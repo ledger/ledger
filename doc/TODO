@@ -18,17 +18,21 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :Ticket: 136
   :ID: C0F9D986-4A39-49D3-9799-E6CFCF76E49A
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] --debug isn't taking a regular expression
   :PROPERTIES:
   :ID: 5936E070-F86A-4E52-B165-B70CE24C8109
   :END:
   [2008-07-24 Thu]
 * TODO [#B] --price option in lot_sales branch
+  message://m24q2rwrym.fsf_-_@newartisans.com
+  message://m2k6bl3vr3.fsf@newartisans.com
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 172
   :ID: F6120E58-8985-4D76-908B-93A319E6D1D1
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] -j is not working with -E
   :PROPERTIES:
   :Version: 2.6
@@ -36,11 +40,22 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :ID: 03FF4D6D-2B7A-4466-8A29-99E6CBCF8A32
   :END:
 * TODO [#B] A few changes for the textual parser
+  - Ignore any line like /^\s*;/ as a comment -even in the middle of a
+    transaction
+  - Treat -00.00 the same as hB300.00 : I found myself making this mistake
+    frequently.
+  - Print the out offending transaction and the 'out of balance' amount in the
+    'unbalanced transaction' error message.
+  - It would be nice if the 'entry' command could be modified to assume the
+    amount is the same as last time if you dont supply it.  It also doesn't
+    seem to reproduce multiple-split transactions either -- it seems you only
+    get the first split line.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 121
   :ID: 8C5FD48A-F498-4B97-9C6E-DD8B5A50B773
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] A mask by itself should generate a helpful error message
   Especially since people from 2.6 will want to use "/foo/" intead of "account
   =~ /foo".
@@ -54,18 +69,52 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :Ticket: 166
   :ID: 8C9A4F0A-75B6-4F7D-913C-B8D8D84A882E
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Add a "scramble" command
+  The purpose of this command is to anonymize the user's data so that they can
+  submit a bug report without revealing any sensitive information about
+  themselves.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 162
   :ID: 5B6D773A-E90F-4F36-8C97-79613427CA01
   :END:
+  [2008-04-11 Fri]
 * TODO [#C] Add an entry type for specifying value constraints
+  I'd like to see a more general syntax for this based on value expressions,
+  which would offer a full constraints mechanism.  For example, to constrain
+  all transactions to being less than $10,000 in an account:
+  :DATA:
+? Constrain all transactions to less than $10,000
+  /Expenses:Food/      a < $10,000
+  :END:
+
+  The "?" indicates a "constraints entry".  Each transaction would have two
+  value expressions: one to match every applicable transaction in the file,
+  and another to provide the boolean logic of the constraint.
+
+  Then, while the file is being parsed, any violations of a constraint would
+  be treated as an error, the same as when an entry fails to balance to zero.
+  I suppose making these warnings could be a possibility as well.
+
+  Here is how you'd constrain commodities in this model:
+  :DATA:
+? Guarantee commodities within accounts
+  Assets:Checking    comm(a) == $1.00
+  :END:
+
+  (At the moment there is no value expr function that would allow: comm(a) ==
+  "$")
+
+  Then, of course, there could be a specific declaration option -- such as you
+  have above -- for just this case, which internally would be parsed as a
+  constraints entry.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 39
   :ID: 31E75D27-157E-452B-B817-7AD570AFE357
   :END:
+  [2008-04-05 Sat]
 * TODO [#B] Add complete calculation history in Ledger
   :PROPERTIES:
   :Version: 2.6
@@ -96,11 +145,13 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :END:
   [2008-08-05 Tue]
 * TODO [#C] Add support for comments (notes) on entire entries
+  These get scanned for tags or regexp match when scanning entries using e//.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 63
   :ID: DCB44369-82CE-44CB-AD05-42B25BA6A492
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Add the ability to map OFX numbers to specific accounts
   By allowing a directive like this:
   :DATA:
@@ -143,17 +194,39 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :ID: BDBB79F0-9FC4-4B91-B922-D128E18982BA
   :END:
 * TODO [#B] Added a section in the manual specifically about stocks
+  There is no explicit section right now which details how to handle stock
+  transactions.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 189
   :ID: 7AD3B6F2-765B-41A5-A481-BFAB39A55824
   :END:
+  [2008-04-21 Mon]
 * TODO [#C] Added a {{total}} syntax for lot price specification       :FEATURE:
+  I had another idea: do you remember I mentioned a problem I had, which that
+  some of my trade confirmation slips provide the "adjusted cost base" and not
+  the cost-per-share? This makes it a big ugly to enter such postings, even
+  with expressions:
+  :DATA:  
+    BrokerAccount    -29.435 WIDGETS {353.51435/29.435 USD} @ 13.02 USD
+  :END:
+  (I didn't test the above, by the way, that was your suggestion when we
+  talked last time.)
+  
+  I propose this syntax:
+  :DATA:  
+    BrokerAccount    -29.435 WIDGETS {{353.51435 USD}} @ 13.02 USD
+  :END:
+  It's a bit similar to the idea of @ vs. @@ where the single char (@) is for
+  price, and the double (@@) is for total amount. Using {{ ... }} refers to
+  the total cost, while { ... } refers to the cost price (per share).
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 188
   :ID: C9E09993-CC01-41C6-BADC-0A9AA1221419
   :END:
+  [2008-04-20 Sun]
 * TODO [#B] Allow column width to be specified
   :PROPERTIES:
   :Version: 2.6
@@ -161,11 +234,15 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :ID: 1F0FD61B-1734-4A30-9EB5-D7AC4A6C7D7B
   :END:
 * TODO [#B] Allow for data file assertions
+  A use for these would be after reconciling the bank balance, you want to
+  assert that the cleared balance on that day is a given amount and if it ever
+  changes there should be an error.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 165
   :ID: 434EA2BD-BB4D-4F97-BB2A-BB983797F1AE
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Allow for quicker reporting commands in ledger.el		 :EMACS:
   :PROPERTIES:
   :Version: 2.6
@@ -188,6 +265,7 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :Ticket: 185
   :ID: 383C04EE-94AF-4D01-BDEF-E644A12E97BF
   :END:
+  [2008-04-20 Sun]
 * TODO [#C] Allow pre-declaration of account and commodity names, and account commodities
   :PROPERTIES:
   :Version: 2.6
@@ -201,23 +279,35 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
   :END:
   [2008-05-12 Mon]
 * TODO [#B] Annotations should allow for HH:MM:SS
+  And also datetime should display this if it's there (but not if it's
+  midnight).
+
+  To implement this, add a parsing option that if, before the code, there is a
+  string fitting HH:MM:SS, then it is taken to be a time value.  This will
+  require making the parsing of date_t and datetime_t flexible and adaptive
+  (and stream-based).
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 149
   :ID: F7DDD7D6-D219-4645-BB02-33AF74BED44B
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Another problem with XML output
+  [[message://20060918231625.11184.qmail@web30708.mail.mud.yahoo.com][Re: Ledger 3 XML processing]]
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 127
   :ID: 0AC36F03-A438-4547-8764-E2B90F6E2A1C
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Another value expression change
+  message://m2fyle3zdy.fsf@newartisans.com
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 171
   :ID: 356DB3E1-3613-4DE2-8245-A8F8E4937FBD
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Answer Martin's question about Capital gains
   [[message://20080423221130.4D77D1144C3@banane.furius.ca]["capital gains" from Martin Blais <blais@furius.ca>]]
   [[message://1209097067.1413.1249786835@webmail.messagingengine.com]["Here is one valid way to book capital gains" from Martin Blais <blais@furius.ca>]]
@@ -248,11 +338,35 @@ ledger -S -t -s bal wedding
   :END:
   [2007-12-10 Mon]
 * TODO [#B] Balances with non-matching exchange rates is ambiguous.
+  Not sure what it should say here... it balances in EUR, but not in
+  USD. Should it fail?
+  :DATA:
+2007-12-31 * Start of year / Opening balances.
+  Account1   1000 EUR @ 1.6 USD
+  Account2   -1000 EUR @ 1.5 USD
+  :END:
+  :OUTPUT:
+-*- mode: compilation; default-directory: "/tmp/" -*-
+Compilation started at Sat Apr 12 12:35:43
+
+ledger -f /tmp/brokrate.ledger bal
+While balancing entry:
+  2007/12/31 * Start of year / Opening balances.
+      Account1                            1000 EUR @ 1.6 USD
+      Account2                            -1000 EUR @ 1.5 USD
+Unbalanced remainder is:
+           100.0 USD
+Error: "/tmp/brokrate.ledger", line 3: Entry does not balance
+
+Compilation exited abnormally with code 1 at Sat Apr 12 12:35:43
+  :END:
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 179
   :ID: 2E3496BD-143C-4D3E-8815-A01FFD31D132
   :END:
+  [2008-04-12 Sat]
 * TODO [#C] Binary cache is invalidated if LEDGER_FILE is changed
   - State "DEFERRED"   [2008-09-17 Wed 05:06] \\
     This bug is deferred until 3.0, since it is so rare there is no need to change
@@ -370,11 +484,23 @@ $ ledger -l 'd<=[30/06/2006]' -w equity ^Assets:Super
   :END:
   [2007-12-10 Mon]
 * TODO [#C] Bug in showing budget balance
+  I've been playing with budget feature in 2.4.  So far I've learned to make
+  periodic income and expenses, and to show them balanced against actual
+  transactions, which is very useful.  However I can't make it show how
+  budgets for next month are balanced.  The obvious (for me) command:
+  :OUTPUT:
+$ ledger -Bs --budget -p "next month" bal ^inc ^exp
+  :END:
+  shows nothing unless I add an empty transaction on someday next month, which
+  is weird, and not any kind of transaction will work.  Are there better ways
+  to do this?
   :PROPERTIES:
+  :Submitter: <pomin5@gmail.com>
   :Version: 2.4.1
   :Ticket: 20
   :ID: 41716CDE-670C-4F41-825F-FE64B624AF97
   :END:
+  [2007-12-10 Mon]
 * TODO [#C] C-c C-c on a cleared entry doesn't unclear it		 :EMACS:
   :PROPERTIES:
   :Version: 2.6.0.90
@@ -393,11 +519,15 @@ $ ledger -l 'd<=[30/06/2006]' -w equity ^Assets:Super
   :END:
   [2008-08-05 Tue]
 * TODO [#C] Change value_t to use a union instead of a char array
+  This is needed on systems like Sparc64, where *((long *) data) = value will
+  cause a SIGBUS due to a misaligned pointer access.
   :PROPERTIES:
+  :Submitter: Thomas Delaet <thomas@delaet.org>
   :Version: 2.6
   :Ticket: 196
   :ID: CAAC7BA1-882E-4BC1-A0BD-F65546EABDBF
   :END:
+  [2008-05-07 Wed]
 * TODO [#B] Clear out all #if 0 and jww commented sections
   :PROPERTIES:
   :Version: 2.6
@@ -439,11 +569,15 @@ ledger -p "this year" -MAs bal ^Expenses
   :END:
   [2007-12-10 Mon]
 * TODO [#B] Command output-xml
+  As a corollary to the output command, have an output-xml command, which
+  writes a complete Ledger file (including all automated entries, etc) to an
+  XML file.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 150
   :ID: 5D17A372-FB03-4E1D-9917-113E10211880
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Complete the internal documentation, exported using Doxygen
   :PROPERTIES:
   :ID: 986054C6-CD18-4EA1-8F8C-FF02C9842EB0
@@ -470,7 +604,7 @@ ledger -p "this year" -MAs bal ^Expenses
 
   The fees are inserted without a commodity as -9.610705:
   :OUTPUT:
-ledger -w -f bug.txt  reg 
+ledger -w -f bug.txt  reg
 2007/12/31  Cost basis for: RED HAT INC RHT     As:Investments:RBC-Broker:Account-RSP                4.00 RHT               4.00 RHT
                                                 Equity:Opening-Balances:Cost                       689.87 CAD             689.87 CAD
                                                                                                                             4.00 RHT
@@ -510,11 +644,44 @@ ledger -w -f bug.txt  reg
   :END:
   [2008-08-14 Thu]
 * TODO [#B] Create a "date" report for balances
+  The idea for this report would be to show very nicely when the last date an
+  account was balanced to was.  For example (from blais):
+  :OUTPUT:
+ .
+ |-- Assets
+ |   |-- Current
+ |   |   |-- HSBC
+ |   |   |   |-- Checking                                      2007-12-31 -> 2007-12-31
+ |   |   |   |-- Savings                                       2007-12-31 -> 2008-03-28
+ |   |   |   `-- Secured                                       2007-12-31 -> 2008-03-28
+ |   |   `-- RBC
+ |   |       |-- Checking                                      2007-12-31 -> 2008-04-02
+ |   |       |-- Checking-US                                   2007-12-31 -> 2008-03-03
+ |   |       `-- Savings                                       2007-12-31 -> 2008-04-02
+ |   `-- Investments
+ |       |-- HSBC-Broker                                       2007-12-31 -> 2008-04-13
+ |       |-- OANDA                                             2007-12-31 -> 2007-12-31
+ |       `-- RBC-Broker
+ |           |-- Account-CA                                    2008-01-01 -> 2008-04-01
+ |           |-- Account-RSP                                   2007-12-31 -> 2008-01-31
+ |           `-- Account-US                                    2008-01-01 -> 2008-04-01
+ `-- Liabilities
+     |-- Credit-Card
+     |   |-- HSBC-MasterCard                                   2007-12-31 -> 2008-04-04
+     |   `-- RBC-VISA                                          2007-12-31 -> 2008-04-02
+     `-- RBC
+         |-- Credit-Line                                       2007-12-31 -> 2007-12-31
+         `-- Mortgage
+             |-- Credit-Line                                   2007-12-31 -> 2007-12-31
+             `-- Loan                                          2007-12-31 -> 2007-12-31
+  :END:
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 182
   :ID: 4D175527-AE30-4030-B1B7-DD6A92B6F067
   :END:
+  [2008-04-14 Mon]
 * TODO [#B] Create a Debian build of Ledger
   :PROPERTIES:
   :ID: 6CE0A190-0368-446F-9EF5-84DD4F5EB0E4
@@ -580,29 +747,63 @@ ledger -w -f bug.txt  reg
   :Ticket: 164
   :ID: E97BCC81-4E9E-49AA-A905-051C9524B769
   :END:
+  [2008-04-11 Fri]
 * TODO [#C] Enhanced comments					       :FEATURE:
+  - Note taken on [2008-07-21 Mon 18:53] \\
+    I agree that we need something like this.  Also, whatever format is chosen, we
+    should look at adding a flexible properties/tags/annotation mechanism for
+    entries and transactions.
+  12:47 < Demosthenes> i think we need a comment or further descriptive field that is preserved with the record
+  12:47 < Nafai> That would probably be useful
+  12:48 < Nafai> I can imagine, for example, in the future if I start scanning all of my receipts and such.  I'd like to be able to associate an entry with a given scan file
+  12:48 < Nafai> I would do that via a comment, I suppose
+  12:48 < Nafai> I'd bring it up on the mailing list and see what johnw thinks
+  12:48 < Demosthenes> i was thinking expense report notes ;]
+  13:02 < Demosthenes> if there were to be a comment, how would we make it look?
+  13:03 < Demosthenes> my immediate suggestion would be to keep it freeform and use the ;, just that the parser would preserve the comments in the same text block as the ledger entry bounded by whitespace
+  13:43 < Nafai> Yeah, that sounds reasonable
+  14:16 < Demosthenes> then as an extension,  /^; ([A-Z][a-z]+): (.*)$/ could match key : value pairs for tags ;] 
+  14:17 < Nafai> Nice
+  14:24 < Demosthenes> good news is, i can go ahead and write comments that way, and we'll see if its added later ;]
+  15:22 < johnw> let me show you what I'm thinking of, in the spirit of Python
+  15:23 < johnw> http://rafb.net/p/jyagP679.html
+  15:25 < johnw> so, ; inside an entry will be a note, ; outside is a comment
+
+  Example from johnw:
+  :DATA:
+2008/07/21 For my friend Demosthenes
+   ; This is an entry note, although it looks just like a comment.
+   Expenses:Food ....
+  :END:
   :PROPERTIES:
+  :Submitter: Demosthenes
   :Version: 2.6
   :Ticket: 204
   :ID: AC4FCEC6-7F38-4229-88AD-B0032C49AE93
   :END:
+  [2008-07-21 Mon]
 * TODO [#C] Error when running my 'bal' script
+  When using my bal script, if there is an error in the large valexpr I use,
+  it doesn't show the full context, only the valueof statement.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 25
   :ID: 88468528-A332-47E7-AA34-5E4F8126E3E7
   :END:
+  [2007-12-10 Mon]
 * TODO [#C] Every destructor which contains only TRACE_DTOR should specify throw()
   :PROPERTIES:
   :ID: 44497B2D-292F-4C82-8D4F-B928FE6143EC
   :END:
   [2008-07-25 Fri]
 * TODO [#B] Extended lot indentification support
+  message://m2veuvq0al.fsf@newartisans.com
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 167
   :ID: 9CC55CD0-30C3-4C4F-BCB6-E980FD1F44DA
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Find out why master is failing to build on Thomas Delaet's OpenBSD box
   ssh obsd86
   :PROPERTIES:
@@ -630,17 +831,55 @@ ledger -Y --forecast 'T>0' reg food
   :END:
   [2007-12-10 Mon]
 * TODO [#C] Forecasting goes too far
+  - Note taken on [2007-12-10 Mon 19:04] \\
+    Because of the way that forecasting is (currently) implemented, you will often
+    see an entry that is "one beyond" the condition of your forecast. I hope to
+    remedy this in the near future.
+  :OUTPUT:
+tim@yggdrasil [/Users/tim]# ledger --forecast 'd<=[2006/08/27]' reg  
+^assets
+[some entries which balance correctly]
+2006/09/01 Forecast entry       Assets                      $-1322.00    $13313.99
+  :END:
+  Why is the last entry being displayed?  Doesn't the date predicate prevent
+  that from happening?
   :PROPERTIES:
+  :Submitter: <tim@scarybright.org>
   :Version: 2.6
   :Ticket: 15
   :ID: E627C594-A019-4D87-A6B4-C8E75F6D8FC0
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] FR: Add the concept of spatially delimited "pages"
+  Another way to associate a custag tag/field to entries is by virtue of their
+  organisation in the file. We could tag a sequence of consecutive entries in
+  a block, like this:
+  :DATA:
+@page_begin Vacations
+
+...
+
+@page_end
+  :END:
+
+  This gives us yet another dimension of tagging of transactions:
+  
+  - The account in which a transaction belongs
+  - The page in which a transaction was declared.
+  - The "notes" at the end of postings
+  - The description of the transaction
+  - The file in which a transaction was defined.
+  
+  These are all fields that can be used for selecting a subset of
+  transactions. Some of these fields may allow us to simplify our accounts
+  hierarchy to some extent.
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 176
   :ID: BCE275E5-37EA-4231-8F05-55ED96B5BB3F
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Get rid of --print-format, and have print use hdr-format
   ... and xact-format, which output uses.
   :PROPERTIES:
@@ -656,11 +895,13 @@ ledger -Y --forecast 'T>0' reg food
   :ID: 60B631E4-9819-4460-ABC0-6B789865646D
   :END:
 * TODO [#B] Handling funds
+  message://m2fylicj1e.fsf@Majdhub.local
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 170
   :ID: B5C1EE3D-8F66-4116-A88B-D1D568CF46B7
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Have -T and -t set the expression template
   ... so that # may be used to refer to whatever the previous value (set by
   other options) was
@@ -676,12 +917,21 @@ ledger -Y --forecast 'T>0' reg food
   :Ticket: 163
   :ID: 5F20A546-046B-4CC6-B1EF-89C5962B55BE
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Highlight transaction lines in based on their status	 :EMACS:
+  Here is a tweak to ledger-mode that I find useful. It makes uncleared lines
+  pink and cleared lines green. C-c C-e to toggle the status.
+  :SCRIPT:
+(add-hook 'ledger-mode-hook (lambda ()
+                             (highlight-lines-matching-regexp "^..\\(..\\)?/..?/..?[ 	]+[^\\*]" (quote hi-pink))
+                             (highlight-lines-matching-regexp "^..\\(..\\)?/..?/..?[ 	]+\\*" (quote hi-green))))
+  :END:
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 200
   :ID: 1C870658-6460-423C-9199-E46C48074688
   :END:
+  [2008-07-13 Sun]
 * TODO [#B] If a file !include's other files, it cannot be reconciled
   ... since hitting space will not mark the right entry.
   :PROPERTIES:
@@ -691,7 +941,27 @@ ledger -Y --forecast 'T>0' reg food
   :END:
   [2008-04-11 Fri]
 * TODO [#B] Implied rates.
+  Not sure what you should do in this case:
+  :DATA:
+2007-12-31 * Start of year / Opening balances.
+    Account1   100 EUR @ 1.4 USD
+    Account1   -200 EUR
+    Account2   100 USD
+  :END:
+
+  You could calculate the cost:
+  :OUTPUT:
+   140 USD
+   -200 EUR
+   100 USD
+  :END:
+  So, 240 USD and -200 EUR, which implies an aggregate exchange rate of 1.2,
+  which is wildly different of the 1.4 EUR/USD rate declared above.
+  
+  (Do you fill in? In my Python version, I'll prefer not to, because I think
+  that in general these will be errors rather than reflect implied rates.)
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :Version: 2.6
   :Ticket: 181
   :ID: 3E56A012-FE58-49B5-8CF0-7E80CD2B2F8A
@@ -711,11 +981,15 @@ ledger -Y --forecast 'T>0' reg food
   :END:
   [2008-04-16 Wed]
 * TODO [#B] In ledger.el, fix toggle-current-transaction		 :EMACS:
+  When all transactions have been cleared, the marks should be wiped and then
+  ledger-toggle-current-entry called, rather than doing the entry clearing
+  itself.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 130
   :ID: 465231DF-6EF2-4C4F-BF0D-9FED19AB99A3
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] In the "pricesdb" report, output commodity conversions
   ... and "N" commands.
   :PROPERTIES:
@@ -734,11 +1008,13 @@ ledger -Y --forecast 'T>0' reg food
   :END:
   [2008-04-11 Fri]
 * TODO [#B] Ledger example: building a better "du"
+  message://m2odzwxupz.fsf@newartisans.com
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 169
   :ID: 85DAE1AB-F6D3-4AAC-A4F7-99D146B355E7
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Ledger formats UTF-8 strings incorrectly
   The report `ledger --tail 20 reg nrl:checking` has errors in the tabulation
   because of the width of UTF-8 characters that are larger than 8-bit.
@@ -749,31 +1025,48 @@ ledger -Y --forecast 'T>0' reg food
   :END:
   [2008-04-11 Fri]
 * TODO [#C] Ledger should output empty values with -E -j
+  The -E flag should cause Ledger to report null figures:
+  :OUTPUT:
+$ ledger -E -j -p 2006.12 reg Travel
+
+2006.12.18 32.1
+2006.12.28 21.81
+2006.12.28 63.83
+2006.12.28 14.62
+2006.12.28 13.4
+2006.12.28 15.23
+2006.12.28 23.14
+2006.12.28 23.14
+2006.12.28 23.14
+2006.12.28 -28.32
+  :END:
+  There were null values in the above report, but they weren't output.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 44
   :ID: 86C0F968-F05B-4881-96B8-1C8CA8BB1315
   :END:
+  [2008-04-05 Sat]
 * TODO [#B] ledger.el: ledger-context-at-point fails to parse acct-transaction  :EMACS:
   - State "TODO"       [2007-11-07 Wed 04:06] \\
-    levin writes:
+    Levin <zslevin@gmail.com> writes:
     > The following patch fixes problem of the amount with no ',':
     :PATCH:
 @@ -648,10 +648,12 @@
-        (indent account amount nil commodity comment)) 
-       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$" 
-        (indent account amount nil commodity)) 
--      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$" 
-+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$" 
-        (indent account amount nil commodity comment)) 
--      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*$" 
-+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$" 
-        (indent account amount nil commodity)) 
-+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]*$" 
-+       (indent account amount nil)) 
-       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$" 
-        (indent account comment)) 
-       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*$" 
+        (indent account amount nil commodity comment))
+       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$"
+        (indent account amount nil commodity))
+-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
++      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+        (indent account amount nil commodity comment))
+-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*$"
++      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$"
+        (indent account amount nil commodity))
++      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]*$"
++       (indent account amount nil))
+       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+        (indent account comment))
+       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*$"
     :END:
     > BTW, the amount regexp is a bit complex here. Do we need the fraction
     > part of the amount? And it should recognize the ',' in amount.
@@ -798,7 +1091,7 @@ ledger -Y --forecast 'T>0' reg food
   Equity:Opening Balances
   :END:
   :PROPERTIES:
-  :Submitter: levin
+  :Submitter: Levin <zslevin@gmail.com>
   :Version: 2.6
   :Ticket: 6
   :ID: 2558642F-EE17-4DCB-B6DB-50490FB0CF83
@@ -824,11 +1117,13 @@ ledger -Y --forecast 'T>0' reg food
   :ID: CD7B03D4-E0B2-4E7F-81B2-D98816B68B84
   :END:
 * TODO [#B] Make ^ be a power operator
+  So that 0.234 * 10^7 notation is possible.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 156
   :ID: CE06A271-419D-4F27-87C6-74412BE546E1
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Make commodity_t::qualified_symbol a virtual function
   :PROPERTIES:
   :Version: 2.6
@@ -849,28 +1144,48 @@ ledger -Y --forecast 'T>0' reg food
 * TODO [#B] Mention Martin's beancount project from the Ledger home page
   "Beancount on PyPi" from Martin Blais <blais@furius.ca>
   :PROPERTIES:
+  :Submitter: Martin Blais <blais@furius.ca>
   :ID: 81540394-3662-4CBA-8747-3F6CEAEE61D5
   :END:
   [2008-08-14 Thu]
 * TODO [#B] More issues with price file parsing
+  - Note taken on [2008-07-18 Fri 22:44] \\
+    Solving this is going to be part of a larger revising of the way commodities
+    are translated in general.
+  - Note taken on [2008-07-18 Fri 17:37] \\
+    Here's the entry:
+    :DATA:
+2007/01/01 Wasatch Small Cap: WMCVX
+    Assets:Wasatch                           178.170 WMCVX
+    Equity:OpeningBalances
+    :END:
+  - Note taken on [2008-07-18 Fri 17:37] \\
+    This must be used with the entry found in one of the comments.
+  - Note taken on [2008-07-18 Fri 02:35] \\
+    I need supporting information before I can do anything more here; I need the
+    actual entry which, combined with the price file, causes the problem.
+  See archive/New Artisans LLC // View topic - Problem with prices.db file/index.html.
   :PROPERTIES:
+  :Submitter: <ktneely@astroturfgarden.com>
   :Version: 2.6
   :Ticket: 134
   :ID: 3850F5F3-8D73-435C-A734-1C39683430ED
+  :Attachments: prices.db
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Multiple -f options fail silently.
   Ledger does not seem to be able to accept multiple -f options (further -f's
   get ignored silently). It should simply concatenate all the specified files
   in a single data set.
 
   :OUTPUT:
-Predicate: 
+Predicate:
 Display P: a
 2007/12/31 Start of year / Op.. As:In:HSBC-Broker           100 IVV      100 IVV
                                 Eq:Op:Cost             -15333.7200 USD      100 IVV
                                                                  -15333.7200 USD
 banane:~$ ledger -f /tmp/b.txt reg
-Predicate: 
+Predicate:
 Display P: a
 2007/12/31 Start of year / Op.. As:In:HSBC-Broker           100 IAA      100 IAA
                                 Eq:Op:Cost             -15333.7200 USD      100 IAA
@@ -878,7 +1193,7 @@ Display P: a
 banane:~$ ledger -f /tmp/a.txt /tmp/b.txt reg
 Error: Unrecognized command '/tmp/b.txt'
 banane:~$ ledger -f /tmp/a.txt -f /tmp/b.txt reg
-Predicate: 
+Predicate:
 Display P: a
 2007/12/31 Start of year / Op.. As:In:HSBC-Broker           100 IVV      100 IVV
                                 Eq:Op:Cost             -15333.7200 USD      100 IVV
@@ -904,11 +1219,13 @@ Display P: a
   :ID: 6838FEA5-9283-462D-8651-351B0B6A6A0E
   :END:
 * TODO [#B] New reporting options: --descend and --descend-if
+  message://m2slpojqjc.fsf@newartisans.com
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 168
   :ID: 06F4D252-4049-42D5-BBD4-F52130ED3F82
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Normalize automated transactions
   So that there is no functional difference between the binary and textual
   data formats; this is needed for the GUI so that if entries are added or
@@ -920,11 +1237,14 @@ Display P: a
   :END:
   [2008-04-11 Fri]
 * TODO [#B] Odditing in name of XML namespaces in Ledger
+  [[message://20060304.181355.96677625.arb46@cornell.edu][e-mail]] one
+  [[message://20060802015747.27838.qmail@web30706.mail.mud.yahoo.com][e-mail]] two
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 122
   :ID: 9F69B516-9F57-4204-9EF2-BA0AB42B1401
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Optimize parsing of transaction amounts
   :PROPERTIES:
   :Version: 2.6
@@ -933,23 +1253,32 @@ Display P: a
   :END:
   [2008-04-11 Fri]
 * TODO [#B] Option --args-only
+  Have `--args-only`, which causes Ledger to ignore the environment or any
+  initialization files.  Use this in the test scripts.  It will require making
+  a standard price database.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 153
   :ID: AB622F55-C2EF-43B9-B943-CABDBAF144F5
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Option --bold-if
+  Which will bold the whole transaction line if it matches the given predicate
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 154
   :ID: 3D04C70F-422D-4CEC-BC4A-B177C76D834A
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Option --transform VALEXPR
+  Which is a handler that applies valexpr to each transaction and outputs a
+  temporary transaction with that amount -- or is this just the same as -t?
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 152
   :ID: C112D47E-7814-47D1-AE8C-B777AEFB7C56
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Output error messages in a way that compilation-mode can parse
   message://20080421160053.C6CE61144C3@banane.furius.ca
   :PROPERTIES:
@@ -965,11 +1294,17 @@ Display P: a
   :END:
   [2008-04-11 Fri]
 * TODO [#C] Periodic budgeting problem when Yxxxx is used
+  Yeah, it works as expected for me as well.  I have since changed my ledger
+  files to use YYYY/MM/DD strings.  In the past I was using the Yxxxx
+  directive with MM/DD strings for each entry.  That might have had something
+  to do with it... or there was some other problem with my ledger files.
   :PROPERTIES:
+  :Submitter: <edavis@insanum.com>
   :Version: 2.6
   :Ticket: 21
   :ID: F2FC7C2B-0CB1-47E7-AE2E-C9E744A47927
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Post the Ledger manual in HTML format on newartisans.com	  :DOCS:
   :PROPERTIES:
   :Version: 2.6
@@ -978,23 +1313,40 @@ Display P: a
   :END:
   [2008-08-14 Thu]
 * TODO [#C] Preserve file comments in the XML output
+  I would like to use the XML format for doing some transformations to my
+  data. Not just reformatting for reporting, but actual changes to my data.
+
+  This means I would like to export to XML, then do an XSLT transformation,
+  and then re-import it back into ledger format. (Throw away my original
+  ledger file, and replace it with the transformed version.)
+
+  My problem is that comments don't seem to be preserved in the XML
+  format. Well, the end-of-line comments on (what you call) transactions
+  do. (They come out as <tr:note> elements.) But whole-line comments do not.
+
+  I wish these whole-line comments could somehow be preserved in the XML
+  format.
   :PROPERTIES:
   :Version: 2.5
   :Ticket: 41
   :ID: D27098A4-647A-4EEA-B0B8-3088E069214D
   :END:
+  [2008-04-05 Sat]
 * TODO [#B] Preserve XML comments
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 142
   :ID: D964682A-2B95-482F-B7FE-BAEE3E2E2AA8
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Problem reading Russian prices file
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 131
   :ID: 22D053B7-616B-4B64-83DF-80A46BA1EC2B
+  :Attachments: bug.100
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Problem with basis report
   The command is:
   :SCRIPT:
@@ -1032,13 +1384,13 @@ ledger -f utils/standard.dat -e 2004/4 -G reg 401
   card accounts still end up with the same final balance as they did before.
   Also, I typically save any edits to my ledger file in a Subversion
   repository, so I can always get back to a previous version if I need to.
-  
+
   So now I do have a nice, clean file.
-  
+
   After I got your message, I did try the "output" command.  I guess I didn't
   understand exactly what it's supposed to be doing, because it didn't quite
   seem to work as I expected.
-  
+
   If I type:
   :SCRIPT:
 ledger -f foo output foo
@@ -1058,7 +1410,7 @@ Y2005
 
 01/01 * (1830) TPC
     Expenses:Phone                  $100.00
-    Assets:Bank:Checking                            
+    Assets:Bank:Checking
 
 2/3 (1832) ABC Dept Store
     Expenses:Clothing           $100.00
@@ -1076,11 +1428,11 @@ Y2005
 
 2005/01/01 * (1830) TPC
     Expenses:Phone                           $100.00
-    Assets:Bank:Checking                            
+    Assets:Bank:Checking
 
 2005/02/03 (1832) ABC Dept Store
     Expenses:Clothing                        $100.00
-    Assets:Bank:Checking                            
+    Assets:Bank:Checking
 2/3 (1832) ABC Dept Store
     Expenses:Clothing           $100.00
     Assets:Bank:Checking
@@ -1109,15 +1461,15 @@ Error: Journal does not refer to file ''
     your, rpw, or let me know where I can find an ISO of the exact version you're
     using?
   Downloaded and (eventually) compiled the latest version from anonymous CVS.
-  
+
   Had to update my 'automake' to 1.9 and add "#include <cassert>" to
   datetime.h to get it to make.
-  
+
   Runs the help screen OK but SEGV's out when attempting to do any useful
   work.
-  
+
   System is debian stable ('sarge'), gcc 3.3.5 fully upgraded.
-  
+
   Any clues?
   :OUTPUT:
 $gdb ledger
@@ -1195,16 +1547,25 @@ argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
   :END:
   [2007-12-10 Mon]
 * TODO [#B] Promote tagging to a first-class concept 		       :FEATURE:
+  - Tagging is indicated by the presence of ":tag:" in an entry note or a
+    transaction note.
+  - Entry note transactions apply also to all of their child entries.
+  - Searching by tag is support by using "/ tag..." on the command-line, after
+    the fashion of "-- payee..".
+  - When searching by tag, there should be a way to show a transaction's tags
+    in the register and balance outputs.
   :PROPERTIES:
   :Ticket: 208
   :ID: E7595DA3-4634-4275-A793-701A6D9438A4
   :END:
+  [2008-08-01 Fri]
 * TODO [#B] read_xml and write_xml methods for values
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 151
   :ID: 415F72A7-A744-41EE-A849-D9E80237E00C
   :END:
+  [2008-04-11 Fri]
 * TODO [#A] Reading Ledger data from stdin does not work at all
   :PROPERTIES:
   :Version: 2.6.0.90
@@ -1228,11 +1589,13 @@ argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
   :END:
   [2008-04-11 Fri]
 * TODO [#B] Request for unique payee list
+  [[message://87k68rutji.fsf@kea-dev-lnx-lt.intruvert.com][e-mail]]
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 157
   :ID: A75FE2B8-86B0-42B9-AB7F-C37C8FF576EC
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Respond to billk's question about options /email
   New Artisans LLC :: View topic - stock options
   :PROPERTIES:
@@ -1245,11 +1608,15 @@ argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
   :END:
   [2008-08-14 Thu]
 * TODO [#B] Revise the concept of commodities
+  At the moment, commodities, conversions, exchanges and prices all relate to
+  the same underlying ideas, but they're unfortunately spread out throughout
+  the docs and the reporting struture.  It's time to unify all of this.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 180
   :ID: 29E1CF5D-FEA9-4A23-90F0-4E14C374D908
   :END:
+  [2008-04-12 Sat]
 * TODO [#B] Rewrite the concept of error contexts
   :PROPERTIES:
   :Version: 2.6
@@ -1272,23 +1639,27 @@ argv=0xbfffddf0, envp=0xbfffddf0) at main.cc:452
   :ID: 2BDB9BCA-6C3F-4766-9AFC-F363237C9049
   :END:
 * TODO [#B] Support for exceptions to interval_t
+  For example, "monthly except June".
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 147
   :ID: A8AC5063-AB2F-4031-8821-2084B7B6497C
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Support multiple -f options
+  So that add-in report files can be specified
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 155
   :ID: 146B0BE4-C5EB-4A5B-A332-FE512B40D375
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] The -V flag is not working
   Here's the data input
   :DATA:
 2008/04/15 * Paid expenses back from cie.
    Expenses:Cie-Reimbursements    2000 CAD @ 1.10 EUR
-   Assets:Checking                
+   Assets:Checking
 
 P 2008/04/20 00:00:00 CAD 1.20 EUR
   :END:
@@ -1312,17 +1683,41 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
   :END:
   [2008-04-07 Mon]
 * TODO [#B] The entry command drops price specifications
+  If you enter a pricing command like this in Emacs:
+  :DATA:
+C -c C-a 2008/02/19 chevron 'GAL 11.118 @ $ 2.879'
+  :END:
+  The resulting entry omits the '@ ...' part.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 192
   :ID: 03C6208E-E48F-45BB-BFBF-2C38B129458A
   :END:
+  [2008-05-03 Sat]
 * TODO [#B] The following, with -B or -V, does not output correctly
+  If you do a register report using this input:
+  :DATA:
+; reported by pll
+
+D $1,000.00
+
+2008/10/05 Shell
+    Expenses:Auto:Fuel          GAL 5.580 @ $ 2.699
+    Assets:BankAccounts:USAA:Checking      $ -15.06
+
+2008/10/05 Shell
+    Expenses:Auto:Fuel                    GAL 5.580
+    Assets:BankAccounts:USAA:Checking      $ -15.06
+  :END:
+  What you will see in the -V case is that GAL is never converted to $, and in
+  the -B case there is too much precision.
   :PROPERTIES:
+  :Submitter: pll
   :Version: 2.6.0.90
   :Ticket: 201
   :ID: F5ABB1B6-B2C1-45B2-A9AE-174736521687
   :END:
+  [2008-07-13 Sun]
 * TODO [#B] The operators in valexpr.cc shouldn't just assert
   ... but if somebody says "T&", it should give a syntax error.
   :PROPERTIES:
@@ -1350,6 +1745,7 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
   :Ticket: 19
   :ID: C7C7EC3C-D05E-4C8A-BDCC-ED04ADD28CC5
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Tie-in with beancounter and quantlib
   :PROPERTIES:
   :Version: 2.6
@@ -1357,11 +1753,21 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
   :ID: 7A8607F3-87C8-4A85-A4EF-BA090BB81EDE
   :END:
 * TODO [#C] Trouble reading an ofx file
+  I'm using ledger from CVS and am having some trouble reading an OFX file
+  that I downloaded from my bank.  The command I'm using is
+  :OUTPUT:
+$ ledger -f <ofx file> print
+Error: Please specify ledger file using -f or LEDGER_FILE environment variable.
+  :END:
+  What might be going on?  As far as I can see, the OFX file is well-formed.
   :PROPERTIES:
+  :Submitter: <alama@stanford.edu>
   :Version: 2.4.1
   :Ticket: 11
   :ID: D9CAC376-E751-4DC6-841B-70217748AA20
+  :Attachments: 20060630-xxxxxx0779.ofx
   :END:
+  [2007-12-10 Mon]
 * TODO [#B] Use &lt; when writing out XML, instead of <
   :PROPERTIES:
   :Version: 2.6
@@ -1379,12 +1785,31 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
   :Ticket: 175
   :ID: 8735E6AB-DB0A-4F66-BD81-BBFFEE66A68E
   :END:
+  [2008-04-11 Fri]
 * TODO [#C] Using --reconcile with -20 causes a segmentation fault
+  Using the trunk version:
+  :OUTPUT:
+./ledger -f sample.dat --reconcile -20.00 --reconcile-date 2007/05/27 reg master
+  :END:
+  which leads to a segmentation fault.
+
+  Replace -20.00 with a number below 1 (e.g. 0.99), then that's OK.
+
+  My gcc version:
+  :OUTPUT:
+$ gcc -v
+Reading specs from /usr/lib/gcc/i686-magic-linux/3.4.6/specs
+Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --enable-shared --enable-threads=posix --disable-checking --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-java-awt=gtk --host=i686-magic-linux
+Thread model: posix
+gcc version 3.4.6 20060404 (MagicLinux 3.4.6-2mgc)
+  :END:
   :PROPERTIES:
+  :Submitter: Levin <zslevin@gmail.com>
   :Version: 2.6
   :Ticket: 4
   :ID: 567B5118-7A77-42B9-A1CD-C5DA688AC406
   :END:
+  [2007-10-29 Mon]
 * TODO [#B] Using Ledger as a scientific analysis tool
   :PROPERTIES:
   :Version: 2.6
@@ -1398,17 +1823,23 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
   :ID: F7A6A833-5AC6-4ED0-A5EA-93CD6B97EEBF
   :END:
 * TODO [#B] Value expression descriptions
+  When parsing a value expression, allowing keeping a description tag, so that
+  when an exception is fired the user can be told where the value expression
+  came from.
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 123
   :ID: 81340878-2C17-485B-BBA7-62A271925401
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Value expressions for getting at the lot date
+  For example: lotdate, lotdateof(x)
   :PROPERTIES:
   :Version: 2.6
   :Ticket: 148
   :ID: A1230B8C-EF48-40BB-A200-18E7E94620BE
   :END:
+  [2008-04-11 Fri]
 * TODO [#B] Write unit tests for all core sections of Ledger and all reporting options
   :PROPERTIES:
   :ID: A8DE6DCB-917B-433F-8D07-3ACE45A05F45
@@ -1664,7 +2095,7 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
   The solution is either to support multi-byte correctly, or to use line
   numbering instead.  levin has offered a patch for this (attached).
   :PROPERTIES:
-  :Submitter: levin
+  :Submitter: Levin <zslevin@gmail.com>
   :Version: 2.6
   :Ticket: 5
   :ID: 6B7E468B-CB1E-41C3-A6BF-DCB64DA91C15
@@ -1726,18 +2157,18 @@ Hermes:/Users/johnw $ ledger -f /tmp/test.dat -V reg
 +  if (! interval.begin)
    throw new error(std::string("Could not determine end of period '") +
  		    optarg + "'");
- 
+
  if (! report->predicate.empty())
    report->predicate += "&";
  report->predicate += "d<[";
 -  report->predicate += interval.end.to_string();
 +  report->predicate += interval.begin.to_string();
  report->predicate += "]";
- 
+
 -  terminus = interval.end;
 +  terminus = interval.begin;
  } OPT_END(end);
- 
+
  OPT_BEGIN(current, "c") {
 :END:
   :PROPERTIES:
@@ -1835,18 +2266,18 @@ make[1]: *** [libledger_la-journal.lo] Error 1
   I found a tiny bug in the info documentation for ledger, version
   2.6.0.90, regarding per-unit and complete transaction cost.  There
   seems to be @'s missing (maybe texinfo gobbles up at least on @)
-  
+
   It says:
-  
+
   > The `ACCOUNT' may be surrounded by parentheses if it is a virtual
   > transactions, or square brackets if it is a virtual transactions
   > that must balance.  The `AMOUNT' can be followed by a per-unit
   > transaction cost, by specifying ` AMOUNT', or a complete
   > transaction cost with `@ AMOUNT'.  Lastly
-  
+
   whereas I believe (from reading the source of textual.cc) it should
-  be: 
-  
+  be:
+
   > The `ACCOUNT' may be surrounded by parentheses if it is a virtual
   > transactions, or square brackets if it is a virtual transactions
   > that must balance.  The `AMOUNT' can be followed by a per-unit
