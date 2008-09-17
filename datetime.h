@@ -17,8 +17,6 @@ class  datetime_t;
 
 class date_t
 {
-  date_t(const datetime_t& _when);
-
  public:
   static date_t       now;
   static const char * formats[];
@@ -30,7 +28,7 @@ class date_t
 
   date_t() : when(0) {}
   date_t(const date_t& _when) : when(_when.when) {}
-
+  date_t(const datetime_t& _when);
   date_t(const std::time_t _when) : when(_when) {
 #if 0
     struct std::tm * moment = std::localtime(&_when);
@@ -299,7 +297,6 @@ inline date_t& date_t::operator+=(const interval_t& period) {
 }
 
 inline date_t::date_t(const datetime_t& _when) {
-  assert(0);
   struct std::tm * moment = _when.localtime();
   moment->tm_hour = 0;
   moment->tm_min  = 0;
