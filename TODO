@@ -6,14 +6,6 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* TODO [#B] Do not adjust display precision when parsing a pricing entry
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6.0.90
-  :Ticket: 206
-  :ID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
-  :END:
-  [2008-07-28 Mon]
 * DONE [#B] -e doesn't seem to work for providing an end date
   - State "DONE"       [2008-04-04 Fri 14:34] \\
     There was a problem with the -e date parsing.  I now interpret "-e june"
@@ -284,6 +276,15 @@ ledger -f my.ledger -b 2008/03/01 -e 2008/04/01 print
   :ID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
   :END:
   [2008-04-06 Sun]
+* DONE [#B] Do not adjust display precision when parsing a pricing entry
+  - State "DONE"       [2008-09-17 Wed 05:12]
+  :PROPERTIES:
+  :Submitter: John Wiegley <johnw@newartisans.com>
+  :Version: 2.6.0.90
+  :Ticket: 206
+  :ID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
+  :END:
+  [2008-07-28 Mon]
 * DONE [#C] Entry command doesn't match debit account when description is unmatched
   - State "DONE"       [2008-07-20 Sun 20:32]
   I think I've isolated a bug with the entry command where I get "Equity"

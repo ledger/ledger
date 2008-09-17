@@ -732,7 +732,8 @@ unsigned int textual_parser_t::parse(std::istream&	 in,
 
 	std::string symbol;
 	parse_symbol(symbol_and_price, symbol);
-	amount_t price(symbol_and_price);
+	amount_t price;
+	price.parse(symbol_and_price, AMOUNT_PARSE_NO_MIGRATE);
 
 	if (commodity_t * commodity = commodity_t::find_or_create(symbol))
 	  commodity->add_price(datetime, price);
