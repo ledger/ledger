@@ -113,7 +113,7 @@ public:
   }
 
   bool should_display(account_t& account) {
-    if (! disp_pred.predicate)
+    if (! disp_pred.predicate && ! report.display_predicate.empty())
       disp_pred.predicate.parse(report.display_predicate);
     return disp_pred(account);
   }
