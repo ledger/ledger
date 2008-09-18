@@ -680,8 +680,13 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'p':
-    if (name == "print_balance")
+    if (std::strcmp(p, "print_balance") == 0)
       return WRAP_FUNCTOR(print_balance);
+    break;
+
+  case 't':
+    if (std::strcmp(p, "total_expr") == 0)
+	return MAKE_FUNCTOR(report_t::get_total_expr);
     break;
   }
 
