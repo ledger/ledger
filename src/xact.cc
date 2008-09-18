@@ -126,7 +126,7 @@ namespace {
   }
 
   value_t get_note(xact_t& xact) {
-    return string_value(xact.note ? *xact.note : ":NOTELESS:");
+    return string_value(xact.note ? *xact.note : empty_string);
   }
 
   value_t get_account(call_scope_t& scope)
@@ -210,6 +210,11 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
 	return WRAP_FUNCTOR(get_wrapper<&get_payee>);
       }
     }
+    break;
+
+  case 'n':
+    if (name == "note")
+      return WRAP_FUNCTOR(get_wrapper<&get_note>);
     break;
 
   case 'p':
