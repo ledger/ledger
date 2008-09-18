@@ -6,6 +6,11 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
+* TODO [#B] Implement a --raw flag for print, to show what the user entered
+  :PROPERTIES:
+  :Version: 3.0
+  :ID: 9F074119-FF1C-4568-9297-54A8C31258D2
+  :END:
 * TODO [#B] 'derive_new_entry' shouldn't add accounts to the journal
   :PROPERTIES:
   :Version: 2.6
