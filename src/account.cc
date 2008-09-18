@@ -175,19 +175,13 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 'd':
     if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
+    else if (name == "depth_spacer")
+      return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
     break;
 
-  case 'f':
-    if (name.find("fmt_") == 0) {
-      switch (name[4]) {
-      case '_':
-	return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
-      case 'T':
-	return WRAP_FUNCTOR(get_wrapper<&get_total>);
-      case 'a':
-	return WRAP_FUNCTOR(get_wrapper<&get_partial_name>);
-      }
-    }
+  case 'p':
+    if (name == "partial_account")
+      return WRAP_FUNCTOR(get_wrapper<&get_partial_name>);
     break;
 
   case 't':

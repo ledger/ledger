@@ -430,17 +430,6 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_date>);
     break;
 
-  case 'f':
-    if (name.find("fmt_") == 0) {
-      switch (name[4]) {
-      case 'D':
-	return WRAP_FUNCTOR(get_wrapper<&get_date>);
-      case 'P':
-	return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-      }
-    }
-    break;
-
   case 'p':
     if (name[1] == '\0' || name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);

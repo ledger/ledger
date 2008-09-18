@@ -237,7 +237,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       buf[0] = *p;
       buf[1] = '\0';
       current->chars = buf;
-      current->expr.parse(string("fmt_") + *p);
+      current->expr.parse(buf);
       break;
     }
     }
