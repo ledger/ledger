@@ -30,6 +30,7 @@
  */
 
 #include "report.h"
+#include "output.h"
 #include "reconcile.h"
 
 namespace ledger {
@@ -284,20 +285,191 @@ namespace {
     args[0].strip_annotations().dump(out, *first_width, *latter_width);
     return string_value(out.str());
   }
+
+  string args_to_predicate(value_t::sequence_t::const_iterator begin,
+			   value_t::sequence_t::const_iterator end)
+  {
+    string acct_value_expr;
+    string payee_value_expr;
+    string note_value_expr;
+
+    string * value_expr;
+
+    enum regexp_kind_t {
+      ACCOUNT_REGEXP,
+      PAYEE_REGEXP,
+      NOTE_REGEXP
+    }
+    kind = ACCOUNT_REGEXP;
+
+    value_expr = &acct_value_expr;
+
+    for ( ; begin != end; begin++) {
+      const string& arg((*begin).as_string());
+
+      if (arg == "--") {
+	kind = PAYEE_REGEXP;
+	value_expr = &payee_value_expr;
+      }
+      else if (arg == "/") {
+	kind = NOTE_REGEXP;
+	value_expr = &note_value_expr;
+      }
+      else {
+	if (! value_expr->empty())
+	  *value_expr += "|";
+
+	switch (kind) {
+	case ACCOUNT_REGEXP:
+	  *value_expr += "account =~ ";
+	  break;
+	case PAYEE_REGEXP:
+	  *value_expr += "payee =~ ";
+	  break;
+	case NOTE_REGEXP:
+	  *value_expr += "note =~ ";
+	  break;
+	}
+
+	const char * p = arg.c_str();
+	if (*p == '-') {
+	  *value_expr += "!";
+	  p++;
+	}
+
+	*value_expr += "/";
+	if (kind == NOTE_REGEXP) *value_expr += ":";
+	while (*p) {
+	  if (*p == '/')
+	    *value_expr += "\\";
+	  *value_expr += *p;
+	  p++;
+	}
+	if (kind == NOTE_REGEXP) *value_expr += ":";
+	*value_expr += "/";
+      }
+    }
+
+    string final_value_expr;
+
+    if (! acct_value_expr.empty()) {
+      if (! payee_value_expr.empty() ||
+	  ! note_value_expr.empty())
+	final_value_expr = string("(") + acct_value_expr + ")";
+      else
+	final_value_expr = acct_value_expr;
+    }
+
+    if (! payee_value_expr.empty()) {
+      if (! acct_value_expr.empty())
+	final_value_expr += string("&(") + payee_value_expr + ")";
+      else if (! note_value_expr.empty())
+	final_value_expr = string("(") + payee_value_expr + ")";
+      else
+	final_value_expr = payee_value_expr;
+    }
+
+    if (! note_value_expr.empty()) {
+      if (! acct_value_expr.empty() ||
+	  ! payee_value_expr.empty())
+	final_value_expr += string("&(") + note_value_expr + ")";
+      else if (acct_value_expr.empty() &&
+	       payee_value_expr.empty())
+	final_value_expr = note_value_expr;
+    }
+
+    DEBUG("report.predicate",
+	  "Regexp predicate expression = " << final_value_expr);
+
+    return final_value_expr;
+  }
+
+  template <class Type        = xact_t,
+	    class handler_ptr = xact_handler_ptr,
+	    void (report_t::*report_method)(handler_ptr) =
+	    &report_t::xacts_report>
+  class reporter
+  {
+    shared_ptr<item_handler<Type> > handler;
+
+  public:
+    reporter(item_handler<Type> * _handler)
+      : handler(_handler) {}
+
+    value_t operator()(call_scope_t& args)
+    {
+      report_t& report(find_scope<report_t>(args));
+
+      if (args.value().size() > 0)
+	report.append_predicate
+	  (args_to_predicate(args.value().as_sequence().begin(),
+			     args.value().as_sequence().end()));
+
+      (report.*report_method)(handler_ptr(handler));
+
+      return true;
+    }
+  };
 }
 
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'f':
-    if (std::strncmp(p, "fmt_", 4) == 0) {
+  case 'a':
+    if (std::strcmp(p, "amount_expr") == 0)
+      return MAKE_FUNCTOR(report_t::get_amount_expr);
+    break;
+
+  case 'c':
+    if (std::strncmp(p, "cmd_", 4) == 0) {
+
+#define FORMAT(str) \
+    (format_string.empty() ? session. str : format_string)
+
+#if 0
+      // Commands yet to implement:
+      //
+      // entry
+      // dump
+      // output
+      // prices
+      // pricesdb
+      // csv
+      // emacs | lisp
+      // xml
+#endif
+
       p = p + 4;
       switch (*p) {
-      case 't':
-	return MAKE_FUNCTOR(report_t::get_amount_expr);
-      case 'T':
-	return MAKE_FUNCTOR(report_t::get_total_expr);
+      case 'b':
+	if (*(p + 1) == '\0' ||
+	    std::strcmp(p, "bal") == 0 ||
+	    std::strcmp(p, "balance") == 0)
+	  return expr_t::op_t::wrap_functor
+	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	     (new format_accounts(*this, FORMAT(balance_format))));
+
+      case 'e':
+	if (std::strcmp(p, "equity") == 0)
+	  return expr_t::op_t::wrap_functor
+	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	     (new format_equity(*this, FORMAT(print_format))));
+
+      case 'p':
+	if (*(p + 1) == '\0' ||
+	    std::strcmp(p, "print") == 0)
+	  return WRAP_FUNCTOR
+	    (reporter<>(new format_xacts(*this, FORMAT(print_format))));
+	break;
+
+      case 'r':
+	if (*(p + 1) == '\0' ||
+	    std::strcmp(p, "reg") == 0 ||
+	    std::strcmp(p, "register") == 0)
+	  return WRAP_FUNCTOR
+	    (reporter<>(new format_xacts(*this, FORMAT(register_format))));
+	break;
       }
     }
     break;

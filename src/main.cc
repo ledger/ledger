@@ -32,7 +32,6 @@
 #include "session.h"
 #include "report.h"
 #include "option.h"
-#include "output.h"
 #include "help.h"
 
 #include "textual.h"
@@ -52,131 +51,6 @@
 #endif
 
 namespace ledger {
-  string args_to_predicate(value_t::sequence_t::const_iterator begin,
-			   value_t::sequence_t::const_iterator end)
-  {
-    string acct_value_expr;
-    string payee_value_expr;
-    string note_value_expr;
-
-    string * value_expr;
-
-    enum regexp_kind_t {
-      ACCOUNT_REGEXP,
-      PAYEE_REGEXP,
-      NOTE_REGEXP
-    }
-    kind = ACCOUNT_REGEXP;
-
-    value_expr = &acct_value_expr;
-
-    for ( ; begin != end; begin++) {
-      const string& arg((*begin).as_string());
-
-      if (arg == "--") {
-	kind = PAYEE_REGEXP;
-	value_expr = &payee_value_expr;
-      }
-      else if (arg == "/") {
-	kind = NOTE_REGEXP;
-	value_expr = &note_value_expr;
-      }
-      else {
-	if (! value_expr->empty())
-	  *value_expr += "|";
-
-	switch (kind) {
-	case ACCOUNT_REGEXP:
-	  *value_expr += "account =~ ";
-	  break;
-	case PAYEE_REGEXP:
-	  *value_expr += "payee =~ ";
-	  break;
-	case NOTE_REGEXP:
-	  *value_expr += "note =~ ";
-	  break;
-	}
-
-	const char * p = arg.c_str();
-	if (*p == '-') {
-	  *value_expr += "!";
-	  p++;
-	}
-
-	*value_expr += "/";
-	if (kind == NOTE_REGEXP) *value_expr += ":";
-	while (*p) {
-	  if (*p == '/')
-	    *value_expr += "\\";
-	  *value_expr += *p;
-	  p++;
-	}
-	if (kind == NOTE_REGEXP) *value_expr += ":";
-	*value_expr += "/";
-      }
-    }
-
-    string final_value_expr;
-
-    if (! acct_value_expr.empty()) {
-      if (! payee_value_expr.empty() ||
-	  ! note_value_expr.empty())
-	final_value_expr = string("(") + acct_value_expr + ")";
-      else
-	final_value_expr = acct_value_expr;
-    }
-
-    if (! payee_value_expr.empty()) {
-      if (! acct_value_expr.empty())
-	final_value_expr += string("&(") + payee_value_expr + ")";
-      else if (! note_value_expr.empty())
-	final_value_expr = string("(") + payee_value_expr + ")";
-      else
-	final_value_expr = payee_value_expr;
-    }
-
-    if (! note_value_expr.empty()) {
-      if (! acct_value_expr.empty() ||
-	  ! payee_value_expr.empty())
-	final_value_expr += string("&(") + note_value_expr + ")";
-      else if (acct_value_expr.empty() &&
-	       payee_value_expr.empty())
-	final_value_expr = note_value_expr;
-    }
-
-    DEBUG("report.predicate",
-	  "Regexp predicate expression = " << final_value_expr);
-
-    return final_value_expr;
-  }
-
-  template <class Type        = xact_t,
-	    class handler_ptr = xact_handler_ptr,
-	    void (report_t::*report_method)(handler_ptr) =
-	      &report_t::xacts_report>
-  class reporter
-  {
-    shared_ptr<item_handler<Type> > handler;
-
-  public:
-    reporter(item_handler<Type> * _handler)
-      : handler(_handler) {}
-
-    value_t operator()(call_scope_t& args)
-    {
-      report_t& report(find_scope<report_t>(args));
-
-      if (args.value().size() > 0)
-	report.append_predicate
-	  (args_to_predicate(args.value().as_sequence().begin(),
-			     args.value().as_sequence().end()));
-
-      (report.*report_method)(handler_ptr(handler));
-
-      return true;
-    }
-  };
-
   int read_and_report(ledger::report_t& report,
 		      int argc, char * argv[], char * envp[])
   {
@@ -393,66 +267,14 @@ namespace ledger {
     TRACE_FINISH(entries, 1);
     TRACE_FINISH(parsing_total, 1);
 
-    // Create a command object based on the command verb that was seen
-    // above.
+    // Lookup the command object corresponding to the command verb.
 
     function_t command;
+    if (expr_t::ptr_op_t def = report.lookup(string("cmd_") + verb))
+      command = def->as_function();
 
-    if (verb == "register" || verb == "reg" || verb == "r") {
-      verb = "register";
-      command = reporter<>(new format_xacts(report,
-					    report.format_string.empty() ?
-					    session.register_format :
-					    report.format_string));
-    }
-    else if (verb == "print" || verb == "p") {
-      verb = "print";
-      command = reporter<>(new format_xacts(report,
-					    report.format_string.empty() ?
-					    session.print_format :
-					    report.format_string));
-    }
-    else if (verb == "balance" || verb == "bal" || verb == "b") {
-      verb = "balance";
-      command = reporter<account_t, acct_handler_ptr,
-	                 &report_t::accounts_report>
-	(new format_accounts(report, session.balance_format));
-    }
-    else if (verb == "equity") {
-      verb = "equity";
-      command = reporter<account_t, acct_handler_ptr,
-                         &report_t::accounts_report>
-	(new format_equity(report, session.print_format));
-    }
-#if 0
-    else if (verb == "entry")
-      command = entry_command();
-    else if (verb == "dump")
-      command = dump_command();
-    else if (verb == "output")
-      command = output_command();
-    else if (verb == "prices")
-      command = prices_command();
-    else if (verb == "pricesdb")
-      command = pricesdb_command();
-    else if (verb == "csv")
-      command = csv_command();
-    else if (verb == "emacs" || verb == "lisp")
-      command = emacs_command();
-    else if (verb == "xml")
-      command = xml_command();
-#endif
-    else {
-      char buf[128];
-      std::strcpy(buf, "cmd_");
-      std::strcat(buf, verb.c_str());
-
-      if (expr_t::ptr_op_t def = report.lookup(buf))
-	command = def->as_function();
-
-      if (! command)
-	throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
-    }
+    if (! command)
+      throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
 
     // Patch up some of the reporting options based on what kind of
     // command it was.
@@ -460,7 +282,7 @@ namespace ledger {
     // jww (2008-08-14): This code really needs to be rationalized away
     // for 3.0.
 
-    if (verb == "print" || verb == "entry" || verb == "dump") {
+    if (verb[0] == 'p' || verb == "entry" || verb == "dump") {
       report.show_related     = true;
       report.show_all_related = true;
     }
@@ -468,7 +290,7 @@ namespace ledger {
       report.show_subtotal = true;
     }
     else if (report.show_related) {
-      if (verb == "register") {
+      if (verb[0] == 'r') {
 	report.show_inverted = true;
       } else {
 	report.show_subtotal    = true;
@@ -476,13 +298,13 @@ namespace ledger {
       }
     }
 
-    if (verb != "balance" && verb != "register")
+    if (verb[0] != 'b' && verb[0] != 'r')
       amount_t::keep_base = true;
 
     // Setup the default value for the display predicate
 
     if (report.display_predicate.empty()) {
-      if (verb == "balance") {
+      if (verb[0] == 'b') {
 	if (! report.show_empty)
 	  report.display_predicate = "total";
 	if (! report.show_subtotal) {
@@ -492,9 +314,9 @@ namespace ledger {
 	}
       }
       else if (verb == "equity") {
-	report.display_predicate = "fmt_t"; // jww (2008-08-14): ???
+	report.display_predicate = "amount_expr"; // jww (2008-08-14): ???
       }
-      else if (verb == "register" && ! report.show_empty) {
+      else if (verb[0] == 'r' && ! report.show_empty) {
 	report.display_predicate = "amount";
       }
     }
