@@ -79,7 +79,7 @@ session_t::session_t()
     ("%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
     print_format
-    ("\n%d %Y%C%P\n    %-34W  %12o%n\n%/    %-34W  %12o%n\n"),
+    ("%(date)%(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%(code ? \" (\" + code + \")\" : \"\") %(payee)\n    %-34(account)  %12(amount)\n%/    %-34(account)  %12(amount)%(note ? \"  ; \" + note : \"\")\n"),
     balance_format
     ("%20T  %_%-a\n"),
     equity_format

@@ -44,6 +44,7 @@ protected:
   report_t& report;
   format_t  first_line_format;
   format_t  next_lines_format;
+  format_t  between_format;
   entry_t * last_entry;
   xact_t *  last_xact;
 

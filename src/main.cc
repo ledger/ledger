@@ -407,7 +407,10 @@ namespace ledger {
     }
     else if (verb == "print" || verb == "p") {
       verb = "print";
-      command = reporter<>(new format_xacts(report, session.print_format));
+      command = reporter<>(new format_xacts(report,
+					    report.format_string.empty() ?
+					    session.print_format :
+					    report.format_string));
     }
     else if (verb == "balance" || verb == "bal" || verb == "b") {
       verb = "balance";

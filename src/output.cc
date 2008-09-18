@@ -42,10 +42,18 @@ format_xacts::format_xacts(report_t& _report, const string& format)
 
   if (const char * p = std::strstr(f, "%/")) {
     first_line_format.parse(string(f, 0, p - f));
-    next_lines_format.parse(string(p + 2));
+    const char * n = p + 2;
+    if (const char * p = std::strstr(n, "%/")) {
+      next_lines_format.parse(string(n, 0, p - n));
+      between_format.parse(string(p + 2));
+    } else {
+      next_lines_format.parse(n);
+      between_format.parse("\n");
+    }
   } else {
     first_line_format.parse(format);
     next_lines_format.parse(format);
+    between_format.parse("\n");
   }
 }
 
@@ -56,6 +64,8 @@ void format_xacts::operator()(xact_t& xact)
   if (! xact.has_xdata() ||
       ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
     if (last_entry != xact.entry) {
+      if (last_entry)
+	between_format.format(out, *last_entry);
       first_line_format.format(out, xact);
       last_entry = xact.entry;
     }
