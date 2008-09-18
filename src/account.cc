@@ -189,7 +189,9 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
   }
-  return expr_t::ptr_op_t();
+
+  assert(owner == session_t::current);
+  return owner->current_report->lookup(name);
 }
 
 bool account_t::valid() const
