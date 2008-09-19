@@ -118,7 +118,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   try {
 
   // The account will be determined later...
-  std::auto_ptr<xact_t> xact(new xact_t(NULL));
+  std::auto_ptr<xact_t> xact(new xact_t);
   if (entry)
     xact->entry = entry;
 
