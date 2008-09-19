@@ -6,11 +6,27 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
+* TODO [#B] ledger.el and reconcile don't to work with accounts that span files
+  My ledger uses a static "Main" file which contains links to all the other
+  accounts, some of which cross-reference.
+  
+  Thus the output of 'register' and the *Reconcile* buffer have a different
+  amount and # of entries.
+  
+  The "visit-entry" is also broken, and fails frequently to find the
+  appropriate location.
+  :PROPERTIES:
+  :Submitter: Russell Adams <RLAdams@AdamsInfoServ.Com>
+  :Version: 2.6.1
+  :ID: 28BA7B80-9740-4C86-B222-09B88932F136
+  :END:
+  [2008-09-18 Thu]
 * TODO [#B] Implement a --raw flag for print, to show what the user entered
   :PROPERTIES:
   :Version: 3.0
   :ID: 9F074119-FF1C-4568-9297-54A8C31258D2
   :END:
+  [2008-09-17 Wed]
 * TODO [#B] 'derive_new_entry' shouldn't add accounts to the journal
   :PROPERTIES:
   :Version: 2.6
