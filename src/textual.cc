@@ -88,11 +88,11 @@ namespace {
   {
     expr_t expr(in, flags | EXPR_PARSE_PARTIAL);
 
-    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG("textual.parse", "line " << linenum << ": " <<
 	  "Parsed an amount expression");
 
 #ifdef DEBUG_ENABLED
-    DEBUG_IF("ledger.textual.parse") {
+    DEBUG_IF("textual.parse") {
       if (_debug_stream) {
 	ledger::dump_value_expr(*_debug_stream, expr);
 	*_debug_stream << std::endl;
@@ -102,7 +102,7 @@ namespace {
 
     if (expr) {
       amount = expr.calc(*xact).as_amount();
-      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG("textual.parse", "line " << linenum << ": " <<
 	    "The transaction amount is " << amount);
       return expr;
     }
@@ -130,14 +130,14 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
     xact->set_state(item_t::CLEARED);
     in.get(p);
     p = peek_next_nonws(in);
-    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG("textual.parse", "line " << linenum << ": " <<
 		"Parsed the CLEARED flag");
     break;
   case '!':
     xact->set_state(item_t::PENDING);
     in.get(p);
     p = peek_next_nonws(in);
-    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+    DEBUG("textual.parse", "line " << linenum << ": " <<
 		"Parsed the PENDING flag");
     break;
   }
@@ -164,19 +164,19 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   if ((*b == '[' && *(e - 1) == ']') ||
       (*b == '(' && *(e - 1) == ')')) {
     xact->add_flags(XACT_VIRTUAL);
-    DEBUG("ledger.textual.parse",
+    DEBUG("textual.parse",
 	  "line " << linenum << ": " << "Parsed a virtual account name");
 
     if (*b == '[') {
       xact->add_flags(XACT_MUST_BALANCE);
-      DEBUG("ledger.textual.parse",
+      DEBUG("textual.parse",
 	    "line " << linenum << ": " << "Transaction must balance");
     }
     b++; e--;
   }
 
   string name(b, e - b);
-  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+  DEBUG("textual.parse", "line " << linenum << ": " <<
 	      "Parsed account name " << name);
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(name);
@@ -209,7 +209,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 
       if (! xact->amount.is_null()) {
 	xact->amount.reduce();
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("textual.parse", "line " << linenum << ": " <<
 	      "Reduced amount is " << xact->amount);
       }
 
@@ -238,14 +238,14 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	throw parse_error
 	  ("Transaction cannot have a cost expression with an amount");
 	
-      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG("textual.parse", "line " << linenum << ": " <<
 		  "Found a price indicator");
       bool per_unit = true;
       in.get(p);
       if (in.peek() == '@') {
 	in.get(p);
 	per_unit = false;
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("textual.parse", "line " << linenum << ": " <<
 		    "And it's for a total price");
       }
 
@@ -288,11 +288,11 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	    ! xact->amount.commodity().annotated)
 	  xact->amount.annotate(annotation_t(per_unit_cost));
 
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("textual.parse", "line " << linenum << ": " <<
 		    "Total cost is " << *xact->cost);
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("textual.parse", "line " << linenum << ": " <<
 		    "Per-unit cost is " << per_unit_cost);
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("textual.parse", "line " << linenum << ": " <<
 		    "Annotated amount is " << xact->amount);
       }
     }
@@ -306,7 +306,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
       p = peek_next_nonws(in);
       if (p == '=') {
 	in.get(p);
-	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	DEBUG("textual.parse", "line " << linenum << ": " <<
 	      "Found a balance assignment indicator");
 	if (in.good() && ! in.eof()) {
 	  xact->assigned_amount = amount_t();
@@ -322,7 +322,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	      throw parse_error
 		("An assigned balance must evaluate to a constant value");
 
-	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	    DEBUG("textual.parse", "line " << linenum << ": " <<
 		  "XACT assign: parsed amt = " << *xact->assigned_amount);
 
 	    if (xact->assigned_amount_expr) {
@@ -362,7 +362,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	    }
 
 	    DEBUG("xact.assign", "diff = " << diff.strip_annotations());
-	    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	    DEBUG("textual.parse", "line " << linenum << ": " <<
 		  "XACT assign: diff = " << diff.strip_annotations());
 
 	    if (! diff.is_zero()) {
@@ -373,12 +373,12 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 					     ITEM_GENERATED | XACT_CALCULATED);
 		  entry->add_xact(temp);
 
-		  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+		  DEBUG("textual.parse", "line " << linenum << ": " <<
 			"Created balancing transaction");
 		}
 	      } else {
 		xact->amount = diff;
-		DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+		DEBUG("textual.parse", "line " << linenum << ": " <<
 		      "Overwrite null transaction");
 	      }
 	    }
@@ -401,7 +401,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
       in.get(p);
       p = peek_next_nonws(in);
       xact->note = &line[long(in.tellg())];
-      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+      DEBUG("textual.parse", "line " << linenum << ": " <<
 		  "Parsed a note '" << *xact->note << "'");
 
       if (char * b = std::strchr(xact->note->c_str(), '['))
@@ -410,7 +410,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	  std::strncpy(buf, b + 1, e - b - 1);
 	  buf[e - b - 1] = '\0';
 
-	  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
+	  DEBUG("textual.parse", "line " << linenum << ": " <<
 		"Parsed a transaction date " << buf);
 
 	  if (char * p = std::strchr(buf, '=')) {
