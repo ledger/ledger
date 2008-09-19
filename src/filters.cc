@@ -197,7 +197,7 @@ void handle_value(const value_t&	value,
     if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
       xact.add_flags(XACT_VIRTUAL);
       if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
-	xact.add_flags(XACT_BALANCE);
+	xact.add_flags(XACT_MUST_BALANCE);
     }
 
   xact_t::xdata_t& xdata(xact.xdata());
@@ -420,7 +420,7 @@ void subtotal_xacts::operator()(xact_t& xact)
 
   if (! xact.has_flags(XACT_VIRTUAL))
     xact.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS);
-  else if (! xact.has_flags(XACT_BALANCE))
+  else if (! xact.has_flags(XACT_MUST_BALANCE))
     xact.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS);
 }
 

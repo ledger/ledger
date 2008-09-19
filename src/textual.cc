@@ -168,7 +168,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	  "line " << linenum << ": " << "Parsed a virtual account name");
 
     if (*b == '[') {
-      xact->add_flags(XACT_BALANCE);
+      xact->add_flags(XACT_MUST_BALANCE);
       DEBUG("ledger.textual.parse",
 	    "line " << linenum << ": " << "Transaction must balance");
     }
