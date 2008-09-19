@@ -45,10 +45,10 @@ typedef std::list<xact_t *> xacts_list;
 class xact_t : public item_t
 {
 public:
-#define XACT_VIRTUAL	  0x0100 // the account was specified with (parens)
-#define XACT_MUST_BALANCE 0x0200 // the account was specified with [brackets]
-#define XACT_AUTO	  0x0400 // transaction created by automated entry
-#define XACT_CALCULATED	  0x0800 // transaction's amount was auto-calculated
+#define XACT_VIRTUAL	  0x10 // the account was specified with (parens)
+#define XACT_MUST_BALANCE 0x20 // the account was specified with [brackets]
+#define XACT_AUTO	  0x40 // transaction created by automated entry
+#define XACT_CALCULATED	  0x80 // transaction's amount was auto-calculated
 
   entry_t *	     entry;	// only set for xacts of regular entries
   account_t *	     account;
