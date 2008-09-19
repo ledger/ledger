@@ -291,10 +291,7 @@ bool entry_base_t::finalize()
       amount_t final_cost;
       amount_t basis_cost;
       amount_t ann_amount =
-	commodity_t::exchange(x_amt, final_cost, basis_cost, xact->cost, none,
-			      datetime_t(*xact->actual_date(),
-					 time_duration_t(0, 0, 0)),
-			      entry ? entry->code : optional<string>());
+	commodity_t::exchange(x_amt, final_cost, basis_cost, xact->cost);
 
       if (xact->amount.is_annotated()) {
 	if (ann_amount.annotation().price)

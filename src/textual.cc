@@ -285,14 +285,8 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	  per_unit_cost /= xact->amount;
 
 	if (xact->amount.commodity() &&
-	    ! xact->amount.commodity().annotated) {
-	  if (xact->entry)
-	    xact->amount.annotate(annotation_t(per_unit_cost,
-					       xact->entry->actual_date(),
-					       xact->entry->code));
-	  else
-	    xact->amount.annotate(annotation_t(per_unit_cost));
-	}
+	    ! xact->amount.commodity().annotated)
+	  xact->amount.annotate(annotation_t(per_unit_cost));
 
 	DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		    "Total cost is " << *xact->cost);
