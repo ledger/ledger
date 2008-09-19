@@ -39,16 +39,16 @@ public:
   typedef T flags_t;
 
 protected:
-  flags_t flags_;
+  flags_t _flags;
 
 public:
-  supports_flags() : flags_(0) {
+  supports_flags() : _flags(0) {
     TRACE_CTOR(supports_flags, "");
   }
-  supports_flags(const supports_flags& arg) : flags_(arg.flags_) {
+  supports_flags(const supports_flags& arg) : _flags(arg._flags) {
     TRACE_CTOR(supports_flags, "copy");
   }
-  supports_flags(const flags_t& arg) : flags_(arg) {
+  supports_flags(const flags_t& arg) : _flags(arg) {
     TRACE_CTOR(supports_flags, "const flags_t&");
   }
   ~supports_flags() throw() {
@@ -56,23 +56,23 @@ public:
   }
 
   flags_t flags() const {
-    return flags_;
+    return _flags;
   }
   bool has_flags(const flags_t arg) const {
-    return flags_ & arg;
+    return _flags & arg;
   }
 
   void set_flags(const flags_t arg) {
-    flags_ = arg;
+    _flags = arg;
   }
   void clear_flags() {
-    flags_ = 0;
+    _flags = 0;
   }
   void add_flags(const flags_t arg) {
-    flags_ |= arg;
+    _flags |= arg;
   }
   void drop_flags(const flags_t arg) {
-    flags_ &= ~arg;
+    _flags &= ~arg;
   }
 };
 
@@ -83,13 +83,13 @@ public:
   typedef T flags_t;
 
 protected:
-  supports_flags<T>& flags_;
+  supports_flags<T>& _flags;
 
 public:
-  delegates_flags() : flags_() {
+  delegates_flags() : _flags() {
     TRACE_CTOR(delegates_flags, "");
   }
-  delegates_flags(supports_flags<T>& arg) : flags_(arg) {
+  delegates_flags(supports_flags<T>& arg) : _flags(arg) {
     TRACE_CTOR(delegates_flags, "const supports_flags<T>&");
   }
   ~delegates_flags() throw() {
@@ -97,23 +97,23 @@ public:
   }
 
   flags_t flags() const {
-    return flags_.flags();
+    return _flags.flags();
   }
   bool has_flags(const flags_t arg) const {
-    return flags_.has_flags(arg);
+    return _flags.has_flags(arg);
   }
 
   void set_flags(const flags_t arg) {
-    flags_.set_flags(arg);
+    _flags.set_flags(arg);
   }
   void clear_flags() {
-    flags_.clear_flags();
+    _flags.clear_flags();
   }
   void add_flags(const flags_t arg) {
-    flags_.add_flags(arg);
+    _flags.add_flags(arg);
   }
   void drop_flags(const flags_t arg) {
-    flags_.drop_flags(arg);
+    _flags.drop_flags(arg);
   }
 };
 
