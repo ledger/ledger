@@ -114,6 +114,7 @@ bool entry_base_t::finalize()
   foreach (xact_t * xact, xacts) {
     if (xact->must_balance()) {
       amount_t& p(xact->cost ? *xact->cost : xact->amount);
+      DEBUG("entry.finalize", "xact must balance = " << p);
       if (! p.is_null()) {
 	add_or_set_value(balance, p);
       } else {
@@ -127,7 +128,7 @@ bool entry_base_t::finalize()
   }
   assert(balance.valid());
 
-  DEBUG("ledger.journal.finalize", "initial balance = " << balance);
+  DEBUG("entry.finalize", "initial balance = " << balance);
 
   // If there is only one xact, balance against the default account if
   // one has been set.
@@ -238,23 +239,23 @@ bool entry_base_t::finalize()
 	if (! (xact->cost ||
 	       ! xact->must_balance() ||
 	       x_amt.commodity() == comm)) {
-	  DEBUG("ledger.journal.finalize", "before operation 1 = " << balance);
+	  DEBUG("entry.finalize", "before operation 1 = " << balance);
 	  balance -= x_amt;
-	  DEBUG("ledger.journal.finalize", "after operation 1 = " << balance);
-	  DEBUG("ledger.journal.finalize", "x_amt = " << x_amt);
-	  DEBUG("ledger.journal.finalize", "per_unit_cost = " << per_unit_cost);
+	  DEBUG("entry.finalize", "after operation 1 = " << balance);
+	  DEBUG("entry.finalize", "x_amt = " << x_amt);
+	  DEBUG("entry.finalize", "per_unit_cost = " << per_unit_cost);
 
 	  xact->cost = per_unit_cost * x_amt;
-	  DEBUG("ledger.journal.finalize", "*xact->cost = " << *xact->cost);
+	  DEBUG("entry.finalize", "*xact->cost = " << *xact->cost);
 
 	  balance += *xact->cost;
-	  DEBUG("ledger.journal.finalize", "after operation 2 = " << balance);
+	  DEBUG("entry.finalize", "after operation 2 = " << balance);
 	}
 
       }
     }
 
-    DEBUG("ledger.journal.finalize", "resolved balance = " << balance);
+    DEBUG("entry.finalize", "resolved balance = " << balance);
   }
 
   // Now that the xact list has its final form, calculate the balance
@@ -302,7 +303,7 @@ bool entry_base_t::finalize()
     }
   }
 
-  DEBUG("ledger.journal.finalize", "final balance = " << balance);
+  DEBUG("entry.finalize", "final balance = " << balance);
 
   // (if (value-zerop balance)
   //     (prog1
