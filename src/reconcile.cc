@@ -72,12 +72,12 @@ void reconcile_xacts::flush()
 
   foreach (xact_t * xact, xacts) {
     if (! is_valid(cutoff) || xact->date() < cutoff) {
-      switch (xact->state) {
-      case xact_t::CLEARED:
+      switch (xact->state()) {
+      case item_t::CLEARED:
 	cleared_balance += xact->amount;
 	break;
-      case xact_t::UNCLEARED:
-      case xact_t::PENDING:
+      case item_t::UNCLEARED:
+      case item_t::PENDING:
 	pending_balance += xact->amount;
 	*last_ptr = xact;
 	last_ptr = xact_next_ptr(xact);

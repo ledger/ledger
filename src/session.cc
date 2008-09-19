@@ -113,7 +113,7 @@ session_t::session_t()
     ansi_codes(false),
     ansi_invert(false),
 
-    master(new account_t(this, NULL, ""))
+    master(new account_t(NULL, ""))
 {
   TRACE_CTOR(session_t, "");
 }
@@ -161,7 +161,7 @@ void session_t::read_init()
 
   ifstream init(*init_file);
 
-  journal_t temp(this);
+  journal_t temp;
   if (read_journal(temp, *init_file) > 0 ||
       temp.auto_entries.size() > 0 ||
       temp.period_entries.size() > 0)

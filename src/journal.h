@@ -46,7 +46,6 @@ class account_t;
 class journal_t : public noncopyable
 {
 public:
-  session_t *	 owner;
   account_t *	 master;
   account_t *	 basket;
   entries_list	 entries;
@@ -58,11 +57,11 @@ public:
 
   hooks_t<entry_finalizer_t, entry_t> entry_finalize_hooks;
 
-  journal_t(session_t * _owner);
+  journal_t();
   ~journal_t();
 
-  // These four methods are delegated to 'owner', since all accounts processed
-  // are gathered together at the session level.
+  // These four methods are delegated to the current session, since all
+  // accounts processed are gathered together at the session level.
   void	      add_account(account_t * acct);
   bool	      remove_account(account_t * acct);
   account_t * find_account(const string& name, bool auto_create = true);

@@ -127,14 +127,14 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   char p = peek_next_nonws(in);
   switch (p) {
   case '*':
-    xact->state = xact_t::CLEARED;
+    xact->set_state(item_t::CLEARED);
     in.get(p);
     p = peek_next_nonws(in);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
 		"Parsed the CLEARED flag");
     break;
   case '!':
-    xact->state = xact_t::PENDING;
+    xact->set_state(item_t::PENDING);
     in.get(p);
     p = peek_next_nonws(in);
     DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
@@ -160,15 +160,17 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 
   char * b = &line[long(account_beg)];
   char * e = &line[long(account_end)];
+
   if ((*b == '[' && *(e - 1) == ']') ||
       (*b == '(' && *(e - 1) == ')')) {
     xact->add_flags(XACT_VIRTUAL);
-    DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		"Parsed a virtual account name");
+    DEBUG("ledger.textual.parse",
+	  "line " << linenum << ": " << "Parsed a virtual account name");
+
     if (*b == '[') {
       xact->add_flags(XACT_BALANCE);
-      DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
-		  "Parsed a balanced virtual account name");
+      DEBUG("ledger.textual.parse",
+	    "line " << linenum << ": " << "Transaction must balance");
     }
     b++; e--;
   }
@@ -374,7 +376,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 		diff -= xact->amount;
 		if (! diff.is_zero()) {
 		  xact_t * temp = new xact_t(xact->account, diff,
-					     XACT_GENERATED | XACT_CALCULATED);
+					     ITEM_GENERATED | XACT_CALCULATED);
 		  entry->add_xact(temp);
 
 		  DEBUG("ledger.textual.parse", "line " << linenum << ": " <<
@@ -496,15 +498,15 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
 
   // Parse the optional cleared flag: *
 
-  xact_t::state_t state = xact_t::UNCLEARED;
+  item_t::state_t state = item_t::UNCLEARED;
   if (next) {
     switch (*next) {
     case '*':
-      state = xact_t::CLEARED;
+      state = item_t::CLEARED;
       next = skip_ws(++next);
       break;
     case '!':
-      state = xact_t::PENDING;
+      state = item_t::PENDING;
       next = skip_ws(++next);
       break;
     }
@@ -556,14 +558,13 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
     }
 
     if (xact_t * xact = parse_xact(line, master, curr.get())) {
-      if (state != xact_t::UNCLEARED &&
-	  xact->state == xact_t::UNCLEARED)
-	xact->state = state;
+      xact->set_state(state);
 
       xact->beg_pos  = beg_pos;
       xact->beg_line = beg_line;
       xact->end_pos  = end_pos;
       xact->end_line = linenum;
+
       pos = end_pos;
 
       curr->add_xact(xact);
@@ -674,9 +675,8 @@ static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
   amt.parse(buf);
   assert(amt.valid());
 
-  xact_t * xact
-    = new xact_t(event.account, amt, XACT_VIRTUAL);
-  xact->state = xact_t::CLEARED;
+  xact_t * xact = new xact_t(event.account, amt, XACT_VIRTUAL);
+  xact->set_state(item_t::CLEARED);
   curr->add_xact(xact);
 
   if (! journal.add_entry(curr.get()))

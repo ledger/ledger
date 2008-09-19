@@ -166,7 +166,7 @@ unsigned int qif_parser_t::parse(std::istream& in,
       c = in.peek();
       if (c == '*' || c == 'X') {
 	in.get(c);
-	xact->state = xact_t::CLEARED;
+	xact->set_state(item_t::CLEARED);
       }
       break;
 

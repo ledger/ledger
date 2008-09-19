@@ -38,8 +38,9 @@ endif
 
 libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
 libledger_la_LDFLAGS  = -release 3.0.0
-libledger_la_SOURCES  = \
+libledger_la_SOURCES  =    \
 	src/journal.cc     \
+	src/item.cc        \
 	src/entry.cc       \
 	src/xact.cc        \
 	src/account.cc     \
@@ -102,6 +103,7 @@ pkginclude_HEADERS =	  \
 	src/option.h	  \
 			  \
 	src/journal.h	  \
+	src/item.h	  \
 	src/entry.h	  \
 	src/xact.h	  \
 	src/account.h	  \

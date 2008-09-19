@@ -36,69 +36,37 @@
 
 namespace ledger {
 
-bool xact_t::use_effective_date = false;
-
-xact_t::~xact_t()
+optional<date_t> xact_t::actual_date() const
 {
-  TRACE_DTOR(xact_t);
-}
-
-date_t xact_t::actual_date() const
-{
-  if (! _date && entry)
+  optional<date_t> date = item_t::actual_date();
+  if (! date && entry)
     return entry->actual_date();
-  return *_date;
+  return date;
 }
 
-date_t xact_t::effective_date() const
+optional<date_t> xact_t::effective_date() const
 {
-  if (! _date_eff && entry)
+  optional<date_t> date = item_t::effective_date();
+  if (! date && entry)
     return entry->effective_date();
-  return *_date_eff;
+  return date;
+}
+
+item_t::state_t xact_t::state() const
+{
+  state_t entry_state = entry->state();
+  if ((_state == UNCLEARED && entry_state != UNCLEARED) ||
+      (_state == PENDING && entry_state == CLEARED))
+    return entry_state;
+  return _state;
 }
 
 namespace {
-  value_t get_state(xact_t& xact) {
-    return long(xact.state);
-  }
-
-  value_t state_uncleared(call_scope_t&) {
-    return 0L;
-  }
-
-  value_t state_cleared(call_scope_t&) {
-    return 1L;
-  }
-
-  value_t state_pending(call_scope_t&) {
-    return 2L;
-  }
-
-  value_t get_date(xact_t& xact) {
-    return xact.date();
-  }
-
   value_t get_code(xact_t& xact) {
     if (xact.entry->code)
       return string_value(*xact.entry->code);
     else
       return string_value(empty_string);
-  }
-
-  value_t get_status(xact_t& xact) {
-    xact_t::state_t status;
-    xact.entry->get_state(&status);
-    return long(status);
-  }
-  value_t get_cleared(xact_t& xact) {
-    xact_t::state_t status;
-    xact.entry->get_state(&status);
-    return status == xact_t::CLEARED;
-  }
-  value_t get_pending(xact_t& xact) {
-    xact_t::state_t status;
-    xact.entry->get_state(&status);
-    return status == xact_t::PENDING;
   }
 
   value_t get_payee(xact_t& xact) {
@@ -125,10 +93,6 @@ namespace {
     return xact.cost ? *xact.cost : xact.amount;
   }
 
-  value_t get_note(xact_t& xact) {
-    return string_value(xact.note ? *xact.note : empty_string);
-  }
-
   value_t get_account(call_scope_t& scope)
   {
     xact_t& xact(downcast<xact_t>(*scope.parent));
@@ -153,22 +117,6 @@ namespace {
     return string_value(xact.reported_account()->name);
   }
 
-  value_t get_beg_pos(xact_t& xact) {
-    return long(xact.beg_pos);
-  }
-
-  value_t get_beg_line(xact_t& xact) {
-    return long(xact.beg_line);
-  }
-
-  value_t get_end_pos(xact_t& xact) {
-    return long(xact.end_pos);
-  }
-
-  value_t get_end_line(xact_t& xact) {
-    return long(xact.end_line);
-  }
-
   template <value_t (*Func)(xact_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<xact_t>(scope));
@@ -188,79 +136,35 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
     break;
 
   case 'c':
-    if (name == "cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    else if (name == "code")
+    if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     break;
 
-  case 'd':
-    if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_date>);
-    break;
-
-  case 'f':
-    if (name.find("fmt_") == 0) {
-      switch (name[4]) {
-      case 'A':
-	return WRAP_FUNCTOR(get_account);
-      case 'D':
-	return WRAP_FUNCTOR(get_wrapper<&get_date>);
-      case 'P':
-	return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-      }
-    }
-    break;
-
-  case 'n':
-    if (name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    break;
-
   case 'p':
-    if (name == "pending")
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    else if (name == "payee")
+    if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-    break;
-
-  case 's':
-    if (name == "status")
-      return WRAP_FUNCTOR(get_wrapper<&get_status>);
     break;
 
   case 't':
     if (name[1] == '\0' || name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
-
-  case 'u':
-    if (name == "uncleared")
-      return expr_t::op_t::wrap_value(1L);
-    break;
-
-  case 'X':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    break;
-
-  case 'Y':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    break;
   }
+
+#if 0
+  // jww (2008-09-19): I don't think we can lookup in entry, because
+  // that means the functor returned would be expecting an entry to be
+  // passed to it, rather than a transaction.
   return entry->lookup(name);
+#else
+  return item_t::lookup(name);
+#endif
 }
 
 bool xact_t::valid() const
 {
   if (! entry) {
     DEBUG("ledger.validate", "xact_t: ! entry");
-    return false;
-  }
-
-  if (state != UNCLEARED && state != CLEARED && state != PENDING) {
-    DEBUG("ledger.validate", "xact_t: state is bad");
     return false;
   }
 
@@ -284,11 +188,6 @@ bool xact_t::valid() const
 
   if (cost && ! cost->valid()) {
     DEBUG("ledger.validate", "xact_t: cost && ! cost->valid()");
-    return false;
-  }
-
-  if (flags() & ~0x003f) {
-    DEBUG("ledger.validate", "xact_t: flags are bad");
     return false;
   }
 

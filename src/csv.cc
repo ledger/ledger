@@ -102,28 +102,15 @@ void format_csv_xacts::operator()(xact_t& xact)
     }
     out << ',';
 
-    switch (xact.state) {
-    case xact_t::CLEARED:
+    switch (xact.state()) {
+    case item_t::CLEARED:
       write_escaped_string(out, "*");
       break;
-    case xact_t::PENDING:
+    case item_t::PENDING:
       write_escaped_string(out, "!");
       break;
-    default: {
-      xact_t::state_t state;
-      if (xact.entry->get_state(&state))
-	switch (state) {
-	case xact_t::CLEARED:
-	  write_escaped_string(out, "*");
-	  break;
-	case xact_t::PENDING:
-	  write_escaped_string(out, "!");
-	  break;
-	default:
-	  write_escaped_string(out, "");
-	  break;
-	}
-    }
+    default:
+      break;
     }
     out << ',';
 

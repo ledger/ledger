@@ -73,7 +73,7 @@ account_t * account_t::find_account(const string& name,
     if (! auto_create)
       return NULL;
 
-    account = new account_t(owner, this, first);
+    account = new account_t(this, first);
     std::pair<accounts_map::iterator, bool> result
       = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);
@@ -190,8 +190,7 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
     break;
   }
 
-  assert(owner == session_t::current);
-  return owner->current_report->lookup(name);
+  return session_t::current->current_report->lookup(name);
 }
 
 bool account_t::valid() const
@@ -234,7 +233,7 @@ void account_t::calculate_sums()
   }
 
   call_scope_t args(*this);
-  value_t amount(owner->current_report->get_amount_expr(args));
+  value_t amount(session_t::current->current_report->get_amount_expr(args));
   if (! amount.is_null()) {
     add_or_set_value(xd.total, amount);
     xd.total_count += xd.count;

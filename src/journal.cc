@@ -36,11 +36,10 @@ namespace ledger {
 
 const string version = PACKAGE_VERSION;
 
-journal_t::journal_t(session_t * _owner)
-  : owner(_owner), basket(NULL)
+journal_t::journal_t() : basket(NULL)
 {
   TRACE_CTOR(journal_t, "");
-  master = owner->master.get();
+  master = session_t::current->master.get();
 }
 
 journal_t::~journal_t()
@@ -51,19 +50,19 @@ journal_t::~journal_t()
   // accounts they refer to, because all accounts are about to
   // be deleted.
   foreach (entry_t * entry, entries)
-    if (! entry->has_flags(ENTRY_IN_CACHE))
+    if (! entry->has_flags(ITEM_IN_CACHE))
       checked_delete(entry);
     else
       entry->~entry_t();
 
   foreach (auto_entry_t * entry, auto_entries)
-    if (! entry->has_flags(ENTRY_IN_CACHE))
+    if (! entry->has_flags(ITEM_IN_CACHE))
       checked_delete(entry);
     else
       entry->~auto_entry_t();
 
   foreach (period_entry_t * entry, period_entries)
-    if (! entry->has_flags(ENTRY_IN_CACHE))
+    if (! entry->has_flags(ITEM_IN_CACHE))
       checked_delete(entry);
     else
       entry->~period_entry_t();
@@ -71,22 +70,22 @@ journal_t::~journal_t()
 
 void journal_t::add_account(account_t * acct)
 {
-  owner->add_account(acct);
+  session_t::current->add_account(acct);
 }
 
 bool journal_t::remove_account(account_t * acct)
 {
-  return owner->remove_account(acct);
+  return session_t::current->remove_account(acct);
 }
 
 account_t * journal_t::find_account(const string& name, bool auto_create)
 {
-  return owner->find_account(name, auto_create);
+  return session_t::current->find_account(name, auto_create);
 }
 
 account_t * journal_t::find_account_re(const string& regexp)
 {
-  return owner->find_account_re(regexp);
+  return session_t::current->find_account_re(regexp);
 }
 
 bool journal_t::add_entry(entry_t * entry)
@@ -105,7 +104,7 @@ bool journal_t::add_entry(entry_t * entry)
   foreach (const xact_t * xact, entry->xacts)
     if (xact->cost) {
       assert(xact->amount);
-      xact->amount.commodity().add_price(datetime_t(entry->date(),
+      xact->amount.commodity().add_price(datetime_t(*entry->date(),
 						    time_duration_t(0, 0, 0)),
 					 *xact->cost / xact->amount.number());
     }

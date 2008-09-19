@@ -290,7 +290,7 @@ public:
   collapse_xacts(xact_handler_ptr handler, session_t& session)
     : item_handler<xact_t>(handler), count(0),
       last_entry(NULL), last_xact(NULL),
-      totals_account(&session, NULL, "<Total>") {
+      totals_account(NULL, "<Total>") {
     TRACE_CTOR(collapse_xacts, "xact_handler_ptr");
   }
   virtual ~collapse_xacts() {
@@ -588,7 +588,7 @@ public:
 
   virtual void flush();
   virtual void operator()(xact_t& xact) {
-    days_of_the_week[xact.date().day_of_week()].push_back(&xact);
+    days_of_the_week[xact.date()->day_of_week()].push_back(&xact);
   }
 };
 

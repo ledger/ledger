@@ -39,35 +39,20 @@ namespace ledger {
 
 class journal_t;
 
-class entry_base_t : public supports_flags<>
+class entry_base_t : public item_t
 {
 public:
-#define ENTRY_IN_CACHE 0x1
+  journal_t * journal;
+  xacts_list  xacts;
 
-  journal_t *      journal;
-  string	   note;
-  unsigned long    src_idx;
-  istream_pos_type beg_pos;
-  unsigned long    beg_line;
-  istream_pos_type end_pos;
-  unsigned long    end_line;
-  xacts_list	   xacts;
-
-  entry_base_t() : journal(NULL),
-    beg_pos(0), beg_line(0), end_pos(0), end_line(0)
-  {
+  entry_base_t() : journal(NULL) {
     TRACE_CTOR(entry_base_t, "");
   }
   entry_base_t(const entry_base_t& e);  
 
   virtual ~entry_base_t();
 
-  bool operator==(const entry_base_t& entry) {
-    return this == &entry;
-  }
-  bool operator!=(const entry_base_t& entry) {
-    return ! (*this == entry);
-  }
+  virtual state_t state() const;
 
   virtual void add_xact(xact_t * xact);
   virtual bool remove_xact(xact_t * xact);
@@ -76,11 +61,9 @@ public:
   virtual bool valid() const = 0;
 };
 
-class entry_t : public entry_base_t, public scope_t
+class entry_t : public entry_base_t
 {
 public:
-  date_t	   _date;
-  optional<date_t> _date_eff;
   optional<string> code;
   string	   payee;
 
@@ -92,23 +75,6 @@ public:
   virtual ~entry_t() {
     TRACE_DTOR(entry_t);
   }
-
-  date_t actual_date() const {
-    return _date;
-  }
-  date_t effective_date() const {
-    if (! _date_eff)
-      return _date;
-    return *_date_eff;
-  }
-  date_t date() const {
-    if (xact_t::use_effective_date)
-      return effective_date();
-    else
-      return actual_date();
-  }
-
-  bool get_state(xact_t::state_t * state) const;
 
   virtual void add_xact(xact_t * xact);
 

@@ -38,8 +38,7 @@
 namespace ledger {
 
 entry_base_t::entry_base_t(const entry_base_t& e)
-  : supports_flags<>(), journal(NULL),
-    beg_pos(0), beg_line(0), end_pos(0), end_line(0)
+  : item_t(), journal(NULL)
 {
   TRACE_CTOR(entry_base_t, "copy");
   xacts.insert(xacts.end(), e.xacts.begin(), e.xacts.end());
@@ -53,13 +52,27 @@ entry_base_t::~entry_base_t()
     // If the transaction is a temporary, it will be destructed when the
     // temporary is.  If it's from a binary cache, we can safely destruct it
     // but its memory will be deallocated with the cache.
-    if (! xact->has_flags(XACT_TEMP)) {
-      if (! xact->has_flags(XACT_IN_CACHE))
+    if (! xact->has_flags(ITEM_TEMP)) {
+      if (! xact->has_flags(ITEM_IN_CACHE))
 	checked_delete(xact);
       else
 	xact->~xact_t();
     }
   }
+}
+
+item_t::state_t entry_base_t::state() const
+{
+  bool	  first	 = true;
+  state_t result = UNCLEARED;
+
+  foreach (xact_t * xact, xacts) {
+    if ((result == UNCLEARED && xact->_state != UNCLEARED) ||
+	(result == PENDING   && xact->_state == CLEARED))
+      result = xact->_state;
+  }
+
+  return result;
 }
 
 void entry_base_t::add_xact(xact_t * xact)
@@ -133,8 +146,8 @@ bool entry_base_t::finalize()
   if (journal && journal->basket && xacts.size() == 1 && ! balance.is_null()) {
     // jww (2008-07-24): Need to make the rest of the code aware of what to do
     // when it sees a generated xact.
-    null_xact = new xact_t(journal->basket, XACT_GENERATED);
-    null_xact->state = (*xacts.begin())->state;
+    null_xact = new xact_t(journal->basket, ITEM_GENERATED);
+    null_xact->_state = (*xacts.begin())->_state;
     add_xact(null_xact);
   }
 
@@ -170,7 +183,7 @@ bool entry_base_t::finalize()
 	  first = false;
 	} else {
 	  add_xact(new xact_t(null_xact->account, pair.second.negate(),
-			      XACT_GENERATED));
+			      ITEM_GENERATED));
 	}
       }
     }
@@ -279,7 +292,7 @@ bool entry_base_t::finalize()
       amount_t basis_cost;
       amount_t ann_amount =
 	commodity_t::exchange(x_amt, final_cost, basis_cost, xact->cost, none,
-			      datetime_t(xact->actual_date(),
+			      datetime_t(*xact->actual_date(),
 					 time_duration_t(0, 0, 0)),
 			      entry ? entry->code : optional<string>());
 
@@ -341,34 +354,12 @@ bool entry_base_t::finalize()
 }
 
 entry_t::entry_t(const entry_t& e)
-  : entry_base_t(e), scope_t(), _date(e._date), _date_eff(e._date_eff),
-    code(e.code), payee(e.payee)
+  : entry_base_t(e), code(e.code), payee(e.payee)
 {
   TRACE_CTOR(entry_t, "copy");
 
   foreach (xact_t * xact, xacts)
     xact->entry = this;
-}
-
-bool entry_t::get_state(xact_t::state_t * state) const
-{
-  bool first  = true;
-  bool hetero = false;
-
-  foreach (xact_t * xact, xacts) {
-    if (first ||
-	xact->state == xact_t::CLEARED ||
-	(xact->state == xact_t::PENDING && *state == xact_t::UNCLEARED)) {
-      *state = xact->state;
-      first = false;
-    }
-    else if (*state != xact->state) {
-      hetero = true;
-      break;
-    }
-  }
-
-  return ! hetero;
 }
 
 void entry_t::add_xact(xact_t * xact)
@@ -378,26 +369,6 @@ void entry_t::add_xact(xact_t * xact)
 }
 
 namespace {
-  value_t get_date(entry_t& entry) {
-    return entry.date();
-  }
-
-  value_t get_status(entry_t& entry) {
-    xact_t::state_t status;
-    entry.get_state(&status);
-    return long(status);
-  }
-  value_t get_cleared(entry_t& entry) {
-    xact_t::state_t status;
-    entry.get_state(&status);
-    return status == xact_t::CLEARED;
-  }
-  value_t get_pending(entry_t& entry) {
-    xact_t::state_t status;
-    entry.get_state(&status);
-    return status == xact_t::PENDING;
-  }
-
   value_t get_code(entry_t& entry) {
     if (entry.code)
       return string_value(*entry.code);
@@ -421,49 +392,20 @@ expr_t::ptr_op_t entry_t::lookup(const string& name)
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
-    else if (name == "cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    break;
-
-  case 'd':
-    if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_date>);
     break;
 
   case 'p':
     if (name[1] == '\0' || name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-    else if (name == "pending")
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    break;
-
-  case 'u':
-    if (name == "uncleared")
-      return expr_t::op_t::wrap_value(1L);
-    break;
-
-  case 'X':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    break;
-
-  case 'Y':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     break;
   }
 
-  if (journal) {
-    assert(journal->owner == session_t::current);
-    return journal->owner->current_report->lookup(name);
-  } else {
-    return session_t::current->current_report->lookup(name);
-  }
+  return item_t::lookup(name);
 }
 
 bool entry_t::valid() const
 {
-  if (! is_valid(_date) || ! journal) {
+  if (! _date || ! journal) {
     DEBUG("ledger.validate", "entry_t: ! _date || ! journal");
     return false;
   }
@@ -514,19 +456,11 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	if (fullname == "$account" || fullname == "@account")
 	  account = initial_xact->account;
 
-	xact_t * new_xact
-	  = new xact_t(account, amt, xact->flags() | XACT_AUTO);
-
 	// Copy over details so that the resulting xact is a mirror of
 	// the automated entry's one.
-	new_xact->state	    = xact->state;
-	new_xact->_date	    = xact->_date;
-	new_xact->_date_eff = xact->_date_eff;
-	new_xact->note	    = xact->note;
-	new_xact->beg_pos   = xact->beg_pos;
-	new_xact->beg_line  = xact->beg_line;
-	new_xact->end_pos   = xact->end_pos;
-	new_xact->end_line  = xact->end_line;
+	xact_t * new_xact = new xact_t(account, amt);
+	new_xact->copy_details(*xact);
+	new_xact->add_flags(XACT_AUTO);
 
 	entry.add_xact(new_xact);
       }

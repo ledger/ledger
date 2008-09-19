@@ -96,7 +96,7 @@ public:
   virtual ~session_t();
 
   journal_t * create_journal() {
-    journal_t * journal = new journal_t(this);
+    journal_t * journal = new journal_t;
     journals.push_back(journal);
     return journal;
   }

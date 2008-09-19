@@ -64,8 +64,8 @@ static void startElement(void *userData, const char *name, const char **attrs)
   else if (std::strcmp(name, "xact") == 0) {
     assert(curr_entry);
     curr_entry->add_xact(new xact_t);
-    if (curr_state != xact_t::UNCLEARED)
-      curr_entry->xacts.back()->state = curr_state;
+    if (curr_state != item_t::UNCLEARED)
+      curr_entry->xacts.back()->set_state(curr_state);
   }
   else if (std::strcmp(name, "commodity") == 0) {
     if (string(attrs[0]) == "flags")
@@ -122,10 +122,10 @@ static void endElement(void *userData, const char *name)
     curr_entry->xacts.back()->account = curr_journal->find_account(data);
   }
   else if (std::strcmp(name, "tr:cleared") == 0) {
-    curr_entry->xacts.back()->state = xact_t::CLEARED;
+    curr_entry->xacts.back()->set_state(item_t::CLEARED);
   }
   else if (std::strcmp(name, "tr:pending") == 0) {
-    curr_entry->xacts.back()->state = xact_t::PENDING;
+    curr_entry->xacts.back()->set_state(item_t::PENDING);
   }
   else if (std::strcmp(name, "tr:virtual") == 0) {
     curr_entry->xacts.back()->add_flags(XACT_VIRTUAL);
@@ -437,9 +437,9 @@ void format_xml_entries::format_last_entry()
 	    << "</tr:date_eff>\n";
 #endif
 
-      if (xact->state == xact_t::CLEARED)
+      if (xact->state() == item_t::CLEARED)
 	out << "        <tr:cleared/>\n";
-      else if (xact->state == xact_t::PENDING)
+      else if (xact->state() == xact_t::PENDING)
 	out << "        <tr:pending/>\n";
 
       if (xact->has_flags(XACT_VIRTUAL))

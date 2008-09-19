@@ -180,7 +180,7 @@ void handle_value(const value_t&	value,
   temps.push_back(xact_t(account));
   xact_t& xact(temps.back());
   xact.entry = entry;
-  xact.add_flags(XACT_TEMP);
+  xact.add_flags(ITEM_TEMP);
   entry->add_xact(&xact);
 
   // If there are component xacts to associate with this
@@ -390,9 +390,9 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
 void subtotal_xacts::operator()(xact_t& xact)
 {
   if (! is_valid(start) || xact.date() < start)
-    start = xact.date();
+    start = *xact.date();
   if (! is_valid(finish) || xact.date() > finish)
-    finish = xact.date();
+    finish = *xact.date();
 
   account_t * acct = xact.reported_account();
   assert(acct);
@@ -432,7 +432,7 @@ void interval_xacts::report_subtotal(const date_t& date)
   if (is_valid(date))
     finish = date - gregorian::days(1);
   else
-    finish = last_xact->date();
+    finish = *last_xact->date();
 
   subtotal_xacts::report_subtotal();
 
@@ -441,7 +441,7 @@ void interval_xacts::report_subtotal(const date_t& date)
 
 void interval_xacts::operator()(xact_t& xact)
 {
-  const date_t& date(xact.date());
+  const date_t& date(*xact.date());
 
   if ((is_valid(interval.begin) && date < interval.begin) ||
       (is_valid(interval.end)   && date >= interval.end))
@@ -512,7 +512,7 @@ void by_payee_xacts::operator()(xact_t& xact)
   }
 
   if (xact.date() > (*i).second->start)
-    (*i).second->start = xact.date();
+    (*i).second->start = *xact.date();
 
   (*(*i).second)(xact);
 }
@@ -532,8 +532,8 @@ void set_comm_as_payee::operator()(xact_t& xact)
   xact_temps.push_back(xact);
   xact_t& temp = xact_temps.back();
   temp.entry = &entry;
-  temp.state = xact.state;
-  temp.add_flags(XACT_TEMP);
+  temp.set_state(xact.state());
+  temp.add_flags(ITEM_TEMP);
 
   entry.add_xact(&temp);
 
@@ -554,8 +554,8 @@ void set_code_as_payee::operator()(xact_t& xact)
   xact_temps.push_back(xact);
   xact_t& temp = xact_temps.back();
   temp.entry = &entry;
-  temp.state = xact.state;
-  temp.add_flags(XACT_TEMP);
+  temp.set_state(xact.state());
+  temp.add_flags(ITEM_TEMP);
 
   entry.add_xact(&temp);
 
@@ -619,7 +619,7 @@ void budget_xacts::report_budget_items(const date_t& date)
 	xact_temps.push_back(xact);
 	xact_t& temp = xact_temps.back();
 	temp.entry = &entry;
-	temp.add_flags(XACT_AUTO | XACT_TEMP);
+	temp.add_flags(XACT_AUTO | ITEM_TEMP);
 	temp.amount.negate();
 	entry.add_xact(&temp);
 
@@ -653,7 +653,7 @@ void budget_xacts::operator()(xact_t& xact)
 
  handle:
   if (xact_in_budget && flags & BUDGET_BUDGETED) {
-    report_budget_items(xact.date());
+    report_budget_items(*xact.date());
     item_handler<xact_t>::operator()(xact);
   }
   else if (! xact_in_budget && flags & BUDGET_UNBUDGETED) {
@@ -706,7 +706,7 @@ void forecast_xacts::flush()
     xact_temps.push_back(xact);
     xact_t& temp = xact_temps.back();
     temp.entry = &entry;
-    temp.add_flags(XACT_AUTO | XACT_TEMP);
+    temp.add_flags(XACT_AUTO | ITEM_TEMP);
     entry.add_xact(&temp);
 
     date_t next = (*least).first.increment(begin);
@@ -720,7 +720,7 @@ void forecast_xacts::flush()
 	temp.xdata().has_flags(XACT_EXT_MATCHES)) {
       if (! pred(temp))
 	break;
-      last = temp.date();
+      last = *temp.date();
       passed.clear();
     } else {
       bool found = false;

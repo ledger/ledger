@@ -253,7 +253,7 @@ format_equity::format_equity(report_t& _report, const string& _format)
 
 void format_equity::flush()
 {
-  account_t summary(&report.session, NULL, "Equity:Opening Balances");
+  account_t summary(NULL, "Equity:Opening Balances");
 
   account_t::xdata_t& xdata(summary.xdata());
   std::ostream&	      out(*report.output_stream);
