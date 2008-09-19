@@ -1265,6 +1265,7 @@ bool value_t::is_realzero() const
   default:
     throw_(value_error, "Cannot determine if " << label() << " is really zero");
   }
+  return false;
 }
 
 bool value_t::is_zero() const
@@ -1295,6 +1296,7 @@ bool value_t::is_zero() const
   default:
     throw_(value_error, "Cannot determine if " << label() << " is zero");
   }
+  return false;
 }
 
 value_t value_t::value(const optional<datetime_t>& moment) const
