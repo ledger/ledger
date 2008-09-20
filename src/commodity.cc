@@ -45,62 +45,92 @@ namespace ledger {
 
 void commodity_t::add_price(const datetime_t& date, const amount_t& price)
 {
-  if (! base->history)
-    base->history = history_t();
+  if (! base->varied_history)
+    base->varied_history = varied_history_t();
 
-  history_map::iterator i = base->history->prices.find(date);
-  if (i != base->history->prices.end()) {
+  optional<history_t&> hist = history(price.commodity());
+  if (! hist) {
+    std::pair<history_by_commodity_map::iterator, bool> result
+      = base->varied_history->insert(history_by_commodity_map::value_type
+				     (&price.commodity(), history_t()));
+    assert(result.second);
+    hist = (*result.first).second;
+  }
+  assert(hist);
+      
+  history_map::iterator i = hist->prices.find(date);
+  if (i != hist->prices.end()) {
     (*i).second = price;
   } else {
     std::pair<history_map::iterator, bool> result
-      = base->history->prices.insert(history_map::value_type(date, price));
+      = hist->prices.insert(history_map::value_type(date, price));
     assert(result.second);
   }
 }
 
-bool commodity_t::remove_price(const datetime_t& date)
+bool commodity_t::remove_price(const datetime_t& date, const commodity_t& comm)
 {
-  if (base->history) {
-    history_map::size_type n = base->history->prices.erase(date);
-    if (n > 0) {
-      if (base->history->prices.empty())
-	base->history.reset();
-      return true;
+  if (base->varied_history) {
+    optional<history_t&> hist = history(comm);
+    if (hist) {
+      history_map::size_type n = hist->prices.erase(date);
+      if (n > 0) {
+	if (hist->prices.empty())
+	  hist.reset();
+	return true;
+      }
     }
   }
   return false;
 }
 
-optional<amount_t> commodity_t::value(const optional<datetime_t>& moment)
+optional<amount_t>
+commodity_t::value(const optional<datetime_t>&			      moment,
+		   const optional<std::vector<const commodity_t *> >& commodities)
 {
   optional<datetime_t> age;
-  optional<amount_t> price;
+  optional<amount_t>   price;
+  optional<history_t&> hist;
 
-  if (base->history) {
-    assert(base->history->prices.size() > 0);
-
-    if (! moment) {
-      history_map::reverse_iterator r = base->history->prices.rbegin();
-      age   = (*r).first;
-      price = (*r).second;
+  if (base->varied_history) {
+    const commodity_t * comm = NULL;
+    if (commodities) {
+      // Walk the list of commodities, finding the first one applicable
+      comm = commodities->back();
     } else {
-      history_map::iterator i = base->history->prices.lower_bound(*moment);
-      if (i == base->history->prices.end()) {
-	history_map::reverse_iterator r = base->history->prices.rbegin();
+      if (base->varied_history->size() > 1)
+	throw_(commodity_error,
+	       "Cannot find commodity value: multiple possibilities exist");
+      comm = (*base->varied_history->begin()).first;
+    }
+
+    hist = history(*comm);
+    if (hist) {
+      assert(hist->prices.size() > 0);
+
+      if (! moment) {
+	history_map::reverse_iterator r = hist->prices.rbegin();
 	age   = (*r).first;
 	price = (*r).second;
       } else {
-	age = (*i).first;
-	if (*moment != *age) {
-	  if (i != base->history->prices.begin()) {
-	    --i;
-	    age	  = (*i).first;
-	    price = (*i).second;
-	  } else {
-	    age   = none;
-	  }
+	history_map::iterator i = hist->prices.lower_bound(*moment);
+	if (i == hist->prices.end()) {
+	  history_map::reverse_iterator r = hist->prices.rbegin();
+	  age   = (*r).first;
+	  price = (*r).second;
 	} else {
-	  price = (*i).second;
+	  age = (*i).first;
+	  if (*moment != *age) {
+	    if (i != hist->prices.begin()) {
+	      --i;
+	      age	  = (*i).first;
+	      price = (*i).second;
+	    } else {
+	      age   = none;
+	    }
+	  } else {
+	    price = (*i).second;
+	  }
 	}
       }
     }
@@ -109,8 +139,8 @@ optional<amount_t> commodity_t::value(const optional<datetime_t>& moment)
   if (! has_flags(COMMODITY_STYLE_NOMARKET) && parent().get_quote) {
     if (optional<amount_t> quote = parent().get_quote
 	(*this, age, moment,
-	 (base->history && base->history->prices.size() > 0 ?
-	  (*base->history->prices.rbegin()).first : optional<datetime_t>())))
+	 (hist && hist->prices.size() > 0 ?
+	  (*hist->prices.rbegin()).first : optional<datetime_t>())))
       return *quote;
   }
   return price;

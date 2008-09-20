@@ -50,6 +50,8 @@
 
 namespace ledger {
 
+DECLARE_EXCEPTION(commodity_error, std::runtime_error);
+
 class commodity_t
   : public delegates_flags<>,
     public equality_comparable1<commodity_t, noncopyable>
@@ -62,13 +64,16 @@ public:
     base_t();
 
   public:
-    typedef std::map<const datetime_t, amount_t>  history_map;
-    typedef std::pair<const datetime_t, amount_t> history_pair;
+    typedef std::map<const datetime_t, amount_t> history_map;
 
     struct history_t {
       history_map prices;
       ptime	  last_lookup;
     };
+
+    typedef std::map<const commodity_t *, history_t> history_by_commodity_map;
+
+    typedef history_by_commodity_map varied_history_t;
 
 #define COMMODITY_STYLE_DEFAULTS   0x00
 #define COMMODITY_STYLE_SUFFIXED   0x01
@@ -78,13 +83,13 @@ public:
 #define COMMODITY_STYLE_NOMARKET   0x10
 #define COMMODITY_STYLE_BUILTIN    0x20
 
-    string		  symbol;
-    amount_t::precision_t precision;
-    optional<string>	  name;
-    optional<string>	  note;
-    optional<history_t>	  history;
-    optional<amount_t>	  smaller;
-    optional<amount_t>	  larger;
+    string		       symbol;
+    amount_t::precision_t      precision;
+    optional<string>	       name;
+    optional<string>	       note;
+    optional<varied_history_t> varied_history;
+    optional<amount_t>	       smaller;
+    optional<amount_t>	       larger;
 
   public:
     explicit base_t(const string& _symbol)
@@ -100,9 +105,12 @@ public:
 public:
   static bool symbol_needs_quotes(const string& symbol);
 
-  typedef base_t::history_t   history_t;
-  typedef base_t::history_map history_map;
-  typedef uint_least32_t      ident_t;
+  typedef base_t::history_t	   history_t;
+  typedef base_t::history_map	   history_map;
+  typedef base_t::varied_history_t varied_history_t;
+  typedef uint_least32_t	   ident_t;
+
+  typedef base_t::history_by_commodity_map history_by_commodity_map;
 
   shared_ptr<base_t> base;
 
@@ -188,24 +196,36 @@ public:
     base->larger = arg;
   }
 
-  optional<history_t> history() const {
-    return base->history;
+  optional<varied_history_t&> varied_history() const {
+    if (base->varied_history)
+      return *base->varied_history;
+    return none;
+  }
+  optional<history_t&> history(const commodity_t& comm) const {
+    if (base->varied_history) {
+      history_by_commodity_map::iterator i = base->varied_history->find(&comm);
+      if (i != base->varied_history->end())
+	return (*i).second;
+    }
+    return none;
   }
 
   void add_price(const datetime_t& date, const amount_t& price);
-  bool remove_price(const datetime_t& date);
+  bool remove_price(const datetime_t& date, const commodity_t& comm);
 
-  optional<amount_t> value(const optional<datetime_t>& moment = none);
+  optional<amount_t>
+  value(const optional<datetime_t>&			   moment      = none,
+	const optional<std::vector<const commodity_t *> >& commodities = none);
+
+  static void exchange(commodity_t&	 commodity,
+		       const amount_t&   per_unit_cost,
+		       const datetime_t& moment);
 
   struct cost_breakdown_t {
     amount_t amount;
     amount_t final_cost;
     amount_t basis_cost;
   };
-
-  static void             exchange(commodity_t&	     commodity,
-				   const amount_t&   per_unit_cost,
-				   const datetime_t& moment);
 
   static cost_breakdown_t exchange(const amount_t&	       amount,
 				   const amount_t&	       cost,

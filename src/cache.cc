@@ -290,7 +290,7 @@ void read_commodity_base_extra(const char *& data,
     // duplicated (and thus not lost when the journal's item_pool is deleted).
     if (! commodity->history)
       commodity->history = commodity_t::history_t();
-    commodity->history->prices.insert(commodity_t::base_t::history_pair(when, amt));
+    commodity->history->prices.insert(commodity_t::history_t::value_type(when, amt));
 
     read_history = true;
   }
