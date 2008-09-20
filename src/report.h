@@ -757,7 +757,9 @@ public:
 
       if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
 	commodity->add_price(datetime_t::now, price);
+#if 0
 	commodity->history()->bogus_time = datetime_t::now;
+#endif
       }
     }
   }
