@@ -101,14 +101,6 @@ bool journal_t::add_entry(entry_t * entry)
 
   entries.push_back(entry);
 
-  foreach (const xact_t * xact, entry->xacts)
-    if (xact->cost) {
-      assert(xact->amount);
-      xact->amount.commodity().add_price(datetime_t(*entry->date(),
-						    time_duration_t(0, 0, 0)),
-					 *xact->cost / xact->amount.number());
-    }
-
   return true;
 }
 

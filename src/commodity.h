@@ -192,18 +192,26 @@ public:
     return base->history;
   }
 
-  void	   add_price(const datetime_t& date, const amount_t& price);
-  bool	   remove_price(const datetime_t& date);
+  void add_price(const datetime_t& date, const amount_t& price);
+  bool remove_price(const datetime_t& date);
 
   optional<amount_t> value(const optional<datetime_t>& moment = none);
 
-  static amount_t exchange(const amount_t&	       amount,
-			   amount_t&		       final_cost, // out
-			   amount_t&		       basis_cost, // out
-			   const optional<amount_t>&   total_cost,
-			   const optional<amount_t>&   per_unit_cost = none,
-			   const optional<datetime_t>& moment        = none,
-			   const optional<string>&     tag           = none);
+  struct cost_breakdown_t {
+    amount_t amount;
+    amount_t final_cost;
+    amount_t basis_cost;
+  };
+
+  static void             exchange(commodity_t&	     commodity,
+				   const amount_t&   per_unit_cost,
+				   const datetime_t& moment);
+
+  static cost_breakdown_t exchange(const amount_t&	       amount,
+				   const amount_t&	       cost,
+				   const bool		       is_per_unit = false,
+				   const optional<datetime_t>& moment	   = none,
+				   const optional<string>&     tag	   = none);
 
   static void parse_symbol(std::istream& in, string& symbol);
   static void parse_symbol(char *& p, string& symbol);

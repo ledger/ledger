@@ -43,8 +43,7 @@
 
 namespace ledger {
 
-void commodity_t::add_price(const datetime_t& date,
-			    const amount_t& price)
+void commodity_t::add_price(const datetime_t& date, const amount_t& price)
 {
   if (! base->history)
     base->history = history_t();
@@ -117,19 +116,26 @@ optional<amount_t> commodity_t::value(const optional<datetime_t>& moment)
   return price;
 }
 
-amount_t commodity_t::exchange(const amount_t&		   amount,
-			       amount_t&		   final_cost, // out
-			       amount_t&		   basis_cost, // out
-			       const optional<amount_t>&   total_cost_,
-			       const optional<amount_t>&   per_unit_cost_,
-			       const optional<datetime_t>& moment,
-			       const optional<string>&     tag)
+void commodity_t::exchange(commodity_t&	     commodity,
+			   const amount_t&   per_unit_cost,
+			   const datetime_t& moment)
 {
-  // (assert (or (and total-cost (not per-unit-cost))
-  //             (and per-unit-cost (not total-cost))))
+  if (! commodity.has_flags(COMMODITY_STYLE_NOMARKET)) {
+    commodity_t& base_commodity
+      (commodity.annotated ?
+       as_annotated_commodity(commodity).referent() : commodity);
 
-  assert((total_cost_ && ! per_unit_cost_) || (per_unit_cost_ && ! total_cost_));
+    base_commodity.add_price(moment, per_unit_cost);
+  }
+}
 
+commodity_t::cost_breakdown_t
+commodity_t::exchange(const amount_t&		  amount,
+		      const amount_t&		  cost,
+		      const bool		  is_per_unit,
+		      const optional<datetime_t>& moment,
+		      const optional<string>&     tag)
+{
   // (let* ((commodity (amount-commodity amount))
   //        (current-annotation
   //         (and (annotated-commodity-p commodity)
@@ -152,9 +158,10 @@ amount_t commodity_t::exchange(const amount_t&		   amount,
     (current_annotation ?
      as_annotated_commodity(commodity).referent() : commodity);
 
-  amount_t per_unit_cost(per_unit_cost_ ?
-			 *per_unit_cost_ : *total_cost_ / amount);
-  final_cost = total_cost_ ? *total_cost_ : *per_unit_cost_ * amount;
+  amount_t per_unit_cost(is_per_unit ? cost : cost / amount);
+
+  cost_breakdown_t breakdown;
+  breakdown.final_cost = ! is_per_unit ? cost : cost * amount;
 
   // Add a price history entry for this conversion if we know when it took
   // place
@@ -177,16 +184,15 @@ amount_t commodity_t::exchange(const amount_t&		   amount,
   //             total-cost))))
 
   if (current_annotation && current_annotation->price)
-    basis_cost = *current_annotation->price * amount;
+    breakdown.basis_cost = *current_annotation->price * amount;
   else
-    basis_cost = final_cost;
+    breakdown.basis_cost = breakdown.final_cost;
 
-  amount_t ann_amount(amount);
-  ann_amount.annotate
-    (annotation_t(per_unit_cost,
-		  moment ? moment->date() : optional<date_t>(), tag));
+  breakdown.amount =
+    amount_t(amount, annotation_t (per_unit_cost, moment ?
+				   moment->date() : optional<date_t>(), tag));
 
-  return ann_amount;
+  return breakdown;
 }
 
 commodity_t::operator bool() const

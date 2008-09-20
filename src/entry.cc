@@ -98,19 +98,6 @@ bool entry_base_t::finalize()
   value_t  balance;
   xact_t * null_xact = NULL;
 
-  //   (do-xacts (xact entry)
-  //     (when (xact-must-balance-p xact)
-  //       (let ((amt (xact-amount* xact)))
-  //         (if amt
-  //             (setf balance (add balance (or (xact-cost xact) amt)))
-  //             (if null-xact
-  //                 (error "Only one xact with null amount allowed ~
-  //                         per entry (beg ~S end ~S)"
-  //                        (item-position-begin-line (entry-position entry))
-  //                        (item-position-end-line (entry-position entry)))
-  //                 (setf null-xact xact))))))
-  //
-
   foreach (xact_t * xact, xacts) {
     if (xact->must_balance()) {
       amount_t& p(xact->cost ? *xact->cost : xact->amount);
@@ -133,17 +120,6 @@ bool entry_base_t::finalize()
   // If there is only one xact, balance against the default account if
   // one has been set.
 
-  //   (when (= 1 (length (entry-xacts entry)))
-  //     (if-let ((default-account
-  //                  (journal-default-account (entry-journal entry))))
-  //       (setf null-xact
-  //             (make-xact :entry entry
-  //                               :status (xact-status
-  //                                        (first (entry-xacts entry)))
-  //                               :account default-account
-  //                               :generatedp t))
-  //       (add-xact entry null-xact)))
-
   if (journal && journal->basket && xacts.size() == 1 && ! balance.is_null()) {
     // jww (2008-07-24): Need to make the rest of the code aware of what to do
     // when it sees a generated xact.
@@ -156,24 +132,6 @@ bool entry_base_t::finalize()
     // If one xact has no value at all, its value will become the
     // inverse of the rest.  If multiple commodities are involved, multiple
     // xacts are generated to balance them all.
-
-    // (progn
-    //   (if (balance-p balance)
-    //       (let ((first t))
-    //         (dolist (amount (balance-amounts balance))
-    //           (if first
-    //               (setf (xact-amount* null-xact) (negate amount)
-    //                     first nil)
-    //               (add-xact
-    //                entry
-    //                (make-xact :entry entry
-    //                                  :account (xact-account null-xact)
-    //                                  :amount (negate amount)
-    //                                  :generatedp t)))))
-    //       (setf (xact-amount* null-xact) (negate balance)
-    //             (xact-calculatedp null-xact) t))
-    //
-    //   (setf balance 0))
 
     if (balance.is_balance()) {
       bool first = true;
@@ -206,21 +164,6 @@ bool entry_base_t::finalize()
     // establishes the per-unit cost for this xact for both
     // commodities.
 
-    // (when (and (balance-p balance)
-    //            (= 2 (balance-commodity-count balance)))
-    //   (destructuring-bind (x y) (balance-amounts balance)
-    //     (let ((a-commodity (amount-commodity x))
-    //           (per-unit-cost (value-abs (divide x y))))
-    //       (do-xacts (xact entry)
-    //         (let ((amount (xact-amount* xact)))
-    //           (unless (or (xact-cost xact)
-    //                       (not (xact-must-balance-p xact))
-    //                       (commodity-equal (amount-commodity amount)
-    //                                        a-commodity))
-    //             (setf balance (subtract balance amount)
-    //                   (xact-cost xact) (multiply per-unit-cost amount)
-    //                   balance (add balance (xact-cost xact))))))))))
-
     const balance_t& bal(balance.as_balance());
 
     balance_t::amounts_map::const_iterator a = bal.amounts.begin();
@@ -234,22 +177,13 @@ bool entry_base_t::finalize()
       commodity_t& comm(x.commodity());
 
       foreach (xact_t * xact, xacts) {
-	const amount_t& x_amt(xact->amount);
+	const amount_t& amt(xact->amount);
 
-	if (! (xact->cost ||
-	       ! xact->must_balance() ||
-	       x_amt.commodity() == comm)) {
-	  DEBUG("entry.finalize", "before operation 1 = " << balance);
-	  balance -= x_amt;
-	  DEBUG("entry.finalize", "after operation 1 = " << balance);
-	  DEBUG("entry.finalize", "x_amt = " << x_amt);
-	  DEBUG("entry.finalize", "per_unit_cost = " << per_unit_cost);
-
-	  xact->cost = per_unit_cost * x_amt;
-	  DEBUG("entry.finalize", "*xact->cost = " << *xact->cost);
-
+	if (! (xact->cost || ! xact->must_balance() ||
+	       amt.commodity() == comm)) {
+	  balance -= amt;
+	  xact->cost = per_unit_cost * amt;
 	  balance += *xact->cost;
-	  DEBUG("entry.finalize", "after operation 2 = " << balance);
 	}
 
       }
@@ -262,57 +196,22 @@ bool entry_base_t::finalize()
   // once more in terms of total cost, accounting for any possible gain/loss
   // amounts.
 
-  // (do-xacts (xact entry)
-  //   (when (xact-cost xact)
-  //     (let ((amount (xact-amount* xact)))
-  //       (assert (not (commodity-equal (amount-commodity amount)
-  //                                     (amount-commodity (xact-cost xact)))))
-  //       (multiple-value-bind (annotated-amount total-cost basis-cost)
-  //           (exchange-commodity amount :total-cost (xact-cost xact)
-  //                               :moment (entry-date entry)
-  //                               :tag (entry-code entry))
-  //         (if (annotated-commodity-p (amount-commodity amount))
-  //             (if-let ((price (annotation-price
-  //                              (commodity-annotation
-  //                               (amount-commodity amount)))))
-  //               (setf balance
-  //                     (add balance (subtract basis-cost total-cost))))
-  //             (setf (xact-amount* xact) annotated-amount))))))
-
   foreach (xact_t * xact, xacts) {
     if (xact->cost) {
-      const amount_t& x_amt(xact->amount);
+      if (xact->amount.commodity() == xact->cost->commodity())
+	throw_(balance_error, "Transaction's cost must be of a different commodity");
 
-      assert(x_amt.commodity() != xact->cost->commodity());
+      commodity_t::cost_breakdown_t breakdown =
+	commodity_t::exchange(xact->amount, *xact->cost);
 
-      entry_t * entry = dynamic_cast<entry_t *>(this);
-
-      // jww (2008-07-24): Pass the entry's code here if we can, as the
-      // auto-tag
-      amount_t final_cost;
-      amount_t basis_cost;
-      amount_t ann_amount =
-	commodity_t::exchange(x_amt, final_cost, basis_cost, xact->cost);
-
-      if (xact->amount.is_annotated()) {
-	if (ann_amount.annotation().price)
-	  add_or_set_value(balance, basis_cost - final_cost);
-      } else {
-	xact->amount = ann_amount;
-      }
+      if (xact->amount.is_annotated())
+	add_or_set_value(balance, breakdown.basis_cost - breakdown.final_cost);
+      else
+	xact->amount = breakdown.amount;
     }
   }
 
   DEBUG("entry.finalize", "final balance = " << balance);
-
-  // (if (value-zerop balance)
-  //     (prog1
-  //         entry
-  //       (setf (entry-normalizedp entry) t))
-  //     (error "Entry does not balance (beg ~S end ~S); remaining balance is:~%~A"
-  //            (item-position-begin-line (entry-position entry))
-  //            (item-position-end-line (entry-position entry))
-  //            (format-value balance :width 20)))
 
   if (! balance.is_null()) {
     balance.in_place_round();

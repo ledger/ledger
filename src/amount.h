@@ -241,6 +241,12 @@ public:
     else
       commodity_ = NULL;
   }
+  amount_t(const amount_t& amt, const annotation_t& details) : quantity(NULL) {
+    TRACE_CTOR(amount_t, "const amount_t&, const annotation_t&");
+    assert(amt.quantity);
+    _copy(amt);
+    annotate(details);
+  }
   amount_t& operator=(const amount_t& amt);
 
 #ifdef HAVE_GDTOA
