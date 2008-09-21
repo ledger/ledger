@@ -651,7 +651,7 @@ optional<amount_t> amount_t::value(const optional<datetime_t>& moment) const
 {
   if (quantity) {
     // jww (2008-09-21): 'none' is not the right argument here.
-    optional<amount_t> amt(commodity().value(none, moment));
+    optional<amount_t> amt(commodity().find_price(none, moment));
     if (amt)
       return (*amt * number()).round();
   } else {

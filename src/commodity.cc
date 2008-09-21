@@ -43,109 +43,75 @@
 
 namespace ledger {
 
-optional<commodity_t::history_t&>
-commodity_t::history(const optional<const commodity_t&>& commodity) const
+void commodity_t::base_t::history_t::add_price(const datetime_t& date,
+					       const amount_t&	 price)
 {
-  if (base->varied_history) {
-    const commodity_t * comm = NULL;
-    if (! commodity) {
-      if (base->varied_history->size() > 1)
-	// jww (2008-09-20): Document which option switch to use here
-	throw_(commodity_error, "Cannot determine history for '"
-	       << *this << "': prices known for multiple commodities (use -?)");
-      comm = (*base->varied_history->begin()).first;
-    } else {
-      comm = &(*commodity);
-    }
-
-    history_by_commodity_map::iterator i = base->varied_history->find(comm);
-    if (i != base->varied_history->end())
-      return (*i).second;
-  }
-  return none;
-}
-
-optional<commodity_t::history_t&>
-commodity_t::history(const std::vector<const commodity_t *>& commodities) const
-{
-  // This function differs from the single commodity case avoid in that
-  // 'commodities' represents a list of preferred valuation commodities.
-  // If no price can be located in terms of the first commodity, then
-  // the second is chosen, etc.
-
-  foreach (const commodity_t * commodity, commodities) {
-    if (optional<commodity_t::history_t&> hist =
-	history(*commodity))
-      return hist;
-  }
-  return none;
-}
-
-void commodity_t::add_price(const datetime_t& date, const amount_t& price)
-{
-  if (! base->varied_history)
-    base->varied_history = varied_history_t();
-
-  optional<history_t&> hist = history(price.commodity());
-  if (! hist) {
-    std::pair<history_by_commodity_map::iterator, bool> result
-      = base->varied_history->insert(history_by_commodity_map::value_type
-				     (&price.commodity(), history_t()));
-    assert(result.second);
-    hist = (*result.first).second;
-  }
-  assert(hist);
-      
-  history_map::iterator i = hist->prices.find(date);
-  if (i != hist->prices.end()) {
+  history_map::iterator i = prices.find(date);
+  if (i != prices.end()) {
     (*i).second = price;
   } else {
     std::pair<history_map::iterator, bool> result
-      = hist->prices.insert(history_map::value_type(date, price));
+      = prices.insert(history_map::value_type(date, price));
     assert(result.second);
   }
 }
 
-bool commodity_t::remove_price(const datetime_t& date, const commodity_t& comm)
+bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
 {
-  if (base->varied_history) {
-    optional<history_t&> hist = history(comm);
-    if (hist) {
-      history_map::size_type n = hist->prices.erase(date);
-      if (n > 0) {
-	if (hist->prices.empty())
-	  hist.reset();
-	return true;
-      }
-    }
+  history_map::size_type n = prices.erase(date);
+  if (n > 0)
+    return true;
+  return false;
+}
+
+void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
+						      const amount_t&	price)
+{
+  optional<history_t&> hist = history(price.commodity());
+  if (! hist) {
+    std::pair<history_by_commodity_map::iterator, bool> result
+      = histories.insert(history_by_commodity_map::value_type
+			 (&price.commodity(), history_t()));
+    assert(result.second);
+
+    hist = (*result.first).second;
   }
+  assert(hist);
+
+  hist->add_price(date, price);
+}
+
+bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date,
+							 const commodity_t& comm)
+{
+  if (optional<history_t&> hist = history(comm))
+    return hist->remove_price(date);
   return false;
 }
 
 optional<amount_t>
-commodity_t::value(const history_t&	       history,
-		   const optional<datetime_t>& moment)
+commodity_t::base_t::history_t::find_price(const optional<datetime_t>& moment)
 {
   optional<datetime_t> age;
   optional<amount_t>   price;
 
-  if (history.prices.size() == 0)
+  if (prices.size() == 0)
     return none;
 
   if (! moment) {
-    history_map::const_reverse_iterator r = history.prices.rbegin();
+    history_map::const_reverse_iterator r = prices.rbegin();
     age   = (*r).first;
     price = (*r).second;
   } else {
-    history_map::const_iterator i = history.prices.lower_bound(*moment);
-    if (i == history.prices.end()) {
-      history_map::const_reverse_iterator r = history.prices.rbegin();
+    history_map::const_iterator i = prices.lower_bound(*moment);
+    if (i == prices.end()) {
+      history_map::const_reverse_iterator r = prices.rbegin();
       age   = (*r).first;
       price = (*r).second;
     } else {
       age = (*i).first;
       if (*moment != *age) {
-	if (i != history.prices.begin()) {
+	if (i != prices.begin()) {
 	  --i;
 	  age	  = (*i).first;
 	  price = (*i).second;
@@ -169,6 +135,60 @@ commodity_t::value(const history_t&	       history,
 #endif
 
   return price;
+}
+
+optional<amount_t>
+commodity_t::base_t::varied_history_t::find_price
+  (const optional<const commodity_t&>& commodity,
+   const optional<datetime_t>&	       moment)
+{
+  return none;
+}
+
+optional<amount_t>
+commodity_t::base_t::varied_history_t::find_price
+  (const std::vector<const commodity_t *>& commodities,
+   const optional<datetime_t>&		   moment)
+{
+  return none;
+}
+
+optional<commodity_t::base_t::history_t&>
+commodity_t::base_t::varied_history_t::history
+  (const optional<const commodity_t&>& commodity)
+{
+  const commodity_t * comm = NULL;
+  if (! commodity) {
+    if (histories.size() > 1)
+      // jww (2008-09-20): Document which option switch to use here
+      throw_(commodity_error,
+	     "Cannot determine price history: prices known for multiple commodities (use -?)");
+    comm = (*histories.begin()).first;
+  } else {
+    comm = &(*commodity);
+  }
+
+  history_by_commodity_map::iterator i = histories.find(comm);
+  if (i != histories.end())
+    return (*i).second;
+
+  return none;
+}
+
+optional<commodity_t::history_t&>
+commodity_t::base_t::varied_history_t::history
+  (const std::vector<const commodity_t *>& commodities)
+{
+  // This function differs from the single commodity case avoid in that
+  // 'commodities' represents a list of preferred valuation commodities.
+  // If no price can be located in terms of the first commodity, then
+  // the second is chosen, etc.
+
+  foreach (const commodity_t * commodity, commodities) {
+    if (optional<history_t&> hist = history(*commodity))
+      return hist;
+  }
+  return none;
 }
 
 void commodity_t::exchange(commodity_t&	     commodity,

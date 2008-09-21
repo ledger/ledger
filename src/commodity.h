@@ -66,14 +66,38 @@ public:
   public:
     typedef std::map<const datetime_t, amount_t> history_map;
 
-    struct history_t {
+    struct history_t
+    {
       history_map prices;
       ptime	  last_lookup;
+
+      void add_price(const datetime_t& date, const amount_t& price);
+      bool remove_price(const datetime_t& date);
+
+      optional<amount_t> find_price(const optional<datetime_t>& moment = none);
     };
 
     typedef std::map<const commodity_t *, history_t> history_by_commodity_map;
 
-    typedef history_by_commodity_map varied_history_t;
+    struct varied_history_t
+    {
+      history_by_commodity_map histories;
+
+      void add_price(const datetime_t& date, const amount_t& price);
+      bool remove_price(const datetime_t& date, const commodity_t& commodity);
+
+      optional<amount_t>
+      find_price(const optional<const commodity_t&>& commodity = none,
+		 const optional<datetime_t>&	     moment    = none);
+      optional<amount_t>
+      find_price(const std::vector<const commodity_t *>& commodities,
+		 const optional<datetime_t>&		 moment = none);
+
+      optional<history_t&>
+      history(const optional<const commodity_t&>& commodity = none);
+      optional<history_t&>
+      history(const std::vector<const commodity_t *>& commodities);
+    };
 
 #define COMMODITY_STYLE_DEFAULTS   0x00
 #define COMMODITY_STYLE_SUFFIXED   0x01
@@ -91,10 +115,12 @@ public:
     optional<amount_t>	       smaller;
     optional<amount_t>	       larger;
 
+    mutable bool               searched;
+
   public:
     explicit base_t(const string& _symbol)
       : supports_flags<>(COMMODITY_STYLE_DEFAULTS),
-	symbol(_symbol), precision(0) {
+	symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
     }
     ~base_t() {
@@ -196,39 +222,57 @@ public:
     base->larger = arg;
   }
 
-  optional<varied_history_t&> varied_history() const {
+protected:
+  optional<varied_history_t&> varied_history() {
     if (base->varied_history)
       return *base->varied_history;
     return none;
   }
 
   optional<history_t&>
-  history(const optional<const commodity_t&>& commodity) const;
+  history(const optional<const commodity_t&>& commodity);
   optional<history_t&>
-  history(const std::vector<const commodity_t *>& commodities) const;
+  history(const std::vector<const commodity_t *>& commodities);
 
-  void add_price(const datetime_t& date, const amount_t& price);
-  bool remove_price(const datetime_t& date, const commodity_t& comm);
+  optional<history_t>
+  find_price(const commodity_t&		 commodity,
+	     const optional<datetime_t>& moment,
+	     std::vector<bool *>&	 bools);
+
+public:
+  // These methods provide a transparent pass-through to the underlying
+  // base->varied_history object.
+
+  void add_price(const datetime_t& date, const amount_t& price) {
+    if (! base->varied_history)
+      base->varied_history = varied_history_t();
+
+    base->varied_history->add_price(date, price);
+  }
+  bool remove_price(const datetime_t& date, const commodity_t& commodity) {
+    if (base->varied_history)
+      base->varied_history->remove_price(date, commodity);
+    return false;
+  }
 
   optional<amount_t>
-  value(const history_t&	    history,
-	const optional<datetime_t>& moment = none);
-
-  optional<amount_t>
-  value(const optional<const commodity_t&>& commodity = none,
-	const optional<datetime_t>&	    moment    = none) {
-    if (optional<history_t&> hist = history(commodity))
-      return value(*hist, moment);
+  find_price(const optional<const commodity_t&>& commodity = none,
+	     const optional<datetime_t>&	 moment    = none) {
+    if (base->varied_history)
+      return base->varied_history->find_price(commodity, moment);
     return none;
   }    
 
   optional<amount_t>
-  value(const std::vector<const commodity_t *>& commodities,
-	const optional<datetime_t>&	        moment = none) {
-    if (optional<history_t&> hist = history(commodities))
-      return value(*hist, moment);
+  find_price(const std::vector<const commodity_t *>& commodities,
+	     const optional<datetime_t>&	     moment = none) {
+    if (base->varied_history)
+      return base->varied_history->find_price(commodities, moment);
     return none;
   }
+
+  // Methods to exchange one commodity for another, while recording the
+  // factored price.
 
   static void exchange(commodity_t&	 commodity,
 		       const amount_t&   per_unit_cost,
@@ -245,6 +289,9 @@ public:
 				   const bool		       is_per_unit = false,
 				   const optional<datetime_t>& moment	   = none,
 				   const optional<string>&     tag	   = none);
+
+  // Methods related to parsing, reading, writing, etc., the commodity
+  // itself.
 
   static void parse_symbol(std::istream& in, string& symbol);
   static void parse_symbol(char *& p, string& symbol);
