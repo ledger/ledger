@@ -201,21 +201,34 @@ public:
       return *base->varied_history;
     return none;
   }
-  optional<history_t&> history(const commodity_t& comm) const {
-    if (base->varied_history) {
-      history_by_commodity_map::iterator i = base->varied_history->find(&comm);
-      if (i != base->varied_history->end())
-	return (*i).second;
-    }
-    return none;
-  }
+
+  optional<history_t&>
+  history(const optional<const commodity_t&>& commodity) const;
+  optional<history_t&>
+  history(const std::vector<const commodity_t *>& commodities) const;
 
   void add_price(const datetime_t& date, const amount_t& price);
   bool remove_price(const datetime_t& date, const commodity_t& comm);
 
   optional<amount_t>
-  value(const optional<datetime_t>&			   moment      = none,
-	const optional<std::vector<const commodity_t *> >& commodities = none);
+  value(const history_t&	    history,
+	const optional<datetime_t>& moment = none);
+
+  optional<amount_t>
+  value(const optional<const commodity_t&>& commodity = none,
+	const optional<datetime_t>&	    moment    = none) {
+    if (optional<history_t&> hist = history(commodity))
+      return value(*hist, moment);
+    return none;
+  }    
+
+  optional<amount_t>
+  value(const std::vector<const commodity_t *>& commodities,
+	const optional<datetime_t>&	        moment = none) {
+    if (optional<history_t&> hist = history(commodities))
+      return value(*hist, moment);
+    return none;
+  }
 
   static void exchange(commodity_t&	 commodity,
 		       const amount_t&   per_unit_cost,

@@ -43,6 +43,44 @@
 
 namespace ledger {
 
+optional<commodity_t::history_t&>
+commodity_t::history(const optional<const commodity_t&>& commodity) const
+{
+  if (base->varied_history) {
+    const commodity_t * comm = NULL;
+    if (! commodity) {
+      if (base->varied_history->size() > 1)
+	// jww (2008-09-20): Document which option switch to use here
+	throw_(commodity_error, "Cannot determine history for '"
+	       << *this << "': prices known for multiple commodities (use -?)");
+      comm = (*base->varied_history->begin()).first;
+    } else {
+      comm = &(*commodity);
+    }
+
+    history_by_commodity_map::iterator i = base->varied_history->find(comm);
+    if (i != base->varied_history->end())
+      return (*i).second;
+  }
+  return none;
+}
+
+optional<commodity_t::history_t&>
+commodity_t::history(const std::vector<const commodity_t *>& commodities) const
+{
+  // This function differs from the single commodity case avoid in that
+  // 'commodities' represents a list of preferred valuation commodities.
+  // If no price can be located in terms of the first commodity, then
+  // the second is chosen, etc.
+
+  foreach (const commodity_t * commodity, commodities) {
+    if (optional<commodity_t::history_t&> hist =
+	history(*commodity))
+      return hist;
+  }
+  return none;
+}
+
 void commodity_t::add_price(const datetime_t& date, const amount_t& price)
 {
   if (! base->varied_history)
@@ -85,57 +123,42 @@ bool commodity_t::remove_price(const datetime_t& date, const commodity_t& comm)
 }
 
 optional<amount_t>
-commodity_t::value(const optional<datetime_t>&			      moment,
-		   const optional<std::vector<const commodity_t *> >& commodities)
+commodity_t::value(const history_t&	       history,
+		   const optional<datetime_t>& moment)
 {
   optional<datetime_t> age;
   optional<amount_t>   price;
-  optional<history_t&> hist;
 
-  if (base->varied_history) {
-    const commodity_t * comm = NULL;
-    if (commodities) {
-      // Walk the list of commodities, finding the first one applicable
-      comm = commodities->back();
+  if (history.prices.size() == 0)
+    return none;
+
+  if (! moment) {
+    history_map::const_reverse_iterator r = history.prices.rbegin();
+    age   = (*r).first;
+    price = (*r).second;
+  } else {
+    history_map::const_iterator i = history.prices.lower_bound(*moment);
+    if (i == history.prices.end()) {
+      history_map::const_reverse_iterator r = history.prices.rbegin();
+      age   = (*r).first;
+      price = (*r).second;
     } else {
-      if (base->varied_history->size() > 1)
-	throw_(commodity_error,
-	       "Cannot find commodity value: multiple possibilities exist");
-      comm = (*base->varied_history->begin()).first;
-    }
-
-    hist = history(*comm);
-    if (hist) {
-      assert(hist->prices.size() > 0);
-
-      if (! moment) {
-	history_map::reverse_iterator r = hist->prices.rbegin();
-	age   = (*r).first;
-	price = (*r).second;
-      } else {
-	history_map::iterator i = hist->prices.lower_bound(*moment);
-	if (i == hist->prices.end()) {
-	  history_map::reverse_iterator r = hist->prices.rbegin();
-	  age   = (*r).first;
-	  price = (*r).second;
+      age = (*i).first;
+      if (*moment != *age) {
+	if (i != history.prices.begin()) {
+	  --i;
+	  age	  = (*i).first;
+	  price = (*i).second;
 	} else {
-	  age = (*i).first;
-	  if (*moment != *age) {
-	    if (i != hist->prices.begin()) {
-	      --i;
-	      age	  = (*i).first;
-	      price = (*i).second;
-	    } else {
-	      age   = none;
-	    }
-	  } else {
-	    price = (*i).second;
-	  }
+	  age   = none;
 	}
+      } else {
+	price = (*i).second;
       }
     }
   }
 
+#if 0
   if (! has_flags(COMMODITY_STYLE_NOMARKET) && parent().get_quote) {
     if (optional<amount_t> quote = parent().get_quote
 	(*this, age, moment,
@@ -143,6 +166,8 @@ commodity_t::value(const optional<datetime_t>&			      moment,
 	  (*hist->prices.rbegin()).first : optional<datetime_t>())))
       return *quote;
   }
+#endif
+
   return price;
 }
 
