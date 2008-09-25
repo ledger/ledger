@@ -46,6 +46,9 @@ namespace ledger {
 void commodity_t::base_t::history_t::add_price(const datetime_t& date,
 					       const amount_t&	 price)
 {
+  DEBUG("commodity.prices",
+	"add_price: " << date << ", " << price);
+
   history_map::iterator i = prices.find(date);
   if (i != prices.end()) {
     (*i).second = price;
@@ -58,6 +61,8 @@ void commodity_t::base_t::history_t::add_price(const datetime_t& date,
 
 bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
 {
+  DEBUG("commodity.prices", "remove_price: " << date);
+
   history_map::size_type n = prices.erase(date);
   if (n > 0)
     return true;
@@ -67,6 +72,9 @@ bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
 void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
 						      const amount_t&	price)
 {
+  DEBUG("commodity.prices",
+	"varied_add_price: " << date << ", " << price);
+
   optional<history_t&> hist = history(price.commodity());
   if (! hist) {
     std::pair<history_by_commodity_map::iterator, bool> result
@@ -82,8 +90,11 @@ void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
 }
 
 bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date,
-							 const commodity_t& comm)
+							 commodity_t& comm)
 {
+  DEBUG("commodity.prices",
+	"varied_remove_price: " << date << ", " << comm);
+
   if (optional<history_t&> hist = history(comm))
     return hist->remove_price(date);
   return false;
@@ -95,19 +106,35 @@ commodity_t::base_t::history_t::find_price(const optional<datetime_t>& moment)
   optional<datetime_t> age;
   optional<amount_t>   price;
 
-  if (prices.size() == 0)
+#if defined(DEBUG_ON)
+  if (moment) {
+    DEBUG("commodity.prices", "find_price: " << *moment);
+  } else {
+    DEBUG("commodity.prices", "find_price");
+  }
+#endif
+
+  if (prices.size() == 0) {
+    DEBUG("commodity.prices", "  there are no prices in the history");
     return none;
+  }
 
   if (! moment) {
     history_map::const_reverse_iterator r = prices.rbegin();
     age   = (*r).first;
     price = (*r).second;
+
+    DEBUG("commodity.prices",
+	  "  returning most recent price: " << age << ", " << price);
   } else {
     history_map::const_iterator i = prices.lower_bound(*moment);
     if (i == prices.end()) {
       history_map::const_reverse_iterator r = prices.rbegin();
       age   = (*r).first;
       price = (*r).second;
+
+      DEBUG("commodity.prices",
+	    "  returning last price: " << age << ", " << price);
     } else {
       age = (*i).first;
       if (*moment != *age) {
@@ -121,6 +148,9 @@ commodity_t::base_t::history_t::find_price(const optional<datetime_t>& moment)
       } else {
 	price = (*i).second;
       }
+
+      DEBUG("commodity.prices",
+	    "  returning found price: " << age << ", " << price);
     }
   }
 
@@ -139,25 +169,79 @@ commodity_t::base_t::history_t::find_price(const optional<datetime_t>& moment)
 
 optional<amount_t>
 commodity_t::base_t::varied_history_t::find_price
-  (const optional<const commodity_t&>& commodity,
-   const optional<datetime_t>&	       moment)
+  (const optional<commodity_t&>& commodity,
+   const optional<datetime_t>&	 moment)
 {
-  return none;
+  optional<amount_t> amt;
+
+#if defined(DEBUG_ON)
+  DEBUG("commodity.prices", "varied_find_price");
+
+  if (commodity)
+    DEBUG("commodity.prices", "  looking for commodity '" << *commodity << "'");
+  else
+    DEBUG("commodity.prices", "  looking for any commodity");
+
+  if (moment)
+    DEBUG("commodity.prices", "  time index: " << *moment);
+#endif
+
+  if (optional<history_t&> hist = history(commodity)) {
+    DEBUG("commodity.prices", "  found a history for the commodity");
+
+    amt = hist->find_price(moment);
+
+#if defined(DEBUG_ON)
+    if (amt)
+      DEBUG("commodity.prices", "  found price in that history: " << *amt);
+    else
+      DEBUG("commodity.prices", "  found no price in that history");
+#endif
+  }
+
+  // Either we couldn't find a history for the target commodity, or we
+  // couldn't find a price.  In either case, search all histories known
+  // to this commodity for a price which we can calculate in terms of
+  // the goal commodity.
+  if (! amt && commodity) {
+    foreach (history_by_commodity_map::value_type hist, histories) {
+      commodity_t& comm(*hist.first);
+
+      DEBUG("commodity.prices",
+	    "  searching for price via commodity '" << comm << "'");
+
+      amt = comm.find_price(commodity, moment);
+      // jww (2008-09-24): look for the most recent match
+
+#if defined(DEBUG_ON)
+      if (amt)
+	DEBUG("commodity.prices", "  found price there: " << *amt);
+      else
+	DEBUG("commodity.prices", "  found no price there");
+#endif
+    }
+  }
+
+  return amt;
 }
 
 optional<amount_t>
 commodity_t::base_t::varied_history_t::find_price
-  (const std::vector<const commodity_t *>& commodities,
-   const optional<datetime_t>&		   moment)
+  (const std::vector<commodity_t *>& commodities,
+   const optional<datetime_t>&	     moment)
 {
+  foreach (commodity_t * commodity, commodities) {
+    if (optional<amount_t> amt = find_price(*commodity, moment))
+      return amt;
+  }
   return none;
 }
 
 optional<commodity_t::base_t::history_t&>
 commodity_t::base_t::varied_history_t::history
-  (const optional<const commodity_t&>& commodity)
+  (const optional<commodity_t&>& commodity)
 {
-  const commodity_t * comm = NULL;
+  commodity_t * comm = NULL;
   if (! commodity) {
     if (histories.size() > 1)
       // jww (2008-09-20): Document which option switch to use here
@@ -177,14 +261,14 @@ commodity_t::base_t::varied_history_t::history
 
 optional<commodity_t::history_t&>
 commodity_t::base_t::varied_history_t::history
-  (const std::vector<const commodity_t *>& commodities)
+  (const std::vector<commodity_t *>& commodities)
 {
   // This function differs from the single commodity case avoid in that
   // 'commodities' represents a list of preferred valuation commodities.
   // If no price can be located in terms of the first commodity, then
   // the second is chosen, etc.
 
-  foreach (const commodity_t * commodity, commodities) {
+  foreach (commodity_t * commodity, commodities) {
     if (optional<history_t&> hist = history(*commodity))
       return hist;
   }

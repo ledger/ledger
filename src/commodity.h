@@ -77,26 +77,26 @@ public:
       optional<amount_t> find_price(const optional<datetime_t>& moment = none);
     };
 
-    typedef std::map<const commodity_t *, history_t> history_by_commodity_map;
+    typedef std::map<commodity_t *, history_t> history_by_commodity_map;
 
     struct varied_history_t
     {
       history_by_commodity_map histories;
 
       void add_price(const datetime_t& date, const amount_t& price);
-      bool remove_price(const datetime_t& date, const commodity_t& commodity);
+      bool remove_price(const datetime_t& date, commodity_t& commodity);
 
       optional<amount_t>
-      find_price(const optional<const commodity_t&>& commodity = none,
-		 const optional<datetime_t>&	     moment    = none);
+      find_price(const optional<commodity_t&>& commodity = none,
+		 const optional<datetime_t>&   moment    = none);
       optional<amount_t>
-      find_price(const std::vector<const commodity_t *>& commodities,
-		 const optional<datetime_t>&		 moment = none);
+      find_price(const std::vector<commodity_t *>& commodities,
+		 const optional<datetime_t>&	   moment = none);
 
       optional<history_t&>
-      history(const optional<const commodity_t&>& commodity = none);
+      history(const optional<commodity_t&>& commodity = none);
       optional<history_t&>
-      history(const std::vector<const commodity_t *>& commodities);
+      history(const std::vector<commodity_t *>& commodities);
     };
 
 #define COMMODITY_STYLE_DEFAULTS   0x00
@@ -230,12 +230,12 @@ protected:
   }
 
   optional<history_t&>
-  history(const optional<const commodity_t&>& commodity);
+  history(const optional<commodity_t&>& commodity);
   optional<history_t&>
-  history(const std::vector<const commodity_t *>& commodities);
+  history(const std::vector<commodity_t *>& commodities);
 
   optional<history_t>
-  find_price(const commodity_t&		 commodity,
+  find_price(commodity_t&		 commodity,
 	     const optional<datetime_t>& moment,
 	     std::vector<bool *>&	 bools);
 
@@ -249,23 +249,23 @@ public:
 
     base->varied_history->add_price(date, price);
   }
-  bool remove_price(const datetime_t& date, const commodity_t& commodity) {
+  bool remove_price(const datetime_t& date, commodity_t& commodity) {
     if (base->varied_history)
       base->varied_history->remove_price(date, commodity);
     return false;
   }
 
   optional<amount_t>
-  find_price(const optional<const commodity_t&>& commodity = none,
-	     const optional<datetime_t>&	 moment    = none) {
+  find_price(const optional<commodity_t&>& commodity	= none,
+	     const optional<datetime_t>&	 moment = none) {
     if (base->varied_history)
       return base->varied_history->find_price(commodity, moment);
     return none;
   }    
 
   optional<amount_t>
-  find_price(const std::vector<const commodity_t *>& commodities,
-	     const optional<datetime_t>&	     moment = none) {
+  find_price(const std::vector<commodity_t *>& commodities,
+	     const optional<datetime_t>&       moment = none) {
     if (base->varied_history)
       return base->varied_history->find_price(commodities, moment);
     return none;
