@@ -6,6 +6,23 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
+* TODO [#A] The -V flag is producing a discrepancy when includes are used
+  If you comment out AISChecking from main, the bug goes away.
+  :SCRIPT:
+./ledger -V reg AR:
+  :END:
+  :PROPERTIES:
+  :Submitter: Russell Adams <RLAdams@AdamsInfoServ.Com>
+  :Version: 2.6.1
+  :Attachments: PrecisionBug.tar.gz
+  :ID: A98BFCBA-012D-4E18-9CBB-4D880CDBFE7E
+  :END:
+  [2008-10-05 Sun 20:59]
+* TODO [#B] Add a --actual option to override --effective if in .ledgerc
+  :PROPERTIES:
+  :ID: 84C7C18B-8B06-4248-9C4F-A8E377FACA49
+  :END:
+  [2008-10-03 Fri]
 * TODO [#B] ledger.el and reconcile don't to work with accounts that span files
   My ledger uses a static "Main" file which contains links to all the other
   accounts, some of which cross-reference.
