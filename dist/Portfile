@@ -1,0 +1,63 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+
+name                ledger
+version             2.6.1
+homepage            http://www.newartisans.com/software/ledger.html
+categories          finance accounting reporting
+
+description         A command-line, double-entry accounting tool.
+long_description    Ledger is a powerful, double-entry accounting system that \
+    				is accessed from the UNIX command-line.
+
+maintainers         johnw@newartisans.com
+
+platforms           darwin
+
+use_bzip2           no
+master_sites        ftp://ftp.newartisans.com/pub/ledger/:source
+distname            ${name}-${version}
+distfiles           ${distname}${extract.suffix}:source
+checksums           ${distname}${extract.suffix} \
+						md5     7d2ebb3fbc0ca14e34f4aada9fe764a0 \
+                    	sha1    d00ca4d61f28793c22be892411491d5ff48f156b \
+                    	rmd160  e6ef6e0acfa125a88927ac399ec8e37fbbe1fe66
+
+depends_build       port:automake \
+                    port:autoconf \
+                    port:libtool
+
+depends_lib         port:pcre \
+                    port:gmp \
+                    port:expat
+
+configure.args		--with-extra-includes=${prefix}/include \
+                    --with-extra-libs=${prefix}/lib
+
+#patchfiles          patch-admin-libtool.m4.in.diff \
+#                    patch-ledger-ProjectFile.cpp.diff
+
+build.args          DYLD_LIBRARY_PATH=${worksrcpath}/ledger/.libs
+
+platform darwin 9 {}
+
+destroot.args       DESTDIR=${destroot}${prefix} \
+                    DYLD_LIBRARY_PATH=${worksrcpath}/ledger/.libs \
+                    docprefix=${destroot}/share/doc
+
+post-destroot {}
+
+variant ofx description {Allow reading of OFX data files} {
+    depends_lib-append          port:libofx
+}
+
+variant debug description {Enable debug mode} {
+    configure.args-append       --enable-debug=yes
+}
+
+#livecheck.check     regex
+#livecheck.url       ${homepage}
+#livecheck.regex     "Latest Stable Ledger \\(Version (\\d+.\\d+.\\d+)\\)"
+
