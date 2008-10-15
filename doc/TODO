@@ -6,6 +6,18 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
+* TODO [#B] Mention hledger in the Ledger docs and webpage
+  http://hackage.haskell.org/cgi-bin/hackage-scripts/package/hledger-0.1
+  :PROPERTIES:
+  :ID: F71EA52C-0F99-4689-9DA5-DF6B131D81EE
+  :END:
+  [2008-10-15 Wed 16:45]
+* TODO [#B] Ledger is crashing on Thomas' computer when -O2 is used
+  SCHEDULED: <2008-10-06 Mon>
+  :PROPERTIES:
+  :ID: 00DA5F10-6B76-4CB0-89E3-152A80BFBCED
+  :END:
+  [2008-10-06 Mon 19:15]
 * TODO [#A] The -V flag is producing a discrepancy when includes are used
   If you comment out AISChecking from main, the bug goes away.
   :SCRIPT:
