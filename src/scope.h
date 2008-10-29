@@ -56,27 +56,7 @@ public:
     else
       return NULL_VALUE;
   }
-
-  virtual optional<scope_t&> find_scope(const std::type_info&, bool = true) {
-    return none;
-  }
 };
-
-template <typename T>
-inline T& find_scope(scope_t& scope, bool skip_this = true) {
-  optional<scope_t&> found = scope.find_scope(typeid(T), skip_this);
-  assert(found);
-  return static_cast<T&>(*found);
-}
-
-template <typename T>
-inline optional<T&> maybe_find_scope(scope_t& scope, bool skip_this = true) {
-  optional<scope_t&> found = scope.find_scope(typeid(T), skip_this);
-  if (found)
-    return optional<T&>(static_cast<T&>(*found));
-  else
-    return none;
-}
 
 class child_scope_t : public noncopyable, public scope_t
 {
@@ -99,20 +79,24 @@ public:
       return parent->lookup(name);
     return expr_t::ptr_op_t();
   }
-
-  virtual optional<scope_t&> find_scope(const std::type_info& type,
-					bool skip_this = true) {
-    for (scope_t * ptr = (skip_this ? parent : this); ptr; ) {
-      if (typeid(*ptr) == type)
-	return *ptr;
-      if (child_scope_t * scope = dynamic_cast<child_scope_t *>(ptr))
-        ptr = scope->parent;
-      else
-	ptr = NULL;
-    }
-    return none;
-  }
 };
+
+
+template <typename T>
+inline T& find_scope(child_scope_t& scope, bool skip_this = true)
+{
+  for (scope_t * ptr = (skip_this ? scope.parent : &scope); ptr; ) {
+    T * sought = dynamic_cast<T *>(ptr);
+    if (sought)
+      return *sought;
+    if (child_scope_t * scope = dynamic_cast<child_scope_t *>(ptr))
+      ptr = scope->parent;
+    else
+      ptr = NULL;
+  }
+  throw_(std::runtime_error, "Could not find scope");
+  return reinterpret_cast<T&>(scope); // never executed
+}
 
 class symbol_scope_t : public child_scope_t
 {
