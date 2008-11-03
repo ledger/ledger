@@ -44,8 +44,10 @@ static bool search_for_balance(amount_t& amount,
     *prev = next;
 
     amount -= next->amount;
-    if (! amount ||
-	search_for_balance(amount, xact_next_ptr(next), xact_next(next)))
+    if (! amount) {
+      transaction_xdata(*next).ptr = NULL;
+      return true;
+    } else if (search_for_balance(amount, xact_next_ptr(next), xact_next(next)))
       return true;
     amount += next->amount;
 
