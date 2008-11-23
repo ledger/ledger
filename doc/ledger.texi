@@ -1,6 +1,6 @@
 \input texinfo  @c -*-texinfo-*-
 
-@setfilename ledger.info
+@setfilename ledger-sm.info
 @settitle Ledger: Command-Line Accounting
 
 @dircategory User Applications
