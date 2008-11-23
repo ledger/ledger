@@ -494,9 +494,10 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
   if (has_commodity() && ! (quantity->has_flags(BIGINT_KEEP_PREC))) {
     precision_t comm_prec = commodity().precision();
-    if (quantity->prec > comm_prec + 6U) {
-      mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
-      quantity->prec = comm_prec + 6U;
+    if (quantity->prec > comm_prec + extend_by_digits) {
+      mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec,
+		comm_prec + extend_by_digits);
+      quantity->prec = comm_prec + extend_by_digits;
     }
   }
 
@@ -524,10 +525,17 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   // Increase the value's precision, to capture fractional parts after
   // the divide.  Round up in the last position.
 
-  mpz_ui_pow_ui(divisor, 10, (2 * amt.quantity->prec) + quantity->prec + 7U);
+  // jww (2008-11-13): I need to consider the magnitude of the numerator
+  // of both numbers.  For example, if I divide 10 by
+  // 100000000000000000000000000000000000, the result will be 0 because
+  // even extend_by_digits * 2 will not be enough digits of precision to
+  // retain the significance of the answer.
+
+  mpz_ui_pow_ui(divisor, 10,
+		(2 * amt.quantity->prec) + quantity->prec + extend_by_digits + 1U);
   mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
-  quantity->prec += amt.quantity->prec + quantity->prec + 7U;
+  quantity->prec += amt.quantity->prec + quantity->prec + extend_by_digits + 1U;
 
   mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, quantity->prec - 1);
   quantity->prec -= 1;
@@ -542,9 +550,10 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 
   if (has_commodity() && ! (quantity->has_flags(BIGINT_KEEP_PREC))) {
     precision_t comm_prec = commodity().precision();
-    if (quantity->prec > comm_prec + 6U) {
-      mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, comm_prec + 6U);
-      quantity->prec = comm_prec + 6U;
+    if (quantity->prec > comm_prec + extend_by_digits) {
+      mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec,
+		comm_prec + extend_by_digits);
+      quantity->prec = comm_prec + extend_by_digits;
     }
   }
 
