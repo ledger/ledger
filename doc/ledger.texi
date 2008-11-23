@@ -59,7 +59,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @menu
 * Introduction::                
-* Using Ledger::                
+* Quick Reference::             
 * Ledger Tutorial::             
 * Ledger in Practice::          
 @end menu
@@ -69,7 +69,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @insertcopying
 @end ifnottex
 
-@node Introduction, Using Ledger, Top, Top
+@node Introduction, Quick Reference, Top, Top
 @chapter Introduction
 
 Ledger is an accounting tool with the moxie to exist.  It provides no
@@ -272,8 +272,8 @@ https://lists.sourceforge.net/lists/listinfo/ledger-discuss
 You can also find help at the @samp{#ledger} channel on the IRC server
 @samp{irc.freenode.net}.
 
-@node Using Ledger, Ledger Tutorial, Introduction, Top
-@chapter Using Ledger
+@node Quick Reference, Ledger Tutorial, Introduction, Top
+@chapter Quick Reference
 
 This chapter describes ledger's features and serves as a quick
 reference. You may wish to survey this to get an overview before diving
@@ -319,7 +319,7 @@ commands.
 * File format::                 
 @end menu
 
-@node Commands, Options, Using Ledger, Using Ledger
+@node Commands, Options, Quick Reference, Quick Reference
 @section Commands
 
 @subsection balance
@@ -467,7 +467,7 @@ ledger entry 4/9 viva food $11.50 tips $8 cash
 ledger entry 4/9 viva dining "DM 11.50"
 @end example
 
-@node Options, Period expressions, Commands, Using Ledger
+@node Options, Period expressions, Commands, Quick Reference
 @section Options
 
 With all of the reports, command-line options are useful to modify the
@@ -833,7 +833,7 @@ option settings in the file @file{~/.ledgerrc}, for example:
 --cache /tmp/.mycache
 @end example
 
-@node Period expressions, Format strings, Options, Using Ledger
+@node Period expressions, Format strings, Options, Quick Reference
 @section Period expressions
 
 A period expression indicates a span of time, or a reporting interval,
@@ -920,7 +920,7 @@ last oct
 weekly last august
 @end example
 
-@node Format strings, Value expressions, Period expressions, Using Ledger
+@node Format strings, Value expressions, Period expressions, Quick Reference
 @section Format strings
 
 Format strings may be used to change the output format of reports.
@@ -1068,7 +1068,7 @@ what is printed for all subsequent transactions.  If not used, the
 same format string is used for all transactions.
 @end table
 
-@node Value expressions, File format, Format strings, Using Ledger
+@node Value expressions, File format, Format strings, Quick Reference
 @section Value expressions
 
 Value expressions are an expression language used by Ledger to
@@ -1291,7 +1291,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @samp{[2004/06/01]}.
 @end table
 
-@node File format,  , Value expressions, Using Ledger
+@node File format,  , Value expressions, Quick Reference
 @section File format
 
 The ledger file format is quite simple, but also very flexible.  It
@@ -1421,7 +1421,7 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Ledger Tutorial, Ledger in Practice, Using Ledger, Top
+@node Ledger Tutorial, Ledger in Practice, Quick Reference, Top
 @chapter Ledger Tutorial
 
 This chapter presents a series of recipes, gradually introducing all of
