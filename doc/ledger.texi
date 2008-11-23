@@ -55,15 +55,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @ifnottex
 @node Top, Introduction, (dir), (dir)
 @top Overview
-
-@insertcopying
 @end ifnottex
 
 @menu
 * Introduction::                
 * Using Ledger::                
+* Ledger Tutorial::             
 * Ledger in Practice::          
 @end menu
+
+@ifnottex
+@section Copyright
+@insertcopying
+@end ifnottex
 
 @node Introduction, Using Ledger, Top, Top
 @chapter Introduction
@@ -189,12 +193,59 @@ $ ledger -f ledger.dat register checking
 $ ledger -f ledger.dat register bell
 @end example
 
-@menu
-* Building the program::        
-* Getting help::                
-@end menu
+@section More introduction
 
-@node Building the program, Getting help, Introduction, Introduction
+The most important part of accounting is keeping a good ledger.  If
+you have a good ledger, tools can be written to work whatever
+mathematically tricks you need to better understand your spending
+patterns.  Without a good ledger, no tool, however smart, can help
+you.
+
+The Ledger program aims at making ledger entry as simple as possible.
+Since it is a command-line tool, it does not provide a user interface
+for keeping a ledger.  If you like, you may use GnuCash to maintain
+your ledger, in which case the Ledger program will read GnuCash's data
+files directly.  In that case, read the GnuCash manual now, and skip
+to the next chapter.
+
+If you are not using GnuCash, but a text editor to maintain your
+ledger, read on.  Ledger has been designed to make data entry as
+simple as possible, by keeping the ledger format easy, and also by
+automagically determining as much information as possible based on the
+nature of your entries.
+
+For example, you do not need to tell Ledger about the accounts you
+use.  Any time Ledger sees a transaction involving an account it knows
+nothing about, it will create it.  If you use a commodity that is new
+to Ledger, it will create that commodity, and determine its display
+characteristics (placement of the symbol before or after the amount,
+display precision, etc) based on how you used the commodity in the
+transaction.
+
+Here is the Pacific Bell example from above, given as a Ledger
+transaction:
+
+@smallexample
+9/29 (100) Pacific Bell
+    Expenses:Utilities:Phone                   $23.00
+    Assets:Checking                           $-23.00
+@end smallexample
+
+As you can see, it is very similar to what would be written on paper,
+minus the computed balance totals, and adding in account names that
+work better with Ledger's scheme of things.  In fact, since Ledger is
+smart about many things, you don't need to specify the balanced
+amount, if it is the same as the first line:
+
+@smallexample
+9/29 (100) Pacific Bell
+    Expenses:Utilities:Phone                   $23.00
+    Assets:Checking
+@end smallexample
+
+For this entry, Ledger will figure out that $-23.00 must come from
+@samp{Assets:Checking} in order to balance the entry.
+
 @section Building the program
 
 Ledger is written in ANSI C++, and should compile on any platform.  It
@@ -209,7 +260,6 @@ enter these commands:
 ./configure && make install
 @end example
 
-@node Getting help,  , Building the program, Introduction
 @section Getting help
 
 If you need help on how to use Ledger, or run into problems, you can
@@ -222,8 +272,12 @@ https://lists.sourceforge.net/lists/listinfo/ledger-discuss
 You can also find help at the @samp{#ledger} channel on the IRC server
 @samp{irc.freenode.net}.
 
-@node Using Ledger, Ledger in Practice, Introduction, Top
+@node Using Ledger, Ledger Tutorial, Introduction, Top
 @chapter Using Ledger
+
+This chapter describes ledger's features and serves as a quick
+reference. You may wish to survey this to get an overview before diving
+in to the @ref{Ledger Tutorial} and more detailed examples that follow.
 
 Ledger has a very simple command-line interface, named---enticing
 enough---@command{ledger}.  It supports a few reporting commands, and
@@ -259,12 +313,10 @@ commands.
 @menu
 * Commands::                    
 * Options::                     
+* Period expressions::          
 * Format strings::              
 * Value expressions::           
-* Period expressions::          
 * File format::                 
-* Some typical queries::        
-* Budgeting and forecasting::   
 @end menu
 
 @node Commands, Options, Using Ledger, Using Ledger
@@ -415,7 +467,7 @@ ledger entry 4/9 viva food $11.50 tips $8 cash
 ledger entry 4/9 viva dining "DM 11.50"
 @end example
 
-@node Options, Format strings, Commands, Using Ledger
+@node Options, Period expressions, Commands, Using Ledger
 @section Options
 
 With all of the reports, command-line options are useful to modify the
@@ -433,20 +485,11 @@ You could just use @samp{ledger balance}, without any options---which
 prints a summary of all accounts.  But for more specific reporting, or
 to change the appearance of the output, options are needed.
 
-@menu
-* Basic options::               
-* Report filtering::            
-* Output customization::        
-* Commodity reporting::         
-* Environment variables::       
-@end menu
-
-@node Basic options, Report filtering, Options, Options
 @subsection Basic options
 
 These are the most basic command options.  Most likely, the user will
-want to set them using @ref{Environment variables}, instead of using
-actual command-line options:
+want to set them using environment variables (see @ref{Options}),
+instead of using actual command-line options:
 
 @option{--help} (@option{-h}) prints a summary of all the options, and
 what they are used for.  This can be a handy way to remember which
@@ -493,7 +536,6 @@ option causes Ledger to always ignore the binary cache.
 @option{--account NAME} (@option{-a NAME}) specifies the default
 account which QIF file transactions are assumed to relate to.
 
-@node Report filtering, Output customization, Basic options, Options
 @subsection Report filtering
 
 These options change which transactions affect the outcome of a
@@ -594,7 +636,6 @@ report, the amount used to calculate account totals in the
 used for the ``totals'' column in the @command{register} and
 @command{balance} reports.
 
-@node Output customization, Commodity reporting, Report filtering, Options
 @subsection Output customization
 
 These options affect only the output, but not which transactions are
@@ -720,7 +761,6 @@ There are also specific format commands for each report type:
 @item @option{--wide-register-format STR} (-w @command{register})
 @end itemize
 
-@node Commodity reporting, Environment variables, Output customization, Options
 @subsection Commodity reporting
 
 These options affect how commodity values are displayed:
@@ -777,7 +817,6 @@ Reports the net gain/loss for all commodities in the report that have
 a price history.
 @end table
 
-@node Environment variables,  , Commodity reporting, Options
 @subsection Environment variables
 
 Every option to ledger may be set using an environment variable.  If
@@ -794,7 +833,94 @@ option settings in the file @file{~/.ledgerrc}, for example:
 --cache /tmp/.mycache
 @end example
 
-@node Format strings, Value expressions, Options, Using Ledger
+@node Period expressions, Format strings, Options, Using Ledger
+@section Period expressions
+
+A period expression indicates a span of time, or a reporting interval,
+or both.  The full syntax is:
+
+@example
+[INTERVAL] [BEGIN] [END]
+@end example
+
+The optional @var{INTERVAL} part may be any one of:
+
+@example
+every day
+every week
+every monthly
+every quarter
+every year
+every N days     # N is any integer
+every N weeks
+every N months
+every N quarters
+every N years
+daily
+weekly
+biweekly
+monthly
+bimonthly
+quarterly
+yearly
+@end example
+
+After the interval, a begin time, end time, both or neither may be
+specified.  As for the begin time, it can be either of:
+
+@example
+from <SPEC>
+since <SPEC>
+@end example
+
+The end time can be either of:
+
+@example
+to <SPEC>
+until <SPEC>
+@end example
+
+Where @var{SPEC} can be any of:
+
+@example
+2004
+2004/10
+2004/10/1
+10/1
+october
+oct
+this week  # or day, month, quarter, year
+next week
+last week
+@end example
+
+The beginning and ending can be given at the same time, if it spans a
+single period.  In that case, just use @var{SPEC} by itself.  In that
+case, the period @samp{oct}, for example, will cover all the days in
+october.  The possible forms are:
+
+@example
+<SPEC>
+in <SPEC>
+@end example
+
+Here are a few examples of period expressions:
+
+@example
+monthly
+monthly in 2004
+weekly from oct
+weekly from last month
+from sep to oct
+from 10/1 to 10/5
+monthly until 2005
+from apr
+until nov
+last oct
+weekly last august
+@end example
+
+@node Format strings, Value expressions, Period expressions, Using Ledger
 @section Format strings
 
 Format strings may be used to change the output format of reports.
@@ -942,7 +1068,7 @@ what is printed for all subsequent transactions.  If not used, the
 same format string is used for all transactions.
 @end table
 
-@node Value expressions, Period expressions, Format strings, Using Ledger
+@node Value expressions, File format, Format strings, Using Ledger
 @section Value expressions
 
 Value expressions are an expression language used by Ledger to
@@ -1165,94 +1291,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @samp{[2004/06/01]}.
 @end table
 
-@node Period expressions, File format, Value expressions, Using Ledger
-@section Period expressions
-
-A period expression indicates a span of time, or a reporting interval,
-or both.  The full syntax is:
-
-@example
-[INTERVAL] [BEGIN] [END]
-@end example
-
-The optional @var{INTERVAL} part may be any one of:
-
-@example
-every day
-every week
-every monthly
-every quarter
-every year
-every N days     # N is any integer
-every N weeks
-every N months
-every N quarters
-every N years
-daily
-weekly
-biweekly
-monthly
-bimonthly
-quarterly
-yearly
-@end example
-
-After the interval, a begin time, end time, both or neither may be
-specified.  As for the begin time, it can be either of:
-
-@example
-from <SPEC>
-since <SPEC>
-@end example
-
-The end time can be either of:
-
-@example
-to <SPEC>
-until <SPEC>
-@end example
-
-Where @var{SPEC} can be any of:
-
-@example
-2004
-2004/10
-2004/10/1
-10/1
-october
-oct
-this week  # or day, month, quarter, year
-next week
-last week
-@end example
-
-The beginning and ending can be given at the same time, if it spans a
-single period.  In that case, just use @var{SPEC} by itself.  In that
-case, the period @samp{oct}, for example, will cover all the days in
-october.  The possible forms are:
-
-@example
-<SPEC>
-in <SPEC>
-@end example
-
-Here are a few examples of period expressions:
-
-@example
-monthly
-monthly in 2004
-weekly from oct
-weekly from last month
-from sep to oct
-from 10/1 to 10/5
-monthly until 2005
-from apr
-until nov
-last oct
-weekly last august
-@end example
-
-@node File format, Some typical queries, Period expressions, Using Ledger
+@node File format,  , Value expressions, Using Ledger
 @section File format
 
 The ledger file format is quite simple, but also very flexible.  It
@@ -1382,278 +1421,11 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Some typical queries, Budgeting and forecasting, File format, Using Ledger
-@section Some typical queries
+@node Ledger Tutorial, Ledger in Practice, Using Ledger, Top
+@chapter Ledger Tutorial
 
-A query such as the following shows all expenses since last
-October, sorted by total:
-
-@example
-ledger -b "last oct" -s -S T bal ^expenses
-@end example
-
-From left to right the options mean: Show entries since October, 2003;
-show all sub-accounts; sort by the absolute value of the total; and
-report the balance for all expenses.
-
-@subsection Reporting monthly expenses
-
-The following query makes it easy to see monthly expenses, with each
-month's expenses sorted by the amount:
-
-@example
-ledger -M --period-sort t reg ^expenses
-@end example
-
-Now, you might wonder where the money came from to pay for these
-things.  To see that report, add @option{-r}, which shows the
-``related account'' transactions:
-
-@example
-ledger -M --period-sort t -r reg ^expenses
-@end example
-
-But maybe this prints too much information.  You might just want to
-see how much you're spending with your MasterCard.  That kind of query
-requires the use of a display predicate, since the transactions
-calculated must match @samp{^expenses}, while the transactions
-displayed must match @samp{mastercard}.  The command would be:
-
-@example
-ledger -M -r -d /mastercard/ reg ^expenses
-@end example
-
-This query says: Report monthly subtotals; report the ``related
-account'' transactions; display only related transactions whose
-account matches @samp{mastercard}, and base the calculation on
-transactions matching @samp{^expenses}.
-
-This works just as well for report the overall total, too:
-
-@example
-ledger -s -r -d /mastercard/ reg ^expenses
-@end example
-
-The @option{-s} option subtotals all transactions, just as @option{-M}
-subtotaled by the month.  The running total in both cases is off,
-however, since a display expression is being used.
-
-@subsection Visualizing with Gnuplot
-
-If you have @command{Gnuplot} installed, you can graph any of the
-above register reports.  The script to do this is included in the
-ledger distribution, and is named @file{scripts/report}.  Install
-@file{report} anywhere along your @env{PATH}, and then use
-@command{report} instead of @command{ledger} when doing a register
-report.  The only thing to keep in mind is that you must specify
-@option{-j} or @option{-J} to indicate whether Gnuplot should plot the
-amount, or the running total.  For example, this command plots total
-monthly expenses made on your MasterCard.
-
-@example
-report -j -M -r -d /mastercard/ reg ^expenses
-@end example
-
-The @command{report} script is a very simple Bourne shell script, that
-passes a set of scripted commands to Gnuplot.  Feel free to modify the
-script to your liking, since you may prefer histograms to line plots,
-for example.
-
-@subsubsection Typical plots
-
-Here are some useful plots:
-
-@smallexample
-report -j -M reg ^expenses         # monthly expenses
-report -J reg checking             # checking account balance
-report -J reg ^income ^expenses    # cash flow report
-
-# net worth report, ignoring non-$ transactions
-
-report -J -l "Ua>=@{\$0.01@}" reg ^assets ^liab
-
-# net worth report starting last February.  the use of a display
-# predicate (-d) is needed, otherwise the balance will start at
-# zero, and thus the y-axis will not reflect the true balance
-
-report -J -l "Ua>=@{\$0.01@}" -d "d>=[last feb]" reg ^assets ^liab
-@end smallexample
-
-The last report uses both a calculation predicate (@option{-l}) and a
-display predicate (@option{-d}).  The calculation predicates limits
-the report to transactions whose amount is greater than $1 (which can
-only happen if the transaction amount is in dollars).  The display
-predicate limits the entries @emph{displayed} to just those since last
-February, even those entries from before then will be computed as part
-of the balance.
-
-@node Budgeting and forecasting,  , Some typical queries, Using Ledger
-@section Budgeting and forecasting
-
-@subsection Budgeting
-
-Keeping a budget allows you to pay closer attention to your income and
-expenses, by reporting how far your actual financial activity is from
-your expectations.
-
-To start keeping a budget, put some period entries at the top of your
-ledger file.  A period entry is almost identical to a regular entry,
-except that it begins with a tilde and has a period expression in
-place of a payee.  For example:
-
-@smallexample
-~ Monthly
-  Expenses:Rent               $500.00
-  Expenses:Food               $450.00
-  Expenses:Auto:Gas           $120.00
-  Expenses:Insurance          $150.00
-  Expenses:Phone              $125.00
-  Expenses:Utilities          $100.00
-  Expenses:Movies              $50.00
-  Expenses                    $200.00  ; all other expenses
-  Assets
-
-~ Yearly
-  Expenses:Auto:Repair        $500.00
-  Assets
-@end smallexample
-
-These two period entries give the usual monthly expenses, as well as
-one typical yearly expense.  For help on finding out what your average
-monthly expense is for any category, use a command like:
-
-@example
-ledger -p "this year" -MAs bal ^expenses
-@end example
-
-The reported totals are the current year's average for each account.
-
-Once these period entries are defined, creating a budget report is as
-easy as adding @option{--budget} to the command-line.  For example, a
-typical monthly expense report would be:
-
-@example
-ledger -M reg ^exp
-@end example
-
-To see the same report balanced against your budget, use:
-
-@example
-ledger --budget -M reg ^exp
-@end example
-
-A budget report includes only those accounts that appear in the
-budget.  To see all expenses balanced against the budget, use
-@option{--add-budget}.  You can even see only the unbudgeted expenses
-using @option{--unbudgeted}:
-
-@example
-ledger --unbudgeted -M reg ^exp
-@end example
-
-You can also use these flags with the @command{balance} command.
-
-@subsection Forecasting
-
-Sometimes it's useful to know what your finances will look like in the
-future, such as determining when an account will reach zero.  Ledger
-makes this easy to do, using the same period entries as are used for
-budgeting.  An example forecast report can be generated with:
-
-@example
-ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
-@end example
-
-This report continues outputting transactions until the running total
-is greater than $-500.00.  A final transaction is always output, to
-show you what the total afterwards would be.
-
-Forecasting can also be used with the balance report, but by date
-only, and not against the running total:
-
-@example
-ledger --forecast "d<[2010]" bal ^assets ^liabilities
-@end example
-
-@node Ledger in Practice,  , Using Ledger, Top
-@chapter Ledger in Practice
-
-The most important part of accounting is keeping a good ledger.  If
-you have a good ledger, tools can be written to work whatever
-mathematically tricks you need to better understand your spending
-patterns.  Without a good ledger, no tool, however smart, can help
-you.
-
-The Ledger program aims at making ledger entry as simple as possible.
-Since it is a command-line tool, it does not provide a user interface
-for keeping a ledger.  If you like, you may use GnuCash to maintain
-your ledger, in which case the Ledger program will read GnuCash's data
-files directly.  In that case, read the GnuCash manual now, and skip
-to the next chapter.
-
-If you are not using GnuCash, but a text editor to maintain your
-ledger, read on.  Ledger has been designed to make data entry as
-simple as possible, by keeping the ledger format easy, and also by
-automagically determining as much information as possible based on the
-nature of your entries.
-
-For example, you do not need to tell Ledger about the accounts you
-use.  Any time Ledger sees a transaction involving an account it knows
-nothing about, it will create it.  If you use a commodity that is new
-to Ledger, it will create that commodity, and determine its display
-characteristics (placement of the symbol before or after the amount,
-display precision, etc) based on how you used the commodity in the
-transaction.
-
-Here is the Pacific Bell example from above, given as a Ledger
-transaction:
-
-@smallexample
-9/29 (100) Pacific Bell
-    Expenses:Utilities:Phone                   $23.00
-    Assets:Checking                           $-23.00
-@end smallexample
-
-As you can see, it is very similar to what would be written on paper,
-minus the computed balance totals, and adding in account names that
-work better with Ledger's scheme of things.  In fact, since Ledger is
-smart about many things, you don't need to specify the balanced
-amount, if it is the same as the first line:
-
-@smallexample
-9/29 (100) Pacific Bell
-    Expenses:Utilities:Phone                   $23.00
-    Assets:Checking
-@end smallexample
-
-For this entry, Ledger will figure out that $-23.00 must come from
-@samp{Assets:Checking} in order to balance the entry.
-
-@menu
-* Usage overview::              
-* Stating where money goes::    
-* Assets and Liabilities::      
-* Commodities and Currencies::  
-* Accounts and Inventories::    
-* Understanding Equity::        
-* Dealing with Petty Cash::     
-* Working with multiple funds and accounts::  
-* Archiving previous years::    
-* Virtual transactions::        
-* Automated transactions::      
-* Using Emacs to Keep Your Ledger::  
-* Using GnuCash to Keep Your Ledger::  
-* Using timeclock to record billable time::  
-* Using XML::                   
-@end menu
-
-@node Usage overview, Stating where money goes, Ledger in Practice, Ledger in Practice
-@section Usage overview
-
-Before getting into the details of how to run Ledger, it will be
-easier to introduce the features in the context of their typical
-usage.  To that end, this section presents a series of recipes,
-gradually introducing all of the command-line features of Ledger.
+This chapter presents a series of recipes, gradually introducing all of
+the command-line features of Ledger.
 
 For the purpose of these examples, assume the environment variable
 @var{LEDGER} is set to the file @file{sample.dat} (which is included
@@ -1693,7 +1465,7 @@ is recommended you follow: Keep all of your accounts under five parent
 Assets, Liabilities, Income, Expenses and Equity.  It is important to
 do so in order to make sense out of the following examples.
 
-@subsection Checking balances
+@section Checking balances
 
 Ledger has seven basic commands, but by far the most often used are
 @command{balance} and @command{register}.  To see a summary balance of
@@ -1779,7 +1551,7 @@ should never yield a remainder@footnote{If it ever does, then
 generated transactions are involved, which can be removed using
 @option{--actual}}.
 
-@subsubsection Sub-account balances
+@subsection Sub-account balances
 
 The totals reported by the balance command are only the topmost parent
 accounts.  To see the totals of all child accounts as well, use the
@@ -1834,7 +1606,7 @@ terse expression means: Display an account only if it has a non-zero
 total (@code{T}), and its nesting level is less than or equal to 2
 (@code{l<=2}).
 
-@subsubsection Specific account balances
+@subsection Specific account balances
 
 While reporting the totals for all accounts can be useful, most often
 you will want to check the balance of a specific account or accounts.
@@ -1883,7 +1655,7 @@ Reports:
               $-2.00  Liabilities:Taxes
 @end smallexample
 
-@subsection The register report
+@section The register report
 
 While the @command{balance} command can be very handy for checking
 account totals, by far the most powerful of Ledger's reporting tools
@@ -1951,7 +1723,7 @@ Reports:
 
 Here we see that everything balances to zero in the end, as it must.
 
-@subsubsection Specific register queries
+@subsection Specific register queries
 
 The most common use of the register command is to summarize
 transactions based on the account(s) they affect.  Using
@@ -1986,7 +1758,7 @@ There are many reporting options for tailoring which transactions are
 found, and also how to summarize the various amounts and totals that
 result.  These are plumbed in greater depth below.
 
-@subsection Selecting transactions
+@section Selecting transactions
 
 Although the easiest way to use the register is to report all the
 transactions affecting a set of accounts, it can often result in more
@@ -1996,7 +1768,7 @@ report to exactly the transactions that interest you most.  This is
 called the ``calculation'' phase of Ledger.  All of its related
 options are documented under @option{--help-calc}.
 
-@subsubsection By date
+@subsection By date
 
 @c  -c, --current          show only current and past entries (not future)
 
@@ -2087,7 +1859,7 @@ similar to the @option{--sort} option, except that it sorts within
 each period entry, rather than sorting all transactions in the report.
 See the documentation on @option{--sort} below for more details.
 
-@subsubsection By status
+@subsection By status
 
 By default, all regular transactions are included in each report.  To
 limit the report to certain kinds of transactions, use one or more of
@@ -2131,7 +1903,7 @@ but without subtracting the budget amount (because the generated
 transactions are suppressed with @option{--actual}).  The report shows
 how much you actually spent on budgeted items.
 
-@subsubsection By relationship
+@subsection By relationship
 
 @c  -r, --related          calculate report using related transactions
 
@@ -2164,7 +1936,7 @@ Reports:
 2004/05/29 Book Store           Liabilities:MasterCard       $20.00       $20.00
 @end smallexample
 
-@subsubsection By budget
+@subsection By budget
 
 @c      --budget           generate budget entries based on FILE
 
@@ -2264,7 +2036,7 @@ of the above command (in November 2004) is:
 2008/01/01 - 2008/01/01         Income:Salary              $-500.00  $-19,480.00
 @end smallexample
 
-@subsubsection By value expression
+@subsection By value expression
 
 @c  -l, --limit EXPR       calculate only transactions matching EXPR
 
@@ -2304,7 +2076,7 @@ transaction amount is displayed.  To change the running total, use
 ledger -T 'O/2' reg ^exp
 @end example
 
-@subsection Massaging register output
+@section Massaging register output
 
 Even after filtering down your data to just the transactions you're
 interested in, the default reporting method of one transaction per
@@ -2313,7 +2085,7 @@ possible to ask Ledger to report the details to you in many different
 forms, summarized in various ways.  This is the ``display'' phase of
 Ledger, and is documented under @option{--help-disp}.
 
-@subsubsection Summarizing
+@subsection Summarizing
 
 @c  -n, --collapse         register: collapse entries with multiple transactions
 
@@ -2419,7 +2191,7 @@ matching accounts with a zero a balance, which are ordinarily
 excluded.  This can be useful to see all the accounts involved in a
 report, even if some have no total.
 
-@subsubsection Quick periods
+@subsection Quick periods
 
 Although the @option{-p} option (also @option{--period}) is much more
 versatile, there are other options to make the most common period
@@ -2452,7 +2224,7 @@ Reports:
 2004/05/14 Fridays              Income:Salary              $-500.00     $-480.00
 @end smallexample
 
-@subsubsection Ordering and width
+@subsection Ordering and width
 
 @c  -S, --sort EXPR        sort report according to the value expression EXPR
 
@@ -2509,7 +2281,7 @@ data to a pager utility, such as @command{more} or @command{less}:
 ledger --pager /usr/bin/less reg checking
 @end example
 
-@subsubsection Averages and percentages
+@subsection Averages and percentages
 
 @c  -A, --average          report average transaction amount
 
@@ -2554,7 +2326,7 @@ such as reviewing overall expenses:
 ledger -%s -S T bal ^expenses
 @end example
 
-@subsubsection Reporting total data
+@subsection Reporting total data
 
 @c      --totals           in the "xml" report, include running total
 
@@ -2571,7 +2343,7 @@ commodities.  This only makes sense if a single commodity appears in
 the report, but can be quite useful for scripting, or passing the data
 to Gnuplot.  To show only the date and running total, use @option{-J}.
 
-@subsubsection Display by value expression
+@subsection Display by value expression
 
 @c  -d, --display EXPR     display only transactions matching EXPR
 
@@ -2588,7 +2360,7 @@ This command shows the checking account's register, beginning from
 last month, but with the running total reflecting the entire history
 of the account.
 
-@subsubsection Change report format
+@subsection Change report format
 
 @c  -y, --date-format STR  use STR as the date format (default: %Y/%m/%d)
 
@@ -2660,7 +2432,7 @@ options:
 @end smallexample
 @end table
 
-@subsection Standard queries
+@section Standard queries
 
 If your ledger file uses the standard top-level accounts: Assets,
 Liabilities, Income, Expenses, Equity: then the following queries will
@@ -2702,7 +2474,7 @@ ledger balance
 Here I've set my Ledger environment variable to point to where my
 ledger file is hiding.  Thereafter, I needn't specify it again.
 
-@subsection Reporting balance totals
+@section Reporting balance totals
 
 The balance command prints out the summarized balances of all my
 top-level accounts, excluding sub-accounts.  In order to see the
@@ -2736,12 +2508,34 @@ food spending:
 ledger balance expenses -food
 @end example
 
-@subsection Reporting percentages
+@section Reporting percentages
 
 There is no built-in way to report transaction amounts or account
 balances in terms of percentages
 
-@node Stating where money goes, Assets and Liabilities, Usage overview, Ledger in Practice
+@node Ledger in Practice,  , Ledger Tutorial, Top
+@chapter Ledger in Practice
+
+@menu
+* Stating where money goes::    
+* Assets and Liabilities::      
+* Typical queries::             
+* Budgeting and forecasting::   
+* Commodities and Currencies::  
+* Accounts and Inventories::    
+* Understanding Equity::        
+* Dealing with Petty Cash::     
+* Working with multiple funds and accounts::  
+* Archiving previous years::    
+* Virtual transactions::        
+* Automated transactions::      
+* Using Emacs to Keep Your Ledger::  
+* Using GnuCash to Keep Your Ledger::  
+* Using timeclock to record billable time::  
+* Using XML::                   
+@end menu
+
+@node Stating where money goes, Assets and Liabilities, Ledger in Practice, Ledger in Practice
 @section Stating where money goes
 
 Accountants will talk of ``credits'' and ``debits'', but the meaning
@@ -2791,7 +2585,7 @@ place has less money now than when you started your ledger; and every
 positive figure means that that account or person or place has more
 money now that when you started your ledger.  Make sense?
 
-@node Assets and Liabilities, Commodities and Currencies, Stating where money goes, Ledger in Practice
+@node Assets and Liabilities, Typical queries, Stating where money goes, Ledger in Practice
 @section Assets and Liabilities
 
 Assets are money that you have, and Liabilities are money that you
@@ -3006,7 +2800,200 @@ spent using your MasterCard on behalf of Company XYZ, and that Company
 XYZ spent the money on computer software and paid it back about two
 weeks later.
 
-@node Commodities and Currencies, Accounts and Inventories, Assets and Liabilities, Ledger in Practice
+@node Typical queries, Budgeting and forecasting, Assets and Liabilities, Ledger in Practice
+@section Typical queries
+
+A query such as the following shows all expenses since last
+October, sorted by total:
+
+@example
+ledger -b "last oct" -s -S T bal ^expenses
+@end example
+
+From left to right the options mean: Show entries since October, 2003;
+show all sub-accounts; sort by the absolute value of the total; and
+report the balance for all expenses.
+
+@subsection Reporting monthly expenses
+
+The following query makes it easy to see monthly expenses, with each
+month's expenses sorted by the amount:
+
+@example
+ledger -M --period-sort t reg ^expenses
+@end example
+
+Now, you might wonder where the money came from to pay for these
+things.  To see that report, add @option{-r}, which shows the
+``related account'' transactions:
+
+@example
+ledger -M --period-sort t -r reg ^expenses
+@end example
+
+But maybe this prints too much information.  You might just want to
+see how much you're spending with your MasterCard.  That kind of query
+requires the use of a display predicate, since the transactions
+calculated must match @samp{^expenses}, while the transactions
+displayed must match @samp{mastercard}.  The command would be:
+
+@example
+ledger -M -r -d /mastercard/ reg ^expenses
+@end example
+
+This query says: Report monthly subtotals; report the ``related
+account'' transactions; display only related transactions whose
+account matches @samp{mastercard}, and base the calculation on
+transactions matching @samp{^expenses}.
+
+This works just as well for report the overall total, too:
+
+@example
+ledger -s -r -d /mastercard/ reg ^expenses
+@end example
+
+The @option{-s} option subtotals all transactions, just as @option{-M}
+subtotaled by the month.  The running total in both cases is off,
+however, since a display expression is being used.
+
+@subsection Visualizing with Gnuplot
+
+If you have @command{Gnuplot} installed, you can graph any of the
+above register reports.  The script to do this is included in the
+ledger distribution, and is named @file{scripts/report}.  Install
+@file{report} anywhere along your @env{PATH}, and then use
+@command{report} instead of @command{ledger} when doing a register
+report.  The only thing to keep in mind is that you must specify
+@option{-j} or @option{-J} to indicate whether Gnuplot should plot the
+amount, or the running total.  For example, this command plots total
+monthly expenses made on your MasterCard.
+
+@example
+report -j -M -r -d /mastercard/ reg ^expenses
+@end example
+
+The @command{report} script is a very simple Bourne shell script, that
+passes a set of scripted commands to Gnuplot.  Feel free to modify the
+script to your liking, since you may prefer histograms to line plots,
+for example.
+
+@subsubsection Typical plots
+
+Here are some useful plots:
+
+@smallexample
+report -j -M reg ^expenses         # monthly expenses
+report -J reg checking             # checking account balance
+report -J reg ^income ^expenses    # cash flow report
+
+# net worth report, ignoring non-$ transactions
+
+report -J -l "Ua>=@{\$0.01@}" reg ^assets ^liab
+
+# net worth report starting last February.  the use of a display
+# predicate (-d) is needed, otherwise the balance will start at
+# zero, and thus the y-axis will not reflect the true balance
+
+report -J -l "Ua>=@{\$0.01@}" -d "d>=[last feb]" reg ^assets ^liab
+@end smallexample
+
+The last report uses both a calculation predicate (@option{-l}) and a
+display predicate (@option{-d}).  The calculation predicates limits
+the report to transactions whose amount is greater than $1 (which can
+only happen if the transaction amount is in dollars).  The display
+predicate limits the entries @emph{displayed} to just those since last
+February, even those entries from before then will be computed as part
+of the balance.
+
+@node Budgeting and forecasting, Commodities and Currencies, Typical queries, Ledger in Practice
+@section Budgeting and forecasting
+
+@subsection Budgeting
+
+Keeping a budget allows you to pay closer attention to your income and
+expenses, by reporting how far your actual financial activity is from
+your expectations.
+
+To start keeping a budget, put some period entries at the top of your
+ledger file.  A period entry is almost identical to a regular entry,
+except that it begins with a tilde and has a period expression in
+place of a payee.  For example:
+
+@smallexample
+~ Monthly
+  Expenses:Rent               $500.00
+  Expenses:Food               $450.00
+  Expenses:Auto:Gas           $120.00
+  Expenses:Insurance          $150.00
+  Expenses:Phone              $125.00
+  Expenses:Utilities          $100.00
+  Expenses:Movies              $50.00
+  Expenses                    $200.00  ; all other expenses
+  Assets
+
+~ Yearly
+  Expenses:Auto:Repair        $500.00
+  Assets
+@end smallexample
+
+These two period entries give the usual monthly expenses, as well as
+one typical yearly expense.  For help on finding out what your average
+monthly expense is for any category, use a command like:
+
+@example
+ledger -p "this year" -MAs bal ^expenses
+@end example
+
+The reported totals are the current year's average for each account.
+
+Once these period entries are defined, creating a budget report is as
+easy as adding @option{--budget} to the command-line.  For example, a
+typical monthly expense report would be:
+
+@example
+ledger -M reg ^exp
+@end example
+
+To see the same report balanced against your budget, use:
+
+@example
+ledger --budget -M reg ^exp
+@end example
+
+A budget report includes only those accounts that appear in the
+budget.  To see all expenses balanced against the budget, use
+@option{--add-budget}.  You can even see only the unbudgeted expenses
+using @option{--unbudgeted}:
+
+@example
+ledger --unbudgeted -M reg ^exp
+@end example
+
+You can also use these flags with the @command{balance} command.
+
+@subsection Forecasting
+
+Sometimes it's useful to know what your finances will look like in the
+future, such as determining when an account will reach zero.  Ledger
+makes this easy to do, using the same period entries as are used for
+budgeting.  An example forecast report can be generated with:
+
+@example
+ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
+@end example
+
+This report continues outputting transactions until the running total
+is greater than $-500.00.  A final transaction is always output, to
+show you what the total afterwards would be.
+
+Forecasting can also be used with the balance report, but by date
+only, and not against the running total:
+
+@example
+ledger --forecast "d<[2010]" bal ^assets ^liabilities
+@end example
+
+@node Commodities and Currencies, Accounts and Inventories, Budgeting and forecasting, Ledger in Practice
 @section Commodities and Currencies
 
 Ledger makes no assumptions about the commodities you use; it only
