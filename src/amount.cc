@@ -606,6 +606,7 @@ amount_t& amount_t::in_place_round(precision_t prec)
 
   DEBUG("amount.round", "Rounding " << *this << " to precision " << prec);
 
+  _dup();
   mpz_round(MPZ(quantity), MPZ(quantity), quantity->prec, prec);
 
   quantity->prec = prec;
