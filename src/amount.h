@@ -104,7 +104,7 @@ public:
    * The number of places of precision by which values are extended to
    * avoid losing precision during division and multiplication.
    */
-  static const unsigned int extend_by_digits = 8U;
+  static const unsigned int extend_by_digits = 6U;
 
   /**
    * The current_pool is a static variable indicating which commodity
