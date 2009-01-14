@@ -48,12 +48,10 @@ format_xacts::format_xacts(report_t& _report, const string& format)
       between_format.parse(string(p + 2));
     } else {
       next_lines_format.parse(n);
-      between_format.parse("\n");
     }
   } else {
     first_line_format.parse(format);
     next_lines_format.parse(format);
-    between_format.parse("\n");
   }
 }
 
