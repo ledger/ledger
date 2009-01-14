@@ -130,15 +130,15 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
     xact->set_state(item_t::CLEARED);
     in.get(p);
     p = peek_next_nonws(in);
-    DEBUG("textual.parse", "line " << linenum << ": " <<
-		"Parsed the CLEARED flag");
+    DEBUG("textual.parse",
+	  "line " << linenum << ": " << "Parsed the CLEARED flag");
     break;
   case '!':
     xact->set_state(item_t::PENDING);
     in.get(p);
     p = peek_next_nonws(in);
-    DEBUG("textual.parse", "line " << linenum << ": " <<
-		"Parsed the PENDING flag");
+    DEBUG("textual.parse",
+	  "line " << linenum << ": " << "Parsed the PENDING flag");
     break;
   }
 
