@@ -552,7 +552,9 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
     }
 
     if (xact_t * xact = parse_xact(line, master, curr.get())) {
-      xact->set_state(state);
+      if ((state == item_t::CLEARED && xact->state() != item_t::CLEARED) ||
+	  (state == item_t::PENDING && xact->state() == item_t::UNCLEARED))
+	xact->set_state(state);
 
       xact->beg_pos  = beg_pos;
       xact->beg_line = beg_line;

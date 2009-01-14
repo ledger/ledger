@@ -41,6 +41,9 @@ namespace {
   value_t get_status(item_t& item) {
     return long(item.state());
   }
+  value_t get_uncleared(item_t& item) {
+    return item.state() == item_t::CLEARED;
+  }
   value_t get_cleared(item_t& item) {
     return item.state() == item_t::CLEARED;
   }
@@ -111,7 +114,7 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
 
   case 'u':
     if (name == "uncleared")
-      return expr_t::op_t::wrap_value(1L);
+      return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
     break;
 
   case 'X':
