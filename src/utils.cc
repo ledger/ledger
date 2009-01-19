@@ -520,6 +520,16 @@ namespace ledger {
 
 optional<std::string> _log_category;
 
+struct __maybe_enable_debugging {
+  __maybe_enable_debugging() {
+    const char * p = std::getenv("LEDGER_DEBUG");
+    if (p != NULL) {
+      _log_level    = LOG_DEBUG;
+      _log_category = p;
+    }
+  }
+} __maybe_enable_debugging_obj;
+
 } // namespace ledger
 
 #endif // DEBUG_ON
