@@ -722,6 +722,8 @@ public:
   bool valid() const;
 };
 
+extern amount_t * one;
+
 inline amount_t amount_t::exact(const string& value) {
   amount_t temp;
   temp.parse(value, AMOUNT_PARSE_NO_MIGRATE);

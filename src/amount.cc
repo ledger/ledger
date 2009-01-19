@@ -115,10 +115,14 @@ uint_fast32_t amount_t::sizeof_bigint_t()
   return sizeof(bigint_t);
 }
 
+amount_t * one = NULL;
+
 void amount_t::initialize()
 {
   mpz_init(temp);
   mpz_init(divisor);
+
+  one = new amount_t(amount_t(1L).unround());
 
   if (! current_pool)
     current_pool = new commodity_pool_t;
@@ -139,6 +143,8 @@ void amount_t::shutdown()
 {
   mpz_clear(temp);
   mpz_clear(divisor);
+
+  delete one;
 
   if (current_pool) {
     checked_delete(current_pool);
@@ -661,9 +667,9 @@ optional<amount_t> amount_t::value(const optional<datetime_t>& moment) const
 {
   if (quantity) {
     // jww (2008-09-21): 'none' is not the right argument here.
-    optional<amount_t> amt(commodity().find_price(none, moment));
-    if (amt)
-      return (*amt * number()).round();
+    optional<price_point_t> point(commodity().find_price(none, moment));
+    if (point)
+      return (point->price * number()).round();
   } else {
     throw_(amount_error, "Cannot determine value of an uninitialized amount");
   }
