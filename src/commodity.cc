@@ -43,9 +43,10 @@
 
 namespace ledger {
 
-void commodity_t::base_t::history_t::add_price(const datetime_t& date,
-					       const amount_t&	 price,
-					       const bool        reflexive)
+void commodity_t::base_t::history_t::add_price(const commodity_t& source,
+					       const datetime_t&  date,
+					       const amount_t&	  price,
+					       const bool	  reflexive)
 {
   DEBUG("commodity.prices", "add_price: " << date << ", " << price);
 
@@ -59,7 +60,9 @@ void commodity_t::base_t::history_t::add_price(const datetime_t& date,
   }
 
   if (reflexive) {
-    price.commodity().add_price(date, *one / price, false);
+    amount_t inverse(*one / price);
+    inverse.set_commodity(const_cast<commodity_t&>(source));
+    price.commodity().add_price(date, inverse, false);
   }
 }
 
@@ -73,9 +76,11 @@ bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
   return false;
 }
 
-void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
-						      const amount_t&	price,
-						      const bool        reflexive)
+void commodity_t::base_t::varied_history_t::
+  add_price(const commodity_t& source,
+	    const datetime_t&  date,
+	    const amount_t&    price,
+	    const bool	       reflexive)
 {
   DEBUG("commodity.prices", "varied_add_price: " << date << ", " << price);
 
@@ -90,7 +95,7 @@ void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
   }
   assert(hist);
 
-  hist->add_price(date, price, reflexive);
+  hist->add_price(source, date, price, reflexive);
 }
 
 bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date,
@@ -112,7 +117,7 @@ optional<price_point_t>
 #if defined(DEBUG_ON)
 	       , const int indent
 #endif
-	       )
+	       ) const
 {
   price_point_t point;
   bool          found = false;
@@ -219,7 +224,7 @@ optional<price_point_t>
 #if defined(DEBUG_ON)
 	       , const int indent
 #endif
-	       )
+	       ) const
 {
   optional<price_point_t> point;
   optional<datetime_t>	  limit = oldest;
@@ -295,7 +300,8 @@ optional<price_point_t>
 
       assert(! commodity || point->price.commodity() == *commodity);
       DEBUG_INDENT("commodity.prices", indent + 1);
-      DEBUG("commodity.prices", "  saw a price there: " << point->price);
+      DEBUG("commodity.prices",
+	    "  saw a price there: " << point->price << " from " << point->when);
       if (! limit || point->when > *limit) {
 	limit = point->when;
 	best  = *point;
@@ -325,7 +331,7 @@ optional<price_point_t>
 #if defined(DEBUG_ON)
 	       , const int indent
 #endif
-	       )
+	       ) const
 {
   foreach (commodity_t * commodity, commodities) {
     if (optional<price_point_t> point = find_price(source, *commodity,
@@ -753,8 +759,7 @@ commodity_pool_t::commodity_pool_t() : default_commodity(NULL)
 {
   TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");
-  null_commodity->add_flags(COMMODITY_STYLE_NOMARKET |
-			    COMMODITY_STYLE_BUILTIN);
+  null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_STYLE_NOMARKET);
 }
 
 commodity_t * commodity_pool_t::create(const string& symbol)

@@ -77,8 +77,10 @@ public:
       history_map prices;
       ptime	  last_lookup;
 
-      void add_price(const datetime_t& date, const amount_t& price,
-		     const bool reflexive = true);
+      void add_price(const commodity_t&	source,
+		     const datetime_t&	date,
+		     const amount_t&	price,
+		     const bool		reflexive = true);
       bool remove_price(const datetime_t& date);
 
       optional<price_point_t>
@@ -89,7 +91,7 @@ public:
 #if defined(DEBUG_ON)
 		 , const int indent = 0
 #endif
-		 );
+		 ) const;
     };
 
     typedef std::map<commodity_t *, history_t> history_by_commodity_map;
@@ -98,8 +100,10 @@ public:
     {
       history_by_commodity_map histories;
 
-      void add_price(const datetime_t& date, const amount_t& price,
-		     const bool reflexive = true);
+      void add_price(const commodity_t&	source,
+		     const datetime_t&	date,
+		     const amount_t&	price,
+		     const bool		reflexive = true);
       bool remove_price(const datetime_t& date, commodity_t& commodity);
 
       optional<price_point_t>
@@ -110,7 +114,7 @@ public:
 #if defined(DEBUG_ON)
 		 , const int indent = 0
 #endif
-		 );
+		 ) const;
       optional<price_point_t>
       find_price(const commodity_t&                source,
 		 const std::vector<commodity_t *>& commodities,
@@ -119,7 +123,7 @@ public:
 #if defined(DEBUG_ON)
 		 , const int indent = 0
 #endif
-		 );
+		 ) const;
 
       optional<history_t&>
       history(const optional<commodity_t&>& commodity = none);
@@ -270,7 +274,7 @@ public:
     if (! base->varied_history)
       base->varied_history = varied_history_t();
 
-    base->varied_history->add_price(date, price, reflexive);
+    base->varied_history->add_price(*this, date, price, reflexive);
   }
   bool remove_price(const datetime_t& date, commodity_t& commodity) {
     if (base->varied_history)
@@ -285,13 +289,18 @@ public:
 #if defined(DEBUG_ON)
 	     , const int indent = 0
 #endif
-	     ) {
-    if (base->varied_history)
-      return base->varied_history->find_price(*this, commodity, moment, oldest
+	     ) const {
+    if (base->varied_history && ! has_flags(COMMODITY_WALKED)) {
+      const_cast<commodity_t&>(*this).add_flags(COMMODITY_WALKED);
+      optional<price_point_t> point =
+	base->varied_history->find_price(*this, commodity, moment, oldest
 #if defined(DEBUG_ON)
-					      , indent
+					 , indent
 #endif
-					      );
+					 );
+      const_cast<commodity_t&>(*this).drop_flags(COMMODITY_WALKED);
+      return point;
+    }
     return none;
   }    
 
@@ -302,7 +311,7 @@ public:
 #if defined(DEBUG_ON)
 	     , const int indent = 0
 #endif
-	     ) {
+	     ) const {
     if (base->varied_history)
       return base->varied_history->find_price(*this, commodities, moment, oldest
 #if defined(DEBUG_ON)
