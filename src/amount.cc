@@ -663,11 +663,11 @@ amount_t& amount_t::in_place_unreduce()
   return *this;
 }
 
-optional<amount_t> amount_t::value(const optional<datetime_t>& moment) const
+optional<amount_t> amount_t::value(const optional<datetime_t>&   moment,
+				   const optional<commodity_t&>& in_terms_of) const
 {
   if (quantity) {
-    // jww (2008-09-21): 'none' is not the right argument here.
-    optional<price_point_t> point(commodity().find_price(none, moment));
+    optional<price_point_t> point(commodity().find_price(in_terms_of, moment));
     if (point)
       return (point->price * number()).round();
   } else {

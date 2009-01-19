@@ -354,10 +354,11 @@ public:
    * compact form greater than 1.0.  That is, 3599s will unreduce to
    * 59.98m, while 3601 unreduces to 1h.
    *
-   * value(optional<datetime_t>) returns the historical value for an
-   * amount -- the default moment returns the most recently known
-   * price -- based on the price history of its commodity.  For
-   * example, if the amount were 10 AAPL, and on Apr 10, 2000 each
+   * value(optional<datetime_t>, optional<commodity_t>) returns the
+   * historical value for an amount -- the default moment returns the
+   * most recently known price -- based on the price history for the
+   * given commodity (or determined automatically, if none is provided).
+   * For example, if the amount were 10 AAPL, and on Apr 10, 2000 each
    * share of AAPL was worth $10, then call value() for that moment in
    * time would yield the amount $100.00.
    *
@@ -419,7 +420,9 @@ public:
   }
   amount_t& in_place_unreduce();
 
-  optional<amount_t> value(const optional<datetime_t>& moment = none) const;
+  optional<amount_t>
+  value(const optional<datetime_t>&   moment	  = none,
+	const optional<commodity_t&>& in_terms_of = none) const;
 
   /**
    * Truth tests.  An amount may be truth test in several ways:
