@@ -200,6 +200,11 @@ pyexec_PROGRAMS = ledger.so
 clean-local:
 	rm -fr build
 
+install-exec-hook:
+	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
+	    $(PYTHON) python/setup.py install \
+		--prefix=$(prefix) --root=$(DESTDIR)/
+
 ledger_so_SOURCES      = $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
 			 $(libpyledger_la_SOURCES) python/pyledger.cc
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
