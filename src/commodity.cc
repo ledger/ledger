@@ -44,10 +44,10 @@
 namespace ledger {
 
 void commodity_t::base_t::history_t::add_price(const datetime_t& date,
-					       const amount_t&	 price)
+					       const amount_t&	 price,
+					       const bool        reflexive)
 {
-  DEBUG("commodity.prices",
-	"add_price: " << date << ", " << price);
+  DEBUG("commodity.prices", "add_price: " << date << ", " << price);
 
   history_map::iterator i = prices.find(date);
   if (i != prices.end()) {
@@ -56,6 +56,10 @@ void commodity_t::base_t::history_t::add_price(const datetime_t& date,
     std::pair<history_map::iterator, bool> result
       = prices.insert(history_map::value_type(date, price));
     assert(result.second);
+  }
+
+  if (reflexive) {
+    price.commodity().add_price(date, *one / price, false);
   }
 }
 
@@ -70,10 +74,10 @@ bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
 }
 
 void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
-						      const amount_t&	price)
+						      const amount_t&	price,
+						      const bool        reflexive)
 {
-  DEBUG("commodity.prices",
-	"varied_add_price: " << date << ", " << price);
+  DEBUG("commodity.prices", "varied_add_price: " << date << ", " << price);
 
   optional<history_t&> hist = history(price.commodity());
   if (! hist) {
@@ -86,71 +90,90 @@ void commodity_t::base_t::varied_history_t::add_price(const datetime_t& date,
   }
   assert(hist);
 
-  hist->add_price(date, price);
+  hist->add_price(date, price, reflexive);
 }
 
 bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date,
 							 commodity_t& comm)
 {
-  DEBUG("commodity.prices",
-	"varied_remove_price: " << date << ", " << comm);
+  DEBUG("commodity.prices", "varied_remove_price: " << date << ", " << comm);
 
   if (optional<history_t&> hist = history(comm))
     return hist->remove_price(date);
   return false;
 }
 
-optional<amount_t>
-commodity_t::base_t::history_t::find_price(const optional<datetime_t>& moment)
+optional<price_point_t>
+  commodity_t::base_t::history_t::
+    find_price(const commodity_t&	     source,
+	       const optional<commodity_t&>& commodity,
+	       const optional<datetime_t>&   moment,
+	       const optional<datetime_t>&   oldest
+#if defined(DEBUG_ON)
+	       , const int indent
+#endif
+	       )
 {
-  optional<datetime_t> age;
-  optional<amount_t>   price;
+  price_point_t point;
+  bool          found = false;
+
+#define DEBUG_INDENT(cat, indent)		\
+  do {						\
+    if (SHOW_DEBUG(cat))			\
+      for (int i = 0; i < indent; i++)		\
+	ledger::_log_buffer << "  ";		\
+  } while (false)
 
 #if defined(DEBUG_ON)
-  if (moment) {
-    DEBUG("commodity.prices", "find_price: " << *moment);
-  } else {
-    DEBUG("commodity.prices", "find_price");
+  DEBUG_INDENT("commodity.prices", indent);
+  if (moment)
+    DEBUG("commodity.prices", "find price nearest before or on: " << *moment);
+  else
+    DEBUG("commodity.prices", "find any price");
+
+  if (oldest) {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  but no older than: " << *oldest);
   }
 #endif
 
   if (prices.size() == 0) {
-    DEBUG("commodity.prices", "  there are no prices in the history");
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  there are no prices in this history");
     return none;
   }
 
   if (! moment) {
     history_map::const_reverse_iterator r = prices.rbegin();
-    age   = (*r).first;
-    price = (*r).second;
-
-    DEBUG("commodity.prices",
-	  "  returning most recent price: " << age << ", " << price);
+    point.when	= (*r).first;
+    point.price = (*r).second;
+    found = true;
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  using most recent price");
   } else {
     history_map::const_iterator i = prices.lower_bound(*moment);
     if (i == prices.end()) {
       history_map::const_reverse_iterator r = prices.rbegin();
-      age   = (*r).first;
-      price = (*r).second;
-
-      DEBUG("commodity.prices",
-	    "  returning last price: " << age << ", " << price);
+      point.when  = (*r).first;
+      point.price = (*r).second;
+      found = true;
+      DEBUG_INDENT("commodity.prices", indent);
+      DEBUG("commodity.prices", "  using last price");
     } else {
-      age = (*i).first;
-      if (*moment != *age) {
+      point.when = (*i).first;
+      if (*moment < point.when) {
 	if (i != prices.begin()) {
 	  --i;
-	  age	  = (*i).first;
-	  price = (*i).second;
-	} else {
-	  age   = none;
+	  point.when  = (*i).first;
+	  point.price = (*i).second;
+	  found = true;
 	}
       } else {
-	price = (*i).second;
+	point.price = (*i).second;
+	found = true;
       }
-
-      DEBUG("commodity.prices",
-	    "  returning found price: " << age << ", " << price);
+      DEBUG_INDENT("commodity.prices", indent);
+      DEBUG("commodity.prices", "  using found price");
     }
   }
 
@@ -164,89 +187,171 @@ commodity_t::base_t::history_t::find_price(const optional<datetime_t>& moment)
   }
 #endif
 
-  return price;
+  if (! found) {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  could not find a price");
+    return none;
+  }
+  else if (moment && point.when > *moment) {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  price is too young ");
+    return none;
+  }
+  else if (oldest && point.when < *oldest) {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  price is too old ");
+    return none;
+  }
+  else {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices",
+	  "  returning price: " << point.when << ", " << point.price);
+    return point;
+  }
 }
 
-optional<amount_t>
-commodity_t::base_t::varied_history_t::find_price
-  (const optional<commodity_t&>& commodity,
-   const optional<datetime_t>&	 moment)
+optional<price_point_t>
+  commodity_t::base_t::varied_history_t::
+    find_price(const commodity_t&            source,
+	       const optional<commodity_t&>& commodity,
+	       const optional<datetime_t>&   moment,
+	       const optional<datetime_t>&   oldest
+#if defined(DEBUG_ON)
+	       , const int indent
+#endif
+	       )
 {
-  optional<amount_t> amt;
+  optional<price_point_t> point;
+  optional<datetime_t>	  limit = oldest;
+
+  assert(! commodity || source != *commodity);
 
 #if defined(DEBUG_ON)
-  DEBUG("commodity.prices", "varied_find_price");
+  DEBUG_INDENT("commodity.prices", indent);
+  DEBUG("commodity.prices", "varied_find_price for: " << source);
 
+  DEBUG_INDENT("commodity.prices", indent);
   if (commodity)
-    DEBUG("commodity.prices", "  looking for commodity '" << *commodity << "'");
+    DEBUG("commodity.prices", "  looking for: commodity '" << *commodity << "'");
   else
-    DEBUG("commodity.prices", "  looking for any commodity");
+    DEBUG("commodity.prices", "  looking for: any commodity");
 
-  if (moment)
+  if (moment) {
+    DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices", "  time index: " << *moment);
-#endif
-
-  if (optional<history_t&> hist = history(commodity)) {
-    DEBUG("commodity.prices", "  found a history for the commodity");
-
-    amt = hist->find_price(moment);
-
-#if defined(DEBUG_ON)
-    if (amt)
-      DEBUG("commodity.prices", "  found price in that history: " << *amt);
-    else
-      DEBUG("commodity.prices", "  found no price in that history");
-#endif
   }
+
+  if (oldest) {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices", "  only consider prices younger than: " << *oldest);
+  }
+#endif
 
   // Either we couldn't find a history for the target commodity, or we
   // couldn't find a price.  In either case, search all histories known
   // to this commodity for a price which we can calculate in terms of
   // the goal commodity.
-  if (! amt && commodity) {
-    foreach (history_by_commodity_map::value_type hist, histories) {
-      commodity_t& comm(*hist.first);
+  price_point_t best;
+  bool          found = false;
 
-      DEBUG("commodity.prices",
-	    "  searching for price via commodity '" << comm << "'");
+  foreach (history_by_commodity_map::value_type hist, histories) {
+    commodity_t& comm(*hist.first);
+    if (comm == source)
+      continue;
 
-      amt = comm.find_price(commodity, moment);
-      // jww (2008-09-24): look for the most recent match
+    DEBUG_INDENT("commodity.prices", indent + 1);
+    DEBUG("commodity.prices",
+	  "  searching for price via commodity '" << comm << "'");
 
-#if defined(DEBUG_ON)
-      if (amt)
-	DEBUG("commodity.prices", "  found price there: " << *amt);
-      else
-	DEBUG("commodity.prices", "  found no price there");
-#endif
+    point = hist.second.find_price(source, commodity, moment, limit, indent + 2);
+    assert(! point || point->price.commodity() == comm);
+
+    if (point) {
+      optional<price_point_t> xlat;
+
+      if (commodity && comm != *commodity) {
+	DEBUG_INDENT("commodity.prices", indent + 1);
+	DEBUG("commodity.prices", "  looking for translation price");
+
+	xlat = comm.find_price(commodity, moment, limit, indent + 2);
+	if (xlat) {
+	  DEBUG_INDENT("commodity.prices", indent + 1);
+	  DEBUG("commodity.prices", "  found translated price "
+		<< xlat->price << " from " << xlat->when);
+
+	  point->price = xlat->price * point->price;
+	  if (xlat->when < point->when) {
+	    point->when = xlat->when;
+	    DEBUG_INDENT("commodity.prices", indent + 1);
+	    DEBUG("commodity.prices",
+		  "  adjusting date of result back to " << point->when);
+	  }
+	} else {
+	  DEBUG_INDENT("commodity.prices", indent + 1);
+	  DEBUG("commodity.prices", "  saw no translated price there");
+	  continue;
+	}
+      }
+
+      assert(! commodity || point->price.commodity() == *commodity);
+      DEBUG_INDENT("commodity.prices", indent + 1);
+      DEBUG("commodity.prices", "  saw a price there: " << point->price);
+      if (! limit || point->when > *limit) {
+	limit = point->when;
+	best  = *point;
+	found = true;
+      }
+    } else {
+      DEBUG_INDENT("commodity.prices", indent + 1);
+      DEBUG("commodity.prices", "  saw no price there");
     }
   }
 
-  return amt;
+  if (found) {
+    DEBUG_INDENT("commodity.prices", indent);
+    DEBUG("commodity.prices",
+	  "  found price " << best.price << " from " << best.when);
+    return best;
+  }
+  return none;
 }
 
-optional<amount_t>
-commodity_t::base_t::varied_history_t::find_price
-  (const std::vector<commodity_t *>& commodities,
-   const optional<datetime_t>&	     moment)
+optional<price_point_t>
+  commodity_t::base_t::varied_history_t::
+    find_price(const commodity_t&                source,
+	       const std::vector<commodity_t *>& commodities,
+	       const optional<datetime_t>&       moment,
+	       const optional<datetime_t>&       oldest
+#if defined(DEBUG_ON)
+	       , const int indent
+#endif
+	       )
 {
   foreach (commodity_t * commodity, commodities) {
-    if (optional<amount_t> amt = find_price(*commodity, moment))
-      return amt;
+    if (optional<price_point_t> point = find_price(source, *commodity,
+						   moment, oldest
+#if defined(DEBUG_ON)
+						   , indent
+#endif
+						   ))
+      return point;
   }
   return none;
 }
 
 optional<commodity_t::base_t::history_t&>
-commodity_t::base_t::varied_history_t::history
-  (const optional<commodity_t&>& commodity)
+  commodity_t::base_t::varied_history_t::
+    history(const optional<commodity_t&>& commodity)
 {
   commodity_t * comm = NULL;
   if (! commodity) {
     if (histories.size() > 1)
+      return none;
+#if 0
       // jww (2008-09-20): Document which option switch to use here
       throw_(commodity_error,
 	     "Cannot determine price history: prices known for multiple commodities (use -?)");
+#endif
     comm = (*histories.begin()).first;
   } else {
     comm = &(*commodity);

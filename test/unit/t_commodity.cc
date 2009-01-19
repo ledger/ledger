@@ -35,14 +35,29 @@ void CommodityTestCase::testPriceHistory()
   aapl.add_price(feb28_07sbm, amount_t("$18.30"));
   aapl.add_price(mar01_07, amount_t("$19.50"));
   aapl.add_price(apr15_07, amount_t("$21.22"));
+  aapl.add_price(apr15_07, amount_t("EUR 23.00"));
 
   optional<amount_t> amt1 = x1.value(feb28_07sbm);
   assertTrue(amt1);
   assertEqual(amount_t("$1831.83"), *amt1);
 
-  optional<amount_t> amt2 = x1.value(current_time);
+  commodity_t& euro(amount_t("EUR 1.00").commodity());
+
+  optional<amount_t> amt2 = x1.value(current_time, euro);
   assertTrue(amt2);
-  assertEqual(amount_t("$2124.12"), *amt2);
+  assertEqual(amount_t("EUR 2302.30"), *amt2);
+
+  optional<amount_t> amt3 = x1.value(current_time);
+  assertTrue(amt3);
+  assertEqual(amount_t("$2124.12"), *amt3);
+
+  euro.add_price(feb27_07, amount_t("CAD 40.00"));
+
+  commodity_t& cad(amount_t("CAD 1.00").commodity());
+
+  optional<amount_t> amt4 = x1.value(current_time, cad);
+  assertTrue(amt4);
+  assertEqual(amount_t("CAD 92092.00"), *amt4);
 
   assertValid(x1);
 }

@@ -52,6 +52,12 @@ namespace ledger {
 
 DECLARE_EXCEPTION(commodity_error, std::runtime_error);
 
+struct price_point_t
+{
+  datetime_t when;
+  amount_t   price;
+};
+
 class commodity_t
   : public delegates_flags<>,
     public equality_comparable1<commodity_t, noncopyable>
@@ -71,10 +77,19 @@ public:
       history_map prices;
       ptime	  last_lookup;
 
-      void add_price(const datetime_t& date, const amount_t& price);
+      void add_price(const datetime_t& date, const amount_t& price,
+		     const bool reflexive = true);
       bool remove_price(const datetime_t& date);
 
-      optional<amount_t> find_price(const optional<datetime_t>& moment = none);
+      optional<price_point_t>
+      find_price(const commodity_t&	       source,
+		 const optional<commodity_t&>& commodity,
+		 const optional<datetime_t>&   moment = none,
+		 const optional<datetime_t>&   oldest = none
+#if defined(DEBUG_ON)
+		 , const int indent = 0
+#endif
+		 );
     };
 
     typedef std::map<commodity_t *, history_t> history_by_commodity_map;
@@ -83,15 +98,28 @@ public:
     {
       history_by_commodity_map histories;
 
-      void add_price(const datetime_t& date, const amount_t& price);
+      void add_price(const datetime_t& date, const amount_t& price,
+		     const bool reflexive = true);
       bool remove_price(const datetime_t& date, commodity_t& commodity);
 
-      optional<amount_t>
-      find_price(const optional<commodity_t&>& commodity = none,
-		 const optional<datetime_t>&   moment    = none);
-      optional<amount_t>
-      find_price(const std::vector<commodity_t *>& commodities,
-		 const optional<datetime_t>&	   moment = none);
+      optional<price_point_t>
+      find_price(const commodity_t&            source,
+		 const optional<commodity_t&>& commodity = none,
+		 const optional<datetime_t>&   moment    = none,
+		 const optional<datetime_t>&   oldest    = none
+#if defined(DEBUG_ON)
+		 , const int indent = 0
+#endif
+		 );
+      optional<price_point_t>
+      find_price(const commodity_t&                source,
+		 const std::vector<commodity_t *>& commodities,
+		 const optional<datetime_t>&	   moment = none,
+		 const optional<datetime_t>&       oldest = none
+#if defined(DEBUG_ON)
+		 , const int indent = 0
+#endif
+		 );
 
       optional<history_t&>
       history(const optional<commodity_t&>& commodity = none);
@@ -229,25 +257,19 @@ protected:
     return none;
   }
 
-  optional<history_t&>
-  history(const optional<commodity_t&>& commodity);
-  optional<history_t&>
-  history(const std::vector<commodity_t *>& commodities);
-
-  optional<history_t>
-  find_price(commodity_t&		 commodity,
-	     const optional<datetime_t>& moment,
-	     std::vector<bool *>&	 bools);
+  optional<history_t&> history(const optional<commodity_t&>& commodity);
+  optional<history_t&> history(const std::vector<commodity_t *>& commodities);
 
 public:
   // These methods provide a transparent pass-through to the underlying
   // base->varied_history object.
 
-  void add_price(const datetime_t& date, const amount_t& price) {
+  void add_price(const datetime_t& date, const amount_t& price,
+		 const bool reflexive = true) {
     if (! base->varied_history)
       base->varied_history = varied_history_t();
 
-    base->varied_history->add_price(date, price);
+    base->varied_history->add_price(date, price, reflexive);
   }
   bool remove_price(const datetime_t& date, commodity_t& commodity) {
     if (base->varied_history)
@@ -255,19 +277,37 @@ public:
     return false;
   }
 
-  optional<amount_t>
-  find_price(const optional<commodity_t&>& commodity	= none,
-	     const optional<datetime_t>&	 moment = none) {
+  optional<price_point_t>
+  find_price(const optional<commodity_t&>& commodity = none,
+	     const optional<datetime_t>&   moment    = none,
+	     const optional<datetime_t>&   oldest    = none
+#if defined(DEBUG_ON)
+	     , const int indent = 0
+#endif
+	     ) {
     if (base->varied_history)
-      return base->varied_history->find_price(commodity, moment);
+      return base->varied_history->find_price(*this, commodity, moment, oldest
+#if defined(DEBUG_ON)
+					      , indent
+#endif
+					      );
     return none;
   }    
 
-  optional<amount_t>
+  optional<price_point_t>
   find_price(const std::vector<commodity_t *>& commodities,
-	     const optional<datetime_t>&       moment = none) {
+	     const optional<datetime_t>&       moment = none,
+	     const optional<datetime_t>&       oldest = none
+#if defined(DEBUG_ON)
+	     , const int indent = 0
+#endif
+	     ) {
     if (base->varied_history)
-      return base->varied_history->find_price(commodities, moment);
+      return base->varied_history->find_price(*this, commodities, moment, oldest
+#if defined(DEBUG_ON)
+					      , indent
+#endif
+					      );
     return none;
   }
 
