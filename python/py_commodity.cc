@@ -48,7 +48,8 @@ void export_commodity()
   scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
   scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
   scope().attr("COMMODITY_STYLE_NOMARKET")  = COMMODITY_STYLE_NOMARKET;
-  scope().attr("COMMODITY_STYLE_BUILTIN")   = COMMODITY_STYLE_BUILTIN;
+  scope().attr("COMMODITY_BUILTIN")         = COMMODITY_BUILTIN;
+  scope().attr("COMMODITY_WALKED")          = COMMODITY_WALKED;
 
   class_< commodity_t, bases<>,
 	  commodity_t, boost::noncopyable > ("commodity", no_init)

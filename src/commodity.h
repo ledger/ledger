@@ -127,13 +127,14 @@ public:
       history(const std::vector<commodity_t *>& commodities);
     };
 
-#define COMMODITY_STYLE_DEFAULTS   0x00
-#define COMMODITY_STYLE_SUFFIXED   0x01
-#define COMMODITY_STYLE_SEPARATED  0x02
-#define COMMODITY_STYLE_EUROPEAN   0x04
-#define COMMODITY_STYLE_THOUSANDS  0x08
-#define COMMODITY_STYLE_NOMARKET   0x10
-#define COMMODITY_STYLE_BUILTIN    0x20
+#define COMMODITY_STYLE_DEFAULTS  0x00
+#define COMMODITY_STYLE_SUFFIXED  0x01
+#define COMMODITY_STYLE_SEPARATED 0x02
+#define COMMODITY_STYLE_EUROPEAN  0x04
+#define COMMODITY_STYLE_THOUSANDS 0x08
+#define COMMODITY_STYLE_NOMARKET  0x10
+#define COMMODITY_BUILTIN         0x20
+#define COMMODITY_WALKED          0x40
 
     string		       symbol;
     amount_t::precision_t      precision;
