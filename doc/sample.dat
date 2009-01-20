@@ -1,3 +1,5 @@
+N $
+
 = account =~ /^Expenses:Books/
   (Liabilities:Taxes)             -0.10
 
