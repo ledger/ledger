@@ -36,7 +36,7 @@ void CommodityTestCase::testPriceHistory()
   aapl.add_price(feb28_07sbm, amount_t("$18.30"));
   aapl.add_price(mar01_07,    amount_t("$19.50"));
   aapl.add_price(apr15_07,    amount_t("$21.22"));
-  aapl.add_price(apr15_07,    amount_t("EUR 23.00"));
+  aapl.add_price(jan17_05,    amount_t("EUR 23.00"));
   aapl.add_price(jan17_06,    amount_t("CAD 25.00"));
 
   commodity_t& euro(amount_t("EUR 1.00").commodity());
@@ -55,6 +55,13 @@ void CommodityTestCase::testPriceHistory()
   amt = x1.value(current_time);
   assertTrue(amt);
   assertEqual(amount_t("$2124.12"), *amt);
+
+  amt = x1.value(current_time, euro);
+  assertTrue(amt);
+  assertEqual(amount_t("EUR 1366.87"), *amt);
+
+  // Add a newer Euro pricing
+  aapl.add_price(jan17_07, amount_t("EUR 23.00"));
 
   amt = x1.value(current_time, euro);
   assertTrue(amt);
