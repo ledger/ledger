@@ -284,9 +284,8 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 	else
 	  per_unit_cost /= xact->amount;
 
-	if (xact->amount.commodity() &&
-	    ! xact->amount.commodity().annotated)
-	  xact->amount.annotate(annotation_t(per_unit_cost));
+	commodity_t::exchange(xact->amount.commodity(),
+			      per_unit_cost, datetime_t(*xact->date()));
 
 	DEBUG("textual.parse", "line " << linenum << ": " <<
 		    "Total cost is " << *xact->cost);
