@@ -48,7 +48,8 @@ void commodity_t::base_t::history_t::add_price(const commodity_t& source,
 					       const amount_t&	  price,
 					       const bool	  reflexive)
 {
-  DEBUG("commodity.prices", "add_price: " << date << ", " << price);
+  DEBUG("commodity.prices",
+	"add_price to " << source << " : " << date << ", " << price);
 
   history_map::iterator i = prices.find(date);
   if (i != prices.end()) {
@@ -59,7 +60,7 @@ void commodity_t::base_t::history_t::add_price(const commodity_t& source,
     assert(result.second);
   }
 
-  if (reflexive) {
+  if (reflexive && ! price.commodity().has_flags(COMMODITY_NOMARKET)) {
     amount_t inverse(*one / price);
     inverse.set_commodity(const_cast<commodity_t&>(source));
     price.commodity().add_price(date, inverse, false);
@@ -82,8 +83,6 @@ void commodity_t::base_t::varied_history_t::
 	    const amount_t&    price,
 	    const bool	       reflexive)
 {
-  DEBUG("commodity.prices", "varied_add_price: " << date << ", " << price);
-
   optional<history_t&> hist = history(price.commodity());
   if (! hist) {
     std::pair<history_by_commodity_map::iterator, bool> result
