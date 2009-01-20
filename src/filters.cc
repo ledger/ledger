@@ -310,15 +310,7 @@ void changed_value_xacts::output_diff(const date_t& date)
   value_t cur_bal;
 
   last_xact->xdata().date = date;
-#if 0
-  compute_total(cur_bal, details_t(*last_xact));
-#endif
-  cur_bal.round();
-
-#if 0
-  // jww (2008-04-24): What does this do?
-  last_xact->xdata().date = 0;
-#endif
+  cur_bal = total_expr.calc(*last_xact).round();
 
   if (value_t diff = cur_bal - last_balance) {
     entry_temps.push_back(entry_t());
@@ -341,12 +333,8 @@ void changed_value_xacts::operator()(xact_t& xact)
 
   item_handler<xact_t>::operator()(xact);
 
-#if 0
-  compute_total(last_balance, details_t(xact));
-#endif
-  last_balance.round();
-
-  last_xact = &xact;
+  last_balance = total_expr.calc(xact).round();
+  last_xact    = &xact;
 }
 
 void component_xacts::operator()(xact_t& xact)
@@ -355,10 +343,9 @@ void component_xacts::operator()(xact_t& xact)
     if (xact.has_xdata() &&
 	xact.xdata().has_component_xacts())
 #if 0
-      xact.xdata().walk_component_xacts(*handler);
-#else
-    ;
+      xact.xdata().walk_component_xacts(*handler)
 #endif
+	;
     else
       (*handler)(xact);
   }

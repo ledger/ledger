@@ -366,6 +366,7 @@ class changed_value_xacts : public item_handler<xact_t>
   // This filter requires that calc_xacts be used at some point
   // later in the chain.
 
+  expr_t   total_expr;
   bool	   changed_values_only;
   xact_t * last_xact;
   value_t  last_balance;
@@ -377,8 +378,9 @@ class changed_value_xacts : public item_handler<xact_t>
 
 public:
   changed_value_xacts(xact_handler_ptr handler,
-			     bool _changed_values_only)
-    : item_handler<xact_t>(handler),
+		      const expr_t&    _total_expr,
+		      bool	       _changed_values_only)
+    : item_handler<xact_t>(handler), total_expr(_total_expr),
       changed_values_only(_changed_values_only), last_xact(NULL) {
     TRACE_CTOR(changed_value_xacts,
 	       "xact_handler_ptr, bool");
