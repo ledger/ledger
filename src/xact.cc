@@ -54,10 +54,12 @@ optional<date_t> xact_t::effective_date() const
 
 item_t::state_t xact_t::state() const
 {
-  state_t entry_state = entry->state();
-  if ((_state == UNCLEARED && entry_state != UNCLEARED) ||
-      (_state == PENDING && entry_state == CLEARED))
-    return entry_state;
+  if (entry) {
+    state_t entry_state = entry->state();
+    if ((_state == UNCLEARED && entry_state != UNCLEARED) ||
+	(_state == PENDING && entry_state == CLEARED))
+      return entry_state;
+  }
   return _state;
 }
 
