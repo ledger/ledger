@@ -93,12 +93,11 @@ value_t expr_t::op_t::calc(scope_t& scope)
       call_args.set_args(right()->calc(scope));
 
     ptr_op_t func = left();
-    string   name;
 
     assert(func->kind == IDENT);
     func = func->left();
 
-    if (func->kind != FUNCTION)
+    if (! func || func->kind != FUNCTION)
       throw_(calc_error, "Calling non-function");
 
     return func->as_function()(call_args);
