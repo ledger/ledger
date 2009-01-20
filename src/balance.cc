@@ -158,17 +158,19 @@ balance_t& balance_t::operator/=(const amount_t& amt)
 }
 
 optional<balance_t>
-balance_t::value(const optional<datetime_t>& moment) const
+balance_t::value(const optional<datetime_t>&   moment,
+		 const optional<commodity_t&>& in_terms_of) const
 {
   optional<balance_t> temp;
 
-  foreach (const amounts_map::value_type& pair, amounts)
-    if (optional<amount_t> val = pair.second.value(moment)) {
-      if (! temp)
-	temp = balance_t();
+  foreach (const amounts_map::value_type& pair, amounts) {
+    if (! temp)
+      temp = balance_t();
+    if (optional<amount_t> val = pair.second.value(moment, in_terms_of))
       *temp += *val;
-    }
-
+    else
+      *temp += pair.second;
+  }
   return temp;
 }
 
