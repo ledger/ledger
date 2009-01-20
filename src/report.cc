@@ -113,7 +113,8 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
     // list to account for changes in market value of commodities,
     // which otherwise would affect the running total unpredictably.
     if (show_revalued)
-      handler.reset(new changed_value_xacts(handler, show_revalued_only));
+      handler.reset(new changed_value_xacts(handler, total_expr,
+					    show_revalued_only));
 
     // collapse_xacts causes entries with multiple xacts
     // to appear as entries with a subtotaled xact for each
