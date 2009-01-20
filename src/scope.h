@@ -141,8 +141,10 @@ public:
   }
 
   void set_args(const value_t& _args) {
-    assert(_args.is_sequence());
-    args = _args;
+    if (_args.is_sequence())
+      args = _args;
+    else
+      args = _args.to_sequence();
   }
   value_t& value() {
     assert(args.is_null() || args.is_sequence());
