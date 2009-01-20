@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2008, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -184,7 +184,7 @@ public:
 
   value_t option_version(scope_t&) {
     std::cout << "Ledger " << ledger::version << ", the command-line accounting tool";
-    std::cout << "\n\nCopyright (c) 2003-2008, John Wiegley.  All rights reserved.\n\n\
+    std::cout << "\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
     std::cout << "\n(modules: gmp, pcre";

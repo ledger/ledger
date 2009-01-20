@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2008, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,7 +38,7 @@
 //
 //   A command-line tool for general double-entry accounting.
 //
-// Copyright (c) 2003-2008, John Wiegley <johnw@newartisans.com>
+// Copyright (c) 2003-2009, John Wiegley <johnw@newartisans.com>
 //
 
 #include <utils.h>

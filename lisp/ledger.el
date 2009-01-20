@@ -1,6 +1,6 @@
 ;;; ledger.el --- Helper code for use with the "ledger" command-line tool
 
-;; Copyright (C) 2008 John Wiegley (johnw AT gnu DOT org)
+;; Copyright (C) 2003-2009 John Wiegley (johnw AT gnu DOT org)
 
 ;; Emacs Lisp Archive Entry
 ;; Filename: ledger.el
