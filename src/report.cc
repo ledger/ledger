@@ -272,6 +272,11 @@ value_t report_t::get_total_expr(call_scope_t& scope)
   return total_expr.calc(scope);
 }
 
+value_t report_t::get_display_total(call_scope_t& scope)
+{
+  return display_total.calc(scope);
+}
+
 namespace {
   value_t print_balance(call_scope_t& args)
   {
@@ -472,6 +477,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
+    break;
+
+  case 'd':
+    if (std::strcmp(p, "display_total") == 0)
+	return MAKE_FUNCTOR(report_t::get_display_total);
     break;
 
   case 'o':

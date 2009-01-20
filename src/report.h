@@ -104,6 +104,7 @@ public:
 
   expr_t	 amount_expr;
   expr_t	 total_expr;
+  expr_t	 display_total;
 
   unsigned long  budget_flags;
 
@@ -139,6 +140,7 @@ public:
   explicit report_t(session_t& _session)
     : amount_expr("amount"),
       total_expr("total"),
+      display_total("total_expr"),
 
       head_entries(0),
       tail_entries(0),
@@ -675,6 +677,7 @@ public:
 
   value_t get_amount_expr(call_scope_t& scope);
   value_t get_total_expr(call_scope_t& scope);
+  value_t get_display_total(call_scope_t& scope);
 
   value_t option_amount_data(call_scope_t&) { // j
     format_string = session.plot_amount_format;

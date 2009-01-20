@@ -72,16 +72,16 @@ void release_session_context()
 session_t::session_t()
   : register_format
     ("%-.9(date) %-.20(payee) %-.23(account) %!12(print_balance(amount_expr, 12, 67)) "
-     "%!12(print_balance(total_expr, 12, 80, true))\n%/"
+     "%!12(print_balance(display_total, 12, 80, true))\n%/"
      "%31|%-.23(account) %!12(print_balance(amount_expr, 12, 67)) "
-     "%!12(print_balance(total_expr, 12, 80, true))\n"),
+     "%!12(print_balance(display_total, 12, 80, true))\n"),
     wide_register_format
     ("%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
     print_format
     ("%(date)%(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%(code ? \" (\" + code + \")\" : \"\") %(payee)\n    %-34(account)  %12(amount)\n%/    %-34(account)  %12(amount)%(note ? \"  ; \" + note : \"\")\n%/\n"),
     balance_format
-    ("%20(total_expr)  %(depth_spacer)%-(partial_account)\n"),
+    ("%20(display_total)  %(depth_spacer)%-(partial_account)\n"),
     equity_format
     ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format
