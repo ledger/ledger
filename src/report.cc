@@ -517,12 +517,18 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'a':
 	if (std::strcmp(p, "amount_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_amount_);
+	else if (std::strcmp(p, "ansi") == 0)
+	  return MAKE_FUNCTOR(report_t::option_ansi);
+	else if (std::strcmp(p, "ansi-invert") == 0)
+	  return MAKE_FUNCTOR(report_t::option_ansi_invert);
 	break;
 
       case 'b':
 	if (std::strcmp(p, "b_") == 0 ||
 	    std::strcmp(p, "begin_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_begin_);
+	else if (std::strcmp(p, "base") == 0)
+	  return MAKE_FUNCTOR(report_t::option_base);
 	else if (std::strcmp(p, "by-payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_by_payee);
 	break;
@@ -534,6 +540,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_collapse);
 	else if (std::strcmp(p, "cleared") == 0)
 	  return MAKE_FUNCTOR(report_t::option_cleared);
+	else if (std::strcmp(p, "cost") == 0)
+	  return MAKE_FUNCTOR(report_t::option_cost);
 	else if (std::strcmp(p, "comm-as-payee") == 0)
 	  return MAKE_FUNCTOR(report_t::option_comm_as_payee);
 	else if (std::strcmp(p, "code-as-payee") == 0)
@@ -601,11 +609,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_period_);
 	else if (std::strcmp(p, "period_sort_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_period_sort_);
+	else if (std::strcmp(p, "price") == 0)
+	  return MAKE_FUNCTOR(report_t::option_price);
+	else if (std::strcmp(p, "price_db_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_price_db_);
 	break;
 
       case 'q':
 	if (std::strcmp(p, "quarterly") == 0)
 	  return MAKE_FUNCTOR(report_t::option_quarterly);
+	else if (std::strcmp(p, "quantity") == 0)
+	  return MAKE_FUNCTOR(report_t::option_quantity);
 	break;
 
       case 'r':
@@ -659,6 +673,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_date_format_);
 	break;
 
+      case 'B':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t::option_cost);
+	break;
+
       case 'C':
 	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_cleared);
@@ -674,6 +693,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_format_);
 	break;
 
+      case 'I':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t::option_price);
+	break;
+
       case 'J':
 	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_total_data);
@@ -682,6 +706,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'M':
 	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_monthly);
+	break;
+
+      case 'O':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t::option_quantity);
 	break;
 
       case 'P':

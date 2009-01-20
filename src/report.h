@@ -691,15 +691,16 @@ public:
     return true;
   }
 
-#if 0
   value_t option_ansi(call_scope_t& args) {
     format_t::ansi_codes  = true;
     format_t::ansi_invert = false;
+    return true;
   }
 
   value_t option_ansi_invert(call_scope_t& args) {
     format_t::ansi_codes  =
     format_t::ansi_invert = true;
+    return true;
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -708,40 +709,46 @@ public:
 
   value_t option_base(call_scope_t& args) { // :
     amount_t::keep_base = true;
+    return true;
   }
 
-  value_t option_price_db(call_scope_t& args) { // :
-    config->price_db = optarg;
+  value_t option_price_db_(call_scope_t& args) { // :
+    session.price_db = args[0].as_string();
+    return true;
   }
 
-  value_t option_price_exp(call_scope_t& args) { // Z:
-    config->pricing_leeway = std::atol(optarg) * 60;
+  value_t option_price_exp_(call_scope_t& args) { // Z:
+    session.pricing_leeway = lexical_cast<long>(args[0].as_string()) * 60;
+    return true;
   }
 
   value_t option_download(call_scope_t& args) { // Q
-    config->download_quotes = true;
+    session.download_quotes = true;
+    return true;
   }
 
   value_t option_quantity(call_scope_t& args) { // O
-    ledger::amount_expr = "amount";
-    ledger::total_expr  = "total";
+    amount_expr = "amount";
+    total_expr  = "total";
+    return true;
   }
 
-  value_t option_basis(call_scope_t& args) { // B
-    ledger::amount_expr = "b";
-    ledger::total_expr  = "B";
+  value_t option_cost(call_scope_t& args) { // B
+    amount_expr = "cost";
+    total_expr  = "total_cost";
+    return true;
   }
 
   value_t option_price(call_scope_t& args) { // I
-    ledger::amount_expr = "i";
-    ledger::total_expr  = "I";
+    amount_expr = "price";
+    total_expr  = "price_total";
+    return true;
   }
 
   value_t option_market(call_scope_t& args) { // V
-    report->show_revalued = true;
-
-    ledger::amount_expr = "v";
-    ledger::total_expr  = "V";
+    show_revalued = true;
+    display_total = "market_value(total_expr)";
+    return true;
   }
 
 #if 0
@@ -768,7 +775,6 @@ public:
       }
     }
   }
-#endif
 #endif
 
   //
