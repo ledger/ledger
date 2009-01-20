@@ -138,6 +138,11 @@ namespace {
     return account.xdata_->total;
   }
 
+  value_t get_total_cost(account_t& account) {
+    assert(account.xdata_);
+    return account.xdata_->total.cost();
+  }
+
   value_t get_amount(account_t& account) {
     assert(account.xdata_);
     return account.xdata_->value;
@@ -187,6 +192,8 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 't':
     if (name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
+    else if (name == "total_cost")
+      return WRAP_FUNCTOR(get_wrapper<&get_total_cost>);
     break;
   }
 
