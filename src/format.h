@@ -39,6 +39,8 @@ namespace ledger {
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
+class report_t;
+
 class format_t : public noncopyable
 {
   struct element_t : public supports_flags<>, public noncopyable
@@ -104,6 +106,8 @@ private:
   static bool		 ansi_invert;
 
   static element_t * parse_elements(const string& fmt);
+
+  friend class report_t;
 
 public:
   format_t() {
