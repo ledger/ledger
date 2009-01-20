@@ -169,7 +169,7 @@ void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
 	 i = commodities.begin();
        i != commodities.end();
        i++) {
-    if ((*i)->has_flags(COMMODITY_STYLE_NOMARKET))
+    if ((*i)->has_flags(COMMODITY_NOMARKET))
       continue;
 
     entry_temps.push_back(entry_t());

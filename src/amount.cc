@@ -130,7 +130,7 @@ void amount_t::initialize()
   // Add time commodity conversions, so that timelog's may be parsed
   // in terms of seconds, but reported as minutes or hours.
   if (commodity_t * commodity = current_pool->create("s")) {
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_STYLE_NOMARKET);
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
 
     parse_conversion("1.0m", "60s");
     parse_conversion("1.0h", "60m");
@@ -1043,7 +1043,7 @@ void amount_t::parse_conversion(const string& larger_str,
   if (larger.commodity()) {
     larger.commodity().set_smaller(smaller);
     larger.commodity().add_flags(smaller.commodity().flags() |
-				 COMMODITY_STYLE_NOMARKET);
+				 COMMODITY_NOMARKET);
   }
   if (smaller.commodity())
     smaller.commodity().set_larger(larger);

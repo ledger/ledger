@@ -835,7 +835,7 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
 	if (commodity_t * commodity =
 	    amount_t::current_pool->find_or_create(symbol))
-	  commodity->add_flags(COMMODITY_STYLE_NOMARKET);
+	  commodity->add_flags(COMMODITY_NOMARKET);
 	break;
       }
 

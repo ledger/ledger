@@ -183,7 +183,7 @@ optional<price_point_t>
   }
 
 #if 0
-  if (! has_flags(COMMODITY_STYLE_NOMARKET) && parent().get_quote) {
+  if (! has_flags(COMMODITY_NOMARKET) && parent().get_quote) {
     if (optional<amount_t> quote = parent().get_quote
 	(*this, age, moment,
 	 (hist && hist->prices.size() > 0 ?
@@ -390,7 +390,10 @@ void commodity_t::exchange(commodity_t&	     commodity,
 			   const amount_t&   per_unit_cost,
 			   const datetime_t& moment)
 {
-  if (! commodity.has_flags(COMMODITY_STYLE_NOMARKET)) {
+  if (! commodity.has_flags(COMMODITY_NOMARKET)) {
+    DEBUG("commodity.prices", "exchanging commodity " << commodity
+	  << " at per unit cost " << per_unit_cost << " on " << moment);
+
     commodity_t& base_commodity
       (commodity.annotated ?
        as_annotated_commodity(commodity).referent() : commodity);
@@ -439,7 +442,7 @@ commodity_t::exchange(const amount_t&		  amount,
   // (if (and moment (not (commodity-no-market-price-p base-commodity)))
   //     (add-price base-commodity per-unit-cost moment))
 
-  if (moment && ! commodity.has_flags(COMMODITY_STYLE_NOMARKET))
+  if (moment && ! commodity.has_flags(COMMODITY_NOMARKET))
     base_commodity.add_price(*moment, per_unit_cost);
 
   // ;; returns: ANNOTATED-AMOUNT TOTAL-COST BASIS-COST
@@ -759,7 +762,7 @@ commodity_pool_t::commodity_pool_t() : default_commodity(NULL)
 {
   TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");
-  null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_STYLE_NOMARKET);
+  null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
 }
 
 commodity_t * commodity_pool_t::create(const string& symbol)
