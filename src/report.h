@@ -679,6 +679,8 @@ public:
   value_t get_total_expr(call_scope_t& scope);
   value_t get_display_total(call_scope_t& scope);
 
+  value_t f_market_value(call_scope_t& args);
+
   value_t option_amount_data(call_scope_t&) { // j
     format_string = session.plot_amount_format;
     return true;

@@ -277,6 +277,26 @@ value_t report_t::get_display_total(call_scope_t& scope)
   return display_total.calc(scope);
 }
 
+value_t report_t::f_market_value(call_scope_t& args)
+{
+  var_t<datetime_t> date(args, 1);
+  var_t<string>	    in_terms_of(args, 2);
+
+  commodity_t * commodity = NULL;
+  if (in_terms_of)
+    commodity = amount_t::current_pool->find_or_create(*in_terms_of);
+
+  DEBUG("report.market", "getting market value of: " << args[0]);
+
+  value_t result =
+    args[0].value(date ? optional<datetime_t>(*date) : optional<datetime_t>(),
+		  commodity ? optional<commodity_t&>(*commodity) :
+		  optional<commodity_t&>());
+
+  DEBUG("report.market", "result is: " << result);
+  return result;
+}
+
 namespace {
   value_t print_balance(call_scope_t& args)
   {
@@ -484,6 +504,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	return MAKE_FUNCTOR(report_t::get_display_total);
     break;
 
+  case 'm':
+    if (std::strcmp(p, "market_value") == 0)
+      return MAKE_FUNCTOR(report_t::f_market_value);
+    break;
+
   case 'o':
     if (std::strncmp(p, "opt_", 4) == 0) {
       p = p + 4;
@@ -560,6 +585,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'm':
 	if (std::strcmp(p, "monthly") == 0)
 	  return MAKE_FUNCTOR(report_t::option_monthly);
+	else if (std::strcmp(p, "market") == 0)
+	  return MAKE_FUNCTOR(report_t::option_market);
 	break;
 
       case 'n':
@@ -674,6 +701,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'U':
 	if (! *(p + 1))
 	  return MAKE_FUNCTOR(report_t::option_uncleared);
+	break;
+
+      case 'V':
+	if (! *(p + 1))
+	  return MAKE_FUNCTOR(report_t::option_market);
 	break;
 
       case 'W':
