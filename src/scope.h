@@ -260,6 +260,15 @@ inline const string var_t<string>::operator *() const {
   return value->to_string();
 }
 
+template <>
+inline datetime_t var_t<datetime_t>::operator *() {
+  return value->to_datetime();
+}
+template <>
+inline const datetime_t var_t<datetime_t>::operator *() const {
+  return value->to_datetime();
+}
+
 } // namespace ledger
 
 #endif // _SCOPE_H
