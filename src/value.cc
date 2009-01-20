@@ -1299,25 +1299,26 @@ bool value_t::is_zero() const
   return false;
 }
 
-value_t value_t::value(const optional<datetime_t>& moment) const
+value_t value_t::value(const optional<datetime_t>&   moment,
+		       const optional<commodity_t&>& in_terms_of) const
 {
   switch (type()) {
   case INTEGER:
     return *this;
 
   case AMOUNT: {
-    if (optional<amount_t> val = as_amount().value(moment))
+    if (optional<amount_t> val = as_amount().value(moment, in_terms_of))
       return *val;
     return false;
   }
   case BALANCE: {
-    if (optional<balance_t> bal = as_balance().value(moment))
+    if (optional<balance_t> bal = as_balance().value(moment, in_terms_of))
       return *bal;
     return false;
   }
   case BALANCE_PAIR: {
-    if (optional<balance_t> bal_pair =
-	as_balance_pair().quantity().value(moment))
+    if (optional<balance_pair_t> bal_pair =
+	as_balance_pair().value(moment, in_terms_of))
       return *bal_pair;
     return false;
   }
@@ -1679,8 +1680,10 @@ void value_t::print(std::ostream& out, const bool relaxed) const
     break;
 
   case BALANCE:
-  case BALANCE_PAIR:
     out << as_balance();
+    break;
+  case BALANCE_PAIR:
+    out << as_balance_pair();
     break;
 
   case DATETIME:

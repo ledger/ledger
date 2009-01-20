@@ -103,8 +103,7 @@ public:
   balance_pair_t(const balance_t& bal) : balance_t(bal) {
     TRACE_CTOR(balance_pair_t, "const balance_t&");
   }
-  balance_pair_t(const balance_t& bal,
-		 const balance_t& cost_bal)
+  balance_pair_t(const balance_t& bal, const balance_t& cost_bal)
     : balance_t(bal), cost(cost_bal) {
     TRACE_CTOR(balance_pair_t, "const balance_t&, const balance_t&");
   }
@@ -309,6 +308,10 @@ public:
   const balance_t& quantity() const {
     return *this;
   }
+
+  optional<balance_pair_t>
+  value(const optional<datetime_t>&   moment      = none,
+	const optional<commodity_t&>& in_terms_of = none) const;
 
   /**
    * Truth tests.  An balance pair may be truth tested by comparison

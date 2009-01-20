@@ -12,6 +12,7 @@ libamounts_la_SOURCES  = \
 	src/amount.cc      \
 	src/commodity.cc   \
 	src/balance.cc     \
+	src/balpair.cc     \
 	src/value.cc       \
 			   \
 	src/token.cc       \
