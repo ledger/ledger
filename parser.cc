@@ -126,7 +126,7 @@ unsigned int parse_ledger_data(config_t&   config,
   }
 
   if (config.use_cache && ! config.cache_file.empty() &&
-      ! config.data_file.empty()) {
+      config.cache_file != "<none>" && ! config.data_file.empty()) {
     DEBUG_PRINT("ledger.config.cache",
 		"using_cache " << config.cache_file);
     config.cache_dirty = true;

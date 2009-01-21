@@ -414,7 +414,8 @@ appending the output of this command to your Ledger file if you so choose."
   // Write out the binary cache, if need be
 
   if (config.use_cache && config.cache_dirty &&
-      ! config.cache_file.empty()) {
+      ! config.cache_file.empty() &&
+      config.cache_file != "<none>") {
     TRACE_PUSH(binary_cache, "Writing journal file");
 
     std::ofstream stream(config.cache_file.c_str());
