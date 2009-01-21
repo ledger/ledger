@@ -130,9 +130,11 @@ namespace {
   {
     std::ostringstream buf;
 
-    for(int i = 0; i < 5 ; i++)
+    for(int i = 0; i < 5 ; i++) {
+      buf.width(8);
+      buf.fill('0');
       buf << std::hex << message_digest[i];
-
+    }
     return buf.str();
   }
 }
