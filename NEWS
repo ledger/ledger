@@ -2,7 +2,13 @@
 
 * 2.6.2
 
-- This version has no new features, it's all critical bug fixes.
+- Bug fix: "cat data | ledger -f -" now works.
+
+- Bug fix: --no-cache is now honored.  Previously, it was writing out a cache
+  file named "<none>".
+
+- Bug fix: Using %.2X in a format string now outputs 2 spaces if the state is
+  cleared.
 
 * 2.6.1
 

@@ -6,7 +6,51 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+TAGS: EMACS(e) FEATURE(f) DOCS(d) WEBSITE(w) BUILD(b)
 #+CATEGORY: Ledger
 
-* DONE [#B] -e doesn't seem to work for providing an end date
+* 2.6.2
+** DONE [#A] Reading Ledger data from stdin does not work at all
+   - State "DONE"       [2009-01-21 Wed 18:26] \\
+     Fixed by buffering stdin data into memory before parsing it.
+   :PROPERTIES:
+   :Version: 2.6.0.90
+   :Ticket: 210
+   :ID: B6A502D1-D8A8-4986-9D96-301C2E13E020
+   :END:
+** DONE [#B] %2.2X format string doesn't work
+   - State "DONE"       [2009-01-20 Tue 21:02] \\
+     Fixed in 2.6.2.
+   If I use %2.2X in a format string, I would expect to either get the string
+   "! ", the string "* " or " ", but for the non-cleared case, it doesn't print
+   any spaces, and the columns don't line up.  Other optional formatting (such
+   as %C) seem to work with width indicators.
+
+   I've worked around this by putting the %X as the last thing in the register,
+   but it would be nice to be able to see it next to the amounts.
+   :PROPERTIES:
+   :Submitter: David Brown <ledger@davidb.org>
+   :Version: 2.6.1
+   :URL: message:%3C20090120084407.GA13140@linode.davidb.org%3E
+   :ID: 19909091-7A05-46FB-8654-3413E955BFCD
+   :END:
+   [2009-01-18 Sun 21:39]
+** DONE [#B] When --no-cache is used, a file named '<none>' is being written out
+   - State "DONE"       [2009-01-20 Tue 21:02] \\
+     Fixed in 2.6.2.
+   I'm running off of the v2.6.1 tag in git.  I occasionally find that the
+   ledger cache has a few problems, usually causing transactions to have the
+   wrong sign.  I haven't figured out exactly how to reproduce this.
+   
+   I've put --no-cache in my ~/.ledgerrc, but this seems to just cause it to
+   write the cache to a file in the current directory called "<none>".  I'm not
+   sure if it reads the file or not.
+   :PROPERTIES:
+   :Submitter: David Brown <ledger@davidb.org>
+   :Version: 2.6.1
+   :URL: message:%3C20090119013953.GA31608@linode.davidb.org%3E
+   :ID: EB3B079A-2783-4716-89B5-E658DE5A1FAC
+   :END:
+   [2009-01-18 Sun 21:39]
+* 2.6.1
+** DONE [#B] -e doesn't seem to work for providing an end date
   - State "DONE"       [2008-04-04 Fri 14:34] \\
     There was a problem with the -e date parsing.  I now interpret "-e june"
     to mean that you want the report to end AT June, rather than IN June.
@@ -53,7 +97,7 @@ $
   :ID: 1DE6FB08-93D2-47C8-A5A3-3379BA76360D
   :END:
   [2008-04-04 Fri]
-* DONE [#A] -p "this month" doesn't work at all anymore
+** DONE [#A] -p "this month" doesn't work at all anymore
   - State "DONE"       [2008-07-17 Thu 18:14] \\
     This has been fixed, and represents a very major set of fixes to date
     handling in general.  Thanks to Nathan for hitting the nail on the head.
@@ -76,7 +120,7 @@ Predicate: d>=[1969/12/31]&d<[1970/01/31]&/(?:cash)/
   :ID: 0CF00621-31C4-4E5A-B260-78B4DA8C3616
   :END:
   [2008-04-04 Fri]
-* DONE [#A] Cannot sort by reverse time
+** DONE [#A] Cannot sort by reverse time
   - State "DONE"       [2008-07-19 Sat 16:52]
   When I specify `--sort -d`, I get:
   :OUTPUT:
@@ -93,7 +137,7 @@ Error: Cannot negate a date/time
   :ID: CB97253A-581E-49D0-98D4-3BC5B0616A42
   :END:
   [2008-07-17 Thu]
-* DONE [#B] Command results in assertion failure
+** DONE [#B] Command results in assertion failure
   - State "DONE"       [2008-07-17 Thu 17:44]
   The command is:
   :SCRIPT:
@@ -107,7 +151,7 @@ ledger -s bal --sort O wedding
   :ID: AB684BBE-F093-4F77-BCFB-2F4E0D60AA9C
   :END:
   [2007-12-10 Mon]
-* DONE [#A] Core dump on simple input.
+** DONE [#A] Core dump on simple input.
   - State "DONE"       [2008-07-17 Thu 17:38]
   :DATA:
 2008/01/03=2007/12/28 * Sell -- RHT -- RED HAT INC CA TAUX DE CHANGE    .96590
@@ -122,7 +166,7 @@ ledger -s bal --sort O wedding
   :ID: 843B6A53-C3C2-45BB-A92C-558AF6F02014
   :END:
   [2008-04-07 Mon]
-* DONE [#B] Coredump.
+** DONE [#B] Coredump.
   - State "DONE"       [2008-07-17 Thu 17:50]
   :DATA:
 2008/01/02 * Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
@@ -140,7 +184,7 @@ ledger -s bal --sort O wedding
   :ID: A18B37A4-68DB-4F3A-92D5-3962D010CA0B
   :END:
   [2008-04-06 Sun]
-* DONE [#A] crash
+** DONE [#A] crash
   - State "DONE"       [2008-07-17 Thu 17:39]
   :DATA:
 2007-12-31 * Start of year / Opening balances.
@@ -154,7 +198,7 @@ ledger -s bal --sort O wedding
   :ID: 45605775-F9E3-4C83-8BF2-616905178E82
   :END:
   [2008-04-12 Sat]
-* DONE [#B] Crash on input -- spurious comma
+** DONE [#B] Crash on input -- spurious comma
   - State "DONE"       [2008-07-17 Thu 17:49]
   :DATA:
 2008/02/25 * bla bla bnla
@@ -170,7 +214,7 @@ ledger -s bal --sort O wedding
   :ID: 517CB118-49A5-42B2-ACFD-1A63DCF163AA
   :END:
   [2008-04-06 Sun]
-* DONE [#A] Crash on input.
+** DONE [#A] Crash on input.
   - State "DONE"       [2008-07-17 Thu 17:38]
   - State "TODO"       [2008-04-06 Sun 10:23] \\
     Martin Blais <blais@furius.ca> writes:
@@ -208,7 +252,7 @@ banane:~/__accounting/.../rbcinv/invest$
   :ID: 703505C9-B702-4139-B64A-FD3CF592E720
   :END:
   [2008-04-06 Sun]
-* DONE [#A] Crash on input.
+** DONE [#A] Crash on input.
   - State "DONE"       [2008-07-17 Thu 17:38]
   :DATA:
 2008/01/02 ! Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
@@ -224,7 +268,7 @@ banane:~/__accounting/.../rbcinv/invest$
   :ID: B2B79746-5E3B-40D3-B6ED-CCF27364DD5F
   :END:
   [2008-04-06 Sun]
-* DONE [#B] Crash on input.
+** DONE [#B] Crash on input.
   - State "DONE"       [2008-07-17 Thu 17:45]
   :DATA:
 2008/01/02 ! Sell -- on 2007/12/27 -- CRA  --  APPLERA CORP COM CELERA GROUP CA EXCHANGE RATE     .96760
@@ -240,17 +284,17 @@ banane:~/__accounting/.../rbcinv/invest$
   :ID: 93CFAFEB-46EA-4E47-8F0A-069309D6EE3A
   :END:
   [2008-04-06 Sun]
-* DONE [#B] Crash reading .timelog file
-  - State "DONE"       [2008-07-17 Thu 18:08]
-  2.6b aborts if the last entry is the timelog is an "in" event.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 128
-  :ID: C7A32276-11A7-44F1-99CD-6F0CA7330340
-  :END:
-  [2008-04-11 Fri]
-* DONE [#A] Dates (used with -b -e and -p parameters) are broken
+** DONE [#B] Crash reading .timelog file
+   - State "DONE"       [2008-07-17 Thu 18:08]
+   2.6b aborts if the last entry is the timelog is an "in" event.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 128
+   :ID: C7A32276-11A7-44F1-99CD-6F0CA7330340
+   :END:
+   [2008-04-11 Fri]
+** DONE [#A] Dates (used with -b -e and -p parameters) are broken
   - State "DONE"       [2008-07-17 Thu 06:20] \\
     Patch checked in.  Thanks, Nathan!
   - State "TODO"       [2008-04-06 Sun 21:59] \\
@@ -276,16 +320,16 @@ ledger -f my.ledger -b 2008/03/01 -e 2008/04/01 print
   :ID: A95B2E0F-095D-4314-BC4D-3CEC42203FB1
   :END:
   [2008-04-06 Sun]
-* DONE [#B] Do not adjust display precision when parsing a pricing entry
-  - State "DONE"       [2008-09-17 Wed 05:12]
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6.0.90
-  :Ticket: 206
-  :ID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
-  :END:
-  [2008-07-28 Mon]
-* DONE [#C] Entry command doesn't match debit account when description is unmatched
+** DONE [#B] Do not adjust display precision when parsing a pricing entry
+   - State "DONE"       [2008-09-17 Wed 05:12]
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6.0.90
+   :Ticket: 206
+   :ID: 7E5D2A6C-A15F-4BC8-A851-04A48E3E30F4
+   :END:
+   [2008-07-28 Mon]
+** DONE [#C] Entry command doesn't match debit account when description is unmatched
   - State "DONE"       [2008-07-20 Sun 20:32]
   I think I've isolated a bug with the entry command where I get "Equity"
   instead of a valid debit account:
@@ -315,7 +359,7 @@ $ ledger entry 2008/07/18 "Foo Bar" food 20 checking
   :ID: FF8CE4C5-03B3-4FCA-85BD-52A9DB191B4B
   :END:
   [2008-07-18 Fri]
-* DONE [#A] Entry command produces two liability transactions
+** DONE [#A] Entry command produces two liability transactions
   - State "DONE"       [2008-07-17 Thu 22:01]
   - State "TODO"       [2008-05-03 Sat 22:27] \\
     This is being a real problem for drewr, arete and pll!  This one gets fixed
@@ -335,7 +379,7 @@ arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
   :ID: D7DD54D7-8870-4D6D-92A0-90717692F8F2
   :END:
   [2007-11-12 Mon]
-* DONE [#B] Expressions don't work.
+** DONE [#B] Expressions don't work.
   - State "DONE"       [2008-07-17 Thu 21:37]
   - State "TODO"       [2008-04-12 Sat 14:58] \\
     Martin Blais <blais@furius.ca> writes:
@@ -352,7 +396,7 @@ arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
   :ID: DA9F2346-CD90-4E22-B2F0-2670532456BA
   :END:
   [2008-04-12 Sat]
-* DONE [#B] Getting an abort with a self-referential pricing statement
+** DONE [#B] Getting an abort with a self-referential pricing statement
   - State "DONE"       [2008-07-17 Thu 17:51] \\
     Getting this to work correctly is going to need more work (which has already
     been logged as another bug).
@@ -369,7 +413,7 @@ arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
   :ID: A21E4DCC-6112-441F-B76D-95CF47BA658D
   :END:
   [2008-04-06 Sun]
-* DONE [#B] Ignore [TEXT] in a transaction which does not specify a date
+** DONE [#B] Ignore [TEXT] in a transaction which does not specify a date
   - State "DONE"       [2008-09-17 Wed 05:10] \\
     Fixed, by simply ignoring when something that looks [TEXT] in a transaction
     note fails to parse as a date.
@@ -383,35 +427,35 @@ arete$ ledger entry 2007/11/11 safeway groceries \$10.00 american
   :ID: 96DDA4B9-E216-4C7A-8D0E-02B0F39CA256
   :END:
   [2008-08-27 Wed]
-* DONE [#B] Install patches for Ledger 2.6 from Simon Michael
-  - State "DONE"       [2008-07-17 Thu 21:41] \\
-    I'm only taking the first patch for 2.6.  The other two need a bit more
-    polish before I would put them in the standard distro, instead of just
-    posting them to the Wiki or some such.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 60
-  :ID: 0C311A59-701A-4D30-BBDB-924F12878724
-  :Attachments: sm001.patch sm002.patch sm004.patch 
-  :END:
-  [2008-04-11 Fri]
-* DONE [#A] ledger 2.6 shows no timelog entries
-  - State "DONE"       [2008-07-17 Thu 19:08]
-  - State "TODO"       [2008-08-18 Mon 02:15] \\
-    Simon Michael <simon@joyful.com> writes:
-    > And if ends with a "i" record, ledger gives a bus error. This is on
-    > leopard.
-  Ledger 2.5 shows entries in my timelog file, but 2.6.1-pre shows none. There
-  is no parse error.
-  :PROPERTIES:
-  :Submitter: Simon Michael <simon@joyful.com>
-  :Version: 2.6.1b
-  :Ticket: 57
-  :ID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
-  :END:
-  [2008-04-09 Wed]
-* DONE [#A] Ledger fails to balance a simple entry
+** DONE [#B] Install patches for Ledger 2.6 from Simon Michael
+   - State "DONE"       [2008-07-17 Thu 21:41] \\
+     I'm only taking the first patch for 2.6.  The other two need a bit more
+     polish before I would put them in the standard distro, instead of just
+     posting them to the Wiki or some such.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 60
+   :ID: 0C311A59-701A-4D30-BBDB-924F12878724
+   :Attachments: sm001.patch sm002.patch sm004.patch 
+   :END:
+   [2008-04-11 Fri]
+** DONE [#A] ledger 2.6 shows no timelog entries
+   - State "DONE"       [2008-07-17 Thu 19:08]
+   - State "TODO"       [2008-08-18 Mon 02:15] \\
+     Simon Michael <simon@joyful.com> writes:
+     > And if ends with a "i" record, ledger gives a bus error. This is on
+     > leopard.
+   Ledger 2.5 shows entries in my timelog file, but 2.6.1-pre shows none. There
+   is no parse error.
+   :PROPERTIES:
+   :Submitter: Simon Michael <simon@joyful.com>
+   :Version: 2.6.1b
+   :Ticket: 57
+   :ID: C13F0BDF-4E15-442E-BBB7-265B0A37457C
+   :END:
+   [2008-04-09 Wed]
+** DONE [#A] Ledger fails to balance a simple entry
   - State "DONE"       [2008-07-28 Mon 02:05] \\
     This was quite the nasty little bug.
   I just installed v2.6.1 and ledger reports errors with some transactions
@@ -436,7 +480,7 @@ Error: "/home/vinod/data/ledger.dat", line 52379: Entry does not balance
   :ID: 0CA014F9-E309-4840-9085-71EC1F46DEC1
   :END:
   [2008-07-28 Mon]
-* DONE [#B] ledger SVN doesn't compile on freebsd-8
+** DONE [#B] ledger SVN doesn't compile on freebsd-8
   - State "DONE"       [2008-03-17 Mon 16:22] \\
     Clemens writes:
     > Just for the record, there's a fix:
@@ -500,70 +544,70 @@ gmake: *** [all] Error 2
   :ID: C1BE11BD-958D-4E67-8B85-5DA14CD375B4
   :END:
   [2008-03-14 Fri]
-* DONE [#B] ledger.el requires an absolute pathname for the ledger-binary-path :EMACS:
-  - State "DONE"       [2008-07-17 Thu 22:09]
-  This caused me pain after a ledger upgrade. "ledger" should be sufficient if
-  it's in the path.
-  :PROPERTIES:
-  :Submitter: Simon Michael <simon@joyful.com>
-  :Version: 2.6
-  :Ticket: 199
-  :ID: 7D40038A-DEED-47FA-8D02-0951E94CA175
-  :END:
-  [2008-07-12 Sat]
-* DONE [#A] Make -e use an inclusive end date, and -E an exclusive one
-  - State "DONE"       [2008-07-17 Thu 06:22] \\
-    -e has been reverted back to its old behavior, to avoid confusing people.
-  Right now (as of today) -e was made exclusive, but this isn't right; I need
-  another option for exclusivity.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 37
-  :ID: A440BB5E-072B-4C75-A235-C551EA090F81
-  :END:
-  [2008-04-04 Fri]
-* DONE [#A] Marking a transaction cleared may delete text in ledger-mode :EMACS:
-  - State "DONE"       [2008-07-18 Fri 02:28]
-  I started the groundwork for this, now I just have to add code to insert
-  whitespace if needed to keep each transaction valid.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 70
-  :ID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
-  :END:
-  [2008-04-11 Fri]
-* DONE [#C] Merge Levin's changes into v2.6.1b
-  - State "DONE"       [2008-08-26 Tue 10:11]
-  These are from http://github.com/levindu/ledger
-  :PROPERTIES:
-  :ID: C9167249-98C3-4C7E-8076-35B81A580B38
-  :END:
-  [2008-08-21 Thu]
-* DONE [#C] Multiple commodities in gnucash crash ledger
-  - State "DONE"       [2008-07-17 Thu 21:26]
-  - State "TODO"       [2008-03-27 Thu 19:54] \\
-    I still have to review the patch and make the changes, before this gets
-    closed.
-  - State "TODO"       [2008-03-27 Thu 15:20] \\
-    slanack writes:
-    > The proposed Fix works for me.  The problem was that <split:quantity>
-    > received the `transaction commodity' instead of the correct `account
-    > commodity'.  There should really be a check if the account commodity has
-    > been defined.
-  I am using transactions between accounts with different base commodities in
-  gnucash.  Ledger reports a segfault when reading the gnucash file and using
-  the command `print`.
-  :PROPERTIES:
-  :Submitter: slanack
-  :Version: 2.6.0.90
-  :Ticket: 35
-  :ID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
-  :Attachments: gnucash.cc.patch gnucash-minimal.xml
-  :END:
-  [2008-03-23 Sun]
-* DONE [#C] My "bal" command is broken again
+** DONE [#B] ledger.el requires an absolute pathname for the ledger-binary-path		  :EMACS:
+   - State "DONE"       [2008-07-17 Thu 22:09]
+   This caused me pain after a ledger upgrade. "ledger" should be sufficient if
+   it's in the path.
+   :PROPERTIES:
+   :Submitter: Simon Michael <simon@joyful.com>
+   :Version: 2.6
+   :Ticket: 199
+   :ID: 7D40038A-DEED-47FA-8D02-0951E94CA175
+   :END:
+   [2008-07-12 Sat]
+** DONE [#A] Make -e use an inclusive end date, and -E an exclusive one
+   - State "DONE"       [2008-07-17 Thu 06:22] \\
+     -e has been reverted back to its old behavior, to avoid confusing people.
+   Right now (as of today) -e was made exclusive, but this isn't right; I need
+   another option for exclusivity.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 37
+   :ID: A440BB5E-072B-4C75-A235-C551EA090F81
+   :END:
+   [2008-04-04 Fri]
+** DONE [#A] Marking a transaction cleared may delete text in ledger-mode		  :EMACS:
+   - State "DONE"       [2008-07-18 Fri 02:28]
+   I started the groundwork for this, now I just have to add code to insert
+   whitespace if needed to keep each transaction valid.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 70
+   :ID: 0EB5602F-66BE-46C0-8A74-5EB5DBAF2E07
+   :END:
+   [2008-04-11 Fri]
+** DONE [#C] Merge Levin's changes into v2.6.1b
+   - State "DONE"       [2008-08-26 Tue 10:11]
+   These are from http://github.com/levindu/ledger
+   :PROPERTIES:
+   :ID: C9167249-98C3-4C7E-8076-35B81A580B38
+   :END:
+   [2008-08-21 Thu]
+** DONE [#C] Multiple commodities in gnucash crash ledger
+   - State "DONE"       [2008-07-17 Thu 21:26]
+   - State "TODO"       [2008-03-27 Thu 19:54] \\
+     I still have to review the patch and make the changes, before this gets
+     closed.
+   - State "TODO"       [2008-03-27 Thu 15:20] \\
+     slanack writes:
+     > The proposed Fix works for me.  The problem was that <split:quantity>
+     > received the `transaction commodity' instead of the correct `account
+     > commodity'.  There should really be a check if the account commodity has
+     > been defined.
+   I am using transactions between accounts with different base commodities in
+   gnucash.  Ledger reports a segfault when reading the gnucash file and using
+   the command `print`.
+   :PROPERTIES:
+   :Submitter: slanack
+   :Version: 2.6.0.90
+   :Ticket: 35
+   :ID: DAAF3481-1B7A-4F4A-9EC6-575104655B1B
+   :Attachments: gnucash.cc.patch gnucash-minimal.xml
+   :END:
+   [2008-03-23 Sun]
+** DONE [#C] My "bal" command is broken again
   - State "DONE"       [2008-07-17 Thu 21:22]
   :OUTPUT:
 ~/Reference/Computing/Systems/Linux $ bal
@@ -578,29 +622,29 @@ Error: Cannot compare amounts with different commodities: EC and $
   :ID: 8159EF00-B95D-4E83-9927-7DB461CD2CC9
   :END:
   [2008-04-11 Fri]
-* DONE [#A] Reconciling is broken again; I need a way to verify Emacs output :EMACS:
-  - State "DONE"       [2008-07-17 Thu 23:40] \\
-    Reconciling is now line-based in 2.6.1, not character based (which has serious
-    issues with UTF-8 at the moment).
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 64
-  :ID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
-  :END:
-  [2008-04-11 Fri]
-* DONE [#C] Remove bogus reference to Emacs in project documentation	   :DOC:
-  - State "DONE"       [2008-07-16 Wed 03:59]
-  The gnucash docs talk about there someday being an Emacs mode. There is
-  already one.
-  :PROPERTIES:
-  :Submitter: bpt <#ledger>
-  :Version: 2.4.1
-  :Ticket: 10
-  :ID: B81ADF25-F176-4ABC-9C2B-1090E4F2FA7D
-  :END:
-  [2007-12-10 Mon]
-* DONE [#C] Segfault with commodity price in budget.
+** DONE [#A] Reconciling is broken again; I need a way to verify Emacs output		  :EMACS:
+   - State "DONE"       [2008-07-17 Thu 23:40] \\
+     Reconciling is now line-based in 2.6.1, not character based (which has serious
+     issues with UTF-8 at the moment).
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 64
+   :ID: 7A8C49FB-F9B8-4ECF-8720-9E29559F3CA6
+   :END:
+   [2008-04-11 Fri]
+** DONE [#C] Remove bogus reference to Emacs in project documentation			    :DOC:
+   - State "DONE"       [2008-07-16 Wed 03:59]
+   The gnucash docs talk about there someday being an Emacs mode. There is
+   already one.
+   :PROPERTIES:
+   :Submitter: bpt <#ledger>
+   :Version: 2.4.1
+   :Ticket: 10
+   :ID: B81ADF25-F176-4ABC-9C2B-1090E4F2FA7D
+   :END:
+   [2007-12-10 Mon]
+** DONE [#C] Segfault with commodity price in budget.
   - State "DONE"       [2008-07-17 Thu 20:09]
   :DATA:
 ~ Monthly
@@ -627,7 +671,7 @@ Error: Cannot compare amounts with different commodities: EC and $
   :ID: A4F87484-1B1D-4C76-B0AB-70E20FBA9D1B
   :END:
   [2008-04-23 Wed]
-* DONE [#B] Segmentation fault on import from GnuCash
+** DONE [#B] Segmentation fault on import from GnuCash
   - State "DONE"       [2008-07-17 Thu 20:04]
   - State "TODO"       [2008-06-16 Mon 16:05] \\
     Luben Manolov <lubo@manolov.org> writes:
@@ -648,51 +692,51 @@ While balancing entry:
   :Attachments: sample.gnucash
   :END:
   [2008-06-16 Mon]
-* DONE [#B] Some at-signs are not properly escaped in documentation	   :DOC:
-  - State "DONE"       [2008-03-27 Thu 19:42]
-  Some of the at signs are not properly escaped in the texi
-  documentation. This leads to great confusion when trying to figure out how
-  to use commodity transactions.
-  :PROPERTIES:
-  :Submitter: thedward <thedward@barsoom.net>
-  :Version: 2.6
-  :Ticket: 31
-  :Attachments: ledger-texi.patch
-  :ID: A7CA0F5B-1F08-417A-9071-A223601100CA
-  :END:
-  [2008-01-28 Mon]
-* DONE [#A] Strip \r from lines when parsing on Windows
-  - State "DONE"       [2008-07-17 Thu 18:31]
-  It sounds like I'm not stripping the \r from the \r\n sequence, and thus
-  it's interpreting the \r as part of the file name. I'll add this to the
-  buglist for 3.0.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 43
-  :ID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
-  :END:
-  [2008-04-05 Sat]
-* DONE [#A] trailing whitespace is significant in 2.6
-  - State "DONE"       [2008-04-05 Sat 18:56] \\
-    The first patch fixes parsing account names when a single space follows.
-    This might close ticket #3.
-  - State "TODO"       [2008-04-05 Sat 18:55] \\
-    The following patch, submitted by Nathan Jones, proposes to fix this problem.
-  - State "TODO"       [2007-09-22 Sat 04:26] \\
-    Simon, have you tried this with 2.6.1-svn?  I believe this is something I
-    fixed.
-  Unlike 2.5, 2.6 considers an account name followed by whitespace to be
-  different from one without (when no amount is specified).
-  :PROPERTIES:
-  :Submitter: Simon Michael <simon@joyful.com>
-  :Version: 2.6
-  :Ticket: 3
-  :Attachments: 288.patch
-  :ID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
-  :END:
-  [2007-09-22 Sat]
-* DONE [#B] Unbalanced transactions due to rounding problems
+** DONE [#B] Some at-signs are not properly escaped in documentation			    :DOC:
+   - State "DONE"       [2008-03-27 Thu 19:42]
+   Some of the at signs are not properly escaped in the texi
+   documentation. This leads to great confusion when trying to figure out how
+   to use commodity transactions.
+   :PROPERTIES:
+   :Submitter: thedward <thedward@barsoom.net>
+   :Version: 2.6
+   :Ticket: 31
+   :Attachments: ledger-texi.patch
+   :ID: A7CA0F5B-1F08-417A-9071-A223601100CA
+   :END:
+   [2008-01-28 Mon]
+** DONE [#A] Strip \r from lines when parsing on Windows
+   - State "DONE"       [2008-07-17 Thu 18:31]
+   It sounds like I'm not stripping the \r from the \r\n sequence, and thus
+   it's interpreting the \r as part of the file name. I'll add this to the
+   buglist for 3.0.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 43
+   :ID: 458B2B74-AF2D-4D9D-89E4-D8AC26CFD531
+   :END:
+   [2008-04-05 Sat]
+** DONE [#A] trailing whitespace is significant in 2.6
+   - State "DONE"       [2008-04-05 Sat 18:56] \\
+     The first patch fixes parsing account names when a single space follows.
+     This might close ticket #3.
+   - State "TODO"       [2008-04-05 Sat 18:55] \\
+     The following patch, submitted by Nathan Jones, proposes to fix this problem.
+   - State "TODO"       [2007-09-22 Sat 04:26] \\
+     Simon, have you tried this with 2.6.1-svn?  I believe this is something I
+     fixed.
+   Unlike 2.5, 2.6 considers an account name followed by whitespace to be
+   different from one without (when no amount is specified).
+   :PROPERTIES:
+   :Submitter: Simon Michael <simon@joyful.com>
+   :Version: 2.6
+   :Ticket: 3
+   :Attachments: 288.patch
+   :ID: FB2330E1-AD78-4559-A885-A488DFDF3DC1
+   :END:
+   [2007-09-22 Sat]
+** DONE [#B] Unbalanced transactions due to rounding problems
   - State "DONE"       [2008-09-17 Wed 05:03] \\
     The cents disappeared because 'D $1,000.00' must be specified at the beginning
     of the file, since you never use dollar figures outside of the pricing.
@@ -740,30 +784,30 @@ While balancing entry:
   :ID: E87DD3A5-B061-46A0-95E9-9844A6CB0443
   :END:
   [2008-08-01 Fri]
-* DONE [#C] When reporting the unbalanced remainder, round it	       :FEATURE:
-  - State "DONE"       [2008-07-17 Thu 20:52]
-  This is so that it shows what ledger is really thinking.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 125
-  :ID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
-  :END:
-  [2008-04-11 Fri]
-* WONTFIX [#C] Balance calculations using the '=' operator are off
-  - State "WONTFIX"    [2008-08-15 Fri 04:14] \\
-    This feature is not ready for 2.6.1, and is being pushed to 3.0 where this
-    issue has been fixed.
-  When I run 'ledger --tail 20 reg assets:cash' with my current ledger data,
-  the final balance is way, way off.  Something is being miscalculated.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6.1b
-  :Ticket: 209
-  :ID: F32E914F-D485-427B-89E9-33C762CC1A47
-  :END:
-  [2008-08-02 Sat]
-* WONTFIX [#B] No commodity when amount contains simple math operation
+** DONE [#C] When reporting the unbalanced remainder, round it				:FEATURE:
+   - State "DONE"       [2008-07-17 Thu 20:52]
+   This is so that it shows what ledger is really thinking.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 125
+   :ID: 4BF95CDC-972F-4F39-9F54-7BEFD404F9AA
+   :END:
+   [2008-04-11 Fri]
+** WONTFIX [#C] Balance calculations using the '=' operator are off
+   - State "WONTFIX"    [2008-08-15 Fri 04:14] \\
+     This feature is not ready for 2.6.1, and is being pushed to 3.0 where this
+     issue has been fixed.
+   When I run 'ledger --tail 20 reg assets:cash' with my current ledger data,
+   the final balance is way, way off.  Something is being miscalculated.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6.1b
+   :Ticket: 209
+   :ID: F32E914F-D485-427B-89E9-33C762CC1A47
+   :END:
+   [2008-08-02 Sat]
+** WONTFIX [#B] No commodity when amount contains simple math operation
   - State "WONTFIX"    [2007-11-09 Fri 23:34] \\
     This expected behavior.  If you multiply or divide two commoditized
     amounts together, the second commodity is dropped in favor of the first.
@@ -793,7 +837,7 @@ $ ledger -f sample2.dat bal
   :ID: 4290A2E5-8CFB-4529-87DE-F088719AF13A
   :END:
   [2007-11-09 Fri]
-* WONTFIX [#C] Non-balanced virtual transaction should fail.
+** WONTFIX [#C] Non-balanced virtual transaction should fail.
   - State "WONTFIX"    [2008-07-17 Thu 20:44] \\
     This is not an error because:
     
@@ -823,7 +867,7 @@ $ ledger -f sample2.dat bal
   :ID: 75E83651-B130-4978-89C7-DFED4E874E8F
   :END:
   [2008-04-23 Wed]
-* WONTFIX [#B] Problem with pricing specification in prices.db file
+** WONTFIX [#B] Problem with pricing specification in prices.db file
   - State "WONTFIX"    [2008-07-17 Thu 21:42] \\
     Pricing info is not used for balancing entries.  For that, you'd need to use
     "@ ... USD" for the halfg and gouda amounts, so that Ledger could be certain
@@ -865,27 +909,27 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :ID: 43CFF7FF-DA09-478C-AED1-2D2756BACA09
   :END:
   [2008-04-05 Sat]
-* WORKSFORME [#B] ledger -MA doesn't give a monthly report if some months have no transactions
-  - State "WORKSFORME" [2008-07-17 Thu 20:14] \\
-    This works for me.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 61
-  :ID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
-  :END:
-  [2008-04-11 Fri]
-* WORKSFORME [#C] ledger -Mn
-  - State "WORKSFORME" [2008-08-17 Sun 20:13]
-  Is not the same as: ledger -M -n
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 126
-  :ID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
-  :END:
-  [2008-04-11 Fri]
-* WORKSFORME [#A] Monthly register command displays nothing
+** WORKSFORME [#B] ledger -MA doesn't give a monthly report if some months have no transactions
+   - State "WORKSFORME" [2008-07-17 Thu 20:14] \\
+     This works for me.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 61
+   :ID: FD118D79-3B8F-48CE-89D0-F0FFD46F6C49
+   :END:
+   [2008-04-11 Fri]
+** WORKSFORME [#C] ledger -Mn
+   - State "WORKSFORME" [2008-08-17 Sun 20:13]
+   Is not the same as: ledger -M -n
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 126
+   :ID: 2C3B5DCE-AB7F-41A2-BF93-56CC1222AE64
+   :END:
+   [2008-04-11 Fri]
+** WORKSFORME [#A] Monthly register command displays nothing
   - State "WORKSFORME" [2008-07-17 Thu 20:12] \\
     This has apparently been fixed by the recent date/time bug fixes.
   The command is:
@@ -900,7 +944,7 @@ ledger -p 2005 -e 2005/08/17 --monthly reg
   :ID: 841041A2-925D-4797-BE44-11BFC7333054
   :END:
   [2007-12-10 Mon]
-* WORKSFORME [#B] Problems with the prices.db file
+** WORKSFORME [#B] Problems with the prices.db file
   - State "WORKSFORME" [2008-07-17 Thu 21:45] \\
     Pricing entries must start with a capital P, not a lowercase p.
 
@@ -942,7 +986,7 @@ Error: Errors parsing file 'life/finances/ledger/prices.db'
   :ID: B8173D32-D7EB-4619-8488-B2C641431FDE
   :END:
   [2008-04-05 Sat]
-* WORKSFORME [#A] Weekly register report is completely broken in 2.6
+** WORKSFORME [#A] Weekly register report is completely broken in 2.6
   - State "WORKSFORME" [2008-07-17 Thu 20:11] \\
     This has apparently been fixed by all the other date/time fixes done today.
   The command is:
@@ -957,16 +1001,16 @@ ledger --weekly reg food
   :ID: 30383931-3060-4999-8FD3-9002E02366A0
   :END:
   [2007-12-10 Mon]
-* INVALID [#B] Remove bogus reference to Emacs in project documentation (2.6)
-  - State "INVALID"    [2008-07-13 Sun 22:16]
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 72
-  :ID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
-  :END:
-  [2008-04-11 Fri]
-* DUPLICATE [#A] Bug with date ranges
+** INVALID [#B] Remove bogus reference to Emacs in project documentation (2.6)
+   - State "INVALID"    [2008-07-13 Sun 22:16]
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 72
+   :ID: 7455E4A7-16FD-4F41-8A33-CF44F6E690B2
+   :END:
+   [2008-04-11 Fri]
+** DUPLICATE [#A] Bug with date ranges
   - State "DUPLICATE"  [2008-04-04 Fri 14:35] \\
     This has been fixed, see the comments in #36.
   I'm using the latest source from CVS and it appears the `-e` option is
@@ -991,19 +1035,19 @@ This also doesn't work.  It just shows `Opening Balances: 0`:
   :ID: FE3E08C0-802A-4FAA-B8BA-93D81C061148
   :END:
   [2007-12-10 Mon]
-* DUPLICATE [#A] DOS format line endings are fooling the parser
-  - State "DUPLICATE"  [2008-08-16 Sat 03:56] \\
-    Duplicated by #43.
-  The \r\n ending is having only the \n stripped, making the \r appear as part
-  of the filename when doing a !include.
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 129
-  :ID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
-  :END:
-  [2008-04-11 Fri]
-* DUPLICATE [#C] Entry command produces duplicate source transactions
+** DUPLICATE [#A] DOS format line endings are fooling the parser
+   - State "DUPLICATE"  [2008-08-16 Sat 03:56] \\
+     Duplicated by #43.
+   The \r\n ending is having only the \n stripped, making the \r appear as part
+   of the filename when doing a !include.
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 129
+   :ID: 6DF2250F-C54D-4F67-AFB6-F8656020D394
+   :END:
+   [2008-04-11 Fri]
+** DUPLICATE [#C] Entry command produces duplicate source transactions
   - State "DUPLICATE"  [2008-01-31 Thu 14:57] \\
     drewr writes:
     > This is a duplicate of ticket #8.
@@ -1029,16 +1073,16 @@ This also doesn't work.  It just shows `Opening Balances: 0`:
   :ID: EA246228-3EC7-4834-B55A-455DBA58116C
   :END:
   [2008-01-30 Wed]
-* DUPLICATE [#B] Need to strip \r from \r\n line endings
-  - State "DUPLICATE"  [2008-07-13 Sun 22:38]
-  :PROPERTIES:
-  :Submitter: John Wiegley <johnw@newartisans.com>
-  :Version: 2.6
-  :Ticket: 139
-  :ID: C7A61E89-08D1-4151-AF2E-92F666148F19
-  :END:
-  [2008-04-11 Fri]
-* DUPLICATE [#B] Problems parsing an entry
+** DUPLICATE [#B] Need to strip \r from \r\n line endings
+   - State "DUPLICATE"  [2008-07-13 Sun 22:38]
+   :PROPERTIES:
+   :Submitter: John Wiegley <johnw@newartisans.com>
+   :Version: 2.6
+   :Ticket: 139
+   :ID: C7A61E89-08D1-4151-AF2E-92F666148F19
+   :END:
+   [2008-04-11 Fri]
+** DUPLICATE [#B] Problems parsing an entry
   - State "DUPLICATE"  [2008-07-18 Fri 02:12]
   :OUTPUT:
 djw@hector:~$ ledger bal 
@@ -1066,23 +1110,23 @@ P 2007/03/04 00:00:00 gouda 7 USD
   :ID: AD876FB0-E7B8-4C89-9E23-2D25AF8D5F0A
   :END:
   [2008-04-11 Fri]
-* DUPLICATE [#B] Reconciling doesn't work in ledger.el			 :EMACS:
-  - State "DUPLICATE"  [2008-07-16 Wed 03:56] \\
-    Duplicated by #64.
-  I've tried version 2.5 but have had some problems.
+** DUPLICATE [#B] Reconciling doesn't work in ledger.el					  :EMACS:
+   - State "DUPLICATE"  [2008-07-16 Wed 03:56] \\
+     Duplicated by #64.
+   I've tried version 2.5 but have had some problems.
 
-  I use Carbon Emacs on Mac OS X to edit my Ledger files.  Unfortunately the
-  reconcile functionality doesn't work any more.  Pressing the space bar
-  doesn't always toggle an entry, sometimes it needs to be pressed twice,
-  sometimes it never goes.  Additionally, even if some entries are toggled,
-  nothing is changed in the main file and pressing C-c C-c just re-sets the
-  reconcile window back to it's original state.
+   I use Carbon Emacs on Mac OS X to edit my Ledger files.  Unfortunately the
+   reconcile functionality doesn't work any more.  Pressing the space bar
+   doesn't always toggle an entry, sometimes it needs to be pressed twice,
+   sometimes it never goes.  Additionally, even if some entries are toggled,
+   nothing is changed in the main file and pressing C-c C-c just re-sets the
+   reconcile window back to it's original state.
 
-  I've tried with and without the new ledger-clear-whole-entries variable set.
-  :PROPERTIES:
-  :Submitter: Karen Cooke <karen.cooke@gmail.com>
-  :Version: 2.6
-  :Ticket: 14
-  :ID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
-  :END:
-  [2007-12-10 Mon]
+   I've tried with and without the new ledger-clear-whole-entries variable set.
+   :PROPERTIES:
+   :Submitter: Karen Cooke <karen.cooke@gmail.com>
+   :Version: 2.6
+   :Ticket: 14
+   :ID: 2B02E2FD-DCF8-4CD8-A7FA-F83F5DAE3F55
+   :END:
+   [2007-12-10 Mon]
