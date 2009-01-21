@@ -41,7 +41,9 @@ entry_base_t::entry_base_t(const entry_base_t& e)
   : item_t(), journal(NULL)
 {
   TRACE_CTOR(entry_base_t, "copy");
+#if 0
   xacts.insert(xacts.end(), e.xacts.begin(), e.xacts.end());
+#endif
 }
 
 entry_base_t::~entry_base_t()
@@ -254,9 +256,10 @@ entry_t::entry_t(const entry_t& e)
   : entry_base_t(e), code(e.code), payee(e.payee)
 {
   TRACE_CTOR(entry_t, "copy");
-
+#if 0
   foreach (xact_t * xact, xacts)
     xact->entry = this;
+#endif
 }
 
 void entry_t::add_xact(xact_t * xact)
