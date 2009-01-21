@@ -615,6 +615,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	case transaction_t::PENDING:
 	  out << "! ";
 	  break;
+	default:
+	  out << "";
+	  break;
 	}
       }
       break;
@@ -629,6 +632,9 @@ void format_t::format(std::ostream& out_str, const details_t& details) const
 	    break;
 	  case transaction_t::PENDING:
 	    out << "! ";
+	    break;
+	  default:
+	    out << "";
 	    break;
 	  }
       }
