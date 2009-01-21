@@ -216,7 +216,23 @@ std::size_t session_t::read_data(journal_t&    journal,
     if (data_file == "-") {
       use_cache = false;
       journal.sources.push_back("/dev/stdin");
-      entry_count += read_journal(journal, std::cin, "/dev/stdin", acct);
+
+      // To avoid problems with stdin and pipes, etc., we read the entire
+      // file in beforehand into a memory buffer, and then parcel it out
+      // from there.
+      std::ostringstream buffer;
+
+      while (std::cin.good() && ! std::cin.eof()) {
+	static char line[8192];
+	std::cin.read(line, 8192);
+	std::streamsize count = std::cin.gcount();
+	buffer.write(line, count);
+      }
+      buffer.flush();
+
+      std::istringstream buf_in(buffer.str());
+
+      entry_count += read_journal(journal, buf_in, "/dev/stdin", acct);
     }
     else if (exists(data_file)) {
       entry_count += read_journal(journal, data_file, acct);
