@@ -1,5 +1,11 @@
 			     Ledger NEWS
 
+* 3.0
+
+- Added --anon option, for anonymizing the private details of reports.  This
+  is almost solely for the purpose of easing the creation of accurate bug
+  reports.
+
 * 2.6.1
 
 - Added the concept of "balance setting transactions":
