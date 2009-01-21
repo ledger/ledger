@@ -730,20 +730,23 @@ public:
   }
 
   value_t option_quantity(call_scope_t& args) { // O
-    amount_expr = "amount";
-    total_expr  = "total";
+    show_revalued = false;
+    amount_expr	  = "amount";
+    total_expr	  = "total";
     return true;
   }
 
   value_t option_cost(call_scope_t& args) { // B
-    amount_expr = "cost";
-    total_expr  = "total_cost";
+    show_revalued = false;
+    amount_expr	  = "cost";
+    total_expr	  = "total_cost";
     return true;
   }
 
   value_t option_price(call_scope_t& args) { // I
-    amount_expr = "price";
-    total_expr  = "price_total";
+    show_revalued = false;
+    amount_expr	  = "price";
+    total_expr	  = "price_total";
     return true;
   }
 

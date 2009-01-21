@@ -179,8 +179,6 @@ std::size_t session_t::read_data(journal_t&    journal,
 
   std::size_t entry_count = 0;
 
-  read_init();
-
   DEBUG("ledger.cache", "3. use_cache = " << use_cache);
 
   if (use_cache && cache_file) {

@@ -58,7 +58,48 @@ namespace ledger {
 
     session_t& session(report.session);
 
+    // Setup global defaults
+
+    optional<path> home;
+    if (const char * home_var = std::getenv("HOME"))
+      home = home_var;
+
+    session.init_file  = home ? *home / ".ledgerrc"	: "./.ledgerrc";
+    session.price_db   = home ? *home / ".pricedb"	: "./.pricedb";
+    session.cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
+
+    // Process the environment settings
+
+    TRACE_START(environment, 1, "Processed environment variables");
+
+    process_environment(const_cast<const char **>(envp), "LEDGER_", report);
+
+#if 1
+    // These are here for backwards compatability, but are deprecated.
+
+    if (const char * p = std::getenv("LEDGER"))
+      process_option("file", report, p);
+    if (const char * p = std::getenv("LEDGER_INIT"))
+      process_option("init-file", report, p);
+    if (const char * p = std::getenv("PRICE_HIST"))
+      process_option("price-db", report, p);
+    if (const char * p = std::getenv("PRICE_EXP"))
+      process_option("price-exp", report, p);
+#endif
+
+    TRACE_FINISH(environment, 1);
+
+    // Read the initialization file
+
+    TRACE_START(init, 1, "Read initialization file");
+
+    session.read_init();
+
+    TRACE_FINISH(init, 1);
+
     // Handle the command-line arguments
+
+    TRACE_START(arguments, 1, "Processing command-line arguments");
 
     strings_list args;
     process_arguments(argc - 1, argv + 1, false, report, args);
@@ -76,24 +117,6 @@ namespace ledger {
 
     DEBUG("ledger.session.cache", "1. use_cache = " << session.use_cache);
 
-    // Process the environment settings
-
-    TRACE_START(environment, 1, "Processed environment variables");
-    process_environment(const_cast<const char **>(envp), "LEDGER_", report);
-    TRACE_FINISH(environment, 1);
-
-    optional<path> home;
-    if (const char * home_var = std::getenv("HOME"))
-      home = home_var;
-
-    if (! session.init_file)
-      session.init_file  = home ? *home / ".ledgerrc" : "./.ledgerrc";
-    if (! session.price_db)
-      session.price_db   = home ? *home / ".pricedb" : "./.pricedb";
-
-    if (! session.cache_file)
-      session.cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
-
     if (session.data_file == *session.cache_file)
       session.use_cache = false;
 
@@ -106,6 +129,8 @@ namespace ledger {
 
     if (! session.use_cache)
       INFO("Binary cache mechanism will not be used");
+
+    TRACE_FINISH(arguments, 1);
 
     // Configure the output stream
 
