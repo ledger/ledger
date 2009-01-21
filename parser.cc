@@ -166,16 +166,21 @@ unsigned int parse_ledger_data(config_t&   config,
 		"rejected cache, parsing " << config.data_file);
     if (config.data_file == "-") {
       config.use_cache = false;
-      journal->sources.push_back("<stdin>");
-#if 0
-      // jww (2006-03-23): Why doesn't XML work on stdin?
-      if (xml_parser && std::cin.peek() == '<')
-	entry_count += xml_parser->parse(std::cin, config, journal,
-					 acct);
-      else if (stdin_parser)
-#endif
-	entry_count += stdin_parser->parse(std::cin, config,
-					   journal, acct);
+      journal->sources.push_back("/dev/stdin");
+
+      std::ostringstream buffer;
+
+      while (std::cin.good() && ! std::cin.eof()) {
+	static char line[8192];
+	std::cin.read(line, 8192);
+	std::streamsize count = std::cin.gcount();
+	buffer.write(line, count);
+      }
+      buffer.flush();
+
+      std::istringstream buf_in(buffer.str());
+
+      entry_count += parse_journal(buf_in, config, journal, acct);
     }
     else if (access(config.data_file.c_str(), R_OK) != -1) {
       entry_count += parse_journal_file(config.data_file, config,
