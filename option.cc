@@ -13,19 +13,16 @@
 
 namespace {
   inline void process_option(option_t * opt, const char * arg = NULL) {
-    if (! opt->handled) {
-      try {
-	opt->handler(arg);
-      }
-      catch (error * err) {
-	err->context.push_back
-	  (new error_context
-	   (std::string("While parsing option '--") + opt->long_opt +
-	    "'" + (opt->short_opt != '\0' ?
-		   (std::string(" (-") + opt->short_opt + "):") : ":")));
-	throw err;
-      }
-      opt->handled = true;
+    try {
+      opt->handler(arg);
+    }
+    catch (error * err) {
+      err->context.push_back
+	(new error_context
+	 (std::string("While parsing option '--") + opt->long_opt +
+	  "'" + (opt->short_opt != '\0' ?
+		 (std::string(" (-") + opt->short_opt + "):") : ":")));
+      throw err;
     }
   }
 
@@ -869,23 +866,25 @@ OPT_BEGIN(download, "Q") {
 } OPT_END(download);
 
 OPT_BEGIN(quantity, "O") {
+  report->show_revalued = false;
   ledger::amount_expr = "@a";
   ledger::total_expr  = "@O";
 } OPT_END(quantity);
 
 OPT_BEGIN(basis, "B") {
+  report->show_revalued = false;
   ledger::amount_expr = "@b";
   ledger::total_expr  = "@B";
 } OPT_END(basis);
 
 OPT_BEGIN(price, "I") {
+  report->show_revalued = false;
   ledger::amount_expr = "@i";
   ledger::total_expr  = "@I";
 } OPT_END(price);
 
 OPT_BEGIN(market, "V") {
   report->show_revalued = true;
-
   ledger::amount_expr = "@v";
   ledger::total_expr  = "@V";
 } OPT_END(market);
@@ -963,103 +962,103 @@ OPT_BEGIN(percentage, "%") {
 //////////////////////////////////////////////////////////////////////
 
 option_t config_options[CONFIG_OPTIONS_SIZE] = {
-  { "abbrev-len", '\0', true, opt_abbrev_len, false },
-  { "account", 'a', true, opt_account, false },
-  { "actual", 'L', false, opt_actual, false },
-  { "add-budget", '\0', false, opt_add_budget, false },
-  { "amount", 't', true, opt_amount, false },
-  { "amount-data", 'j', false, opt_amount_data, false },
-  { "ansi", '\0', false, opt_ansi, false },
-  { "ansi-invert", '\0', false, opt_ansi_invert, false },
-  { "average", 'A', false, opt_average, false },
-  { "balance-format", '\0', true, opt_balance_format, false },
-  { "base", '\0', false, opt_base, false },
-  { "basis", 'B', false, opt_basis, false },
-  { "begin", 'b', true, opt_begin, false },
-  { "budget", '\0', false, opt_budget, false },
-  { "by-payee", 'P', false, opt_by_payee, false },
-  { "cache", '\0', true, opt_cache, false },
-  { "cleared", 'C', false, opt_cleared, false },
-  { "code-as-payee", '\0', false, opt_code_as_payee, false },
-  { "collapse", 'n', false, opt_collapse, false },
-  { "comm-as-payee", 'x', false, opt_comm_as_payee, false },
-  { "cost", '\0', false, opt_basis, false },
-  { "current", 'c', false, opt_current, false },
-  { "daily", '\0', false, opt_daily, false },
-  { "date-format", 'y', true, opt_date_format, false },
-  { "debug", '\0', true, opt_debug, false },
-  { "descend", '\0', true, opt_descend, false },
-  { "descend-if", '\0', true, opt_descend_if, false },
-  { "deviation", 'D', false, opt_deviation, false },
-  { "display", 'd', true, opt_display, false },
-  { "dow", '\0', false, opt_dow, false },
-  { "download", 'Q', false, opt_download, false },
-  { "effective", '\0', false, opt_effective, false },
-  { "empty", 'E', false, opt_empty, false },
-  { "end", 'e', true, opt_end, false },
-  { "equity-format", '\0', true, opt_equity_format, false },
-  { "file", 'f', true, opt_file, false },
-  { "forecast", '\0', true, opt_forecast, false },
-  { "format", 'F', true, opt_format, false },
-  { "full-help", 'H', false, opt_full_help, false },
-  { "gain", 'G', false, opt_gain, false },
-  { "head", '\0', true, opt_head, false },
-  { "help", 'h', false, opt_help, false },
-  { "help-calc", '\0', false, opt_help_calc, false },
-  { "help-comm", '\0', false, opt_help_comm, false },
-  { "help-disp", '\0', false, opt_help_disp, false },
-  { "init-file", 'i', true, opt_init_file, false },
-  { "input-date-format", '\0', true, opt_input_date_format, false },
-  { "limit", 'l', true, opt_limit, false },
-  { "lot-dates", '\0', false, opt_lot_dates, false },
-  { "lot-prices", '\0', false, opt_lot_prices, false },
-  { "lot-tags", '\0', false, opt_lot_tags, false },
-  { "lots", '\0', false, opt_lots, false },
-  { "market", 'V', false, opt_market, false },
-  { "monthly", 'M', false, opt_monthly, false },
-  { "no-cache", '\0', false, opt_no_cache, false },
-  { "only", '\0', true, opt_only, false },
-  { "output", 'o', true, opt_output, false },
-  { "pager", '\0', true, opt_pager, false },
-  { "percentage", '%', false, opt_percentage, false },
-  { "performance", 'g', false, opt_performance, false },
-  { "period", 'p', true, opt_period, false },
-  { "period-sort", '\0', true, opt_period_sort, false },
-  { "plot-amount-format", '\0', true, opt_plot_amount_format, false },
-  { "plot-total-format", '\0', true, opt_plot_total_format, false },
-  { "price", 'I', false, opt_price, false },
-  { "price-db", '\0', true, opt_price_db, false },
-  { "price-exp", 'Z', true, opt_price_exp, false },
-  { "prices-format", '\0', true, opt_prices_format, false },
-  { "print-format", '\0', true, opt_print_format, false },
-  { "quantity", 'O', false, opt_quantity, false },
-  { "quarterly", '\0', false, opt_quarterly, false },
-  { "real", 'R', false, opt_real, false },
-  { "reconcile", '\0', true, opt_reconcile, false },
-  { "reconcile-date", '\0', true, opt_reconcile_date, false },
-  { "register-format", '\0', true, opt_register_format, false },
-  { "related", 'r', false, opt_related, false },
-  { "set-price", '\0', true, opt_set_price, false },
-  { "sort", 'S', true, opt_sort, false },
-  { "sort-all", '\0', true, opt_sort_all, false },
-  { "sort-entries", '\0', true, opt_sort_entries, false },
-  { "subtotal", 's', false, opt_subtotal, false },
-  { "tail", '\0', true, opt_tail, false },
-  { "total", 'T', true, opt_total, false },
-  { "total-data", 'J', false, opt_total_data, false },
-  { "totals", '\0', false, opt_totals, false },
-  { "trace", '\0', false, opt_trace, false },
-  { "truncate", '\0', true, opt_truncate, false },
-  { "unbudgeted", '\0', false, opt_unbudgeted, false },
-  { "uncleared", 'U', false, opt_uncleared, false },
-  { "verbose", '\0', false, opt_verbose, false },
-  { "version", 'v', false, opt_version, false },
-  { "weekly", 'W', false, opt_weekly, false },
-  { "wide", 'w', false, opt_wide, false },
-  { "wide-register-format", '\0', true, opt_wide_register_format, false },
-  { "write-hdr-format", '\0', true, opt_write_hdr_format, false },
-  { "write-xact-format", '\0', true, opt_write_xact_format, false },
-  { "yearly", 'Y', false, opt_yearly, false },
+  { "abbrev-len",	    '\0', true,	 opt_abbrev_len },
+  { "account",		    'a',  true,	 opt_account },
+  { "actual",		    'L',  false, opt_actual },
+  { "add-budget",	    '\0', false, opt_add_budget },
+  { "amount",		    't',  true,	 opt_amount },
+  { "amount-data",	    'j',  false, opt_amount_data },
+  { "ansi",		    '\0', false, opt_ansi },
+  { "ansi-invert",	    '\0', false, opt_ansi_invert },
+  { "average",		    'A',  false, opt_average },
+  { "balance-format",	    '\0', true,	 opt_balance_format },
+  { "base",		    '\0', false, opt_base },
+  { "basis",		    'B',  false, opt_basis },
+  { "begin",		    'b',  true,	 opt_begin },
+  { "budget",		    '\0', false, opt_budget },
+  { "by-payee",		    'P',  false, opt_by_payee },
+  { "cache",		    '\0', true,	 opt_cache },
+  { "cleared",		    'C',  false, opt_cleared },
+  { "code-as-payee",	    '\0', false, opt_code_as_payee },
+  { "collapse",		    'n',  false, opt_collapse },
+  { "comm-as-payee",	    'x',  false, opt_comm_as_payee },
+  { "cost",		    '\0', false, opt_basis },
+  { "current",		    'c',  false, opt_current },
+  { "daily",		    '\0', false, opt_daily },
+  { "date-format",	    'y',  true,	 opt_date_format },
+  { "debug",		    '\0', true,	 opt_debug },
+  { "descend",		    '\0', true,	 opt_descend },
+  { "descend-if",	    '\0', true,	 opt_descend_if },
+  { "deviation",	    'D',  false, opt_deviation },
+  { "display",		    'd',  true,	 opt_display },
+  { "dow",		    '\0', false, opt_dow },
+  { "download",		    'Q',  false, opt_download },
+  { "effective",	    '\0', false, opt_effective },
+  { "empty",		    'E',  false, opt_empty },
+  { "end",		    'e',  true,	 opt_end },
+  { "equity-format",	    '\0', true,	 opt_equity_format },
+  { "file",		    'f',  true,	 opt_file },
+  { "forecast",		    '\0', true,	 opt_forecast },
+  { "format",		    'F',  true,	 opt_format },
+  { "full-help",	    'H',  false, opt_full_help },
+  { "gain",		    'G',  false, opt_gain },
+  { "head",		    '\0', true,	 opt_head },
+  { "help",		    'h',  false, opt_help },
+  { "help-calc",	    '\0', false, opt_help_calc },
+  { "help-comm",	    '\0', false, opt_help_comm },
+  { "help-disp",	    '\0', false, opt_help_disp },
+  { "init-file",	    'i',  true,	 opt_init_file },
+  { "input-date-format",    '\0', true,	 opt_input_date_format },
+  { "limit",		    'l',  true,	 opt_limit },
+  { "lot-dates",	    '\0', false, opt_lot_dates },
+  { "lot-prices",	    '\0', false, opt_lot_prices },
+  { "lot-tags",		    '\0', false, opt_lot_tags },
+  { "lots",		    '\0', false, opt_lots },
+  { "market",		    'V',  false, opt_market },
+  { "monthly",		    'M',  false, opt_monthly },
+  { "no-cache",		    '\0', false, opt_no_cache },
+  { "only",		    '\0', true,	 opt_only },
+  { "output",		    'o',  true,	 opt_output },
+  { "pager",		    '\0', true,	 opt_pager },
+  { "percentage",	    '%',  false, opt_percentage },
+  { "performance",	    'g',  false, opt_performance },
+  { "period",		    'p',  true,	 opt_period },
+  { "period-sort",	    '\0', true,	 opt_period_sort },
+  { "plot-amount-format",   '\0', true,	 opt_plot_amount_format },
+  { "plot-total-format",    '\0', true,	 opt_plot_total_format },
+  { "price",		    'I',  false, opt_price },
+  { "price-db",		    '\0', true,	 opt_price_db },
+  { "price-exp",	    'Z',  true,	 opt_price_exp },
+  { "prices-format",	    '\0', true,	 opt_prices_format },
+  { "print-format",	    '\0', true,	 opt_print_format },
+  { "quantity",		    'O',  false, opt_quantity },
+  { "quarterly",	    '\0', false, opt_quarterly },
+  { "real",		    'R',  false, opt_real },
+  { "reconcile",	    '\0', true,	 opt_reconcile },
+  { "reconcile-date",	    '\0', true,	 opt_reconcile_date },
+  { "register-format",	    '\0', true,	 opt_register_format },
+  { "related",		    'r',  false, opt_related },
+  { "set-price",	    '\0', true,	 opt_set_price },
+  { "sort",		    'S',  true,	 opt_sort },
+  { "sort-all",		    '\0', true,	 opt_sort_all },
+  { "sort-entries",	    '\0', true,	 opt_sort_entries },
+  { "subtotal",		    's',  false, opt_subtotal },
+  { "tail",		    '\0', true,	 opt_tail },
+  { "total",		    'T',  true,	 opt_total },
+  { "total-data",	    'J',  false, opt_total_data },
+  { "totals",		    '\0', false, opt_totals },
+  { "trace",		    '\0', false, opt_trace },
+  { "truncate",		    '\0', true,	 opt_truncate },
+  { "unbudgeted",	    '\0', false, opt_unbudgeted },
+  { "uncleared",	    'U',  false, opt_uncleared },
+  { "verbose",		    '\0', false, opt_verbose },
+  { "version",		    'v',  false, opt_version },
+  { "weekly",		    'W',  false, opt_weekly },
+  { "wide",		    'w',  false, opt_wide },
+  { "wide-register-format", '\0', true,	 opt_wide_register_format },
+  { "write-hdr-format",	    '\0', true,	 opt_write_hdr_format },
+  { "write-xact-format",    '\0', true,	 opt_write_xact_format },
+  { "yearly",		    'Y',  false, opt_yearly },
 };
 
 } // namespace ledger

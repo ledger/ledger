@@ -14,7 +14,6 @@ struct option_t {
   char	       short_opt;
   bool	       wants_arg;
   handler_t    handler;
-  bool         handled;
 };
 
 class option_error : public error {

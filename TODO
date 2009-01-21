@@ -7,6 +7,22 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
 #+CATEGORY: Ledger
 
 * 2.6.2
+** DONE [#A] Command-line options don't always override init-file options
+   - State "DONE"       [2009-01-21 Wed 18:53] \\
+     Fixed by changing the order in which options are read:
+     
+       1. Global defaults
+       2. Environment variable settings
+       3. Initialization file
+       4. Command-line arguments
+     
+     Whatever is later in the list overrides what is earlier.
+   :PROPERTIES:
+   :Submitter: Daniel Neilson <daniel.neilson@gmail.com>
+   :Version: 2.6.1
+   :ID: E8E19E21-608E-4B91-A85E-B0EE3E500557
+   :END:
+   [2009-01-21 Wed 18:36]
 ** DONE [#A] Reading Ledger data from stdin does not work at all
    - State "DONE"       [2009-01-21 Wed 18:26] \\
      Fixed by buffering stdin data into memory before parsing it.
@@ -15,6 +31,7 @@ LEDGER  -*- mode: org; fill-column: 78 -*-
    :Ticket: 210
    :ID: B6A502D1-D8A8-4986-9D96-301C2E13E020
    :END:
+   [2009-01-21 Wed 18:35]
 ** DONE [#B] %2.2X format string doesn't work
    - State "DONE"       [2009-01-20 Tue 21:02] \\
      Fixed in 2.6.2.

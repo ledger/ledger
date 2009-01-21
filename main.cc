@@ -29,22 +29,16 @@ int parse_and_report(config_t& config, std::auto_ptr<journal_t>& journal,
 
   ledger::terminus = datetime_t::now;
 
-  // Parse command-line arguments, and those set in the environment
+  // Setup some global defaults
 
-  std::list<std::string> args;
-  process_arguments(ledger::config_options, argc - 1, argv + 1, false, args);
+  const char * p    = std::getenv("HOME");
+  std::string  home = p ? p : "";
 
-  if (args.empty()) {
-    option_help(std::cerr);
-    return 1;
-  }
-  strings_list::iterator arg = args.begin();
+  config.init_file  = home + "/.ledgerrc";
+  config.price_db   = home + "/.pricedb";
+  config.cache_file = home + "/.ledger-cache";
 
-  if (config.cache_file == "<none>")
-    config.use_cache = false;
-  else
-    config.use_cache = config.data_file.empty() && config.price_db.empty();
-  DEBUG_PRINT("ledger.config.cache", "1. use_cache = " << config.use_cache);
+  // Process environment settings
 
   TRACE(main, "Processing options and environment variables");
 
@@ -64,16 +58,39 @@ int parse_and_report(config_t& config, std::auto_ptr<journal_t>& journal,
     process_option(ledger::config_options, "price-exp", p);
 #endif
 
-  const char * p    = std::getenv("HOME");
-  std::string  home = p ? p : "";
+  // Process init-file settings
 
-  if (config.init_file.empty())
-    config.init_file  = home + "/.ledgerrc";
-  if (config.price_db.empty())
-    config.price_db   = home + "/.pricedb";
+  journal.reset(new journal_t);
 
-  if (config.cache_file.empty())
-    config.cache_file = home + "/.ledger-cache";
+  if (! config.init_file.empty() &&
+      access(config.init_file.c_str(), R_OK) != -1) {
+    if (parse_journal_file(config.init_file, config, journal.get()) ||
+	journal->auto_entries.size() > 0 ||
+	journal->period_entries.size() > 0)
+      throw new error(std::string("Entries found in initialization file '") +
+		      config.init_file + "'");
+
+    journal->sources.pop_front(); // remove init file
+  }
+
+  // Process command-line arguments
+
+  std::list<std::string> args;
+  process_arguments(ledger::config_options, argc - 1, argv + 1, false, args);
+
+  if (args.empty()) {
+    option_help(std::cerr);
+    return 1;
+  }
+  strings_list::iterator arg = args.begin();
+
+  if (config.cache_file == "<none>")
+    config.use_cache = false;
+  else
+    config.use_cache = config.data_file.empty() && config.price_db.empty();
+  DEBUG_PRINT("ledger.config.cache", "1. use_cache = " << config.use_cache);
+
+  // Identify which files will be used
 
   if (config.data_file == config.cache_file)
     config.use_cache = false;
@@ -143,8 +160,6 @@ int parse_and_report(config_t& config, std::auto_ptr<journal_t>& journal,
   }
 
   // Parse initialization files, ledger data, price database, etc.
-
-  journal.reset(new journal_t);
 
   { TRACE_PUSH(parser, "Parsing journal file");
 

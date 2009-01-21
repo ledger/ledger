@@ -114,17 +114,6 @@ unsigned int parse_ledger_data(config_t&   config,
   DEBUG_PRINT("ledger.config.cache",
 	      "3. use_cache = " << config.use_cache);
 
-  if (! config.init_file.empty() &&
-      access(config.init_file.c_str(), R_OK) != -1) {
-    if (parse_journal_file(config.init_file, config, journal) ||
-	journal->auto_entries.size() > 0 ||
-	journal->period_entries.size() > 0)
-      throw new error(std::string("Entries found in initialization file '") +
-		      config.init_file + "'");
-
-    journal->sources.pop_front(); // remove init file
-  }
-
   if (config.use_cache && ! config.cache_file.empty() &&
       config.cache_file != "<none>" && ! config.data_file.empty()) {
     DEBUG_PRINT("ledger.config.cache",
