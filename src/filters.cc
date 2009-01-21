@@ -35,6 +35,7 @@
 #include "session.h"
 #include "format.h"
 #include "textual.h"
+#include "SHA1.h"
 
 namespace ledger {
 
@@ -122,6 +123,61 @@ void sort_xacts::post_accumulated_xacts()
   }
 
   xacts.clear();
+}
+
+namespace {
+  string to_hex(unsigned int * message_digest)
+  {
+    std::ostringstream buf;
+
+    for(int i = 0; i < 5 ; i++)
+      buf << std::hex << message_digest[i];
+
+    return buf.str();
+  }
+}
+
+void anonymize_xacts::operator()(xact_t& xact)
+{
+  SHA1	       sha;
+  unsigned int message_digest[5];
+  bool         copy_entry_details = false;
+
+  if (last_entry != xact.entry) {
+    entry_temps.push_back(*xact.entry);
+    last_entry = xact.entry;
+    copy_entry_details = true;
+  }
+  entry_t& entry = entry_temps.back();
+
+  if (copy_entry_details) {
+    entry.copy_details(*xact.entry);
+
+    sha.Reset();
+    sha << xact.entry->payee.c_str();
+    sha.Result(message_digest);
+
+    entry.payee = to_hex(message_digest);
+    entry.note  = none;
+  }
+
+  xact_temps.push_back(xact);
+  xact_t& temp = xact_temps.back();
+  temp.entry = &entry;
+
+  sha.Reset();
+  sha << xact.account->fullname().c_str();
+  sha.Result(message_digest);
+
+  temp.copy_details(xact);
+
+  temp.account = xact.entry->journal->find_account(to_hex(message_digest));
+  temp.note    = none;
+  temp.add_flags(ITEM_TEMP);
+
+  entry.add_xact(&temp);
+
+  (*handler)(temp);
 }
 
 void calc_xacts::operator()(xact_t& xact)

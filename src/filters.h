@@ -132,8 +132,8 @@ class sort_xacts : public item_handler<xact_t>
 {
   typedef std::deque<xact_t *> xacts_deque;
 
-  xacts_deque xacts;
-  const expr_t	     sort_order;
+  xacts_deque  xacts;
+  const expr_t sort_order;
 
   sort_xacts();
 
@@ -237,6 +237,27 @@ public:
       (*handler)(xact);
     }
   }
+};
+
+class anonymize_xacts : public item_handler<xact_t>
+{
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
+
+  entry_t * last_entry;
+
+  anonymize_xacts();
+
+public:
+  anonymize_xacts(xact_handler_ptr handler)
+    : item_handler<xact_t>(handler), last_entry(NULL) {
+    TRACE_CTOR(anonymize_xacts, "xact_handler_ptr");
+  }
+  virtual ~anonymize_xacts() {
+    TRACE_DTOR(anonymize_xacts);
+  }
+
+  virtual void operator()(xact_t& xact);
 };
 
 class calc_xacts : public item_handler<xact_t>

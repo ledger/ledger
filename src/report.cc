@@ -163,6 +163,12 @@ report_t::chain_xact_handlers(xact_handler_ptr base_handler,
   if (show_related)
     handler.reset(new related_xacts(handler, show_all_related));
 
+  // anonymize_xacts removes all meaningful information from entry
+  // payee's and account names, for the sake of creating useful bug
+  // reports.
+  if (anonymize)
+    handler.reset(new anonymize_xacts(handler));
+
   // This filter_xacts will only pass through xacts
   // matching the `predicate'.
   if (! predicate.empty()) {
@@ -521,6 +527,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_ansi);
 	else if (std::strcmp(p, "ansi-invert") == 0)
 	  return MAKE_FUNCTOR(report_t::option_ansi_invert);
+	else if (std::strcmp(p, "anon") == 0)
+	  return MAKE_FUNCTOR(report_t::option_anon);
 	break;
 
       case 'b':

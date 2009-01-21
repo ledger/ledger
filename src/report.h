@@ -129,6 +129,7 @@ public:
   bool		 keep_tag;
   bool		 entry_sort;
   bool		 sort_all;
+  bool		 anonymize;
 
   string	 account;
   optional<path> pager;
@@ -163,6 +164,7 @@ public:
       keep_tag(false),
       entry_sort(false),
       sort_all(false),
+      anonymize(false),
 
       raw_mode(false),
 
@@ -776,6 +778,11 @@ public:
     }
   }
 #endif
+
+  value_t option_anon(call_scope_t& args) {
+    anonymize = true;
+    return true;
+  }
 
   //
   // Scope members

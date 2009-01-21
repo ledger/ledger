@@ -21,7 +21,9 @@ libamounts_la_SOURCES  = \
 	src/expr.cc        \
 	src/scope.cc       \
 	src/format.cc      \
-	src/option.cc
+	src/option.cc      \
+			   \
+	lib/sha1.cpp
 
 if HAVE_EXPAT
 libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
@@ -133,6 +135,7 @@ pkginclude_HEADERS =	  \
 			  \
 	src/ledger.h	  \
 	lib/fdstream.h    \
+	lib/sha1.h        \
 			  \
 	python/pyledger.h \
 	python/pyinterp.h
