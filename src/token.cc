@@ -34,46 +34,77 @@
 
 namespace ledger {
 
+int expr_t::token_t::parse_reserved_word(std::istream& in)
+{
+  char c = in.peek();
+
+  if (c == 'a' || c == 'f' || c == 'o' || c == 'n' || c == 't') {
+    length = 0;
+
+    char buf[256];
+    READ_INTO_(in, buf, 255, c, length,
+	       std::isalnum(c) || c == '_' || c == '.' || c == '-');
+
+    switch (buf[0]) {
+    case 'a':
+      if (std::strcmp(buf, "and") == 0) {
+	symbol[0] = '&';
+	symbol[1] = '\0';
+	kind = KW_AND;
+	return 1;
+      }
+      break;
+
+    case 'f':
+      if (std::strcmp(buf, "false") == 0) {
+	kind = VALUE;
+	value = false;
+	return 1;
+      }
+      break;
+
+    case 'o':
+      if (std::strcmp(buf, "or") == 0) {
+	symbol[0] = '|';
+	symbol[1] = '\0';
+	kind = KW_OR;
+	return 1;
+      }
+      break;
+
+    case 'n':
+      if (std::strcmp(buf, "not") == 0) {
+	symbol[0] = '!';
+	symbol[1] = '\0';
+	kind = EXCLAM;
+	return 1;
+      }
+      break;
+
+    case 't':
+      if (std::strcmp(buf, "true") == 0) {
+	kind = VALUE;
+	value = true;
+	return 1;
+      }
+      break;
+    }
+
+    return 0;
+  }
+  return -1;
+}
+
 void expr_t::token_t::parse_ident(std::istream& in)
 {
-  if (in.eof()) {
-    kind = TOK_EOF;
-    return;
-  }
-  assert(in.good());
-
-  char c = peek_next_nonws(in);
-
-  if (in.eof()) {
-    kind = TOK_EOF;
-    return;
-  }
-  assert(in.good());
-
   kind	 = IDENT;
   length = 0;
 
-  char buf[256];
+  char c, buf[256];
   READ_INTO_(in, buf, 255, c, length,
 	     std::isalnum(c) || c == '_' || c == '.' || c == '-');
 
-  switch (buf[0]) {
-  case 'f':
-    if (std::strcmp(buf, "false") == 0) {
-      kind = VALUE;
-      value = false;
-    }
-    break;
-  case 't':
-    if (std::strcmp(buf, "true") == 0) {
-      kind = VALUE;
-      value = true;
-    }
-    break;
-  }
-
-  if (kind == IDENT)
-    value.set_string(buf);
+  value.set_string(buf);
 }
 
 void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
@@ -82,7 +113,8 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     kind = TOK_EOF;
     return;
   }
-  assert(in.good());
+  if (! in.good())
+    throw_(parse_error, "Input stream no longer valid");
 
   char c = peek_next_nonws(in);
 
@@ -90,7 +122,8 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     kind = TOK_EOF;
     return;
   }
-  assert(in.good());
+  if (! in.good())
+    throw_(parse_error, "Input stream no longer valid");
 
   symbol[0] = c;
   symbol[1] = '\0';
@@ -100,10 +133,22 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
   switch (c) {
   case '&':
     in.get(c);
+    if (c == '&') {
+      in.get(c);
+      kind = KW_AND;
+      length = 2;
+      break;
+    }
     kind = KW_AND;
     break;
   case '|':
     in.get(c);
+    if (c == '|') {
+      in.get(c);
+      kind = KW_OR;
+      length = 2;
+      break;
+    }
     kind = KW_OR;
     break;
 
@@ -201,7 +246,6 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     in.get(c);
     kind = QUERY;
     break;
-
   case ':':
     in.get(c);
     kind = COLON;
@@ -231,6 +275,14 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
       symbol[1] = c;
       symbol[2] = '\0';
       kind = MATCH;
+      length = 2;
+      break;
+    }
+    else if (c == '=') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = EQUAL;
       length = 2;
       break;
     }
@@ -269,29 +321,46 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     break;
 
   default: {
-    amount_t temp;
-    istream_pos_type pos = 0;
+    istream_pos_type pos = in.tellg();
 
-    // When in relaxed parsing mode, we want to migrate commodity
-    // flags so that any precision specified by the user updates the
-    // current maximum displayed precision.
-    pos = in.tellg();
+    // First, check to see if it's a reserved word, such as: and or not
+    int result = parse_reserved_word(in);
+    if (std::isalpha(c) && result == 1)
+      break;
 
+    // If not, rewind back to the beginning of the word to scan it
+    // again.  If the result was -1, it means no identifier was scanned
+    // so we don't have to rewind.
+    if (result == 0) {
+      in.clear();
+      in.seekg(pos, std::ios::beg);
+      if (in.fail())
+	throw_(parse_error, "Failed to reset input stream");
+    }
+
+    // When in relaxed parsing mode, we want to migrate commodity flags
+    // so that any precision specified by the user updates the current
+    // maximum displayed precision.
     amount_t::flags_t parse_flags = 0;
     if (pflags & EXPR_PARSE_NO_MIGRATE)
       parse_flags |= AMOUNT_PARSE_NO_MIGRATE;
     if (pflags & EXPR_PARSE_NO_REDUCE)
       parse_flags |= AMOUNT_PARSE_NO_REDUCE;
 
+    amount_t temp;
     if (! temp.parse(in, parse_flags | AMOUNT_PARSE_SOFT_FAIL)) {
       // If the amount had no commodity, it must be an unambiguous
       // variable reference
 
       in.clear();
       in.seekg(pos, std::ios::beg);
+      if (in.fail())
+	throw_(parse_error, "Failed to reset input stream");
 
       c = in.peek();
-      assert(! (std::isdigit(c) || c == '.'));
+      if (std::isdigit(c) || c == '.')
+	expected('\0', c);
+
       parse_ident(in);
     } else {
       kind = VALUE;
@@ -304,8 +373,9 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
 void expr_t::token_t::rewind(std::istream& in)
 {
-  for (unsigned int i = 0; i < length; i++)
-    in.unget();
+  in.seekg(- length, std::ios::cur);
+  if (in.fail())
+    throw_(parse_error, "Failed to rewind input stream");
 }
 
 

@@ -61,9 +61,9 @@ struct expr_t::token_t : public noncopyable
     STAR,			// *
     KW_DIV,			// /
 
-    EXCLAM,			// !
-    KW_AND,			// &
-    KW_OR,			// |
+    EXCLAM,			// !, not
+    KW_AND,			// &, &&, and
+    KW_OR,			// |, ||, or
     KW_MOD,			// %
 
     QUERY,			// ?
@@ -90,7 +90,7 @@ struct expr_t::token_t : public noncopyable
   token_t& operator=(const token_t& other) {
     if (&other == this)
       return *this;
-    assert(false);
+    assert(false);		// only one token object is used at a time
     return *this;
   }
 
@@ -104,6 +104,7 @@ struct expr_t::token_t : public noncopyable
     symbol[2] = '\0';
   }
 
+  int  parse_reserved_word(std::istream& in);
   void parse_ident(std::istream& in);
   void next(std::istream& in, const uint_least8_t flags);
   void rewind(std::istream& in);
