@@ -63,6 +63,11 @@ public:
   void write(std::ostream& out) const;
 };
 
+inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
+  out << mask.expr.str();
+  return out;
+}
+
 } // namespace ledger
 
 #endif // _MASK_H
