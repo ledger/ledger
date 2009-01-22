@@ -270,8 +270,6 @@ namespace ledger {
     // Parse the initialization file, which can only be textual; then
     // parse the journal data.
 
-    session.read_init();
-
     INFO_START(journal, "Read journal file");
 
     journal_t& journal(*session.create_journal());
