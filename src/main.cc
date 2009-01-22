@@ -102,7 +102,7 @@ namespace ledger {
     TRACE_START(arguments, 1, "Processing command-line arguments");
 
     strings_list args;
-    process_arguments(argc - 1, argv + 1, false, report, args);
+    process_arguments(argc - 1, argv + 1, report, args);
 
     if (args.empty()) {
       ledger::help(std::cout);

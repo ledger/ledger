@@ -139,31 +139,36 @@ void process_environment(const char ** envp, const string& tag,
     }
 }
 
-void process_arguments(int, char ** argv, const bool anywhere,
-		       scope_t& scope, std::list<string>& args)
+void process_arguments(int, char ** argv, scope_t& scope,
+		       std::list<string>& args)
 {
+  bool anywhere = true;
+
   for (char ** i = argv; *i; i++) {
-    if ((*i)[0] != '-') {
-      if (anywhere) {
-	args.push_back(*i);
-	continue;
-      } else {
-	for (; *i; i++)
-	  args.push_back(*i);
-	break;
-      }
+    DEBUG("option.args", "Examining argument '" << *i << "'");
+
+    if (! anywhere || (*i)[0] != '-') {
+      DEBUG("option.args", "  adding to list of real args");
+      args.push_back(*i);
+      continue;
     }
 
     // --long-option or -s
     if ((*i)[1] == '-') {
-      if ((*i)[2] == '\0')
-	break;
+      if ((*i)[2] == '\0') {
+	DEBUG("option.args", "  it's a --, ending options processing");
+	anywhere = false;
+	continue;
+      }
+
+      DEBUG("option.args", "  it's an option string");
 
       char * name  = *i + 2;
       char * value = NULL;
       if (char * p = std::strchr(name, '=')) {
 	*p++ = '\0';
 	value = p;
+	DEBUG("option.args", "  read option value from option: " << value);
       }
 
       op_bool_tuple opt(find_option(scope, name));
@@ -172,6 +177,7 @@ void process_arguments(int, char ** argv, const bool anywhere,
 
       if (opt.get<1>() && value == NULL) {
 	value = *++i;
+	DEBUG("option.args", "  read option value from arg: " << value);
 	if (value == NULL)
 	  throw_(option_error, "missing option argument for --" << name);
       }
@@ -181,6 +187,8 @@ void process_arguments(int, char ** argv, const bool anywhere,
       throw_(option_error, "illegal option -");
     }
     else {
+      DEBUG("option.args", "  single-char option");
+
       typedef tuple<expr_t::ptr_op_t, bool, char> op_bool_char_tuple;
 
       std::list<op_bool_char_tuple> option_queue;
@@ -199,6 +207,7 @@ void process_arguments(int, char ** argv, const bool anywhere,
 	char * value = NULL;
 	if (o.get<1>()) {
 	  value = *++i;
+	  DEBUG("option.args", "  read option value from arg: " << value);
 	  if (value == NULL)
 	    throw_(option_error,
 		   "missing option argument for -" << o.get<2>());

@@ -42,8 +42,8 @@ void process_option(const string& name, scope_t& scope,
 void process_environment(const char ** envp, const string& tag,
 			 scope_t& scope);
 
-void process_arguments(int argc, char ** argv, const bool anywhere,
-		       scope_t& scope, std::list<string>& args);
+void process_arguments(int argc, char ** argv, scope_t& scope,
+		       std::list<string>& args);
 
 DECLARE_EXCEPTION(option_error, std::runtime_error);
 

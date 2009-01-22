@@ -224,27 +224,12 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
   // Option handlers
   //
 
-  value_t option_file_(call_scope_t& args) {
+  value_t option_file_(call_scope_t& args) { // f
     assert(args.size() == 1);
-    // jww (2008-08-13): Add support for multiple files, but not between
-    // -f and LEDGER_FILE
-    if (data_file.empty()) {
-      data_file = args[0].as_string();
-      use_cache = false;
 
-#if 0
-      // jww (2008-08-14): Should we check whether the file exists
-      // before we accept it, or is this done later on?
-      if (! data_file.string() == "-") {
-	std::string path = resolve_path(optarg);
-	if (access(path.c_str(), R_OK) != -1)
-	  config->data_file = path;
-	else
-	  throw_(std::invalid_argument,
-		 "The ledger file '" << path << "' does not exist or is not readable");
-      }
-#endif
-    }
+    // jww (2008-08-13): Add support for multiple files
+    data_file = args[0].as_string();
+    use_cache = false;
 
     return true;
   }

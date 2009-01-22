@@ -215,8 +215,9 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
 
   if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
     op_t::kind_t kind	= op_t::LAST;
-    flags_t	 _flags = tflags;
+    flags_t	 _flags	= tflags;
     token_t&	 tok	= next_token(in, tflags);
+    bool	 negate = false;
 
     switch (tok.kind) {
     case token_t::EQUAL:
@@ -226,10 +227,15 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
 	kind = op_t::O_EQ;
       break;
     case token_t::NEQUAL:
-      kind = op_t::O_NEQ;
+      kind = op_t::O_EQ;
+      negate = true;
       break;
     case token_t::MATCH:
       kind = op_t::O_MATCH;
+      break;
+    case token_t::NMATCH:
+      kind = op_t::O_MATCH;
+      negate = true;
       break;
     case token_t::LESS:
       kind = op_t::O_LT;
@@ -257,6 +263,12 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
       if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
+
+      if (negate) {
+	prev = node;
+	node = new op_t(op_t::O_NOT);
+	node->set_left(prev);
+      }
     }
   }
 
