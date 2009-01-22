@@ -40,8 +40,9 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
   switch (kind) {
   case IDENT:
     if (ptr_op_t def = scope.lookup(as_ident())) {
-      // Definitions are compiled at the point of definition, not the
-      // point of use.
+      // Identifier references are first looked up at the point of
+      // definition, and then at the point of every use if they could
+      // not be found there.
       return copy(def);
     }
     return this;
@@ -54,7 +55,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     return this;
 
   ptr_op_t lhs(left()->compile(scope));
-  ptr_op_t rhs(kind > UNARY_OPERATORS ? right()->compile(scope) : ptr_op_t());
+  ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
+	       right()->compile(scope) : ptr_op_t());
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
