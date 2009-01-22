@@ -189,18 +189,17 @@ namespace ledger {
     if (verb == "parse") {
       expr_t expr(*arg);
 
-      out << "Value expression as  input: " << *arg << std::endl;
+      out << "--- Input text ---" << std::endl;
+      out << *arg << std::endl;
 
-      out << "Value expression as parsed: ";
+      out << std::endl << "--- Text as parsed ---" << std::endl;
       expr.print(out);
       out << std::endl;
 
-      out << std::endl;
-      out << "--- Parsed tree ---" << std::endl;
+      out << std::endl << "--- Expression tree ---" << std::endl;
       expr.dump(out);
 
-      out << std::endl;
-      out << "--- Calculated value ---" << std::endl;
+      out << std::endl << "--- Calculated value ---" << std::endl;
       expr.calc(report).print(out);
       out << std::endl;
 
@@ -209,23 +208,22 @@ namespace ledger {
     else if (verb == "compile") {
       expr_t expr(*arg);
 
-      out << "Value expression as  input: " << *arg << std::endl;
-      out << "Value expression as parsed: ";
+      out << "--- Input text ---" << std::endl;
+      out << *arg << std::endl;
+
+      out << std::endl << "--- Text as parsed ---" << std::endl;
       expr.print(out);
       out << std::endl;
 
-      out << std::endl;
-      out << "--- Parsed tree ---" << std::endl;
+      out << std::endl << "--- Expression tree ---" << std::endl;
       expr.dump(out);
 
       expr.compile(report);
 
-      out << std::endl;
-      out << "--- Compiled tree ---" << std::endl;
+      out << std::endl << "--- Compiled tree ---" << std::endl;
       expr.dump(out);
 
-      out << std::endl;
-      out << "--- Calculated value ---" << std::endl;
+      out << std::endl << "--- Calculated value ---" << std::endl;
       expr.calc(report).print(out);
       out << std::endl;
 
