@@ -54,8 +54,7 @@ private:
   mutable token_t lookahead;
   mutable bool	  use_lookahead;
 
-  token_t& next_token(std::istream& in, flags_t tflags) const
-  {
+  token_t& next_token(std::istream& in, flags_t tflags) const {
     if (use_lookahead)
       use_lookahead = false;
     else
@@ -63,14 +62,11 @@ private:
     return lookahead;
   }
 
-  void push_token(const token_t& tok) const
-  {
+  void push_token(const token_t& tok) const {
     assert(&tok == &lookahead);
     use_lookahead = true;
   }
-
-  void push_token() const
-  {
+  void push_token() const {
     use_lookahead = true;
   }
 
