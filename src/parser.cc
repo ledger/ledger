@@ -55,13 +55,12 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   case token_t::IDENT: {
     string ident = tok.value.as_string();
 
+    node = new op_t(op_t::IDENT);
+    node->set_ident(ident);
+
     // An identifier followed by ( represents a function call
     tok = next_token(in, tflags);
-
     if (tok.kind == token_t::LPAREN) {
-      node = new op_t(op_t::IDENT);
-      node->set_ident(ident);
-
       ptr_op_t call_node(new op_t(op_t::O_CALL));
       call_node->set_left(node);
       node = call_node;
@@ -69,13 +68,6 @@ expr_t::parser_t::parse_value_term(std::istream& in,
       push_token(tok);		// let the parser see it again
       node->set_right(parse_value_expr(in, tflags | EXPR_PARSE_SINGLE));
     } else {
-      if (std::isdigit(ident[0])) {
-	node = new op_t(op_t::INDEX);
-	node->set_index(lexical_cast<unsigned int>(ident.c_str()));
-      } else {
-	node = new op_t(op_t::IDENT);
-	node->set_ident(ident);
-      }
       push_token(tok);
     }
     break;
@@ -84,9 +76,6 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   case token_t::LPAREN:
     node = parse_value_expr(in, (tflags | EXPR_PARSE_PARTIAL) &
 			    ~EXPR_PARSE_SINGLE);
-    if (! node)
-      throw_(parse_error, "Left parenthesis not followed by an expression");
-
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.expected(')');
