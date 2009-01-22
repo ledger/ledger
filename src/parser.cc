@@ -117,7 +117,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
-      term->as_value_lval().in_place_negate();
+      term->as_value_lval().in_place_not();
       node = term;
     } else {
       node = new op_t(op_t::O_NOT);

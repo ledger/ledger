@@ -1237,6 +1237,35 @@ void value_t::in_place_negate()
   throw_(value_error, "Cannot negate " << label());
 }
 
+void value_t::in_place_not()
+{
+  switch (type()) {
+  case BOOLEAN:
+    set_boolean(! as_boolean());
+    return;
+  case INTEGER:
+  case DATETIME:
+    set_boolean(! as_long());
+    return;
+  case DATE:
+    set_boolean(! as_long());
+    return;
+  case AMOUNT:
+    set_boolean(! as_amount());
+    return;
+  case BALANCE:
+    set_boolean(! as_balance());
+    return;
+  case BALANCE_PAIR:
+    set_boolean(! as_balance_pair());
+    return;
+  default:
+    break;
+  }
+
+  throw_(value_error, "Cannot not " << label());
+}
+
 bool value_t::is_realzero() const
 {
   switch (type()) {

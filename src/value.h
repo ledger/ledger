@@ -400,6 +400,7 @@ public:
     return temp;
   }
   void    in_place_negate();	// exists for efficiency's sake
+  void    in_place_not();	// exists for efficiency's sake
 
   value_t operator-() const {
     return negate();
