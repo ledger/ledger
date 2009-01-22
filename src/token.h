@@ -55,6 +55,7 @@ struct expr_t::token_t : public noncopyable
 
     ASSIGN,			// =
     MATCH,			// =~
+    NMATCH,			// !~
     MINUS,			// -
     PLUS,			// +
     STAR,			// *

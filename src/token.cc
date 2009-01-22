@@ -172,6 +172,14 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
       length = 2;
       break;
     }
+    else if (c == '~') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = NMATCH;
+      length = 2;
+      break;
+    }
     kind = EXCLAM;
     break;
 

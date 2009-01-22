@@ -78,7 +78,6 @@ public:
     UNARY_OPERATORS,
 
     O_EQ,
-    O_NEQ,
     O_LT,
     O_LTE,
     O_GT,

@@ -117,8 +117,6 @@ value_t expr_t::op_t::calc(scope_t& scope)
     break;
   }
 
-  case O_NEQ:
-    return left()->calc(scope) != right()->calc(scope);
   case O_EQ:
     return left()->calc(scope) == right()->calc(scope);
   case O_LT:
@@ -260,15 +258,6 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     out << ")";
     break;
 
-  case O_NEQ:
-    out << "(";
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " != ";
-    if (right() && right()->print(out, context))
-      found = true;
-    out << ")";
-    break;
   case O_EQ:
     out << "(";
     if (left() && left()->print(out, context))
@@ -415,7 +404,6 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   case O_MUL:	out << "O_MUL"; break;
   case O_DIV:	out << "O_DIV"; break;
 
-  case O_NEQ:	out << "O_NEQ"; break;
   case O_EQ:	out << "O_EQ"; break;
   case O_LT:	out << "O_LT"; break;
   case O_LTE:	out << "O_LTE"; break;
