@@ -241,6 +241,11 @@ public:
     assert(kind > TERMINALS);
     data = expr;
   }
+  bool has_right() const {
+    if (kind < TERMINALS)
+      return false;
+    return as_op();
+  }
 
 private:
   void acquire() const {
@@ -274,23 +279,27 @@ private:
 public:
   ptr_op_t compile(scope_t& scope);
   value_t  calc(scope_t& scope);
+  value_t  opcalc(scope_t& scope);
 
-  struct print_context_t
+  struct context_t
   {
-    const bool	       relaxed;
-    const ptr_op_t&    op_to_find;
+    ptr_op_t	       expr_op;
+    ptr_op_t	       op_to_find;
     ostream_pos_type * start_pos;
     ostream_pos_type * end_pos;
+    bool	       relaxed;
 
-    print_context_t(const bool	       _relaxed	   = false,
-		    const ptr_op_t&    _op_to_find = ptr_op_t(),
-		    ostream_pos_type * _start_pos  = NULL,
-		    ostream_pos_type * _end_pos	   = NULL)
-      : relaxed(_relaxed), op_to_find(_op_to_find),
-	start_pos(_start_pos), end_pos(_end_pos) {}
+    context_t(const ptr_op_t&          _expr_op    = ptr_op_t(),
+	      const ptr_op_t&	       _op_to_find = ptr_op_t(),
+	      ostream_pos_type * const _start_pos  = NULL,
+	      ostream_pos_type * const _end_pos    = NULL,
+	      const bool	       _relaxed	   = true)
+      : expr_op(_expr_op), op_to_find(_op_to_find),
+	start_pos(_start_pos), end_pos(_end_pos),
+	relaxed(_relaxed) {}
   };
 
-  bool print(std::ostream& out, print_context_t& context) const;
+  bool print(std::ostream& out, const context_t& context = context_t()) const;
   void dump(std::ostream& out, const int depth) const;
 
   void read(const char *& data);
@@ -323,6 +332,8 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(const function_t& fobj) {
 
 #define MAKE_FUNCTOR(x) expr_t::op_t::wrap_functor(bind(&x, this, _1))
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
+
+string expr_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t op);
 
 } // namespace ledger
 

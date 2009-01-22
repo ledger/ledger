@@ -162,10 +162,8 @@ value_t expr_t::eval(const string& _expr, scope_t& scope)
 
 void expr_t::print(std::ostream& out) const
 {
-  if (ptr) {
-    op_t::print_context_t context;
-    ptr->print(out, context);
-  }
+  if (ptr)
+    ptr->print(out);
 }
 
 void expr_t::dump(std::ostream& out) const

@@ -69,8 +69,28 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
   return intermediate;
 }
 
+namespace {
+  expr_t::ptr_op_t context_op_ptr;
+}
+
 value_t expr_t::op_t::calc(scope_t& scope)
 {
+  try {
+    context_op_ptr = ptr_op_t();
+    return opcalc(scope);
+  }
+  catch (const std::exception& err) {
+    if (context_op_ptr) {
+      add_error_context("While evaluating value expression:");
+      add_error_context(expr_context(this, context_op_ptr));
+    }
+    throw;
+  }
+}
+
+value_t expr_t::op_t::opcalc(scope_t& scope)
+{
+  try {
   switch (kind) {
   case VALUE:
     return as_value();
@@ -78,7 +98,12 @@ value_t expr_t::op_t::calc(scope_t& scope)
   case IDENT:
     if (! left())
       throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
-    return left()->calc(scope);
+    return left()->opcalc(scope);
+
+  case MASK:
+    throw_(calc_error,
+	   "Regexs can only be used in a match; did you mean: account =~ /"
+	   << as_mask() << '/');
 
   case FUNCTION: {
     // Evaluating a FUNCTION is the same as calling it directly; this happens
@@ -91,8 +116,8 @@ value_t expr_t::op_t::calc(scope_t& scope)
   case O_CALL: {
     call_scope_t call_args(scope);
 
-    if (right())
-      call_args.set_args(right()->calc(scope));
+    if (has_right())
+      call_args.set_args(right()->opcalc(scope));
 
     ptr_op_t func = left();
 
@@ -106,8 +131,9 @@ value_t expr_t::op_t::calc(scope_t& scope)
   }
 
   case O_MATCH:
-    assert(right()->is_mask());
-    return right()->as_mask().match(left()->calc(scope).to_string());
+    if (! right()->is_mask())
+      throw_(calc_error, "Right-hand argument to match operator must be a regex");
+    return right()->as_mask().match(left()->opcalc(scope).to_string());
 
   case INDEX: {
     const call_scope_t& args(downcast<const call_scope_t>(scope));
@@ -120,47 +146,47 @@ value_t expr_t::op_t::calc(scope_t& scope)
   }
 
   case O_EQ:
-    return left()->calc(scope) == right()->calc(scope);
+    return left()->opcalc(scope) == right()->opcalc(scope);
   case O_LT:
-    return left()->calc(scope) <  right()->calc(scope);
+    return left()->opcalc(scope) <  right()->opcalc(scope);
   case O_LTE:
-    return left()->calc(scope) <= right()->calc(scope);
+    return left()->opcalc(scope) <= right()->opcalc(scope);
   case O_GT:
-    return left()->calc(scope) >  right()->calc(scope);
+    return left()->opcalc(scope) >  right()->opcalc(scope);
   case O_GTE:
-    return left()->calc(scope) >= right()->calc(scope);
+    return left()->opcalc(scope) >= right()->opcalc(scope);
 
   case O_ADD:
-    return left()->calc(scope) + right()->calc(scope);
+    return left()->opcalc(scope) + right()->opcalc(scope);
   case O_SUB:
-    return left()->calc(scope) - right()->calc(scope);
+    return left()->opcalc(scope) - right()->opcalc(scope);
   case O_MUL:
-    return left()->calc(scope) * right()->calc(scope);
+    return left()->opcalc(scope) * right()->opcalc(scope);
   case O_DIV:
-    return left()->calc(scope) / right()->calc(scope);
+    return left()->opcalc(scope) / right()->opcalc(scope);
 
   case O_NEG:
-    return left()->calc(scope).negate();
+    return left()->opcalc(scope).negate();
 
   case O_NOT:
-    return ! left()->calc(scope);
+    return ! left()->opcalc(scope);
 
   case O_AND:
-    return ! left()->calc(scope) ? value_t(false) : right()->calc(scope);
+    return ! left()->opcalc(scope) ? value_t(false) : right()->opcalc(scope);
 
   case O_OR:
-    if (value_t temp = left()->calc(scope))
+    if (value_t temp = left()->opcalc(scope))
       return temp;
     else
-      return right()->calc(scope);
+      return right()->opcalc(scope);
 
   case O_COMMA: {
-    value_t result(left()->calc(scope));
+    value_t result(left()->opcalc(scope));
 
     ptr_op_t next = right();
     while (next) {
       ptr_op_t value_op;
-      if (next->kind == O_COMMA /* || next->kind == O_UNION */) {
+      if (next->kind == O_COMMA) {
 	value_op = next->left();
 	next     = next->right();
       } else {
@@ -168,7 +194,7 @@ value_t expr_t::op_t::calc(scope_t& scope)
 	next     = NULL;
       }
 
-      result.push_back(value_op->calc(scope));
+      result.push_back(value_op->opcalc(scope));
     }
     return result;
   }
@@ -180,15 +206,21 @@ value_t expr_t::op_t::calc(scope_t& scope)
   }
 
   return NULL_VALUE;
+  }
+  catch (const std::exception& err) {
+    if (! context_op_ptr)
+      context_op_ptr = this;
+    throw;
+  }
 }
 
-bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
+bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 {
   bool found = false;
 
   if (context.start_pos && this == context.op_to_find) {
     *context.start_pos = out.tellp();
-    *context.start_pos--;
+    *context.start_pos -= 1;
     found = true;
   }
 
@@ -202,6 +234,10 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
 
   case IDENT:
     out << as_ident();
+    break;
+
+  case MASK:
+    out << '/' << as_mask() << '/';
     break;
 
   case FUNCTION:
@@ -228,7 +264,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " + ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -237,7 +273,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " - ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -246,7 +282,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " * ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -255,7 +291,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " / ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -265,7 +301,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " == ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -274,7 +310,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " < ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -283,7 +319,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " <= ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -292,7 +328,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " > ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -301,7 +337,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " >= ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -311,7 +347,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " & ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -320,7 +356,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << " | ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -329,7 +365,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << ", ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     break;
 
@@ -337,7 +373,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << "(";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     out << ")";
     break;
@@ -347,7 +383,7 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     out << "/ =~ ";
-    if (right() && right()->print(out, context))
+    if (has_right() && right()->print(out, context))
       found = true;
     break;
 
@@ -363,8 +399,10 @@ bool expr_t::op_t::print(std::ostream& out, print_context_t& context) const
     out << symbol;
   }
 
-  if (context.end_pos && this == context.op_to_find)
-    *context.end_pos = static_cast<unsigned long>(out.tellp()) - 1;
+  if (context.end_pos && this == context.op_to_find) {
+    *context.end_pos = out.tellp();
+    *context.end_pos -= 1;
+  }
 
   return found;
 }
@@ -380,15 +418,19 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   switch (kind) {
   case VALUE:
-    out << "VALUE - " << as_value();
+    out << "VALUE: " << as_value();
     break;
 
   case IDENT:
-    out << "IDENT - " << as_ident();
+    out << "IDENT: " << as_ident();
+    break;
+
+  case MASK:
+    out << "MASK: " << as_mask();
     break;
 
   case INDEX:
-    out << "INDEX - " << as_index();
+    out << "INDEX: " << as_index();
     break;
 
   case FUNCTION:
@@ -430,11 +472,11 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   if (kind > TERMINALS || kind == IDENT) {
     if (left()) {
       left()->dump(out, depth + 1);
-      if (kind > UNARY_OPERATORS && right())
+      if (kind > UNARY_OPERATORS && has_right())
 	right()->dump(out, depth + 1);
     }
     else if (kind > UNARY_OPERATORS) {
-      assert(! right());
+      assert(! has_right());
     }
   }
 }
@@ -493,7 +535,7 @@ void expr_t::op_t::write(std::ostream& out) const
     left()->write(out);
 
     if (kind > UNARY_OPERATORS) {
-      if (right()) {
+      if (has_right()) {
 	binary::write_bool(out, true);
 	right()->write(out);
       } else {
@@ -521,6 +563,25 @@ void expr_t::op_t::write(std::ostream& out) const
       break;
     }
   }
+}
+
+string expr_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t goal)
+{
+  ostream_pos_type start_pos, end_pos;
+  expr_t::op_t::context_t context(op, goal, &start_pos, &end_pos);
+  std::ostringstream buf;
+  buf << "  ";
+  if (op->print(buf, context)) {
+    buf << "\n";
+    for (int i = 0; i <= end_pos; i++) {
+      if (i > start_pos)
+	buf << "^";
+      else
+	buf << " ";
+    }
+    buf << '\n';
+  }
+  return buf.str();
 }
 
 } // namespace ledger
