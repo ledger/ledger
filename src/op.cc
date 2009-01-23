@@ -37,32 +37,34 @@ namespace ledger {
 
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
 {
-  switch (kind) {
-  case IDENT:
+  if (kind == IDENT) {
+    DEBUG("expr.compile", "Looking up identifier '" << as_ident() << "'");
+
     if (ptr_op_t def = scope.lookup(as_ident())) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
+      if (SHOW_DEBUG("expr.compile")) {
+	DEBUG("expr.compile", "Found definition:");
+	def->dump(*_log_stream, 0);
+      }
       return copy(def);
     }
     return this;
-
-  default:
-    break;
   }
 
   if (kind < TERMINALS)
     return this;
 
   ptr_op_t lhs(left()->compile(scope));
-  ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
-	       right()->compile(scope) : ptr_op_t());
+  ptr_op_t rhs(has_right() ? right()->compile(scope) : ptr_op_t());
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
 
   ptr_op_t intermediate(copy(lhs, rhs));
 
+  // Reduce constants immediately if possible
   if (lhs->is_value() && (! rhs || rhs->is_value()))
     return wrap_value(intermediate->calc(scope));
 
