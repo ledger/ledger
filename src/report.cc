@@ -323,44 +323,51 @@ namespace {
   {
     std::ostringstream expr;
     bool	       append_and = false;
+    bool	       only_parenthesis;
 
     while (begin != end) {
       const string& arg((*begin).as_string());
+      const char *  p = arg.c_str();
 
       bool parse_argument = true;
 
-      if (arg == "not") {
+      if (arg == "not" || arg == "NOT") {
 	expr << " ! ";
 	parse_argument = false;
 	append_and = false;
       }
-      else if (arg == "and") {
+      else if (arg == "and" || arg == "AND") {
 	expr << " & ";
 	parse_argument = false;
 	append_and = false;
       }
-      else if (arg == "or") {
+      else if (arg == "or" || arg == "OR") {
 	expr << " | ";
 	parse_argument = false;
 	append_and = false;
       }
       else if (append_and) {
-	expr << " & ";
+	if (! only_parenthesis)
+	  expr << " & ";
       }
       else {
 	append_and = true;
       }
 
       if (parse_argument) {
-	const char * p = arg.c_str();
-
 	bool in_prefix	   = true;
 	bool in_suffix	   = false;
 	bool found_specifier = false;
 	bool saw_tag_char    = false;
 
+	only_parenthesis = true;
+
 	for (const char * c = p; *c != '\0'; c++) {
 	  bool consumed = false;
+
+	  if (*c != '(' && *c != ')')
+	    only_parenthesis = false;
+
 	  if (in_prefix) {
 	    switch (*c) {
 	    case '(':
