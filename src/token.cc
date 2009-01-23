@@ -133,6 +133,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
   switch (c) {
   case '&':
     in.get(c);
+    c = in.peek();
     if (c == '&') {
       in.get(c);
       kind = KW_AND;
@@ -143,6 +144,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     break;
   case '|':
     in.get(c);
+    c = in.peek();
     if (c == '|') {
       in.get(c);
       kind = KW_OR;
