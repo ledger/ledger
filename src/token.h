@@ -39,6 +39,7 @@ namespace ledger {
 struct expr_t::token_t : public noncopyable
 {
   enum kind_t {
+    ERROR,			// an error occurred while tokenizing
     VALUE,			// any kind of literal value
     IDENT,			// [A-Za-z_][-A-Za-z0-9_:]*
     MASK,			// /regexp/
@@ -109,8 +110,7 @@ struct expr_t::token_t : public noncopyable
   void next(std::istream& in, const uint_least8_t flags);
   void rewind(std::istream& in);
   void unexpected();
-
-  static void expected(char wanted, char c = '\0');
+  void expected(char wanted, char c = '\0');
 };
 
 } // namespace ledger

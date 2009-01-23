@@ -347,24 +347,32 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     if (pflags & EXPR_PARSE_NO_REDUCE)
       parse_flags |= AMOUNT_PARSE_NO_REDUCE;
 
-    amount_t temp;
-    if (! temp.parse(in, parse_flags | AMOUNT_PARSE_SOFT_FAIL)) {
-      // If the amount had no commodity, it must be an unambiguous
-      // variable reference
+    try {
+      amount_t temp;
+      if (! temp.parse(in, parse_flags | AMOUNT_PARSE_SOFT_FAIL)) {
+	// If the amount had no commodity, it must be an unambiguous
+	// variable reference
 
-      in.clear();
-      in.seekg(pos, std::ios::beg);
-      if (in.fail())
-	throw_(parse_error, "Failed to reset input stream");
+	in.clear();
+	in.seekg(pos, std::ios::beg);
+	if (in.fail())
+	  throw_(parse_error, "Failed to reset input stream");
 
-      c = in.peek();
-      if (std::isdigit(c) || c == '.')
-	expected('\0', c);
+	c = in.peek();
+	if (std::isdigit(c) || c == '.')
+	  expected('\0', c);
 
-      parse_ident(in);
-    } else {
-      kind = VALUE;
-      value = temp;
+	parse_ident(in);
+      } else {
+	kind   = VALUE;
+	value  = temp;
+	length = in.tellg() - pos;
+      }
+    }
+    catch (const std::exception& err) {
+      kind   = ERROR;
+      length = in.tellg() - pos;
+      throw;
     }
     break;
   }
@@ -381,7 +389,11 @@ void expr_t::token_t::rewind(std::istream& in)
 
 void expr_t::token_t::unexpected()
 {
-  switch (kind) {
+  kind_t prev_kind = kind;
+
+  kind = ERROR;
+
+  switch (prev_kind) {
   case TOK_EOF:
     throw_(parse_error, "Unexpected end of expression");
   case IDENT:
@@ -395,17 +407,19 @@ void expr_t::token_t::unexpected()
 
 void expr_t::token_t::expected(char wanted, char c)
 {
-  if (c == '\0') {
-    if (wanted)
-      throw_(parse_error, "Missing '" << wanted << "'");
-    else
+  kind = ERROR;
+
+  if (c == '\0' || c == -1) {
+    if (wanted == '\0' || wanted == -1)
       throw_(parse_error, "Unexpected end");
+    else
+      throw_(parse_error, "Missing '" << wanted << "'");
   } else {
-    if (wanted)
+    if (wanted == '\0' || wanted == -1)
+      throw_(parse_error, "Invalid char '" << c << "'");
+    else
       throw_(parse_error, "Invalid char '" << c
 	     << "' (wanted '" << wanted << "')");
-    else
-      throw_(parse_error, "Invalid char '" << c << "'");
   }
 }
 

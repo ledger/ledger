@@ -399,11 +399,21 @@ expr_t::parser_t::parse(std::istream& in, const flags_t flags,
     return top_node;
   }
   catch (const std::exception& err) {
-    add_error_context("While parsing value expression:");
     if (original_string) {
-      istream_pos_type pos = in.tellg();
-      pos -= 1;
-      add_error_context(line_context(*original_string, pos));
+      add_error_context("While parsing value expression:");
+
+      istream_pos_type end_pos = in.tellg();
+      istream_pos_type pos     = end_pos;
+
+      pos -= lookahead.length;
+
+      DEBUG("parser.error", "original_string = '" << *original_string << "'");
+      DEBUG("parser.error", "            pos = " << pos);
+      DEBUG("parser.error", "        end_pos = " << end_pos);
+      DEBUG("parser.error", "     token kind = " << int(lookahead.kind));
+      DEBUG("parser.error", "   token length = " << lookahead.length);
+
+      add_error_context(line_context(*original_string, pos, end_pos));
     }
     throw;
   }
