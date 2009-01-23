@@ -789,6 +789,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 't':
     if (std::strcmp(p, "total_expr") == 0)
 	return MAKE_FUNCTOR(report_t::get_total_expr);
+    else if (std::strcmp(p, "truncate") == 0)
+	return MAKE_FUNCTOR(report_t::get_total_expr);
     break;
   }
 

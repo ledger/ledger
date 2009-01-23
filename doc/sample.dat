@@ -15,8 +15,16 @@ N $
   Assets:Brokerage              50 AAPL @ $30.00
   Equity:Opening Balances
 
-2004/05/14 * Pay day
+2004/05/14 * Páy dày
   Assets:Bank:Checking          $500.00
+  Income:Salary
+
+2004/05/14 * Another dày in which there is Páying
+  Asséts:Bánk:Chécking:Asséts:Bánk:Chécking          $500.00
+  Income:Salary
+
+2004/05/14 * Another dày in which there is Páying
+  Русский язык:Русский язык:Русский язык:Русский язык  $1000.00
   Income:Salary
 
 2004/05/27 Book Store

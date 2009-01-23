@@ -596,10 +596,16 @@ static inline void parse_symbol(char *& p, string& symbol)
 
 bool textual_parser_t::test(std::istream& in) const
 {
-  char buf[5];
+  char   buf[12];
+  char * p;
 
-  in.read(buf, 5);
-  if (std::strncmp(buf, "<?xml", 5) == 0) {
+  in.read(buf, 11);
+  if (utf8::is_bom(buf))
+    p = &buf[3];
+  else
+    p = buf;
+
+  if (std::strncmp(p, "<?xml", 5) == 0) {
 #if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     throw parse_error("Ledger file contains XML data, but format was not recognized");
 #else
@@ -688,10 +694,11 @@ unsigned int textual_parser_t::parse(std::istream& in,
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 
-  static bool  added_auto_entry_hook = false;
-  static char  line[MAX_LINE + 1];
-  unsigned int count  = 0;
-  unsigned int errors = 0;
+  static bool	added_auto_entry_hook = false;
+  static char	linebuf[MAX_LINE + 1];
+         char * line;
+  unsigned int	count  = 0;
+  unsigned int	errors = 0;
 
   std::list<account_t *>  account_stack;
   auto_entry_finalizer_t  auto_entry_finalizer(&journal);
@@ -714,9 +721,14 @@ unsigned int textual_parser_t::parse(std::istream& in,
 
   while (in.good() && ! in.eof()) {
     try {
-      in.getline(line, MAX_LINE);
+      in.getline(linebuf, MAX_LINE);
       if (in.eof())
 	break;
+
+      if (linenum == 1 && utf8::is_bom(linebuf))
+	line = &linebuf[3];
+      else
+	line = linebuf;
 
       int len = std::strlen(line);
       if (line[len - 1] == '\r')

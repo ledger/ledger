@@ -5,7 +5,8 @@ EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES = libamounts.la libledger.la
 
-libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib
+libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib \
+			 -I$(srcdir)/lib/utfcpp/source
 if HAVE_GDTOA
 libamounts_la_CPPFLAGS += -I$(top_builddir)/lib/gdtoa -I$(srcdir)/lib/gdtoa
 endif

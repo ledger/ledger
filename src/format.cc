@@ -308,58 +308,60 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
       break;
     }
 
-    string temp = out.str();
+    unistring temp(out.str());
 
-    DEBUG("format.expr", "output = \"" << temp << "\"");
-
+    string result;
     if (! elem->has_flags(ELEMENT_FORMATTED) &&
-	elem->max_width > 0 && elem->max_width < temp.length())
-      out_str << truncate(temp, elem->max_width);
-    else
-      out_str << temp;
+	elem->max_width > 0 && elem->max_width < temp.length()) {
+      result = truncate(temp, elem->max_width);
+    } else {
+      result = temp.extract();
+      for (int i = 0; i < (int)elem->min_width - (int)temp.length(); i++)
+	result += " ";
+    }
+
+    out_str << result;
   }
 }
 
-string format_t::truncate(const string& str, unsigned int width,
+string format_t::truncate(const unistring& ustr, unsigned int width,
 			  const bool is_account)
 {
-  const unsigned int len = str.length();
-  if (len <= width)
-    return str;
-
   assert(width < 4095);
 
-  char buf[4096];
+  const unsigned int len = ustr.length();
+  if (len <= width)
+    return ustr.extract();
+
+  std::ostringstream buf;
 
   switch (elision_style) {
   case TRUNCATE_LEADING:
     // This method truncates at the beginning.
-    std::strncpy(buf, str.c_str() + (len - width), width);
-    buf[0] = '.';
-    buf[1] = '.';
+    buf << ".." << ustr.extract(len - width, width);
     break;
 
   case TRUNCATE_MIDDLE:
     // This method truncates in the middle.
-    std::strncpy(buf, str.c_str(), width / 2);
-    std::strncpy(buf + width / 2,
-		 str.c_str() + (len - (width / 2 + width % 2)),
-		 width / 2 + width % 2);
-    buf[width / 2 - 1] = '.';
-    buf[width / 2] = '.';
+    buf << ustr.extract(0, width / 2)
+	<< ".."
+	<< ustr.extract(len - (width / 2 + width % 2),
+			width / 2 + width % 2);
     break;
 
   case ABBREVIATE:
     if (is_account) {
       std::list<string> parts;
       string::size_type beg = 0;
-      for (string::size_type pos = str.find(':');
+      string strcopy(ustr.extract());
+      for (string::size_type pos = strcopy.find(':');
 	   pos != string::npos;
-	   beg = pos + 1, pos = str.find(':', beg))
-	parts.push_back(string(str, beg, pos - beg));
-      parts.push_back(string(str, beg));
+	   beg = pos + 1, pos = strcopy.find(':', beg))
+	parts.push_back(string(strcopy, beg, pos - beg));
+      parts.push_back(string(strcopy, beg));
 
-      string result;
+      std::ostringstream result;
+
       unsigned int newlen = len;
       for (std::list<string>::iterator i = parts.begin();
 	   i != parts.end();
@@ -367,28 +369,26 @@ string format_t::truncate(const string& str, unsigned int width,
 	// Don't contract the last element
 	std::list<string>::iterator x = i;
 	if (++x == parts.end()) {
-	  result += *i;
+	  result << *i;
 	  break;
 	}
 
 	if (newlen > width) {
-	  result += string(*i, 0, abbrev_length);
-	  result += ":";
-	  newlen -= (*i).length() - abbrev_length;
+	  unistring temp(*i);
+	  result << temp.extract(0, abbrev_length) << ":";
+	  newlen -= temp.length() - abbrev_length;
 	} else {
-	  result += *i;
-	  result += ":";
+	  result << *i << ":";
 	}
       }
 
       if (newlen > width) {
 	// Even abbreviated its too big to show the last account, so
 	// abbreviate all but the last and truncate at the beginning.
-	std::strncpy(buf, result.c_str() + (result.length() - width), width);
-	buf[0] = '.';
-	buf[1] = '.';
+	unistring temp(result.str());
+	buf << ".." << temp.extract(temp.length() - width, width);
       } else {
-	std::strcpy(buf, result.c_str());
+	buf << result.str();
       }
       break;
     }
@@ -396,14 +396,11 @@ string format_t::truncate(const string& str, unsigned int width,
 
   case TRUNCATE_TRAILING:
     // This method truncates at the end (the default).
-    std::strncpy(buf, str.c_str(), width - 2);
-    buf[width - 2] = '.';
-    buf[width - 1] = '.';
+    buf << ustr.extract(0, width -2) << "..";
     break;
   }
-  buf[width] = '\0';
 
-  return buf;
+  return buf.str();
 }
 
 } // namespace ledger
