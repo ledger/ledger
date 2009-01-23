@@ -97,7 +97,7 @@ python_interpreter_t::python_interpreter_t() : session_t(), main_nspace()
   if (! main_module)
     throw_(std::logic_error, "Python failed to initialize");
 
-  main_nspace = main_module.attr("__dict__");
+  main_nspace = extract<dict>(main_module.attr("__dict__"));
   if (! main_nspace)
     throw_(std::logic_error, "Python failed to initialize");
 
@@ -116,10 +116,7 @@ object python_interpreter_t::import(const string& str)
       throw_(std::logic_error, "Failed to import Python module " << str);
  
     // Import all top-level entries directly into the main namespace
-    object nspace = mod.attr("__dict__");
-
-    dict main_nspace_dict = extract<dict>(main_nspace);
-    main_nspace_dict.update(nspace);
+    main_nspace.update(mod.attr("__dict__"));
 
     return mod;
   }
@@ -207,13 +204,11 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
     break;
   }
 
-  DEBUG("python.interp", "Python eval: " << name);
+  DEBUG("python.interp", "Python lookup: " << name);
 
-  try {
-    if (boost::python::object obj = eval(name))
+  if (main_nspace.has_key(name))
+    if (boost::python::object obj = main_nspace.get(name))
       return WRAP_FUNCTOR(functor_t(name, obj));
-  }
-  catch (...) {}
 
   return expr_t::ptr_op_t();
 }

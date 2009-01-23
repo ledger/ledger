@@ -43,7 +43,7 @@ namespace ledger {
 class python_interpreter_t : public session_t
 {
 public:
-  boost::python::object main_nspace;
+  boost::python::dict main_nspace;
 
   python_interpreter_t();
 
