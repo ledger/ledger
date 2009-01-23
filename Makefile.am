@@ -1,28 +1,35 @@
+if HAVE_GDTOA
+SUBDIRS    = lib/gdtoa
+endif
 EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES = libamounts.la libledger.la
 
 libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib
-libamounts_la_SOURCES  = \
-	src/utils.cc       \
-	src/times.cc       \
-	src/mask.cc        \
-	src/binary.cc      \
-			   \
-	src/amount.cc      \
-	src/commodity.cc   \
-	src/balance.cc     \
-	src/balpair.cc     \
-	src/value.cc       \
-			   \
-	src/token.cc       \
-	src/parser.cc      \
-	src/op.cc          \
-	src/expr.cc        \
-	src/scope.cc       \
-	src/format.cc      \
-	src/option.cc      \
-			   \
+if HAVE_GDTOA
+libamounts_la_CPPFLAGS += -I$(top_builddir)/lib/gdtoa -I$(srcdir)/lib/gdtoa
+endif
+
+libamounts_la_SOURCES =  \
+	src/utils.cc     \
+	src/times.cc     \
+	src/mask.cc      \
+	src/binary.cc    \
+			 \
+	src/amount.cc    \
+	src/commodity.cc \
+	src/balance.cc   \
+	src/balpair.cc   \
+	src/value.cc     \
+			 \
+	src/token.cc     \
+	src/parser.cc    \
+	src/op.cc        \
+	src/expr.cc      \
+	src/scope.cc     \
+	src/format.cc    \
+	src/option.cc    \
+			 \
 	lib/sha1.cpp
 
 if HAVE_EXPAT
@@ -165,6 +172,9 @@ ledger_CPPFLAGS	+= -DHAVE_BOOST_PYTHON=1 -I$(srcdir)/python
 endif
 ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
+if HAVE_GDTOA
+ledger_LDADD   += lib/gdtoa/libgdtoa.la
+endif
 if HAVE_BOOST_PYTHON
 ledger_LDADD   += libpyledger.la
 endif
@@ -211,10 +221,18 @@ pyexec_PROGRAMS = ledger.so
 clean-local:
 	rm -fr build
 
+if HAVE_GDTOA
+install-exec-hook:
+	CFLAGS="$(CPPFLAGS)" \
+	LDFLAGS="$(LDFLAGS) -L. -L.libs -Llib/gdtoa -Llib/gdtoa/.libs" \
+	    $(PYTHON) python/setup.py install \
+		--prefix=$(prefix) --root=$(DESTDIR)/
+else
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS) -L. -L.libs" \
 	    $(PYTHON) python/setup.py install \
 		--prefix=$(prefix) --root=$(DESTDIR)/
+endif
 
 ledger_so_SOURCES      = $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
 			 $(libpyledger_la_SOURCES) python/pyledger.cc
@@ -227,10 +245,23 @@ PYLIBS  = ledger amounts pyledger gmp \
           boost_regex$(BOOST_SUFFIX)	  \
           boost_python$(BOOST_SUFFIX)
 
+if HAVE_GDTOA
+PYLIBS += gdtoa
+endif
 if HAVE_LIBOFX
 PYLIBS += ofx
 endif
 
+if HAVE_GDTOA
+ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
+	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	(cd $(srcdir); \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libpyledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
+	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
+	     $(PYTHON) python/setup.py build \
+		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
+else
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); \
@@ -239,6 +270,7 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     $(PYTHON) python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
+endif
 
 endif
 
@@ -279,6 +311,9 @@ UnitTests_SOURCES =		 \
 UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
 UnitTests_LDFLAGS  = $(LIBADD_DL)
 UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
+if HAVE_GDTOA
+UnitTests_LDADD   += lib/gdtoa/libgdtoa.la
+endif
 
 EXTRA_DIST += test/python
 
