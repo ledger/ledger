@@ -33,6 +33,9 @@
 #include "report.h"
 #include "option.h"
 #include "help.h"
+#if defined(HAVE_BOOST_PYTHON)
+#include "pyinterp.h"
+#endif
 
 #include "textual.h"
 #include "qif.h"
@@ -455,7 +458,11 @@ int main(int argc, char * argv[], char * envp[])
 
     INFO("Ledger starting");
 
+#if defined(HAVE_BOOST_PYTHON)
+    std::auto_ptr<ledger::session_t> session(new ledger::python_interpreter_t);
+#else
     std::auto_ptr<ledger::session_t> session(new ledger::session_t);
+#endif
 
     ledger::set_session_context(session.get());
 

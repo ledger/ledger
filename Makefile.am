@@ -160,8 +160,14 @@ endif
 bin_PROGRAMS	= ledger
 
 ledger_CPPFLAGS	= $(libledger_la_CPPFLAGS)
+if HAVE_BOOST_PYTHON
+ledger_CPPFLAGS	+= -DHAVE_BOOST_PYTHON=1 -I$(srcdir)/python
+endif
 ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
+if HAVE_BOOST_PYTHON
+ledger_LDADD   += libpyledger.la
+endif
 ledger_LDFLAGS	= 
 
 info_TEXINFOS	= doc/ledger.texi

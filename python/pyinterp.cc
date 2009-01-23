@@ -79,20 +79,28 @@ struct python_run
   python_run(python_interpreter_t * intepreter,
 	     const string& str, int input_mode)
     : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
-					    intepreter->nspace.ptr(),
-					    intepreter->nspace.ptr())))) {}
+					    intepreter->main_nspace.ptr(),
+					    intepreter->main_nspace.ptr())))) {}
   operator object() {
     return result;
   }
 };
 
-python_interpreter_t::python_interpreter_t()
-  : scope_t(), mmodule(borrowed(PyImport_AddModule("__main__"))),
-    nspace(handle<>(borrowed(PyModule_GetDict(mmodule.get()))))
+python_interpreter_t::python_interpreter_t() : session_t(), main_nspace()
 {
-  TRACE_CTOR(python_interpreter_t, "expr_t::scope_t&");
+  TRACE_CTOR(python_interpreter_t, "");
 
+  DEBUG("python.interp", "Initializing Python");
   Py_Initialize();
+
+  object main_module = boost::python::import("__main__");
+  if (! main_module)
+    throw_(std::logic_error, "Python failed to initialize");
+
+  main_nspace = main_module.attr("__dict__");
+  if (! main_nspace)
+    throw_(std::logic_error, "Python failed to initialize");
+
   boost::python::detail::init_module("ledger", &initialize_for_python);
 }
 
@@ -101,20 +109,19 @@ object python_interpreter_t::import(const string& str)
   assert(Py_IsInitialized());
 
   try {
-    PyObject * mod = PyImport_Import(PyString_FromString(str.c_str()));
+    DEBUG("python.interp", "Importing Python module: " << str);
+
+    object mod = boost::python::import(str.c_str());
     if (! mod)
       throw_(std::logic_error, "Failed to import Python module " << str);
-
-    object newmod(handle<>(borrowed(mod)));
-
-#if 1
+ 
     // Import all top-level entries directly into the main namespace
-    dict m_nspace(handle<>(borrowed(PyModule_GetDict(mod))));
-    nspace.update(m_nspace);
-#else
-    nspace[string(PyModule_GetName(mod))] = newmod;
-#endif
-    return newmod;
+    object nspace = mod.attr("__dict__");
+
+    dict main_nspace_dict = extract<dict>(main_nspace);
+    main_nspace_dict.update(nspace);
+
+    return mod;
   }
   catch (const error_already_set&) {
     PyErr_Print();
@@ -125,7 +132,7 @@ object python_interpreter_t::import(const string& str)
 
 object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
 {
-  bool	      first = true;
+  bool	 first = true;
   string buffer;
   buffer.reserve(4096);
 
@@ -149,6 +156,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
     case PY_EVAL_MULTI: input_mode = Py_file_input;   break;
     }
     assert(Py_IsInitialized());
+
     return python_run(this, buffer, input_mode);
   }
   catch (const error_already_set&) {
@@ -177,11 +185,58 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   return object();
 }
 
+expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
+{
+  if (expr_t::ptr_op_t op = session_t::lookup(name))
+    return op;
+
+  const char * p = name.c_str();
+  switch (*p) {
+  case 'o':
+    if (std::strncmp(p, "opt_", 4) == 0) {
+      p = p + 4;
+      switch (*p) {
+      case 'i':
+	if (std::strcmp(p, "import_") == 0)
+	  return MAKE_FUNCTOR(python_interpreter_t::option_import_);
+	else if (std::strcmp(p, "import") == 0)
+	  return expr_t::ptr_op_t();
+	break;
+      }
+    }
+    break;
+  }
+
+  DEBUG("python.interp", "Python eval: " << name);
+
+  try {
+    if (boost::python::object obj = eval(name))
+      return WRAP_FUNCTOR(functor_t(name, obj));
+  }
+  catch (...) {}
+
+  return expr_t::ptr_op_t();
+}
+  
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 {
   try {
     if (! PyCallable_Check(func.ptr())) {
-      return extract<value_t>(func.ptr());
+      if (PyBool_Check(func.ptr()))
+	return extract<bool>(func)();
+      else if (PyInt_Check(func.ptr()))
+	return long(extract<int>(func)());
+      else if (PyString_Check(func.ptr()))
+	return string_value(extract<string>(func)());
+
+      extract<date_t> d(func);
+      if (d.check())
+	return value_t(d());
+      extract<datetime_t> dt(func);
+      if (dt.check())
+	return value_t(dt());
+
+      return extract<value_t>(func);
     } else {
       if (args.size() > 0) {
 	list arglist;

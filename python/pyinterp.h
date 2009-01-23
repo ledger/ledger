@@ -33,22 +33,19 @@
 #define _PYINTERP_H
 
 #include "scope.h"
+#include "session.h"
 
 #include <boost/python.hpp>
 #include <Python.h>
 
 namespace ledger {
 
-class python_interpreter_t : public noncopyable, public scope_t
+class python_interpreter_t : public session_t
 {
-  boost::python::handle<> mmodule;
+public:
+  boost::python::object main_nspace;
 
   python_interpreter_t();
-
-public:
-  boost::python::dict nspace;
-
-  python_interpreter_t(scope_t& parent);
 
   virtual ~python_interpreter_t() {
     TRACE_DTOR(python_interpreter_t);
@@ -91,10 +88,11 @@ public:
     virtual value_t operator()(call_scope_t& args);
   };
 
-  virtual expr_t::ptr_op_t lookup(const string& name) {
-    if (boost::python::object func = eval(name))
-      return WRAP_FUNCTOR(functor_t(name, func));
-    return expr_t::ptr_op_t();
+  virtual expr_t::ptr_op_t lookup(const string& name);
+
+  value_t option_import_(call_scope_t& args) {
+    import(args[0].to_string());
+    return true;
   }
 
   class lambda_t : public functor_t {
