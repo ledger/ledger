@@ -273,7 +273,10 @@ private:
 			   ptr_op_t _right = NULL);
 
   ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
-    return new_node(kind, _left, _right);
+    ptr_op_t node(new_node(kind, _left, _right));
+    if (kind < TERMINALS)
+      node->data = data;
+    return node;
   }
 
 public:
