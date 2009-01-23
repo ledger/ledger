@@ -159,10 +159,9 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
       if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
-
-      tok = next_token(in, tflags);
+    } else {
+      push_token(tok);
     }
-    push_token(tok);
   }
 
   return node;
@@ -187,10 +186,9 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
       if (! node->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
-
-      tok = next_token(in, tflags);
+    } else {
+      push_token(tok);
     }
-    push_token(tok);
   }
 
   return node;
