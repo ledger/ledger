@@ -9,7 +9,8 @@ STOW_ROOT = /usr/local/stow
 
 HERE = $(shell pwd)
 
-all: boost-build cppunit-build # gdtoa
+all:
+	@echo Making libraries...
 
 # architecture=combined
 boost-release:
@@ -47,13 +48,3 @@ cppunit-debug:
 	 make install)
 
 cppunit-build: cppunit-release cppunit-debug
-
-gdtoa-debug:
-	(cd gdtoa; autoreconf; \
-	 ./configure CFLAGS="-g $(ARCH_CFLAGS)" \
-		   LDFLAGS="-g $(ARCH_LDFLAGS)" \
-		--prefix=$(STOW_ROOT)/gdtoa \
-		--disable-dependency-tracking && \
-	 make install)
-
-gdtoa-build: gdtoa-debug
