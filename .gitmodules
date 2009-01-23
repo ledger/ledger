@@ -6,7 +6,7 @@
 	url = git://github.com/jwiegley/gdtoa.git
 [submodule "lib/cppunit"]
 	path = lib/cppunit
-	url = git://newartisans.com/cppunit.git
+	url = git://github.com/jwiegley/cppunit.git
 [submodule "lib/libofx"]
 	path = lib/libofx
 	url = git://newartisans.com/libofx.git
