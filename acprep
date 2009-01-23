@@ -35,7 +35,7 @@ CXXFLAGS=""
 ARCHFLAGS=""
 LDARCHFLAGS=""
 LDFLAGS=""
-LIBDIRS="-L/usr/local/lib -L/opt/local/lib"
+LIBDIRS="-L/usr/local/lib -L$PYTHON_HOME/lib -L/opt/local/lib"
 LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python$PYTHON_VERSION/config"
 
 SYSTEM=$(uname -s)
