@@ -250,14 +250,22 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	if (PyObject * val =
 	    PyObject_CallObject(func.ptr(),
 				boost::python::tuple(arglist).ptr())) {
-	  value_t result = extract<value_t>(val)();
-	  Py_DECREF(val);
+	  extract<value_t> xval(val);
+	  value_t result;
+	  if (xval.check()) {
+	    result = xval();
+	    Py_DECREF(val);
+	  } else {
+	    Py_DECREF(val);
+	    throw_(calc_error,
+		   "Could not evaluate Python variable '" << name << "'");
+	  }
 	  return result;
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
 	  throw_(calc_error,
-		 "While calling Python function '" /*<< name() <<*/ "': " << err);
+		 "While calling Python function '" << name << "': " << err);
 	} else {
 	  assert(false);
 	}
@@ -269,7 +277,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
   catch (const error_already_set&) {
     PyErr_Print();
     throw_(calc_error,
-	   "While calling Python function '" /*<< name() <<*/ "'");
+	   "While calling Python function '" << name << "'");
   }
   return NULL_VALUE;
 }

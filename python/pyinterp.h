@@ -73,13 +73,19 @@ public:
 
   class functor_t {
     functor_t();
+
   protected:
     boost::python::object func;
+
   public:
-    functor_t(const string&, boost::python::object _func) : func(_func) {
+    string name;
+
+    functor_t(const string& _name, boost::python::object _func)
+      : func(_func), name(_name) {
       TRACE_CTOR(functor_t, "const string&, boost::python::object");
     }
-    functor_t(const functor_t& other) : func(other.func) {
+    functor_t(const functor_t& other)
+      : func(other.func), name(other.name) {
       TRACE_CTOR(functor_t, "copy");
     }
     virtual ~functor_t() throw() {
