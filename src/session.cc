@@ -175,7 +175,7 @@ std::size_t session_t::read_data(journal_t&    journal,
   if (data_file.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
 
-  TRACE_START(parser, 1, "Parsing journal file");
+  TRACE_START(parser, 1, "Parsed journal file");
 
   std::size_t entry_count = 0;
 
