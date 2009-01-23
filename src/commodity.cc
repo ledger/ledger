@@ -142,8 +142,10 @@ optional<price_point_t>
 #endif
 
   if (prices.size() == 0) {
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices", "  there are no prices in this history");
+#endif
     return none;
   }
 
@@ -152,8 +154,10 @@ optional<price_point_t>
     point.when	= (*r).first;
     point.price = (*r).second;
     found = true;
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices", "  using most recent price");
+#endif
   } else {
     history_map::const_iterator i = prices.lower_bound(*moment);
     if (i == prices.end()) {
@@ -161,8 +165,10 @@ optional<price_point_t>
       point.when  = (*r).first;
       point.price = (*r).second;
       found = true;
+#if defined(DEBUG_ON)
       DEBUG_INDENT("commodity.prices", indent);
       DEBUG("commodity.prices", "  using last price");
+#endif
     } else {
       point.when = (*i).first;
       if (*moment < point.when) {
@@ -176,8 +182,10 @@ optional<price_point_t>
 	point.price = (*i).second;
 	found = true;
       }
+#if defined(DEBUG_ON)
       DEBUG_INDENT("commodity.prices", indent);
       DEBUG("commodity.prices", "  using found price");
+#endif
     }
   }
 
@@ -192,24 +200,32 @@ optional<price_point_t>
 #endif
 
   if (! found) {
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices", "  could not find a price");
+#endif
     return none;
   }
   else if (moment && point.when > *moment) {
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices", "  price is too young ");
+#endif
     return none;
   }
   else if (oldest && point.when < *oldest) {
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices", "  price is too old ");
+#endif
     return none;
   }
   else {
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices",
 	  "  returning price: " << point.when << ", " << point.price);
+#endif
     return point;
   }
 }
@@ -263,59 +279,83 @@ optional<price_point_t>
     if (comm == source)
       continue;
 
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent + 1);
     DEBUG("commodity.prices",
 	  "  searching for price via commodity '" << comm << "'");
+#endif
 
-    point = hist.second.find_price(source, commodity, moment, limit, indent + 2);
+    point = hist.second.find_price(source, commodity, moment, limit
+#if defined(DEBUG_ON)
+				   , indent + 2
+#endif
+				   );
     assert(! point || point->price.commodity() == comm);
 
     if (point) {
       optional<price_point_t> xlat;
 
       if (commodity && comm != *commodity) {
+#if defined(DEBUG_ON)
 	DEBUG_INDENT("commodity.prices", indent + 1);
 	DEBUG("commodity.prices", "  looking for translation price");
+#endif
 
-	xlat = comm.find_price(commodity, moment, limit, indent + 2);
+	xlat = comm.find_price(commodity, moment, limit
+#if defined(DEBUG_ON)
+			       , indent + 2
+#endif
+			       );
 	if (xlat) {
+#if defined(DEBUG_ON)
 	  DEBUG_INDENT("commodity.prices", indent + 1);
 	  DEBUG("commodity.prices", "  found translated price "
 		<< xlat->price << " from " << xlat->when);
+#endif
 
 	  point->price = xlat->price * point->price;
 	  if (xlat->when < point->when) {
 	    point->when = xlat->when;
+#if defined(DEBUG_ON)
 	    DEBUG_INDENT("commodity.prices", indent + 1);
 	    DEBUG("commodity.prices",
 		  "  adjusting date of result back to " << point->when);
+#endif
 	  }
 	} else {
+#if defined(DEBUG_ON)
 	  DEBUG_INDENT("commodity.prices", indent + 1);
 	  DEBUG("commodity.prices", "  saw no translated price there");
+#endif
 	  continue;
 	}
       }
 
       assert(! commodity || point->price.commodity() == *commodity);
+#if defined(DEBUG_ON)
       DEBUG_INDENT("commodity.prices", indent + 1);
       DEBUG("commodity.prices",
 	    "  saw a price there: " << point->price << " from " << point->when);
+#endif
       if (! limit || point->when > *limit) {
 	limit = point->when;
 	best  = *point;
 	found = true;
       }
     } else {
+#if defined(DEBUG_ON)
       DEBUG_INDENT("commodity.prices", indent + 1);
       DEBUG("commodity.prices", "  saw no price there");
+#endif
     }
   }
 
   if (found) {
+#if defined(DEBUG_ON)
     DEBUG_INDENT("commodity.prices", indent);
     DEBUG("commodity.prices",
 	  "  found price " << best.price << " from " << best.when);
+#endif
     return best;
   }
   return none;
