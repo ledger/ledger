@@ -508,6 +508,8 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   };
 
+  istream_pos_type pos = in.tellg();
+
   char buf[256];
   char c = peek_next_nonws(in);
   if (c == '"') {
@@ -521,6 +523,11 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     READ_INTO(in, buf, 255, c, ! invalid_chars[static_cast<unsigned char>(c)]);
   }
   symbol = buf;
+
+  if (symbol.length() == 0) {
+    in.clear();
+    in.seekg(pos, std::ios::beg);
+  }
 }
 
 void commodity_t::parse_symbol(char *& p, string& symbol)
@@ -567,6 +574,8 @@ bool commodity_t::valid() const
 void annotation_t::parse(std::istream& in)
 {
   do {
+    istream_pos_type pos = in.tellg();
+
     char buf[256];
     char c = peek_next_nonws(in);
     if (c == '{') {
@@ -621,6 +630,8 @@ void annotation_t::parse(std::istream& in)
       tag = buf;
     }
     else {
+      in.clear();
+      in.seekg(pos, std::ios::beg);
       break;
     }
   } while (true);
