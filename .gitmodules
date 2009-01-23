@@ -3,7 +3,7 @@
 	url = git://repo.or.cz/boost.git
 [submodule "lib/gdtoa"]
 	path = lib/gdtoa
-	url = git://newartisans.com/gdtoa.git
+	url = git://github.com/jwiegley/gdtoa.git
 [submodule "lib/cppunit"]
 	path = lib/cppunit
 	url = git://newartisans.com/cppunit.git
