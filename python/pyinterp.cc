@@ -90,6 +90,8 @@ python_interpreter_t::python_interpreter_t() : session_t(), main_nspace()
 {
   TRACE_CTOR(python_interpreter_t, "");
 
+  TRACE_START(python_init, 1, "Initialized Python");
+
   DEBUG("python.interp", "Initializing Python");
   Py_Initialize();
 
@@ -102,6 +104,8 @@ python_interpreter_t::python_interpreter_t() : session_t(), main_nspace()
     throw_(std::logic_error, "Python failed to initialize");
 
   boost::python::detail::init_module("ledger", &initialize_for_python);
+
+  TRACE_FINISH(python_init, 1);
 }
 
 object python_interpreter_t::import(const string& str)
@@ -109,7 +113,7 @@ object python_interpreter_t::import(const string& str)
   assert(Py_IsInitialized());
 
   try {
-    DEBUG("python.interp", "Importing Python module: " << str);
+    TRACE_START(python_import, 1, "Imported Python module: " << str);
 
     object mod = boost::python::import(str.c_str());
     if (! mod)
@@ -117,6 +121,8 @@ object python_interpreter_t::import(const string& str)
  
     // Import all top-level entries directly into the main namespace
     main_nspace.update(mod.attr("__dict__"));
+
+    TRACE_FINISH(python_import, 1);
 
     return mod;
   }
