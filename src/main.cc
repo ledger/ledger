@@ -481,8 +481,8 @@ int main(int argc, char * argv[], char * envp[])
   }
   catch (const std::exception& err) {
     std::cout.flush();
-    std::cerr << "Error: " << ledger::error_context() << err.what()
-	      << std::endl;
+    std::cerr << ledger::error_context()
+	      << "Error: " << err.what() << std::endl;
   }
   catch (int _status) {
     status = _status;

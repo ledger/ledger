@@ -1012,8 +1012,8 @@ unsigned int textual_parser_t::parse(std::istream& in,
       add_error_context(file_context(pathname, linenum - 1));
 
       std::cout.flush();
-      std::cerr << "Error: " << error_context() << err.what()
-		<< std::endl;
+      std::cerr << ledger::error_context()
+		<< "Error: " << err.what() << std::endl;
       errors++;
     }
     beg_pos = end_pos;
