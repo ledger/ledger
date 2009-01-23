@@ -229,10 +229,9 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
   string symbol;
 
   switch (kind) {
-  case VALUE: {
+  case VALUE:
     as_value().print(out, context.relaxed);
     break;
-  }
 
   case IDENT:
     out << as_ident();
