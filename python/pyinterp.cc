@@ -43,7 +43,9 @@ void export_amount();
 void export_commodity();
 #if 0
 void export_balance();
+#endif
 void export_value();
+#if 0
 void export_journal();
 void export_parser();
 void export_option();
@@ -61,7 +63,9 @@ void initialize_for_python()
   export_commodity();
 #if 0
   export_balance();
+#endif
   export_value();
+#if 0
   export_journal();
   export_parser();
   export_option();
@@ -223,21 +227,11 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 {
   try {
     if (! PyCallable_Check(func.ptr())) {
-      if (PyBool_Check(func.ptr()))
-	return extract<bool>(func)();
-      else if (PyInt_Check(func.ptr()))
-	return long(extract<int>(func)());
-      else if (PyString_Check(func.ptr()))
-	return string_value(extract<string>(func)());
-
-      extract<date_t> d(func);
-      if (d.check())
-	return value_t(d());
-      extract<datetime_t> dt(func);
-      if (dt.check())
-	return value_t(dt());
-
-      return extract<value_t>(func);
+      extract<value_t> val(func);
+      if (val.check())
+	return val();
+      throw_(calc_error,
+	     "Could not evaluate Python variable '" << name << "'");
     } else {
       if (args.size() > 0) {
 	list arglist;

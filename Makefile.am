@@ -194,13 +194,14 @@ if HAVE_BOOST_PYTHON
 lib_LTLIBRARIES += libpyledger.la
 
 libpyledger_la_SOURCES =       \
+	python/pyutils.h       \
+	python/pyfstream.h     \
+	python/py_utils.cc     \
+	python/py_times.cc     \
 	python/py_amount.cc    \
 	python/py_commodity.cc \
-	python/py_times.cc     \
-	python/py_utils.cc     \
-	python/pyfstream.h     \
+	python/py_value.cc     \
 	python/pyinterp.cc     \
-	python/pyutils.h       \
 	python/setup.py
 
 libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS) -I$(srcdir)/python
