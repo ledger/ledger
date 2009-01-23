@@ -187,12 +187,11 @@ namespace ledger {
     string verb = *arg++;
 
     if (verb == "parse") {
-      expr_t expr(*arg);
-
       out << "--- Input text ---" << std::endl;
       out << *arg << std::endl;
 
       out << std::endl << "--- Text as parsed ---" << std::endl;
+      expr_t expr(*arg);
       expr.print(out);
       out << std::endl;
 
@@ -206,12 +205,11 @@ namespace ledger {
       return 0;
     }
     else if (verb == "compile") {
-      expr_t expr(*arg);
-
       out << "--- Input text ---" << std::endl;
       out << *arg << std::endl;
 
       out << std::endl << "--- Text as parsed ---" << std::endl;
+      expr_t expr(*arg);
       expr.print(out);
       out << std::endl;
 
