@@ -118,8 +118,19 @@ void expr_t::compile(scope_t& scope)
 value_t expr_t::calc(scope_t& scope)
 {
   if (ptr.get()) {
-    if (! compiled)
+    if (! compiled) {
+      if (SHOW_DEBUG("expr.calc")) {
+	DEBUG("expr.calc", "Before compilation:");
+	dump(*_log_stream);
+      }
+
       compile(scope);
+
+      if (SHOW_DEBUG("expr.calc")) {
+	DEBUG("expr.calc", "After compilation:");
+	dump(*_log_stream);
+      }
+    }
     return ptr->calc(scope);
   }
   return NULL_VALUE;
