@@ -423,9 +423,14 @@ report: all
 copy-sources:
 	-mkdir /tmp/ledger
 	sudo rsync -av --delete \
-	    --exclude='/lib/*/' \
+	    --exclude='/lib/boost/' \
+	    --exclude='/lib/icu/' \
+	    --exclude='/lib/irrlicht/' \
 	    --exclude=/.libs/ \
 	    --exclude=/.deps/ \
+	    --exclude=/archive/ \
+	    --exclude=/plan/ \
+	    --exclude=/2.6*/ \
 	    ./ /tmp/ledger/
 	(cd /tmp/ledger; sudo git clean -x -d -f)
 
