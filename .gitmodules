@@ -9,7 +9,7 @@
 	url = git://github.com/jwiegley/cppunit.git
 [submodule "lib/libofx"]
 	path = lib/libofx
-	url = git://newartisans.com/libofx.git
+	url = git://github.com/jwiegley/libofx.git
 [submodule "lib/utfcpp"]
 	path = lib/utfcpp
 	url = git://github.com/jwiegley/utfcpp.git
