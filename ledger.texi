@@ -124,8 +124,8 @@ The entry might look like this:
            Equity:Opening Balances    $200.00
 9/29  BAL  Checking                   $100.00    $100.00
            Equity:Opening Balances   $-100.00
-9/29  100  Pacific Bell                $23.00    $223.00
-           Checking                   $-23.00     $77.00
+9/29  100  Pacific Bell                $23.00     $23.00
+           Checking                   $-23.00
 @end smallexample
 
 The first line shows a payment to Pacific Bell for $23.00.  Because
