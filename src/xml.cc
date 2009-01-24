@@ -35,10 +35,8 @@
 
 namespace ledger {
 
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-
-static XML_Parser    current_parser;
-static unsigned int  count;
+static irr::io::IrrXMLReader * current_parser;
+static unsigned int	       count;
 
 static journal_t *   curr_journal;
 static entry_t *     curr_entry;
@@ -51,7 +49,7 @@ static string data;
 static bool   ignore;
 static string have_error;
 
-static void startElement(void *userData, const char *name, const char **attrs)
+static void startElement(const char *name)
 {
   if (ignore)
     return;
@@ -68,15 +66,15 @@ static void startElement(void *userData, const char *name, const char **attrs)
       curr_entry->xacts.back()->set_state(curr_state);
   }
   else if (std::strcmp(name, "commodity") == 0) {
-    if (string(attrs[0]) == "flags")
-      comm_flags = attrs[1];
+    if (const char * p = current_parser->getAttributeValue("flags"))
+      comm_flags = p;
   }
   else if (std::strcmp(name, "total") == 0) {
     ignore = true;
   }
 }
 
-static void endElement(void *userData, const char *name)
+static void endElement(const char *name)
 {
   if (ignore) {
     if (std::strcmp(name, "total") == 0)
@@ -181,27 +179,32 @@ static void endElement(void *userData, const char *name)
   }
 }
 
-static void dataHandler(void *userData, const char *s, int len)
-{
-  if (! ignore)
-    data = string(s, len);
-}
-
 bool xml_parser_t::test(std::istream& in) const
 {
-  char buf[80];
+  char	 buf[80];
+  char * p;
 
-  in.getline(buf, 79);
-  if (std::strncmp(buf, "<?xml", 5) != 0) {
+  DEBUG("xml.parse", "Testing whether the file is XML...");
+
+  in.read(buf, 10);
+  if (utf8::is_bom(buf))
+    p = &buf[3];
+  else
+    p = buf;
+
+  if (std::strncmp(p, "<?xml", 5) != 0) {
     in.clear();
     in.seekg(0, std::ios::beg);
+    DEBUG("xml.parse", "Does not begin with <?xml");
     return false;
   }
 
+  in.getline(buf, 79);		// skip rest of <?xml line
   in.getline(buf, 79);
   if (! std::strstr(buf, "<ledger")) {
     in.clear();
     in.seekg(0, std::ios::beg);
+    DEBUG("xml.parse", "Next line does not begin with <ledger");
     return false;
   }
 
@@ -211,11 +214,13 @@ bool xml_parser_t::test(std::istream& in) const
 }
 
 unsigned int xml_parser_t::parse(std::istream& in,
-				 session_t&     session,
-				 journal_t&   journal,
+				 session_t&    session,
+				 journal_t&    journal,
 				 account_t *   master,
 				 const path *  original_file)
 {
+  TRACE_START(xml_parsing_total, 1, "Total time spent parsing XML:");
+
   char buf[BUFSIZ];
 
   count        = 0;
@@ -224,46 +229,54 @@ unsigned int xml_parser_t::parse(std::istream& in,
   curr_comm    = NULL;
   ignore       = false;
 
-  XML_Parser   parser = XML_ParserCreate(NULL);
+  irr::io::IrrXMLReader * parser =
+    new irr::io::CXMLReaderImpl<char, irr::io::IXMLBase>(new CStreamReadCallBack(in)); 
   current_parser = parser;
 
-  XML_SetElementHandler(parser, startElement, endElement);
-  XML_SetCharacterDataHandler(parser, dataHandler);
+  while (parser->read()) {
+    switch (parser->getNodeType()) {
+    case irr::io::EXN_TEXT:
+      DEBUG("xml.parse", "Read text: " << parser->getNodeData());
+      if (! ignore) {
+	DEBUG("xml.parse", "  but ignoring it");
+	data = parser->getNodeData();
+      }
+      break;
 
-  while (! in.eof()) {
-    in.getline(buf, BUFSIZ - 1);
-    std::strcat(buf, "\n");
-    bool result;
-    try {
-      result = XML_Parse(parser, buf, std::strlen(buf), in.eof());
-    }
-    catch (const std::exception& err) {
-      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
-      XML_ParserFree(parser);
-      throw parse_error(err.what());
+    case irr::io::EXN_ELEMENT:
+      DEBUG("xml.parse", "Read element: " << parser->getNodeName());
+      startElement(parser->getNodeName());
+      break;
+    case irr::io::EXN_ELEMENT_END:
+      DEBUG("xml.parse", "End element: " << parser->getNodeName());
+      endElement(parser->getNodeName());
+      break;
+
+    default:			// ignore: COMMENT, CDATA, UNKNOWN
+      break;
     }
 
     if (! have_error.empty()) {
-      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       parse_error err(have_error);
       std::cerr << "Error: " << err.what() << std::endl;
       have_error = "";
     }
 
+#if 0
     if (! result) {
-      //unsigned long line = XML_GetCurrentLineNumber(parser) - offset++;
       const char *  err  = XML_ErrorString(XML_GetErrorCode(parser));
       XML_ParserFree(parser);
       throw parse_error(err);
     }
+#endif
   }
 
-  XML_ParserFree(parser);
+  delete parser;
+
+  TRACE_FINISH(xml_parsing_total, 1);
 
   return count;
 }
-
-#endif // defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 
 void xml_write_amount(std::ostream& out, const amount_t& amount,
 		      const int depth = 0)

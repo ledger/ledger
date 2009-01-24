@@ -41,10 +41,12 @@ typedef std::pair<const string, account_t *> accounts_pair;
 typedef std::map<account_t *, commodity_t *>  account_comm_map;
 typedef std::pair<account_t *, commodity_t *> account_comm_pair;
 
+#if 0
+
 static journal_t *	curr_journal;
 static account_t *	master_account;
 static account_t *	curr_account;
-static string	curr_account_id;
+static string		curr_account_id;
 static entry_t *	curr_entry;
 static commodity_t *	entry_comm;
 static commodity_t *	curr_comm;
@@ -54,7 +56,7 @@ static XML_Parser	current_parser;
 static accounts_map	accounts_by_id;
 static account_comm_map	account_comms;
 static unsigned int	count;
-static string	have_error;
+static string		have_error;
 
 static std::istream *   instreamp;
 static unsigned int     offset;
@@ -350,14 +352,28 @@ static void dataHandler(void *, const char *s, int len)
   }
 }
 
+#endif
+
 bool gnucash_parser_t::test(std::istream& in) const
 {
-  char buf[5];
-  in.read(buf, 5);
+  char	 buf[80];
+  char * p;
+
+  in.read(buf, 11);
+  if (utf8::is_bom(buf))
+    p = &buf[3];
+  else
+    p = buf;
+
+  if (std::strncmp(p, "<?xml", 5) != 0) {
+    in.clear();
+    in.seekg(0, std::ios::beg);
+    return false;
+  }
+
   in.clear();
   in.seekg(0, std::ios::beg);
-
-  return std::strncmp(buf, "<?xml", 5) == 0;
+  return true;
 }
 
 unsigned int gnucash_parser_t::parse(std::istream& in,
@@ -366,6 +382,7 @@ unsigned int gnucash_parser_t::parse(std::istream& in,
 				     account_t *   master,
 				     const path *  original_file)
 {
+#if 0
   char buf[BUFSIZ];
 
 #if 0
@@ -428,6 +445,9 @@ unsigned int gnucash_parser_t::parse(std::istream& in,
   curr_account_id.clear();
 
   return count;
+#else
+  return 0;
+#endif
 }
 
 } // namespace ledger

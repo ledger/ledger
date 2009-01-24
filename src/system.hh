@@ -122,13 +122,8 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <gmp.h>
 
-extern "C" {
-#if defined(HAVE_EXPAT)
-#include <expat.h>		// expat XML parser
-#elif defined(HAVE_XMLPARSE)
-#include <xmlparse.h>		// expat XML parser
-#endif
-}
+#include "irrXML.h"		// XML parser
+#include "CXMLReaderImpl.h"
 
 #if defined(HAVE_LIBOFX)
 #include <libofx.h>

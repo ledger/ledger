@@ -13,3 +13,6 @@
 [submodule "lib/utfcpp"]
 	path = lib/utfcpp
 	url = git://github.com/jwiegley/utfcpp.git
+[submodule "lib/irrxml"]
+	path = lib/irrxml
+	url = git://github.com/jwiegley/irrxml.git

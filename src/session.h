@@ -188,9 +188,7 @@ public:
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
     std::cout << "\n(modules: gmp, pcre";
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     std::cout << ", xml";
-#endif
 #ifdef HAVE_LIBOFX
     std::cout << ", ofx";
 #endif

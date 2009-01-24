@@ -3942,7 +3942,6 @@ example:
 
 That is the extent of the XML data format used by Ledger.  It will
 output such data if the @command{xml} command is used, and can read
-the same data as long as the @file{expat} library was available
-when Ledger was built.
+the same data.
 
 @bye

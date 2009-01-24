@@ -126,61 +126,6 @@ else
   AC_MSG_FAILURE("Could not find gmp library (set CPPFLAGS and LDFLAGS?)")
 fi
 
-# check for expat or xmlparse
-AC_CACHE_CHECK(
-  [if libexpat is available],
-  [libexpat_avail_cv_],
-  [libexpat_save_libs=$LIBS
-   LIBS="-lexpat $LIBS"
-   AC_LANG_PUSH(C++)
-   AC_TRY_LINK(
-     [#include <stdio.h>
-	extern "C" {
-	#include <expat.h>           // expat XML parser
-	}],
-     [XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;],
-     [libexpat_avail_cv_=true],
-     [libexpat_avail_cv_=false])
-   AC_LANG_POP
-   LIBS=$libexpat_save_libs])
-
-if [test x$libexpat_avail_cv_ = xtrue ]; then
-  AM_CONDITIONAL(HAVE_EXPAT, true)
-  LIBS="-lexpat $LIBS"
-else
-  AM_CONDITIONAL(HAVE_EXPAT, false)
-fi
-
-if [test x$libexpat_avail_cv_ = xfalse ]; then
-  AC_CACHE_CHECK(
-    [if libxmlparse is available],
-    [libxmlparse_avail_cv_],
-    [libxmlparse_save_libs=$LIBS
-     LIBS="-lxmlparse -lxmltok $LIBS"
-     AC_LANG_PUSH(C++)
-     AC_TRY_LINK(
-	 [#include <stdio.h>
-	extern "C" {
-	#include <xmlparse.h>           // expat XML parser
-	}],
-	 [XML_Parser parser = XML_ParserCreate(NULL);
-	return parser != NULL;],
-	 [libxmlparse_avail_cv_=true],
-	 [libxmlparse_avail_cv_=false])
-     AC_LANG_POP
-     LIBS=$libxmlparse_save_libs])
-
-  if [test x$libxmlparse_avail_cv_ = xtrue ]; then
-    AM_CONDITIONAL(HAVE_XMLPARSE, true)
-    LIBS="-lxmlparse -lxmltok $LIBS"
-  else
-    AM_CONDITIONAL(HAVE_XMLPARSE, false)
-  fi
-else
-  AM_CONDITIONAL(HAVE_XMLPARSE, false)
-fi
-
 # check for boost_regex
 AC_CACHE_CHECK(
   [if boost_regex is available],

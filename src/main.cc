@@ -39,10 +39,8 @@
 
 #include "textual.h"
 #include "qif.h"
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
 #include "xml.h"
 #include "gnucash.h"
-#endif
 #ifdef HAVE_LIBOFX
 #include "ofx.h"
 #endif
@@ -469,10 +467,8 @@ int main(int argc, char * argv[], char * envp[])
 #if 0
     session->register_parser(new ledger::journal_t::binary_parser_t);
 #endif
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
     session->register_parser(new ledger::xml_parser_t);
     session->register_parser(new ledger::gnucash_parser_t);
-#endif
 #ifdef HAVE_LIBOFX
     session->register_parser(new ledger::ofx_parser_t);
 #endif

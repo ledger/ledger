@@ -605,13 +605,9 @@ bool textual_parser_t::test(std::istream& in) const
   else
     p = buf;
 
-  if (std::strncmp(p, "<?xml", 5) == 0) {
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
-    throw parse_error("Ledger file contains XML data, but format was not recognized");
-#else
-    throw parse_error("Ledger file contains XML data, but no XML support present");
-#endif
-  }
+  if (std::strncmp(p, "<?xml", 5) == 0)
+    throw_(parse_error,
+	   "Ledger file contains XML data, but format was not recognized");
 
   in.clear();
   in.seekg(0, std::ios::beg);

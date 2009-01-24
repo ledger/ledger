@@ -38,7 +38,37 @@
 
 namespace ledger {
 
-#if defined(HAVE_EXPAT) || defined(HAVE_XMLPARSE)
+class CStreamReadCallBack : public irr::io::IFileReadCallBack
+{
+  std::istream& in;
+  std::size_t	size;
+
+public:
+  //! construct from filename
+  CStreamReadCallBack(std::istream& _in) : in(_in), size(0) {
+    TRACE_CTOR(CStreamReadCallBack, "std::istream&");
+  }
+  virtual ~CStreamReadCallBack() {
+    TRACE_DTOR(CStreamReadCallBack);
+  }
+
+  virtual int read(void * buffer, int sizeToRead)
+  {
+    in.read(static_cast<char *>(buffer), sizeToRead);
+    return in.gcount();
+  }
+
+  virtual int getSize()
+  {
+    if (size == 0) {
+      std::ifstream::pos_type pos = in.tellg();
+      in.seekg(0, std::ios_base::end);
+      size = in.tellg() - pos;
+      in.seekg(pos, std::ios_base::beg);
+    }
+    return size;
+  }
+};
 
 class xml_parser_t : public journal_t::parser_t
 {
@@ -46,13 +76,11 @@ class xml_parser_t : public journal_t::parser_t
   virtual bool test(std::istream& in) const;
 
   virtual unsigned int parse(std::istream& in,
-			     session_t&     session,
-			     journal_t&   journal,
+			     session_t&    session,
+			     journal_t&	   journal,
 			     account_t *   master        = NULL,
 			     const path *  original_file = NULL);
 };
-
-#endif
 
 class format_xml_entries : public format_entries
 {

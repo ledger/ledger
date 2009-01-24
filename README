@@ -42,7 +42,6 @@ Now, if you wish to proceed in this venture, you'll need a few dependencies:
   - CppUnit 1.12.1    -- if you're building DEVEL
 
   - Optionally, Python 2.4 or higher
-  - Optionally, libexpat or libxml2
   - Optionally, libofx
 
 * MacPorts
@@ -50,7 +49,7 @@ Now, if you wish to proceed in this venture, you'll need a few dependencies:
 If you build stuff using MacPorts, as I do, here is what you would run:
 
   sudo port install boost +complete+python25
-  sudo port install gmp pcre cppunit expat libofx
+  sudo port install gmp pcre cppunit libofx
 
 * Ubuntu
 

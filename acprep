@@ -204,9 +204,6 @@ while [ -n "$1" ]; do
 
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
-	#if [ -f /opt/local/lib/libexpat.a ]; then
-	#    LIBS="$LIBS /opt/local/lib/libexpat.a"
-	#fi
 	#if [ -f /opt/local/lib/libgmp.a ]; then
 	#    LIBS="$LIBS /opt/local/lib/libgmp.a"
 	#fi

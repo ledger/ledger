@@ -38,12 +38,6 @@ will not work), and at least these two libraries installed:
 (On some GNU/Linux systems, the packages you need to install are
 called "gmp-dev" and "pcre-dev").
 
-If you wish to read Gnucash data files, you will also need two XML
-libraries, which may or may not be available in a single package (it
-depends on your distribution):
-
-    libexpat, or libxmlparse and libxmltok
-
 Once you have determined where the headers and libraries for the above
 packages are installed, run the script "configure", passing those
 paths.  If you installed everything under /usr/local, you can probably

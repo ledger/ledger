@@ -6,7 +6,8 @@ EXTRA_DIST = autogen.sh contrib
 lib_LTLIBRARIES = libamounts.la libledger.la
 
 libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib \
-			 -I$(srcdir)/lib/utfcpp/source
+			 -I$(srcdir)/lib/utfcpp/source \
+			 -I$(srcdir)/lib/irrxml/src
 if HAVE_GDTOA
 libamounts_la_CPPFLAGS += -I$(top_builddir)/lib/gdtoa -I$(srcdir)/lib/gdtoa
 endif
@@ -31,15 +32,10 @@ libamounts_la_SOURCES =  \
 	src/format.cc    \
 	src/option.cc    \
 			 \
-	lib/sha1.cpp
+	lib/sha1.cpp     \
+			 \
+	lib/irrxml/src/irrXML.cpp
 
-if HAVE_EXPAT
-libamounts_la_CPPFLAGS += -DHAVE_EXPAT=1
-else
-if HAVE_XMLPARSE
-libamounts_la_CPPFLAGS += -DHAVE_XMLPARSE=1
-endif
-endif
 if HAVE_LIBOFX
 libamounts_la_CPPFLAGS += -DHAVE_LIBOFX=1
 endif
@@ -64,6 +60,7 @@ libledger_la_SOURCES  =    \
 	src/qif.cc	   \
 	src/xml.cc	   \
 	src/csv.cc         \
+	src/gnucash.cc     \
 			   \
 	src/session.cc     \
 	src/report.cc      \
@@ -75,13 +72,6 @@ libledger_la_SOURCES  =    \
 	src/reconcile.cc   \
 	src/quotes.cc
 
-if HAVE_EXPAT
-libledger_la_SOURCES += src/gnucash.cc
-else
-if HAVE_XMLPARSE
-libledger_la_SOURCES += src/gnucash.cc
-endif
-endif
 if HAVE_LIBOFX
 libledger_la_SOURCES += src/ofx.cc
 endif
