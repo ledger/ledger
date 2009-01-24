@@ -8,6 +8,10 @@
 # This script simply sets up the compiler and linker flags for all the various
 # build permutations I use for testing and profiling.
 
+# Make sure that all of the dependencies are available
+git submodule init
+git submodule update
+
 COMMIT=$(git describe --all --long | sed 's/heads\///')
 echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 
