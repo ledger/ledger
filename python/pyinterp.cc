@@ -90,31 +90,40 @@ struct python_run
   }
 };
 
-python_interpreter_t::python_interpreter_t() : session_t(), main_nspace()
+void python_interpreter_t::initialize()
 {
-  TRACE_CTOR(python_interpreter_t, "");
-
   TRACE_START(python_init, 1, "Initialized Python");
 
-  DEBUG("python.interp", "Initializing Python");
-  Py_Initialize();
+  try {
+    DEBUG("python.interp", "Initializing Python");
 
-  object main_module = boost::python::import("__main__");
-  if (! main_module)
+    Py_Initialize();
+    assert(Py_IsInitialized());
+
+    object main_module = boost::python::import("__main__");
+    if (! main_module)
+      throw_(std::logic_error, "Python failed to initialize");
+
+    main_nspace = extract<dict>(main_module.attr("__dict__"));
+    if (! main_nspace)
+      throw_(std::logic_error, "Python failed to initialize");
+
+    boost::python::detail::init_module("ledger", &initialize_for_python);
+
+    is_initialized = true;
+  }
+  catch (const error_already_set&) {
+    PyErr_Print();
     throw_(std::logic_error, "Python failed to initialize");
-
-  main_nspace = extract<dict>(main_module.attr("__dict__"));
-  if (! main_nspace)
-    throw_(std::logic_error, "Python failed to initialize");
-
-  boost::python::detail::init_module("ledger", &initialize_for_python);
+  }
 
   TRACE_FINISH(python_init, 1);
 }
 
 object python_interpreter_t::import(const string& str)
 {
-  assert(Py_IsInitialized());
+  if (! is_initialized)
+    initialize();
 
   try {
     TRACE_START(python_import, 1, "Imported Python module: " << str);
@@ -132,7 +141,6 @@ object python_interpreter_t::import(const string& str)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, "Importing Python module " << str);
   }
   return object();
 }
@@ -155,6 +163,9 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
     buffer += buf;
   }
 
+  if (! is_initialized)
+    initialize();
+
   try {
     int input_mode;
     switch (mode) {
@@ -162,19 +173,21 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
     case PY_EVAL_STMT:  input_mode = Py_single_input; break;
     case PY_EVAL_MULTI: input_mode = Py_file_input;   break;
     }
-    assert(Py_IsInitialized());
 
     return python_run(this, buffer, input_mode);
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, "Evaluating Python code");
+    throw_(std::logic_error, "Failed to evaluate Python code");
   }
   return object();
 }
 
 object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
 {
+  if (! is_initialized)
+    initialize();
+
   try {
     int input_mode;
     switch (mode) {
@@ -182,18 +195,19 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
     case PY_EVAL_STMT:  input_mode = Py_single_input; break;
     case PY_EVAL_MULTI: input_mode = Py_file_input;   break;
     }
-    assert(Py_IsInitialized());
+
     return python_run(this, str, input_mode);
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, "Evaluating Python code");
+    throw_(std::logic_error, "Failed to evaluate Python code");
   }
   return object();
 }
 
 expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
 {
+  // Give our superclass first dibs on symbol definitions
   if (expr_t::ptr_op_t op = session_t::lookup(name))
     return op;
 
@@ -214,11 +228,12 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
     break;
   }
 
-  DEBUG("python.interp", "Python lookup: " << name);
+  if (is_initialized && main_nspace.has_key(name)) {
+    DEBUG("python.interp", "Python lookup: " << name);
 
-  if (main_nspace.has_key(name))
     if (boost::python::object obj = main_nspace.get(name))
       return WRAP_FUNCTOR(functor_t(name, obj));
+  }
 
   return expr_t::ptr_op_t();
 }
@@ -259,7 +274,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
 	  throw_(calc_error,
-		 "While calling Python function '" << name << "': " << err);
+		 "Failed call to Python function '" << name << "': " << err);
 	} else {
 	  assert(false);
 	}
@@ -271,7 +286,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
   catch (const error_already_set&) {
     PyErr_Print();
     throw_(calc_error,
-	   "While calling Python function '" << name << "'");
+	   "Failed call to Python function '" << name << "'");
   }
   return NULL_VALUE;
 }
@@ -285,7 +300,7 @@ value_t python_interpreter_t::lambda_t::operator()(call_scope_t& args)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(calc_error, "While evaluating Python lambda expression");
+    throw_(calc_error, "Failed to evaluate Python lambda expression");
   }
   return NULL_VALUE;
 }

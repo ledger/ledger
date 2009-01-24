@@ -44,14 +44,21 @@ class python_interpreter_t : public session_t
 {
 public:
   boost::python::dict main_nspace;
+  bool is_initialized;
 
-  python_interpreter_t();
-
+  python_interpreter_t()
+    : session_t(), main_nspace(), is_initialized(false) {
+    TRACE_CTOR(python_interpreter_t, "");
+  }
+  
   virtual ~python_interpreter_t() {
     TRACE_DTOR(python_interpreter_t);
 
-    Py_Finalize();
+    if (is_initialized)
+      Py_Finalize();
   }
+
+  void initialize();
 
   boost::python::object import(const string& name);
 
