@@ -43,9 +43,6 @@
 
 #include "amount.h"
 #include "binary.h"
-#ifdef HAVE_GDTOA
-#include "gdtoa.h"
-#endif
 
 namespace ledger {
 

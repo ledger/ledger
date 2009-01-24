@@ -35,7 +35,6 @@
 #include "session.h"
 #include "format.h"
 #include "textual.h"
-#include "SHA1.h"
 
 namespace ledger {
 

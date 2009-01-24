@@ -121,6 +121,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <gmp.h>
+#ifdef HAVE_GDTOA
+#include "gdtoa.h"
+#endif
+#include "SHA1.h"
 
 #include "irrXML.h"		// XML parser
 #include "CXMLReaderImpl.h"
