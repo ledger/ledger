@@ -57,15 +57,17 @@ extern int		 current_year;
 extern optional<string>  input_date_format;
 extern string		 output_date_format;
 
+datetime_t parse_datetime(const char * str);
+
 inline datetime_t parse_datetime(const string& str) {
   return parse_datetime(str.c_str());
 }
-datetime_t parse_datetime(const char * str);
+
+date_t parse_date(const char * str);
 
 inline date_t parse_date(const string& str) {
   return parse_date(str.c_str());
 }
-date_t parse_date(const char * str);
 
 inline std::time_t to_time_t(const ptime& t) 
 { 
