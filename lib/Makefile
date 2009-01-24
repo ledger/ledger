@@ -9,9 +9,6 @@ STOW_ROOT = /usr/local/stow
 
 HERE = $(shell pwd)
 
-all:
-	@echo Making libraries...
-
 # architecture=combined
 boost-release:
 	(cd boost && \
