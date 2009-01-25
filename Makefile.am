@@ -442,20 +442,14 @@ RegressionTests: $(srcdir)/test/regress.py
 	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
-if HAVE_VALGRIND
-VALGRIND = valgrind
-else
-VALGRIND =
-endif
-
-fullcheck: check
-	MallocGuardEdges=1	 \
-	MallocScribble=1	 \
-	MallocPreScribble=1	 \
-	MallocCheckHeapStart=100 \
-	MallocCheckHeapEach=100	 \
-	DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib \
-	$(VALGRIND) $(top_builddir)/UnitTests$(EXEEXT) --verify
+fullcheck: $(TESTS)
+	sh fullcheck $(top_builddir)/util_tests$(EXEEXT) --verify
+	sh fullcheck $(top_builddir)/math_tests$(EXEEXT) --verify
+	sh fullcheck $(top_builddir)/expr_tests$(EXEEXT) --verify
+	sh fullcheck $(top_builddir)/data_tests$(EXEEXT) --verify
+	sh fullcheck $(top_builddir)/parse_tests$(EXEEXT) --verify
+	sh fullcheck $(top_builddir)/report_tests$(EXEEXT) --verify
+	sh fullcheck $(top_builddir)/extra_tests$(EXEEXT) --verify
 
 ######################################################################
 

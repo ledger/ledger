@@ -19,9 +19,6 @@ AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
 
-AC_CHECK_PROG([VALGRIND_TEST], [valgrind], [true], [false])
-AM_CONDITIONAL(HAVE_VALGRIND, test x$VALGRIND_TEST = xtrue)
-
 # Checks for emacs lisp path
 AM_PATH_LISPDIR
 
