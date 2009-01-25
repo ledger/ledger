@@ -444,13 +444,13 @@ RegressionTests: $(srcdir)/test/regress.py
 	chmod 755 $@
 
 fullcheck: $(TESTS)
-	sh fullcheck $(top_builddir)/util_tests$(EXEEXT) --verify
-	sh fullcheck $(top_builddir)/math_tests$(EXEEXT) --verify
-	sh fullcheck $(top_builddir)/expr_tests$(EXEEXT) --verify
-	sh fullcheck $(top_builddir)/data_tests$(EXEEXT) --verify
-	sh fullcheck $(top_builddir)/parse_tests$(EXEEXT) --verify
-	sh fullcheck $(top_builddir)/report_tests$(EXEEXT) --verify
-	sh fullcheck $(top_builddir)/extra_tests$(EXEEXT) --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/util_tests$(EXEEXT)   --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/math_tests$(EXEEXT)   --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/expr_tests$(EXEEXT)   --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/data_tests$(EXEEXT)   --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/parse_tests$(EXEEXT)  --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/report_tests$(EXEEXT) --verify
+	sh $(srcdir)/fullcheck $(top_builddir)/extra_tests$(EXEEXT)  --verify
 
 ######################################################################
 
