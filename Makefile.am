@@ -227,6 +227,7 @@ all_sources     = $(libledger_util_la_SOURCES)	  \
 		  $(libledger_extra_la_SOURCES)  \
 		  $(libledger_python_la_SOURCES) \
 		  python/pyledger.cc
+
 all_files       = $(all_sources) $(pkginclude_HEADERS)
 
 TAGS: $(all_sources)
@@ -295,7 +296,7 @@ if HAVE_GDTOA
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     $(PYTHON) python/setup.py build \
@@ -304,7 +305,7 @@ else
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     $(PYTHON) python/setup.py build \
