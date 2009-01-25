@@ -1,10 +1,15 @@
 #include "t_amount.h"
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AmountTestCase, "numerics");
+#include "utils.h"
+#include "amount.h"
+
+using namespace ledger;
+
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AmountTestCase, "math");
 
 void AmountTestCase::setUp()
 {
-  ledger::set_session_context(&session);
+  amount_t::initialize();
 
   // Cause the display precision for dollars to be initialized to 2.
   amount_t x1("$1.00");
@@ -16,8 +21,7 @@ void AmountTestCase::setUp()
 void AmountTestCase::tearDown()
 {
   amount_t::stream_fullstrings = false;
-
-  ledger::set_session_context();
+  amount_t::shutdown();
 }
 
 void AmountTestCase::testParser()

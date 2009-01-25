@@ -62,12 +62,15 @@ private:
   string   str;
   bool     compiled;
 
+public:
+  /**
+   * The initialize and shutdown methods ready the amount subsystem for
+   * use.  Normally they are called by `session_t::initialize' and
+   * `session_t::shutdown'.
+   */
   static void initialize();
   static void shutdown();
 
-  friend class session_t;
-
-public:
   expr_t();
   expr_t(const expr_t& other);
   expr_t(const ptr_op_t& _ptr, const string& _str = "");

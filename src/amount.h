@@ -88,9 +88,9 @@ class amount_t
 {
 public:
   /**
-   * The initialize and shutdown methods ready the amount subsystem
-   * for use.  Normally they are called by `ledger::initialize' and
-   * `ledger::shutdown'.
+   * The initialize and shutdown methods ready the amount subsystem for
+   * use.  Normally they are called by `session_t::initialize' and
+   * `session_t::shutdown'.
    */
   static void initialize();
   static void shutdown();

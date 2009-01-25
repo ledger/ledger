@@ -1,23 +1,21 @@
 #include "t_expr.h"
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(ValueExprTestCase, "numerics");
+#include "expr.h"
+
+using namespace ledger;
+
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(ValueExprTestCase, "expr");
 
 void ValueExprTestCase::setUp()
 {
-  ledger::set_session_context(&session);
-
-  // Cause the display precision for dollars to be initialized to 2.
-  amount_t x1("$1.00");
-  assertTrue(x1);
-
-  amount_t::stream_fullstrings = true; // make reports from UnitTests accurate
+  amount_t::initialize();
+  expr_t::initialize();
 }
 
 void ValueExprTestCase::tearDown()
 {
-  amount_t::stream_fullstrings = false;
-
-  ledger::set_session_context();
+  expr_t::shutdown();
+  amount_t::shutdown();
 }
 
 void ValueExprTestCase::testConstructors()

@@ -290,7 +290,7 @@ PATH="$PYTHON_HOME/bin:$PATH" \
 # and warnings much easier to spot.
 
 if [ -f Makefile ]; then
-    perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*?\.cc)$/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
+    perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*?\.(cc|cpp))$/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
     perl -i -pe 's/^\tmv -f/\t\@mv -f/;' Makefile
     perl -i -pe 's/^\t(\$\((.*?)LINK\).*)/\t\@echo "   " LD \$\@;$1 > \/dev\/null/;' Makefile
 fi

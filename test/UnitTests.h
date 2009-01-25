@@ -1,10 +1,6 @@
 #ifndef _UNITTESTS_H
 #define _UNITTESTS_H
 
-#include "ledger.h"
-
-using namespace ledger;
-
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Exception.h>
 #include <cppunit/Portability.h>
@@ -19,6 +15,6 @@ using namespace ledger;
 #define assertMessage(x,y)	    CPPUNIT_ASSERT_MESSAGE(x,y)
 #define assertThrow(x,y)	    CPPUNIT_ASSERT_THROW(x,y)
 
-#define internalAmount(x) amount_t::exact(x)
+#define internalAmount(x)           amount_t::exact(x)
 
 #endif /* _UNITTESTS_H */

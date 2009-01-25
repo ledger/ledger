@@ -8,14 +8,11 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 
 #include "UnitTests.h"
-
+#include "utils.h"
 
 // Create the CppUnit registry
 
 CPPUNIT_REGISTRY_ADD_TO_DEFAULT("Framework");
-
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("numerics");
-CPPUNIT_REGISTRY_ADD_TO_DEFAULT("utility");
 
 // Create a sample test, which acts both as a template, and a
 // verification that the basic framework is functioning.
@@ -44,7 +41,6 @@ private:
 };
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(UnitTests, "framework");
-
 
 // Create the various runners and commence running the tests!
 
@@ -82,12 +78,12 @@ int main(int argc, char* argv[])
   runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
   try {
     IF_VERIFY()
-      initialize_memory_tracing();
+      ledger::initialize_memory_tracing();
 
     runner.run(controller, testPath);
 
     IF_VERIFY()
-      shutdown_memory_tracing();
+      ledger::shutdown_memory_tracing();
 
     // Print test in a compiler compatible format.
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
@@ -103,9 +99,7 @@ int main(int argc, char* argv[])
 #endif
   }
   catch (std::invalid_argument &e) { // Test path not resolved
-    CPPUNIT_NS::stdCOut()  <<  "\n"
-			   <<  "ERROR: "  <<  e.what()
-			   << "\n";
+    CPPUNIT_NS::stdCOut() << "\nERROR: " << e.what() << "\n";
     return 0;
   }
 

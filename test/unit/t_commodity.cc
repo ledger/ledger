@@ -1,12 +1,18 @@
 #include "t_commodity.h"
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "numerics");
+#include "utils.h"
+#include "amount.h"
+
+using namespace ledger;
+
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "math");
 
 void CommodityTestCase::setUp() {
-  ledger::set_session_context(&session);
+  amount_t::initialize();
 }
+
 void CommodityTestCase::tearDown() {
-  ledger::set_session_context();
+  amount_t::shutdown();
 }
 
 void CommodityTestCase::testPriceHistory()

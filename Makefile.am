@@ -3,153 +3,193 @@ SUBDIRS    = lib/gdtoa
 endif
 EXTRA_DIST = autogen.sh contrib
 
-lib_LTLIBRARIES = libamounts.la libledger.la
+lib_LTLIBRARIES =    \
+	libledger_util.la   \
+	libledger_math.la   \
+	libledger_expr.la   \
+	libledger_data.la   \
+	libledger_parse.la  \
+	libledger_report.la \
+	libledger_extra.la
 
-libamounts_la_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/lib \
-			 -I$(srcdir)/lib/utfcpp/source \
-			 -I$(srcdir)/lib/irrxml/src
+lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib \
+		-I$(srcdir)/lib/utfcpp/source \
+		-I$(srcdir)/lib/irrxml/src
 if HAVE_GDTOA
-libamounts_la_CPPFLAGS += -I$(top_builddir)/lib/gdtoa -I$(srcdir)/lib/gdtoa
+lib_cppflags += -I$(top_builddir)/lib/gdtoa -I$(srcdir)/lib/gdtoa
+endif
+if HAVE_LIBOFX
+lib_cppflags += -DHAVE_LIBOFX=1
+endif
+if DEBUG
+lib_cppflags += -DDEBUG_MODE
 endif
 
-libamounts_la_SOURCES =  \
-	src/utils.cc     \
-	src/times.cc     \
-	src/mask.cc      \
-	src/binary.cc    \
-			 \
+libledger_util_la_SOURCES =	 \
+	src/utils.cc	 \
+	src/times.cc	 \
+	src/mask.cc	 \
+	src/binary.cc	 \
+	lib/sha1.cpp
+
+libledger_util_la_CPPFLAGS = $(lib_cppflags)
+libledger_util_la_LDFLAGS  = -release 3.0.0
+
+libledger_math_la_SOURCES =	 \
 	src/amount.cc    \
 	src/commodity.cc \
 	src/balance.cc   \
 	src/balpair.cc   \
-	src/value.cc     \
-			 \
+	src/value.cc
+
+libledger_math_la_CPPFLAGS = $(lib_cppflags)
+libledger_math_la_LDFLAGS  = -release 3.0.0
+
+libledger_expr_la_SOURCES =	 \
 	src/token.cc     \
 	src/parser.cc    \
 	src/op.cc        \
 	src/expr.cc      \
 	src/scope.cc     \
 	src/format.cc    \
-	src/option.cc    \
-			 \
-	lib/sha1.cpp     \
-			 \
+	src/option.cc
+
+libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
+libledger_expr_la_LDFLAGS    = -release 3.0.0
+
+libledger_data_la_SOURCES  =		  \
+	src/item.cc		  \
+	src/xact.cc		  \
+	src/entry.cc		  \
+	src/account.cc		  \
+	src/journal.cc		  \
+	src/iterators.cc	  \
+	src/compare.cc
+
+libledger_data_la_CPPFLAGS = $(lib_cppflags)
+libledger_data_la_LDFLAGS  = -release 3.0.0
+
+libledger_parse_la_SOURCES  =		  \
+	src/textual.cc		  \
+	src/cache.cc		  \
+	src/xml.cc		  \
+	src/csv.cc		  \
+	src/emacs.cc		  \
+	src/qif.cc		  \
+	src/gnucash.cc		  \
 	lib/irrxml/src/irrXML.cpp
-
 if HAVE_LIBOFX
-libamounts_la_CPPFLAGS += -DHAVE_LIBOFX=1
-endif
-if DEBUG
-libamounts_la_CPPFLAGS += -DDEBUG_MODE
+libledger_parse_la_SOURCES += src/ofx.cc
 endif
 
-libledger_la_CPPFLAGS = $(libamounts_la_CPPFLAGS)
-libledger_la_LDFLAGS  = -release 3.0.0
-libledger_la_SOURCES  =    \
-	src/journal.cc     \
-	src/item.cc        \
-	src/entry.cc       \
-	src/xact.cc        \
-	src/account.cc     \
-	src/iterators.cc   \
-	src/compare.cc     \
-			   \
-	src/textual.cc     \
-	src/cache.cc       \
-	src/emacs.cc       \
-	src/qif.cc	   \
-	src/xml.cc	   \
-	src/csv.cc         \
-	src/gnucash.cc     \
-			   \
-	src/session.cc     \
-	src/report.cc      \
-	src/filters.cc     \
-	src/output.cc      \
-	src/help.cc        \
-			   \
-	src/derive.cc      \
-	src/reconcile.cc   \
+libledger_parse_la_CPPFLAGS = $(lib_cppflags)
+libledger_parse_la_LDFLAGS  = -release 3.0.0
+
+libledger_report_la_SOURCES  =		  \
+	src/session.cc		  \
+	src/report.cc		  \
+	src/filters.cc		  \
+	src/output.cc		  \
+	src/help.cc
+
+libledger_report_la_CPPFLAGS = $(lib_cppflags)
+libledger_report_la_LDFLAGS  = -release 3.0.0
+
+libledger_extra_la_SOURCES  =		  \
+	src/derive.cc		  \
+	src/reconcile.cc	  \
 	src/quotes.cc
 
-if HAVE_LIBOFX
-libledger_la_SOURCES += src/ofx.cc
-endif
+libledger_extra_la_CPPFLAGS = $(lib_cppflags)
+libledger_extra_la_LDFLAGS  = -release 3.0.0
 
-pkginclude_HEADERS =	  \
-	acconf.h	  \
-	src/system.hh	  \
-	src/utils.h	  \
-	src/flags.h	  \
-	src/hooks.h	  \
-	src/pushvar.h	  \
-	src/error.h	  \
-	src/times.h	  \
-	src/mask.h	  \
-	src/binary.h	  \
-			  \
-	src/amount.h	  \
-	src/commodity.h	  \
-	src/balance.h	  \
-	src/balpair.h	  \
-	src/value.h	  \
-			  \
-	src/token.h	  \
-	src/parser.h	  \
-	src/op.h	  \
-	src/expr.h	  \
-	src/scope.h	  \
-	src/predicate.h	  \
-	src/format.h	  \
-	src/option.h	  \
-			  \
-	src/journal.h	  \
-	src/item.h	  \
-	src/entry.h	  \
-	src/xact.h	  \
-	src/account.h	  \
-	src/iterators.h	  \
-	src/compare.h	  \
-			  \
-	src/textual.h	  \
-	src/cache.h	  \
-	src/emacs.h	  \
-	src/qif.h	  \
-	src/xml.h	  \
-	src/csv.h	  \
-	src/gnucash.h	  \
-	src/ofx.h	  \
-			  \
-	src/session.h	  \
-	src/report.h	  \
-	src/handler.h	  \
-	src/filters.h	  \
-	src/output.h	  \
-	src/help.h	  \
-			  \
-	src/derive.h	  \
-	src/reconcile.h	  \
-	src/quotes.h	  \
-			  \
-	src/ledger.h	  \
-	lib/fdstream.h    \
-	lib/sha1.h        \
-			  \
-	python/pyledger.h \
-	python/pyinterp.h
+pkginclude_HEADERS =			   \
+	acconf.h			   \
+	src/system.hh			   \
+	src/utils.h			   \
+	src/flags.h			   \
+	src/hooks.h			   \
+	src/pushvar.h			   \
+	src/error.h			   \
+	src/times.h			   \
+	src/mask.h			   \
+	src/binary.h			   \
+					   \
+	src/amount.h			   \
+	src/commodity.h			   \
+	src/balance.h			   \
+	src/balpair.h			   \
+	src/value.h			   \
+					   \
+	src/token.h			   \
+	src/parser.h			   \
+	src/op.h			   \
+	src/expr.h			   \
+	src/scope.h			   \
+	src/predicate.h			   \
+	src/format.h			   \
+	src/option.h			   \
+					   \
+	src/item.h			   \
+	src/xact.h			   \
+	src/entry.h			   \
+	src/account.h			   \
+	src/journal.h			   \
+	src/iterators.h			   \
+	src/compare.h			   \
+					   \
+	src/textual.h			   \
+	src/cache.h			   \
+	src/xml.h			   \
+	src/csv.h			   \
+	src/emacs.h			   \
+	src/qif.h			   \
+	src/gnucash.h			   \
+	src/ofx.h			   \
+					   \
+	src/session.h			   \
+	src/report.h			   \
+	src/handler.h			   \
+	src/filters.h			   \
+	src/output.h			   \
+	src/help.h			   \
+					   \
+	src/derive.h			   \
+	src/reconcile.h			   \
+	src/quotes.h			   \
+					   \
+	src/ledger.h			   \
+					   \
+	python/pyledger.h		   \
+	python/pyinterp.h                  \
+					   \
+	lib/fdstream.h			   \
+	lib/sha1.h			   \
+					   \
+	lib/utfcpp/source/utf8.h	   \
+	lib/utfcpp/source/utf8/checked.h   \
+	lib/utfcpp/source/utf8/core.h	   \
+	lib/utfcpp/source/utf8/unchecked.h \
+					   \
+	lib/irrxml/src/CXMLReaderImpl.h	   \
+	lib/irrxml/src/fast_atof.h	   \
+	lib/irrxml/src/heapsort.h	   \
+	lib/irrxml/src/irrArray.h	   \
+	lib/irrxml/src/irrString.h	   \
+	lib/irrxml/src/irrTypes.h	   \
+	lib/irrxml/src/irrXML.h
 
 CLEANFILES =
 
 if USE_PCH
-nodist_libledger_la_SOURCES = src/system.hh.gch
+nodist_libledger_util_la_SOURCES = src/system.hh.gch
 
 BUILT_SOURCES = src/system.hh.gch
 CLEANFILES   += src/system.hh.gch
 
 $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	    $(libledger_la_CPPFLAGS) \
-	    $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	    $(lib_cppflags) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	    -g -o $@ $(srcdir)/src/system.hh
 endif
 
@@ -157,17 +197,17 @@ endif
 
 bin_PROGRAMS	= ledger
 
-ledger_CPPFLAGS	= $(libledger_la_CPPFLAGS)
+ledger_CPPFLAGS	= $(lib_cppflags)
 if HAVE_BOOST_PYTHON
 ledger_CPPFLAGS	+= -DHAVE_BOOST_PYTHON=1 -I$(srcdir)/python
 endif
 ledger_SOURCES	= src/main.cc
-ledger_LDADD	= $(LIBOBJS) libamounts.la libledger.la
+ledger_LDADD	= $(LIBOBJS) $(lib_LTLIBRARIES)
 if HAVE_GDTOA
 ledger_LDADD   += lib/gdtoa/libgdtoa.la
 endif
 if HAVE_BOOST_PYTHON
-ledger_LDADD   += libpyledger.la
+ledger_LDADD   += libledger_python.la
 endif
 ledger_LDFLAGS	= 
 
@@ -178,11 +218,16 @@ ELCFILES	=
 DISTCLEANFILES	= ledger.elc timeclock.elc
 CLEANFILES     += TAGS
 
-all_sources     = $(libamounts_la_SOURCES) \
-		  $(libledger_la_SOURCES) \
-		  $(libpyledger_la_SOURCES) \
-		  python/pyledger.cc \
-		  $(pkginclude_HEADERS)
+all_sources     = $(libledger_util_la_SOURCES)	  \
+		  $(libledger_math_la_SOURCES)	  \
+		  $(libledger_expr_la_SOURCES)	  \
+		  $(libledger_data_la_SOURCES)	  \
+		  $(libledger_parse_la_SOURCES)  \
+		  $(libledger_report_la_SOURCES) \
+		  $(libledger_extra_la_SOURCES)  \
+		  $(libledger_python_la_SOURCES) \
+		  python/pyledger.cc
+all_files       = $(all_sources) $(pkginclude_HEADERS)
 
 TAGS: $(all_sources)
 	@etags $(all_sources)
@@ -192,9 +237,9 @@ TAGS: $(all_sources)
 
 if HAVE_BOOST_PYTHON
 
-lib_LTLIBRARIES += libpyledger.la
+lib_LTLIBRARIES += libledger_python.la
 
-libpyledger_la_SOURCES =       \
+libledger_python_la_SOURCES =       \
 	python/pyutils.h       \
 	python/pyfstream.h     \
 	python/py_utils.cc     \
@@ -205,7 +250,7 @@ libpyledger_la_SOURCES =       \
 	python/pyinterp.cc     \
 	python/setup.py
 
-libpyledger_la_CPPFLAGS = $(libledger_la_CPPFLAGS) -I$(srcdir)/python
+libledger_python_la_CPPFLAGS = $(lib_cppflags) -I$(srcdir)/python
 
 pyexec_PROGRAMS = ledger.so
 
@@ -225,15 +270,18 @@ install-exec-hook:
 		--prefix=$(prefix) --root=$(DESTDIR)/
 endif
 
-ledger_so_SOURCES      = $(libamounts_la_SOURCES) $(libledger_la_SOURCES) \
-			 $(libpyledger_la_SOURCES) python/pyledger.cc
+ledger_so_SOURCES      = $(all_sources)
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
 
-PYLIBS  = ledger amounts pyledger gmp \
-	  boost_system$(BOOST_SUFFIX)  \
-	  boost_date_time$(BOOST_SUFFIX)  \
-          boost_filesystem$(BOOST_SUFFIX) \
-          boost_regex$(BOOST_SUFFIX)	  \
+PYLIBS  = ledger_util ledger_math ledger_expr \
+	  ledger_data ledger_parse	      \
+	  ledger_report ledger_extra	      \
+	  ledger_python			      \
+	  gmp				      \
+	  boost_system$(BOOST_SUFFIX)	      \
+	  boost_date_time$(BOOST_SUFFIX)      \
+          boost_filesystem$(BOOST_SUFFIX)     \
+          boost_regex$(BOOST_SUFFIX)	      \
           boost_python$(BOOST_SUFFIX)
 
 if HAVE_GDTOA
@@ -247,7 +295,7 @@ if HAVE_GDTOA
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libpyledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     $(PYTHON) python/setup.py build \
@@ -256,7 +304,7 @@ else
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libpyledger_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	     $(PYTHON) python/setup.py build \
@@ -274,7 +322,14 @@ TESTS += RegressionTests
 endif
 
 if HAVE_CPPUNIT
-TESTS += UnitTests
+TESTS +=	     \
+	util_tests   \
+	math_tests   \
+	expr_tests   \
+	data_tests   \
+	parse_tests  \
+	report_tests \
+	extra_tests
 endif
 
 if HAVE_BOOST_PYTHON
@@ -283,28 +338,83 @@ endif
 
 check_PROGRAMS = $(TESTS)
 
-UnitTests_SOURCES =		 \
+util_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
+	test/util_tests.cc	 \
+	test/util_tests.h	 \
 	test/unit/t_utils.cc	 \
 	test/unit/t_utils.h	 \
 	test/unit/t_times.cc	 \
-	test/unit/t_times.h	 \
+	test/unit/t_times.h
+
+util_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+util_tests_LDADD    = libledger_util.la -lcppunit
+
+math_tests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/math_tests.cc	 \
+	test/math_tests.h	 \
 	test/unit/t_commodity.cc \
 	test/unit/t_commodity.h	 \
 	test/unit/t_amount.cc	 \
 	test/unit/t_amount.h	 \
 	test/unit/t_balance.cc	 \
-	test/unit/t_balance.h	 \
+	test/unit/t_balance.h
+
+math_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+math_tests_LDADD    = $(util_tests_LDADD) libledger_math.la
+if HAVE_GDTOA
+math_tests_LDADD   += lib/gdtoa/libgdtoa.la
+endif
+
+expr_tests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/expr_tests.cc	 \
+	test/expr_tests.h	 \
 	test/unit/t_expr.cc	 \
 	test/unit/t_expr.h
 
-UnitTests_CPPFLAGS = -I$(srcdir)/test $(libledger_la_CPPFLAGS)
-UnitTests_LDFLAGS  = $(LIBADD_DL)
-UnitTests_LDADD    = $(lib_LTLIBRARIES) -lcppunit
-if HAVE_GDTOA
-UnitTests_LDADD   += lib/gdtoa/libgdtoa.la
-endif
+expr_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+expr_tests_LDADD    = $(math_tests_LDADD) libledger_expr.la
+
+data_tests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/data_tests.cc	 \
+	test/data_tests.h
+
+data_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+data_tests_LDADD    = $(math_tests_LDADD) libledger_data.la
+
+parse_tests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/parse_tests.cc	 \
+	test/parse_tests.h
+
+parse_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+parse_tests_LDADD    = $(math_tests_LDADD) libledger_parse.la
+
+report_tests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/report_tests.cc	 \
+	test/report_tests.h
+
+report_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+report_tests_LDADD    = $(math_tests_LDADD) libledger_report.la
+
+extra_tests_SOURCES =		 \
+	test/UnitTests.cc	 \
+	test/UnitTests.h	 \
+	test/extra_tests.cc	 \
+	test/extra_tests.h
+
+extra_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+extra_tests_LDADD    = $(math_tests_LDADD) libledger_extra.la
 
 EXTRA_DIST += test/python
 
@@ -329,7 +439,7 @@ RegressionTests_SOURCES = test/regress.py
 EXTRA_DIST += test/regress
 
 RegressionTests: $(srcdir)/test/regress.py
-	echo "python $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
+	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
 if HAVE_VALGRIND

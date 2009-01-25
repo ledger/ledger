@@ -79,3 +79,10 @@
 /system.hh.gch
 /texinfo.tex
 /version.m4
+/data_tests
+/expr_tests
+/extra_tests
+/math_tests
+/parse_tests
+/report_tests
+/util_tests
