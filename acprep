@@ -70,7 +70,7 @@ BUILD_DIR=false
 #   but gives you useful stack traces to mention in your bug reports.
 #   Recommended if you're not running a release version.
 #
-# --dir PATH
+# --build PATH
 #
 #   Building the sources in PATH instead of in the source directory.  This
 #   breaks pre-compiled headers, but keeps your source tree clean.
@@ -242,7 +242,7 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3"
 	shift 1 ;;
 
-    --dir)
+    --output)
 	shift 1
 	BUILD_DIR="$1"
 	shift 1 ;;
