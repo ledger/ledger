@@ -262,13 +262,13 @@ if HAVE_GDTOA
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs -Llib/gdtoa -Llib/gdtoa/.libs" \
-	    $(PYTHON) $(srcdir)/python/setup.py install \
+	    SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py install \
 		--prefix=$(prefix) --root=$(DESTDIR)/
 else
 install-exec-hook:
 	CFLAGS="$(CPPFLAGS)" ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
 	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    $(PYTHON) $(srcdir)/python/setup.py install \
+	    SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py install \
 		--prefix=$(prefix) --root=$(DESTDIR)/
 endif
 
@@ -300,7 +300,7 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	     $(PYTHON) $(srcdir)/python/setup.py build \
+	     SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
 else
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
@@ -309,7 +309,7 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	     $(PYTHON) $(srcdir)/python/setup.py build \
+	     SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
 endif
 
