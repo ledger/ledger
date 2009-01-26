@@ -1,3 +1,5 @@
+VERSION = 3.0
+
 if HAVE_GDTOA
 SUBDIRS    = lib/gdtoa
 endif
@@ -33,7 +35,7 @@ libledger_util_la_SOURCES =	 \
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
-libledger_util_la_LDFLAGS  = -release 3.0.0
+libledger_util_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_math_la_SOURCES =	 \
 	src/amount.cc    \
@@ -43,7 +45,7 @@ libledger_math_la_SOURCES =	 \
 	src/value.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
-libledger_math_la_LDFLAGS  = -release 3.0.0
+libledger_math_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_expr_la_SOURCES =	 \
 	src/token.cc     \
@@ -55,7 +57,7 @@ libledger_expr_la_SOURCES =	 \
 	src/option.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS    = -release 3.0.0
+libledger_expr_la_LDFLAGS    = -release $(VERSION).0
 
 libledger_data_la_SOURCES  =		  \
 	src/item.cc		  \
@@ -67,7 +69,7 @@ libledger_data_la_SOURCES  =		  \
 	src/compare.cc
 
 libledger_data_la_CPPFLAGS = $(lib_cppflags)
-libledger_data_la_LDFLAGS  = -release 3.0.0
+libledger_data_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_parse_la_SOURCES  =		  \
 	src/textual.cc		  \
@@ -83,7 +85,7 @@ libledger_parse_la_SOURCES += src/ofx.cc
 endif
 
 libledger_parse_la_CPPFLAGS = $(lib_cppflags)
-libledger_parse_la_LDFLAGS  = -release 3.0.0
+libledger_parse_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_report_la_SOURCES  =		  \
 	src/session.cc		  \
@@ -93,7 +95,7 @@ libledger_report_la_SOURCES  =		  \
 	src/help.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
-libledger_report_la_LDFLAGS  = -release 3.0.0
+libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_extra_la_SOURCES  =		  \
 	src/derive.cc		  \
@@ -101,7 +103,7 @@ libledger_extra_la_SOURCES  =		  \
 	src/quotes.cc
 
 libledger_extra_la_CPPFLAGS = $(lib_cppflags)
-libledger_extra_la_LDFLAGS  = -release 3.0.0
+libledger_extra_la_LDFLAGS  = -release $(VERSION).0
 
 pkginclude_HEADERS =			   \
 	acconf.h			   \
@@ -258,18 +260,39 @@ pyexec_PROGRAMS = ledger.so
 clean-local:
 	rm -fr build
 
+uninstall-hook:
+	rm -f $(DESTDIR)$(libdir)/Ledger-$(VERSION)-py$(PYTHON_VERSION).egg-info
+
 if HAVE_GDTOA
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS)" ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	LDFLAGS="$(LDFLAGS) -L. -L.libs -Llib/gdtoa -Llib/gdtoa/.libs" \
-	    SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py install \
-		--prefix=$(prefix) --root=$(DESTDIR)/
+	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	SRC_DIR=`cd $(srcdir); pwd`; \
+	(cd $(srcdir); \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
+	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
+	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py install \
+		--skip-build \
+		--root=$(DESTDIR)/ \
+		--prefix=$(prefix) \
+		--install-lib=$(libdir) \
+		--install-headers=$(pkgincludedir) \
+		--install-data=$(datadir))
 else
 install-exec-hook:
-	CFLAGS="$(CPPFLAGS)" ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	LDFLAGS="$(LDFLAGS) -L. -L.libs" \
-	    SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py install \
-		--prefix=$(prefix) --root=$(DESTDIR)/
+	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	SRC_DIR=`cd $(srcdir); pwd`; \
+	(cd $(srcdir); \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
+	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
+	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py install \
+		--skip-build \
+		--root=$(DESTDIR)/ \
+		--prefix=$(prefix) \
+		--install-lib=$(libdir) \
+		--install-headers=$(pkgincludedir) \
+		--install-data=$(datadir))
 endif
 
 ledger_so_SOURCES      = $(all_sources)
@@ -296,20 +319,22 @@ endif
 if HAVE_GDTOA
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	SRC_DIR=`cd $(srcdir); pwd`; \
 	(cd $(srcdir); \
 	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
-	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	     SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py build \
+	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
+	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
 else
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	SRC_DIR=`cd $(srcdir); pwd`; \
 	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
+	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
-	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" \
-	     SRCDIR="$(srcdir)" $(PYTHON) $(srcdir)/python/setup.py build \
+	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
+	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
 endif
 

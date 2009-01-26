@@ -8,7 +8,7 @@ defines = [('PYTHON_MODULE', 1)]
 libs    = os.environ["PYLIBS"].split()
 
 setup(name         = "Ledger",
-      version      = "2.7",
+      version      = os.environ["VERSION"],
       description  = "Ledger Accounting Library",
       author       = "John Wiegley",
       author_email = "johnw@newartisans.com",
