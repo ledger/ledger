@@ -515,24 +515,19 @@ report: all
 
 ######################################################################
 
+STAGING = /tmp/ledger
+
 copy-sources:
-	-mkdir /tmp/ledger
-	sudo rsync -av --delete \
-	    --exclude='/lib/boost/' \
-	    --exclude='/lib/icu/' \
-	    --exclude='/lib/irrlicht/' \
-	    --exclude=/.libs/ \
-	    --exclude=/.deps/ \
-	    --exclude=/archive/ \
-	    --exclude=/plan/ \
-	    --exclude=/2.6*/ \
-	    ./ /tmp/ledger/
-	(cd /tmp/ledger; sudo git clean -x -d -f)
+	-mkdir $(STAGING)
+	sudo rsync -av --delete --exclude=/.libs/ --exclude=/.deps/ \
+	    --exclude=/plan/ --exclude=/2.6*/ --exclude=/archive/ \
+	    $(srcdir)/ $(STAGING)/
+	(cd $(STAGING); sudo git clean -x -d -f)
 
 release: copy-sources
-	(cd /tmp/ledger; ./acprep --release --build -j3)
+	(cd $(STAGING); ./acprep --release --build -j3)
 
 release-distcheck: copy-sources
-	(cd /tmp/ledger; ./acprep --release --build -j3 distcheck)
+	(cd $(STAGING); ./acprep --release --build -j3 distcheck)
 
 # Makefile.am ends here
