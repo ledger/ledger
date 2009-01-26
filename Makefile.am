@@ -343,7 +343,6 @@ util_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
 	test/util_tests.cc	 \
-	test/util_tests.h	 \
 	test/unit/t_utils.cc	 \
 	test/unit/t_utils.h	 \
 	test/unit/t_times.cc	 \
@@ -356,7 +355,6 @@ math_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
 	test/math_tests.cc	 \
-	test/math_tests.h	 \
 	test/unit/t_commodity.cc \
 	test/unit/t_commodity.h	 \
 	test/unit/t_amount.cc	 \
@@ -374,7 +372,6 @@ expr_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
 	test/expr_tests.cc	 \
-	test/expr_tests.h	 \
 	test/unit/t_expr.cc	 \
 	test/unit/t_expr.h
 
@@ -384,8 +381,7 @@ expr_tests_LDADD    = $(math_tests_LDADD) libledger_expr.la
 data_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/data_tests.cc	 \
-	test/data_tests.h
+	test/data_tests.cc
 
 data_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 data_tests_LDADD    = $(math_tests_LDADD) libledger_data.la
@@ -393,8 +389,7 @@ data_tests_LDADD    = $(math_tests_LDADD) libledger_data.la
 parse_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/parse_tests.cc	 \
-	test/parse_tests.h
+	test/parse_tests.cc
 
 parse_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 parse_tests_LDADD    = $(math_tests_LDADD) libledger_parse.la
@@ -402,8 +397,7 @@ parse_tests_LDADD    = $(math_tests_LDADD) libledger_parse.la
 report_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/report_tests.cc	 \
-	test/report_tests.h
+	test/report_tests.cc
 
 report_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 report_tests_LDADD    = $(math_tests_LDADD) libledger_report.la
@@ -411,8 +405,7 @@ report_tests_LDADD    = $(math_tests_LDADD) libledger_report.la
 extra_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/extra_tests.cc	 \
-	test/extra_tests.h
+	test/extra_tests.cc
 
 extra_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 extra_tests_LDADD    = $(math_tests_LDADD) libledger_extra.la
