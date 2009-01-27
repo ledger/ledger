@@ -233,7 +233,8 @@ all_sources     = $(libledger_util_la_SOURCES)	  \
 all_files       = $(all_sources) $(pkginclude_HEADERS)
 
 TAGS: $(all_sources)
-	@etags $(all_sources)
+	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	(cd $(srcdir); etags -o $$BUILD_DIR/TAGS $(all_sources))
 	@echo TAGS rebuilt.
 
 ######################################################################
