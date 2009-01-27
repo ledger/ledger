@@ -429,6 +429,10 @@ public:
    */
   operator bool() const;
 
+  bool is_nonzero() const {
+    return ! is_zero();
+  }
+
   bool is_realzero() const;
   bool is_zero() const;
   bool is_null() const {
@@ -892,6 +896,7 @@ public:
    * stream or a character pointer, and it may be serialized to an
    * output stream.  The methods used are:
    */
+  void read(std::istream& in);
   void read(const char *& data);
   void write(std::ostream& out) const;
 

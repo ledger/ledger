@@ -1747,6 +1747,34 @@ void value_t::print(std::ostream& out, const bool relaxed) const
   }
 }
 
+void value_t::read(std::istream& in)
+{
+  switch (static_cast<value_t::type_t>(binary::read_long<int>(in))) {
+  case BOOLEAN:
+    set_boolean(binary::read_bool(in));
+    break;
+  case INTEGER:
+    set_long(binary::read_long<long>(in));
+    break;
+  case DATETIME:
+    set_datetime(parse_datetime(binary::read_string(in)));
+    break;
+  case DATE:
+    set_date(parse_date(binary::read_string(in)));
+    break;
+  case AMOUNT: {
+    amount_t temp;
+    temp.read(in);
+    set_amount(temp);
+    break;
+  }
+  default:
+    break;
+  }
+
+  throw_(value_error, "Cannot read " << label() << " from a stream");
+}
+
 void value_t::read(const char *& data)
 {
   switch (static_cast<value_t::type_t>(binary::read_long<int>(data))) {
