@@ -52,7 +52,7 @@ void export_commodity()
   scope().attr("COMMODITY_WALKED")          = COMMODITY_WALKED;
 
   class_< commodity_t, bases<>,
-	  commodity_t, boost::noncopyable > ("commodity", no_init)
+	  commodity_t, boost::noncopyable > ("Commodity", no_init)
     .def(self == self)
 
     .def("drop_flags", &commodity_t::drop_flags)
