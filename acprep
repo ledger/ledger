@@ -28,11 +28,12 @@ if [ -z "$PYTHON_VERSION" ]; then
 fi
 
 BOOST_SUFFIX=""
+BOOST_VERSION="1_37"
 
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
-INCDIRS="$INCDIRS -isystem /usr/local/include/boost-1_35"
+INCDIRS="$INCDIRS -isystem /usr/local/include/boost-$BOOST_VERSION"
 INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
 
 CXXFLAGS=""
@@ -117,16 +118,16 @@ BUILD_DIR=false
 #   super-debugging Boost:
 #
 #      src $ git clone git://repo.or.cz/boost.git
-#      src $ git checkout -b v1.35.0 svn/Version_1_35_0
+#      src $ git checkout svn/Version_$BOOST_VERSION
 #      src $ cd boost
-#    boost $ sudo bjam release --prefix=/usr/local/stow/boost_1_35_0 \
-#                --build-dir=$HOME/Products/boost_1_35_0 --toolset=darwin \
+#    boost $ sudo bjam release --prefix=/usr/local/stow/boost_$BOOST_VERSION \
+#                --build-dir=$HOME/Products/boost_$BOOST_VERSION --toolset=darwin \
 #                architecture=combined install
-#    boost $ sudo bjam debug --prefix=/usr/local/stow/boost_1_35_0 \
-#                --build-dir=$HOME/Products/boost_1_35_0 --toolset=darwin \
+#    boost $ sudo bjam debug --prefix=/usr/local/stow/boost_$BOOST_VERSION \
+#                --build-dir=$HOME/Products/boost_$BOOST_VERSION --toolset=darwin \
 #                architecture=combined define=_GLIBCXX_DEBUG=1 install
 #    boost $ cd /usr/local/stow
-#     stow $ stow boost_1_35_0
+#     stow $ stow boost_$BOOST_VERSION
 #
 #   Of course, you'll need MacPorts to do this, with both the "bjam" and "stow"
 #   packages installed.
@@ -167,7 +168,8 @@ while [ -n "$1" ]; do
 	CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
 	LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
 
-	BOOST_SUFFIX="-d-1_35"	# I built mine with _GLIBCXX_DEBUG
+	# I build mine with _GLIBCXX_DEBUG
+	BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
 
         # Do the same thing as --debug below
 	SWITCHES="$SWITCHES --enable-debug"
