@@ -1,6 +1,3 @@
-[submodule "lib/boost"]
-	path = lib/boost
-	url = git://repo.or.cz/boost.git
 [submodule "lib/gdtoa"]
 	path = lib/gdtoa
 	url = git://github.com/jwiegley/gdtoa.git
