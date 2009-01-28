@@ -838,7 +838,7 @@ value_t& value_t::operator/=(const value_t& val)
 }
 
 
-bool value_t::operator==(const value_t& val) const
+bool value_t::is_equal_to(const value_t& val) const
 {
   switch (type()) {
   case VOID:
@@ -938,7 +938,7 @@ bool value_t::operator==(const value_t& val) const
   return *this;
 }
 
-bool value_t::operator<(const value_t& val) const
+bool value_t::is_less_than(const value_t& val) const
 {
   switch (type()) {
   case DATETIME:
@@ -992,8 +992,7 @@ bool value_t::operator<(const value_t& val) const
   return *this;
 }
 
-#if 0
-bool value_t::operator>(const value_t& val) const
+bool value_t::is_greater_than(const value_t& val) const
 {
   switch (type()) {
   case DATETIME:
@@ -1041,7 +1040,6 @@ bool value_t::operator>(const value_t& val) const
 
   return *this;
 }
-#endif
 
 void value_t::in_place_cast(type_t cast_type)
 {

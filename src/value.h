@@ -361,16 +361,21 @@ public:
   /**
    * Comparison operators.  Values can be compared to other values
    */
-  bool operator==(const value_t& val) const;
-  bool operator<(const value_t& val) const;
+  bool is_equal_to(const value_t& val) const;
+  bool is_less_than(const value_t& val) const;
+  bool is_greater_than(const value_t& val) const;
 
   template <typename T>
   bool operator==(const T& amt) const {
-    return *this == value_t(amt);
+    return is_equal_to(amt);
   }
   template <typename T>
   bool operator<(const T& amt) const {
-    return *this < value_t(amt);
+    return is_less_than(amt);
+  }
+  template <typename T>
+  bool operator>(const T& amt) const {
+    return is_greater_than(amt);
   }
 
   /**
