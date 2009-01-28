@@ -71,6 +71,11 @@ boost::optional<amount_t> py_value_1(const amount_t& amount,
 				     const boost::optional<datetime_t>& moment) {
   return amount.value(moment);
 }
+boost::optional<amount_t> py_value_2(const amount_t& amount,
+				     const boost::optional<datetime_t>& moment,
+				     const boost::optional<commodity_t&>& in_terms_of) {
+  return amount.value(moment, in_terms_of);
+}
 
 void py_parse_2(amount_t& amount, object in, unsigned char flags) {
   if (PyFile_Check(in.ptr())) {
@@ -118,7 +123,7 @@ void export_amount()
   scope().attr("AMOUNT_PARSE_NO_MIGRATE") = AMOUNT_PARSE_NO_MIGRATE;
   scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
 
-  class_< amount_t > ("amount")
+  class_< amount_t > ("Amount")
 #if 0
     .def("initialize", &amount_t::initialize)
     .staticmethod("initialize")
@@ -285,6 +290,7 @@ internal precision.")
 
     .def("value", py_value_0)
     .def("value", py_value_1)
+    .def("value", py_value_2)
 
     .def("sign", &amount_t::sign)
     .def("__nonzero__", &amount_t::is_nonzero)
