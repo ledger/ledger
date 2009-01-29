@@ -107,7 +107,7 @@ libledger_extra_la_CPPFLAGS = $(lib_cppflags)
 libledger_extra_la_LDFLAGS  = -release $(VERSION).0
 
 pkginclude_HEADERS =			   \
-	acconf.h			   \
+	$(top_builddir)/acconf.h	   \
 	src/system.hh			   \
 	src/utils.h			   \
 	src/flags.h			   \
@@ -236,7 +236,8 @@ all_files       = $(all_sources) $(pkginclude_HEADERS)
 
 TAGS: $(all_sources) $(pkginclude_HEADERS)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
-	(cd $(srcdir); etags -o $$BUILD_DIR/TAGS $(all_sources) $(pkginclude_HEADERS))
+	(cd $(srcdir); \
+	 etags -l c++ -o $$BUILD_DIR/TAGS $(all_sources) $(pkginclude_HEADERS))
 	@echo TAGS rebuilt.
 
 ######################################################################
