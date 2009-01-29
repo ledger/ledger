@@ -49,7 +49,7 @@ private:
   mutable short refc;
   ptr_op_t	left_;
 
-  variant<unsigned int,		// used by constant INDEX
+  variant<std::size_t,		// used by constant INDEX
 	  value_t,		// used by constant VALUE
 	  string,		// used by constant IDENT
 	  mask_t,		// used by constant MASK
@@ -122,16 +122,16 @@ public:
   }
 
   bool is_index() const {
-    return data.type() == typeid(unsigned int);
+    return data.type() == typeid(std::size_t);
   }
-  unsigned int& as_index_lval() {
+  std::size_t& as_index_lval() {
     assert(kind == INDEX);
-    return boost::get<unsigned int>(data);
+    return boost::get<std::size_t>(data);
   }
-  const unsigned int& as_index() const {
+  const std::size_t& as_index() const {
     return const_cast<op_t *>(this)->as_index_lval();
   }
-  void set_index(unsigned int val) {
+  void set_index(std::size_t val) {
     data = val;
   }
 

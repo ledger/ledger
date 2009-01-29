@@ -72,7 +72,7 @@ typedef std::pair<std::string, std::size_t>     allocation_pair;
 typedef std::map<void *, allocation_pair>       live_memory_map;
 typedef std::multimap<void *, allocation_pair>  live_objects_map;
 
-typedef std::pair<unsigned int, std::size_t>    count_size_pair;
+typedef std::pair<std::size_t, std::size_t>     count_size_pair;
 typedef std::map<std::string, count_size_pair>  object_count_map;
 
 static live_memory_map  * live_memory	     = NULL;
@@ -432,7 +432,7 @@ std::ostream *	   _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
 
 #if defined(TRACING_ON)
-unsigned int	   _trace_level;
+uint8_t		   _trace_level;
 #endif
 
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK

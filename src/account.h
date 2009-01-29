@@ -108,13 +108,13 @@ class account_t : public scope_t
 #define ACCOUNT_EXT_HAS_NON_VIRTUALS 0x08
 #define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x10
 
-    value_t	   value;
-    value_t	   total;
-    value_t	   sort_value;
-    unsigned int   count;	// xacts counted toward amount
-    unsigned int   total_count;	// xacts counted toward total
-    unsigned int   virtuals;
-    unsigned short dflags;
+    value_t	  value;
+    value_t	  total;
+    value_t	  sort_value;
+    std::size_t   count;	// xacts counted toward amount
+    std::size_t   total_count;	// xacts counted toward total
+    std::size_t   virtuals;
+    uint_least8_t dflags;
 
     xdata_t()
       : supports_flags<>(), count(0), total_count(0),

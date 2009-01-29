@@ -108,8 +108,8 @@ public:
     str = txt;
   }
 
-  void     parse(const string& _str, const unsigned int flags = 0);
-  void     parse(std::istream& in, const unsigned int flags = 0,
+  void     parse(const string& _str, const uint32_t flags = 0);
+  void     parse(std::istream& in, const uint32_t flags = 0,
 		 const string * original_string = NULL);
 	   
   void     compile(scope_t& scope);

@@ -86,7 +86,7 @@ expr_t& expr_t::operator=(const expr_t& _expr)
   return *this;
 }
 
-void expr_t::parse(const string& _str, const unsigned int flags)
+void expr_t::parse(const string& _str, const uint32_t flags)
 {
   if (! parser.get())
     throw_(parse_error, "Value expression parser not initialized");
@@ -96,7 +96,7 @@ void expr_t::parse(const string& _str, const unsigned int flags)
   compiled = false;
 }
 
-void expr_t::parse(std::istream& in, const unsigned int flags,
+void expr_t::parse(std::istream& in, const uint32_t flags,
 		   const string * original_string)
 {
   if (! parser.get())

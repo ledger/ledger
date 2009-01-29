@@ -114,13 +114,13 @@ public:
 #define XACT_EXT_COMPOUND   0x40
 #define XACT_EXT_MATCHES    0x80
 
-    value_t	 total;
-    value_t	 sort_value;
-    value_t	 value;
-    unsigned int index;
-    date_t	 date;
-    account_t *	 account;
-    void *	 ptr;
+    value_t	total;
+    value_t	sort_value;
+    value_t	value;
+    std::size_t index;
+    date_t	date;
+    account_t *	account;
+    void *	ptr;
 
     optional<xacts_list> component_xacts;
 

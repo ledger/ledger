@@ -296,11 +296,11 @@ inline void clear_entries_xacts(std::list<entry_t>& entries_list) {
 
 class collapse_xacts : public item_handler<xact_t>
 {
-  value_t      subtotal;
-  unsigned int count;
-  entry_t *    last_entry;
-  xact_t *     last_xact;
-  account_t    totals_account;
+  value_t     subtotal;
+  std::size_t count;
+  entry_t *   last_entry;
+  xact_t *    last_xact;
+  account_t   totals_account;
 
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;

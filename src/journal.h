@@ -96,11 +96,11 @@ public:
 
     virtual bool test(std::istream& in) const = 0;
 
-    virtual unsigned int parse(std::istream& in,
-			       session_t&    session,
-			       journal_t&    journal,
-			       account_t *   master        = NULL,
-			       const path *  original_file = NULL) = 0;
+    virtual std::size_t parse(std::istream& in,
+			      session_t&    session,
+			      journal_t&    journal,
+			      account_t *   master        = NULL,
+			      const path *  original_file = NULL) = 0;
   };
 
   class binary_parser_t : public parser_t
@@ -108,11 +108,11 @@ public:
   public:
     virtual bool test(std::istream& in) const;
 
-    virtual unsigned int parse(std::istream& in,
-			       session_t&     session,
-			       journal_t&   journal,
-			       account_t *   master        = NULL,
-			       const path *  original_file = NULL);
+    virtual std::size_t parse(std::istream& in,
+			      session_t&    session,
+			      journal_t&    journal,
+			      account_t *   master        = NULL,
+			      const path *  original_file = NULL);
   };
 
   bool valid() const;

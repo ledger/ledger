@@ -517,10 +517,10 @@ void write_account(std::ostream& out, account_t * account)
     write_account(out, pair.second);
 }
 
-unsigned int read_journal(std::istream& in,
-			  const path&   file,
-			  journal_t&    journal,
-			  account_t *   master)
+std::size_t read_journal(std::istream& in,
+			 const path&   file,
+			 journal_t&    journal,
+			 account_t *   master)
 {
   using namespace binary;
 

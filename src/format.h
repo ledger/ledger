@@ -185,7 +185,7 @@ public:
       elem->dump(out);
   }
 
-  static string truncate(const unistring& str, unsigned int width,
+  static string truncate(const unistring& str, std::size_t width,
 			 const bool is_account = false);
 };
 

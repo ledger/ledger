@@ -177,12 +177,12 @@ void format_accounts::operator()(account_t& account)
 bool format_accounts::disp_subaccounts_p(account_t&   account,
 					 account_t *& to_show)
 {
-  bool	       display  = false;
-  unsigned int counted  = 0;
-  bool         matches  = should_display(account);
-  bool         computed = false;
-  value_t      acct_total;
-  value_t      result;
+  bool	      display  = false;
+  std::size_t counted  = 0;
+  bool        matches  = should_display(account);
+  bool        computed = false;
+  value_t     acct_total;
+  value_t     result;
 
   to_show = NULL;
 

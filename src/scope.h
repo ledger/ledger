@@ -151,10 +151,10 @@ public:
     return args;
   }
 
-  value_t& operator[](const unsigned int index) {
+  value_t& operator[](const std::size_t index) {
     return args[index];
   }
-  const value_t& operator[](const unsigned int index) const {
+  const value_t& operator[](const std::size_t index) const {
     return args[index];
   }
 
@@ -182,9 +182,9 @@ public:
     : value(scope.resolve(name).template as_pointer<T>()) {
     TRACE_CTOR(ptr_t, "scope_t&, const string&");
   }
-  ptr_t(call_scope_t& scope, const unsigned int idx)
+  ptr_t(call_scope_t& scope, const std::size_t idx)
     : value(scope[idx].template as_pointer<T>()) {
-    TRACE_CTOR(ptr_t, "call_scope_t&, const unsigned int");
+    TRACE_CTOR(ptr_t, "call_scope_t&, const std::size_t");
   }
   ~ptr_t() throw() {
     TRACE_DTOR(ptr_t);
@@ -215,9 +215,9 @@ public:
     }
   }
 
-  var_t(call_scope_t& scope, const unsigned int idx)
+  var_t(call_scope_t& scope, const std::size_t idx)
   {
-    TRACE_CTOR(var_t, "call_scope_t&, const unsigned int");
+    TRACE_CTOR(var_t, "call_scope_t&, const std::size_t");
 
     if (idx < scope.size())
       value = scope[idx];

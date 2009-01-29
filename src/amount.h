@@ -104,7 +104,7 @@ public:
    * The number of places of precision by which values are extended to
    * avoid losing precision during division and multiplication.
    */
-  static const unsigned int extend_by_digits = 6U;
+  static const std::size_t extend_by_digits = 6U;
 
   /**
    * The current_pool is a static variable indicating which commodity
@@ -805,7 +805,7 @@ public:
   void read(const char *& data,
 	    char **	  pool	    = NULL,
 	    char **	  pool_next = NULL);
-  void write(std::ostream& out, unsigned int index = 0) const;
+  void write(std::ostream& out, std::size_t index = 0) const;
 
   /*@}*/
 

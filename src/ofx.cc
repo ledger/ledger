@@ -230,11 +230,11 @@ bool ofx_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int ofx_parser_t::parse(std::istream&,
-				 session_t&    session,
-				 journal_t&    journal,
-				 account_t *   master,
-				 const path *  original_file)
+std::size_t ofx_parser_t::parse(std::istream& in,
+				session_t&    session,
+				journal_t&    journal,
+				account_t *   master,
+				const path *  original_file)
 {
   if (! original_file)
     return 0;

@@ -39,8 +39,8 @@ namespace ledger {
 
 static char         line[MAX_LINE + 1];
 static path         pathname;
-static unsigned int src_idx;
-static unsigned int linenum;
+static std::size_t src_idx;
+static std::size_t linenum;
 
 static inline char * get_line(std::istream& in) {
   in.getline(line, MAX_LINE);
@@ -53,9 +53,9 @@ static inline char * get_line(std::istream& in) {
 
 bool qif_parser_t::test(std::istream& in) const
 {
-  char magic[sizeof(unsigned int) + 1];
-  in.read(magic, sizeof(unsigned int));
-  magic[sizeof(unsigned int)] = '\0';
+  char magic[sizeof(uint32_t) + 1];
+  in.read(magic, sizeof(uint32_t));
+  magic[sizeof(uint32_t)] = '\0';
   in.clear();
   in.seekg(0, std::ios::beg);
 
@@ -64,17 +64,17 @@ bool qif_parser_t::test(std::istream& in) const
 	  std::strcmp(magic, "\r\n!T") == 0);
 }
 
-unsigned int qif_parser_t::parse(std::istream& in,
-				 session_t&    session,
-				 journal_t&    journal,
-				 account_t *   master,
-				 const path *  original_file)
+std::size_t qif_parser_t::parse(std::istream& in,
+				session_t&    session,
+				journal_t&    journal,
+				account_t *   master,
+				const path *  original_file)
 {
   std::auto_ptr<entry_t>  entry;
   std::auto_ptr<amount_t> amount;
 
   xact_t *	xact;
-  unsigned int  count	      = 0;
+  std::size_t	count	      = 0;
   account_t *   misc	      = NULL;
   commodity_t * def_commodity = NULL;
   bool          saw_splits    = false;

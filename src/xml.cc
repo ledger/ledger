@@ -36,7 +36,7 @@
 namespace ledger {
 
 static irr::io::IrrXMLReader * current_parser;
-static unsigned int	       count;
+static std::size_t	       count;
 
 static journal_t *   curr_journal;
 static entry_t *     curr_entry;
@@ -213,11 +213,11 @@ bool xml_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int xml_parser_t::parse(std::istream& in,
-				 session_t&    session,
-				 journal_t&    journal,
-				 account_t *   master,
-				 const path *  original_file)
+std::size_t xml_parser_t::parse(std::istream& in,
+				session_t&    session,
+				journal_t&    journal,
+				account_t *   master,
+				const path *  original_file)
 {
   TRACE_START(xml_parsing_total, 1, "Total time spent parsing XML:");
 

@@ -323,12 +323,12 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
   }
 }
 
-string format_t::truncate(const unistring& ustr, unsigned int width,
+string format_t::truncate(const unistring& ustr, std::size_t width,
 			  const bool is_account)
 {
   assert(width < 4095);
 
-  const unsigned int len = ustr.length();
+  const std::size_t len = ustr.length();
   if (len <= width)
     return ustr.extract();
 
@@ -361,7 +361,7 @@ string format_t::truncate(const unistring& ustr, unsigned int width,
 
       std::ostringstream result;
 
-      unsigned int newlen = len;
+      std::size_t newlen = len;
       for (std::list<string>::iterator i = parts.begin();
 	   i != parts.end();
 	   i++) {

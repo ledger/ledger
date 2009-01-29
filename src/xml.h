@@ -75,11 +75,11 @@ class xml_parser_t : public journal_t::parser_t
  public:
   virtual bool test(std::istream& in) const;
 
-  virtual unsigned int parse(std::istream& in,
-			     session_t&    session,
-			     journal_t&	   journal,
-			     account_t *   master        = NULL,
-			     const path *  original_file = NULL);
+  virtual std::size_t parse(std::istream& in,
+			    session_t&    session,
+			    journal_t&	  journal,
+			    account_t *   master        = NULL,
+			    const path *  original_file = NULL);
 };
 
 class format_xml_entries : public format_entries

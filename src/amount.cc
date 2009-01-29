@@ -1341,7 +1341,7 @@ void amount_t::read(const char *& data,
   }
 }
 
-void amount_t::write(std::ostream& out, unsigned int index) const
+void amount_t::write(std::ostream& out, std::size_t index) const
 {
   using namespace ledger::binary;
 

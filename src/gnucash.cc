@@ -55,14 +55,14 @@ static amount_t		curr_quant;
 static XML_Parser	current_parser;
 static accounts_map	accounts_by_id;
 static account_comm_map	account_comms;
-static unsigned int	count;
+static std::size_t	count;
 static string		have_error;
 
 static std::istream *   instreamp;
-static unsigned int     offset;
+static std::size_t	offset;
 static XML_Parser       parser;
 static path      	pathname;
-static unsigned int     src_idx;
+static std::size_t	src_idx;
 static istream_pos_type beg_pos;
 static unsigned long    beg_line;
 
@@ -376,11 +376,11 @@ bool gnucash_parser_t::test(std::istream& in) const
   return true;
 }
 
-unsigned int gnucash_parser_t::parse(std::istream& in,
-				     session_t&    session,
-				     journal_t&	   journal,
-				     account_t *   master,
-				     const path *  original_file)
+std::size_t gnucash_parser_t::parse(std::istream& in,
+				    session_t&    session,
+				    journal_t&	  journal,
+				    account_t *   master,
+				    const path *  original_file)
 {
 #if 0
   char buf[BUFSIZ];

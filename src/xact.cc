@@ -237,7 +237,7 @@ xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
   : file_context("", 0, desc), xact(_xact)
 {
   const paths_list& sources(xact.entry->journal->sources);
-  unsigned int x = 0;
+  std::size_t x = 0;
   foreach (const path& path, sources)
     if (x == xact.entry->src_idx) {
       file = path;

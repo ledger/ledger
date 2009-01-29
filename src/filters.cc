@@ -125,7 +125,7 @@ void sort_xacts::post_accumulated_xacts()
 }
 
 namespace {
-  string to_hex(unsigned int * message_digest)
+  string to_hex(uint_least32_t * message_digest)
   {
     std::ostringstream buf;
 
@@ -140,9 +140,9 @@ namespace {
 
 void anonymize_xacts::operator()(xact_t& xact)
 {
-  SHA1	       sha;
-  unsigned int message_digest[5];
-  bool         copy_entry_details = false;
+  SHA1		 sha;
+  uint_least32_t message_digest[5];
+  bool		 copy_entry_details = false;
 
   if (last_entry != xact.entry) {
     entry_temps.push_back(*xact.entry);
