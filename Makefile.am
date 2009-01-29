@@ -232,9 +232,9 @@ all_sources     = $(libledger_util_la_SOURCES)	  \
 
 all_files       = $(all_sources) $(pkginclude_HEADERS)
 
-TAGS: $(all_sources)
+TAGS: $(all_sources) $(pkginclude_HEADERS)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
-	(cd $(srcdir); etags -o $$BUILD_DIR/TAGS $(all_sources))
+	(cd $(srcdir); etags -o $$BUILD_DIR/TAGS $(all_sources) $(pkginclude_HEADERS))
 	@echo TAGS rebuilt.
 
 ######################################################################
@@ -529,13 +529,17 @@ distclean-local:
 	rm -fr doc/html doc/latex
 	rm -f doc/refman.pdf
 
+ESC_top_builddir=`cd $(top_builddir); pwd | sed 's/\//\\\\\//g'`
+
 $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	cat $(srcdir)/doc/Doxyfile \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
-	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
+	    | sed "s/%builddir%/$(ESC_top_builddir)/g" > $@
 
-$(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen
-	doxygen $(top_builddir)/Doxyfile.gen
+$(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen \
+	$(all_sources) $(pkginclude_HEADERS)
+	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	(cd $(srcdir); doxygen $$BUILD_DIR/Doxyfile.gen)
 
 # The intention with the following rules is that all of the Doxygen
 # documentation (both HTML and PDF) is built locally before distcheck is
