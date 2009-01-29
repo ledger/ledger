@@ -437,9 +437,41 @@ extra_tests_SOURCES =		 \
 extra_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 extra_tests_LDADD    = $(math_tests_LDADD) libledger_extra.la
 
+all_tests_sources =				\
+	$(util_tests_SOURCES)			\
+	$(math_tests_SOURCES)			\
+	$(expr_tests_SOURCES)			\
+	$(data_tests_SOURCES)			\
+	$(parse_tests_SOURCES)			\
+	$(report_tests_SOURCES)			\
+	$(extra_tests_SOURCES)
+
 EXTRA_DIST += test/python
 
 PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py test/UnitTests.py
+
+all_py_tests_sources = \
+	$(patsubst test/unit/%.cc,test/python/%.py, \
+		   $(filter test/unit/t_%.cc,$(all_tests_sources)))
+
+test/python/%.py: test/unit/%.cc test/convert.py
+	$(PYTHON) $(srcdir)/test/convert.py $< $@
+
+test/python/UnitTests.py: $(all_py_tests_sources)
+	@echo "from unittest import TextTestRunner, TestSuite" > $@
+	@for file in $$(ls $(srcdir)/test/unit/*.cc); do \
+	    base=$$(basename $$file); \
+	    base=$$(echo $$base | sed 's/\.cc//'); \
+	    echo "import $$base" >> $@; \
+	done
+	@echo "suites = [" >> $@
+	@for file in $$(ls $(srcdir)/test/unit/*.cc); do \
+	    base=$$(basename $$file); \
+	    base=$$(echo $$base | sed 's/\.cc//'); \
+	    echo "    $$base.suite()," >> $@; \
+	done
+	@echo "]" >> $@
+	@echo "TextTestRunner().run(TestSuite(suites))" >> $@
 
 ESC_python=`echo "$(PYTHON)" | sed 's/\//\\\\\//g'`
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
@@ -448,7 +480,9 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: $(srcdir)/test/PyUnitTests.py
+PyUnitTests: $(srcdir)/test/PyUnitTests.py test/python/UnitTests.py
+	@echo all_test_sources: $(all_tests_sources)
+	@echo all_py_test_sources: $(all_py_tests_sources)
 	cat $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%python%/$(ESC_python)/" \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \

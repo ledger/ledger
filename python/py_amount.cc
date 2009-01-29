@@ -97,18 +97,47 @@ void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
   amount.parse(str, flags);
 }
 
+void py_print(amount_t& amount, object out) {
+  if (PyFile_Check(out.ptr())) {
+    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
+    amount.print(outstr);
+  } else {
+    PyErr_SetString(PyExc_IOError,
+		    "Argument to amount.print_(file) is not a file object");
+  }
+}
+
 void py_read_1(amount_t& amount, object in) {
   if (PyFile_Check(in.ptr())) {
     pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
     amount.read(instr);
   } else {
     PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.parse(file) is not a file object");
+		    "Argument to amount.read(file) is not a file object");
   }
 }
 void py_read_2(amount_t& amount, const std::string& str) {
   const char * p = str.c_str();
   amount.read(p);
+}
+
+void py_write_xml_1(amount_t& amount, object out) {
+  if (PyFile_Check(out.ptr())) {
+    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
+    amount.write_xml(outstr);
+  } else {
+    PyErr_SetString(PyExc_IOError,
+		    "Argument to amount.write_xml(file) is not a file object");
+  }
+}
+  void py_write_xml_2(amount_t& amount, object out, const int depth) {
+  if (PyFile_Check(out.ptr())) {
+    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
+    amount.write_xml(outstr, depth);
+  } else {
+    PyErr_SetString(PyExc_IOError,
+		    "Argument to amount.write_xml(file, depth) is not a file object");
+  }
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -124,12 +153,10 @@ void export_amount()
   scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
 
   class_< amount_t > ("Amount")
-#if 0
     .def("initialize", &amount_t::initialize)
     .staticmethod("initialize")
     .def("shutdown", &amount_t::shutdown)
     .staticmethod("shutdown")
-#endif
 
     .add_static_property("current_pool",
 			 make_getter(&amount_t::current_pool,
@@ -266,7 +293,7 @@ internal precision.")
     .def(double() / self)
 #endif
 
-    .add_property("precision", &amount_t::precision)
+    .def("precision", &amount_t::precision)
 
     .def("negate", &amount_t::negate)
     .def("in_place_negate", &amount_t::in_place_negate,
@@ -317,22 +344,21 @@ internal precision.")
 #endif
     .def("fits_in_long", &amount_t::fits_in_long)
 
-    .add_property("quantity_string", &amount_t::quantity_string)
+    .def("quantity_string", &amount_t::quantity_string)
 
-    .add_property("commodity",
-		  make_function(&amount_t::commodity,
-				return_value_policy<reference_existing_object>()),
-		  make_function(&amount_t::set_commodity,
-				with_custodian_and_ward<1, 2>()))
+    .def("commodity", &amount_t::commodity,
+	 return_value_policy<reference_existing_object>())
+    .def("set_commodity", &amount_t::set_commodity,
+	 with_custodian_and_ward<1, 2>())
 
     .def("has_commodity", &amount_t::has_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
-    .add_property("number", &amount_t::number)
+    .def("number", &amount_t::number)
 
     .def("annotate", &amount_t::annotate)
     .def("is_annotated", &amount_t::is_annotated)
 #if 0
-    .add_property("annotation", &amount_t::annotation)
+    .def("annotation", &amount_t::annotation)
 #endif
     .def("strip_annotations", &amount_t::strip_annotations)
 
@@ -344,9 +370,17 @@ internal precision.")
     .def("parse_conversion", &amount_t::parse_conversion)
     .staticmethod("parse_conversion")
 
+    .def("print_", py_print)
+
     .def("read", py_read_1)
     .def("read", py_read_2)
     .def("write", &amount_t::write)
+
+    .def("read_xml", &amount_t::read_xml)
+    .def("write_xml", py_write_xml_1)
+    .def("write_xml", py_write_xml_2)
+
+    .def("dump", &amount_t::dump)
 
     .def("valid", &amount_t::valid)
     ;

@@ -32,12 +32,6 @@
 #include "pyinterp.h"
 #include "pyutils.h"
 
-#include <boost/cast.hpp>
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
-#include <boost/python/to_python_converter.hpp>
-
-#include <Python.h>
 #include <datetime.h>
 
 // jww (2007-05-04): Convert time duration objects to PyDelta
@@ -121,12 +115,26 @@ struct datetime_from_python
 typedef register_python_conversion<datetime_t, datetime_to_python, datetime_from_python>
   datetime_python_conversion;
 
+datetime_t py_parse_datetime(const string& str) {
+  return parse_datetime(str);
+}
+
+date_t py_parse_date(const string& str) {
+  return parse_date(str);
+}
+
 void export_times()
 {
-  date_python_conversion();
   datetime_python_conversion();
+  date_python_conversion();
 
   register_optional_to_python<datetime_t>();
+  register_optional_to_python<date_t>();
+
+  scope().attr("parse_datetime") = &py_parse_datetime;
+  scope().attr("parse_date")	 = &py_parse_date;
+  scope().attr("current_time")	 = current_time;
+  scope().attr("current_date")	 = current_date;
 }
 
 } // namespace ledger

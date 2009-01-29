@@ -40,6 +40,13 @@ namespace ledger {
 
 using namespace boost::python;
 
+void py_add_price(commodity_t&	    commodity,
+		  const datetime_t& date,
+		  const amount_t&   price)
+{
+  commodity.add_price(date, price);
+}
+
 void export_commodity()
 {
   scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
@@ -57,7 +64,9 @@ void export_commodity()
 
     .def("drop_flags", &commodity_t::drop_flags)
 
-    .add_property("precision", &commodity_t::precision)
+    .def("add_price", py_add_price)
+
+    .def("precision", &commodity_t::precision)
     ;
 }
 

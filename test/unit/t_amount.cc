@@ -42,11 +42,13 @@ void AmountTestCase::testParser()
 
   assertEqual(amount_t::precision_t(2), x12.commodity().precision());
 
+#ifndef NOT_FOR_PYTHON
   string buf("$100...");
   std::istringstream input(buf);
   amount_t x13;
   x13.parse(input);
   assertEqual(x12, x13);
+#endif // NOT_FOR_PYTHON
 
   amount_t x14;
   assertThrow(x14.parse("DM"), amount_error);
@@ -210,6 +212,7 @@ void AmountTestCase::testCommodityConstructors()
   assertValid(x10);
 }
 
+#ifndef NOT_FOR_PYTHON
 void AmountTestCase::testAssignment()
 {
   amount_t x0;
@@ -315,6 +318,7 @@ void AmountTestCase::testCommodityAssignment()
   assertValid(x9);
   assertValid(x10);
 }
+#endif // NOT_FOR_PYTHON
 
 void AmountTestCase::testEquality()
 {
@@ -350,35 +354,24 @@ void AmountTestCase::testEquality()
 void AmountTestCase::testCommodityEquality()
 {
   amount_t x0;
-  amount_t x1;
-  amount_t x2;
-  amount_t x3;
-  amount_t x4;
-  amount_t x5;
-  amount_t x6;
-  amount_t x7;
-  amount_t x8;
-  amount_t x9;
-  amount_t x10;
-
-  x1  = "$123.45";
-  x2  = "-$123.45";
-  x3  = "$-123.45";
-  x4  = "DM 123.45";
-  x5  = "-DM 123.45";
-  x6  = "DM -123.45";
-  x7  = "123.45 euro";
-  x8  = "-123.45 euro";
-  x9  = "123.45€";
-  x10 = "-123.45€";
+  amount_t x1("$123.45");
+  amount_t x2("-$123.45");
+  amount_t x3("$-123.45");
+  amount_t x4("DM 123.45");
+  amount_t x5("-DM 123.45");
+  amount_t x6("DM -123.45");
+  amount_t x7("123.45 euro");
+  amount_t x8("-123.45 euro");
+  amount_t x9("123.45€");
+  amount_t x10("-123.45€");
 
   assertTrue(x0.is_null());
   assertThrow(x0.is_zero(), amount_error);
   assertThrow(x0.is_realzero(), amount_error);
-  assertThrow(assert(x0.sign() == 0), amount_error);
-  assertThrow(assert(x0.compare(x1) < 0), amount_error);
-  assertThrow(assert(x0.compare(x2) > 0), amount_error);
-  assertThrow(assert(x0.compare(x0) == 0), amount_error);
+  assertThrow(x0.sign() == 0, amount_error);
+  assertThrow(x0.compare(x1) < 0, amount_error);
+  assertThrow(x0.compare(x2) > 0, amount_error);
+  assertThrow(x0.compare(x0) == 0, amount_error);
 
   assertTrue(x1 != x2);
   assertTrue(x1 != x4);
@@ -1335,7 +1328,7 @@ void AmountTestCase::testTruth()
   amount_t x1("1234");
   amount_t x2("1234.56");
 
-  assertThrow(assert(x0 ? 1 : 0), amount_error);
+  assertThrow(x0 ? 1 : 0, amount_error);
 
   assertTrue(x1);
   assertTrue(x2);
@@ -1442,24 +1435,24 @@ void AmountTestCase::testCommodityConversion()
   assertValid(x1);
 }
 
+#ifndef NOT_FOR_PYTHON
 void AmountTestCase::testPrinting()
 {
   amount_t x0;
   amount_t x1("982340823.380238098235098235098235098");
 
-#if 0
   {
-    std::ostringstream bufstr;
-    assertThrow(bufstr << x0, amount_error);
+  std::ostringstream bufstr;
+  x0.print(bufstr);
+  assertEqual(std::string("<null>"), bufstr.str());
   }
-#endif
 
   {
-    std::ostringstream bufstr;
-    bufstr << x1;
+  std::ostringstream bufstr;
+  x1.print(bufstr);
 
-    assertEqual(std::string("982340823.380238098235098235098235098"),
-		bufstr.str());
+  assertEqual(std::string("982340823.380238098235098235098235098"),
+	      bufstr.str());
   }
 
   assertValid(x0);
@@ -1472,26 +1465,26 @@ void AmountTestCase::testCommodityPrinting()
   amount_t x2("$982340823.38");
 
   {
-    std::ostringstream bufstr;
-    bufstr << x1;
+  std::ostringstream bufstr;
+  x1.print(bufstr);
 
-    assertEqual(std::string("$982340823.386238098235098235098235098"),
-		bufstr.str());
+  assertEqual(std::string("$982340823.386238098235098235098235098"),
+	      bufstr.str());
   }
 
   {
-    std::ostringstream bufstr;
-    bufstr << (x1 * x2).to_string();
+  std::ostringstream bufstr;
+  (x1 * x2).print(bufstr);
 
-    assertEqual(std::string("$964993493285024293.18099172508158508135413499124"),
-		bufstr.str());
+  assertEqual(std::string("$964993493285024293.18099172508158508135413499124"),
+	      bufstr.str());
   }
 
   {
-    std::ostringstream bufstr;
-    bufstr << (x2 * x1).to_string();
+  std::ostringstream bufstr;
+  (x2 * x1).print(bufstr);
 
-    assertEqual(std::string("$964993493285024293.18"), bufstr.str());
+  assertEqual(std::string("$964993493285024293.18"), bufstr.str());
   }
 
   assertValid(x1);
@@ -1512,14 +1505,14 @@ void AmountTestCase::testSerialization()
 
   std::string buf;
   {
-    std::ostringstream storage;
-    assertThrow(x0.write(storage), amount_error);
-    x1.write(storage);
-    x2.write(storage);
-    x3.write(storage);
-    x4.write(storage);
-    x5.write(storage);
-    buf = storage.str();
+  std::ostringstream storage;
+  assertThrow(x0.write(storage), amount_error);
+  x1.write(storage);
+  x2.write(storage);
+  x3.write(storage);
+  x4.write(storage);
+  x5.write(storage);
+  buf = storage.str();
   }
 
   amount_t x1b;
@@ -1528,12 +1521,12 @@ void AmountTestCase::testSerialization()
   amount_t x4b;
   amount_t x5b;
   {
-    std::istringstream storage(buf);
-    x1b.read(storage);
-    x2b.read(storage);
-    x3b.read(storage);
-    x4b.read(storage);
-    x5b.read(storage);
+  std::istringstream storage(buf);
+  x1b.read(storage);
+  x2b.read(storage);
+  x3b.read(storage);
+  x4b.read(storage);
+  x5b.read(storage);
   }
 
   assertEqual(x1, x1b);
@@ -1541,6 +1534,7 @@ void AmountTestCase::testSerialization()
   assertEqual(x3, x3b);
   assertEqual(x4, x4b);
 
+#ifndef NOT_FOR_PYTHON
   const char * ptr = buf.c_str();
 
   amount_t x1c;
@@ -1549,17 +1543,18 @@ void AmountTestCase::testSerialization()
   amount_t x4c;
   amount_t x5c;
   {
-    x1c.read(ptr);
-    x2c.read(ptr);
-    x3c.read(ptr);
-    x4c.read(ptr);
-    x5c.read(ptr);
+  x1c.read(ptr);
+  x2c.read(ptr);
+  x3c.read(ptr);
+  x4c.read(ptr);
+  x5c.read(ptr);
   }
 
   assertEqual(x1, x1b);
   assertEqual(x2, x2b);
   assertEqual(x3, x3b);
   assertEqual(x4, x4b);
+#endif // NOT_FOR_PYTHON
 
   assertValid(x1);
   assertValid(x2);
@@ -1574,3 +1569,14 @@ void AmountTestCase::testSerialization()
   assertValid(x3c);
   assertValid(x4c);
 }
+
+void AmountTestCase::testXmlSerialization()
+{
+  amount_t x1("$8,192.34");
+
+  std::ostringstream storage;
+  x1.write_xml(storage);
+
+  assertEqual(std::string("<amount>\n  <commodity flags=\"PT\">\n    <symbol>$</symbol>\n  </commodity>\n  <quantity>8192.34</quantity>\n</amount>\n"), storage.str());
+}
+#endif // NOT_FOR_PYTHON
