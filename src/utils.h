@@ -535,6 +535,18 @@ inline char peek_next_nonws(std::istream& in) {
   return c;
 }
 
+inline void xml_space(std::ostream& out, const int depth = 0) {
+  for (int i = 0; i < depth; i++)
+    out << "  ";
+}
+
+inline void xml_print(std::ostream& out,
+		      const string& str,
+		      const int     depth = 0) {
+  xml_space(out, depth);
+  out << str;
+}
+
 #define READ_INTO(str, targ, size, var, cond) {				\
   char * _p = targ;							\
   var = str.peek();							\

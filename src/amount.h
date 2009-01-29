@@ -703,6 +703,9 @@ public:
 	    char **	  pool_next = NULL);
   void write(std::ostream& out, unsigned int index = 0) const;
 
+  void read_xml(std::istream& in);
+  void write_xml(std::ostream& out, const int depth = 0) const;
+
   /**
    * Debugging methods.  There are two methods defined to help with
    * debugging:

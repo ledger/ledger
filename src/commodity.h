@@ -359,6 +359,9 @@ public:
   void read(char *& data);
   void write(std::ostream& out) const;
 
+  void read_xml(std::istream& in);
+  void write_xml(std::ostream& out, const int depth = 0) const;
+
   bool valid() const;
 };
 
