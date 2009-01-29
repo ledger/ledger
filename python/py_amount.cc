@@ -149,9 +149,6 @@ EXC_TRANSLATOR(amount_error)
 
 void export_amount()
 {
-  scope().attr("AMOUNT_PARSE_NO_MIGRATE") = AMOUNT_PARSE_NO_MIGRATE;
-  scope().attr("AMOUNT_PARSE_NO_REDUCE")  = AMOUNT_PARSE_NO_REDUCE;
-
   class_< amount_t > ("Amount")
     .def("initialize", &amount_t::initialize)
     .staticmethod("initialize")
@@ -383,6 +380,13 @@ internal precision.")
     .def("dump", &amount_t::dump)
 
     .def("valid", &amount_t::valid)
+    ;
+
+  enum_< amount_t::parse_flags_enum_t >("AmountParse")
+    .value("PARSE_DEFAULT",    amount_t::PARSE_DEFAULT)
+    .value("PARSE_NO_MIGRATE", amount_t::PARSE_NO_MIGRATE)
+    .value("PARSE_NO_REDUCE",  amount_t::PARSE_NO_REDUCE)
+    .value("PARSE_SOFT_FAIL",  amount_t::PARSE_SOFT_FAIL)
     ;
 
   register_optional_to_python<amount_t>();

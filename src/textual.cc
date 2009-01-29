@@ -84,9 +84,9 @@ namespace {
   optional<expr_t> parse_amount_expr(std::istream&  in,
 				     amount_t&      amount,
 				     xact_t *	    xact,
-				     unsigned short flags = 0)
+				     uint_least8_t  flags = 0)
   {
-    expr_t expr(in, flags | EXPR_PARSE_PARTIAL);
+    expr_t expr(in, flags | static_cast<uint_least8_t>(expr_t::PARSE_PARTIAL));
 
     DEBUG("textual.parse", "line " << linenum << ": " <<
 	  "Parsed an amount expression");
@@ -204,7 +204,8 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 
       xact->amount_expr =
 	parse_amount_expr(in, xact->amount, xact.get(),
-			  EXPR_PARSE_NO_REDUCE | EXPR_PARSE_NO_ASSIGN);
+			  static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
+			  static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
       saw_amount = true;
 
       if (! xact->amount.is_null()) {
@@ -257,8 +258,8 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 
 	  xact->cost_expr =
 	    parse_amount_expr(in, *xact->cost, xact.get(),
-			      EXPR_PARSE_NO_MIGRATE |
-			      EXPR_PARSE_NO_ASSIGN);
+			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
+			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
 	  if (xact->cost_expr) {
 	    istream_pos_type end = in.tellg();
@@ -315,7 +316,7 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
 
 	    xact->assigned_amount_expr =
 	      parse_amount_expr(in, *xact->assigned_amount, xact.get(),
-				EXPR_PARSE_NO_MIGRATE);
+				static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
 	    if (xact->assigned_amount->is_null())
 	      throw parse_error

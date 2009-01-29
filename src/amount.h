@@ -633,17 +633,36 @@ public:
    * between scaling commodity values.  For example, Ledger uses it to
    * define the relationships among various time values:
    *
+   * @code
    *   amount_t::parse_conversion("1.0m", "60s"); // a minute is 60 seconds
    *   amount_t::parse_conversion("1.0h", "60m"); // an hour is 60 minutes
+   * @endcode
    */
-#define AMOUNT_PARSE_NO_MIGRATE	 0x01
-#define AMOUNT_PARSE_NO_REDUCE	 0x02
-#define AMOUNT_PARSE_SOFT_FAIL   0x04
+  enum parse_flags_enum_t {
+    PARSE_DEFAULT    = 0x00,
+    PARSE_NO_MIGRATE = 0x01,
+    PARSE_NO_REDUCE  = 0x02,
+    PARSE_SOFT_FAIL  = 0x04
+  };
 
-  typedef uint_least8_t flags_t;
+  typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
 
-  bool parse(std::istream& in, flags_t flags = 0);
-  bool parse(const string& str, flags_t flags = 0) {
+  /**
+   * The method parse() is used to parse an amount from an input stream
+   * or a string.  A global operator>>() is also defined which simply
+   * calls parse on the input stream.  The parse() method has two forms:
+   *
+   * parse(istream, flags_t) parses an amount from the given input
+   * stream.
+   *
+   * parse(string, flags_t) parses an amount from the given string.
+   *
+   * parse(string, flags_t) also parses an amount from a string.
+   */
+  bool parse(std::istream& in,
+	     const parse_flags_t& flags = PARSE_DEFAULT);
+  bool parse(const string& str,
+	     const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
     bool result = parse(stream, flags);
     assert(stream.eof());

@@ -31,7 +31,6 @@
 
 #include "format.h"
 #include "account.h"
-#include "parser.h"
 
 namespace ledger {
 
@@ -213,7 +212,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       std::istringstream str(p);
       current->type = element_t::EXPR;
       string temp(p);
-      current->expr.parse(str, EXPR_PARSE_SINGLE, &temp);
+      current->expr.parse(str, expr_t::PARSE_SINGLE, &temp);
       if (str.eof()) {
 	current->expr.set_text(p);
 	p += std::strlen(p);

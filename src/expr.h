@@ -57,6 +57,16 @@ public:
   class op_t;
   typedef intrusive_ptr<op_t> ptr_op_t;
 
+  enum parse_flags_enum_t {
+    PARSE_NORMAL     = 0x00,
+    PARSE_PARTIAL    = 0x01,
+    PARSE_SINGLE     = 0x02,
+    PARSE_NO_MIGRATE = 0x04,
+    PARSE_NO_REDUCE  = 0x08,
+    PARSE_NO_ASSIGN  = 0x10,
+    PARSE_NO_DATES   = 0x20
+  };
+
 private:
   ptr_op_t ptr;
   string   str;
@@ -75,8 +85,8 @@ public:
   expr_t(const expr_t& other);
   expr_t(const ptr_op_t& _ptr, const string& _str = "");
 
-  expr_t(const string& _str, const unsigned int flags = 0);
-  expr_t(std::istream& in, const unsigned int flags = 0);
+  expr_t(const string& _str, const uint_least8_t flags = 0);
+  expr_t(std::istream& in, const uint_least8_t flags = 0);
 
   virtual ~expr_t() throw();
 

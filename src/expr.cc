@@ -48,7 +48,7 @@ expr_t::expr_t(const expr_t& other)
   TRACE_CTOR(expr_t, "copy");
 }
 
-expr_t::expr_t(const string& _str, const unsigned int flags)
+expr_t::expr_t(const string& _str, const uint_least8_t flags)
   : str(_str), compiled(false)
 {
   TRACE_CTOR(expr_t, "const string&");
@@ -57,7 +57,7 @@ expr_t::expr_t(const string& _str, const unsigned int flags)
     ptr = parser->parse(str, flags);
 }
 
-expr_t::expr_t(std::istream& in, const unsigned int flags)
+expr_t::expr_t(std::istream& in, const uint_least8_t flags)
   : compiled(false)
 {
   TRACE_CTOR(expr_t, "std::istream&");

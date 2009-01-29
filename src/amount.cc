@@ -859,7 +859,7 @@ namespace {
   }
 }
 
-bool amount_t::parse(std::istream& in, flags_t flags)
+bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 {
   // The possible syntax for an amount is:
   //
@@ -911,7 +911,7 @@ bool amount_t::parse(std::istream& in, flags_t flags)
   }
 
   if (quant.empty()) {
-    if (flags & AMOUNT_PARSE_SOFT_FAIL)
+    if (flags.has_flags(PARSE_SOFT_FAIL))
       return false;
     else
       throw_(amount_error, "No quantity specified for amount");
@@ -983,7 +983,7 @@ bool amount_t::parse(std::istream& in, flags_t flags)
 
   // Set the commodity's flags and precision accordingly
 
-  if (commodity_ && ! (flags & AMOUNT_PARSE_NO_MIGRATE)) {
+  if (commodity_ && ! flags.has_flags(PARSE_NO_MIGRATE)) {
     commodity().add_flags(comm_flags);
 
     if (quantity->prec > commodity().precision())
@@ -992,7 +992,7 @@ bool amount_t::parse(std::istream& in, flags_t flags)
 
   // Setup the amount's own flags
 
-  if (flags & AMOUNT_PARSE_NO_MIGRATE)
+  if (flags.has_flags(PARSE_NO_MIGRATE))
     quantity->add_flags(BIGINT_KEEP_PREC);
 
   // Now we have the final number.  Remove commas and periods, if
@@ -1020,7 +1020,7 @@ bool amount_t::parse(std::istream& in, flags_t flags)
   if (negative)
     in_place_negate();
 
-  if (! (flags & AMOUNT_PARSE_NO_REDUCE))
+  if (! flags.has_flags(PARSE_NO_REDUCE))
     in_place_reduce();
 
   safe_holder.release();	// `this->quantity' owns the pointer
@@ -1035,8 +1035,8 @@ void amount_t::parse_conversion(const string& larger_str,
 {
   amount_t larger, smaller;
 
-  larger.parse(larger_str, AMOUNT_PARSE_NO_REDUCE);
-  smaller.parse(smaller_str, AMOUNT_PARSE_NO_REDUCE);
+  larger.parse(larger_str, PARSE_NO_REDUCE);
+  smaller.parse(smaller_str, PARSE_NO_REDUCE);
 
   larger *= smaller.number();
 
@@ -1324,8 +1324,8 @@ void amount_t::read(const char *& data,
 
     quantity->prec = *reinterpret_cast<precision_t *>(const_cast<char *>(data));
     data += sizeof(precision_t);
-    quantity->set_flags(*reinterpret_cast<flags_t *>(const_cast<char *>(data)));
-    data += sizeof(flags_t);
+    quantity->set_flags(*reinterpret_cast<bigint_t::flags_t *>(const_cast<char *>(data)));
+    data += sizeof(bigint_t::flags_t);
 
     if (byte == 2)
       quantity->add_flags(BIGINT_BULK_ALLOC);

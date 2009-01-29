@@ -34,8 +34,8 @@
 namespace ledger {
 
 expr_t::ptr_op_t
-expr_t::parser_t::parse_value_term(std::istream& in,
-				   const flags_t tflags) const
+expr_t::parser_t::parse_value_term(std::istream&        in,
+				   const parse_flags_t& tflags) const
 {
   ptr_op_t node;
 
@@ -66,7 +66,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
       node = call_node;
 
       push_token(tok);		// let the parser see it again
-      node->set_right(parse_value_expr(in, tflags | EXPR_PARSE_SINGLE));
+      node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
     } else {
       push_token(tok);
     }
@@ -74,8 +74,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
   }
 
   case token_t::LPAREN:
-    node = parse_value_expr(in, (tflags | EXPR_PARSE_PARTIAL) &
-			    ~EXPR_PARSE_SINGLE);
+    node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL).minus_flags(PARSE_SINGLE));
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.expected(')');
@@ -91,7 +90,7 @@ expr_t::parser_t::parse_value_term(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_unary_expr(std::istream& in,
-				   const flags_t tflags) const
+				   const parse_flags_t& tflags) const
 {
   ptr_op_t node;
 
@@ -143,11 +142,11 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_mul_expr(std::istream& in,
-				 const flags_t tflags) const
+				 const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_unary_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
@@ -169,11 +168,11 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_add_expr(std::istream& in,
-				 const flags_t tflags) const
+				 const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_mul_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::PLUS ||
@@ -196,19 +195,19 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_logic_expr(std::istream& in,
-				   const flags_t tflags) const
+				   const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_add_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
-    op_t::kind_t kind	= op_t::LAST;
-    flags_t	 _flags	= tflags;
-    token_t&	 tok	= next_token(in, tflags);
-    bool	 negate = false;
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+    op_t::kind_t  kind	 = op_t::LAST;
+    parse_flags_t _flags = tflags;
+    token_t&	  tok	 = next_token(in, tflags);
+    bool	  negate = false;
 
     switch (tok.kind) {
     case token_t::EQUAL:
-      if (tflags & EXPR_PARSE_NO_ASSIGN)
+      if (tflags.has_flags(PARSE_NO_ASSIGN))
 	tok.rewind(in);
       else
 	kind = op_t::O_EQ;
@@ -264,11 +263,11 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_and_expr(std::istream& in,
-				 const flags_t tflags) const
+				 const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_logic_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::KW_AND) {
@@ -288,11 +287,11 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_or_expr(std::istream& in,
-				const flags_t tflags) const
+				const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_and_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::KW_OR) {
@@ -312,11 +311,11 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_querycolon_expr(std::istream& in,
-					const flags_t tflags) const
+					const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_or_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::QUERY) {
@@ -348,11 +347,11 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 
 expr_t::ptr_op_t
 expr_t::parser_t::parse_value_expr(std::istream& in,
-				   const flags_t tflags) const
+				   const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_querycolon_expr(in, tflags));
 
-  if (node && ! (tflags & EXPR_PARSE_SINGLE)) {
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags);
 
     if (tok.kind == token_t::COMMA) {
@@ -367,14 +366,14 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
     }
 
     if (tok.kind != token_t::TOK_EOF) {
-      if (tflags & EXPR_PARSE_PARTIAL)
+      if (tflags.has_flags(PARSE_PARTIAL))
 	push_token(tok);
       else
 	tok.unexpected();
     }
   }
-  else if (! (tflags & (EXPR_PARSE_PARTIAL |
-			EXPR_PARSE_SINGLE))) {
+  else if (! tflags.has_flags(PARSE_PARTIAL) &&
+	   ! tflags.has_flags(PARSE_SINGLE)) {
     throw_(parse_error, "Failed to parse value expression");
   }
 
@@ -382,7 +381,7 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 }
 
 expr_t::ptr_op_t
-expr_t::parser_t::parse(std::istream& in, const flags_t flags,
+expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
 			const string * original_string)
 {
   try {

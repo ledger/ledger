@@ -32,7 +32,7 @@
 #ifndef _FLAGS_H
 #define _FLAGS_H
 
-template <typename T = boost::uint_least8_t>
+template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags
 {
 public:
@@ -42,7 +42,7 @@ protected:
   flags_t _flags;
 
 public:
-  supports_flags() : _flags(0) {
+  supports_flags() : _flags(static_cast<T>(0)) {
     TRACE_CTOR(supports_flags, "");
   }
   supports_flags(const supports_flags& arg) : _flags(arg._flags) {
@@ -66,13 +66,60 @@ public:
     _flags = arg;
   }
   void clear_flags() {
-    _flags = 0;
+    _flags = static_cast<T>(0);
   }
   void add_flags(const flags_t arg) {
-    _flags |= arg;
+    _flags = static_cast<T>(static_cast<U>(_flags) | static_cast<U>(arg));
   }
   void drop_flags(const flags_t arg) {
-    _flags &= ~arg;
+    _flags = static_cast<T>(static_cast<U>(_flags) & static_cast<U>(~arg));
+  }
+};
+
+template <typename T = boost::uint_least8_t, typename U = T>
+class basic_flags_t : public supports_flags<T, U>
+{
+public:
+  basic_flags_t() {
+    TRACE_CTOR(basic_flags_t, "");
+  }
+  basic_flags_t(const T& bits) {
+    TRACE_CTOR(basic_flags_t, "const T&");
+    set_flags(bits);
+  }
+  basic_flags_t(const U& bits) {
+    TRACE_CTOR(basic_flags_t, "const U&");
+    set_flags(static_cast<T>(bits));
+  }
+  ~basic_flags_t() throw() {
+    TRACE_DTOR(basic_flags_t);
+  }
+
+  basic_flags_t& operator=(const basic_flags_t& other) {
+    set_flags(other.flags());
+    return *this;
+  }
+  basic_flags_t& operator=(const T& bits) {
+    set_flags(bits);
+    return *this;
+  }
+
+  operator T() const {
+    return supports_flags<T, U>::flags();
+  }
+  operator U() const {
+    return supports_flags<T, U>::flags();
+  }
+
+  basic_flags_t plus_flags(const T& arg) const {
+    basic_flags_t temp(*this);
+    temp.add_flags(arg);
+    return temp;
+  }
+  basic_flags_t minus_flags(const T& arg) const {
+    basic_flags_t temp(*this);
+    temp.drop_flags(arg);
+    return temp;
   }
 };
 
