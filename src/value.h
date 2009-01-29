@@ -30,17 +30,16 @@
  */
 
 /**
- * @defgroup numerics Core numerics
+ * @addtogroup math
  */
 
 /**
  * @file   value.h
  * @author John Wiegley
- * @date   Thu Jun 14 21:54:00 2007
  *
- * @brief  Abstract dynamic type representing various numeric types.
+ * @ingroup math
  *
- * @ingroup numerics
+ * @brief  Abstract dynamic type representing various numeric types
  *
  * A value_t object can be one of many types, and changes its type
  * dynamically based on how it is used.  For example, if you assign

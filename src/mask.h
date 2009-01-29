@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup util
+ */
+
+/**
+ * @file   mask.h
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Regular expression masking.
+ */
+
 #ifndef _MASK_H
 #define _MASK_H
 

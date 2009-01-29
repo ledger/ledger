@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup util
+ */
+
+/**
+ * @file   times.h
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief datetime_t and date_t objects
+ */
+
 #ifndef _TIMES_H
 #define _TIMES_H
 

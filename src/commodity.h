@@ -30,17 +30,16 @@
  */
 
 /**
- * @defgroup numerics Core numerics
+ * @addtogroup math
  */
 
 /**
  * @file   commodity.h
  * @author John Wiegley
- * @date   Wed Apr 18 22:05:53 2007
  *
- * @brief  Types for handling commodities.
+ * @ingroup math
  *
- * @ingroup numerics
+ * @brief  Types for handling commodities
  *
  * This file contains one of the most basic types in Ledger:
  * commodity_t, and its annotated cousin, annotated_commodity_t.

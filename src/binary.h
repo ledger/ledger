@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup util
+ */
+
+/**
+ * @file   binary.h
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief General binary object streaming.
+ */
+
 #ifndef BINARY_H
 #define BINARY_H
 

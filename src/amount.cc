@@ -34,7 +34,7 @@
  * @author John Wiegley
  * @date   Thu Apr 26 15:19:46 2007
  *
- * @brief  Types for handling commoditized math.
+ * @brief  Types for handling commoditized math
  *
  * This file defines member functions for amount_t, and also defines a
  * helper class, bigint_t, which is used as a refcounted wrapper

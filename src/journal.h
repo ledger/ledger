@@ -78,8 +78,6 @@ public:
   }
 
   /**
-   * @class journal_t::parser_t
-   *
    * @brief Provides an abstract interface for writing journal parsers.
    *
    * Any data format for Ledger data is possible, as long as it can be parsed

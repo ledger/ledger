@@ -30,26 +30,16 @@
  */
 
 /**
+ * @defgroup util General utilities
+ */
+
+/**
  * @file   utils.h
  * @author John Wiegley
- * @date   Sun May  6 21:20:00 2007
  *
- * @brief  This file contains general utility facilities used by Ledger.
+ * @ingroup util
  *
- * Ledger has need of the following utility code, which this file
- * provides or includes in:
- *
- * - system headers
- * - asserts
- * - verification (basically, "heavy asserts")
- * - tracing code
- * - debug logging code
- * - timing code
- * - current error context
- * - exception framework
- * - date/time type
- * - supports_flags<> for objects that use flags
- * - push_variable<> for restoring variable values
+ * @brief General utility facilities used by Ledger
  */
 
 #ifndef _UTILS_H
@@ -62,10 +52,10 @@
 
 #include <system.hh>
 
-/**********************************************************************
- *
- * Default values
+/**
+ * @name Default values
  */
+/*@{*/
 
 #if defined(DEBUG_MODE)
 #define VERIFY_ON   1
@@ -81,10 +71,12 @@
 #define TIMERS_ON   1
 #endif
 
-/**********************************************************************
- *
- * Forward declarations
+/*@}*/
+
+/**
+ * @name Forward declarations
  */
+/*@{*/
 
 namespace ledger {
   using namespace boost;
@@ -109,10 +101,12 @@ namespace ledger {
   typedef boost::filesystem::filesystem_error filesystem_error;
 }
 
-/**********************************************************************
- *
- * Assertions
+/*@}*/
+
+/**
+ * @name Assertions
  */
+/*@{*/
 
 #ifdef assert
 #undef assert
@@ -138,10 +132,12 @@ namespace ledger {
 
 #endif // ASSERTS_ON
 
-/**********************************************************************
- *
- * Verification (basically, very slow asserts)
+/*@}*/
+
+/**
+ * @name Verification (i.e., heavy asserts)
  */
+/*@{*/
 
 #if defined(VERIFY_ON)
 
@@ -250,10 +246,12 @@ extern ledger::string empty_string;
 
 #define IF_VERIFY() if (DO_VERIFY())
 
-/**********************************************************************
- *
- * Logging
+/*@}*/
+
+/**
+ * @name Tracing and logging
  */
+/*@{*/
 
 #if ! defined(NO_LOGGING)
 #define LOGGING_ON 1
@@ -383,10 +381,13 @@ inline bool category_matches(const char * cat) {
 #define IF_FATAL()    if (SHOW_FATAL())
 #define IF_CRITICAL() if (SHOW_CRITICAL())
 
-/**********************************************************************
- *
- * Timers (allows log entries to specify cumulative time spent)
+/*@}*/
+
+/**
+ * @name Timers
+ * This allows log entries to specify cumulative time spent.
  */
+/*@{*/
 
 #if defined(LOGGING_ON) && defined(TIMERS_ON)
 
@@ -461,12 +462,10 @@ void finish_timer(const char * name);
 
 #endif // TIMERS_ON
 
-/**********************************************************************
- *
- * - Exception handling helpers
- * - Date/time support classes
- * - General support for objects with "flags"
- * - Support for scoped execution and variable restoration
+/*@}*/
+
+/*
+ * These files define the other internal facilities.
  */
 
 #include "error.h"
@@ -474,10 +473,10 @@ void finish_timer(const char * name);
 #include "flags.h"
 #include "pushvar.h"
 
-/**********************************************************************
- *
- * General utility functions
+/**
+ * @name General utility functions
  */
+/*@{*/
 
 #define foreach BOOST_FOREACH
 
@@ -586,5 +585,7 @@ inline void xml_print(std::ostream& out,
 }
 
 } // namespace ledger
+
+/*@}*/
 
 #endif // _UTILS_H
