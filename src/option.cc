@@ -49,8 +49,7 @@ namespace {
     }
     *p = '\0';
 
-    expr_t::ptr_op_t op = scope.lookup(buf);
-    if (op)
+    if (expr_t::ptr_op_t op = scope.lookup(buf))
       return op_bool_tuple(op, false);
 
     *p++ = '_';
@@ -66,8 +65,7 @@ namespace {
     buf[4] = letter;
     buf[5] = '\0';
 
-    expr_t::ptr_op_t op = scope.lookup(buf);
-    if (op)
+    if (expr_t::ptr_op_t op = scope.lookup(buf))
       return op_bool_tuple(op, false);
 
     buf[5] = '_';

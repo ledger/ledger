@@ -50,41 +50,41 @@ class session_t : public noncopyable, public scope_t
   friend void release_session_context();
 
 public:
-  static session_t * current;
+  static session_t *		current;
 
-  scoped_ptr<report_t> current_report;
+  scoped_ptr<report_t>		current_report;
 
-  path		 data_file;
-  optional<path> init_file;
-  optional<path> cache_file;
-  optional<path> price_db;
+  path				data_file;
+  optional<path>		init_file;
+  optional<path>		cache_file;
+  optional<path>		price_db;
 
-  string register_format;
-  string wide_register_format;
-  string print_format;
-  string balance_format;
-  string equity_format;
-  string plot_amount_format;
-  string plot_total_format;
-  string write_hdr_format;
-  string write_xact_format;
-  string prices_format;
-  string pricesdb_format;
+  string			register_format;
+  string			wide_register_format;
+  string			print_format;
+  string			balance_format;
+  string			equity_format;
+  string			plot_amount_format;
+  string			plot_total_format;
+  string			write_hdr_format;
+  string			write_xact_format;
+  string			prices_format;
+  string			pricesdb_format;
 
-  unsigned long pricing_leeway;
+  unsigned long			pricing_leeway;
 
-  bool download_quotes;
-  bool use_cache;
-  bool cache_dirty;
+  bool				download_quotes;
+  bool				use_cache;
+  bool				cache_dirty;
 
-  datetime_t now;
-  date_t today;
+  datetime_t			now;
+  date_t			today;
 
-  format_t::elision_style_t elision_style;
-  int abbrev_length;
+  format_t::elision_style_t	elision_style;
+  int				abbrev_length;
 
-  bool ansi_codes;
-  bool ansi_invert;
+  bool				ansi_codes;
+  bool				ansi_invert;
 
   ptr_list<journal_t>		journals;
   ptr_list<journal_t::parser_t> parsers;
