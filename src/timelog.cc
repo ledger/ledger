@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "timelog.h"
+
 namespace ledger {
 
 namespace {
@@ -119,8 +121,8 @@ time_log_t::~time_log_t()
 }
 
 void time_log_t::clock_in(const datetime_t& checkin,
-			  account_t *	    account = NULL,
-			  const string&     desc    = "")
+			  account_t *	    account,
+			  const string&     desc)
 {
   time_entry_t event(checkin, account, desc);
 
@@ -133,13 +135,14 @@ void time_log_t::clock_in(const datetime_t& checkin,
 }
 
 void time_log_t::clock_out(const datetime_t& checkin,
-			   account_t *	     account = NULL,
-			   const string&     desc    = "")
+			   account_t *	     account,
+			   const string&     desc)
 {
   if (time_entries.empty())
     throw std::logic_error("Timelog check-out event without a check-in");
 
-  clock_out_from_timelog(time_entries, checkin, account, desc, journal);
+  clock_out_from_timelog(time_entries, checkin, account, desc.c_str(),
+			 journal);
 }
 
 } // namespace ledger

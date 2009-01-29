@@ -34,51 +34,66 @@
 #endif
 
 #include "textual.h"
+#if defined(TIMELOG_SUPPORT)
+#include "timelog.h"
+#endif
 #include "expr.h"
 #include "parser.h"
 #include "session.h"
 #include "option.h"
 #include "acconf.h"
 
-#define TIMELOG_SUPPORT 1
-
 namespace ledger {
 
-#define MAX_LINE 1024
-
-static path         pathname;
-static unsigned int linenum;
-static unsigned int src_idx;
-static accounts_map account_aliases;
-
-static std::list<std::pair<path, int> > include_stack;
-
-#ifdef TIMELOG_SUPPORT
-struct time_entry_t
+bool textual_parser_t::test(std::istream& in) const
 {
-  datetime_t  checkin;
-  account_t * account;
-  string      desc;
+  char   buf[12];
+  char * p;
 
-  time_entry_t() : account(NULL) {
-    TRACE_CTOR(time_entry_t, "");
-  }
-  time_entry_t(const datetime_t& _checkin,
-	       account_t *	 _account = NULL,
-	       const string&     _desc	  = "")
-    : checkin(_checkin), account(_account), desc(_desc) {
-    TRACE_CTOR(time_entry_t, "const datetime_t&, account_t *, const string&");
-  }
-  time_entry_t(const time_entry_t& entry)
-    : checkin(entry.checkin), account(entry.account),
-      desc(entry.desc) {
-    TRACE_CTOR(time_entry_t, "copy");
-  }
-  ~time_entry_t() throw() {
-    TRACE_DTOR(time_entry_t);
-  }
-};
+  in.read(buf, 11);
+  if (utf8::is_bom(buf))
+    p = &buf[3];
+  else
+    p = buf;
+
+  if (std::strncmp(p, "<?xml", 5) == 0)
+    throw_(parse_error,
+	   "Ledger file contains XML data, but format was not recognized");
+
+  in.clear();
+  in.seekg(0, std::ios::beg);
+  assert(in.good());
+  return true;
+}
+
+std::size_t textual_parser_t::parse(std::istream& in,
+				    session_t&    session,
+				    journal_t&	  journal,
+				    account_t *   master,
+				    const path *  original_file)
+{
+  TRACE_START(parsing_total, 1, "Total time spent parsing text:");
+
+  std::list<account_t *> account_stack;
+#if defined(TIMELOG_SUPPORT)
+  time_log_t		 timelog(journal);
 #endif
+
+  instance_t parsing_instance(account_stack,
+#if defined(TIMELOG_SUPPORT)
+			      timelog,
+#endif
+			      in, session, journal, master,
+			      original_file);
+  parsing_instance.parse();
+
+  TRACE_STOP(parsing_total, 1);
+
+  if (parsing_instance.errors > 0)
+    throw static_cast<int>(parsing_instance.errors);
+
+  return parsing_instance.count;
+}
 
 namespace {
   optional<expr_t> parse_amount_expr(std::istream&  in,
@@ -88,10 +103,9 @@ namespace {
   {
     expr_t expr(in, flags | static_cast<uint_least8_t>(expr_t::PARSE_PARTIAL));
 
-    DEBUG("textual.parse", "line " << linenum << ": " <<
-	  "Parsed an amount expression");
+    DEBUG("textual.parse", "Parsed an amount expression");
 
-#ifdef DEBUG_ENABLED
+#if defined(DEBUG_ENABLED)
     DEBUG_IF("textual.parse") {
       if (_debug_stream) {
 	ledger::dump_value_expr(*_debug_stream, expr);
@@ -102,15 +116,539 @@ namespace {
 
     if (expr) {
       amount = expr.calc(*xact).as_amount();
-      DEBUG("textual.parse", "line " << linenum << ": " <<
-	    "The transaction amount is " << amount);
+      DEBUG("textual.parse", "The transaction amount is " << amount);
       return expr;
     }
     return none;
   }
 }
 
-xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
+textual_parser_t::instance_t::instance_t
+  (std::list<account_t *>& _account_stack,
+#if defined(TIMELOG_SUPPORT)
+   time_log_t&             _timelog,
+#endif
+   std::istream&	   _in,
+   session_t&		   _session,
+   journal_t&		   _journal,
+   account_t *		   _master,
+   const path *		   _original_file,
+   instance_t *            _parent)
+    : account_stack(_account_stack),
+#if defined(TIMELOG_SUPPORT)
+      timelog(_timelog),
+#endif
+      parent(_parent), in(_in), session(_session),
+      journal(_journal), master(_master),
+      original_file(_original_file)
+{
+  TRACE_CTOR(textual_parser_t::instance_t, "...");
+
+  if (! master)
+    master = journal.master;
+
+  account_stack.push_front(master);
+
+  pathname = journal.sources.back();
+  src_idx  = journal.sources.size() - 1;
+  linenum  = 1;
+  beg_pos  = in.tellg();
+  beg_line = linenum;
+  count    = 0;
+  errors   = 0;
+}
+
+textual_parser_t::instance_t::~instance_t()
+{
+  TRACE_DTOR(textual_parser_t::instance_t);
+
+  account_stack.pop_front();
+
+  if (auto_entry_finalizer.get())
+    journal.remove_entry_finalizer(auto_entry_finalizer.get());
+}
+
+void textual_parser_t::instance_t::parse()
+{
+  INFO("Parsing file '" << pathname.string() << "'");
+
+  TRACE_START(instance_parse, 1,
+	      "Done parsing file '" << pathname.string() << "'");
+
+  errors = 0;
+
+  while (in.good() && ! in.eof()) {
+    try {
+      read_next_directive();
+
+      beg_pos = end_pos;
+    }
+    catch (const std::exception& err) {
+      if (parent) {
+	std::list<instance_t *> instances;
+
+	for (instance_t * instance = parent;
+	     instance;
+	     instance = instance->parent)
+	  instances.push_front(instance);
+
+	foreach (instance_t * instance, instances)
+	  add_error_context("In file included from '"
+			    << file_context(instance->pathname,
+					    instance->linenum - 1) << "':");
+      }
+      add_error_context("While parsing file '"
+			<< file_context(pathname, linenum - 1) << "':");
+
+      std::cout.flush();
+      std::cerr << ledger::error_context()
+		<< "Error: " << err.what() << std::endl;
+      errors++;
+    }
+  }
+
+  TRACE_STOP(instance_parse, 1);
+}
+
+void textual_parser_t::instance_t::read_next_directive()
+{
+  char * line;
+
+  in.getline(linebuf, MAX_LINE);
+  if (in.eof())
+    return;
+
+  if (linenum == 1 && utf8::is_bom(linebuf))
+    line = &linebuf[3];
+  else
+    line = linebuf;
+
+  int len = std::strlen(line);
+  if (line[len - 1] == '\r')
+    line[--len] = '\0';
+
+  end_pos = beg_pos;
+  end_pos += len + 1;
+  linenum++;
+
+  switch (line[0]) {
+  case '\0':
+    break;
+
+  case ' ':
+  case '\t': {
+    char * p = skip_ws(line);
+    if (*p)
+      throw parse_error("Line begins with whitespace");
+    break;
+  }
+
+  case '#':			// comment line
+  case ';':			// comment line
+    break;
+
+  case '-':			// option setting
+    option_directive(line);
+    break;
+
+  case '0':
+  case '1':
+  case '2':
+  case '3':
+  case '4':
+  case '5':
+  case '6':
+  case '7':
+  case '8':
+  case '9':
+    entry_directive(line);
+    break;
+  case '=':			// automated entry
+    automated_entry_directive(line);
+    break;
+  case '~':			// period entry
+    period_entry_directive(line);
+    break;
+
+#if defined(TIMELOG_SUPPORT)
+  case 'i':
+    clock_in_directive(line, false);
+    break;
+  case 'I':
+    clock_in_directive(line, true);
+    break;
+
+  case 'o':
+    clock_out_directive(line, false);
+    break;
+  case 'O':
+    clock_out_directive(line, true);
+    break;
+
+  case 'h':
+  case 'b':
+    break;
+#endif // TIMELOG_SUPPORT
+
+  case 'A':		        // a default account for unbalanced xacts
+    default_account_directive(line);
+    break;
+  case 'C':			// a set of conversions
+    price_conversion_directive(line);
+    break;
+  case 'D':			// a default commodity for "entry"
+    default_commodity_directive(line);
+    break;
+  case 'N':			// don't download prices
+    nomarket_directive(line);
+    break;
+  case 'P':			// a pricing entry
+    price_entry_directive(line);
+    break;
+  case 'Y':			// set the current year
+    year_directive(line);
+    break;
+
+  case '@':
+  case '!':
+    line++;
+    // fall through...
+  default:			// some other directive
+    general_directive(line);
+    break;
+  }
+}
+
+#if defined(TIMELOG_SUPPORT)
+
+void textual_parser_t::instance_t::clock_in_directive(char * line,
+						      bool   capitalized)
+{
+  string date(line, 2, 19);
+
+  char * p = skip_ws(line + 22);
+  char * n = next_element(p, true);
+
+  timelog.clock_in(parse_datetime(date),
+		   account_stack.front()->find_account(p), n ? n : "");
+}
+
+void textual_parser_t::instance_t::clock_out_directive(char * line,
+						       bool   capitalized)
+{  
+  string date(line, 2, 19);
+
+  char * p = skip_ws(line + 22);
+  char * n = next_element(p, true);
+
+  timelog.clock_out(parse_datetime(date),
+		    p ? account_stack.front()->find_account(p) : NULL, n);
+  count++;
+}
+#endif // TIMELOG_SUPPORT
+
+void textual_parser_t::instance_t::default_commodity_directive(char * line)
+{
+  amount_t amt(skip_ws(line + 1));
+  assert(amt.valid());
+  amount_t::current_pool->default_commodity = &amt.commodity();
+}
+
+void textual_parser_t::instance_t::default_account_directive(char * line)
+{
+  journal.basket = account_stack.front()->find_account(skip_ws(line + 1));
+}
+
+void textual_parser_t::instance_t::price_conversion_directive(char * line)
+{
+  if (char * p = std::strchr(line + 1, '=')) {
+    *p++ = '\0';
+#if 0
+    // jww (2008-04-22): NYI!
+    parse_conversion(line + 1, p);
+#endif
+  }
+}
+
+namespace {
+  void parse_symbol(char *& p, string& symbol)
+  {
+    if (*p == '"') {
+      char * q = std::strchr(p + 1, '"');
+      if (! q)
+	throw parse_error("Quoted commodity symbol lacks closing quote");
+      symbol = string(p + 1, 0, q - p - 1);
+      p = q + 2;
+    } else {
+      char * q = next_element(p);
+      symbol = p;
+      if (q)
+	p = q;
+      else
+	p += symbol.length();
+    }
+    if (symbol.empty())
+      throw parse_error("Failed to parse commodity");
+  }
+}
+
+void textual_parser_t::instance_t::price_entry_directive(char * line)
+{
+  char * date_field_ptr = skip_ws(line + 1);
+  char * time_field_ptr = next_element(date_field_ptr);
+  if (! time_field_ptr) return;
+  string date_field = date_field_ptr;
+
+  char *     symbol_and_price;
+  datetime_t datetime;
+
+  if (std::isdigit(time_field_ptr[0])) {
+    symbol_and_price = next_element(time_field_ptr);
+    if (! symbol_and_price) return;
+    datetime = parse_datetime(date_field + " " + time_field_ptr);
+  } else {
+    symbol_and_price = time_field_ptr;
+    datetime = parse_datetime(date_field);
+  }
+
+  string symbol;
+  parse_symbol(symbol_and_price, symbol);
+  amount_t price(symbol_and_price);
+  assert(price.valid());
+
+  if (commodity_t * commodity =
+      amount_t::current_pool->find_or_create(symbol))
+    commodity->add_price(datetime, price);
+}
+
+void textual_parser_t::instance_t::nomarket_directive(char * line)
+{
+  char * p = skip_ws(line + 1);
+  string symbol;
+  parse_symbol(p, symbol);
+
+  if (commodity_t * commodity =
+      amount_t::current_pool->find_or_create(symbol))
+    commodity->add_flags(COMMODITY_NOMARKET);
+}
+
+void textual_parser_t::instance_t::year_directive(char * line)
+{
+  current_year = std::atoi(skip_ws(line + 1));
+}
+
+void textual_parser_t::instance_t::option_directive(char * line)
+{
+  char * p = next_element(line);
+  if (! p) {
+    p = std::strchr(line, '=');
+    if (p)
+      *p++ = '\0';
+  }
+  process_option(line + 2, session, p);
+}
+
+void textual_parser_t::instance_t::automated_entry_directive(char * line)
+{
+  if (! auto_entry_finalizer.get()) {
+    auto_entry_finalizer.reset(new auto_entry_finalizer_t(&journal));
+    journal.add_entry_finalizer(auto_entry_finalizer.get());
+  }
+
+  auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
+  if (parse_xacts(in, account_stack.front(), *ae, "automated",
+		  end_pos)) {
+    journal.auto_entries.push_back(ae);
+    ae->src_idx  = src_idx;
+    ae->beg_pos  = beg_pos;
+    ae->beg_line = beg_line;
+    ae->end_pos  = end_pos;
+    ae->end_line = linenum;
+  }
+}
+
+void textual_parser_t::instance_t::period_entry_directive(char * line)
+{
+  period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
+  if (! pe->period)
+    throw_(parse_error, "Parsing time period '" << line << "'");
+
+  if (parse_xacts(in, account_stack.front(), *pe,
+		  "period", end_pos)) {
+    if (pe->finalize()) {
+      extend_entry_base(&journal, *pe, true);
+      journal.period_entries.push_back(pe);
+      pe->src_idx  = src_idx;
+      pe->beg_pos  = beg_pos;
+      pe->beg_line = beg_line;
+      pe->end_pos  = end_pos;
+      pe->end_line = linenum;
+    } else {
+      throw parse_error("Period entry failed to balance");
+    }
+  }
+}
+
+void textual_parser_t::instance_t::entry_directive(char * line)
+{
+  istream_pos_type pos = beg_pos;
+
+  TRACE_START(entries, 1, "Time spent handling entries:");
+
+  if (entry_t * entry = parse_entry(in, line, account_stack.front(), pos)) {
+    // The entry pointer is unowned at the minute, and there is a
+    // possibility that add_entry ma throw an exception, which
+    // would cause us to leak without this guard.
+    std::auto_ptr<entry_t> entry_ptr(entry);
+    if (journal.add_entry(entry)) {
+      entry_ptr.release(); // it's owned by the journal now
+      entry->src_idx  = src_idx;
+      entry->beg_pos  = beg_pos;
+      entry->beg_line = beg_line;
+      entry->end_pos  = pos;
+      entry->end_line = linenum;
+      count++;
+    }
+    // It's perfectly valid for the journal to reject the entry,
+    // which it will do if the entry has no substantive effect
+    // (for example, a checking entry, all of whose transactions
+    // have null amounts).
+  } else {
+    throw parse_error("Failed to parse entry");
+  }
+
+  end_pos = pos;
+
+  TRACE_STOP(entries, 1);
+}
+
+void textual_parser_t::instance_t::include_directive(char * line)
+{
+  path filename(next_element(line));
+
+#if 0
+  if (filename[0] != '/' && filename[0] != '\\' && filename[0] != '~') {
+    string::size_type pos = pathname.prev.rfind('/');
+    if (pos == string::npos)
+      pos = pathname.prev.rfind('\\');
+    if (pos != string::npos)
+      filename = string(pathname.prev, 0, pos + 1) + filename;
+  }
+#endif
+  filename = resolve_path(filename);
+
+  DEBUG("textual.include", "Line " << linenum << ": " <<
+	"Including path '" << filename << "'");
+
+  ifstream stream(filename);
+
+  instance_t instance(account_stack,
+#if defined(TIMELOG_SUPPORT)
+		      timelog,
+#endif
+		      stream, session, journal, master,
+		      &filename, this);
+  instance.parse();
+
+  errors += instance.errors;
+  count  += instance.count;
+}
+
+void textual_parser_t::instance_t::account_directive(char * line)
+{
+  if (account_t * acct =
+      account_stack.front()->find_account(next_element(line)))
+    account_stack.push_front(acct);
+  else
+    assert(! "Failed to create account");
+}
+
+void textual_parser_t::instance_t::end_directive(char * line)
+{
+  account_stack.pop_front();
+}
+
+void textual_parser_t::instance_t::alias_directive(char * line)
+{
+  char * b = skip_ws(line + 1);
+  if (char * e = std::strchr(b, '=')) {
+    char * z = e - 1;
+    while (std::isspace(*z))
+      *z-- = '\0';
+    *e++ = '\0';
+    e = skip_ws(e);
+
+    // Once we have an alias name (b) and the target account
+    // name (e), add a reference to the account in the
+    // `account_aliases' map, which is used by the xact
+    // parser to resolve alias references.
+    account_t * acct = account_stack.front()->find_account(e);
+    std::pair<accounts_map::iterator, bool> result
+      = account_aliases.insert(accounts_map::value_type(b, acct));
+    assert(result.second);
+  }
+}
+
+void textual_parser_t::instance_t::define_directive(char * line)
+{
+  expr_t def(skip_ws(line + 1));
+  def.compile(session);	// causes definitions to be established
+}
+
+void textual_parser_t::instance_t::general_directive(char * line)
+{
+  char * p = next_element(line);
+  string word(line + 1);
+
+  switch (*p) {
+  case 'a':
+    if (std::strcmp(p, "account") == 0) {
+      account_directive(line);
+      return;
+    }
+    else if (std::strcmp(p, "alias") == 0) {
+      alias_directive(line);
+      return;
+    }
+    break;
+
+  case 'd':
+    if (std::strcmp(p, "def") == 0) {
+      define_directive(line);
+      return;
+    }
+    break;
+
+  case 'e':
+    if (std::strcmp(p, "end") == 0) {
+      end_directive(line);
+      return;
+    }
+    break;
+
+  case 'i':
+    if (std::strcmp(p, "include") == 0) {
+      include_directive(line);
+      return;
+    }
+    break;
+  }
+
+  static const std::size_t textdir_len = std::strlen("ledger_textdir_");
+  scoped_array<char> directive(new char[std::strlen(p) + textdir_len + 1]);
+  std::strcpy(directive.get(), "ledger_textdir_");
+  std::strcpy(directive.get() + textdir_len, p);
+
+  if (expr_t::ptr_op_t op = lookup(directive.get())) {
+    call_scope_t args(*this);
+    args.push_back(string_value(p));
+    op->as_function()(args);
+  }
+}
+
+xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
+						  account_t * account,
+						  entry_t *   entry)
 {
   std::istringstream in(line);
 
@@ -434,11 +972,11 @@ xact_t * parse_xact(char * line, account_t * account, entry_t * entry = NULL)
   }
 }
 
-bool parse_xacts(std::istream&	  in,
-		 account_t *	  account,
-		 entry_base_t&	  entry,
-		 const string&	  kind,
-		 istream_pos_type beg_pos)
+bool textual_parser_t::instance_t::parse_xacts(std::istream&    in,
+					       account_t *	account,
+					       entry_base_t&    entry,
+					       const string&    kind,
+					       istream_pos_type beg_pos)
 {
   TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
 
@@ -462,7 +1000,7 @@ bool parse_xacts(std::istream&	  in,
       if (! *p)
 	break;
     }
-    if (xact_t * xact = parse_xact(line, account)) {
+    if (xact_t * xact = parse_xact(line, account, NULL)) {
       entry.add_xact(xact);
       added = true;
     }
@@ -473,8 +1011,10 @@ bool parse_xacts(std::istream&	  in,
   return added;
 }
 
-entry_t * parse_entry(std::istream& in, char * line, account_t * master,
-		      textual_parser_t& parser, istream_pos_type& pos)
+entry_t * textual_parser_t::instance_t::parse_entry(std::istream&     in,
+						    char *	      line,
+						    account_t *	      master,
+						    istream_pos_type& pos)
 {
   TRACE_START(entry_text, 1, "Time spent preparing entry text:");
 
@@ -575,481 +1115,9 @@ entry_t * parse_entry(std::istream& in, char * line, account_t * master,
   return curr.release();
 }
 
-static inline void parse_symbol(char *& p, string& symbol)
+expr_t::ptr_op_t textual_parser_t::instance_t::lookup(const string& name)
 {
-  if (*p == '"') {
-    char * q = std::strchr(p + 1, '"');
-    if (! q)
-      throw parse_error("Quoted commodity symbol lacks closing quote");
-    symbol = string(p + 1, 0, q - p - 1);
-    p = q + 2;
-  } else {
-    char * q = next_element(p);
-    symbol = p;
-    if (q)
-      p = q;
-    else
-      p += symbol.length();
-  }
-  if (symbol.empty())
-    throw parse_error("Failed to parse commodity");
-}
-
-bool textual_parser_t::test(std::istream& in) const
-{
-  char   buf[12];
-  char * p;
-
-  in.read(buf, 11);
-  if (utf8::is_bom(buf))
-    p = &buf[3];
-  else
-    p = buf;
-
-  if (std::strncmp(p, "<?xml", 5) == 0)
-    throw_(parse_error,
-	   "Ledger file contains XML data, but format was not recognized");
-
-  in.clear();
-  in.seekg(0, std::ios::beg);
-  assert(in.good());
-  return true;
-}
-
-static void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
-				   const datetime_t&	    when,
-				   account_t *		    account,
-				   const char *		    desc,
-				   journal_t&		    journal)
-{
-  time_entry_t event;
-
-  if (time_entries.size() == 1) {
-    event = time_entries.back();
-    time_entries.clear();
-  }
-  else if (time_entries.empty()) {
-    throw parse_error("Timelog check-out event without a check-in");
-  }
-  else if (! account) {
-    throw parse_error
-      ("When multiple check-ins are active, checking out requires an account");
-  }
-  else {
-    bool found = false;
-
-    for (std::list<time_entry_t>::iterator i = time_entries.begin();
-	 i != time_entries.end();
-	 i++)
-      if (account == (*i).account) {
-	event = *i;
-	found = true;
-	time_entries.erase(i);
-	break;
-      }
-
-    if (! found)
-      throw parse_error
-	("Timelog check-out event does not match any current check-ins");
-  }
-
-  if (desc && event.desc.empty()) {
-    event.desc = desc;
-    desc = NULL;
-  }
-
-  std::auto_ptr<entry_t> curr(new entry_t);
-  curr->_date = when.date();
-  curr->code  = desc ? desc : "";
-  curr->payee = event.desc;
-
-  if (when < event.checkin)
-    throw parse_error
-      ("Timelog check-out date less than corresponding check-in");
-
-  char buf[32];
-  std::sprintf(buf, "%lds", long((when - event.checkin).seconds()));
-  amount_t amt;
-  amt.parse(buf);
-  assert(amt.valid());
-
-  xact_t * xact = new xact_t(event.account, amt, XACT_VIRTUAL);
-  xact->set_state(item_t::CLEARED);
-  curr->add_xact(xact);
-
-  if (! journal.add_entry(curr.get()))
-    throw parse_error("Failed to record 'out' timelog entry");
-  else
-    curr.release();
-}
-
-unsigned int textual_parser_t::parse(std::istream& in,
-				     session_t&    session,
-				     journal_t&	   journal,
-				     account_t *   master,
-				     const path *  original_file)
-{
-  TRACE_START(parsing_total, 1, "Total time spent parsing text:");
-
-  static bool	added_auto_entry_hook = false;
-  static char	linebuf[MAX_LINE + 1];
-         char * line;
-  unsigned int	count  = 0;
-  unsigned int	errors = 0;
-
-  std::list<account_t *>  account_stack;
-  auto_entry_finalizer_t  auto_entry_finalizer(&journal);
-  std::list<time_entry_t> time_entries;
-
-  if (! master)
-    master = journal.master;
-
-  account_stack.push_front(master);
-
-  pathname = journal.sources.back();
-  src_idx  = journal.sources.size() - 1;
-  linenum  = 1;
-
-  INFO("Parsing file '" << pathname.string() << "'");
-
-  istream_pos_type beg_pos  = in.tellg();
-  istream_pos_type end_pos;
-  unsigned long	   beg_line = linenum;
-
-  while (in.good() && ! in.eof()) {
-    try {
-      in.getline(linebuf, MAX_LINE);
-      if (in.eof())
-	break;
-
-      if (linenum == 1 && utf8::is_bom(linebuf))
-	line = &linebuf[3];
-      else
-	line = linebuf;
-
-      int len = std::strlen(line);
-      if (line[len - 1] == '\r')
-	line[--len] = '\0';
-
-      end_pos = beg_pos;
-      end_pos += len + 1;
-      linenum++;
-
-      switch (line[0]) {
-      case '\0':
-	break;
-
-      case ' ':
-      case '\t': {
-	char * p = skip_ws(line);
-	if (*p)
-	  throw parse_error("Line begins with whitespace");
-	break;
-      }
-
-#ifdef TIMELOG_SUPPORT
-      case 'i':
-      case 'I': {
-	string date(line, 2, 19);
-
-	char * p = skip_ws(line + 22);
-	char * n = next_element(p, true);
-
-	time_entry_t event(parse_datetime(date),
-			   account_stack.front()->find_account(p), n ? n : "");
-
-	if (! time_entries.empty())
-	  foreach (time_entry_t& time_entry, time_entries)
-	    if (event.account == time_entry.account)
-	      throw parse_error("Cannot double check-in to the same account");
-
-	time_entries.push_back(event);
-	break;
-      }
-
-      case 'o':
-      case 'O':
-	if (time_entries.empty()) {
-	  throw parse_error("Timelog check-out event without a check-in");
-	} else {
-	  string date(line, 2, 19);
-
-	  char * p = skip_ws(line + 22);
-	  char * n = next_element(p, true);
-
-	  clock_out_from_timelog
-	    (time_entries, parse_datetime(date),
-	     p ? account_stack.front()->find_account(p) : NULL, n, journal);
-	  count++;
-	}
-	break;
-#endif // TIMELOG_SUPPORT
-
-      case 'D':	{		// a default commodity for "entry"
-	amount_t amt(skip_ws(line + 1));
-	assert(amt.valid());
-	amount_t::current_pool->default_commodity = &amt.commodity();
-	break;
-      }
-
-      case 'A':		        // a default account for unbalanced xacts
-	journal.basket =
-	  account_stack.front()->find_account(skip_ws(line + 1));
-	break;
-
-      case 'C':			// a set of conversions
-	if (char * p = std::strchr(line + 1, '=')) {
-	  *p++ = '\0';
-	  // jww (2008-04-22): NYI!
-#if 0
-	  parse_conversion(line + 1, p);
-#endif
-	}
-	break;
-
-      case 'P': {		// a pricing entry
-	char * date_field_ptr = skip_ws(line + 1);
-	char * time_field_ptr = next_element(date_field_ptr);
-	if (! time_field_ptr) break;
-	string date_field = date_field_ptr;
-
-	char *     symbol_and_price;
-	datetime_t datetime;
-
-	if (std::isdigit(time_field_ptr[0])) {
-	  symbol_and_price = next_element(time_field_ptr);
-	  if (! symbol_and_price) break;
-	  datetime = parse_datetime(date_field + " " + time_field_ptr);
-	} else {
-	  symbol_and_price = time_field_ptr;
-	  datetime = parse_datetime(date_field);
-	}
-
-	string symbol;
-	parse_symbol(symbol_and_price, symbol);
-	amount_t price(symbol_and_price);
-	assert(price.valid());
-
-	if (commodity_t * commodity =
-	    amount_t::current_pool->find_or_create(symbol))
-	  commodity->add_price(datetime, price);
-	break;
-      }
-
-      case 'N': {			// don't download prices
-	char * p = skip_ws(line + 1);
-	string symbol;
-	parse_symbol(p, symbol);
-
-	if (commodity_t * commodity =
-	    amount_t::current_pool->find_or_create(symbol))
-	  commodity->add_flags(COMMODITY_NOMARKET);
-	break;
-      }
-
-      case 'Y':                   // set the current year
-	current_year = std::atoi(skip_ws(line + 1));
-	break;
-
-#ifdef TIMELOG_SUPPORT
-      case 'h':
-      case 'b':
-#endif
-      case '*':                   // comment line
-      case ';':                   // comment line
-	break;
-
-      case '-': {                 // option setting
-	char * p = next_element(line);
-	if (! p) {
-	  p = std::strchr(line, '=');
-	  if (p)
-	    *p++ = '\0';
-	}
-	process_option(line + 2, session, p);
-	break;
-      }
-
-      case '=': {		// automated entry
-	if (! added_auto_entry_hook) {
-	  journal.add_entry_finalizer(&auto_entry_finalizer);
-	  added_auto_entry_hook = true;
-	}
-
-	auto_entry_t * ae = new auto_entry_t(skip_ws(line + 1));
-	if (parse_xacts(in, account_stack.front(), *ae, "automated",
-			end_pos)) {
-	  journal.auto_entries.push_back(ae);
-	  ae->src_idx  = src_idx;
-	  ae->beg_pos  = beg_pos;
-	  ae->beg_line = beg_line;
-	  ae->end_pos  = end_pos;
-	  ae->end_line = linenum;
-	}
-	break;
-      }
-
-      case '~': {		// period entry
-	period_entry_t * pe = new period_entry_t(skip_ws(line + 1));
-	if (! pe->period)
-	  throw_(parse_error, "Parsing time period '" << line << "'");
-
-	if (parse_xacts(in, account_stack.front(), *pe,
-			       "period", end_pos)) {
-	  if (pe->finalize()) {
-	    extend_entry_base(&journal, *pe, true);
-	    journal.period_entries.push_back(pe);
-	    pe->src_idx	 = src_idx;
-	    pe->beg_pos	 = beg_pos;
-	    pe->beg_line = beg_line;
-	    pe->end_pos	 = end_pos;
-	    pe->end_line = linenum;
-	  } else {
-	    throw parse_error("Period entry failed to balance");
-	  }
-	}
-	break;
-      }
-
-      case '@':
-      case '!': {                 // directive
-	char * p = next_element(line);
-	string word(line + 1);
-	if (word == "include") {
-	  push_variable<path>		  save_pathname(pathname);
-	  push_variable<unsigned int>	  save_src_idx(src_idx);
-	  push_variable<istream_pos_type> save_beg_pos(beg_pos);
-	  push_variable<istream_pos_type> save_end_pos(end_pos);
-	  push_variable<unsigned int>	  save_linenum(linenum);
-
-	  pathname = p;
-#if 0
-	  if (pathname[0] != '/' && pathname[0] != '\\' && pathname[0] != '~') {
-	    string::size_type pos = save_pathname.prev.rfind('/');
-	    if (pos == string::npos)
-	      pos = save_pathname.prev.rfind('\\');
-	    if (pos != string::npos)
-	      pathname = string(save_pathname.prev, 0, pos + 1) + pathname;
-	  }
-	  pathname = resolve_path(pathname);
-
-	  DEBUG("ledger.textual.include", "line " << linenum << ": " <<
-		      "Including path '" << pathname << "'");
-
-	  include_stack.push_back(std::pair<path, int>
-				  (journal.sources.back(), linenum - 1));
-	  count += parse_journal_file(pathname, config, journal,
-				      account_stack.front());
-	  include_stack.pop_back();
-#endif
-	}
-	else if (word == "account") {
-	  account_t * acct;
-	  acct = account_stack.front()->find_account(p);
-	  account_stack.push_front(acct);
-	}
-	else if (word == "end") {
-	  account_stack.pop_front();
-	}
-	else if (word == "alias") {
-	  char * b = p;
-	  if (char * e = std::strchr(b, '=')) {
-	    char * z = e - 1;
-	    while (std::isspace(*z))
-	      *z-- = '\0';
-	    *e++ = '\0';
-	    e = skip_ws(e);
-
-	    // Once we have an alias name (b) and the target account
-	    // name (e), add a reference to the account in the
-	    // `account_aliases' map, which is used by the xact
-	    // parser to resolve alias references.
-	    account_t * acct = account_stack.front()->find_account(e);
-	    std::pair<accounts_map::iterator, bool> result
-	      = account_aliases.insert(accounts_map::value_type(b, acct));
-	    assert(result.second);
-	  }
-	}
-	else if (word == "def") {
-	  expr_t def(p);
-	  def.compile(session);	// causes definitions to be established
-	}
-	break;
-      }
-
-      default: {
-	istream_pos_type pos = beg_pos;
-	TRACE_START(entries, 1, "Time spent handling entries:");
-	if (entry_t * entry =
-	    parse_entry(in, line, account_stack.front(), *this, pos)) {
-	  // The entry pointer is unowned at the minute, and there is a
-	  // possibility that add_entry ma throw an exception, which
-	  // would cause us to leak without this guard.
-	  std::auto_ptr<entry_t> entry_ptr(entry);
-	  if (journal.add_entry(entry)) {
-	    entry_ptr.release(); // it's owned by the journal now
-	    entry->src_idx  = src_idx;
-	    entry->beg_pos  = beg_pos;
-	    entry->beg_line = beg_line;
-	    entry->end_pos  = pos;
-	    entry->end_line = linenum;
-	    count++;
-	  }
-	  // It's perfectly valid for the journal to reject the entry,
-	  // which it will do if the entry has no substantive effect
-	  // (for example, a checking entry, all of whose transactions
-	  // have null amounts).
-	} else {
-	  throw parse_error("Failed to parse entry");
-	}
-	end_pos = pos;
-      TRACE_STOP(entries, 1);
-	break;
-      }
-      }
-    }
-    catch (const std::exception& err) {
-      for (std::list<std::pair<path, int> >::reverse_iterator i =
-	     include_stack.rbegin();
-	   i != include_stack.rend();
-	   i++) {
-	add_error_context("In file included from ");
-#if 0
-	add_error_context(include_context((*i).first, (*i).second));
-#endif
-      }
-      add_error_context(file_context(pathname, linenum - 1));
-
-      std::cout.flush();
-      std::cerr << ledger::error_context()
-		<< "Error: " << err.what() << std::endl;
-      errors++;
-    }
-    beg_pos = end_pos;
-  }
-
-  if (! time_entries.empty()) {
-    std::list<account_t *> accounts;
-
-    foreach (time_entry_t& time_entry, time_entries)
-      accounts.push_back(time_entry.account);
-
-    foreach (account_t * account, accounts)
-      clock_out_from_timelog(time_entries, current_time, account, NULL,
-			     journal);
-
-    assert(time_entries.empty());
-  }
-
-  if (added_auto_entry_hook)
-    journal.remove_entry_finalizer(&auto_entry_finalizer);
-
-  if (errors > 0)
-    throw static_cast<int>(errors);
-
-  TRACE_STOP(parsing_total, 1);
-
-  return count;
+  return session.lookup(name);
 }
 
 void write_textual_journal(journal_t&	    journal,
@@ -1060,6 +1128,8 @@ void write_textual_journal(journal_t&	    journal,
 {
   unsigned long index = 0;
   path		found;
+
+  // jww (2009-01-29): This function currently doesn't work
 
   if (pathname.empty()) {
     if (! journal.sources.empty())

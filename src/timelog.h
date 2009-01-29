@@ -32,6 +32,8 @@
 #ifndef _TIMELOG_H
 #define _TIMELOG_H
 
+#include "journal.h"
+
 namespace ledger {
 
 class time_entry_t
