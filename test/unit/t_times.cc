@@ -104,6 +104,51 @@ void DateTimeTestCase::testConstructors()
   assertThrow(parse_datetime("fecruary"), datetime_error);
   assertThrow(parse_datetime("207x"), datetime_error);
   assertThrow(parse_datetime("hello"), datetime_error);
+
+  d1 = parse_datetime("2002-02-02");
+  d1 = parse_datetime("2002/02/02");
+  d1 = parse_datetime("2002.02.02");
+  d1 = parse_datetime("02-02-2002");
+  d1 = parse_datetime("02/02/2002");
+  d1 = parse_datetime("02.02.2002");
+  d1 = parse_datetime("02-02-02");
+  d1 = parse_datetime("02/02/02");
+  d1 = parse_datetime("02.02.02");
+  d1 = parse_datetime("02-02");
+  d1 = parse_datetime("02/02");
+  d1 = parse_datetime("02.02");
+  d1 = parse_datetime("20020202");
+  d1 = parse_datetime("20020202T023318");
+  d1 = parse_datetime("20020202T023318-0700");
+  d1 = parse_datetime("20020202T023318-0100");
+  d1 = parse_datetime("02-Feb-2002");
+  d1 = parse_datetime("2002-Feb-02");
+  d1 = parse_datetime("02 Feb 2002");
+  d1 = parse_datetime("02-Feb-2002");
+  d1 = parse_datetime("02 February 2002");
+  d1 = parse_datetime("02-February-2002");
+  d1 = parse_datetime("2002 Feb 02");
+  d1 = parse_datetime("2002-Feb-02");
+  d1 = parse_datetime("2002 February 02");
+  d1 = parse_datetime("2002-February-02");
+  d1 = parse_datetime("02 Feb");
+  d1 = parse_datetime("02-Feb");
+  d1 = parse_datetime("02 February");
+  d1 = parse_datetime("02-February");
+  d1 = parse_datetime("Feb 02");
+  d1 = parse_datetime("Feb-02");
+  d1 = parse_datetime("February 02");
+  d1 = parse_datetime("February-02");
+  d1 = parse_datetime("Feb 02, 2002");
+  d1 = parse_datetime("February 02, 2002");
+  d1 = parse_datetime("2002-02-02 12:00:00");
+  d1 = parse_datetime("2002-02-02 12:00:00 AM");
+  d1 = parse_datetime("2002-02-02 12:00 AM");
+  d1 = parse_datetime("2002-02-02 12:00AM");
+  d1 = parse_datetime("2002-02-02 12p");
+  d1 = parse_datetime("2002-02-02 12a");
+
+  assertValid(d1);
 #endif // NOT_FOR_PYTHON
 #endif
 }
