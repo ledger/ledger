@@ -57,6 +57,11 @@
 
 namespace ledger {
 
+// If defined, amount.cc uses GMP integers rather than rationals.
+// Ledger 3.0 uses rationals, but 2.6 and before used integers, so this
+// provides a quick way of testing against past numerical behavior.
+//#define INTEGER_MATH 1
+
 class commodity_t;
 class annotation_t;
 class commodity_pool_t;
@@ -318,6 +323,9 @@ public:
       amount.commodity().precision()
       @endcode */
   precision_t precision() const;
+  bool        keep_precision() const;
+  void        set_keep_precision(const bool keep = true) const;
+  precision_t display_precision(const bool full_precision = false) const;
 
   /** Returns the negated value of an amount.
       @see operator-()
@@ -344,6 +352,8 @@ public:
     return *this;
   }
 
+#ifdef INTEGER_MATH
+
   /** An amount's internal value to the given precision, or to the
       commodity's current display precision if no precision value is
       given.  This method changes the internal value of the amount, if
@@ -362,6 +372,8 @@ public:
     return temp;
   }
   amount_t& in_place_round(precision_t prec);
+
+#endif // INTEGER_MATH
 
   /** Yields an amount whose display precision is never truncated, even
       though its commodity normally displays only rounded values.

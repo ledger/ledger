@@ -311,6 +311,8 @@ public:
     return temp;
   }
 
+#ifdef INTEGER_MATH
+
   balance_t round() const {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
@@ -334,6 +336,8 @@ public:
       pair.second.in_place_round(prec);
     return *this;
   }
+
+#endif // INTEGER_MATH
 
   balance_t unround() const {
     balance_t temp;

@@ -41,12 +41,14 @@ namespace ledger {
 
 using namespace boost::python;
 
+#ifdef INTEGER_MATH
 amount_t py_round_0(const amount_t& amount) {
   return amount.round();
 }
 amount_t py_round_1(const amount_t& amount, amount_t::precision_t prec) {
   return amount.round(prec);
 }
+#endif
 
 double py_to_double_0(amount_t& amount) {
   return amount.to_double();
@@ -268,8 +270,10 @@ internal precision.")
     .def("abs", &amount_t::abs)
     .def("__abs__", &amount_t::abs)
 
+#ifdef INTEGER_MATH
     .def("round", py_round_0)
     .def("round", py_round_1)
+#endif
     .def("unround", &amount_t::unround)
 
     .def("reduce", &amount_t::reduce)

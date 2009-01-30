@@ -195,8 +195,10 @@ void export_value()
     .def("abs", &value_t::abs)
     .def("__abs__", &value_t::abs)
 
+#ifdef INTEGER_MATH
     .def("round", &value_t::round)
     .def("in_place_round", &value_t::in_place_round)
+#endif
     .def("unround", &value_t::unround)
 
     .def("reduce", &value_t::reduce)

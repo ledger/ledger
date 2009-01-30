@@ -404,8 +404,10 @@ public:
   }
 
   value_t abs() const;
+#ifdef INTEGER_MATH
   value_t round() const;
   void    in_place_round();
+#endif
   value_t unround() const;
 
   value_t reduce() const {

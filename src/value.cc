@@ -1400,6 +1400,8 @@ value_t value_t::abs() const
   return NULL_VALUE;
 }
 
+#ifdef INTEGER_MATH
+
 value_t value_t::round() const
 {
   switch (type()) {
@@ -1438,6 +1440,8 @@ void value_t::in_place_round()
     break;
   }
 }
+
+#endif // INTEGER_MATH
 
 value_t value_t::unround() const
 {
