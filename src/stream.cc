@@ -134,8 +134,8 @@ output_stream_t::~output_stream_t()
 
     int status;
     wait(&status);
-    if (status & 0xffff != 0)
-      throw std::logic_error("Something went wrong in the pager");
+    if (! WIFEXITED(status) || WEXITSTATUS(status) != 0)
+      throw std::logic_error("Error in the pager");
   }
 }
 
