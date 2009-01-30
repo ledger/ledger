@@ -226,16 +226,13 @@ bool entry_base_t::finalize()
 
   DEBUG("entry.finalize", "final balance = " << balance);
 
-  if (! balance.is_null()) {
-    balance.in_place_round();
-    if (! balance.is_zero()) {
+  if (! balance.is_null() && ! balance.is_zero()) {
 #if 0
-      new entry_context(*this, "While balancing entry:");
+    new entry_context(*this, "While balancing entry:");
 #endif
-      add_error_context("Unbalanced remainder is: ");
-      add_error_context(value_context(balance));
-      throw_(balance_error, "Entry does not balance");
-    }
+    add_error_context("Unbalanced remainder is: ");
+    add_error_context(value_context(balance));
+    throw_(balance_error, "Entry does not balance");
   }
 
   // Add the final calculated totals each to their related account
