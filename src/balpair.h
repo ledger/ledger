@@ -213,16 +213,14 @@ public:
     return *this;
   }
 
-  balance_pair_t& add(const amount_t&  amt,
-		      const optional<amount_t>& a_cost = none) {
+  balance_pair_t& add(const amount_t&           amt,
+		      const optional<amount_t>& a_cost = none)
+  {
     if (a_cost && ! cost)
       cost = quantity();
-
     *this += amt;
-
     if (cost)
       *cost += a_cost ? *a_cost : amt;
-
     return *this;
   }
 

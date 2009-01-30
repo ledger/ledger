@@ -828,11 +828,11 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 			      per_unit_cost, datetime_t(*xact->date()));
 
 	DEBUG("textual.parse", "line " << linenum << ": " <<
-		    "Total cost is " << *xact->cost);
+	      "Total cost is " << *xact->cost);
 	DEBUG("textual.parse", "line " << linenum << ": " <<
-		    "Per-unit cost is " << per_unit_cost);
+	      "Per-unit cost is " << per_unit_cost);
 	DEBUG("textual.parse", "line " << linenum << ": " <<
-		    "Annotated amount is " << xact->amount);
+	      "Annotated amount is " << xact->amount);
       }
     }
   }
