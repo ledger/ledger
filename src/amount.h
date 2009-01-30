@@ -39,13 +39,21 @@
  *
  * @ingroup math
  *
- * @brief  Basic type for handling commoditized math: amount_t
+ * @brief Basic type for handling commoditized math: amount_t
  *
- * This file contains the most basic numerical type in Ledger, which
- * relies upon commodity.h for handling commoditized amounts.  This
- * class allows Ledger to handle mathematical expressions involving
- * differing commodities, as well as math using no commodities at all
- * (such as increasing a dollar amount by a multiplier).
+ * An amount is the most basic numerical type in Ledger, and relies on
+ * commodity.h to represent commoditized amounts, which allows Ledger to
+ * handle mathematical expressions involving disparate commodities.
+ *
+ * Amounts can be of virtually infinite size and precision.  When
+ * division or multiplication is performed, the precision is
+ * automatically expanded to include as many extra digits as necessary
+ * to avoid losing information.
+ *
+ * Floating-point math is never used at any point in these routines.  If
+ * floating-point numbers are used to create amounts, they are first
+ * rendered to decimal using David Gay's gdtoa library, and then parsed
+ * as multi-precision values.
  */
 #ifndef _AMOUNT_H
 #define _AMOUNT_H
@@ -63,9 +71,9 @@ DECLARE_EXCEPTION(amount_error, std::runtime_error);
 /**
  * @brief Encapsulate infinite-precision commoditized amounts
  *
- * This class can be used for commoditized infinite-precision math, and
- * also for uncommoditized math.  In the commoditized case, commodities
- * keep track of how they are used, and will always display back to the
+ * Used to represent commoditized infinite-precision numbers, and
+ * uncommoditized, plain numbers.  In the commoditized case, commodities
+ * keep track of how they are used, and are always displayed back to the
  * user after the same fashion.  For uncommoditized numbers, no display
  * truncation is ever done.  In both cases, internal precision is always
  * kept to an excessive degree.
@@ -82,85 +90,64 @@ class amount_t
 #endif
 {
 public:
-  /**
-   * @name Class statics
-   */
-  /*@{*/
-
-  /**
-   * The initialize() and shutdown() methods ready the amount subsystem
-   * for use.  Normally they are called by session_t::initialize() and
-   * session_t::shutdown().
-   */
+  /** Ready the amount subsystem for use.
+      @note Normally called by session_t::initialize(). */
   static void initialize();
+  /** Shutdown the amount subsystem and free all resources.
+      @note Normally called by session_t::shutdown(). */
   static void shutdown();
 
-  /**
-   * The amount's decimal precision.
-   */
+  /** The amount's decimal precision. */
   typedef uint_least16_t precision_t;
 
-  /**
-   * The number of places of precision by which values are extended to
-   * avoid losing precision during division and multiplication.
-   */
+  /** Number of places of precision by which values are extended to
+      avoid losing precision during division and multiplication. */
   static const std::size_t extend_by_digits = 6U;
 
-  /**
-   * The current_pool is a static variable indicating which commodity
-   * pool should be used.
-   */
+  /** Indicates which commodity pool should be used. */
   static commodity_pool_t * current_pool;
 
-  /**
-   * The \c keep_base member determines whether scalable commodities are
-   * automatically converted to their most reduced form when printing.
-   * The default is \code true \endcode.
-   *
-   * For example, Ledger supports time values specified in seconds,
-   * hours or minutes.  Internally, such amounts are always kept as
-   * quantities of seconds.  However, when streaming the amount Ledger
-   * will convert it to its "least representation", which is \c 5.2h in
-   * the second case.  If \c keep_base is \c true this amount is
-   * displayed as \code 18720s \endcode.
-   */
+  /** If scalable commodities are automatically converted to their most
+      reduced form for printing.
+
+      For example, Ledger supports time values specified in seconds,
+      hours or minutes.  Internally, such amounts are always kept as
+      quantities of seconds.  However, when streaming the amount, Ledger
+      converts it to its "least representation", which is \c 5.2h in the
+      second case.  If \c keep_base is \c true this amount is displayed
+      as \c 18720s. */
   static bool keep_base;
 
-  /**
-   * The following three members determine whether lot details are
-   * maintained when working with commoditized values.  The default is
-   * false for all three.
-   *
-   * Let's say a user adds two values of the following form:
-   *
-   * @code
-   * 10 AAPL + 10 AAPL {$20}
-   * @endcode
-   *
-   * This expression adds ten shares of Apple stock with another ten
-   * shares that were purchased for $20 a share.  If \c keep_price is
-   * false, the result of this expression will be an amount equal to
-   * \code 20 AAPL \endcode.  If \c keep_price is \c true the expression
-   * yields an exception for adding amounts with different commodities.
-   * In that case, a \link balance_t \endlink object must be used to
-   * store the combined sum.
-   */
+  /** If the lot price is considered whenever working with commoditized
+      values.
+
+      Let's say a user adds two values of the following form:
+      @code
+      10 AAPL + 10 AAPL {$20}
+      @endcode
+
+      This expression adds ten shares of Apple stock with another ten
+      shares that were purchased for \c $20 a share.  If \c keep_price
+      is false, the result of this expression is an amount equal to
+      <tt>20 AAPL</tt>.  If \c keep_price is \c true the expression
+      yields an exception for adding amounts with different commodities.
+      In that case, a \link balance_t \endlink object must be used to
+      store the combined sum. */
   static bool keep_price;
+
+  /** If the lot date is considered whenever working with commoditized
+      values. @see keep_date */
   static bool keep_date;
+  /** If the lot note is considered whenever working with commoditized
+      values. @see keep_tag */
   static bool keep_tag;
 
-  /**
-   * The \c stream_fullstrings static member is currently only used by
-   * the unit testing code.  It causes amounts written to streams to use
-   * to_fullstring() rather than the to_string(), so that complete
-   * precision is always displayed, no matter what the precision of an
-   * individual commodity might be.
-   */
+  /** If amounts should be streamed using to_fullstring() rather than
+      to_string(), so that complete precision is always displayed no
+      matter what the precision of an individual commodity may be. */
   static bool stream_fullstrings;
 
   static uint_fast32_t sizeof_bigint_t();
-
-  /*@}*/
 
 protected:
   void _copy(const amount_t& amt);
@@ -175,43 +162,41 @@ protected:
   commodity_t *	commodity_;
 
 public:
-  /**
-   * @name Constructors
-   */
-  /*@{*/
+  /** @name Constructors
+      @{ */
 
-  /**
-   * \c amount_t supports several forms of construction:
-   *
-   * amount_t() creates a value for which is_null() is true, and which
-   * has no value or commodity.  If used in value situations it will be
-   * zero, and its commodity equals \code commodity_t::null_commodity
-   * \endcode.
-   *
-   * amount_t(const double), amount_t(const unsigned long),
-   * amount_t(const long) all convert from the respective numerics type
-   * to an amount.  No precision or sign is lost in any of these
-   * conversions.  The resulting commodity is always \code
-   * commodity_t::null_commodity \endcode.
-   *
-   * amount_t(const string&), amount_t(const char *) both convert from a
-   * string representation of an amount, which may or may not include a
-   * commodity.  This is the proper way to initialize an amount like
-   * \code $100.00 \endcode.
-   */
+  /** Creates a value for which is_null() is true, and which has no
+      value or commodity.  If used in a value expression it evaluates to
+      zero, and its commodity equals \c commodity_t::null_commodity. */
   amount_t() : quantity(NULL), commodity_(NULL) {
     TRACE_CTOR(amount_t, "");
   }
+
 #ifdef HAVE_GDTOA
+  /** Convert a double to an amount.  As much precision as possible is
+      decoded from the binary floating point number. */
   amount_t(const double val);
 #endif
+
+  /** Convert an unsigned long to an amount.  It's precision is zero. */
   amount_t(const unsigned long val);
+
+  /** Convert a long to an amount.  It's precision is zero, and the sign
+      is preserved. */
   amount_t(const long val);
 
+  /** Parse a string as an (optionally commoditized) amount.  If no
+      commodity is present, the resulting commodity is \c
+      commodity_t::null_commodity.  The number may be of infinite
+      precision. */
   explicit amount_t(const string& val) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const string&");
     parse(val);
   }
+  /** Parse a pointer to a C string as an (optionally commoditized)
+      amount.  If no commodity is present, the resulting commodity is \c
+      commodity_t::null_commodity.  The number may be of infinite
+      precision. */
   explicit amount_t(const char * val) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const char *");
     assert(val);
@@ -220,58 +205,30 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Static creator function
-   */
-  /*@{*/
-
-  /**
-   * Calling amount_t::exact(const string&) will create an amount whose
-   * display precision is never truncated, even if the amount uses a
-   * commodity (which normally causes "round on streaming" to occur).
-   * This function is mostly used by the debugging code.  It is the
-   * proper way to initialize \code $100.005 \endcode, where display of
-   * the extra precision is required.  If a regular constructor is used,
-   * this amount will stream as \code $100.01 \endcode, even though its
-   * internal value always equals \code $100.005 \endcode.
-   */
+  /** Create an amount whose display precision is never truncated, even
+      if the amount uses a commodity (which normally causes "round on
+      streaming" to occur).  This function is mostly used by debugging
+      code and unit tests.  This is the proper way to specify \c
+      $100.005, where display of the extra digit precision is required.
+      If a regular constructor were used, the amount would stream as \c
+      $100.01, even though its internal value equals \c $100.005. */
   static amount_t exact(const string& value);
 
-  /*@}*/
-
-  /**
-   * @name Destructor
-   */
-  /*@{*/
-
-  /**
-   * Releases the reference count held for the underlying \code
-   * amount_t::bigint_t \endcode object.
-   */
+  /** Release the reference count held for the underlying \c
+      amount_t::bigint_t object. */
   ~amount_t() {
     TRACE_DTOR(amount_t);
     if (quantity)
       _release();
   }
 
-  /*@}*/
+  /** @name Assignment and copy
+      @{*/
 
-  /**
-   * @name Assignment and copy
-   */
-  /*@{*/
-
-  /**
-   * An amount may be assigned or copied.  If a double, long or unsigned
-   * long is assigned to an amount, a temporary is constructed and then
-   * the temporary is assigned to \code this \endcode.  Both the value
-   * and the commodity are copied, causing the result to compare equal
-   * to the reference amount.
-   *
-   * @note @c quantity must be initialized to \c NULL first, otherwise
-   * amount_t::_copy() would attempt to release an uninitialized
-   * pointer.
-   */
+  /** Copy an amount object.  Copies are very efficient, using a
+      copy-on-write model.  Until the copy is changed, it refers to the
+      same memory used by the original via reference counting.  The \c
+      amount_t::bigint_t class in amount.cc maintains the reference. */
   amount_t(const amount_t& amt) : quantity(NULL) {
     TRACE_CTOR(amount_t, "copy");
     if (amt.quantity)
@@ -279,12 +236,19 @@ public:
     else
       commodity_ = NULL;
   }
+  /** Copy an amount object, applying the given commodity annotation
+      details afterward.  This is equivalent to doing a normal copy
+      (@see amount_t(const amount_t&)) and then calling
+      amount_t::annotate(). */
   amount_t(const amount_t& amt, const annotation_t& details) : quantity(NULL) {
     TRACE_CTOR(amount_t, "const amount_t&, const annotation_t&");
     assert(amt.quantity);
     _copy(amt);
     annotate(details);
   }
+  /** Assign an amount object.  This is like copying if the amount was
+      null beforehand, otherwise the previous value's reference is must
+      be freed. */
   amount_t& operator=(const amount_t& amt);
 
 #ifdef HAVE_GDTOA
@@ -299,6 +263,9 @@ public:
     return *this = amount_t(val);
   }
 
+  /* Assign a string to an amount.  This causes the contents of the
+     string to be parsed, look for a commoditized or uncommoditized
+     amount specifier. */
   amount_t& operator=(const string& str) {
     return *this = amount_t(str);
   }
@@ -309,27 +276,18 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Comparison
-   */
-  /*@{*/
+  /** @name Comparison
+      @{ */
 
-  /**
-   * The fundamental comparison operation for amounts is compare(),
-   * which returns a value less than, greater than or equal to zero.
-   * All the other comparison operators are defined in terms of this
-   * method.  The only special detail is that operator==() will fail
-   * immediately if amounts with different commodities are being
-   * compared.  Otherwise, if the commodities are equivalent (@see
-   * keep_price, et al), then the amount quantities are compared
-   * numerically.
-   *
-   * Comparison between an amount and a double, long or unsigned long is
-   * allowed.  In such cases the non-amount value is constructed as an
-   * amount temporary, which is then compared to \code this \endcode.
-   */
+  /** Compare two amounts, returning a number less than zero if \p amt
+      is greater, exactly zero if they are equal, and greater than zero
+      if \p amt is less.  This method is used to implement all of the
+      other comparison methods.*/
   int compare(const amount_t& amt) const;
 
+  /** Test two amounts for equality.  First the commodity pointers are
+      quickly tested, then the multi-precision values themselves must be
+      compared. */
   bool operator==(const amount_t& amt) const;
 
   template <typename T>
@@ -347,46 +305,37 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Binary arithmetic
+  /** @name Binary arithmetic
    */
   /*@{*/
 
-  /**
-   * Amounts support addition, subtraction, multiplication and division
-   * -- but not modulus, bitwise operations, or shifting.  Arithmetic is
-   * also supported between amounts, double, long and unsigned long, in
-   * which case temporary amount are constructed for the life of the
-   * expression.
-   *
-   * Although only in-place operators are defined here, the remainder
-   * are provided by \code boost::ordered_field_operators<> \endcode.
-   */
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
   amount_t& operator*=(const amount_t& amt);
+
+  /** Divide two amounts while extending the precision to preserve the
+      accuracy of the result.  For example, if \c 10 is divided by \c 3,
+      the result ends up having a precision of \link
+      amount_t::extend_by_digits \endlink place to avoid losing internal
+      resolution. */
   amount_t& operator/=(const amount_t& amt);
 
   /*@}*/
 
-  /**
-   * @name Unary arithmetic
-   * There are several unary methods supported for amounts.
-   */
-  /*@{*/
+  /** @name Unary arithmetic
+      @{ */
 
-  /**
-   * Return an amount's current, internal precision.  To find the
-   * precision it will be displayed at -- assuming it was not created
-   * using the static method amount_t::exact().
-   * @see commodity_t::precision()
-   */
+  /** Return an amount's internal precision.  To find the precision it
+      should be displayed at -- assuming it was not created using
+      amount_t::exact() -- use the following expression instead:
+      @code
+      amount.commodity().precision()
+      @endcode */
   precision_t precision() const;
 
-  /**
-   * Returns the negated value of an amount.
-   * @see operator-()
-   */
+  /** Returns the negated value of an amount.
+      @see operator-()
+  */
   amount_t negate() const {
     amount_t temp(*this);
     temp.in_place_negate();
@@ -398,22 +347,22 @@ public:
     return negate();
   }
 
-  /**
-   * Returns the absolute value of an amount.  Equivalent to: \code (x <
-   * 0) ? - x : x \endcode.
-   */
+  /** Returns the absolute value of an amount.  Equivalent to:
+      @code
+      (x < * 0) ? - x : x
+      @endcode
+  */
   amount_t abs() const {
     if (sign() < 0)
       return negate();
     return *this;
   }
 
-  /**
-   * An amount's internal value to the given precision, or to the
-   * commodity's current display precision if no precision value is
-   * given.  This method changes the internal value of the amount, if
-   * it's internal precision was greater than the rounding precision.
-   */
+  /** An amount's internal value to the given precision, or to the
+      commodity's current display precision if no precision value is
+      given.  This method changes the internal value of the amount, if
+      it's internal precision was greater than the rounding precision.
+  */
   amount_t round() const {
     amount_t temp(*this);
     temp.in_place_round();
@@ -428,17 +377,15 @@ public:
   }
   amount_t& in_place_round(precision_t prec);
 
-  /**
-   * Yields an amount whose display precision is never truncated, even
-   * though its commodity normally displays only rounded values.
-   */
+  /** Yields an amount whose display precision is never truncated, even
+      though its commodity normally displays only rounded values.
+  */
   amount_t unround() const;
 
-  /**
-   * reduces a value to its most basic commodity form, for amounts that
-   * utilize "scaling commodities".  For example, an amount of \c 1h
-   * after reduction will be \code 3600s \endcode.
-   */
+  /** reduces a value to its most basic commodity form, for amounts that
+      utilize "scaling commodities".  For example, an amount of \c 1h
+      after reduction will be \c 3600s.
+  */
   amount_t reduce() const {
     amount_t temp(*this);
     temp.in_place_reduce();
@@ -446,12 +393,10 @@ public:
   }
   amount_t& in_place_reduce();
 
-  /**
-   * unreduce(), if used with a "scaling commodity", yields the most
-   * compact form greater than one.  That is, \c 3599s will unreduce to
-   * \code 59.98m \endcode, while \c 3601 unreduces to \code 1h
-   * \endcode.
-   */
+  /** unreduce(), if used with a "scaling commodity", yields the most
+      compact form greater than one.  That is, \c 3599s will unreduce to
+      \c 59.98m, while \c 3601 unreduces to \c 1h.
+  */
   amount_t unreduce() const {
     amount_t temp(*this);
     temp.in_place_unreduce();
@@ -459,50 +404,47 @@ public:
   }
   amount_t& in_place_unreduce();
 
-  /**
-   * Returns the historical value for an amount -- the default moment
-   * returns the most recently known price -- based on the price history
-   * for the given commodity (or determined automatically, if none is
-   * provided).  For example, if the amount were \code 10 AAPL \encode,
-   * and on Apr 10, 2000 each share of \c AAPL was worth \code $10
-   * \endcode, then calling value() for that moment in time would yield
-   * the amount \code $100.00 \endcode.
-   */
+  /** Returns the historical value for an amount -- the default moment
+      returns the most recently known price -- based on the price history
+      for the given commodity (or determined automatically, if none is
+      provided).  For example, if the amount were <tt>10 AAPL</tt>, and
+      on Apr 10, 2000 each share of \c AAPL was worth \c $10, then
+      calling value() for that moment in time would yield the amount \c
+      $100.00.
+  */
   optional<amount_t>
   value(const optional<datetime_t>&   moment	  = none,
 	const optional<commodity_t&>& in_terms_of = none) const;
 
   /*@}*/
 
-  /**
-   * @name Truth tests
+  /** @name Truth tests
    */
   /*@{*/
 
-  /**
-   * Truth tests.  An amount may be truth test in several ways:
-   *
-   * sign() returns an integer less than, greater than, or equal to
-   * zero depending on whether the amount is negative, zero, or
-   * greater than zero.  Note that this function tests the actual
-   * value of the amount -- using its internal precision -- and not
-   * the display value.  To test its display value, use:
-   * `round().sign()'.
-   *
-   * is_nonzero(), or operator bool, returns true if an amount's
-   * display value is not zero.
-   *
-   * is_zero() returns true if an amount's display value is zero.
-   * Thus, $0.0001 is considered zero if the current display precision
-   * for dollars is two decimal places.
-   *
-   * is_realzero() returns true if an amount's actual value is zero.
-   * Thus, $0.0001 is never considered realzero.
-   *
-   * is_null() returns true if an amount has no value and no
-   * commodity.  This only occurs if an uninitialized amount has never
-   * been assigned a value.
-   */
+  /** Truth tests.  An amount may be truth test in several ways:
+
+      sign() returns an integer less than, greater than, or equal to
+      zero depending on whether the amount is negative, zero, or
+      greater than zero.  Note that this function tests the actual
+      value of the amount -- using its internal precision -- and not
+      the display value.  To test its display value, use:
+      `round().sign()'.
+
+      is_nonzero(), or operator bool, returns true if an amount's
+      display value is not zero.
+
+      is_zero() returns true if an amount's display value is zero.
+      Thus, $0.0001 is considered zero if the current display precision
+      for dollars is two decimal places.
+
+      is_realzero() returns true if an amount's actual value is zero.
+      Thus, $0.0001 is never considered realzero.
+
+      is_null() returns true if an amount has no value and no
+      commodity.  This only occurs if an uninitialized amount has never
+      been assigned a value.
+  */
   int sign() const;
 
   operator bool() const {
@@ -527,45 +469,43 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Conversion
+  /** @name Conversion
    */
   /*@{*/
 
-  /**
-   * Conversion methods.  An amount may be converted to the same types
-   * it can be constructed from -- with the exception of unsigned
-   * long.  Implicit conversions are not allowed in C++ (though they
-   * are in Python), rather the following conversion methods must be
-   * called explicitly:
-   *
-   * to_double([bool]) returns an amount as a double.  If the optional
-   * boolean argument is true (the default), an exception is thrown if
-   * the conversion would lose information.
-   *
-   * to_long([bool]) returns an amount as a long integer.  If the
-   * optional boolean argument is true (the default), an exception is
-   * thrown if the conversion would lose information.
-   *
-   * fits_in_double() returns true if to_double() would not lose
-   * precision.
-   *
-   * fits_in_long() returns true if to_long() would not lose
-   * precision.
-   *
-   * to_string() returns an amount'ss "display value" as a string --
-   * after rounding the value according to the commodity's default
-   * precision.  It is equivalent to: `round().to_fullstring()'.
-   *
-   * to_fullstring() returns an amount's "internal value" as a string,
-   * without any rounding.
-   *
-   * quantity_string() returns an amount's "display value", but
-   * without any commodity.  Note that this is different from
-   * `number().to_string()', because in that case the commodity has
-   * been stripped and the full, internal precision of the amount
-   * would be displayed.
-   */
+  /** Conversion methods.  An amount may be converted to the same types
+      it can be constructed from -- with the exception of unsigned
+      long.  Implicit conversions are not allowed in C++ (though they
+      are in Python), rather the following conversion methods must be
+      called explicitly:
+
+      to_double([bool]) returns an amount as a double.  If the optional
+      boolean argument is true (the default), an exception is thrown if
+      the conversion would lose information.
+
+      to_long([bool]) returns an amount as a long integer.  If the
+      optional boolean argument is true (the default), an exception is
+      thrown if the conversion would lose information.
+
+      fits_in_double() returns true if to_double() would not lose
+      precision.
+
+      fits_in_long() returns true if to_long() would not lose
+      precision.
+
+      to_string() returns an amount'ss "display value" as a string --
+      after rounding the value according to the commodity's default
+      precision.  It is equivalent to: `round().to_fullstring()'.
+
+      to_fullstring() returns an amount's "internal value" as a string,
+      without any rounding.
+
+      quantity_string() returns an amount's "display value", but
+      without any commodity.  Note that this is different from
+      `number().to_string()', because in that case the commodity has
+      been stripped and the full, internal precision of the amount
+      would be displayed.
+  */
 #ifdef HAVE_GDTOA
   double to_double(bool no_check = false) const;
 #endif
@@ -581,32 +521,30 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Commodity methods
+  /** @name Commodity methods
    */
   /*@{*/
 
-  /**
-   * The following methods relate to an
-   * amount's commodity:
-   *
-   * commodity() returns an amount's commodity.  If the amount has no
-   * commodity, the value returned is `current_pool->null_commodity'.
-   *
-   * has_commodity() returns true if the amount has a commodity.
-   *
-   * set_commodity(commodity_t) sets an amount's commodity to the
-   * given value.  Note that this merely sets the current amount to
-   * that commodity, it does not "observe" the amount for possible
-   * changes in the maximum display precision of the commodity, the
-   * way that `parse' does.
-   *
-   * clear_commodity() sets an amount's commodity to null, such that
-   * has_commodity() afterwards returns false.
-   *
-   * number() returns a commodity-less version of an amount.  This is
-   * useful for accessing just the numeric portion of an amount.
-   */
+  /** The following methods relate to an
+      amount's commodity:
+
+      commodity() returns an amount's commodity.  If the amount has no
+      commodity, the value returned is `current_pool->null_commodity'.
+
+      has_commodity() returns true if the amount has a commodity.
+
+      set_commodity(commodity_t) sets an amount's commodity to the
+      given value.  Note that this merely sets the current amount to
+      that commodity, it does not "observe" the amount for possible
+      changes in the maximum display precision of the commodity, the
+      way that `parse' does.
+
+      clear_commodity() sets an amount's commodity to null, such that
+      has_commodity() afterwards returns false.
+
+      number() returns a commodity-less version of an amount.  This is
+      useful for accessing just the numeric portion of an amount.
+  */
   commodity_t& commodity() const;
 
   bool has_commodity() const;
@@ -630,36 +568,34 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Commodity annotations
+  /** @name Commodity annotations
    */
   /*@{*/
 
-  /**
-   * An amount's commodity may be
-   * annotated with special details, such as the price it was
-   * purchased for, when it was acquired, or an arbitrary note,
-   * identifying perhaps the lot number of an item.
-   *
-   * annotate_commodity(amount_t price, [datetime_t date, string tag])
-   * sets the annotations for the current amount's commodity.  Only
-   * the price argument is required, although it can be passed as
-   * `none' if no price is desired.
-   *
-   * commodity_annotated() returns true if an amount's commodity has
-   * any annotation details associated with it.
-   *
-   * annotation_details() returns all of the details of an annotated
-   * commodity's annotations.  The structure returns will evaluate as
-   * boolean false if there are no details.
-   *
-   * strip_annotations([keep_price, keep_date, keep_tag]) returns an
-   * amount whose commodity's annotations have been stripped.  The
-   * three `keep_' arguments determine which annotation detailed are
-   * kept, meaning that the default is to follow whatever
-   * amount_t::keep_price, amount_t::keep_date and amount_t::keep_tag
-   * have been set to (which all default to false).
-   */
+  /** An amount's commodity may be
+      annotated with special details, such as the price it was
+      purchased for, when it was acquired, or an arbitrary note,
+      identifying perhaps the lot number of an item.
+
+      annotate_commodity(amount_t price, [datetime_t date, string tag])
+      sets the annotations for the current amount's commodity.  Only
+      the price argument is required, although it can be passed as
+      `none' if no price is desired.
+
+      commodity_annotated() returns true if an amount's commodity has
+      any annotation details associated with it.
+
+      annotation_details() returns all of the details of an annotated
+      commodity's annotations.  The structure returns will evaluate as
+      boolean false if there are no details.
+
+      strip_annotations([keep_price, keep_date, keep_tag]) returns an
+      amount whose commodity's annotations have been stripped.  The
+      three `keep_' arguments determine which annotation detailed are
+      kept, meaning that the default is to follow whatever
+      amount_t::keep_price, amount_t::keep_date and amount_t::keep_tag
+      have been set to (which all default to false).
+  */
   void          annotate(const annotation_t& details);
   bool          is_annotated() const;
 
@@ -674,41 +610,39 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Parsing
+  /** @name Parsing
    */
   /*@{*/
 
-  /**
-   * The `flags' argument of both parsing may be one or more of the
-   * following:
-   *
-   * PARSE_NO_MIGRATE means to not pay attention to the way an
-   * amount is used.  Ordinarily, if an amount were $100.001, for
-   * example, it would cause the default display precision for $ to be
-   * "widened" to three decimal places.  If PARSE_NO_MIGRATE is
-   * used, the commodity's default display precision is not changed.
-   *
-   * PARSE_NO_REDUCE means not to call in_place_reduce() on the
-   * resulting amount after it is parsed.
-   *
-   * These parsing methods observe the amounts they parse (unless
-   * PARSE_NO_MIGRATE is true), and set the display details of
-   * the corresponding commodity accordingly.  This way, amounts do
-   * not require commodities to be pre-defined in any way, but merely
-   * displays them back to the user in the same fashion as it saw them
-   * used.
-   *
-   * There is also a static convenience method called
-   * `parse_conversion' which can be used to define a relationship
-   * between scaling commodity values.  For example, Ledger uses it to
-   * define the relationships among various time values:
-   *
-   * @code
-   *   amount_t::parse_conversion("1.0m", "60s"); // a minute is 60 seconds
-   *   amount_t::parse_conversion("1.0h", "60m"); // an hour is 60 minutes
-   * @endcode
-   */
+  /** The `flags' argument of both parsing may be one or more of the
+      following:
+
+      PARSE_NO_MIGRATE means to not pay attention to the way an
+      amount is used.  Ordinarily, if an amount were $100.001, for
+      example, it would cause the default display precision for $ to be
+      "widened" to three decimal places.  If PARSE_NO_MIGRATE is
+      used, the commodity's default display precision is not changed.
+
+      PARSE_NO_REDUCE means not to call in_place_reduce() on the
+      resulting amount after it is parsed.
+
+      These parsing methods observe the amounts they parse (unless
+      PARSE_NO_MIGRATE is true), and set the display details of
+      the corresponding commodity accordingly.  This way, amounts do
+      not require commodities to be pre-defined in any way, but merely
+      displays them back to the user in the same fashion as it saw them
+      used.
+
+      There is also a static convenience method called
+      `parse_conversion' which can be used to define a relationship
+      between scaling commodity values.  For example, Ledger uses it to
+      define the relationships among various time values:
+
+      @code
+      amount_t::parse_conversion("1.0m", "60s"); // a minute is 60 seconds
+      amount_t::parse_conversion("1.0h", "60m"); // an hour is 60 minutes
+      @endcode
+  */
   enum parse_flags_enum_t {
     PARSE_DEFAULT    = 0x00,
     PARSE_NO_MIGRATE = 0x01,
@@ -718,18 +652,17 @@ public:
 
   typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
 
-  /**
-   * The method parse() is used to parse an amount from an input stream
-   * or a string.  A global operator>>() is also defined which simply
-   * calls parse on the input stream.  The parse() method has two forms:
-   *
-   * parse(istream, flags_t) parses an amount from the given input
-   * stream.
-   *
-   * parse(string, flags_t) parses an amount from the given string.
-   *
-   * parse(string, flags_t) also parses an amount from a string.
-   */
+  /** The method parse() is used to parse an amount from an input stream
+      or a string.  A global operator>>() is also defined which simply
+      calls parse on the input stream.  The parse() method has two forms:
+
+      parse(istream, flags_t) parses an amount from the given input
+      stream.
+
+      parse(string, flags_t) parses an amount from the given string.
+
+      parse(string, flags_t) also parses an amount from a string.
+  */
   bool parse(std::istream& in,
 	     const parse_flags_t& flags = PARSE_DEFAULT);
   bool parse(const string& str,
@@ -745,62 +678,58 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Printing
+  /** @name Printing
    */
   /*@{*/
 
-  /**
-   * An amount may be output to a stream using the
-   * `print' method.  There is also a global operator<< defined which
-   * simply calls print for an amount on the given stream.  There is
-   * one form of the print method, which takes one required argument
-   * and two arguments with default values:
-   *
-   * print(ostream, bool omit_commodity = false, bool full_precision =
-   * false) prints an amounts to the given output stream, using its
-   * commodity's default display characteristics.  If `omit_commodity'
-   * is true, the commodity will not be displayed, only the amount
-   * (although the commodity's display precision is still used).  If
-   * `full_precision' is true, the full internal precision of the
-   * amount is displayed, regardless of its commodity's display
-   * precision.
-   */
+  /** An amount may be output to a stream using the
+      `print' method.  There is also a global operator<< defined which
+      simply calls print for an amount on the given stream.  There is
+      one form of the print method, which takes one required argument
+      and two arguments with default values:
+
+      print(ostream, bool omit_commodity = false, bool full_precision =
+      false) prints an amounts to the given output stream, using its
+      commodity's default display characteristics.  If `omit_commodity'
+      is true, the commodity will not be displayed, only the amount
+      (although the commodity's display precision is still used).  If
+      `full_precision' is true, the full internal precision of the
+      amount is displayed, regardless of its commodity's display
+      precision.
+  */
   void print(std::ostream& out, bool omit_commodity = false,
 	     bool full_precision = false) const;
 
   /*@}*/
 
-  /**
-   * @name Serialization
+  /** @name Serialization
    */
   /*@{*/
 
-  /**
-   * An amount may be deserialized from an input stream or a character
-   * pointer, and it may be serialized to an output stream.  The methods
-   * used are:
-   *
-   * read(istream) reads an amount from the given input stream.  It
-   * must have been put there using `write(ostream)'.  The required
-   * flow of logic is:
-   *   amount_t::current_pool->write(out)
-   *   amount.write(out)	// write out all amounts
-   *   amount_t::current_pool->read(in)
-   *   amount.read(in)
-   *
-   * read(char *&) reads an amount from data which has been read from
-   * an input stream into a buffer.  It advances the pointer passed in
-   * to the end of the deserialized amount.
-   *
-   * write(ostream, [bool]) writes an amount to an output stream in a
-   * compact binary format.  If the second parameter is true,
-   * quantities with multiple reference counts will be written in an
-   * optimized fashion.  NOTE: This form of usage is valid only for
-   * the binary journal writer, it should not be used otherwise, as it
-   * has strict requirements for reading that only the binary reader
-   * knows about.
-   */
+  /** An amount may be deserialized from an input stream or a character
+      pointer, and it may be serialized to an output stream.  The methods
+      used are:
+
+      read(istream) reads an amount from the given input stream.  It
+      must have been put there using `write(ostream)'.  The required
+      flow of logic is:
+      amount_t::current_pool->write(out)
+      amount.write(out)	// write out all amounts
+      amount_t::current_pool->read(in)
+      amount.read(in)
+
+      read(char *&) reads an amount from data which has been read from
+      an input stream into a buffer.  It advances the pointer passed in
+      to the end of the deserialized amount.
+
+      write(ostream, [bool]) writes an amount to an output stream in a
+      compact binary format.  If the second parameter is true,
+      quantities with multiple reference counts will be written in an
+      optimized fashion.  NOTE: This form of usage is valid only for
+      the binary journal writer, it should not be used otherwise, as it
+      has strict requirements for reading that only the binary reader
+      knows about.
+  */
   void read(std::istream& in);
   void read(const char *& data,
 	    char **	  pool	    = NULL,
@@ -809,8 +738,7 @@ public:
 
   /*@}*/
 
-  /**
-   * @name XML Serialization
+  /** @name XML Serialization
    */
   /*@{*/
 
@@ -819,23 +747,21 @@ public:
 
   /*@}*/
 
-  /**
-   * @name Debugging
+  /** @name Debugging
    */
   /*@{*/
 
-  /**
-   * There are two methods defined to help with debugging:
-   *
-   * dump(ostream) dumps an amount to an output stream.  There is
-   * little different from print(), it simply surrounds the display
-   * value with a marker, for example "AMOUNT($1.00)".  This code is
-   * used by other dumping code elsewhere in Ledger.
-   *
-   * valid() returns true if an amount is valid.  This ensures that if
-   * an amount has a commodity, it has a valid value pointer, for
-   * example, even if that pointer simply points to a zero value.
-   */
+  /** There are two methods defined to help with debugging:
+
+      dump(ostream) dumps an amount to an output stream.  There is
+      little different from print(), it simply surrounds the display
+      value with a marker, for example "AMOUNT($1.00)".  This code is
+      used by other dumping code elsewhere in Ledger.
+
+      valid() returns true if an amount is valid.  This ensures that if
+      an amount has a commodity, it has a valid value pointer, for
+      example, even if that pointer simply points to a zero value.
+  */
   void dump(std::ostream& out) const {
     out << "AMOUNT(";
     print(out);

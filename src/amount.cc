@@ -29,18 +29,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file   amount.cc
- * @author John Wiegley
- * @date   Thu Apr 26 15:19:46 2007
- *
- * @brief  Types for handling commoditized math
- *
- * This file defines member functions for amount_t, and also defines a
- * helper class, bigint_t, which is used as a refcounted wrapper
- * around libgmp's mpz_t type.
- */
-
 #include "amount.h"
 #include "binary.h"
 
@@ -57,10 +45,8 @@ bool amount_t::keep_tag	  = false;
 bool amount_t::stream_fullstrings = false;
 
 #ifndef THREADSAFE
-/**
- * These global temporaries are pre-initialized for the sake of
- * efficiency, and reused over and over again.
- */
+// These global temporaries are pre-initialized for the sake of
+// efficiency, and are reused over and over again.
 static mpz_t temp;
 static mpz_t divisor;
 #endif
@@ -238,6 +224,7 @@ void amount_t::_release()
 
 
 #ifdef HAVE_GDTOA
+
 namespace {
   amount_t::precision_t convert_double(mpz_t dest, double val)
   {
@@ -289,7 +276,8 @@ amount_t::amount_t(const double val) : commodity_(NULL)
   quantity = new bigint_t;
   quantity->prec = convert_double(MPZ(quantity), val);
 }
-#endif
+
+#endif // HAVE_GDTOA
 
 amount_t::amount_t(const unsigned long val) : commodity_(NULL)
 {
@@ -531,14 +519,8 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   // Increase the value's precision, to capture fractional parts after
   // the divide.  Round up in the last position.
 
-  // jww (2008-11-13): I need to consider the magnitude of the numerator
-  // of both numbers.  For example, if I divide 10 by
-  // 100000000000000000000000000000000000, the result will be 0 because
-  // even extend_by_digits * 2 will not be enough digits of precision to
-  // retain the significance of the answer.
-
-  mpz_ui_pow_ui(divisor, 10,
-		(2 * amt.quantity->prec) + quantity->prec + extend_by_digits + 1U);
+  mpz_ui_pow_ui(divisor, 10, (2 * amt.quantity->prec) + quantity->prec +
+		extend_by_digits + 1U);
   mpz_mul(MPZ(quantity), MPZ(quantity), divisor);
   mpz_tdiv_q(MPZ(quantity), MPZ(quantity), MPZ(amt.quantity));
   quantity->prec += amt.quantity->prec + quantity->prec + extend_by_digits + 1U;
@@ -702,6 +684,7 @@ bool amount_t::is_zero() const
 
 
 #ifdef HAVE_GDTOA
+
 double amount_t::to_double(bool no_check) const
 {
   if (! quantity)
@@ -732,7 +715,8 @@ double amount_t::to_double(bool no_check) const
 
   return value;
 }
-#endif
+
+#endif // HAVE_GDTOA
 
 long amount_t::to_long(bool no_check) const
 {
@@ -752,12 +736,14 @@ long amount_t::to_long(bool no_check) const
 }
 
 #ifdef HAVE_GDTOA
+
 bool amount_t::fits_in_double() const
 {
   double value = to_double(true);
   return *this == amount_t(value);
 }
-#endif
+
+#endif // HAVE_GDTOA
 
 bool amount_t::fits_in_long() const
 {
