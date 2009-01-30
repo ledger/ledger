@@ -76,17 +76,20 @@ public:
 
   /**
    * Construct a new output_stream_t.
-   *
-   * @param output_file File to which to send output. If both this
-   * and pager are set, output_file takes priority.
-   *
-   * @param pager Path to a pager. To not use a pager, leave this
-   * empty.
    */
   output_stream_t() : pipe_to_pager_fd(-1), os(NULL) {
     TRACE_CTOR(output_stream_t, "");
   }
 
+  /**
+   * Initialize the output stream object.
+   *
+   * @param output_file File to which to send output. If both this
+   * and pager are set, output_file takes priority.
+   *
+   * @param pager_path Path to a pager. To not use a pager, leave this
+   * empty.
+   */
   void initialize(const optional<path>& output_file = none,
 		  const optional<path>& pager_path  = none);
 
