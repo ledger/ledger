@@ -93,8 +93,8 @@ public:
 		     const bool _show_totals = false)
     : format_entries(_report, ""), show_totals(_show_totals) {
     TRACE_CTOR(format_xml_entries, "std::ostream&, const bool");
-    *report.output_stream << "<?xml version=\"1.0\"?>\n"
-			  << "<ledger version=\"2.5\">\n";
+    report.output_stream << "<?xml version=\"1.0\"?>\n"
+			 << "<ledger version=\"2.5\">\n";
   }
   virtual ~format_xml_entries() throw() {
     TRACE_DTOR(format_xml_entries);
@@ -102,7 +102,7 @@ public:
 
   virtual void flush() {
     format_entries::flush();
-    *report.output_stream << "</ledger>" << std::endl;
+    report.output_stream << "</ledger>" << std::endl;
   }
 
   virtual void format_last_entry();

@@ -57,7 +57,7 @@ format_xacts::format_xacts(report_t& _report, const string& format)
 
 void format_xacts::operator()(xact_t& xact)
 {
-  std::ostream& out(*report.output_stream);
+  std::ostream& out(report.output_stream);
 
   if (! xact.has_xdata() ||
       ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
@@ -82,7 +82,7 @@ void format_xacts::operator()(xact_t& xact)
 void format_entries::format_last_entry()
 {
   bool		first = true;
-  std::ostream& out(*report.output_stream);
+  std::ostream& out(report.output_stream);
 
   foreach (xact_t * xact, last_entry->xacts) {
     if (xact->has_xdata() &&
@@ -144,7 +144,7 @@ void print_entry(std::ostream& out, const entry_base_t& entry_base,
 
 void format_accounts::flush()
 {
-  std::ostream& out(*report.output_stream);
+  std::ostream& out(report.output_stream);
 
   if (print_final_total) {
     assert(out);
@@ -168,7 +168,7 @@ void format_accounts::operator()(account_t& account)
     if (! account.parent) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
     } else {
-      format.format(*report.output_stream, account);
+      format.format(report.output_stream, account);
       account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
     }
   }
@@ -246,7 +246,7 @@ format_equity::format_equity(report_t& _report, const string& _format)
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
   header_entry._date = current_date;
-  first_line_format.format(*report.output_stream, header_entry);
+  first_line_format.format(report.output_stream, header_entry);
 }
 
 void format_equity::flush()
@@ -254,7 +254,7 @@ void format_equity::flush()
   account_t summary(NULL, "Equity:Opening Balances");
 
   account_t::xdata_t& xdata(summary.xdata());
-  std::ostream&	      out(*report.output_stream);
+  std::ostream&	      out(report.output_stream);
   
   xdata.value = total.negate();
 
@@ -280,7 +280,7 @@ void format_equity::flush()
 
 void format_equity::operator()(account_t& account)
 {
-  std::ostream& out(*report.output_stream);
+  std::ostream& out(report.output_stream);
 
   if (display_account(account)) {
     if (account.has_xdata()) {

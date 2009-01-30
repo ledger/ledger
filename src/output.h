@@ -55,7 +55,7 @@ public:
   }
 
   virtual void flush() {
-    report.output_stream->flush();
+    report.output_stream.flush();
   }
   virtual void operator()(xact_t& xact);
 };

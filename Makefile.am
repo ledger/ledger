@@ -31,6 +31,7 @@ libledger_util_la_SOURCES =	 \
 	src/utils.cc	 \
 	src/times.cc	 \
 	src/mask.cc	 \
+	src/stream.cc	 \
 	src/binary.cc	 \
 	lib/sha1.cpp
 
@@ -116,6 +117,7 @@ pkginclude_HEADERS =			   \
 	src/error.h			   \
 	src/times.h			   \
 	src/mask.h			   \
+	src/stream.h			   \
 	src/binary.h			   \
 					   \
 	src/amount.h			   \

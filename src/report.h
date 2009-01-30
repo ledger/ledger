@@ -86,57 +86,57 @@ class report_t : public noncopyable, public scope_t
   report_t();
 
 public:
-  optional<path> output_file;
-  std::ostream * output_stream;
+  optional<path>  output_file;
+  output_stream_t output_stream;
 
-  string	 format_string;
-  string	 date_output_format;
-  string	 predicate;
-  string	 secondary_predicate;
-  string	 display_predicate;
-  string	 report_period;
-  string	 report_period_sort;
-  string	 sort_string;
-  string	 descend_expr;
-  string	 forecast_limit;
-  string	 reconcile_balance;
-  string	 reconcile_date;
+  string	  format_string;
+  string	  date_output_format;
+  string	  predicate;
+  string	  secondary_predicate;
+  string	  display_predicate;
+  string	  report_period;
+  string	  report_period_sort;
+  string	  sort_string;
+  string	  descend_expr;
+  string	  forecast_limit;
+  string	  reconcile_balance;
+  string	  reconcile_date;
 
-  expr_t	 amount_expr;
-  expr_t	 total_expr;
-  expr_t	 display_total;
+  expr_t	  amount_expr;
+  expr_t	  total_expr;
+  expr_t	  display_total;
 
-  unsigned long  budget_flags;
+  unsigned long	  budget_flags;
 
-  long		 head_entries;
-  long		 tail_entries;
+  long		  head_entries;
+  long		  tail_entries;
 
-  bool		 show_collapsed;
-  bool		 show_subtotal;
-  bool		 show_totals;
-  bool		 show_related;
-  bool		 show_all_related;
-  bool		 show_inverted;
-  bool		 show_empty;
-  bool		 days_of_the_week;
-  bool		 by_payee;
-  bool		 comm_as_payee;
-  bool		 code_as_payee;
-  bool		 show_revalued;
-  bool		 show_revalued_only;
-  bool		 keep_price;
-  bool		 keep_date;
-  bool		 keep_tag;
-  bool		 entry_sort;
-  bool		 sort_all;
-  bool		 anonymize;
+  bool		  show_collapsed;
+  bool		  show_subtotal;
+  bool		  show_totals;
+  bool		  show_related;
+  bool		  show_all_related;
+  bool		  show_inverted;
+  bool		  show_empty;
+  bool		  days_of_the_week;
+  bool		  by_payee;
+  bool		  comm_as_payee;
+  bool		  code_as_payee;
+  bool		  show_revalued;
+  bool		  show_revalued_only;
+  bool		  keep_price;
+  bool		  keep_date;
+  bool		  keep_tag;
+  bool		  entry_sort;
+  bool		  sort_all;
+  bool		  anonymize;
 
-  string	 account;
-  optional<path> pager;
+  string	  account;
+  optional<path>  pager_path;
 
-  bool           raw_mode;
+  bool		  raw_mode;
 
-  session_t&	 session;
+  session_t&	  session;
 
   explicit report_t(session_t& _session)
     : amount_expr("amount"),
@@ -426,11 +426,12 @@ public:
     return true;
   }
 
-#if 0
   value_t option_pager(call_scope_t& args) { // :
-    config->pager = optarg;
+    pager_path = args[0].as_string();
+    return true;
   }
 
+#if 0
   value_t option_truncate(call_scope_t& args) { // :
     std::string style(optarg);
     if (style == "leading")

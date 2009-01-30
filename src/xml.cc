@@ -400,7 +400,7 @@ void output_xml_string(std::ostream& out, const string& str)
 
 void format_xml_entries::format_last_entry()
 {
-  std::ostream& out(*report.output_stream);
+  std::ostream& out(report.output_stream);
 
 #if 0
   // jww (2008-05-08): Need to format these dates

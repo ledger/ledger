@@ -45,12 +45,6 @@
 #include "ofx.h"
 #endif
 
-#ifdef HAVE_UNIX_PIPES
-#include <sys/types.h>
-#include <sys/wait.h>
-#include "fdstream.h"
-#endif
-
 namespace ledger {
   int read_and_report(ledger::report_t& report,
 		      int argc, char * argv[], char * envp[])
@@ -133,176 +127,58 @@ namespace ledger {
 
     TRACE_FINISH(arguments, 1);
 
-    // Configure the output stream
-
-#ifdef HAVE_UNIX_PIPES
-    int status, pfd[2];		// Pipe file descriptors
-#endif
-    report.output_stream = &std::cout;
-
-    if (report.output_file) {
-      report.output_stream = new ofstream(*report.output_file);
-    }
-#ifdef HAVE_UNIX_PIPES
-    else if (report.pager) {
-      status = pipe(pfd);
-      if (status == -1)
-	throw_(std::logic_error, "Failed to create pipe");
-
-      status = fork();
-      if (status < 0) {
-	throw_(std::logic_error, "Failed to fork child process");
-      }
-      else if (status == 0) {	// child
-	// Duplicate pipe's reading end into stdin
-	status = dup2(pfd[0], STDIN_FILENO);
-	if (status == -1)
-	  perror("dup2");
-
-	// Close unuseful file descriptors: the pipe's writing and
-	// reading ends (the latter is not needed anymore, after the
-	// duplication).
-	close(pfd[1]);
-	close(pfd[0]);
-
-	// Find command name: its the substring starting right of the
-	// rightmost '/' character in the pager pathname.  See manpage
-	// for strrchr.
-	execlp(report.pager->native_file_string().c_str(),
-	       basename(*report.pager).c_str(), NULL);
-	perror("execl");
-	exit(1);
-      }
-      else {			// parent
-	close(pfd[0]);
-	report.output_stream = new boost::fdostream(pfd[1]);
-      }
-    }
-#endif
-
     // Read the command word and see if it's any of the debugging commands
     // that Ledger supports.
 
-    std::ostream& out(*report.output_stream);
-
     string verb = *arg++;
 
-    if (verb == "parse") {
-      out << "--- Input text ---" << std::endl;
-      out << *arg << std::endl;
-
-      out << std::endl << "--- Text as parsed ---" << std::endl;
-      expr_t expr(*arg);
-      expr.print(out);
-      out << std::endl;
-
-      out << std::endl << "--- Expression tree ---" << std::endl;
-      expr.dump(out);
-
-      out << std::endl << "--- Calculated value ---" << std::endl;
-      expr.calc(report).print(out);
-      out << std::endl;
-
-      return 0;
-    }
-    else if (verb == "compile") {
-      out << "--- Input text ---" << std::endl;
-      out << *arg << std::endl;
-
-      out << std::endl << "--- Text as parsed ---" << std::endl;
-      expr_t expr(*arg);
-      expr.print(out);
-      out << std::endl;
-
-      out << std::endl << "--- Expression tree ---" << std::endl;
-      expr.dump(out);
-
-      expr.compile(report);
-
-      out << std::endl << "--- Compiled tree ---" << std::endl;
-      expr.dump(out);
-
-      out << std::endl << "--- Calculated value ---" << std::endl;
-      expr.calc(report).print(out);
-      out << std::endl;
-
-      return 0;
-    }
-    else if (verb == "eval") {
-      expr_t expr(*arg);
-      out << expr.calc(report).strip_annotations() << std::endl;
-      return 0;
-    }
-    else if (verb == "format") {
-      format_t fmt(*arg);
-      fmt.dump(out);
-      return 0;
-    }
-    else if (verb == "period") {
-      interval_t interval(*arg);
-
-      if (! is_valid(interval.begin)) {
-	out << "Time period has no beginning." << std::endl;
-      } else {
-	out << "begin: " << format_date(interval.begin) << std::endl;
-	out << "  end: " << format_date(interval.end) << std::endl;
-	out << std::endl;
-
-	date_t date = interval.first();
-
-	for (int i = 0; i < 20; i++) {
-	  out << std::right;
-	  out.width(2);
-
-	  out << i << ": " << format_date(date) << std::endl;
-
-	  date = interval.increment(date);
-	  if (is_valid(interval.end) && date >= interval.end)
-	    break;
-	}
-      }
-      return 0;
-    }
+    function_t command;
+    if (expr_t::ptr_op_t def = report.lookup(string("ledger_precmd_") + verb))
+      command = def->as_function();
 
     // Parse the initialization file, which can only be textual; then
-    // parse the journal data.
+    // parse the journal data.  But only do this if there was no
+    // "pre-command", which are always executed without doing any
+    // parsing.
 
-    INFO_START(journal, "Read journal file");
+    if (! command) {
+      INFO_START(journal, "Read journal file");
 
-    journal_t& journal(*session.create_journal());
+      journal_t& journal(*session.create_journal());
 
-    std::size_t count = session.read_data(journal, report.account);
-    if (count == 0)
-      throw_(parse_error, "Failed to locate any journal entries; "
-	     "did you specify a valid file with -f?");
+      std::size_t count = session.read_data(journal, report.account);
+      if (count == 0)
+	throw_(parse_error, "Failed to locate any journal entries; "
+	       "did you specify a valid file with -f?");
 
-    INFO_FINISH(journal);
+      INFO_FINISH(journal);
 
-    INFO("Found " << count << " entries");
+      INFO("Found " << count << " entries");
 
-    TRACE_FINISH(entry_text, 1);
-    TRACE_FINISH(entry_date, 1);
-    TRACE_FINISH(entry_details, 1);
-    TRACE_FINISH(entry_xacts, 1);
-    TRACE_FINISH(entries, 1);
-    TRACE_FINISH(parsing_total, 1);
+      TRACE_FINISH(entry_text, 1);
+      TRACE_FINISH(entry_details, 1);
+      TRACE_FINISH(entry_xacts, 1);
+      TRACE_FINISH(entries, 1);
+      TRACE_FINISH(session_parser, 1);
+      TRACE_FINISH(parsing_total, 1);
 
-    // Lookup the command object corresponding to the command verb.
+      // Lookup the command object corresponding to the command verb.
 
-    function_t command;
-    if (expr_t::ptr_op_t def = report.lookup(string("cmd_") + verb))
-      command = def->as_function();
+      if (expr_t::ptr_op_t def = report.lookup(string("ledger_cmd_") + verb))
+	command = def->as_function();
+    }
 
     if (! command)
       throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
 
+#if 1
     // Patch up some of the reporting options based on what kind of
     // command it was.
 
     // jww (2008-08-14): This code really needs to be rationalized away
     // for 3.0.
 
-    if (verb[0] == 'p' || verb == "entry" || verb == "dump") {
+    if (verb == "print" || verb == "entry" || verb == "dump") {
       report.show_related     = true;
       report.show_all_related = true;
     }
@@ -340,6 +216,7 @@ namespace ledger {
 	report.display_predicate = "amount";
       }
     }
+#endif
 
     // Now setup the various formatting strings
 
@@ -356,6 +233,10 @@ namespace ledger {
 
     if (! report.report_period.empty() && ! report.sort_all)
       report.entry_sort = true;
+
+    // Setup the output stream, which might involve invoking the pager
+
+    report.output_stream.initialize(report.output_file, report.pager_path);
 
     // Create an argument scope containing the report command's
     // arguments, and then invoke the command.
@@ -383,23 +264,6 @@ namespace ledger {
       TRACE_FINISH(binary_cache, 1);
     }
 #endif
-
-    // If the user specified a pager, wait for it to exit now
-
-#ifdef HAVE_UNIX_PIPES
-    if (! report.output_file && report.pager) {
-      checked_delete(report.output_stream);
-      close(pfd[1]);
-
-      // Wait for child to finish
-      wait(&status);
-      if (status & 0xffff != 0)
-	throw_(std::logic_error, "Something went wrong in the pager");
-    }
-#endif
-    else if (DO_VERIFY() && report.output_file) {
-      checked_delete(report.output_stream);
-    }
 
     return 0;
   }

@@ -471,6 +471,7 @@ void finish_timer(const char * name);
 #include "error.h"
 #include "times.h"
 #include "flags.h"
+#include "stream.h"
 #include "pushvar.h"
 
 /**
