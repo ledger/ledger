@@ -88,6 +88,7 @@ std::size_t textual_parser_t::parse(std::istream& in,
   parsing_instance.parse();
 
   TRACE_STOP(parsing_total, 1);
+  TRACE_FINISH(instance_parse, 1); // report per-instance timers
 
   if (parsing_instance.errors > 0)
     throw static_cast<int>(parsing_instance.errors);
