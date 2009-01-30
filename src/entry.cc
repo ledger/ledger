@@ -358,6 +358,27 @@ void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 	  amt = xact->amount;
 	}
 
+	IF_DEBUG("entry.extend") {
+	  DEBUG("entry.extend",
+		"Initial xact on line " << initial_xact->beg_line << ": "
+		<< "amount " << initial_xact->amount << " (precision "
+		<< initial_xact->amount.precision() << ")");
+
+	  if (initial_xact->amount.keep_precision())
+	    DEBUG("entry.extend", "  precision is kept");
+
+	  DEBUG("entry.extend",
+		"Transaction on line " << xact->beg_line << ": "
+		<< "amount " << xact->amount << ", amt " << amt
+		<< " (precision " << xact->amount.precision()
+		<< " != " << amt.precision() << ")");
+
+	  if (xact->amount.keep_precision())
+	    DEBUG("entry.extend", "  precision is kept");
+	  if (amt.keep_precision())
+	    DEBUG("entry.extend", "  amt precision is kept");
+	}
+
 	account_t * account  = xact->account;
 	string fullname = account->fullname();
 	assert(! fullname.empty());
