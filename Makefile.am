@@ -281,7 +281,7 @@ PYLIBS  = ledger_util ledger_math ledger_expr \
 	  ledger_data ledger_parse	      \
 	  ledger_report ledger_extra	      \
 	  ledger_python			      \
-	  gmp				      \
+	  gmp mpfr			      \
 	  boost_system$(BOOST_SUFFIX)	      \
 	  boost_date_time$(BOOST_SUFFIX)      \
           boost_filesystem$(BOOST_SUFFIX)     \

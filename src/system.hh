@@ -121,6 +121,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <gmp.h>
+#include <mpfr.h>
 #include "SHA1.h"
 
 #include "irrXML.h"		// XML parser
