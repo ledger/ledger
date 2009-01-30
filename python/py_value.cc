@@ -89,9 +89,7 @@ void export_value()
     .staticmethod("shutdown")
 #endif
 
-#ifdef HAVE_GDTOA
     .def(init<double>())
-#endif
     .def(init<long>())
     .def(init<std::string>())
     .def(init<date_t>())
@@ -111,108 +109,80 @@ void export_value()
     .def(self == self)
     .def(self == long())
     .def(long() == self)
-#ifdef HAVE_GDTOA
     .def(self == double())
     .def(double() == self)
-#endif
 
     .def(self != self)
     .def(self != long())
     .def(long() != self)
-#ifdef HAVE_GDTOA
     .def(self != double())
     .def(double() != self)
-#endif
 
     .def(! self)
 
     .def(self <  self)
     .def(self <  long())
     .def(long() < self)
-#ifdef HAVE_GDTOA
     .def(self <  double())
     .def(double() < self)
-#endif
 
     .def(self <= self)
     .def(self <= long())
     .def(long() <= self)
-#ifdef HAVE_GDTOA
     .def(self <= double())
     .def(double() <= self)
-#endif
 
     .def(self >  self)
     .def(self >  long())
     .def(long() > self)
-#ifdef HAVE_GDTOA
     .def(self >  double())
     .def(double() > self)
-#endif
 
     .def(self >= self)
     .def(self >= long())
     .def(long() >= self)
-#ifdef HAVE_GDTOA
     .def(self >= double())
     .def(double() >= self)
-#endif
 
     .def(self += self)
     .def(self += long())
-#ifdef HAVE_GDTOA
     .def(self += double())
-#endif
 
     .def(self	  + self)
     .def(self	  + long())
     .def(long()	  + self)
-#ifdef HAVE_GDTOA
     .def(self	  + double())
     .def(double() + self)
-#endif
 
     .def(self -= self)
     .def(self -= long())
-#ifdef HAVE_GDTOA
     .def(self -= double())
-#endif
 
     .def(self	  - self)
     .def(self	  - long())
     .def(long()	  - self)
-#ifdef HAVE_GDTOA
     .def(self	  - double())
     .def(double() - self)
-#endif
 
     .def(self *= self)
     .def(self *= long())
-#ifdef HAVE_GDTOA
     .def(self *= double())
-#endif
 
     .def(self	  * self)
     .def(self	  * long())
     .def(long()	  * self)
-#ifdef HAVE_GDTOA
     .def(self	  * double())
     .def(double() * self)
-#endif
 
     .def(self /= self)
     .def(self /= long())
-#ifdef HAVE_GDTOA
     .def(self /= double())
-#endif
 
     .def(self	  /  self)
     .def(self	  /  long())
     .def(long()	  / self)
-#ifdef HAVE_GDTOA
     .def(self	  /  double())
     .def(double() / self)
-#endif
 
     .def("add", &value_t::add,
 	 return_value_policy<reference_existing_object>())
@@ -336,9 +306,7 @@ void export_value()
 
   register_optional_to_python<value_t>();
 
-#ifdef HAVE_GDTOA
   implicitly_convertible<double, value_t>();
-#endif
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
   implicitly_convertible<date_t, value_t>();

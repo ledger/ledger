@@ -223,8 +223,6 @@ void amount_t::_release()
 }
 
 
-#ifdef HAVE_GDTOA
-
 namespace {
   amount_t::precision_t convert_double(mpz_t dest, double val)
   {
@@ -276,8 +274,6 @@ amount_t::amount_t(const double val) : commodity_(NULL)
   quantity = new bigint_t;
   quantity->prec = convert_double(MPZ(quantity), val);
 }
-
-#endif // HAVE_GDTOA
 
 amount_t::amount_t(const unsigned long val) : commodity_(NULL)
 {
@@ -683,8 +679,6 @@ bool amount_t::is_zero() const
 }
 
 
-#ifdef HAVE_GDTOA
-
 double amount_t::to_double(bool no_check) const
 {
   if (! quantity)
@@ -716,8 +710,6 @@ double amount_t::to_double(bool no_check) const
   return value;
 }
 
-#endif // HAVE_GDTOA
-
 long amount_t::to_long(bool no_check) const
 {
   if (! quantity)
@@ -735,15 +727,11 @@ long amount_t::to_long(bool no_check) const
   return value;
 }
 
-#ifdef HAVE_GDTOA
-
 bool amount_t::fits_in_double() const
 {
   double value = to_double(true);
   return *this == amount_t(value);
 }
-
-#endif // HAVE_GDTOA
 
 bool amount_t::fits_in_long() const
 {

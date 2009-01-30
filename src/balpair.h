@@ -113,11 +113,9 @@ public:
     : balance_t(amt), cost(cost_amt) {
     TRACE_CTOR(balance_pair_t, "const amount_t&, const amount_t&");
   }
-#ifdef HAVE_GDTOA
   balance_pair_t(const double val) : balance_t(val) {
     TRACE_CTOR(balance_pair_t, "const double");
   }
-#endif
   balance_pair_t(const unsigned long val) : balance_t(val) {
     TRACE_CTOR(balance_pair_t, "const unsigned long");
   }

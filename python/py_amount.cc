@@ -48,14 +48,12 @@ amount_t py_round_1(const amount_t& amount, amount_t::precision_t prec) {
   return amount.round(prec);
 }
 
-#ifdef HAVE_GDTOA
 double py_to_double_0(amount_t& amount) {
   return amount.to_double();
 }
 double py_to_double_1(amount_t& amount, bool no_check) {
   return amount.to_double(no_check);
 }
-#endif
 
 long py_to_long_0(amount_t& amount) {
   return amount.to_long();
@@ -169,9 +167,7 @@ void export_amount()
 			 make_getter(&amount_t::stream_fullstrings),
 			 make_setter(&amount_t::stream_fullstrings))
 
-#ifdef HAVE_GDTOA
     .def(init<double>())
-#endif
     .def(init<long>())
     .def(init<std::string>())
 
@@ -187,108 +183,80 @@ internal precision.")
     .def(self == self)
     .def(self == long())
     .def(long() == self)
-#ifdef HAVE_GDTOA
     .def(self == double())
     .def(double() == self)
-#endif
 
     .def(self != self)
     .def(self != long())
     .def(long() != self)
-#ifdef HAVE_GDTOA
     .def(self != double())
     .def(double() != self)
-#endif
 
     .def(! self)
 
     .def(self <  self)
     .def(self <  long())
     .def(long() < self)
-#ifdef HAVE_GDTOA
     .def(self <  double())
     .def(double() < self)
-#endif
 
     .def(self <= self)
     .def(self <= long())
     .def(long() <= self)
-#ifdef HAVE_GDTOA
     .def(self <= double())
     .def(double() <= self)
-#endif
 
     .def(self >  self)
     .def(self >  long())
     .def(long() > self)
-#ifdef HAVE_GDTOA
     .def(self >  double())
     .def(double() > self)
-#endif
 
     .def(self >= self)
     .def(self >= long())
     .def(long() >= self)
-#ifdef HAVE_GDTOA
     .def(self >= double())
     .def(double() >= self)
-#endif
 
     .def(self += self)
     .def(self += long())
-#ifdef HAVE_GDTOA
     .def(self += double())
-#endif
 
     .def(self	  + self)
     .def(self	  + long())
     .def(long()	  + self)
-#ifdef HAVE_GDTOA
     .def(self	  + double())
     .def(double() + self)
-#endif
 
     .def(self -= self)
     .def(self -= long())
-#ifdef HAVE_GDTOA
     .def(self -= double())
-#endif
 
     .def(self	  - self)
     .def(self	  - long())
     .def(long()	  - self)
-#ifdef HAVE_GDTOA
     .def(self	  - double())
     .def(double() - self)
-#endif
 
     .def(self *= self)
     .def(self *= long())
-#ifdef HAVE_GDTOA
     .def(self *= double())
-#endif
 
     .def(self	  * self)
     .def(self	  * long())
     .def(long()	  * self)
-#ifdef HAVE_GDTOA
     .def(self	  * double())
     .def(double() * self)
-#endif
 
     .def(self /= self)
     .def(self /= long())
-#ifdef HAVE_GDTOA
     .def(self /= double())
-#endif
 
     .def(self	  /  self)
     .def(self	  /  long())
     .def(long()	  / self)
-#ifdef HAVE_GDTOA
     .def(self	  /  double())
     .def(double() / self)
-#endif
 
     .def("precision", &amount_t::precision)
 
@@ -323,11 +291,9 @@ internal precision.")
     .def("is_realzero", &amount_t::is_realzero)
     .def("is_null", &amount_t::is_null)
 
-#ifdef HAVE_GDTOA
     .def("to_double", py_to_double_0)
     .def("to_double", py_to_double_1)
     .def("__float__", py_to_double_0)
-#endif
     .def("to_long", py_to_long_0)
     .def("to_long", py_to_long_1)
     .def("__int__", py_to_long_0)
@@ -336,9 +302,7 @@ internal precision.")
     .def("to_fullstring", &amount_t::to_fullstring)
     .def("__repr__", &amount_t::to_fullstring)
 
-#ifdef HAVE_GDTOA
     .def("fits_in_double", &amount_t::fits_in_double)
-#endif
     .def("fits_in_long", &amount_t::fits_in_long)
 
     .def("quantity_string", &amount_t::quantity_string)
@@ -391,9 +355,7 @@ internal precision.")
 
   register_optional_to_python<amount_t>();
 
-#ifdef HAVE_GDTOA
   implicitly_convertible<double, amount_t>();
-#endif
   implicitly_convertible<long, amount_t>();
   implicitly_convertible<string, amount_t>();
 

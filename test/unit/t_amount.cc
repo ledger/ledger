@@ -423,10 +423,8 @@ void AmountTestCase::testComparisons()
   assertTrue(100L > x1);
   assertTrue(x1 < 100UL);
   assertTrue(100UL > x1);
-#ifdef HAVE_GDTOA
   assertTrue(x1 < 100.0);
   assertTrue(100.0 > x1);
-#endif
 
   assertValid(x0);
   assertValid(x1);
@@ -540,9 +538,7 @@ void AmountTestCase::testCommodityAddition()
   assertThrow(x1 + x4, amount_error);
   assertThrow(x1 + x5, amount_error);
   assertThrow(x1 + x6, amount_error);
-#ifdef HAVE_GDTOA
   assertThrow(x1 + 123.45, amount_error);
-#endif
   assertThrow(x1 + 123L, amount_error);
 
   assertEqual(amount_t("DM 246.90"), x3 + x3);
@@ -656,9 +652,7 @@ void AmountTestCase::testCommoditySubtraction()
   assertThrow(x1 - x4, amount_error);
   assertThrow(x1 - x5, amount_error);
   assertThrow(x1 - x6, amount_error);
-#ifdef HAVE_GDTOA
   assertThrow(x1 - 123.45, amount_error);
-#endif
   assertThrow(x1 - 123L, amount_error);
 
   assertEqual(amount_t("DM 0.00"), x3 - x3);
@@ -870,6 +864,9 @@ void AmountTestCase::testIntegerDivision()
 
   assertEqual(amount_t(1L), x4 / x4);
   assertEqual(amount_t("2204585520061728377204585.517857"), x4 / y4);
+
+  assertEqual(amount_t("0.000000000000000000000000000001"),
+	      amount_t("10") / amount_t("10000000000000000000000000000000"));
 
   assertValid(x1);
   assertValid(y1);
@@ -1386,14 +1383,10 @@ void AmountTestCase::testIntegerConversion()
   amount_t x2("12345682348723487324");
 
   assertThrow(x0.to_long(), amount_error);
-#ifdef HAVE_GDTOA
   assertThrow(x0.to_double(), amount_error);
-#endif
   assertFalse(x2.fits_in_long());
   assertEqual(123456L, x1.to_long());
-#ifdef HAVE_GDTOA
   assertEqual(123456.0, x1.to_double());
-#endif
   assertEqual(string("123456"), x1.to_string());
   assertEqual(string("123456"), x1.quantity_string());
 
@@ -1406,14 +1399,10 @@ void AmountTestCase::testFractionalConversion()
   amount_t x2("1234.5683787634678348734");
 
   assertThrow(x1.to_long(), amount_error); // loses precision
-#ifdef HAVE_GDTOA
   assertThrow(x2.to_double(), amount_error); // loses precision
   assertFalse(x2.fits_in_double());
-#endif
   assertEqual(1234L, x1.to_long(true));
-#ifdef HAVE_GDTOA
   assertEqual(1234.56, x1.to_double());
-#endif
   assertEqual(string("1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
 
@@ -1426,9 +1415,7 @@ void AmountTestCase::testCommodityConversion()
 
   assertThrow(x1.to_long(), amount_error); // loses precision
   assertEqual(1234L, x1.to_long(true));
-#ifdef HAVE_GDTOA
   assertEqual(1234.56, x1.to_double());
-#endif
   assertEqual(string("$1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
 

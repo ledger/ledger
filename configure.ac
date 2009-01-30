@@ -23,20 +23,6 @@ AM_PROG_LIBTOOL
 AM_PATH_LISPDIR
 
 # Check for options
-AC_ARG_ENABLE(gdtoa,
-  [  --disable-gdtoa         Do not build with David Gay's gdtoa library],
-  [case "${enableval}" in
-    yes) gdtoa=true ;;
-    no)  gdtoa=false ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gdtoa) ;;
-  esac],[gdtoa=true])
-
-if test x$gdtoa = xtrue; then
-   AM_CONDITIONAL(HAVE_GDTOA, true)
-   AC_DEFINE([HAVE_GDTOA], [1], [Whether gdtoa is available])
-   AC_CONFIG_SUBDIRS([lib/gdtoa])
-fi
-
 AC_ARG_ENABLE(debug,
   [  --enable-debug          Turn on debugging],
   [case "${enableval}" in

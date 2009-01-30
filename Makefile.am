@@ -1,8 +1,4 @@
-VERSION = 3.0
-
-if HAVE_GDTOA
-SUBDIRS    = lib/gdtoa
-endif
+VERSION    = 3.0
 EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES =    \
@@ -17,9 +13,6 @@ lib_LTLIBRARIES =    \
 lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib \
 		-I$(srcdir)/lib/utfcpp/source \
 		-I$(srcdir)/lib/irrxml/src
-if HAVE_GDTOA
-lib_cppflags += -I$(top_builddir)/lib/gdtoa -I$(srcdir)/lib/gdtoa
-endif
 if HAVE_LIBOFX
 lib_cppflags += -DHAVE_LIBOFX=1
 endif
@@ -209,9 +202,6 @@ ledger_CPPFLAGS	+= -DHAVE_BOOST_PYTHON=1 -I$(srcdir)/python
 endif
 ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) $(lib_LTLIBRARIES)
-if HAVE_GDTOA
-ledger_LDADD   += lib/gdtoa/libgdtoa.la
-endif
 if HAVE_BOOST_PYTHON
 ledger_LDADD   += libledger_python.la
 endif
@@ -269,22 +259,6 @@ clean-local:
 uninstall-hook:
 	rm -f $(DESTDIR)$(libdir)/Ledger-$(VERSION)-py$(PYTHON_VERSION).egg-info
 
-if HAVE_GDTOA
-install-exec-hook:
-	BUILD_DIR=`cd $(top_builddir); pwd`; \
-	SRC_DIR=`cd $(srcdir); pwd`; \
-	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
-	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
-	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
-	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py install \
-		--skip-build \
-		--root=$(DESTDIR)/ \
-		--prefix=$(prefix) \
-		--install-lib=$(libdir) \
-		--install-headers=$(pkgincludedir) \
-		--install-data=$(datadir))
-else
 install-exec-hook:
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	SRC_DIR=`cd $(srcdir); pwd`; \
@@ -299,7 +273,6 @@ install-exec-hook:
 		--install-lib=$(libdir) \
 		--install-headers=$(pkgincludedir) \
 		--install-data=$(datadir))
-endif
 
 ledger_so_SOURCES      = $(all_sources)
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
@@ -315,24 +288,10 @@ PYLIBS  = ledger_util ledger_math ledger_expr \
           boost_regex$(BOOST_SUFFIX)	      \
           boost_python$(BOOST_SUFFIX)
 
-if HAVE_GDTOA
-PYLIBS += gdtoa
-endif
 if HAVE_LIBOFX
 PYLIBS += ofx
 endif
 
-if HAVE_GDTOA
-ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
-	BUILD_DIR=`cd $(top_builddir); pwd`; \
-	SRC_DIR=`cd $(srcdir); pwd`; \
-	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR -I$$BUILD_DIR/lib/gdtoa $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
-	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs -L$$BUILD_DIR/lib/gdtoa -L$$BUILD_DIR/lib/gdtoa/.libs" \
-	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
-	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py build \
-		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
-else
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	SRC_DIR=`cd $(srcdir); pwd`; \
@@ -342,7 +301,6 @@ ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
 	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
-endif
 
 endif
 
@@ -396,9 +354,6 @@ math_tests_SOURCES =		 \
 
 math_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 math_tests_LDADD    = $(util_tests_LDADD) libledger_math.la
-if HAVE_GDTOA
-math_tests_LDADD   += lib/gdtoa/libgdtoa.la
-endif
 
 expr_tests_SOURCES =		 \
 	test/UnitTests.cc	 \

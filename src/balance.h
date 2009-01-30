@@ -115,13 +115,11 @@ public:
     if (! amt.is_realzero())
       amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
   }
-#ifdef HAVE_GDTOA
   balance_t(const double val) {
     TRACE_CTOR(balance_t, "const double");
     amounts.insert
       (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
   }
-#endif
   balance_t(const unsigned long val) {
     TRACE_CTOR(balance_t, "const unsigned long");
     amounts.insert
@@ -236,11 +234,9 @@ public:
 
   virtual balance_t& operator*=(const amount_t& amt);
 
-#ifdef HAVE_GDTOA
   balance_t& operator*=(const double val) {
     return *this *= amount_t(val);
   }
-#endif
   balance_t& operator*=(const unsigned long val) {
     return *this *= amount_t(val);
   }
@@ -250,11 +246,9 @@ public:
 
   virtual balance_t& operator/=(const amount_t& amt);
 
-#ifdef HAVE_GDTOA
   balance_t& operator/=(const double val) {
     return *this /= amount_t(val);
   }
-#endif
   balance_t& operator/=(const unsigned long val) {
     return *this /= amount_t(val);
   }

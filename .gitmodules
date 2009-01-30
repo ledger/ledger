@@ -1,6 +1,3 @@
-[submodule "lib/gdtoa"]
-	path = lib/gdtoa
-	url = git://github.com/jwiegley/gdtoa.git
 [submodule "lib/cppunit"]
 	path = lib/cppunit
 	url = git://github.com/jwiegley/cppunit.git
