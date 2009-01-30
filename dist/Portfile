@@ -4,7 +4,7 @@
 PortSystem          1.0
 
 name                ledger
-version             2.6.1
+version             3.0
 homepage            http://www.newartisans.com/software/ledger.html
 categories          finance accounting reporting
 
@@ -29,9 +29,9 @@ depends_build       port:automake \
                     port:autoconf \
                     port:libtool
 
-depends_lib         port:pcre \
-                    port:gmp \
-                    port:expat
+depends_lib         port:gmp \
+                    port:mpfr \
+                    port:boost
 
 configure.args		--with-extra-includes=${prefix}/include \
                     --with-extra-libs=${prefix}/lib
@@ -50,11 +50,25 @@ destroot.args       DESTDIR=${destroot}${prefix} \
 post-destroot {}
 
 variant ofx description {Allow reading of OFX data files} {
-    depends_lib-append          port:libofx
+    depends_lib-append      port:libofx
 }
 
 variant debug description {Enable debug mode} {
-    configure.args-append       --enable-debug=yes
+    configure.args-append   --enable-debug=yes
+}
+
+variant python25 description {build python 2.5 support} conflicts python26 {
+	set pyversion		2.5
+	depends_lib-delete      port:boost
+	depends_lib-append      port:boost+python25 \
+                            port:python[strsed ${pyversion} {g/[.]//}]
+}
+
+variant python26 description {build python 2.6 support} conflicts python25 {
+	set pyversion		2.6
+	depends_lib-delete      port:boost
+	depends_lib-append      port:boost+python26 \
+                            port:python[strsed ${pyversion} {g/[.]//}]
 }
 
 #livecheck.check     regex
