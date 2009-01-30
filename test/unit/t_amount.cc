@@ -79,7 +79,7 @@ void AmountTestCase::testParser()
   assertEqual(string("EUR 1000"), x19.to_string());
   assertEqual(string("EUR 1000"), x20.to_string());
 
-  x1.parse("$100.0000", AMOUNT_PARSE_NO_MIGRATE);
+  x1.parse("$100.0000", amount_t::PARSE_NO_MIGRATE);
   assertEqual(amount_t::precision_t(2), x12.commodity().precision());
   assertEqual(x1.commodity(), x12.commodity());
   assertEqual(x1, x12);
@@ -89,27 +89,27 @@ void AmountTestCase::testParser()
   assertEqual(x0.commodity(), x12.commodity());
   assertEqual(x0, x12);
 
-  x2.parse("$100.00", AMOUNT_PARSE_NO_REDUCE);
+  x2.parse("$100.00", amount_t::PARSE_NO_REDUCE);
   assertEqual(x2, x12);
-  x3.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
+  x3.parse("$100.00", amount_t::PARSE_NO_MIGRATE | amount_t::PARSE_NO_REDUCE);
   assertEqual(x3, x12);
 
   x4.parse("$100.00");
   assertEqual(x4, x12);
-  x5.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE);
+  x5.parse("$100.00", amount_t::PARSE_NO_MIGRATE);
   assertEqual(x5, x12);
-  x6.parse("$100.00", AMOUNT_PARSE_NO_REDUCE);
+  x6.parse("$100.00", amount_t::PARSE_NO_REDUCE);
   assertEqual(x6, x12);
-  x7.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
+  x7.parse("$100.00", amount_t::PARSE_NO_MIGRATE | amount_t::PARSE_NO_REDUCE);
   assertEqual(x7, x12);
 
   x8.parse("$100.00");
   assertEqual(x8, x12);
-  x9.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE);
+  x9.parse("$100.00", amount_t::PARSE_NO_MIGRATE);
   assertEqual(x9, x12);
-  x10.parse("$100.00", AMOUNT_PARSE_NO_REDUCE);
+  x10.parse("$100.00", amount_t::PARSE_NO_REDUCE);
   assertEqual(x10, x12);
-  x11.parse("$100.00", AMOUNT_PARSE_NO_MIGRATE | AMOUNT_PARSE_NO_REDUCE);
+  x11.parse("$100.00", amount_t::PARSE_NO_MIGRATE | amount_t::PARSE_NO_REDUCE);
   assertEqual(x11, x12);
 
   assertValid(x0);
