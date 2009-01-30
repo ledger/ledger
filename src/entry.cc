@@ -105,7 +105,18 @@ bool entry_base_t::finalize()
       amount_t& p(xact->cost ? *xact->cost : xact->amount);
       DEBUG("entry.finalize", "xact must balance = " << p);
       if (! p.is_null()) {
-	add_or_set_value(balance, p);
+	if (p.keep_precision()) {
+	  amount_t temp(p);
+	  // If the amount was a cost, it very likely has the "keep_precision"
+	  // flag set, meaning commodity display precision is ignored when
+	  // displaying the amount.  We never want this set for the balance,
+	  // so we must clear the flag in a temporary to avoid it propagating
+	  // into the balance.
+	  temp.set_keep_precision(false);
+	  add_or_set_value(balance, temp);
+	} else {
+	  add_or_set_value(balance, p);
+	}
       } else {
 	if (null_xact)
 	  throw_(std::logic_error,
