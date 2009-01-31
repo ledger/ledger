@@ -30,31 +30,15 @@
  */
 
 /**
- * @defgroup extra Other facilities
- */
-
-/**
  * @file   ledger.h
  * @author John Wiegley
  *
- * @ingroup extra
+ * @mainpage Ledger Accounting Tool
  *
- * @brief Brief
- *
- * Long.
+ * A command-line tool for general double-entry accounting.
  */
 #ifndef _LEDGER_H
 #define _LEDGER_H
-
-//////////////////////////////////////////////////////////////////////
-//
-// Ledger Accounting Tool
-//
-//   A command-line tool for general double-entry accounting.
-//
-// Copyright (c) 2003-2009, John Wiegley <johnw@newartisans.com>
-//
-// @mainpage jww (2009-01-31): Something should go here.
 
 #include <utils.h>
 
