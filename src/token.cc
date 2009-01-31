@@ -402,7 +402,13 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
 void expr_t::token_t::rewind(std::istream& in)
 {
+#if 0
   in.seekg(- length, std::ios::cur);
+#else
+  for (unsigned int i = 0; i < length; i++)
+    in.unget();
+#endif
+
   if (in.fail())
     throw_(parse_error, "Failed to rewind input stream");
 }
