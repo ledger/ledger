@@ -34,6 +34,8 @@
 #include "account.h"
 #include "session.h"
 
+#if defined(HAVE_LIBOFX)
+
 #include <libofx.h>
 
 namespace ledger {
@@ -261,3 +263,5 @@ std::size_t ofx_parser_t::parse(std::istream& in,
 }
 
 } // namespace ledger
+
+#endif HAVE_LIBOFX

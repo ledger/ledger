@@ -488,38 +488,7 @@ namespace {
     out << std::endl << "--- Expression tree ---" << std::endl;
     expr.dump(out);
 
-    out << std::endl << "--- Calculated value ---" << std::endl;
-    expr.calc(args).print(out);
-    out << std::endl;
-
-    return 0L;
-  }
-
-  value_t compile_command(call_scope_t& args)
-  {
-    var_t<string> arg(args, 0);
-
-    if (! arg) {
-      throw std::logic_error("Usage: compile TEXT");
-      return 1L;
-    }
-
-    report_t& report(find_scope<report_t>(args));
-    std::ostream& out(report.output_stream);
-
-    out << "--- Input text ---" << std::endl;
-    out << *arg << std::endl;
-
-    out << std::endl << "--- Text as parsed ---" << std::endl;
-    expr_t expr(*arg);
-    expr.print(out);
-    out << std::endl;
-
-    out << std::endl << "--- Expression tree ---" << std::endl;
-    expr.dump(out);
-
     expr.compile(args);
-
     out << std::endl << "--- Compiled tree ---" << std::endl;
     expr.dump(out);
 
@@ -678,11 +647,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return WRAP_FUNCTOR(parse_command);
 	else if (std::strcmp(p, "period") == 0)
 	  return WRAP_FUNCTOR(period_command);
-	break;
-
-      case 'c':
-	if (std::strcmp(p, "compile") == 0)
-	  return WRAP_FUNCTOR(compile_command);
 	break;
 
       case 'e':

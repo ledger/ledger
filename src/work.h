@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -30,49 +30,36 @@
  */
 
 /**
- * @file   ledger.h
+ * @file   work.h
  * @author John Wiegley
  *
- * @mainpage Ledger Accounting Tool
- *
- * A command-line tool for general double-entry accounting.
+ * @brief Contains the top-level functions used by main.cc
  */
-#ifndef _LEDGER_H
-#define _LEDGER_H
+#ifndef _WORK_H
+#define _WORK_H
 
-#include <utils.h>
-#include <option.h>
+namespace ledger {
 
-#include <value.h>
+typedef strings_list::iterator string_iterator;
+typedef std::pair<string_iterator, string_iterator> string_iterator_pair;
 
-#include <expr.h>
+void         handle_debug_options(int argc, char * argv[]);
+void         register_journal_parsers(session_t& session);
+void         read_environment_settings(report_t& report, char * envp[]);
+strings_list read_command_line_arguments(report_t& report,
+					 int argc, char * argv[]);
+void         normalize_session_options(session_t& session);
+function_t   look_for_precommand(report_t& report, const string& verb);
+journal_t *  read_journal_files(session_t& session);
+function_t   look_for_command(report_t& report, const string& verb);
+void         normalize_report_options(report_t& report, const string& verb);
+void         create_output_stream(report_t& report);
+void         invoke_command_verb(report_t&       report,
+				 function_t&	 command,
+				 string_iterator args_begin,
+				 string_iterator args_end);
+void         write_binary_cache(session_t& session, journal_t * journal);
 
-#include <journal.h>
-#include <iterators.h>
-#include <compare.h>
+} // namespace ledger
 
-#include <textual.h>
-#include <cache.h>
-#include <xml.h>
-#include <csv.h>
-#include <emacs.h>
-#include <qif.h>
-#include <gnucash.h>
-#include <ofx.h>
-
-#include <session.h>
-#include <report.h>
-#include <help.h>
-
-#include <derive.h>
-#include <reconcile.h>
-#include <quotes.h>
-
-#if defined(HAVE_BOOST_PYTHON)
-#include <pyinterp.h>
-#define LEDGER_SESSION_T python_interpreter_t
-#else
-#define LEDGER_SESSION_T session_t
-#endif
-
-#endif // _LEDGER_H
+#endif // _WORK_H

@@ -70,7 +70,12 @@ void release_session_context()
 }
 
 session_t::session_t()
-  : register_format
+  : next_data_file_from_command_line(false),
+    saw_data_file_from_command_line(false),
+    next_price_db_from_command_line(false),
+    saw_price_db_from_command_line(false),
+
+    register_format
     ("%-.9(date) %-.20(payee) %-.23(account(23)) %!12(print_balance(amount_expr, 12, 67)) "
      "%!12(print_balance(display_total, 12, 80, true))\n%/"
      "%31|%-.23(account(23)) %!12(print_balance(amount_expr, 12, 67)) "
@@ -116,6 +121,14 @@ session_t::session_t()
     master(new account_t(NULL, ""))
 {
   TRACE_CTOR(session_t, "");
+
+  optional<path> home;
+  if (const char * home_var = std::getenv("HOME"))
+    home = home_var;
+
+  init_file  = home ? *home / ".ledgerrc"	: "./.ledgerrc";
+  price_db   = home ? *home / ".pricedb"	: "./.pricedb";
+  cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
 }
 
 session_t::~session_t()
@@ -159,6 +172,8 @@ void session_t::read_init()
   if (! exists(*init_file))
     throw_(std::logic_error, "Cannot read init file" << *init_file);
 
+  TRACE_START(init, 1, "Read initialization file");
+
   ifstream init(*init_file);
 
   journal_t temp;
@@ -167,12 +182,14 @@ void session_t::read_init()
       temp.period_entries.size() > 0)
     throw_(parse_error, "Entries found in initialization file '" <<
 	   init_file << "'");
+
+  TRACE_FINISH(init, 1);
 }
 
 std::size_t session_t::read_data(journal_t&    journal,
 				 const string& master_account)
 {
-  if (data_file.empty())
+  if (data_files.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
 
   TRACE_START(session_parser, 1, "Parsed journal file");
@@ -210,33 +227,39 @@ std::size_t session_t::read_data(journal_t&    journal,
       }
     }
 
-    DEBUG("ledger.cache", "rejected cache, parsing " << data_file.string());
-    if (data_file == "-") {
-      use_cache = false;
-      journal.sources.push_back("/dev/stdin");
 
-      // To avoid problems with stdin and pipes, etc., we read the entire
-      // file in beforehand into a memory buffer, and then parcel it out
-      // from there.
-      std::ostringstream buffer;
+    foreach (const path& pathname, data_files) {
+      DEBUG("ledger.cache", "rejected cache, parsing " << pathname.string());
+      if (pathname == "-") {
+	use_cache = false;
+	journal.sources.push_back("/dev/stdin");
 
-      while (std::cin.good() && ! std::cin.eof()) {
-	static char line[8192];
-	std::cin.read(line, 8192);
-	std::streamsize count = std::cin.gcount();
-	buffer.write(line, count);
+	// To avoid problems with stdin and pipes, etc., we read the entire
+	// file in beforehand into a memory buffer, and then parcel it out
+	// from there.
+	std::ostringstream buffer;
+
+	while (std::cin.good() && ! std::cin.eof()) {
+	  static char line[8192];
+	  std::cin.read(line, 8192);
+	  std::streamsize count = std::cin.gcount();
+	  buffer.write(line, count);
+	}
+	buffer.flush();
+
+	std::istringstream buf_in(buffer.str());
+
+	entry_count += read_journal(journal, buf_in, "/dev/stdin", acct);
       }
-      buffer.flush();
-
-      std::istringstream buf_in(buffer.str());
-
-      entry_count += read_journal(journal, buf_in, "/dev/stdin", acct);
-    }
-    else if (exists(data_file)) {
-      entry_count += read_journal(journal, data_file, acct);
-      if (journal.price_db)
-	journal.sources.push_back(*journal.price_db);
-      clean_accounts();
+      else if (exists(pathname)) {
+	entry_count += read_journal(journal, pathname, acct);
+	if (journal.price_db)
+	  journal.sources.push_back(*journal.price_db);
+	clean_accounts();
+      }
+      else {
+	throw_(parse_error, "Could not open journal file '" << pathname << "'");
+      }
     }
   }
 

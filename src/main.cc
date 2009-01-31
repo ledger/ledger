@@ -29,335 +29,129 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "session.h"
-#include "report.h"
-#include "option.h"
-#include "help.h"
-#include "pyinterp.h"
+#include <ledger.h>
 
-#include "textual.h"
-#include "qif.h"
-#include "xml.h"
-#include "gnucash.h"
-#ifdef HAVE_LIBOFX
-#include "ofx.h"
-#endif
-
-namespace ledger {
-  int read_and_report(ledger::report_t& report,
-		      int argc, char * argv[], char * envp[])
-  {
-    using namespace ledger;
-
-    session_t& session(report.session);
-
-    // Setup global defaults
-
-    optional<path> home;
-    if (const char * home_var = std::getenv("HOME"))
-      home = home_var;
-
-    session.init_file  = home ? *home / ".ledgerrc"	: "./.ledgerrc";
-    session.price_db   = home ? *home / ".pricedb"	: "./.pricedb";
-    session.cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
-
-    // Process the environment settings
-
-    TRACE_START(environment, 1, "Processed environment variables");
-
-    process_environment(const_cast<const char **>(envp), "LEDGER_", report);
-
-#if 1
-    // These are here for backwards compatability, but are deprecated.
-
-    if (const char * p = std::getenv("LEDGER"))
-      process_option("file", report, p);
-    if (const char * p = std::getenv("LEDGER_INIT"))
-      process_option("init-file", report, p);
-    if (const char * p = std::getenv("PRICE_HIST"))
-      process_option("price-db", report, p);
-    if (const char * p = std::getenv("PRICE_EXP"))
-      process_option("price-exp", report, p);
-#endif
-
-    TRACE_FINISH(environment, 1);
-
-    // Read the initialization file
-
-    TRACE_START(init, 1, "Read initialization file");
-
-    session.read_init();
-
-    TRACE_FINISH(init, 1);
-
-    // Handle the command-line arguments
-
-    TRACE_START(arguments, 1, "Processed command-line arguments");
-
-    strings_list args;
-    process_arguments(argc - 1, argv + 1, report, args);
-
-    if (args.empty()) {
-      ledger::help(std::cout);
-      return 1;
-    }
-    strings_list::iterator arg = args.begin();
-
-    if (! session.cache_file)
-      session.use_cache = false;
-    else if (session.use_cache)
-      session.use_cache = ! session.data_file.empty() && session.price_db;
-
-    DEBUG("ledger.session.cache", "1. use_cache = " << session.use_cache);
-
-    if (session.data_file == *session.cache_file)
-      session.use_cache = false;
-
-    DEBUG("ledger.session.cache", "2. use_cache = " << session.use_cache);
-
-    INFO("Initialization file is " << session.init_file->string());
-    INFO("Price database is " << session.price_db->string());
-    INFO("Binary cache is " << session.cache_file->string());
-    INFO("Journal file is " << session.data_file.string());
-
-    if (! session.use_cache)
-      INFO("Binary cache mechanism will not be used");
-
-    TRACE_FINISH(arguments, 1);
-
-    // Read the command word and see if it's any of the debugging commands
-    // that Ledger supports.
-
-    string verb = *arg++;
-
-    function_t command;
-    if (expr_t::ptr_op_t def = report.lookup(string("ledger_precmd_") + verb))
-      command = def->as_function();
-
-    // Parse the initialization file, which can only be textual; then
-    // parse the journal data.  But only do this if there was no
-    // "pre-command", which are always executed without doing any
-    // parsing.
-
-    if (! command) {
-      INFO_START(journal, "Read journal file");
-
-      journal_t& journal(*session.create_journal());
-
-      std::size_t count = session.read_data(journal, report.account);
-      if (count == 0)
-	throw_(parse_error, "Failed to locate any journal entries; "
-	       "did you specify a valid file with -f?");
-
-      INFO_FINISH(journal);
-
-      INFO("Found " << count << " entries");
-
-      TRACE_FINISH(entry_text, 1);
-      TRACE_FINISH(entry_details, 1);
-      TRACE_FINISH(entry_xacts, 1);
-      TRACE_FINISH(entries, 1);
-      TRACE_FINISH(session_parser, 1);
-      TRACE_FINISH(parsing_total, 1);
-
-      // Lookup the command object corresponding to the command verb.
-
-      if (expr_t::ptr_op_t def = report.lookup(string("ledger_cmd_") + verb))
-	command = def->as_function();
-    }
-
-    if (! command)
-      throw_(std::logic_error, string("Unrecognized command '") + verb + "'");
-
-#if 1
-    // Patch up some of the reporting options based on what kind of
-    // command it was.
-
-    // jww (2008-08-14): This code really needs to be rationalized away
-    // for 3.0.
-
-    if (verb == "print" || verb == "entry" || verb == "dump") {
-      report.show_related     = true;
-      report.show_all_related = true;
-    }
-    else if (verb == "equity") {
-      report.show_subtotal = true;
-    }
-    else if (report.show_related) {
-      if (verb[0] == 'r') {
-	report.show_inverted = true;
-      } else {
-	report.show_subtotal    = true;
-	report.show_all_related = true;
-      }
-    }
-
-    if (verb[0] != 'b' && verb[0] != 'r')
-      amount_t::keep_base = true;
-
-    // Setup the default value for the display predicate
-
-    if (report.display_predicate.empty()) {
-      if (verb[0] == 'b') {
-	if (! report.show_empty)
-	  report.display_predicate = "total";
-	if (! report.show_subtotal) {
-	  if (! report.display_predicate.empty())
-	    report.display_predicate += "&";
-	  report.display_predicate += "depth<=1";
-	}
-      }
-      else if (verb == "equity") {
-	report.display_predicate = "amount_expr"; // jww (2008-08-14): ???
-      }
-      else if (verb[0] == 'r' && ! report.show_empty) {
-	report.display_predicate = "amount";
-      }
-    }
-#endif
-
-    // Now setup the various formatting strings
-
-    // jww (2008-08-14): I hear a song, and it's sound is "HaAaaCcK"
-
-#if 0
-    if (! date_output_format.empty())
-      date_t::output_format = date_output_format;
-#endif
-
-    amount_t::keep_price = report.keep_price;
-    amount_t::keep_date  = report.keep_date;
-    amount_t::keep_tag   = report.keep_tag;
-
-    if (! report.report_period.empty() && ! report.sort_all)
-      report.entry_sort = true;
-
-    // Setup the output stream, which might involve invoking the pager
-
-    report.output_stream.initialize(report.output_file, report.pager_path);
-
-    // Create an argument scope containing the report command's
-    // arguments, and then invoke the command.
-
-    call_scope_t command_args(report);
-
-    for (strings_list::iterator i = arg; i != args.end(); i++)
-      command_args.push_back(string_value(*i));
-
-    INFO_START(command, "Did user command '" << verb << "'");
-
-    command(command_args);
-
-    INFO_FINISH(command);
-
-#if 0
-    // Write out the binary cache, if need be
-
-    if (session.use_cache && session.cache_dirty && session.cache_file) {
-      TRACE_START(binary_cache, 1, "Wrote binary journal file");
-
-      ofstream stream(*session.cache_file);
-      journal.write(stream);
-
-      TRACE_FINISH(binary_cache, 1);
-    }
-#endif
-
-    return 0;
-  }
-}
+#include "work.h"		// this is where the top-level code is
 
 int main(int argc, char * argv[], char * envp[])
 {
-  int status = 1;
+  using namespace ledger;
 
-  for (int i = 1; i < argc; i++)
-    if (argv[i][0] == '-') {
-      if (std::strcmp(argv[i], "--verify") == 0) {
-#if defined(VERIFY_ON)
-	ledger::verify_enabled = true;
-#endif
-      }
-      else if (std::strcmp(argv[i], "--verbose") == 0 ||
-	       std::strcmp(argv[i], "-v") == 0) {
-#if defined(LOGGING_ON)
-	ledger::_log_level    = ledger::LOG_INFO;
-#endif
-      }
-      else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
-#if defined(DEBUG_ON)
-	ledger::_log_level    = ledger::LOG_DEBUG;
-	ledger::_log_category = argv[i + 1];
-	i++;
-#endif
-      }
-      else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
-#if defined(TRACING_ON)
-	ledger::_log_level   = ledger::LOG_TRACE;
-	try {
-	  ledger::_trace_level = boost::lexical_cast<int>(argv[i + 1]);
-	}
-	catch (const boost::bad_lexical_cast& e) {
-	  std::cerr << "Argument to --trace must be an integer."
-		    << std::endl;
-	  return 1;
-	}
-	i++;
-#endif
-      }
-    }
+  // The very first thing we do is handle some very special command-line
+  // options, since they affect how the whole environment is setup:
+  //
+  //   --verify            ; turns on memory tracing
+  //   --verbose           ; turns on logging
+  //   --debug CATEGORY    ; turns on debug logging
+  //   --trace LEVEL       ; turns on trace logging
+  handle_debug_options(argc, argv);
 
   IF_VERIFY()
-    ledger::initialize_memory_tracing();
+    initialize_memory_tracing();
 
+  // Initialize the global C++ environment
+  std::ios::sync_with_stdio(false);
+  filesystem::path::default_name_check(filesystem::portable_posix_name);
+
+  // Initialization of Ledger can now begin.  The whole series of operations
+  // is contained in a try block, so we can report errors in a nicer fashion.
+  INFO("Ledger starting");
+
+  session_t * session = NULL;
+  int	      status  = 1;
   try {
-    std::ios::sync_with_stdio(false);
+    // Create the session object, which maintains nearly all state relating to
+    // this invocation of Ledger.
+    session = new LEDGER_SESSION_T;
+    set_session_context(session);
 
-    boost::filesystem::path::default_name_check
-      (boost::filesystem::portable_posix_name);
+    // Register all known journal parsers.  The order of these is important.
+    register_journal_parsers(*session);
 
-    INFO("Ledger starting");
+    // Create the report object, which maintains state relating to each
+    // command invocation.  Because we're running this from main() the
+    // distinction between session and report doesn't matter, but if a GUI
+    // were calling into Ledger, it would have one session object, with a
+    // separate report object for each report it generated.
+    session->report.reset(new report_t(*session));
+    report_t& report(*session->report.get());
 
-#if defined(HAVE_BOOST_PYTHON)
-    std::auto_ptr<ledger::session_t> session(new ledger::python_interpreter_t);
-#else
-    std::auto_ptr<ledger::session_t> session(new ledger::session_t);
-#endif
+    // Read user option settings, first in the environment, then from the
+    // user's initialization file and then from the command-line.  The first
+    // non-option argument thereafter is the "command verb".
+    read_environment_settings(report, envp);
+    session->read_init();
 
-    ledger::set_session_context(session.get());
+    // Notify the session object that all option handlers invoked beyond this
+    // point came from the command-line
+    session->now_at_command_line(true);
 
-#if 0
-    session->register_parser(new ledger::journal_t::binary_parser_t);
-#endif
-    session->register_parser(new ledger::xml_parser_t);
-    session->register_parser(new ledger::gnucash_parser_t);
-#ifdef HAVE_LIBOFX
-    session->register_parser(new ledger::ofx_parser_t);
-#endif
-    session->register_parser(new ledger::qif_parser_t);
-    session->register_parser(new ledger::textual_parser_t);
+    strings_list    args = read_command_line_arguments(report, argc, argv);
+    string_iterator arg  = args.begin();
+    string	    verb = *arg++;
 
-    session->current_report.reset(new ledger::report_t(*session.get()));
+    // Look for a precommand first, which is defined as any defined function
+    // whose name starts with "ledger_precmd_".  The difference between a
+    // precommand and a regular command is that precommands ignore the journal
+    // data file completely, nor is the user's init file read.
+    //
+    // Here are some examples:
+    //
+    //   parse STRING       ; show how a value expression is parsed
+    //   eval STRING        ; simply evaluate a value expression
+    //   format STRING      ; show how a format string is parsed
+    //
+    // If such a command is found, create the output stream for the result and
+    // then invoke the command.
+    if (function_t command = look_for_precommand(report, verb)) {
+      create_output_stream(report);
+      invoke_command_verb(report, command, arg, args.end());
+    }
+    else if (function_t command = look_for_command(report, verb)) {
+      // Parse the user's journal files.
+      if (journal_t * journal = read_journal_files(*session)) {
+	normalize_report_options(report, verb); // this is a total hack
 
-    status = read_and_report(*session->current_report.get(), argc, argv, envp);
+	// Create the output stream (it might be a file, the console or a
+	// PAGER subprocess) and invoke the report command.
+	create_output_stream(report);
+	invoke_command_verb(report, command, arg, args.end());
 
-    if (! DO_VERIFY())
-      session.release();	// don't free anything! just let it leak
+	// Write out a binary cache of the journal data, if needed and
+	// appropriate to do so
+	write_binary_cache(*session, journal);
+      }
+    }
+    else {
+      throw_(std::logic_error, "Unrecognized command '" << verb << "'");
+    }
+
+    // If we got here, everything succeeded just fine.  Ledger uses exceptions
+    // to notify of any error conditions, so if you're using gdb, type "catch
+    // throw" to find the source of any errors.
+    status = 0;
   }
   catch (const std::exception& err) {
     std::cout.flush();
-    std::cerr << ledger::error_context()
-	      << "Error: " << err.what() << std::endl;
+    std::cerr << error_context() << "Error: " << err.what() << std::endl;
   }
   catch (int _status) {
     status = _status;
   }
 
+  // If memory verification is being performed (which can be very slow), clean
+  // up everything by closing the session and deleting the session object, and
+  // then shutting down the memory tracing subsystem.  Otherwise, let it all
+  // leak because we're about to exit anyway.
   IF_VERIFY() {
+    set_session_context(NULL);
+    if (session != NULL)
+      checked_delete(session);
+
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
-    ledger::set_session_context();
-    ledger::shutdown_memory_tracing();
+    shutdown_memory_tracing();
   } else {
+    // Don't free anything, just let it all leak.
     INFO("Ledger ended");
   }
 

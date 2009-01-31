@@ -71,12 +71,16 @@ class session_t : public noncopyable, public scope_t
 public:
   static session_t *		current;
 
-  scoped_ptr<report_t>		current_report;
+  scoped_ptr<report_t>		report;
 
-  path				data_file;
+  std::list<path>		data_files;
+  bool                          next_data_file_from_command_line;
+  bool                          saw_data_file_from_command_line;
   optional<path>		init_file;
   optional<path>		cache_file;
-  optional<path>		price_db;
+  optional<path>	        price_db;
+  bool                          next_price_db_from_command_line;
+  bool                          saw_price_db_from_command_line;
 
   string			register_format;
   string			wide_register_format;
@@ -113,6 +117,11 @@ public:
 
   session_t();
   virtual ~session_t();
+
+  void now_at_command_line(const bool truth) {
+    next_data_file_from_command_line = truth;
+    next_price_db_from_command_line  = truth;
+  }
 
   journal_t * create_journal() {
     journal_t * journal = new journal_t;
@@ -243,11 +252,13 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
 
   value_t option_file_(call_scope_t& args) { // f
     assert(args.size() == 1);
-
-    // jww (2008-08-13): Add support for multiple files
-    data_file = args[0].as_string();
-    use_cache = false;
-
+    if (next_data_file_from_command_line &&
+	! saw_data_file_from_command_line) {
+      data_files.clear();
+      use_cache = false;
+      saw_data_file_from_command_line = true;
+    }
+    data_files.push_back(args[0].as_string());
     return true;
   }
 };

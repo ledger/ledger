@@ -735,6 +735,8 @@ public:
   }
 
   value_t option_price_db_(call_scope_t& args) { // :
+    // jww (2009-01-31): This, and several of the other option handlers,
+    // should be in the session object.
     session.price_db = args[0].as_string();
     return true;
   }

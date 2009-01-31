@@ -128,7 +128,7 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
     break;
   }
 
-  return session_t::current->current_report->lookup(name);
+  return session_t::current->report->lookup(name);
 }
 
 bool item_t::valid() const

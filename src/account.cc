@@ -197,7 +197,7 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
     break;
   }
 
-  return session_t::current->current_report->lookup(name);
+  return session_t::current->report->lookup(name);
 }
 
 bool account_t::valid() const
@@ -240,7 +240,7 @@ void account_t::calculate_sums()
   }
 
   call_scope_t args(*this);
-  value_t amount(session_t::current->current_report->get_amount_expr(args));
+  value_t amount(session_t::current->report->get_amount_expr(args));
   if (! amount.is_null()) {
     add_or_set_value(xd.total, amount);
     xd.total_count += xd.count;
