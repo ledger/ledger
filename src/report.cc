@@ -668,6 +668,32 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
+    else if (std::strncmp(p, "ledger_precmd_", 14) == 0) {
+      p = p + 14;
+      switch (*p) {
+      case 'p':
+	if (std::strcmp(p, "parse") == 0)
+	  return WRAP_FUNCTOR(parse_command);
+	else if (std::strcmp(p, "period") == 0)
+	  return WRAP_FUNCTOR(period_command);
+	break;
+
+      case 'c':
+	if (std::strcmp(p, "compile") == 0)
+	  return WRAP_FUNCTOR(compile_command);
+	break;
+
+      case 'e':
+	if (std::strcmp(p, "eval") == 0)
+	  return WRAP_FUNCTOR(eval_command);
+	break;
+
+      case 'f':
+	if (std::strcmp(p, "format") == 0)
+	  return WRAP_FUNCTOR(format_command);
+	break;
+      }
+    }
     break;
 
   case 'm':
@@ -919,33 +945,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'p':
-    if (std::strncmp(p, "ledger_precmd_", 14) == 0) {
-      p = p + 14;
-      switch (*p) {
-      case 'p':
-	if (std::strcmp(p, "parse") == 0)
-	  return WRAP_FUNCTOR(parse_command);
-	else if (std::strcmp(p, "period") == 0)
-	  return WRAP_FUNCTOR(period_command);
-	break;
-
-      case 'c':
-	if (std::strcmp(p, "compile") == 0)
-	  return WRAP_FUNCTOR(compile_command);
-	break;
-
-      case 'e':
-	if (std::strcmp(p, "eval") == 0)
-	  return WRAP_FUNCTOR(eval_command);
-	break;
-
-      case 'f':
-	if (std::strcmp(p, "format") == 0)
-	  return WRAP_FUNCTOR(format_command);
-	break;
-      }
-    }
-    else if (std::strcmp(p, "print_balance") == 0)
+    if (std::strcmp(p, "print_balance") == 0)
       return WRAP_FUNCTOR(print_balance);
     break;
 
