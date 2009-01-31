@@ -541,13 +541,14 @@ copy-sources:
 	(cd $(STAGING); sudo git clean -x -d -f)
 
 release: copy-sources
-	(cd $(STAGING); ./acprep --release --boost xgcc40 --build -j3)
+	(cd $(STAGING); \
+	 nice -n 20 ./acprep --release --opt --boost xgcc40 --build -j3)
 
 release-distcheck: copy-sources
-	(cd $(STAGING); ./acprep --release --boost xgcc40 --build -j3 distcheck)
+	(cd $(STAGING); \
+	 nice -n 20 ./acprep --release --boost xgcc40 --build -j3 distcheck)
 
-benchmark: copy-sources
-	(cd $(STAGING); ./acprep --release --opt --build -j3 all)
+benchmark: release
 	PATH=$(PATH):$(srcdir)/tools \
 	    $(srcdir)/tools/speedcmp 50 $(STAGING)/ledger
 
