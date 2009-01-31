@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup expr
+ */
+
+/**
+ * @file   parser.h
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _PARSER_H
 #define _PARSER_H
 
@@ -37,6 +51,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class expr_t::parser_t : public noncopyable
 {
 public:

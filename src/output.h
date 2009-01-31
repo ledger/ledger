@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup report
+ */
+
+/**
+ * @file   output.h
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _OUTPUT_H
 #define _OUTPUT_H
 
@@ -38,6 +52,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_xacts : public item_handler<xact_t>
 {
 protected:
@@ -60,6 +79,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_entries : public format_xacts
 {
  public:
@@ -88,6 +112,11 @@ private:
 		   const string&       prefix = "");
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_accounts : public item_handler<account_t>
 {
 protected:
@@ -122,6 +151,11 @@ public:
   virtual void operator()(account_t& account);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_equity : public format_accounts
 {
   format_t first_line_format;

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @defgroup report Reporting
+ */
+
+/**
+ * @file   session.h
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _SESSION_H
 #define _SESSION_H
 
@@ -41,6 +55,11 @@ namespace ledger {
 
 class report_t;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class session_t : public noncopyable, public scope_t
 {
   static void initialize();

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @defgroup parse Parsers
+ */
+
+/**
+ * @file   textual.h
+ * @author John Wiegley
+ *
+ * @ingroup parse
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _TEXTUAL_H
 #define _TEXTUAL_H
 
@@ -43,6 +57,11 @@ namespace ledger {
 class time_log_t;
 #endif
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class textual_parser_t : public journal_t::parser_t
 {
 public:

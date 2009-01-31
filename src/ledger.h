@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @defgroup extra Other facilities
+ */
+
+/**
+ * @file   ledger.h
+ * @author John Wiegley
+ *
+ * @ingroup extra
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _LEDGER_H
 #define _LEDGER_H
 

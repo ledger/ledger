@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup expr
+ */
+
+/**
+ * @file   scope.h
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _SCOPE_H
 #define _SCOPE_H
 
@@ -37,6 +51,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class scope_t
 {
 public:
@@ -58,6 +77,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class child_scope_t : public noncopyable, public scope_t
 {
 public:
@@ -98,6 +122,11 @@ inline T& find_scope(child_scope_t& scope, bool skip_this = true)
   return reinterpret_cast<T&>(scope); // never executed
 }
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class symbol_scope_t : public child_scope_t
 {
   typedef std::map<const string, expr_t::ptr_op_t> symbol_map;
@@ -126,6 +155,11 @@ public:
   virtual expr_t::ptr_op_t lookup(const string& name);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class call_scope_t : public child_scope_t
 {
   value_t args;
@@ -170,6 +204,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T>
 class ptr_t : public noncopyable
 {
@@ -194,6 +233,11 @@ public:
   T * operator->() { return value; }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T>
 class var_t : public noncopyable
 {

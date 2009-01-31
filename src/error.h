@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup util
+ */
+
+/**
+ * @file   error.h
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _ERROR_H
 #define _ERROR_H
 

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup expr
+ */
+
+/**
+ * @file   format.h
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _FORMAT_H
 #define _FORMAT_H
 
@@ -45,6 +59,7 @@ namespace ledger {
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
 #if defined(SUPPORT_UNICODE)
+
 /**
  * @class unistring
  *
@@ -87,10 +102,16 @@ public:
     return utf8result;
   }
 };
-#endif
+
+#endif // SUPPORT_UNICODE
 
 class report_t;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_t : public noncopyable
 {
   struct element_t : public supports_flags<>, public noncopyable

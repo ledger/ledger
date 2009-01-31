@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup parse
+ */
+
+/**
+ * @file   csv.h
+ * @author John Wiegley
+ *
+ * @ingroup parse
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _CSV_H
 #define _CSV_H
 
@@ -37,6 +51,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_csv_xacts : public item_handler<xact_t>
 {
   format_csv_xacts();

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup parse
+ */
+
+/**
+ * @file   cache.h
+ * @author John Wiegley
+ *
+ * @ingroup parse
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef CACHE_H
 #define CACHE_H
 
@@ -41,6 +55,11 @@ namespace ledger {
 
 DECLARE_EXCEPTION(cache_error, std::runtime_error);
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class binary_cache_t
 {
   static const unsigned long binary_magic_number = 0xFFEED765;

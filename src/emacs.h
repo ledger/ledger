@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup parse
+ */
+
+/**
+ * @file   emacs.h
+ * @author John Wiegley
+ *
+ * @ingroup parse
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _EMACS_H
 #define _EMACS_H
 
@@ -37,6 +51,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_emacs_xacts : public item_handler<xact_t>
 {
   format_emacs_xacts();

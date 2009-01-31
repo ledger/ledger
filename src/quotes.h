@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup extra
+ */
+
+/**
+ * @file   quotes.h
+ * @author John Wiegley
+ *
+ * @ingroup extra
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _QUOTES_H
 #define _QUOTES_H
 
@@ -37,6 +51,11 @@
 namespace ledger {
 
 #if 0
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class quotes_by_script : public noncopyable, public commodity_t::base_t::updater_t
 {
   string	price_db;

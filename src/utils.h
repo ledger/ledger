@@ -41,7 +41,6 @@
  *
  * @brief General utility facilities used by Ledger
  */
-
 #ifndef _UTILS_H
 #define _UTILS_H
 
@@ -168,6 +167,8 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 void report_memory(std::ostream& out, bool report_all = false);
 
 /**
+ * @brief Brief
+ *
  * This string type is a wrapper around std::string that allows us to
  * trace constructor and destructor calls.
  */

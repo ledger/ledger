@@ -30,16 +30,25 @@
  */
 
 /**
+ * @addtogroup util
+ */
+
+/**
  * @file   pushvar.h
  * @author John Wiegley
- * @date   Sun May  6 20:10:52 2007
+ *
+ * @ingroup util
  *
  * @brief  Adds a facility to C++ for handling "scoped yet global".
  */
-
 #ifndef _PUSHVAR_H
 #define _PUSHVAR_H
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T>
 class push_variable : public boost::noncopyable
 {

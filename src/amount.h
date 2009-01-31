@@ -30,7 +30,7 @@
  */
 
 /**
- * @defgroup math Core numerical objects
+ * @defgroup math Mathematical objects
  */
 
 /**

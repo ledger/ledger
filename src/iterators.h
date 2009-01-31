@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   iterators.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _ITERATORS_H
 #define _ITERATORS_H
 
@@ -38,6 +52,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class xacts_iterator : public noncopyable
 {
 public:
@@ -45,6 +64,11 @@ public:
   virtual xact_t * operator()() = 0;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class entry_xacts_iterator : public xacts_iterator
 {
   xacts_list::iterator xacts_i;
@@ -79,6 +103,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class entries_iterator : public noncopyable
 {
   ptr_list<journal_t>::iterator journals_i;
@@ -110,6 +139,11 @@ public:
   entry_t * operator()();
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class session_xacts_iterator : public xacts_iterator
 {
   entries_iterator     entries;
@@ -132,6 +166,11 @@ public:
   virtual xact_t * operator()();
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class accounts_iterator : public noncopyable
 {
 public:
@@ -139,6 +178,11 @@ public:
   virtual account_t * operator()() = 0;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class basic_accounts_iterator : public accounts_iterator
 {
   std::list<accounts_map::const_iterator> accounts_i;
@@ -164,6 +208,11 @@ public:
   virtual account_t * operator()();
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class sorted_accounts_iterator : public accounts_iterator
 {
   expr_t sort_cmp;
@@ -201,6 +250,11 @@ public:
   virtual account_t * operator()();
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class journals_iterator : public noncopyable
 {
   ptr_list<journal_t>::iterator journals_i;

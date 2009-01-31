@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup parse
+ */
+
+/**
+ * @file   ofx.h
+ * @author John Wiegley
+ *
+ * @ingroup parse
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _OFX_H
 #define _OFX_H
 
@@ -36,6 +50,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class ofx_parser_t : public journal_t::parser_t
 {
 public:

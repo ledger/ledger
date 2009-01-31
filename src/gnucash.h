@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup parse
+ */
+
+/**
+ * @file   gnucash.h
+ * @author John Wiegley
+ *
+ * @ingroup pares
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _GNUCASH_H
 #define _GNUCASH_H
 
@@ -36,6 +50,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class gnucash_parser_t : public journal_t::parser_t
 {
  public:

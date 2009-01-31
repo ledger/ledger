@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   timelog.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _TIMELOG_H
 #define _TIMELOG_H
 
@@ -36,6 +50,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class time_entry_t
 {
 public:
@@ -62,6 +81,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class time_log_t
 {
   std::list<time_entry_t> time_entries;

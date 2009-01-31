@@ -29,9 +29,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup util
+ */
+
+/**
+ * @file   flags.h
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _FLAGS_H
 #define _FLAGS_H
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags
 {
@@ -76,6 +95,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T = boost::uint_least8_t, typename U = T>
 class basic_flags_t : public supports_flags<T, U>
 {
@@ -127,6 +151,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T = boost::uint_least8_t>
 class delegates_flags : public boost::noncopyable
 {

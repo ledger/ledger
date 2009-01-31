@@ -41,7 +41,6 @@
  *
  * @brief General binary object streaming.
  */
-
 #ifndef BINARY_H
 #define BINARY_H
 

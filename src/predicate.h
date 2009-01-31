@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup expr
+ */
+
+/**
+ * @file   predicate.h
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _PREDICATE_H
 #define _PREDICATE_H
 
@@ -37,6 +51,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T>
 class item_predicate
 {

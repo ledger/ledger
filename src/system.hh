@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup util
+ */
+
+/**
+ * @file   system.hh
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _SYSTEM_HH
 #define _SYSTEM_HH
 

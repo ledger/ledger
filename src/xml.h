@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup parse
+ */
+
+/**
+ * @file   xml.h
+ * @author John Wiegley
+ *
+ * @ingroup parse
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _XML_H
 #define _XML_H
 
@@ -38,6 +52,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class CStreamReadCallBack : public irr::io::IFileReadCallBack
 {
   std::istream& in;
@@ -70,6 +89,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class xml_parser_t : public journal_t::parser_t
 {
  public:
@@ -82,6 +106,11 @@ class xml_parser_t : public journal_t::parser_t
 			    const path *  original_file = NULL);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_xml_entries : public format_entries
 {
   bool show_totals;

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   journal.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _JOURNAL_H
 #define _JOURNAL_H
 
@@ -43,6 +57,11 @@ typedef std::list<path>	paths_list;
 class session_t;
 class account_t;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class journal_t : public noncopyable
 {
 public:

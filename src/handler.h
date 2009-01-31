@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup report
+ */
+
+/**
+ * @file   handler.h
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _HANDLER_H
 #define _HANDLER_H
 
@@ -38,6 +52,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T>
 struct item_handler : public noncopyable
 {

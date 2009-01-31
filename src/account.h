@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   account.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _ACCOUNT_H
 #define _ACCOUNT_H
 
@@ -42,6 +56,11 @@ class session_t;
 
 typedef std::map<const string, account_t *> accounts_map;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class account_t : public scope_t
 {
  public:

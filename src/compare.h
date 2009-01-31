@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   compare.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _COMPARE_H
 #define _COMPARE_H
 
@@ -38,6 +52,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 template <typename T>
 class compare_items
 {

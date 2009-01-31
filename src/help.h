@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup report
+ */
+
+/**
+ * @file   help.h
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _HELP_H
 #define _HELP_H
 

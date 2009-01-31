@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup expr
+ */
+
+/**
+ * @file   option.h
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _OPTION_H
 #define _OPTION_H
 

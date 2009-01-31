@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup extra
+ */
+
+/**
+ * @file   derive.h
+ * @author John Wiegley
+ *
+ * @ingroup extra
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _DERIVE_H
 #define _DERIVE_H
 

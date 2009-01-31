@@ -51,12 +51,22 @@ namespace ledger {
 
 DECLARE_EXCEPTION(commodity_error, std::runtime_error);
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct price_point_t
 {
   datetime_t when;
   amount_t   price;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class commodity_t
   : public delegates_flags<>,
     public equality_comparable1<commodity_t, noncopyable>
@@ -369,6 +379,11 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   return out;
 }
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct annotation_t : public equality_comparable<annotation_t>
 {
   optional<amount_t> price;
@@ -418,6 +433,11 @@ inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) 
   return out;
 }
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class annotated_commodity_t
   : public commodity_t,
     public equality_comparable<annotated_commodity_t,
@@ -472,10 +492,20 @@ as_annotated_commodity(const commodity_t& commodity) {
 }
 
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class commodity_pool_t : public noncopyable
 {
   /**

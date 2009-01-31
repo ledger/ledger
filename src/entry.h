@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   entry.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _ENTRY_H
 #define _ENTRY_H
 
@@ -39,6 +53,11 @@ namespace ledger {
 
 class journal_t;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class entry_base_t : public item_t
 {
 public:
@@ -61,6 +80,11 @@ public:
   virtual bool valid() const = 0;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class entry_t : public entry_base_t
 {
 public:
@@ -83,11 +107,21 @@ public:
   virtual bool valid() const;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct entry_finalizer_t {
   virtual ~entry_finalizer_t() {}
   virtual bool operator()(entry_t& entry, bool post) = 0;
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class auto_entry_t : public entry_base_t
 {
 public:
@@ -116,6 +150,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct auto_entry_finalizer_t : public entry_finalizer_t
 {
   journal_t * journal;
@@ -137,6 +176,11 @@ struct auto_entry_finalizer_t : public entry_finalizer_t
   virtual bool operator()(entry_t& entry, bool post);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class period_entry_t : public entry_base_t
 {
  public:
@@ -164,6 +208,11 @@ class period_entry_t : public entry_base_t
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class func_finalizer_t : public entry_finalizer_t
 {
   func_finalizer_t();

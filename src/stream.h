@@ -45,7 +45,6 @@
  * child process, different cleanup is needed for each scenario.  This
  * file abstracts those various needs.
  */
-
 #ifndef _STREAM_H
 #define _STREAM_H
 

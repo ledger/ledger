@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup report
+ */
+
+/**
+ * @file   filters.h
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _FILTERS_H
 #define _FILTERS_H
 
@@ -43,12 +57,22 @@ namespace ledger {
 // Transaction filters
 //
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class ignore_xacts : public item_handler<xact_t>
 {
 public:
   virtual void operator()(xact_t&) {}
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class clear_xact_xdata : public item_handler<xact_t>
 {
 public:
@@ -59,6 +83,11 @@ public:
 
 class xacts_iterator;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class pass_down_xacts : public item_handler<xact_t>
 {
   pass_down_xacts();
@@ -71,6 +100,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class push_to_xacts_list : public item_handler<xact_t>
 {
   push_to_xacts_list();
@@ -90,6 +124,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class truncate_entries : public item_handler<xact_t>
 {
   int head_count;
@@ -119,6 +158,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class set_account_value : public item_handler<xact_t>
 {
 public:
@@ -128,6 +172,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class sort_xacts : public item_handler<xact_t>
 {
   typedef std::deque<xact_t *> xacts_deque;
@@ -168,6 +217,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class sort_entries : public item_handler<xact_t>
 {
   sort_xacts sorter;
@@ -207,6 +261,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class filter_xacts : public item_handler<xact_t>
 {
   item_predicate<xact_t> pred;
@@ -239,6 +298,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class anonymize_xacts : public item_handler<xact_t>
 {
   std::list<entry_t> entry_temps;
@@ -260,6 +324,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class calc_xacts : public item_handler<xact_t>
 {
   xact_t * last_xact;
@@ -278,6 +347,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class invert_xacts : public item_handler<xact_t>
 {
   invert_xacts();
@@ -294,6 +368,11 @@ inline void clear_entries_xacts(std::list<entry_t>& entries_list) {
     entry.xacts.clear();
 }
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class collapse_xacts : public item_handler<xact_t>
 {
   value_t     subtotal;
@@ -330,6 +409,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class component_xacts : public item_handler<xact_t>
 {
   item_predicate<xact_t> pred;
@@ -356,6 +440,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class related_xacts : public item_handler<xact_t>
 {
   xacts_list xacts;
@@ -382,6 +471,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class changed_value_xacts : public item_handler<xact_t>
 {
   // This filter requires that calc_xacts be used at some point
@@ -424,6 +518,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class subtotal_xacts : public item_handler<xact_t>
 {
   class acct_value_t
@@ -490,6 +589,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class interval_xacts : public subtotal_xacts
 {
   interval_t      interval;
@@ -529,6 +633,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class by_payee_xacts : public item_handler<xact_t>
 {
   typedef std::map<string, subtotal_xacts *>  payee_subtotals_map;
@@ -553,6 +662,11 @@ class by_payee_xacts : public item_handler<xact_t>
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class set_comm_as_payee : public item_handler<xact_t>
 {
   std::list<entry_t> entry_temps;
@@ -573,6 +687,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class set_code_as_payee : public item_handler<xact_t>
 {
   std::list<entry_t> entry_temps;
@@ -593,6 +712,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class dow_xacts : public subtotal_xacts
 {
   xacts_list days_of_the_week[7];
@@ -615,6 +739,11 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class generate_xacts : public item_handler<xact_t>
 {
   generate_xacts();
@@ -643,6 +772,11 @@ public:
   virtual void add_xact(const interval_t& period, xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class budget_xacts : public generate_xacts
 {
 #define BUDGET_NO_BUDGET  0x00
@@ -669,6 +803,11 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class forecast_xacts : public generate_xacts
 {
   item_predicate<xact_t> pred;
@@ -696,6 +835,11 @@ class forecast_xacts : public generate_xacts
 // Account filters
 //
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class clear_account_xdata : public item_handler<account_t>
 {
 public:
@@ -706,6 +850,11 @@ public:
 
 class accounts_iterator;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();

@@ -41,7 +41,6 @@
  *
  * @brief datetime_t and date_t objects
  */
-
 #ifndef _TIMES_H
 #define _TIMES_H
 
@@ -115,6 +114,11 @@ inline string format_date(const date_t& when,
   }
 }
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct interval_t
 {
   int	 years;

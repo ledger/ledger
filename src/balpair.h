@@ -60,6 +60,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class balance_pair_t
   : public balance_t,
     public equality_comparable<balance_pair_t,

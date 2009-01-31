@@ -41,7 +41,6 @@
  *
  * @brief Regular expression masking.
  */
-
 #ifndef _MASK_H
 #define _MASK_H
 
@@ -49,6 +48,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class mask_t
 {
 public:

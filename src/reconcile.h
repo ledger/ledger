@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup extra
+ */
+
+/**
+ * @file   reconcile.h
+ * @author John Wiegley
+ *
+ * @ingroup extra
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _RECONCILE_H
 #define _RECONCILE_H
 
@@ -38,6 +52,11 @@
 
 namespace ledger {
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class reconcile_xacts : public item_handler<xact_t>
 {
   value_t    balance;

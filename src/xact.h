@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup data
+ */
+
+/**
+ * @file   xact.h
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
 #ifndef _XACT_H
 #define _XACT_H
 
@@ -42,6 +56,11 @@ class account_t;
 class xact_t;
 typedef std::list<xact_t *> xacts_list;
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class xact_t : public item_t
 {
 public:
