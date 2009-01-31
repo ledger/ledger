@@ -198,8 +198,8 @@ void textual_parser_t::instance_t::parse()
 			    << file_context(instance->pathname,
 					    instance->linenum - 1) << "':");
       }
-      add_error_context("While parsing file '"
-			<< file_context(pathname, linenum - 1) << "':");
+      add_error_context("While parsing file "
+			<< file_context(pathname, linenum - 1) << "\n");
 
       std::cout.flush();
       std::cerr << ledger::error_context()
