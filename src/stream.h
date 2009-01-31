@@ -82,6 +82,13 @@ public:
   }
 
   /**
+   * Destroys an output_stream_t.  This deletes the dynamically
+   * allocated ostream, if necessary. It also closes output file
+   * descriptor, if necessary.
+   */
+  ~output_stream_t();
+
+  /**
    * Initialize the output stream object.
    *
    * @param output_file File to which to send output. If both this
@@ -92,13 +99,6 @@ public:
    */
   void initialize(const optional<path>& output_file = none,
 		  const optional<path>& pager_path  = none);
-
-  /**
-   * Destroys an output_stream_t.  This deletes the dynamically
-   * allocated ostream, if necessary. It also closes output file
-   * descriptor, if necessary.
-   */
-  ~output_stream_t();
 
   /**
    * Convertor to a standard ostream.  This is used so that we can
