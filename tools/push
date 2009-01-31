@@ -1,0 +1,11 @@
+#!/bin/sh
+
+git push origin
+git push --tags origin
+
+git push mirror
+git push --tags mirror
+
+git remote update
+
+github network fetch

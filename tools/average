@@ -1,0 +1,26 @@
+#!/usr/bin/python
+
+import getopt
+import time
+import string
+import sys
+import os
+
+count = 10
+
+opts, args = getopt.getopt(sys.argv[1:], "n:")
+for opt in opts:
+    if opt[0] == "-n":
+        count = int(opt[1])
+
+length = 0.0
+
+i = 0
+while i < count:
+    begin = time.time()
+    cmd = '"' + string.join(args, '" "') + '"';
+    os.system(cmd)
+    length += time.time() - begin
+    i += 1
+
+print >> sys.stderr, length / count

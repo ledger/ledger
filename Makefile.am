@@ -548,4 +548,9 @@ release: copy-sources
 release-distcheck: copy-sources
 	(cd $(STAGING); ./acprep --release --build -j3 distcheck)
 
+benchmark: copy-sources
+	(cd $(STAGING); ./acprep --release --opt --build -j3 all)
+	PATH=$(PATH):$(srcdir)/tools \
+	    $(srcdir)/tools/speedcmp 50 $(STAGING)/ledger
+
 # Makefile.am ends here
