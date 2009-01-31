@@ -106,14 +106,12 @@ bool entry_base_t::finalize()
       DEBUG("entry.finalize", "xact must balance = " << p);
       if (! p.is_null()) {
 	if (p.keep_precision()) {
-	  amount_t temp(p);
 	  // If the amount was a cost, it very likely has the "keep_precision"
 	  // flag set, meaning commodity display precision is ignored when
 	  // displaying the amount.  We never want this set for the balance,
 	  // so we must clear the flag in a temporary to avoid it propagating
 	  // into the balance.
-	  temp.set_keep_precision(false);
-	  add_or_set_value(balance, temp);
+	  add_or_set_value(balance, p.rounded());
 	} else {
 	  add_or_set_value(balance, p);
 	}
@@ -218,7 +216,8 @@ bool entry_base_t::finalize()
 	commodity_t::exchange(xact->amount, *xact->cost);
 
       if (xact->amount.is_annotated())
-	add_or_set_value(balance, breakdown.basis_cost - breakdown.final_cost);
+	add_or_set_value(balance, (breakdown.basis_cost -
+				   breakdown.final_cost).rounded());
       else
 	xact->amount = breakdown.amount;
     }
@@ -231,7 +230,7 @@ bool entry_base_t::finalize()
     add_error_context(entry_context(*this));
 #endif
     add_error_context("Unbalanced remainder is: ");
-    add_error_context(value_context(balance.unrounded()));
+    add_error_context(value_context(balance));
     throw_(balance_error, "Entry does not balance");
   }
 
