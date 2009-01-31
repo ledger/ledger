@@ -346,6 +346,8 @@ public:
     return *this;
   }
 
+  amount_t inverted() const;
+
   /** Yields an amount whose display precision when output is truncated
       to the display precision of its commodity.  This is normally the
       default state of an amount, but if one has become unrounded, this
@@ -739,8 +741,6 @@ public:
 
   /*@}*/
 };
-
-extern amount_t * one;
 
 inline amount_t amount_t::exact(const string& value) {
   amount_t temp;

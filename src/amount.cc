@@ -100,16 +100,12 @@ uint_fast32_t amount_t::sizeof_bigint_t()
   return sizeof(bigint_t);
 }
 
-amount_t * one = NULL;
-
 void amount_t::initialize()
 {
   mpz_init(temp);
   mpq_init(tempq);
   mpfr_init(tempf);
   mpfr_init(tempfb);
-
-  one = new amount_t(amount_t(1L).unrounded());
 
   if (! current_pool)
     current_pool = new commodity_pool_t;
@@ -132,8 +128,6 @@ void amount_t::shutdown()
   mpq_clear(tempq);
   mpfr_clear(tempf);
   mpfr_clear(tempfb);
-
-  checked_delete(one);
 
   if (current_pool) {
     checked_delete(current_pool);
@@ -453,6 +447,18 @@ amount_t& amount_t::in_place_negate()
     throw_(amount_error, "Cannot negate an uninitialized amount");
   }
   return *this;
+}
+
+amount_t amount_t::inverted() const
+{
+  if (! quantity)
+    throw_(amount_error, "Cannot invert an uninitialized amount");
+
+  amount_t t(*this);
+  t._dup();
+  mpq_inv(MP(t.quantity), MP(t.quantity));
+
+  return t;
 }
 
 amount_t amount_t::rounded() const

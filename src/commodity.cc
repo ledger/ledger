@@ -62,7 +62,7 @@ void commodity_t::base_t::history_t::add_price(const commodity_t& source,
   }
 
   if (reflexive && ! price.commodity().has_flags(COMMODITY_NOMARKET)) {
-    amount_t inverse(*one / price);
+    amount_t inverse = price.inverted();
     inverse.set_commodity(const_cast<commodity_t&>(source));
     price.commodity().add_price(date, inverse, false);
   }
