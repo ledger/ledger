@@ -33,9 +33,7 @@
 #include "report.h"
 #include "option.h"
 #include "help.h"
-#if defined(HAVE_BOOST_PYTHON)
 #include "pyinterp.h"
-#endif
 
 #include "textual.h"
 #include "qif.h"

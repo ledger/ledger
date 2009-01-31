@@ -13,12 +13,6 @@ lib_LTLIBRARIES =    \
 lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib \
 		-I$(srcdir)/lib/utfcpp/source \
 		-I$(srcdir)/lib/irrxml/src
-if HAVE_LIBOFX
-lib_cppflags += -DHAVE_LIBOFX=1
-endif
-if DEBUG
-lib_cppflags += -DDEBUG_MODE
-endif
 
 libledger_util_la_SOURCES =	 \
 	src/utils.cc	 \
@@ -198,7 +192,7 @@ bin_PROGRAMS	= ledger
 
 ledger_CPPFLAGS	= $(lib_cppflags)
 if HAVE_BOOST_PYTHON
-ledger_CPPFLAGS	+= -DHAVE_BOOST_PYTHON=1 -I$(srcdir)/python
+ledger_CPPFLAGS	+= -I$(srcdir)/python
 endif
 ledger_SOURCES	= src/main.cc
 ledger_LDADD	= $(LIBOBJS) $(lib_LTLIBRARIES)

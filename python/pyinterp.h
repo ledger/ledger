@@ -35,6 +35,8 @@
 #include "scope.h"
 #include "session.h"
 
+#if defined(HAVE_BOOST_PYTHON)
+
 #include <boost/python.hpp>
 #include <Python.h>
 
@@ -125,5 +127,7 @@ public:
 };
 
 } // namespace ledger
+
+#endif // HAVE_BOOST_PYTHON
 
 #endif // _PYINTERP_H

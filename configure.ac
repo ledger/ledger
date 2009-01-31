@@ -31,6 +31,9 @@ AC_ARG_ENABLE(debug,
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
   esac],[debug=false])
 
+if [ test x$debug = xtrue ]; then
+  AC_DEFINE([DEBUG_MODE], [1], [Whether debugging is enabled])
+fi
 AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
 
 AC_ARG_ENABLE(pch,
@@ -41,6 +44,9 @@ AC_ARG_ENABLE(pch,
     *) AC_MSG_ERROR(bad value ${enableval} for --enable-pch) ;;
   esac],[pch=false])
 
+if [ test x$pch = xtrue ]; then
+  AC_DEFINE([USE_PCH], [1], [Whether pre-compiled headers are being used])
+fi
 AM_CONDITIONAL(USE_PCH, test x$pch = xtrue)
 
 AC_ARG_WITH(boost-suffix,
@@ -228,12 +234,11 @@ AC_CACHE_CHECK(
    AC_LANG_POP
    LIBS=$libofx_save_libs])
 
-if [test x$libofx_avail_cv_ = xtrue ]; then
-  AM_CONDITIONAL(HAVE_LIBOFX, true)
+if [ test x$libofx_avail_cv_ = xtrue ]; then
+  AC_DEFINE([HAVE_LIBOFX], [1], [Whether libofx is available])
   LIBS="-lofx $LIBS"
-else
-  AM_CONDITIONAL(HAVE_LIBOFX, false)
 fi
+AM_CONDITIONAL(HAVE_LIBOFX, test x$libofx_avail_cv_ = xtrue)
 
 # check for Python
 AM_PATH_PYTHON(2.4,, :)
@@ -259,16 +264,14 @@ if [test "$PYTHON" != :]; then
      AC_LANG_POP
      LIBS=$boost_python_save_libs])
 
-  if [test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
-    AM_CONDITIONAL(HAVE_BOOST_PYTHON, true)
+  if [ test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
+    AC_DEFINE([HAVE_BOOST_PYTHON], [1], [Whether Boost.Python is available])
     LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
-  else
-    AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
   fi
 else
   AM_CONDITIONAL(HAVE_PYTHON, false)
-  AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
 fi
+AM_CONDITIONAL(HAVE_BOOST_PYTHON, test x$boost_python_cpplib_avail_cv_ = xtrue)
 
 # check for CppUnit
 AC_CACHE_CHECK(
@@ -294,11 +297,7 @@ AC_CACHE_CHECK(
    AC_LANG_POP
    LIBS=$cppunit_save_libs])
 
-if [test x$cppunit_avail_cv_ = xtrue ]; then
-  AM_CONDITIONAL(HAVE_CPPUNIT, true)
-else
-  AM_CONDITIONAL(HAVE_CPPUNIT, false)
-fi
+AM_CONDITIONAL(HAVE_CPPUNIT, test x$cppunit_avail_cv_ = xtrue)
 
 # Checks for header files.
 AC_HEADER_STDC
