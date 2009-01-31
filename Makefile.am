@@ -248,7 +248,7 @@ libledger_python_la_CPPFLAGS = $(lib_cppflags) -I$(srcdir)/python
 pyexec_PROGRAMS = ledger.so
 
 clean-local:
-	rm -fr build
+	rm -fr build test/python
 
 uninstall-hook:
 	rm -f $(DESTDIR)$(libdir)/Ledger-$(VERSION)-py$(PYTHON_VERSION).egg-info
@@ -403,13 +403,14 @@ all_tests_sources =				\
 PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
 
 all_py_tests_sources = \
-	$(patsubst test/unit/%.cc,test/python/%.py, \
+	$(patsubst test/unit/%.cc,$(top_builddir)/test/python/%.py, \
 		   $(filter test/unit/t_%.cc,$(all_tests_sources)))
 
-test/python/%.py: test/unit/%.cc test/convert.py
+$(top_builddir)/test/python/%.py: $(srcdir)/test/unit/%.cc \
+				  $(srcdir)/test/convert.py
 	$(PYTHON) $(srcdir)/test/convert.py $< $@
 
-test/python/UnitTests.py: $(all_py_tests_sources)
+$(top_builddir)/test/python/UnitTests.py: $(all_py_tests_sources)
 	@echo "from unittest import TextTestRunner, TestSuite" > $@
 	@for file in $$(ls $(srcdir)/test/unit/*.cc); do \
 	    base=$$(basename $$file); \
@@ -443,7 +444,7 @@ PyUnitTests: $(srcdir)/test/PyUnitTests.py test/python/UnitTests.py
 
 RegressionTests_SOURCES = test/regress.py
 
-EXTRA_DIST += test/regress
+EXTRA_DIST += test/regress test/convert.py
 
 RegressionTests: $(srcdir)/test/regress.py
 	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
