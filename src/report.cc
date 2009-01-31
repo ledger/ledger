@@ -645,12 +645,14 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_accounts(*this, FORMAT(balance_format))));
+	break;
 
       case 'e':
 	if (std::strcmp(p, "equity") == 0)
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_equity(*this, FORMAT(print_format))));
+	break;
 
       case 'p':
 	if (*(p + 1) == '\0' ||
