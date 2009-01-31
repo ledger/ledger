@@ -122,7 +122,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <gmp.h>
 #include <mpfr.h>
-#include "SHA1.h"
+#include "sha1.h"
 
 #include "irrXML.h"		// XML parser
 #include "CXMLReaderImpl.h"
