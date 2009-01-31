@@ -1091,6 +1091,9 @@ void AmountTestCase::testCommodityAbs()
   assertValid(x2);
 }
 
+#ifndef NOT_FOR_PYTHON
+#ifdef INTEGER_MATH
+
 void AmountTestCase::testFractionalRound()
 {
   amount_t x0;
@@ -1255,6 +1258,9 @@ void AmountTestCase::testCommodityDisplayRound()
   assertEqual(internalAmount("$1.1305"), x1);
   assertEqual(string("$1.13"), x1.to_string());
 }
+
+#endif // INTEGER_MATH
+#endif
 
 void AmountTestCase::testReduction()
 {
