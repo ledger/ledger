@@ -641,7 +641,7 @@ bool amount_t::is_zero() const
       stream_out_mpq(out, MP(quantity), commodity().precision());
       
       for (const char * p = out.str().c_str(); *p; p++)
-	if (*p != '0' && *p != '.')
+	if (*p != '0' && *p != '.' && *p  != '-')
 	  return false;
       return true;
     }
