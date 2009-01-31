@@ -62,7 +62,7 @@ namespace ledger {
  * Cline's "C++ FAQ Lite". Arguably this should be three different
  * classes, but that introduces additional unneeded complications.
  */
-class output_stream_t
+class output_stream_t : public noncopyable
 {
 private:
   int pipe_to_pager_fd;
