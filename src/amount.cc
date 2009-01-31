@@ -625,7 +625,18 @@ bool amount_t::is_zero() const
   if (has_commodity()) {
     if (keep_precision() || quantity->prec <= commodity().precision()) {
       return is_realzero();
-    } else {
+    }
+    else if (is_realzero()) {
+      return true;
+    }
+    else if (mpz_cmp(mpq_numref(MP(quantity)),
+		     mpq_denref(MP(quantity))) > 0) {
+      DEBUG("amount.is_zero", "Numerator is larger than the denominator");
+      return false;
+    }
+    else {
+      DEBUG("amount.is_zero", "We have to print the number to check for zero");
+
       std::ostringstream out;
       stream_out_mpq(out, MP(quantity), commodity().precision());
       
