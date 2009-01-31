@@ -291,7 +291,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     out << "(";
     if (left() && left()->print(out, context))
       found = true;
-    out << " / ";
+    out << " // ";
     if (has_right() && right()->print(out, context))
       found = true;
     out << ")";

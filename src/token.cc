@@ -38,12 +38,11 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 {
   char c = in.peek();
 
-  if (c == 'a' || c == 'f' || c == 'o' || c == 'n' || c == 't') {
+  if (c == 'a' || c == 'd' || c == 'f' || c == 'o' || c == 'n' || c == 't') {
     length = 0;
 
-    char buf[256];
-    READ_INTO_(in, buf, 255, c, length,
-	       std::isalnum(c) || c == '_' || c == '.' || c == '-');
+    char buf[5];
+    READ_INTO_(in, buf, 4, c, length, std::isalpha(c));
 
     switch (buf[0]) {
     case 'a':
@@ -51,6 +50,16 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 	symbol[0] = '&';
 	symbol[1] = '\0';
 	kind = KW_AND;
+	return 1;
+      }
+      break;
+
+    case 'd':
+      if (std::strcmp(buf, "div") == 0) {
+	symbol[0] = '/';
+	symbol[1] = '/';
+	symbol[2] = '\0';
+	kind = KW_DIV;
 	return 1;
       }
       break;
@@ -255,17 +264,25 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '/': {
     in.get(c);
+    c = in.peek();
+    if (c == '/') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = KW_DIV;
+      length = 2;
+    } else {
+      // Read in the regexp
+      char buf[256];
+      READ_INTO_(in, buf, 255, c, length, c != '/');
+      if (c != '/')
+	expected('/', c);
+      in.get(c);
+      length++;
 
-    // Read in the regexp
-    char buf[256];
-    READ_INTO_(in, buf, 255, c, length, c != '/');
-    if (c != '/')
-      expected('/', c);
-    in.get(c);
-    length++;
-
-    kind = MASK;
-    value.set_string(buf);
+      kind = MASK;
+      value.set_string(buf);
+    }
     break;
   }
 
