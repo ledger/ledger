@@ -95,6 +95,10 @@ public:
     TRACE_DTOR(basic_flags_t);
   }
 
+  basic_flags_t(const basic_flags_t& other)
+    : supports_flags<T, U>(other) {
+    TRACE_CTOR(basic_flags_t, "copy");
+  }
   basic_flags_t& operator=(const basic_flags_t& other) {
     set_flags(other.flags());
     return *this;
