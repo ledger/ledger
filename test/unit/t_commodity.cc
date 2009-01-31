@@ -9,6 +9,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "math");
 
 void CommodityTestCase::setUp() {
   amount_t::initialize();
+  amount_t::stream_fullstrings = true;
 }
 
 void CommodityTestCase::tearDown() {
