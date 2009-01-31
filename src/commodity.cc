@@ -657,15 +657,13 @@ void annotation_t::parse(std::istream& in)
       temp.parse(buf, amount_t::PARSE_NO_MIGRATE);
       temp.in_place_reduce();
 
-#ifdef INTEGER_MATH
       // Since this price will maintain its own precision, make sure
       // it is at least as large as the base commodity, since the user
       // may have only specified {$1} or something similar.
 
       if (temp.has_commodity() &&
 	  temp.precision() > temp.commodity().precision())
-	temp = temp.round();	// no need to retain individual precision
-#endif
+	temp = temp.rounded();	// no need to retain individual precision
 
       price = temp;
     }

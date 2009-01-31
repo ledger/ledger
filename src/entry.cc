@@ -231,7 +231,7 @@ bool entry_base_t::finalize()
     add_error_context(entry_context(*this));
 #endif
     add_error_context("Unbalanced remainder is: ");
-    add_error_context(value_context(balance.unround()));
+    add_error_context(value_context(balance.unrounded()));
     throw_(balance_error, "Entry does not balance");
   }
 

@@ -213,6 +213,7 @@ void AmountTestCase::testCommodityConstructors()
 }
 
 #ifndef NOT_FOR_PYTHON
+
 void AmountTestCase::testAssignment()
 {
   amount_t x0;
@@ -318,6 +319,7 @@ void AmountTestCase::testCommodityAssignment()
   assertValid(x9);
   assertValid(x10);
 }
+
 #endif // NOT_FOR_PYTHON
 
 void AmountTestCase::testEquality()
@@ -423,8 +425,10 @@ void AmountTestCase::testComparisons()
   assertTrue(100L > x1);
   assertTrue(x1 < 100UL);
   assertTrue(100UL > x1);
+#ifndef NOT_FOR_PYTHON
   assertTrue(x1 < 100.0);
   assertTrue(100.0 > x1);
+#endif // NOT_FOR_PYTHON
 
   assertValid(x0);
   assertValid(x1);
@@ -538,7 +542,9 @@ void AmountTestCase::testCommodityAddition()
   assertThrow(x1 + x4, amount_error);
   assertThrow(x1 + x5, amount_error);
   assertThrow(x1 + x6, amount_error);
+#ifndef NOT_FOR_PYTHON
   assertThrow(x1 + 123.45, amount_error);
+#endif // NOT_FOR_PYTHON
   assertThrow(x1 + 123L, amount_error);
 
   assertEqual(amount_t("DM 246.90"), x3 + x3);
@@ -652,7 +658,9 @@ void AmountTestCase::testCommoditySubtraction()
   assertThrow(x1 - x4, amount_error);
   assertThrow(x1 - x5, amount_error);
   assertThrow(x1 - x6, amount_error);
+#ifndef NOT_FOR_PYTHON
   assertThrow(x1 - 123.45, amount_error);
+#endif // NOT_FOR_PYTHON
   assertThrow(x1 - 123L, amount_error);
 
   assertEqual(amount_t("DM 0.00"), x3 - x3);
@@ -857,11 +865,7 @@ void AmountTestCase::testIntegerDivision()
   x1 /= amount_t(456L);
   assertEqual(string("0.269737"), x1.to_string());
   x1 /= 456L;
-#ifdef INTEGER_MATH
-  assertEqual(string("0.00059152850877193"), x1.to_string());
-#else
   assertEqual(string("0.000591528162511542"), x1.to_string());
-#endif
 
   amount_t x4("123456789123456789123456789");
   amount_t y4("56");
@@ -901,13 +905,9 @@ void AmountTestCase::testFractionalDivision()
   x1 /= amount_t("456.456");
   assertEqual(string("0.269736842105263"), x1.to_string());
   x1 /= amount_t("456.456");
-#ifdef INTEGER_MATH
-  assertEqual(string("0.000590937225286255411255411255411255411"), x1.to_string());
-#else
   assertEqual(string("0.000590937225286255757169884601508201951"), x1.to_string());
-#endif
   x1 /= 456L;
-  assertEqual(string("0.000001295914967733016252753094858358016252192982456140350877192982456140350877192982"), x1.to_string());
+  assertEqual(string("0.000001295914967733017011337466214297678193292890066687335298289595263924317558590360"), x1.to_string());
 
   amount_t x4("1234567891234567.89123456789");
   amount_t y4("56.789");
@@ -934,18 +934,18 @@ void AmountTestCase::testCommodityDivision()
   assertThrow(x1 / 0L, amount_error);
   assertEqual(amount_t("$0.00"), 0L / x1);
   assertEqual(x1, x1 / 1L);
-  assertEqual(string("$0.00812216"), (1L / x1).to_string());
+  assertEqual(string("$0.00812216"), (1L / x1).to_fullstring());
   assertEqual(- x1, x1 / -1L);
-  assertEqual(string("$-0.00812216"), (-1L / x1).to_string());
-  assertEqual(string("$0.26973382"), (x1 / y1).to_string());
+  assertEqual(string("$-0.00812216"), (-1L / x1).to_fullstring());
+  assertEqual(string("$0.26973382"), (x1 / y1).to_fullstring());
   assertEqual(string("$0.27"), (x1 / y1).to_string());
-  assertEqual(string("$3.70735867"), (y1 / x1).to_string());
+  assertEqual(string("$3.70735867"), (y1 / x1).to_fullstring());
   assertEqual(string("$3.71"), (y1 / x1).to_string());
 
   // Internal amounts retain their precision, even when being
   // converted to strings
-  assertEqual(string("$0.99727201"), (x1 / x2).to_string());
-  assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_string());
+  assertEqual(string("$0.99727201"), (x1 / x2).to_fullstring());
+  assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_fullstring());
   assertEqual(string("$1.00"), (x1 / x2).to_string());
   assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_string());
 
@@ -959,10 +959,10 @@ void AmountTestCase::testCommodityDivision()
   x1 /= amount_t("123.12");
   assertEqual(string("$1.00"), x1.to_string());
   x1 /= amount_t("123.12");
-  assertEqual(string("$0.00812216"), x1.to_string());
+  assertEqual(string("$0.00812216"), x1.to_fullstring());
   assertEqual(string("$0.01"), x1.to_string());
   x1 /= 123L;
-  assertEqual(string("$0.00006603"), x1.to_string());
+  assertEqual(string("$0.00006603"), x1.to_fullstring());
   assertEqual(string("$0.00"), x1.to_string());
 
   amount_t x6(internalAmount("$237235987235987.98723987235978"));
@@ -970,9 +970,9 @@ void AmountTestCase::testCommodityDivision()
 
   assertEqual(amount_t("$1"), x7 / x7);
   assertEqual(string("$0.0019216115121765559608381226612019501046413574469262"),
-	      (x6 / x7).to_string());
+	      (x6 / x7).to_fullstring());
   assertEqual(string("$520.39654928343335571379527154924040947271699678158689736256"),
-	      (x7 / x6).to_string());
+	      (x7 / x6).to_fullstring());
 
   assertValid(x1);
   assertValid(x2);
@@ -1097,177 +1097,6 @@ void AmountTestCase::testCommodityAbs()
   assertValid(x1);
   assertValid(x2);
 }
-
-#ifndef NOT_FOR_PYTHON
-#ifdef INTEGER_MATH
-
-void AmountTestCase::testFractionalRound()
-{
-  amount_t x0;
-  amount_t x1("1234.567890");
-
-  assertThrow(x0.precision(), amount_error);
-  assertThrow(x0.round(), amount_error);
-  assertThrow(x0.round(2), amount_error);
-  assertThrow(x0.unround(), amount_error);
-  assertEqual(amount_t::precision_t(6), x1.precision());
-
-  amount_t x1b(x1.unround());
-
-  assertEqual(x1b.precision(), x1b.unround().precision());
-
-  amount_t y7(x1.round(7));
-  amount_t y6(x1.round(6));
-  amount_t y5(x1.round(5));
-  amount_t y4(x1.round(4));
-  amount_t y3(x1.round(3));
-  amount_t y2(x1.round(2));
-  amount_t y1(x1.round(1));
-  amount_t y0(x1.round(0));
-
-  assertEqual(amount_t::precision_t(6), y7.precision());
-  assertEqual(amount_t::precision_t(6), y6.precision());
-  assertEqual(amount_t::precision_t(5), y5.precision());
-  assertEqual(amount_t::precision_t(4), y4.precision());
-  assertEqual(amount_t::precision_t(3), y3.precision());
-  assertEqual(amount_t::precision_t(2), y2.precision());
-  assertEqual(amount_t::precision_t(1), y1.precision());
-  assertEqual(amount_t::precision_t(0), y0.precision());
-
-  assertEqual(amount_t("1234.56789"), y7);
-  assertEqual(amount_t("1234.56789"), y6);
-  assertEqual(amount_t("1234.56789"), y5);
-  assertEqual(amount_t("1234.5679"), y4);
-  assertEqual(amount_t("1234.568"), y3);
-  assertEqual(amount_t("1234.57"), y2);
-  assertEqual(amount_t("1234.6"), y1);
-  assertEqual(amount_t("1235"), y0);
-
-  amount_t x2("9876.543210");
-
-  assertEqual(amount_t("9876.543210"), x2.round(6));
-  assertEqual(amount_t("9876.54321"), x2.round(5));
-  assertEqual(amount_t("9876.5432"), x2.round(4));
-  assertEqual(amount_t("9876.543"), x2.round(3));
-  assertEqual(amount_t("9876.54"), x2.round(2));
-  assertEqual(amount_t("9876.5"), x2.round(1));
-  assertEqual(amount_t("9877"), x2.round(0));
-
-  amount_t x3("-1234.567890");
-
-  assertEqual(amount_t("-1234.56789"), x3.round(6));
-  assertEqual(amount_t("-1234.56789"), x3.round(5));
-  assertEqual(amount_t("-1234.5679"), x3.round(4));
-  assertEqual(amount_t("-1234.568"), x3.round(3));
-  assertEqual(amount_t("-1234.57"), x3.round(2));
-  assertEqual(amount_t("-1234.6"), x3.round(1));
-  assertEqual(amount_t("-1235"), x3.round(0));
-
-  amount_t x4("-9876.543210");
-
-  assertEqual(amount_t("-9876.543210"), x4.round(6));
-  assertEqual(amount_t("-9876.54321"), x4.round(5));
-  assertEqual(amount_t("-9876.5432"), x4.round(4));
-  assertEqual(amount_t("-9876.543"), x4.round(3));
-  assertEqual(amount_t("-9876.54"), x4.round(2));
-  assertEqual(amount_t("-9876.5"), x4.round(1));
-  assertEqual(amount_t("-9877"), x4.round(0));
-
-  amount_t x5("0.0000000000000000000000000000000000001");
-
-  assertEqual(amount_t("0.0000000000000000000000000000000000001"),
-	      x5.round(37));
-  assertEqual(amount_t(0L), x5.round(36));
-
-  assertValid(x1);
-  assertValid(x2);
-  assertValid(x3);
-  assertValid(x4);
-  assertValid(x5);
-}
-
-void AmountTestCase::testCommodityRound()
-{
-  amount_t x1(internalAmount("$1234.567890"));
-
-  assertEqual(internalAmount("$1234.56789"), x1.round(6));
-  assertEqual(internalAmount("$1234.56789"), x1.round(5));
-  assertEqual(internalAmount("$1234.5679"), x1.round(4));
-  assertEqual(internalAmount("$1234.568"), x1.round(3));
-  assertEqual(amount_t("$1234.57"), x1.round(2));
-  assertEqual(amount_t("$1234.6"), x1.round(1));
-  assertEqual(amount_t("$1235"), x1.round(0));
-
-  amount_t x2(internalAmount("$9876.543210"));
-
-  assertEqual(internalAmount("$9876.543210"), x2.round(6));
-  assertEqual(internalAmount("$9876.54321"), x2.round(5));
-  assertEqual(internalAmount("$9876.5432"), x2.round(4));
-  assertEqual(internalAmount("$9876.543"), x2.round(3));
-  assertEqual(amount_t("$9876.54"), x2.round(2));
-  assertEqual(amount_t("$9876.5"), x2.round(1));
-  assertEqual(amount_t("$9877"), x2.round(0));
-
-  amount_t x3(internalAmount("$-1234.567890"));
-
-  assertEqual(internalAmount("$-1234.56789"), x3.round(6));
-  assertEqual(internalAmount("$-1234.56789"), x3.round(5));
-  assertEqual(internalAmount("$-1234.5679"), x3.round(4));
-  assertEqual(internalAmount("$-1234.568"), x3.round(3));
-  assertEqual(amount_t("$-1234.57"), x3.round(2));
-  assertEqual(amount_t("$-1234.6"), x3.round(1));
-  assertEqual(amount_t("$-1235"), x3.round(0));
-
-  amount_t x4(internalAmount("$-9876.543210"));
-
-  assertEqual(internalAmount("$-9876.543210"), x4.round(6));
-  assertEqual(internalAmount("$-9876.54321"), x4.round(5));
-  assertEqual(internalAmount("$-9876.5432"), x4.round(4));
-  assertEqual(internalAmount("$-9876.543"), x4.round(3));
-  assertEqual(amount_t("$-9876.54"), x4.round(2));
-  assertEqual(amount_t("$-9876.5"), x4.round(1));
-  assertEqual(amount_t("$-9877"), x4.round(0));
-
-  amount_t x5("$123.45");
-
-  x5 *= amount_t("100.12");
-
-  assertEqual(internalAmount("$12359.814"), x5);
-  assertEqual(string("$12359.81"), x5.to_string());
-  assertEqual(string("$12359.814"), x5.to_fullstring());
-  assertEqual(string("$12359.814"), x5.unround().to_string());
-
-  assertValid(x1);
-  assertValid(x2);
-  assertValid(x3);
-  assertValid(x4);
-  assertValid(x5);
-}
-
-void AmountTestCase::testCommodityDisplayRound()
-{
-  amount_t x1("$0.85");
-  amount_t x2("$0.1");
-
-  x1 *= amount_t("0.19");
-
-  assertNotEqual(amount_t("$0.16"), x1);
-  assertEqual(internalAmount("$0.1615"), x1);
-  assertEqual(string("$0.16"), x1.to_string());
-
-  assertEqual(amount_t("$0.10"), x2);
-  assertNotEqual(internalAmount("$0.101"), x2);
-  assertEqual(string("$0.10"), x2.to_string());
-
-  x1 *= 7L;
-
-  assertNotEqual(amount_t("$1.13"), x1);
-  assertEqual(internalAmount("$1.1305"), x1);
-  assertEqual(string("$1.13"), x1.to_string());
-}
-
-#endif // INTEGER_MATH
-#endif
 
 void AmountTestCase::testReduction()
 {
@@ -1411,10 +1240,7 @@ void AmountTestCase::testFractionalConversion()
   amount_t x1("1234.56");
   amount_t x2("1234.5683787634678348734");
 
-  assertThrow(x1.to_long(), amount_error); // loses precision
-  assertThrow(x2.to_double(), amount_error); // loses precision
-  assertFalse(x2.fits_in_double());
-  assertEqual(1234L, x1.to_long(true));
+  assertEqual(1235L, x1.to_long());
   assertEqual(1234.56, x1.to_double());
   assertEqual(string("1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
@@ -1426,8 +1252,7 @@ void AmountTestCase::testCommodityConversion()
 {
   amount_t x1("$1234.56");
 
-  assertThrow(x1.to_long(), amount_error); // loses precision
-  assertEqual(1234L, x1.to_long(true));
+  assertEqual(1235L, x1.to_long());
   assertEqual(1234.56, x1.to_double());
   assertEqual(string("$1234.56"), x1.to_string());
   assertEqual(string("1234.56"), x1.quantity_string());
@@ -1436,6 +1261,7 @@ void AmountTestCase::testCommodityConversion()
 }
 
 #ifndef NOT_FOR_PYTHON
+
 void AmountTestCase::testPrinting()
 {
   amount_t x0;
@@ -1579,4 +1405,5 @@ void AmountTestCase::testXmlSerialization()
 
   assertEqual(std::string("<amount>\n  <commodity flags=\"PT\">\n    <symbol>$</symbol>\n  </commodity>\n  <quantity>8192.34</quantity>\n</amount>\n"), storage.str());
 }
+
 #endif // NOT_FOR_PYTHON

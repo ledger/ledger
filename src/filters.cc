@@ -367,11 +367,7 @@ void changed_value_xacts::output_diff(const date_t& date)
   value_t cur_bal;
 
   last_xact->xdata().date = date;
-#ifdef INTEGER_MATH
-  cur_bal = total_expr.calc(*last_xact).round();
-#else
-  cur_bal = total_expr.calc(*last_xact);
-#endif
+  cur_bal = total_expr.calc(*last_xact).rounded();
 
   if (value_t diff = cur_bal - last_balance) {
     entry_temps.push_back(entry_t());
@@ -394,11 +390,7 @@ void changed_value_xacts::operator()(xact_t& xact)
 
   item_handler<xact_t>::operator()(xact);
 
-#ifdef INTEGER_MATH
-  last_balance = total_expr.calc(xact).round();
-#else
-  last_balance = total_expr.calc(xact);
-#endif
+  last_balance = total_expr.calc(xact).rounded();
   last_xact    = &xact;
 }
 

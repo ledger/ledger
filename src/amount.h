@@ -57,11 +57,6 @@
 
 namespace ledger {
 
-// If defined, amount.cc uses GMP integers rather than rationals.
-// Ledger 3.0 uses rationals, but 2.6 and before used integers, so this
-// provides a quick way of testing against past numerical behavior.
-//#define INTEGER_MATH 1
-
 class commodity_t;
 class annotation_t;
 class commodity_pool_t;
@@ -147,9 +142,6 @@ public:
 protected:
   void _copy(const amount_t& amt);
   void _dup();
-#ifdef INTEGER_MATH
-  void _resize(precision_t prec);
-#endif
   void _clear();
   void _release();
 
@@ -354,33 +346,16 @@ public:
     return *this;
   }
 
-#ifdef INTEGER_MATH
-
-  /** An amount's internal value to the given precision, or to the
-      commodity's current display precision if no precision value is
-      given.  This method changes the internal value of the amount, if
-      it's internal precision was greater than the rounding precision.
-  */
-  amount_t round() const {
-    amount_t temp(*this);
-    temp.in_place_round();
-    return temp;
-  }
-  amount_t& in_place_round();
-
-  amount_t round(precision_t prec) const {
-    amount_t temp(*this);
-    temp.in_place_round(prec);
-    return temp;
-  }
-  amount_t& in_place_round(precision_t prec);
-
-#endif // INTEGER_MATH
+  /** Yields an amount whose display precision when output is truncated
+      to the display precision of its commodity.  This is normally the
+      default state of an amount, but if one has become unrounded, this
+      sets the "keep precision" state back to false.
+      @see set_keep_precision */
+  amount_t rounded() const;
 
   /** Yields an amount whose display precision is never truncated, even
-      though its commodity normally displays only rounded values.
-  */
-  amount_t unround() const;
+      though its commodity normally displays only rounded values. */
+  amount_t unrounded() const;
 
   /** reduces a value to its most basic commodity form, for amounts that
       utilize "scaling commodities".  For example, an amount of \c 1h
@@ -487,9 +462,6 @@ public:
       optional boolean argument is true (the default), an exception is
       thrown if the conversion would lose information.
 
-      fits_in_double() returns true if to_double() would not lose
-      precision.
-
       fits_in_long() returns true if to_long() would not lose
       precision.
 
@@ -506,14 +478,13 @@ public:
       been stripped and the full, internal precision of the amount
       would be displayed.
   */
-  double to_double(bool no_check = false) const;
-  long   to_long(bool no_check = false) const;
+  double to_double() const;
+  long   to_long() const;
+  bool   fits_in_long() const;
+
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;
-
-  bool   fits_in_double() const;
-  bool   fits_in_long() const;
 
   /*@}*/
 

@@ -32,11 +32,6 @@ class AmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST(testCommodityNegation);
   CPPUNIT_TEST(testAbs);
   CPPUNIT_TEST(testCommodityAbs);
-#ifdef INTEGER_MATH
-  CPPUNIT_TEST(testFractionalRound);
-  CPPUNIT_TEST(testCommodityRound);
-  CPPUNIT_TEST(testCommodityDisplayRound);
-#endif
   CPPUNIT_TEST(testReduction);
   CPPUNIT_TEST(testSign);
   CPPUNIT_TEST(testCommoditySign);

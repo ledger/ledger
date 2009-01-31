@@ -311,38 +311,17 @@ public:
     return temp;
   }
 
-#ifdef INTEGER_MATH
-
-  balance_t round() const {
+  balance_t rounded() const {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.round();
+      temp += pair.second.rounded();
     return temp;
   }
-  balance_t& in_place_round() {
-    foreach (amounts_map::value_type& pair, amounts)
-      pair.second.in_place_round();
-    return *this;
-  }
 
-  balance_t round(amount_t::precision_t prec) const {
+  balance_t unrounded() const {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.round(prec);
-    return temp;
-  }
-  balance_t& in_place_round(amount_t::precision_t prec) {
-    foreach (amounts_map::value_type& pair, amounts)
-      pair.second.in_place_round(prec);
-    return *this;
-  }
-
-#endif // INTEGER_MATH
-
-  balance_t unround() const {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.unround();
+      temp += pair.second.unrounded();
     return temp;
   }
 

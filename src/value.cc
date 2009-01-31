@@ -1400,56 +1400,28 @@ value_t value_t::abs() const
   return NULL_VALUE;
 }
 
-#ifdef INTEGER_MATH
-
-value_t value_t::round() const
+value_t value_t::rounded() const
 {
   switch (type()) {
   case INTEGER:
     return *this;
   case AMOUNT:
-    return as_amount().round();
-  case BALANCE:
-    return as_balance().round();
-  case BALANCE_PAIR:
-    return as_balance_pair().round();
+    return as_amount().rounded();
   default:
     break;
   }
 
-  throw_(value_error, "Cannot round " << label());
+  throw_(value_error, "Cannot set rounding for " << label());
   return NULL_VALUE;
 }
 
-void value_t::in_place_round()
-{
-  switch (type()) {
-  case INTEGER:
-    break;
-  case AMOUNT:
-    as_amount_lval().in_place_round();
-    break;
-  case BALANCE:
-    as_balance_lval().in_place_round();
-    break;
-  case BALANCE_PAIR:
-    as_balance_pair_lval().in_place_round();
-    break;
-  default:
-    throw_(value_error, "Cannot round " << label());
-    break;
-  }
-}
-
-#endif // INTEGER_MATH
-
-value_t value_t::unround() const
+value_t value_t::unrounded() const
 {
   switch (type()) {
   case INTEGER:
     return *this;
   case AMOUNT:
-    return as_amount().unround();
+    return as_amount().unrounded();
   default:
     break;
   }

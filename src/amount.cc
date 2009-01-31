@@ -47,14 +47,10 @@ bool amount_t::stream_fullstrings = false;
 #if !defined(THREADSAFE)
 // These global temporaries are pre-initialized for the sake of
 // efficiency, and are reused over and over again.
-static mpz_t temp;
+static mpz_t  temp;
+static mpq_t  tempq;
 static mpfr_t tempf;
-#ifdef INTEGER_MATH
-static mpz_t divisor;
-#else
-static mpq_t tempq;
 static mpfr_t tempfb;
-#endif
 #endif
 
 struct amount_t::bigint_t : public supports_flags<>
@@ -62,11 +58,7 @@ struct amount_t::bigint_t : public supports_flags<>
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC  0x02
 
-#ifdef INTEGER_MATH
-  mpz_t		 val;
-#else
   mpq_t		 val;
-#endif
   precision_t	 prec;
   uint_least16_t ref;
   uint_fast32_t	 index;
@@ -75,31 +67,19 @@ struct amount_t::bigint_t : public supports_flags<>
 
   bigint_t() : prec(0), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "");
-#ifdef INTEGER_MATH
-    mpz_init(val);
-#else
     mpq_init(val);
-#endif
   }
   bigint_t(const bigint_t& other)
     : supports_flags<>(other.flags() & ~BIGINT_BULK_ALLOC),
       prec(other.prec), ref(1), index(0) {
     TRACE_CTOR(bigint_t, "copy");
-#ifdef INTEGER_MATH
-    mpz_init_set(val, other.val);
-#else
     mpq_init(val);
     mpq_set(val, other.val);
-#endif
   }
   ~bigint_t() {
     TRACE_DTOR(bigint_t);
     assert(ref == 0);
-#ifdef INTEGER_MATH
-    mpz_clear(val);
-#else
     mpq_clear(val);
-#endif
   }
 
   bool valid() const {
@@ -125,15 +105,11 @@ amount_t * one = NULL;
 void amount_t::initialize()
 {
   mpz_init(temp);
-  mpfr_init(tempf);
-#ifdef INTEGER_MATH
-  mpz_init(divisor);
-#else
   mpq_init(tempq);
+  mpfr_init(tempf);
   mpfr_init(tempfb);
-#endif
 
-  one = new amount_t(amount_t(1L).unround());
+  one = new amount_t(amount_t(1L).unrounded());
 
   if (! current_pool)
     current_pool = new commodity_pool_t;
@@ -153,13 +129,9 @@ void amount_t::initialize()
 void amount_t::shutdown()
 {
   mpz_clear(temp);
-  mpfr_clear(tempf);
-#ifdef INTEGER_MATH
-  mpz_clear(divisor);
-#else
   mpq_clear(tempq);
+  mpfr_clear(tempf);
   mpfr_clear(tempfb);
-#endif
 
   checked_delete(one);
 
@@ -206,28 +178,6 @@ void amount_t::_dup()
   assert(valid());
 }
 
-#ifdef INTEGER_MATH
-
-void amount_t::_resize(precision_t prec)
-{
-  assert(prec < 256);
-
-  if (! quantity || prec == quantity->prec)
-    return;
-
-  _dup();
-
-  assert(prec > quantity->prec);
-  mpz_ui_pow_ui(divisor, 10, prec - quantity->prec);
-  mpz_mul(MP(quantity), MP(quantity), divisor);
-
-  quantity->prec = prec;
-
-  assert(valid());
-}
-
-#endif // INTEGER_MATH
-
 void amount_t::_clear()
 {
   if (quantity) {
@@ -262,12 +212,7 @@ amount_t::amount_t(const double val) : commodity_(NULL)
 {
   TRACE_CTOR(amount_t, "const double");
   quantity = new bigint_t;
-#ifdef INTEGER_MATH
-  mpfr_set_d(tempf, val, GMP_RNDN);
-  mpfr_get_z(MP(quantity), tempf);
-#else
   mpq_set_d(MP(quantity), val);
-#endif
   quantity->prec = extend_by_digits; // an approximation
 }
 
@@ -275,22 +220,14 @@ amount_t::amount_t(const unsigned long val) : commodity_(NULL)
 {
   TRACE_CTOR(amount_t, "const unsigned long");
   quantity = new bigint_t;
-#ifdef INTEGER_MATH
-  mpz_set_ui(MP(quantity), val);
-#else
   mpq_set_ui(MP(quantity), val, 1);
-#endif
 }
 
 amount_t::amount_t(const long val) : commodity_(NULL)
 {
   TRACE_CTOR(amount_t, "const long");
   quantity = new bigint_t;
-#ifdef INTEGER_MATH
-  mpz_set_si(MP(quantity), val);
-#else
   mpq_set_si(MP(quantity), val, 1);
-#endif
 }
 
 
@@ -325,23 +262,7 @@ int amount_t::compare(const amount_t& amt) const
 	   "Cannot compare amounts with different commodities: " <<
 	   commodity().symbol() << " and " << amt.commodity().symbol());
 
-#ifdef INTEGER_MATH
-  if (quantity->prec == amt.quantity->prec) {
-    return mpz_cmp(MP(quantity), MP(amt.quantity));
-  }
-  else if (quantity->prec < amt.quantity->prec) {
-    amount_t t(*this);
-    t._resize(amt.quantity->prec);
-    return mpz_cmp(MP(t.quantity), MP(amt.quantity));
-  }
-  else {
-    amount_t t = amt;
-    t._resize(quantity->prec);
-    return mpz_cmp(MP(quantity), MP(t.quantity));
-  }
-#else
   return mpq_cmp(MP(quantity), MP(amt.quantity));
-#endif
 }
 
 
@@ -367,25 +288,10 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
   _dup();
 
-#ifdef INTEGER_MATH
-  if (quantity->prec == amt.quantity->prec) {
-    mpz_add(MP(quantity), MP(quantity), MP(amt.quantity));
-  }
-  else if (quantity->prec < amt.quantity->prec) {
-    _resize(amt.quantity->prec);
-    mpz_add(MP(quantity), MP(quantity), MP(amt.quantity));
-  }
-  else {
-    amount_t t = amt;
-    t._resize(quantity->prec);
-    mpz_add(MP(quantity), MP(quantity), MP(t.quantity));
-  }
-#else
   mpq_add(MP(quantity), MP(quantity), MP(amt.quantity));
 
   if (quantity->prec < amt.quantity->prec)
     quantity->prec = amt.quantity->prec;
-#endif
 
   return *this;
 }
@@ -412,80 +318,13 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
   _dup();
 
-#ifdef INTEGER_MATH
-  if (quantity->prec == amt.quantity->prec) {
-    mpz_sub(MP(quantity), MP(quantity), MP(amt.quantity));
-  }
-  else if (quantity->prec < amt.quantity->prec) {
-    _resize(amt.quantity->prec);
-    mpz_sub(MP(quantity), MP(quantity), MP(amt.quantity));
-  }
-  else {
-    amount_t t = amt;
-    t._resize(quantity->prec);
-    mpz_sub(MP(quantity), MP(quantity), MP(t.quantity));
-  }
-#else
   mpq_sub(MP(quantity), MP(quantity), MP(amt.quantity));
 
   if (quantity->prec < amt.quantity->prec)
     quantity->prec = amt.quantity->prec;
-#endif
 
   return *this;
 }
-
-#ifdef INTEGER_MATH
-
-namespace {
-  void mpz_round(mpz_t out, mpz_t value, int value_prec, int round_prec)
-  {
-    // Round `value', with an encoding precision of `value_prec', to a
-    // rounded value with precision `round_prec'.  Result is stored in
-    // `out'.
-
-    assert(value_prec > round_prec);
-
-    mpz_t quotient;
-    mpz_t remainder;
-
-    mpz_init(quotient);
-    mpz_init(remainder);
-
-    mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-    mpz_tdiv_qr(quotient, remainder, value, divisor);
-    mpz_divexact_ui(divisor, divisor, 10);
-    mpz_mul_ui(divisor, divisor, 5);
-
-    if (mpz_sgn(remainder) < 0) {
-      mpz_neg(divisor, divisor);
-      if (mpz_cmp(remainder, divisor) < 0) {
-	mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-	mpz_add(remainder, divisor, remainder);
-	mpz_ui_sub(remainder, 0, remainder);
-	mpz_add(out, value, remainder);
-      } else {
-	mpz_sub(out, value, remainder);
-      }
-    } else {
-      if (mpz_cmp(remainder, divisor) >= 0) {
-	mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-	mpz_sub(remainder, divisor, remainder);
-	mpz_add(out, value, remainder);
-      } else {
-	mpz_sub(out, value, remainder);
-      }
-    }
-    mpz_clear(quotient);
-    mpz_clear(remainder);
-
-    // chop off the rounded bits
-    mpz_ui_pow_ui(divisor, 10, value_prec - round_prec);
-    mpz_tdiv_q(out, out, divisor);
-  }
-}
-
-#endif // INTEGER_MATH
 
 amount_t& amount_t::operator*=(const amount_t& amt)
 {
@@ -502,11 +341,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
   _dup();
 
-#ifdef INTEGER_MATH
-  mpz_mul(MP(quantity), MP(quantity), MP(amt.quantity));
-#else
   mpq_mul(MP(quantity), MP(quantity), MP(amt.quantity));
-#endif
   quantity->prec += amt.quantity->prec;
 
   if (! has_commodity())
@@ -514,13 +349,8 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
   if (has_commodity() && ! keep_precision()) {
     precision_t comm_prec = commodity().precision();
-    if (quantity->prec > comm_prec + extend_by_digits) {
-#ifdef INTEGER_MATH
-      mpz_round(MP(quantity), MP(quantity), quantity->prec,
-		comm_prec + extend_by_digits);
-#endif // INTEGER_MATH
+    if (quantity->prec > comm_prec + extend_by_digits)
       quantity->prec = comm_prec + extend_by_digits;
-    }
   }
 
   return *this;
@@ -547,19 +377,8 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   // Increase the value's precision, to capture fractional parts after
   // the divide.  Round up in the last position.
 
-#ifdef INTEGER_MATH
-  mpz_ui_pow_ui(divisor, 10, (2 * amt.quantity->prec) + quantity->prec +
-		extend_by_digits + 1U);
-  mpz_mul(MP(quantity), MP(quantity), divisor);
-  mpz_tdiv_q(MP(quantity), MP(quantity), MP(amt.quantity));
-  quantity->prec += amt.quantity->prec + quantity->prec + extend_by_digits + 1U;
-
-  mpz_round(MP(quantity), MP(quantity), quantity->prec, quantity->prec - 1);
-  quantity->prec -= 1;
-#else
   mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
   quantity->prec += amt.quantity->prec + quantity->prec + extend_by_digits;
-#endif
 
   if (! has_commodity())
     commodity_ = amt.commodity_;
@@ -571,13 +390,8 @@ amount_t& amount_t::operator/=(const amount_t& amt)
 
   if (has_commodity() && ! keep_precision()) {
     precision_t comm_prec = commodity().precision();
-    if (quantity->prec > comm_prec + extend_by_digits) {
-#ifdef INTEGER_MATH
-      mpz_round(MP(quantity), MP(quantity), quantity->prec,
-		comm_prec + extend_by_digits);
-#endif // INTEGER_MATH
+    if (quantity->prec > comm_prec + extend_by_digits)
       quantity->prec = comm_prec + extend_by_digits;
-    }
   }
 
   return *this;
@@ -634,59 +448,28 @@ amount_t& amount_t::in_place_negate()
 {
   if (quantity) {
     _dup();
-#ifdef INTEGER_MATH
-    mpz_neg(MP(quantity), MP(quantity));
-#else
     mpq_neg(MP(quantity), MP(quantity));
-#endif
   } else {
     throw_(amount_error, "Cannot negate an uninitialized amount");
   }
   return *this;
 }
 
-#ifdef INTEGER_MATH
-
-amount_t& amount_t::in_place_round()
+amount_t amount_t::rounded() const
 {
   if (! quantity)
-    throw_(amount_error, "Cannot round an uninitialized amount");
-
-  if (has_commodity())
-    in_place_round(commodity().precision());
-
-  return *this;
-}
-
-amount_t& amount_t::in_place_round(precision_t prec)
-{
-  if (! quantity)
-    throw_(amount_error, "Cannot round an uninitialized amount");
-
-  if (quantity && quantity->prec <= prec) {
-    if (keep_precision()) {
-      _dup();
-      set_keep_precision(false);
-    }
+    throw_(amount_error, "Cannot set rounding for an uninitialized amount");
+  else if (! keep_precision())
     return *this;
-  }
 
-  DEBUG("amount.round", "Rounding " << *this << " to precision " << prec);
+  amount_t t(*this);
+  t._dup();
+  t.set_keep_precision(false);
 
-  _dup();
-  mpz_round(MP(quantity), MP(quantity), quantity->prec, prec);
-
-  quantity->prec = prec;
-  set_keep_precision(false);
-
-  DEBUG("amount.round", "  result = " << *this);
-
-  return *this;
+  return t;
 }
 
-#endif // INTEGER_MATH
-
-amount_t amount_t::unround() const
+amount_t amount_t::unrounded() const
 {
   if (! quantity)
     throw_(amount_error, "Cannot unround an uninitialized amount");
@@ -732,11 +515,7 @@ optional<amount_t> amount_t::value(const optional<datetime_t>&   moment,
   if (quantity) {
     optional<price_point_t> point(commodity().find_price(in_terms_of, moment));
     if (point)
-#ifdef INTEGER_MATH
-      return (point->price * number()).round();
-#else
-      return point->price * number();
-#endif
+      return (point->price * number()).rounded();
   } else {
     throw_(amount_error, "Cannot determine value of an uninitialized amount");
   }
@@ -749,14 +528,8 @@ int amount_t::sign() const
   if (! quantity)
     throw_(amount_error, "Cannot determine sign of an uninitialized amount");
 
-#ifdef INTEGER_MATH
-  return mpz_sgn(MP(quantity));
-#else
   return mpq_sgn(MP(quantity));
-#endif
 }
-
-#ifndef INTEGER_MATH
 
 namespace {
   void stream_out_mpq(std::ostream& out, mpq_t quant,
@@ -826,8 +599,6 @@ namespace {
   }
 }
 
-#endif // INTEGER_MATH
-
 bool amount_t::is_zero() const
 {
   if (! quantity)
@@ -837,9 +608,6 @@ bool amount_t::is_zero() const
     if (keep_precision() || quantity->prec <= commodity().precision()) {
       return is_realzero();
     } else {
-#ifdef INTEGER_MATH
-      return round(commodity().precision()).sign() == 0;
-#else
       std::ostringstream out;
       stream_out_mpq(out, MP(quantity), commodity().precision());
       
@@ -847,80 +615,34 @@ bool amount_t::is_zero() const
 	if (*p != '0' && *p != '.')
 	  return false;
       return true;
-#endif
     }
   }
   return is_realzero();
 }
 
 
-double amount_t::to_double(bool no_check) const
+double amount_t::to_double() const
 {
   if (! quantity)
     throw_(amount_error, "Cannot convert an uninitialized amount to a double");
 
-#ifdef INTEGER_MATH
-  mpz_t remainder;
-  mpz_init(remainder);
-
-  mpz_set(temp, MP(quantity));
-  mpz_ui_pow_ui(divisor, 10, quantity->prec);
-  mpz_tdiv_qr(temp, remainder, temp, divisor);
-
-  char * quotient_s  = mpz_get_str(NULL, 10, temp);
-  char * remainder_s = mpz_get_str(NULL, 10, remainder);
-
-  std::ostringstream num;
-  num << quotient_s << '.' << remainder_s;
-
-  std::free(quotient_s);
-  std::free(remainder_s);
-
-  mpz_clear(remainder);
-
-  double value = lexical_cast<double>(num.str());
-#else
   mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
-  double value = mpfr_get_d(tempf, GMP_RNDN);
-#endif
-
-  if (! no_check && *this != value)
-    throw_(amount_error, "Conversion of amount to_double loses precision");
-
-  return value;
+  return mpfr_get_d(tempf, GMP_RNDN);
 }
 
-long amount_t::to_long(bool no_check) const
+long amount_t::to_long() const
 {
   if (! quantity)
     throw_(amount_error, "Cannot convert an uninitialized amount to a long");
 
-#ifdef INTEGER_MATH
-  mpz_set(temp, MP(quantity));
-  mpz_ui_pow_ui(divisor, 10, quantity->prec);
-  mpz_tdiv_q(temp, temp, divisor);
-  long value = mpz_get_si(temp);
-#else
   mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
-  long value = mpfr_get_si(tempf, GMP_RNDN);
-#endif
-
-  if (! no_check && *this != value)
-    throw_(amount_error, "Conversion of amount to_long loses precision");
-
-  return value;
-}
-
-bool amount_t::fits_in_double() const
-{
-  double value = to_double(true);
-  return *this == amount_t(value);
+  return mpfr_get_si(tempf, GMP_RNDN);
 }
 
 bool amount_t::fits_in_long() const
 {
-  long value = to_long(true);
-  return *this == amount_t(value);
+  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
+  return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }
 
 
@@ -1170,9 +892,6 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     }
     *t = '\0';
 
-#ifdef INTEGER_MATH
-    mpz_set_str(MP(quantity), buf.get(), 10);
-#else
     mpq_set_str(MP(quantity), buf.get(), 10);
     mpz_ui_pow_ui(temp, 10, quantity->prec);
     mpq_set_z(tempq, temp);
@@ -1183,13 +902,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
       DEBUG("amount.parse", "Rational parsed = " << buf);
       std::free(buf);
     }
-#endif
   } else {
-#ifdef INTEGER_MATH
-    mpz_set_str(MP(quantity), quant.c_str(), 10);
-#else
     mpq_set_str(MP(quantity), quant.c_str(), 10);
-#endif
   }
 
   if (negative)
@@ -1243,156 +957,6 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   commodity_t& comm(base.commodity());
   precision_t  precision = 0;
 
-#ifdef INTEGER_MATH
-
-  mpz_t quotient;
-  mpz_t rquotient;
-  mpz_t remainder;
-
-  mpz_init(quotient);
-  mpz_init(rquotient);
-  mpz_init(remainder);
-
-  bool negative = false;
-
-  // Ensure the value is rounded to the commodity's precision before
-  // outputting it.  NOTE: `rquotient' is used here as a temp variable!
-
-  if (quantity) {
-    if (! comm || full_precision || base.keep_precision()) {
-      mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
-      mpz_tdiv_qr(quotient, remainder, MP(base.quantity), divisor);
-      precision = base.quantity->prec;
-    }
-    else if (comm.precision() < base.quantity->prec) {
-      mpz_round(rquotient, MP(base.quantity), base.quantity->prec,
-		comm.precision());
-      mpz_ui_pow_ui(divisor, 10, comm.precision());
-      mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
-      precision = comm.precision();
-    }
-    else if (comm.precision() > base.quantity->prec) {
-      mpz_ui_pow_ui(divisor, 10, comm.precision() - base.quantity->prec);
-      mpz_mul(rquotient, MP(base.quantity), divisor);
-      mpz_ui_pow_ui(divisor, 10, comm.precision());
-      mpz_tdiv_qr(quotient, remainder, rquotient, divisor);
-      precision = comm.precision();
-    }
-    else if (base.quantity->prec) {
-      mpz_ui_pow_ui(divisor, 10, base.quantity->prec);
-      mpz_tdiv_qr(quotient, remainder, MP(base.quantity), divisor);
-      precision = base.quantity->prec;
-    }
-    else {
-      mpz_set(quotient, MP(base.quantity));
-      mpz_set_ui(remainder, 0);
-      precision = 0;
-    }
-
-    if (mpz_sgn(quotient) < 0 || mpz_sgn(remainder) < 0) {
-      negative = true;
-
-      mpz_abs(quotient, quotient);
-      mpz_abs(remainder, remainder);
-    }
-    mpz_set(rquotient, remainder);
-  }
-
-  if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
-    comm.print(out);
-    if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
-      out << " ";
-  }
-
-  if (negative)
-    out << "-";
-
-  if (! quantity || mpz_sgn(quotient) == 0) {
-    out << '0';
-  }
-  else if (omit_commodity || ! comm.has_flags(COMMODITY_STYLE_THOUSANDS)) {
-    char * p = mpz_get_str(NULL, 10, quotient);
-    out << p;
-    std::free(p);
-  }
-  else {
-    std::list<string> strs;
-    char buf[4];
-
-    for (int powers = 0; true; powers += 3) {
-      if (powers > 0) {
-	mpz_ui_pow_ui(divisor, 10, powers);
-	mpz_tdiv_q(temp, quotient, divisor);
-	if (mpz_sgn(temp) == 0)
-	  break;
-	mpz_tdiv_r_ui(temp, temp, 1000);
-      } else {
-	mpz_tdiv_r_ui(temp, quotient, 1000);
-      }
-      mpz_get_str(buf, 10, temp);
-      strs.push_back(buf);
-    }
-
-    bool printed = false;
-
-    for (std::list<string>::reverse_iterator i = strs.rbegin();
-	 i != strs.rend();
-	 i++) {
-      if (printed) {
-	out << (comm.has_flags(COMMODITY_STYLE_EUROPEAN) ? '.' : ',');
-	out.width(3);
-	out.fill('0');
-      }
-      out << *i;
-
-      printed = true;
-    }
-  }
-
-  if (quantity && precision) {
-    std::ostringstream final;
-    final.width(precision);
-    final.fill('0');
-    char * p = mpz_get_str(NULL, 10, rquotient);
-    final << p;
-    std::free(p);
-
-    const string& str(final.str());
-    int i, len = str.length();
-    const char * q = str.c_str();
-    for (i = len; i > 0; i--)
-      if (q[i - 1] != '0')
-	break;
-
-    string ender;
-    if (i == len)
-      ender = str;
-    else if (i < comm.precision())
-      ender = string(str, 0, comm.precision());
-    else
-      ender = string(str, 0, i);
-
-    if (! ender.empty()) {
-      if (omit_commodity)
-	out << '.';
-      else
-	out << (comm.has_flags(COMMODITY_STYLE_EUROPEAN) ? ',' : '.');
-      out << ender;
-    }
-  }
-
-  if (! omit_commodity && comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
-    if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
-      out << " ";
-    comm.print(out);
-  }
-
-  mpz_clear(quotient);
-  mpz_clear(rquotient);
-  mpz_clear(remainder);
-
-#else // INTEGER_MATH
-
   if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     comm.print(out);
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
@@ -1407,8 +971,6 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
       out << " ";
     comm.print(out);
   }
-
-#endif // INTEGER_MATH
 
   // If there are any annotations associated with this commodity,
   // output them now.
@@ -1451,43 +1013,27 @@ void amount_t::read(std::istream& in)
   if (byte < 3) {
     quantity = new bigint_t;
 
-#ifndef INTEGER_MATH
-    mpz_t numerator;
-    mpz_t denominator;
-#endif
-
     unsigned short len;
     in.read(reinterpret_cast<char *>(&len), sizeof(len));
     assert(len < 4096);
     static char buf[4096];
     in.read(buf, len);
-#ifdef INTEGER_MATH
-    mpz_import(MP(quantity), len / sizeof(short), 1, sizeof(short),
+
+    mpz_import(temp, len / sizeof(short), 1, sizeof(short),
 	       0, 0, buf);
-#else
-    mpz_init(numerator);
-    mpz_import(numerator, len / sizeof(short), 1, sizeof(short),
-	       0, 0, buf);
+    mpq_set_num(MP(quantity), temp);
 
     in.read(reinterpret_cast<char *>(&len), sizeof(len));
     assert(len < 4096);
     in.read(buf, len);
-    mpz_init(denominator);
-    mpz_import(denominator, len / sizeof(short), 1, sizeof(short),
+    mpz_import(temp, len / sizeof(short), 1, sizeof(short),
 	       0, 0, buf);
-
-    mpq_set_num(MP(quantity), numerator);
-    mpq_set_den(MP(quantity), denominator);
-#endif
+    mpq_set_den(MP(quantity), temp);
 
     char negative;
     in.read(&negative, sizeof(negative));
     if (negative)
-#ifdef INTEGER_MATH
-      mpz_neg(MP(quantity), MP(quantity));
-#else
       mpq_neg(MP(quantity), MP(quantity));
-#endif
 
     in.read(reinterpret_cast<char *>(&quantity->prec), sizeof(quantity->prec));
 
@@ -1531,40 +1077,28 @@ void amount_t::read(const char *& data,
       quantity = new bigint_t;
     }
 
-#ifndef INTEGER_MATH
-    mpz_t numerator;
-    mpz_t denominator;
-#endif
-
     unsigned short len =
       *reinterpret_cast<unsigned short *>(const_cast<char *>(data));
     data += sizeof(unsigned short);
-#ifdef INTEGER_MATH
-    mpz_import(MP(quantity), len / sizeof(short), 1, sizeof(short),
+    mpz_init(temp);
+    mpz_import(temp, len / sizeof(short), 1, sizeof(short),
 	       0, 0, data);
-#else
-    mpz_init(numerator);
-    mpz_import(numerator, len / sizeof(short), 1, sizeof(short),
-	       0, 0, data);
+    data += len;
+
+    mpq_set_num(MP(quantity), temp);
 
     len = *reinterpret_cast<unsigned short *>(const_cast<char *>(data));
     data += sizeof(unsigned short);
-    mpz_init(denominator);
-    mpz_import(denominator, len / sizeof(short), 1, sizeof(short),
+    mpz_init(temp);
+    mpz_import(temp, len / sizeof(short), 1, sizeof(short),
 	       0, 0, data);
-
-    mpq_set_num(MP(quantity), numerator);
-    mpq_set_den(MP(quantity), denominator);
-#endif
     data += len;
+
+    mpq_set_den(MP(quantity), temp);
 
     char negative = *data++;
     if (negative)
-#ifdef INTEGER_MATH
-      mpz_neg(MP(quantity), MP(quantity));
-#else
       mpq_neg(MP(quantity), MP(quantity));
-#endif
 
     quantity->prec = *reinterpret_cast<precision_t *>(const_cast<char *>(data));
     data += sizeof(precision_t);
@@ -1582,6 +1116,20 @@ void amount_t::read(const char *& data,
     DEBUG("amounts.refs",
 	   quantity << " ref++, now " << (quantity->ref + 1));
     quantity->ref++;
+  }
+}
+
+namespace {
+  void write_bytes(std::ostream&     out,
+		   const char *	     buf,
+		   const std::size_t size)
+  {
+    unsigned short len = size * sizeof(short);
+    out.write(reinterpret_cast<char *>(&len), sizeof(len));
+    if (len) {
+      assert(len < 4096);
+      out.write(buf, len);
+    }
   }
 }
 
@@ -1614,32 +1162,16 @@ void amount_t::write(std::ostream& out, std::size_t index) const
 
     std::size_t size;
     static char buf[4096];
-#ifdef INTEGER_MATH
-    mpz_export(buf, &size, 1, sizeof(short), 0, 0, MP(quantity));
-#else
-    mpz_t numerator;
-    mpz_t denominator;
 
-    mpz_init(numerator);
-    mpq_get_num(numerator, MP(quantity));
-    mpz_export(buf, &size, 1, sizeof(short), 0, 0, numerator);
+    mpq_get_num(temp, MP(quantity));
+    mpz_export(buf, &size, 1, sizeof(short), 0, 0, temp);
+    write_bytes(out, buf, size);
 
-    mpz_init(denominator);
-    mpq_get_den(denominator, MP(quantity));
-    mpz_export(buf, &size, 1, sizeof(short), 0, 0, denominator);
-#endif
-    unsigned short len = size * sizeof(short);
-    out.write(reinterpret_cast<char *>(&len), sizeof(len));
-    if (len) {
-      assert(len < 4096);
-      out.write(buf, len);
-    }
+    mpq_get_den(temp, MP(quantity));
+    mpz_export(buf, &size, 1, sizeof(short), 0, 0, temp);
+    write_bytes(out, buf, size);
 
-#ifdef INTEGER_MATH
-    byte = mpz_sgn(MP(quantity)) < 0 ? 1 : 0;
-#else
     byte = mpq_sgn(MP(quantity)) < 0 ? 1 : 0;
-#endif
     out.write(&byte, sizeof(byte));
 
     out.write(reinterpret_cast<char *>(&quantity->prec), sizeof(quantity->prec));

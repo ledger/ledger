@@ -187,11 +187,7 @@ static void endElement(void *, const char *name)
 
     if (default_commodity) {
       curr_quant.set_commodity(*default_commodity);
-#ifdef INTEGER_MATH
-      value = curr_quant.round();
-#else
-      value = curr_quant;
-#endif
+      value = curr_quant.rounded();
 
       if (curr_value.commodity() == *default_commodity)
 	curr_value = value;
