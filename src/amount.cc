@@ -53,6 +53,7 @@ static mpfr_t tempf;
 static mpz_t divisor;
 #else
 static mpq_t tempq;
+static mpfr_t tempfb;
 #endif
 #endif
 
@@ -66,7 +67,7 @@ struct amount_t::bigint_t : public supports_flags<>
 #else
   mpq_t		 val;
 #endif
-  precision_t	 prec;		// this is only an estimate
+  precision_t	 prec;
   uint_least16_t ref;
   uint_fast32_t	 index;
 
@@ -80,20 +81,6 @@ struct amount_t::bigint_t : public supports_flags<>
     mpq_init(val);
 #endif
   }
-#ifdef INTEGER_MATH
-  bigint_t(mpz_t _val) : prec(0), ref(1), index(0) {
-    TRACE_CTOR(bigint_t, "mpz_t");
-    mpz_init_set(val, _val);
-  }
-#else
-#if 0
-  bigint_t(mpq_t _val) : prec(0), ref(1), index(0) {
-    TRACE_CTOR(bigint_t, "mpq_t");
-    mpq_init(val, _val);
-    mpq_set(val, _val);
-  }
-#endif
-#endif
   bigint_t(const bigint_t& other)
     : supports_flags<>(other.flags() & ~BIGINT_BULK_ALLOC),
       prec(other.prec), ref(1), index(0) {
@@ -143,6 +130,7 @@ void amount_t::initialize()
   mpz_init(divisor);
 #else
   mpq_init(tempq);
+  mpfr_init(tempfb);
 #endif
 
   one = new amount_t(amount_t(1L).unround());
@@ -170,6 +158,7 @@ void amount_t::shutdown()
   mpz_clear(divisor);
 #else
   mpq_clear(tempq);
+  mpfr_clear(tempfb);
 #endif
 
   checked_delete(one);
@@ -275,6 +264,7 @@ amount_t::amount_t(const double val) : commodity_(NULL)
   quantity = new bigint_t;
 #ifdef INTEGER_MATH
   mpfr_set_d(tempf, val, GMP_RNDN);
+  mpfr_get_z(MP(quantity), tempf);
 #else
   mpq_set_d(MP(quantity), val);
 #endif
@@ -593,7 +583,6 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   return *this;
 }
 
-
 amount_t::precision_t amount_t::precision() const
 {
   if (! quantity)
@@ -624,7 +613,8 @@ void amount_t::set_keep_precision(const bool keep) const
     quantity->drop_flags(BIGINT_KEEP_PREC);
 }
 
-amount_t::precision_t amount_t::display_precision(const bool full_precision) const
+amount_t::precision_t
+amount_t::display_precision(const bool full_precision) const
 {
   if (! quantity)
     throw_(amount_error,
@@ -636,10 +626,8 @@ amount_t::precision_t amount_t::display_precision(const bool full_precision) con
     return quantity->prec;
   else if (comm.precision() != quantity->prec)
     return comm.precision();
-  else if (quantity->prec)
+  else
     return quantity->prec;
-
-  return 0;
 }
 
 amount_t& amount_t::in_place_negate()
@@ -768,33 +756,97 @@ int amount_t::sign() const
 #endif
 }
 
+#ifndef INTEGER_MATH
+
+namespace {
+  void stream_out_mpq(std::ostream& out, mpq_t quant,
+		      amount_t::precision_t prec,
+		      const optional<commodity_t&>& comm = none)
+  {
+    char * buf = NULL;
+    try {
+      IF_DEBUG("amount.convert") {
+	char * tbuf = mpq_get_str(NULL, 10, quant);
+	DEBUG("amount.convert", "Rational to convert = " << tbuf);
+	std::free(tbuf);
+      }
+
+      // Convert the rational number to a floating-point, extending the
+      // floating-point to a large enough size to get a precise answer.
+      const std::size_t bits = (mpz_sizeinbase(mpq_numref(quant), 2) +
+				mpz_sizeinbase(mpq_denref(quant), 2));
+      mpfr_set_prec(tempfb, bits + amount_t::extend_by_digits*8);
+      mpfr_set_q(tempfb, quant, GMP_RNDN);
+
+      mpfr_asprintf(&buf, "%.*Rf", prec, tempfb);
+      DEBUG("amount.convert",
+	    "mpfr_print = " << buf << " (precision " << prec << ")");
+
+      if (comm) {
+	int integer_digits = 0;
+	if (comm && comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
+	  // Count the number of integer digits
+	  for (const char * p = buf; *p; p++) {
+	    if (*p == '.')
+	      break;
+	    else if (std::isdigit(*p))
+	      integer_digits++;
+	  }
+	}
+
+	for (const char * p = buf; *p; p++) {
+	  if (*p == '.') {
+	    if (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN))
+	      out << ',';
+	    else
+	      out << *p;
+	    assert(integer_digits < 3);
+	  } else {
+	    if (integer_digits >= 3 && std::isdigit(*p) && 
+		integer_digits-- % 3 == 0) {
+	      if (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN))
+		out << '.';
+	      else
+		out << ',';
+	    }
+	    out << *p;
+	  }
+	}
+      } else {
+	out << buf;
+      }
+    }
+    catch (...) {
+      if (buf != NULL)
+	mpfr_free_str(buf);
+      throw;
+    }
+    if (buf != NULL)
+      mpfr_free_str(buf);
+  }
+}
+
+#endif // INTEGER_MATH
+
 bool amount_t::is_zero() const
 {
   if (! quantity)
     throw_(amount_error, "Cannot determine if an uninitialized amount is zero");
 
   if (has_commodity()) {
-    if (quantity->prec <= commodity().precision() || keep_precision()) {
+    if (keep_precision() || quantity->prec <= commodity().precision()) {
       return is_realzero();
     } else {
 #ifdef INTEGER_MATH
       return round(commodity().precision()).sign() == 0;
 #else
-      char * buf;
-
-      mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
-      mpfr_asprintf(&buf, "%.*RNf", commodity().precision(), tempf);
-
-      bool all_zeroes = true;
-      for (const char * p = buf; *p; p++) {
-	if (*p != '0' || *p != '.') {
-	  all_zeroes = false;
-	  break;
-	}
-      }
-
-      mpfr_free_str(buf);
-      return all_zeroes;
+      std::ostringstream out;
+      stream_out_mpq(out, MP(quantity), commodity().precision());
+      
+      for (const char * p = out.str().c_str(); *p; p++)
+	if (*p != '0' && *p != '.')
+	  return false;
+      return true;
 #endif
     }
   }
@@ -827,15 +879,15 @@ double amount_t::to_double(bool no_check) const
   mpz_clear(remainder);
 
   double value = lexical_cast<double>(num.str());
+#else
+  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
+  double value = mpfr_get_d(tempf, GMP_RNDN);
+#endif
 
   if (! no_check && *this != value)
     throw_(amount_error, "Conversion of amount to_double loses precision");
 
   return value;
-#else
-  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
-  return mpfr_get_d(tempf, GMP_RNDN);
-#endif
 }
 
 long amount_t::to_long(bool no_check) const
@@ -847,11 +899,11 @@ long amount_t::to_long(bool no_check) const
   mpz_set(temp, MP(quantity));
   mpz_ui_pow_ui(divisor, 10, quantity->prec);
   mpz_tdiv_q(temp, temp, divisor);
+  long value = mpz_get_si(temp);
 #else
   mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
-  mpfr_get_z(temp, tempf, GMP_RNDN);
+  long value = mpfr_get_si(tempf, GMP_RNDN);
 #endif
-  long value = mpz_get_si(temp);
 
   if (! no_check && *this != value)
     throw_(amount_error, "Conversion of amount to_long loses precision");
@@ -1125,6 +1177,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     mpz_ui_pow_ui(temp, 10, quantity->prec);
     mpq_set_z(tempq, temp);
     mpq_div(MP(quantity), MP(quantity), tempq);
+
+    IF_DEBUG("amount.parse") {
+      char * buf = mpq_get_str(NULL, 10, MP(quantity));
+      DEBUG("amount.parse", "Rational parsed = " << buf);
+      std::free(buf);
+    }
 #endif
   } else {
 #ifdef INTEGER_MATH
@@ -1335,54 +1393,14 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
 
 #else // INTEGER_MATH
 
-  char * buf;
-  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
-  mpfr_asprintf(&buf, "%.*RNf", base.display_precision(full_precision), tempf);
-  DEBUG("amount.print", "mpfr_print = " << buf);
-
-  try {
-    if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
-      comm.print(out);
-      if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
-	out << " ";
-    }
-
-    if (omit_commodity || ! comm.has_flags(COMMODITY_STYLE_THOUSANDS)) {
-      if (! comm.has_flags(COMMODITY_STYLE_EUROPEAN))
-	out << buf;
-      else
-	for (const char * p = buf; *p; p++)
-	  if (*p == '.')
-	    out << ',';
-	  else
-	    out << *p;
-    } else {
-      // Count the number of integer digits
-      int integer_digits = 0;
-      for (const char * p = buf; *p; p++) {
-	if (*p == '.')
-	  break;
-	else if (std::isdigit(*p))
-	  integer_digits++;
-      }
-
-      for (const char * p = buf; *p; p++) {
-	if (*p == '.' && comm.has_flags(COMMODITY_STYLE_EUROPEAN))
-	  out << ',';
-	else
-	  out << *p;
-
-	if (std::isdigit(*p) && integer_digits > 3 &&
-	    --integer_digits % 3 == 0)
-	  out << ',';
-      }
-    }
+  if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
+    comm.print(out);
+    if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
+      out << " ";
   }
-  catch (...) {
-    mpfr_free_str(buf);
-    throw;
-  }
-  mpfr_free_str(buf);
+
+  stream_out_mpq(out, MP(quantity), base.display_precision(full_precision),
+		 omit_commodity ? optional<commodity_t&>() : comm);
 
   if (! omit_commodity && comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

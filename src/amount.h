@@ -147,7 +147,9 @@ public:
 protected:
   void _copy(const amount_t& amt);
   void _dup();
+#ifdef INTEGER_MATH
   void _resize(precision_t prec);
+#endif
   void _clear();
   void _release();
 

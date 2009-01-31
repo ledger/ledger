@@ -663,7 +663,7 @@ void annotation_t::parse(std::istream& in)
       // may have only specified {$1} or something similar.
 
       if (temp.has_commodity() &&
-	  temp.precision() < temp.commodity().precision())
+	  temp.precision() > temp.commodity().precision())
 	temp = temp.round();	// no need to retain individual precision
 #endif
 
