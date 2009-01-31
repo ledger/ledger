@@ -112,8 +112,6 @@ namespace {
 void output_stream_t::initialize(const optional<path>& output_file,
 				 const optional<path>& pager_path)
 {
-  TRACE_CTOR(output_stream_t, "const path&, const path&");
-
   if (output_file)
     os = new ofstream(*output_file);
   else if (pager_path && exists(*pager_path))
