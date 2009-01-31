@@ -580,7 +580,7 @@ namespace {
 	  for (const char * p = buf; *p; p++) {
 	    if (*p == '.')
 	      break;
-	    else if (std::isdigit(*p))
+	    else if (*p != '-')
 	      integer_digits++;
 	  }
 	}
@@ -591,16 +591,20 @@ namespace {
 	      out << ',';
 	    else
 	      out << *p;
-	    assert(integer_digits < 3);
-	  } else {
-	    if (integer_digits >= 3 && std::isdigit(*p) && 
-		integer_digits-- % 3 == 0) {
+	    assert(integer_digits <= 3);
+	  }
+	  else if (*p == '-') {
+	    out << *p;
+	  }
+	  else {
+	    out << *p;
+
+	    if (integer_digits > 3 && --integer_digits % 3 == 0) {
 	      if (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN))
 		out << '.';
 	      else
 		out << ',';
 	    }
-	    out << *p;
 	  }
 	}
       } else {
