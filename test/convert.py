@@ -118,6 +118,7 @@ for line in fd.readlines():
     # Determine this list automatically by scanning the class_ lines in
     # python/*.cc
     line = re.sub('amount_t::', 'Amount.', line)
+    line = re.sub('Amount\.PARSE_', 'AmountParse.', line)
     line = re.sub('commodity_t\(([^)]+?)\)', '\\1', line)
     line = re.sub('commodity_t::', 'Commodity.', line)
     line = re.sub('balance_t::', 'Balance.', line)
