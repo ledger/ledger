@@ -54,42 +54,33 @@
 //
 // Copyright (c) 2003-2009, John Wiegley <johnw@newartisans.com>
 //
+// @mainpage jww (2009-01-31): Something should go here.
 
 #include <utils.h>
+
 #include <value.h>
+
 #include <expr.h>
-#include <scope.h>
-#include <predicate.h>
-#include <format.h>
-#include <option.h>
 
 #include <journal.h>
-#include <entry.h>
-#include <xact.h>
-#include <account.h>
 #include <iterators.h>
 #include <compare.h>
 
 #include <textual.h>
 #include <cache.h>
-#include <emacs.h>
-#include <qif.h>
 #include <xml.h>
 #include <csv.h>
+#include <emacs.h>
+#include <qif.h>
 #include <gnucash.h>
 #include <ofx.h>
 
 #include <session.h>
 #include <report.h>
-#include <handler.h>
-#include <filters.h>
-#include <output.h>
 #include <help.h>
 
 #include <derive.h>
 #include <reconcile.h>
 #include <quotes.h>
-
-#include <ledger.h>
 
 #endif // _LEDGER_H
