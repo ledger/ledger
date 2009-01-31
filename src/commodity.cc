@@ -40,6 +40,7 @@
  */
 
 #include "amount.h"
+#include "token.h"
 
 namespace ledger {
 
@@ -521,6 +522,27 @@ bool commodity_t::symbol_needs_quotes(const string& symbol)
   return false;
 }
 
+namespace {
+  bool is_reserved_token(const char * buf)
+  {
+    switch (buf[0]) {
+    case 'a':
+      return std::strcmp(buf, "and") == 0;
+    case 'd':
+      return std::strcmp(buf, "div") == 0;
+    case 'f':
+      return std::strcmp(buf, "false") == 0;
+    case 'o':
+      return std::strcmp(buf, "or") == 0;
+    case 'n':
+      return std::strcmp(buf, "not") == 0;
+    case 't':
+      return std::strcmp(buf, "true") == 0;
+    }
+    return false;
+  }
+}
+
 void commodity_t::parse_symbol(std::istream& in, string& symbol)
 {
   // Invalid commodity characters:
@@ -561,6 +583,8 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
       throw_(amount_error, "Quoted commodity symbol lacks closing quote");
   } else {
     READ_INTO(in, buf, 255, c, ! invalid_chars[static_cast<unsigned char>(c)]);
+    if (is_reserved_token(buf))
+      buf[0] = '\0';
   }
   symbol = buf;
 
