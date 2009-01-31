@@ -259,6 +259,18 @@ int amount_t::compare(const amount_t& amt) const
   return mpq_cmp(MP(quantity), MP(amt.quantity));
 }
 
+bool amount_t::operator==(const amount_t& amt) const
+{
+  if ((quantity && ! amt.quantity) || (! quantity && amt.quantity))
+    return false;
+  else if (! quantity && ! amt.quantity)
+    return true;
+  else if (commodity() != amt.commodity())
+    return false;
+
+  return mpq_equal(MP(quantity), MP(amt.quantity));
+}
+
 
 amount_t& amount_t::operator+=(const amount_t& amt)
 {

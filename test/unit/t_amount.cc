@@ -140,10 +140,9 @@ void AmountTestCase::testConstructors()
   amount_t x10(x6);
   amount_t x11(x8);
 
-  assertThrow(amount_t(0L) == x0, amount_error);
-  assertThrow(amount_t() == x0, amount_error);
-  assertThrow(amount_t("0") == x0, amount_error);
-  assertThrow(amount_t("0.0") == x0, amount_error);
+  assertEqual(amount_t(), x0);
+  assertNotEqual(amount_t("0"), x0);
+  assertNotEqual(amount_t("0.0"), x0);
   assertEqual(x2, x1);
   assertEqual(x5, x1);
   assertEqual(x7, x1);

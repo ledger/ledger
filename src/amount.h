@@ -781,12 +781,6 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 
 namespace ledger {
 
-inline bool amount_t::operator==(const amount_t& amt) const {
-  if (commodity() != amt.commodity())
-    return false;
-  return compare(amt) == 0;
-}
-
 inline commodity_t& amount_t::commodity() const {
   return has_commodity() ? *commodity_ : *current_pool->null_commodity;
 }
