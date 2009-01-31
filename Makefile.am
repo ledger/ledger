@@ -406,9 +406,7 @@ all_tests_sources =				\
 	$(report_tests_SOURCES)			\
 	$(extra_tests_SOURCES)
 
-EXTRA_DIST += test/python
-
-PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py test/UnitTests.py
+PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
 
 all_py_tests_sources = \
 	$(patsubst test/unit/%.cc,test/python/%.py, \
@@ -543,10 +541,10 @@ copy-sources:
 	(cd $(STAGING); sudo git clean -x -d -f)
 
 release: copy-sources
-	(cd $(STAGING); ./acprep --release --build -j3)
+	(cd $(STAGING); ./acprep --release --boost xgcc40 --build -j3)
 
 release-distcheck: copy-sources
-	(cd $(STAGING); ./acprep --release --build -j3 distcheck)
+	(cd $(STAGING); ./acprep --release --boost xgcc40 --build -j3 distcheck)
 
 benchmark: copy-sources
 	(cd $(STAGING); ./acprep --release --opt --build -j3 all)
