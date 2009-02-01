@@ -493,8 +493,12 @@ namespace {
     expr.dump(out);
 
     out << std::endl << "--- Calculated value ---" << std::endl;
-    expr.calc(args).print(out);
+    value_t result(expr.calc(args));
+    result.print(out);
     out << std::endl;
+
+    out << std::endl << "--- Calculated value as XML ---" << std::endl;
+    result.write_xml(out);
 
     return 0L;
   }
