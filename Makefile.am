@@ -525,6 +525,9 @@ report: all
 	genhtml -o doc/report doc/report/ledger_cov.info
 	@echo Coverage reported generated\; now open doc/report/index.html
 
+sloc:
+	sloccount $(srcdir)/src $(srcdir)/python $(srcdir)/lisp $(srcdir)/test
+
 ######################################################################
 
 STAGING = /tmp/ledger
