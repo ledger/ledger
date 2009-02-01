@@ -897,6 +897,15 @@ public:
   void read(const char *& data);
   void write(std::ostream& out) const;
 
+  /** @name XML Serialization
+   */
+  /*@{*/
+
+  void read_xml(std::istream& in);
+  void write_xml(std::ostream& out, const int depth = 0) const;
+
+  /*@}*/
+
   /**
    * Debugging methods.
    */

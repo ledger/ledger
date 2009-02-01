@@ -1228,14 +1228,16 @@ void amount_t::read_xml(std::istream& in)
 
 void amount_t::write_xml(std::ostream& out, const int depth) const
 {
-  xml_print(out, "<amount>\n", depth);
+  out << xml_str("<amount>\n", depth);
 
-  commodity().write_xml(out, depth + 1);
+  if (has_commodity())
+    commodity().write_xml(out, depth + 1);
 
-  xml_print(out, "<quantity>", depth + 1);
-  out << quantity_string() << "</quantity>\n";
+  out << xml_str("<quantity>", depth + 1)
+      << quantity_string()
+      << "</quantity>\n";
 
-  xml_print(out, "</amount>\n", depth);
+  out << xml_str("</amount>\n", depth);
 }
 
 bool amount_t::valid() const

@@ -769,32 +769,25 @@ void commodity_t::read_xml(std::istream& in)
 
 void commodity_t::write_xml(std::ostream& out, const int depth) const
 {
-  xml_print(out, "<commodity flags=\"", depth);
-
+  out << xml_str("<commodity flags=\"", depth);
   if (! (flags() & COMMODITY_STYLE_SUFFIXED)) out << 'P';
   if (flags() & COMMODITY_STYLE_SEPARATED)    out << 'S';
   if (flags() & COMMODITY_STYLE_THOUSANDS)    out << 'T';
   if (flags() & COMMODITY_STYLE_EUROPEAN)     out << 'E';
   out << "\">\n";
 
-#if 0
-  // jww (2006-03-02): !!!
-  if (price) {
-  for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<symbol>" << base->symbol << "</symbol>\n";
-    for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "<price>\n";
-    xml_write_amount(out, *price, depth + 4);
-    for (int i = 0; i < depth + 2; i++) out << ' ';
-    out << "</price>\n";
-  } else
-#endif
-  {
-    xml_print(out, "<symbol>", depth + 1);
-    out << symbol() << "</symbol>\n";
-  }
+  out << xml_str("<symbol>", depth + 1) << symbol() << "</symbol>\n";
 
-  xml_print(out, "</commodity>\n", depth);
+#if 0
+  // jww (2009-02-01): If this is an annotated commodity, more has to happen
+  if (price) {
+    out << xml_str("<price>", depth + 1);
+    price->write_xml(out, depth + 2);
+    out << xml_str("</price>\n", depth + 1);
+  }
+#endif
+
+  out << xml_str("</commodity>\n", depth);
 }
 
 bool compare_amount_commodities::operator()(const amount_t * left,

@@ -252,4 +252,14 @@ void balance_t::print(std::ostream& out,
   }
 }
 
+void balance_t::write_xml(std::ostream& out, const int depth) const
+{
+  out << xml_str("<balance>\n", depth);
+
+  foreach (const amounts_map::value_type& pair, amounts)
+    pair.second.write_xml(out, depth + 1);
+
+  out << xml_str("</balance>\n", depth);
+}
+
 } // namespace ledger

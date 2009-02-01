@@ -1804,6 +1804,63 @@ void value_t::write(std::ostream& out) const
   throw_(value_error, "Cannot read " << label() << " to a stream");
 }
 
+void value_t::write_xml(std::ostream& out, const int depth) const
+{
+  out << xml_str("<value>\n", depth);
+
+  switch (type()) {
+  case VOID:
+    out << xml_str("<void />\n", depth + 1);
+    break;
+  case BOOLEAN:
+    out << xml_str("<bool>", depth + 1)
+	<< (as_boolean() ? "true" : "false")
+	<< "</bool>\n";
+    break;
+  case DATETIME:
+    out << xml_str("<datetime>", depth + 1)
+	<< format_datetime(as_datetime())
+	<< "</datetime>\n";
+    break;
+  case DATE:
+    out << xml_str("<date>", depth + 1)
+	<< format_date(as_date())
+	<< "</date>\n";
+    break;
+  case INTEGER:
+    out << xml_str("<integer>", depth + 1)
+	<< as_long()
+	<< "</integer>\n";
+    break;
+  case AMOUNT:
+    as_amount().write_xml(out, depth + 1);
+    break;
+  case BALANCE:
+    as_balance().write_xml(out, depth + 1);
+    break;
+  case BALANCE_PAIR:
+    as_balance_pair().write_xml(out, depth + 1);
+    break;
+  case STRING:
+    out << xml_str("<string>", depth + 1)
+	<< as_string()
+	<< "</string>\n";
+    break;
+  case SEQUENCE:
+    out << xml_str("<sequence>\n", depth + 1);
+    foreach (const value_t& v, as_sequence())
+      v.write_xml(out, depth + 2);
+    out << xml_str("</sequence>\n", depth + 1);
+    break;
+  case POINTER:
+  default:
+    throw_(value_error, "Cannot output " << label() << " as XML");
+    break;
+  }
+
+  out << xml_str("</value>\n", depth);
+}
+
 bool value_t::valid() const
 {
   switch (type()) {
