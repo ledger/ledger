@@ -90,7 +90,7 @@ std::size_t qif_parser_t::parse(std::istream& in,
   linenum  = 1;
 
   istream_pos_type beg_pos  = 0;
-  unsigned long    beg_line = 0;
+  std::size_t      beg_line = 0;
 
 #define SET_BEG_POS_AND_LINE()			\
   if (! beg_line) {				\

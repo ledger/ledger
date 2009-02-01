@@ -94,7 +94,7 @@ public:
   string			prices_format;
   string			pricesdb_format;
 
-  unsigned long			pricing_leeway;
+  std::size_t			pricing_leeway;
 
   bool				download_quotes;
   bool				use_cache;

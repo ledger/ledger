@@ -73,10 +73,14 @@ public:
   optional<string>   note;
 
   unsigned short     src_idx;
+  istream_pos_type   full_beg_pos;
+  std::size_t	     full_beg_line;
   istream_pos_type   beg_pos;
-  unsigned long	     beg_line;
+  std::size_t	     beg_line;
   istream_pos_type   end_pos;
-  unsigned long	     end_line;
+  std::size_t	     end_line;
+  istream_pos_type   full_end_pos;
+  std::size_t	     full_end_line;
 
   static  bool	     use_effective_date;
 

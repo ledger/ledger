@@ -159,7 +159,7 @@ void write_string(std::ostream& out, const string& str)
 {
   write_guard(out, 0x3001);
 
-  unsigned long len = str.length();
+  std::size_t len = str.length();
   if (len > 255) {
     assert(len < 65536);
     write_number_nocheck<unsigned char>(out, 0xff);

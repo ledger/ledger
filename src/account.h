@@ -64,7 +64,7 @@ typedef std::map<const string, account_t *> accounts_map;
 class account_t : public scope_t
 {
  public:
-  typedef unsigned long ident_t;
+  typedef std::size_t ident_t;
 
   account_t *	   parent;
   string	   name;

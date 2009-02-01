@@ -95,8 +95,8 @@ namespace std {
   }
 }
 
-typedef unsigned long istream_pos_type;
-typedef unsigned long ostream_pos_type;
+typedef std::size_t istream_pos_type;
+typedef std::size_t ostream_pos_type;
 
 #else // ! (defined(__GNUG__) && __GNUG__ < 3)
 

@@ -1068,7 +1068,7 @@ entry_t * textual_parser_t::instance_t::parse_entry(std::istream&     in,
   TRACE_START(entry_details, 1, "Time spent parsing entry details:");
 
   istream_pos_type end_pos;
-  unsigned long beg_line = linenum;
+  std::size_t	   beg_line = linenum;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     istream_pos_type beg_pos = in.tellg();
@@ -1127,8 +1127,8 @@ void write_textual_journal(journal_t&	    journal,
 			   const string&    write_hdr_format,
 			   std::ostream&    out)
 {
-  unsigned long index = 0;
-  path		found;
+  std::size_t index = 0;
+  path	      found;
 
   // jww (2009-01-29): This function currently doesn't work
 

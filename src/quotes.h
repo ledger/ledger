@@ -58,19 +58,19 @@ namespace ledger {
  */
 class quotes_by_script : public noncopyable, public commodity_t::base_t::updater_t
 {
-  string	price_db;
-  unsigned long pricing_leeway;
-  bool&         cache_dirty;
+  string      price_db;
+  std::size_t pricing_leeway;
+  bool&       cache_dirty;
 
   quotes_by_script();
 
 public:
-  quotes_by_script(path		 _price_db,
-		   unsigned long _pricing_leeway,
-		   bool&         _cache_dirty)
+  quotes_by_script(path	       _price_db,
+		   std::size_t _pricing_leeway,
+		   bool&       _cache_dirty)
     : price_db(_price_db), pricing_leeway(_pricing_leeway),
       cache_dirty(_cache_dirty) {
-    TRACE_CTOR(quotes_by_script, "path, unsigned long, bool&");
+    TRACE_CTOR(quotes_by_script, "path, std::size_t, bool&");
   }
   ~quotes_by_script() throw() {
     TRACE_DTOR(quotes_by_script);

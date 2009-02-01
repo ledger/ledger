@@ -72,6 +72,7 @@ void read_xact(const char *& data, xact_t * xact)
   xact->add_flags(XACT_BULK_ALLOC);
   read_string(data, xact->note);
 
+  // jww (2009-02-01): Use istream_pos_type
   xact->beg_pos = read_long<unsigned long>(data);
   read_long(data, xact->beg_line);
   xact->end_pos = read_long<unsigned long>(data);
@@ -249,7 +250,7 @@ commodity_t::base_t * read_commodity_base(const char *& data)
     commodity->note = str;
 
   read_number(data, commodity->precision);
-  unsigned long flags;
+  commodity_t::base_t::flags_t flags;
   read_number(data, flags);
   commodity->set_flags(flags);
 
@@ -320,9 +321,9 @@ void write_commodity_base_extra(std::ostream& out,
 #endif
 
   if (! commodity->history) {
-    write_long<unsigned long>(out, 0);
+    write_long<std::size_t>(out, 0);
   } else {
-    write_long<unsigned long>(out, commodity->history->prices.size());
+    write_long<std::size_t>(out, commodity->history->prices.size());
     foreach (commodity_t::history_map::value_type& pair,
 	     commodity->history->prices) {
       write_number(out, pair.first);

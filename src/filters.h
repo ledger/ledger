@@ -783,16 +783,15 @@ class budget_xacts : public generate_xacts
 #define BUDGET_BUDGETED   0x01
 #define BUDGET_UNBUDGETED 0x02
 
-  unsigned short flags;
+  uint_least8_t flags;
 
   budget_xacts();
 
 public:
   budget_xacts(xact_handler_ptr handler,
-		      unsigned long _flags = BUDGET_BUDGETED)
+	       uint_least8_t _flags = BUDGET_BUDGETED)
     : generate_xacts(handler), flags(_flags) {
-    TRACE_CTOR(budget_xacts,
-	       "xact_handler_ptr, unsigned long");
+    TRACE_CTOR(budget_xacts, "xact_handler_ptr, uint_least8_t");
   }
   virtual ~budget_xacts() throw() {
     TRACE_DTOR(budget_xacts);

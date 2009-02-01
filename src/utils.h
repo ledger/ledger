@@ -118,7 +118,7 @@ namespace ledger {
 
 namespace ledger {
   void debug_assert(const string& reason, const string& func,
-		    const string& file, unsigned long line);
+		    const string& file, std::size_t line);
 }
 
 #define assert(x)						\

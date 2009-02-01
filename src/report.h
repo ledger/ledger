@@ -125,7 +125,7 @@ public:
   expr_t	  total_expr;
   expr_t	  display_total;
 
-  unsigned long	  budget_flags;
+  uint_least8_t	  budget_flags;
 
   long		  head_entries;
   long		  tail_entries;

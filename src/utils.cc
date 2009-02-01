@@ -45,7 +45,7 @@ DECLARE_EXCEPTION(assertion_failed, std::logic_error);
 void debug_assert(const string& reason,
 		  const string& func,
 		  const string& file,
-		  unsigned long	line)
+		  std::size_t	line)
 {
   std::ostringstream buf;
   buf << "Assertion failed in \"" << file << "\", line " << line
@@ -458,7 +458,7 @@ static ptime logger_start;
 
 bool logger_func(log_level_t level)
 {
-  unsigned long appender = 0;
+  std::size_t appender = 0;
 
   if (! logger_has_run) {
     logger_has_run = true;
