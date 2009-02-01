@@ -445,7 +445,7 @@ public:
     return true;
   }
 
-  value_t option_pager(call_scope_t& args) { // :
+  value_t option_pager_(call_scope_t& args) { // :
     pager_path = args[0].as_string();
     return true;
   }
