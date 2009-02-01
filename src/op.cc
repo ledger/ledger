@@ -380,10 +380,9 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_MATCH:
-    out << '/';
     if (left() && left()->print(out, context))
       found = true;
-    out << "/ =~ ";
+    out << " =~ ";
     if (has_right() && right()->print(out, context))
       found = true;
     break;
