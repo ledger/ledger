@@ -206,10 +206,6 @@ public:
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(const string& format);
 
-  xact_handler_ptr
-  chain_xact_handlers(xact_handler_ptr handler,
-		      const bool handle_individual_transactions = true);
-
 #if 0
   //////////////////////////////////////////////////////////////////////
   //
