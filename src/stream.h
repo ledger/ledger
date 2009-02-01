@@ -76,7 +76,7 @@ public:
   /**
    * Construct a new output_stream_t.
    */
-  output_stream_t() : pipe_to_pager_fd(-1), os(NULL) {
+  output_stream_t() : pipe_to_pager_fd(-1), os(&std::cout) {
     TRACE_CTOR(output_stream_t, "");
   }
 
@@ -85,7 +85,10 @@ public:
    * allocated ostream, if necessary. It also closes output file
    * descriptor, if necessary.
    */
-  ~output_stream_t();
+  ~output_stream_t() {
+    TRACE_DTOR(output_stream_t);
+    close();
+  }
 
   /**
    * Initialize the output stream object.
@@ -113,6 +116,11 @@ public:
   void flush() {
     os->flush();
   }
+
+  /**
+   * Close the output stream, waiting on the pager process if necessary.
+   */
+  void close();
 };
 
 } // namespace ledger

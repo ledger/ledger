@@ -139,6 +139,9 @@ int main(int argc, char * argv[], char * envp[])
     status = _status;
   }
 
+  // Close the output stream, waiting on the pager process if need be
+  session->report->output_stream.close();
+
   // If memory verification is being performed (which can be very slow), clean
   // up everything by closing the session and deleting the session object, and
   // then shutting down the memory tracing subsystem.  Otherwise, let it all

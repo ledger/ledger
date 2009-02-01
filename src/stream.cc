@@ -98,7 +98,7 @@ namespace {
 	     (char *)0);
 
       // We should never, ever reach here
-      perror("execl");
+      perror((std::string("execl: ") + pager_path.string()).c_str());
       exit(1);
     }
     else {			// parent
@@ -114,21 +114,22 @@ void output_stream_t::initialize(const optional<path>& output_file,
 {
   if (output_file)
     os = new ofstream(*output_file);
-  else if (pager_path && exists(*pager_path))
+  else if (pager_path)
     pipe_to_pager_fd = do_fork(&os, *pager_path);
   else
     os = &std::cout;
 }
 
-output_stream_t::~output_stream_t()
+void output_stream_t::close()
 {
-  TRACE_DTOR(output_stream_t);
-
-  if (os && os != &std::cout)
+  if (os != &std::cout) {
     checked_delete(os);
+    os = &std::cout;
+  }
 
   if (pipe_to_pager_fd != -1) {
-    close(pipe_to_pager_fd);
+    ::close(pipe_to_pager_fd);
+    pipe_to_pager_fd = -1;
 
     int status;
     wait(&status);
