@@ -837,6 +837,16 @@ public:
     }
   }
 
+  sequence_t::const_iterator begin() const {
+    assert(is_sequence());
+    return as_sequence().begin();
+  }
+
+  sequence_t::const_iterator end() const {
+    assert(is_sequence());
+    return as_sequence().end();
+  }
+
   const std::size_t size() const {
     if (is_null())
       return 0;

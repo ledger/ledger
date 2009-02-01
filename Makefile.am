@@ -82,6 +82,7 @@ libledger_report_la_SOURCES  =			\
 	src/report.cc				\
 	src/filters.cc				\
 	src/chain.cc				\
+	src/precmd.cc				\
 	src/output.cc				\
 	src/help.cc
 

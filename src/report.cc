@@ -34,6 +34,7 @@
 #include "filters.h"
 #include "chain.h"
 #include "output.h"
+#include "precmd.h"
 
 namespace ledger {
 
@@ -161,116 +162,6 @@ namespace {
       return true;
     }
   };
-
-  value_t parse_command(call_scope_t& args)
-  {
-    var_t<string> arg(args, 0);
-
-    if (! arg) {
-      throw std::logic_error("Usage: parse TEXT");
-      return 1L;
-    }
-
-    report_t& report(find_scope<report_t>(args));
-    std::ostream& out(report.output_stream);
-
-    out << "--- Input text ---" << std::endl;
-    out << *arg << std::endl;
-
-    out << std::endl << "--- Text as parsed ---" << std::endl;
-    expr_t expr(*arg);
-    expr.print(out);
-    out << std::endl;
-
-    out << std::endl << "--- Expression tree ---" << std::endl;
-    expr.dump(out);
-
-    expr.compile(args);
-    out << std::endl << "--- Compiled tree ---" << std::endl;
-    expr.dump(out);
-
-    out << std::endl << "--- Calculated value ---" << std::endl;
-    value_t result(expr.calc(args));
-    result.print(out);
-    out << std::endl;
-
-    out << std::endl << "--- Calculated value as XML ---" << std::endl;
-    result.write_xml(out);
-
-    return 0L;
-  }
-
-  value_t eval_command(call_scope_t& args)
-  {
-    var_t<string> arg(args, 0);
-
-    if (! arg) {
-      throw std::logic_error("Usage: eval TEXT");
-      return 1L;
-    }
-
-    report_t& report(find_scope<report_t>(args));
-    std::ostream& out(report.output_stream);
-
-    expr_t expr(*arg);
-    out << expr.calc(args).strip_annotations() << std::endl;
-    return 0L;
-  }
-
-  value_t format_command(call_scope_t& args)
-  {
-    var_t<string> arg(args, 0);
-
-    if (! arg) {
-      throw std::logic_error("Usage: format TEXT");
-      return 1L;
-    }
-
-    report_t& report(find_scope<report_t>(args));
-    std::ostream& out(report.output_stream);
-
-    format_t fmt(*arg);
-    fmt.dump(out);
-
-    return 0L;
-  }
-
-  value_t period_command(call_scope_t& args)
-  {
-    var_t<string> arg(args, 0);
-
-    if (! arg) {
-      throw std::logic_error("Usage: period TEXT");
-      return 1L;
-    }
-
-    report_t& report(find_scope<report_t>(args));
-    std::ostream& out(report.output_stream);
-
-    interval_t interval(*arg);
-
-    if (! is_valid(interval.begin)) {
-      out << "Time period has no beginning." << std::endl;
-    } else {
-      out << "begin: " << format_date(interval.begin) << std::endl;
-      out << "  end: " << format_date(interval.end) << std::endl;
-      out << std::endl;
-
-      date_t date = interval.first();
-
-      for (int i = 0; i < 20; i++) {
-	out << std::right;
-	out.width(2);
-
-	out << i << ": " << format_date(date) << std::endl;
-
-	date = interval.increment(date);
-	if (is_valid(interval.end) && date >= interval.end)
-	  break;
-      }
-    }
-    return 0L;
-  }
 }
 
 expr_t::ptr_op_t report_t::lookup(const string& name)
@@ -343,6 +234,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     else if (std::strncmp(p, "ledger_precmd_", 14) == 0) {
       p = p + 14;
       switch (*p) {
+      case 'a':
+	if (std::strcmp(p, "args") == 0)
+	  return WRAP_FUNCTOR(args_command);
+	break;
+
       case 'p':
 	if (std::strcmp(p, "parse") == 0)
 	  return WRAP_FUNCTOR(parse_command);
