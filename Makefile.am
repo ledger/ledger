@@ -1,95 +1,96 @@
 VERSION    = 3.0
 EXTRA_DIST = autogen.sh contrib
 
-lib_LTLIBRARIES =    \
-	libledger_util.la   \
-	libledger_math.la   \
-	libledger_expr.la   \
-	libledger_data.la   \
-	libledger_parse.la  \
-	libledger_report.la \
+lib_LTLIBRARIES =				\
+	libledger_util.la			\
+	libledger_math.la			\
+	libledger_expr.la			\
+	libledger_data.la			\
+	libledger_parse.la			\
+	libledger_report.la			\
 	libledger_extra.la
 
-lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib \
-		-I$(srcdir)/lib/utfcpp/source \
+lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib	\
+		-I$(srcdir)/lib/utfcpp/source	\
 		-I$(srcdir)/lib/irrxml/src
 
-libledger_util_la_SOURCES =	 \
-	src/utils.cc	 \
-	src/times.cc	 \
-	src/mask.cc	 \
-	src/stream.cc	 \
-	src/binary.cc	 \
+libledger_util_la_SOURCES =			\
+	src/utils.cc				\
+	src/times.cc				\
+	src/mask.cc				\
+	src/stream.cc				\
+	src/binary.cc				\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
 libledger_util_la_LDFLAGS  = -release $(VERSION).0
 
-libledger_math_la_SOURCES =	 \
-	src/amount.cc    \
-	src/commodity.cc \
-	src/balance.cc   \
-	src/balpair.cc   \
+libledger_math_la_SOURCES =			\
+	src/amount.cc				\
+	src/commodity.cc			\
+	src/balance.cc				\
+	src/balpair.cc				\
 	src/value.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
 libledger_math_la_LDFLAGS  = -release $(VERSION).0
 
-libledger_expr_la_SOURCES =	 \
-	src/token.cc     \
-	src/parser.cc    \
-	src/op.cc        \
-	src/expr.cc      \
-	src/scope.cc     \
-	src/format.cc    \
+libledger_expr_la_SOURCES =			\
+	src/token.cc				\
+	src/parser.cc				\
+	src/op.cc				\
+	src/expr.cc				\
+	src/scope.cc				\
+	src/predicate.cc			\
+	src/format.cc				\
 	src/option.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
 libledger_expr_la_LDFLAGS    = -release $(VERSION).0
 
-libledger_data_la_SOURCES  =		  \
-	src/item.cc		  \
-	src/xact.cc		  \
-	src/entry.cc		  \
-	src/account.cc		  \
-	src/journal.cc		  \
-	src/timelog.cc		  \
-	src/iterators.cc	  \
+libledger_data_la_SOURCES  =			\
+	src/item.cc				\
+	src/xact.cc				\
+	src/entry.cc				\
+	src/account.cc				\
+	src/journal.cc				\
+	src/timelog.cc				\
+	src/iterators.cc			\
 	src/compare.cc
 
 libledger_data_la_CPPFLAGS = $(lib_cppflags)
 libledger_data_la_LDFLAGS  = -release $(VERSION).0
 
-libledger_parse_la_SOURCES  =		  \
-	src/textual.cc		  \
-	src/cache.cc		  \
-	src/xml.cc		  \
-	src/csv.cc		  \
-	src/emacs.cc		  \
-	src/qif.cc		  \
-	src/gnucash.cc		  \
-	lib/irrxml/src/irrXML.cpp
-if HAVE_LIBOFX
-libledger_parse_la_SOURCES += src/ofx.cc
+libledger_parse_la_SOURCES  =			\
+	src/textual.cc				\
+	src/cache.cc				\
+	src/xml.cc				\
+	src/csv.cc				\
+	src/emacs.cc				\
+	src/qif.cc				\
+	src/gnucash.cc				\
+	lib/irrxml/src/irrXML.cpp		\
+if HAVE_LIBOFX					\
+libledger_parse_la_SOURCES += src/ofx.cc	\
 endif
 
 libledger_parse_la_CPPFLAGS = $(lib_cppflags)
 libledger_parse_la_LDFLAGS  = -release $(VERSION).0
 
-libledger_report_la_SOURCES  =		  \
-	src/session.cc		  \
-	src/report.cc		  \
-	src/filters.cc		  \
-	src/chain.cc		  \
-	src/output.cc		  \
+libledger_report_la_SOURCES  =			\
+	src/session.cc				\
+	src/report.cc				\
+	src/filters.cc				\
+	src/chain.cc				\
+	src/output.cc				\
 	src/help.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
 libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
-libledger_extra_la_SOURCES  =		  \
-	src/derive.cc		  \
-	src/reconcile.cc	  \
+libledger_extra_la_SOURCES  =			\
+	src/derive.cc				\
+	src/reconcile.cc			\
 	src/quotes.cc
 
 libledger_extra_la_CPPFLAGS = $(lib_cppflags)
