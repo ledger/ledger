@@ -34,23 +34,27 @@ IRC or via the mailing list before going too much further with those.
 
 Now, if you wish to proceed in this venture, you'll need a few dependencies:
 
+  - Boost 1.35 or higher -- if you're building DEVEL
+  - Python 2.4 or higher -- optional
   - GMP 4.2.2		 -- for all builds
   - MPFR 2.4.0		 -- for all builds
+  - libofx 0.8.3         -- optional
 
-  - PCRE 7.7		 -- if you're building BETA or RELEASE
+  - pcre 7.7		 -- if you're building BETA or RELEASE
 
-  - Boost 1.35 or higher -- if you're building DEVEL
-  - CppUnit 1.12.1	 -- if you're building DEVEL
+  - cppunit 1.12.1	 -- if you're building DEVEL
+  - lcov 1.6		 -- optional, for "make report"
+  - doxygen 1.5.7.1	 -- optional, for "make docs"
+  - texinfo 4.13	 -- optional, for "make docs"
 
-  - Python 2.4 or higher -- optional
-  - libofx               -- optional
 
 * MacPorts
 
 If you build stuff using MacPorts, as I do, here is what you would run:
 
   sudo port install boost +python25+st
-  sudo port install gmp mpfr pcre libofx cppunit doxygen texlive texinfo
+  sudo port install gmp mpfr pcre libofx
+  sudo port install cppunit doxygen texlive texinfo lcov
 
 * Ubuntu
 
