@@ -149,6 +149,7 @@ pkginclude_HEADERS =			   \
 	src/handler.h			   \
 	src/filters.h			   \
 	src/chain.h			   \
+	src/precmd.h			   \
 	src/output.h			   \
 	src/help.h			   \
 					   \
