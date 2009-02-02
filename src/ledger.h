@@ -35,7 +35,36 @@
  *
  * @mainpage Ledger Accounting Tool
  *
- * A command-line tool for general double-entry accounting.
+ * There are essentially nine steps involved in realizing a ledger reporting
+ * session, with steps 5 and 8 -- which relate to the user's journal file --
+ * being optional in the case of "pre-commands", since they do not require the
+ * user's data to be read.
+ *
+ * \section global_init Initialize the global environment
+ *
+ * \section create_objs  Create session and report objects
+ *
+ * jww (2009-02-02): Set the "session context".
+ *
+ * \section process_opts Process user options
+ *
+ * This configures session and report objects
+ *
+ *    - environment
+ *    - initialization file
+ *    - command-line options
+ *
+ * \section lookup_cmd Locate object relating to command verb
+ *
+ * \section parse_data Parse the user's journal files
+ *
+ * \section create_out Create the output stream
+ *
+ * \section invoke_cmd Invoke the command object
+ *
+ * \section write_cache Write out binary cache file, if necessary
+ *
+ * \section shutdown Wrap up, closing everything and releasing memory
  */
 #ifndef _LEDGER_H
 #define _LEDGER_H

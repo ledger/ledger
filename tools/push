@@ -8,4 +8,4 @@ git push --tags mirror
 
 git remote update
 
-github network fetch
+#github network fetch

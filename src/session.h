@@ -264,15 +264,14 @@ See LICENSE file included with the distribution for details and disclaimer.\n";
 };
 
 /**
- * This sets the current session context, transferring all static
- * globals to point at the data structures related to this session.
- * Although Ledger itself is not thread-safe, by locking, switching
- * session context, then unlocking after the operation is done,
- * multiple threads can sequentially make use of the library.  Thus, a
- * session_t maintains all of the information relating to a single
- * usage of the Ledger library.
+ * Set the current session context, transferring all static globals to point
+ * at the data structures related to this session.  Although Ledger itself is
+ * not thread-safe, by locking, switching session context, then unlocking
+ * after an operation is done, multiple threads can sequentially make use of
+ * the library.  Thus, a session_t maintains all of the information relating
+ * to a single usage of the Ledger library.
  */
-void set_session_context(session_t * session = NULL);
+void set_session_context(session_t * session);
 
 } // namespace ledger
 

@@ -29,73 +29,68 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ledger.h>
+#include <ledger.h>		// Read this file for a top-level overview
 
-#include "work.h"		// this is where the top-level code is
+#include "work.h"		// This is where the meat of main() is, which
+				// was moved there for the sake of clarity
 
 int main(int argc, char * argv[], char * envp[])
 {
   using namespace ledger;
 
-  // The very first thing we do is handle some very special command-line
-  // options, since they affect how the whole environment is setup:
-  //
-  //   --verify            ; turns on memory tracing
-  //   --verbose           ; turns on logging
-  //   --debug CATEGORY    ; turns on debug logging
-  //   --trace LEVEL       ; turns on trace logging
-  handle_debug_options(argc, argv);
-
-  IF_VERIFY()
-    initialize_memory_tracing();
-
-  // Initialize the global C++ environment
-  std::ios::sync_with_stdio(false);
-  filesystem::path::default_name_check(filesystem::portable_posix_name);
-
-  // Initialization of Ledger can now begin.  The whole series of operations
-  // is contained in a try block, so we can report errors in a nicer fashion.
-  INFO("Ledger starting");
-
   session_t * session = NULL;
   int	      status  = 1;
   try {
+    // The very first thing we do is handle some very special command-line
+    // options, since they affect how the environment is setup:
+    //
+    //   --verify            ; turns on memory tracing
+    //   --verbose           ; turns on logging
+    //   --debug CATEGORY    ; turns on debug logging
+    //   --trace LEVEL       ; turns on trace logging
+    handle_debug_options(argc, argv);
+    IF_VERIFY() initialize_memory_tracing();
+
+    INFO("Ledger starting");
+
+    // Initialize global Boost/C++ environment
+    std::ios::sync_with_stdio(false);
+    filesystem::path::default_name_check(filesystem::portable_posix_name);
+
     // Create the session object, which maintains nearly all state relating to
-    // this invocation of Ledger.
+    // this invocation of Ledger; and register all known journal parsers.
     session = new LEDGER_SESSION_T;
+    register_journal_parsers(*session);
     set_session_context(session);
 
-    // Register all known journal parsers.  The order of these is important.
-    register_journal_parsers(*session);
-
     // Create the report object, which maintains state relating to each
-    // command invocation.  Because we're running this from main() the
-    // distinction between session and report doesn't matter, but if a GUI
-    // were calling into Ledger, it would have one session object, with a
-    // separate report object for each report it generated.
+    // command invocation.  Because we're running from main(), the distinction
+    // between session and report doesn't really matter, but if a GUI were
+    // calling into Ledger it would have one session object per open document,
+    // with a separate report_t object for each report it generated.
     session->report.reset(new report_t(*session));
     report_t& report(*session->report.get());
 
-    // Read user option settings, first in the environment, then from the
-    // user's initialization file and then from the command-line.  The first
-    // non-option argument thereafter is the "command verb".
+    // Read the user's options, in the following order:
+    //
+    //  1. environment variables (LEDGER_<option>)
+    //  2. initialization file (~/.ledgerrc)
+    //  3. command-line (--option or -o)
+    //
+    // Before processing command-line options, we must notify the session
+    // object that such options are beginning, since options like -f cause a
+    // complete override of files found anywhere else.
     read_environment_settings(report, envp);
-    session->read_init();
-
-    // Notify the session object that all option handlers invoked beyond this
-    // point came from the command-line
+    session->read_init();	// accesses report object via session.report
     session->now_at_command_line(true);
-
-    strings_list    args = read_command_line_arguments(report, argc, argv);
-    string_iterator arg  = args.begin();
-    string	    verb = *arg++;
+    strings_list args = read_command_line_arguments(report, argc, argv);
 
     // Look for a precommand first, which is defined as any defined function
     // whose name starts with "ledger_precmd_".  The difference between a
     // precommand and a regular command is that precommands ignore the journal
     // data file completely, nor is the user's init file read.
     //
-    // Here are some examples:
+    // Here are some examples of pre-commands:
     //
     //   parse STRING       ; show how a value expression is parsed
     //   eval STRING        ; simply evaluate a value expression
@@ -103,22 +98,27 @@ int main(int argc, char * argv[], char * envp[])
     //
     // If such a command is found, create the output stream for the result and
     // then invoke the command.
+    string_iterator arg  = args.begin();
+    string	    verb = *arg++;
+
     if (function_t command = look_for_precommand(report, verb)) {
+      // Create the output stream (it might be a file, the console or a PAGER
+      // subprocess) and invoke the report command.
       create_output_stream(report);
       invoke_command_verb(report, command, arg, args.end());
     }
     else if (function_t command = look_for_command(report, verb)) {
-      // Parse the user's journal files.
+      // This is regular command verb, so parse the user's data.
       if (journal_t * journal = read_journal_files(*session)) {
-	normalize_report_options(report, verb); // this is a total hack
+	normalize_report_options(report, verb); // jww (2009-02-02): a hack
 
 	// Create the output stream (it might be a file, the console or a
 	// PAGER subprocess) and invoke the report command.
 	create_output_stream(report);
 	invoke_command_verb(report, command, arg, args.end());
 
-	// Write out a binary cache of the journal data, if needed and
-	// appropriate to do so
+	// Write out a binary cache of the journal data, if needful and
+	// appropriate to do so.
 	write_binary_cache(*session, journal);
       }
     }
@@ -126,21 +126,22 @@ int main(int argc, char * argv[], char * envp[])
       throw_(std::logic_error, "Unrecognized command '" << verb << "'");
     }
 
-    // If we got here, everything succeeded just fine.  Ledger uses exceptions
-    // to notify of any error conditions, so if you're using gdb, type "catch
-    // throw" to find the source of any errors.
+    // If we've reached this point, everything succeeded fine.  Ledger uses
+    // exceptions to notify of error conditions, so if you're using gdb, just
+    // type "catch throw" to find the source point of any error.
     status = 0;
   }
   catch (const std::exception& err) {
-    std::cout.flush();
+    std::cout.flush();		// first display anything that was pending
     std::cerr << error_context() << std::endl
 	      << "Error: " << err.what() << std::endl;
   }
   catch (int _status) {
-    status = _status;
+    status = _status;		// used for a "quick" exit, and is used only
+				// if help text (such as --help) was displayed
   }
 
-  // Close the output stream, waiting on the pager process if need be
+  // Close the output stream, waiting on the pager process to exit if need be
   session->report->output_stream.close();
 
   // If memory verification is being performed (which can be very slow), clean
@@ -159,6 +160,8 @@ int main(int argc, char * argv[], char * envp[])
     INFO("Ledger ended");
   }
 
+  // Return the final status to the operating system, either 1 for error or 0
+  // for a successful completion.
   return status;
 }
 

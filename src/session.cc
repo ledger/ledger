@@ -178,10 +178,10 @@ void session_t::read_init()
 
   journal_t temp;
   if (read_journal(temp, *init_file) > 0 ||
-      temp.auto_entries.size() > 0 ||
-      temp.period_entries.size() > 0)
-    throw_(parse_error, "Entries found in initialization file '" <<
-	   init_file << "'");
+      temp.auto_entries.size() > 0 || temp.period_entries.size() > 0) {
+    throw_(parse_error,
+	   "Entries found in initialization file '" << init_file << "'");
+  }
 
   TRACE_FINISH(init, 1);
 }

@@ -216,32 +216,32 @@ public:
 
   value_t option_full_help(call_scope_t& args) { // H
     option_full_help(std::cout);
-    throw 0;
+    throw int(0);
   }
 
   value_t option_help(call_scope_t& args) { // h
     option_help(std::cout);
-    throw 0;
+    throw int(0);
   }
 
   value_t option_help_calc(call_scope_t& args) {
     option_calc_help(std::cout);
-    throw 0;
+    throw int(0);
   }
 
   value_t option_help_disp(call_scope_t& args) {
     option_disp_help(std::cout);
-    throw 0;
+    throw int(0);
   }
 
   value_t option_help_comm(call_scope_t& args) {
     option_comm_help(std::cout);
-    throw 0;
+    throw int(0);
   }
 
   value_t option_version(call_scope_t& args) { // v
     show_version(std::cout);
-    throw 0;
+    throw int(0);
   }
 
   value_t option_init_file(call_scope_t& args) { // i:

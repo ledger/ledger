@@ -65,9 +65,7 @@ void handle_debug_options(int argc, char * argv[])
 	  _trace_level = boost::lexical_cast<int>(argv[i + 1]);
 	}
 	catch (const boost::bad_lexical_cast& e) {
-	  std::cerr << "Argument to --trace must be an integer."
-		    << std::endl;
-	  throw int(1);
+	  throw std::logic_error("Argument to --trace must be an integer");
 	}
 	i++;
 #endif
