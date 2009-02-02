@@ -28,9 +28,9 @@ The *BETA* is what I prefer people use, since I still have a chance to fix
 major bugs that you find.  Just e-mail me, or post to the mailing list,
 they'll become a part of my work list.
 
-  | *CURRENT* | git checkout master |
-  | *BETA* | git checkout -b v2.6.2b origin/v2.6.2b |
-  | *RELEASE* | git checkout v2.6.1 |
+  | *CURRENT* | @git checkout master@ |
+  | *BETA* | @git checkout -b v2.6.2b origin/v2.6.2b@ |
+  | *RELEASE* | @git checkout v2.6.1@ |
 
 There are also several topic branches which contain experimental features,
 though none of these are guaranteed to compile.  Best to chat with me on
@@ -116,7 +116,7 @@ h1. Resources
 Now that you're up and running, here are a few resources to keep in mind:
 
   | Home page | "http://www.newartisans.com/software/ledger.html":http://www.newartisans.com/software/ledger.html |
-  | IRC channel | "#ledger, irc.freenode.net":irc://irc.freenode.net/ledger |
+  | IRC channel | "#ledger on irc.freenode.net":irc://irc.freenode.net/ledger |
   | Mailing List / Forum | "http://groups.google.com/group/ledger-cli":http://groups.google.com/group/ledger-cli |
   | GitHub project page | "http://github.com/jwiegley/ledger":http://github.com/jwiegley/ledger |
   | Buildbot status | "http://www.newartisans.com:9090":http://www.newartisans.com:9090 |
