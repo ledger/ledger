@@ -69,9 +69,9 @@ libledger_parse_la_SOURCES  =			\
 	src/emacs.cc				\
 	src/qif.cc				\
 	src/gnucash.cc				\
-	lib/irrxml/src/irrXML.cpp		\
-if HAVE_LIBOFX					\
-libledger_parse_la_SOURCES += src/ofx.cc	\
+	lib/irrxml/src/irrXML.cpp
+if HAVE_LIBOFX
+libledger_parse_la_SOURCES += src/ofx.cc
 endif
 
 libledger_parse_la_CPPFLAGS = $(lib_cppflags)
