@@ -299,6 +299,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
       }
       catch (const calc_error&) {
 	out << (string("%") + elem->chars);
+	throw;
       }
       break;
 
