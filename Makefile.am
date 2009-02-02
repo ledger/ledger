@@ -457,14 +457,16 @@ RegressionTests: $(srcdir)/test/regress.py
 	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
+FULLCHECK=$(srcdir)/tools/fullcheck
+
 fullcheck: $(TESTS)
-	sh $(srcdir)/fullcheck $(top_builddir)/util_tests$(EXEEXT)   --verify
-	sh $(srcdir)/fullcheck $(top_builddir)/math_tests$(EXEEXT)   --verify
-	sh $(srcdir)/fullcheck $(top_builddir)/expr_tests$(EXEEXT)   --verify
-	sh $(srcdir)/fullcheck $(top_builddir)/data_tests$(EXEEXT)   --verify
-	sh $(srcdir)/fullcheck $(top_builddir)/parse_tests$(EXEEXT)  --verify
-	sh $(srcdir)/fullcheck $(top_builddir)/report_tests$(EXEEXT) --verify
-	sh $(srcdir)/fullcheck $(top_builddir)/extra_tests$(EXEEXT)  --verify
+	sh $(FULLCHECK) $(top_builddir)/util_tests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/math_tests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/expr_tests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/data_tests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/parse_tests$(EXEEXT)  --verify
+	sh $(FULLCHECK) $(top_builddir)/report_tests$(EXEEXT) --verify
+	sh $(FULLCHECK) $(top_builddir)/extra_tests$(EXEEXT)  --verify
 
 ######################################################################
 
