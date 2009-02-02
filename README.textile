@@ -1,6 +1,6 @@
-Hello, and welcome to the Ledger source code!
+h1. Ledger: Command-Line Accounting
 
-h1. For the Impatient
+h2. For the Impatient
 
 I know, you just want to build and play.  Do this:
 
@@ -16,7 +16,7 @@ Now try your first ledger command:
 ./ledger -f doc/sample.dat reg
 </pre>
 
-h1. To the Rest
+h2. To the Rest
 
 If you're reading this file, you have in your hands the Bleeding Edge.  This
 may very well *not* be what you want, since it's not guaranteed to be in a
@@ -38,7 +38,7 @@ though none of these are guaranteed to compile.  Best to chat with me on
 "mailing list":http://groups.google.com/group/ledger-cli before going too
 much further with those.
 
-h1. Dependencies
+h2. Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies:
 
@@ -54,7 +54,7 @@ If you wish to proceed in this venture, you'll need a few dependencies:
   | doxygen | 1.5.7.1 | _optional_, for @make docs@ |
   | texinfo | 4.13 | _optional_, for @make docs@ |
 
-h2. MacPorts
+h3. MacPorts
 
 If you build stuff using MacPorts, as I do, here is what you would run:
 
@@ -70,7 +70,7 @@ You can even just install the current Ledger *RELEASE* directly:
 sudo port install ledger
 </pre>
 
-h2. Ubuntu
+h3. Ubuntu
 
 If you're going to be build on Ubuntu, @sudo apt-get install ...@
 the following packages (current as of Ubuntu Hardy):
@@ -81,7 +81,7 @@ zlib1g-dev libbz2-dev stow libgmp3-dev bjam libboost-dev
 libboost-regex-dev libboost-date-time-dev libboost-filesystem-dev
 </pre>
 
-h1. Preparing the Build
+h2. Preparing the Build
 
 The next step is preparing your environment for building.  While you can use
 @autogen.sh@, I've prepared a script that does a lot more of the footwork for
@@ -102,7 +102,7 @@ your library directory.  It might be @mt@, or @xgcc40@, or @st@, etc.
 
 Please read the contents of @config.log@ if the configure step fails.
 
-h1. Building
+h2. Building
 
 Once you have the dependencies installed and the source prepared for building,
 run @make@.  If you have CppUnit installed, I prefer you always run 
@@ -112,7 +112,7 @@ Python unit tests (if applicable), and the regression tests.
 If you have extra CPU cycles to burn, perhaps try @make release-distcheck@,
 which provides the most thorough shakedown of a healthy source tree.
 
-h1. Resources
+h2. Resources
 
 Now that you're up and running, here are a few resources to keep in mind:
 
