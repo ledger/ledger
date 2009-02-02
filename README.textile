@@ -42,13 +42,14 @@ h1. Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies:
 
+  |_. Library |_. Min.Ver. |_. When needed |
   | Boost | 1.35 or higher | if you're building *CURRENT* |
-  | Python | 2.4 or higher | _optional_ |
+  | pcre | 7.7 | if you're building *BETA* or *RELEASE* |
   | GMP | 4.2.2 | for all builds |
   | MPFR | 2.4.0 | if you're building *CURRENT* |
+  | cppunit | 1.12.1 | if you're building *CURRENT*, for @make check@ |
+  | Python | 2.4 or higher | _optional_ |
   | libofx | 0.8.3 | _optional_ |
-  | pcre | 7.7 | if you're building *BETA* or *RELEASE* |
-  | cppunit | 1.12.1 | if you're building *CURRENT* |
   | lcov | 1.6 | _optional_, for @make report@, used with @./acprep --gcov@|
   | doxygen | 1.5.7.1 | _optional_, for @make docs@ |
   | texinfo | 4.13 | _optional_, for @make docs@ |
