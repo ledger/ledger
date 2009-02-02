@@ -64,9 +64,9 @@ class binary_cache_t
 {
   static const unsigned long binary_magic_number = 0xFFEED765;
 #if defined(DEBUG_ON)
-  static const unsigned long format_version      = 0x0002060d;
+  static const unsigned long format_version      = 0x00030001;
 #else
-  static const unsigned long format_version      = 0x0002060c;
+  static const unsigned long format_version      = 0x00030000;
 #endif
 
   scoped_array<char>  item_pool;
