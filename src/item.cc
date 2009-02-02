@@ -323,7 +323,7 @@ string item_context(const item_t& item)
 	  first = false;
 	else
 	  out << '\n';
-	out << "  " << p;
+	out << "> " << p;
       }
       return out.str();
     }
