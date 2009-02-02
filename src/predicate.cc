@@ -67,27 +67,29 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
       append_and = true;
     }
 
-    if (arg == "desc" || arg == "DESC" ||
-	arg == "payee" || arg == "PAYEE") {
-      arg = string("@") + (*++begin).as_string();
-    }
-    else if (arg == "note" || arg == "NOTE") {
-      arg = string("&") + (*++begin).as_string();
-    }
-    else if (arg == "tag" || arg == "TAG" ||
-	     arg == "meta" || arg == "META" ||
-	     arg == "data" || arg == "DATA") {
-      arg = string("%") + (*++begin).as_string();
-    }
-    else if (arg == "expr" || arg == "EXPR") {
-      arg = string("=") + (*++begin).as_string();
+    value_t::sequence_t::const_iterator next = begin;
+    if (++next != end) {
+      if (arg == "desc" || arg == "DESC" ||
+	  arg == "payee" || arg == "PAYEE") {
+	arg = string("@") + (*++begin).as_string();
+      }
+      else if (arg == "note" || arg == "NOTE") {
+	arg = string("&") + (*++begin).as_string();
+      }
+      else if (arg == "tag" || arg == "TAG" ||
+	       arg == "meta" || arg == "META" ||
+	       arg == "data" || arg == "DATA") {
+	arg = string("%") + (*++begin).as_string();
+      }
+      else if (arg == "expr" || arg == "EXPR") {
+	arg = string("=") + (*++begin).as_string();
+      }
     }
 
     if (parse_argument) {
       bool in_prefix	   = true;
       bool in_suffix	   = false;
       bool found_specifier = false;
-      bool saw_tag_char    = false;
       bool no_final_slash  = false;
 
       only_parenthesis = true;
@@ -122,15 +124,14 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    bool found_metadata = false;
 	    for (const char *q = c; *q != '\0'; q++)
 	      if (*q == '=') {
-		expr << "(metadata(\""
-		     << string(c + 1, q - c - 1) << "\") =~ /";
+		expr << "has_tag(/"
+		     << string(c + 1, q - c - 1) << "/, /";
 		found_metadata = true;
 		c = q;
 		break;
 	      }
 	    if (! found_metadata) {
-	      expr << "(tag =~ /:";
-	      saw_tag_char = true;
+	      expr << "has_tag(/";
 	    }
 	    found_specifier = true;
 	    consumed = true;
@@ -151,9 +152,9 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	  case ')':
 	    if (! in_suffix) {
 	      if (found_specifier) {
-		if (saw_tag_char)
-		  expr << ':';
-		expr << "/)";
+		if (! no_final_slash)
+		  expr << "/";
+		expr << ")";
 	      }
 	      in_suffix = true;
 	    }
@@ -171,8 +172,6 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 
       if (! in_suffix) {
 	if (found_specifier) {
-	  if (saw_tag_char)
-	    expr << ':';
 	  if (! no_final_slash)
 	    expr << "/";
 	  expr << ")";

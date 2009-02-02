@@ -47,11 +47,6 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
     node->set_value(tok.value);
     break;
 
-  case token_t::MASK:
-    node = new op_t(op_t::MASK);
-    node->set_mask(tok.value.as_string());
-    break;
-
   case token_t::IDENT: {
     string ident = tok.value.as_string();
 
@@ -89,6 +84,31 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
 }
 
 expr_t::ptr_op_t
+expr_t::parser_t::parse_dot_expr(std::istream& in,
+				 const parse_flags_t& tflags) const
+{
+  ptr_op_t node(parse_value_term(in, tflags));
+
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+    token_t& tok = next_token(in, tflags);
+
+    if (tok.kind == token_t::DOT) {
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_LOOKUP);
+      node->set_left(prev);
+      node->set_right(parse_dot_expr(in, tflags));
+      if (! node->right())
+	throw_(parse_error,
+	       tok.symbol << " operator not followed by argument");
+    } else {
+      push_token(tok);
+    }
+  }
+
+  return node;
+}
+
+expr_t::ptr_op_t
 expr_t::parser_t::parse_unary_expr(std::istream& in,
 				   const parse_flags_t& tflags) const
 {
@@ -98,7 +118,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
 
   switch (tok.kind) {
   case token_t::EXCLAM: {
-    ptr_op_t term(parse_value_term(in, tflags));
+    ptr_op_t term(parse_dot_expr(in, tflags));
     if (! term)
       throw_(parse_error,
 	     tok.symbol << " operator not followed by argument");
@@ -115,7 +135,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
   }
 
   case token_t::MINUS: {
-    ptr_op_t term(parse_value_term(in, tflags));
+    ptr_op_t term(parse_dot_expr(in, tflags));
     if (! term)
       throw_(parse_error,
 	     tok.symbol << " operator not followed by argument");
@@ -133,7 +153,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
 
   default:
     push_token(tok);
-    node = parse_value_term(in, tflags);
+    node = parse_dot_expr(in, tflags);
     break;
   }
 

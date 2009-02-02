@@ -1068,7 +1068,8 @@ entry_t * textual_parser_t::instance_t::parse_entry(std::istream&     in,
   TRACE_START(entry_details, 1, "Time spent parsing entry details:");
 
   istream_pos_type end_pos;
-  std::size_t	   beg_line = linenum;
+  std::size_t	   beg_line  = linenum;
+  xact_t *         last_xact = NULL;
 
   while (! in.eof() && (in.peek() == ' ' || in.peek() == '\t')) {
     istream_pos_type beg_pos = in.tellg();
@@ -1086,13 +1087,23 @@ entry_t * textual_parser_t::instance_t::parse_entry(std::istream&     in,
     end_pos += len + 1;
     linenum++;
 
-    if (line[0] == ' ' || line[0] == '\t') {
-      char * p = skip_ws(line);
-      if (! *p)
-	break;
-    }
+    const char * p = skip_ws(line);
+    if (! *p)
+      break;
 
-    if (xact_t * xact = parse_xact(line, master, curr.get())) {
+    if (*p == ';') {
+      // This is an entry note, and possibly a metadata info tag
+      if (last_xact) {
+	last_xact->append_note(p + 1);
+	last_xact->append_note("\n");
+	last_xact->parse_tags(p + 1);
+      } else {
+	curr->append_note(p + 1);
+	curr->append_note("\n");
+	curr->parse_tags(p + 1);
+      }
+    }
+    else if (xact_t * xact = parse_xact(line, master, curr.get())) {
       if ((state == item_t::CLEARED && xact->state() != item_t::CLEARED) ||
 	  (state == item_t::PENDING && xact->state() == item_t::UNCLEARED))
 	xact->set_state(state);
@@ -1105,6 +1116,7 @@ entry_t * textual_parser_t::instance_t::parse_entry(std::istream&     in,
       pos = end_pos;
 
       curr->add_xact(xact);
+      last_xact = xact;
     }
 
     if (in.eof())

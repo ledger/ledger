@@ -110,8 +110,7 @@ void expr_t::token_t::parse_ident(std::istream& in)
   length = 0;
 
   char c, buf[256];
-  READ_INTO_(in, buf, 255, c, length,
-	     std::isalnum(c) || c == '_' || c == '.' || c == '-');
+  READ_INTO_(in, buf, 255, c, length, std::isalnum(c) || c == '_' || c == '-');
 
   value.set_string(buf);
 }
@@ -280,8 +279,8 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
       in.get(c);
       length++;
 
-      kind = MASK;
-      value.set_string(buf);
+      kind = VALUE;
+      value.set_mask(buf);
     }
     break;
   }
@@ -332,6 +331,11 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
       break;
     }
     kind = GREATER;
+    break;
+
+  case '.':
+    in.get(c);
+    kind = DOT;
     break;
 
   case ',':

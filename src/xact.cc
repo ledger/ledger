@@ -64,6 +64,10 @@ item_t::state_t xact_t::state() const
 }
 
 namespace {
+  value_t get_entry(xact_t& xact) {
+    return value_t(static_cast<scope_t *>(xact.entry));
+  }
+
   value_t get_code(xact_t& xact) {
     if (xact.entry->code)
       return string_value(*xact.entry->code);
@@ -172,6 +176,11 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_cost>);
     break;
 
+  case 'e':
+    if (name == "entry")
+      return WRAP_FUNCTOR(get_wrapper<&get_entry>);
+    break;
+
   case 'p':
     if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
@@ -189,14 +198,7 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
     break;
   }
 
-#if 0
-  // jww (2008-09-19): I don't think we can lookup in entry, because
-  // that means the functor returned would be expecting an entry to be
-  // passed to it, rather than a transaction.
-  return entry->lookup(name);
-#else
   return item_t::lookup(name);
-#endif
 }
 
 bool xact_t::valid() const

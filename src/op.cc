@@ -57,7 +57,9 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     return this;
 
   ptr_op_t lhs(left()->compile(scope));
-  ptr_op_t rhs(has_right() ? right()->compile(scope) : ptr_op_t());
+  ptr_op_t rhs(has_right() ? (kind == O_LOOKUP ?
+			      right() : right()->compile(scope)) :
+	       ptr_op_t());
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
@@ -102,11 +104,6 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
       throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
     return left()->opcalc(scope);
 
-  case MASK:
-    throw_(calc_error,
-	   "Regexs can only be used in a match; did you mean: account =~ /"
-	   << as_mask() << '/');
-
   case FUNCTION: {
     // Evaluating a FUNCTION is the same as calling it directly; this happens
     // when certain functions-that-look-like-variables (such as "amount") are
@@ -115,6 +112,27 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
     return as_function()(call_args);
   }
 
+  case O_LOOKUP:
+    if (left()->kind == IDENT &&
+	left()->left() && left()->left()->kind == FUNCTION) {
+      call_scope_t call_args(scope);
+      if (value_t obj = left()->left()->as_function()(call_args)) {
+	if (obj.is_pointer()) {
+	  scope_t& objscope(obj.as_ref_lval<scope_t>());
+	  if (ptr_op_t member = objscope.lookup(right()->as_ident()))
+	    return member->calc(objscope);
+	}
+      }
+    }
+    if (right()->kind != IDENT) {
+      throw_(calc_error,
+	     "Right operand of . operator must be an identifier");
+    } else {
+      throw_(calc_error,
+	     "Failed to lookup member '" << right()->as_ident() << "'");
+    }
+    break;
+
   case O_CALL: {
     call_scope_t call_args(scope);
 
@@ -122,20 +140,19 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
       call_args.set_args(right()->opcalc(scope));
 
     ptr_op_t func = left();
+    const string& name(func->as_ident());
 
-    assert(func->kind == IDENT);
     func = func->left();
-
     if (! func || func->kind != FUNCTION)
-      throw_(calc_error, "Calling non-function");
+      throw_(calc_error, "Calling non-function '" << name << "'");
 
     return func->as_function()(call_args);
   }
 
   case O_MATCH:
-    if (! right()->is_mask())
+    if (! right()->is_value() || ! right()->as_value().is_mask())
       throw_(calc_error, "Right-hand argument to match operator must be a regex");
-    return right()->as_mask().match(left()->opcalc(scope).to_string());
+    return right()->as_value().as_mask().match(left()->opcalc(scope).to_string());
 
   case INDEX: {
     const call_scope_t& args(downcast<const call_scope_t>(scope));
@@ -235,10 +252,6 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 
   case IDENT:
     out << as_ident();
-    break;
-
-  case MASK:
-    out << '/' << as_mask() << '/';
     break;
 
   case FUNCTION:
@@ -370,6 +383,14 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
       found = true;
     break;
 
+  case O_LOOKUP:
+    if (left() && left()->print(out, context))
+      found = true;
+    out << ".";
+    if (has_right() && right()->print(out, context))
+      found = true;
+    break;
+
   case O_CALL:
     if (left() && left()->print(out, context))
       found = true;
@@ -425,10 +446,6 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     out << "IDENT: " << as_ident();
     break;
 
-  case MASK:
-    out << "MASK: " << as_mask();
-    break;
-
   case INDEX:
     out << "INDEX: " << as_index();
     break;
@@ -437,27 +454,28 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     out << "FUNCTION";
     break;
 
-  case O_CALL:	out << "O_CALL"; break;
-  case O_MATCH:	out << "O_MATCH"; break;
+  case O_LOOKUP: out << "O_LOOKUP"; break;
+  case O_CALL:	 out << "O_CALL"; break;
+  case O_MATCH:	 out << "O_MATCH"; break;
 
-  case O_NOT:	out << "O_NOT"; break;
-  case O_NEG:	out << "O_NEG"; break;
+  case O_NOT:	 out << "O_NOT"; break;
+  case O_NEG:	 out << "O_NEG"; break;
 
-  case O_ADD:	out << "O_ADD"; break;
-  case O_SUB:	out << "O_SUB"; break;
-  case O_MUL:	out << "O_MUL"; break;
-  case O_DIV:	out << "O_DIV"; break;
+  case O_ADD:	 out << "O_ADD"; break;
+  case O_SUB:	 out << "O_SUB"; break;
+  case O_MUL:	 out << "O_MUL"; break;
+  case O_DIV:	 out << "O_DIV"; break;
 
-  case O_EQ:	out << "O_EQ"; break;
-  case O_LT:	out << "O_LT"; break;
-  case O_LTE:	out << "O_LTE"; break;
-  case O_GT:	out << "O_GT"; break;
-  case O_GTE:	out << "O_GTE"; break;
+  case O_EQ:	 out << "O_EQ"; break;
+  case O_LT:	 out << "O_LT"; break;
+  case O_LTE:	 out << "O_LTE"; break;
+  case O_GT:	 out << "O_GT"; break;
+  case O_GTE:	 out << "O_GTE"; break;
 
-  case O_AND:	out << "O_AND"; break;
-  case O_OR:	out << "O_OR"; break;
+  case O_AND:	 out << "O_AND"; break;
+  case O_OR:	 out << "O_OR"; break;
 
-  case O_COMMA:	out << "O_COMMA"; break;
+  case O_COMMA:	 out << "O_COMMA"; break;
 
   case LAST:
   default:
@@ -508,12 +526,6 @@ void expr_t::op_t::read(const char *& data)
     set_ident(temp);
     break;
   }
-  case MASK: {
-    mask_t temp;
-    temp.read(data);
-    set_mask(temp);
-    break;
-  }
   case INDEX: {
     long temp;
     binary::read_long(data, temp);
@@ -549,9 +561,6 @@ void expr_t::op_t::write(std::ostream& out) const
       break;
     case IDENT:
       binary::write_string(out, as_ident());
-      break;
-    case MASK:
-      as_mask().write(out);
       break;
     case INDEX:
       binary::write_long(out, as_index());

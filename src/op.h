@@ -47,7 +47,6 @@
 #define _OP_H
 
 #include "expr.h"
-#include "mask.h"
 
 namespace ledger {
 
@@ -71,7 +70,6 @@ private:
   variant<std::size_t,		// used by constant INDEX
 	  value_t,		// used by constant VALUE
 	  string,		// used by constant IDENT
-	  mask_t,		// used by constant MASK
 	  function_t,		// used by terminal FUNCTION
 	  ptr_op_t>		// used by all binary operators
   data;
@@ -81,7 +79,6 @@ public:
     // Constants
     VALUE,
     IDENT,
-    MASK,
     INDEX,
 
     CONSTANTS,
@@ -115,6 +112,7 @@ public:
 
     O_COMMA,
 
+    O_LOOKUP,
     O_CALL,
     O_MATCH,
 
@@ -191,27 +189,6 @@ public:
   }
   void set_ident(const string& val) {
     data = val;
-  }
-
-  bool is_mask() const {
-    if (kind == MASK) {
-      assert(data.type() == typeid(mask_t));
-      return true;
-    }
-    return false;
-  }
-  mask_t& as_mask_lval() {
-    assert(is_mask());
-    return boost::get<mask_t>(data);
-  }
-  const mask_t& as_mask() const {
-    return const_cast<op_t *>(this)->as_mask_lval();
-  }
-  void set_mask(const mask_t& val) {
-    data = val;
-  }
-  void set_mask(const string& expr) {
-    data = mask_t(expr);
   }
 
   bool is_function() const {

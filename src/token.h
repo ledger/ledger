@@ -89,6 +89,7 @@ struct expr_t::token_t : public noncopyable
     QUERY,			// ?
     COLON,			// :
 
+    DOT,			// .
     COMMA,			// ,
 
     TOK_EOF,

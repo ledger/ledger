@@ -37,6 +37,68 @@ namespace ledger {
 
 bool item_t::use_effective_date = false;
 
+bool item_t::has_tag(const string& tag) const
+{
+  if (! metadata)
+    return false;
+  string_map::const_iterator i = metadata->find(tag);
+  return i != metadata->end();
+}
+
+optional<string> item_t::get_tag(const string& tag) const
+{
+  if (metadata) {
+    string_map::const_iterator i = metadata->find(tag);
+    if (i != metadata->end())
+      return (*i).second;
+  }
+  return none;
+}
+
+void item_t::set_tag(const string&           tag,
+		     const optional<string>& value)
+{
+  if (! metadata)
+    metadata = string_map();
+
+  DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
+	<< (value ? *value : string("<none>")) << "'");
+
+  std::pair<string_map::iterator, bool> result
+    = metadata->insert(string_map::value_type(tag, value));
+  assert(result.second);
+}
+
+void item_t::parse_tags(const char * p)
+{
+  if (! std::strchr(p, ':'))
+    return;
+
+  scoped_array<char> buf(new char[std::strlen(p) + 1]);
+
+  std::strcpy(buf.get(), p);
+
+  string tag;
+  for (char * q = std::strtok(buf.get(), " \t");
+       q;
+       q = std::strtok(NULL, " \t")) {
+    const std::size_t len = std::strlen(q);
+    if (! tag.empty()) {
+      set_tag(tag, string(p + (q - buf.get())));
+      break;
+    }
+    else if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
+      for (char * r = std::strtok(q + 1, ":");
+	   r;
+	   r = std::strtok(NULL, ":"))
+	set_tag(r);
+    }
+    else if (q[len - 1] == ':') { // a metadata setting
+      tag = string(q, len - 1);
+    }
+  }
+}
+
 namespace {
   value_t get_status(item_t& item) {
     return long(item.state());
@@ -59,7 +121,51 @@ namespace {
   }
 
   value_t get_note(item_t& item) {
-    return string_value(item.note ? *item.note : empty_string);
+    return item.note ? string_value(*item.note) : value_t(false);
+  }
+
+  value_t has_tag(call_scope_t& args) {
+    item_t& item(find_scope<item_t>(args));
+    if (! item.metadata)
+      return false;
+
+    IF_DEBUG("item.meta") {
+	foreach (const item_t::string_map::value_type& data, *item.metadata) {
+	  *_log_stream << "  Tag: " << data.first << "\n";
+	  *_log_stream << "Value: ";
+	  if (data.second)
+	    *_log_stream << *data.second << "\n";
+	  else
+	    *_log_stream << "<none>\n";
+	}
+    }
+
+    value_t& arg(args[0]);
+
+    if (arg.is_string()) {
+      if (args.size() == 1)
+	return item.has_tag(args[0].as_string());
+      else if (optional<string> tag = item.get_tag(args[0].as_string()))
+	return args[1] == string_value(*tag);
+    }
+    else if (arg.is_mask()) {
+      foreach (const item_t::string_map::value_type& data, *item.metadata) {
+	if (arg.as_mask().match(data.first)) {
+	  if (args.size() == 1)
+	    return true;
+	  else if (data.second && args[1] == string_value(*data.second))
+	    return true;
+	}
+      }
+    }
+    return false;
+  }
+
+  value_t get_tag(call_scope_t& args) {
+    item_t& item(find_scope<item_t>(args));
+    if (optional<string> value = item.get_tag(args[0].as_string()))
+      return string_value(*value);
+    return false;
   }
 
   value_t get_beg_pos(item_t& item) {
@@ -84,17 +190,54 @@ namespace {
   }
 }
 
+value_t get_comment(item_t& item)
+{
+  if (! item.note) {
+    return false;
+  } else {
+    std::ostringstream buf;
+    buf << "\n    ;";
+    bool need_separator = false;
+    for (const char * p = item.note->c_str(); *p; p++) {
+      if (*p == '\n')
+	need_separator = true;
+      else {
+	if (need_separator) {
+	  buf << "\n    ;";
+	  need_separator = false;
+	}
+	buf << *p;
+      }
+    }
+    return string_value(buf.str());
+  }
+}
+
 expr_t::ptr_op_t item_t::lookup(const string& name)
 {
   switch (name[0]) {
   case 'c':
     if (name == "cleared")
       return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
+    else if (name == "comment")
+      return WRAP_FUNCTOR(get_wrapper<&get_comment>);
     break;
 
   case 'd':
     if (name[1] == '\0' || name == "date")
       return WRAP_FUNCTOR(get_wrapper<&get_date>);
+    break;
+
+  case 'h':
+    if (name == "has_tag")
+      return WRAP_FUNCTOR(ledger::has_tag);
+    else if (name == "has_meta")
+      return WRAP_FUNCTOR(ledger::has_tag);
+    break;
+
+  case 'm':
+    if (name == "meta")
+      return WRAP_FUNCTOR(ledger::get_tag);
     break;
 
   case 'n':
@@ -110,6 +253,11 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
   case 's':
     if (name == "status")
       return WRAP_FUNCTOR(get_wrapper<&get_status>);
+    break;
+
+  case 't':
+    if (name == "tag")
+      return WRAP_FUNCTOR(ledger::get_tag);
     break;
 
   case 'u':

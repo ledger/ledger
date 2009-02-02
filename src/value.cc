@@ -76,6 +76,11 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
       string(*reinterpret_cast<string *>(const_cast<char *>(rhs.data)));
     break;
 
+  case MASK:
+    new(reinterpret_cast<mask_t *>(data))
+      mask_t(*reinterpret_cast<mask_t *>(const_cast<char *>(rhs.data)));
+    break;
+
   case SEQUENCE:
     *reinterpret_cast<sequence_t **>(data) =
       new sequence_t(**reinterpret_cast<sequence_t **>
@@ -107,6 +112,9 @@ void value_t::storage_t::destroy()
   case STRING:
     reinterpret_cast<string *>(data)->~string();
     break;
+  case MASK:
+    reinterpret_cast<mask_t *>(data)->~mask_t();
+    break;
   case SEQUENCE:
     checked_delete(*reinterpret_cast<sequence_t **>(data));
     break;
@@ -134,7 +142,6 @@ void value_t::initialize()
   false_value->type = BOOLEAN;
   *reinterpret_cast<bool *>(false_value->data) = false;
 
-#if 0
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(datetime_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(date_t));
@@ -143,9 +150,9 @@ void value_t::initialize()
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_t *));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_pair_t *));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(string));
+  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(mask_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(sequence_t *));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(boost::any));
-#endif
 
   DEBUG_(std::setw(3) << std::right << sizeof(bool)
 	 << "  sizeof(bool)");
@@ -163,6 +170,8 @@ void value_t::initialize()
 	 << "  sizeof(balance_pair_t *)");
   DEBUG_(std::setw(3) << std::right << sizeof(string)
 	 << "  sizeof(string)");
+  DEBUG_(std::setw(3) << std::right << sizeof(mask_t)
+	 << "  sizeof(mask_t)");
   DEBUG_(std::setw(3) << std::right << sizeof(sequence_t *)
 	 << "  sizeof(sequence_t *)");
   DEBUG_(std::setw(3) << std::right << sizeof(boost::any)
@@ -203,6 +212,8 @@ value_t::operator bool() const
     return as_balance_pair();
   case STRING:
     return ! as_string().empty();
+  case MASK:
+    return ! as_mask().empty();
   case SEQUENCE:
     return ! as_sequence().empty();
   case POINTER:
@@ -300,6 +311,17 @@ string value_t::to_string() const
     value_t temp(*this);
     temp.in_place_cast(STRING);
     return temp.as_string();
+  }
+}
+
+mask_t value_t::to_mask() const
+{
+  if (is_mask()) {
+    return as_mask();
+  } else {
+    value_t temp(*this);
+    temp.in_place_cast(MASK);
+    return temp.as_mask();
   }
 }
 
@@ -922,6 +944,15 @@ bool value_t::is_equal_to(const value_t& val) const
   case STRING:
     if (val.is_string())
       return as_string() == val.as_string();
+    else if (val.is_mask())
+      return val.as_mask().match(as_string());
+    break;
+
+  case MASK:
+    if (val.is_mask())
+      return as_mask() == val.as_mask();
+    else if (val.is_string())
+      return as_mask().match(val.as_string());
     break;
 
   case SEQUENCE:
@@ -1257,6 +1288,12 @@ void value_t::in_place_not()
   case BALANCE_PAIR:
     set_boolean(! as_balance_pair());
     return;
+  case STRING:
+    set_boolean(as_string().empty());
+    return;
+  case MASK:
+    set_boolean(as_mask().empty());
+    return;
   default:
     break;
   }
@@ -1283,6 +1320,8 @@ bool value_t::is_realzero() const
     return as_balance_pair().is_realzero();
   case STRING:
     return as_string().empty();
+  case MASK:
+    return as_mask().empty();
   case SEQUENCE:
     return as_sequence().empty();
 
@@ -1314,6 +1353,8 @@ bool value_t::is_zero() const
     return as_balance_pair().is_zero();
   case STRING:
     return as_string().empty();
+  case MASK:
+    return as_mask().empty();
   case SEQUENCE:
     return as_sequence().empty();
 
@@ -1505,6 +1546,7 @@ value_t value_t::strip_annotations(const bool keep_price,
   case DATETIME:
   case DATE:
   case STRING:
+  case MASK:
   case POINTER:
     return *this;
 
@@ -1625,6 +1667,10 @@ void value_t::dump(std::ostream& out, const int first_width,
     out << as_string();
     break;
 
+  case MASK:
+    out << as_mask();
+    break;
+
   case POINTER:
     out << boost::unsafe_any_cast<const void *>(&as_any_pointer());
     break;
@@ -1698,6 +1744,10 @@ void value_t::print(std::ostream& out, const bool relaxed) const
 
   case STRING:
     out << '"' << as_string() << '"';
+    break;
+
+  case MASK:
+    out << '/' << as_mask() << '/';
     break;
 
   case POINTER:
@@ -1801,7 +1851,7 @@ void value_t::write(std::ostream& out) const
     break;
   }
 
-  throw_(value_error, "Cannot read " << label() << " to a stream");
+  throw_(value_error, "Cannot write " << label() << " to a stream");
 }
 
 void value_t::write_xml(std::ostream& out, const int depth) const
@@ -1845,6 +1895,11 @@ void value_t::write_xml(std::ostream& out, const int depth) const
     out << xml_str("<string>", depth + 1)
 	<< as_string()
 	<< "</string>\n";
+    break;
+  case MASK:
+    out << xml_str("<mask>", depth + 1)
+	<< as_mask()
+	<< "</mask>\n";
     break;
   case SEQUENCE:
     out << xml_str("<sequence>\n", depth + 1);

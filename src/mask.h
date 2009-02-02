@@ -72,8 +72,16 @@ public:
 
   mask_t& operator=(const string& other);
 
+  bool operator==(const mask_t& other) const {
+    return expr == other.expr;
+  }
+
   bool match(const string& str) const {
     return boost::regex_search(str, expr);
+  }
+
+  bool empty() const {
+    return expr.empty();
   }
 
   void read(const char *& data);

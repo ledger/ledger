@@ -83,6 +83,8 @@ private:
 
   ptr_op_t parse_value_term(std::istream& in,
 			    const parse_flags_t& flags) const;
+  ptr_op_t parse_dot_expr(std::istream& in,
+			  const parse_flags_t& flags) const;
   ptr_op_t parse_unary_expr(std::istream& in,
 			    const parse_flags_t& flags) const;
   ptr_op_t parse_mul_expr(std::istream& in,

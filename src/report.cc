@@ -157,6 +157,8 @@ namespace {
 	  (args_to_predicate_expr(args.value().as_sequence().begin(),
 				  args.value().as_sequence().end()));
 
+      DEBUG("report.predicate", "Predicate = " << report.predicate);
+
       (report.*report_method)(handler_ptr(handler));
 
       return true;

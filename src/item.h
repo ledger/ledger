@@ -72,6 +72,9 @@ public:
   optional<date_t>   _date_eff;
   optional<string>   note;
 
+  typedef std::map<string, optional<string> > string_map;
+  optional<string_map> metadata;
+
   unsigned short     src_idx;
   istream_pos_type   full_beg_pos;
   std::size_t	     full_beg_line;
@@ -122,6 +125,19 @@ public:
     return ! (*this == entry);
   }
 
+  virtual bool has_tag(const string& tag) const;
+  virtual optional<string> get_tag(const string& tag) const;
+  virtual void set_tag(const string& tag,
+		       const optional<string>& value = none);
+  virtual void parse_tags(const char * p);
+
+  virtual void append_note(const char * p) {
+    if (note)
+      *note += p;
+    else
+      note = p;
+  }
+
   virtual optional<date_t> actual_date() const {
     return _date;
   }
@@ -146,6 +162,8 @@ public:
 
   bool valid() const;
 };
+
+value_t get_comment(item_t& item);
 
 } // namespace ledger
 

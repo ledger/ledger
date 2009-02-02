@@ -50,6 +50,7 @@
 #define _VALUE_H
 
 #include "balpair.h"		// pulls in balance.h and amount.h
+#include "mask.h"
 
 namespace ledger {
 
@@ -108,6 +109,7 @@ public:
     BALANCE,			// a ledger::balance_t
     BALANCE_PAIR,		// a ledger::balance_pair_t
     STRING,			// a string object
+    MASK,			// a regular expression mask
     SEQUENCE,			// a vector of value_t objects
     POINTER			// an opaque pointer of any type
   };
@@ -299,6 +301,10 @@ public:
     TRACE_CTOR(value_t, "const balance_pair_t&");
     set_balance_pair(val);
   }
+  value_t(const mask_t& val) {
+    TRACE_CTOR(value_t, "const mask_t&");
+    set_mask(val);
+  }
 
   explicit value_t(const string& val, bool literal = false) {
     TRACE_CTOR(value_t, "const string&, bool");
@@ -477,6 +483,7 @@ public:
    * is_balance()
    * is_balance_pair()
    * is_string()
+   * is_mask()
    * is_sequence()
    * is_pointer()
    *
@@ -649,6 +656,27 @@ public:
     new(reinterpret_cast<string *>(storage->data)) string(val);
   }
 
+  bool is_mask() const {
+    return is_type(MASK);
+  }
+  mask_t& as_mask_lval() {
+    assert(is_mask());
+    _dup();
+    return *reinterpret_cast<mask_t *>(storage->data);
+  }
+  const mask_t& as_mask() const {
+    assert(is_mask());
+    return *reinterpret_cast<mask_t *>(storage->data);
+  }
+  void set_mask(const string& val) {
+    set_type(MASK);
+    new(reinterpret_cast<mask_t *>(storage->data)) mask_t(val);
+  }
+  void set_mask(const mask_t& val) {
+    set_type(MASK);
+    new(reinterpret_cast<mask_t *>(storage->data)) mask_t(val);
+  }
+
   bool is_sequence() const {
     return is_type(SEQUENCE);
   }
@@ -731,6 +759,7 @@ public:
   balance_t	 to_balance() const;
   balance_pair_t to_balance_pair() const;
   string	 to_string() const;
+  mask_t	 to_mask() const;
   sequence_t     to_sequence() const;
 
   /**
@@ -879,6 +908,8 @@ public:
       return "a balance pair";
     case STRING:
       return "a string";
+    case MASK:
+      return "a regexp";
     case SEQUENCE:
       return "a sequence";
     case POINTER:
@@ -926,6 +957,10 @@ public:
 
 inline value_t string_value(const string& str) {
   return value_t(str, true);
+}
+
+inline value_t mask_value(const string& str) {
+  return value_t(mask_t(str));
 }
 
 inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
