@@ -124,6 +124,8 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <mpfr.h>]], [[mpfr_t bar;
       mpfr_init(bar);
+      char * buf = NULL;
+      mpfr_asprintf(&buf, "%Rf", bar);
       mpfr_clear(bar);]])],[libmpfr_avail_cv_=true],[libmpfr_avail_cv_=false])
    AC_LANG_POP
    LIBS=$libmpfr_save_libs])
@@ -131,7 +133,7 @@ AC_CACHE_CHECK(
 if [test x$libmpfr_avail_cv_ = xtrue ]; then
   LIBS="-lmpfr $LIBS"
 else
-  AC_MSG_FAILURE("Could not find mpfr library (set CPPFLAGS and LDFLAGS?)")
+  AC_MSG_FAILURE("Could not find mpfr library 2.4.0 or higher (set CPPFLAGS and LDFLAGS?)")
 fi
 
 # check for boost_regex
