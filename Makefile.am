@@ -213,14 +213,14 @@ ELCFILES	=
 DISTCLEANFILES	= ledger.elc timeclock.elc
 CLEANFILES     += TAGS
 
-all_sources     = $(libledger_util_la_SOURCES)	  \
-		  $(libledger_math_la_SOURCES)	  \
-		  $(libledger_expr_la_SOURCES)	  \
-		  $(libledger_data_la_SOURCES)	  \
-		  $(libledger_parse_la_SOURCES)  \
-		  $(libledger_report_la_SOURCES) \
-		  $(libledger_extra_la_SOURCES)  \
-		  $(libledger_python_la_SOURCES) \
+all_sources     = $(libledger_util_la_SOURCES)		\
+		  $(libledger_math_la_SOURCES)		\
+		  $(libledger_expr_la_SOURCES)		\
+		  $(libledger_data_la_SOURCES)		\
+		  $(libledger_parse_la_SOURCES)		\
+		  $(libledger_report_la_SOURCES)	\
+		  $(libledger_extra_la_SOURCES)		\
+		  $(libledger_python_la_SOURCES)	\
 		  python/pyledger.cc
 
 all_files       = $(all_sources) $(pkginclude_HEADERS)
