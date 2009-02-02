@@ -16,6 +16,7 @@ lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib	\
 
 libledger_util_la_SOURCES =			\
 	src/utils.cc				\
+	src/error.cc				\
 	src/times.cc				\
 	src/mask.cc				\
 	src/stream.cc				\

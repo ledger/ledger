@@ -29,58 +29,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @addtogroup util
- */
-
-/**
- * @file   error.h
- * @author John Wiegley
- *
- * @ingroup util
- *
- * @brief Brief
- *
- * Long.
- */
-#ifndef _ERROR_H
-#define _ERROR_H
+#include "utils.h"
 
 namespace ledger {
 
-extern std::ostringstream _desc_buffer;
+std::ostringstream _desc_buffer;
+std::ostringstream _ctxt_buffer;
 
-template <typename T>
-inline void throw_func(const string& message) {
-  _desc_buffer.str("");
-  throw T(message);
+string error_context()
+{
+  string context = _ctxt_buffer.str();
+  _ctxt_buffer.str("");
+  return context;
 }
 
-#define throw_(cls, msg)					\
-  ((_desc_buffer << msg), throw_func<cls>(_desc_buffer.str()))
+string file_context(const path& file, std::size_t line)
+{
+  std::ostringstream buf;
+  buf << "\"" << file << "\", line " << line << ": ";
+  return buf.str();
+}
 
-extern std::ostringstream _ctxt_buffer;
-
-#define add_error_context(msg)					\
-  ((long(_ctxt_buffer.tellp()) == 0) ?				\
-   (_ctxt_buffer << msg) : (_ctxt_buffer << std::endl << msg))
-
-string error_context();
-
-string file_context(const path& file, std::size_t line);
 string line_context(const string&    line,
-		    istream_pos_type pos     = istream_pos_type(0),
-		    istream_pos_type end_pos = istream_pos_type(0));
+		    istream_pos_type pos,
+		    istream_pos_type end_pos)
+{
+  std::ostringstream buf;
+  buf << "  " << line << "\n";
 
-void report_error(const std::exception& err);
-
-#define DECLARE_EXCEPTION(name, kind)				\
-  class name : public kind {					\
-  public:							\
-  explicit name(const string& why) throw() : kind(why) {}	\
-  virtual ~name() throw() {}					\
+  if (pos != istream_pos_type(0)) {
+    buf << "  ";
+    if (end_pos == istream_pos_type(0)) {
+      for (istream_pos_type i = 0; i < pos; i += 1)
+	buf << " ";
+      buf << "^";
+    } else {
+      for (istream_pos_type i = 0; i < end_pos; i += 1) {
+	if (i >= pos)
+	  buf << "^";
+	else
+	  buf << " ";
+      }
+    }
   }
+  return buf.str();
+}
+
+void report_error(const std::exception& err)
+{
+  std::cerr << error_context() << std::endl
+	    << "Error: " << err.what() << std::endl;
+}
 
 } // namespace ledger
-
-#endif // _ERROR_H
