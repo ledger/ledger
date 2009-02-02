@@ -944,15 +944,11 @@ bool value_t::is_equal_to(const value_t& val) const
   case STRING:
     if (val.is_string())
       return as_string() == val.as_string();
-    else if (val.is_mask())
-      return val.as_mask().match(as_string());
     break;
 
   case MASK:
     if (val.is_mask())
       return as_mask() == val.as_mask();
-    else if (val.is_string())
-      return as_mask().match(val.as_string());
     break;
 
   case SEQUENCE:

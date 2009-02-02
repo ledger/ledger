@@ -141,18 +141,29 @@ namespace {
     value_t& arg(args[0]);
 
     if (arg.is_string()) {
-      if (args.size() == 1)
+      if (args.size() == 1) {
 	return item.has_tag(args[0].as_string());
-      else if (optional<string> tag = item.get_tag(args[0].as_string()))
-	return args[1] == string_value(*tag);
+      }
+      else if (optional<string> tag = item.get_tag(args[0].as_string())) {
+	if (args[1].is_string()) {
+	  return args[1].as_string() == *tag;
+	}
+	else if (args[1].is_mask()) {
+	  return args[1].as_mask().match(*tag);
+	}
+      }
     }
     else if (arg.is_mask()) {
       foreach (const item_t::string_map::value_type& data, *item.metadata) {
 	if (arg.as_mask().match(data.first)) {
 	  if (args.size() == 1)
 	    return true;
-	  else if (data.second && args[1] == string_value(*data.second))
-	    return true;
+	  else if (data.second) {
+	    if (args[1].is_string())
+	      return args[1].as_string() == *data.second;
+	    else if (args[1].is_mask())
+	      return args[1].as_mask().match(*data.second);
+	  }
 	}
       }
     }
@@ -312,8 +323,13 @@ string item_context(const item_t& item)
       std::ostringstream out;
       
       out << "While balancing item from \"" << path.string()
-	  << "\", line " << item.beg_line
-	  << ", byte " << item.beg_pos << ":\n";
+	  << "\"";
+
+      if (item.beg_line != (item.end_line - 1))
+	out << ", lines " << item.beg_line << "-"
+	    << (item.end_line - 1) << ":\n";
+      else
+	out << ", line " << item.beg_line << ":\n";
 
       bool first = true;
       for (char * p = std::strtok(buf.get(), "\n");
