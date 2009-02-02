@@ -1,5 +1,10 @@
 h1. Ledger: Command-Line Accounting
 
+Ledger is a powerful, double-entry accounting system that is accessed from the
+UNIX command-line.  This may put off some users -- as there is no flashy UI --
+but for those who want unparalleled reporting access to their data, there
+really are few alternatives.
+
 h2. For the Impatient
 
 I know, you just want to build and play.  Do this:
