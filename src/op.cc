@@ -150,9 +150,11 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
   }
 
   case O_MATCH:
+#if 0
     if (! right()->is_value() || ! right()->as_value().is_mask())
       throw_(calc_error, "Right-hand argument to match operator must be a regex");
-    return right()->as_value().as_mask().match(left()->opcalc(scope).to_string());
+#endif
+    return right()->opcalc(scope).as_mask().match(left()->opcalc(scope).to_string());
 
   case INDEX: {
     const call_scope_t& args(downcast<const call_scope_t>(scope));
