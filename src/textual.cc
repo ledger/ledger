@@ -190,6 +190,8 @@ void textual_parser_t::instance_t::parse()
       beg_line = linenum;
     }
     catch (const std::exception& err) {
+      string current_context = error_context();
+
       if (parent) {
 	std::list<instance_t *> instances;
 
@@ -206,7 +208,9 @@ void textual_parser_t::instance_t::parse()
       add_error_context("While parsing file "
 			<< file_context(pathname, linenum - 1));
 
-      report_error(err);
+      std::cerr << error_context() << std::endl
+		<< current_context << std::endl
+		<< "Error: " << err.what() << std::endl;
       errors++;
     }
   }

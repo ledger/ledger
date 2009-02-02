@@ -75,10 +75,4 @@ string line_context(const string&    line,
   return buf.str();
 }
 
-void report_error(const std::exception& err)
-{
-  std::cerr << error_context() << std::endl
-	    << "Error: " << err.what() << std::endl;
-}
-
 } // namespace ledger

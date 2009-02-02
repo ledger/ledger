@@ -133,7 +133,8 @@ int main(int argc, char * argv[], char * envp[])
   }
   catch (const std::exception& err) {
     std::cout.flush();
-    report_error(err);
+    std::cerr << error_context() << std::endl
+	      << "Error: " << err.what() << std::endl;
   }
   catch (int _status) {
     status = _status;

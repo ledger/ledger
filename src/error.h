@@ -72,8 +72,6 @@ string line_context(const string&    line,
 		    istream_pos_type pos     = istream_pos_type(0),
 		    istream_pos_type end_pos = istream_pos_type(0));
 
-void report_error(const std::exception& err);
-
 #define DECLARE_EXCEPTION(name, kind)				\
   class name : public kind {					\
   public:							\
