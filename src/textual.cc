@@ -116,7 +116,11 @@ namespace {
 #endif
 
     if (expr) {
-      amount = expr.calc(*xact).as_amount();
+      value_t result(expr.calc(*xact));
+      // jww (2009-02-01): What about storing time-dependent expressions?
+      if (! result.is_amount())
+	throw_(parse_error, "Transactions may only specify simple amounts");
+      amount = result.as_amount();
       DEBUG("textual.parse", "The transaction amount is " << amount);
       return expr;
     }
@@ -182,7 +186,8 @@ void textual_parser_t::instance_t::parse()
     try {
       read_next_directive();
 
-      beg_pos = end_pos;
+      beg_pos  = end_pos;
+      beg_line = linenum;
     }
     catch (const std::exception& err) {
       if (parent) {
@@ -194,16 +199,14 @@ void textual_parser_t::instance_t::parse()
 	  instances.push_front(instance);
 
 	foreach (instance_t * instance, instances)
-	  add_error_context("In file included from '"
+	  add_error_context("In file included from "
 			    << file_context(instance->pathname,
-					    instance->linenum - 1) << "':");
+					    instance->linenum - 1));
       }
       add_error_context("While parsing file "
-			<< file_context(pathname, linenum - 1) << "\n");
+			<< file_context(pathname, linenum - 1));
 
-      std::cout.flush();
-      std::cerr << ledger::error_context()
-		<< "Error: " << err.what() << std::endl;
+      report_error(err);
       errors++;
     }
   }
@@ -446,7 +449,7 @@ void textual_parser_t::instance_t::option_directive(char * line)
     if (p)
       *p++ = '\0';
   }
-  process_option(line + 2, session, p);
+  process_option(line + 2, session, p, line);
 }
 
 void textual_parser_t::instance_t::automated_entry_directive(char * line)
@@ -501,13 +504,15 @@ void textual_parser_t::instance_t::entry_directive(char * line)
     // possibility that add_entry ma throw an exception, which
     // would cause us to leak without this guard.
     std::auto_ptr<entry_t> entry_ptr(entry);
+
+    entry->src_idx  = src_idx;
+    entry->beg_pos  = beg_pos;
+    entry->beg_line = beg_line;
+    entry->end_pos  = pos;
+    entry->end_line = linenum;
+
     if (journal.add_entry(entry)) {
       entry_ptr.release(); // it's owned by the journal now
-      entry->src_idx  = src_idx;
-      entry->beg_pos  = beg_pos;
-      entry->beg_line = beg_line;
-      entry->end_pos  = pos;
-      entry->end_line = linenum;
       count++;
     }
     // It's perfectly valid for the journal to reject the entry,
@@ -653,6 +658,9 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 {
   std::istringstream in(line);
 
+  istream_pos_type beg = in.tellg();
+  istream_pos_type end = beg;
+
   string err_desc;
   try {
 
@@ -683,22 +691,22 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
   // Parse the account name
 
-  istream_pos_type account_beg = in.tellg();
-  istream_pos_type account_end = account_beg;
+  beg = in.tellg();
+  end = beg;
   while (! in.eof()) {
     in.get(p);
     if (in.eof() || (std::isspace(p) &&
 		     (p == '\t' || in.peek() == EOF ||
 		      std::isspace(in.peek()))))
       break;
-    account_end += 1;
+    end += 1;
   }
 
-  if (account_beg == account_end)
+  if (beg == end)
     throw parse_error("No account was specified");
 
-  char * b = &line[long(account_beg)];
-  char * e = &line[long(account_end)];
+  char * b = &line[long(beg)];
+  char * e = &line[long(end)];
 
   if ((*b == '[' && *(e - 1) == ']') ||
       (*b == '(' && *(e - 1) == ')')) {
@@ -738,34 +746,28 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
     if (p == '=' && entry)
       goto parse_assign;
 
-    try {
-      istream_pos_type beg = in.tellg();
+    beg = in.tellg();
 
-      xact->amount_expr =
-	parse_amount_expr(in, xact->amount, xact.get(),
-			  static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
-			  static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
-      saw_amount = true;
+    xact->amount_expr =
+      parse_amount_expr(in, xact->amount, xact.get(),
+			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
+			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
+    saw_amount = true;
 
-      if (! xact->amount.is_null()) {
-	xact->amount.reduce();
-	DEBUG("textual.parse", "line " << linenum << ": " <<
-	      "Reduced amount is " << xact->amount);
-      }
-
-      // We don't need to store the actual expression that resulted in the
-      // amount if it's constant
-      if (xact->amount_expr) {
-	if (xact->amount_expr->is_constant())
-	  xact->amount_expr = expr_t();
-
-	istream_pos_type end = in.tellg();
-	xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
-      }
+    if (! xact->amount.is_null()) {
+      xact->amount.reduce();
+      DEBUG("textual.parse", "line " << linenum << ": " <<
+	    "Reduced amount is " << xact->amount);
     }
-    catch (const std::exception& err) {
-      add_error_context("While parsing transaction amount:\n");
-      throw;
+
+    // We don't need to store the actual expression that resulted in the
+    // amount if it's constant
+    if (xact->amount_expr) {
+      if (xact->amount_expr->is_constant())
+	xact->amount_expr = expr_t();
+
+      end = in.tellg();
+      xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
     }
   }
 
@@ -792,27 +794,21 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
       if (in.good() && ! in.eof()) {
 	xact->cost = amount_t();
 
-	try {
-	  istream_pos_type beg = in.tellg();
+	beg = in.tellg();
 
-	  xact->cost_expr =
-	    parse_amount_expr(in, *xact->cost, xact.get(),
-			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
-			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
+	xact->cost_expr =
+	  parse_amount_expr(in, *xact->cost, xact.get(),
+			    static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
+			    static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
-	  if (xact->cost_expr) {
-	    istream_pos_type end = in.tellg();
-	    if (per_unit)
-	      xact->cost_expr->set_text(string("@") +
-					string(line, long(beg), long(end - beg)));
-	    else
-	      xact->cost_expr->set_text(string("@@") +
-					string(line, long(beg), long(end - beg)));
-	  }
-	}
-	catch (const std::exception& err) {
-	  add_error_context("While parsing transaction cost:\n");
-	  throw;
+	if (xact->cost_expr) {
+	  end = in.tellg();
+	  if (per_unit)
+	    xact->cost_expr->set_text(string("@") +
+				      string(line, long(beg), long(end - beg)));
+	  else
+	    xact->cost_expr->set_text(string("@@") +
+				      string(line, long(beg), long(end - beg)));
 	}
 
 	if (xact->cost->sign() < 0)
@@ -850,81 +846,75 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	if (in.good() && ! in.eof()) {
 	  xact->assigned_amount = amount_t();
 
-	  try {
-	    istream_pos_type beg = in.tellg();
+	  beg = in.tellg();
 
-	    xact->assigned_amount_expr =
-	      parse_amount_expr(in, *xact->assigned_amount, xact.get(),
-				static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
+	  xact->assigned_amount_expr =
+	    parse_amount_expr(in, *xact->assigned_amount, xact.get(),
+			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
-	    if (xact->assigned_amount->is_null())
-	      throw parse_error
-		("An assigned balance must evaluate to a constant value");
+	  if (xact->assigned_amount->is_null())
+	    throw parse_error
+	      ("An assigned balance must evaluate to a constant value");
 
-	    DEBUG("textual.parse", "line " << linenum << ": " <<
-		  "XACT assign: parsed amt = " << *xact->assigned_amount);
+	  DEBUG("textual.parse", "line " << linenum << ": " <<
+		"XACT assign: parsed amt = " << *xact->assigned_amount);
 
-	    if (xact->assigned_amount_expr) {
-	      istream_pos_type end = in.tellg();
-	      xact->assigned_amount_expr->set_text
-		(string("=") + string(line, long(beg), long(end - beg)));
-	    }
-
-	    account_t::xdata_t& xdata(xact->account->xdata());
-	    amount_t& amt(*xact->assigned_amount);
-
-	    DEBUG("xact.assign",
-		  "account balance = " << xdata.value.strip_annotations());
-	    DEBUG("xact.assign",
-		  "xact amount = " << amt.strip_annotations());
-
-	    amount_t diff;
-	    if (xdata.value.is_amount()) {
-	      diff = amt - xdata.value.as_amount();
-	    }
-	    else if (xdata.value.is_balance()) {
-	      if (optional<amount_t> comm_bal =
-		  xdata.value.as_balance().commodity_amount(amt.commodity()))
-		diff = amt - *comm_bal;
-	      else
-		diff = amt;
-	    }
-	    else if (xdata.value.is_balance_pair()) {
-	      if (optional<amount_t> comm_bal =
-		  xdata.value.as_balance_pair().commodity_amount(amt.commodity()))
-		diff = amt - *comm_bal;
-	      else
-		diff = amt;
-	    }
-	    else {
-	      diff = amt;
-	    }
-
-	    DEBUG("xact.assign", "diff = " << diff.strip_annotations());
-	    DEBUG("textual.parse", "line " << linenum << ": " <<
-		  "XACT assign: diff = " << diff.strip_annotations());
-
-	    if (! diff.is_zero()) {
-	      if (! xact->amount.is_null()) {
-		diff -= xact->amount;
-		if (! diff.is_zero()) {
-		  xact_t * temp = new xact_t(xact->account, diff,
-					     ITEM_GENERATED | XACT_CALCULATED);
-		  entry->add_xact(temp);
-
-		  DEBUG("textual.parse", "line " << linenum << ": " <<
-			"Created balancing transaction");
-		}
-	      } else {
-		xact->amount = diff;
-		DEBUG("textual.parse", "line " << linenum << ": " <<
-		      "Overwrite null transaction");
-	      }
-	    }
+	  if (xact->assigned_amount_expr) {
+	    end = in.tellg();
+	    xact->assigned_amount_expr->set_text
+	      (string("=") + string(line, long(beg), long(end - beg)));
 	  }
-	  catch (const std::exception& err) {
-	    add_error_context("While parsing assigned balance:\n");
-	    throw;
+
+	  account_t::xdata_t& xdata(xact->account->xdata());
+	  amount_t& amt(*xact->assigned_amount);
+
+	  DEBUG("xact.assign",
+		"account balance = " << xdata.value.strip_annotations());
+	  DEBUG("xact.assign",
+		"xact amount = " << amt.strip_annotations());
+
+	  amount_t diff;
+	  if (xdata.value.is_amount()) {
+	    diff = amt - xdata.value.as_amount();
+	  }
+	  else if (xdata.value.is_balance()) {
+	    if (optional<amount_t> comm_bal =
+		xdata.value.as_balance().commodity_amount(amt.commodity()))
+	      diff = amt - *comm_bal;
+	    else
+	      diff = amt;
+	  }
+	  else if (xdata.value.is_balance_pair()) {
+	    if (optional<amount_t> comm_bal =
+		xdata.value.as_balance_pair().commodity_amount(amt.commodity()))
+	      diff = amt - *comm_bal;
+	    else
+	      diff = amt;
+	  }
+	  else {
+	    diff = amt;
+	  }
+
+	  DEBUG("xact.assign", "diff = " << diff.strip_annotations());
+	  DEBUG("textual.parse", "line " << linenum << ": " <<
+		"XACT assign: diff = " << diff.strip_annotations());
+
+	  if (! diff.is_zero()) {
+	    if (! xact->amount.is_null()) {
+	      diff -= xact->amount;
+	      if (! diff.is_zero()) {
+		xact_t * temp = new xact_t(xact->account, diff,
+					   ITEM_GENERATED | XACT_CALCULATED);
+		entry->add_xact(temp);
+
+		DEBUG("textual.parse", "line " << linenum << ": " <<
+		      "Created balancing transaction");
+	      }
+	    } else {
+	      xact->amount = diff;
+	      DEBUG("textual.parse", "line " << linenum << ": " <<
+		    "Overwrite null transaction");
+	    }
 	  }
 	}
       }
@@ -967,8 +957,8 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
   }
   catch (const std::exception& err) {
-    add_error_context("While parsing transaction:\n");
-    add_error_context(line_context(line, in.tellg()));
+    add_error_context("While parsing transaction:");
+    add_error_context(line_context(line, beg, in.tellg()));
     throw;
   }
 }

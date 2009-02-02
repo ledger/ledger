@@ -149,6 +149,8 @@ public:
   bool		  entry_sort;
   bool		  sort_all;
   bool		  anonymize;
+  bool	          use_effective_date;
+
 
   string	  account;
   optional<path>  pager_path;
@@ -184,6 +186,7 @@ public:
       entry_sort(false),
       sort_all(false),
       anonymize(false),
+      use_effective_date(false),
 
       raw_mode(false),
 
@@ -274,7 +277,7 @@ public:
   // Report filtering
 
   value_t option_effective(call_scope_t& args) {
-    xact_t::use_effective_date = true;
+    use_effective_date = true;
   }
 #endif
 

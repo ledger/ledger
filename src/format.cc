@@ -298,7 +298,8 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	value.strip_annotations().dump(out, elem->min_width);
       }
       catch (const calc_error&) {
-	out << (string("%") + elem->chars);
+	add_error_context("While calculating format expression:");
+	add_error_context(expr_context(elem->expr));
 	throw;
       }
       break;

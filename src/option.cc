@@ -75,7 +75,7 @@ namespace {
   }
 
   void process_option(const function_t& opt, scope_t& scope,
-		      const char * arg)
+		      const char * arg, const string& name)
   {
     try {
       call_scope_t args(scope);
@@ -85,23 +85,23 @@ namespace {
       opt(args);
     }
     catch (const std::exception& err) {
-#if 0
-      add_error_context("While parsing option '--" << opt->long_opt
-			<< "'" << (opt->short_opt != '\0' ?
-				   (string(" (-") + opt->short_opt + "):") :
-				   ": "));
-#endif
+      if (name[0] == '-')
+	add_error_context("While parsing option '" << name << "':");
+	  
+      else
+	add_error_context("While parsing environent variable '"
+			  << name << "':");
       throw;
     }
   }
 }
 
 void process_option(const string& name, scope_t& scope,
-		    const char * arg)
+		    const char * arg, const string& varname)
 {
   op_bool_tuple opt(find_option(scope, name));
   if (opt.get<0>())
-    process_option(opt.get<0>()->as_function(), scope, arg);
+    process_option(opt.get<0>()->as_function(), scope, arg, varname);
 }
 
 void process_environment(const char ** envp, const string& tag,
@@ -126,7 +126,7 @@ void process_environment(const char ** envp, const string& tag,
 
       if (*q == '=') {
 	try {
-	  process_option(string(buf), scope, q + 1);
+	  process_option(string(buf), scope, q + 1, string(*p, q - *p));
 	}
 	catch (const std::exception& err) {
 	  add_error_context("While parsing environment variable option '"
@@ -179,7 +179,8 @@ void process_arguments(int, char ** argv, scope_t& scope,
 	if (value == NULL)
 	  throw_(option_error, "missing option argument for --" << name);
       }
-      process_option(opt.get<0>()->as_function(), scope, value);
+      process_option(opt.get<0>()->as_function(), scope, value,
+		     string("--") + name);
     }
     else if ((*i)[1] == '\0') {
       throw_(option_error, "illegal option -");
@@ -210,7 +211,8 @@ void process_arguments(int, char ** argv, scope_t& scope,
 	    throw_(option_error,
 		   "missing option argument for -" << o.get<2>());
 	}
-	process_option(o.get<0>()->as_function(), scope, value);
+	process_option(o.get<0>()->as_function(), scope, value,
+		       string("-") + o.get<2>());
       }
     }
   }

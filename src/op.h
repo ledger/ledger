@@ -332,7 +332,7 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(const function_t& fobj) {
 #define MAKE_FUNCTOR(x) expr_t::op_t::wrap_functor(bind(&x, this, _1))
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
 
-string expr_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t op);
+string op_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t op);
 
 } // namespace ledger
 

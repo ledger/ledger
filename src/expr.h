@@ -153,6 +153,11 @@ public:
 
 std::ostream& operator<<(std::ostream& out, const expr_t& expr);
 
+inline string expr_context(const expr_t& expr) {
+  // jww (2009-02-01): NYI
+  return "EXPR";
+}
+
 } // namespace ledger
 
 #endif // _EXPR_H

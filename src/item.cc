@@ -35,8 +35,6 @@
 
 namespace ledger {
 
-bool item_t::use_effective_date = false;
-
 bool item_t::has_tag(const string& tag) const
 {
   if (! metadata)
@@ -213,6 +211,14 @@ value_t get_comment(item_t& item)
   }
 }
 
+optional<date_t> item_t::date() const
+{
+  if (session_t::current->report->use_effective_date && _date_eff)
+    return effective_date();
+  else
+    return actual_date();
+}
+
 expr_t::ptr_op_t item_t::lookup(const string& name)
 {
   switch (name[0]) {
@@ -287,6 +293,43 @@ bool item_t::valid() const
   }
 
   return true;
+}
+
+string item_context(const item_t& item)
+{
+  unsigned short x = 0;
+  foreach (const path& path, item.journal->sources) {
+    if (x++ == item.src_idx) {
+      std::size_t len = item.end_pos - item.beg_pos;
+      assert(len > 0);
+      assert(len < 2048);
+      ifstream in(path);
+      in.seekg(item.beg_pos, std::ios::beg);
+      
+      scoped_array<char> buf(new char[len + 1]);
+      in.read(buf.get(), len);
+
+      std::ostringstream out;
+      
+      out << "While balancing item from \"" << path.string()
+	  << "\", line " << item.beg_line
+	  << ", byte " << item.beg_pos << ":\n";
+
+      bool first = true;
+      for (char * p = std::strtok(buf.get(), "\n");
+	   p;
+	   p = std::strtok(NULL, "\n")) {
+	if (first)
+	  first = false;
+	else
+	  out << '\n';
+	out << "  " << p;
+
+      return out.str();
+    }
+  }
+  assert(false);
+  return empty_string;
 }
 
 } // namespace ledger

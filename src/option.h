@@ -51,7 +51,7 @@
 namespace ledger {
 
 void process_option(const string& name, scope_t& scope,
-		    const char * arg = NULL);
+		    const char * arg, const string& name);
 
 void process_environment(const char ** envp, const string& tag,
 			 scope_t& scope);

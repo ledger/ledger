@@ -973,7 +973,6 @@ inline string value_context(const value_t& val) {
   buf << std::right;
   buf.width(20);
   val.print(buf);
-  buf << std::endl;
   return buf.str();
 }
 

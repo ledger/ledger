@@ -51,6 +51,8 @@
 
 namespace ledger {
 
+class journal_t;
+
 /**
  * @brief Brief
  *
@@ -75,20 +77,25 @@ public:
   typedef std::map<string, optional<string> > string_map;
   optional<string_map> metadata;
 
+  journal_t *        journal;
+
   unsigned short     src_idx;
+#if 0
   istream_pos_type   full_beg_pos;
   std::size_t	     full_beg_line;
+#endif
   istream_pos_type   beg_pos;
   std::size_t	     beg_line;
   istream_pos_type   end_pos;
   std::size_t	     end_line;
+#if 0
   istream_pos_type   full_end_pos;
   std::size_t	     full_end_line;
-
-  static  bool	     use_effective_date;
+#endif
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<>(_flags), _state(UNCLEARED), note(_note),
+    : supports_flags<>(_flags),
+      _state(UNCLEARED), note(_note), journal(NULL), src_idx(0),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
@@ -112,6 +119,8 @@ public:
 
     note      = item.note;
 
+    journal   = item.journal;
+    src_idx   = item.src_idx;
     beg_pos   = item.beg_pos;
     beg_line  = item.beg_line;
     end_pos   = item.end_pos;
@@ -144,12 +153,7 @@ public:
   virtual optional<date_t> effective_date() const {
     return _date_eff;
   }
-  optional<date_t> date() const {
-    if (use_effective_date && _date_eff)
-      return effective_date();
-    else
-      return actual_date();
-  }
+  optional<date_t> date() const;
 
   void set_state(state_t new_state) {
     _state = new_state;
@@ -164,6 +168,8 @@ public:
 };
 
 value_t get_comment(item_t& item);
+
+string item_context(const item_t& item);
 
 } // namespace ledger
 

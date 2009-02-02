@@ -234,21 +234,6 @@ bool xact_t::valid() const
   return true;
 }
 
-#if 0
-xact_context::xact_context(const xact_t& _xact, const string& desc) throw()
-  : file_context("", 0, desc), xact(_xact)
-{
-  const paths_list& sources(xact.entry->journal->sources);
-  std::size_t x = 0;
-  foreach (const path& path, sources)
-    if (x == xact.entry->src_idx) {
-      file = path;
-      break;
-    }
-  line = xact.beg_line;
-}
-#endif
-
 void xact_t::add_to_value(value_t& value)
 {
   if (xdata_ && xdata_->has_flags(XACT_EXT_COMPOUND)) {

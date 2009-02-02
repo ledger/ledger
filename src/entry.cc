@@ -37,8 +37,7 @@
 
 namespace ledger {
 
-entry_base_t::entry_base_t(const entry_base_t& e)
-  : item_t(), journal(NULL)
+entry_base_t::entry_base_t(const entry_base_t& e) : item_t()
 {
   TRACE_CTOR(entry_base_t, "copy");
 #if 0
@@ -80,11 +79,14 @@ item_t::state_t entry_base_t::state() const
 void entry_base_t::add_xact(xact_t * xact)
 {
   xacts.push_back(xact);
+  xact->journal = journal;
 }
 
 bool entry_base_t::remove_xact(xact_t * xact)
 {
   xacts.remove(xact);
+  xact->entry   = NULL;
+  xact->journal = NULL;
   return true;
 }
 
@@ -226,10 +228,8 @@ bool entry_base_t::finalize()
   DEBUG("entry.finalize", "final balance = " << balance);
 
   if (! balance.is_null() && ! balance.is_zero()) {
-#if 0
-    add_error_context(entry_context(*this));
-#endif
-    add_error_context("Unbalanced remainder is: ");
+    add_error_context(item_context(*this));
+    add_error_context("Unbalanced remainder is:");
     add_error_context(value_context(balance));
     throw_(balance_error, "Entry does not balance");
   }
@@ -325,16 +325,6 @@ bool entry_t::valid() const
 
   return true;
 }
-
-#if 0
-void entry_context::describe(std::ostream& out) const throw()
-{
-  if (! desc.empty())
-    out << desc << std::endl;
-
-  print_entry(out, entry, "  ");
-}
-#endif
 
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {

@@ -86,7 +86,7 @@ value_t expr_t::op_t::calc(scope_t& scope)
   catch (const std::exception& err) {
     if (context_op_ptr) {
       add_error_context("While evaluating value expression:");
-      add_error_context(expr_context(this, context_op_ptr));
+      add_error_context(op_context(this, context_op_ptr));
     }
     throw;
   }
@@ -574,7 +574,7 @@ void expr_t::op_t::write(std::ostream& out) const
   }
 }
 
-string expr_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t goal)
+string op_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t goal)
 {
   ostream_pos_type start_pos, end_pos;
   expr_t::op_t::context_t context(op, goal, &start_pos, &end_pos);
@@ -588,7 +588,6 @@ string expr_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t goal)
       else
 	buf << " ";
     }
-    buf << '\n';
   }
   return buf.str();
 }

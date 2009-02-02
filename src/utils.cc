@@ -644,18 +644,6 @@ void finish_timer(const char * name)
 
 /**********************************************************************
  *
- * Exception handling
- */
-
-namespace ledger {
-
-std::ostringstream _desc_buffer;
-std::ostringstream _ctxt_buffer;
-
-} // namespace ledger
-
-/**********************************************************************
- *
  * General utility functions
  */
 
