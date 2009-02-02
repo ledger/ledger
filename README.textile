@@ -5,7 +5,8 @@ h1. For the Impatient
 I know, you just want to build and play.  Do this:
 
 <pre>
-./acprep && make check
+git clone git://github.com/jwiegley/ledger.git
+cd ledger && ./acprep && make check
 </pre>
 
 If you have all the dependencies installed (see below), this is all you need.
@@ -18,36 +19,36 @@ Now try your first ledger command:
 h1. To the Rest
 
 If you're reading this file, you have in your hands the Bleeding Edge.  This
-may very well *NOT* be what you want, since it's not guaranteed to be in a
+may very well *not* be what you want, since it's not guaranteed to be in a
 functionally complete state.  It's under active development, and may change in
 any way at any time.
 
 What you may prefer is the current stable release, or the current beta branch.
-The BETA is what I prefer people use, since I still have a chance to fix major
-bugs that you find.  Just e-mail me, or post to the mailing list, they'll
-become a part of my work list.
+The *BETA* is what I prefer people use, since I still have a chance to fix
+major bugs that you find.  Just e-mail me, or post to the mailing list,
+they'll become a part of my work list.
 
-  | CURRENT | git checkout master |
-  | BETA | git checkout -b v2.6.2b origin/v2.6.2b |
-  | RELEASE | git checkout v2.6.1 |
+  | *CURRENT* | git checkout master |
+  | *BETA* | git checkout -b v2.6.2b origin/v2.6.2b |
+  | *RELEASE* | git checkout v2.6.1 |
 
 There are also several topic branches which contain experimental features,
-though none of these are guaranteed to compile.  Best to chat with me on IRC
-(#ledger, irc.freenode.net) or via the mailing list
-(http://groups.google.com/group/ledger-cli) before going too much further with
-those.
+though none of these are guaranteed to compile.  Best to chat with me on
+"IRC":irc//irc.freenode.net/ledger or via the 
+"mailing list":http://groups.google.com/group/ledger-cli before going too
+much further with those.
 
 h1. Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies:
 
-  | Boost | 1.35 or higher | if you're building CURRENT |
+  | Boost | 1.35 or higher | if you're building *CURRENT* |
   | Python | 2.4 or higher | optional |
   | GMP | 4.2.2 | for all builds |
-  | MPFR | 2.4.0 | if you're building CURRENT |
+  | MPFR | 2.4.0 | if you're building *CURRENT* |
   | libofx | 0.8.3 | optional |
-  | pcre | 7.7 | if you're building BETA or RELEASE |
-  | cppunit | 1.12.1 | if you're building CURRENT |
+  | pcre | 7.7 | if you're building *BETA* or *RELEASE* |
+  | cppunit | 1.12.1 | if you're building *CURRENT* |
   | lcov | 1.6 | optional, for "make report" |
   | doxygen | 1.5.7.1 | optional, for "make docs" |
   | texinfo | 4.13 | optional, for "make docs" |
@@ -62,7 +63,7 @@ sudo port install gmp mpfr pcre libofx
 sudo port install cppunit doxygen texlive texinfo lcov
 </pre>
 
-You can even just install the current Ledger release directly:
+You can even just install the current Ledger *RELEASE* directly:
 
 <pre>
 sudo port install ledger
@@ -82,8 +83,8 @@ libboost-regex-dev libboost-date-time-dev libboost-filesystem-dev
 h1. Preparing the Build
 
 The next step is preparing your environment for building.  While you can use
-@autogen.sh@, I've prepared a script that does a lot more of the
-footwork for you:
+@autogen.sh@, I've prepared a script that does a lot more of the footwork for
+you:
 
 <pre>
 ./acprep
@@ -114,14 +115,14 @@ h1. Resources
 
 Now that you're up and running, here are a few resources to keep in mind:
 
-  | Home page | http://www.newartisans.com/software/ledger.html |
-  | IRC channel | #ledger, irc.freenode.net |
-  | Mailing List / Forum | http://groups.google.com/group/ledger-cli |
-  | GitHub project page | http://github.com/jwiegley/ledger/tree/master |
-  | Buildbot display | http://www.newartisans.com:9090 |
-  | Ohloh code analysis | http://www.ohloh.net/projects/ledger |
+  | Home page | "http://www.newartisans.com/software/ledger.html":http://www.newartisans.com/software/ledger.html |
+  | IRC channel | "#ledger, irc.freenode.net":irc://irc.freenode.net/ledger |
+  | Mailing List / Forum | "http://groups.google.com/group/ledger-cli":http://groups.google.com/group/ledger-cli |
+  | GitHub project page | "http://github.com/jwiegley/ledger":http://github.com/jwiegley/ledger |
+  | Buildbot status | "http://www.newartisans.com:9090":http://www.newartisans.com:9090 |
+  | Ohloh code analysis | "http://www.ohloh.net/projects/ledger":http://www.ohloh.net/projects/ledger |
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
 patch (I prefer attachments over pasted text), or to get an account on GitHub.
-Once you do, fork the Ledger project, hack as much as you like, then send me a
-pull request via GitHub.
+Once you do, fork the "Ledger project":http://github.com/jwiegley/ledger, hack
+as much as you like, then send me a pull request via GitHub.
