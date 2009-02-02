@@ -324,7 +324,7 @@ string item_context(const item_t& item)
 	else
 	  out << '\n';
 	out << "  " << p;
-
+      }
       return out.str();
     }
   }
