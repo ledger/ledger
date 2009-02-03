@@ -343,15 +343,6 @@ public:
     return balance_t::operator==(val);
   }
 
-  /** @name XML Serialization
-   */
-  /*@{*/
-
-  void read_xml(std::istream& in);
-  void write_xml(std::ostream& out, const int depth = 0) const;
-
-  /*@}*/
-
   /**
    * Debugging methods.  There is only one method specifically for
    * balance pairs to help with debugging:

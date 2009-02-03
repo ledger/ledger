@@ -53,15 +53,4 @@ balance_pair_t::value(const optional<datetime_t>&   moment,
   return none;
 }
 
-void balance_pair_t::write_xml(std::ostream& out, const int depth) const
-{
-  out << xml_str("<balance-pair>\n", depth);
-
-  quantity().write_xml(out, depth + 1);
-  if (cost)
-    cost->write_xml(out, depth + 1);
-
-  out << xml_str("</balance-pair>\n", depth);
-}
-
 } // namespace ledger

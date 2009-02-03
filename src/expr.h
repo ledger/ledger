@@ -145,8 +145,6 @@ public:
 
   void     print(std::ostream& out) const;
   void     dump(std::ostream& out) const;
-  void     read(const char *& data);
-  void     write(std::ostream& out) const;
 
   static value_t eval(const string& _expr, scope_t& scope);
 };

@@ -220,28 +220,6 @@ else
   AC_MSG_FAILURE("Could not find boost_filesystem library (set CPPFLAGS and LDFLAGS?)")
 fi
 
-# check for libofx
-AC_CACHE_CHECK(
-  [if libofx is available],
-  [libofx_avail_cv_],
-  [libofx_save_libs=$LIBS
-   LIBS="-lofx $LIBS"
-   AC_LANG_PUSH(C++)
-   AC_LINK_IFELSE(
-     [AC_LANG_PROGRAM(
-	  [[#include <libofx.h>]],
-	  [[LibofxContextPtr libofx_context = libofx_get_new_context();]])],
-     [libofx_avail_cv_=true],
-     [libofx_avail_cv_=false])
-   AC_LANG_POP
-   LIBS=$libofx_save_libs])
-
-if [ test x$libofx_avail_cv_ = xtrue ]; then
-  AC_DEFINE([HAVE_LIBOFX], [1], [Whether libofx is available])
-  LIBS="-lofx $LIBS"
-fi
-AM_CONDITIONAL(HAVE_LIBOFX, test x$libofx_avail_cv_ = xtrue)
-
 # check for Python
 AM_PATH_PYTHON(2.4,, :)
 if [test "$PYTHON" != :]; then

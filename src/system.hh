@@ -138,13 +138,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <mpfr.h>
 #include "sha1.h"
 
-#include "irrXML.h"		// XML parser
-#include "CXMLReaderImpl.h"
-
-#if defined(HAVE_LIBOFX)
-#include <libofx.h>
-#endif
-
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/any.hpp>

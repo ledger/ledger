@@ -81,13 +81,8 @@
 #include <compare.h>
 
 #include <textual.h>
-#include <cache.h>
-#include <xml.h>
 #include <csv.h>
 #include <emacs.h>
-#include <qif.h>
-#include <gnucash.h>
-#include <ofx.h>
 
 #include <session.h>
 #include <report.h>

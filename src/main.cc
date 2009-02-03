@@ -60,7 +60,6 @@ int main(int argc, char * argv[], char * envp[])
     // Create the session object, which maintains nearly all state relating to
     // this invocation of Ledger; and register all known journal parsers.
     session = new LEDGER_SESSION_T;
-    register_journal_parsers(*session);
     set_session_context(session);
 
     // Create the report object, which maintains state relating to each

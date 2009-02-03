@@ -84,39 +84,6 @@ void py_print(amount_t& amount, object out) {
   }
 }
 
-void py_read_1(amount_t& amount, object in) {
-  if (PyFile_Check(in.ptr())) {
-    pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
-    amount.read(instr);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.read(file) is not a file object");
-  }
-}
-void py_read_2(amount_t& amount, const std::string& str) {
-  const char * p = str.c_str();
-  amount.read(p);
-}
-
-void py_write_xml_1(amount_t& amount, object out) {
-  if (PyFile_Check(out.ptr())) {
-    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-    amount.write_xml(outstr);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.write_xml(file) is not a file object");
-  }
-}
-  void py_write_xml_2(amount_t& amount, object out, const int depth) {
-  if (PyFile_Check(out.ptr())) {
-    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-    amount.write_xml(outstr, depth);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.write_xml(file, depth) is not a file object");
-  }
-}
-
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
     PyErr_SetString(PyExc_ArithmeticError, err.what());	\
@@ -337,14 +304,6 @@ internal precision.")
     .staticmethod("parse_conversion")
 
     .def("print_", py_print)
-
-    .def("read", py_read_1)
-    .def("read", py_read_2)
-    .def("write", &amount_t::write)
-
-    .def("read_xml", &amount_t::read_xml)
-    .def("write_xml", py_write_xml_1)
-    .def("write_xml", py_write_xml_2)
 
     .def("dump", &amount_t::dump)
 

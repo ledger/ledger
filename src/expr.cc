@@ -182,16 +182,6 @@ void expr_t::dump(std::ostream& out) const
   if (ptr) ptr->dump(out, 0);
 }
 
-void expr_t::read(const char *& data)
-{
-  if (ptr) ptr->read(data);
-}
-
-void expr_t::write(std::ostream& out) const
-{
-  if (ptr) ptr->write(out);
-}
-
 void expr_t::initialize()
 {
   parser.reset(new expr_t::parser_t);

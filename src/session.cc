@@ -34,6 +34,7 @@
 #include "handler.h"
 #include "iterators.h"
 #include "filters.h"
+#include "textual.h"
 
 namespace ledger {
 
@@ -129,6 +130,8 @@ session_t::session_t()
   init_file  = home ? *home / ".ledgerrc"	: "./.ledgerrc";
   price_db   = home ? *home / ".pricedb"	: "./.pricedb";
   cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
+
+  register_parser(new textual_parser_t);
 }
 
 session_t::~session_t()

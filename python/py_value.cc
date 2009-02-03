@@ -58,20 +58,6 @@ void py_set_string(value_t& amount, const string& str) {
   return amount.set_string(str);
 }
 
-void py_read_1(value_t& amount, object in) {
-  if (PyFile_Check(in.ptr())) {
-    pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
-    amount.read(instr);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.parse(file) is not a file object");
-  }
-}
-void py_read_2(value_t& amount, const std::string& str) {
-  const char * p = str.c_str();
-  amount.read(p);
-}
-
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
     PyErr_SetString(PyExc_ArithmeticError, err.what());	\
@@ -277,10 +263,6 @@ void export_value()
 
     .def("dump", &value_t::dump)
     .def("print", &value_t::print)
-
-    .def("read", py_read_1)
-    .def("read", py_read_2)
-    .def("write", &value_t::write)
 
     .def("valid", &value_t::valid)
     ;

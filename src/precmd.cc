@@ -66,9 +66,6 @@ value_t parse_command(call_scope_t& args)
   result.print(out);
   out << std::endl;
 
-  out << std::endl << "--- Calculated value as XML ---" << std::endl;
-  result.write_xml(out);
-
   return 0L;
 }
 

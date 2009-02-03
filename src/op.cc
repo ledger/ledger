@@ -31,7 +31,6 @@
 
 #include "op.h"
 #include "scope.h"
-#include "binary.h"
 
 namespace ledger {
 
@@ -497,81 +496,6 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     }
     else if (kind > UNARY_OPERATORS) {
       assert(! has_right());
-    }
-  }
-}
-
-void expr_t::op_t::read(const char *& data)
-{
-  kind = binary::read_long<kind_t>(data);
-
-  if (kind > TERMINALS) {
-    set_left(new expr_t::op_t());
-    left()->read(data);
-
-    if (kind > UNARY_OPERATORS && binary::read_bool(data)) {
-      set_right(new expr_t::op_t());
-      right()->read(data);
-    }
-  }
-
-  switch (kind) {
-  case VALUE: {
-    value_t temp;
-    temp.read(data);
-    set_value(temp);
-    break;
-  }
-  case IDENT: {
-    string temp;
-    binary::read_string(data, temp);
-    set_ident(temp);
-    break;
-  }
-  case INDEX: {
-    long temp;
-    binary::read_long(data, temp);
-    set_index(temp);
-    break;
-  }
-
-  default:
-    assert(false);
-    break;
-  }
-}
-
-void expr_t::op_t::write(std::ostream& out) const
-{
-  binary::write_long<kind_t>(out, kind);
-
-  if (kind > TERMINALS) {
-    left()->write(out);
-
-    if (kind > UNARY_OPERATORS) {
-      if (has_right()) {
-	binary::write_bool(out, true);
-	right()->write(out);
-      } else {
-	binary::write_bool(out, false);
-      }
-    }
-  } else {
-    switch (kind) {
-    case VALUE:
-      as_value().write(out);
-      break;
-    case IDENT:
-      binary::write_string(out, as_ident());
-      break;
-    case INDEX:
-      binary::write_long(out, as_index());
-      break;
-
-    case FUNCTION:
-    default:
-      assert(false);
-      break;
     }
   }
 }

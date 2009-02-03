@@ -1,12 +1,6 @@
 [submodule "lib/cppunit"]
 	path = lib/cppunit
 	url = git://github.com/jwiegley/cppunit.git
-[submodule "lib/libofx"]
-	path = lib/libofx
-	url = git://github.com/jwiegley/libofx.git
 [submodule "lib/utfcpp"]
 	path = lib/utfcpp
 	url = git://github.com/jwiegley/utfcpp.git
-[submodule "lib/irrxml"]
-	path = lib/irrxml
-	url = git://github.com/jwiegley/irrxml.git

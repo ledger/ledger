@@ -301,9 +301,6 @@ public:
   bool print(std::ostream& out, const context_t& context = context_t()) const;
   void dump(std::ostream& out, const int depth) const;
 
-  void read(const char *& data);
-  void write(std::ostream& out) const;
-
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(const function_t& fobj);
 };

@@ -536,42 +536,6 @@ inline char peek_next_nonws(std::istream& in) {
   return c;
 }
 
-inline void xml_space(std::ostream& out, const int depth = 0) {
-  for (int i = 0; i < depth; i++)
-    out << "  ";
-}
-
-inline void xml_print(std::ostream& out,
-		      const string& str,
-		      const int     depth = 0) {
-  xml_space(out, depth);
-  out << str;
-}
-
-struct xml_str
-{
-  const string&	    str;
-  const std::size_t depth;
-
-  xml_str(const string& _str, const std::size_t _depth)
-    : str(_str), depth(_depth) {
-    TRACE_CTOR(xml_str, "const string&, const std::size_t");
-  }
-  xml_str(const xml_str& other)
-    : str(other.str), depth(other.depth) {
-    TRACE_CTOR(xml_str, "copy");
-  }
-  ~xml_str() throw() {
-    TRACE_DTOR(xml_str);
-  }
-};
-
-inline std::ostream& operator<<(std::ostream& out, const xml_str& obj) {
-  xml_space(out, obj.depth);
-  out << obj.str;
-  return out;
-}
-
 #define READ_INTO(str, targ, size, var, cond) {				\
   char * _p = targ;							\
   var = str.peek();							\

@@ -930,24 +930,6 @@ public:
   void print(std::ostream& out, const bool relaxed = true) const;
 
   /**
-   * Serialization methods.  A value may be deserialized from an input
-   * stream or a character pointer, and it may be serialized to an
-   * output stream.  The methods used are:
-   */
-  void read(std::istream& in);
-  void read(const char *& data);
-  void write(std::ostream& out) const;
-
-  /** @name XML Serialization
-   */
-  /*@{*/
-
-  void read_xml(std::istream& in);
-  void write_xml(std::ostream& out, const int depth = 0) const;
-
-  /*@}*/
-
-  /**
    * Debugging methods.
    */
   bool valid() const;

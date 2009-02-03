@@ -44,7 +44,6 @@ typedef strings_list::iterator string_iterator;
 typedef std::pair<string_iterator, string_iterator> string_iterator_pair;
 
 void         handle_debug_options(int argc, char * argv[]);
-void         register_journal_parsers(session_t& session);
 void         read_environment_settings(report_t& report, char * envp[]);
 strings_list read_command_line_arguments(report_t& report,
 					 int argc, char * argv[]);

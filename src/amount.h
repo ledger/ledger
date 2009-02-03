@@ -671,51 +671,6 @@ public:
 
   /*@}*/
 
-  /** @name Serialization
-   */
-  /*@{*/
-
-  /** An amount may be deserialized from an input stream or a character
-      pointer, and it may be serialized to an output stream.  The methods
-      used are:
-
-      read(istream) reads an amount from the given input stream.  It
-      must have been put there using `write(ostream)'.  The required
-      flow of logic is:
-      amount_t::current_pool->write(out)
-      amount.write(out)	// write out all amounts
-      amount_t::current_pool->read(in)
-      amount.read(in)
-
-      read(char *&) reads an amount from data which has been read from
-      an input stream into a buffer.  It advances the pointer passed in
-      to the end of the deserialized amount.
-
-      write(ostream, [bool]) writes an amount to an output stream in a
-      compact binary format.  If the second parameter is true,
-      quantities with multiple reference counts will be written in an
-      optimized fashion.  NOTE: This form of usage is valid only for
-      the binary journal writer, it should not be used otherwise, as it
-      has strict requirements for reading that only the binary reader
-      knows about.
-  */
-  void read(std::istream& in);
-  void read(const char *& data,
-	    char **	  pool	    = NULL,
-	    char **	  pool_next = NULL);
-  void write(std::ostream& out, std::size_t index = 0) const;
-
-  /*@}*/
-
-  /** @name XML Serialization
-   */
-  /*@{*/
-
-  void read_xml(std::istream& in);
-  void write_xml(std::ostream& out, const int depth = 0) const;
-
-  /*@}*/
-
   /** @name Debugging
    */
   /*@{*/

@@ -10,8 +10,7 @@ lib_LTLIBRARIES =				\
 	libledger_util.la
 
 lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib	\
-		-I$(srcdir)/lib/utfcpp/source	\
-		-I$(srcdir)/lib/irrxml/src
+		-I$(srcdir)/lib/utfcpp/source
 
 libledger_util_la_SOURCES =			\
 	src/utils.cc				\
@@ -19,7 +18,6 @@ libledger_util_la_SOURCES =			\
 	src/times.cc				\
 	src/mask.cc				\
 	src/stream.cc				\
-	src/binary.cc				\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
@@ -63,16 +61,8 @@ libledger_data_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_parse_la_SOURCES  =			\
 	src/textual.cc				\
-	src/cache.cc				\
-	src/xml.cc				\
 	src/csv.cc				\
-	src/emacs.cc				\
-	src/qif.cc				\
-	src/gnucash.cc				\
-	lib/irrxml/src/irrXML.cpp
-if HAVE_LIBOFX
-libledger_parse_la_SOURCES += src/ofx.cc
-endif
+	src/emacs.cc
 
 libledger_parse_la_CPPFLAGS = $(lib_cppflags)
 libledger_parse_la_LDFLAGS  = -release $(VERSION).0
@@ -103,7 +93,6 @@ pkginclude_HEADERS =			   \
 	src/times.h			   \
 	src/mask.h			   \
 	src/stream.h			   \
-	src/binary.h			   \
 					   \
 	src/amount.h			   \
 	src/commodity.h			   \
@@ -130,13 +119,8 @@ pkginclude_HEADERS =			   \
 	src/compare.h			   \
 					   \
 	src/textual.h			   \
-	src/cache.h			   \
-	src/xml.h			   \
 	src/csv.h			   \
 	src/emacs.h			   \
-	src/qif.h			   \
-	src/gnucash.h			   \
-	src/ofx.h			   \
 					   \
 	src/session.h			   \
 	src/report.h			   \
@@ -163,15 +147,7 @@ pkginclude_HEADERS =			   \
 	lib/utfcpp/source/utf8.h	   \
 	lib/utfcpp/source/utf8/checked.h   \
 	lib/utfcpp/source/utf8/core.h	   \
-	lib/utfcpp/source/utf8/unchecked.h \
-					   \
-	lib/irrxml/src/CXMLReaderImpl.h	   \
-	lib/irrxml/src/fast_atof.h	   \
-	lib/irrxml/src/heapsort.h	   \
-	lib/irrxml/src/irrArray.h	   \
-	lib/irrxml/src/irrString.h	   \
-	lib/irrxml/src/irrTypes.h	   \
-	lib/irrxml/src/irrXML.h
+	lib/utfcpp/source/utf8/unchecked.h
 
 CLEANFILES =
 
@@ -285,10 +261,6 @@ PYLIBS  = ledger_python				\
           boost_filesystem$(BOOST_SUFFIX)	\
           boost_regex$(BOOST_SUFFIX)		\
           boost_python$(BOOST_SUFFIX)
-
-if HAVE_LIBOFX
-PYLIBS += ofx
-endif
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \

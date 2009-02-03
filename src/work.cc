@@ -74,20 +74,6 @@ void handle_debug_options(int argc, char * argv[])
   }
 }
 
-void register_journal_parsers(session_t& session)
-{
-#if 0
-  session.register_parser(new journal_t::binary_parser_t);
-#endif
-  session.register_parser(new xml_parser_t);
-  session.register_parser(new gnucash_parser_t);
-#ifdef HAVE_LIBOFX
-  session.register_parser(new ofx_parser_t);
-#endif
-  session.register_parser(new qif_parser_t);
-  session.register_parser(new textual_parser_t);
-}
-
 void read_environment_settings(report_t& report, char * envp[])
 {
   TRACE_START(environment, 1, "Processed environment variables");

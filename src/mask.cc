@@ -30,7 +30,6 @@
  */
 
 #include "mask.h"
-#include "binary.h"
 
 namespace ledger {
 
@@ -44,16 +43,6 @@ mask_t& mask_t::operator=(const string& pat)
 {
   expr.assign(pat.c_str(), regex::perl | regex::icase);
   return *this;
-}
-
-void mask_t::read(const char *& data)
-{
-  *this = binary::read_string(data);
-}
-
-void mask_t::write(std::ostream& out) const
-{
-  binary::write_string(out, expr.str());
 }
 
 } // namespace ledger

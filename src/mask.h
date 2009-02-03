@@ -83,9 +83,6 @@ public:
   bool empty() const {
     return expr.empty();
   }
-
-  void read(const char *& data);
-  void write(std::ostream& out) const;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
