@@ -227,10 +227,10 @@ all_sources     = $(libledger_util_la_SOURCES)		\
 
 all_files       = $(all_sources) $(pkginclude_HEADERS)
 
-TAGS: $(all_sources) $(pkginclude_HEADERS)
+TAGS: $(all_files)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); \
-	 etags -l c++ -o $$BUILD_DIR/TAGS $(all_sources) $(pkginclude_HEADERS))
+	 etags -l c++ -o $$BUILD_DIR/TAGS $(all_files))
 	@echo TAGS rebuilt.
 
 ######################################################################
@@ -503,8 +503,7 @@ $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_top_builddir)/g" > $@
 
-$(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen \
-	$(all_sources) $(pkginclude_HEADERS)
+$(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen $(all_files)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); doxygen $$BUILD_DIR/Doxyfile.gen)
 
