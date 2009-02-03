@@ -38,5 +38,5 @@ N $
   ; This is a transaction note!
   ; Sample: Another Value
   ; :MyTag:
-  Assets:Bank:Checking          $-21.00
+  Assets:Bank:Checking
   ; :AnotherTag:
