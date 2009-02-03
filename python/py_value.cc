@@ -54,6 +54,18 @@ boost::optional<value_t> py_value_2(const value_t& amount,
   return amount.value(moment, in_terms_of);
 }
 
+string py_print(const value_t& value) {
+  std::ostringstream buf;
+  value.print(buf);
+  return buf.str();
+}
+
+string py_print_relaxed(const value_t& value) {
+  std::ostringstream buf;
+  value.print(buf, true);
+  return buf.str();
+}
+
 void py_set_string(value_t& amount, const string& str) {
   return amount.set_string(str);
 }
@@ -234,6 +246,7 @@ void export_value()
 
     .def("to_boolean", &value_t::to_boolean)
     .def("to_long", &value_t::to_long)
+    .def("__int__", &value_t::to_long)
     .def("to_datetime", &value_t::to_datetime)
     .def("to_date", &value_t::to_date)
     .def("to_amount", &value_t::to_amount)
@@ -241,6 +254,9 @@ void export_value()
     .def("to_balance_pair", &value_t::to_balance_pair)
     .def("to_string", &value_t::to_string)
     .def("to_sequence", &value_t::to_sequence)
+
+    .def("__str__", py_print_relaxed)
+    .def("__repr__", py_print)
 
     .def("cast", &value_t::cast)
     .def("in_place_cast", &value_t::in_place_cast)
