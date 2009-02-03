@@ -2,7 +2,6 @@ VERSION    = 3.0
 EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES =				\
-	libledger_extra.la			\
 	libledger_report.la			\
 	libledger_parse.la			\
 	libledger_data.la			\
@@ -85,18 +84,13 @@ libledger_report_la_SOURCES  =			\
 	src/chain.cc				\
 	src/precmd.cc				\
 	src/output.cc				\
-	src/help.cc
-
-libledger_report_la_CPPFLAGS = $(lib_cppflags)
-libledger_report_la_LDFLAGS  = -release $(VERSION).0
-
-libledger_extra_la_SOURCES  =			\
+	src/help.cc				\
 	src/derive.cc				\
 	src/reconcile.cc			\
 	src/quotes.cc
 
-libledger_extra_la_CPPFLAGS = $(lib_cppflags)
-libledger_extra_la_LDFLAGS  = -release $(VERSION).0
+libledger_report_la_CPPFLAGS = $(lib_cppflags)
+libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
 pkginclude_HEADERS =			   \
 	$(top_builddir)/acconf.h	   \
@@ -221,7 +215,6 @@ all_sources     = $(libledger_util_la_SOURCES)		\
 		  $(libledger_data_la_SOURCES)		\
 		  $(libledger_parse_la_SOURCES)		\
 		  $(libledger_report_la_SOURCES)	\
-		  $(libledger_extra_la_SOURCES)		\
 		  $(libledger_python_la_SOURCES)	\
 		  python/pyledger.cc
 
@@ -279,7 +272,6 @@ ledger_so_SOURCES      = $(all_sources)
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
 
 PYLIBS  = ledger_python				\
-	  ledger_extra				\
 	  ledger_report				\
 	  ledger_parse				\
 	  ledger_data				\
@@ -325,8 +317,7 @@ TESTS +=	     \
 	expr_tests   \
 	data_tests   \
 	parse_tests  \
-	report_tests \
-	extra_tests
+	report_tests
 endif
 
 if HAVE_BOOST_PYTHON
@@ -395,22 +386,13 @@ report_tests_SOURCES =		 \
 report_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 report_tests_LDADD    = $(math_tests_LDADD) libledger_report.la
 
-extra_tests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/extra_tests.cc
-
-extra_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-extra_tests_LDADD    = $(math_tests_LDADD) libledger_extra.la
-
 all_tests_sources =				\
 	$(util_tests_SOURCES)			\
 	$(math_tests_SOURCES)			\
 	$(expr_tests_SOURCES)			\
 	$(data_tests_SOURCES)			\
 	$(parse_tests_SOURCES)			\
-	$(report_tests_SOURCES)			\
-	$(extra_tests_SOURCES)
+	$(report_tests_SOURCES)
 
 PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
 
@@ -471,7 +453,6 @@ fullcheck: $(TESTS)
 	sh $(FULLCHECK) $(top_builddir)/data_tests$(EXEEXT)   --verify
 	sh $(FULLCHECK) $(top_builddir)/parse_tests$(EXEEXT)  --verify
 	sh $(FULLCHECK) $(top_builddir)/report_tests$(EXEEXT) --verify
-	sh $(FULLCHECK) $(top_builddir)/extra_tests$(EXEEXT)  --verify
 
 ######################################################################
 
