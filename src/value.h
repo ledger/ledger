@@ -876,7 +876,7 @@ public:
     return as_sequence().end();
   }
 
-  const std::size_t size() const {
+  std::size_t size() const {
     if (is_null())
       return 0;
     else if (is_sequence())

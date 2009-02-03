@@ -199,7 +199,7 @@ public:
     args.pop_back();
   }
 
-  const std::size_t size() const {
+  std::size_t size() const {
     return args.size();
   }
 };
@@ -276,7 +276,7 @@ public:
   operator bool() { return value; }
 
   T operator *();
-  const T operator *() const;
+  T operator *() const;
 
   T * operator->() {
     return &**this;
@@ -291,7 +291,7 @@ inline long var_t<long>::operator *() {
   return value->to_long();
 }
 template <>
-inline const long var_t<long>::operator *() const {
+inline long var_t<long>::operator *() const {
   return value->to_long();
 }
 
@@ -300,7 +300,7 @@ inline string var_t<string>::operator *() {
   return value->to_string();
 }
 template <>
-inline const string var_t<string>::operator *() const {
+inline string var_t<string>::operator *() const {
   return value->to_string();
 }
 
@@ -309,7 +309,7 @@ inline datetime_t var_t<datetime_t>::operator *() {
   return value->to_datetime();
 }
 template <>
-inline const datetime_t var_t<datetime_t>::operator *() const {
+inline datetime_t var_t<datetime_t>::operator *() const {
   return value->to_datetime();
 }
 
