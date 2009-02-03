@@ -14,10 +14,13 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADER([acconf.h])
 
 # Checks for programs.
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CXX
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
+AM_GNU_GETTEXT
+AM_GNU_GETTEXT_VERSION([0.17])
 
 # Checks for emacs lisp path
 AM_PATH_LISPDIR
@@ -317,5 +320,5 @@ AC_STRUCT_TM
 AC_CHECK_FUNCS([access realpath getpwuid getpwnam])
 
 # Pepare the Makefiles
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile po/Makefile.in intl/Makefile])
 AC_OUTPUT

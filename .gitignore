@@ -50,6 +50,7 @@
 /build
 /config.guess
 /config.log
+/config.rpath
 /config.status
 /config.sub
 /configure
@@ -69,6 +70,7 @@
 /expr_tests
 /extra_tests
 /install-sh
+/intl/
 /ledger
 /ledger-*/
 /ledger.info
@@ -77,12 +79,14 @@
 /lib/cppunit
 /libtool
 /ltmain.sh
+/m4/
 /make.deps
 /make.sh
 /math_tests
 /missing
 /parse_tests
 /pending
+/po/
 /report_tests
 /stamp-h1
 /system.hh.gch
@@ -90,3 +94,5 @@
 /util_tests
 /version.m4
 /src/system.hh.gch
+/ABOUT-NLS
+/tools/gettextize

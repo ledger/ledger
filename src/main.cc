@@ -75,6 +75,8 @@ int main(int argc, char * argv[], char * envp[])
   std::signal(SIGINT, sigint_handler);
   std::signal(SIGPIPE, sigpipe_handler);
 
+  ::textdomain("ledger");
+
   // Create the session object, which maintains nearly all state relating to
   // this invocation of Ledger; and register all known journal parsers.
   std::auto_ptr<global_scope_t> global_scope(new global_scope_t(envp));

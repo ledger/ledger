@@ -135,6 +135,13 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <sys/wait.h>
 #include "fdstream.h"
 #endif
+#if defined(HAVE_GETTEXT)
+#include "gettext.h"
+#define _(str) gettext(str)
+#else
+#define textdomain(name)
+#define _(str) str
+#endif
 
 #include <gmp.h>
 #include <mpfr.h>
