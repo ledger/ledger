@@ -33,9 +33,11 @@ for lib in $(ls -1 /opt/local/lib/libboost_regex*.a \
              | sort -r)
 do
     lib=$(basename "$lib")
-    BOOST_SUFFIX=$(echo "$lib" | sed 's/libboost_regex-//' | sed 's/\.a//')
-    echo "Discovered Boost suffix: --boost $BOOST_SUFFIX"
-    BOOST_SUFFIX="-$BOOST_SUFFIX"
+    suffix=$(echo "$lib" | sed 's/libboost_regex-//' | sed 's/\.a//')
+    if [[ "$suffix" != "libboost_regex" ]]; then
+	echo "Discovered Boost suffix: --boost $suffix"
+	BOOST_SUFFIX="-$suffix"
+    fi
     break
 done
 
