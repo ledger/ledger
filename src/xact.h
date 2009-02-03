@@ -73,11 +73,17 @@ public:
   account_t *	     account;
 
   amount_t	     amount;	// can be null until finalization
+#if defined(STORE_XACT_EXPRS)
   optional<expr_t>   amount_expr;
+#endif
   optional<amount_t> cost;
+#if defined(STORE_XACT_EXPRS)
   optional<expr_t>   cost_expr;
+#endif
   optional<amount_t> assigned_amount;
+#if defined(STORE_XACT_EXPRS)
   optional<expr_t>   assigned_amount_expr;
+#endif
 
   xact_t(account_t * _account = NULL,
 	 flags_t     _flags   = ITEM_NORMAL)

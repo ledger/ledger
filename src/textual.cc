@@ -97,10 +97,15 @@ std::size_t textual_parser_t::parse(std::istream& in,
 }
 
 namespace {
-  optional<expr_t> parse_amount_expr(std::istream&  in,
-				     amount_t&      amount,
-				     xact_t *	    xact,
-				     uint_least8_t  flags = 0)
+#if defined(STORE_XACT_EXPRS)
+  optional<expr_t>
+#else
+  void
+#endif
+  parse_amount_expr(std::istream& in,
+		    amount_t&     amount,
+		    xact_t *	  xact,
+		    uint_least8_t flags = 0)
   {
     expr_t expr(in, flags | static_cast<uint_least8_t>(expr_t::PARSE_PARTIAL));
 
@@ -122,9 +127,13 @@ namespace {
 
       amount = result.as_amount();
       DEBUG("textual.parse", "The transaction amount is " << amount);
+#if defined(STORE_XACT_EXPRS)
       return expr;
+#endif
     }
+#if defined(STORE_XACT_EXPRS)
     return none;
+#endif
   }
 }
 
@@ -759,12 +768,16 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
     if (p != '(') {		// indicates a value expression
       xact->amount.parse(in, amount_t::PARSE_NO_REDUCE);
-    } else {
+    }
+    else {
+#if defined(STORE_XACT_EXPRS)
       xact->amount_expr =
+#endif
 	parse_amount_expr(in, xact->amount, xact.get(),
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
+#if defined(STORE_XACT_EXPRS)
       // We don't need to store the actual expression that resulted in the
       // amount if it's constant
       if (xact->amount_expr) {
@@ -774,6 +787,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	end = in.tellg();
 	xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
       }
+#endif // STORE_XACT_EXPRS
     }
 
     if (! xact->amount.is_null()) {
@@ -810,11 +824,14 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	if (p != '(') {		// indicates a value expression
 	  xact->cost->parse(in, amount_t::PARSE_NO_MIGRATE);
 	} else {
+#if defined(STORE_XACT_EXPRS)
 	  xact->cost_expr =
+#endif
 	    parse_amount_expr(in, *xact->cost, xact.get(),
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
+#if defined(STORE_XACT_EXPRS)
 	  if (xact->cost_expr) {
 	    end = in.tellg();
 	    if (per_unit)
@@ -824,6 +841,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	      xact->cost_expr->set_text(string("@@") +
 					string(line, long(beg), long(end - beg)));
 	  }
+#endif // STORE_XACT_EXPRS
 	}
 
 	if (xact->cost->sign() < 0)
@@ -866,15 +884,19 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	  if (p != '(') {	// indicates a value expression
 	    xact->assigned_amount->parse(in, amount_t::PARSE_NO_MIGRATE);
 	  } else {
+#if defined(STORE_XACT_EXPRS)
 	    xact->assigned_amount_expr =
+#endif
 	      parse_amount_expr(in, *xact->assigned_amount, xact.get(),
 				static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
+#if defined(STORE_XACT_EXPRS)
 	    if (xact->assigned_amount_expr) {
 	      end = in.tellg();
 	      xact->assigned_amount_expr->set_text
 		(string("=") + string(line, long(beg), long(end - beg)));
 	    }
+#endif // STORE_XACT_EXPRS
 	  }
 
 	  if (xact->assigned_amount->is_null())
