@@ -117,9 +117,9 @@ namespace {
 
     if (expr) {
       value_t result(expr.calc(*xact));
-      // jww (2009-02-01): What about storing time-dependent expressions?
       if (! result.is_amount())
 	throw_(parse_error, "Transactions may only specify simple amounts");
+
       amount = result.as_amount();
       DEBUG("textual.parse", "The transaction amount is " << amount);
       return expr;
@@ -766,12 +766,6 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
-      if (! xact->amount.is_null()) {
-	xact->amount.reduce();
-	DEBUG("textual.parse", "line " << linenum << ": " <<
-	      "Reduced amount is " << xact->amount);
-      }
-
       // We don't need to store the actual expression that resulted in the
       // amount if it's constant
       if (xact->amount_expr) {
@@ -781,6 +775,12 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	end = in.tellg();
 	xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
       }
+    }
+
+    if (! xact->amount.is_null()) {
+      xact->amount.reduce();
+      DEBUG("textual.parse", "line " << linenum << ": " <<
+	    "Reduced amount is " << xact->amount);
     }
   }
 
@@ -871,19 +871,19 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	      parse_amount_expr(in, *xact->assigned_amount, xact.get(),
 				static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
-	    if (xact->assigned_amount->is_null())
-	      throw parse_error
-		("An assigned balance must evaluate to a constant value");
-
-	    DEBUG("textual.parse", "line " << linenum << ": " <<
-		  "XACT assign: parsed amt = " << *xact->assigned_amount);
-
 	    if (xact->assigned_amount_expr) {
 	      end = in.tellg();
 	      xact->assigned_amount_expr->set_text
 		(string("=") + string(line, long(beg), long(end - beg)));
 	    }
 	  }
+
+	  if (xact->assigned_amount->is_null())
+	    throw parse_error
+	      ("An assigned balance must evaluate to a constant value");
+
+	  DEBUG("textual.parse", "line " << linenum << ": " <<
+		"XACT assign: parsed amt = " << *xact->assigned_amount);
 
 	  account_t::xdata_t& xdata(xact->account->xdata());
 	  amount_t& amt(*xact->assigned_amount);
