@@ -94,7 +94,6 @@ protected:
 
     path	      pathname;
     std::size_t       linenum;
-    std::size_t       src_idx;
     istream_pos_type  beg_pos;
     std::size_t       beg_line;
     istream_pos_type  end_pos;

@@ -61,9 +61,11 @@ class journal_t;
 class entry_base_t : public item_t
 {
 public:
+  journal_t * journal;
+
   xacts_list  xacts;
 
-  entry_base_t() {
+  entry_base_t() : item_t(), journal(NULL) {
     TRACE_CTOR(entry_base_t, "");
   }
   entry_base_t(const entry_base_t& e);  

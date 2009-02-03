@@ -36,14 +36,8 @@ namespace ledger {
 
 void format_emacs_xacts::write_entry(entry_t& entry)
 {
-  int idx = entry.src_idx;
-  foreach (const path& path, entry.journal->sources)
-    if (! idx--) {
-      out << "\"" << path << "\" ";
-      break;
-    }
-
-  out << (static_cast<std::size_t>(entry.beg_line) + 1) << " ";
+  out << "\"" << entry.pathname << "\" "
+      << (static_cast<std::size_t>(entry.beg_line) + 1) << " ";
 
   tm when = gregorian::to_tm(*entry.date());
   std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?

@@ -37,7 +37,8 @@
 
 namespace ledger {
 
-entry_base_t::entry_base_t(const entry_base_t& e) : item_t()
+entry_base_t::entry_base_t(const entry_base_t& e)
+  : item_t(), journal(NULL)
 {
   TRACE_CTOR(entry_base_t, "copy");
 #if 0
@@ -79,14 +80,12 @@ item_t::state_t entry_base_t::state() const
 void entry_base_t::add_xact(xact_t * xact)
 {
   xacts.push_back(xact);
-  xact->journal = journal;
 }
 
 bool entry_base_t::remove_xact(xact_t * xact)
 {
   xacts.remove(xact);
   xact->entry   = NULL;
-  xact->journal = NULL;
   return true;
 }
 

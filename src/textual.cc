@@ -155,7 +155,6 @@ textual_parser_t::instance_t::instance_t
   account_stack.push_front(master);
 
   pathname = journal.sources.back();
-  src_idx  = journal.sources.size() - 1;
   linenum  = 1;
   beg_pos  = in.tellg();
   beg_line = linenum;
@@ -472,7 +471,7 @@ void textual_parser_t::instance_t::automated_entry_directive(char * line)
   if (parse_xacts(in, account_stack.front(), *ae, "automated",
 		  end_pos)) {
     journal.auto_entries.push_back(ae);
-    ae->src_idx  = src_idx;
+    ae->pathname = pathname;
     ae->beg_pos  = beg_pos;
     ae->beg_line = beg_line;
     ae->end_pos  = end_pos;
@@ -491,7 +490,7 @@ void textual_parser_t::instance_t::period_entry_directive(char * line)
     if (pe->finalize()) {
       extend_entry_base(&journal, *pe, true);
       journal.period_entries.push_back(pe);
-      pe->src_idx  = src_idx;
+      pe->pathname = pathname;
       pe->beg_pos  = beg_pos;
       pe->beg_line = beg_line;
       pe->end_pos  = end_pos;
@@ -514,7 +513,7 @@ void textual_parser_t::instance_t::entry_directive(char * line)
     // would cause us to leak without this guard.
     std::auto_ptr<entry_t> entry_ptr(entry);
 
-    entry->src_idx  = src_idx;
+    entry->pathname = pathname;
     entry->beg_pos  = beg_pos;
     entry->beg_line = beg_line;
     entry->end_pos  = pos;

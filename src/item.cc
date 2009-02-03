@@ -310,44 +310,38 @@ bool item_t::valid() const
 
 string item_context(const item_t& item)
 {
-  unsigned short x = 0;
-  foreach (const path& path, item.journal->sources) {
-    if (x++ == item.src_idx) {
-      std::size_t len = item.end_pos - item.beg_pos;
-      assert(len > 0);
-      assert(len < 2048);
-      ifstream in(path);
-      in.seekg(item.beg_pos, std::ios::beg);
+  std::size_t len = item.end_pos - item.beg_pos;
+  assert(len > 0);
+  assert(len < 2048);
+
+  ifstream in(item.pathname);
+  in.seekg(item.beg_pos, std::ios::beg);
       
-      scoped_array<char> buf(new char[len + 1]);
-      in.read(buf.get(), len);
+  scoped_array<char> buf(new char[len + 1]);
+  in.read(buf.get(), len);
 
-      std::ostringstream out;
+  std::ostringstream out;
       
-      out << "While balancing item from \"" << path.string()
-	  << "\"";
+  out << "While balancing item from \"" << item.pathname.string()
+      << "\"";
 
-      if (item.beg_line != (item.end_line - 1))
-	out << ", lines " << item.beg_line << "-"
-	    << (item.end_line - 1) << ":\n";
-      else
-	out << ", line " << item.beg_line << ":\n";
+  if (item.beg_line != (item.end_line - 1))
+    out << ", lines " << item.beg_line << "-"
+	<< (item.end_line - 1) << ":\n";
+  else
+    out << ", line " << item.beg_line << ":\n";
 
-      bool first = true;
-      for (char * p = std::strtok(buf.get(), "\n");
-	   p;
-	   p = std::strtok(NULL, "\n")) {
-	if (first)
-	  first = false;
-	else
-	  out << '\n';
-	out << "> " << p;
-      }
-      return out.str();
-    }
+  bool first = true;
+  for (char * p = std::strtok(buf.get(), "\n");
+       p;
+       p = std::strtok(NULL, "\n")) {
+    if (first)
+      first = false;
+    else
+      out << '\n';
+    out << "> " << p;
   }
-  assert(false);
-  return empty_string;
+  return out.str();
 }
 
 } // namespace ledger

@@ -51,8 +51,6 @@
 
 namespace ledger {
 
-class journal_t;
-
 /**
  * @brief Brief
  *
@@ -62,9 +60,9 @@ class item_t : public supports_flags<>, public scope_t
 {
 public:
 #define ITEM_NORMAL     0x00	// no flags at all, a basic transaction
-#define ITEM_IN_CACHE   0x01  // transaction allocated by the binary cache
-#define ITEM_GENERATED  0x02  // transaction was not found in a journal
-#define ITEM_TEMP       0x04  // transaction is a temporary object
+#define ITEM_IN_CACHE   0x01	// transaction allocated by the binary cache
+#define ITEM_GENERATED  0x02	// transaction was not found in a journal
+#define ITEM_TEMP       0x04	// transaction is a temporary object
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
@@ -77,9 +75,7 @@ public:
   typedef std::map<string, optional<string> > string_map;
   optional<string_map> metadata;
 
-  journal_t *        journal;
-
-  unsigned short     src_idx;
+  path               pathname;
   istream_pos_type   beg_pos;
   std::size_t	     beg_line;
   istream_pos_type   end_pos;
@@ -88,8 +84,7 @@ public:
   static bool        use_effective_date;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<>(_flags),
-      _state(UNCLEARED), note(_note), journal(NULL), src_idx(0),
+    : supports_flags<>(_flags), _state(UNCLEARED), note(_note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
@@ -113,8 +108,7 @@ public:
 
     note      = item.note;
 
-    journal   = item.journal;
-    src_idx   = item.src_idx;
+    pathname  = item.pathname;
     beg_pos   = item.beg_pos;
     beg_line  = item.beg_line;
     end_pos   = item.end_pos;
