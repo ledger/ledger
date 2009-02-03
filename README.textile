@@ -54,10 +54,13 @@ If you wish to proceed in this venture, you'll need a few dependencies:
   | MPFR | 2.4.0 | if you're building *CURRENT* |
   | cppunit | 1.12.1 | if you're building *CURRENT*, for @make check@ |
   | Python | 2.4 or higher | _optional_ |
-  | libofx | 0.8.3 | _optional_ |
+  | libofx | 0.8.3 | _optional_, if you're building *BETA* or *RELEASE* |
+  | expat | 2.0.1 | _optional_, if you're building *BETA* or *RELEASE* |
+  | libxml2 | 2.7.2 | _optional_, if you're building *BETA* or *RELEASE* |
   | lcov | 1.6 | _optional_, for @make report@, used with @./acprep --gcov@|
   | doxygen | 1.5.7.1 | _optional_, for @make docs@ |
   | texinfo | 4.13 | _optional_, for @make docs@ |
+  | sloccount | 2.26 | _optional_, for @make sloc@ |
 
 h3. MacPorts
 
