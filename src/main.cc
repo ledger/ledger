@@ -133,8 +133,12 @@ int main(int argc, char * argv[], char * envp[])
   }
   catch (const std::exception& err) {
     std::cout.flush();		// first display anything that was pending
-    std::cerr << error_context() << std::endl
-	      << "Error: " << err.what() << std::endl;
+
+    string context = error_context();
+    if (! context.empty())
+      std::cerr << context << std::endl;
+    
+    std::cerr << "Error: " << err.what() << std::endl;
   }
   catch (int _status) {
     status = _status;		// used for a "quick" exit, and is used only

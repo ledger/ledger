@@ -208,9 +208,14 @@ void textual_parser_t::instance_t::parse()
       add_error_context("While parsing file "
 			<< file_context(pathname, linenum - 1));
 
-      std::cerr << error_context() << std::endl
-		<< current_context << std::endl
-		<< "Error: " << err.what() << std::endl;
+      string context = error_context();
+      if (! context.empty())
+	std::cerr << context << std::endl;
+    
+      if (! current_context.empty())
+	std::cerr << current_context << std::endl;
+
+      std::cerr << "Error: " << err.what() << std::endl;
       errors++;
     }
   }
