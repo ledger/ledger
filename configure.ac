@@ -98,7 +98,7 @@ fi
 
 # check for gmp
 AC_CACHE_CHECK(
-  [if libgmp is available],
+  [if GMP is available],
   [libgmp_avail_cv_],
   [libgmp_save_libs=$LIBS
    LIBS="-lgmp $LIBS"
@@ -117,7 +117,7 @@ fi
 
 # check for mpfr
 AC_CACHE_CHECK(
-  [if libmpfr is available],
+  [if MPFR is available],
   [libmpfr_avail_cv_],
   [libmpfr_save_libs=$LIBS
    LIBS="-lmpfr $LIBS"
