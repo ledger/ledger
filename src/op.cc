@@ -56,8 +56,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     return this;
 
   ptr_op_t lhs(left()->compile(scope));
-  ptr_op_t rhs(has_right() ? (kind == O_LOOKUP ?
-			      right() : right()->compile(scope)) :
+  ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
+	       (kind == O_LOOKUP ? right() : right()->compile(scope)) :
 	       ptr_op_t());
 
   if (lhs == left() && (! rhs || rhs == right()))
@@ -264,14 +264,16 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_NOT:
-    out << "!";
+    out << "!(";
     if (left() && left()->print(out, context))
       found = true;
+    out << ")";
     break;
   case O_NEG:
-    out << "-";
+    out << "-(";
     if (left() && left()->print(out, context))
       found = true;
+    out << ")";
     break;
 
   case O_ADD:
