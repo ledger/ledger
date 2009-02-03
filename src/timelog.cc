@@ -126,10 +126,12 @@ void time_log_t::clock_in(const datetime_t& checkin,
 {
   time_entry_t event(checkin, account, desc);
 
-  if (! time_entries.empty())
-    foreach (time_entry_t& time_entry, time_entries)
+  if (! time_entries.empty()) {
+    foreach (time_entry_t& time_entry, time_entries) {
       if (event.account == time_entry.account)
 	throw parse_error("Cannot double check-in to the same account");
+    }
+  }
 
   time_entries.push_back(event);
 }
