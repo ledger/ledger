@@ -539,11 +539,11 @@ copy-sources:
 
 release: copy-sources
 	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --opt --boost xgcc40 --build -j3)
+	 nice -n 20 ./acprep --release --opt --build -j3)
 
 release-distcheck: copy-sources
 	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --boost xgcc40 --build -j3 distcheck)
+	 nice -n 20 ./acprep --release --build -j3 distcheck)
 
 benchmark: release
 	PATH=$(PATH):$(srcdir)/tools \
