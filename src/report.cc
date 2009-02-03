@@ -62,7 +62,7 @@ void report_t::sum_all_accounts()
   pass_down_xacts
     (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value), false),
      walker);
-  session.master->calculate_sums();
+  session.master->calculate_sums(amount_expr);
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)

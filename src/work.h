@@ -49,7 +49,7 @@ strings_list read_command_line_arguments(report_t& report,
 					 int argc, char * argv[]);
 void         normalize_session_options(session_t& session);
 function_t   look_for_precommand(report_t& report, const string& verb);
-journal_t *  read_journal_files(session_t& session);
+journal_t *  read_journal_files(session_t& session, const string& account);
 function_t   look_for_command(report_t& report, const string& verb);
 void         normalize_report_options(report_t& report, const string& verb);
 void         create_output_stream(report_t& report);

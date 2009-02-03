@@ -93,6 +93,8 @@ public:
   std::size_t	     full_end_line;
 #endif
 
+  static bool        use_effective_date;
+
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
     : supports_flags<>(_flags),
       _state(UNCLEARED), note(_note), journal(NULL), src_idx(0),

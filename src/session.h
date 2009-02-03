@@ -53,8 +53,6 @@
 
 namespace ledger {
 
-class report_t;
-
 /**
  * @brief Brief
  *
@@ -71,7 +69,7 @@ class session_t : public noncopyable, public scope_t
 public:
   static session_t *		current;
 
-  scoped_ptr<report_t>		report;
+  scope_t *                     global_scope;
 
   std::list<path>		data_files;
   bool                          next_data_file_from_command_line;

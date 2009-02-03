@@ -197,7 +197,7 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
     break;
   }
 
-  return session_t::current->report->lookup(name);
+  return session_t::current->global_scope->lookup(name);
 }
 
 bool account_t::valid() const
@@ -222,12 +222,12 @@ bool account_t::valid() const
   return true;
 }
 
-void account_t::calculate_sums()
+void account_t::calculate_sums(expr_t& amount_expr)
 {
   xdata_t& xd(xdata());
 
   foreach (accounts_map::value_type& pair, accounts) {
-    (*pair.second).calculate_sums();
+    (*pair.second).calculate_sums(amount_expr);
 
     xdata_t& child_xd((*pair.second).xdata());
     if (! child_xd.total.is_null()) {
@@ -240,7 +240,7 @@ void account_t::calculate_sums()
   }
 
   call_scope_t args(*this);
-  value_t amount(session_t::current->report->get_amount_expr(args));
+  value_t amount(amount_expr.calc(args));
   if (! amount.is_null()) {
     add_or_set_value(xd.total, amount);
     xd.total_count += xd.count;

@@ -39,6 +39,7 @@ int main(int argc, char * argv[], char * envp[])
   using namespace ledger;
 
   session_t * session = NULL;
+  report_t *  report  = NULL;
   int	      status  = 1;
   try {
     // The very first thing we do is handle some very special command-line
@@ -67,8 +68,8 @@ int main(int argc, char * argv[], char * envp[])
     // between session and report doesn't really matter, but if a GUI were
     // calling into Ledger it would have one session object per open document,
     // with a separate report_t object for each report it generated.
-    session->report.reset(new report_t(*session));
-    report_t& report(*session->report.get());
+    report = new report_t(*session);
+    session->global_scope = report;
 
     // Read the user's options, in the following order:
     //
@@ -79,10 +80,10 @@ int main(int argc, char * argv[], char * envp[])
     // Before processing command-line options, we must notify the session
     // object that such options are beginning, since options like -f cause a
     // complete override of files found anywhere else.
-    read_environment_settings(report, envp);
-    session->read_init();	// accesses report object via session.report
+    read_environment_settings(*report, envp);
+    session->read_init();
     session->now_at_command_line(true);
-    strings_list args = read_command_line_arguments(report, argc, argv);
+    strings_list args = read_command_line_arguments(*report, argc, argv);
 
     // Look for a precommand first, which is defined as any defined function
     // whose name starts with "ledger_precmd_".  The difference between a
@@ -100,21 +101,21 @@ int main(int argc, char * argv[], char * envp[])
     string_iterator arg  = args.begin();
     string	    verb = *arg++;
 
-    if (function_t command = look_for_precommand(report, verb)) {
+    if (function_t command = look_for_precommand(*report, verb)) {
       // Create the output stream (it might be a file, the console or a PAGER
       // subprocess) and invoke the report command.
-      create_output_stream(report);
-      invoke_command_verb(report, command, arg, args.end());
+      create_output_stream(*report);
+      invoke_command_verb(*report, command, arg, args.end());
     }
-    else if (function_t command = look_for_command(report, verb)) {
+    else if (function_t command = look_for_command(*report, verb)) {
       // This is regular command verb, so parse the user's data.
-      if (journal_t * journal = read_journal_files(*session)) {
-	normalize_report_options(report, verb); // jww (2009-02-02): a hack
+      if (journal_t * journal = read_journal_files(*session, report->account)) {
+	normalize_report_options(*report, verb); // jww (2009-02-02): a hack
 
 	// Create the output stream (it might be a file, the console or a
 	// PAGER subprocess) and invoke the report command.
-	create_output_stream(report);
-	invoke_command_verb(report, command, arg, args.end());
+	create_output_stream(*report);
+	invoke_command_verb(*report, command, arg, args.end());
 
 	// Write out a binary cache of the journal data, if needful and
 	// appropriate to do so.
@@ -146,7 +147,7 @@ int main(int argc, char * argv[], char * envp[])
   }
 
   // Close the output stream, waiting on the pager process to exit if need be
-  session->report->output_stream.close();
+  report->output_stream.close();
 
   // If memory verification is being performed (which can be very slow), clean
   // up everything by closing the session and deleting the session object, and
@@ -156,6 +157,8 @@ int main(int argc, char * argv[], char * envp[])
     set_session_context(NULL);
     if (session != NULL)
       checked_delete(session);
+    if (report != NULL)
+      checked_delete(report);
 
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
     shutdown_memory_tracing();

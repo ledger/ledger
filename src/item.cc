@@ -35,6 +35,8 @@
 
 namespace ledger {
 
+bool item_t::use_effective_date = false;
+
 bool item_t::has_tag(const string& tag) const
 {
   if (! metadata)
@@ -224,7 +226,7 @@ value_t get_comment(item_t& item)
 
 optional<date_t> item_t::date() const
 {
-  if (session_t::current->report->use_effective_date && _date_eff)
+  if (use_effective_date && _date_eff)
     return effective_date();
   else
     return actual_date();
@@ -293,7 +295,7 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
     break;
   }
 
-  return session_t::current->report->lookup(name);
+  return session_t::current->global_scope->lookup(name);
 }
 
 bool item_t::valid() const

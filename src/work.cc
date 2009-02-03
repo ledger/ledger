@@ -148,13 +148,13 @@ function_t look_for_precommand(report_t& report, const string& verb)
     return function_t();
 }
 
-journal_t * read_journal_files(session_t& session)
+journal_t * read_journal_files(session_t& session, const string& account)
 {
   INFO_START(journal, "Read journal file");
 
   journal_t * journal(session.create_journal());
 
-  std::size_t count = session.read_data(*journal, session.report->account);
+  std::size_t count = session.read_data(*journal, account);
   if (count == 0)
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
