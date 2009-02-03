@@ -447,7 +447,7 @@ dist-hook:
 	       $(distdir)/doc/Doxyfile.bak \
 	       $(distdir)/doc/Doxyfile.gen
 	cp -pR $(srcdir)/doc/html $(distdir)/doc
-	chmod u+w $(distdir)/README
+	rm -f $(distdir)/README.textile
 	cp -p $(srcdir)/doc/README $(distdir)/README
 
 distclean-local:
