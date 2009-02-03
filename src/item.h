@@ -80,18 +80,10 @@ public:
   journal_t *        journal;
 
   unsigned short     src_idx;
-#if 0
-  istream_pos_type   full_beg_pos;
-  std::size_t	     full_beg_line;
-#endif
   istream_pos_type   beg_pos;
   std::size_t	     beg_line;
   istream_pos_type   end_pos;
   std::size_t	     end_line;
-#if 0
-  istream_pos_type   full_end_pos;
-  std::size_t	     full_end_line;
-#endif
 
   static bool        use_effective_date;
 
