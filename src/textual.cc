@@ -756,27 +756,31 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
       goto parse_assign;
 
     beg = in.tellg();
-
-    xact->amount_expr =
-      parse_amount_expr(in, xact->amount, xact.get(),
-			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
-			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
     saw_amount = true;
 
-    if (! xact->amount.is_null()) {
-      xact->amount.reduce();
-      DEBUG("textual.parse", "line " << linenum << ": " <<
-	    "Reduced amount is " << xact->amount);
-    }
+    if (p != '(') {		// indicates a value expression
+      xact->amount.parse(in, amount_t::PARSE_NO_REDUCE);
+    } else {
+      xact->amount_expr =
+	parse_amount_expr(in, xact->amount, xact.get(),
+			  static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
+			  static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
-    // We don't need to store the actual expression that resulted in the
-    // amount if it's constant
-    if (xact->amount_expr) {
-      if (xact->amount_expr->is_constant())
-	xact->amount_expr = expr_t();
+      if (! xact->amount.is_null()) {
+	xact->amount.reduce();
+	DEBUG("textual.parse", "line " << linenum << ": " <<
+	      "Reduced amount is " << xact->amount);
+      }
 
-      end = in.tellg();
-      xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
+      // We don't need to store the actual expression that resulted in the
+      // amount if it's constant
+      if (xact->amount_expr) {
+	if (xact->amount_expr->is_constant())
+	  xact->amount_expr = expr_t();
+
+	end = in.tellg();
+	xact->amount_expr->set_text(string(line, long(beg), long(end - beg)));
+      }
     }
   }
 
@@ -786,8 +790,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
     p = peek_next_nonws(in);
     if (p == '@') {
       if (! saw_amount)
-	throw parse_error
-	  ("Transaction cannot have a cost expression with an amount");
+	throw parse_error("Transaction cannot have a cost without an amount");
 	
       DEBUG("textual.parse", "line " << linenum << ": " <<
 		  "Found a price indicator");
@@ -805,19 +808,23 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
 	beg = in.tellg();
 
-	xact->cost_expr =
-	  parse_amount_expr(in, *xact->cost, xact.get(),
-			    static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
-			    static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
+	if (p != '(') {		// indicates a value expression
+	  xact->cost->parse(in, amount_t::PARSE_NO_MIGRATE);
+	} else {
+	  xact->cost_expr =
+	    parse_amount_expr(in, *xact->cost, xact.get(),
+			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
+			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
-	if (xact->cost_expr) {
-	  end = in.tellg();
-	  if (per_unit)
-	    xact->cost_expr->set_text(string("@") +
-				      string(line, long(beg), long(end - beg)));
-	  else
-	    xact->cost_expr->set_text(string("@@") +
-				      string(line, long(beg), long(end - beg)));
+	  if (xact->cost_expr) {
+	    end = in.tellg();
+	    if (per_unit)
+	      xact->cost_expr->set_text(string("@") +
+					string(line, long(beg), long(end - beg)));
+	    else
+	      xact->cost_expr->set_text(string("@@") +
+					string(line, long(beg), long(end - beg)));
+	  }
 	}
 
 	if (xact->cost->sign() < 0)
@@ -857,21 +864,25 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
 	  beg = in.tellg();
 
-	  xact->assigned_amount_expr =
-	    parse_amount_expr(in, *xact->assigned_amount, xact.get(),
-			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
+	  if (p != '(') {	// indicates a value expression
+	    xact->assigned_amount->parse(in, amount_t::PARSE_NO_MIGRATE);
+	  } else {
+	    xact->assigned_amount_expr =
+	      parse_amount_expr(in, *xact->assigned_amount, xact.get(),
+				static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
-	  if (xact->assigned_amount->is_null())
-	    throw parse_error
-	      ("An assigned balance must evaluate to a constant value");
+	    if (xact->assigned_amount->is_null())
+	      throw parse_error
+		("An assigned balance must evaluate to a constant value");
 
-	  DEBUG("textual.parse", "line " << linenum << ": " <<
-		"XACT assign: parsed amt = " << *xact->assigned_amount);
+	    DEBUG("textual.parse", "line " << linenum << ": " <<
+		  "XACT assign: parsed amt = " << *xact->assigned_amount);
 
-	  if (xact->assigned_amount_expr) {
-	    end = in.tellg();
-	    xact->assigned_amount_expr->set_text
-	      (string("=") + string(line, long(beg), long(end - beg)));
+	    if (xact->assigned_amount_expr) {
+	      end = in.tellg();
+	      xact->assigned_amount_expr->set_text
+		(string("=") + string(line, long(beg), long(end - beg)));
+	    }
 	  }
 
 	  account_t::xdata_t& xdata(xact->account->xdata());
