@@ -134,6 +134,7 @@ int main(int argc, char * argv[], char * envp[])
   catch (const std::exception& err) {
     std::cout.flush();		// first display anything that was pending
 
+    // Display any pending error context information
     string context = error_context();
     if (! context.empty())
       std::cerr << context << std::endl;
