@@ -1286,9 +1286,6 @@ void value_t::in_place_not()
   case STRING:
     set_boolean(as_string().empty());
     return;
-  case MASK:
-    set_boolean(as_mask().empty());
-    return;
   default:
     break;
   }
@@ -1315,8 +1312,6 @@ bool value_t::is_realzero() const
     return as_balance_pair().is_realzero();
   case STRING:
     return as_string().empty();
-  case MASK:
-    return as_mask().empty();
   case SEQUENCE:
     return as_sequence().empty();
 
@@ -1348,8 +1343,6 @@ bool value_t::is_zero() const
     return as_balance_pair().is_zero();
   case STRING:
     return as_string().empty();
-  case MASK:
-    return as_mask().empty();
   case SEQUENCE:
     return as_sequence().empty();
 
