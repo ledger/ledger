@@ -350,7 +350,7 @@ math_tests_SOURCES =		 \
 	test/unit/t_balance.h
 
 math_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-math_tests_LDADD    = $(util_tests_LDADD) libledger_math.la
+math_tests_LDADD    = libledger_math.la $(util_tests_LDADD)
 
 expr_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -360,7 +360,7 @@ expr_tests_SOURCES =		 \
 	test/unit/t_expr.h
 
 expr_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-expr_tests_LDADD    = $(math_tests_LDADD) libledger_expr.la
+expr_tests_LDADD    = libledger_expr.la $(math_tests_LDADD)
 
 data_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -368,7 +368,7 @@ data_tests_SOURCES =		 \
 	test/data_tests.cc
 
 data_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-data_tests_LDADD    = $(math_tests_LDADD) libledger_data.la
+data_tests_LDADD    = libledger_data.la $(math_tests_LDADD)
 
 parse_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -376,7 +376,7 @@ parse_tests_SOURCES =		 \
 	test/parse_tests.cc
 
 parse_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-parse_tests_LDADD    = $(math_tests_LDADD) libledger_parse.la
+parse_tests_LDADD    = libledger_parse.la $(math_tests_LDADD)
 
 report_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -384,7 +384,7 @@ report_tests_SOURCES =		 \
 	test/report_tests.cc
 
 report_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-report_tests_LDADD    = $(math_tests_LDADD) libledger_report.la
+report_tests_LDADD    = libledger_report.la $(math_tests_LDADD)
 
 all_tests_sources =				\
 	$(util_tests_SOURCES)			\
