@@ -2,13 +2,13 @@ VERSION    = 3.0
 EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES =				\
-	libledger_util.la			\
-	libledger_math.la			\
-	libledger_expr.la			\
-	libledger_data.la			\
-	libledger_parse.la			\
+	libledger_extra.la			\
 	libledger_report.la			\
-	libledger_extra.la
+	libledger_parse.la			\
+	libledger_data.la			\
+	libledger_expr.la			\
+	libledger_math.la			\
+	libledger_util.la
 
 lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib	\
 		-I$(srcdir)/lib/utfcpp/source	\
@@ -278,15 +278,20 @@ install-exec-hook:
 ledger_so_SOURCES      = $(all_sources)
 ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
 
-PYLIBS  = ledger_util ledger_math ledger_expr \
-	  ledger_data ledger_parse	      \
-	  ledger_report ledger_extra	      \
-	  ledger_python			      \
-	  gmp mpfr			      \
-	  boost_system$(BOOST_SUFFIX)	      \
-	  boost_date_time$(BOOST_SUFFIX)      \
-          boost_filesystem$(BOOST_SUFFIX)     \
-          boost_regex$(BOOST_SUFFIX)	      \
+PYLIBS  = ledger_python				\
+	  ledger_extra				\
+	  ledger_report				\
+	  ledger_parse				\
+	  ledger_data				\
+	  ledger_expr				\
+	  ledger_math				\
+	  ledger_util				\
+	  gmp					\
+	  mpfr					\
+	  boost_system$(BOOST_SUFFIX)		\
+	  boost_date_time$(BOOST_SUFFIX)	\
+          boost_filesystem$(BOOST_SUFFIX)	\
+          boost_regex$(BOOST_SUFFIX)		\
           boost_python$(BOOST_SUFFIX)
 
 if HAVE_LIBOFX
