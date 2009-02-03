@@ -446,6 +446,7 @@ RegressionTests: $(srcdir)/test/regress.py
 
 FULLCHECK=$(srcdir)/tools/fullcheck
 
+if HAVE_CPPUNIT
 fullcheck: $(TESTS)
 	sh $(FULLCHECK) $(top_builddir)/util_tests$(EXEEXT)   --verify
 	sh $(FULLCHECK) $(top_builddir)/math_tests$(EXEEXT)   --verify
@@ -453,6 +454,10 @@ fullcheck: $(TESTS)
 	sh $(FULLCHECK) $(top_builddir)/data_tests$(EXEEXT)   --verify
 	sh $(FULLCHECK) $(top_builddir)/parse_tests$(EXEEXT)  --verify
 	sh $(FULLCHECK) $(top_builddir)/report_tests$(EXEEXT) --verify
+else
+fullcheck: check
+	@test 1 -eq 1
+endif
 
 ######################################################################
 
