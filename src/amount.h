@@ -137,8 +137,6 @@ public:
       matter what the precision of an individual commodity may be. */
   static bool stream_fullstrings;
 
-  static uint_fast32_t sizeof_bigint_t();
-
 protected:
   void _copy(const amount_t& amt);
   void _dup();

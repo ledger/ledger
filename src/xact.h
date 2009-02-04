@@ -142,14 +142,13 @@ public:
     value_t	total;
     value_t	sort_value;
     value_t	value;
-    std::size_t index;
     date_t	date;
     account_t *	account;
     void *	ptr;
 
     optional<xacts_list> component_xacts;
 
-    xdata_t() : supports_flags<>(), index(0), account(NULL), ptr(NULL) {
+    xdata_t() : supports_flags<>(), account(NULL), ptr(NULL) {
       TRACE_CTOR(xact_t::xdata_t, "");
     }
     xdata_t(const xdata_t& other)
@@ -157,7 +156,6 @@ public:
 	total(other.total),
 	sort_value(other.sort_value),
 	value(other.value),
-	index(other.index),
 	date(other.date),
 	account(other.account),
 	ptr(NULL)

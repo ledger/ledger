@@ -60,17 +60,16 @@ struct amount_t::bigint_t : public supports_flags<>
   mpq_t		 val;
   precision_t	 prec;
   uint_least16_t ref;
-  uint_fast32_t	 index;
 
 #define MP(bigint) ((bigint)->val)
 
-  bigint_t() : prec(0), ref(1), index(0) {
+  bigint_t() : prec(0), ref(1) {
     TRACE_CTOR(bigint_t, "");
     mpq_init(val);
   }
   bigint_t(const bigint_t& other)
     : supports_flags<>(other.flags() & ~BIGINT_BULK_ALLOC),
-      prec(other.prec), ref(1), index(0) {
+      prec(other.prec), ref(1) {
     TRACE_CTOR(bigint_t, "copy");
     mpq_init(val);
     mpq_set(val, other.val);
@@ -93,11 +92,6 @@ struct amount_t::bigint_t : public supports_flags<>
     return true;
   }
 };
-
-uint_fast32_t amount_t::sizeof_bigint_t()
-{
-  return sizeof(bigint_t);
-}
 
 void amount_t::initialize()
 {
