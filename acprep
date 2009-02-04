@@ -8,12 +8,15 @@
 # This script simply sets up the compiler and linker flags for all the various
 # build permutations I use for testing and profiling.
 
+
 # Make sure that all of the dependencies are available
 git submodule init
 git submodule update
 
+
 COMMIT=$(git describe --all --long | sed 's/heads\///')
 echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
+
 
 sh autogen.sh
 
@@ -26,6 +29,7 @@ fi
 if [ -z "$PYTHON_VERSION" ]; then
     PYTHON_VERSION="2.5"
 fi
+
 
 BOOST_SUFFIX=""
 for lib in $(ls -1 /opt/local/lib/libboost_regex*.a \
@@ -43,11 +47,13 @@ done
 
 BOOST_VERSION="1_37"
 
+
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-$BOOST_VERSION"
 INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
+
 
 CXXFLAGS=""
 ARCHFLAGS=""
@@ -55,6 +61,7 @@ LDARCHFLAGS=""
 LDFLAGS=""
 LIBDIRS="-L/usr/local/lib -L$PYTHON_HOME/lib -L/opt/local/lib"
 LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python$PYTHON_VERSION/config"
+
 
 SYSTEM=$(uname -s)
 
@@ -67,6 +74,7 @@ elif [ $SYSTEM = Darwin ]; then
     LDARCHFLAGS="$ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
 fi
 
+
 # Building the command-line tool as a shared library is a luxury,
 # since there are no clients except a GUI tool which might use it (and
 # that is built again anyway by Xcode).
@@ -74,6 +82,7 @@ CPPFLAGS="$INCDIRS"
 CXXFLAGS="$CXXFLAGS -pipe"
 LDFLAGS="$LDFLAGS $LIBDIRS"
 BUILD_DIR=false
+
 
 # The following are options to prepare a developer tree of Ledger for
 # building:
@@ -213,9 +222,11 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
 	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
 
-	if [ $SYSTEM = Darwin ]; then
-	    CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
-	fi
+	#if [[ -f /opt/local/bin/g++-mp-4.3 ]]; then
+	#    CXX=/opt/local/bin/g++-mp-4.3
+	#elif [ $SYSTEM = Darwin ]; then
+	#    CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
+	#fi
 
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
@@ -301,6 +312,7 @@ PATH="$PYTHON_HOME/bin:$PATH" \
 	LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
 	$SWITCHES
 
+
 # Alter the Makefile so that it's not nearly so verbose.  This makes errors
 # and warnings much easier to spot.
 
@@ -309,6 +321,7 @@ if [ -f Makefile ]; then
     perl -i -pe 's/^\tmv -f/\t\@mv -f/;' Makefile
     perl -i -pe 's/^\t(\$\((.*?)LINK\).*)/\t\@echo "   " LD \$\@;$1 > \/dev\/null/;' Makefile
 fi
+
 
 # If the --build flag was passed, start a build right away with the right
 # options.
