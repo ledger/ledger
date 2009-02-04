@@ -222,7 +222,7 @@ int main(int argc, char * argv[], char * envp[])
 
 #ifdef HAVE_LIBEDIT
 
-    rl_readline_name = "Ledger";
+    rl_readline_name = const_cast<char *>("Ledger");
 #if 0
     rl_attempted_completion_function = ledger_completion;
 #endif

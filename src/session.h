@@ -192,7 +192,8 @@ public:
     std::cout << "Ledger " << ledger::version << ", the command-line accounting tool";
     std::cout << "\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
-See LICENSE file included with the distribution for details and disclaimer.\n";
+See LICENSE file included with the distribution for details and disclaimer.";
+    std::cout << std::endl;
     return NULL_VALUE;
   }
 
