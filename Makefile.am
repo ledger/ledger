@@ -93,6 +93,7 @@ pkginclude_HEADERS =			   \
 	src/times.h			   \
 	src/mask.h			   \
 	src/stream.h			   \
+	src/pstream.h			   \
 					   \
 	src/amount.h			   \
 	src/commodity.h			   \

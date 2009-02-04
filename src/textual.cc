@@ -42,66 +42,9 @@
 #include "session.h"
 #include "option.h"
 #include "acconf.h"
+#include "pstream.h"
 
 namespace ledger {
-
-namespace {
-  class ptristream : public std::istream
-  {
-    class ptrinbuf : public std::streambuf
-    {
-    protected:
-      char *	ptr;
-      std::size_t len;
-
-    public:
-      ptrinbuf(char * _ptr, std::size_t _len) : ptr(_ptr), len(_len) {
-	setg(ptr,		// beginning of putback area
-	     ptr,		// read position
-	     ptr+len);		// end position
-      }
-
-    protected:
-      virtual int_type underflow() {
-	// is read position before end of buffer?
-	if (gptr() < egptr())
-	  return traits_type::to_int_type(*gptr());
-	else
-	  return EOF;
-      }
-
-      virtual pos_type seekoff(off_type off, ios_base::seekdir way,
-			       ios_base::openmode mode =
-			       ios_base::in | ios_base::out)
-      {
-	switch (way) {
-	case std::ios::cur:
-	  setg(ptr, gptr()+off, ptr+len);
-	  break;
-	case std::ios::beg:
-	  setg(ptr, ptr+off, ptr+len);
-	  break;
-	case std::ios::end:
-	  setg(ptr, egptr()+off, ptr+len);
-	  break;
-
-	default:
-	  assert(false);
-	  break;
-	}
-	return pos_type(gptr() - ptr);
-      }
-    };
-
-  protected:
-    ptrinbuf buf;
-  public:
-    ptristream(char * ptr, std::size_t len)
-      : std::istream(0), buf(ptr, len) {
-      rdbuf(&buf);
-    }
-  };
-}
 
 #if defined(TEST_FOR_PARSER)
 
