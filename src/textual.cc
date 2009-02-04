@@ -681,14 +681,16 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
   string err_desc;
   try {
 
+  // Parse the state flag
+  char p = peek_next_nonws(in);
+  if (in.eof())
+    return NULL;
+  
   // The account will be determined later...
   std::auto_ptr<xact_t> xact(new xact_t);
   if (entry)
     xact->entry = entry;
 
-  // Parse the state flag
-
-  char p = peek_next_nonws(in);
   switch (p) {
   case '*':
     xact->set_state(item_t::CLEARED);
@@ -801,21 +803,24 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
   if (in.good() && ! in.eof()) {
     p = peek_next_nonws(in);
-    if (p == '@') {
+    if (! in.eof() && p == '@') {
       if (! saw_amount)
 	throw parse_error("Transaction cannot have a cost without an amount");
 	
       DEBUG("textual.parse", "line " << linenum << ": " <<
 		  "Found a price indicator");
       bool per_unit = true;
+
       in.get(p);
       if (in.peek() == '@') {
 	in.get(p);
+
 	per_unit = false;
 	DEBUG("textual.parse", "line " << linenum << ": " <<
 		    "And it's for a total price");
       }
 
+      p = peek_next_nonws(in);
       if (in.good() && ! in.eof()) {
 	xact->cost = amount_t();
 
@@ -862,6 +867,8 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 	      "Per-unit cost is " << per_unit_cost);
 	DEBUG("textual.parse", "line " << linenum << ": " <<
 	      "Annotated amount is " << xact->amount);
+      } else {
+	throw_(parse_error, "Expected a cost amount");
       }
     }
   }
@@ -872,10 +879,13 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
     if (in.good() && ! in.eof()) {
       p = peek_next_nonws(in);
-      if (p == '=') {
+      if (! in.eof() && p == '=') {
 	in.get(p);
+
 	DEBUG("textual.parse", "line " << linenum << ": " <<
 	      "Found a balance assignment indicator");
+
+	p = peek_next_nonws(in);
 	if (in.good() && ! in.eof()) {
 	  xact->assigned_amount = amount_t();
 
@@ -957,6 +967,8 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 		    "Overwrite null transaction");
 	    }
 	  }
+	} else {
+	  throw_(parse_error, "Expected an assigned balance amount");
 	}
       }
     }
@@ -964,32 +976,39 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *      line,
 
   // Parse the optional note
 
- parse_note:
+parse_note:
   if (in.good() && ! in.eof()) {
     p = peek_next_nonws(in);
-    if (p == ';') {
-      in.get(p);
-      p = peek_next_nonws(in);
-      xact->note = &line[long(in.tellg())];
-      DEBUG("textual.parse", "line " << linenum << ": " <<
-		  "Parsed a note '" << *xact->note << "'");
-
-      if (char * b = std::strchr(xact->note->c_str(), '['))
-	if (char * e = std::strchr(xact->note->c_str(), ']')) {
-	  char buf[256];
-	  std::strncpy(buf, b + 1, e - b - 1);
-	  buf[e - b - 1] = '\0';
-
+    if (! in.eof()) {
+      if (p == ';') {
+	in.get(p);
+	if (! in.eof()) {
+	  xact->note = &line[long(in.tellg())];
 	  DEBUG("textual.parse", "line " << linenum << ": " <<
-		"Parsed a transaction date " << buf);
+		"Parsed a note '" << *xact->note << "'");
 
-	  if (char * p = std::strchr(buf, '=')) {
-	    *p++ = '\0';
-	    xact->_date_eff = parse_date(p);
-	  }
-	  if (buf[0])
-	    xact->_date = parse_date(buf);
+	  if (char * b = std::strchr(xact->note->c_str(), '['))
+	    if (char * e = std::strchr(xact->note->c_str(), ']')) {
+	      char buf[256];
+	      std::strncpy(buf, b + 1, e - b - 1);
+	      buf[e - b - 1] = '\0';
+
+	      DEBUG("textual.parse", "line " << linenum << ": " <<
+		    "Parsed a transaction date " << buf);
+
+	      if (char * p = std::strchr(buf, '=')) {
+		*p++ = '\0';
+		xact->_date_eff = parse_date(p);
+	      }
+	      if (buf[0])
+		xact->_date = parse_date(buf);
+	    }
 	}
+      } else {
+	beg = in.tellg();
+	throw_(parse_error, "Unexpected char '" << p
+	       << "' (Note: inline math requires parentheses)");
+      }
     }
   }
 
