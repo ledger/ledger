@@ -169,13 +169,6 @@ public:
   };
 
 private:
-  // jww (2008-08-02): Should these four be here, or in session_t?
-  static elision_style_t elision_style;
-  static int		 abbrev_length;
-
-  static bool		 ansi_codes;
-  static bool		 ansi_invert;
-
   static element_t * parse_elements(const string& fmt);
 
   friend class report_t;
@@ -207,7 +200,7 @@ public:
   }
 
   static string truncate(const unistring& str, std::size_t width,
-			 const bool is_account = false);
+			 const int account_abbrev_length = -1);
 };
 
 } // namespace ledger

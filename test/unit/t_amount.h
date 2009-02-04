@@ -32,7 +32,9 @@ class AmountTestCase : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST(testCommodityNegation);
   CPPUNIT_TEST(testAbs);
   CPPUNIT_TEST(testCommodityAbs);
+#if 0
   CPPUNIT_TEST(testReduction);
+#endif
   CPPUNIT_TEST(testSign);
   CPPUNIT_TEST(testCommoditySign);
   CPPUNIT_TEST(testTruth);

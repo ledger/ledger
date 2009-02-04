@@ -135,10 +135,10 @@ public:
     : entry_base_t(), predicate(other.predicate) {
     TRACE_CTOR(auto_entry_t, "copy");
   }
-  auto_entry_t(const string& _predicate)
+  auto_entry_t(const item_predicate<xact_t>& _predicate)
     : predicate(_predicate)
   {
-    TRACE_CTOR(auto_entry_t, "const string&");
+    TRACE_CTOR(auto_entry_t, "const item_predicate<xact_t>&");
   }
 
   virtual ~auto_entry_t() {

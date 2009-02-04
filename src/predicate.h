@@ -60,26 +60,32 @@ template <typename T>
 class item_predicate
 {
 public:
-  expr_t predicate;
+  expr_t	 predicate;
+  keep_details_t what_to_keep;
 
   item_predicate() {
     TRACE_CTOR(item_predicate, "");
   }
-  item_predicate(const item_predicate& other) : predicate(other.predicate) {
+  item_predicate(const item_predicate& other)
+    : predicate(other.predicate), what_to_keep(other.what_to_keep) {
     TRACE_CTOR(item_predicate, "copy");
   }
-  item_predicate(const expr_t& _predicate) : predicate(_predicate) {
-    TRACE_CTOR(item_predicate, "const expr_t&");
+  item_predicate(const expr_t&	       _predicate,
+		 const keep_details_t& _what_to_keep)
+    : predicate(_predicate), what_to_keep(_what_to_keep) {
+    TRACE_CTOR(item_predicate, "const expr_t&, const keep_details_t&");
   }
-  item_predicate(const string& _predicate) : predicate(expr_t(_predicate)) {
-    TRACE_CTOR(item_predicate, "const string&");
+  item_predicate(const string&	       _predicate,
+		 const keep_details_t& _what_to_keep)
+    : predicate(expr_t(_predicate)), what_to_keep(_what_to_keep) {
+    TRACE_CTOR(item_predicate, "const string&, const keep_details_t&");
   }
   ~item_predicate() throw() {
     TRACE_DTOR(item_predicate);
   }
 
   bool operator()(T& item) {
-    return ! predicate || predicate.calc(item).strip_annotations();
+    return ! predicate || predicate.calc(item).strip_annotations(what_to_keep);
   }
 };
 

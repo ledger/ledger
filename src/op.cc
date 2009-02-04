@@ -72,28 +72,10 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
   return intermediate;
 }
 
-namespace {
-  expr_t::ptr_op_t context_op_ptr;
-}
-
-value_t expr_t::op_t::calc(scope_t& scope)
+value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
 {
   try {
-    context_op_ptr = ptr_op_t();
-    return opcalc(scope);
-  }
-  catch (const std::exception& err) {
-    if (context_op_ptr) {
-      add_error_context("While evaluating value expression:");
-      add_error_context(op_context(this, context_op_ptr));
-    }
-    throw;
-  }
-}
 
-value_t expr_t::op_t::opcalc(scope_t& scope)
-{
-  try {
   switch (kind) {
   case VALUE:
     return as_value();
@@ -101,7 +83,7 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
   case IDENT:
     if (! left())
       throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
-    return left()->opcalc(scope);
+    return left()->calc(scope, context);
 
   case FUNCTION: {
     // Evaluating a FUNCTION is the same as calling it directly; this happens
@@ -136,7 +118,7 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
     call_scope_t call_args(scope);
 
     if (has_right())
-      call_args.set_args(right()->opcalc(scope));
+      call_args.set_args(right()->calc(scope, context));
 
     ptr_op_t func = left();
     const string& name(func->as_ident());
@@ -153,7 +135,8 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
     if (! right()->is_value() || ! right()->as_value().is_mask())
       throw_(calc_error, "Right-hand argument to match operator must be a regex");
 #endif
-    return right()->opcalc(scope).as_mask().match(left()->opcalc(scope).to_string());
+    return (right()->calc(scope, context).as_mask()
+	    .match(left()->calc(scope, context).to_string()));
 
   case INDEX: {
     const call_scope_t& args(downcast<const call_scope_t>(scope));
@@ -166,42 +149,43 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
   }
 
   case O_EQ:
-    return left()->opcalc(scope) == right()->opcalc(scope);
+    return left()->calc(scope, context) == right()->calc(scope, context);
   case O_LT:
-    return left()->opcalc(scope) <  right()->opcalc(scope);
+    return left()->calc(scope, context) <  right()->calc(scope, context);
   case O_LTE:
-    return left()->opcalc(scope) <= right()->opcalc(scope);
+    return left()->calc(scope, context) <= right()->calc(scope, context);
   case O_GT:
-    return left()->opcalc(scope) >  right()->opcalc(scope);
+    return left()->calc(scope, context) >  right()->calc(scope, context);
   case O_GTE:
-    return left()->opcalc(scope) >= right()->opcalc(scope);
+    return left()->calc(scope, context) >= right()->calc(scope, context);
 
   case O_ADD:
-    return left()->opcalc(scope) + right()->opcalc(scope);
+    return left()->calc(scope, context) + right()->calc(scope, context);
   case O_SUB:
-    return left()->opcalc(scope) - right()->opcalc(scope);
+    return left()->calc(scope, context) - right()->calc(scope, context);
   case O_MUL:
-    return left()->opcalc(scope) * right()->opcalc(scope);
+    return left()->calc(scope, context) * right()->calc(scope, context);
   case O_DIV:
-    return left()->opcalc(scope) / right()->opcalc(scope);
+    return left()->calc(scope, context) / right()->calc(scope, context);
 
   case O_NEG:
-    return left()->opcalc(scope).negate();
+    return left()->calc(scope, context).negate();
 
   case O_NOT:
-    return ! left()->opcalc(scope);
+    return ! left()->calc(scope, context);
 
   case O_AND:
-    return ! left()->opcalc(scope) ? value_t(false) : right()->opcalc(scope);
+    return (! left()->calc(scope, context) ? value_t(false) :
+	    right()->calc(scope, context));
 
   case O_OR:
-    if (value_t temp = left()->opcalc(scope))
+    if (value_t temp = left()->calc(scope, context))
       return temp;
     else
-      return right()->opcalc(scope);
+      return right()->calc(scope, context);
 
   case O_COMMA: {
-    value_t result(left()->opcalc(scope));
+    value_t result(left()->calc(scope, context));
 
     ptr_op_t next = right();
     while (next) {
@@ -214,7 +198,7 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
 	next     = NULL;
       }
 
-      result.push_back(value_op->opcalc(scope));
+      result.push_back(value_op->calc(scope, context));
     }
     return result;
   }
@@ -226,10 +210,11 @@ value_t expr_t::op_t::opcalc(scope_t& scope)
   }
 
   return NULL_VALUE;
+
   }
-  catch (const std::exception& err) {
-    if (! context_op_ptr)
-      context_op_ptr = this;
+  catch (const std::exception& err) { 
+    if (context && ! *context)
+      *context = this;
     throw;
   }
 }

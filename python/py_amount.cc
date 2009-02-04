@@ -74,7 +74,8 @@ void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
   amount.parse(str, flags);
 }
 
-void py_print(amount_t& amount, object out) {
+void py_print(amount_t& amount, object out)
+{
   if (PyFile_Check(out.ptr())) {
     pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
     amount.print(outstr);
@@ -82,6 +83,10 @@ void py_print(amount_t& amount, object out) {
     PyErr_SetString(PyExc_IOError,
 		    "Argument to amount.print_(file) is not a file object");
   }
+}
+
+void py_amount_initialize() {
+  amount_t::initialize();
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -94,7 +99,7 @@ EXC_TRANSLATOR(amount_error)
 void export_amount()
 {
   class_< amount_t > ("Amount")
-    .def("initialize", &amount_t::initialize)
+    .def("initialize", py_amount_initialize) // only for the PyUnitTests
     .staticmethod("initialize")
     .def("shutdown", &amount_t::shutdown)
     .staticmethod("shutdown")
@@ -102,12 +107,6 @@ void export_amount()
     .add_static_property("current_pool",
 			 make_getter(&amount_t::current_pool,
 				     return_value_policy<reference_existing_object>()))
-
-    .add_static_property("keep_base", &amount_t::keep_base)
-
-    .add_static_property("keep_price", &amount_t::keep_price)
-    .add_static_property("keep_date", &amount_t::keep_date)
-    .add_static_property("keep_tag", &amount_t::keep_tag)
 
     .add_static_property("stream_fullstrings",
 			 make_getter(&amount_t::stream_fullstrings),

@@ -109,7 +109,7 @@ public:
   output_stream_t output_stream;
 
   string	  format_string;
-  string	  date_output_format;
+  string	  output_date_format;
   string	  predicate;
   string	  secondary_predicate;
   string	  display_predicate;
@@ -143,12 +143,12 @@ public:
   bool		  code_as_payee;
   bool		  show_revalued;
   bool		  show_revalued_only;
-  bool		  keep_price;
-  bool		  keep_date;
-  bool		  keep_tag;
   bool		  entry_sort;
   bool		  sort_all;
   bool		  anonymize;
+  bool		  use_effective_date;
+
+  keep_details_t  what_to_keep;
 
   string	  account;
   optional<path>  pager_path;
@@ -158,7 +158,9 @@ public:
   session_t&	  session;
 
   explicit report_t(session_t& _session)
-    : amount_expr("amount"),
+    : output_date_format("%y-%b-%d"),
+
+      amount_expr("amount"),
       total_expr("total"),
       display_total("total_expr"),
 
@@ -178,12 +180,10 @@ public:
       code_as_payee(false),
       show_revalued(false),
       show_revalued_only(false),
-      keep_price(false),
-      keep_date(false),
-      keep_tag(false),
       entry_sort(false),
       sort_all(false),
       anonymize(false),
+      use_effective_date(false),
 
       raw_mode(false),
 
@@ -194,6 +194,7 @@ public:
 
   virtual ~report_t() {
     TRACE_DTOR(report_t);
+    output_stream.close();
   }
 
   //
@@ -268,15 +269,23 @@ public:
   value_t option_account(call_scope_t& args) { // a:
     config->account = optarg;
   }
+#endif
 
   //////////////////////////////////////////////////////////////////////
   //
   // Report filtering
 
-  value_t option_effective(call_scope_t& args) {
-    item_t::use_effective_date = true;
+  value_t option_ignore(call_scope_t& args) {
+    return true;
   }
-#endif
+  value_t option_ignore_(call_scope_t& args) {
+    return true;
+  }
+
+  value_t option_effective(call_scope_t& args) {
+    use_effective_date = true;
+    return true;
+  }
 
   value_t option_begin_(call_scope_t& args) { // b:
     interval_t interval(args[0].to_string());
@@ -348,21 +357,21 @@ public:
   }
 
   value_t option_lots(call_scope_t& args) {
-    report->keep_price =
-      report->keep_date  =
-      report->keep_tag   = true;
+    what_to_keep.keep_price = true;
+    what_to_keep.keep_date  = true;
+      what_to_keep.keep_tag = true;
   }
 
   value_t option_lot_prices(call_scope_t& args) {
-    report->keep_price = true;
+    what_to_keep.keep_price = true;
   }
 
   value_t option_lot_dates(call_scope_t& args) {
-    report->keep_date = true;
+    what_to_keep.keep_date = true;
   }
 
   value_t option_lot_tags(call_scope_t& args) {
-    report->keep_tag = true;
+    what_to_keep.keep_tag = true;
   }
 #endif
 
@@ -376,7 +385,7 @@ public:
   }
 
   value_t option_date_format_(call_scope_t& args) { // y:
-    ledger::output_date_format = args[0].as_string();
+    output_date_format = args[0].as_string();
     return true;
   }
 
@@ -710,14 +719,18 @@ public:
   }
 
   value_t option_ansi(call_scope_t& args) {
+#if 0
     format_t::ansi_codes  = true;
     format_t::ansi_invert = false;
+#endif
     return true;
   }
 
   value_t option_ansi_invert(call_scope_t& args) {
+#if 0
     format_t::ansi_codes  =
     format_t::ansi_invert = true;
+#endif
     return true;
   }
 
@@ -726,7 +739,7 @@ public:
   // Commodity reporting
 
   value_t option_base(call_scope_t& args) { // :
-    amount_t::keep_base = true;
+    what_to_keep.keep_base = true;
     return true;
   }
 
@@ -775,27 +788,25 @@ public:
   }
 
 #if 0
-  namespace {
-    void parse_price_setting(const char * optarg)
-    {
-      char * equals = std::strchr(optarg, '=');
-      if (! equals)
-	return;
+  void parse_price_setting(const char * optarg)
+  {
+    char * equals = std::strchr(optarg, '=');
+    if (! equals)
+      return;
 
-      while (std::isspace(*optarg))
-	optarg++;
-      while (equals > optarg && std::isspace(*(equals - 1)))
-	equals--;
+    while (std::isspace(*optarg))
+      optarg++;
+    while (equals > optarg && std::isspace(*(equals - 1)))
+      equals--;
 
-      std::string symbol(optarg, 0, equals - optarg);
-      amount_t price(equals + 1);
+    std::string symbol(optarg, 0, equals - optarg);
+    amount_t price(equals + 1);
 
-      if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
-	commodity->add_price(datetime_t::now, price);
+    if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
+      commodity->add_price(datetime_t::now, price);
 #if 0
-	commodity->history()->bogus_time = datetime_t::now;
+      commodity->history()->bogus_time = datetime_t::now;
 #endif
-      }
     }
   }
 #endif

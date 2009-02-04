@@ -68,9 +68,7 @@ typedef function<value_t (call_scope_t&)> function_t;
 class expr_t
 {
   struct token_t;
-
-  class parser_t;
-  static std::auto_ptr<parser_t> parser;
+  class  parser_t;
 
 public:
   class op_t;
@@ -92,14 +90,6 @@ private:
   bool     compiled;
 
 public:
-  /**
-   * The initialize and shutdown methods ready the amount subsystem for
-   * use.  Normally they are called by `session_t::initialize' and
-   * `session_t::shutdown'.
-   */
-  static void initialize();
-  static void shutdown();
-
   expr_t();
   expr_t(const expr_t& other);
   expr_t(const ptr_op_t& _ptr, const string& _str = "");

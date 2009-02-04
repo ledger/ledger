@@ -34,19 +34,6 @@
 namespace ledger {
 
 namespace {
-#ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
-  const ptime time_now = boost::posix_time::microsec_clock::universal_time();
-#else
-  const ptime time_now = boost::posix_time::second_clock::universal_time();
-#endif
-  const date  date_now = boost::gregorian::day_clock::universal_day();
-}
-
-const datetime_t& current_time(time_now);
-const date_t&	  current_date(date_now);
-      int         current_year(current_date.year());
-
-namespace {
   const char * formats[] = {
     "%y/%m/%d",
     "%Y/%m/%d",
@@ -67,7 +54,6 @@ namespace {
 }
 
 optional<string> input_date_format;
-string		 output_date_format = "%y-%b-%d";
 
 namespace {
   bool parse_date_mask(const char * date_str, std::tm& result)
@@ -85,7 +71,7 @@ namespace {
     return false;
   }
 
-  bool parse_date(const char * date_str, std::tm& result, const int year)
+  bool quick_parse_date(const char * date_str, std::tm& result, const int year)
   {
     if (! parse_date_mask(date_str, result))
       return false;
@@ -95,7 +81,7 @@ namespace {
     result.tm_sec  = 0;
 
     if (result.tm_year == -1)
-      result.tm_year = ((year == -1) ? current_year : year) - 1900;
+      result.tm_year = (year == -1 ? int(CURRENT_DATE().year()) : year) - 1900;
 
     if (result.tm_mon == -1)
       result.tm_mon = 0;
@@ -105,25 +91,20 @@ namespace {
 
     return true;
   }
-
-  bool quick_parse_date(const char * date_str, std::tm& result)
-  {
-    return parse_date(date_str, result, current_year);
-  }
 }
 
-datetime_t parse_datetime(const char * str)
+datetime_t parse_datetime(const char * str, int current_year)
 {
   std::tm when;
-  // jww (2008-08-01): This needs to look for HH:MM:SS as well.
-  quick_parse_date(str, when);
+  // jww (2008-08-01): Needs to look for HH:MM:SS as well.
+  quick_parse_date(str, when, current_year);
   return posix_time::ptime_from_tm(when);
 }
 
-date_t parse_date(const char * str)
+date_t parse_date(const char * str, int current_year)
 {
   std::tm when;
-  quick_parse_date(str, when);
+  quick_parse_date(str, when, current_year);
   return gregorian::date_from_tm(when);
 }
 
@@ -168,7 +149,8 @@ date_t interval_t::increment(const date_t& moment) const
 
 namespace {
   void parse_inclusion_specifier(const string& word,
-				 date_t * begin, date_t * end)
+				 date_t *      begin,
+				 date_t *      end)
   {
     struct std::tm when;
 
@@ -185,7 +167,7 @@ namespace {
     bool saw_day  = true;
 
     if (when.tm_year == -1) {
-      when.tm_year = current_year - 1900;
+      when.tm_year = CURRENT_DATE().year() - 1900;
       saw_year = false;
     }
     if (when.tm_mon == -1) {
@@ -238,13 +220,14 @@ namespace {
     }
 
     if (word == "month") {
-      time_t now = to_time_t(current_time);
+      time_t now = to_time_t(CURRENT_TIME());
       std::strftime(buf, 31, "%B", localtime(&now));
       word = buf;
       mon_spec = true;
     }
     else if (word == "year") {
-      std::sprintf(buf, "%04d", current_year);
+      int year = CURRENT_DATE().year();
+      std::sprintf(buf, "%04d", year);
       word = buf;
     }
 

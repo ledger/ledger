@@ -112,6 +112,7 @@ class account_t : public scope_t
   }
 
   account_t * find_account(const string& name, bool auto_create = true);
+  account_t * find_account_re(const string& regexp);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
 
@@ -177,7 +178,7 @@ class account_t : public scope_t
     return *xdata_;
   }
 
-  void calculate_sums(expr_t& amount_expr);
+  void calculate_sums(expr_t& amount_expr, scope_t& scope);
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);

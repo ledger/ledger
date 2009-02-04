@@ -126,16 +126,16 @@ public:
   virtual optional<string> get_tag(const string& tag) const;
   virtual void set_tag(const string& tag,
 		       const optional<string>& value = none);
-  virtual void parse_tags(const char * p);
-  virtual void append_note(const char * p);
+  virtual void parse_tags(const char * p, int current_year = -1);
+  virtual void append_note(const char * p, int current_year = -1);
 
-  virtual optional<date_t> actual_date() const {
-    return _date;
+  virtual date_t date() const {
+    assert(_date);
+    return *_date;
   }
   virtual optional<date_t> effective_date() const {
     return _date_eff;
   }
-  optional<date_t> date() const;
 
   void set_state(state_t new_state) {
     _state = new_state;

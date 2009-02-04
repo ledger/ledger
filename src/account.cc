@@ -30,7 +30,6 @@
  */
 
 #include "account.h"
-#include "report.h"
 
 namespace ledger {
 
@@ -87,6 +86,25 @@ account_t * account_t::find_account(const string& name,
   return account;
 }
 
+namespace {
+  account_t * find_account_re_(account_t * account, const mask_t& regexp)
+  {
+    if (regexp.match(account->fullname()))
+      return account;
+
+    foreach (accounts_map::value_type& pair, account->accounts)
+      if (account_t * a = find_account_re_(pair.second, regexp))
+	return a;
+
+    return NULL;
+  }
+}
+
+account_t * account_t::find_account_re(const string& regexp)
+{
+  return find_account_re_(this, mask_t(regexp));
+}
+
 string account_t::fullname() const
 {
   if (! _fullname.empty()) {
@@ -114,7 +132,8 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 }
 
 namespace {
-  value_t get_partial_name(account_t& account) {
+  value_t get_partial_name(account_t& account)
+  {
     string name;
 
     for (account_t * acct = &account;
@@ -152,7 +171,8 @@ namespace {
     return long(account.depth);
   }
 
-  value_t get_depth_spacer(account_t& account) {
+  value_t get_depth_spacer(account_t& account)
+  {
     std::ostringstream out;
     for (account_t * acct = &account;
 	 acct;
@@ -197,7 +217,7 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
     break;
   }
 
-  return session_t::current->global_scope->lookup(name);
+  return expr_t::ptr_op_t();
 }
 
 bool account_t::valid() const
@@ -222,12 +242,13 @@ bool account_t::valid() const
   return true;
 }
 
-void account_t::calculate_sums(expr_t& amount_expr)
+void account_t::calculate_sums(expr_t&  amount_expr,
+			       scope_t& scope)
 {
   xdata_t& xd(xdata());
 
   foreach (accounts_map::value_type& pair, accounts) {
-    (*pair.second).calculate_sums(amount_expr);
+    (*pair.second).calculate_sums(amount_expr, scope);
 
     xdata_t& child_xd((*pair.second).xdata());
     if (! child_xd.total.is_null()) {
@@ -239,7 +260,8 @@ void account_t::calculate_sums(expr_t& amount_expr)
     }
   }
 
-  call_scope_t args(*this);
+  bind_scope_t bound_scope(scope, *this);
+  call_scope_t args(bound_scope);
   value_t amount(amount_expr.calc(args));
   if (! amount.is_null()) {
     add_or_set_value(xd.total, amount);

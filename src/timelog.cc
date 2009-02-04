@@ -113,7 +113,7 @@ time_log_t::~time_log_t()
       accounts.push_back(time_entry.account);
 
     foreach (account_t * account, accounts)
-      clock_out_from_timelog(time_entries, current_time, account, NULL,
+      clock_out_from_timelog(time_entries, CURRENT_TIME(), account, NULL,
 			     journal);
 
     assert(time_entries.empty());

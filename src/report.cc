@@ -42,18 +42,14 @@ void report_t::xacts_report(xact_handler_ptr handler)
 {
   session_xacts_iterator walker(session);
   pass_down_xacts(chain_xact_handlers(*this, handler), walker);
-
-  if (DO_VERIFY())
-    session.clean_xacts();
+  session.clean_xacts();
 }
 
 void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
 {
   entry_xacts_iterator walker(entry);
   pass_down_xacts(chain_xact_handlers(*this, handler), walker);
-
-  if (DO_VERIFY())
-    session.clean_xacts(entry);
+  session.clean_xacts(entry);
 }
 
 void report_t::sum_all_accounts()
@@ -62,7 +58,8 @@ void report_t::sum_all_accounts()
   pass_down_xacts
     (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value), false),
      walker);
-  session.master->calculate_sums(amount_expr);
+
+  session.master->calculate_sums(amount_expr, *this);
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)
@@ -71,16 +68,16 @@ void report_t::accounts_report(acct_handler_ptr handler)
 
   if (sort_string.empty()) {
     basic_accounts_iterator walker(*session.master);
-    pass_down_accounts(handler, walker, expr_t("total"));
+    pass_down_accounts(handler, walker,
+		       item_predicate<account_t>("total", what_to_keep));
   } else {
     sorted_accounts_iterator walker(*session.master, sort_string);
-    pass_down_accounts(handler, walker, expr_t("total"));
+    pass_down_accounts(handler, walker,
+		       item_predicate<account_t>("total", what_to_keep));
   }
     
-  if (DO_VERIFY()) {
-    session.clean_xacts();
-    session.clean_accounts();
-  }
+  session.clean_xacts();
+  session.clean_accounts();
 }
 
 void report_t::commodities_report(const string& format)
@@ -125,6 +122,8 @@ value_t report_t::f_market_value(call_scope_t& args)
 namespace {
   value_t print_balance(call_scope_t& args)
   {
+    report_t& report(find_scope<report_t>(args));
+
     var_t<long>	first_width(args, 1);
     var_t<long>	latter_width(args, 2);
 #if 0
@@ -132,8 +131,38 @@ namespace {
 #endif
 
     std::ostringstream out;
-    args[0].strip_annotations().dump(out, *first_width, *latter_width);
+    args[0].strip_annotations(report.what_to_keep)
+      .print(out, *first_width, *latter_width);
     return string_value(out.str());
+  }
+
+  value_t strip_annotations(call_scope_t& args)
+  {
+    report_t& report(find_scope<report_t>(args));
+    return args[0].strip_annotations(report.what_to_keep);
+  }
+
+  value_t truncate(call_scope_t& args)
+  {
+    report_t& report(find_scope<report_t>(args));
+
+    var_t<long>	width(args, 1);
+    var_t<long>	account_abbrev(args, 2);
+
+    return string_value(format_t::truncate(args[0].as_string(), *width,
+					   account_abbrev ? *account_abbrev : -1));
+  }
+
+  value_t display_date(call_scope_t& args)
+  {
+    report_t& report(find_scope<report_t>(args));
+    item_t&   item(find_scope<item_t>(args));
+
+    if (item.use_effective_date) {
+      if (optional<date_t> date = item.effective_date())
+	return string_value(format_date(*date, report.output_date_format));
+    }
+    return string_value(format_date(item.date(), report.output_date_format));
   }
 
   template <class Type        = xact_t,
@@ -178,13 +207,14 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'd':
     if (std::strcmp(p, "display_total") == 0)
 	return MAKE_FUNCTOR(report_t::get_display_total);
+    else if (std::strcmp(p, "display_date") == 0)
+	return WRAP_FUNCTOR(display_date);
     break;
 
   case 'l':
     if (std::strncmp(p, "ledger_cmd_", 11) == 0) {
 
-#define FORMAT(str) \
-    (format_string.empty() ? session. str : format_string)
+#define FORMAT(str) (format_string.empty() ? session. str : format_string)
 
 #if 0
       // Commands yet to implement:
@@ -313,6 +343,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_dow);
 	else if (std::strcmp(p, "date-format_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_date_format_);
+	else if (std::strcmp(p, "debug_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_ignore_);
 	break;
 
       case 'e':
@@ -409,11 +441,20 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_totals);
 	else if (std::strcmp(p, "tail_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_tail_);
+	else if (std::strcmp(p, "trace_") == 0)
+	  return MAKE_FUNCTOR(report_t::option_ignore_);
 	break;
 
       case 'u':
 	if (std::strcmp(p, "uncleared") == 0)
 	  return MAKE_FUNCTOR(report_t::option_uncleared);
+	break;
+
+      case 'v':
+	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
+	  return MAKE_FUNCTOR(report_t::option_ignore);
+	else if (std::strcmp(p, "verify") == 0)
+	  return MAKE_FUNCTOR(report_t::option_ignore);
 	break;
 
       case 'w':
@@ -516,11 +557,16 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return WRAP_FUNCTOR(print_balance);
     break;
 
+  case 's':
+    if (std::strcmp(p, "strip") == 0)
+      return WRAP_FUNCTOR(strip_annotations);
+    break;
+
   case 't':
     if (std::strcmp(p, "total_expr") == 0)
 	return MAKE_FUNCTOR(report_t::get_total_expr);
     else if (std::strcmp(p, "truncate") == 0)
-	return MAKE_FUNCTOR(report_t::get_total_expr);
+	return WRAP_FUNCTOR(truncate);
     break;
   }
 

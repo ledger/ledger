@@ -63,22 +63,25 @@ inline bool is_valid(const date_t& moment) {
   return ! moment.is_not_a_date();
 }
 
-extern const datetime_t& current_time;
-extern const date_t&     current_date;
-extern int		 current_year;
-extern optional<string>  input_date_format;
-extern string		 output_date_format;
+#ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
+#define CURRENT_TIME() boost::posix_time::microsec_clock::universal_time()
+#else
+#define CURRENT_TIME() boost::posix_time::second_clock::universal_time()
+#endif
+#define CURRENT_DATE() boost::gregorian::day_clock::universal_day()
 
-datetime_t parse_datetime(const char * str);
+extern optional<string> input_date_format;
 
-inline datetime_t parse_datetime(const string& str) {
-  return parse_datetime(str.c_str());
+datetime_t parse_datetime(const char * str, int current_year = -1);
+
+inline datetime_t parse_datetime(const string& str, int current_year = -1) {
+  return parse_datetime(str.c_str(), current_year);
 }
 
-date_t parse_date(const char * str);
+date_t parse_date(const char * str, int current_year = -1);
 
-inline date_t parse_date(const string& str) {
-  return parse_date(str.c_str());
+inline date_t parse_date(const string& str, int current_year = -1) {
+  return parse_date(str.c_str(), current_year);
 }
 
 inline std::time_t to_time_t(const ptime& t) 
@@ -91,27 +94,22 @@ inline std::time_t to_time_t(const ptime& t)
   return (t-start).total_seconds(); 
 }
 
-inline string format_datetime(const datetime_t& when)
+inline string format_datetime(const datetime_t& when,
+			      const string      format = "%Y-%m-%d %H:%M:%S")
 {
   char buf[256];
   time_t moment = to_time_t(when);
-  std::strftime(buf, 255, (output_date_format + " %H:%M:%S").c_str(),
-		std::localtime(&moment));
+  std::strftime(buf, 255, format.c_str(), std::localtime(&moment));
   return buf;
 }
 
 inline string format_date(const date_t& when,
-			  const optional<string>& format = none)
+			  const string  format = "%Y-%m-%d")
 {
-  if (format || ! output_date_format.empty()) {
-    char buf[256];
-    std::tm moment = gregorian::to_tm(when);
-    std::strftime(buf, 255, format ?
-		  format->c_str() : output_date_format.c_str(), &moment);
-    return buf;
-  } else {
-    return to_simple_string(when).substr(2);
-  }
+  char buf[256];
+  std::tm moment = gregorian::to_tm(when);
+  std::strftime(buf, 255, format.c_str(), &moment);
+  return buf;
 }
 
 /**

@@ -34,13 +34,6 @@
 
 namespace ledger {
 
-format_t::elision_style_t
-     format_t::elision_style = ABBREVIATE;
-int  format_t::abbrev_length = 2;
-
-bool format_t::ansi_codes    = false;
-bool format_t::ansi_invert   = false;
-
 void format_t::element_t::dump(std::ostream& out) const
 {
   out << "Element: ";
@@ -295,7 +288,8 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	  value = elem->expr.calc(scope);
 	}
 	DEBUG("format.expr", "value = (" << value << ")");
-	value.strip_annotations().dump(out, elem->min_width);
+
+	value.print(out, elem->min_width);
       }
       catch (const calc_error&) {
 	add_error_context("While calculating format expression:");
@@ -326,7 +320,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 }
 
 string format_t::truncate(const unistring& ustr, std::size_t width,
-			  const bool is_account)
+			  const int account_abbrev_length)
 {
   assert(width < 4095);
 
@@ -336,7 +330,11 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 
   std::ostringstream buf;
 
-  switch (elision_style) {
+  elision_style_t style = TRUNCATE_TRAILING;
+  if (account_abbrev_length > 0)
+    style = ABBREVIATE;
+
+  switch (style) {
   case TRUNCATE_LEADING:
     // This method truncates at the beginning.
     buf << ".." << ustr.extract(len - width, width);
@@ -351,7 +349,7 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
     break;
 
   case ABBREVIATE:
-    if (is_account) {
+    if (account_abbrev_length > 0) {
       std::list<string> parts;
       string::size_type beg = 0;
       string strcopy(ustr.extract());
@@ -376,8 +374,8 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 
 	if (newlen > width) {
 	  unistring temp(*i);
-	  result << temp.extract(0, abbrev_length) << ":";
-	  newlen -= temp.length() - abbrev_length;
+	  result << temp.extract(0, account_abbrev_length) << ":";
+	  newlen -= temp.length() - account_abbrev_length;
 	} else {
 	  result << *i << ":";
 	}

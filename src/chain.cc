@@ -55,7 +55,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // filter_xacts will only pass through xacts matching the
     // `display_predicate'.
     if (! report.display_predicate.empty())
-      handler.reset(new filter_xacts(handler, report.display_predicate));
+      handler.reset(new filter_xacts
+		    (handler, item_predicate<xact_t>(report.display_predicate,
+						     report.what_to_keep)));
 
     // calc_xacts computes the running total.  When this
     // appears will determine, for example, whether filtered
@@ -81,7 +83,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 	     descend_exprs.rbegin();
 	   i != descend_exprs.rend();
 	   i++)
-	handler.reset(new component_xacts(handler, *i));
+	handler.reset(new component_xacts
+		      (handler,
+		       item_predicate<xact_t>(*i, report.what_to_keep)));
 
       remember_components = true;
     }
@@ -90,7 +94,7 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // xacts which can be reconciled to a given balance
     // (calculated against the xacts which it receives).
     if (! report.reconcile_balance.empty()) {
-      date_t cutoff = current_date;
+      date_t cutoff = CURRENT_DATE();
       if (! report.reconcile_date.empty())
 	cutoff = parse_date(report.reconcile_date);
       handler.reset(new reconcile_xacts
@@ -100,7 +104,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // filter_xacts will only pass through xacts
     // matching the `secondary_predicate'.
     if (! report.secondary_predicate.empty())
-      handler.reset(new filter_xacts(handler, report.secondary_predicate));
+      handler.reset(new filter_xacts
+		    (handler, item_predicate<xact_t>(report.secondary_predicate,
+						     report.what_to_keep)));
 
     // sort_xacts will sort all the xacts it sees, based
     // on the `sort_order' value expression.
@@ -176,7 +182,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   if (! report.predicate.empty()) {
     DEBUG("report.predicate",
 	  "Report predicate expression = " << report.predicate);
-    handler.reset(new filter_xacts(handler, report.predicate));
+    handler.reset(new filter_xacts
+		  (handler, item_predicate<xact_t>(report.predicate,
+						   report.what_to_keep)));
   }
 
 #if 0

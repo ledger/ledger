@@ -721,27 +721,26 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
 }
 
 commodity_t&
-annotated_commodity_t::strip_annotations(const bool _keep_price,
-					 const bool _keep_date,
-					 const bool _keep_tag)
+annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 {
   DEBUG("commodity.annotated.strip",
 	"Reducing commodity " << *this << std::endl
-	 << "  keep price " << _keep_price << " "
-	 << "  keep date "  << _keep_date << " "
-	 << "  keep tag "   << _keep_tag);
+	 << "  keep price " << what_to_keep.keep_price << " "
+	 << "  keep date "  << what_to_keep.keep_date << " "
+	 << "  keep tag "   << what_to_keep.keep_tag);
 
   commodity_t * new_comm;
 
-  if ((_keep_price && details.price) ||
-      (_keep_date  && details.date) ||
-      (_keep_tag   && details.tag))
+  if (what_to_keep.keep_any(*this) &&
+      ((what_to_keep.keep_price && details.price) ||
+       (what_to_keep.keep_date  && details.date) ||
+       (what_to_keep.keep_tag   && details.tag)))
   {
     new_comm = parent().find_or_create
       (referent(),
-       annotation_t(_keep_price ? details.price : none,
-		    _keep_date  ? details.date  : none,
-		    _keep_tag   ? details.tag   : none));
+       annotation_t(what_to_keep.keep_price ? details.price : none,
+		    what_to_keep.keep_date  ? details.date  : none,
+		    what_to_keep.keep_tag   ? details.tag   : none));
   } else {
     new_comm = parent().find_or_create(base_symbol());
   }

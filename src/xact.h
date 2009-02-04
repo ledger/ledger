@@ -106,7 +106,7 @@ public:
     TRACE_DTOR(xact_t);
   }
 
-  virtual optional<date_t> actual_date() const;
+  virtual date_t date() const;
   virtual optional<date_t> effective_date() const;
 
   virtual state_t state() const;
@@ -203,7 +203,7 @@ public:
   date_t reported_date() const {
     if (xdata_ && is_valid(xdata_->date))
       return xdata_->date;
-    return *date();
+    return date();
   }
 
   account_t * reported_account() {

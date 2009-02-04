@@ -133,8 +133,6 @@ void export_times()
 
   scope().attr("parse_datetime") = &py_parse_datetime;
   scope().attr("parse_date")	 = &py_parse_date;
-  scope().attr("current_time")	 = current_time;
-  scope().attr("current_date")	 = current_date;
 }
 
 } // namespace ledger

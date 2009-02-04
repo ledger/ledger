@@ -435,12 +435,6 @@ std::ostringstream _log_buffer;
 uint8_t		   _trace_level;
 #endif
 
-#ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
-#define CURRENT_TIME() boost::posix_time::microsec_clock::universal_time()
-#else
-#define CURRENT_TIME() boost::posix_time::second_clock::universal_time()
-#endif
-
 static inline void stream_memory_size(std::ostream& out, std::size_t size)
 {
   if (size < 1024)
@@ -458,20 +452,16 @@ static ptime logger_start;
 
 bool logger_func(log_level_t level)
 {
-  std::size_t appender = 0;
-
   if (! logger_has_run) {
     logger_has_run = true;
     logger_start   = CURRENT_TIME();
 
     IF_VERIFY()
-      *_log_stream << " TIME  OBJSZ  MEMSZ" << std::endl;
-
-    appender = (logger_start - current_time).total_milliseconds();
+      *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
   }
 
   *_log_stream << std::right << std::setw(5)
-	       << (CURRENT_TIME() - logger_start).total_milliseconds();
+	       << (CURRENT_TIME() - logger_start).total_milliseconds() << "ms";
 
   IF_VERIFY() {
     *_log_stream << std::right << std::setw(6) << std::setprecision(3);
@@ -500,13 +490,7 @@ bool logger_func(log_level_t level)
     break;
   }
 
-  *_log_stream << ' ' << _log_buffer.str();
-
-  if (appender)
-    *_log_stream << " (" << appender << "ms startup)";
-
-  *_log_stream << std::endl;
-
+  *_log_stream << ' ' << _log_buffer.str() << std::endl;
   _log_buffer.str("");
 
   return true;

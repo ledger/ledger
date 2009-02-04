@@ -30,8 +30,6 @@
  */
 
 #include "item.h"
-#include "session.h"
-#include "report.h"
 
 namespace ledger {
 
@@ -69,7 +67,7 @@ void item_t::set_tag(const string&           tag,
   assert(result.second);
 }
 
-void item_t::parse_tags(const char * p)
+void item_t::parse_tags(const char * p, int current_year)
 {
   if (char * b = std::strchr(p, '[')) {
     if (char * e = std::strchr(p, ']')) {
@@ -79,10 +77,10 @@ void item_t::parse_tags(const char * p)
 
       if (char * p = std::strchr(buf, '=')) {
 	*p++ = '\0';
-	_date_eff = parse_date(p);
+	_date_eff = parse_date(p, current_year);
       }
       if (buf[0])
-	_date = parse_date(buf);
+	_date = parse_date(buf, current_year);
     }
   }
 
@@ -114,7 +112,7 @@ void item_t::parse_tags(const char * p)
   }
 }
 
-void item_t::append_note(const char * p)
+void item_t::append_note(const char * p, int current_year)
 {
   if (note)
     *note += p;
@@ -122,7 +120,7 @@ void item_t::append_note(const char * p)
     note = p;
   *note += '\n';
 
-  parse_tags(p);
+  parse_tags(p, current_year);
 }
 
 namespace {
@@ -250,14 +248,6 @@ value_t get_comment(item_t& item)
   }
 }
 
-optional<date_t> item_t::date() const
-{
-  if (use_effective_date && _date_eff)
-    return effective_date();
-  else
-    return actual_date();
-}
-
 expr_t::ptr_op_t item_t::lookup(const string& name)
 {
   switch (name[0]) {
@@ -321,7 +311,7 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
     break;
   }
 
-  return session_t::current->global_scope->lookup(name);
+  return expr_t::ptr_op_t();
 }
 
 bool item_t::valid() const

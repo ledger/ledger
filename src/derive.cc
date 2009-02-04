@@ -35,7 +35,7 @@
 
 namespace ledger {
 
-entry_t * derive_new_entry(report_t& report,
+entry_t * derive_new_entry(report_t&		  report,
 			   strings_list::iterator i,
 			   strings_list::iterator end)
 {
@@ -71,12 +71,12 @@ entry_t * derive_new_entry(report_t& report,
   if (! matching) {
     account_t * acct;
     if (i == end || ((*i)[0] == '-' || std::isdigit((*i)[0]))) {
-      acct = session.find_account("Expenses");
+      acct = session.master->find_account("Expenses");
     }
     else if (i != end) {
-      acct = session.find_account_re(*i);
+      acct = session.master->find_account_re(*i);
       if (! acct)
-	acct = session.find_account(*i);
+	acct = session.master->find_account(*i);
       assert(acct);
       i++;
     }
@@ -106,16 +106,16 @@ entry_t * derive_new_entry(report_t& report,
 
     if (i != end) {
       if (! acct)
-	acct = session.find_account_re(*i);
+	acct = session.master->find_account_re(*i);
       if (! acct)
-	acct = session.find_account(*i);
+	acct = session.master->find_account(*i);
     }
 
     if (! acct) {
       if (matching && matching->journal->basket)
 	acct = matching->journal->basket;
       else
-	acct = session.find_account("Equity");
+	acct = session.master->find_account("Equity");
     }   
 
     added->add_xact(new xact_t(acct));
@@ -144,9 +144,9 @@ entry_t * derive_new_entry(report_t& report,
     added->add_xact(xact);
 
     if (i != end) {
-      account_t * acct = session.find_account_re(*i);
+      account_t * acct = session.master->find_account_re(*i);
       if (! acct)
-	acct = session.find_account(*i);
+	acct = session.master->find_account(*i);
       assert(acct);
       added->xacts.back()->account = acct;
     }
@@ -185,16 +185,16 @@ entry_t * derive_new_entry(report_t& report,
 
 	strings_list::iterator x = i;
 	if (i != end && ++x == end) {
-	  draw_acct = session.find_account_re(*i);
+	  draw_acct = session.master->find_account_re(*i);
 	  if (! draw_acct)
-	    draw_acct = session.find_account(*i);
+	    draw_acct = session.master->find_account(*i);
 	  i++;
 	}
 
 	if (! acct)
-	  acct = session.find_account_re(re_pat);
+	  acct = session.master->find_account_re(re_pat);
 	if (! acct)
-	  acct = session.find_account(re_pat);
+	  acct = session.master->find_account(re_pat);
 
 	xact = new xact_t(acct, amount);
 	if (! xact->amount.commodity()) {

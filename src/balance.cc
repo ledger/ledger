@@ -181,6 +181,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
     if (amounts.size() == 1) {
       return amounts.begin()->second;
     }
+#if 0
     else if (amounts.size() > 1) {
       // Try stripping annotations before giving an error.
       balance_t temp(strip_annotations());
@@ -190,6 +191,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
       throw_(amount_error,
 	     "Requested amount of a balance with multiple commodities: " << temp);
     }
+#endif
   }
   else if (amounts.size() > 0) {
     amounts_map::const_iterator i = amounts.find(&*commodity);
@@ -199,14 +201,13 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
   return none;
 }
 
-balance_t balance_t::strip_annotations(const bool keep_price,
-				       const bool keep_date,
-				       const bool keep_tag) const
+balance_t
+balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 {
   balance_t temp;
 
   foreach (const amounts_map::value_type& pair, amounts)
-    temp += pair.second.strip_annotations(keep_price, keep_date, keep_tag);
+    temp += pair.second.strip_annotations(what_to_keep);
 
   return temp;
 }

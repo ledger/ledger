@@ -49,6 +49,8 @@
 
 namespace ledger {
 
+class keep_details_t;
+
 DECLARE_EXCEPTION(commodity_error, std::runtime_error);
 
 /**
@@ -210,6 +212,17 @@ public:
       return comm == *this;
     return base.get() == comm.base.get();
   }
+
+  virtual commodity_t& referent() {
+    return *this;
+  }
+  virtual const commodity_t& referent() const {
+    return *this;
+  }
+  virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep) {
+    return *this;
+  }
+  virtual void write_annotations(std::ostream& out) const {}
 
   commodity_pool_t& parent() const {
     return *parent_;
@@ -421,6 +434,49 @@ struct annotation_t : public equality_comparable<annotation_t>
   }
 };
 
+struct keep_details_t
+{
+  bool keep_price;
+  bool keep_date;
+  bool keep_tag;
+  bool keep_base;
+
+  explicit keep_details_t(bool _keep_price = false,
+			     bool _keep_date  = false,
+			     bool _keep_tag   = false,
+			     bool _keep_base  = false)
+    : keep_price(_keep_price),
+      keep_date(_keep_date),
+      keep_tag(_keep_tag),
+      keep_base(_keep_base)
+  {
+    TRACE_CTOR(keep_details_t, "bool, bool, bool, bool");
+  }
+  keep_details_t(const keep_details_t& other)
+    : keep_price(other.keep_price), keep_date(other.keep_date),
+      keep_tag(other.keep_tag), keep_base(other.keep_base) {
+    TRACE_CTOR(keep_details_t, "copy");
+  }
+
+  ~keep_details_t() throw() {
+    TRACE_DTOR(keep_details_t);
+  }
+
+  bool keep_all() const {
+    return keep_price && keep_date && keep_tag;
+  }
+  bool keep_all(const commodity_t& comm) const {
+    return ! comm.annotated || (keep_price && keep_date && keep_tag);
+  }
+
+  bool keep_any() const {
+    return keep_price || keep_date || keep_tag;
+  }
+  bool keep_any(const commodity_t& comm) const {
+    return comm.annotated && (keep_price || keep_date || keep_tag);
+  }
+};
+
 inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) {
   details.print(out);
   return out;
@@ -456,18 +512,16 @@ public:
     return *this == static_cast<const commodity_t&>(comm);
   }
 
-  commodity_t& referent() {
+  virtual commodity_t& referent() {
     return *ptr;
   }
-  const commodity_t& referent() const {
+  virtual const commodity_t& referent() const {
     return *ptr;
   }
 
-  commodity_t& strip_annotations(const bool _keep_price,
-				 const bool _keep_date,
-				 const bool _keep_tag);
+  virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
 
-  void write_annotations(std::ostream& out) const {
+  virtual void write_annotations(std::ostream& out) const {
     annotated_commodity_t::write_annotations(out, details);
   }
 

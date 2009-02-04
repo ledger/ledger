@@ -273,18 +273,11 @@ class filter_xacts : public item_handler<xact_t>
   filter_xacts();
 
 public:
-  filter_xacts(xact_handler_ptr handler,
-	       const expr_t&    predicate)
+  filter_xacts(xact_handler_ptr		     handler,
+	       const item_predicate<xact_t>& predicate)
     : item_handler<xact_t>(handler), pred(predicate) {
     TRACE_CTOR(filter_xacts,
-	       "xact_handler_ptr, const value_expr&");
-  }
-
-  filter_xacts(xact_handler_ptr handler,
-	       const string& predicate)
-    : item_handler<xact_t>(handler), pred(predicate) {
-    TRACE_CTOR(filter_xacts,
-	       "xact_handler_ptr, const string&");
+	       "xact_handler_ptr, const item_predicate<xact_t>&");
   }
   virtual ~filter_xacts() {
     TRACE_DTOR(filter_xacts);
@@ -421,17 +414,11 @@ class component_xacts : public item_handler<xact_t>
   component_xacts();
 
 public:
-  component_xacts(xact_handler_ptr handler,
-			 const expr_t&    predicate)
+  component_xacts(xact_handler_ptr		handler,
+		  const item_predicate<xact_t>& predicate)
     : item_handler<xact_t>(handler), pred(predicate) {
     TRACE_CTOR(component_xacts,
-	       "xact_handler_ptr, const value_expr&");
-  }
-  component_xacts(xact_handler_ptr handler,
-			 const string& predicate)
-    : item_handler<xact_t>(handler), pred(predicate) {
-    TRACE_CTOR(component_xacts,
-	       "xact_handler_ptr, const string&");
+	       "xact_handler_ptr, const item_predicate<xact_t>&");
   }
   virtual ~component_xacts() throw() {
     TRACE_DTOR(component_xacts);
@@ -507,7 +494,7 @@ public:
 
   virtual void flush() {
     if (last_xact) {
-      output_diff(current_date);
+      output_diff(CURRENT_DATE());
       last_xact = NULL;
     }
     item_handler<xact_t>::flush();
@@ -557,9 +544,9 @@ class subtotal_xacts : public item_handler<xact_t>
   subtotal_xacts();
 
 protected:
-  values_map values;
-  bool       remember_components;
-
+  values_map	     values;
+  bool		     remember_components;
+  optional<string>   date_format;
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
 
@@ -568,9 +555,11 @@ public:
   date_t finish;
 
   subtotal_xacts(xact_handler_ptr handler,
-			bool _remember_components = false)
+		 bool		  _remember_components = false,
+		 optional<string> _date_format	       = none)
     : item_handler<xact_t>(handler),
-      remember_components(_remember_components) {
+      remember_components(_remember_components),
+      date_format(_date_format) {
     TRACE_CTOR(subtotal_xacts,
 	       "xact_handler_ptr, bool");
   }
@@ -735,7 +724,7 @@ public:
 
   virtual void flush();
   virtual void operator()(xact_t& xact) {
-    days_of_the_week[xact.date()->day_of_week()].push_back(&xact);
+    days_of_the_week[xact.date().day_of_week()].push_back(&xact);
   }
 };
 
@@ -812,13 +801,11 @@ class forecast_xacts : public generate_xacts
   item_predicate<xact_t> pred;
 
  public:
-  forecast_xacts(xact_handler_ptr handler, const expr_t& predicate)
+  forecast_xacts(xact_handler_ptr	       handler,
+		 const item_predicate<xact_t>& predicate)
     : generate_xacts(handler), pred(predicate) {
-    TRACE_CTOR(forecast_xacts, "xact_handler_ptr, const expr_t&");
-  }
-  forecast_xacts(xact_handler_ptr handler, const string& predicate)
-    : generate_xacts(handler), pred(predicate) {
-    TRACE_CTOR(forecast_xacts, "xact_handler_ptr, const string&");
+    TRACE_CTOR(forecast_xacts,
+	       "xact_handler_ptr, const item_predicate<xact_t>&");
   }
   virtual ~forecast_xacts() throw() {
     TRACE_DTOR(forecast_xacts);
@@ -858,12 +845,12 @@ class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
-  item_predicate<account_t> pred;
+  optional<item_predicate<account_t> > pred;
 
 public:
   pass_down_accounts(acct_handler_ptr	handler,
-		     accounts_iterator& iter,
-		     const expr_t&	predicate = expr_t());
+		     accounts_iterator&	iter,
+		     const optional<item_predicate<account_t> >& predicate = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

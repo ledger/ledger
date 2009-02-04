@@ -60,15 +60,9 @@ namespace ledger {
  */
 class session_t : public noncopyable, public scope_t
 {
-  static void initialize();
-  static void shutdown();
-
   friend void set_session_context(session_t * session);
-  friend void release_session_context();
 
 public:
-  static session_t *		current;
-
   scope_t *                     global_scope;
 
   std::list<path>		data_files;
@@ -93,13 +87,11 @@ public:
   string			pricesdb_format;
 
   std::size_t			pricing_leeway;
+  int				current_year;
 
   bool				download_quotes;
   bool				use_cache;
   bool				cache_dirty;
-
-  datetime_t			now;
-  date_t			today;
 
   format_t::elision_style_t	elision_style;
   int				abbrev_length;
@@ -107,11 +99,10 @@ public:
   bool				ansi_codes;
   bool				ansi_invert;
 
-  ptr_list<journal_t>		journals;
+  shared_ptr<commodity_pool_t>	commodity_pool;
   ptr_list<journal_t::parser_t> parsers;
-  scoped_ptr<commodity_pool_t>	commdity_pool;
+  ptr_list<journal_t>		journals;
   scoped_ptr<account_t>		master;
-  mutable accounts_map		accounts_cache;
 
   session_t();
   virtual ~session_t();
@@ -122,7 +113,7 @@ public:
   }
 
   journal_t * create_journal() {
-    journal_t * journal = new journal_t;
+    journal_t * journal = new journal_t(master.get());
     journals.push_back(journal);
     return journal;
   }
@@ -177,17 +168,6 @@ public:
     return master->remove_account(acct);
   }
 
-  account_t * find_account(const string& name, bool auto_create = true) {
-    accounts_map::iterator c = accounts_cache.find(name);
-    if (c != accounts_cache.end())
-      return (*c).second;
-
-    account_t * account = master->find_account(name, auto_create);
-    accounts_cache.insert(accounts_map::value_type(name, account));
-    return account;
-  }
-  account_t * find_account_re(const string& regexp);
-
   void clean_accounts();
 
   void clean_xacts();
@@ -213,12 +193,6 @@ public:
     std::cout << "\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.\n";
-    std::cout << "\n(modules: gmp, pcre";
-    std::cout << ", xml";
-#ifdef HAVE_LIBOFX
-    std::cout << ", ofx";
-#endif
-    std::cout << ")\n";
     return NULL_VALUE;
   }
 

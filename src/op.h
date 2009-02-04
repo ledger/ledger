@@ -277,8 +277,7 @@ private:
 
 public:
   ptr_op_t compile(scope_t& scope);
-  value_t  calc(scope_t& scope);
-  value_t  opcalc(scope_t& scope);
+  value_t  calc(scope_t& scope, ptr_op_t * context = NULL);
 
   struct context_t
   {

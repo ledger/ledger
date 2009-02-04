@@ -802,9 +802,7 @@ public:
   value_t annotated_tag() const;
 #endif
 
-  value_t strip_annotations(const bool keep_price = amount_t::keep_price,
-			    const bool keep_date  = amount_t::keep_date,
-			    const bool keep_tag   = amount_t::keep_tag) const;
+  value_t strip_annotations(const keep_details_t& what_to_keep) const;
 
   /**
    * Collection-style access methods for SEQUENCE values.
@@ -925,9 +923,11 @@ public:
   /**
    * Printing methods.
    */
-  void dump(std::ostream& out, const int first_width,
-	    const int latter_width = -1) const;
-  void print(std::ostream& out, const bool relaxed = true) const;
+  void print(std::ostream&	     out,
+	     const int		     first_width,
+	     const int		     latter_width = -1,
+	     const optional<string>& date_format  = none) const;
+  void dump(std::ostream& out, const bool relaxed = true) const;
 
   /**
    * Debugging methods.
@@ -954,7 +954,7 @@ inline string value_context(const value_t& val) {
   std::ostringstream buf;
   buf << std::right;
   buf.width(20);
-  val.print(buf);
+  val.dump(buf);
   return buf.str();
 }
 

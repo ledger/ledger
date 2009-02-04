@@ -130,7 +130,7 @@ void value_t::storage_t::destroy()
 void value_t::initialize()
 {
 #if defined(DEBUG_ON)
-  LOGGER("value.initialize");
+  LOGGER("value.init");
 #endif
 
   true_value = new storage_t;
@@ -1523,10 +1523,11 @@ value_t value_t::annotated_tag() const
 }
 #endif
 
-value_t value_t::strip_annotations(const bool keep_price,
-				   const bool keep_date,
-				   const bool keep_tag) const
+value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
 {
+  if (what_to_keep.keep_all())
+    return *this;
+
   switch (type()) {
   case VOID:
   case BOOLEAN:
@@ -1541,17 +1542,16 @@ value_t value_t::strip_annotations(const bool keep_price,
   case SEQUENCE: {
     sequence_t temp;
     foreach (const value_t& value, as_sequence())
-      temp.push_back(value.strip_annotations(keep_price, keep_date, keep_tag));
+      temp.push_back(value.strip_annotations(what_to_keep));
     return temp;
   }
 
   case AMOUNT:
-    return as_amount().strip_annotations(keep_price, keep_date, keep_tag);
+    return as_amount().strip_annotations(what_to_keep);
   case BALANCE:
-    return as_balance().strip_annotations(keep_price, keep_date, keep_tag);
+    return as_balance().strip_annotations(what_to_keep);
   case BALANCE_PAIR:
-    return as_balance_pair().quantity().strip_annotations(keep_price, keep_date,
-							  keep_tag);
+    return as_balance_pair().quantity().strip_annotations(what_to_keep);
 
   default:
     assert(false);
@@ -1623,24 +1623,35 @@ value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
   return *this;
 }
 
-void value_t::dump(std::ostream& out, const int first_width,
-		   const int latter_width) const
+void value_t::print(std::ostream&           out,
+		    const int	            first_width,
+		    const int               latter_width,
+		    const optional<string>& date_format) const
 {
   switch (type()) {
   case VOID:
-    out << "VOID";
+    out << "";
     break;
 
   case BOOLEAN:
-    out << as_boolean();
+    if (as_boolean())
+      out << "true";
+    else
+      out << "false";
     break;
 
   case DATETIME:
-    out << format_datetime(as_datetime());
+    if (date_format)
+      out << format_datetime(as_datetime(), *date_format);
+    else
+      out << format_datetime(as_datetime());
     break;
 
   case DATE:
-    out << format_date(as_date());
+    if (date_format)
+      out << format_date(as_date(), *date_format);
+    else
+      out << format_date(as_date());
     break;
 
   case INTEGER:
@@ -1655,14 +1666,6 @@ void value_t::dump(std::ostream& out, const int first_width,
     out << as_string();
     break;
 
-  case MASK:
-    out << as_mask();
-    break;
-
-  case POINTER:
-    out << boost::unsafe_any_cast<const void *>(&as_any_pointer());
-    break;
-
   case SEQUENCE: {
     out << '(';
     bool first = true;
@@ -1672,7 +1675,7 @@ void value_t::dump(std::ostream& out, const int first_width,
       else
 	out << ", ";
 
-      value.dump(out, first_width, latter_width);
+      value.print(out, first_width, latter_width, date_format);
     }
     out << ')';
     break;
@@ -1684,13 +1687,13 @@ void value_t::dump(std::ostream& out, const int first_width,
   case BALANCE_PAIR:
     as_balance_pair().print(out, first_width, latter_width);
     break;
+
   default:
-    assert(false);
-    break;
+    throw_(value_error, "Cannot print " << label());
   }
 }
 
-void value_t::print(std::ostream& out, const bool relaxed) const
+void value_t::dump(std::ostream& out, const bool relaxed) const
 {
   switch (type()) {
   case VOID:
@@ -1702,6 +1705,13 @@ void value_t::print(std::ostream& out, const bool relaxed) const
       out << "true";
     else
       out << "false";
+    break;
+
+  case DATETIME:
+    out << '[' << format_datetime(as_datetime()) << ']';
+    break;
+  case DATE:
+    out << '[' << format_date(as_date()) << ']';
     break;
 
   case INTEGER:
@@ -1723,13 +1733,6 @@ void value_t::print(std::ostream& out, const bool relaxed) const
     out << as_balance_pair();
     break;
 
-  case DATETIME:
-    assert(false);
-    break;
-  case DATE:
-    out << '[' << format_date(as_date()) << ']';
-    break;
-
   case STRING:
     out << '"' << as_string() << '"';
     break;
@@ -1739,7 +1742,7 @@ void value_t::print(std::ostream& out, const bool relaxed) const
     break;
 
   case POINTER:
-    assert(false);
+    out << boost::unsafe_any_cast<const void *>(&as_any_pointer());
     break;
 
   case SEQUENCE: {
@@ -1751,11 +1754,15 @@ void value_t::print(std::ostream& out, const bool relaxed) const
       else
 	out << ", ";
 
-      value.print(out, relaxed);
+      value.dump(out, relaxed);
     }
     out << ')';
     break;
   }
+
+  default:
+    assert(false);
+    break;
   }
 }
 

@@ -62,16 +62,21 @@ void format_xacts::operator()(xact_t& xact)
   if (! xact.has_xdata() ||
       ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
     if (last_entry != xact.entry) {
-      if (last_entry)
-	between_format.format(out, *last_entry);
-      first_line_format.format(out, xact);
+      if (last_entry) {
+	bind_scope_t bound_scope(report, *last_entry);
+	between_format.format(out, bound_scope);
+      }
+      bind_scope_t bound_scope(report, xact);
+      first_line_format.format(out, bound_scope);
       last_entry = xact.entry;
     }
     else if (last_xact && last_xact->date() != xact.date()) {
-      first_line_format.format(out, xact);
+      bind_scope_t bound_scope(report, xact);
+      first_line_format.format(out, bound_scope);
     }
     else {
-      next_lines_format.format(out, xact);
+      bind_scope_t bound_scope(report, xact);
+      next_lines_format.format(out, bound_scope);
     }
 
     xact.xdata().add_flags(XACT_EXT_DISPLAYED);
@@ -88,10 +93,12 @@ void format_entries::format_last_entry()
     if (xact->has_xdata() &&
 	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
       if (first) {
-	first_line_format.format(out, *xact);
+	bind_scope_t bound_scope(report, *xact);
+	first_line_format.format(out, bound_scope);
 	first = false;
       } else {
-	next_lines_format.format(out, *xact);
+	bind_scope_t bound_scope(report, *xact);
+	next_lines_format.format(out, bound_scope);
       }
       xact->xdata().add_flags(XACT_EXT_DISPLAYED);
     }
@@ -155,7 +162,8 @@ void format_accounts::flush()
     if (! report.show_collapsed && xdata.total) {
       out << "--------------------\n";
       xdata.value = xdata.total;
-      format.format(out, *report.session.master);
+      bind_scope_t bound_scope(report, *report.session.master);
+      format.format(out, bound_scope);
     }
   }
 
@@ -168,7 +176,8 @@ void format_accounts::operator()(account_t& account)
     if (! account.parent) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
     } else {
-      format.format(report.output_stream, account);
+      bind_scope_t bound_scope(report, account);
+      format.format(report.output_stream, bound_scope);
       account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
     }
   }
@@ -245,8 +254,9 @@ format_equity::format_equity(report_t& _report, const string& _format)
 
   entry_t header_entry;
   header_entry.payee = "Opening Balances";
-  header_entry._date = current_date;
-  first_line_format.format(report.output_stream, header_entry);
+  header_entry._date = CURRENT_DATE();
+  bind_scope_t bound_scope(report, header_entry);
+  first_line_format.format(report.output_stream, bound_scope);
 }
 
 void format_equity::flush()
@@ -270,10 +280,12 @@ void format_equity::flush()
     foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
       xdata.value = pair.second;
       xdata.value.negate();
-      next_lines_format.format(out, summary);
+      bind_scope_t bound_scope(report, summary);
+      next_lines_format.format(out, bound_scope);
     }
   } else {
-    next_lines_format.format(out, summary);
+    bind_scope_t bound_scope(report, summary);
+    next_lines_format.format(out, bound_scope);
   }
   out.flush();
 }
@@ -297,11 +309,13 @@ void format_equity::operator()(account_t& account)
 
 	foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
 	  account.xdata().value = pair.second;
-	  next_lines_format.format(out, account);
+	  bind_scope_t bound_scope(report, account);
+	  next_lines_format.format(out, bound_scope);
 	}
 	account.xdata().value = val;
       } else {
-	next_lines_format.format(out, account);
+	bind_scope_t bound_scope(report, account);
+	next_lines_format.format(out, bound_scope);
       }
       total += val;
     }

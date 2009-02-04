@@ -124,13 +124,9 @@ void normalize_session_options(session_t& session)
 
   INFO("Initialization file is " << session.init_file->string());
   INFO("Price database is " << session.price_db->string());
-  INFO("Binary cache is " << session.cache_file->string());
 
   foreach (const path& pathname, session.data_files)
     INFO("Journal file is " << pathname.string());
-
-  if (! session.use_cache)
-    INFO("Binary cache mechanism will not be used");
 }
 
 function_t look_for_precommand(report_t& report, const string& verb)
@@ -200,7 +196,7 @@ void normalize_report_options(report_t& report, const string& verb)
   }
 
   if (verb[0] != 'b' && verb[0] != 'r')
-    amount_t::keep_base = true;
+    report.what_to_keep.keep_base = true;
 
   // Setup the default value for the display predicate
 
@@ -222,19 +218,6 @@ void normalize_report_options(report_t& report, const string& verb)
     }
   }
 #endif
-
-  // Now setup the various formatting strings
-
-  // jww (2008-08-14): I hear a song, and it's sound is "HaAaaCcK"
-
-#if 0
-  if (! date_output_format.empty())
-    date_t::output_format = date_output_format;
-#endif
-
-  amount_t::keep_price = report.keep_price;
-  amount_t::keep_date  = report.keep_date;
-  amount_t::keep_tag   = report.keep_tag;
 
   if (! report.report_period.empty() && ! report.sort_all)
     report.entry_sort = true;
@@ -263,23 +246,6 @@ void invoke_command_verb(report_t&       report,
   command(command_args);
 
   INFO_FINISH(command);
-}
-
-void write_binary_cache(session_t& session, journal_t * journal)
-{
-  // Write out the binary cache, if need be
-
-  if (session.use_cache && session.cache_dirty && session.cache_file) {
-    TRACE_START(binary_cache, 1, "Wrote binary journal file");
-
-    ofstream stream(*session.cache_file);
-#if 0
-    // jww (2009-01-31): NYI
-    journal->write(stream);
-#endif
-
-    TRACE_FINISH(binary_cache, 1);
-  }
 }
 
 } // namespace ledger

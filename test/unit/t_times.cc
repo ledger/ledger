@@ -66,8 +66,8 @@ void DateTimeTestCase::testConstructors()
   assertFalse(d4.is_not_a_date_time());
 #endif // NOT_FOR_PYTHON
 
-  assertTrue(current_time > d1);
-  assertTrue(current_time > d4);
+  assertTrue(CURRENT_TIME() > d1);
+  assertTrue(CURRENT_TIME() > d4);
 
 #ifndef NOT_FOR_PYTHON
   assertEqual(d3, d15);

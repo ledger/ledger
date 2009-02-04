@@ -105,23 +105,6 @@ public:
   }
 };
 
-
-template <typename T>
-inline T& find_scope(child_scope_t& scope, bool skip_this = true)
-{
-  for (scope_t * ptr = (skip_this ? scope.parent : &scope); ptr; ) {
-    T * sought = dynamic_cast<T *>(ptr);
-    if (sought)
-      return *sought;
-    if (child_scope_t * scope = dynamic_cast<child_scope_t *>(ptr))
-      ptr = scope->parent;
-    else
-      ptr = NULL;
-  }
-  throw_(std::runtime_error, "Could not find scope");
-  return reinterpret_cast<T&>(scope); // never executed
-}
-
 /**
  * @brief Brief
  *
@@ -203,6 +186,66 @@ public:
     return args.size();
   }
 };
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class bind_scope_t : public child_scope_t
+{
+  bind_scope_t();
+
+public:
+  scope_t& grandchild;
+
+  explicit bind_scope_t(scope_t& _parent,
+			scope_t& _grandchild)
+    : child_scope_t(_parent), grandchild(_grandchild) {
+    TRACE_CTOR(bind_scope_t, "scope_t&, scope_t&");
+  }
+  virtual ~bind_scope_t() {
+    TRACE_DTOR(bind_scope_t);
+  }
+
+  virtual expr_t::ptr_op_t lookup(const string& name) {
+    if (expr_t::ptr_op_t def = grandchild.lookup(name))
+      return def;
+    return child_scope_t::lookup(name);
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+template <typename T>
+T * search_scope(scope_t * ptr)
+{
+  if (T * sought = dynamic_cast<T *>(ptr))
+    return sought;
+
+  if (bind_scope_t * scope = dynamic_cast<bind_scope_t *>(ptr)) {
+    if (T * sought = search_scope<T>(&scope->grandchild))
+      return sought;
+    return search_scope<T>(scope->parent);
+  }
+  else if (child_scope_t * scope = dynamic_cast<child_scope_t *>(ptr)) {
+    return search_scope<T>(scope->parent);
+  }
+  return NULL;
+}
+
+template <typename T>
+inline T& find_scope(child_scope_t& scope, bool skip_this = true)
+{
+  if (T * sought = search_scope<T>(skip_this ? scope.parent : &scope))
+    return *sought;
+
+  throw_(std::runtime_error, "Could not find scope");
+  return reinterpret_cast<T&>(scope); // never executed
+}
 
 /**
  * @brief Brief

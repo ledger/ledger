@@ -35,8 +35,6 @@
 
 namespace ledger {
 
-std::auto_ptr<expr_t::parser_t> expr_t::parser;
-
 expr_t::expr_t() : compiled(false)
 {
   TRACE_CTOR(expr_t, "");
@@ -52,17 +50,15 @@ expr_t::expr_t(const string& _str, const uint_least8_t flags)
   : str(_str), compiled(false)
 {
   TRACE_CTOR(expr_t, "const string&");
-
   if (! _str.empty())
-    ptr = parser->parse(str, flags);
+    parse(str, flags);
 }
 
 expr_t::expr_t(std::istream& in, const uint_least8_t flags)
   : compiled(false)
 {
   TRACE_CTOR(expr_t, "std::istream&");
-
-  ptr = parser->parse(in, flags);
+  parse(in, flags);
 }
 
 expr_t::expr_t(const ptr_op_t& _ptr, const string& _str)
@@ -88,22 +84,18 @@ expr_t& expr_t::operator=(const expr_t& _expr)
 
 void expr_t::parse(const string& _str, const uint32_t flags)
 {
-  if (! parser.get())
-    throw_(parse_error, "Value expression parser not initialized");
-
+  parser_t parser;
   str	   = _str;
-  ptr	   = parser->parse(str, flags);
+  ptr	   = parser.parse(str, flags);
   compiled = false;
 }
 
 void expr_t::parse(std::istream& in, const uint32_t flags,
 		   const string * original_string)
 {
-  if (! parser.get())
-    throw_(parse_error, "Value expression parser not initialized");
-
+  parser_t parser;
   str	   = "<stream>";
-  ptr	   = parser->parse(in, flags, original_string);
+  ptr	   = parser.parse(in, flags, original_string);
   compiled = false;
 }
 
@@ -131,7 +123,18 @@ value_t expr_t::calc(scope_t& scope)
 	dump(*_log_stream);
       }
     }
-    return ptr->calc(scope);
+
+    ptr_op_t context;
+    try {
+      return ptr->calc(scope, &context);
+    }
+    catch (const std::exception& err) {
+      if (context) {
+	add_error_context("While evaluating value expression:");
+	add_error_context(op_context(ptr, context));
+      }
+      throw;
+    }
   }
   return NULL_VALUE;
 }
@@ -180,16 +183,6 @@ void expr_t::print(std::ostream& out) const
 void expr_t::dump(std::ostream& out) const
 {
   if (ptr) ptr->dump(out, 0);
-}
-
-void expr_t::initialize()
-{
-  parser.reset(new expr_t::parser_t);
-}
-
-void expr_t::shutdown()
-{
-  parser.reset();
 }
 
 std::ostream& operator<<(std::ostream& out, const expr_t& expr) {

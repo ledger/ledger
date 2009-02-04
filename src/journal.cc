@@ -36,12 +36,6 @@ namespace ledger {
 
 const string version = PACKAGE_VERSION;
 
-journal_t::journal_t() : basket(NULL)
-{
-  TRACE_CTOR(journal_t, "");
-  master = session_t::current->master.get();
-}
-
 journal_t::~journal_t()
 {
   TRACE_DTOR(journal_t);
@@ -70,22 +64,22 @@ journal_t::~journal_t()
 
 void journal_t::add_account(account_t * acct)
 {
-  session_t::current->add_account(acct);
+  master->add_account(acct);
 }
 
 bool journal_t::remove_account(account_t * acct)
 {
-  return session_t::current->remove_account(acct);
+  return master->remove_account(acct);
 }
 
 account_t * journal_t::find_account(const string& name, bool auto_create)
 {
-  return session_t::current->find_account(name, auto_create);
+  return master->find_account(name, auto_create);
 }
 
 account_t * journal_t::find_account_re(const string& regexp)
 {
-  return session_t::current->find_account_re(regexp);
+  return master->find_account_re(regexp);
 }
 
 bool journal_t::add_entry(entry_t * entry)

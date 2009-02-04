@@ -63,7 +63,7 @@ value_t parse_command(call_scope_t& args)
 
   out << std::endl << "--- Calculated value ---" << std::endl;
   value_t result(expr.calc(args));
-  result.print(out);
+  result.dump(out);
   out << std::endl;
 
   return 0L;
@@ -82,7 +82,8 @@ value_t eval_command(call_scope_t& args)
   std::ostream& out(report.output_stream);
 
   expr_t expr(*arg);
-  out << expr.calc(args).strip_annotations() << std::endl;
+  out << expr.calc(args).strip_annotations(report.what_to_keep)
+      << std::endl;
   return 0L;
 }
 
@@ -150,7 +151,7 @@ value_t args_command(call_scope_t& args)
   value_t::sequence_t::const_iterator end   = args.value().end();
 
   out << "--- Input arguments ---" << std::endl;
-  args.value().print(out);
+  args.value().dump(out);
   out << std::endl << std::endl;
 
   string predicate = args_to_predicate_expr(begin, end);

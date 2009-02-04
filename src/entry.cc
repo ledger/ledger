@@ -247,8 +247,7 @@ bool entry_base_t::finalize()
 
 	DEBUG("entry.finalize.totals",
 	      "Total for " << xact->account->fullname() << " + "
-	      << xact->amount.strip_annotations() << ": "
-	      << xact->account->xdata().value.strip_annotations());
+	      << xact->amount << ": " << xact->account->xdata().value);
       }
     }
     if (all_null)

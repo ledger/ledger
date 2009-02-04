@@ -59,6 +59,7 @@ namespace ledger {
 
 class commodity_t;
 class annotation_t;
+class keep_details_t;
 class commodity_pool_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
@@ -80,8 +81,12 @@ class amount_t
 	   ordered_field_operators<amount_t, long> > > >
 {
 public:
+  /** Indicates which commodity pool should be used. */
+  static shared_ptr<commodity_pool_t> current_pool;
+
   /** Ready the amount subsystem for use.
       @note Normally called by session_t::initialize(). */
+  static void initialize(shared_ptr<commodity_pool_t> pool);
   static void initialize();
   /** Shutdown the amount subsystem and free all resources.
       @note Normally called by session_t::shutdown(). */
@@ -94,47 +99,9 @@ public:
       avoid losing precision during division and multiplication. */
   static const std::size_t extend_by_digits = 6U;
 
-  /** Indicates which commodity pool should be used. */
-  static commodity_pool_t * current_pool;
-
-  /** If scalable commodities are automatically converted to their most
-      reduced form for printing.
-
-      For example, Ledger supports time values specified in seconds,
-      hours or minutes.  Internally, such amounts are always kept as
-      quantities of seconds.  However, when streaming the amount, Ledger
-      converts it to its "least representation", which is \c 5.2h in the
-      second case.  If \c keep_base is \c true this amount is displayed
-      as \c 18720s. */
-  static bool keep_base;
-
-  /** If the lot price is considered whenever working with commoditized
-      values.
-
-      Let's say a user adds two values of the following form:
-      @code
-      10 AAPL + 10 AAPL {$20}
-      @endcode
-
-      This expression adds ten shares of Apple stock with another ten
-      shares that were purchased for \c $20 a share.  If \c keep_price
-      is false, the result of this expression is an amount equal to
-      <tt>20 AAPL</tt>.  If \c keep_price is \c true the expression
-      yields an exception for adding amounts with different commodities.
-      In that case, a \link balance_t \endlink object must be used to
-      store the combined sum. */
-  static bool keep_price;
-
-  /** If the lot date is considered whenever working with commoditized
-      values. @see keep_date */
-  static bool keep_date;
-  /** If the lot note is considered whenever working with commoditized
-      values. @see keep_tag */
-  static bool keep_tag;
-
   /** If amounts should be streamed using to_fullstring() rather than
-      to_string(), so that complete precision is always displayed no
-      matter what the precision of an individual commodity may be. */
+      to_string(), so that complete precision is always displayed no matter
+      what the precision of an individual commodity may be. */
   static bool stream_fullstrings;
 
 protected:
@@ -317,7 +284,7 @@ public:
   precision_t precision() const;
   bool        keep_precision() const;
   void        set_keep_precision(const bool keep = true) const;
-  precision_t display_precision(const bool full_precision = false) const;
+  precision_t display_precision() const;
 
   /** Returns the negated value of an amount.
       @see operator-()
@@ -556,12 +523,8 @@ public:
       commodity's annotations.  The structure returns will evaluate as
       boolean false if there are no details.
 
-      strip_annotations([keep_price, keep_date, keep_tag]) returns an
-      amount whose commodity's annotations have been stripped.  The
-      three `keep_' arguments determine which annotation detailed are
-      kept, meaning that the default is to follow whatever
-      amount_t::keep_price, amount_t::keep_date and amount_t::keep_tag
-      have been set to (which all default to false).
+      strip_annotations() returns an amount whose commodity's annotations have
+      been stripped.
   */
   void          annotate(const annotation_t& details);
   bool          is_annotated() const;
@@ -571,9 +534,22 @@ public:
     return const_cast<amount_t&>(*this).annotation();
   }
 
-  amount_t      strip_annotations(const bool _keep_price = keep_price,
-				  const bool _keep_date  = keep_date,
-				  const bool _keep_tag   = keep_tag) const;
+  /** If the lot price is considered whenever working with commoditized
+      values.
+
+      Let's say a user adds two values of the following form:
+      @code
+      10 AAPL + 10 AAPL {$20}
+      @endcode
+
+      This expression adds ten shares of Apple stock with another ten
+      shares that were purchased for \c $20 a share.  If \c keep_price
+      is false, the result of this expression is an amount equal to
+      <tt>20 AAPL</tt>.  If \c keep_price is \c true the expression
+      yields an exception for adding amounts with different commodities.
+      In that case, a \link balance_t \endlink object must be used to
+      store the combined sum. */
+  amount_t strip_annotations(const keep_details_t& what_to_keep) const;
 
   /*@}*/
 
@@ -649,23 +625,20 @@ public:
    */
   /*@{*/
 
-  /** An amount may be output to a stream using the
-      `print' method.  There is also a global operator<< defined which
-      simply calls print for an amount on the given stream.  There is
-      one form of the print method, which takes one required argument
-      and two arguments with default values:
+  /** An amount may be output to a stream using the `print' method.  There is
+      also a global operator<< defined which simply calls print for an amount
+      on the given stream.  There is one form of the print method, which takes
+      one required argument and two arguments with default values:
 
-      print(ostream, bool omit_commodity = false, bool full_precision =
-      false) prints an amounts to the given output stream, using its
-      commodity's default display characteristics.  If `omit_commodity'
-      is true, the commodity will not be displayed, only the amount
-      (although the commodity's display precision is still used).  If
-      `full_precision' is true, the full internal precision of the
-      amount is displayed, regardless of its commodity's display
-      precision.
+      print(ostream, bool omit_commodity = false, bool full_precision = false)
+      prints an amounts to the given output stream, using its commodity's
+      default display characteristics.  If `omit_commodity' is true, the
+      commodity will not be displayed, only the amount (although the
+      commodity's display precision is still used).  If `full_precision' is
+      true, the full internal precision of the amount is displayed, regardless
+      of its commodity's display precision.
   */
-  void print(std::ostream& out, bool omit_commodity = false,
-	     bool full_precision = false) const;
+  void print(std::ostream& out) const;
 
   /*@}*/
 
@@ -709,18 +682,21 @@ inline string amount_t::to_string() const {
 
 inline string amount_t::to_fullstring() const {
   std::ostringstream bufstream;
-  print(bufstream, false, true);
+  unrounded().print(bufstream);
   return bufstream.str();
 }
 
 inline string amount_t::quantity_string() const {
   std::ostringstream bufstream;
-  print(bufstream, true);
+  number().print(bufstream);
   return bufstream.str();
 }
 
 inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
-  amt.print(out, false, amount_t::stream_fullstrings);
+  if (amount_t::stream_fullstrings)
+    amt.unrounded().print(out);
+  else
+    amt.print(out);
   return out;
 }
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {

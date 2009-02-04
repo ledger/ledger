@@ -33,14 +33,6 @@
 
 namespace ledger {
 
-commodity_pool_t * amount_t::current_pool = NULL;
-
-bool amount_t::keep_base = false;
-
-bool amount_t::keep_price = false;
-bool amount_t::keep_date  = false;
-bool amount_t::keep_tag	  = false;
-
 bool amount_t::stream_fullstrings = false;
 
 #if !defined(THREADSAFE)
@@ -93,39 +85,31 @@ struct amount_t::bigint_t : public supports_flags<>
   }
 };
 
-void amount_t::initialize()
+shared_ptr<commodity_pool_t> amount_t::current_pool;
+
+void amount_t::initialize(shared_ptr<commodity_pool_t> pool)
 {
   mpz_init(temp);
   mpq_init(tempq);
   mpfr_init(tempf);
   mpfr_init(tempfb);
 
-  if (! current_pool)
-    current_pool = new commodity_pool_t;
+  current_pool = pool;
+}
 
-  // Add time commodity conversions, so that timelog's may be parsed
-  // in terms of seconds, but reported as minutes or hours.
-  if (commodity_t * commodity = current_pool->create("s")) {
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-
-    parse_conversion("1.0m", "60s");
-    parse_conversion("1.0h", "60m");
-  } else {
-    assert(false);
-  }
+void amount_t::initialize()
+{
+  initialize(shared_ptr<commodity_pool_t>(new commodity_pool_t));
 }
 
 void amount_t::shutdown()
 {
+  current_pool.reset();
+
   mpz_clear(temp);
   mpq_clear(tempq);
   mpfr_clear(tempf);
   mpfr_clear(tempfb);
-
-  if (current_pool) {
-    checked_delete(current_pool);
-    current_pool = NULL;
-  }
 }
 
 void amount_t::_copy(const amount_t& amt)
@@ -426,8 +410,7 @@ void amount_t::set_keep_precision(const bool keep) const
     quantity->drop_flags(BIGINT_KEEP_PREC);
 }
 
-amount_t::precision_t
-amount_t::display_precision(const bool full_precision) const
+amount_t::precision_t amount_t::display_precision() const
 {
   if (! quantity)
     throw_(amount_error,
@@ -435,7 +418,7 @@ amount_t::display_precision(const bool full_precision) const
 
   commodity_t& comm(commodity());
 
-  if (! comm || full_precision || keep_precision())
+  if (! comm || keep_precision())
     return quantity->prec;
   else if (comm.precision() != quantity->prec)
     return comm.precision();
@@ -728,22 +711,18 @@ annotation_t& amount_t::annotation()
   return ann_comm.details;
 }
 
-amount_t amount_t::strip_annotations(const bool _keep_price,
-				     const bool _keep_date,
-				     const bool _keep_tag) const
+amount_t amount_t::strip_annotations(const keep_details_t& what_to_keep) const
 {
   if (! quantity)
     throw_(amount_error,
 	   "Cannot strip commodity annotations from an uninitialized amount");
 
-  if (! commodity().annotated ||
-      (_keep_price && _keep_date && _keep_tag))
-    return *this;
-
-  amount_t t(*this);
-  t.set_commodity(as_annotated_commodity(commodity()).
-		  strip_annotations(_keep_price, _keep_date, _keep_tag));
-  return t;
+  if (! what_to_keep.keep_all(commodity())) {
+    amount_t t(*this);
+    t.set_commodity(commodity().strip_annotations(what_to_keep));
+    return t;
+  }
+  return *this;
 }
 
 
@@ -964,8 +943,7 @@ void amount_t::parse_conversion(const string& larger_str,
     smaller.commodity().set_larger(larger);
 }
 
-void amount_t::print(std::ostream& _out, bool omit_commodity,
-		     bool full_precision) const
+void amount_t::print(std::ostream& _out) const
 {
   assert(valid());
 
@@ -974,25 +952,20 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
     return;
   }
 
-  amount_t base(*this);
-  if (! amount_t::keep_base)
-    base.in_place_unreduce();
-
   std::ostringstream out;
 
-  commodity_t& comm(base.commodity());
+  commodity_t& comm(commodity());
   precision_t  precision = 0;
 
-  if (! omit_commodity && ! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
+  if (! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     comm.print(out);
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
   }
 
-  stream_out_mpq(out, MP(quantity), base.display_precision(full_precision),
-		 omit_commodity ? optional<commodity_t&>() : comm);
+  stream_out_mpq(out, MP(quantity), display_precision(), comm);
 
-  if (! omit_commodity && comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
+  if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
     comm.print(out);
@@ -1001,7 +974,7 @@ void amount_t::print(std::ostream& _out, bool omit_commodity,
   // If there are any annotations associated with this commodity,
   // output them now.
 
-  if (! omit_commodity && comm.annotated) {
+  if (comm.annotated) {
     annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
     assert(&*ann.details.price != this);
     ann.write_annotations(out);

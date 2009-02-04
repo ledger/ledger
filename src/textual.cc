@@ -92,6 +92,8 @@ std::size_t textual_parser_t::parse(std::istream& in,
 			      original_file);
   parsing_instance.parse();
 
+  session.clean_accounts();	// remove calculated totals
+
   TRACE_STOP(parsing_total, 1);
   TRACE_FINISH(instance_parse, 1); // report per-instance timers
 
@@ -107,7 +109,8 @@ namespace {
 #else
   void
 #endif
-  parse_amount_expr(std::istream& in,
+  parse_amount_expr(session_t&    session,
+		    std::istream& in,
 		    amount_t&     amount,
 		    xact_t *	  xact,
 		    uint_least8_t flags = 0)
@@ -126,7 +129,9 @@ namespace {
 #endif
 
     if (expr) {
-      value_t result(expr.calc(*xact));
+      bind_scope_t bound_scope(session, *xact);
+
+      value_t result(expr.calc(bound_scope));
       if (! result.is_amount())
 	throw_(parse_error, "Transactions may only specify simple amounts");
 
@@ -369,7 +374,7 @@ void textual_parser_t::instance_t::clock_in_directive(char * line,
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
 
-  timelog.clock_in(parse_datetime(date),
+  timelog.clock_in(parse_datetime(date, session.current_year),
 		   account_stack.front()->find_account(p), n ? n : "");
 }
 
@@ -381,7 +386,7 @@ void textual_parser_t::instance_t::clock_out_directive(char * line,
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
 
-  timelog.clock_out(parse_datetime(date),
+  timelog.clock_out(parse_datetime(date, session.current_year),
 		    p ? account_stack.front()->find_account(p) : NULL, n);
   count++;
 }
@@ -445,10 +450,11 @@ void textual_parser_t::instance_t::price_entry_directive(char * line)
   if (std::isdigit(time_field_ptr[0])) {
     symbol_and_price = next_element(time_field_ptr);
     if (! symbol_and_price) return;
-    datetime = parse_datetime(date_field + " " + time_field_ptr);
+    datetime = parse_datetime(date_field + " " + time_field_ptr,
+			      session.current_year);
   } else {
     symbol_and_price = time_field_ptr;
-    datetime = parse_datetime(date_field);
+    datetime = parse_datetime(date_field, session.current_year);
   }
 
   string symbol;
@@ -474,7 +480,7 @@ void textual_parser_t::instance_t::nomarket_directive(char * line)
 
 void textual_parser_t::instance_t::year_directive(char * line)
 {
-  current_year = std::atoi(skip_ws(line + 1));
+  session.current_year = std::atoi(skip_ws(line + 1));
 }
 
 void textual_parser_t::instance_t::option_directive(char * line)
@@ -498,7 +504,10 @@ void textual_parser_t::instance_t::automated_entry_directive(char * line)
   istream_pos_type pos	= curr_pos;
   std::size_t      lnum = linenum;
 
-  std::auto_ptr<auto_entry_t> ae(new auto_entry_t(skip_ws(line + 1)));
+  std::auto_ptr<auto_entry_t>
+    ae(new auto_entry_t(item_predicate<xact_t>
+			(skip_ws(line + 1),
+			 keep_details_t(true, true, true, true))));
 
   if (parse_xacts(account_stack.front(), *ae.get(), "automated")) {
     journal.auto_entries.push_back(ae.get());
@@ -700,7 +709,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
   xact->beg_pos  = line_beg_pos;
   xact->beg_line = linenum;
 
-  static char buf[MAX_LINE + 1];
+  char buf[MAX_LINE + 1];
   std::strcpy(buf, line);
   std::size_t beg = 0;
 
@@ -780,7 +789,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
     if (*next != '(')		// indicates a value expression
       xact->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
     else
-      parse_amount_expr(stream, xact->amount, xact.get(),
+      parse_amount_expr(session, stream, xact->amount, xact.get(),
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
@@ -821,7 +830,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
 	  if (*p != '(')		// indicates a value expression
 	    xact->cost->parse(cstream, amount_t::PARSE_NO_MIGRATE);
 	  else
-	    parse_amount_expr(cstream, *xact->cost, xact.get(),
+	    parse_amount_expr(session, cstream, *xact->cost, xact.get(),
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
@@ -835,7 +844,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
 	    per_unit_cost /= xact->amount;
 
 	  commodity_t::exchange(xact->amount.commodity(),
-				per_unit_cost, datetime_t(*xact->date()));
+				per_unit_cost, datetime_t(xact->date()));
 
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "Total cost is " << *xact->cost);
@@ -873,7 +882,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
       if (*p != '(')		// indicates a value expression
 	xact->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
       else
-	parse_amount_expr(stream, *xact->assigned_amount, xact.get(),
+	parse_amount_expr(session, stream, *xact->assigned_amount, xact.get(),
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
       if (xact->assigned_amount->is_null())
@@ -886,9 +895,9 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
       amount_t&		  amt(*xact->assigned_amount);
 
       DEBUG("xact.assign", "line " << linenum << ": "
-	    "account balance = " << xdata.value.strip_annotations());
+	    "account balance = " << xdata.value);
       DEBUG("xact.assign", "line " << linenum << ": "
-	    "xact amount = " << amt.strip_annotations());
+	    "xact amount = " << amt);
 
       amount_t diff;
 
@@ -919,9 +928,9 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
       }
 
       DEBUG("xact.assign",  "line " << linenum << ": "
-	    << "diff = " << diff.strip_annotations());
+	    << "diff = " << diff);
       DEBUG("textual.parse", "line " << linenum << ": "
-	    << "XACT assign: diff = " << diff.strip_annotations());
+	    << "XACT assign: diff = " << diff);
 
       if (! diff.is_zero()) {
 	if (! xact->amount.is_null()) {
@@ -953,7 +962,7 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    xact->append_note(++next);
+    xact->append_note(++next, session.current_year);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed a transaction note");
@@ -1022,9 +1031,9 @@ entry_t * textual_parser_t::instance_t::parse_entry(char *	    line,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    curr->_date_eff = parse_date(p);
+    curr->_date_eff = parse_date(p, session.current_year);
   }
-  curr->_date = parse_date(line);
+  curr->_date = parse_date(line, session.current_year);
 
   // Parse the optional cleared flag: *
 
@@ -1064,7 +1073,7 @@ entry_t * textual_parser_t::instance_t::parse_entry(char *	    line,
   // Parse the entry note
 
   if (next && *next == ';')
-    curr->append_note(next);
+    curr->append_note(next, session.current_year);
 
   TRACE_STOP(entry_text, 1);
 
@@ -1089,7 +1098,7 @@ entry_t * textual_parser_t::instance_t::parse_entry(char *	    line,
 	item = curr.get();
 
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1);
+      item->append_note(p + 1, session.current_year);
       item->end_pos = curr_pos;
       item->end_line++;
     }

@@ -76,7 +76,9 @@ public:
 
   hooks_t<entry_finalizer_t, entry_t> entry_finalize_hooks;
 
-  journal_t();
+  journal_t(account_t * _master = NULL) : master(_master) {
+    TRACE_CTOR(journal_t, "");
+  }
   ~journal_t();
 
   // These four methods are delegated to the current session, since all

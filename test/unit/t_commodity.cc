@@ -73,7 +73,7 @@ void CommodityTestCase::testPriceHistory()
   assertTrue(amt);
   assertEqual(amount_t("$1831.83"), *amt);
 
-  amt = x1.value(current_time);
+  amt = x1.value(CURRENT_TIME());
   assertTrue(amt);
   assertEqual(string("$2124.12"), amt->to_string());
 #ifdef INTEGER_MATH
@@ -82,18 +82,18 @@ void CommodityTestCase::testPriceHistory()
   assertEqual(string("$2124.1220"), amt->to_fullstring());
 #endif
 
-  amt = x1.value(current_time, euro);
+  amt = x1.value(CURRENT_TIME(), euro);
   assertTrue(amt);
   assertEqual(string("EUR 1366.87"), amt->rounded().to_string());
 
   // Add a newer Euro pricing
   aapl.add_price(jan17_07, amount_t("EUR 23.00"));
 
-  amt = x1.value(current_time, euro);
+  amt = x1.value(CURRENT_TIME(), euro);
   assertTrue(amt);
   assertEqual(string("EUR 2302.30"), amt->to_string());
 
-  amt = x1.value(current_time, cad);
+  amt = x1.value(CURRENT_TIME(), cad);
   assertTrue(amt);
   assertEqual(string("CAD 3223.22"), amt->to_string());
 #endif // NOT_FOR_PYTHON

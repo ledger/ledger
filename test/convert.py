@@ -144,6 +144,8 @@ for line in fd.readlines():
     line = re.sub('\.print\(([^)]+?)\)', '.print_(\\1)', line)
     line = re.sub('true', 'True', line)
     line = re.sub('false', 'False', line)
+    line = re.sub('CURRENT_TIME\(\)', 'datetime.now()', line)
+    line = re.sub('CURRENT_DATE\(\)', 'date.today()', line)
     line = re.sub('([0-9]+)[FL]', '\\1', line)
     line = re.sub('([0-9]+)UL', '\\1L', line)
     line = re.sub(';', '', line)

@@ -102,7 +102,9 @@ void set_account_value::operator()(xact_t& xact)
   account_t * acct = xact.reported_account();
 
   account_t::xdata_t& xdata(acct->xdata());
+  DEBUG("account.sums", "Account value was = " << xdata.value);
   xact.add_to_value(xdata.value);
+  DEBUG("account.sums", "Account value is  = " << xdata.value);
 
   xdata.count++;
   if (xact.has_flags(XACT_VIRTUAL))
@@ -218,73 +220,74 @@ void invert_xacts::operator()(xact_t& xact)
 }
 
 
-static inline
-void handle_value(const value_t&	value,
-		  account_t *		account,
-		  entry_t *		entry,
-		  unsigned int		flags,
-		  std::list<xact_t>&    temps,
-		  item_handler<xact_t>& handler,
-		  const date_t&         date = date_t(),
-		  xacts_list *          component_xacts = NULL)
-{
-  temps.push_back(xact_t(account));
-  xact_t& xact(temps.back());
-  xact.entry = entry;
-  xact.add_flags(ITEM_TEMP);
-  entry->add_xact(&xact);
+namespace {
+  void handle_value(const value_t&	  value,
+		    account_t *		  account,
+		    entry_t *		  entry,
+		    unsigned int	  flags,
+		    std::list<xact_t>&    temps,
+		    item_handler<xact_t>& handler,
+		    const date_t&         date		  = date_t(),
+		    xacts_list *          component_xacts = NULL)
+  {
+    temps.push_back(xact_t(account));
+    xact_t& xact(temps.back());
+    xact.entry = entry;
+    xact.add_flags(ITEM_TEMP);
+    entry->add_xact(&xact);
 
-  // If there are component xacts to associate with this
-  // temporary, do so now.
+    // If there are component xacts to associate with this temporary, do so
+    // now.
 
-  if (component_xacts)
-    xact.xdata().copy_component_xacts(*component_xacts);
+    if (component_xacts)
+      xact.xdata().copy_component_xacts(*component_xacts);
 
-  // If the account for this xact is all virtual, then report
-  // the xact as such.  This allows subtotal reports to show
-  // "(Account)" for accounts that contain only virtual xacts.
+    // If the account for this xact is all virtual, then report the xact as
+    // such.  This allows subtotal reports to show "(Account)" for accounts
+    // that contain only virtual xacts.
 
-  if (account && account->has_xdata())
-    if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
-      xact.add_flags(XACT_VIRTUAL);
-      if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
-	xact.add_flags(XACT_MUST_BALANCE);
+    if (account && account->has_xdata())
+      if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
+	xact.add_flags(XACT_VIRTUAL);
+	if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
+	  xact.add_flags(XACT_MUST_BALANCE);
+      }
+
+    xact_t::xdata_t& xdata(xact.xdata());
+
+    if (is_valid(date))
+      xdata.date = date;
+
+    value_t temp(value);
+
+    switch (value.type()) {
+    case value_t::BOOLEAN:
+    case value_t::DATETIME:
+    case value_t::DATE:
+    case value_t::INTEGER:
+      temp.cast(value_t::AMOUNT);
+      // fall through...
+
+    case value_t::AMOUNT:
+      xact.amount = temp.as_amount();
+      break;
+
+    case value_t::BALANCE:
+    case value_t::BALANCE_PAIR:
+      xdata.value = temp;
+      flags |= XACT_EXT_COMPOUND;
+      break;
+
+    default:
+      assert(false);		// jww (2008-04-24): What to do here?
+      break;
     }
 
-  xact_t::xdata_t& xdata(xact.xdata());
+    if (flags)
+      xdata.add_flags(flags);
 
-  if (is_valid(date))
-    xdata.date = date;
-
-  value_t temp(value);
-
-  switch (value.type()) {
-  case value_t::BOOLEAN:
-  case value_t::DATETIME:
-  case value_t::DATE:
-  case value_t::INTEGER:
-    temp.cast(value_t::AMOUNT);
-    // fall through...
-
-  case value_t::AMOUNT:
-    xact.amount = temp.as_amount();
-    break;
-
-  case value_t::BALANCE:
-  case value_t::BALANCE_PAIR:
-    xdata.value = temp;
-    flags |= XACT_EXT_COMPOUND;
-    break;
-
-  default:
-    assert(false);		// jww (2008-04-24): What to do here?
-    break;
+    handler(xact);
   }
-
-  if (flags)
-    xdata.add_flags(flags);
-
-  handler(xact);
 }
 
 void collapse_xacts::report_subtotal()
@@ -405,12 +408,16 @@ void component_xacts::operator()(xact_t& xact)
 void subtotal_xacts::report_subtotal(const char * spec_fmt)
 {
   std::ostringstream out_date;
-  if (! spec_fmt) {
-    string fmt = "- ";
-    fmt += output_date_format;
-    out_date << format_date(finish, string(fmt));
-  } else {
+  if (spec_fmt) {
     out_date << format_date(finish, string(spec_fmt));
+  }
+  else if (date_format) {
+    string fmt = "- ";
+    fmt += *date_format;
+    out_date << format_date(finish, string(fmt));
+  }
+  else {
+    out_date << format_date(finish);
   }
 
   entry_temps.push_back(entry_t());
@@ -428,9 +435,9 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
 void subtotal_xacts::operator()(xact_t& xact)
 {
   if (! is_valid(start) || xact.date() < start)
-    start = *xact.date();
+    start = xact.date();
   if (! is_valid(finish) || xact.date() > finish)
-    finish = *xact.date();
+    finish = xact.date();
 
   account_t * acct = xact.reported_account();
   assert(acct);
@@ -470,7 +477,7 @@ void interval_xacts::report_subtotal(const date_t& date)
   if (is_valid(date))
     finish = date - gregorian::days(1);
   else
-    finish = *last_xact->date();
+    finish = last_xact->date();
 
   subtotal_xacts::report_subtotal();
 
@@ -479,7 +486,7 @@ void interval_xacts::report_subtotal(const date_t& date)
 
 void interval_xacts::operator()(xact_t& xact)
 {
-  const date_t& date(*xact.date());
+  const date_t& date(xact.date());
 
   if ((is_valid(interval.begin) && date < interval.begin) ||
       (is_valid(interval.end)   && date >= interval.end))
@@ -550,7 +557,7 @@ void by_payee_xacts::operator()(xact_t& xact)
   }
 
   if (xact.date() > (*i).second->start)
-    (*i).second->start = *xact.date();
+    (*i).second->start = xact.date();
 
   (*(*i).second)(xact);
 }
@@ -691,7 +698,7 @@ void budget_xacts::operator()(xact_t& xact)
 
  handle:
   if (xact_in_budget && flags & BUDGET_BUDGETED) {
-    report_budget_items(*xact.date());
+    report_budget_items(xact.date());
     item_handler<xact_t>::operator()(xact);
   }
   else if (! xact_in_budget && flags & BUDGET_UNBUDGETED) {
@@ -705,10 +712,10 @@ void forecast_xacts::add_xact(const interval_t& period, xact_t& xact)
 
   interval_t& i = pending_xacts.back().first;
   if (! is_valid(i.begin)) {
-    i.set_start(current_date);
+    i.set_start(CURRENT_DATE());
     i.begin = i.increment(i.begin);
   } else {
-    while (i.begin < current_date)
+    while (i.begin < CURRENT_DATE())
       i.begin = i.increment(i.begin);
   }
 }
@@ -758,7 +765,7 @@ void forecast_xacts::flush()
 	temp.xdata().has_flags(XACT_EXT_MATCHES)) {
       if (! pred(temp))
 	break;
-      last = *temp.date();
+      last = temp.date();
       passed.clear();
     } else {
       bool found = false;
@@ -779,15 +786,16 @@ void forecast_xacts::flush()
   item_handler<xact_t>::flush();
 }
 
-pass_down_accounts::pass_down_accounts(acct_handler_ptr	  handler,
-				       accounts_iterator& iter,
-				       const expr_t&	  predicate)
+pass_down_accounts::pass_down_accounts
+  (acct_handler_ptr   handler,
+   accounts_iterator& iter,
+   const optional<item_predicate<account_t> >& predicate)
   : item_handler<account_t>(handler), pred(predicate)
 {
   TRACE_CTOR(pass_down_accounts,
 	     "acct_handler_ptr, accounts_iterator");
   for (account_t * account = iter(); account; account = iter())
-    if (pred(*account))
+    if (! pred || (*pred)(*account))
       item_handler<account_t>::operator()(*account);
 
   item_handler<account_t>::flush();

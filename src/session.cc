@@ -38,36 +38,32 @@
 
 namespace ledger {
 
-session_t * session_t::current = NULL;
-
 #if 0
 boost::mutex session_t::session_mutex;
 #endif
 
 void set_session_context(session_t * session)
 {
+  if (session) {
 #if 0
-  session_t::session_mutex.lock();
+    session_t::session_mutex.lock();
 #endif
+    amount_t::initialize(session->commodity_pool);
 
-  if (session && ! session_t::current) {
-    session_t::initialize();
+    // jww (2009-02-04): Is amount_t the right place for parse_conversion to
+    // happen?
+    amount_t::parse_conversion("1.0m", "60s");
+    amount_t::parse_conversion("1.0h", "60m");
+
+    value_t::initialize();
   }
-  else if (! session && session_t::current) {
-    session_t::shutdown();
+  else if (! session) {
+    value_t::shutdown();
+    amount_t::shutdown();
 #if 0
     session_t::session_mutex.unlock();
 #endif
   }
-
-  session_t::current = session;
-}
-
-void release_session_context()
-{
-#if 0
-  session_t::session_mutex.unlock();
-#endif
 }
 
 session_t::session_t()
@@ -77,17 +73,17 @@ session_t::session_t()
     saw_price_db_from_command_line(false),
 
     register_format
-    ("%-.9(date) %-.20(payee) %-.23(account(23)) %!12(print_balance(amount_expr, 12, 67)) "
-     "%!12(print_balance(display_total, 12, 80, true))\n%/"
-     "%31|%-.23(account(23)) %!12(print_balance(amount_expr, 12, 67)) "
-     "%!12(print_balance(display_total, 12, 80, true))\n"),
+    ("%-.9(display_date) %-.20(payee) %-.23(truncate(account, 23, 2)) %!12(print_balance(strip(amount_expr), 12, 67)) "
+     "%!12(print_balance(strip(display_total), 12, 80, true))\n%/"
+     "%31|%-.23(truncate(account, 23, 2)) %!12(print_balance(strip(amount_expr), 12, 67)) "
+     "%!12(print_balance(strip(display_total), 12, 80, true))\n"),
     wide_register_format
     ("%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
      "%48|%-.38A %22.108t %!22.132T\n"),
     print_format
-    ("%(date)%(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n    %-34(account)  %12(amount)%(comment | \"\")\n%/    %-34(account)  %12(amount)%(comment | \"\")\n%/\n"),
+    ("%(display_date)%(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n    %-34(account)  %12(amount)%(comment | \"\")\n%/    %-34(account)  %12(amount)%(comment | \"\")\n%/\n"),
     balance_format
-    ("%20(display_total)  %(depth_spacer)%-(partial_account)\n"),
+    ("%20(strip(display_total))  %(depth_spacer)%-(partial_account)\n"),
     equity_format
     ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
     plot_amount_format
@@ -104,12 +100,11 @@ session_t::session_t()
     ("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
 
     pricing_leeway(24 * 3600),
+    current_year(CURRENT_DATE().year()),
 
     download_quotes(false),
     use_cache(true),
     cache_dirty(false),
-
-    now(now),
 
 #if 0
     elision_style(ABBREVIATE),
@@ -119,6 +114,7 @@ session_t::session_t()
     ansi_codes(false),
     ansi_invert(false),
 
+    commodity_pool(new commodity_pool_t),
     master(new account_t(NULL, ""))
 {
   TRACE_CTOR(session_t, "");
@@ -132,6 +128,14 @@ session_t::session_t()
   cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
 
   register_parser(new textual_parser_t);
+
+  // Add time commodity conversions, so that timelog's may be parsed
+  // in terms of seconds, but reported as minutes or hours.
+  if (commodity_t * commodity = commodity_pool->create("s")) {
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  } else {
+    assert(false);
+  }
 }
 
 session_t::~session_t()
@@ -217,7 +221,7 @@ std::size_t session_t::read_data(journal_t&    journal,
   }
 
   if (entry_count == 0) {
-    account_t * acct = NULL;
+    account_t * acct = journal.master;
     if (! master_account.empty())
       acct = journal.find_account(master_account);
 
@@ -245,7 +249,7 @@ std::size_t session_t::read_data(journal_t&    journal,
 	std::ostringstream buffer;
 
 	while (std::cin.good() && ! std::cin.eof()) {
-	  static char line[8192];
+	  char line[8192];
 	  std::cin.read(line, 8192);
 	  std::streamsize count = std::cin.gcount();
 	  buffer.write(line, count);
@@ -260,7 +264,6 @@ std::size_t session_t::read_data(journal_t&    journal,
 	entry_count += read_journal(journal, pathname, acct);
 	if (journal.price_db)
 	  journal.sources.push_back(*journal.price_db);
-	clean_accounts();
       }
       else {
 	throw_(parse_error, "Could not open journal file '" << pathname << "'");
@@ -273,25 +276,6 @@ std::size_t session_t::read_data(journal_t&    journal,
   TRACE_STOP(session_parser, 1);
 
   return entry_count;
-}
-
-namespace {
-  account_t * find_account_re_(account_t * account, const mask_t& regexp)
-  {
-    if (regexp.match(account->fullname()))
-      return account;
-
-    foreach (accounts_map::value_type& pair, account->accounts)
-      if (account_t * a = find_account_re_(pair.second, regexp))
-	return a;
-
-    return NULL;
-  }
-}
-
-account_t * session_t::find_account_re(const string& regexp)
-{
-  return find_account_re_(master.get(), mask_t(regexp));
 }
 
 void session_t::clean_xacts()
@@ -310,8 +294,7 @@ void session_t::clean_xacts(entry_t& entry)
 void session_t::clean_accounts()
 {
   basic_accounts_iterator acct_walker(*master);
-  pass_down_accounts(acct_handler_ptr(new clear_account_xdata),
-		     acct_walker);
+  pass_down_accounts(acct_handler_ptr(new clear_account_xdata), acct_walker);
 }
 
 #if 0
@@ -421,22 +404,6 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
   }
 
   return expr_t::ptr_op_t();
-}
-
-// jww (2007-04-26): All of Ledger should be accessed through a
-// session_t object
-void session_t::initialize()
-{
-  amount_t::initialize();
-  value_t::initialize();
-  expr_t::initialize();
-}
-
-void session_t::shutdown()
-{
-  expr_t::shutdown();
-  value_t::shutdown();
-  amount_t::shutdown();
 }
 
 } // namespace ledger

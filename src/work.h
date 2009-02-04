@@ -56,7 +56,6 @@ void         invoke_command_verb(report_t&       report,
 				 function_t&	 command,
 				 string_iterator args_begin,
 				 string_iterator args_end);
-void         write_binary_cache(session_t& session, journal_t * journal);
 
 } // namespace ledger
 

@@ -446,10 +446,7 @@ public:
    * their commodity annotations likewise stripped.  See
    * amount_t::strip_annotations for more details.
    */
-  balance_t
-  strip_annotations(const bool keep_price = amount_t::keep_price,
-		    const bool keep_date  = amount_t::keep_date,
-		    const bool keep_tag   = amount_t::keep_tag) const;
+  balance_t strip_annotations(const keep_details_t& what_to_keep) const;
 
   /**
    * Printing methods.  A balance may be output to a stream using the

@@ -36,12 +36,13 @@
 
 namespace ledger {
 
-optional<date_t> xact_t::actual_date() const
+date_t xact_t::date() const
 {
-  optional<date_t> date = item_t::actual_date();
-  if (! date && entry)
-    return entry->actual_date();
-  return date;
+  if (! _date) {
+    assert(entry);
+    return entry->date();
+  }
+  return item_t::date();
 }
 
 optional<date_t> xact_t::effective_date() const
@@ -129,7 +130,7 @@ namespace {
 
   value_t get_account(call_scope_t& scope)
   {
-    xact_t& xact(downcast<xact_t>(*scope.parent));
+    xact_t& xact(find_scope<xact_t>(scope));
 
     var_t<long> max_width(scope, 0);
 
