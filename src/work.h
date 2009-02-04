@@ -45,8 +45,7 @@ typedef std::pair<string_iterator, string_iterator> string_iterator_pair;
 
 void         handle_debug_options(int argc, char * argv[]);
 void         read_environment_settings(report_t& report, char * envp[]);
-strings_list read_command_line_arguments(report_t& report,
-					 int argc, char * argv[]);
+strings_list read_command_arguments(report_t& report, strings_list args);
 void         normalize_session_options(session_t& session);
 function_t   look_for_precommand(report_t& report, const string& verb);
 journal_t *  read_journal_files(session_t& session, const string& account);

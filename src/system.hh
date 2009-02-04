@@ -138,6 +138,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <mpfr.h>
 #include "sha1.h"
 
+#ifdef HAVE_LIBEDIT
+#include <editline/readline.h>
+#endif
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/any.hpp>

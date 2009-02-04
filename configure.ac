@@ -136,6 +136,30 @@ else
   AC_MSG_FAILURE("Could not find mpfr library 2.4.0 or higher (set CPPFLAGS and LDFLAGS?)")
 fi
 
+# check for edit
+AC_CACHE_CHECK(
+  [if libedit is available],
+  [libedit_avail_cv_],
+  [libedit_save_libs=$LIBS
+   LIBS="-ledit $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_LINK_IFELSE([AC_LANG_PROGRAM(
+    [[#include <stdlib.h>
+      #include <stdio.h>
+      #include <editline/readline.h>]],
+    [[rl_readline_name = "foo";
+      char * line = readline("foo: ");
+      free(line);]])],[libedit_avail_cv_=true],[libedit_avail_cv_=false])
+   AC_LANG_POP
+   LIBS=$libedit_save_libs])
+
+if [test x$libedit_avail_cv_ = xtrue ]; then
+  LIBS="-ledit $LIBS"
+  AC_DEFINE([HAVE_LIBEDIT], [1], [If the libedit library is available])
+else
+  AC_MSG_FAILURE("Could not find libedit library (set CPPFLAGS and LDFLAGS?)")
+fi
+
 # check for boost_regex
 AC_CACHE_CHECK(
   [if boost_regex is available],

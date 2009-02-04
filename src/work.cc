@@ -97,22 +97,15 @@ void read_environment_settings(report_t& report, char * envp[])
   TRACE_FINISH(environment, 1);
 }
 
-strings_list
-read_command_line_arguments(report_t& report, int argc, char * argv[])
+strings_list read_command_arguments(report_t& report, strings_list args)
 {
   TRACE_START(arguments, 1, "Processed command-line arguments");
 
-  strings_list args;
-  process_arguments(argc - 1, argv + 1, report, args);
-
-  if (args.empty()) {
-    help(std::cout);
-    throw int(1);
-  }
+  strings_list remaining = process_arguments(args, report);
 
   TRACE_FINISH(arguments, 1);
 
-  return args;
+  return remaining;
 }
 
 void normalize_session_options(session_t& session)
