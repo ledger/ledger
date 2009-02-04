@@ -127,13 +127,7 @@ public:
   virtual void set_tag(const string& tag,
 		       const optional<string>& value = none);
   virtual void parse_tags(const char * p);
-
-  virtual void append_note(const char * p) {
-    if (note)
-      *note += p;
-    else
-      note = p;
-  }
+  virtual void append_note(const char * p);
 
   virtual optional<date_t> actual_date() const {
     return _date;

@@ -148,7 +148,9 @@ std::size_t session_t::read_journal(journal_t&	  journal,
     master = journal.master;
 
   foreach (journal_t::parser_t& parser, parsers)
+#if defined(TEST_FOR_PARSER)
     if (parser.test(in))
+#endif
       return parser.parse(in, *this, journal, master, &pathname);
 
   return 0;

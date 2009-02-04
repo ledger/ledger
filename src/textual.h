@@ -65,7 +65,9 @@ class time_log_t;
 class textual_parser_t : public journal_t::parser_t
 {
 public:
+#if defined(TEST_FOR_PARSER)
   virtual bool test(std::istream& in) const;
+#endif
 
   virtual std::size_t parse(std::istream& in,
 			    session_t&    session,
@@ -93,14 +95,12 @@ protected:
     accounts_map      account_aliases;
 
     path	      pathname;
+    char	      linebuf[MAX_LINE + 1];
     std::size_t       linenum;
-    istream_pos_type  beg_pos;
-    std::size_t       beg_line;
-    istream_pos_type  end_pos;
+    istream_pos_type  line_beg_pos;
+    istream_pos_type  curr_pos;
     std::size_t       count;
     std::size_t       errors;
-
-    char	      linebuf[MAX_LINE + 1];
 
     scoped_ptr<auto_entry_finalizer_t> auto_entry_finalizer;
 
@@ -118,6 +118,11 @@ protected:
     ~instance_t();
 
     void parse();
+    std::streamsize read_line(char *& line);
+    bool peek_whitespace_line() {
+      return (in.good() && ! in.eof() &&
+	      (in.peek() == ' ' || in.peek() == '\t'));
+    }
     void read_next_directive(); 
 
 #if defined(TIMELOG_SUPPORT)
@@ -134,7 +139,7 @@ protected:
     void option_directive(char * line);
     void automated_entry_directive(char * line);
     void period_entry_directive(char * line);
-    void entry_directive(char * line);
+    void entry_directive(char * line, std::streamsize len);
     void include_directive(char * line);
     void account_directive(char * line);
     void end_directive(char * line);
@@ -142,20 +147,18 @@ protected:
     void define_directive(char * line);
     void general_directive(char * line);
 
-    xact_t * parse_xact(char *	    line,
-			account_t * account,
-			entry_t *   entry);
+    xact_t * parse_xact(char *		line,
+			std::streamsize len,
+			account_t *	account,
+			entry_t *	entry);
 
-    bool parse_xacts(std::istream&    in,
-		     account_t *      account,
-		     entry_base_t&    entry,
-		     const string&    kind,
-		     istream_pos_type beg_pos);
+    bool parse_xacts(account_t *   account,
+		     entry_base_t& entry,
+		     const string& kind);
 
-    entry_t * parse_entry(std::istream&     in,
-			  char *	    line,
-			  account_t *	    master,
-			  istream_pos_type& pos);
+    entry_t * parse_entry(char *	  line,
+			  std::streamsize len,
+			  account_t *	  account);
 
     virtual expr_t::ptr_op_t lookup(const string& name);
   };

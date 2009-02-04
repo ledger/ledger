@@ -71,6 +71,21 @@ void item_t::set_tag(const string&           tag,
 
 void item_t::parse_tags(const char * p)
 {
+  if (char * b = std::strchr(p, '[')) {
+    if (char * e = std::strchr(p, ']')) {
+      char buf[256];
+      std::strncpy(buf, b + 1, e - b - 1);
+      buf[e - b - 1] = '\0';
+
+      if (char * p = std::strchr(buf, '=')) {
+	*p++ = '\0';
+	_date_eff = parse_date(p);
+      }
+      if (buf[0])
+	_date = parse_date(buf);
+    }
+  }
+
   if (! std::strchr(p, ':'))
     return;
 
@@ -97,6 +112,17 @@ void item_t::parse_tags(const char * p)
       tag = string(q, len - 1);
     }
   }
+}
+
+void item_t::append_note(const char * p)
+{
+  if (note)
+    *note += p;
+  else
+    note = p;
+  *note += '\n';
+
+  parse_tags(p);
 }
 
 namespace {
@@ -325,9 +351,9 @@ string item_context(const item_t& item)
   out << "While balancing item from \"" << item.pathname.string()
       << "\"";
 
-  if (item.beg_line != (item.end_line - 1))
+  if (item.beg_line != item.end_line)
     out << ", lines " << item.beg_line << "-"
-	<< (item.end_line - 1) << ":\n";
+	<< item.end_line << ":\n";
   else
     out << ", line " << item.beg_line << ":\n";
 

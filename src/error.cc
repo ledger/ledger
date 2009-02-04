@@ -50,21 +50,21 @@ string file_context(const path& file, std::size_t line)
   return buf.str();
 }
 
-string line_context(const string&    line,
-		    istream_pos_type pos,
-		    istream_pos_type end_pos)
+string line_context(const string& line,
+		    std::size_t	  pos,
+		    std::size_t	  end_pos)
 {
   std::ostringstream buf;
   buf << "  " << line << "\n";
 
-  if (pos != istream_pos_type(0)) {
+  if (pos != 0) {
     buf << "  ";
-    if (end_pos == istream_pos_type(0)) {
-      for (istream_pos_type i = 0; i < pos; i += 1)
+    if (end_pos == 0) {
+      for (std::size_t i = 0; i < pos; i += 1)
 	buf << " ";
       buf << "^";
     } else {
-      for (istream_pos_type i = 0; i < end_pos; i += 1) {
+      for (std::size_t i = 0; i < end_pos; i += 1) {
 	if (i >= pos)
 	  buf << "^";
 	else

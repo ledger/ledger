@@ -68,9 +68,9 @@ extern std::ostringstream _ctxt_buffer;
 string error_context();
 
 string file_context(const path& file, std::size_t line);
-string line_context(const string&    line,
-		    istream_pos_type pos     = istream_pos_type(0),
-		    istream_pos_type end_pos = istream_pos_type(0));
+string line_context(const string& line,
+		    std::size_t	  pos     = 0,
+		    std::size_t	  end_pos = 0);
 
 #define DECLARE_EXCEPTION(name, kind)				\
   class name : public kind {					\
