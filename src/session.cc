@@ -172,24 +172,20 @@ std::size_t session_t::read_journal(journal_t&	journal,
 
 void session_t::read_init()
 {
-  if (! init_file)
-    return;
+  if (init_file && exists(*init_file)) {
+    TRACE_START(init, 1, "Read initialization file");
 
-  if (! exists(*init_file))
-    throw_(std::logic_error, "Cannot read init file" << *init_file);
+    ifstream init(*init_file);
 
-  TRACE_START(init, 1, "Read initialization file");
+    journal_t temp;
+    if (read_journal(temp, *init_file) > 0 ||
+	temp.auto_entries.size() > 0 || temp.period_entries.size() > 0) {
+      throw_(parse_error,
+	     "Entries found in initialization file '" << init_file << "'");
+    }
 
-  ifstream init(*init_file);
-
-  journal_t temp;
-  if (read_journal(temp, *init_file) > 0 ||
-      temp.auto_entries.size() > 0 || temp.period_entries.size() > 0) {
-    throw_(parse_error,
-	   "Entries found in initialization file '" << init_file << "'");
+    TRACE_FINISH(init, 1);
   }
-
-  TRACE_FINISH(init, 1);
 }
 
 std::size_t session_t::read_data(journal_t&    journal,
