@@ -236,7 +236,7 @@ install-exec-hook:
 	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
-	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py install \
+	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py -q install \
 		--skip-build \
 		--root=$(DESTDIR)/ \
 		--prefix=$(prefix) \
@@ -263,13 +263,14 @@ PYLIBS  = ledger_python				\
           boost_python$(BOOST_SUFFIX)
 
 ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
-	BUILD_DIR=`cd $(top_builddir); pwd`; \
+	@echo "    PY ledger.so"
+	@BUILD_DIR=`cd $(top_builddir); pwd`; \
 	SRC_DIR=`cd $(srcdir); pwd`; \
 	(cd $(srcdir); \
 	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
 	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
 	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
-	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py build \
+	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py -q build \
 		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
 
 endif
