@@ -1634,10 +1634,7 @@ void value_t::print(std::ostream&           out,
     break;
 
   case BOOLEAN:
-    if (as_boolean())
-      out << "true";
-    else
-      out << "false";
+    out << (as_boolean() ? "1" : "0");
     break;
 
   case DATETIME:
