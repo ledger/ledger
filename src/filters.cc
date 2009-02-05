@@ -794,6 +794,7 @@ pass_down_accounts::pass_down_accounts
 {
   TRACE_CTOR(pass_down_accounts,
 	     "acct_handler_ptr, accounts_iterator");
+
   for (account_t * account = iter(); account; account = iter())
     if (! pred || (*pred)(*account))
       item_handler<account_t>::operator()(*account);
