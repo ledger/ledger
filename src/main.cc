@@ -57,11 +57,6 @@ namespace {
     return s;
   }
 
-  void sigint_handler(int sig)
-  {
-    throw std::logic_error("Interrupted by user (use Control-D to quit)");
-  }
-
   strings_list split_arguments(char * line)
   {
     strings_list args;
@@ -177,12 +172,16 @@ namespace {
     catch (const std::exception& err) {
       std::cout.flush();		// first display anything that was pending
 
-      // Display any pending error context information
-      string context = error_context();
-      if (! context.empty())
-	std::cerr << context << std::endl;
+      if (caught_signal == NONE_CAUGHT) {
+	// Display any pending error context information
+	string context = error_context();
+	if (! context.empty())
+	  std::cerr << context << std::endl;
     
-      std::cerr << "Error: " << err.what() << std::endl;
+	std::cerr << "Error: " << err.what() << std::endl;
+      } else {
+	caught_signal = NONE_CAUGHT;
+      }
     }
     catch (int _status) {
       status = _status;		// used for a "quick" exit, and is used only
@@ -226,6 +225,7 @@ int main(int argc, char * argv[], char * envp[])
     session->option_version(*session);
     
     std::signal(SIGINT, sigint_handler);
+    std::signal(SIGPIPE, sigpipe_handler);
 
 #ifdef HAVE_LIBEDIT
 

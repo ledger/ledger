@@ -78,8 +78,10 @@ public:
       handler->flush();
   }
   virtual void operator()(T& item) {
-    if (handler.get())
+    if (handler.get()) {
+      check_for_signal();
       (*handler.get())(item);
+    }
   }
 };
 

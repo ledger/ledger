@@ -628,6 +628,23 @@ void finish_timer(const char * name)
 
 /**********************************************************************
  *
+ * Signal handlers
+ */
+
+caught_signal_t caught_signal = NONE_CAUGHT;
+
+void sigint_handler(int sig)
+{
+  caught_signal = INTERRUPTED;
+}
+
+void sigpipe_handler(int sig)
+{
+  caught_signal = PIPE_CLOSED;
+}
+
+/**********************************************************************
+ *
  * General utility functions
  */
 

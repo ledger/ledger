@@ -475,6 +475,28 @@ void finish_timer(const char * name);
 #include "stream.h"
 #include "pushvar.h"
 
+enum caught_signal_t {
+  NONE_CAUGHT,
+  INTERRUPTED,
+  PIPE_CLOSED
+};
+
+extern caught_signal_t caught_signal;
+
+void sigint_handler(int sig);
+void sigpipe_handler(int sig);
+
+inline void check_for_signal() {
+  switch (caught_signal) {
+  case NONE_CAUGHT:
+    break;
+  case INTERRUPTED:
+    throw std::runtime_error("Interrupted by user (use Control-D to quit)");
+  case PIPE_CLOSED:
+    throw std::runtime_error("Pipe terminated");
+  }
+}
+
 /**
  * @name General utility functions
  */
