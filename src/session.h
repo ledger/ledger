@@ -63,8 +63,6 @@ class session_t : public noncopyable, public scope_t
   friend void set_session_context(session_t * session);
 
 public:
-  scope_t *                     global_scope;
-
   std::list<path>		data_files;
   bool                          next_data_file_from_command_line;
   bool                          saw_data_file_from_command_line;
