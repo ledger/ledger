@@ -49,6 +49,9 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
       }
       return copy(def);
     }
+    else if (left()) {
+      return copy();
+    }
     return this;
   }
 
@@ -427,7 +430,8 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   switch (kind) {
   case VALUE:
-    out << "VALUE: " << as_value();
+    out << "VALUE: ";
+    as_value().dump(out);
     break;
 
   case IDENT:
