@@ -69,7 +69,6 @@ public:
   bool                          next_data_file_from_command_line;
   bool                          saw_data_file_from_command_line;
   optional<path>		init_file;
-  optional<path>		cache_file;
   optional<path>	        price_db;
   optional<path>                pager_path;
   bool                          next_price_db_from_command_line;
@@ -91,8 +90,6 @@ public:
   int				current_year;
 
   bool				download_quotes;
-  bool				use_cache;
-  bool				cache_dirty;
 
   format_t::elision_style_t	elision_style;
   int				abbrev_length;
@@ -229,7 +226,6 @@ See LICENSE file included with the distribution for details and disclaimer.";
     if (next_data_file_from_command_line &&
 	! saw_data_file_from_command_line) {
       data_files.clear();
-      use_cache = false;
       saw_data_file_from_command_line = true;
     }
     data_files.push_back(args[0].as_string());

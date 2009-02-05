@@ -60,16 +60,13 @@ class quotes_by_script : public noncopyable, public commodity_t::base_t::updater
 {
   string      price_db;
   std::size_t pricing_leeway;
-  bool&       cache_dirty;
 
   quotes_by_script();
 
 public:
   quotes_by_script(path	       _price_db,
-		   std::size_t _pricing_leeway,
-		   bool&       _cache_dirty)
-    : price_db(_price_db), pricing_leeway(_pricing_leeway),
-      cache_dirty(_cache_dirty) {
+		   std::size_t _pricing_leeway)
+    : price_db(_price_db), pricing_leeway(_pricing_leeway) {
     TRACE_CTOR(quotes_by_script, "path, std::size_t, bool&");
   }
   ~quotes_by_script() throw() {

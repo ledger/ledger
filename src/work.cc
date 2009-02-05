@@ -110,18 +110,6 @@ strings_list read_command_arguments(report_t& report, strings_list args)
 
 void normalize_session_options(session_t& session)
 {
-  if (! session.cache_file)
-    session.use_cache = false;
-
-  DEBUG("ledger.session.cache", "1. use_cache = " << session.use_cache);
-
-  if (std::find(session.data_files.begin(),
-		session.data_files.end(), *session.cache_file) !=
-      session.data_files.end())
-    session.use_cache = false;
-
-  DEBUG("ledger.session.cache", "2. use_cache = " << session.use_cache);
-
   INFO("Initialization file is " << session.init_file->string());
   INFO("Price database is " << session.price_db->string());
 

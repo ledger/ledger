@@ -103,8 +103,6 @@ session_t::session_t()
     current_year(CURRENT_DATE().year()),
 
     download_quotes(false),
-    use_cache(true),
-    cache_dirty(false),
 
 #if 0
     elision_style(ABBREVIATE),
@@ -123,9 +121,8 @@ session_t::session_t()
   if (const char * home_var = std::getenv("HOME"))
     home = home_var;
 
-  init_file  = home ? *home / ".ledgerrc"	: "./.ledgerrc";
-  price_db   = home ? *home / ".pricedb"	: "./.pricedb";
-  cache_file = home ? *home / ".ledger-cache" : "./.ledger-cache";
+  init_file  = home ? *home / ".ledgerrc" : "./.ledgerrc";
+  price_db   = home ? *home / ".pricedb"  : "./.pricedb";
 
   register_parser(new textual_parser_t);
 
@@ -205,21 +202,6 @@ std::size_t session_t::read_data(journal_t&    journal,
 
   std::size_t entry_count = 0;
 
-  DEBUG("ledger.cache", "3. use_cache = " << use_cache);
-
-  if (use_cache && cache_file) {
-    DEBUG("ledger.cache", "using_cache " << cache_file->string());
-    cache_dirty = true;
-    if (exists(*cache_file)) {
-      push_variable<optional<path> >
-	save_price_db(journal.price_db, price_db);
-
-      entry_count += read_journal(journal, *cache_file);
-      if (entry_count > 0)
-	cache_dirty = false;
-    }
-  }
-
   if (entry_count == 0) {
     account_t * acct = journal.master;
     if (! master_account.empty())
@@ -230,17 +212,13 @@ std::size_t session_t::read_data(journal_t&    journal,
       if (read_journal(journal, *journal.price_db)) {
 	throw_(parse_error, "Entries not allowed in price history file");
       } else {
-	DEBUG("ledger.cache",
-	      "read price database " << journal.price_db->string());
 	journal.sources.pop_back();
       }
     }
 
 
     foreach (const path& pathname, data_files) {
-      DEBUG("ledger.cache", "rejected cache, parsing " << pathname.string());
       if (pathname == "-") {
-	use_cache = false;
 	journal.sources.push_back("/dev/stdin");
 
 	// To avoid problems with stdin and pipes, etc., we read the entire

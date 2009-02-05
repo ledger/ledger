@@ -250,14 +250,6 @@ public:
 	     "The init file '" << path << "' does not exist or is not readable");
   }
 
-  value_t option_cache(call_scope_t& args) { // :
-    config->cache_file = resolve_path(optarg);
-  }
-
-  value_t option_no_cache(call_scope_t& args) {
-    config->cache_file = "<none>";
-  }
-
   value_t option_output(call_scope_t& args) { // o:
     if (std::string(optarg) != "-") {
       std::string path = resolve_path(optarg);

@@ -52,14 +52,9 @@ entry_base_t::~entry_base_t()
 
   foreach (xact_t * xact, xacts) {
     // If the transaction is a temporary, it will be destructed when the
-    // temporary is.  If it's from a binary cache, we can safely destruct it
-    // but its memory will be deallocated with the cache.
-    if (! xact->has_flags(ITEM_TEMP)) {
-      if (! xact->has_flags(ITEM_IN_CACHE))
-	checked_delete(xact);
-      else
-	xact->~xact_t();
-    }
+    // temporary is.
+    if (! xact->has_flags(ITEM_TEMP))
+      checked_delete(xact);
   }
 }
 

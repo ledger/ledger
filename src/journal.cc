@@ -44,22 +44,13 @@ journal_t::~journal_t()
   // accounts they refer to, because all accounts are about to
   // be deleted.
   foreach (entry_t * entry, entries)
-    if (! entry->has_flags(ITEM_IN_CACHE))
-      checked_delete(entry);
-    else
-      entry->~entry_t();
+    checked_delete(entry);
 
   foreach (auto_entry_t * entry, auto_entries)
-    if (! entry->has_flags(ITEM_IN_CACHE))
-      checked_delete(entry);
-    else
-      entry->~auto_entry_t();
+    checked_delete(entry);
 
   foreach (period_entry_t * entry, period_entries)
-    if (! entry->has_flags(ITEM_IN_CACHE))
-      checked_delete(entry);
-    else
-      entry->~period_entry_t();
+    checked_delete(entry);
 }
 
 void journal_t::add_account(account_t * acct)

@@ -87,7 +87,6 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
     commodity.add_price(current_moment, price);
 
     commodity.history->last_lookup = current_moment;
-    cache_dirty = true;
 
     if (price && ! price_db.empty()) {
 #if defined(__GNUG__) && __GNUG__ < 3

@@ -62,8 +62,6 @@
  *
  * \section invoke_cmd Invoke the command object
  *
- * \section write_cache Write out binary cache file, if necessary
- *
  * \section shutdown Wrap up, closing everything and releasing memory
  */
 #ifndef _LEDGER_H

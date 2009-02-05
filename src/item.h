@@ -60,9 +60,8 @@ class item_t : public supports_flags<>, public scope_t
 {
 public:
 #define ITEM_NORMAL     0x00	// no flags at all, a basic transaction
-#define ITEM_IN_CACHE   0x01	// transaction allocated by the binary cache
-#define ITEM_GENERATED  0x02	// transaction was not found in a journal
-#define ITEM_TEMP       0x04	// transaction is a temporary object
+#define ITEM_GENERATED  0x01	// transaction was not found in a journal
+#define ITEM_TEMP       0x02	// transaction is a temporary object
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
