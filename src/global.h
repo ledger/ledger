@@ -30,18 +30,81 @@
  */
 
 /**
- * @file   work.h
+ * @file   global.h
  * @author John Wiegley
  *
  * @brief Contains the top-level functions used by main.cc
  */
-#ifndef _WORK_H
-#define _WORK_H
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
+
+#include "report.h"
 
 namespace ledger {
 
-typedef strings_list::iterator string_iterator;
-typedef std::pair<string_iterator, string_iterator> string_iterator_pair;
+class global_scope_t : public noncopyable, public scope_t
+{
+  scoped_ptr<session_t> session_ptr;
+  ptr_list<report_t>	report_stack;
+
+public:
+  path script_file;
+
+  global_scope_t(char ** envp);
+  ~global_scope_t();
+
+  void read_journal_files();
+
+  char * prompt_string();
+
+  session_t& session() {
+    return *session_ptr.get();
+  }
+  report_t& report() {
+    return report_stack.front();
+  }
+
+  void push_report() {
+    report_stack.push_front(new report_t(report_stack.front()));
+  }
+  void pop_report() {
+    if (! report_stack.empty())
+      report_stack.pop_front();
+  }
+
+  void report_error(const std::exception& err);
+
+  /**
+   * @return \c true if a command was actually executed; otherwise, it probably
+   *         just resulted in setting some options.
+   */
+  void execute_command(strings_list args, bool at_repl);
+  int  execute_command_wrapper(strings_list args, bool at_repl);
+
+  value_t push_report_cmd(call_scope_t&) {
+    // Make a copy at position 2, because the topmost report object has an
+    // open output stream at this point.  We want it to get popped off as
+    // soon as this command terminate so that the stream is closed cleanly.
+    report_stack.insert(++report_stack.begin(),
+			new report_t(report_stack.front()));
+    return true;
+  }
+  value_t pop_report_cmd(call_scope_t&) {
+    pop_report();
+    return true;
+  }
+
+  value_t option_script_(call_scope_t& args) {
+    script_file = args[0].as_string();
+    return true;
+  }
+
+  value_t ignore(call_scope_t&) {
+    return true;
+  }
+
+  virtual expr_t::ptr_op_t lookup(const string& name);
+};
 
 void         handle_debug_options(int argc, char * argv[]);
 void         read_environment_settings(report_t& report, char * envp[]);
@@ -53,4 +116,4 @@ void         normalize_report_options(report_t& report, const string& verb);
 
 } // namespace ledger
 
-#endif // _WORK_H
+#endif // _GLOBAL_H
