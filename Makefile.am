@@ -401,9 +401,7 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
 PyUnitTests: $(srcdir)/test/PyUnitTests.py test/python/UnitTests.py
-	@echo all_test_sources: $(all_tests_sources)
-	@echo all_py_test_sources: $(all_py_tests_sources)
-	cat $(srcdir)/test/PyUnitTests.py \
+	@cat $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%python%/$(ESC_python)/" \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
