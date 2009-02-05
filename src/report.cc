@@ -251,8 +251,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (*(p + 1) == '\0' || std::strcmp(p, "print") == 0)
 	  return WRAP_FUNCTOR
 	    (reporter<>(new format_xacts(*this, FORMAT(print_format))));
-	else if (std::strcmp(p, "push") == 0)
-	  return MAKE_FUNCTOR(report_t::ignore);
 	break;
 
       case 'r':
@@ -344,8 +342,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_dow);
 	else if (std::strcmp(p, "date-format_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_date_format_);
-	else if (std::strcmp(p, "debug_") == 0)
-	  return MAKE_FUNCTOR(report_t::ignore);
 	break;
 
       case 'e':
@@ -440,20 +436,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_totals);
 	else if (std::strcmp(p, "tail_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_tail_);
-	else if (std::strcmp(p, "trace_") == 0)
-	  return MAKE_FUNCTOR(report_t::ignore);
 	break;
 
       case 'u':
 	if (std::strcmp(p, "uncleared") == 0)
 	  return MAKE_FUNCTOR(report_t::option_uncleared);
-	break;
-
-      case 'v':
-	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
-	  return MAKE_FUNCTOR(report_t::ignore);
-	else if (std::strcmp(p, "verify") == 0)
-	  return MAKE_FUNCTOR(report_t::ignore);
 	break;
 
       case 'w':

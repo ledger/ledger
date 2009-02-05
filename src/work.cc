@@ -97,11 +97,11 @@ void read_environment_settings(report_t& report, char * envp[])
   TRACE_FINISH(environment, 1);
 }
 
-strings_list read_command_arguments(report_t& report, strings_list args)
+strings_list read_command_arguments(scope_t& scope, strings_list args)
 {
   TRACE_START(arguments, 1, "Processed command-line arguments");
 
-  strings_list remaining = process_arguments(args, report);
+  strings_list remaining = process_arguments(args, scope);
 
   TRACE_FINISH(arguments, 1);
 
@@ -117,9 +117,17 @@ void normalize_session_options(session_t& session)
     INFO("Journal file is " << pathname.string());
 }
 
-function_t look_for_precommand(report_t& report, const string& verb)
+function_t look_for_precommand(scope_t& scope, const string& verb)
 {
-  if (expr_t::ptr_op_t def = report.lookup(string("ledger_precmd_") + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(string("ledger_precmd_") + verb))
+    return def->as_function();
+  else
+    return function_t();
+}
+
+function_t look_for_command(scope_t& scope, const string& verb)
+{
+  if (expr_t::ptr_op_t def = scope.lookup(string("ledger_cmd_") + verb))
     return def->as_function();
   else
     return function_t();
@@ -145,14 +153,6 @@ void read_journal_files(session_t& session, const string& account)
   TRACE_FINISH(entries, 1);
   TRACE_FINISH(session_parser, 1);
   TRACE_FINISH(parsing_total, 1);
-}
-
-function_t look_for_command(report_t& report, const string& verb)
-{
-  if (expr_t::ptr_op_t def = report.lookup(string("ledger_cmd_") + verb))
-    return def->as_function();
-  else
-    return function_t();
 }
 
 void normalize_report_options(report_t& report, const string& verb)
@@ -204,31 +204,6 @@ void normalize_report_options(report_t& report, const string& verb)
 
   if (! report.report_period.empty() && ! report.sort_all)
     report.entry_sort = true;
-}
-
-void create_output_stream(report_t& report)
-{
-  report.output_stream.initialize(report.output_file, report.session.pager_path);
-}
-
-void invoke_command_verb(report_t&       report,
-			 function_t&	 command,
-			 string_iterator args_begin,
-			 string_iterator args_end)
-{
-  // Create an argument scope containing the report command's
-  // arguments, and then invoke the command.
-
-  call_scope_t command_args(report);
-
-  for (string_iterator i = args_begin; i != args_end; i++)
-    command_args.push_back(string_value(*i));
-
-  INFO_START(command, "Finished executing command");
-
-  command(command_args);
-
-  INFO_FINISH(command);
 }
 
 } // namespace ledger

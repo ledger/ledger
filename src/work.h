@@ -45,17 +45,12 @@ typedef std::pair<string_iterator, string_iterator> string_iterator_pair;
 
 void         handle_debug_options(int argc, char * argv[]);
 void         read_environment_settings(report_t& report, char * envp[]);
-strings_list read_command_arguments(report_t& report, strings_list args);
+strings_list read_command_arguments(scope_t& scope, strings_list args);
 void         normalize_session_options(session_t& session);
-function_t   look_for_precommand(report_t& report, const string& verb);
+function_t   look_for_precommand(scope_t& scope, const string& verb);
+function_t   look_for_command(scope_t& scope, const string& verb);
 void	     read_journal_files(session_t& session, const string& account);
-function_t   look_for_command(report_t& report, const string& verb);
 void         normalize_report_options(report_t& report, const string& verb);
-void         create_output_stream(report_t& report);
-void         invoke_command_verb(report_t&       report,
-				 function_t&	 command,
-				 string_iterator args_begin,
-				 string_iterator args_end);
 
 } // namespace ledger
 

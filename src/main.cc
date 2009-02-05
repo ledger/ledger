@@ -36,6 +36,142 @@
 using namespace ledger;
 
 namespace {
+  class global_scope_t : public noncopyable, public scope_t
+  {
+    scoped_ptr<session_t> session_ptr;
+    ptr_list<report_t>	  report_stack;
+
+  public:
+    path script_file;
+
+    global_scope_t() {
+      session_ptr.reset(new LEDGER_SESSION_T);
+      set_session_context(session_ptr.get());
+
+      // Create the report object, which maintains state relating to each
+      // command invocation.  Because we're running from main(), the
+      // distinction between session and report doesn't really matter, but if
+      // a GUI were calling into Ledger it would have one session object per
+      // open document, with a separate report_t object for each report it
+      // generated.
+      report_stack.push_front(new report_t(*session_ptr.get()));
+    }
+    ~global_scope_t() {
+      // If memory verification is being performed (which can be very slow),
+      // clean up everything by closing the session and deleting the session
+      // object, and then shutting down the memory tracing subsystem.
+      // Otherwise, let it all leak because we're about to exit anyway.
+      IF_VERIFY() {
+	set_session_context(NULL);
+	INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
+	shutdown_memory_tracing();
+      } else {
+	// Don't free anything, just let it all leak.
+	INFO("Ledger ended");
+      }
+    }
+
+    char * prompt_string()
+    {
+      static char prompt[32];
+      std::size_t i;
+      for (i = 0; i < report_stack.size(); i++)
+	prompt[i] = ']';
+      prompt[i++] = ' ';
+      prompt[i]   = '\0';
+      return prompt;
+    }
+
+    session_t& session() {
+      return *session_ptr.get();
+    }
+    report_t& report() {
+      return report_stack.front();
+    }
+
+    void push_report() {
+      report_stack.push_front(new report_t(report_stack.front()));
+    }
+    void pop_report() {
+      if (! report_stack.empty())
+	report_stack.pop_front();
+    }
+
+    value_t push_report_cmd(call_scope_t&) {
+      // Make a copy at position 2, because the topmost report object has an
+      // open output stream at this point.  We want it to get popped off as
+      // soon as this command terminate so that the stream is closed cleanly.
+      report_stack.insert(++report_stack.begin(),
+			  new report_t(report_stack.front()));
+      return true;
+    }
+    value_t pop_report_cmd(call_scope_t&) {
+      pop_report();
+      return true;
+    }
+
+    value_t option_script_(call_scope_t& args) {
+      script_file = args[0].as_string();
+      return true;
+    }
+
+    value_t ignore(call_scope_t&) {
+      return true;
+    }
+
+    virtual expr_t::ptr_op_t lookup(const string& name)
+    {
+      const char * p = name.c_str();
+      switch (*p) {
+      case 'l':
+	if (std::strncmp(p, "ledger_precmd_", 14) == 0) {
+	  p = p + 14;
+	  switch (*p) {
+	  case 'p':
+	    if (std::strcmp(p, "push") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::push_report_cmd);
+	    else if (std::strcmp(p, "pop") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::pop_report_cmd);
+	    break;
+	  }
+	}
+	break;
+
+      case 'o':
+	if (std::strncmp(p, "opt_", 4) == 0) {
+	  p = p + 4;
+	  switch (*p) {
+	  case 'd':
+	    if (std::strcmp(p, "debug_") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::ignore);
+	    break;
+
+	  case 's':
+	    if (std::strcmp(p, "script_") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::option_script_);
+	    break;
+
+	  case 't':
+	    if (std::strcmp(p, "trace_") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::ignore);
+	    break;
+
+	  case 'v':
+	    if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::ignore);
+	    else if (std::strcmp(p, "verify") == 0)
+	      return MAKE_FUNCTOR(global_scope_t::ignore);
+	    break;
+	  }
+	}
+      }
+
+      // If you're wondering how symbols from report() will be found, it's
+      // because of the bind_scope_t object in execute_command() below.
+      return expr_t::ptr_op_t();
+    }
+  };
+
   strings_list split_arguments(char * line)
   {
     strings_list args;
@@ -47,17 +183,6 @@ namespace {
       args.push_back(p);
 
     return args;
-  }
-
-  char * prompt_string(const ptr_list<report_t>& report_stack)
-  {
-    static char prompt[32];
-    std::size_t i;
-    for (i = 0; i < report_stack.size(); i++)
-      prompt[i] = ']';
-    prompt[i++] = ' ';
-    prompt[i]   = '\0';
-    return prompt;
   }
 
   void report_error(const std::exception& err)
@@ -80,17 +205,12 @@ namespace {
    * @return \c true if a command was actually executed; otherwise, it probably
    *         just resulted in setting some options.
    */
-  void execute_command(session_t&   session,
-		       report_t&    report,
-		       strings_list args,
-		       bool         at_repl)
+  void execute_command(global_scope_t& global_scope,
+		       strings_list    args,
+		       bool	       at_repl)
   {
-    // Create a new report command object based on the current one, so that
-    // the next command's option don't corrupt state.
-    std::auto_ptr<report_t> manager(new report_t(report));
-
     // Process the command verb, arguments and options
-    args = read_command_arguments(*manager.get(), args);
+    args = read_command_arguments(global_scope.report(), args);
     if (args.empty())
       return;
 
@@ -111,12 +231,13 @@ namespace {
     // If such a command is found, create the output stream for the result and
     // then invoke the command.
 
-    function_t command;
-    bool       is_precommand = false;
+    function_t	 command;
+    bool	 is_precommand = false;
+    bind_scope_t bound_scope(global_scope, global_scope.report());
 
-    if (bool(command = look_for_precommand(*manager.get(), verb)))
+    if (bool(command = look_for_precommand(bound_scope, verb)))
       is_precommand = true;
-    else if (! bool(command = look_for_command(*manager.get(), verb)))
+    else if (! bool(command = look_for_command(bound_scope, verb)))
       throw_(std::logic_error, "Unrecognized command '" << verb << "'");
 
     // If it is not a pre-command, then parse the user's ledger data at this
@@ -125,29 +246,45 @@ namespace {
 
     if (! is_precommand) {
       if (! at_repl)
-	read_journal_files(session, manager->account);
+	read_journal_files(global_scope.session(),
+			   global_scope.report().account);
 
       // jww (2009-02-02): This is a complete hack, and a leftover from long,
       // long ago.  The question is, how best to remove its necessity...
-      normalize_report_options(*manager.get(), verb);
+      normalize_report_options(global_scope.report(), verb);
     }
 
     // Create the output stream (it might be a file, the console or a PAGER
-    // subprocess) and invoke the report command.
+    // subprocess) and invoke the report command.  The output stream is closed
+    // by the caller of this function.
 
-    create_output_stream(*manager.get()); // closed by auto_ptr destructor
-    invoke_command_verb(*manager.get(), command, arg, args.end());
+    global_scope.report()
+      .output_stream.initialize(global_scope.report().output_file,
+				global_scope.session().pager_path);
+
+    // Create an argument scope containing the report command's arguments, and
+    // then invoke the command.  The bound scope causes lookups to happen
+    // first in the global scope, and then in the report scope.
+
+    call_scope_t command_args(bound_scope);
+    for (string_iterator i = arg; i != args.end(); i++)
+      command_args.push_back(string_value(*i));
+
+    INFO_START(command, "Finished executing command");
+    command(command_args);
+    INFO_FINISH(command);
   }
 
-  int execute_command_wrapper(session_t&   session,
-			      report_t&    report,
-			      strings_list args,
-			      bool         at_repl)
+  int execute_command_wrapper(global_scope_t& global_scope,
+			      strings_list    args,
+			      bool	      at_repl)
   {
     int status = 1;
 
     try {
-      execute_command(session, report, args, at_repl);
+      global_scope.push_report();
+      execute_command(global_scope, args, at_repl);
+      global_scope.pop_report();
 
       // If we've reached this point, everything succeeded fine.  Ledger uses
       // exceptions to notify of error conditions, so if you're using gdb,
@@ -155,8 +292,10 @@ namespace {
       status = 0;
     }
     catch (const std::exception& err) {
+      global_scope.pop_report();
       report_error(err);
     }
+
     return status;
   }
 }
@@ -186,16 +325,7 @@ int main(int argc, char * argv[], char * envp[])
 
   // Create the session object, which maintains nearly all state relating to
   // this invocation of Ledger; and register all known journal parsers.
-  session_t * session = new LEDGER_SESSION_T;
-  set_session_context(session);
-
-  // Create the report object, which maintains state relating to each command
-  // invocation.  Because we're running from main(), the distinction between
-  // session and report doesn't really matter, but if a GUI were calling into
-  // Ledger it would have one session object per open document, with a
-  // separate report_t object for each report it generated.
-  ptr_list<report_t> report_stack;
-  report_stack.push_front(new report_t(*session));
+  std::auto_ptr<global_scope_t> global_scope(new global_scope_t);
 
   try {
     // Read the user's options, in the following order:
@@ -207,10 +337,10 @@ int main(int argc, char * argv[], char * envp[])
     // Before processing command-line options, we must notify the session object
     // that such options are beginning, since options like -f cause a complete
     // override of files found anywhere else.
-    session->now_at_command_line(false);
-    read_environment_settings(report_stack.front(), envp);
-    session->read_init();
-    session->now_at_command_line(true);
+    global_scope->session().now_at_command_line(false);
+    read_environment_settings(global_scope->report(), envp);
+    global_scope->session().read_init();
+    global_scope->session().now_at_command_line(true);
 
     // Construct an STL-style argument list from the process command arguments
     strings_list args;
@@ -218,16 +348,36 @@ int main(int argc, char * argv[], char * envp[])
       args.push_back(argv[i]);
 
     // Look for options and a command verb in the command-line arguments
-    args = read_command_arguments(report_stack.front(), args);
+    bind_scope_t bound_scope(*global_scope.get(), global_scope->report());
+    args = read_command_arguments(bound_scope, args);
 
-    if (! args.empty()) {	// user has invoke a command-line verb
-      status = execute_command_wrapper(*session, report_stack.front(), args,
-				       false);
-    } else {
+    if (! global_scope->script_file.empty() &&
+	exists(global_scope->script_file)) {
+
+      read_journal_files(global_scope->session(),
+			 global_scope->report().account);
+
+      ifstream in(global_scope->script_file);
+      while (! in.eof()) {
+	char line[1024];
+	in.getline(line, 1023);
+
+	char * p = skip_ws(line);
+	if (*p && *p != '#')
+	  execute_command_wrapper(*global_scope, split_arguments(p), true);
+      }
+      status = 0;
+    }
+    else if (! args.empty()) {
+      // User has invoke a verb at the interactive command-line
+      status = execute_command_wrapper(*global_scope, args, false);
+    }
+    else {
       // Commence the REPL by displaying the current Ledger version
-      session->option_version(*session);
+      global_scope->session().option_version(global_scope->session());
 
-      read_journal_files(*session, report_stack.front().account);
+      read_journal_files(global_scope->session(),
+			 global_scope->report().account);
 
       bool exit_loop = false;
 
@@ -239,7 +389,7 @@ int main(int argc, char * argv[], char * envp[])
       rl_attempted_completion_function = ledger_completion;
 #endif
 
-      while (char * p = readline(prompt_string(report_stack))) {
+      while (char * p = readline(global_scope->prompt_string())) {
 	char * expansion = NULL;
 	int    result;
 
@@ -259,7 +409,7 @@ int main(int argc, char * argv[], char * envp[])
 #else // HAVE_LIBEDIT
 
       while (! std::cin.eof()) {
-	std::cout << prompt_string(report_stack);
+	std::cout << global_scope->prompt_string();
 	char line[1024];
 	std::cin.getline(line, 1023);
 
@@ -271,24 +421,12 @@ int main(int argc, char * argv[], char * envp[])
 
 	check_for_signal();
 
-	if (! *p) {
-	  do_command = false;
+	if (*p && *p != '#') {
+	  if (std::strncmp(p, "quit", 4) == 0)
+	    exit_loop = true;
+	  else
+	    execute_command_wrapper(*global_scope, split_arguments(p), true);
 	}
-	else if (std::strncmp(p, "quit", 4) == 0) {
-	  exit_loop = true;
-	  do_command = false;
-	}
-	else if (std::strncmp(p, "push", 4) == 0) {
-	  report_stack.push_front(new report_t(report_stack.front()));
-	}
-	else if (std::strncmp(p, "pop", 3) == 0) {
-	  report_stack.pop_front();
-	  do_command = false;
-	}
-
-	if (do_command)
-	  execute_command_wrapper(*session, report_stack.front(),
-				  split_arguments(p), true);
 
 #ifdef HAVE_LIBEDIT
 	if (expansion)
@@ -316,14 +454,14 @@ int main(int argc, char * argv[], char * envp[])
   // then shutting down the memory tracing subsystem.  Otherwise, let it all
   // leak because we're about to exit anyway.
   IF_VERIFY() {
-    set_session_context(NULL);
-    if (session != NULL)
-      checked_delete(session);
+    global_scope.reset();
 
-    INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
     shutdown_memory_tracing();
+    INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
   } else {
     // Don't free anything, just let it all leak.
+    global_scope.release();
+
     INFO("Ledger ended");
   }
 

@@ -322,11 +322,11 @@ public:
   //
   // Report filtering
 
-  value_t ignore(call_scope_t& args) {
+  value_t ignore(call_scope_t&) {
     return true;
   }
 
-  value_t option_effective(call_scope_t& args) {
+  value_t option_effective(call_scope_t&) {
     use_effective_date = true;
     return true;
   }
