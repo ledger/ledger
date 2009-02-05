@@ -41,7 +41,7 @@ expr_t::expr_t() : compiled(false)
 }
 
 expr_t::expr_t(const expr_t& other)
-  : ptr(other.ptr), str(other.str), compiled(other.compiled)
+  : ptr(other.ptr), str(other.str), compiled(false)
 {
   TRACE_CTOR(expr_t, "copy");
 }
