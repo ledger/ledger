@@ -403,8 +403,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(report_t::option_price);
 	else if (std::strcmp(p, "price_db_") == 0)
 	  return MAKE_FUNCTOR(report_t::option_price_db_);
-	else if (std::strcmp(p, "pager_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_pager_);
 	break;
 
       case 'q':

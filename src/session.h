@@ -71,6 +71,7 @@ public:
   optional<path>		init_file;
   optional<path>		cache_file;
   optional<path>	        price_db;
+  optional<path>                pager_path;
   bool                          next_price_db_from_command_line;
   bool                          saw_price_db_from_command_line;
 
@@ -232,6 +233,11 @@ See LICENSE file included with the distribution for details and disclaimer.";
       saw_data_file_from_command_line = true;
     }
     data_files.push_back(args[0].as_string());
+    return true;
+  }
+
+  value_t option_pager_(call_scope_t& args) { // :
+    pager_path = args[0].as_string();
     return true;
   }
 };

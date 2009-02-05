@@ -151,7 +151,6 @@ public:
   keep_details_t  what_to_keep;
 
   string	  account;
-  optional<path>  pager_path;
 
   bool		  raw_mode;
 
@@ -447,11 +446,6 @@ public:
 
   value_t option_tail_(call_scope_t& args) { // :
     tail_entries = *var_t<long>(args, 0);
-    return true;
-  }
-
-  value_t option_pager_(call_scope_t& args) { // :
-    pager_path = args[0].as_string();
     return true;
   }
 

@@ -225,7 +225,7 @@ void normalize_report_options(report_t& report, const string& verb)
 
 void create_output_stream(report_t& report)
 {
-  report.output_stream.initialize(report.output_file, report.pager_path);
+  report.output_stream.initialize(report.output_file, report.session.pager_path);
 }
 
 void invoke_command_verb(report_t&       report,
