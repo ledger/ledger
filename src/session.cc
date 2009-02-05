@@ -281,8 +281,7 @@ std::size_t session_t::read_data(journal_t&    journal,
 void session_t::clean_xacts()
 {
   session_xacts_iterator walker(*this);
-  pass_down_xacts
-    (xact_handler_ptr(new clear_xact_xdata), walker);
+  pass_down_xacts(xact_handler_ptr(new clear_xact_xdata), walker);
 }
 
 void session_t::clean_xacts(entry_t& entry)
@@ -295,6 +294,7 @@ void session_t::clean_accounts()
 {
   basic_accounts_iterator acct_walker(*master);
   pass_down_accounts(acct_handler_ptr(new clear_account_xdata), acct_walker);
+  master->clear_xdata();
 }
 
 #if 0
