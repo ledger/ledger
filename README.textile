@@ -52,7 +52,8 @@ If you wish to proceed in this venture, you'll need a few dependencies:
   | pcre | 7.7 | if you're building *BETA* or *RELEASE* |
   | GMP | 4.2.2 | for all builds |
   | MPFR | 2.4.0 | if you're building *CURRENT* |
-  | cppunit | 1.12.1 | if you're building *CURRENT*, for @make check@ |
+  | libedit | 20090111-3.0 | _optional_, if you're building *CURRENT* |
+  | cppunit | 1.12.1 | _optional_, if you're building *CURRENT*, for @make check@ |
   | Python | 2.4 or higher | _optional_ |
   | libofx | 0.8.3 | _optional_, if you're building *BETA* or *RELEASE* |
   | expat | 2.0.1 | _optional_, if you're building *BETA* or *RELEASE* |
@@ -68,7 +69,7 @@ If you build stuff using MacPorts, as I do, here is what you would run:
 
 <pre>
 sudo port install boost +python25+st
-sudo port install gmp mpfr pcre libofx
+sudo port install gmp mpfr libedit pcre libofx
 sudo port install cppunit doxygen texlive texinfo lcov
 </pre>
 
