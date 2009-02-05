@@ -156,8 +156,6 @@ AC_CACHE_CHECK(
 if [test x$libedit_avail_cv_ = xtrue ]; then
   LIBS="-ledit $LIBS"
   AC_DEFINE([HAVE_LIBEDIT], [1], [If the libedit library is available])
-else
-  AC_MSG_FAILURE("Could not find libedit library (set CPPFLAGS and LDFLAGS?)")
 fi
 
 # check for boost_regex
