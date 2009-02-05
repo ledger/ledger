@@ -199,10 +199,12 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
     if (! should_display(*pair.second))
       continue;
 
-    call_scope_t args(*pair.second);
+    bind_scope_t bound_scope(report, *pair.second);
+    call_scope_t args(bound_scope);
     result = report.get_total_expr(args);
     if (! computed) {
-      call_scope_t args(account);
+      bind_scope_t account_scope(report, account);
+      call_scope_t args(account_scope);
       acct_total = report.get_total_expr(args);
       computed = true;
     }
