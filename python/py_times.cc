@@ -42,11 +42,16 @@ using namespace boost::python;
 
 typedef boost::gregorian::date date;
 
+#define MY_PyDateTime_IMPORT				\
+  PyDateTimeAPI = (PyDateTime_CAPI*)			\
+  PyCObject_Import(const_cast<char *>("datetime"),	\
+		   const_cast<char *>("datetime_CAPI"))
+
 struct date_to_python
 {
   static PyObject* convert(const date& dte)
   {
-    PyDateTime_IMPORT;
+    MY_PyDateTime_IMPORT;
     return PyDate_FromDate(dte.year(), dte.month(), dte.day());
   }
 };
@@ -55,14 +60,14 @@ struct date_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    PyDateTime_IMPORT;
+    MY_PyDateTime_IMPORT;
     if (PyDate_Check(obj_ptr)) return obj_ptr;
     return 0;
   }
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
   {
-    PyDateTime_IMPORT;
+    MY_PyDateTime_IMPORT;
     int y = PyDateTime_GET_YEAR(obj_ptr);
     int m = PyDateTime_GET_MONTH(obj_ptr);
     int d = PyDateTime_GET_DAY(obj_ptr);
@@ -79,7 +84,7 @@ struct datetime_to_python
 {
   static PyObject* convert(const datetime_t& moment)
   {
-    PyDateTime_IMPORT;
+    MY_PyDateTime_IMPORT;
     date dte = moment.date();
     datetime_t::time_duration_type tod = moment.time_of_day();
     return PyDateTime_FromDateAndTime(dte.year(), dte.month(), dte.day(),
@@ -92,14 +97,14 @@ struct datetime_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    PyDateTime_IMPORT;
+    MY_PyDateTime_IMPORT;
     if(PyDateTime_Check(obj_ptr)) return obj_ptr;
     return 0;
   }
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
   {
-    PyDateTime_IMPORT;
+    MY_PyDateTime_IMPORT;
     int y = PyDateTime_GET_YEAR(obj_ptr);
     int m = PyDateTime_GET_MONTH(obj_ptr);
     int d = PyDateTime_GET_DAY(obj_ptr);
