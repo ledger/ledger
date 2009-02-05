@@ -57,6 +57,11 @@ namespace {
     return s;
   }
 
+  void sigint_handler(int sig)
+  {
+    throw std::logic_error("Interrupted by user (use Control-D to quit)");
+  }
+
   strings_list split_arguments(char * line)
   {
     strings_list args;
@@ -219,6 +224,8 @@ int main(int argc, char * argv[], char * envp[])
   int status = execute_command_wrapper(*session, cmd_args, envp);
   if (status == -1) {		// no command was given; enter the REPL
     session->option_version(*session);
+    
+    std::signal(SIGINT, sigint_handler);
 
 #ifdef HAVE_LIBEDIT
 
@@ -228,22 +235,29 @@ int main(int argc, char * argv[], char * envp[])
 #endif
 
     while (char * line = stripwhite(readline("==> "))) {
-      char * expansion;
+      char * expansion = NULL;
       int    result;
+
+      if (std::strcmp(line, "quit") == 0) {
+	std::free(line);
+	break;
+      }
 
       result = history_expand(line, &expansion);
 
       if (result < 0 || result == 2) {
+	std::free(line);
 	throw_(std::logic_error,
 	       "Failed to expand history reference '" << line << "'");
-      } else {
+      }
+      else if (expansion) {
 	add_history(expansion);
 
 	strings_list line_argv = split_arguments(line);
 	execute_command_wrapper(*session, line_argv);
-      }
-      std::free(expansion);
 
+	std::free(expansion);
+      }
       std::free(line);
     }
 
@@ -255,8 +269,12 @@ int main(int argc, char * argv[], char * envp[])
       std::cin.getline(line, 1023);
 
       char * p = stripwhite(line);
-      if (*p)
+      if (*p) {
+	if (std::strcmp(p, "quit") == 0)
+	  break;
+
 	execute_command_wrapper(*session, split_arguments(line));
+      }
     }
 
 #endif // HAVE_LIBEDIT
