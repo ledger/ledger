@@ -262,7 +262,9 @@ void account_t::calculate_sums(expr_t&  amount_expr,
 
   bind_scope_t bound_scope(scope, *this);
   call_scope_t args(bound_scope);
+
   value_t amount(amount_expr.calc(args));
+
   if (! amount.is_null()) {
     add_or_set_value(xd.total, amount);
     xd.total_count += xd.count;

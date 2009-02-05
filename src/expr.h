@@ -128,13 +128,13 @@ public:
   bool	   is_constant() const;
   bool     is_function() const;
 
-  value_t& constant_value();
+  value_t&       constant_value();
   const value_t& constant_value() const;
 
   function_t& get_function();
 
-  void     print(std::ostream& out) const;
-  void     dump(std::ostream& out) const;
+  void print(std::ostream& out) const;
+  void dump(std::ostream& out) const;
 
   static value_t eval(const string& _expr, scope_t& scope);
 };
