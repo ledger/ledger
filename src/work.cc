@@ -133,28 +133,6 @@ function_t look_for_command(scope_t& scope, const string& verb)
     return function_t();
 }
 
-void read_journal_files(session_t& session, const string& account)
-{
-  INFO_START(journal, "Read journal file");
-
-  std::size_t count = session.read_data(*session.create_journal(),
-					account);
-  if (count == 0)
-    throw_(parse_error, "Failed to locate any journal entries; "
-	   "did you specify a valid file with -f?");
-
-  INFO_FINISH(journal);
-
-  INFO("Found " << count << " entries");
-
-  TRACE_FINISH(entry_text, 1);
-  TRACE_FINISH(entry_details, 1);
-  TRACE_FINISH(entry_xacts, 1);
-  TRACE_FINISH(entries, 1);
-  TRACE_FINISH(session_parser, 1);
-  TRACE_FINISH(parsing_total, 1);
-}
-
 void normalize_report_options(report_t& report, const string& verb)
 {
   // Patch up some of the reporting options based on what kind of

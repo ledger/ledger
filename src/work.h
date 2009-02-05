@@ -49,7 +49,6 @@ strings_list read_command_arguments(scope_t& scope, strings_list args);
 void         normalize_session_options(session_t& session);
 function_t   look_for_precommand(scope_t& scope, const string& verb);
 function_t   look_for_command(scope_t& scope, const string& verb);
-void	     read_journal_files(session_t& session, const string& account);
 void         normalize_report_options(report_t& report, const string& verb);
 
 } // namespace ledger

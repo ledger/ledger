@@ -44,8 +44,12 @@ namespace {
   public:
     path script_file;
 
-    global_scope_t() {
+    global_scope_t(char ** envp)
+    {
+      TRACE_CTOR(global_scope_t, "");
+
       session_ptr.reset(new LEDGER_SESSION_T);
+
       set_session_context(session_ptr.get());
 
       // Create the report object, which maintains state relating to each
@@ -54,21 +58,45 @@ namespace {
       // a GUI were calling into Ledger it would have one session object per
       // open document, with a separate report_t object for each report it
       // generated.
-      report_stack.push_front(new report_t(*session_ptr.get()));
+      report_stack.push_front(new report_t(session()));
+
+      // Read the user's options, in the following order:
+      //
+      //  1. environment variables (LEDGER_<option>)
+      //  2. initialization file (~/.ledgerrc)
+      //  3. command-line (--option or -o)
+      //
+      // Before processing command-line options, we must notify the session object
+      // that such options are beginning, since options like -f cause a complete
+      // override of files found anywhere else.
+      session().now_at_command_line(false);
+      read_environment_settings(report(), envp);
+      session().read_init();
     }
-    ~global_scope_t() {
+    ~global_scope_t()
+    {
+      TRACE_DTOR(global_scope_t);
+
       // If memory verification is being performed (which can be very slow),
       // clean up everything by closing the session and deleting the session
       // object, and then shutting down the memory tracing subsystem.
       // Otherwise, let it all leak because we're about to exit anyway.
-      IF_VERIFY() {
-	set_session_context(NULL);
-	INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
-	shutdown_memory_tracing();
-      } else {
-	// Don't free anything, just let it all leak.
-	INFO("Ledger ended");
-      }
+      IF_VERIFY() set_session_context(NULL);
+    }
+
+    void read_journal_files()
+    {
+      INFO_START(journal, "Read journal file");
+
+      std::size_t count = session().read_data(*session().create_journal(),
+					      report().account);
+      if (count == 0)
+	throw_(parse_error, "Failed to locate any journal entries; "
+	       "did you specify a valid file with -f?");
+
+      INFO_FINISH(journal);
+
+      INFO("Found " << count << " entries");
     }
 
     char * prompt_string()
@@ -95,6 +123,114 @@ namespace {
     void pop_report() {
       if (! report_stack.empty())
 	report_stack.pop_front();
+    }
+
+    void report_error(const std::exception& err)
+    {
+      std::cout.flush();		// first display anything that was pending
+
+      if (caught_signal == NONE_CAUGHT) {
+	// Display any pending error context information
+	string context = error_context();
+	if (! context.empty())
+	  std::cerr << context << std::endl;
+    
+	std::cerr << "Error: " << err.what() << std::endl;
+      } else {
+	caught_signal = NONE_CAUGHT;
+      }
+    }
+
+    /**
+     * @return \c true if a command was actually executed; otherwise, it probably
+     *         just resulted in setting some options.
+     */
+    void execute_command(strings_list args, bool at_repl)
+    {
+      // Process the command verb, arguments and options
+      args = read_command_arguments(report(), args);
+      if (args.empty())
+	return;
+
+      string_iterator arg  = args.begin();
+      string	    verb = *arg++;
+
+      // Look for a precommand first, which is defined as any defined function
+      // whose name starts with "ledger_precmd_".  The difference between a
+      // precommand and a regular command is that precommands ignore the journal
+      // data file completely, nor is the user's init file read.
+      //
+      // Here are some examples of pre-commands:
+      //
+      //   parse STRING       ; show how a value expression is parsed
+      //   eval STRING        ; simply evaluate a value expression
+      //   format STRING      ; show how a format string is parsed
+      //
+      // If such a command is found, create the output stream for the result and
+      // then invoke the command.
+
+      function_t   command;
+      bool	   is_precommand = false;
+      bind_scope_t bound_scope(*this, report());
+
+      if (bool(command = look_for_precommand(bound_scope, verb)))
+	is_precommand = true;
+      else if (! bool(command = look_for_command(bound_scope, verb)))
+	throw_(std::logic_error, "Unrecognized command '" << verb << "'");
+
+      // If it is not a pre-command, then parse the user's ledger data at this
+      // time if not done alreday (i.e., if not at a REPL).  Then patch up the
+      // report options based on the command verb.
+
+      if (! is_precommand) {
+	if (! at_repl)
+	  read_journal_files();
+
+	// jww (2009-02-02): This is a complete hack, and a leftover from long,
+	// long ago.  The question is, how best to remove its necessity...
+	normalize_report_options(report(), verb);
+      }
+
+      // Create the output stream (it might be a file, the console or a PAGER
+      // subprocess) and invoke the report command.  The output stream is closed
+      // by the caller of this function.
+
+      report().output_stream.initialize(report().output_file,
+					session().pager_path);
+
+      // Create an argument scope containing the report command's arguments, and
+      // then invoke the command.  The bound scope causes lookups to happen
+      // first in the global scope, and then in the report scope.
+
+      call_scope_t command_args(bound_scope);
+      for (string_iterator i = arg; i != args.end(); i++)
+	command_args.push_back(string_value(*i));
+
+      INFO_START(command, "Finished executing command");
+      command(command_args);
+      INFO_FINISH(command);
+    }
+
+    int execute_command_wrapper(strings_list args, bool at_repl)
+    {
+      int status = 1;
+
+      try {
+	push_report();
+	execute_command(args, at_repl);
+	pop_report();
+
+	// If we've reached this point, everything succeeded fine.  Ledger uses
+	// exceptions to notify of error conditions, so if you're using gdb,
+	// just type "catch throw" to find the source point of any error.
+	status = 0;
+      }
+      catch (const std::exception& err) {
+	pop_report();
+	report_error(err);
+      }
+
+      return status;
     }
 
     value_t push_report_cmd(call_scope_t&) {
@@ -184,120 +320,6 @@ namespace {
 
     return args;
   }
-
-  void report_error(const std::exception& err)
-  {
-    std::cout.flush();		// first display anything that was pending
-
-    if (caught_signal == NONE_CAUGHT) {
-      // Display any pending error context information
-      string context = error_context();
-      if (! context.empty())
-	std::cerr << context << std::endl;
-    
-      std::cerr << "Error: " << err.what() << std::endl;
-    } else {
-      caught_signal = NONE_CAUGHT;
-    }
-  }
-
-  /**
-   * @return \c true if a command was actually executed; otherwise, it probably
-   *         just resulted in setting some options.
-   */
-  void execute_command(global_scope_t& global_scope,
-		       strings_list    args,
-		       bool	       at_repl)
-  {
-    // Process the command verb, arguments and options
-    args = read_command_arguments(global_scope.report(), args);
-    if (args.empty())
-      return;
-
-    string_iterator arg  = args.begin();
-    string	    verb = *arg++;
-
-    // Look for a precommand first, which is defined as any defined function
-    // whose name starts with "ledger_precmd_".  The difference between a
-    // precommand and a regular command is that precommands ignore the journal
-    // data file completely, nor is the user's init file read.
-    //
-    // Here are some examples of pre-commands:
-    //
-    //   parse STRING       ; show how a value expression is parsed
-    //   eval STRING        ; simply evaluate a value expression
-    //   format STRING      ; show how a format string is parsed
-    //
-    // If such a command is found, create the output stream for the result and
-    // then invoke the command.
-
-    function_t	 command;
-    bool	 is_precommand = false;
-    bind_scope_t bound_scope(global_scope, global_scope.report());
-
-    if (bool(command = look_for_precommand(bound_scope, verb)))
-      is_precommand = true;
-    else if (! bool(command = look_for_command(bound_scope, verb)))
-      throw_(std::logic_error, "Unrecognized command '" << verb << "'");
-
-    // If it is not a pre-command, then parse the user's ledger data at this
-    // time if not done alreday (i.e., if not at a REPL).  Then patch up the
-    // report options based on the command verb.
-
-    if (! is_precommand) {
-      if (! at_repl)
-	read_journal_files(global_scope.session(),
-			   global_scope.report().account);
-
-      // jww (2009-02-02): This is a complete hack, and a leftover from long,
-      // long ago.  The question is, how best to remove its necessity...
-      normalize_report_options(global_scope.report(), verb);
-    }
-
-    // Create the output stream (it might be a file, the console or a PAGER
-    // subprocess) and invoke the report command.  The output stream is closed
-    // by the caller of this function.
-
-    global_scope.report()
-      .output_stream.initialize(global_scope.report().output_file,
-				global_scope.session().pager_path);
-
-    // Create an argument scope containing the report command's arguments, and
-    // then invoke the command.  The bound scope causes lookups to happen
-    // first in the global scope, and then in the report scope.
-
-    call_scope_t command_args(bound_scope);
-    for (string_iterator i = arg; i != args.end(); i++)
-      command_args.push_back(string_value(*i));
-
-    INFO_START(command, "Finished executing command");
-    command(command_args);
-    INFO_FINISH(command);
-  }
-
-  int execute_command_wrapper(global_scope_t& global_scope,
-			      strings_list    args,
-			      bool	      at_repl)
-  {
-    int status = 1;
-
-    try {
-      global_scope.push_report();
-      execute_command(global_scope, args, at_repl);
-      global_scope.pop_report();
-
-      // If we've reached this point, everything succeeded fine.  Ledger uses
-      // exceptions to notify of error conditions, so if you're using gdb,
-      // just type "catch throw" to find the source point of any error.
-      status = 0;
-    }
-    catch (const std::exception& err) {
-      global_scope.pop_report();
-      report_error(err);
-    }
-
-    return status;
-  }
 }
 
 int main(int argc, char * argv[], char * envp[])
@@ -325,21 +347,9 @@ int main(int argc, char * argv[], char * envp[])
 
   // Create the session object, which maintains nearly all state relating to
   // this invocation of Ledger; and register all known journal parsers.
-  std::auto_ptr<global_scope_t> global_scope(new global_scope_t);
+  std::auto_ptr<global_scope_t> global_scope(new global_scope_t(envp));
 
   try {
-    // Read the user's options, in the following order:
-    //
-    //  1. environment variables (LEDGER_<option>)
-    //  2. initialization file (~/.ledgerrc)
-    //  3. command-line (--option or -o)
-    //
-    // Before processing command-line options, we must notify the session object
-    // that such options are beginning, since options like -f cause a complete
-    // override of files found anywhere else.
-    global_scope->session().now_at_command_line(false);
-    read_environment_settings(global_scope->report(), envp);
-    global_scope->session().read_init();
     global_scope->session().now_at_command_line(true);
 
     // Construct an STL-style argument list from the process command arguments
@@ -349,35 +359,36 @@ int main(int argc, char * argv[], char * envp[])
 
     // Look for options and a command verb in the command-line arguments
     bind_scope_t bound_scope(*global_scope.get(), global_scope->report());
+
     args = read_command_arguments(bound_scope, args);
 
     if (! global_scope->script_file.empty() &&
 	exists(global_scope->script_file)) {
+      // Ledger is being invoked as a script command interpreter
+      global_scope->read_journal_files();
 
-      read_journal_files(global_scope->session(),
-			 global_scope->report().account);
+      status = 0;
 
       ifstream in(global_scope->script_file);
-      while (! in.eof()) {
+      while (status == 0 && ! in.eof()) {
 	char line[1024];
 	in.getline(line, 1023);
 
 	char * p = skip_ws(line);
 	if (*p && *p != '#')
-	  execute_command_wrapper(*global_scope, split_arguments(p), true);
+	  status = global_scope->execute_command_wrapper(split_arguments(p),
+							 true);
       }
-      status = 0;
     }
     else if (! args.empty()) {
       // User has invoke a verb at the interactive command-line
-      status = execute_command_wrapper(*global_scope, args, false);
+      status = global_scope->execute_command_wrapper(args, false);
     }
     else {
       // Commence the REPL by displaying the current Ledger version
       global_scope->session().option_version(global_scope->session());
 
-      read_journal_files(global_scope->session(),
-			 global_scope->report().account);
+      global_scope->read_journal_files();
 
       bool exit_loop = false;
 
@@ -425,14 +436,14 @@ int main(int argc, char * argv[], char * envp[])
 	  if (std::strncmp(p, "quit", 4) == 0)
 	    exit_loop = true;
 	  else
-	    execute_command_wrapper(*global_scope, split_arguments(p), true);
+	    global_scope->execute_command_wrapper(split_arguments(p), true);
 	}
 
 #ifdef HAVE_LIBEDIT
 	if (expansion)
 	  std::free(expansion);
 	std::free(p);
-#endif // HAVE_LIBEDIT
+#endif
 
 	if (exit_loop)
 	  break;
@@ -442,7 +453,7 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
   catch (const std::exception& err) {
-    report_error(err);
+    global_scope->report_error(err);
   }
   catch (int _status) {
     status = _status;		// used for a "quick" exit, and is used only
@@ -456,8 +467,8 @@ int main(int argc, char * argv[], char * envp[])
   IF_VERIFY() {
     global_scope.reset();
 
-    shutdown_memory_tracing();
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
+    shutdown_memory_tracing();
   } else {
     // Don't free anything, just let it all leak.
     global_scope.release();

@@ -95,7 +95,14 @@ std::size_t textual_parser_t::parse(std::istream& in,
   session.clean_accounts();	// remove calculated totals
 
   TRACE_STOP(parsing_total, 1);
+
+  // These tracers were started in textual.cc
+  TRACE_FINISH(entry_text, 1);
+  TRACE_FINISH(entry_details, 1);
+  TRACE_FINISH(entry_xacts, 1);
+  TRACE_FINISH(entries, 1);
   TRACE_FINISH(instance_parse, 1); // report per-instance timers
+  TRACE_FINISH(parsing_total, 1);
 
   if (parsing_instance.errors > 0)
     throw static_cast<int>(parsing_instance.errors);
