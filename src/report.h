@@ -100,7 +100,7 @@ namespace ledger {
  *
  * Long.
  */
-class report_t : public noncopyable, public scope_t
+class report_t : public scope_t
 {
   report_t();
 
@@ -191,6 +191,62 @@ public:
     TRACE_CTOR(report_t, "session_t&");
   }
 
+  report_t(const report_t& other)
+    : scope_t(),
+
+      output_file(other.output_file),
+
+      format_string(other.format_string),
+      output_date_format(other.output_date_format),
+      predicate(other.predicate),
+      secondary_predicate(other.secondary_predicate),
+      display_predicate(other.display_predicate),
+      report_period(other.report_period),
+      report_period_sort(other.report_period_sort),
+      sort_string(other.sort_string),
+      descend_expr(other.descend_expr),
+      forecast_limit(other.forecast_limit),
+      reconcile_balance(other.reconcile_balance),
+      reconcile_date(other.reconcile_date),
+
+      amount_expr(other.amount_expr),
+      total_expr(other.total_expr),
+      display_total(other.display_total),
+
+      budget_flags(other.budget_flags),
+
+      head_entries(other.head_entries),
+      tail_entries(other.tail_entries),
+
+      show_collapsed(other.show_collapsed),
+      show_subtotal(other.show_subtotal),
+      show_totals(other.show_totals),
+      show_related(other.show_related),
+      show_all_related(other.show_all_related),
+      show_inverted(other.show_inverted),
+      show_empty(other.show_empty),
+      days_of_the_week(other.days_of_the_week),
+      by_payee(other.by_payee),
+      comm_as_payee(other.comm_as_payee),
+      code_as_payee(other.code_as_payee),
+      show_revalued(other.show_revalued),
+      show_revalued_only(other.show_revalued_only),
+      entry_sort(other.entry_sort),
+      sort_all(other.sort_all),
+      anonymize(other.anonymize),
+      use_effective_date(other.use_effective_date),
+
+      what_to_keep(other.what_to_keep),
+
+      account(other.account),
+
+      raw_mode(other.raw_mode),
+
+      session(other.session)
+  {
+    TRACE_CTOR(report_t, "copy");
+  }
+  
   virtual ~report_t() {
     TRACE_DTOR(report_t);
     output_stream.close();
@@ -266,10 +322,7 @@ public:
   //
   // Report filtering
 
-  value_t option_ignore(call_scope_t& args) {
-    return true;
-  }
-  value_t option_ignore_(call_scope_t& args) {
+  value_t ignore(call_scope_t& args) {
     return true;
   }
 

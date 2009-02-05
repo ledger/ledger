@@ -125,13 +125,12 @@ function_t look_for_precommand(report_t& report, const string& verb)
     return function_t();
 }
 
-journal_t * read_journal_files(session_t& session, const string& account)
+void read_journal_files(session_t& session, const string& account)
 {
   INFO_START(journal, "Read journal file");
 
-  journal_t * journal(session.create_journal());
-
-  std::size_t count = session.read_data(*journal, account);
+  std::size_t count = session.read_data(*session.create_journal(),
+					account);
   if (count == 0)
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
@@ -146,8 +145,6 @@ journal_t * read_journal_files(session_t& session, const string& account)
   TRACE_FINISH(entries, 1);
   TRACE_FINISH(session_parser, 1);
   TRACE_FINISH(parsing_total, 1);
-
-  return journal;
 }
 
 function_t look_for_command(report_t& report, const string& verb)
@@ -160,7 +157,6 @@ function_t look_for_command(report_t& report, const string& verb)
 
 void normalize_report_options(report_t& report, const string& verb)
 {
-#if 1
   // Patch up some of the reporting options based on what kind of
   // command it was.
 
@@ -205,7 +201,6 @@ void normalize_report_options(report_t& report, const string& verb)
       report.display_predicate = "amount";
     }
   }
-#endif
 
   if (! report.report_period.empty() && ! report.sort_all)
     report.entry_sort = true;

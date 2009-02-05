@@ -36,27 +36,6 @@
 using namespace ledger;
 
 namespace {
-  char * stripwhite (char * string)
-  {
-    if (! string)
-      return NULL;
-
-    register char *s, *t;
-
-    for (s = string; isspace (*s); s++)
-      ;
-
-    if (*s == 0)
-      return (s);
-
-    t = s + strlen (s) - 1;
-    while (t > s && isspace (*t))
-      t--;
-    *++t = '\0';
-
-    return s;
-  }
-
   strings_list split_arguments(char * line)
   {
     strings_list args;
@@ -70,40 +49,53 @@ namespace {
     return args;
   }
 
+  char * prompt_string(const ptr_list<report_t>& report_stack)
+  {
+    static char prompt[32];
+    std::size_t i;
+    for (i = 0; i < report_stack.size(); i++)
+      prompt[i] = ']';
+    prompt[i++] = ' ';
+    prompt[i]   = '\0';
+    return prompt;
+  }
+
+  void report_error(const std::exception& err)
+  {
+    std::cout.flush();		// first display anything that was pending
+
+    if (caught_signal == NONE_CAUGHT) {
+      // Display any pending error context information
+      string context = error_context();
+      if (! context.empty())
+	std::cerr << context << std::endl;
+    
+      std::cerr << "Error: " << err.what() << std::endl;
+    } else {
+      caught_signal = NONE_CAUGHT;
+    }
+  }
+
   /**
    * @return \c true if a command was actually executed; otherwise, it probably
    *         just resulted in setting some options.
    */
-  bool execute_command(session_t&	    session,
-		       ledger::strings_list args,
-		       char **              envp = NULL)
+  void execute_command(session_t&   session,
+		       report_t&    report,
+		       strings_list args,
+		       bool         at_repl)
   {
-    // Create the report object, which maintains state relating to each
-    // command invocation.  Because we're running from main(), the distinction
-    // between session and report doesn't really matter, but if a GUI were
-    // calling into Ledger it would have one session object per open document,
-    // with a separate report_t object for each report it generated.
-    std::auto_ptr<report_t> manager(new report_t(session));
-    report_t& report(*manager.get());
+    // Create a new report command object based on the current one, so that
+    // the next command's option don't corrupt state.
+    std::auto_ptr<report_t> manager(new report_t(report));
 
-    session.global_scope = &report;
+    // Process the command verb, arguments and options
+    args = read_command_arguments(*manager.get(), args);
+    if (args.empty())
+      return;
 
-    // Read the user's options, in the following order:
-    //
-    //  1. environment variables (LEDGER_<option>)
-    //  2. initialization file (~/.ledgerrc)
-    //  3. command-line (--option or -o)
-    //
-    // Before processing command-line options, we must notify the session
-    // object that such options are beginning, since options like -f cause a
-    // complete override of files found anywhere else.
-    if (envp) {
-      session.now_at_command_line(false);
-      read_environment_settings(report, envp);
-      session.read_init();
-    }
-    session.now_at_command_line(true);
-    args = read_command_arguments(report, args);
+    string_iterator arg  = args.begin();
+    string	    verb = *arg++;
 
     // Look for a precommand first, which is defined as any defined function
     // whose name starts with "ledger_precmd_".  The difference between a
@@ -119,50 +111,43 @@ namespace {
     // If such a command is found, create the output stream for the result and
     // then invoke the command.
 
-    if (args.empty()) {
-      read_journal_files(session, report.account);
-      return false;
-    } else {
-      string_iterator arg  = args.begin();
-      string	      verb = *arg++;
+    function_t command;
+    bool       is_precommand = false;
 
-      if (function_t command = look_for_precommand(report, verb)) {
-	// Create the output stream (it might be a file, the console or a PAGER
-	// subprocess) and invoke the report command.
-	create_output_stream(report);
-	invoke_command_verb(report, command, arg, args.end());
-      }
-      else if (function_t command = look_for_command(report, verb)) {
-	// This is regular command verb, so parse the user's data if we
-	// haven't already at the beginning of the REPL.
-	if (! envp || read_journal_files(session, report.account)) {
-	  normalize_report_options(report, verb); // jww (2009-02-02): a hack
+    if (bool(command = look_for_precommand(*manager.get(), verb)))
+      is_precommand = true;
+    else if (! bool(command = look_for_command(*manager.get(), verb)))
+      throw_(std::logic_error, "Unrecognized command '" << verb << "'");
 
-	  // Create the output stream (it might be a file, the console or a
-	  // PAGER subprocess) and invoke the report command.
-	  create_output_stream(report);
-	  invoke_command_verb(report, command, arg, args.end());
-	}
-      }
-      else {
-	throw_(std::logic_error, "Unrecognized command '" << verb << "'");
-      }
+    // If it is not a pre-command, then parse the user's ledger data at this
+    // time if not done alreday (i.e., if not at a REPL).  Then patch up the
+    // report options based on the command verb.
 
-      session.global_scope = NULL;
+    if (! is_precommand) {
+      if (! at_repl)
+	read_journal_files(session, manager->account);
 
-      return true; 
+      // jww (2009-02-02): This is a complete hack, and a leftover from long,
+      // long ago.  The question is, how best to remove its necessity...
+      normalize_report_options(*manager.get(), verb);
     }
+
+    // Create the output stream (it might be a file, the console or a PAGER
+    // subprocess) and invoke the report command.
+
+    create_output_stream(*manager.get()); // closed by auto_ptr destructor
+    invoke_command_verb(*manager.get(), command, arg, args.end());
   }
 
-  int execute_command_wrapper(session_t&	   session,
-			      ledger::strings_list args,
-			      char **              envp = NULL)
+  int execute_command_wrapper(session_t&   session,
+			      report_t&    report,
+			      strings_list args,
+			      bool         at_repl)
   {
     int status = 1;
 
     try {
-      if (! execute_command(session, args, envp))
-	return -1;
+      execute_command(session, report, args, at_repl);
 
       // If we've reached this point, everything succeeded fine.  Ledger uses
       // exceptions to notify of error conditions, so if you're using gdb,
@@ -170,22 +155,7 @@ namespace {
       status = 0;
     }
     catch (const std::exception& err) {
-      std::cout.flush();		// first display anything that was pending
-
-      if (caught_signal == NONE_CAUGHT) {
-	// Display any pending error context information
-	string context = error_context();
-	if (! context.empty())
-	  std::cerr << context << std::endl;
-    
-	std::cerr << "Error: " << err.what() << std::endl;
-      } else {
-	caught_signal = NONE_CAUGHT;
-      }
-    }
-    catch (int _status) {
-      status = _status;		// used for a "quick" exit, and is used only
-				// if help text (such as --help) was displayed
+      report_error(err);
     }
     return status;
   }
@@ -193,7 +163,7 @@ namespace {
 
 int main(int argc, char * argv[], char * envp[])
 {
-  session_t * session = NULL;
+  int status;
 
   // The very first thing we do is handle some very special command-line
   // options, since they affect how the environment is setup:
@@ -211,75 +181,134 @@ int main(int argc, char * argv[], char * envp[])
   std::ios::sync_with_stdio(false);
   filesystem::path::default_name_check(filesystem::portable_posix_name);
 
+  std::signal(SIGINT, sigint_handler);
+  std::signal(SIGPIPE, sigpipe_handler);
+
   // Create the session object, which maintains nearly all state relating to
   // this invocation of Ledger; and register all known journal parsers.
-  session = new LEDGER_SESSION_T;
+  session_t * session = new LEDGER_SESSION_T;
   set_session_context(session);
 
-  strings_list cmd_args;
-  for (int i = 1; i < argc; i++)
-    cmd_args.push_back(argv[i]);
+  // Create the report object, which maintains state relating to each command
+  // invocation.  Because we're running from main(), the distinction between
+  // session and report doesn't really matter, but if a GUI were calling into
+  // Ledger it would have one session object per open document, with a
+  // separate report_t object for each report it generated.
+  ptr_list<report_t> report_stack;
+  report_stack.push_front(new report_t(*session));
 
-  int status = execute_command_wrapper(*session, cmd_args, envp);
-  if (status == -1) {		// no command was given; enter the REPL
-    session->option_version(*session);
-    
-    std::signal(SIGINT, sigint_handler);
-    std::signal(SIGPIPE, sigpipe_handler);
+  try {
+    // Read the user's options, in the following order:
+    //
+    //  1. environment variables (LEDGER_<option>)
+    //  2. initialization file (~/.ledgerrc)
+    //  3. command-line (--option or -o)
+    //
+    // Before processing command-line options, we must notify the session object
+    // that such options are beginning, since options like -f cause a complete
+    // override of files found anywhere else.
+    session->now_at_command_line(false);
+    read_environment_settings(report_stack.front(), envp);
+    session->read_init();
+    session->now_at_command_line(true);
+
+    // Construct an STL-style argument list from the process command arguments
+    strings_list args;
+    for (int i = 1; i < argc; i++)
+      args.push_back(argv[i]);
+
+    // Look for options and a command verb in the command-line arguments
+    args = read_command_arguments(report_stack.front(), args);
+
+    if (! args.empty()) {	// user has invoke a command-line verb
+      status = execute_command_wrapper(*session, report_stack.front(), args,
+				       false);
+    } else {
+      // Commence the REPL by displaying the current Ledger version
+      session->option_version(*session);
+
+      read_journal_files(*session, report_stack.front().account);
+
+      bool exit_loop = false;
 
 #ifdef HAVE_LIBEDIT
 
-    rl_readline_name = const_cast<char *>("Ledger");
+      rl_readline_name = const_cast<char *>("Ledger");
 #if 0
-    rl_attempted_completion_function = ledger_completion;
+      // jww (2009-02-05): NYI
+      rl_attempted_completion_function = ledger_completion;
 #endif
 
-    while (char * line = stripwhite(readline("==> "))) {
-      char * expansion = NULL;
-      int    result;
+      while (char * p = readline(prompt_string(report_stack))) {
+	char * expansion = NULL;
+	int    result;
 
-      if (std::strcmp(line, "quit") == 0) {
-	std::free(line);
-	break;
-      }
+	result = history_expand(skip_ws(p), &expansion);
 
-      result = history_expand(line, &expansion);
-
-      if (result < 0 || result == 2) {
-	std::free(line);
-	throw_(std::logic_error,
-	       "Failed to expand history reference '" << line << "'");
-      }
-      else if (expansion) {
-	add_history(expansion);
-
-	strings_list line_argv = split_arguments(line);
-	execute_command_wrapper(*session, line_argv);
-
-	std::free(expansion);
-      }
-      std::free(line);
-    }
+	if (result < 0 || result == 2) {
+	  if (expansion)
+	    std::free(expansion);
+	  std::free(p);
+	  throw_(std::logic_error,
+		 "Failed to expand history reference '" << p << "'");
+	}
+	else if (expansion) {
+	  add_history(expansion);
+	}
 
 #else // HAVE_LIBEDIT
 
-    while (! std::cin.eof()) {
-      std::cout << "--> ";
-      char line[1024];
-      std::cin.getline(line, 1023);
+      while (! std::cin.eof()) {
+	std::cout << prompt_string(report_stack);
+	char line[1024];
+	std::cin.getline(line, 1023);
 
-      char * p = stripwhite(line);
-      if (*p) {
-	if (std::strcmp(p, "quit") == 0)
-	  break;
-
-	execute_command_wrapper(*session, split_arguments(line));
-      }
-    }
+	char * p = skip_ws(line);
 
 #endif // HAVE_LIBEDIT
 
-    status = 0;			// report success
+	bool do_command = true;
+
+	check_for_signal();
+
+	if (! *p) {
+	  do_command = false;
+	}
+	else if (std::strncmp(p, "quit", 4) == 0) {
+	  exit_loop = true;
+	  do_command = false;
+	}
+	else if (std::strncmp(p, "push", 4) == 0) {
+	  report_stack.push_front(new report_t(report_stack.front()));
+	}
+	else if (std::strncmp(p, "pop", 3) == 0) {
+	  report_stack.pop_front();
+	  do_command = false;
+	}
+
+	if (do_command)
+	  execute_command_wrapper(*session, report_stack.front(),
+				  split_arguments(p), true);
+
+#ifdef HAVE_LIBEDIT
+	if (expansion)
+	  std::free(expansion);
+	std::free(p);
+#endif // HAVE_LIBEDIT
+
+	if (exit_loop)
+	  break;
+      }
+
+      status = 0;			// report success
+    }
+  }
+  catch (const std::exception& err) {
+    report_error(err);
+  }
+  catch (int _status) {
+    status = _status;		// used for a "quick" exit, and is used only
+				// if help text (such as --help) was displayed
   }
 
   // If memory verification is being performed (which can be very slow), clean
