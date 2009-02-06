@@ -55,6 +55,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @ifnottex
 @node Top, Introduction, (dir), (dir)
 @top Overview
+
+@insertcopying
 @end ifnottex
 
 @menu
@@ -3943,5 +3945,131 @@ example:
 That is the extent of the XML data format used by Ledger.  It will
 output such data if the @command{xml} command is used, and can read
 the same data.
+
+@chapter Anatomy of a journal file
+
+Everything begins with a journal file---the anatomy of which is covered
+in detail in chapter one.  To review: a @emph{journal} contains one or
+more @emph{entries}, each of which refers to two or more
+@emph{transactions}.  A @emph{transaction} specifies that a given
+@emph{amount} is added to, or subtracted from, an @emph{account}.
+(@emph{Accounts} may be nested hierarchically by separating the elements
+using a colon).  Lastly, an @emph{amount} is a figure representing a
+given @emph{quantity} of a @emph{commodity}.  Here follows a review of
+these terms, which are all used extensively throughout this chapter:
+
+@table @emph
+@item journal
+A journal is a data file containing a series of entries.
+
+@item entry
+An entry relates a group of two or more transactions, with the absolute
+constraint that the total sum of an entry's transactions must equal
+zero.  That is, every entry in a journal must @emph{balance} to zero.
+
+@item transaction
+Transactions record how commodities are moved between accounts.  If you
+spent money on a movie ticket, for example, such an entry would have two
+transactions: One to show how the money was taken from your wallet, and
+another to show how it was applied to your movie expenses.
+
+@item account
+An account 
+
+@item amount
+
+@item quantity
+
+@item commodity
+@end table
+
+@chapter Example accounting practices
+
+@chapter Generating useful reports
+
+Once you have a journal file representing a recent history of your
+finances, the next step is to generate reports in order to give richer
+meaning to this data.  For example: Where do you spend your money?  Do
+you have enough to cover upcoming expenses?  Are you creating or losing
+net worth?  Are your investment performing well?  All of these questions
+can be answered easily with Ledger---if you know how to ask them.
+
+Preparing complex reports is not a simple task, but neither is it a
+difficult one.  All that's required is a proper understanding of how
+Ledger views your data, and how it prepares it for reporting.
+
+After Ledger reads a journal file, it creates an in-memory
+representation reflecting the order and composition of those entries.
+
+@chapter Value expressions
+
+@chapter Format strings
+
+@chapter Extensions in Python
+
+@chapter The design of Ledger
+
+The following sections discuss how Ledger is architected, from the
+ground up, and will show how to use the various parts of the Ledger
+library from your own scripts.  Ledger essentially follows five steps in
+reporting data to the user:
+
+@begin enumerate
+@item Parse journal file into an internal representation
+@item Perform any implied math within the journal file
+@item ``Face'' this internal representation as a virtual document
+@item Apply a series of transforms to the virtual document
+@item Display the virtual document using a formatting command
+@end enumerate
+
+The calculations in step two are specified by the user, such as when a
+transaction's value might contain mathematical operators.  The
+calculations in step four are implied in the transformations, for
+example when the @option{--average} option is used.
+
+At the core, however, Ledger is basically a sophisticated calculator
+with special knowledge about commoditized values.  It knows what you
+mean if you add ten dollars to twenty euros, and later ask for the
+balance of that particular account.  So it follows that first we must
+discuss how Ledger deals with math, and from there move on to describing
+how the steps above are achieved.
+
+@section Numerics
+
+@subsection Basic amounts
+
+The most fundamental type in Ledger is the amount, which may or may not
+have a commodity attached to it.  First, we'll deal with the bare case,
+just to show how the amount type works.  In C++, most all of Ledger's
+internal types end in @example{_t}; in Python, the same type name is
+used, but the @example{_t} suffix is dropped.  Examples of usage in both
+languages will be presented throughout.
+
+
+
+amount_t
+commodity_t
+updater_t
+datetime_t
+balance_t
+balance_pair_t
+value_t
+valexpr_t
+format_t
+mask_t
+
+@section Journal Representation
+
+journal_t
+account_t
+entry_t
+transaction_t
+parser_t
+
+@section Reporting
+
+@section Terminal Interface
+
+@section General Utility
 
 @bye
