@@ -442,9 +442,9 @@ struct keep_details_t
   bool keep_base;
 
   explicit keep_details_t(bool _keep_price = false,
-			     bool _keep_date  = false,
-			     bool _keep_tag   = false,
-			     bool _keep_base  = false)
+			  bool _keep_date  = false,
+			  bool _keep_tag   = false,
+			  bool _keep_base  = false)
     : keep_price(_keep_price),
       keep_date(_keep_date),
       keep_tag(_keep_tag),
