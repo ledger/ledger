@@ -61,8 +61,8 @@ global_scope_t::global_scope_t(char ** envp)
   // that such options are beginning, since options like -f cause a complete
   // override of files found anywhere else.
   session().now_at_command_line(false);
-  read_environment_settings(report(), envp);
-  session().read_init();
+  read_environment_settings(envp);
+  read_init();
 }
 
 global_scope_t::~global_scope_t()
@@ -76,12 +76,37 @@ global_scope_t::~global_scope_t()
   IF_VERIFY() set_session_context(NULL);
 }
 
+void global_scope_t::read_init()
+{
+  if (HANDLED(init_file_)) {
+    path init_file(HANDLER(init_file_).str());
+    if (exists(init_file)) {
+      TRACE_START(init, 1, "Read initialization file");
+
+      ifstream init(init_file);
+
+      journal_t temp;
+      if (session().read_journal(temp, init_file) > 0 ||
+	  temp.auto_entries.size() > 0 || temp.period_entries.size() > 0) {
+	throw_(parse_error,
+	       "Entries found in initialization file '" << init_file << "'");
+      }
+
+      TRACE_FINISH(init, 1);
+    }
+  }
+}
+
 void global_scope_t::read_journal_files()
 {
   INFO_START(journal, "Read journal file");
 
+  string master_account;
+  if (report().HANDLED(account_))
+    master_account = report().HANDLER(account_).str();
+
   std::size_t count = session().read_data(*session().create_journal(),
-					  report().account);
+					  master_account);
   if (count == 0)
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");
@@ -161,7 +186,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
 
     // jww (2009-02-02): This is a complete hack, and a leftover from long,
     // long ago.  The question is, how best to remove its necessity...
-    normalize_report_options(report(), verb);
+    normalize_report_options(verb);
   }
 
   // Create the output stream (it might be a file, the console or a PAGER
@@ -211,9 +236,6 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
   return status;
 }
 
-namespace {
-}
-
 expr_t::ptr_op_t global_scope_t::lookup(const string& name)
 {
   const char * p = name.c_str();
@@ -224,6 +246,9 @@ expr_t::ptr_op_t global_scope_t::lookup(const string& name)
       case 'd':
 	OPT(debug_);
 	break;
+      case 'i':
+	OPT(init_file_);
+	break;
       case 's':
 	OPT(script_);
 	break;
@@ -233,6 +258,7 @@ expr_t::ptr_op_t global_scope_t::lookup(const string& name)
       case 'v':
 	OPT_(verbose);
 	else OPT(verify);
+	else OPT(version);
 	break;
       }
     }
@@ -252,6 +278,118 @@ expr_t::ptr_op_t global_scope_t::lookup(const string& name)
   // If you're wondering how symbols from report() will be found, it's
   // because of the bind_scope_t object in execute_command() below.
   return expr_t::ptr_op_t();
+}
+
+void global_scope_t::read_environment_settings(char * envp[])
+{
+  TRACE_START(environment, 1, "Processed environment variables");
+
+  process_environment(const_cast<const char **>(envp), "LEDGER_", report());
+
+#if 1
+  // These are here for backwards compatability, but are deprecated.
+
+  if (const char * p = std::getenv("LEDGER"))
+    process_option("file", report(), p, "LEDGER");
+  if (const char * p = std::getenv("LEDGER_INIT"))
+    process_option("init-file", report(), p, "LEDGER_INIT");
+  if (const char * p = std::getenv("PRICE_HIST"))
+    process_option("price-db", report(), p, "PRICE_HIST");
+  if (const char * p = std::getenv("PRICE_EXP"))
+    process_option("price-exp", report(), p, "PRICE_EXP");
+#endif
+
+  TRACE_FINISH(environment, 1);
+}
+
+strings_list
+global_scope_t::read_command_arguments(scope_t& scope, strings_list args)
+{
+  TRACE_START(arguments, 1, "Processed command-line arguments");
+
+  strings_list remaining = process_arguments(args, scope);
+
+  TRACE_FINISH(arguments, 1);
+
+  return remaining;
+}
+
+void global_scope_t::normalize_session_options()
+{
+  INFO("Initialization file is " << HANDLER(init_file_).str());
+  INFO("Price database is " << session().HANDLER(price_db_).str());
+
+  foreach (const path& pathname, session().HANDLER(file_).data_files)
+    INFO("Journal file is " << pathname.string());
+}
+
+function_t global_scope_t::look_for_precommand(scope_t&	     scope,
+					       const string& verb)
+{
+  if (expr_t::ptr_op_t def = scope.lookup(string("precmd_") + verb))
+    return def->as_function();
+  else
+    return function_t();
+}
+
+function_t global_scope_t::look_for_command(scope_t&	  scope,
+					    const string& verb)
+{
+  if (expr_t::ptr_op_t def = scope.lookup(string("cmd_") + verb))
+    return def->as_function();
+  else
+    return function_t();
+}
+
+void global_scope_t::normalize_report_options(const string& verb)
+{
+  // Patch up some of the reporting options based on what kind of
+  // command it was.
+
+  report_t& rep(report());
+
+  // jww (2008-08-14): This code really needs to be rationalized away
+  // for 3.0.
+
+  if (verb == "print" || verb == "entry" || verb == "dump") {
+    rep.HANDLER(related).on();
+    rep.HANDLER(related_all).on();
+  }
+  else if (verb == "equity") {
+    rep.HANDLER(subtotal).on();
+  }
+  else if (rep.HANDLED(related)) {
+    if (verb[0] == 'r') {
+      rep.HANDLER(invert).on();
+    } else {
+      rep.HANDLER(subtotal).on();
+      rep.HANDLER(related_all).on();
+    }
+  }
+
+  if (verb[0] != 'b' && verb[0] != 'r')
+    rep.HANDLER(base).on();
+
+  // Setup the default value for the display predicate
+
+  if (! rep.HANDLED(display_)) {
+    if (verb[0] == 'b') {
+      if (! rep.HANDLED(empty))
+	rep.append_display_predicate("total");
+      if (! rep.HANDLED(subtotal))
+	rep.append_display_predicate("depth<=1");
+    }
+    else if (verb == "equity") {
+      // jww (2008-08-14): ???
+      rep.append_display_predicate("amount_expr");
+    }
+    else if (verb[0] == 'r' && ! rep.HANDLED(empty)) {
+      rep.append_display_predicate("amount");
+    }
+  }
+
+  if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
+    rep.HANDLER(sort_entries_).on();
 }
 
 void handle_debug_options(int argc, char * argv[])
@@ -291,116 +429,6 @@ void handle_debug_options(int argc, char * argv[])
       }
     }
   }
-}
-
-void read_environment_settings(report_t& report, char * envp[])
-{
-  TRACE_START(environment, 1, "Processed environment variables");
-
-  process_environment(const_cast<const char **>(envp), "LEDGER_",
-		      report);
-
-#if 1
-  // These are here for backwards compatability, but are deprecated.
-
-  if (const char * p = std::getenv("LEDGER"))
-    process_option("file", report, p, "LEDGER");
-  if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option("init-file", report, p, "LEDGER_INIT");
-  if (const char * p = std::getenv("PRICE_HIST"))
-    process_option("price-db", report, p, "PRICE_HIST");
-  if (const char * p = std::getenv("PRICE_EXP"))
-    process_option("price-exp", report, p, "PRICE_EXP");
-#endif
-
-  TRACE_FINISH(environment, 1);
-}
-
-strings_list read_command_arguments(scope_t& scope, strings_list args)
-{
-  TRACE_START(arguments, 1, "Processed command-line arguments");
-
-  strings_list remaining = process_arguments(args, scope);
-
-  TRACE_FINISH(arguments, 1);
-
-  return remaining;
-}
-
-void normalize_session_options(session_t& session)
-{
-  INFO("Initialization file is " << session.init_file->string());
-  INFO("Price database is " << session.price_db->string());
-
-  foreach (const path& pathname, session.data_files)
-    INFO("Journal file is " << pathname.string());
-}
-
-function_t look_for_precommand(scope_t& scope, const string& verb)
-{
-  if (expr_t::ptr_op_t def = scope.lookup(string("precmd_") + verb))
-    return def->as_function();
-  else
-    return function_t();
-}
-
-function_t look_for_command(scope_t& scope, const string& verb)
-{
-  if (expr_t::ptr_op_t def = scope.lookup(string("cmd_") + verb))
-    return def->as_function();
-  else
-    return function_t();
-}
-
-void normalize_report_options(report_t& report, const string& verb)
-{
-  // Patch up some of the reporting options based on what kind of
-  // command it was.
-
-  // jww (2008-08-14): This code really needs to be rationalized away
-  // for 3.0.
-
-  if (verb == "print" || verb == "entry" || verb == "dump") {
-    report.HANDLER(related).on();
-    report.HANDLER(related_all).on();
-  }
-  else if (verb == "equity") {
-    report.HANDLER(subtotal).on();
-  }
-  else if (report.HANDLED(related)) {
-    if (verb[0] == 'r') {
-      report.HANDLER(invert).on();
-    } else {
-      report.HANDLER(subtotal).on();
-      report.HANDLER(related_all).on();
-    }
-  }
-
-  if (verb[0] != 'b' && verb[0] != 'r')
-    report.what_to_keep.keep_base = true;
-
-  // Setup the default value for the display predicate
-
-  if (report.display_predicate.empty()) {
-    if (verb[0] == 'b') {
-      if (! report.HANDLED(empty))
-	report.display_predicate = "total";
-      if (! report.HANDLED(subtotal)) {
-	if (! report.display_predicate.empty())
-	  report.display_predicate += "&";
-	report.display_predicate += "depth<=1";
-      }
-    }
-    else if (verb == "equity") {
-      report.display_predicate = "amount_expr"; // jww (2008-08-14): ???
-    }
-    else if (verb[0] == 'r' && ! report.HANDLED(empty)) {
-      report.display_predicate = "amount";
-    }
-  }
-
-  if (! report.report_period.empty() && ! report.HANDLED(sort_all_))
-    report.HANDLER(sort_entries_).on();
 }
 
 } // namespace ledger

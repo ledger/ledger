@@ -82,7 +82,7 @@ value_t eval_command(call_scope_t& args)
   std::ostream& out(report.output_stream);
 
   expr_t expr(*arg);
-  out << expr.calc(args).strip_annotations(report.what_to_keep)
+  out << expr.calc(args).strip_annotations(report.what_to_keep())
       << std::endl;
   return 0L;
 }

@@ -64,66 +64,25 @@ class session_t : public noncopyable, public scope_t
   friend void set_session_context(session_t * session);
 
 public:
-  std::list<path>		data_files;
-  bool                          next_data_file_from_command_line;
-  bool                          saw_data_file_from_command_line;
-  optional<path>		init_file;
-  optional<path>	        price_db;
-  bool                          next_price_db_from_command_line;
-  bool                          saw_price_db_from_command_line;
-
-  string			register_format;
-  string			wide_register_format;
-  string			print_format;
-  string			balance_format;
-  string			equity_format;
-  string			plot_amount_format;
-  string			plot_total_format;
-  string			write_hdr_format;
-  string			write_xact_format;
-  string			prices_format;
-  string			pricesdb_format;
-
-  std::size_t			pricing_leeway;
-  int				current_year;
-
-  bool				download_quotes;
-
-  format_t::elision_style_t	elision_style;
-  int				abbrev_length;
-
-  bool				ansi_codes;
-  bool				ansi_invert;
+  bool flush_on_next_data_file;
+  int  current_year;
 
   shared_ptr<commodity_pool_t>	commodity_pool;
   ptr_list<journal_t::parser_t> parsers;
   ptr_list<journal_t>		journals;
   scoped_ptr<account_t>		master;
 
-  session_t();
-  virtual ~session_t();
+  explicit session_t();
+  virtual ~session_t() {
+    TRACE_DTOR(session_t);
+  }
 
   void now_at_command_line(const bool truth) {
-    next_data_file_from_command_line = truth;
-    next_price_db_from_command_line  = truth;
+    flush_on_next_data_file = true;
   }
 
-  journal_t * create_journal() {
-    journal_t * journal = new journal_t(master.get());
-    journals.push_back(journal);
-    return journal;
-  }
-  void close_journal(journal_t * journal) {
-    for (ptr_list<journal_t>::iterator i = journals.begin();
-	 i != journals.end();
-	 i++)
-      if (&*i == journal) {
-	journals.erase(i);
-	return;
-      }
-    assert(false);
-    checked_delete(journal);
-  }
+  journal_t * create_journal();
+  void        close_journal(journal_t * journal);
 
   std::size_t read_journal(journal_t&	 journal,
 			   std::istream& in,
@@ -133,102 +92,47 @@ public:
 			   const path&	 pathname,
 			   account_t *   master = NULL);
 
-  void read_init();
-
   std::size_t read_data(journal_t&    journal,
 			const string& master_account = "");
 
   void register_parser(journal_t::parser_t * parser) {
     parsers.push_back(parser);
   }
-  void unregister_parser(journal_t::parser_t * parser) {
-    for (ptr_list<journal_t::parser_t>::iterator i = parsers.begin();
-	 i != parsers.end();
-	 i++)
-      if (&*i == parser) {
-	parsers.erase(i);
-	return;
-      }
-    assert(false);
-    checked_delete(parser);
-  }
-
-  //
-  // Dealing with accounts
-  //
-
-  void add_account(account_t * acct) {
-    master->add_account(acct);
-  }
-  bool remove_account(account_t * acct) {
-    return master->remove_account(acct);
-  }
-
-  void clean_accounts();
+  void unregister_parser(journal_t::parser_t * parser);
 
   void clean_xacts();
   void clean_xacts(entry_t& entry);
-
+  void clean_accounts();
   void clean_all() {
     clean_xacts();
     clean_accounts();
   }
 
-  //
-  // Scope members
-  //
-
   virtual expr_t::ptr_op_t lookup(const string& name);
 
-  //
-  // Help options
-  //
+  /**
+   * Option handlers
+   */
 
-  value_t option_version(scope_t&) {
-    std::cout << "Ledger " << ledger::version << ", the command-line accounting tool";
-    std::cout << "\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
-This program is made available under the terms of the BSD Public License.\n\
-See LICENSE file included with the distribution for details and disclaimer.";
-    std::cout << std::endl;
-    return NULL_VALUE;
-  }
+  OPTION(session_t, abbrev_len_);
+  OPTION(session_t, account_); // -a
+  OPTION(session_t, download); // -Q
 
-  //
-  // Debug options
-  //
+  OPTION__
+  (session_t, file_, // -f
+   std::list<path> data_files;
+   CTOR(session_t, file_) {}
+   DO_(args) {
+     assert(args.size() == 1);
+     if (parent->flush_on_next_data_file) {
+       data_files.clear();
+       parent->flush_on_next_data_file = false;
+     }
+     data_files.push_back(args[0].as_string());
+   });
 
-  value_t option_trace_(scope_t&) {
-    return NULL_VALUE;
-  }
-  value_t option_debug_(scope_t&) {
-    return NULL_VALUE;
-  }
-  value_t option_verify(scope_t&) {
-    return NULL_VALUE;
-  }
-
-  value_t option_verbose(scope_t&) {
-#if defined(LOGGING_ON)
-    if (_log_level < LOG_INFO)
-      _log_level = LOG_INFO;
-#endif
-    return NULL_VALUE;
-  }
-
-  //
-  // Option handlers
-  //
-
-  value_t option_file_(call_scope_t& args) { // f
-    assert(args.size() == 1);
-    if (next_data_file_from_command_line &&
-	! saw_data_file_from_command_line) {
-      data_files.clear();
-      saw_data_file_from_command_line = true;
-    }
-    data_files.push_back(args[0].as_string());
-    return true;
-  }
+  OPTION(session_t, input_date_format_);
+  OPTION(session_t, price_db_);
 };
 
 /**

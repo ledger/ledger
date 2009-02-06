@@ -103,10 +103,12 @@ class handler_t
 public:
   T *          parent;
   value_t      value;
+  bool	       wants_arg;
 
   handler_t(const char * _name, const char _ch = '\0')
     : name(_name), name_len(std::strlen(name)), ch(_ch),
-      handled(false), parent(NULL), value() {
+      handled(false), parent(NULL), value(),
+      wants_arg(name[name_len - 1] == '_') {
     TRACE_CTOR(handler_t, "const char *, const char");
   }
   handler_t(const handler_t& other)
@@ -141,13 +143,17 @@ public:
     return handled;
   }
 
-  string str() const {
+  string& str() {
     assert(handled);
-    return value.as_string();
+    return value.as_string_lval();
   }
 
   void on() {
     handled = true;
+  }
+  void on(const char * str) {
+    handled = true;
+    value   = string_value(str);
   }
   void on(const string& str) {
     handled = true;
@@ -164,7 +170,7 @@ public:
   }
 
   virtual void handler(call_scope_t& args) {
-    if (name[name_len - 1] == '_')
+    if (wants_arg)
       value = args[0];
   }
 
@@ -210,13 +216,17 @@ inline bool optcmp(const char * p, const char * n) {
 	    CALL_FUNCTOR(name ## _handler))
 
 #define OPT_(name)					\
-  if (! *(p + 1) || (*(p + 1) == '_' && ! *(p + 2)) ||	\
+  if (! *(p + 1) ||					\
+      ((name ## _handler).wants_arg &&			\
+       *(p + 1) == '_' && ! *(p + 2)) ||		\
       optcmp(p, #name))					\
     return ((name ## _handler).parent = this,		\
 	    CALL_FUNCTOR(name ## _handler))
 
 #define OPT_CH(name)					\
-  if (! *(p + 1) || (*(p + 1) == '_' && ! *(p + 2)))	\
+  if (! *(p + 1) ||					\
+      ((name ## _handler).wants_arg &&			\
+       *(p + 1) == '_' && ! *(p + 2)))			\
     return ((name ## _handler).parent = this,		\
 	    CALL_FUNCTOR(name ## _handler))
 
@@ -250,6 +260,13 @@ inline bool optcmp(const char * p, const char * n) {
   BEGIN(type, name)					\
   {							\
     CTOR(type, name) {}					\
+    body						\
+  }							\
+  END(name)
+
+#define OPTION__(type, name, body)			\
+  BEGIN(type, name)					\
+  {							\
     body						\
   }							\
   END(name)

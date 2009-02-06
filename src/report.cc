@@ -38,6 +38,45 @@
 
 namespace ledger {
 
+report_t::report_t(session_t& _session) : session(_session)
+{
+  // Setup default values for some of the option handlers
+  HANDLER(date_format_).on("%y-%b-%d");
+
+  HANDLER(register_format_).on(
+    "%-.9(display_date) %-.20(payee)"
+    " %-.23(truncate(account, 23, 2))"
+    " %!12(print_balance(strip(display_amount), 12, 67))"
+    " %!12(print_balance(strip(display_total), 12, 80, true))\n%/"
+    "%31|%-.23(truncate(account, 23, 2))"
+    " %!12(print_balance(strip(display_amount), 12, 67))"
+    " %!12(print_balance(strip(display_total), 12, 80, true))\n");
+
+  // jww (2009-02-06): Most of these still need to be defined
+  HANDLER(wide_register_format_).on(
+    "%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
+    "%48|%-.38A %22.108t %!22.132T\n");
+
+  HANDLER(print_format_).on(
+    "%(display_date)%(entry.cleared ? \" *\" : (entry.uncleared ? \"\" : \" !\"))"
+    "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
+    "    %(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%-34(account)"
+    "  %12(amount)%(comment | \"\")\n%/"
+    "    %(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%-34(account)"
+    "  %12(amount)%(comment | \"\")\n%/\n");
+
+  HANDLER(balance_format_).on(
+    "%20(strip(display_total))  %(depth_spacer)%-(partial_account)\n");
+
+  HANDLER(equity_format_).on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
+  HANDLER(plot_amount_format_).on("%D %(S(t))\n");
+  HANDLER(plot_total_format_).on("%D %(S(T))\n");
+  HANDLER(write_hdr_format_).on("%d %Y%C%P\n");
+  HANDLER(write_xact_format_).on("    %-34W  %12o%n\n");
+  HANDLER(prices_format_).on("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n");
+  HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
+}
+
 void report_t::xacts_report(xact_handler_ptr handler)
 {
   session_xacts_iterator walker(session);
@@ -59,7 +98,7 @@ void report_t::sum_all_accounts()
     (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value), false),
      walker);
 
-  session.master->calculate_sums(amount_expr, *this);
+  session.master->calculate_sums(HANDLER(amount_).expr, *this);
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)
@@ -69,11 +108,11 @@ void report_t::accounts_report(acct_handler_ptr handler)
   if (! HANDLED(sort_)) {
     basic_accounts_iterator walker(*session.master);
     pass_down_accounts(handler, walker,
-		       item_predicate<account_t>("total", what_to_keep));
+		       item_predicate<account_t>("total", what_to_keep()));
   } else {
     sorted_accounts_iterator walker(*session.master, HANDLER(sort_).str());
     pass_down_accounts(handler, walker,
-		       item_predicate<account_t>("total", what_to_keep));
+		       item_predicate<account_t>("total", what_to_keep()));
   }
     
   session.clean_xacts();
@@ -86,17 +125,22 @@ void report_t::commodities_report(const string& format)
 
 value_t report_t::fn_amount_expr(call_scope_t& scope)
 {
-  return amount_expr.calc(scope);
+  return HANDLER(amount_).expr.calc(scope);
 }
 
 value_t report_t::fn_total_expr(call_scope_t& scope)
 {
-  return total_expr.calc(scope);
+  return HANDLER(total_).expr.calc(scope);
+}
+
+value_t report_t::fn_display_amount(call_scope_t& scope)
+{
+  return HANDLER(display_amount_).expr.calc(scope);
 }
 
 value_t report_t::fn_display_total(call_scope_t& scope)
 {
-  return display_total.calc(scope);
+  return HANDLER(display_total_).expr.calc(scope);
 }
 
 namespace {
@@ -131,15 +175,18 @@ namespace {
 #endif
 
     std::ostringstream out;
-    args[0].strip_annotations(report.what_to_keep)
-      .print(out, *first_width, *latter_width);
+    args[0].strip_annotations(report.what_to_keep())
+      .print(out, *first_width, *latter_width,
+	     report.HANDLED(date_format_) ?
+	     report.HANDLER(date_format_).str() : optional<string>());
+
     return string_value(out.str());
   }
 
   value_t fn_strip(call_scope_t& args)
   {
     report_t& report(find_scope<report_t>(args));
-    return args[0].strip_annotations(report.what_to_keep);
+    return args[0].strip_annotations(report.what_to_keep());
   }
 
   value_t fn_truncate(call_scope_t& args)
@@ -166,9 +213,9 @@ namespace {
       when = item.date();
     }
 
-    if (report.HANDLED(output_date_format_))
-      return string_value
-	(format_date(when, report.HANDLER(output_date_format_).str()));
+    if (report.HANDLED(date_format_))
+      return string_value(format_date(when,
+				      report.HANDLER(date_format_).str()));
     else
       return string_value(format_date(when));
   }
@@ -194,7 +241,8 @@ namespace {
 	  (args_to_predicate_expr(args.value().as_sequence().begin(),
 				  args.value().as_sequence().end()));
 
-      DEBUG("report.predicate", "Predicate = " << report.predicate);
+      DEBUG("report.predicate",
+	    "Predicate = " << report.HANDLER(limit_).str());
 
       (report.*report_method)(handler_ptr(handler));
 
@@ -213,9 +261,6 @@ namespace {
 // emacs | lisp
 #endif
 
-#define FORMAT(member) \
-  (HANDLED(format_) ? HANDLER(format_).str() : session.member)
-
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
@@ -233,20 +278,20 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    std::strcmp(p, "balance") == 0)
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, FORMAT(balance_format))));
+	     (new format_accounts(*this, HANDLER(balance_format_).str())));
 	break;
 
       case 'e':
 	if (std::strcmp(p, "equity") == 0)
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_equity(*this, FORMAT(print_format))));
+	     (new format_equity(*this, HANDLER(print_format_).str())));
 	break;
 
       case 'p':
 	if (*(p + 1) == '\0' || std::strcmp(p, "print") == 0)
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, FORMAT(print_format))));
+	    (reporter<>(new format_xacts(*this, HANDLER(print_format_).str())));
 	break;
 
       case 'r':
@@ -254,7 +299,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    std::strcmp(p, "reg") == 0 ||
 	    std::strcmp(p, "register") == 0)
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, FORMAT(register_format))));
+	    (reporter<>(new format_xacts(*this, HANDLER(register_format_).str())));
 	break;
       }
     }
@@ -262,6 +307,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 
   case 'd':
     METHOD(report_t, display_total);
+    else METHOD(report_t, display_amount);
     else FUNCTION(display_date);
     break;
 
@@ -275,6 +321,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'a':
 	OPT(amount_);
 	else OPT(anon);
+	else OPT(account_);
 	break;
 
       case 'b':
@@ -313,8 +360,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'i':
-	OPT(input_date_format_);
-	else OPT(invert);
+	OPT(invert);
 	break;
 
       case 'j':
@@ -322,7 +368,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'l':
-	OPT_(limit);
+	OPT_(limit_);
 	break;
 
       case 'm':
@@ -336,14 +382,12 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 
       case 'o':
 	OPT_(output_);
-	else OPT(output_date_format_);
 	break;
 
       case 'p':
 	OPT_(period_);
 	else OPT(period_sort_);
 	else OPT(price);
-	else OPT(price_db_);
 	else OPT(pager_);
 	break;
 

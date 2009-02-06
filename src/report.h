@@ -106,222 +106,174 @@ class report_t : public scope_t
 
 public:
   session_t&	  session;
-  string	  account;
   output_stream_t output_stream;
-  keep_details_t  what_to_keep;
 
-  uint_least8_t	  budget_flags;
-
-  expr_t	  amount_expr;
-  expr_t	  total_expr;
-  expr_t	  display_total;
-
-  string	  predicate;
-  string	  secondary_predicate;
-  string	  display_predicate;
-  string	  report_period;
-  string	  report_period_sort;
-
-  bool		  show_revalued;
-  bool		  show_revalued_only;
-
-  explicit report_t(session_t& _session)
-    : session(_session),
-
-      amount_expr("amount"),
-      total_expr("total"),
-      display_total("total_expr"),
-
-      show_revalued(false),
-      show_revalued_only(false)
-  {
-    TRACE_CTOR(report_t, "session_t&");
-
-    // Setup default values for some of the option handlers
-    HANDLER(output_date_format_).value = "%y-%b-%d";
-  }
-
-  report_t(const report_t& other)
-    : scope_t(),
-
-      session(other.session),
-      account(other.account),
-      what_to_keep(other.what_to_keep),
-
-      budget_flags(other.budget_flags),
-
-      amount_expr(other.amount_expr),
-      total_expr(other.total_expr),
-      display_total(other.display_total),
-
-      predicate(other.predicate),
-      secondary_predicate(other.secondary_predicate),
-      display_predicate(other.display_predicate),
-      report_period(other.report_period),
-      report_period_sort(other.report_period_sort),
-
-      show_revalued(other.show_revalued),
-      show_revalued_only(other.show_revalued_only),
-
-      COPY_OPT(amount_, other),
-      COPY_OPT(amount_data, other),
-      COPY_OPT(anon, other),
-      COPY_OPT(base, other),
-      COPY_OPT(by_payee, other),
-      COPY_OPT(cleared, other),
-      COPY_OPT(code_as_payee, other),
-      COPY_OPT(collapse, other),
-      COPY_OPT(comm_as_payee, other),
-      COPY_OPT(cost, other),
-      COPY_OPT(current, other),
-      COPY_OPT(daily, other),
-      COPY_OPT(date_format_, other),
-      COPY_OPT(dow, other),
-      COPY_OPT(effective, other),
-      COPY_OPT(empty, other),
-      COPY_OPT(format_, other),
-      COPY_OPT(head_, other),
-      COPY_OPT(input_date_format_, other),
-      COPY_OPT(invert, other),
-      COPY_OPT(limit, other),
-      COPY_OPT(market, other),
-      COPY_OPT(monthly, other),
-      COPY_OPT(output_, other),
-      COPY_OPT(output_date_format_, other),
-      COPY_OPT(pager_, other),
-      COPY_OPT(period_, other),
-      COPY_OPT(period_sort_, other),
-      COPY_OPT(price, other),
-      COPY_OPT(price_db_, other),
-      COPY_OPT(quantity, other),
-      COPY_OPT(quarterly, other),
-      COPY_OPT(related, other),
-      COPY_OPT(related_all, other),
-      COPY_OPT(subtotal, other),
-      COPY_OPT(tail_, other),
-      COPY_OPT(total_, other),
-      COPY_OPT(total_data, other),
-      COPY_OPT(totals, other),
-      COPY_OPT(uncleared, other),
-      COPY_OPT(weekly, other),
-      COPY_OPT(yearly, other),
-
-      COPY_OPT(begin_, other),
-      COPY_OPT(end_, other),
-
-      COPY_OPT(sort_, other),
-      COPY_OPT(sort_all_, other),
-      COPY_OPT(sort_entries_, other)
-  {
-    TRACE_CTOR(report_t, "copy");
-  }
-  
+  explicit report_t(session_t& _session);
   virtual ~report_t() {
-    TRACE_DTOR(report_t);
     output_stream.close();
   }
 
-  //
-  // Actual report generation; this is why we're here...
-  //
-
   void xacts_report(xact_handler_ptr handler);
   void entry_report(xact_handler_ptr handler, entry_t& entry);
-  void sum_all_accounts();
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(const string& format);
 
+  void sum_all_accounts();
+
   value_t fn_amount_expr(call_scope_t& scope);
   value_t fn_total_expr(call_scope_t& scope);
+  value_t fn_display_amount(call_scope_t& scope);
   value_t fn_display_total(call_scope_t& scope);
 
   void append_predicate(const string& str) {
-    if (! predicate.empty())
-      predicate = string("(") + predicate + ")&";
-    predicate += str;
+    if (HANDLED(limit_))
+      HANDLER(limit_).on(string("(") + HANDLER(limit_).str() + ")&" + str);
+    else
+      HANDLER(limit_).on(str);
   }
+
+  void append_display_predicate(const string& str) {
+    if (HANDLED(display_))
+      HANDLER(display_).on(string("(") + HANDLER(display_).str() + ")&" + str);
+    else
+      HANDLER(display_).on(str);
+  }
+
+  keep_details_t what_to_keep() {
+    return keep_details_t(HANDLED(lots) || HANDLED(lot_prices),
+			  HANDLED(lots) || HANDLED(lot_dates),
+			  HANDLED(lots) || HANDLED(lot_tags),
+			  HANDLED(base));
+  }
+
+  virtual expr_t::ptr_op_t lookup(const string& name);
 
   /**
    * Option handlers
    */
 
-  OPTION(report_t, amount_);
-  OPTION(report_t, amount_data);
+  OPTION(report_t, account_);
+  OPTION(report_t, actual); // -L
+  OPTION(report_t, add_budget);
+
+  OPTION__
+  (report_t, amount_, // -t
+   expr_t expr;
+   CTOR(report_t, amount_) {
+     expr = "amount";
+   });
+
+  OPTION(report_t, amount_data); // -j
   OPTION(report_t, anon);
+  OPTION(report_t, ansi);
+  OPTION(report_t, ansi_invert);
+  OPTION(report_t, average); // -A
+  OPTION(report_t, balance_format_);
   OPTION(report_t, base);
-  OPTION(report_t, by_payee);
-  OPTION(report_t, cleared);
-  OPTION(report_t, code_as_payee);
-  OPTION(report_t, collapse);
-  OPTION(report_t, comm_as_payee);
-  OPTION(report_t, cost);
-  OPTION(report_t, current);
-  OPTION(report_t, daily);
-  OPTION(report_t, date_format_);
-  OPTION(report_t, dow);
-  OPTION(report_t, effective);
-  OPTION(report_t, empty);
-  OPTION(report_t, format_);
-  OPTION(report_t, head_);
-  OPTION(report_t, input_date_format_);
-  OPTION(report_t, invert);
-  OPTION(report_t, limit);
-  OPTION(report_t, market);
-  OPTION(report_t, monthly);
-  OPTION(report_t, output_);
-  OPTION(report_t, output_date_format_);
-  OPTION(report_t, pager_);
-  OPTION(report_t, period_);
-  OPTION(report_t, period_sort_);
-  OPTION(report_t, price);
-  OPTION(report_t, price_db_);
-  OPTION(report_t, quantity);
-  OPTION(report_t, quarterly);
-  OPTION(report_t, related);
-  OPTION(report_t, related_all);
-  OPTION(report_t, subtotal);
-  OPTION(report_t, tail_);
-  OPTION(report_t, total_);
-  OPTION(report_t, total_data);
-  OPTION(report_t, totals);
-  OPTION(report_t, uncleared);
-  OPTION(report_t, weekly);
-  OPTION(report_t, yearly);
-  
-  OPTION_(report_t, begin_, DO_(args) {
+  OPTION(report_t, basis); // -B
+
+  OPTION_(report_t, begin_, DO_(args) { // -b
       interval_t interval(args[0].to_string());
       if (! is_valid(interval.begin))
 	throw_(std::invalid_argument,
 	       "Could not determine beginning of period '"
 	       << args[0].to_string() << "'");
 
-      if (! parent->predicate.empty())
-	parent->predicate += "&";
-      parent->predicate += "date>=[";
-      parent->predicate += to_iso_extended_string(interval.begin);
-      parent->predicate += "]";
+      string predicate =
+	"date>=[" + to_iso_extended_string(interval.begin) + "]";
+      parent->append_predicate(predicate);
     });
 
-  OPTION_(report_t, end_, DO_(args) {
+  OPTION(report_t, budget);
+  OPTION(report_t, by_payee); // -P
+  OPTION(report_t, cache_);
+  OPTION(report_t, cleared); // -C
+  OPTION(report_t, code_as_payee);
+  OPTION(report_t, collapse); // -n
+  OPTION(report_t, comm_as_payee); // -x
+  OPTION(report_t, cost);
+  OPTION(report_t, current); // -c
+  OPTION(report_t, daily);
+  OPTION(report_t, date_format_); // -y
+  OPTION(report_t, descend_);
+  OPTION(report_t, descend_if_);
+  OPTION(report_t, deviation); // -D
+  OPTION(report_t, display_); // -d
+
+  OPTION__
+  (report_t, display_amount_,
+   expr_t expr;
+   CTOR(report_t, display_amount_) {
+     expr = "amount_expr";
+   });
+
+  OPTION__
+  (report_t, display_total_,
+   expr_t expr;
+   CTOR(report_t, display_total_) {
+     expr = "total_expr";
+   });
+
+  OPTION(report_t, dow);
+  OPTION(report_t, effective);
+  OPTION(report_t, empty); // -E
+
+  OPTION_(report_t, end_, DO_(args) { // -e
       interval_t interval(args[0].to_string());
       if (! is_valid(interval.begin))
 	throw_(std::invalid_argument,
 	       "Could not determine end of period '"
 	       << args[0].to_string() << "'");
 
-      if (! parent->predicate.empty())
-	parent->predicate += "&";
-      parent->predicate += "date<[";
-      parent->predicate += to_iso_extended_string(interval.begin);
-      parent->predicate += "]";
-
+      string predicate =
+	"date<[" + to_iso_extended_string(interval.begin) + "]";
+      parent->append_predicate(predicate);
 #if 0
       terminus = interval.begin;
 #endif
     });
 
-  OPTION_(report_t, sort_, DO_(args) {
-      on(args[0].to_string());
+  OPTION(report_t, equity_format_);
+  OPTION(report_t, forecast_);
+  OPTION(report_t, format_); // -F
+  OPTION(report_t, gain); // -G
+  OPTION(report_t, head_);
+  OPTION(report_t, invert);
+  OPTION(report_t, limit_); // -l
+  OPTION(report_t, lot_dates);
+  OPTION(report_t, lot_prices);
+  OPTION(report_t, lot_tags);
+  OPTION(report_t, lots);
+  OPTION(report_t, market); // -V
+  OPTION(report_t, monthly); // -M
+  OPTION(report_t, only_);
+  OPTION(report_t, output_); // -o
+  OPTION(report_t, pager_);
+  OPTION(report_t, percentage); // -%
+  OPTION(report_t, performance); // -g
+  OPTION(report_t, period_); // -p
+  OPTION(report_t, period_sort_);
+  OPTION(report_t, plot_amount_format_);
+  OPTION(report_t, plot_total_format_);
+  OPTION(report_t, price); // -I
+  OPTION(report_t, price_exp_); // -Z
+  OPTION(report_t, prices_format_);
+  OPTION(report_t, pricesdb_format_);
+  OPTION(report_t, print_format_);
+  OPTION(report_t, quantity); // -O
+  OPTION(report_t, quarterly);
+  OPTION(report_t, real); // -R
+  OPTION(report_t, reconcile_);
+  OPTION(report_t, reconcile_date_);
+  OPTION(report_t, register_format_);
+  OPTION(report_t, related); // -r
+  OPTION(report_t, related_all);
+  OPTION(report_t, revalued);
+  OPTION(report_t, revalued_only);
+  OPTION(report_t, set_price_);
+
+  OPTION_(report_t, sort_, DO_(args) { // -S
+	on(args[0].to_string());
       parent->HANDLER(sort_entries_).off();
       parent->HANDLER(sort_all_).off();
     });
@@ -336,505 +288,27 @@ public:
       parent->HANDLER(sort_all_).off();
     });
 
-#if 0
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Basic options
-
-  value_t option_full_help(call_scope_t& args) { // H
-    option_full_help(std::cout);
-    throw int(0);
-  }
-
-  value_t option_help(call_scope_t& args) { // h
-    option_help(std::cout);
-    throw int(0);
-  }
-
-  value_t option_help_calc(call_scope_t& args) {
-    option_calc_help(std::cout);
-    throw int(0);
-  }
-
-  value_t option_help_disp(call_scope_t& args) {
-    option_disp_help(std::cout);
-    throw int(0);
-  }
-
-  value_t option_help_comm(call_scope_t& args) {
-    option_comm_help(std::cout);
-    throw int(0);
-  }
-
-  value_t option_init_file(call_scope_t& args) { // i:
-    std::string path = resolve_path(optarg);
-    if (access(path.c_str(), R_OK) != -1)
-      config->init_file = path;
-    else
-      throw_(std::invalid_argument,
-	     "The init file '" << path << "' does not exist or is not readable");
-  }
-
-  value_t option_account(call_scope_t& args) { // a:
-    config->account = optarg;
-  }
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Report filtering
-
-  value_t option_current(call_scope_t& args) { // c
-    if (! predicate.empty())
-      predicate += "&";
-    predicate += "date<=now";
-    return true;
-  }
-
-  value_t option_cleared(call_scope_t& args) { // C
-    if (! predicate.empty())
-      predicate += "&";
-    predicate += "cleared";
-    return true;
-  }
-
-  value_t option_uncleared(call_scope_t& args) { // U
-    if (! predicate.empty())
-      predicate += "&";
-    predicate += "!cleared";
-    return true;
-  }
-
-#if 0
-  value_t option_real(call_scope_t& args) { // R
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "R";
-  }
-
-  value_t option_actual(call_scope_t& args) { // L
-    if (! report->predicate.empty())
-      report->predicate += "&";
-    report->predicate += "L";
-  }
-
-  value_t option_lots(call_scope_t& args) {
-    what_to_keep.keep_price = true;
-    what_to_keep.keep_date  = true;
-    what_to_keep.keep_tag   = true;
-  }
-
-  value_t option_lot_prices(call_scope_t& args) {
-    what_to_keep.keep_price = true;
-  }
-
-  value_t option_lot_dates(call_scope_t& args) {
-    what_to_keep.keep_date = true;
-  }
-
-  value_t option_lot_tags(call_scope_t& args) {
-    what_to_keep.keep_tag = true;
-  }
-#endif
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Output customization
-
-#if 0
-  value_t option_balance_format(call_scope_t& args) { // :
-    config->balance_format = optarg;
-  }
-
-  value_t option_register_format(call_scope_t& args) { // :
-    config->register_format = optarg;
-  }
-
-  value_t option_wide_register_format(call_scope_t& args) { // :
-    config->wide_register_format = optarg;
-  }
-
-  value_t option_plot_amount_format(call_scope_t& args) { // :
-    config->plot_amount_format = optarg;
-  }
-
-  value_t option_plot_total_format(call_scope_t& args) { // :
-    config->plot_total_format = optarg;
-  }
-
-  value_t option_print_format(call_scope_t& args) { // :
-    config->print_format = optarg;
-  }
-
-  value_t option_write_hdr_format(call_scope_t& args) { // :
-    config->write_hdr_format = optarg;
-  }
-
-  value_t option_write_xact_format(call_scope_t& args) { // :
-    config->write_xact_format = optarg;
-  }
-
-  value_t option_equity_format(call_scope_t& args) { // :
-    config->equity_format = optarg;
-  }
-
-  value_t option_prices_format(call_scope_t& args) { // :
-    config->prices_format = optarg;
-  }
-
-  value_t option_wide(call_scope_t& args) { // w
-    config->register_format = config->wide_register_format;
-  }
-#endif
-
-  value_t option_head_(call_scope_t& args) { // :
-    head_entries = *var_t<long>(args, 0);
-    return true;
-  }
-
-  value_t option_tail_(call_scope_t& args) { // :
-    tail_entries = *var_t<long>(args, 0);
-    return true;
-  }
-
-#if 0
-  value_t option_truncate(call_scope_t& args) { // :
-    std::string style(optarg);
-    if (style == "leading")
-      format_t::elision_style = format_t::TRUNCATE_LEADING;
-    else if (style == "middle")
-      format_t::elision_style = format_t::TRUNCATE_MIDDLE;
-    else if (style == "trailing")
-      format_t::elision_style = format_t::TRUNCATE_TRAILING;
-    else if (style == "abbrev")
-      format_t::elision_style = format_t::ABBREVIATE;
-  }
-
-  value_t option_abbrev_len(call_scope_t& args) { // :
-    format_t::abbrev_length = std::atoi(optarg);
-  }
-#endif
-
-  value_t option_empty(call_scope_t& args) { // E
-    show_empty = true;
-    return true;
-  }
-
-  value_t option_collapse(call_scope_t& args) { // n
-    show_collapsed = true;
-    return true;
-  }
-
-  value_t option_subtotal(call_scope_t& args) { // s
-    show_subtotal = true;
-    return true;
-  }
-
-  value_t option_totals(call_scope_t& args) {
-    show_totals = true;
-    return true;
-  }
-
-  value_t option_sort_(call_scope_t& args) { // S:
-    sort_string = args[0].to_string();
-    return true;
-  }
-
-  value_t option_sort_entries_(call_scope_t& args) {
-    sort_string = args[0].to_string();
-    entry_sort = true;
-    return true;
-  }
-
-  value_t option_sort_all_(call_scope_t& args) {
-    sort_string = args[0].to_string();
-    entry_sort = false;
-    sort_all   = true;
-    return true;
-  }
-
-  value_t option_period_sort_(call_scope_t& args) { // :
-    sort_string = args[0].to_string();
-    entry_sort = true;
-    return true;
-  }
-
-  value_t option_related(call_scope_t& args) { // r
-    show_related = true;
-    return true;
-  }
-
-#if 0
-  value_t option_descend(call_scope_t& args) {
-    std::string arg(optarg);
-    std::string::size_type beg = 0;
-    report->descend_expr = "";
-    for (std::string::size_type pos = arg.find(';');
-	 pos != std::string::npos;
-	 beg = pos + 1, pos = arg.find(';', beg))
-      report->descend_expr += (std::string("t=={") +
-			       std::string(arg, beg, pos - beg) + "};");
-    report->descend_expr += (std::string("t=={") +
-			     std::string(arg, beg) + "}");
-  }
-
-  value_t option_descend_if(call_scope_t& args) {
-    report->descend_expr = optarg;
-  }
-#endif
-
-  value_t option_period_(call_scope_t& args) { // p:
-    if (report_period.empty()) {
-      report_period = args[0].to_string();
-    } else {
-      report_period += " ";
-      report_period += args[0].to_string();
-    }
-
-    // If the period gives a beginning and/or ending date, make sure to
-    // modify the calculation predicate (via the --begin and --end
-    // options) to take this into account.
-
-    interval_t interval(report_period);
-
-    if (is_valid(interval.begin)) {
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "date>=[";
-      predicate += to_iso_extended_string(interval.begin);
-      predicate += "]";
-    }
-
-    if (is_valid(interval.end)) {
-      if (! predicate.empty())
-	predicate += "&";
-      predicate += "date<[";
-      predicate += to_iso_extended_string(interval.end);
-      predicate += "]";
-
-#if 0
-      terminus = interval.end;
-#endif
-    }
-    return true;
-  }
-
-  value_t option_daily(call_scope_t& args) {
-    if (report_period.empty())
-      report_period = "daily";
-    else
-      report_period = string("daily ") + report_period;
-    return true;
-  }
-
-  value_t option_weekly(call_scope_t& args) { // W
-    if (report_period.empty())
-      report_period = "weekly";
-    else
-      report_period = string("weekly ") + report_period;
-    return true;
-  }
-
-  value_t option_monthly(call_scope_t& args) { // M
-    if (report_period.empty())
-      report_period = "monthly";
-    else
-      report_period = string("monthly ") + report_period;
-    return true;
-  }
-
-  value_t option_quarterly(call_scope_t& args) {
-    if (report_period.empty())
-      report_period = "quarterly";
-    else
-      report_period = string("quarterly ") + report_period;
-    return true;
-  }
-
-  value_t option_yearly(call_scope_t& args) { // Y
-    if (report_period.empty())
-      report_period = "yearly";
-    else
-      report_period = string("yearly ") + report_period;
-    return true;
-  }
-
-  value_t option_dow(call_scope_t& args) {
-    days_of_the_week = true;
-    return true;
-  }
-
-  value_t option_by_payee(call_scope_t& args) { // P
-    by_payee = true;
-    return true;
-  }
-
-  value_t option_comm_as_payee(call_scope_t& args) { // x
-    comm_as_payee = true;
-    return true;
-  }
-
-  value_t option_code_as_payee(call_scope_t& args) {
-    code_as_payee = true;
-    return true;
-  }
-
-#if 0
-  value_t option_budget(call_scope_t& args) {
-    report->budget_flags = BUDGET_BUDGETED;
-  }
-
-  value_t option_add_budget(call_scope_t& args) {
-    report->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
-  }
-
-  value_t option_unbudgeted(call_scope_t& args) {
-    report->budget_flags = BUDGET_UNBUDGETED;
-  }
-
-  value_t option_forecast(call_scope_t& args) { // :
-    report->forecast_limit = optarg;
-  }
-
-  value_t option_reconcile(call_scope_t& args) { // :
-    report->reconcile_balance = optarg;
-  }
-
-  value_t option_reconcile_date(call_scope_t& args) { // :
-    report->reconcile_date = optarg;
-  }
-#endif
-
-  value_t option_limit_(call_scope_t& args) { // l:
-    append_predicate(args[0].as_string());
-    return true;
-  }
-
-#if 0
-  value_t option_only(call_scope_t& args) { // :
-    if (! report->secondary_predicate.empty())
-      report->secondary_predicate += "&";
-    report->secondary_predicate += "(";
-    report->secondary_predicate += optarg;
-    report->secondary_predicate += ")";
-  }
-
-  value_t option_display(call_scope_t& args) { // d:
-    if (! report->display_predicate.empty())
-      report->display_predicate += "&";
-    report->display_predicate += "(";
-    report->display_predicate += optarg;
-    report->display_predicate += ")";
-  }
-#endif
-
-  value_t option_amount_(call_scope_t& args) { // t:
-    _amount_expr = args[0].as_string();
-    return true;
-  }
-
-  value_t option_total_(call_scope_t& args) { // T:
-    _total_expr = args[0].as_string();
-    return true;
-  }
-
-  value_t option_amount_data(call_scope_t&) { // j
-    format_string = session.plot_amount_format;
-    return true;
-  }
-
-  value_t option_total_data(call_scope_t&) { // J
-    format_string = session.plot_total_format;
-    return true;
-  }
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Commodity reporting
-
-  value_t option_base(call_scope_t& args) { // :
-    what_to_keep.keep_base = true;
-    return true;
-  }
-
-  value_t option_price_db_(call_scope_t& args) { // :
-    // jww (2009-01-31): This, and several of the other option handlers,
-    // should be in the session object.
-    session.price_db = args[0].as_string();
-    return true;
-  }
-
-  value_t option_price_exp_(call_scope_t& args) { // Z:
-    session.pricing_leeway = lexical_cast<long>(args[0].as_string()) * 60;
-    return true;
-  }
-
-  value_t option_download(call_scope_t& args) { // Q
-    session.download_quotes = true;
-    return true;
-  }
-
-  value_t option_quantity(call_scope_t& args) { // O
-    show_revalued = false;
-    _amount_expr  = "amount";
-    _total_expr	  = "total";
-    return true;
-  }
-
-  value_t option_cost(call_scope_t& args) { // B
-    show_revalued = false;
-    _amount_expr  = "cost";
-    _total_expr	  = "total_cost";
-    return true;
-  }
-
-  value_t option_price(call_scope_t& args) { // I
-    show_revalued = false;
-    _amount_expr  = "price";
-    _total_expr	  = "price_total";
-    return true;
-  }
-
-  value_t option_market(call_scope_t& args) { // V
-    show_revalued  = true;
-    _display_total = "market_value(total_expr)";
-    return true;
-  }
-
-#if 0
-  void parse_price_setting(const char * optarg)
-  {
-    char * equals = std::strchr(optarg, '=');
-    if (! equals)
-      return;
-
-    while (std::isspace(*optarg))
-      optarg++;
-    while (equals > optarg && std::isspace(*(equals - 1)))
-      equals--;
-
-    std::string symbol(optarg, 0, equals - optarg);
-    amount_t price(equals + 1);
-
-    if (commodity_t * commodity = commodity_t::find_or_create(symbol)) {
-      commodity->add_price(datetime_t::now, price);
-#if 0
-      commodity->history()->bogus_time = datetime_t::now;
-#endif
-    }
-  }
-#endif
-
-  value_t option_anon(call_scope_t& args) {
-    anonymize = true;
-    return true;
-  }
-#endif // 0
-
-  //
-  // Scope members
-  //
-
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  OPTION(report_t, subtotal); // -s
+  OPTION(report_t, tail_);
+
+  OPTION__
+  (report_t, total_, // -T
+   expr_t expr;
+   CTOR(report_t, total_) {
+     expr = "total";
+   });
+
+  OPTION(report_t, total_data); // -J
+  OPTION(report_t, totals);
+  OPTION(report_t, truncate_);
+  OPTION(report_t, unbudgeted);
+  OPTION(report_t, uncleared); // -U
+  OPTION(report_t, weekly); // -W
+  OPTION(report_t, wide); // -w
+  OPTION(report_t, wide_register_format_);
+  OPTION(report_t, write_hdr_format_);
+  OPTION(report_t, write_xact_format_);
+  OPTION(report_t, yearly); // -Y
 };
 
 } // namespace ledger

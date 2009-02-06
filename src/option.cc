@@ -47,15 +47,15 @@ namespace {
       else
 	*p++ = ch;
     }
-    *p = '\0';
-
-    if (expr_t::ptr_op_t op = scope.lookup(buf))
-      return op_bool_tuple(op, false);
-
     *p++ = '_';
     *p = '\0';
 
-    return op_bool_tuple(scope.lookup(buf), true);
+    if (expr_t::ptr_op_t op = scope.lookup(buf))
+      return op_bool_tuple(op, true);
+
+    *--p = '\0';
+
+    return op_bool_tuple(scope.lookup(buf), false);
   }
 
   op_bool_tuple find_option(scope_t& scope, const char letter)
@@ -63,15 +63,15 @@ namespace {
     char buf[10];
     std::strcpy(buf, "opt_");
     buf[4] = letter;
-    buf[5] = '\0';
-
-    if (expr_t::ptr_op_t op = scope.lookup(buf))
-      return op_bool_tuple(op, false);
-
     buf[5] = '_';
     buf[6] = '\0';
 
-    return op_bool_tuple(scope.lookup(buf), true);
+    if (expr_t::ptr_op_t op = scope.lookup(buf))
+      return op_bool_tuple(op, true);
+
+    buf[5] = '\0';
+
+    return op_bool_tuple(scope.lookup(buf), false);
   }
 
   void process_option(const function_t& opt, scope_t& scope,

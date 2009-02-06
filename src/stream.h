@@ -61,7 +61,7 @@ namespace ledger {
  * Cline's "C++ FAQ Lite". Arguably this should be three different
  * classes, but that introduces additional unneeded complications.
  */
-class output_stream_t : public noncopyable
+class output_stream_t
 {
 private:
   int pipe_to_pager_fd;
@@ -78,6 +78,16 @@ public:
    */
   output_stream_t() : pipe_to_pager_fd(-1), os(&std::cout) {
     TRACE_CTOR(output_stream_t, "");
+  }
+
+  /**
+   * When copy-constructed, make the copy just be a new output stream.  This
+   * allows large classes to rely on their default copy-constructor without
+   * worrying about pointer copying within output_stream_t.
+   */
+  output_stream_t(const output_stream_t& other)
+    : pipe_to_pager_fd(-1), os(&std::cout) {
+    TRACE_CTOR(output_stream_t, "copy");
   }
 
   /**

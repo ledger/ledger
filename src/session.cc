@@ -37,16 +37,9 @@
 
 namespace ledger {
 
-#if 0
-boost::mutex session_t::session_mutex;
-#endif
-
 void set_session_context(session_t * session)
 {
   if (session) {
-#if 0
-    session_t::session_mutex.lock();
-#endif
     amount_t::initialize(session->commodity_pool);
 
     // jww (2009-02-04): Is amount_t the right place for parse_conversion to
@@ -59,84 +52,52 @@ void set_session_context(session_t * session)
   else if (! session) {
     value_t::shutdown();
     amount_t::shutdown();
-#if 0
-    session_t::session_mutex.unlock();
-#endif
   }
 }
 
 session_t::session_t()
-  : next_data_file_from_command_line(false),
-    saw_data_file_from_command_line(false),
-    next_price_db_from_command_line(false),
-    saw_price_db_from_command_line(false),
+  : flush_on_next_data_file(false),
 
-    register_format
-    ("%-.9(display_date) %-.20(payee) %-.23(truncate(account, 23, 2)) %!12(print_balance(strip(amount_expr), 12, 67)) "
-     "%!12(print_balance(strip(display_total), 12, 80, true))\n%/"
-     "%31|%-.23(truncate(account, 23, 2)) %!12(print_balance(strip(amount_expr), 12, 67)) "
-     "%!12(print_balance(strip(display_total), 12, 80, true))\n"),
-    wide_register_format
-    ("%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
-     "%48|%-.38A %22.108t %!22.132T\n"),
-    print_format
-    ("%(display_date)%(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n    %-34(account)  %12(amount)%(comment | \"\")\n%/    %-34(account)  %12(amount)%(comment | \"\")\n%/\n"),
-    balance_format
-    ("%20(strip(display_total))  %(depth_spacer)%-(partial_account)\n"),
-    equity_format
-    ("\n%D %Y%C%P\n%/    %-34W  %12t\n"),
-    plot_amount_format
-    ("%D %(S(t))\n"),
-    plot_total_format
-    ("%D %(S(T))\n"),
-    write_hdr_format
-    ("%d %Y%C%P\n"),
-    write_xact_format
-    ("    %-34W  %12o%n\n"),
-    prices_format
-    ("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n"),
-    pricesdb_format
-    ("P %[%Y/%m/%d %H:%M:%S] %A %t\n"),
-
-    pricing_leeway(24 * 3600),
     current_year(CURRENT_DATE().year()),
-
-    download_quotes(false),
-
-#if 0
-    elision_style(ABBREVIATE),
-#endif
-    abbrev_length(2),
-
-    ansi_codes(false),
-    ansi_invert(false),
 
     commodity_pool(new commodity_pool_t),
     master(new account_t(NULL, ""))
 {
   TRACE_CTOR(session_t, "");
 
-  optional<path> home;
   if (const char * home_var = std::getenv("HOME"))
-    home = home_var;
-
-  init_file  = home ? *home / ".ledgerrc" : "./.ledgerrc";
-  price_db   = home ? *home / ".pricedb"  : "./.pricedb";
+    HANDLER(price_db_).on((path(home_var) / ".pricedb").string());
+  else
+    HANDLER(price_db_).on(path("./.pricedb").string());
 
   register_parser(new textual_parser_t);
 
   // Add time commodity conversions, so that timelog's may be parsed
   // in terms of seconds, but reported as minutes or hours.
-  if (commodity_t * commodity = commodity_pool->create("s")) {
+  if (commodity_t * commodity = commodity_pool->create("s"))
     commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  } else {
+  else
     assert(false);
-  }
 }
 
-session_t::~session_t()
+journal_t * session_t::create_journal()
 {
-  TRACE_DTOR(session_t);
+  journal_t * journal = new journal_t(master.get());
+  journals.push_back(journal);
+  return journal;
+}
+
+void session_t::close_journal(journal_t * journal)
+{
+  for (ptr_list<journal_t>::iterator i = journals.begin();
+       i != journals.end();
+       i++)
+    if (&*i == journal) {
+      journals.erase(i);
+      return;
+    }
+  assert(false);
+  checked_delete(journal);
 }
 
 std::size_t session_t::read_journal(journal_t&	  journal,
@@ -169,28 +130,10 @@ std::size_t session_t::read_journal(journal_t&	journal,
   return read_journal(journal, stream, pathname, master);
 }
 
-void session_t::read_init()
-{
-  if (init_file && exists(*init_file)) {
-    TRACE_START(init, 1, "Read initialization file");
-
-    ifstream init(*init_file);
-
-    journal_t temp;
-    if (read_journal(temp, *init_file) > 0 ||
-	temp.auto_entries.size() > 0 || temp.period_entries.size() > 0) {
-      throw_(parse_error,
-	     "Entries found in initialization file '" << init_file << "'");
-    }
-
-    TRACE_FINISH(init, 1);
-  }
-}
-
 std::size_t session_t::read_data(journal_t&    journal,
 				 const string& master_account)
 {
-  if (data_files.empty())
+  if (HANDLER(file_).data_files.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
 
   std::size_t entry_count = 0;
@@ -200,7 +143,7 @@ std::size_t session_t::read_data(journal_t&    journal,
     if (! master_account.empty())
       acct = journal.find_account(master_account);
 
-    journal.price_db = price_db;
+    journal.price_db = HANDLER(price_db_).str();
     if (journal.price_db && exists(*journal.price_db)) {
       if (read_journal(journal, *journal.price_db)) {
 	throw_(parse_error, "Entries not allowed in price history file");
@@ -210,7 +153,7 @@ std::size_t session_t::read_data(journal_t&    journal,
     }
 
 
-    foreach (const path& pathname, data_files) {
+    foreach (const path& pathname, HANDLER(file_).data_files) {
       if (pathname == "-") {
 	journal.sources.push_back("/dev/stdin");
 
@@ -245,6 +188,20 @@ std::size_t session_t::read_data(journal_t&    journal,
   VERIFY(journal.valid());
 
   return entry_count;
+}
+
+void session_t::unregister_parser(journal_t::parser_t * parser)
+{
+  for (ptr_list<journal_t::parser_t>::iterator i = parsers.begin();
+       i != parsers.end();
+       i++) {
+    if (&*i == parser) {
+      parsers.erase(i);
+      return;
+    }
+  }
+  assert(false);
+  checked_delete(parser);
 }
 
 void session_t::clean_xacts()
@@ -302,76 +259,32 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'b':
-    if (std::strcmp(p, "balance_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(balance_format));
-    break;
-
-  case 'e':
-    if (std::strcmp(p, "equity_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(equity_format));
-    break;
-
-  case 'p':
-    if (std::strcmp(p, "plot_amount_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(plot_amount_format));
-    else if (std::strcmp(p, "plot_total_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(plot_total_format));
-    else if (std::strcmp(p, "prices_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(prices_format));
-    else if (std::strcmp(p, "pricesdb_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(pricesdb_format));
-    else if (std::strcmp(p, "print_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(print_format));
-    break;
-
-  case 'r':
-    if (std::strcmp(p, "register_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(register_format));
-    break;
-
-  case 'w':
-    if (std::strcmp(p, "wide_register_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(wide_register_format));
-    else if (std::strcmp(p, "write_hdr_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(write_hdr_format));
-    else if (std::strcmp(p, "write_xact_format") == 0)
-      return expr_t::op_t::wrap_value(string_value(write_xact_format));
-    break;
-
   case 'o':
-    if (std::strncmp(p, "opt_", 4) == 0) {
-      p = p + 4;
+    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
       switch (*p) {
+      case 'a':
+	OPT(abbrev_len_);
+	else OPT_(account_); // -a
+	break;
       case 'd':
-	if (std::strcmp(p, "debug_") == 0)
-	  return MAKE_FUNCTOR(session_t::option_debug_);
+	OPT(download); // -Q
 	break;
-
       case 'f':
-	if ((*(p + 1) == '_' && ! *(p + 2)) ||
-	    std::strcmp(p, "file_") == 0)
-	  return MAKE_FUNCTOR(session_t::option_file_);
+	OPT_(file_); // -f
 	break;
-
-      case 't':
-	if (std::strcmp(p, "trace_") == 0)
-	  return MAKE_FUNCTOR(session_t::option_trace_);
+      case 'i':
+	OPT(input_date_format_);
 	break;
-
-      case 'v':
-	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
-	  return MAKE_FUNCTOR(session_t::option_verbose);
-	else if (std::strcmp(p, "version") == 0)
-	  return MAKE_FUNCTOR(session_t::option_version);
-	else if (std::strcmp(p, "verify") == 0)
-	  return MAKE_FUNCTOR(session_t::option_verify);
+      case 'p':
+	OPT(price_db_);
+	break;
+      case 'Q':
+	OPT_CH(download); // -Q
 	break;
       }
     }
     break;
   }
-
   return expr_t::ptr_op_t();
 }
 

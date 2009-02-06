@@ -51,7 +51,14 @@ public:
   global_scope_t(char ** envp);
   ~global_scope_t();
 
-  void read_journal_files();
+  void	       read_init();
+  void	       read_journal_files();
+  void         read_environment_settings(char * envp[]);
+  strings_list read_command_arguments(scope_t& scope, strings_list args);
+  void         normalize_session_options();
+  function_t   look_for_precommand(scope_t& scope, const string& verb);
+  function_t   look_for_command(scope_t& scope, const string& verb);
+  void         normalize_report_options(const string& verb);
 
   char * prompt_string();
 
@@ -92,22 +99,41 @@ public:
     return true;
   }
 
+  void show_version_info(std::ostream& out) {
+    out <<
+      "Ledger " << ledger::version << ", the command-line accounting tool";
+    out <<
+      "\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
+This program is made available under the terms of the BSD Public License.\n\
+See LICENSE file included with the distribution for details and disclaimer.";
+    out << std::endl;
+  }
+
+  virtual expr_t::ptr_op_t lookup(const string& name);
+
   OPTION(global_scope_t, debug_);
+
+  OPTION__
+  (global_scope_t, init_file_,
+   CTOR(global_scope_t, init_file_) {
+     if (const char * home_var = std::getenv("HOME"))
+       on((path(home_var) / ".ledgerrc").string());
+     else
+       on(path("./.ledgerrc").string());
+   });
+
   OPTION(global_scope_t, script_);
   OPTION(global_scope_t, trace_);
   OPTION(global_scope_t, verbose);
   OPTION(global_scope_t, verify);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  OPTION_(global_scope_t, version, DO() {
+      parent->show_version_info(std::cout);
+      throw int(0);		// exit immediately
+    });
 };
 
-void         handle_debug_options(int argc, char * argv[]);
-void         read_environment_settings(report_t& report, char * envp[]);
-strings_list read_command_arguments(scope_t& scope, strings_list args);
-void         normalize_session_options(session_t& session);
-function_t   look_for_precommand(scope_t& scope, const string& verb);
-function_t   look_for_command(scope_t& scope, const string& verb);
-void         normalize_report_options(report_t& report, const string& verb);
+void handle_debug_options(int argc, char * argv[]);
 
 } // namespace ledger
 

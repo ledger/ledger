@@ -88,7 +88,7 @@ int main(int argc, char * argv[], char * envp[])
     // Look for options and a command verb in the command-line arguments
     bind_scope_t bound_scope(*global_scope.get(), global_scope->report());
 
-    args = read_command_arguments(bound_scope, args);
+    args = global_scope->read_command_arguments(bound_scope, args);
 
     if (global_scope->HANDLED(script_)) {
       // Ledger is being invoked as a script command interpreter
@@ -113,7 +113,7 @@ int main(int argc, char * argv[], char * envp[])
     }
     else {
       // Commence the REPL by displaying the current Ledger version
-      global_scope->session().option_version(global_scope->session());
+      global_scope->show_version_info(std::cout);
 
       global_scope->read_journal_files();
 
