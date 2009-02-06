@@ -31,64 +31,90 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#include "amount.h"
+#include "filters.h"
 
 #include <boost/python/exception_translator.hpp>
 #include <boost/python/implicit.hpp>
+#include <boost/python/args.hpp>
 
 namespace ledger {
 
 using namespace boost::python;
 
-void py_add_price(commodity_t&	    commodity,
-		  const datetime_t& date,
-		  const amount_t&   price)
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+  }
+
+//EXC_TRANSLATOR(filters_error)
+
+void export_filters()
 {
-  commodity.add_price(date, price);
-}
-
-void export_commodity()
-{
-  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
-  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
-  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
-  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
-  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
-  scope().attr("COMMODITY_NOMARKET")        = COMMODITY_NOMARKET;
-  scope().attr("COMMODITY_BUILTIN")         = COMMODITY_BUILTIN;
-  scope().attr("COMMODITY_WALKED")          = COMMODITY_WALKED;
-
-  class_< commodity_t, bases<>,
-	  commodity_t, boost::noncopyable > ("Commodity", no_init)
-    .def(self == self)
-
-    .def("drop_flags", &commodity_t::drop_flags)
-
-    .def("add_price", py_add_price)
-
-    .def("precision", &commodity_t::precision)
-    ;
-
 #if 0
-  class_< price_point_t, bases<>,
-    commodity_t, boost::noncopyable > ("PricePoint", no_init)
+  class_< ignore_xacts > ("IgnoreXacts")
     ;
-  class_< annotation_t, bases<>,
-    commodity_t, boost::noncopyable > ("Annotation", no_init)
+  class_< clear_xact_xdata > ("ClearXactXdata")
     ;
-  class_< keep_details_t, bases<>,
-    commodity_t, boost::noncopyable > ("KeepDetails", no_init)
+  class_< pass_down_xacts > ("PassDownXacts")
     ;
-  class_< annotated_commodity_t, bases<>,
-    commodity_t, boost::noncopyable > ("AnnotatedCommodity", no_init)
+  class_< push_to_xacts_list > ("PushToXactsList")
     ;
-  class_< compare_amount_commodities, bases<>,
-    commodity_t, boost::noncopyable > ("CompareAmountCommodities", no_init)
+  class_< truncate_entries > ("TruncateEntries")
     ;
-  class_< commodity_pool_t, bases<>,
-    commodity_t, boost::noncopyable > ("CommodityPool", no_init)
+  class_< set_account_value > ("SetAccountValue")
+    ;
+  class_< sort_xacts > ("SortXacts")
+    ;
+  class_< sort_entries > ("SortEntries")
+    ;
+  class_< filter_xacts > ("FilterXacts")
+    ;
+  class_< anonymize_xacts > ("AnonymizeXacts")
+    ;
+  class_< calc_xacts > ("CalcXacts")
+    ;
+  class_< invert_xacts > ("InvertXacts")
+    ;
+  class_< collapse_xacts > ("CollapseXacts")
+    ;
+  class_< component_xacts > ("ComponentXacts")
+    ;
+  class_< related_xacts > ("RelatedXacts")
+    ;
+  class_< changed_value_xacts > ("ChangedValueXacts")
+    ;
+  class_< subtotal_xacts > ("SubtotalXacts")
+    ;
+  class_< interval_xacts > ("IntervalXacts")
+    ;
+  class_< by_payee_xacts > ("ByPayeeXacts")
+    ;
+  class_< set_comm_as_payee > ("SetCommAsPayee")
+    ;
+  class_< set_code_as_payee > ("SetCodeAsPayee")
+    ;
+  class_< dow_xacts > ("DowXacts")
+    ;
+  class_< generate_xacts > ("GenerateXacts")
+    ;
+  class_< budget_xacts > ("BudgetXacts")
+    ;
+  class_< forecast_xacts > ("ForecastXacts")
+    ;
+  class_< clear_account_xdata > ("ClearAccountXdata")
+    ;
+  class_< pass_down_accounts > ("PassDownAccounts")
     ;
 #endif
+
+  //register_optional_to_python<amount_t>();
+
+  //implicitly_convertible<string, amount_t>();
+
+#define EXC_TRANSLATE(type)					\
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  //EXC_TRANSLATE(filters_error);
 }
 
 } // namespace ledger

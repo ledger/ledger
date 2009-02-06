@@ -29,18 +29,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pyledger.h>
+#include "pyinterp.h"
+#include "pyutils.h"
+#include "iterators.h"
+
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
+#include <boost/python/args.hpp>
+
+namespace ledger {
 
 using namespace boost::python;
 
-ledger::python_interpreter_t python_session;
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+  }
 
-namespace ledger {
-  extern void initialize_for_python();
-}
+//EXC_TRANSLATOR(iterators_error)
 
-BOOST_PYTHON_MODULE(ledger)
+void export_iterators()
 {
-  ledger::set_session_context(&python_session);
-  ledger::initialize_for_python();
+#if 0
+  class_< xacts_iterator > ("XactsIterator")
+    ;
+  class_< entry_xacts_iterator > ("EntryXactsIterator")
+    ;
+  class_< entries_iterator > ("EntriesIterator")
+    ;
+  class_< session_xacts_iterator > ("SessionXactsIterator")
+    ;
+  class_< accounts_iterator > ("AccountsIterator")
+    ;
+  class_< basic_accounts_iterator > ("BasicAccountsIterator")
+    ;
+  class_< sorted_accounts_iterator > ("SortedAccountsIterator")
+    ;
+  class_< journals_iterator > ("JournalsIterator")
+    ;
+#endif
+
+  //register_optional_to_python<amount_t>();
+
+  //implicitly_convertible<string, amount_t>();
+
+#define EXC_TRANSLATE(type)					\
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  //EXC_TRANSLATE(iterators_error);
 }
+
+} // namespace ledger

@@ -29,18 +29,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pyledger.h>
+#include "pyinterp.h"
+#include "pyutils.h"
+#include "flags.h"
+
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
+#include <boost/python/args.hpp>
+
+namespace ledger {
 
 using namespace boost::python;
 
-ledger::python_interpreter_t python_session;
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+  }
 
-namespace ledger {
-  extern void initialize_for_python();
-}
+//EXC_TRANSLATOR(flags_error)
 
-BOOST_PYTHON_MODULE(ledger)
+void export_flags()
 {
-  ledger::set_session_context(&python_session);
-  ledger::initialize_for_python();
+#if 0
+  class_< supports_flags > ("SupportsFlags")
+    ;
+  class_< basic_flags_t > ("BasicFlags")
+    ;
+  class_< delegates_flags > ("DelegatesFlags")
+    ;
+#endif
+
+  //register_optional_to_python<amount_t>();
+
+  //implicitly_convertible<string, amount_t>();
+
+#define EXC_TRANSLATE(type)					\
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  //EXC_TRANSLATE(flags_error);
 }
+
+} // namespace ledger

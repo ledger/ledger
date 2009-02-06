@@ -29,18 +29,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pyledger.h>
+#include "pyinterp.h"
+#include "pyutils.h"
+#include "entry.h"
+
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
+#include <boost/python/args.hpp>
+
+namespace ledger {
 
 using namespace boost::python;
 
-ledger::python_interpreter_t python_session;
+#define EXC_TRANSLATOR(type)				\
+  void exc_translate_ ## type(const type& err) {	\
+    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+  }
 
-namespace ledger {
-  extern void initialize_for_python();
-}
+//EXC_TRANSLATOR(entry_error)
 
-BOOST_PYTHON_MODULE(ledger)
+void export_entry()
 {
-  ledger::set_session_context(&python_session);
-  ledger::initialize_for_python();
+#if 0
+  class_< entry_base_t > ("EntryBase")
+    ;
+  class_< entry_t > ("Entry")
+    ;
+  struct_< entry_finalizer_t > ("EntryFinalizer")
+    ;
+  class_< auto_entry_t > ("AutoEntry")
+    ;
+  struct_< auto_entry_finalizer_t > ("AutoEntryFinalizer")
+    ;
+  class_< period_entry_t > ("PeriodEntry")
+    ;
+  class_< func_finalizer_t > ("FuncFinalizer")
+    ;
+#endif
+
+  //register_optional_to_python<amount_t>();
+
+  //implicitly_convertible<string, amount_t>();
+
+#define EXC_TRANSLATE(type) \
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  //EXC_TRANSLATE(entry_error);
 }
+
+} // namespace ledger

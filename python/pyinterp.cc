@@ -37,43 +37,83 @@ namespace ledger {
 
 using namespace boost::python;
 
-void export_utils();
-void export_times();
 void export_amount();
-void export_commodity();
-#if 0
 void export_balance();
-#endif
-void export_value();
-#if 0
-void export_journal();
-void export_parser();
-void export_option();
-void export_walk();
-void export_report();
+void export_balpair();
+void export_chain();
+void export_commodity();
+void export_compare();
+void export_csv();
+void export_emacs();
+void export_entry();
+void export_expr();
+void export_filters();
+void export_flags();
 void export_format();
-void export_valexpr();
-#endif
+void export_global();
+void export_hooks();
+void export_item();
+void export_iterators();
+void export_journal();
+void export_mask();
+void export_op();
+void export_option();
+void export_output();
+void export_parser();
+void export_predicate();
+void export_quotes();
+void export_reconcile();
+void export_report();
+void export_scope();
+void export_session();
+void export_stream();
+void export_textual();
+void export_timelog();
+void export_times();
+void export_token();
+void export_utils();
+void export_value();
+void export_xact();
 
 void initialize_for_python()
 {
-  export_utils();
-  export_times();
   export_amount();
-  export_commodity();
-#if 0
   export_balance();
-#endif
-  export_value();
-#if 0
-  export_journal();
-  export_parser();
-  export_option();
-  export_walk();
+  export_balpair();
+  export_chain();
+  export_commodity();
+  export_compare();
+  export_csv();
+  export_emacs();
+  export_entry();
+  export_expr();
+  export_filters();
+  export_flags();
   export_format();
+  export_global();
+  export_hooks();
+  export_item();
+  export_iterators();
+  export_journal();
+  export_mask();
+  export_op();
+  export_option();
+  export_output();
+  export_parser();
+  export_predicate();
+  export_quotes();
+  export_reconcile();
   export_report();
-  export_valexpr();
-#endif
+  export_scope();
+  export_session();
+  export_stream();
+  export_textual();
+  export_timelog();
+  export_times();
+  export_token();
+  export_utils();
+  export_value();
+  export_xact();
 }
 
 struct python_run

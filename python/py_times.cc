@@ -138,6 +138,11 @@ void export_times()
 
   scope().attr("parse_datetime") = &py_parse_datetime;
   scope().attr("parse_date")	 = &py_parse_date;
+
+#if 0
+  class_< interval_t > ("Interval")
+    ;
+#endif
 }
 
 } // namespace ledger
