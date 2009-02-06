@@ -47,7 +47,7 @@
 #define _REPORT_H
 
 #include "session.h"
-#include "handler.h"
+#include "chain.h"
 
 namespace ledger {
 
@@ -105,144 +105,112 @@ class report_t : public scope_t
   report_t();
 
 public:
-  optional<path>  output_file;
+  session_t&	  session;
+  string	  account;
   output_stream_t output_stream;
+  keep_details_t  what_to_keep;
 
-  string	  format_string;
-  string	  output_date_format;
-  string	  predicate;
-  string	  secondary_predicate;
-  string	  display_predicate;
-  string	  report_period;
-  string	  report_period_sort;
-  string	  sort_string;
-  string	  descend_expr;
-  string	  forecast_limit;
-  string	  reconcile_balance;
-  string	  reconcile_date;
+  uint_least8_t	  budget_flags;
 
   expr_t	  amount_expr;
   expr_t	  total_expr;
   expr_t	  display_total;
 
-  uint_least8_t	  budget_flags;
+  string	  predicate;
+  string	  secondary_predicate;
+  string	  display_predicate;
+  string	  report_period;
+  string	  report_period_sort;
 
-  long		  head_entries;
-  long		  tail_entries;
-
-  bool		  show_collapsed;
-  bool		  show_subtotal;
-  bool		  show_totals;
-  bool		  show_related;
-  bool		  show_all_related;
-  bool		  show_inverted;
-  bool		  show_empty;
-  bool		  days_of_the_week;
-  bool		  by_payee;
-  bool		  comm_as_payee;
-  bool		  code_as_payee;
   bool		  show_revalued;
   bool		  show_revalued_only;
-  bool		  entry_sort;
-  bool		  sort_all;
-  bool		  anonymize;
-  bool		  use_effective_date;
-
-  keep_details_t  what_to_keep;
-
-  string	  account;
-
-  bool		  raw_mode;
-
-  session_t&	  session;
 
   explicit report_t(session_t& _session)
-    : output_date_format("%y-%b-%d"),
+    : session(_session),
 
       amount_expr("amount"),
       total_expr("total"),
       display_total("total_expr"),
 
-      head_entries(0),
-      tail_entries(0),
-
-      show_collapsed(false),
-      show_subtotal(false),
-      show_totals(false),
-      show_related(false),
-      show_all_related(false),
-      show_inverted(false),
-      show_empty(false),
-      days_of_the_week(false),
-      by_payee(false),
-      comm_as_payee(false),
-      code_as_payee(false),
       show_revalued(false),
-      show_revalued_only(false),
-      entry_sort(false),
-      sort_all(false),
-      anonymize(false),
-      use_effective_date(false),
-
-      raw_mode(false),
-
-      session(_session)
+      show_revalued_only(false)
   {
     TRACE_CTOR(report_t, "session_t&");
+
+    // Setup default values for some of the option handlers
+    HANDLER(output_date_format_).value = "%y-%b-%d";
   }
 
   report_t(const report_t& other)
     : scope_t(),
 
-      output_file(other.output_file),
+      session(other.session),
+      account(other.account),
+      what_to_keep(other.what_to_keep),
 
-      format_string(other.format_string),
-      output_date_format(other.output_date_format),
-      predicate(other.predicate),
-      secondary_predicate(other.secondary_predicate),
-      display_predicate(other.display_predicate),
-      report_period(other.report_period),
-      report_period_sort(other.report_period_sort),
-      sort_string(other.sort_string),
-      descend_expr(other.descend_expr),
-      forecast_limit(other.forecast_limit),
-      reconcile_balance(other.reconcile_balance),
-      reconcile_date(other.reconcile_date),
+      budget_flags(other.budget_flags),
 
       amount_expr(other.amount_expr),
       total_expr(other.total_expr),
       display_total(other.display_total),
 
-      budget_flags(other.budget_flags),
+      predicate(other.predicate),
+      secondary_predicate(other.secondary_predicate),
+      display_predicate(other.display_predicate),
+      report_period(other.report_period),
+      report_period_sort(other.report_period_sort),
 
-      head_entries(other.head_entries),
-      tail_entries(other.tail_entries),
-
-      show_collapsed(other.show_collapsed),
-      show_subtotal(other.show_subtotal),
-      show_totals(other.show_totals),
-      show_related(other.show_related),
-      show_all_related(other.show_all_related),
-      show_inverted(other.show_inverted),
-      show_empty(other.show_empty),
-      days_of_the_week(other.days_of_the_week),
-      by_payee(other.by_payee),
-      comm_as_payee(other.comm_as_payee),
-      code_as_payee(other.code_as_payee),
       show_revalued(other.show_revalued),
       show_revalued_only(other.show_revalued_only),
-      entry_sort(other.entry_sort),
-      sort_all(other.sort_all),
-      anonymize(other.anonymize),
-      use_effective_date(other.use_effective_date),
 
-      what_to_keep(other.what_to_keep),
+      COPY_OPT(amount_, other),
+      COPY_OPT(amount_data, other),
+      COPY_OPT(anon, other),
+      COPY_OPT(base, other),
+      COPY_OPT(by_payee, other),
+      COPY_OPT(cleared, other),
+      COPY_OPT(code_as_payee, other),
+      COPY_OPT(collapse, other),
+      COPY_OPT(comm_as_payee, other),
+      COPY_OPT(cost, other),
+      COPY_OPT(current, other),
+      COPY_OPT(daily, other),
+      COPY_OPT(date_format_, other),
+      COPY_OPT(dow, other),
+      COPY_OPT(effective, other),
+      COPY_OPT(empty, other),
+      COPY_OPT(format_, other),
+      COPY_OPT(head_, other),
+      COPY_OPT(input_date_format_, other),
+      COPY_OPT(invert, other),
+      COPY_OPT(limit, other),
+      COPY_OPT(market, other),
+      COPY_OPT(monthly, other),
+      COPY_OPT(output_, other),
+      COPY_OPT(output_date_format_, other),
+      COPY_OPT(period_, other),
+      COPY_OPT(period_sort_, other),
+      COPY_OPT(price, other),
+      COPY_OPT(price_db_, other),
+      COPY_OPT(quantity, other),
+      COPY_OPT(quarterly, other),
+      COPY_OPT(related, other),
+      COPY_OPT(related_all, other),
+      COPY_OPT(subtotal, other),
+      COPY_OPT(tail_, other),
+      COPY_OPT(total_, other),
+      COPY_OPT(total_data, other),
+      COPY_OPT(totals, other),
+      COPY_OPT(uncleared, other),
+      COPY_OPT(weekly, other),
+      COPY_OPT(yearly, other),
 
-      account(other.account),
+      COPY_OPT(begin_, other),
+      COPY_OPT(end_, other),
 
-      raw_mode(other.raw_mode),
-
-      session(other.session)
+      COPY_OPT(sort_, other),
+      COPY_OPT(sort_all_, other),
+      COPY_OPT(sort_entries_, other)
   {
     TRACE_CTOR(report_t, "copy");
   }
@@ -261,6 +229,110 @@ public:
   void sum_all_accounts();
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(const string& format);
+
+  value_t fn_amount_expr(call_scope_t& scope);
+  value_t fn_total_expr(call_scope_t& scope);
+  value_t fn_display_total(call_scope_t& scope);
+
+  void append_predicate(const string& str) {
+    if (! predicate.empty())
+      predicate = string("(") + predicate + ")&";
+    predicate += str;
+  }
+
+  /**
+   * Option handlers
+   */
+
+  OPTION(report_t, amount_);
+  OPTION(report_t, amount_data);
+  OPTION(report_t, anon);
+  OPTION(report_t, base);
+  OPTION(report_t, by_payee);
+  OPTION(report_t, cleared);
+  OPTION(report_t, code_as_payee);
+  OPTION(report_t, collapse);
+  OPTION(report_t, comm_as_payee);
+  OPTION(report_t, cost);
+  OPTION(report_t, current);
+  OPTION(report_t, daily);
+  OPTION(report_t, date_format_);
+  OPTION(report_t, dow);
+  OPTION(report_t, effective);
+  OPTION(report_t, empty);
+  OPTION(report_t, format_);
+  OPTION(report_t, head_);
+  OPTION(report_t, input_date_format_);
+  OPTION(report_t, invert);
+  OPTION(report_t, limit);
+  OPTION(report_t, market);
+  OPTION(report_t, monthly);
+  OPTION(report_t, output_);
+  OPTION(report_t, output_date_format_);
+  OPTION(report_t, period_);
+  OPTION(report_t, period_sort_);
+  OPTION(report_t, price);
+  OPTION(report_t, price_db_);
+  OPTION(report_t, quantity);
+  OPTION(report_t, quarterly);
+  OPTION(report_t, related);
+  OPTION(report_t, related_all);
+  OPTION(report_t, subtotal);
+  OPTION(report_t, tail_);
+  OPTION(report_t, total_);
+  OPTION(report_t, total_data);
+  OPTION(report_t, totals);
+  OPTION(report_t, uncleared);
+  OPTION(report_t, weekly);
+  OPTION(report_t, yearly);
+  
+  OPTION_(report_t, begin_, DO_(args) {
+      interval_t interval(args[0].to_string());
+      if (! is_valid(interval.begin))
+	throw_(std::invalid_argument,
+	       "Could not determine beginning of period '"
+	       << args[0].to_string() << "'");
+
+      if (! parent->predicate.empty())
+	parent->predicate += "&";
+      parent->predicate += "date>=[";
+      parent->predicate += to_iso_extended_string(interval.begin);
+      parent->predicate += "]";
+    });
+
+  OPTION_(report_t, end_, DO_(args) {
+      interval_t interval(args[0].to_string());
+      if (! is_valid(interval.begin))
+	throw_(std::invalid_argument,
+	       "Could not determine end of period '"
+	       << args[0].to_string() << "'");
+
+      if (! parent->predicate.empty())
+	parent->predicate += "&";
+      parent->predicate += "date<[";
+      parent->predicate += to_iso_extended_string(interval.begin);
+      parent->predicate += "]";
+
+#if 0
+      terminus = interval.begin;
+#endif
+    });
+
+  OPTION_(report_t, sort_, DO_(args) {
+      on(args[0].to_string());
+      parent->HANDLER(sort_entries_).off();
+      parent->HANDLER(sort_all_).off();
+    });
+
+  OPTION_(report_t, sort_all_, DO_(args) {
+      parent->HANDLER(sort_).on(args[0].to_string());
+      parent->HANDLER(sort_entries_).off();
+    });
+
+  OPTION_(report_t, sort_entries_, DO_(args) {
+      parent->HANDLER(sort_).on(args[0].to_string());
+      parent->HANDLER(sort_all_).off();
+    });
 
 #if 0
   //////////////////////////////////////////////////////////////////////
@@ -292,11 +364,6 @@ public:
     throw int(0);
   }
 
-  value_t option_version(call_scope_t& args) { // v
-    show_version(std::cout);
-    throw int(0);
-  }
-
   value_t option_init_file(call_scope_t& args) { // i:
     std::string path = resolve_path(optarg);
     if (access(path.c_str(), R_OK) != -1)
@@ -306,65 +373,13 @@ public:
 	     "The init file '" << path << "' does not exist or is not readable");
   }
 
-  value_t option_output(call_scope_t& args) { // o:
-    if (std::string(optarg) != "-") {
-      std::string path = resolve_path(optarg);
-      report->output_file = path;
-    }
-  }
-
   value_t option_account(call_scope_t& args) { // a:
     config->account = optarg;
   }
-#endif
 
   //////////////////////////////////////////////////////////////////////
   //
   // Report filtering
-
-  value_t ignore(call_scope_t&) {
-    return true;
-  }
-
-  value_t option_effective(call_scope_t&) {
-    use_effective_date = true;
-    return true;
-  }
-
-  value_t option_begin_(call_scope_t& args) { // b:
-    interval_t interval(args[0].to_string());
-    if (! is_valid(interval.begin))
-      throw_(std::invalid_argument,
-	     "Could not determine beginning of period '"
-	     << args[0].to_string() << "'");
-
-    if (! predicate.empty())
-      predicate += "&";
-    predicate += "date>=[";
-    predicate += to_iso_extended_string(interval.begin);
-    predicate += "]";
-
-    return true;
-  }
-
-  value_t option_end_(call_scope_t& args) { // e:
-    interval_t interval(args[0].to_string());
-    if (! is_valid(interval.begin))
-      throw_(std::invalid_argument,
-	     "Could not determine end of period '"
-	     << args[0].to_string() << "'");
-
-    if (! predicate.empty())
-      predicate += "&";
-    predicate += "date<[";
-    predicate += to_iso_extended_string(interval.begin);
-    predicate += "]";
-
-#if 0
-    terminus = interval.begin;
-#endif
-    return true;
-  }
 
   value_t option_current(call_scope_t& args) { // c
     if (! predicate.empty())
@@ -403,7 +418,7 @@ public:
   value_t option_lots(call_scope_t& args) {
     what_to_keep.keep_price = true;
     what_to_keep.keep_date  = true;
-      what_to_keep.keep_tag = true;
+    what_to_keep.keep_tag   = true;
   }
 
   value_t option_lot_prices(call_scope_t& args) {
@@ -422,21 +437,6 @@ public:
   //////////////////////////////////////////////////////////////////////
   //
   // Output customization
-
-  value_t option_format_(call_scope_t& args) { // F:
-    format_string = args[0].as_string();
-    return true;
-  }
-
-  value_t option_date_format_(call_scope_t& args) { // y:
-    output_date_format = args[0].as_string();
-    return true;
-  }
-
-  value_t option_input_date_format_(call_scope_t& args) { // :
-    ledger::input_date_format = args[0].as_string();
-    return true;
-  }
 
 #if 0
   value_t option_balance_format(call_scope_t& args) { // :
@@ -702,12 +702,6 @@ public:
   }
 #endif
 
-  void append_predicate(const string& str) {
-    if (! predicate.empty())
-      predicate = string("(") + predicate + ")&";
-    predicate += str;
-  }
-
   value_t option_limit_(call_scope_t& args) { // l:
     append_predicate(args[0].as_string());
     return true;
@@ -732,20 +726,14 @@ public:
 #endif
 
   value_t option_amount_(call_scope_t& args) { // t:
-    amount_expr = args[0].as_string();
+    _amount_expr = args[0].as_string();
     return true;
   }
 
   value_t option_total_(call_scope_t& args) { // T:
-    total_expr = args[0].as_string();
+    _total_expr = args[0].as_string();
     return true;
   }
-
-  value_t get_amount_expr(call_scope_t& scope);
-  value_t get_total_expr(call_scope_t& scope);
-  value_t get_display_total(call_scope_t& scope);
-
-  value_t f_market_value(call_scope_t& args);
 
   value_t option_amount_data(call_scope_t&) { // j
     format_string = session.plot_amount_format;
@@ -754,22 +742,6 @@ public:
 
   value_t option_total_data(call_scope_t&) { // J
     format_string = session.plot_total_format;
-    return true;
-  }
-
-  value_t option_ansi(call_scope_t& args) {
-#if 0
-    format_t::ansi_codes  = true;
-    format_t::ansi_invert = false;
-#endif
-    return true;
-  }
-
-  value_t option_ansi_invert(call_scope_t& args) {
-#if 0
-    format_t::ansi_codes  =
-    format_t::ansi_invert = true;
-#endif
     return true;
   }
 
@@ -801,28 +773,28 @@ public:
 
   value_t option_quantity(call_scope_t& args) { // O
     show_revalued = false;
-    amount_expr	  = "amount";
-    total_expr	  = "total";
+    _amount_expr  = "amount";
+    _total_expr	  = "total";
     return true;
   }
 
   value_t option_cost(call_scope_t& args) { // B
     show_revalued = false;
-    amount_expr	  = "cost";
-    total_expr	  = "total_cost";
+    _amount_expr  = "cost";
+    _total_expr	  = "total_cost";
     return true;
   }
 
   value_t option_price(call_scope_t& args) { // I
     show_revalued = false;
-    amount_expr	  = "price";
-    total_expr	  = "price_total";
+    _amount_expr  = "price";
+    _total_expr	  = "price_total";
     return true;
   }
 
   value_t option_market(call_scope_t& args) { // V
-    show_revalued = true;
-    display_total = "market_value(total_expr)";
+    show_revalued  = true;
+    _display_total = "market_value(total_expr)";
     return true;
   }
 
@@ -854,6 +826,7 @@ public:
     anonymize = true;
     return true;
   }
+#endif // 0
 
   //
   // Scope members

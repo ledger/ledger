@@ -47,7 +47,7 @@
 #define _TEXTUAL_H
 
 #include "journal.h"
-#include "handler.h"
+#include "account.h"
 
 namespace ledger {
 
@@ -165,12 +165,6 @@ protected:
 
   friend class instance_t;
 };
-
-void write_textual_journal(journal_t&	     journal,
-			   const path&	     pathname,
-			   xact_handler_ptr& formatter,
-			   const string&     write_hdr_format,
-			   std::ostream&     out);
 
 } // namespace ledger
 

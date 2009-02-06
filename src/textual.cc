@@ -690,9 +690,9 @@ void textual_parser_t::instance_t::general_directive(char * line)
     break;
   }
 
-  static const std::size_t textdir_len = std::strlen("ledger_textdir_");
+  static const std::size_t textdir_len = std::strlen("dir_");
   scoped_array<char> directive(new char[std::strlen(p) + textdir_len + 1]);
-  std::strcpy(directive.get(), "ledger_textdir_");
+  std::strcpy(directive.get(), "dir_");
   std::strcpy(directive.get() + textdir_len, p);
 
   if (expr_t::ptr_op_t op = lookup(directive.get())) {

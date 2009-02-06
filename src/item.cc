@@ -33,8 +33,6 @@
 
 namespace ledger {
 
-bool item_t::use_effective_date = false;
-
 bool item_t::has_tag(const string& tag) const
 {
   if (! metadata)

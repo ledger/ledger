@@ -46,9 +46,48 @@
 #ifndef _CHAIN_H
 #define _CHAIN_H
 
-#include "report.h"
+#include "xact.h"
+#include "account.h"
 
 namespace ledger {
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+template <typename T>
+struct item_handler : public noncopyable
+{
+  shared_ptr<item_handler> handler;
+
+public:
+  item_handler() {
+    TRACE_CTOR(item_handler, "");
+  }
+  item_handler(shared_ptr<item_handler> _handler) : handler(_handler) {
+    TRACE_CTOR(item_handler, "shared_ptr<item_handler>");
+  }
+  virtual ~item_handler() {
+    TRACE_DTOR(item_handler);
+  }
+
+  virtual void flush() {
+    if (handler.get())
+      handler->flush();
+  }
+  virtual void operator()(T& item) {
+    if (handler.get()) {
+      check_for_signal();
+      (*handler.get())(item);
+    }
+  }
+};
+
+typedef shared_ptr<item_handler<xact_t> > xact_handler_ptr;
+typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
+
+class report_t;
 
 xact_handler_ptr
 chain_xact_handlers(report_t&	     report,

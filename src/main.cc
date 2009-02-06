@@ -90,14 +90,13 @@ int main(int argc, char * argv[], char * envp[])
 
     args = read_command_arguments(bound_scope, args);
 
-    if (! global_scope->script_file.empty() &&
-	exists(global_scope->script_file)) {
+    if (global_scope->HANDLED(script_)) {
       // Ledger is being invoked as a script command interpreter
       global_scope->read_journal_files();
 
       status = 0;
 
-      ifstream in(global_scope->script_file);
+      ifstream in(global_scope->HANDLER(script_).str());
       while (status == 0 && ! in.eof()) {
 	char line[1024];
 	in.getline(line, 1023);

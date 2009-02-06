@@ -159,7 +159,7 @@ void format_accounts::flush()
 
     account_t::xdata_t& xdata(report.session.master->xdata());
 
-    if (! report.show_collapsed && xdata.total) {
+    if (! report.HANDLED(collapse) && xdata.total) {
       out << "--------------------\n";
       xdata.value = xdata.total;
       bind_scope_t bound_scope(report, *report.session.master);
@@ -201,11 +201,11 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
 
     bind_scope_t bound_scope(report, *pair.second);
     call_scope_t args(bound_scope);
-    result = report.get_total_expr(args);
+    result = report.fn_total_expr(args);
     if (! computed) {
       bind_scope_t account_scope(report, account);
       call_scope_t args(account_scope);
-      acct_total = report.get_total_expr(args);
+      acct_total = report.fn_total_expr(args);
       computed = true;
     }
 

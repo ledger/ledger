@@ -39,54 +39,244 @@
  *
  * @ingroup report
  *
- * @brief Brief
+ * @brief Defines a scheme for more easily handling commands and options via
+ * value expressions.
  *
- * Long.
+ * The OPTION and OPTION_ macros are used to define an option handler within a
+ * scope_t derived class.  The _ variant can specify a body in order to
+ * provide HELP(out) and DO() or DO_(args) methods.
+ *
+ * The other macros are used for looking up and referring to handlers,
+ * commands and functions.  Typically they occur in the object's lookup
+ * method, for example:
+ *
+ * expr_t::ptr_op_t some_class_t::lookup(const string& name)
+ * {
+ *   const char * p = name.c_str();
+ *   switch (*p) {
+ *   case 'a':
+ *     METHOD(some_class_t, my_method); // looks up a method by name
+ *     break;
+ * 
+ *   case 'c':
+ *     if (WANT_CMD()) { p += CMD_PREFIX_LEN;
+ *       switch (*p) {
+ *       case 'a':
+ *         COMMAND(args); // looks up global func named "args_command"
+ *         break;
+ *       }
+ *     }
+ *     break;
+ * 
+ *   case 'o':
+ *     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
+ *       switch (*p) {
+ *       case 'f':
+ *         OPT(foo);		// look for a handler named "foo"
+ *         else OPT(foo2_);     // same, but foo2 wants an argument
+ *         else OPT_(foo3);     // match on "foo3" or 'f'
+ *         else OPT_CH(foo4_);  // match only on 'f'
+ *         break;
+ *       }
+ *     }
+ *     break;
+ *   }
+ * 
+ *   return expr_t::ptr_op_t();
+ * }
  */
 #ifndef _HANDLER_H
 #define _HANDLER_H
 
-#include "utils.h"
-#include "xact.h"
-#include "account.h"
+#include "scope.h"
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T>
-struct item_handler : public noncopyable
+class handler_t
 {
-  shared_ptr<item_handler> handler;
+  const char * name;
+  std::size_t  name_len;
+  const char   ch;
+  bool	       handled;
 
 public:
-  item_handler() {
-    TRACE_CTOR(item_handler, "");
+  T *          parent;
+  value_t      value;
+
+  handler_t(const char * _name, const char _ch = '\0')
+    : name(_name), name_len(std::strlen(name)), ch(_ch),
+      handled(false), parent(NULL), value() {
+    TRACE_CTOR(handler_t, "const char *, const char");
   }
-  item_handler(shared_ptr<item_handler> _handler) : handler(_handler) {
-    TRACE_CTOR(item_handler, "shared_ptr<item_handler>");
-  }
-  virtual ~item_handler() {
-    TRACE_DTOR(item_handler);
+  handler_t(const handler_t& other)
+    : name(other.name),
+      name_len(other.name_len),
+      ch(other.ch),
+      handled(other.handled),
+      parent(NULL),
+      value(other.value)
+  {
+    TRACE_CTOR(handler_t, "copy");
   }
 
-  virtual void flush() {
-    if (handler.get())
-      handler->flush();
+  virtual ~handler_t() {
+    TRACE_DTOR(handler_t);
   }
-  virtual void operator()(T& item) {
-    if (handler.get()) {
-      check_for_signal();
-      (*handler.get())(item);
-    }
+
+  string desc() const {
+    std::ostringstream out;
+    if (ch)
+      out << "--" << name << " (-" << ch << ")";
+    else
+      out << "--" << name;
+    return out.str();
+  }
+
+  virtual void help(std::ostream& out) {
+    out << "No help for " << desc() << "\n";
+  }
+
+  operator bool() const {
+    return handled;
+  }
+
+  string str() const {
+    assert(handled);
+    return value.as_string();
+  }
+
+  void on() {
+    handled = true;
+  }
+  void on(const string& str) {
+    handled = true;
+    value   = string_value(str);
+  }
+  void on(const value_t& val) {
+    handled = true;
+    value   = val;
+  }
+
+  void off() {
+    handled = false;
+    value   = value_t();
+  }
+
+  virtual void handler(call_scope_t& args) {
+    if (name[name_len - 1] == '_')
+      value = args[0];
+  }
+
+  virtual value_t operator()(call_scope_t& args) {
+    handled = true;
+    handler(args);
+    return true;
   }
 };
 
-typedef shared_ptr<item_handler<xact_t> >    xact_handler_ptr;
-typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
+#define BEGIN(type, name)				\
+  struct name ## _handler_t : public handler_t<type>
+
+#define CTOR(type, name)				\
+  name ## _handler_t() : handler_t<type>(#name)
+#define DECL1(type, name, vartype, var, value)		\
+  vartype var ;						\
+  name ## _handler_t() : handler_t<type>(#name), var(value)
+  
+#define HELP(var) virtual void help(std::ostream& var)
+#define DO()      virtual void handler(call_scope_t&)
+#define DO_(var)  virtual void handler(call_scope_t& var)
+
+#define END(name) name ## _handler
+
+#define COPY_OPT(name, other) name ## _handler(other.name ## _handler)
+
+#define CALL_FUNCTOR(x) \
+  expr_t::op_t::wrap_functor(bind(&x ## _t::operator(), &x, _1))
+
+inline bool optcmp(const char * p, const char * n) {
+  // Test whether p matches n, substituting - in p for _ in n.
+  for (; *p && *n; p++, n++) {
+    if (! (*p == '-' && *n == '_' ) && *p != *n)
+      return false;
+  }
+  return *p == *n;
+}
+
+#define OPT(name)					\
+  if (optcmp(p, #name))					\
+    return ((name ## _handler).parent = this,		\
+	    CALL_FUNCTOR(name ## _handler))
+
+#define OPT_(name)					\
+  if (! *(p + 1) || (*(p + 1) == '_' && ! *(p + 2)) ||	\
+      optcmp(p, #name))					\
+    return ((name ## _handler).parent = this,		\
+	    CALL_FUNCTOR(name ## _handler))
+
+#define OPT_CH(name)					\
+  if (! *(p + 1) || (*(p + 1) == '_' && ! *(p + 2)))	\
+    return ((name ## _handler).parent = this,		\
+	    CALL_FUNCTOR(name ## _handler))
+
+#define FUNCTION(name)					\
+  if (std::strcmp(p, #name) == 0)			\
+    return WRAP_FUNCTOR(fn_ ## name)
+
+#define METHOD(type, name)				\
+  if (std::strcmp(p, #name) == 0)			\
+    return MAKE_FUNCTOR(type::fn_ ## name)
+
+#define M_COMMAND(type, name)				\
+  if (std::strcmp(p, #name) == 0)			\
+    return MAKE_FUNCTOR(type::name ## _command)
+
+#define COMMAND(name)					\
+  if (std::strcmp(p, #name) == 0)			\
+    return WRAP_FUNCTOR(name ## _command)
+
+#define HANDLER(name) name ## _handler
+#define HANDLED(name) HANDLER(name)
+
+#define OPTION(type, name)				\
+  BEGIN(type, name)					\
+  {							\
+    CTOR(type, name) {}					\
+  }							\
+  END(name)
+
+#define OPTION_(type, name, body)			\
+  BEGIN(type, name)					\
+  {							\
+    CTOR(type, name) {}					\
+    body						\
+  }							\
+  END(name)
+
+#define OPT_PREFIX "opt_"
+#define OPT_PREFIX_LEN 4
+
+#define WANT_OPT()					\
+  (std::strncmp(p, OPT_PREFIX, OPT_PREFIX_LEN) == 0)
+
+#define PRECMD_PREFIX "precmd_"
+#define PRECMD_PREFIX_LEN 7
+
+#define WANT_PRECMD()					\
+  (std::strncmp(p, PRECMD_PREFIX, PRECMD_PREFIX_LEN) == 0)
+
+#define CMD_PREFIX "cmd_"
+#define CMD_PREFIX_LEN 4
+
+#define WANT_CMD()					\
+  (std::strncmp(p, CMD_PREFIX, CMD_PREFIX_LEN) == 0)
+
+#define DIR_PREFIX "dir_"
+#define DIR_PREFIX_LEN 4
+
+#define WANT_DIR()					\
+  (std::strncmp(p, DIR_PREFIX, DIR_PREFIX_LEN) == 0)
 
 } // namespace ledger
 

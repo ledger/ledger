@@ -46,8 +46,7 @@
 #ifndef _CSV_H
 #define _CSV_H
 
-#include "handler.h"
-#include "format.h"
+#include "output.h"
 
 namespace ledger {
 

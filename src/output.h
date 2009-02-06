@@ -47,7 +47,6 @@
 #define _OUTPUT_H
 
 #include "report.h"
-#include "handler.h"
 #include "format.h"
 
 namespace ledger {

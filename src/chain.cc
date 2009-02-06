@@ -30,6 +30,7 @@
  */
 
 #include "chain.h"
+#include "report.h"
 #include "filters.h"
 #include "reconcile.h"
 
@@ -43,14 +44,14 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 
   xact_handler_ptr handler(base_handler);
 
-  // format_xacts write each xact received to the
-  // output stream.
+  // format_xacts write each xact received to the output stream.
   if (handle_individual_xacts) {
-    // truncate_entries cuts off a certain number of _entries_ from
-    // being displayed.  It does not affect calculation.
-    if (report.head_entries || report.tail_entries)
-      handler.reset(new truncate_entries(handler, report.head_entries,
-					 report.tail_entries));
+    // truncate_entries cuts off a certain number of _entries_ from being
+    // displayed.  It does not affect calculation.
+    if (report.HANDLED(head_) || report.HANDLED(tail_))
+      handler.reset(new truncate_entries(handler,
+					 report.HANDLER(head_).value.to_long(),
+					 report.HANDLER(tail_).value.to_long()));
 
     // filter_xacts will only pass through xacts matching the
     // `display_predicate'.
@@ -59,15 +60,15 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 		    (handler, item_predicate<xact_t>(report.display_predicate,
 						     report.what_to_keep)));
 
-    // calc_xacts computes the running total.  When this
-    // appears will determine, for example, whether filtered
-    // xacts are included or excluded from the running total.
+    // calc_xacts computes the running total.  When this appears will
+    // determine, for example, whether filtered xacts are included or excluded
+    // from the running total.
     handler.reset(new calc_xacts(handler));
 
-    // component_xacts looks for reported xact that
-    // match the given `descend_expr', and then reports the
-    // xacts which made up the total for that reported
-    // xact.
+#if 0
+    // component_xacts looks for reported xact that match the given
+    // `descend_expr', and then reports the xacts which made up the total for
+    // that reported xact.
     if (! report.descend_expr.empty()) {
       std::list<std::string> descend_exprs;
 
@@ -90,9 +91,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
       remember_components = true;
     }
 
-    // reconcile_xacts will pass through only those
-    // xacts which can be reconciled to a given balance
-    // (calculated against the xacts which it receives).
+    // reconcile_xacts will pass through only those xacts which can be
+    // reconciled to a given balance (calculated against the xacts which it
+    // receives).
     if (! report.reconcile_balance.empty()) {
       date_t cutoff = CURRENT_DATE();
       if (! report.reconcile_date.empty())
@@ -100,57 +101,54 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
       handler.reset(new reconcile_xacts
 		    (handler, value_t(report.reconcile_balance), cutoff));
     }
+#endif
 
-    // filter_xacts will only pass through xacts
-    // matching the `secondary_predicate'.
+    // filter_xacts will only pass through xacts matching the
+    // `secondary_predicate'.
     if (! report.secondary_predicate.empty())
       handler.reset(new filter_xacts
-		    (handler, item_predicate<xact_t>(report.secondary_predicate,
-						     report.what_to_keep)));
+		    (handler, item_predicate<xact_t>
+		     (report.secondary_predicate, report.what_to_keep)));
 
-    // sort_xacts will sort all the xacts it sees, based
-    // on the `sort_order' value expression.
-    if (! report.sort_string.empty()) {
-      if (report.entry_sort)
-	handler.reset(new sort_entries(handler, report.sort_string));
+    // sort_xacts will sort all the xacts it sees, based on the `sort_order'
+    // value expression.
+    if (report.HANDLED(sort_)) {
+      if (report.HANDLED(sort_entries_))
+	handler.reset(new sort_entries(handler, report.HANDLER(sort_).str()));
       else
-	handler.reset(new sort_xacts(handler, report.sort_string));
+	handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
     }
 
-    // changed_value_xacts adds virtual xacts to the
-    // list to account for changes in market value of commodities,
-    // which otherwise would affect the running total unpredictably.
+    // changed_value_xacts adds virtual xacts to the list to account for
+    // changes in market value of commodities, which otherwise would affect
+    // the running total unpredictably.
     if (report.show_revalued)
       handler.reset(new changed_value_xacts(handler, report.total_expr,
 					    report.show_revalued_only));
 
-    // collapse_xacts causes entries with multiple xacts
-    // to appear as entries with a subtotaled xact for each
-    // commodity used.
-    if (report.show_collapsed)
+    // collapse_xacts causes entries with multiple xacts to appear as entries
+    // with a subtotaled xact for each commodity used.
+    if (report.HANDLED(collapse))
       handler.reset(new collapse_xacts(handler, report.session));
 
-    // subtotal_xacts combines all the xacts it receives
-    // into one subtotal entry, which has one xact for each
-    // commodity in each account.
+    // subtotal_xacts combines all the xacts it receives into one subtotal
+    // entry, which has one xact for each commodity in each account.
     //
-    // period_xacts is like subtotal_xacts, but it
-    // subtotals according to time periods rather than totalling
-    // everything.
+    // period_xacts is like subtotal_xacts, but it subtotals according to time
+    // periods rather than totalling everything.
     //
-    // dow_xacts is like period_xacts, except that it
-    // reports all the xacts that fall on each subsequent day
-    // of the week.
-    if (report.show_subtotal)
+    // dow_xacts is like period_xacts, except that it reports all the xacts
+    // that fall on each subsequent day of the week.
+    if (report.HANDLED(subtotal))
       handler.reset(new subtotal_xacts(handler, remember_components));
 
-    if (report.days_of_the_week)
+    if (report.HANDLED(dow))
       handler.reset(new dow_xacts(handler, remember_components));
-    else if (report.by_payee)
+    else if (report.HANDLED(by_payee))
       handler.reset(new by_payee_xacts(handler, remember_components));
 
-    // interval_xacts groups xacts together based on a
-    // time period, such as weekly or monthly.
+    // interval_xacts groups xacts together based on a time period, such as
+    // weekly or monthly.
     if (! report.report_period.empty()) {
       handler.reset(new interval_xacts(handler, report.report_period,
 				       remember_components));
@@ -158,27 +156,23 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     }
   }
 
-  // invert_xacts inverts the value of the xacts it
-  // receives.
-  if (report.show_inverted)
+  // invert_xacts inverts the value of the xacts it receives.
+  if (report.HANDLED(invert))
     handler.reset(new invert_xacts(handler));
 
-  // related_xacts will pass along all xacts related
-  // to the xact received.  If `show_all_related' is true,
-  // then all the entry's xacts are passed; meaning that if
-  // one xact of an entry is to be printed, all the
-  // xact for that entry will be printed.
-  if (report.show_related)
-    handler.reset(new related_xacts(handler, report.show_all_related));
+  // related_xacts will pass along all xacts related to the xact received.  If
+  // the `related_all' handler is on, then all the entry's xacts are passed;
+  // meaning that if one xact of an entry is to be printed, all the xact for
+  // that entry will be printed.
+  if (report.HANDLED(related))
+    handler.reset(new related_xacts(handler, report.HANDLED(related_all)));
 
-  // anonymize_xacts removes all meaningful information from entry
-  // payee's and account names, for the sake of creating useful bug
-  // reports.
-  if (report.anonymize)
+  // anonymize_xacts removes all meaningful information from entry payee's and
+  // account names, for the sake of creating useful bug reports.
+  if (report.HANDLED(anon))
     handler.reset(new anonymize_xacts(handler));
 
-  // This filter_xacts will only pass through xacts
-  // matching the `predicate'.
+  // This filter_xacts will only pass through xacts matching the `predicate'.
   if (! report.predicate.empty()) {
     DEBUG("report.predicate",
 	  "Report predicate expression = " << report.predicate);
@@ -188,13 +182,12 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   }
 
 #if 0
-  // budget_xacts takes a set of xacts from a data
-  // file and uses them to generate "budget xacts" which
-  // balance against the reported xacts.
+  // budget_xacts takes a set of xacts from a data file and uses them to
+  // generate "budget xacts" which balance against the reported xacts.
   //
-  // forecast_xacts is a lot like budget_xacts, except
-  // that it adds entries only for the future, and does not balance
-  // them against anything but the future balance.
+  // forecast_xacts is a lot like budget_xacts, except that it adds entries
+  // only for the future, and does not balance them against anything but the
+  // future balance.
 
   if (report.budget_flags) {
     budget_xacts * budget_handler = new budget_xacts(handler,
@@ -202,11 +195,10 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     budget_handler->add_period_entries(journal->period_entries);
     handler.reset(budget_handler);
 
-    // Apply this before the budget handler, so that only matching
-    // xacts are calculated toward the budget.  The use of
-    // filter_xacts above will further clean the results so
-    // that no automated xacts that don't match the filter get
-    // reported.
+    // Apply this before the budget handler, so that only matching xacts are
+    // calculated toward the budget.  The use of filter_xacts above will
+    // further clean the results so that no automated xacts that don't match
+    // the filter get reported.
     if (! report.predicate.empty())
       handler.reset(new filter_xacts(handler, report.predicate));
   }
@@ -222,9 +214,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   }
 #endif
 
-  if (report.comm_as_payee)
+  if (report.HANDLED(comm_as_payee))
     handler.reset(new set_comm_as_payee(handler));
-  else if (report.code_as_payee)
+  else if (report.HANDLED(code_as_payee))
     handler.reset(new set_code_as_payee(handler));
 
   return handler;

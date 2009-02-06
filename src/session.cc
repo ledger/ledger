@@ -31,7 +31,6 @@
 
 #include "session.h"
 #include "report.h"
-#include "handler.h"
 #include "iterators.h"
 #include "filters.h"
 #include "textual.h"

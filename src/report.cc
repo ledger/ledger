@@ -66,12 +66,12 @@ void report_t::accounts_report(acct_handler_ptr handler)
 {
   sum_all_accounts();
 
-  if (sort_string.empty()) {
+  if (! HANDLED(sort_)) {
     basic_accounts_iterator walker(*session.master);
     pass_down_accounts(handler, walker,
 		       item_predicate<account_t>("total", what_to_keep));
   } else {
-    sorted_accounts_iterator walker(*session.master, sort_string);
+    sorted_accounts_iterator walker(*session.master, HANDLER(sort_).str());
     pass_down_accounts(handler, walker,
 		       item_predicate<account_t>("total", what_to_keep));
   }
@@ -84,43 +84,43 @@ void report_t::commodities_report(const string& format)
 {
 }
 
-value_t report_t::get_amount_expr(call_scope_t& scope)
+value_t report_t::fn_amount_expr(call_scope_t& scope)
 {
   return amount_expr.calc(scope);
 }
 
-value_t report_t::get_total_expr(call_scope_t& scope)
+value_t report_t::fn_total_expr(call_scope_t& scope)
 {
   return total_expr.calc(scope);
 }
 
-value_t report_t::get_display_total(call_scope_t& scope)
+value_t report_t::fn_display_total(call_scope_t& scope)
 {
   return display_total.calc(scope);
 }
 
-value_t report_t::f_market_value(call_scope_t& args)
-{
-  var_t<datetime_t> date(args, 1);
-  var_t<string>	    in_terms_of(args, 2);
-
-  commodity_t * commodity = NULL;
-  if (in_terms_of)
-    commodity = amount_t::current_pool->find_or_create(*in_terms_of);
-
-  DEBUG("report.market", "getting market value of: " << args[0]);
-
-  value_t result =
-    args[0].value(date ? optional<datetime_t>(*date) : optional<datetime_t>(),
-		  commodity ? optional<commodity_t&>(*commodity) :
-		  optional<commodity_t&>());
-
-  DEBUG("report.market", "result is: " << result);
-  return result;
-}
-
 namespace {
-  value_t print_balance(call_scope_t& args)
+  value_t fn_market_value(call_scope_t& args)
+  {
+    var_t<datetime_t> date(args, 1);
+    var_t<string>	    in_terms_of(args, 2);
+
+    commodity_t * commodity = NULL;
+    if (in_terms_of)
+      commodity = amount_t::current_pool->find_or_create(*in_terms_of);
+
+    DEBUG("report.market", "getting market value of: " << args[0]);
+
+    value_t result =
+      args[0].value(date ? optional<datetime_t>(*date) : optional<datetime_t>(),
+		    commodity ? optional<commodity_t&>(*commodity) :
+		    optional<commodity_t&>());
+
+    DEBUG("report.market", "result is: " << result);
+    return result;
+  }
+
+  value_t fn_print_balance(call_scope_t& args)
   {
     report_t& report(find_scope<report_t>(args));
 
@@ -136,13 +136,13 @@ namespace {
     return string_value(out.str());
   }
 
-  value_t strip_annotations(call_scope_t& args)
+  value_t fn_strip(call_scope_t& args)
   {
     report_t& report(find_scope<report_t>(args));
     return args[0].strip_annotations(report.what_to_keep);
   }
 
-  value_t truncate(call_scope_t& args)
+  value_t fn_truncate(call_scope_t& args)
   {
     report_t& report(find_scope<report_t>(args));
 
@@ -153,16 +153,24 @@ namespace {
 					   account_abbrev ? *account_abbrev : -1));
   }
 
-  value_t display_date(call_scope_t& args)
+  value_t fn_display_date(call_scope_t& args)
   {
     report_t& report(find_scope<report_t>(args));
     item_t&   item(find_scope<item_t>(args));
 
-    if (item.use_effective_date) {
+    date_t when;
+    if (report.HANDLED(effective)) {
       if (optional<date_t> date = item.effective_date())
-	return string_value(format_date(*date, report.output_date_format));
+	when = *date;
+    } else {
+      when = item.date();
     }
-    return string_value(format_date(item.date(), report.output_date_format));
+
+    if (report.HANDLED(output_date_format_))
+      return string_value
+	(format_date(when, report.HANDLER(output_date_format_).str()));
+    else
+      return string_value(format_date(when));
   }
 
   template <class Type        = xact_t,
@@ -195,41 +203,29 @@ namespace {
   };
 }
 
+#if 0
+// Commands yet to implement:
+//
+// entry
+// prices
+// pricesdb
+// csv
+// emacs | lisp
+#endif
+
+#define FORMAT(member) \
+  (HANDLED(format_) ? HANDLER(format_).str() : session.member)
+
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
-    if (std::strcmp(p, "amount_expr") == 0)
-      return MAKE_FUNCTOR(report_t::get_amount_expr);
+    METHOD(report_t, amount_expr);
     break;
 
-  case 'd':
-    if (std::strcmp(p, "display_total") == 0)
-	return MAKE_FUNCTOR(report_t::get_display_total);
-    else if (std::strcmp(p, "display_date") == 0)
-	return WRAP_FUNCTOR(display_date);
-    break;
-
-  case 'l':
-    if (std::strncmp(p, "ledger_cmd_", 11) == 0) {
-
-#define FORMAT(str) (format_string.empty() ? session. str : format_string)
-
-#if 0
-      // Commands yet to implement:
-      //
-      // entry
-      // dump
-      // output
-      // prices
-      // pricesdb
-      // csv
-      // emacs | lisp
-      // xml
-#endif
-
-      p = p + 11;
+  case 'c':
+    if (WANT_CMD()) { p += CMD_PREFIX_LEN;
       switch (*p) {
       case 'b':
 	if (*(p + 1) == '\0' ||
@@ -262,297 +258,212 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
-    else if (std::strncmp(p, "ledger_precmd_", 14) == 0) {
-      p = p + 14;
-      switch (*p) {
-      case 'a':
-	if (std::strcmp(p, "args") == 0)
-	  return WRAP_FUNCTOR(args_command);
-	break;
+    break;
 
-      case 'p':
-	if (std::strcmp(p, "parse") == 0)
-	  return WRAP_FUNCTOR(parse_command);
-	else if (std::strcmp(p, "period") == 0)
-	  return WRAP_FUNCTOR(period_command);
-	break;
-
-      case 'e':
-	if (std::strcmp(p, "eval") == 0)
-	  return WRAP_FUNCTOR(eval_command);
-	break;
-
-      case 'f':
-	if (std::strcmp(p, "format") == 0)
-	  return WRAP_FUNCTOR(format_command);
-	break;
-      }
-    }
+  case 'd':
+    METHOD(report_t, display_total);
+    else FUNCTION(display_date);
     break;
 
   case 'm':
-    if (std::strcmp(p, "market_value") == 0)
-      return MAKE_FUNCTOR(report_t::f_market_value);
+    FUNCTION(market_value);
     break;
 
   case 'o':
-    if (std::strncmp(p, "opt_", 4) == 0) {
-      p = p + 4;
+    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
       switch (*p) {
       case 'a':
-	if (std::strcmp(p, "amount_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_amount_);
-	else if (std::strcmp(p, "ansi") == 0)
-	  return MAKE_FUNCTOR(report_t::option_ansi);
-	else if (std::strcmp(p, "ansi-invert") == 0)
-	  return MAKE_FUNCTOR(report_t::option_ansi_invert);
-	else if (std::strcmp(p, "anon") == 0)
-	  return MAKE_FUNCTOR(report_t::option_anon);
+	OPT(amount_);
+	else OPT(anon);
 	break;
 
       case 'b':
-	if (std::strcmp(p, "b_") == 0 ||
-	    std::strcmp(p, "begin_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_begin_);
-	else if (std::strcmp(p, "base") == 0)
-	  return MAKE_FUNCTOR(report_t::option_base);
-	else if (std::strcmp(p, "by-payee") == 0)
-	  return MAKE_FUNCTOR(report_t::option_by_payee);
+	OPT_(begin_);
+	else OPT(base);
+	else OPT(by_payee);
 	break;
 
       case 'c':
-	if (! *(p + 1) || std::strcmp(p, "current") == 0)
-	  return MAKE_FUNCTOR(report_t::option_current);
-	else if (std::strcmp(p, "collapse") == 0)
-	  return MAKE_FUNCTOR(report_t::option_collapse);
-	else if (std::strcmp(p, "cleared") == 0)
-	  return MAKE_FUNCTOR(report_t::option_cleared);
-	else if (std::strcmp(p, "cost") == 0)
-	  return MAKE_FUNCTOR(report_t::option_cost);
-	else if (std::strcmp(p, "comm-as-payee") == 0)
-	  return MAKE_FUNCTOR(report_t::option_comm_as_payee);
-	else if (std::strcmp(p, "code-as-payee") == 0)
-	  return MAKE_FUNCTOR(report_t::option_code_as_payee);
+	OPT_(current);
+	else OPT(collapse);
+	else OPT(cleared);
+	else OPT(cost);
+	else OPT(comm_as_payee);
+	else OPT(code_as_payee);
 	break;
 
       case 'd':
-	if (std::strcmp(p, "daily") == 0)
-	  return MAKE_FUNCTOR(report_t::option_daily);
-	else if (std::strcmp(p, "dow") == 0)
-	  return MAKE_FUNCTOR(report_t::option_dow);
-	else if (std::strcmp(p, "date-format_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_date_format_);
+	OPT(daily);
+	else OPT(dow);
+	else OPT(date_format_);
 	break;
 
       case 'e':
-	if (std::strcmp(p, "e_") == 0 ||
-	    std::strcmp(p, "end_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_end_);
-	else if (std::strcmp(p, "empty") == 0)
-	  return MAKE_FUNCTOR(report_t::option_empty);
+	OPT_(end_);
+	else OPT(empty);
+	else OPT(effective);
 	break;
 
       case 'f':
-	if (std::strcmp(p, "format_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_format_);
+	OPT(format_);
 	break;
 
       case 'h':
-	if (std::strcmp(p, "head_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_head_);
+	OPT(head_);
 	break;
 
       case 'i':
-	if (std::strcmp(p, "input-date-format_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_input_date_format_);
+	OPT(input_date_format_);
+	else OPT(invert);
 	break;
 
       case 'j':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_amount_data);
+	OPT_CH(amount_data);
 	break;
 
       case 'l':
-	if (std::strcmp(p, "l_") == 0
-	    || std::strcmp(p, "limit_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_limit_);
+	OPT_(limit);
 	break;
 
       case 'm':
-	if (std::strcmp(p, "monthly") == 0)
-	  return MAKE_FUNCTOR(report_t::option_monthly);
-	else if (std::strcmp(p, "market") == 0)
-	  return MAKE_FUNCTOR(report_t::option_market);
+	OPT(monthly);
+	else OPT(market);
 	break;
 
       case 'n':
-	if (std::strcmp(p, "n") == 0)
-	  return MAKE_FUNCTOR(report_t::option_collapse);
+	OPT_CH(collapse);
+	break;
+
+      case 'o':
+	OPT_(output_);
+	else OPT(output_date_format_);
 	break;
 
       case 'p':
-	if (std::strcmp(p, "p_") == 0 ||
-	    std::strcmp(p, "period_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_period_);
-	else if (std::strcmp(p, "period_sort_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_period_sort_);
-	else if (std::strcmp(p, "price") == 0)
-	  return MAKE_FUNCTOR(report_t::option_price);
-	else if (std::strcmp(p, "price_db_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_price_db_);
+	OPT_(period_);
+	else OPT(period_sort_);
+	else OPT(price);
+	else OPT(price_db_);
 	break;
 
       case 'q':
-	if (std::strcmp(p, "quarterly") == 0)
-	  return MAKE_FUNCTOR(report_t::option_quarterly);
-	else if (std::strcmp(p, "quantity") == 0)
-	  return MAKE_FUNCTOR(report_t::option_quantity);
+	OPT(quarterly);
+	else OPT(quantity);
 	break;
 
       case 'r':
-	if (std::strcmp(p, "r") == 0 ||
-	    std::strcmp(p, "related") == 0)
-	  return MAKE_FUNCTOR(report_t::option_related);
+	OPT_(related);
+	else OPT_(related_all);
 	break;
 
       case 's':
-	if (std::strcmp(p, "s") == 0 ||
-	    std::strcmp(p, "subtotal") == 0)
-	  return MAKE_FUNCTOR(report_t::option_subtotal);
-	else if (std::strcmp(p, "sort_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_sort_);
-	else if (std::strcmp(p, "sort_entries_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_sort_entries_);
-	else if (std::strcmp(p, "sort_all_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_sort_all_);
+	OPT_(subtotal);
+	else OPT(sort_);
+	else OPT(sort_all_);
+	else OPT(sort_entries_);
 	break;
 
       case 't':
-	if (std::strcmp(p, "t_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_amount_);
-	else if (std::strcmp(p, "total_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_total_);
-	else if (std::strcmp(p, "totals") == 0)
-	  return MAKE_FUNCTOR(report_t::option_totals);
-	else if (std::strcmp(p, "tail_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_tail_);
+	OPT_CH(amount_);
+	else OPT(total_);
+	else OPT(totals);
+	else OPT(tail_);
 	break;
 
       case 'u':
-	if (std::strcmp(p, "uncleared") == 0)
-	  return MAKE_FUNCTOR(report_t::option_uncleared);
+	OPT(uncleared);
 	break;
 
       case 'w':
-	if (std::strcmp(p, "weekly") == 0)
-	  return MAKE_FUNCTOR(report_t::option_weekly);
+	OPT(weekly);
 	break;
 
       case 'x':
-	if (std::strcmp(p, "x"))
-	  return MAKE_FUNCTOR(report_t::option_comm_as_payee);
+	OPT_CH(comm_as_payee); // jww (2009-02-05): ???
 	break;
 
       case 'y':
-	if (std::strcmp(p, "yearly") == 0)
-	  return MAKE_FUNCTOR(report_t::option_yearly);
-	else if (std::strcmp(p, "y_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_date_format_);
+	OPT_CH(date_format_);
+	else OPT(yearly);
 	break;
 
       case 'B':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_cost);
+	OPT_CH(cost);
 	break;
-
       case 'C':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_cleared);
+	OPT_CH(cleared);
 	break;
-
       case 'E':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_empty);
+	OPT_CH(empty);
 	break;
-
       case 'F':
-	if (std::strcmp(p, "F_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_format_);
+	OPT_CH(format_);
 	break;
-
       case 'I':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_price);
+	OPT_CH(price);
 	break;
-
       case 'J':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_total_data);
+	OPT_CH(total_data);
 	break;
-
       case 'M':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_monthly);
+	OPT_CH(monthly);
 	break;
-
       case 'O':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_quantity);
+	OPT_CH(quantity);
 	break;
-
       case 'P':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_by_payee);
+	OPT_CH(by_payee);
 	break;
-
       case 'S':
-	if (std::strcmp(p, "S_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_sort_);
+	OPT_CH(sort_);
 	break;
-
       case 'T':
-	if (std::strcmp(p, "T_") == 0)
-	  return MAKE_FUNCTOR(report_t::option_total_);
+	OPT_CH(total_);
 	break;
-
       case 'U':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_uncleared);
+	OPT_CH(uncleared);
 	break;
-
       case 'V':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_market);
+	OPT_CH(market);
 	break;
-
       case 'W':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_weekly);
+	OPT_CH(weekly);
 	break;
-
       case 'Y':
-	if (! *(p + 1))
-	  return MAKE_FUNCTOR(report_t::option_yearly);
+	OPT_CH(yearly);
 	break;
       }
     }
     break;
 
   case 'p':
-    if (std::strcmp(p, "print_balance") == 0)
-      return WRAP_FUNCTOR(print_balance);
+    if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;
+      switch (*p) {
+      case 'a':
+	COMMAND(args);
+	break;
+      case 'p':
+	COMMAND(parse);
+	else COMMAND(period);
+	break;
+      case 'e':
+	COMMAND(eval);
+	break;
+      case 'f':
+	COMMAND(format);
+	break;
+      }
+    }
+    else FUNCTION(print_balance);
     break;
 
   case 's':
-    if (std::strcmp(p, "strip") == 0)
-      return WRAP_FUNCTOR(strip_annotations);
+    FUNCTION(strip);
     break;
 
   case 't':
-    if (std::strcmp(p, "total_expr") == 0)
-	return MAKE_FUNCTOR(report_t::get_total_expr);
-    else if (std::strcmp(p, "truncate") == 0)
-	return WRAP_FUNCTOR(truncate);
+    FUNCTION(truncate);
+    else METHOD(report_t, total_expr);
     break;
   }
 

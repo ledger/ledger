@@ -80,8 +80,6 @@ public:
   istream_pos_type   end_pos;
   std::size_t	     end_line;
 
-  static bool        use_effective_date;
-
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
     : supports_flags<>(_flags), _state(UNCLEARED), note(_note),
       beg_pos(0), beg_line(0), end_pos(0), end_line(0)

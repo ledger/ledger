@@ -112,7 +112,7 @@ namespace {
 void output_stream_t::initialize(const optional<path>& output_file,
 				 const optional<path>& pager_path)
 {
-  if (output_file)
+  if (output_file && *output_file != "-")
     os = new ofstream(*output_file);
   else if (pager_path)
     pipe_to_pager_fd = do_fork(&os, *pager_path);

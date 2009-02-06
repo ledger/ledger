@@ -46,8 +46,7 @@
 #ifndef _EMACS_H
 #define _EMACS_H
 
-#include "handler.h"
-#include "format.h"
+#include "output.h"
 
 namespace ledger {
 

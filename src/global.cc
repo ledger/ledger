@@ -168,8 +168,10 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   // subprocess) and invoke the report command.  The output stream is closed
   // by the caller of this function.
 
-  report().output_stream.initialize(report().output_file,
-				    session().pager_path);
+  report().output_stream
+    .initialize(report().HANDLER(output_) ?
+		optional<path>(path(report().HANDLER(output_).str())) :
+		optional<path>(), session().pager_path);
 
   // Create an argument scope containing the report command's arguments, and
   // then invoke the command.  The bound scope causes lookups to happen
@@ -206,51 +208,42 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
   return status;
 }
 
+namespace {
+}
+
 expr_t::ptr_op_t global_scope_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'l':
-    if (std::strncmp(p, "ledger_precmd_", 14) == 0) {
-      p = p + 14;
+  case 'o':
+    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
+      switch (*p) {
+      case 'd':
+	OPT(debug_);
+	break;
+      case 's':
+	OPT(script_);
+	break;
+      case 't':
+	OPT(trace_);
+	break;
+      case 'v':
+	OPT_(verbose);
+	else OPT(verify);
+	break;
+      }
+    }
+
+  case 'p':
+    if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;
       switch (*p) {
       case 'p':
-	if (std::strcmp(p, "push") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::push_report_cmd);
-	else if (std::strcmp(p, "pop") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::pop_report_cmd);
+	M_COMMAND(global_scope_t, push);
+	else M_COMMAND(global_scope_t, pop);
 	break;
       }
     }
     break;
-
-  case 'o':
-    if (std::strncmp(p, "opt_", 4) == 0) {
-      p = p + 4;
-      switch (*p) {
-      case 'd':
-	if (std::strcmp(p, "debug_") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::ignore);
-	break;
-
-      case 's':
-	if (std::strcmp(p, "script_") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::option_script_);
-	break;
-
-      case 't':
-	if (std::strcmp(p, "trace_") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::ignore);
-	break;
-
-      case 'v':
-	if (! *(p + 1) || std::strcmp(p, "verbose") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::ignore);
-	else if (std::strcmp(p, "verify") == 0)
-	  return MAKE_FUNCTOR(global_scope_t::ignore);
-	break;
-      }
-    }
   }
 
   // If you're wondering how symbols from report() will be found, it's
@@ -342,7 +335,7 @@ void normalize_session_options(session_t& session)
 
 function_t look_for_precommand(scope_t& scope, const string& verb)
 {
-  if (expr_t::ptr_op_t def = scope.lookup(string("ledger_precmd_") + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(string("precmd_") + verb))
     return def->as_function();
   else
     return function_t();
@@ -350,7 +343,7 @@ function_t look_for_precommand(scope_t& scope, const string& verb)
 
 function_t look_for_command(scope_t& scope, const string& verb)
 {
-  if (expr_t::ptr_op_t def = scope.lookup(string("ledger_cmd_") + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(string("cmd_") + verb))
     return def->as_function();
   else
     return function_t();
@@ -365,18 +358,18 @@ void normalize_report_options(report_t& report, const string& verb)
   // for 3.0.
 
   if (verb == "print" || verb == "entry" || verb == "dump") {
-    report.show_related     = true;
-    report.show_all_related = true;
+    report.HANDLER(related).on();
+    report.HANDLER(related_all).on();
   }
   else if (verb == "equity") {
-    report.show_subtotal = true;
+    report.HANDLER(subtotal).on();
   }
-  else if (report.show_related) {
+  else if (report.HANDLED(related)) {
     if (verb[0] == 'r') {
-      report.show_inverted = true;
+      report.HANDLER(invert).on();
     } else {
-      report.show_subtotal    = true;
-      report.show_all_related = true;
+      report.HANDLER(subtotal).on();
+      report.HANDLER(related_all).on();
     }
   }
 
@@ -387,9 +380,9 @@ void normalize_report_options(report_t& report, const string& verb)
 
   if (report.display_predicate.empty()) {
     if (verb[0] == 'b') {
-      if (! report.show_empty)
+      if (! report.HANDLED(empty))
 	report.display_predicate = "total";
-      if (! report.show_subtotal) {
+      if (! report.HANDLED(subtotal)) {
 	if (! report.display_predicate.empty())
 	  report.display_predicate += "&";
 	report.display_predicate += "depth<=1";
@@ -398,13 +391,13 @@ void normalize_report_options(report_t& report, const string& verb)
     else if (verb == "equity") {
       report.display_predicate = "amount_expr"; // jww (2008-08-14): ???
     }
-    else if (verb[0] == 'r' && ! report.show_empty) {
+    else if (verb[0] == 'r' && ! report.HANDLED(empty)) {
       report.display_predicate = "amount";
     }
   }
 
-  if (! report.report_period.empty() && ! report.sort_all)
-    report.entry_sort = true;
+  if (! report.report_period.empty() && ! report.HANDLED(sort_all_))
+    report.HANDLER(sort_entries_).on();
 }
 
 } // namespace ledger

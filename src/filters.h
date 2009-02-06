@@ -46,9 +46,11 @@
 #ifndef _FILTERS_H
 #define _FILTERS_H
 
-#include "handler.h"
+#include "chain.h"
 #include "predicate.h"
 #include "entry.h"
+#include "xact.h"
+#include "account.h"
 
 namespace ledger {
 
