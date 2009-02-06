@@ -482,11 +482,11 @@ sloc:
 STAGING = /tmp/ledger
 
 copy-sources:
-	-mkdir $(STAGING)
-	sudo rsync -av --delete --exclude=/.libs/ --exclude=/.deps/ \
+	-mkdir -p $(STAGING)
+	rsync -av --delete --exclude=/.libs/ --exclude=/.deps/ \
 	    --exclude=/plan/ --exclude=/2.6*/ --exclude=/archive/ \
 	    $(srcdir)/ $(STAGING)/
-	(cd $(STAGING); sudo git clean -x -d -f)
+	(cd $(STAGING); git clean -x -d -f)
 
 release: copy-sources
 	(cd $(STAGING); \
