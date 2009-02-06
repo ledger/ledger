@@ -54,7 +54,7 @@
  * from which is it derived.
  */
 #ifndef _BALPAIR_H
-#define _BARPAIR_H
+#define _BALPAIR_H
 
 #include "balance.h"
 
