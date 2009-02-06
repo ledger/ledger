@@ -473,7 +473,6 @@ void finish_timer(const char * name);
 #include "times.h"
 #include "flags.h"
 #include "stream.h"
-#include "pushvar.h"
 
 enum caught_signal_t {
   NONE_CAUGHT,
