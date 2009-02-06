@@ -129,11 +129,17 @@ text that should replace the format specifier."
 
 (defvar bold 'bold)
 (defvar ledger-font-lock-keywords
-  `((,(concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-	      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") 3 bold)
-    (";.+" . font-lock-comment-face)
-    ("^\\s-+.+?\\(  \\|\t\\|\n\\|\\s-+$\\)" . font-lock-keyword-face))
-  "Default expressions to highlight in Ledger mode.")
+  '(("^[0-9./=]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
+    ("\s \\{5,\\}\\([$]-[0-9][0-9,.]*\\)" 1 font-lock-warning-face)
+    ("\s \\{5,\\}\\(-?[0-9][0-9,.]*\\)" 1 font-lock-type-face)
+    ("^\\s-+.+?\\(  \\|\t\\|\n\\|\\s-+$\\)" . font-lock-keyword-face)
+    ("^\s +\\((\\)\\([A-Za-z0-9]+:[A-Za-z0-9]+[A-Za-z0-9: ]*\\)\\()\\)"
+     (1 font-lock-function-name-face)
+     (2 font-lock-variable-name-face)
+     (3 font-lock-function-name-face))
+    ("^[0-9]+[/-][0-9]+.*\\([*]\\)" 1 bold)
+    ("^\\([~=]\\)\\s " 1 font-lock-function-name-face))
+  "Improved expressions to highlight in Ledger mode.")
 
 (defsubst ledger-current-year ()
   (format-time-string "%Y"))
