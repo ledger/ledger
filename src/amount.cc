@@ -87,13 +87,17 @@ struct amount_t::bigint_t : public supports_flags<>
 
 shared_ptr<commodity_pool_t> amount_t::current_pool;
 
+bool amount_t::is_initialized = false;
+
 void amount_t::initialize(shared_ptr<commodity_pool_t> pool)
 {
-  mpz_init(temp);
-  mpq_init(tempq);
-  mpfr_init(tempf);
-  mpfr_init(tempfb);
-
+  if (! is_initialized) {
+    mpz_init(temp);
+    mpq_init(tempq);
+    mpfr_init(tempf);
+    mpfr_init(tempfb);
+    is_initialized = true;
+  }
   current_pool = pool;
 }
 
@@ -106,10 +110,13 @@ void amount_t::shutdown()
 {
   current_pool.reset();
 
-  mpz_clear(temp);
-  mpq_clear(tempq);
-  mpfr_clear(tempf);
-  mpfr_clear(tempfb);
+  if (is_initialized) {
+    mpz_clear(temp);
+    mpq_clear(tempq);
+    mpfr_clear(tempf);
+    mpfr_clear(tempfb);
+    is_initialized = false;
+  }
 }
 
 void amount_t::_copy(const amount_t& amt)

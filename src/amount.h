@@ -92,6 +92,8 @@ public:
       @note Normally called by session_t::shutdown(). */
   static void shutdown();
 
+  static bool is_initialized;
+
   /** The amount's decimal precision. */
   typedef uint_least16_t precision_t;
 
