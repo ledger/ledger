@@ -3,7 +3,6 @@ EXTRA_DIST = autogen.sh contrib
 
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
-	libledger_parse.la			\
 	libledger_data.la			\
 	libledger_expr.la			\
 	libledger_math.la			\
@@ -52,20 +51,13 @@ libledger_data_la_SOURCES  =			\
 	src/entry.cc				\
 	src/account.cc				\
 	src/journal.cc				\
+	src/textual.cc				\
 	src/timelog.cc				\
 	src/iterators.cc			\
 	src/compare.cc
 
 libledger_data_la_CPPFLAGS = $(lib_cppflags)
 libledger_data_la_LDFLAGS  = -release $(VERSION).0
-
-libledger_parse_la_SOURCES  =			\
-	src/textual.cc				\
-	src/csv.cc				\
-	src/emacs.cc
-
-libledger_parse_la_CPPFLAGS = $(lib_cppflags)
-libledger_parse_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_report_la_SOURCES  =			\
 	src/session.cc				\
@@ -74,6 +66,8 @@ libledger_report_la_SOURCES  =			\
 	src/chain.cc				\
 	src/precmd.cc				\
 	src/output.cc				\
+	src/csv.cc				\
+	src/emacs.cc                            \
 	src/help.cc				\
 	src/derive.cc				\
 	src/reconcile.cc			\
@@ -115,13 +109,10 @@ pkginclude_HEADERS =			   \
 	src/entry.h			   \
 	src/account.h			   \
 	src/journal.h			   \
+	src/textual.h			   \
 	src/timelog.h			   \
 	src/iterators.h			   \
 	src/compare.h			   \
-					   \
-	src/textual.h			   \
-	src/csv.h			   \
-	src/emacs.h			   \
 					   \
 	src/session.h			   \
 	src/report.h			   \
@@ -130,6 +121,8 @@ pkginclude_HEADERS =			   \
 	src/chain.h			   \
 	src/precmd.h			   \
 	src/output.h			   \
+	src/csv.h			   \
+	src/emacs.h			   \
 	src/help.h			   \
 					   \
 	src/derive.h			   \
@@ -190,7 +183,6 @@ all_sources     = $(libledger_util_la_SOURCES)		\
 		  $(libledger_math_la_SOURCES)		\
 		  $(libledger_expr_la_SOURCES)		\
 		  $(libledger_data_la_SOURCES)		\
-		  $(libledger_parse_la_SOURCES)		\
 		  $(libledger_report_la_SOURCES)	\
 		  $(libledger_python_la_SOURCES)	\
 		  python/pyledger.cc
@@ -249,7 +241,6 @@ ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
 
 PYLIBS  = ledger_python				\
 	  ledger_report				\
-	  ledger_parse				\
 	  ledger_data				\
 	  ledger_expr				\
 	  ledger_math				\
@@ -289,7 +280,6 @@ TESTS +=	     \
 	math_tests   \
 	expr_tests   \
 	data_tests   \
-	parse_tests  \
 	report_tests
 endif
 
@@ -343,14 +333,6 @@ data_tests_SOURCES =		 \
 data_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 data_tests_LDADD    = libledger_data.la $(math_tests_LDADD)
 
-parse_tests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/parse_tests.cc
-
-parse_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-parse_tests_LDADD    = libledger_parse.la $(math_tests_LDADD)
-
 report_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
@@ -364,7 +346,6 @@ all_tests_sources =				\
 	$(math_tests_SOURCES)			\
 	$(expr_tests_SOURCES)			\
 	$(data_tests_SOURCES)			\
-	$(parse_tests_SOURCES)			\
 	$(report_tests_SOURCES)
 
 PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
@@ -423,7 +404,6 @@ fullcheck: $(TESTS)
 	sh $(FULLCHECK) $(top_builddir)/math_tests$(EXEEXT)   --verify
 	sh $(FULLCHECK) $(top_builddir)/expr_tests$(EXEEXT)   --verify
 	sh $(FULLCHECK) $(top_builddir)/data_tests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/parse_tests$(EXEEXT)  --verify
 	sh $(FULLCHECK) $(top_builddir)/report_tests$(EXEEXT) --verify
 else
 fullcheck: check

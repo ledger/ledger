@@ -75,12 +75,9 @@
 #include <expr.h>
 
 #include <journal.h>
+#include <textual.h>
 #include <iterators.h>
 #include <compare.h>
-
-#include <textual.h>
-#include <csv.h>
-#include <emacs.h>
 
 #include <session.h>
 #include <report.h>
@@ -89,6 +86,8 @@
 #include <derive.h>
 #include <reconcile.h>
 #include <quotes.h>
+#include <emacs.h>
+#include <csv.h>
 
 #if defined(HAVE_BOOST_PYTHON)
 #include <pyinterp.h>
