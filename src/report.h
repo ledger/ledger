@@ -188,6 +188,7 @@ public:
       COPY_OPT(monthly, other),
       COPY_OPT(output_, other),
       COPY_OPT(output_date_format_, other),
+      COPY_OPT(pager_, other),
       COPY_OPT(period_, other),
       COPY_OPT(period_sort_, other),
       COPY_OPT(price, other),
@@ -269,6 +270,7 @@ public:
   OPTION(report_t, monthly);
   OPTION(report_t, output_);
   OPTION(report_t, output_date_format_);
+  OPTION(report_t, pager_);
   OPTION(report_t, period_);
   OPTION(report_t, period_sort_);
   OPTION(report_t, price);

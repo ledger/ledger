@@ -344,6 +344,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	else OPT(period_sort_);
 	else OPT(price);
 	else OPT(price_db_);
+	else OPT(pager_);
 	break;
 
       case 'q':

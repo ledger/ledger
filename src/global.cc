@@ -169,9 +169,12 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   // by the caller of this function.
 
   report().output_stream
-    .initialize(report().HANDLER(output_) ?
+    .initialize(report().HANDLED(output_) ?
 		optional<path>(path(report().HANDLER(output_).str())) :
-		optional<path>(), session().pager_path);
+		optional<path>(),
+		report().HANDLED(pager_) ?
+		optional<path>(path(report().HANDLER(pager_).str())) :
+		optional<path>());
 
   // Create an argument scope containing the report command's arguments, and
   // then invoke the command.  The bound scope causes lookups to happen

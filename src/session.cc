@@ -354,11 +354,6 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 	  return MAKE_FUNCTOR(session_t::option_file_);
 	break;
 
-      case 'p':
-	if (std::strcmp(p, "pager_") == 0)
-	  return MAKE_FUNCTOR(session_t::option_pager_);
-	break;
-
       case 't':
 	if (std::strcmp(p, "trace_") == 0)
 	  return MAKE_FUNCTOR(session_t::option_trace_);
