@@ -30,14 +30,14 @@
  */
 
 /**
- * @addtogroup parse
+ * @addtogroup report
  */
 
 /**
  * @file   emacs.h
  * @author John Wiegley
  *
- * @ingroup parse
+ * @ingroup report
  *
  * @brief Brief
  *
