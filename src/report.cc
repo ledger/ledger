@@ -84,7 +84,6 @@ report_t::report_t(session_t& _session) : session(_session)
     "%(quoted(payee)),"
     "%(quoted(account)),"
     "%(quoted(display_amount)),"
-    "%(quoted(display_total)),"
     "%(quoted(cleared ? \"*\" : (uncleared ? \"\" : \"!\"))),"
     "%(quoted(code)),"
     "%(quoted(join(note)))\n");
