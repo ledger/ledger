@@ -4014,7 +4014,7 @@ ground up, and will show how to use the various parts of the Ledger
 library from your own scripts.  Ledger essentially follows five steps in
 reporting data to the user:
 
-@begin enumerate
+@enumerate
 @item Parse journal file into an internal representation
 @item Perform any implied math within the journal file
 @item ``Face'' this internal representation as a virtual document
