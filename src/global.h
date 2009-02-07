@@ -113,8 +113,15 @@ See LICENSE file included with the distribution for details and disclaimer.";
 
   OPTION(global_scope_t, debug_);
 
+  OPTION(global_scope_t, full_help); // -H
+  OPTION(global_scope_t, help); // -h
+  OPTION(global_scope_t, help_calc);
+  OPTION(global_scope_t, help_comm);
+  OPTION(global_scope_t, help_disp);
+
   OPTION__
-  (global_scope_t, init_file_,
+  (global_scope_t, init_file_, // -i
+
    CTOR(global_scope_t, init_file_) {
      if (const char * home_var = std::getenv("HOME"))
        on((path(home_var) / ".ledgerrc").string());
@@ -127,7 +134,7 @@ See LICENSE file included with the distribution for details and disclaimer.";
   OPTION(global_scope_t, verbose);
   OPTION(global_scope_t, verify);
 
-  OPTION_(global_scope_t, version, DO() {
+  OPTION_(global_scope_t, version, DO() { // -v
       parent->show_version_info(std::cout);
       throw int(0);		// exit immediately
     });
