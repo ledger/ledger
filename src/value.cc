@@ -211,18 +211,16 @@ value_t::operator bool() const
     return as_balance_pair();
   case STRING:
     return ! as_string().empty();
-  case MASK:
-    return ! as_mask().empty();
   case SEQUENCE:
     return ! as_sequence().empty();
   case POINTER:
     return ! as_any_pointer().empty();
   default:
-    assert(false);
     break;
   }
-  assert(false);
-  return 0;
+
+  throw_(value_error, "Cannot determine truth of " << label());
+  return false;
 }
 
 bool value_t::to_boolean() const
