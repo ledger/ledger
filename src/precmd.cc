@@ -46,13 +46,12 @@ value_t parse_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  out << "--- Input text ---" << std::endl;
+  out << "--- Input expression ---" << std::endl;
   out << *arg << std::endl;
 
   out << std::endl << "--- Text as parsed ---" << std::endl;
   expr_t expr(*arg);
-  expr.print(out);
-  out << std::endl;
+  expr.dump(out);
 
   out << std::endl << "--- Expression tree ---" << std::endl;
   expr.dump(out);
