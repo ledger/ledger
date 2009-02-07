@@ -191,7 +191,12 @@ public:
   OPTION(report_t, average); // -A
   OPTION(report_t, balance_format_);
   OPTION(report_t, base);
-  OPTION(report_t, basis); // -B
+
+  OPTION_(report_t, basis, DO() { // -B
+      parent->HANDLER(revalued).off();
+      parent->HANDLER(amount_).on("cost");
+      parent->HANDLER(total_).on("total_cost");
+    });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
       interval_t interval(args[0].to_string());
@@ -271,7 +276,12 @@ public:
   OPTION(report_t, lot_prices);
   OPTION(report_t, lot_tags);
   OPTION(report_t, lots);
-  OPTION(report_t, market); // -V
+
+  OPTION_(report_t, market, DO() { // -V
+      parent->HANDLER(revalued).on();
+      parent->HANDLER(display_total_).on("market_value(total_expr)");
+    });
+
   OPTION(report_t, monthly); // -M
 
   OPTION_(report_t, only_, DO_(args) { // -d
@@ -286,12 +296,24 @@ public:
   OPTION(report_t, period_sort_);
   OPTION(report_t, plot_amount_format_);
   OPTION(report_t, plot_total_format_);
-  OPTION(report_t, price); // -I
+
+  OPTION_(report_t, price, DO() { // -I
+      parent->HANDLER(revalued).off();
+      parent->HANDLER(amount_).on("price");
+      parent->HANDLER(total_).on("total_price");
+    });
+
   OPTION(report_t, price_exp_); // -Z
   OPTION(report_t, prices_format_);
   OPTION(report_t, pricesdb_format_);
   OPTION(report_t, print_format_);
-  OPTION(report_t, quantity); // -O
+
+  OPTION_(report_t, quantity, DO() { // -O
+      parent->HANDLER(revalued).off();
+      parent->HANDLER(amount_).on("amount");
+      parent->HANDLER(total_).on("total");
+    });
+
   OPTION(report_t, quarterly);
   OPTION(report_t, real); // -R
   OPTION(report_t, register_format_);
