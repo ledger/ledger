@@ -84,7 +84,6 @@
 #include <help.h>
 
 #include <derive.h>
-#include <reconcile.h>
 #include <quotes.h>
 #include <emacs.h>
 #include <csv.h>

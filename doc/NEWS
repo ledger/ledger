@@ -16,6 +16,8 @@
 
   --descend
   --descend_if EXPR
+  --reconcile
+  --reconcile-date DATE
 
 * 2.6.1
 

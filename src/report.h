@@ -262,8 +262,6 @@ public:
   OPTION(report_t, quantity); // -O
   OPTION(report_t, quarterly);
   OPTION(report_t, real); // -R
-  OPTION(report_t, reconcile_);
-  OPTION(report_t, reconcile_date_);
   OPTION(report_t, register_format_);
   OPTION(report_t, related); // -r
   OPTION(report_t, related_all);

@@ -70,7 +70,6 @@ libledger_report_la_SOURCES  =			\
 	src/emacs.cc                            \
 	src/help.cc				\
 	src/derive.cc				\
-	src/reconcile.cc			\
 	src/quotes.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
@@ -125,7 +124,6 @@ pkginclude_HEADERS =			   \
 	src/help.h			   \
 					   \
 	src/derive.h			   \
-	src/reconcile.h			   \
 	src/quotes.h			   \
 					   \
 	src/global.h			   \
@@ -227,7 +225,6 @@ libledger_python_la_SOURCES =			\
 	python/py_parser.cc			\
 	python/py_predicate.cc			\
 	python/py_quotes.cc			\
-	python/py_reconcile.cc			\
 	python/py_report.cc			\
 	python/py_scope.cc			\
 	python/py_session.cc			\

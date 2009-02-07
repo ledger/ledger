@@ -32,7 +32,6 @@
 #include "chain.h"
 #include "report.h"
 #include "filters.h"
-#include "reconcile.h"
 
 namespace ledger {
 
@@ -62,19 +61,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // determine, for example, whether filtered xacts are included or excluded
     // from the running total.
     handler.reset(new calc_xacts(handler));
-
-#if 0
-    // reconcile_xacts will pass through only those xacts which can be
-    // reconciled to a given balance (calculated against the xacts which it
-    // receives).
-    if (! report.reconcile_balance.empty()) {
-      date_t cutoff = CURRENT_DATE();
-      if (! report.reconcile_date.empty())
-	cutoff = parse_date(report.reconcile_date);
-      handler.reset(new reconcile_xacts
-		    (handler, value_t(report.reconcile_balance), cutoff));
-    }
-#endif
 
     // filter_xacts will only pass through xacts matching the
     // `secondary_predicate'.

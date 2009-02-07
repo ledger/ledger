@@ -62,7 +62,6 @@ void export_output();
 void export_parser();
 void export_predicate();
 void export_quotes();
-void export_reconcile();
 void export_report();
 void export_scope();
 void export_session();
@@ -102,7 +101,6 @@ void initialize_for_python()
   export_parser();
   export_predicate();
   export_quotes();
-  export_reconcile();
   export_report();
   export_scope();
   export_session();
