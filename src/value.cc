@@ -1663,6 +1663,10 @@ void value_t::print(std::ostream&           out,
     out << as_string();
     break;
 
+  case MASK:
+    out << '/' << as_mask() << '/';
+    break;
+
   case SEQUENCE: {
     out << '(';
     bool first = true;
