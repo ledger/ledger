@@ -129,7 +129,7 @@ public:
   value_t fn_print_balance(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_truncate(call_scope_t& scope);
-  value_t fn_escape(call_scope_t& scope);
+  value_t fn_quoted(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
 
   value_t fn_options(call_scope_t& scope) {

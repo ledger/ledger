@@ -80,14 +80,14 @@ report_t::report_t(session_t& _session) : session(_session)
   HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
 
   HANDLER(csv_format_).on(
-    "%(escape(display_date)),"
-    "%(escape(payee)),"
-    "%(escape(account)),"
-    "%(escape(display_amount)),"
-    "%(escape(display_total)),"
-    "%(escape(cleared ? \"*\" : (uncleared ? \"\" : \"!\"))),"
-    "%(escape(code),"
-    "%(squash(escape(note))\n");
+    "%(quoted(display_date)),"
+    "%(quoted(payee)),"
+    "%(quoted(account)),"
+    "%(quoted(display_amount)),"
+    "%(quoted(display_total)),"
+    "%(quoted(cleared ? \"*\" : (uncleared ? \"\" : \"!\"))),"
+    "%(quoted(code)),"
+    "%(quoted(join(note)))\n");
 }
 
 void report_t::xacts_report(xact_handler_ptr handler)
@@ -229,7 +229,7 @@ value_t report_t::fn_truncate(call_scope_t& args)
 					 account_abbrev ? *account_abbrev : -1));
 }
 
-value_t report_t::fn_escape(call_scope_t& args)
+value_t report_t::fn_quoted(call_scope_t& args)
 {
   std::ostringstream out;
 
@@ -568,11 +568,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_display_total);
     break;
 
-  case 'e':
-    if (is_eq(p, "escape"))
-      return MAKE_FUNCTOR(report_t::fn_escape);
-    break;
-
   case 'j':
     if (is_eq(p, "join"))
       return MAKE_FUNCTOR(report_t::fn_join);
@@ -618,6 +613,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     }
     else if (is_eq(p, "print_balance"))
       return MAKE_FUNCTOR(report_t::fn_print_balance);
+    break;
+
+  case 'q':
+    if (is_eq(p, "quoted"))
+      return MAKE_FUNCTOR(report_t::fn_quoted);
     break;
 
   case 's':
