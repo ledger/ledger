@@ -140,16 +140,6 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     return (right()->calc(scope, context).as_mask()
 	    .match(left()->calc(scope, context).to_string()));
 
-  case INDEX: {
-    const call_scope_t& args(downcast<const call_scope_t>(scope));
-
-    if (as_index() < args.size())
-      return args[as_index()];
-    else
-      throw_(calc_error, "Reference to non-existing argument " << as_index());
-    break;
-  }
-
   case O_EQ:
     return left()->calc(scope, context) == right()->calc(scope, context);
   case O_LT:
@@ -244,10 +234,6 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 
   case FUNCTION:
     out << "<FUNCTION>";
-    break;
-
-  case INDEX:
-    out << '@' << as_index();
     break;
 
   case O_NOT:
@@ -435,10 +421,6 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   case IDENT:
     out << "IDENT: " << as_ident();
-    break;
-
-  case INDEX:
-    out << "INDEX: " << as_index();
     break;
 
   case FUNCTION:

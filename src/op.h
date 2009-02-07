@@ -67,19 +67,17 @@ private:
   mutable short refc;
   ptr_op_t	left_;
 
-  variant<std::size_t,		// used by constant INDEX
+  variant<ptr_op_t,		// used by all binary operators
 	  value_t,		// used by constant VALUE
 	  string,		// used by constant IDENT
-	  function_t,		// used by terminal FUNCTION
-	  ptr_op_t>		// used by all binary operators
-  data;
+	  function_t		// used by terminal FUNCTION
+	  > data;
 
 public:
   enum kind_t {
     // Constants
     VALUE,
     IDENT,
-    INDEX,
 
     CONSTANTS,
 
@@ -136,20 +134,6 @@ public:
   ~op_t() {
     TRACE_DTOR(op_t);
     assert(refc == 0);
-  }
-
-  bool is_index() const {
-    return data.type() == typeid(std::size_t);
-  }
-  std::size_t& as_index_lval() {
-    assert(kind == INDEX);
-    return boost::get<std::size_t>(data);
-  }
-  const std::size_t& as_index() const {
-    return const_cast<op_t *>(this)->as_index_lval();
-  }
-  void set_index(std::size_t val) {
-    data = val;
   }
 
   bool is_value() const {
