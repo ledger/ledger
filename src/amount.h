@@ -508,9 +508,8 @@ public:
    */
   /*@{*/
 
-  /** An amount's commodity may be
-      annotated with special details, such as the price it was
-      purchased for, when it was acquired, or an arbitrary note,
+  /** An amount's commodity may be annotated with special details, such as the
+      price it was purchased for, when it was acquired, or an arbitrary note,
       identifying perhaps the lot number of an item.
 
       annotate_commodity(amount_t price, [datetime_t date, string tag])
