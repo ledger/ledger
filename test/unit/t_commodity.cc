@@ -1,7 +1,6 @@
 #include "t_commodity.h"
 
-#include "utils.h"
-#include "amount.h"
+#include "commodity.h"
 
 using namespace ledger;
 
