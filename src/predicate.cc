@@ -41,29 +41,33 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
   bool		     only_parenthesis;
 
   while (begin != end) {
-    string	 arg		= (*begin).as_string();
-    bool	 parse_argument = true;
+    string arg = (*begin).as_string();
+    string prefix;
+
+    bool parse_argument		 = true;
+    bool only_closed_parenthesis = false;;
 
     if (arg == "not" || arg == "NOT") {
       if (append_and)
-	expr << " & ";
-      expr << " ! ";
+	prefix = " & ! ";
+      else
+	prefix = " ! ";
       parse_argument = false;
       append_and = false;
     }
     else if (arg == "and" || arg == "AND") {
-      expr << " & ";
+      prefix = " & ";
       parse_argument = false;
       append_and = false;
     }
     else if (arg == "or" || arg == "OR") {
-      expr << " | ";
+      prefix = " | ";
       parse_argument = false;
       append_and = false;
     }
     else if (append_and) {
       if (! only_parenthesis)
-	expr << " & ";
+	prefix = " & ";
     }
     else {
       append_and = true;
@@ -96,6 +100,8 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 
       only_parenthesis = true;
 
+      std::ostringstream buf;
+
       for (const char * c = arg.c_str(); *c != '\0'; c++) {
 	bool consumed = false;
 
@@ -104,21 +110,25 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 
 	if (in_prefix) {
 	  switch (*c) {
+	  case ')':
+	    if (only_parenthesis)
+	      only_closed_parenthesis = true;
+	    break;
 	  case '(':
 	    break;
 	  case '@':
-	    expr << "(payee =~ /";
+	    buf << "(payee =~ /";
 	    found_specifier = true;
 	    consumed = true;
 	    break;
 	  case '=':
-	    expr << "(";
+	    buf << "(";
 	    found_specifier = true;
 	    no_final_slash = true;
 	    consumed = true;
 	    break;
 	  case '&':
-	    expr << "(note =~ /";
+	    buf << "(note =~ /";
 	    found_specifier = true;
 	    consumed = true;
 	    break;
@@ -126,14 +136,14 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    bool found_metadata = false;
 	    for (const char *q = c; *q != '\0'; q++)
 	      if (*q == '=') {
-		expr << "has_tag(/"
+		buf << "has_tag(/"
 		     << string(c + 1, q - c - 1) << "/, /";
 		found_metadata = true;
 		c = q;
 		break;
 	      }
 	    if (! found_metadata) {
-	      expr << "has_tag(/";
+	      buf << "has_tag(/";
 	    }
 	    found_specifier = true;
 	    consumed = true;
@@ -143,7 +153,7 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	  case '_':
 	  default:
 	    if (! found_specifier) {
-	      expr << "(account =~ /";
+	      buf << "(account =~ /";
 	      found_specifier = true;
 	    }
 	    in_prefix = false;
@@ -155,8 +165,8 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    if (! in_suffix) {
 	      if (found_specifier) {
 		if (! no_final_slash)
-		  expr << "/";
-		expr << ")";
+		  buf << "/";
+		buf << ")";
 	      }
 	      in_suffix = true;
 	    }
@@ -169,8 +179,13 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	}
 
 	if (! consumed)
-	  expr << *c;
+	  buf << *c;
       }
+
+      if (! prefix.empty() && ! only_closed_parenthesis)
+	expr << prefix;
+
+      expr << buf.str();
 
       if (! in_suffix) {
 	if (found_specifier) {
@@ -179,6 +194,8 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	  expr << ")";
 	}
       }
+    } else {
+      expr << prefix;
     }
 
     begin++;
