@@ -120,19 +120,13 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <sys/stat.h>
-
 #ifdef WIN32
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
-
 #if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
 #include <pwd.h>
-#endif
-
-#if defined(HAVE_NL_LANGINFO)
-#include <langinfo.h>
 #endif
 
 #include <gmp.h>
@@ -146,6 +140,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/any.hpp>
+#include <boost/bind.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -157,19 +152,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/foreach.hpp>
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/key_extractors.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/random_access_index.hpp>
-#include <boost/multi_index/sequenced_index.hpp>
-#include <boost/multi_index_container.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
 

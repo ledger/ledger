@@ -34,7 +34,7 @@
 namespace ledger {
 
 namespace {
-  typedef tuple<expr_t::ptr_op_t, bool> op_bool_tuple;
+  typedef std::pair<expr_t::ptr_op_t, bool> op_bool_tuple;
 
   op_bool_tuple find_option(scope_t& scope, const string& name)
   {
@@ -100,8 +100,8 @@ void process_option(const string& name, scope_t& scope,
 		    const char * arg, const string& varname)
 {
   op_bool_tuple opt(find_option(scope, name));
-  if (opt.get<0>())
-    process_option(opt.get<0>()->as_function(), scope, arg, varname);
+  if (opt.first)
+    process_option(opt.first->as_function(), scope, arg, varname);
 }
 
 void process_environment(const char ** envp, const string& tag,
@@ -110,7 +110,7 @@ void process_environment(const char ** envp, const string& tag,
   const char * tag_p   = tag.c_str();
   std::size_t  tag_len = tag.length();
 
-  for (const char ** p = envp; *p; p++)
+  for (const char ** p = envp; *p; p++) {
     if (! tag_p || std::strncmp(*p, tag_p, tag_len) == 0) {
       char   buf[128];
       char * r = buf;
@@ -135,7 +135,19 @@ void process_environment(const char ** envp, const string& tag,
 	}
       }
     }
+  }
 }
+
+namespace {
+  struct op_bool_char_tuple {
+    expr_t::ptr_op_t op;
+    bool truth;
+    char ch;
+
+    op_bool_char_tuple(expr_t::ptr_op_t _op, bool _truth, char _ch)
+      : op(_op), truth(_truth), ch(_ch) {}
+  };
+}    
 
 strings_list process_arguments(strings_list args, scope_t& scope)
 {
@@ -177,16 +189,16 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       }
 
       op_bool_tuple opt(find_option(scope, opt_name));
-      if (! opt.get<0>())
+      if (! opt.first)
 	throw_(option_error, "illegal option --" << name);
 
-      if (opt.get<1>() && value == NULL) {
+      if (opt.second && value == NULL) {
 	value = (*++i).c_str();
 	DEBUG("option.args", "  read option value from arg: " << value);
 	if (value == NULL)
 	  throw_(option_error, "missing option argument for --" << name);
       }
-      process_option(opt.get<0>()->as_function(), scope, value,
+      process_option(opt.first->as_function(), scope, value,
 		     string("--") + name);
     }
     else if ((*i)[1] == '\0') {
@@ -195,31 +207,27 @@ strings_list process_arguments(strings_list args, scope_t& scope)
     else {
       DEBUG("option.args", "  single-char option");
 
-      typedef tuple<expr_t::ptr_op_t, bool, char> op_bool_char_tuple;
-
       std::list<op_bool_char_tuple> option_queue;
 
       int x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
 	op_bool_tuple opt(find_option(scope, c));
-	if (! opt.get<0>())
+	if (! opt.first)
 	  throw_(option_error, "illegal option -" << c);
 
-	option_queue.push_back
-	  (op_bool_char_tuple(opt.get<0>(), opt.get<1>(), c));
+	option_queue.push_back(op_bool_char_tuple(opt.first, opt.second, c));
       }
 
       foreach (op_bool_char_tuple& o, option_queue) {
 	const char * value = NULL;
-	if (o.get<1>()) {
+	if (o.truth) {
 	  value = (*++i).c_str();
 	  DEBUG("option.args", "  read option value from arg: " << value);
 	  if (value == NULL)
 	    throw_(option_error,
-		   "missing option argument for -" << o.get<2>());
+		   "missing option argument for -" << o.ch);
 	}
-	process_option(o.get<0>()->as_function(), scope, value,
-		       string("-") + o.get<2>());
+	process_option(o.op->as_function(), scope, value, string("-") + o.ch);
       }
     }
   }
