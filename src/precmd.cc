@@ -51,7 +51,8 @@ value_t parse_command(call_scope_t& args)
 
   out << std::endl << "--- Text as parsed ---" << std::endl;
   expr_t expr(*arg);
-  expr.dump(out);
+  expr.print(out);
+  out << std::endl;
 
   out << std::endl << "--- Expression tree ---" << std::endl;
   expr.dump(out);

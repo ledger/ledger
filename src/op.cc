@@ -236,7 +236,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 
   switch (kind) {
   case VALUE:
-    as_value().print(out, context.relaxed);
+    as_value().dump(out, context.relaxed);
     break;
 
   case IDENT:
