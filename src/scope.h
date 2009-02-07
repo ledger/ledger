@@ -101,7 +101,7 @@ public:
   virtual expr_t::ptr_op_t lookup(const string& name) {
     if (parent)
       return parent->lookup(name);
-    return expr_t::ptr_op_t();
+    return NULL;
   }
 };
 

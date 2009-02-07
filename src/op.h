@@ -287,8 +287,8 @@ public:
     ostream_pos_type * end_pos;
     bool	       relaxed;
 
-    context_t(const ptr_op_t&          _expr_op    = ptr_op_t(),
-	      const ptr_op_t&	       _op_to_find = ptr_op_t(),
+    context_t(const ptr_op_t&          _expr_op    = NULL,
+	      const ptr_op_t&	       _op_to_find = NULL,
 	      ostream_pos_type * const _start_pos  = NULL,
 	      ostream_pos_type * const _end_pos    = NULL,
 	      const bool	       _relaxed	   = true)

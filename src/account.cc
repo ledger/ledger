@@ -217,7 +217,7 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
     break;
   }
 
-  return expr_t::ptr_op_t();
+  return NULL;
 }
 
 bool account_t::valid() const

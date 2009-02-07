@@ -309,7 +309,7 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
     break;
   }
 
-  return expr_t::ptr_op_t();
+  return NULL;
 }
 
 bool item_t::valid() const

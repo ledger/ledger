@@ -60,8 +60,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
 
   ptr_op_t lhs(left()->compile(scope));
   ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
-	       (kind == O_LOOKUP ? right() : right()->compile(scope)) :
-	       ptr_op_t());
+	       (kind == O_LOOKUP ? right() : right()->compile(scope)) : NULL);
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
