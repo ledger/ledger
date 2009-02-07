@@ -394,8 +394,7 @@ public:
   }
 
   virtual void flush() {
-    if (subtotal)
-      report_subtotal();
+    report_subtotal();
     item_handler<xact_t>::flush();
   }
 
