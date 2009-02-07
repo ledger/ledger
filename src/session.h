@@ -66,10 +66,9 @@ public:
   bool flush_on_next_data_file;
   int  current_year;
 
-  shared_ptr<commodity_pool_t>	commodity_pool;
-  ptr_list<journal_t::parser_t> parsers;
-  ptr_list<journal_t>		journals;
-  scoped_ptr<account_t>		master;
+  shared_ptr<commodity_pool_t> commodity_pool;
+  scoped_ptr<account_t>	       master;
+  scoped_ptr<journal_t>	       journal;
 
   explicit session_t();
   virtual ~session_t() {
@@ -80,24 +79,13 @@ public:
     flush_on_next_data_file = true;
   }
 
-  journal_t * create_journal();
-  void        close_journal(journal_t * journal);
-
-  std::size_t read_journal(journal_t&	 journal,
-			   std::istream& in,
+  std::size_t read_journal(std::istream& in,
 			   const path&	 pathname,
 			   account_t *   master = NULL);
-  std::size_t read_journal(journal_t&	 journal,
-			   const path&	 pathname,
+  std::size_t read_journal(const path&	 pathname,
 			   account_t *   master = NULL);
 
-  std::size_t read_data(journal_t&    journal,
-			const string& master_account = "");
-
-  void register_parser(journal_t::parser_t * parser) {
-    parsers.push_back(parser);
-  }
-  void unregister_parser(journal_t::parser_t * parser);
+  std::size_t read_data(const string& master_account = "");
 
   void clean_xacts();
   void clean_xacts(entry_t& entry);

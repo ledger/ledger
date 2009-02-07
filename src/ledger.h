@@ -75,7 +75,6 @@
 #include <expr.h>
 
 #include <journal.h>
-#include <textual.h>
 #include <iterators.h>
 #include <compare.h>
 

@@ -65,7 +65,6 @@ void export_report();
 void export_scope();
 void export_session();
 void export_stream();
-void export_textual();
 void export_timelog();
 void export_times();
 void export_token();
@@ -103,7 +102,6 @@ void initialize_for_python()
   export_scope();
   export_session();
   export_stream();
-  export_textual();
   export_timelog();
   export_times();
   export_token();

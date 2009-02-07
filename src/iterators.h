@@ -110,23 +110,16 @@ public:
  */
 class entries_iterator : public noncopyable
 {
-  ptr_list<journal_t>::iterator journals_i;
-  ptr_list<journal_t>::iterator journals_end;
-
-  bool journals_uninitialized;
-
-  entries_list::iterator	entries_i;
-  entries_list::iterator	entries_end;
+  entries_list::iterator entries_i;
+  entries_list::iterator entries_end;
 
   bool entries_uninitialized;
 
 public:
-  entries_iterator()
-    : journals_uninitialized(true), entries_uninitialized(true) {
+  entries_iterator() : entries_uninitialized(true) {
     TRACE_CTOR(entries_iterator, "");
   }
-  entries_iterator(session_t& session)
-    : journals_uninitialized(true), entries_uninitialized(true) {
+  entries_iterator(session_t& session) : entries_uninitialized(true) {
     TRACE_CTOR(entries_iterator, "session_t&");
     reset(session);
   }
@@ -248,33 +241,6 @@ public:
   }
 
   virtual account_t * operator()();
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class journals_iterator : public noncopyable
-{
-  ptr_list<journal_t>::iterator journals_i;
-  ptr_list<journal_t>::iterator journals_end;
-
-public:
-  journals_iterator() {
-    TRACE_CTOR(journals_iterator, "");
-  }
-  journals_iterator(session_t& session) {
-    TRACE_CTOR(journals_iterator, "session_t&");
-    reset(session);
-  }
-  virtual ~journals_iterator() throw() {
-    TRACE_DTOR(journals_iterator);
-  }
-
-  void reset(session_t& session);
-
-  virtual journal_t * operator()();
 };
 
 } // namespace ledger

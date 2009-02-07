@@ -85,9 +85,9 @@ void global_scope_t::read_init()
 
       ifstream init(init_file);
 
-      journal_t temp;
-      if (session().read_journal(temp, init_file) > 0 ||
-	  temp.auto_entries.size() > 0 || temp.period_entries.size() > 0) {
+      if (session().read_journal(init_file) > 0 ||
+	  session().journal->auto_entries.size() > 0 ||
+	  session().journal->period_entries.size() > 0) {
 	throw_(parse_error,
 	       "Entries found in initialization file '" << init_file << "'");
       }
@@ -105,8 +105,7 @@ void global_scope_t::read_journal_files()
   if (session().HANDLED(account_))
     master_account = session().HANDLER(account_).str();
 
-  std::size_t count = session().read_data(*session().create_journal(),
-					  master_account);
+  std::size_t count = session().read_data(master_account);
   if (count == 0)
     throw_(parse_error, "Failed to locate any journal entries; "
 	   "did you specify a valid file with -f?");

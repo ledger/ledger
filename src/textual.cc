@@ -29,94 +29,107 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__GNUG__) && __GNUG__ < 3
-#define _XOPEN_SOURCE
-#endif
-
-#include "textual.h"
+#include "session.h"
+#include "journal.h"
 #if defined(TIMELOG_SUPPORT)
 #include "timelog.h"
 #endif
-#include "parser.h"
-#include "session.h"
 
 namespace ledger {
 
-#if defined(TEST_FOR_PARSER)
-
-bool textual_parser_t::test(std::istream& in) const
-{
-  char   buf[12];
-  char * p;
-
-  in.read(buf, 11);
-  if (utf8::is_bom(buf))
-    p = &buf[3];
-  else
-    p = buf;
-
-  if (std::strncmp(p, "<?xml", 5) == 0)
-    throw_(parse_error,
-	   "Ledger file contains XML data, but format was not recognized");
-
-  in.clear();
-  in.seekg(0, std::ios::beg);
-  assert(in.good());
-  return true;
-}
-
-#endif // TEST_FOR_PARSER
-
-std::size_t textual_parser_t::parse(std::istream& in,
-				    session_t&    session,
-				    journal_t&	  journal,
-				    account_t *   master,
-				    const path *  original_file)
-{
-  TRACE_START(parsing_total, 1, "Total time spent parsing text:");
-
-  std::list<account_t *> account_stack;
-#if defined(TIMELOG_SUPPORT)
-  time_log_t		 timelog(journal);
-#endif
-
-  instance_t parsing_instance(account_stack,
-#if defined(TIMELOG_SUPPORT)
-			      timelog,
-#endif
-			      in, session, journal, master,
-			      original_file);
-  parsing_instance.parse();
-
-  session.clean_accounts();	// remove calculated totals
-
-  TRACE_STOP(parsing_total, 1);
-
-  // These tracers were started in textual.cc
-  TRACE_FINISH(entry_text, 1);
-  TRACE_FINISH(entry_details, 1);
-  TRACE_FINISH(entry_xacts, 1);
-  TRACE_FINISH(entries, 1);
-  TRACE_FINISH(instance_parse, 1); // report per-instance timers
-  TRACE_FINISH(parsing_total, 1);
-
-  if (parsing_instance.errors > 0)
-    throw static_cast<int>(parsing_instance.errors);
-
-  return parsing_instance.count;
-}
-
 namespace {
-#if defined(STORE_XACT_EXPRS)
-  optional<expr_t>
-#else
-  void
+  class instance_t : public noncopyable, public scope_t
+  {
+    static const std::size_t MAX_LINE = 1024;
+
+  public:
+    std::list<account_t *>& account_stack;
+#if defined(TIMELOG_SUPPORT)
+    time_log_t&		    timelog;
 #endif
-  parse_amount_expr(session_t&    session,
-		    std::istream& in,
-		    amount_t&     amount,
-		    xact_t *	  xact,
-		    uint_least8_t flags = 0)
+
+    instance_t *      parent;
+    std::istream&     in;
+    session_t&	      session;
+    journal_t&	      journal;
+    account_t *	      master;
+    const path *      original_file;
+    accounts_map      account_aliases;
+
+    path	      pathname;
+    char	      linebuf[MAX_LINE + 1];
+    std::size_t       linenum;
+    istream_pos_type  line_beg_pos;
+    istream_pos_type  curr_pos;
+    std::size_t       count;
+    std::size_t       errors;
+
+    scoped_ptr<auto_entry_finalizer_t> auto_entry_finalizer;
+
+    instance_t(std::list<account_t *>& _account_stack,
+#if defined(TIMELOG_SUPPORT)
+	       time_log_t&             _timelog,
+#endif
+	       std::istream&	       _in,
+	       session_t&	       _session,
+	       journal_t&	       _journal,
+	       account_t *	       _master        = NULL,
+	       const path *	       _original_file = NULL,
+	       instance_t *            _parent        = NULL);
+
+    ~instance_t();
+
+    void parse();
+    std::streamsize read_line(char *& line);
+    bool peek_whitespace_line() {
+      return (in.good() && ! in.eof() &&
+	      (in.peek() == ' ' || in.peek() == '\t'));
+    }
+    void read_next_directive(); 
+
+#if defined(TIMELOG_SUPPORT)
+    void clock_in_directive(char * line, bool capitalized);
+    void clock_out_directive(char * line, bool capitalized);
+#endif
+
+    void default_commodity_directive(char * line);
+    void default_account_directive(char * line);
+    void price_conversion_directive(char * line);
+    void price_entry_directive(char * line);
+    void nomarket_directive(char * line);
+    void year_directive(char * line);
+    void option_directive(char * line);
+    void automated_entry_directive(char * line);
+    void period_entry_directive(char * line);
+    void entry_directive(char * line, std::streamsize len);
+    void include_directive(char * line);
+    void account_directive(char * line);
+    void end_directive(char * line);
+    void alias_directive(char * line);
+    void define_directive(char * line);
+    void general_directive(char * line);
+
+    xact_t * parse_xact(char *		line,
+			std::streamsize len,
+			account_t *	account,
+			entry_t *	entry);
+
+    bool parse_xacts(account_t *   account,
+		     entry_base_t& entry,
+		     const string& kind);
+
+    entry_t * parse_entry(char *	  line,
+			  std::streamsize len,
+			  account_t *	  account);
+
+    virtual expr_t::ptr_op_t lookup(const string& name);
+  };
+
+  void parse_amount_expr(session_t&    session,
+			 std::istream& in,
+			 amount_t&     amount,
+			 xact_t *      xact,
+			 uint_least8_t flags = 0)
   {
     expr_t expr(in, flags | static_cast<uint_least8_t>(expr_t::PARSE_PARTIAL));
 
@@ -140,47 +153,42 @@ namespace {
 
       amount = result.as_amount();
       DEBUG("textual.parse", "The transaction amount is " << amount);
-#if defined(STORE_XACT_EXPRS)
-      return expr;
-#endif
     }
-#if defined(STORE_XACT_EXPRS)
-    return none;
-#endif
   }
 }
 
-textual_parser_t::instance_t::instance_t
-  (std::list<account_t *>& _account_stack,
+instance_t::instance_t(std::list<account_t *>& _account_stack,
 #if defined(TIMELOG_SUPPORT)
-   time_log_t&             _timelog,
+		       time_log_t&             _timelog,
 #endif
-   std::istream&	   _in,
-   session_t&		   _session,
-   journal_t&		   _journal,
-   account_t *		   _master,
-   const path *		   _original_file,
-   instance_t *            _parent)
+		       std::istream&	       _in,
+		       session_t&	       _session,
+		       journal_t&	       _journal,
+		       account_t *	       _master,
+		       const path *	       _original_file,
+		       instance_t *            _parent)
     : account_stack(_account_stack),
 #if defined(TIMELOG_SUPPORT)
       timelog(_timelog),
 #endif
-      parent(_parent), in(_in), session(_session),
-      journal(_journal), master(_master),
-      original_file(_original_file)
+      parent(_parent), in(_in), session(_session), journal(_journal),
+      master(_master), original_file(_original_file)
 {
-  TRACE_CTOR(textual_parser_t::instance_t, "...");
+  TRACE_CTOR(instance_t, "...");
 
   if (! master)
     master = journal.master;
   account_stack.push_front(master);
 
-  pathname = journal.sources.back();
+  if (_original_file)
+    pathname = *_original_file;
+  else
+    pathname = "/dev/stdin";
 }
 
-textual_parser_t::instance_t::~instance_t()
+instance_t::~instance_t()
 {
-  TRACE_DTOR(textual_parser_t::instance_t);
+  TRACE_DTOR(instance_t);
 
   account_stack.pop_front();
 
@@ -188,7 +196,7 @@ textual_parser_t::instance_t::~instance_t()
     journal.remove_entry_finalizer(auto_entry_finalizer.get());
 }
 
-void textual_parser_t::instance_t::parse()
+void instance_t::parse()
 {
   INFO("Parsing file '" << pathname.string() << "'");
 
@@ -241,13 +249,15 @@ void textual_parser_t::instance_t::parse()
   TRACE_STOP(instance_parse, 1);
 }
 
-std::streamsize textual_parser_t::instance_t::read_line(char *& line)
+std::streamsize instance_t::read_line(char *& line)
 {
   assert(in.good());
   assert(! in.eof());		// no one should call us in that case
 
   line_beg_pos = curr_pos;
-  
+
+  check_for_signal();
+
   in.getline(linebuf, MAX_LINE);
   std::streamsize len = in.gcount();
 
@@ -270,7 +280,7 @@ std::streamsize textual_parser_t::instance_t::read_line(char *& line)
   return 0;
 }
 
-void textual_parser_t::instance_t::read_next_directive()
+void instance_t::read_next_directive()
 {
   char * line;
   std::streamsize len = read_line(line);
@@ -369,8 +379,8 @@ void textual_parser_t::instance_t::read_next_directive()
 
 #if defined(TIMELOG_SUPPORT)
 
-void textual_parser_t::instance_t::clock_in_directive(char * line,
-						      bool   capitalized)
+void instance_t::clock_in_directive(char * line,
+				    bool   capitalized)
 {
   string date(line, 2, 19);
 
@@ -381,8 +391,8 @@ void textual_parser_t::instance_t::clock_in_directive(char * line,
 		   account_stack.front()->find_account(p), n ? n : "");
 }
 
-void textual_parser_t::instance_t::clock_out_directive(char * line,
-						       bool   capitalized)
+void instance_t::clock_out_directive(char * line,
+				     bool   capitalized)
 {  
   string date(line, 2, 19);
 
@@ -395,19 +405,19 @@ void textual_parser_t::instance_t::clock_out_directive(char * line,
 }
 #endif // TIMELOG_SUPPORT
 
-void textual_parser_t::instance_t::default_commodity_directive(char * line)
+void instance_t::default_commodity_directive(char * line)
 {
   amount_t amt(skip_ws(line + 1));
   assert(amt.valid());
   amount_t::current_pool->default_commodity = &amt.commodity();
 }
 
-void textual_parser_t::instance_t::default_account_directive(char * line)
+void instance_t::default_account_directive(char * line)
 {
   journal.basket = account_stack.front()->find_account(skip_ws(line + 1));
 }
 
-void textual_parser_t::instance_t::price_conversion_directive(char * line)
+void instance_t::price_conversion_directive(char * line)
 {
   if (char * p = std::strchr(line + 1, '=')) {
     *p++ = '\0';
@@ -440,7 +450,7 @@ namespace {
   }
 }
 
-void textual_parser_t::instance_t::price_entry_directive(char * line)
+void instance_t::price_entry_directive(char * line)
 {
   char * date_field_ptr = skip_ws(line + 1);
   char * time_field_ptr = next_element(date_field_ptr);
@@ -470,7 +480,7 @@ void textual_parser_t::instance_t::price_entry_directive(char * line)
     commodity->add_price(datetime, price);
 }
 
-void textual_parser_t::instance_t::nomarket_directive(char * line)
+void instance_t::nomarket_directive(char * line)
 {
   char * p = skip_ws(line + 1);
   string symbol;
@@ -481,12 +491,12 @@ void textual_parser_t::instance_t::nomarket_directive(char * line)
     commodity->add_flags(COMMODITY_NOMARKET);
 }
 
-void textual_parser_t::instance_t::year_directive(char * line)
+void instance_t::year_directive(char * line)
 {
   session.current_year = std::atoi(skip_ws(line + 1));
 }
 
-void textual_parser_t::instance_t::option_directive(char * line)
+void instance_t::option_directive(char * line)
 {
   char * p = next_element(line);
   if (! p) {
@@ -497,7 +507,7 @@ void textual_parser_t::instance_t::option_directive(char * line)
   process_option(line + 2, session, p, line);
 }
 
-void textual_parser_t::instance_t::automated_entry_directive(char * line)
+void instance_t::automated_entry_directive(char * line)
 {
   if (! auto_entry_finalizer.get()) {
     auto_entry_finalizer.reset(new auto_entry_finalizer_t(&journal));
@@ -525,7 +535,7 @@ void textual_parser_t::instance_t::automated_entry_directive(char * line)
   }
 }
 
-void textual_parser_t::instance_t::period_entry_directive(char * line)
+void instance_t::period_entry_directive(char * line)
 {
   std::auto_ptr<period_entry_t> pe(new period_entry_t(skip_ws(line + 1)));
   if (! pe->period)
@@ -553,7 +563,7 @@ void textual_parser_t::instance_t::period_entry_directive(char * line)
   }
 }
 
-void textual_parser_t::instance_t::entry_directive(char * line, std::streamsize len)
+void instance_t::entry_directive(char * line, std::streamsize len)
 {
   TRACE_START(entries, 1, "Time spent handling entries:");
 
@@ -574,7 +584,7 @@ void textual_parser_t::instance_t::entry_directive(char * line, std::streamsize 
   TRACE_STOP(entries, 1);
 }
 
-void textual_parser_t::instance_t::include_directive(char * line)
+void instance_t::include_directive(char * line)
 {
   path filename(next_element(line));
 
@@ -606,7 +616,7 @@ void textual_parser_t::instance_t::include_directive(char * line)
   count  += instance.count;
 }
 
-void textual_parser_t::instance_t::account_directive(char * line)
+void instance_t::account_directive(char * line)
 {
   if (account_t * acct =
       account_stack.front()->find_account(next_element(line)))
@@ -615,12 +625,12 @@ void textual_parser_t::instance_t::account_directive(char * line)
     assert(! "Failed to create account");
 }
 
-void textual_parser_t::instance_t::end_directive(char * line)
+void instance_t::end_directive(char * line)
 {
   account_stack.pop_front();
 }
 
-void textual_parser_t::instance_t::alias_directive(char * line)
+void instance_t::alias_directive(char * line)
 {
   char * b = skip_ws(line + 1);
   if (char * e = std::strchr(b, '=')) {
@@ -641,13 +651,13 @@ void textual_parser_t::instance_t::alias_directive(char * line)
   }
 }
 
-void textual_parser_t::instance_t::define_directive(char * line)
+void instance_t::define_directive(char * line)
 {
   expr_t def(skip_ws(line + 1));
   def.compile(session);	// causes definitions to be established
 }
 
-void textual_parser_t::instance_t::general_directive(char * line)
+void instance_t::general_directive(char * line)
 {
   char * p = next_element(line);
   string word(line + 1);
@@ -698,10 +708,10 @@ void textual_parser_t::instance_t::general_directive(char * line)
   }
 }
 
-xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
-						  std::streamsize len,
-						  account_t *	  account,
-						  entry_t *	  entry)
+xact_t * instance_t::parse_xact(char *		line,
+				std::streamsize len,
+				account_t *	account,
+				entry_t *	entry)
 {
   TRACE_START(xact_details, 1, "Time spent parsing transactions:");
 
@@ -992,9 +1002,9 @@ xact_t * textual_parser_t::instance_t::parse_xact(char *	  line,
   }
 }
 
-bool textual_parser_t::instance_t::parse_xacts(account_t *	account,
-					       entry_base_t&    entry,
-					       const string&    kind)
+bool instance_t::parse_xacts(account_t *   account,
+			     entry_base_t& entry,
+			     const string& kind)
 {
   TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
 
@@ -1016,9 +1026,9 @@ bool textual_parser_t::instance_t::parse_xacts(account_t *	account,
   return added;
 }
 
-entry_t * textual_parser_t::instance_t::parse_entry(char *	    line,
-						    std::streamsize len,
-						    account_t *	    account)
+entry_t * instance_t::parse_entry(char *	  line,
+				  std::streamsize len,
+				  account_t *	  account)
 {
   TRACE_START(entry_text, 1, "Time spent parsing entry text:");
 
@@ -1120,9 +1130,46 @@ entry_t * textual_parser_t::instance_t::parse_entry(char *	    line,
   return curr.release();
 }
 
-expr_t::ptr_op_t textual_parser_t::instance_t::lookup(const string& name)
+expr_t::ptr_op_t instance_t::lookup(const string& name)
 {
   return session.lookup(name);
+}
+
+std::size_t journal_t::parse(std::istream& in,
+			     session_t&    session,
+			     account_t *   master,
+			     const path *  original_file)
+{
+  TRACE_START(parsing_total, 1, "Total time spent parsing text:");
+
+  std::list<account_t *> account_stack;
+#if defined(TIMELOG_SUPPORT)
+  time_log_t		 timelog(*this);
+#endif
+
+  instance_t parsing_instance(account_stack,
+#if defined(TIMELOG_SUPPORT)
+			      timelog,
+#endif
+			      in, session, *this, master, original_file);
+  parsing_instance.parse();
+
+  session.clean_accounts();	// remove calculated totals
+
+  TRACE_STOP(parsing_total, 1);
+
+  // These tracers were started in textual.cc
+  TRACE_FINISH(entry_text, 1);
+  TRACE_FINISH(entry_details, 1);
+  TRACE_FINISH(entry_xacts, 1);
+  TRACE_FINISH(entries, 1);
+  TRACE_FINISH(instance_parse, 1); // report per-instance timers
+  TRACE_FINISH(parsing_total, 1);
+
+  if (parsing_instance.errors > 0)
+    throw static_cast<int>(parsing_instance.errors);
+
+  return parsing_instance.count;
 }
 
 } // namespace ledger

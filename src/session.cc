@@ -33,7 +33,6 @@
 #include "report.h"
 #include "iterators.h"
 #include "filters.h"
-#include "textual.h"
 
 namespace ledger {
 
@@ -61,7 +60,8 @@ session_t::session_t()
     current_year(CURRENT_DATE().year()),
 
     commodity_pool(new commodity_pool_t),
-    master(new account_t(NULL, ""))
+    master(new account_t(NULL, "")),
+    journal(new journal_t(master.get()))
 {
   TRACE_CTOR(session_t, "");
 
@@ -69,8 +69,6 @@ session_t::session_t()
     HANDLER(price_db_).on((path(home_var) / ".pricedb").string());
   else
     HANDLER(price_db_).on(path("./.pricedb").string());
-
-  register_parser(new textual_parser_t);
 
   // Add time commodity conversions, so that timelog's may be parsed
   // in terms of seconds, but reported as minutes or hours.
@@ -80,58 +78,26 @@ session_t::session_t()
     assert(false);
 }
 
-journal_t * session_t::create_journal()
-{
-  journal_t * journal = new journal_t(master.get());
-  journals.push_back(journal);
-  return journal;
-}
-
-void session_t::close_journal(journal_t * journal)
-{
-  for (ptr_list<journal_t>::iterator i = journals.begin();
-       i != journals.end();
-       i++)
-    if (&*i == journal) {
-      journals.erase(i);
-      return;
-    }
-  assert(false);
-  checked_delete(journal);
-}
-
-std::size_t session_t::read_journal(journal_t&	  journal,
-				    std::istream& in,
+std::size_t session_t::read_journal(std::istream& in,
 				    const path&	  pathname,
 				    account_t *   master)
 {
   if (! master)
-    master = journal.master;
-
-  foreach (journal_t::parser_t& parser, parsers)
-#if defined(TEST_FOR_PARSER)
-    if (parser.test(in))
-#endif
-      return parser.parse(in, *this, journal, master, &pathname);
-
-  return 0;
+    master = journal->master;
+  return journal->parse(in, *this, master, &pathname);
 }
 
-std::size_t session_t::read_journal(journal_t&	journal,
-				    const path& pathname,
+std::size_t session_t::read_journal(const path& pathname,
 				    account_t * master)
 {
-  journal.sources.push_back(pathname);
-
   if (! exists(pathname))
     throw_(std::logic_error, "Cannot read file" << pathname);
 
   ifstream stream(pathname);
-  return read_journal(journal, stream, pathname, master);
+  return read_journal(stream, pathname, master);
 }
 
-std::size_t session_t::read_data(journal_t&    journal,
-				 const string& master_account)
+std::size_t session_t::read_data(const string& master_account)
 {
   if (HANDLER(file_).data_files.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
@@ -139,24 +105,18 @@ std::size_t session_t::read_data(journal_t&    journal,
   std::size_t entry_count = 0;
 
   if (entry_count == 0) {
-    account_t * acct = journal.master;
+    account_t * acct = journal->master;
     if (! master_account.empty())
-      acct = journal.find_account(master_account);
+      acct = journal->find_account(master_account);
 
-    journal.price_db = HANDLER(price_db_).str();
-    if (journal.price_db && exists(*journal.price_db)) {
-      if (read_journal(journal, *journal.price_db)) {
+    if (HANDLED(price_db_) && exists(path(HANDLER(price_db_).str()))) {
+      if (read_journal(HANDLER(price_db_).str()))
 	throw_(parse_error, "Entries not allowed in price history file");
-      } else {
-	journal.sources.pop_back();
-      }
     }
 
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
       if (pathname == "-") {
-	journal.sources.push_back("/dev/stdin");
-
 	// To avoid problems with stdin and pipes, etc., we read the entire
 	// file in beforehand into a memory buffer, and then parcel it out
 	// from there.
@@ -172,12 +132,10 @@ std::size_t session_t::read_data(journal_t&    journal,
 
 	std::istringstream buf_in(buffer.str());
 
-	entry_count += read_journal(journal, buf_in, "/dev/stdin", acct);
+	entry_count += read_journal(buf_in, "/dev/stdin", acct);
       }
       else if (exists(pathname)) {
-	entry_count += read_journal(journal, pathname, acct);
-	if (journal.price_db)
-	  journal.sources.push_back(*journal.price_db);
+	entry_count += read_journal(pathname, acct);
       }
       else {
 	throw_(parse_error, "Could not open journal file '" << pathname << "'");
@@ -185,23 +143,9 @@ std::size_t session_t::read_data(journal_t&    journal,
     }
   }
 
-  VERIFY(journal.valid());
+  VERIFY(journal->valid());
 
   return entry_count;
-}
-
-void session_t::unregister_parser(journal_t::parser_t * parser)
-{
-  for (ptr_list<journal_t::parser_t>::iterator i = parsers.begin();
-       i != parsers.end();
-       i++) {
-    if (&*i == parser) {
-      parsers.erase(i);
-      return;
-    }
-  }
-  assert(false);
-  checked_delete(parser);
 }
 
 void session_t::clean_xacts()
@@ -222,38 +166,6 @@ void session_t::clean_accounts()
   pass_down_accounts(acct_handler_ptr(new clear_account_xdata), acct_walker);
   master->clear_xdata();
 }
-
-#if 0
-value_t session_t::resolve(const string& name, expr_t::scope_t& locals)
-{
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'd':
-#if 0
-    if (name == "date_format") {
-      // jww (2007-04-18): What to do here?
-      return string_value(moment_t::output_format);
-    }
-#endif
-    break;
-
-  case 'n':
-    switch (*++p) {
-    case 'o':
-      if (name == "now")
-	return value_t(now);
-      break;
-    }
-    break;
-
-  case 'r':
-    if (name == "register_format")
-      return string_value(register_format);
-    break;
-  }
-  return expr_t::scope_t::resolve(name, locals);
-}
-#endif
 
 option_t<session_t> * session_t::lookup_option(const char * p)
 {

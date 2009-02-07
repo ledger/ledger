@@ -34,7 +34,6 @@
 #include "compare.h"
 #include "session.h"
 #include "format.h"
-#include "textual.h"
 
 namespace ledger {
 

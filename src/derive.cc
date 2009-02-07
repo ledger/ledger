@@ -51,19 +51,15 @@ entry_t * derive_new_entry(report_t&		  report,
 
   mask_t regexp(*i++);
 
-  journals_iterator iter(session);
   entries_list::reverse_iterator j;
 
-  for (journal_t * journal = iter(); journal; journal = iter()) {
-    for (j = journal->entries.rbegin();
-	 j != journal->entries.rend();
-	 j++) {
-      if (regexp.match((*j)->payee)) {
-	matching = *j;
-	break;
-      }
+  for (j = report.session.journal->entries.rbegin();
+       j != report.session.journal->entries.rend();
+       j++) {
+    if (regexp.match((*j)->payee)) {
+      matching = *j;
+      break;
     }
-    if (matching) break;
   }
 
   added->payee = matching ? matching->payee : regexp.expr.str();

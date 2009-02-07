@@ -106,7 +106,6 @@ pkginclude_HEADERS =			   \
 	src/entry.h			   \
 	src/account.h			   \
 	src/journal.h			   \
-	src/textual.h			   \
 	src/timelog.h			   \
 	src/iterators.h			   \
 	src/compare.h			   \
@@ -222,7 +221,6 @@ libledger_python_la_SOURCES =			\
 	python/py_scope.cc			\
 	python/py_session.cc			\
 	python/py_stream.cc			\
-	python/py_textual.cc			\
 	python/py_timelog.cc			\
 	python/py_times.cc			\
 	python/py_token.cc			\

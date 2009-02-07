@@ -37,37 +37,23 @@ namespace ledger {
 
 void entries_iterator::reset(session_t& session)
 {
-  journals_i   = session.journals.begin();
-  journals_end = session.journals.end();
-
-  journals_uninitialized = false;
-
-  if (journals_i != journals_end) {
-    entries_i   = (*journals_i).entries.begin();
-    entries_end = (*journals_i).entries.end();
-
-    entries_uninitialized = false;
-  } else {
-    entries_uninitialized = true;
-  }
+  entries_i   = session.journal->entries.begin();
+  entries_end = session.journal->entries.end();
+  entries_uninitialized = false;
 }
 
 entry_t * entries_iterator::operator()()
 {
-  if (entries_i == entries_end) {
-    journals_i++;
-    if (journals_i == journals_end)
-      return NULL;
-
-    entries_i	= (*journals_i).entries.begin();
-    entries_end = (*journals_i).entries.end();
-  }
-  return *entries_i++;
+  if (entries_i != entries_end)
+    return *entries_i++;
+  else
+    return NULL;
 }
 
 void session_xacts_iterator::reset(session_t& session)
 {
   entries.reset(session);
+
   entry_t * entry = entries();
   if (entry != NULL)
     xacts.reset(*entry);
@@ -137,19 +123,6 @@ account_t * sorted_accounts_iterator::operator()()
 
   account->xdata().drop_flags(ACCOUNT_EXT_SORT_CALC);
   return account;
-}
-
-void journals_iterator::reset(session_t& session)
-{
-  journals_i   = session.journals.begin();
-  journals_end = session.journals.end();
-}
-
-journal_t * journals_iterator::operator()()
-{
-  if (journals_i == journals_end)
-    return NULL;
-  return &(*journals_i++);
 }
 
 #if 0

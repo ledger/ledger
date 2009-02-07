@@ -65,14 +65,12 @@ class account_t;
 class journal_t : public noncopyable
 {
 public:
-  account_t *	 master;
-  account_t *	 basket;
-  entries_list	 entries;
-  paths_list	 sources;
-  optional<path> price_db;
+  account_t *  master;
+  account_t *  basket;
+  entries_list entries;
 
-  auto_entries_list    auto_entries;
-  period_entries_list  period_entries;
+  auto_entries_list   auto_entries;
+  period_entries_list period_entries;
 
   hooks_t<entry_finalizer_t, entry_t> entry_finalize_hooks;
 
@@ -98,33 +96,10 @@ public:
     entry_finalize_hooks.remove_hook(finalizer);
   }
 
-  /**
-   * @brief Provides an abstract interface for writing journal parsers.
-   *
-   * Any data format for Ledger data is possible, as long as it can be parsed
-   * into a journal_t data tree.  This class provides the basic interface which
-   * must be implemented by every such journal parser.
-   */
-  class parser_t : public noncopyable
-  {
-  public:
-    parser_t() {
-      TRACE_CTOR(journal_t::parser_t, "");
-    }
-    virtual ~parser_t() {
-      TRACE_DTOR(journal_t::parser_t);
-    }
-
-#if defined(TEST_FOR_PARSER)
-    virtual bool test(std::istream& in) const = 0;
-#endif
-
-    virtual std::size_t parse(std::istream& in,
-			      session_t&    session,
-			      journal_t&    journal,
-			      account_t *   master        = NULL,
-			      const path *  original_file = NULL) = 0;
-  };
+  std::size_t parse(std::istream& in,
+		    session_t&    session,
+		    account_t *   master,
+		    const path *  original_file);
 
   bool valid() const;
 };
