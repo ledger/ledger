@@ -490,7 +490,8 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   }
 }
 
-string op_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t goal)
+string op_context(const expr_t::ptr_op_t op,
+		  const expr_t::ptr_op_t goal)
 {
   ostream_pos_type start_pos, end_pos;
   expr_t::op_t::context_t context(op, goal, &start_pos, &end_pos);

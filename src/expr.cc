@@ -190,4 +190,9 @@ std::ostream& operator<<(std::ostream& out, const expr_t& expr) {
   return out;
 }
 
+string expr_context(const expr_t& expr)
+{
+  return expr ? op_context(expr.ptr) : "<empty expression>";
+}
+
 } // namespace ledger

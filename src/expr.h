@@ -70,6 +70,8 @@ class expr_t
   struct token_t;
   class  parser_t;
 
+  friend string expr_context(const expr_t& expr);
+
 public:
   class op_t;
   typedef intrusive_ptr<op_t> ptr_op_t;
@@ -141,10 +143,7 @@ public:
 
 std::ostream& operator<<(std::ostream& out, const expr_t& expr);
 
-inline string expr_context(const expr_t& expr) {
-  // jww (2009-02-01): NYI
-  return "EXPR";
-}
+string expr_context(const expr_t& expr);
 
 } // namespace ledger
 
