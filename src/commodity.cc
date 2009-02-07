@@ -29,18 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file   commodity.cc
- * @author John Wiegley
- * @date   Thu Apr 26 15:19:46 2007
- *
- * @brief  Types for dealing with commodities
- *
- * This file defines member functions for flavors of commodity_t.
- */
-
 #include "amount.h"
-#include "token.h"
 
 namespace ledger {
 
@@ -856,9 +845,11 @@ commodity_t * commodity_pool_t::create(const string& symbol)
   DEBUG("amounts.commodities",
 	"Creating commodity '" << commodity->symbol() << "'");
 
-  commodity->ident = commodities.size();
+  std::pair<commodities_map::iterator, bool> result
+    = commodities.insert(commodities_map::value_type(commodity->mapping_key(),
+						     commodity.get()));
+  assert(result.second);
 
-  commodities.push_back(commodity.get());
   return commodity.release();
 }
 
@@ -876,26 +867,10 @@ commodity_t * commodity_pool_t::find(const string& symbol)
 {
   DEBUG("amounts.commodities", "Find commodity " << symbol);
 
-  typedef commodity_pool_t::commodities_t::nth_index<1>::type
-    commodities_by_name;
-
-  commodities_by_name& name_index = commodities.get<1>();
-  commodities_by_name::const_iterator i = name_index.find(symbol);
-  if (i != name_index.end())
-    return *i;
-  else
-    return NULL;
-}
-
-commodity_t * commodity_pool_t::find(const commodity_t::ident_t ident)
-{
-  DEBUG("amounts.commodities", "Find commodity by ident " << ident);
-
-  typedef commodity_pool_t::commodities_t::nth_index<0>::type
-    commodities_by_ident;
-
-  commodities_by_ident& ident_index = commodities.get<0>();
-  return ident_index[ident];
+  commodities_map::const_iterator i = commodities.find(symbol);
+  if (i != commodities.end())
+    return (*i).second;
+  return NULL;
 }
 
 commodity_t *
@@ -987,10 +962,13 @@ commodity_pool_t::create(commodity_t&	     comm,
 
   // Add the fully annotated name to the map, so that this symbol may
   // quickly be found again.
-  commodity->ident	  = commodities.size();
   commodity->mapping_key_ = mapping_key;
 
-  commodities.push_back(commodity.get());
+  std::pair<commodities_map::iterator, bool> result
+    = commodities.insert(commodities_map::value_type(mapping_key,
+						     commodity.get()));
+  assert(result.second);
+
   return commodity.release();
 }
 

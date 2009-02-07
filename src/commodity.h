@@ -175,17 +175,14 @@ public:
 public:
   static bool symbol_needs_quotes(const string& symbol);
 
-  typedef base_t::history_t	   history_t;
-  typedef base_t::history_map	   history_map;
-  typedef base_t::varied_history_t varied_history_t;
-  typedef uint_least32_t	   ident_t;
-
+  typedef base_t::history_t		   history_t;
+  typedef base_t::history_map		   history_map;
+  typedef base_t::varied_history_t	   varied_history_t;
   typedef base_t::history_by_commodity_map history_by_commodity_map;
 
   shared_ptr<base_t> base;
 
   commodity_pool_t * parent_;
-  ident_t	     ident;
   optional<string>   qualified_symbol;
   optional<string>   mapping_key_;
   bool		     annotated;
@@ -556,55 +553,22 @@ struct compare_amount_commodities {
 class commodity_pool_t : public noncopyable
 {
   /**
-   * The commodities collection in commodity_pool_t maintains pointers
-   * to all the commodities which have ever been created by the user,
-   * whether explicitly by calling the create methods of
-   * commodity_pool_t, or implicitly by parsing a commoditized amount.
-   *
-   * The `commodities' member variable represents a collection which
-   * is indexed by two vertices: first, and ordered sequence of unique
-   * integer which identify commodities by a numerical identifier; and
-   * second, by a hashed set of symbolic names which reflect how the
-   * commodity was referred to by the user.
+   * The commodities collection in commodity_pool_t maintains pointers to all
+   * the commodities which have ever been created by the user, whether
+   * explicitly by calling the create methods of commodity_pool_t, or
+   * implicitly by parsing a commoditized amount.
    */
-  typedef multi_index_container<
-    commodity_t *,
-    multi_index::indexed_by<
-      multi_index::random_access<>,
-      multi_index::hashed_unique<
-	multi_index::const_mem_fun<commodity_t,
-				   string, &commodity_t::mapping_key> >
-    >
-  > commodities_t;
+  typedef std::map<string, commodity_t *> commodities_map;
 
 public:
-  typedef commodity_pool_t::commodities_t::nth_index<0>::type
-    commodities_by_ident;
-
-  commodities_t commodities;
+  commodities_map commodities;
 
   commodity_t *	null_commodity;
   commodity_t *	default_commodity;
 
-private:
-  template<typename T>
-  struct first_initialized
-  {
-    typedef T result_type;
-
-    template<typename InputIterator>
-    T operator()(InputIterator first, InputIterator last) const
-    {
-      for (; first != last; first++)
-	if (*first)
-	  return *first;
-      return T();
-    }
-  };
-
 public:
   boost::function<optional<amount_t>
-		  (commodity_t&		     commodity,
+		  (commodity_t&		       commodity,
 		   const optional<datetime_t>& date,
 		   const optional<datetime_t>& moment,
 		   const optional<datetime_t>& last)> get_quote;
@@ -613,16 +577,12 @@ public:
 
   ~commodity_pool_t() {
     TRACE_DTOR(commodity_pool_t);
-    commodities_by_ident& ident_index = commodities.get<0>();
-    for (commodities_by_ident::iterator i = ident_index.begin();
-	 i != ident_index.end();
-	 i++)
-      checked_delete(*i);
+    foreach (commodities_map::value_type pair, commodities)
+      checked_delete(pair.second);
   }
 
   commodity_t * create(const string& symbol);
   commodity_t * find(const string& name);
-  commodity_t * find(const commodity_t::ident_t ident);
   commodity_t * find_or_create(const string& symbol);
 
   commodity_t * create(const string& symbol, const annotation_t& details);
