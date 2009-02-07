@@ -255,32 +255,39 @@ value_t session_t::resolve(const string& name, expr_t::scope_t& locals)
 }
 #endif
 
+option_t<session_t> * session_t::lookup_option(const char * p)
+{
+  switch (*p) {
+  case 'a':
+    OPT_(account_); // -a
+    break;
+  case 'd':
+    OPT(download); // -Q
+    break;
+  case 'f':
+    OPT_(file_); // -f
+    break;
+  case 'i':
+    OPT(input_date_format_);
+    break;
+  case 'p':
+    OPT(price_db_);
+    break;
+  case 'Q':
+    OPT_CH(download); // -Q
+    break;
+  }
+  return NULL;
+}
+
 expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'o':
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      switch (*p) {
-      case 'a':
-	OPT_(account_); // -a
-	break;
-      case 'd':
-	OPT(download); // -Q
-	break;
-      case 'f':
-	OPT_(file_); // -f
-	break;
-      case 'i':
-	OPT(input_date_format_);
-	break;
-      case 'p':
-	OPT(price_db_);
-	break;
-      case 'Q':
-	OPT_CH(download); // -Q
-	break;
-      }
+      if (option_t<session_t> * handler = lookup_option(p))
+	return MAKE_OPT_HANDLER(session_t, handler);
     }
     break;
   }

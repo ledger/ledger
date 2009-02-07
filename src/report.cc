@@ -288,13 +288,225 @@ namespace {
   };
 }
 
+option_t<report_t> * report_t::lookup_option(const char * p)
+{
+  switch (*p) {
+  case '%':
+    OPT_CH(percentage);
+    break;
+  case 'A':
+    OPT_CH(average);
+    break;
+  case 'B':
+    OPT_CH(basis);
+    break;
+  case 'C':
+    OPT_CH(cleared);
+    break;
+  case 'D':
+    OPT_CH(deviation);
+    break;
+  case 'E':
+    OPT_CH(empty);
+    break;
+  case 'F':
+    OPT_CH(format_);
+    break;
+  case 'G':
+    OPT_CH(gain);
+    break;
+  case 'I':
+    OPT_CH(price);
+    break;
+  case 'J':
+    OPT_CH(total_data);
+    break;
+  case 'L':
+    OPT_CH(actual);
+    break;
+  case 'M':
+    OPT_CH(monthly);
+    break;
+  case 'O':
+    OPT_CH(quantity);
+    break;
+  case 'P':
+    OPT_CH(by_payee);
+    break;
+  case 'R':
+    OPT_CH(real);
+    break;
+  case 'S':
+    OPT_CH(sort_);
+    break;
+  case 'T':
+    OPT_CH(total_);
+    break;
+  case 'U':
+    OPT_CH(uncleared);
+    break;
+  case 'V':
+    OPT_CH(market);
+    break;
+  case 'W':
+    OPT_CH(weekly);
+    break;
+  case 'Y':
+    OPT_CH(yearly);
+    break;
+  case 'Z':
+    OPT_CH(price_exp_);
+    break;
+  case 'a':
+    OPT(abbrev_len_);
+    else OPT(account_);
+    else OPT(actual);
+    else OPT(add_budget);
+    else OPT(amount_);
+    else OPT(amount_data);
+    else OPT(anon);
+    else OPT(ansi);
+    else OPT(ansi_invert);
+    else OPT(average);
+    break;
+  case 'b':
+    OPT(balance_format_);
+    else OPT(base);
+    else OPT(basis);
+    else OPT_(begin_);
+    else OPT(budget);
+    else OPT(by_payee);
+    break;
+  case 'c':
+    OPT(cache_);
+    else OPT(csv_format_);
+    else OPT(cleared);
+    else OPT(code_as_payee);
+    else OPT(collapse);
+    else OPT(comm_as_payee);
+    else OPT(cost);
+    else OPT_(current);
+    break;
+  case 'd':
+    OPT(daily);
+    else OPT(date_format_);
+    else OPT(deviation);
+    else OPT_(display_);
+    else OPT(display_amount_);
+    else OPT(display_total_);
+    else OPT(dow);
+    break;
+  case 'e':
+    OPT(effective);
+    else OPT(empty);
+    else OPT_(end_);
+    else OPT(equity_format_);
+    break;
+  case 'f':
+    OPT(forecast_);
+    else OPT(format_);
+    break;
+  case 'g':
+    OPT_CH(performance);
+    else OPT(gain);
+    break;
+  case 'h':
+    OPT(head_);
+    break;
+  case 'i':
+    OPT(invert);
+    break;
+  case 'j':
+    OPT_CH(amount_data);
+    break;
+  case 'l':
+    OPT_(limit_);
+    else OPT(lot_dates);
+    else OPT(lot_prices);
+    else OPT(lot_tags);
+    else OPT(lots);
+    break;
+  case 'm':
+    OPT(market);
+    else OPT(monthly);
+    break;
+  case 'n':
+    OPT_CH(collapse);
+    break;
+  case 'o':
+    OPT(only_);
+    else OPT_(output_);
+    break;
+  case 'p':
+    OPT(pager_);
+    else OPT(percentage);
+    else OPT(performance);
+    else OPT_(period_);
+    else OPT(period_sort_);
+    else OPT(plot_amount_format_);
+    else OPT(plot_total_format_);
+    else OPT(price);
+    else OPT(price_exp_);
+    else OPT(prices_format_);
+    else OPT(pricesdb_format_);
+    else OPT(print_format_);
+    break;
+  case 'q':
+    OPT(quantity);
+    else OPT(quarterly);
+    break;
+  case 'r':
+    OPT(real);
+    else OPT(register_format_);
+    else OPT_(related);
+    else OPT(related_all);
+    else OPT(revalued);
+    else OPT(revalued_only);
+    break;
+  case 's':
+    OPT(set_price_);
+    else OPT(sort_);
+    else OPT(sort_all_);
+    else OPT(sort_entries_);
+    else OPT_(subtotal);
+    break;
+  case 't':
+    OPT_CH(amount_);
+    else OPT(tail_);
+    else OPT(total_);
+    else OPT(total_data);
+    else OPT(totals);
+    else OPT(truncate_);
+    break;
+  case 'u':
+    OPT(unbudgeted);
+    else OPT(uncleared);
+    break;
+  case 'w':
+    OPT(weekly);
+    else OPT_(wide);
+    else OPT(wide_register_format_);
+    else OPT(write_hdr_format_);
+    else OPT(write_xact_format_);
+    break;
+  case 'x':
+    OPT_CH(comm_as_payee);
+    break;
+  case 'y':
+    OPT_CH(date_format_);
+    else OPT(yearly);
+    break;
+  }
+  return NULL;
+}
+
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
     if (is_eq(p, "amount_expr"))
-      MAKE_FUNCTOR(report_t::fn_amount_expr);
+      return MAKE_FUNCTOR(report_t::fn_amount_expr);
     break;
 
   case 'c':
@@ -348,12 +560,12 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'd':
-    if (is_eq(p, "display_total"))
-      return MAKE_FUNCTOR(report_t::fn_display_total);
-    else if (is_eq(p, "display_total"))
+    if (is_eq(p, "display_date"))
+      return MAKE_FUNCTOR(report_t::fn_display_date);
+    else if (is_eq(p, "display_amount"))
       return MAKE_FUNCTOR(report_t::fn_display_amount);
     else if (is_eq(p, "display_total"))
-      return MAKE_FUNCTOR(report_t::fn_display_date);
+      return MAKE_FUNCTOR(report_t::fn_display_total);
     break;
 
   case 'e':
@@ -373,213 +585,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 
   case 'o':
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      switch (*p) {
-      case '%':
-	OPT_CH(percentage);
-	break;
-      case 'A':
-	OPT_CH(average);
-	break;
-      case 'B':
-	OPT_CH(basis);
-	break;
-      case 'C':
-	OPT_CH(cleared);
-	break;
-      case 'D':
-	OPT_CH(deviation);
-	break;
-      case 'E':
-	OPT_CH(empty);
-	break;
-      case 'F':
-	OPT_CH(format_);
-	break;
-      case 'G':
-	OPT_CH(gain);
-	break;
-      case 'I':
-	OPT_CH(price);
-	break;
-      case 'J':
-	OPT_CH(total_data);
-	break;
-      case 'L':
-	OPT_CH(actual);
-	break;
-      case 'M':
-	OPT_CH(monthly);
-	break;
-      case 'O':
-	OPT_CH(quantity);
-	break;
-      case 'P':
-	OPT_CH(by_payee);
-	break;
-      case 'R':
-	OPT_CH(real);
-	break;
-      case 'S':
-	OPT_CH(sort_);
-	break;
-      case 'T':
-	OPT_CH(total_);
-	break;
-      case 'U':
-	OPT_CH(uncleared);
-	break;
-      case 'V':
-	OPT_CH(market);
-	break;
-      case 'W':
-	OPT_CH(weekly);
-	break;
-      case 'Y':
-	OPT_CH(yearly);
-	break;
-      case 'Z':
-	OPT_CH(price_exp_);
-	break;
-      case 'a':
-	OPT(abbrev_len_);
-	else OPT(account_);
-	else OPT(actual);
-	else OPT(add_budget);
-	else OPT(amount_);
-	else OPT(amount_data);
-	else OPT(anon);
-	else OPT(ansi);
-	else OPT(ansi_invert);
-	else OPT(average);
-	break;
-      case 'b':
-	OPT(balance_format_);
-	else OPT(base);
-	else OPT(basis);
-	else OPT_(begin_);
-	else OPT(budget);
-	else OPT(by_payee);
-	break;
-      case 'c':
-	OPT(cache_);
-	else OPT(csv_format_);
-	else OPT(cleared);
-	else OPT(code_as_payee);
-	else OPT(collapse);
-	else OPT(comm_as_payee);
-	else OPT(cost);
-	else OPT_(current);
-	break;
-      case 'd':
-	OPT(daily);
-	else OPT(date_format_);
-	else OPT(deviation);
-	else OPT_(display_);
-	else OPT(display_amount_);
-	else OPT(display_total_);
-	else OPT(dow);
-	break;
-      case 'e':
-	OPT(effective);
-	else OPT(empty);
-	else OPT_(end_);
-	else OPT(equity_format_);
-	break;
-      case 'f':
-	OPT(forecast_);
-	else OPT(format_);
-	break;
-      case 'g':
-	OPT_CH(performance);
-	else OPT(gain);
-	break;
-      case 'h':
-	OPT(head_);
-	break;
-      case 'i':
-	OPT(invert);
-	break;
-      case 'j':
-	OPT_CH(amount_data);
-	break;
-      case 'l':
-	OPT_(limit_);
-	else OPT(lot_dates);
-	else OPT(lot_prices);
-	else OPT(lot_tags);
-	else OPT(lots);
-	break;
-      case 'm':
-	OPT(market);
-	else OPT(monthly);
-	break;
-      case 'n':
-	OPT_CH(collapse);
-	break;
-      case 'o':
-	OPT(only_);
-	else OPT_(output_);
-	break;
-      case 'p':
-	OPT(pager_);
-	else OPT(percentage);
-	else OPT(performance);
-	else OPT_(period_);
-	else OPT(period_sort_);
-	else OPT(plot_amount_format_);
-	else OPT(plot_total_format_);
-	else OPT(price);
-	else OPT(price_exp_);
-	else OPT(prices_format_);
-	else OPT(pricesdb_format_);
-	else OPT(print_format_);
-	break;
-      case 'q':
-	OPT(quantity);
-	else OPT(quarterly);
-	break;
-      case 'r':
-	OPT(real);
-	else OPT(register_format_);
-	else OPT_(related);
-	else OPT(related_all);
-	else OPT(revalued);
-	else OPT(revalued_only);
-	break;
-      case 's':
-	OPT(set_price_);
-	else OPT(sort_);
-	else OPT(sort_all_);
-	else OPT(sort_entries_);
-	else OPT_(subtotal);
-	break;
-      case 't':
-	OPT_CH(amount_);
-	else OPT(tail_);
-	else OPT(total_);
-	else OPT(total_data);
-	else OPT(totals);
-	else OPT(truncate_);
-	break;
-      case 'u':
-	OPT(unbudgeted);
-	else OPT(uncleared);
-	break;
-      case 'w':
-	OPT(weekly);
-	else OPT_(wide);
-	else OPT(wide_register_format_);
-	else OPT(write_hdr_format_);
-	else OPT(write_xact_format_);
-	break;
-      case 'x':
-	OPT_CH(comm_as_payee);
-	break;
-      case 'y':
-	OPT_CH(date_format_);
-	else OPT(yearly);
-	break;
-      }
+      if (option_t<report_t> * handler = lookup_option(p))
+	return MAKE_OPT_HANDLER(report_t, handler);
+    }
+    else if (is_eq(p, "options")) {
+      return MAKE_FUNCTOR(report_t::fn_options);
     }
     break;
 
@@ -622,6 +632,10 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_total_expr);
     break;
   }
+
+  // Check if they are trying to access an option's setting or value.
+  if (option_t<report_t> * handler = lookup_option(p))
+    return MAKE_OPT_FUNCTOR(report_t, handler);
 
   return session.lookup(name);
 }

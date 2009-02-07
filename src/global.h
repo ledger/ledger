@@ -109,6 +109,8 @@ See LICENSE file included with the distribution for details and disclaimer.";
     out << std::endl;
   }
 
+  option_t<global_scope_t> * lookup_option(const char * p);
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   OPTION(global_scope_t, debug_);

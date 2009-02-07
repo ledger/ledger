@@ -107,6 +107,8 @@ public:
     clean_accounts();
   }
 
+  option_t<session_t> * lookup_option(const char * p);
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   /**

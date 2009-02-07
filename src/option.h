@@ -130,12 +130,27 @@ public:
   virtual void handler(call_scope_t& args) {
     if (wants_arg)
       value = args[0];
+    handled = true;
+  }
+
+  virtual value_t handler_wrapper(call_scope_t& args) {
+    handler(args);
+    return true;
   }
 
   virtual value_t operator()(call_scope_t& args) {
-    handler(args);
-    handled = true;
-    return true;
+    if (! args.empty()) {
+      return handler_wrapper(args);
+    }
+    else if (wants_arg) {
+      if (handled)
+	return string_value(str());
+      else
+	return false;
+    }
+    else {
+      return handled;
+    }
   }
 };
 
@@ -156,9 +171,11 @@ public:
 
 #define COPY_OPT(name, other) name ## _handler(other.name ## _handler)
 
-#define MAKE_OPT_FUNCTOR(x)					\
-  expr_t::op_t::wrap_functor(bind(&x ## _option_t::operator(),	\
-				  &x ## _handler, _1))
+#define MAKE_OPT_HANDLER(type, x)					\
+  expr_t::op_t::wrap_functor(bind(&option_t<type>::handler_wrapper, x, _1))
+
+#define MAKE_OPT_FUNCTOR(type, x)					\
+  expr_t::op_t::wrap_functor(bind(&option_t<type>::operator(), x, _1))
 
 inline bool is_eq(const char * p, const char * n) {
   // Test whether p matches n, substituting - in p for _ in n.
@@ -166,25 +183,26 @@ inline bool is_eq(const char * p, const char * n) {
     if (! (*p == '-' && *n == '_' ) && *p != *n)
       return false;
   }
-  return *p == *n;
+  // Ignore any trailing underscore
+  return *p == *n || (! *p && *n == '_' && ! *(n + 1));
 }
 
 #define OPT(name)							\
   if (is_eq(p, #name))							\
-    return ((name ## _handler).parent = this, MAKE_OPT_FUNCTOR(name))
+    return ((name ## _handler).parent = this, &(name ## _handler))
 
 #define OPT_(name)							\
   if (! *(p + 1) ||							\
       ((name ## _handler).wants_arg &&					\
        *(p + 1) == '_' && ! *(p + 2)) ||				\
       is_eq(p, #name))							\
-    return ((name ## _handler).parent = this, MAKE_OPT_FUNCTOR(name))
+    return ((name ## _handler).parent = this, &(name ## _handler))
 
 #define OPT_CH(name)							\
   if (! *(p + 1) ||							\
       ((name ## _handler).wants_arg &&					\
        *(p + 1) == '_' && ! *(p + 2)))					\
-    return ((name ## _handler).parent = this, MAKE_OPT_FUNCTOR(name))
+    return ((name ## _handler).parent = this, &(name ## _handler))
 
 #define HANDLER(name) name ## _handler
 #define HANDLED(name) HANDLER(name)

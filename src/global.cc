@@ -238,32 +238,40 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
   return status;
 }
 
+option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
+{
+  switch (*p) {
+  case 'd':
+    OPT(debug_);
+    break;
+  case 'i':
+    OPT(init_file_);
+    break;
+  case 's':
+    OPT(script_);
+    break;
+  case 't':
+    OPT(trace_);
+    break;
+  case 'v':
+    OPT_(verbose);
+    else OPT(verify);
+    else OPT(version);
+    break;
+  }
+  return NULL;
+}
+
 expr_t::ptr_op_t global_scope_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'o':
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      switch (*p) {
-      case 'd':
-	OPT(debug_);
-	break;
-      case 'i':
-	OPT(init_file_);
-	break;
-      case 's':
-	OPT(script_);
-	break;
-      case 't':
-	OPT(trace_);
-	break;
-      case 'v':
-	OPT_(verbose);
-	else OPT(verify);
-	else OPT(version);
-	break;
-      }
+      if (option_t<global_scope_t> * handler = lookup_option(p))
+	return MAKE_OPT_HANDLER(global_scope_t, handler);
     }
+    break;
 
   case 'p':
     if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;

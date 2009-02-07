@@ -132,6 +132,10 @@ public:
   value_t fn_escape(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
 
+  value_t fn_options(call_scope_t& scope) {
+    return value_t(static_cast<scope_t *>(this));
+  }
+
   void append_predicate(const string& str) {
     if (HANDLED(limit_))
       HANDLER(limit_).on(string("(") + HANDLER(limit_).str() + ")&" + str);
@@ -159,6 +163,8 @@ public:
 			  HANDLED(lots) || HANDLED(lot_tags),
 			  HANDLED(base));
   }
+
+  option_t<report_t> * report_t::lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
 

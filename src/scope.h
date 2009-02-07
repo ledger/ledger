@@ -185,6 +185,9 @@ public:
   std::size_t size() const {
     return args.size();
   }
+  bool empty() const {
+    return args.size() == 0;
+  }
 };
 
 /**
