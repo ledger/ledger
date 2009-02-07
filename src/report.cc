@@ -209,6 +209,8 @@ namespace {
     if (report.HANDLED(effective)) {
       if (optional<date_t> date = item.effective_date())
 	when = *date;
+      else
+	when = item.date();
     } else {
       when = item.date();
     }
