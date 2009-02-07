@@ -219,9 +219,9 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
   int status = 1;
 
   try {
-    push_report();
+    if (at_repl) push_report();
     execute_command(args, at_repl);
-    pop_report();
+    if (at_repl) pop_report();
 
     // If we've reached this point, everything succeeded fine.  Ledger uses
     // exceptions to notify of error conditions, so if you're using gdb,
@@ -229,7 +229,7 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
     status = 0;
   }
   catch (const std::exception& err) {
-    pop_report();
+    if (at_repl) pop_report();
     report_error(err);
   }
 
