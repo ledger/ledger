@@ -143,7 +143,7 @@ namespace {
   }
 
   value_t get_note(item_t& item) {
-    return item.note ? string_value(*item.note) : value_t(false);
+    return string_value(item.note ? *item.note : empty_string);
   }
 
   value_t has_tag(call_scope_t& args) {
