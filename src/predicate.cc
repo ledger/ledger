@@ -45,6 +45,8 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
     bool	 parse_argument = true;
 
     if (arg == "not" || arg == "NOT") {
+      if (append_and)
+	expr << " & ";
       expr << " ! ";
       parse_argument = false;
       append_and = false;
