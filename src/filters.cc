@@ -309,7 +309,7 @@ void collapse_xacts::operator()(xact_t& xact)
   // If we've reached a new entry, report on the subtotal
   // accumulated thus far.
 
-  if (last_entry && last_entry != xact.entry && count > 0)
+  if (last_entry != xact.entry && count > 0)
     report_subtotal();
 
   xact.add_to_value(subtotal);
