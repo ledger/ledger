@@ -139,6 +139,13 @@ public:
       HANDLER(limit_).on(str);
   }
 
+  void append_secondary_predicate(const string& str) {
+    if (HANDLED(only_))
+      HANDLER(only_).on(string("(") + HANDLER(only_).str() + ")&" + str);
+    else
+      HANDLER(only_).on(str);
+  }
+
   void append_display_predicate(const string& str) {
     if (HANDLED(display_))
       HANDLER(display_).on(string("(") + HANDLER(display_).str() + ")&" + str);
@@ -205,7 +212,10 @@ public:
   OPTION(report_t, daily);
   OPTION(report_t, date_format_); // -y
   OPTION(report_t, deviation); // -D
-  OPTION(report_t, display_); // -d
+
+  OPTION_(report_t, display_, DO_(args) { // -d
+      parent->append_display_predicate(args[0].to_string());
+    });
 
   OPTION__
   (report_t, display_amount_,
@@ -246,14 +256,22 @@ public:
   OPTION(report_t, gain); // -G
   OPTION(report_t, head_);
   OPTION(report_t, invert);
-  OPTION(report_t, limit_); // -l
+
+  OPTION_(report_t, limit_, DO_(args) { // -l
+      parent->append_predicate(args[0].to_string());
+    });
+
   OPTION(report_t, lot_dates);
   OPTION(report_t, lot_prices);
   OPTION(report_t, lot_tags);
   OPTION(report_t, lots);
   OPTION(report_t, market); // -V
   OPTION(report_t, monthly); // -M
-  OPTION(report_t, only_);
+
+  OPTION_(report_t, only_, DO_(args) { // -d
+      parent->append_secondary_predicate(args[0].to_string());
+    });
+
   OPTION(report_t, output_); // -o
   OPTION(report_t, pager_);
   OPTION(report_t, percentage); // -%
