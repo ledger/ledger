@@ -47,6 +47,8 @@
 #ifndef _COMMODITY_H
 #define _COMMODITY_H
 
+#include "amount.h"
+
 namespace ledger {
 
 class keep_details_t;

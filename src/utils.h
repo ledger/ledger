@@ -44,11 +44,6 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#if defined(DEBUG_MODE)
-#define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE 1
-#define BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING 1
-#endif
-
 #include <system.hh>
 
 /**

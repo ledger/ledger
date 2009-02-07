@@ -30,6 +30,7 @@
  */
 
 #include "amount.h"
+#include "commodity.h"
 
 namespace ledger {
 
@@ -661,6 +662,15 @@ bool amount_t::fits_in_long() const
   return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }
 
+commodity_t& amount_t::commodity() const
+{
+  return has_commodity() ? *commodity_ : *current_pool->null_commodity;
+}
+
+bool amount_t::has_commodity() const
+{
+  return commodity_ && commodity_ != commodity_->parent().null_commodity;
+}
 
 void amount_t::annotate(const annotation_t& details)
 {

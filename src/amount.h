@@ -707,18 +707,4 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 
 } // namespace ledger
 
-#include "commodity.h"
-
-namespace ledger {
-
-inline commodity_t& amount_t::commodity() const {
-  return has_commodity() ? *commodity_ : *current_pool->null_commodity;
-}
-
-inline bool amount_t::has_commodity() const {
-  return commodity_ && commodity_ != commodity_->parent().null_commodity;
-}
-
-} // namespace ledger
-
 #endif // _AMOUNT_H

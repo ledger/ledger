@@ -49,7 +49,7 @@
 #ifndef _BALANCE_H
 #define _BALANCE_H
 
-#include "amount.h"
+#include "commodity.h"
 
 namespace ledger {
 
