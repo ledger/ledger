@@ -164,9 +164,6 @@ ledger_CPPFLAGS	+= -I$(srcdir)/python
 endif
 ledger_SOURCES	= src/main.cc src/global.cc
 ledger_LDADD	= $(LIBOBJS) $(lib_LTLIBRARIES)
-if HAVE_BOOST_PYTHON
-ledger_LDADD   += libledger_python.la
-endif
 ledger_LDFLAGS	= 
 
 info_TEXINFOS	= doc/ledger.texi
