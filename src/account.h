@@ -64,8 +64,6 @@ typedef std::map<const string, account_t *> accounts_map;
 class account_t : public scope_t
 {
  public:
-  typedef std::size_t ident_t;
-
   account_t *	   parent;
   string	   name;
   optional<string> note;
@@ -73,14 +71,13 @@ class account_t : public scope_t
   accounts_map	   accounts;
 
   mutable void *   data;
-  mutable ident_t  ident;
   mutable string   _fullname;
 
   account_t(account_t *   _parent = NULL,
 	    const string& _name   = "",
 	    const optional<string>& _note = none)
     : scope_t(), parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0), data(NULL), ident(0) {
+      depth(parent ? parent->depth + 1 : 0), data(NULL) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
@@ -90,11 +87,9 @@ class account_t : public scope_t
       note(other.note),
       depth(other.depth),
       accounts(other.accounts),
-      data(NULL),
-      ident(0) {
+      data(NULL) {
     TRACE_CTOR(account_t, "copy");
     assert(other.data == NULL);
-    assert(other.ident == 0);
   }
   ~account_t();
 
