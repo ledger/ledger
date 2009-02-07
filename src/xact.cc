@@ -38,6 +38,7 @@ namespace ledger {
 
 date_t xact_t::date() const
 {
+  // jww (2009-02-06): Why isn't reported_date called here?
   if (! _date) {
     assert(entry);
     return entry->date();

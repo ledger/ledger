@@ -205,6 +205,8 @@ namespace {
     report_t& report(find_scope<report_t>(args));
     item_t&   item(find_scope<item_t>(args));
 
+    // jww (2009-02-06): Should we be calling reported_date here?
+
     date_t when;
     if (report.HANDLED(effective)) {
       if (optional<date_t> date = item.effective_date())
