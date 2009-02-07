@@ -137,8 +137,6 @@ public:
     account_t *	account;
     void *	ptr;
 
-    optional<xacts_list> component_xacts;
-
     xdata_t() : supports_flags<>(), account(NULL), ptr(NULL) {
       TRACE_CTOR(xact_t::xdata_t, "");
     }
@@ -156,28 +154,6 @@ public:
     ~xdata_t() throw() {
       TRACE_DTOR(xact_t::xdata_t);
     }
-
-    void remember_xact(xact_t& xact) {
-      if (! component_xacts)
-	component_xacts = xacts_list();
-      component_xacts->push_back(&xact);
-    }
-
-    bool has_component_xacts() const {
-      return component_xacts && ! component_xacts->empty();
-    }
-
-    void copy_component_xacts(xacts_list& xacts) {
-      foreach (xact_t * xact, xacts)
-	remember_xact(*xact);
-    }
-
-#if 0
-    void walk_component_xacts(item_handler<xact_t>& handler) const {
-      foreach (xact_t * xact, *component_xacts)
-	handler(*xact);
-    }
-#endif
   };
 
   // This variable holds optional "extended data" which is usually produced

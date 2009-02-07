@@ -409,31 +409,6 @@ public:
  *
  * Long.
  */
-class component_xacts : public item_handler<xact_t>
-{
-  item_predicate<xact_t> pred;
-
-  component_xacts();
-
-public:
-  component_xacts(xact_handler_ptr		handler,
-		  const item_predicate<xact_t>& predicate)
-    : item_handler<xact_t>(handler), pred(predicate) {
-    TRACE_CTOR(component_xacts,
-	       "xact_handler_ptr, const item_predicate<xact_t>&");
-  }
-  virtual ~component_xacts() throw() {
-    TRACE_DTOR(component_xacts);
-  }
-
-  virtual void operator()(xact_t& xact);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
 class related_xacts : public item_handler<xact_t>
 {
   xacts_list xacts;
@@ -522,8 +497,6 @@ class subtotal_xacts : public item_handler<xact_t>
     account_t *	account;
     value_t	value;
 
-    xacts_list components;
-
     acct_value_t(account_t * a) : account(a) {
       TRACE_CTOR(acct_value_t, "acount_t *");
     }
@@ -531,8 +504,7 @@ class subtotal_xacts : public item_handler<xact_t>
       TRACE_CTOR(acct_value_t, "acount_t *, value_t&");
     }
     acct_value_t(const acct_value_t& av)
-      : account(av.account), value(av.value),
-	components(av.components) {
+      : account(av.account), value(av.value) {
       TRACE_CTOR(acct_value_t, "copy");
     }
     ~acct_value_t() throw() {
@@ -547,7 +519,6 @@ class subtotal_xacts : public item_handler<xact_t>
 
 protected:
   values_map	     values;
-  bool		     remember_components;
   optional<string>   date_format;
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
@@ -557,11 +528,8 @@ public:
   date_t finish;
 
   subtotal_xacts(xact_handler_ptr handler,
-		 bool		  _remember_components = false,
-		 optional<string> _date_format	       = none)
-    : item_handler<xact_t>(handler),
-      remember_components(_remember_components),
-      date_format(_date_format) {
+		 optional<string> _date_format = none)
+    : item_handler<xact_t>(handler), date_format(_date_format) {
     TRACE_CTOR(subtotal_xacts,
 	       "xact_handler_ptr, bool");
   }
@@ -594,19 +562,17 @@ class interval_xacts : public subtotal_xacts
   interval_xacts();
 
 public:
-  interval_xacts(xact_handler_ptr _handler,
-			const interval_t& _interval,
-			bool remember_components = false)
-    : subtotal_xacts(_handler, remember_components),
-      interval(_interval), last_xact(NULL), started(false) {
+  interval_xacts(xact_handler_ptr  _handler,
+		 const interval_t& _interval)
+    : subtotal_xacts(_handler), interval(_interval),
+      last_xact(NULL), started(false) {
     TRACE_CTOR(interval_xacts,
 	       "xact_handler_ptr, const interval_t&, bool");
   }
   interval_xacts(xact_handler_ptr _handler,
-			const string& _interval,
-			bool remember_components = false)
-    : subtotal_xacts(_handler, remember_components),
-      interval(_interval), last_xact(NULL), started(false) {
+		 const string&	  _interval)
+    : subtotal_xacts(_handler), interval(_interval),
+      last_xact(NULL), started(false) {
     TRACE_CTOR(interval_xacts,
 	       "xact_handler_ptr, const string&, bool");
   }
@@ -635,15 +601,12 @@ class by_payee_xacts : public item_handler<xact_t>
   typedef std::pair<string, subtotal_xacts *> payee_subtotals_pair;
 
   payee_subtotals_map payee_subtotals;
-  bool		      remember_components;
 
   by_payee_xacts();
 
  public:
-  by_payee_xacts(xact_handler_ptr handler,
-			bool _remember_components = false)
-    : item_handler<xact_t>(handler),
-      remember_components(_remember_components) {
+  by_payee_xacts(xact_handler_ptr handler)
+    : item_handler<xact_t>(handler) {
     TRACE_CTOR(by_payee_xacts,
 	       "xact_handler_ptr, bool");
   }
@@ -715,9 +678,8 @@ class dow_xacts : public subtotal_xacts
   dow_xacts();
 
 public:
-  dow_xacts(xact_handler_ptr handler,
-		   bool remember_components = false)
-    : subtotal_xacts(handler, remember_components) {
+  dow_xacts(xact_handler_ptr handler)
+    : subtotal_xacts(handler) {
     TRACE_CTOR(dow_xacts, "xact_handler_ptr, bool");
   }
   virtual ~dow_xacts() throw() {

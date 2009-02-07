@@ -40,8 +40,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 				     xact_handler_ptr base_handler,
 				     const bool	      handle_individual_xacts)
 {
-  bool remember_components = false;
-
   xact_handler_ptr handler(base_handler);
 
   // format_xacts write each xact received to the output stream.
@@ -66,31 +64,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     handler.reset(new calc_xacts(handler));
 
 #if 0
-    // component_xacts looks for reported xact that match the given
-    // `descend_expr', and then reports the xacts which made up the total for
-    // that reported xact.
-    if (! report.descend_expr.empty()) {
-      std::list<std::string> descend_exprs;
-
-      std::string::size_type beg = 0;
-      for (std::string::size_type pos = report.descend_expr.find(';');
-	   pos != std::string::npos;
-	   beg = pos + 1, pos = report.descend_expr.find(';', beg))
-	descend_exprs.push_back(std::string(report.descend_expr,
-					    beg, pos - beg));
-      descend_exprs.push_back(std::string(report.descend_expr, beg));
-
-      for (std::list<std::string>::reverse_iterator i =
-	     descend_exprs.rbegin();
-	   i != descend_exprs.rend();
-	   i++)
-	handler.reset(new component_xacts
-		      (handler,
-		       item_predicate<xact_t>(*i, report.what_to_keep())));
-
-      remember_components = true;
-    }
-
     // reconcile_xacts will pass through only those xacts which can be
     // reconciled to a given balance (calculated against the xacts which it
     // receives).
@@ -141,18 +114,17 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // dow_xacts is like period_xacts, except that it reports all the xacts
     // that fall on each subsequent day of the week.
     if (report.HANDLED(subtotal))
-      handler.reset(new subtotal_xacts(handler, remember_components));
+      handler.reset(new subtotal_xacts(handler));
 
     if (report.HANDLED(dow))
-      handler.reset(new dow_xacts(handler, remember_components));
+      handler.reset(new dow_xacts(handler));
     else if (report.HANDLED(by_payee))
-      handler.reset(new by_payee_xacts(handler, remember_components));
+      handler.reset(new by_payee_xacts(handler));
 
     // interval_xacts groups xacts together based on a time period, such as
     // weekly or monthly.
     if (report.HANDLED(period_)) {
-      handler.reset(new interval_xacts(handler, report.HANDLER(period_).str(),
-				       remember_components));
+      handler.reset(new interval_xacts(handler, report.HANDLER(period_).str()));
       handler.reset(new sort_xacts(handler, "d"));
     }
   }

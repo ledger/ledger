@@ -2,9 +2,20 @@
 
 * 3.0
 
-- Added --anon option, for anonymizing the private details of reports.  This
-  is almost solely for the purpose of easing the creation of accurate bug
-  reports.
+- New commands:
+
+- New options:
+
+  --anon
+      For anonymizing the private details of reports.  This is almost solely
+      for the purpose of easing the creation of accurate bug reports.
+
+- Removed commands:
+
+- Removed options:
+
+  --descend
+  --descend_if EXPR
 
 * 2.6.1
 

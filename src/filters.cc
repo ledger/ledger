@@ -227,20 +227,13 @@ namespace {
 		    unsigned int	  flags,
 		    std::list<xact_t>&    temps,
 		    item_handler<xact_t>& handler,
-		    const date_t&         date		  = date_t(),
-		    xacts_list *          component_xacts = NULL)
+		    const date_t&         date		  = date_t())
   {
     temps.push_back(xact_t(account));
     xact_t& xact(temps.back());
     xact.entry = entry;
     xact.add_flags(ITEM_TEMP);
     entry->add_xact(&xact);
-
-    // If there are component xacts to associate with this temporary, do so
-    // now.
-
-    if (component_xacts)
-      xact.xdata().copy_component_xacts(*component_xacts);
 
     // If the account for this xact is all virtual, then report the xact as
     // such.  This allows subtotal reports to show "(Account)" for accounts
@@ -391,20 +384,6 @@ void changed_value_xacts::operator()(xact_t& xact)
   last_xact    = &xact;
 }
 
-void component_xacts::operator()(xact_t& xact)
-{
-  if (handler && pred(xact)) {
-    if (xact.has_xdata() &&
-	xact.xdata().has_component_xacts())
-#if 0
-      xact.xdata().walk_component_xacts(*handler)
-#endif
-	;
-    else
-      (*handler)(xact);
-  }
-}
-
 void subtotal_xacts::report_subtotal(const char * spec_fmt)
 {
   std::ostringstream out_date;
@@ -427,7 +406,7 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
 
   foreach (values_map::value_type& pair, values)
     handle_value(pair.second.value, pair.second.account, &entry, 0,
-		 xact_temps, *handler, finish, &pair.second.components);
+		 xact_temps, *handler, finish);
 
   values.clear();
 }
@@ -449,14 +428,8 @@ void subtotal_xacts::operator()(xact_t& xact)
     std::pair<values_map::iterator, bool> result
       = values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
     assert(result.second);
-
-    if (remember_components)
-      (*result.first).second.components.push_back(&xact);
   } else {
     xact.add_to_value((*i).second.value);
-
-    if (remember_components)
-      (*i).second.components.push_back(&xact);
   }
 
   // If the account for this xact is all virtual, mark it as
@@ -544,9 +517,7 @@ void by_payee_xacts::operator()(xact_t& xact)
 {
   payee_subtotals_map::iterator i = payee_subtotals.find(xact.entry->payee);
   if (i == payee_subtotals.end()) {
-    payee_subtotals_pair
-      temp(xact.entry->payee,
-	   new subtotal_xacts(handler, remember_components));
+    payee_subtotals_pair temp(xact.entry->payee, new subtotal_xacts(handler));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);
 

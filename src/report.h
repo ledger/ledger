@@ -195,8 +195,6 @@ public:
   OPTION(report_t, current); // -c
   OPTION(report_t, daily);
   OPTION(report_t, date_format_); // -y
-  OPTION(report_t, descend_);
-  OPTION(report_t, descend_if_);
   OPTION(report_t, deviation); // -D
   OPTION(report_t, display_); // -d
 
