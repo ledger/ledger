@@ -43,7 +43,6 @@ void export_balpair();
 void export_chain();
 void export_commodity();
 void export_compare();
-void export_csv();
 void export_emacs();
 void export_entry();
 void export_expr();
@@ -82,7 +81,6 @@ void initialize_for_python()
   export_chain();
   export_commodity();
   export_compare();
-  export_csv();
   export_emacs();
   export_entry();
   export_expr();

@@ -86,7 +86,6 @@
 #include <derive.h>
 #include <quotes.h>
 #include <emacs.h>
-#include <csv.h>
 
 #if defined(HAVE_BOOST_PYTHON)
 #include <pyinterp.h>

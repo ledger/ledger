@@ -50,6 +50,191 @@
 
 namespace ledger {
 
+template <typename T>
+class option_t
+{
+  const char * name;
+  std::size_t  name_len;
+  const char   ch;
+  bool	       handled;
+
+public:
+  T *          parent;
+  value_t      value;
+  bool	       wants_arg;
+
+  option_t(const char * _name, const char _ch = '\0')
+    : name(_name), name_len(std::strlen(name)), ch(_ch),
+      handled(false), parent(NULL), value(),
+      wants_arg(name[name_len - 1] == '_') {
+    TRACE_CTOR(option_t, "const char *, const char");
+  }
+  option_t(const option_t& other)
+    : name(other.name),
+      name_len(other.name_len),
+      ch(other.ch),
+      handled(other.handled),
+      parent(NULL),
+      value(other.value)
+  {
+    TRACE_CTOR(option_t, "copy");
+  }
+
+  virtual ~option_t() {
+    TRACE_DTOR(option_t);
+  }
+
+  string desc() const {
+    std::ostringstream out;
+    if (ch)
+      out << "--" << name << " (-" << ch << ")";
+    else
+      out << "--" << name;
+    return out.str();
+  }
+
+  virtual void help(std::ostream& out) {
+    out << "No help for " << desc() << "\n";
+  }
+
+  operator bool() const {
+    return handled;
+  }
+
+  string& str() {
+    assert(handled);
+    return value.as_string_lval();
+  }
+
+  void on() {
+    handled = true;
+  }
+  void on(const char * str) {
+    handled = true;
+    value   = string_value(str);
+  }
+  void on(const string& str) {
+    handled = true;
+    value   = string_value(str);
+  }
+  void on(const value_t& val) {
+    handled = true;
+    value   = val;
+  }
+
+  void off() {
+    handled = false;
+    value   = value_t();
+  }
+
+  virtual void handler(call_scope_t& args) {
+    if (wants_arg)
+      value = args[0];
+  }
+
+  virtual value_t operator()(call_scope_t& args) {
+    handled = true;
+    handler(args);
+    return true;
+  }
+};
+
+#define BEGIN(type, name)				\
+  struct name ## _option_t : public option_t<type>
+
+#define CTOR(type, name)				\
+  name ## _option_t() : option_t<type>(#name)
+#define DECL1(type, name, vartype, var, value)		\
+  vartype var ;						\
+  name ## _option_t() : option_t<type>(#name), var(value)
+  
+#define HELP(var) virtual void help(std::ostream& var)
+#define DO()      virtual void handler(call_scope_t&)
+#define DO_(var)  virtual void handler(call_scope_t& var)
+
+#define END(name) name ## _handler
+
+#define COPY_OPT(name, other) name ## _handler(other.name ## _handler)
+
+#define MAKE_OPT_FUNCTOR(x)					\
+  expr_t::op_t::wrap_functor(bind(&x ## _option_t::operator(),	\
+				  &x ## _handler, _1))
+
+inline bool is_eq(const char * p, const char * n) {
+  // Test whether p matches n, substituting - in p for _ in n.
+  for (; *p && *n; p++, n++) {
+    if (! (*p == '-' && *n == '_' ) && *p != *n)
+      return false;
+  }
+  return *p == *n;
+}
+
+#define OPT(name)							\
+  if (is_eq(p, #name))							\
+    return ((name ## _handler).parent = this, MAKE_OPT_FUNCTOR(name))
+
+#define OPT_(name)							\
+  if (! *(p + 1) ||							\
+      ((name ## _handler).wants_arg &&					\
+       *(p + 1) == '_' && ! *(p + 2)) ||				\
+      is_eq(p, #name))							\
+    return ((name ## _handler).parent = this, MAKE_OPT_FUNCTOR(name))
+
+#define OPT_CH(name)							\
+  if (! *(p + 1) ||							\
+      ((name ## _handler).wants_arg &&					\
+       *(p + 1) == '_' && ! *(p + 2)))					\
+    return ((name ## _handler).parent = this, MAKE_OPT_FUNCTOR(name))
+
+#define HANDLER(name) name ## _handler
+#define HANDLED(name) HANDLER(name)
+
+#define OPTION(type, name)				\
+  BEGIN(type, name)					\
+  {							\
+    CTOR(type, name) {}					\
+  }							\
+  END(name)
+
+#define OPTION_(type, name, body)			\
+  BEGIN(type, name)					\
+  {							\
+    CTOR(type, name) {}					\
+    body						\
+  }							\
+  END(name)
+
+#define OPTION__(type, name, body)			\
+  BEGIN(type, name)					\
+  {							\
+    body						\
+  }							\
+  END(name)
+
+#define OPT_PREFIX "opt_"
+#define OPT_PREFIX_LEN 4
+
+#define WANT_OPT()					\
+  (std::strncmp(p, OPT_PREFIX, OPT_PREFIX_LEN) == 0)
+
+#define PRECMD_PREFIX "precmd_"
+#define PRECMD_PREFIX_LEN 7
+
+#define WANT_PRECMD()					\
+  (std::strncmp(p, PRECMD_PREFIX, PRECMD_PREFIX_LEN) == 0)
+
+#define CMD_PREFIX "cmd_"
+#define CMD_PREFIX_LEN 4
+
+#define WANT_CMD()					\
+  (std::strncmp(p, CMD_PREFIX, CMD_PREFIX_LEN) == 0)
+
+#define DIR_PREFIX "dir_"
+#define DIR_PREFIX_LEN 4
+
+#define WANT_DIR()					\
+  (std::strncmp(p, DIR_PREFIX, DIR_PREFIX_LEN) == 0)
+
 void process_option(const string& name, scope_t& scope,
 		    const char * arg, const string& varname);
 

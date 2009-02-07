@@ -69,12 +69,25 @@ report_t::report_t(session_t& _session) : session(_session)
     "%20(strip(display_total))  %(depth_spacer)%-(partial_account)\n");
 
   HANDLER(equity_format_).on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
+
   HANDLER(plot_amount_format_).on("%D %(S(t))\n");
   HANDLER(plot_total_format_).on("%D %(S(T))\n");
+
   HANDLER(write_hdr_format_).on("%d %Y%C%P\n");
   HANDLER(write_xact_format_).on("    %-34W  %12o%n\n");
+
   HANDLER(prices_format_).on("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n");
   HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
+
+  HANDLER(csv_format_).on(
+    "%(escape(display_date)),"
+    "%(escape(payee)),"
+    "%(escape(account)),"
+    "%(escape(display_amount)),"
+    "%(escape(display_total)),"
+    "%(escape(cleared ? \"*\" : (uncleared ? \"\" : \"!\"))),"
+    "%(escape(code),"
+    "%(squash(escape(note))\n");
 }
 
 void report_t::xacts_report(xact_handler_ptr handler)
@@ -133,6 +146,28 @@ value_t report_t::fn_total_expr(call_scope_t& scope)
   return HANDLER(total_).expr.calc(scope);
 }
 
+value_t report_t::fn_display_date(call_scope_t& args)
+{
+  item_t& item(find_scope<item_t>(args));
+
+  // jww (2009-02-06): Should we be calling reported_date here?
+
+  date_t when;
+  if (HANDLED(effective)) {
+    if (optional<date_t> date = item.effective_date())
+      when = *date;
+    else
+      when = item.date();
+  } else {
+    when = item.date();
+  }
+
+  if (HANDLED(date_format_))
+    return string_value(format_date(when, HANDLER(date_format_).str()));
+  else
+    return string_value(format_date(when));
+}
+
 value_t report_t::fn_display_amount(call_scope_t& scope)
 {
   return HANDLER(display_amount_).expr.calc(scope);
@@ -143,87 +178,85 @@ value_t report_t::fn_display_total(call_scope_t& scope)
   return HANDLER(display_total_).expr.calc(scope);
 }
 
-namespace {
-  value_t fn_market_value(call_scope_t& args)
-  {
-    var_t<datetime_t> date(args, 1);
-    var_t<string>	    in_terms_of(args, 2);
+value_t report_t::fn_market_value(call_scope_t& args)
+{
+  var_t<datetime_t> date(args, 1);
+  var_t<string>	    in_terms_of(args, 2);
 
-    commodity_t * commodity = NULL;
-    if (in_terms_of)
-      commodity = amount_t::current_pool->find_or_create(*in_terms_of);
+  commodity_t * commodity = NULL;
+  if (in_terms_of)
+    commodity = amount_t::current_pool->find_or_create(*in_terms_of);
 
-    DEBUG("report.market", "getting market value of: " << args[0]);
+  DEBUG("report.market", "getting market value of: " << args[0]);
 
-    value_t result =
-      args[0].value(date ? optional<datetime_t>(*date) : optional<datetime_t>(),
-		    commodity ? optional<commodity_t&>(*commodity) :
-		    optional<commodity_t&>());
+  value_t result =
+    args[0].value(date ? optional<datetime_t>(*date) : optional<datetime_t>(),
+		  commodity ? optional<commodity_t&>(*commodity) :
+		  optional<commodity_t&>());
 
-    DEBUG("report.market", "result is: " << result);
-    return result;
-  }
+  DEBUG("report.market", "result is: " << result);
+  return result;
+}
 
-  value_t fn_print_balance(call_scope_t& args)
-  {
-    report_t& report(find_scope<report_t>(args));
-
-    var_t<long>	first_width(args, 1);
-    var_t<long>	latter_width(args, 2);
+value_t report_t::fn_print_balance(call_scope_t& args)
+{
+  var_t<long> first_width(args, 1);
+  var_t<long> latter_width(args, 2);
 #if 0
-    var_t<bool>	bold_negative(args, 3);
+  var_t<bool> bold_negative(args, 3);
 #endif
 
-    std::ostringstream out;
-    args[0].strip_annotations(report.what_to_keep())
-      .print(out, *first_width, *latter_width,
-	     report.HANDLED(date_format_) ?
-	     report.HANDLER(date_format_).str() : optional<string>());
+  std::ostringstream out;
+  args[0].strip_annotations(what_to_keep())
+    .print(out, *first_width, *latter_width,
+	   HANDLED(date_format_) ?
+	   HANDLER(date_format_).str() : optional<string>());
 
-    return string_value(out.str());
-  }
+  return string_value(out.str());
+}
 
-  value_t fn_strip(call_scope_t& args)
-  {
-    report_t& report(find_scope<report_t>(args));
-    return args[0].strip_annotations(report.what_to_keep());
-  }
+value_t report_t::fn_strip(call_scope_t& args)
+{
+  return args[0].strip_annotations(what_to_keep());
+}
 
-  value_t fn_truncate(call_scope_t& args)
-  {
-    report_t& report(find_scope<report_t>(args));
+value_t report_t::fn_truncate(call_scope_t& args)
+{
+  var_t<long> width(args, 1);
+  var_t<long> account_abbrev(args, 2);
 
-    var_t<long>	width(args, 1);
-    var_t<long>	account_abbrev(args, 2);
+  return string_value(format_t::truncate(args[0].as_string(), *width,
+					 account_abbrev ? *account_abbrev : -1));
+}
 
-    return string_value(format_t::truncate(args[0].as_string(), *width,
-					   account_abbrev ? *account_abbrev : -1));
-  }
+value_t report_t::fn_escape(call_scope_t& args)
+{
+  std::ostringstream out;
 
-  value_t fn_display_date(call_scope_t& args)
-  {
-    report_t& report(find_scope<report_t>(args));
-    item_t&   item(find_scope<item_t>(args));
-
-    // jww (2009-02-06): Should we be calling reported_date here?
-
-    date_t when;
-    if (report.HANDLED(effective)) {
-      if (optional<date_t> date = item.effective_date())
-	when = *date;
-      else
-	when = item.date();
-    } else {
-      when = item.date();
-    }
-
-    if (report.HANDLED(date_format_))
-      return string_value(format_date(when,
-				      report.HANDLER(date_format_).str()));
+  out << '"';
+  foreach (const char ch, args[0].to_string()) {
+    if (ch == '"')
+      out << "\\\"";
     else
-      return string_value(format_date(when));
+      out << ch;
   }
+  out << '"';
 
+  return string_value(out.str());
+}
+
+value_t report_t::fn_join(call_scope_t& args)
+{
+  std::ostringstream out;
+
+  foreach (const char ch, args[0].to_string())
+    if (ch != '\n')
+      out << ch;
+
+  return string_value(out.str());
+}
+
+namespace {
   template <class Type        = xact_t,
 	    class handler_ptr = xact_handler_ptr,
 	    void (report_t::*report_method)(handler_ptr) =
@@ -232,14 +265,14 @@ namespace {
   {
     shared_ptr<item_handler<Type> > handler;
 
+    report_t& report;
+
   public:
-    reporter(item_handler<Type> * _handler)
-      : handler(_handler) {}
+    reporter(item_handler<Type> * _handler, report_t& _report)
+      : handler(_handler), report(_report) {}
 
     value_t operator()(call_scope_t& args)
     {
-      report_t& report(find_scope<report_t>(args));
-
       if (args.value().size() > 0)
 	report.append_predicate
 	  (args_to_predicate_expr(args.value().as_sequence().begin(),
@@ -255,193 +288,106 @@ namespace {
   };
 }
 
-#if 0
-// Commands yet to implement:
-//
-// entry
-// prices
-// pricesdb
-// csv
-// emacs | lisp
-#endif
-
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
-    METHOD(report_t, amount_expr);
+    if (is_eq(p, "amount_expr"))
+      MAKE_FUNCTOR(report_t::fn_amount_expr);
     break;
 
   case 'c':
     if (WANT_CMD()) { p += CMD_PREFIX_LEN;
       switch (*p) {
       case 'b':
-	if (*(p + 1) == '\0' ||
-	    std::strcmp(p, "bal") == 0 ||
-	    std::strcmp(p, "balance") == 0)
+	if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, HANDLER(balance_format_).str())));
+	     (new format_accounts(*this, HANDLER(balance_format_).str()),
+	      *this));
+	break;
+
+      case 'c':
+	if (is_eq(p, "csv"))
+	  return WRAP_FUNCTOR
+	    (reporter<>(new format_xacts(*this, HANDLER(csv_format_).str()),
+			*this));
 	break;
 
       case 'e':
-	if (std::strcmp(p, "equity") == 0)
+	if (is_eq(p, "equity"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_equity(*this, HANDLER(print_format_).str())));
+	     (new format_equity(*this, HANDLER(print_format_).str()), *this));
+	else if (is_eq(p, "entry"))
+	  return NULL;		// jww (2009-02-07): NYI
+	else if (is_eq(p, "emacs"))
+	  return NULL;		// jww (2009-02-07): NYI
 	break;
 
       case 'p':
-	if (*(p + 1) == '\0' || std::strcmp(p, "print") == 0)
+	if (*(p + 1) == '\0' || is_eq(p, "print"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, HANDLER(print_format_).str())));
+	    (reporter<>(new format_xacts(*this, HANDLER(print_format_).str()),
+			*this));
+	else if (is_eq(p, "prices"))
+	  return NULL;		// jww (2009-02-07): NYI
+	else if (is_eq(p, "pricesdb"))
+	  return NULL;		// jww (2009-02-07): NYI
 	break;
 
       case 'r':
-	if (*(p + 1) == '\0' ||
-	    std::strcmp(p, "reg") == 0 ||
-	    std::strcmp(p, "register") == 0)
+	if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, HANDLER(register_format_).str())));
+	    (reporter<>(new format_xacts(*this, HANDLER(register_format_).str()),
+			*this));
 	break;
       }
     }
     break;
 
   case 'd':
-    METHOD(report_t, display_total);
-    else METHOD(report_t, display_amount);
-    else FUNCTION(display_date);
+    if (is_eq(p, "display_total"))
+      return MAKE_FUNCTOR(report_t::fn_display_total);
+    else if (is_eq(p, "display_total"))
+      return MAKE_FUNCTOR(report_t::fn_display_amount);
+    else if (is_eq(p, "display_total"))
+      return MAKE_FUNCTOR(report_t::fn_display_date);
+    break;
+
+  case 'e':
+    if (is_eq(p, "escape"))
+      return MAKE_FUNCTOR(report_t::fn_escape);
+    break;
+
+  case 'j':
+    if (is_eq(p, "join"))
+      return MAKE_FUNCTOR(report_t::fn_join);
     break;
 
   case 'm':
-    FUNCTION(market_value);
+    if (is_eq(p, "market"))
+      return MAKE_FUNCTOR(report_t::fn_market_value);
     break;
 
   case 'o':
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
       switch (*p) {
-      case 'a':
-	OPT(amount_);
-	else OPT(anon);
-	else OPT(account_);
-	else OPT(abbrev_len_);
+      case '%':
+	OPT_CH(percentage);
 	break;
-
-      case 'b':
-	OPT_(begin_);
-	else OPT(base);
-	else OPT(by_payee);
+      case 'A':
+	OPT_CH(average);
 	break;
-
-      case 'c':
-	OPT_(current);
-	else OPT(collapse);
-	else OPT(cleared);
-	else OPT(cost);
-	else OPT(comm_as_payee);
-	else OPT(code_as_payee);
-	break;
-
-      case 'd':
-	OPT(daily);
-	else OPT(dow);
-	else OPT(date_format_);
-	break;
-
-      case 'e':
-	OPT_(end_);
-	else OPT(empty);
-	else OPT(effective);
-	break;
-
-      case 'f':
-	OPT(format_);
-	break;
-
-      case 'h':
-	OPT(head_);
-	break;
-
-      case 'i':
-	OPT(invert);
-	break;
-
-      case 'j':
-	OPT_CH(amount_data);
-	break;
-
-      case 'l':
-	OPT_(limit_);
-	break;
-
-      case 'm':
-	OPT(monthly);
-	else OPT(market);
-	break;
-
-      case 'n':
-	OPT_CH(collapse);
-	break;
-
-      case 'o':
-	OPT_(output_);
-	break;
-
-      case 'p':
-	OPT_(period_);
-	else OPT(period_sort_);
-	else OPT(price);
-	else OPT(pager_);
-	break;
-
-      case 'q':
-	OPT(quarterly);
-	else OPT(quantity);
-	break;
-
-      case 'r':
-	OPT_(related);
-	else OPT_(related_all);
-	break;
-
-      case 's':
-	OPT_(subtotal);
-	else OPT(sort_);
-	else OPT(sort_all_);
-	else OPT(sort_entries_);
-	break;
-
-      case 't':
-	OPT_CH(amount_);
-	else OPT(total_);
-	else OPT(totals);
-	else OPT(tail_);
-	break;
-
-      case 'u':
-	OPT(uncleared);
-	break;
-
-      case 'w':
-	OPT(weekly);
-	break;
-
-      case 'x':
-	OPT_CH(comm_as_payee); // jww (2009-02-05): ???
-	break;
-
-      case 'y':
-	OPT_CH(date_format_);
-	else OPT(yearly);
-	break;
-
       case 'B':
-	OPT_CH(cost);
+	OPT_CH(basis);
 	break;
       case 'C':
 	OPT_CH(cleared);
+	break;
+      case 'D':
+	OPT_CH(deviation);
 	break;
       case 'E':
 	OPT_CH(empty);
@@ -449,11 +395,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'F':
 	OPT_CH(format_);
 	break;
+      case 'G':
+	OPT_CH(gain);
+	break;
       case 'I':
 	OPT_CH(price);
 	break;
       case 'J':
 	OPT_CH(total_data);
+	break;
+      case 'L':
+	OPT_CH(actual);
 	break;
       case 'M':
 	OPT_CH(monthly);
@@ -463,6 +415,9 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       case 'P':
 	OPT_CH(by_payee);
+	break;
+      case 'R':
+	OPT_CH(real);
 	break;
       case 'S':
 	OPT_CH(sort_);
@@ -482,6 +437,148 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'Y':
 	OPT_CH(yearly);
 	break;
+      case 'Z':
+	OPT_CH(price_exp_);
+	break;
+      case 'a':
+	OPT(abbrev_len_);
+	else OPT(account_);
+	else OPT(actual);
+	else OPT(add_budget);
+	else OPT(amount_);
+	else OPT(amount_data);
+	else OPT(anon);
+	else OPT(ansi);
+	else OPT(ansi_invert);
+	else OPT(average);
+	break;
+      case 'b':
+	OPT(balance_format_);
+	else OPT(base);
+	else OPT(basis);
+	else OPT_(begin_);
+	else OPT(budget);
+	else OPT(by_payee);
+	break;
+      case 'c':
+	OPT(cache_);
+	else OPT(csv_format_);
+	else OPT(cleared);
+	else OPT(code_as_payee);
+	else OPT(collapse);
+	else OPT(comm_as_payee);
+	else OPT(cost);
+	else OPT_(current);
+	break;
+      case 'd':
+	OPT(daily);
+	else OPT(date_format_);
+	else OPT(deviation);
+	else OPT_(display_);
+	else OPT(display_amount_);
+	else OPT(display_total_);
+	else OPT(dow);
+	break;
+      case 'e':
+	OPT(effective);
+	else OPT(empty);
+	else OPT_(end_);
+	else OPT(equity_format_);
+	break;
+      case 'f':
+	OPT(forecast_);
+	else OPT(format_);
+	break;
+      case 'g':
+	OPT_CH(performance);
+	else OPT(gain);
+	break;
+      case 'h':
+	OPT(head_);
+	break;
+      case 'i':
+	OPT(invert);
+	break;
+      case 'j':
+	OPT_CH(amount_data);
+	break;
+      case 'l':
+	OPT_(limit_);
+	else OPT(lot_dates);
+	else OPT(lot_prices);
+	else OPT(lot_tags);
+	else OPT(lots);
+	break;
+      case 'm':
+	OPT(market);
+	else OPT(monthly);
+	break;
+      case 'n':
+	OPT_CH(collapse);
+	break;
+      case 'o':
+	OPT(only_);
+	else OPT_(output_);
+	break;
+      case 'p':
+	OPT(pager_);
+	else OPT(percentage);
+	else OPT(performance);
+	else OPT_(period_);
+	else OPT(period_sort_);
+	else OPT(plot_amount_format_);
+	else OPT(plot_total_format_);
+	else OPT(price);
+	else OPT(price_exp_);
+	else OPT(prices_format_);
+	else OPT(pricesdb_format_);
+	else OPT(print_format_);
+	break;
+      case 'q':
+	OPT(quantity);
+	else OPT(quarterly);
+	break;
+      case 'r':
+	OPT(real);
+	else OPT(register_format_);
+	else OPT_(related);
+	else OPT(related_all);
+	else OPT(revalued);
+	else OPT(revalued_only);
+	break;
+      case 's':
+	OPT(set_price_);
+	else OPT(sort_);
+	else OPT(sort_all_);
+	else OPT(sort_entries_);
+	else OPT_(subtotal);
+	break;
+      case 't':
+	OPT_CH(amount_);
+	else OPT(tail_);
+	else OPT(total_);
+	else OPT(total_data);
+	else OPT(totals);
+	else OPT(truncate_);
+	break;
+      case 'u':
+	OPT(unbudgeted);
+	else OPT(uncleared);
+	break;
+      case 'w':
+	OPT(weekly);
+	else OPT_(wide);
+	else OPT(wide_register_format_);
+	else OPT(write_hdr_format_);
+	else OPT(write_xact_format_);
+	break;
+      case 'x':
+	OPT_CH(comm_as_payee);
+	break;
+      case 'y':
+	OPT_CH(date_format_);
+	else OPT(yearly);
+	break;
       }
     }
     break;
@@ -490,30 +587,39 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;
       switch (*p) {
       case 'a':
-	COMMAND(args);
+	if (is_eq(p, "args"))
+	  return WRAP_FUNCTOR(args_command);
 	break;
       case 'p':
-	COMMAND(parse);
-	else COMMAND(period);
+	if (is_eq(p, "parse"))
+	  return WRAP_FUNCTOR(parse_command);
+	else if (is_eq(p, "period"))
+	  return WRAP_FUNCTOR(period_command);
 	break;
       case 'e':
-	COMMAND(eval);
+	if (is_eq(p, "eval"))
+	  return WRAP_FUNCTOR(eval_command);
 	break;
       case 'f':
-	COMMAND(format);
+	if (is_eq(p, "format"))
+	  return WRAP_FUNCTOR(format_command);
 	break;
       }
     }
-    else FUNCTION(print_balance);
+    else if (is_eq(p, "print_balance"))
+      return MAKE_FUNCTOR(report_t::fn_print_balance);
     break;
 
   case 's':
-    FUNCTION(strip);
+    if (is_eq(p, "strip"))
+      return MAKE_FUNCTOR(report_t::fn_strip);
     break;
 
   case 't':
-    FUNCTION(truncate);
-    else METHOD(report_t, total_expr);
+    if (is_eq(p, "truncate"))
+      return MAKE_FUNCTOR(report_t::fn_truncate);
+    else if (is_eq(p, "total_expr"))
+      return MAKE_FUNCTOR(report_t::fn_total_expr);
     break;
   }
 

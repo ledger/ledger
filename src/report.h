@@ -122,8 +122,15 @@ public:
 
   value_t fn_amount_expr(call_scope_t& scope);
   value_t fn_total_expr(call_scope_t& scope);
+  value_t fn_display_date(call_scope_t& scope);
   value_t fn_display_amount(call_scope_t& scope);
   value_t fn_display_total(call_scope_t& scope);
+  value_t fn_market_value(call_scope_t& scope);
+  value_t fn_print_balance(call_scope_t& scope);
+  value_t fn_strip(call_scope_t& scope);
+  value_t fn_truncate(call_scope_t& scope);
+  value_t fn_escape(call_scope_t& scope);
+  value_t fn_join(call_scope_t& scope);
 
   void append_predicate(const string& str) {
     if (HANDLED(limit_))
@@ -193,6 +200,7 @@ public:
   OPTION(report_t, collapse); // -n
   OPTION(report_t, comm_as_payee); // -x
   OPTION(report_t, cost);
+  OPTION(report_t, csv_format_);
   OPTION(report_t, current); // -c
   OPTION(report_t, daily);
   OPTION(report_t, date_format_); // -y
@@ -270,7 +278,7 @@ public:
   OPTION(report_t, set_price_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
-	on(args[0].to_string());
+      on(args[0].to_string());
       parent->HANDLER(sort_entries_).off();
       parent->HANDLER(sort_all_).off();
     });

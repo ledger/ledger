@@ -46,8 +46,7 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include "scope.h"
-#include "handler.h"
+#include "option.h"
 #include "journal.h"
 #include "account.h"
 #include "format.h"

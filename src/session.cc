@@ -284,7 +284,7 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
     }
     break;
   }
-  return expr_t::ptr_op_t();
+  return NULL;
 }
 
 } // namespace ledger

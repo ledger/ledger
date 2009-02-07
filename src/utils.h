@@ -472,7 +472,8 @@ void finish_timer(const char * name);
 #include "error.h"
 #include "times.h"
 #include "flags.h"
-#include "stream.h"
+#include "stream.h"		// output_stream_t
+#include "pstream.h"		// pstristream
 
 enum caught_signal_t {
   NONE_CAUGHT,

@@ -37,12 +37,8 @@
 #if defined(TIMELOG_SUPPORT)
 #include "timelog.h"
 #endif
-#include "expr.h"
 #include "parser.h"
 #include "session.h"
-#include "option.h"
-#include "acconf.h"
-#include "pstream.h"
 
 namespace ledger {
 

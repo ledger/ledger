@@ -102,8 +102,8 @@ void global_scope_t::read_journal_files()
   INFO_START(journal, "Read journal file");
 
   string master_account;
-  if (report().HANDLED(account_))
-    master_account = report().HANDLER(account_).str();
+  if (session().HANDLED(account_))
+    master_account = session().HANDLER(account_).str();
 
   std::size_t count = session().read_data(*session().create_journal(),
 					  master_account);
@@ -269,8 +269,10 @@ expr_t::ptr_op_t global_scope_t::lookup(const string& name)
     if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;
       switch (*p) {
       case 'p':
-	M_COMMAND(global_scope_t, push);
-	else M_COMMAND(global_scope_t, pop);
+	if (is_eq(p, "push"))
+	  MAKE_FUNCTOR(global_scope_t::push_command);
+	else if (is_eq(p, "pop"))
+	  MAKE_FUNCTOR(global_scope_t::pop_command);
 	break;
       }
     }
@@ -279,7 +281,7 @@ expr_t::ptr_op_t global_scope_t::lookup(const string& name)
 
   // If you're wondering how symbols from report() will be found, it's
   // because of the bind_scope_t object in execute_command() below.
-  return expr_t::ptr_op_t();
+  return NULL;
 }
 
 void global_scope_t::read_environment_settings(char * envp[])
