@@ -114,7 +114,6 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, abbrev_len_);
   OPTION(session_t, account_); // -a
   OPTION(session_t, download); // -Q
 

@@ -326,6 +326,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	OPT(amount_);
 	else OPT(anon);
 	else OPT(account_);
+	else OPT(abbrev_len_);
 	break;
 
       case 'b':

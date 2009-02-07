@@ -152,6 +152,7 @@ public:
    * Option handlers
    */
 
+  OPTION(report_t, abbrev_len_);
   OPTION(report_t, account_);
   OPTION(report_t, actual); // -L
   OPTION(report_t, add_budget);

@@ -263,8 +263,7 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
       switch (*p) {
       case 'a':
-	OPT(abbrev_len_);
-	else OPT_(account_); // -a
+	OPT_(account_); // -a
 	break;
       case 'd':
 	OPT(download); // -Q
