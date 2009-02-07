@@ -4038,12 +4038,12 @@ how the steps above are achieved.
 
 @subsection Basic amounts
 
-The most fundamental type in Ledger is the amount, which may or may not
-have a commodity attached to it.  First, we'll deal with the bare case,
-just to show how the amount type works.  In C++, most all of Ledger's
-internal types end in @example{_t}; in Python, the same type name is
-used, but the @example{_t} suffix is dropped.  Examples of usage in both
-languages will be presented throughout.
+The most fundamental type in Ledger is the amount, which may or may
+not have a commodity attached to it.  First, we'll deal with the bare
+case, just to show how the amount type works.  In C++, most all of
+Ledger's internal types end in @code{_t}; in Python, the same type
+name is used, but the @code{_t} suffix is dropped.  Examples of usage
+in both languages will be presented throughout.
 
 
 
