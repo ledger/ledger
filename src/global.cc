@@ -145,13 +145,15 @@ void global_scope_t::report_error(const std::exception& err)
 
 void global_scope_t::execute_command(strings_list args, bool at_repl)
 {
+  session().now_at_command_line(true);
+
   // Process the command verb, arguments and options
   args = read_command_arguments(report(), args);
   if (args.empty())
     return;
 
   strings_list::iterator arg  = args.begin();
-  string		     verb = *arg++;
+  string		 verb = *arg++;
 
   // Look for a precommand first, which is defined as any defined function
   // whose name starts with "ledger_precmd_".  The difference between a
