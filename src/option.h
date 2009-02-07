@@ -133,8 +133,8 @@ public:
   }
 
   virtual value_t operator()(call_scope_t& args) {
-    handled = true;
     handler(args);
+    handled = true;
     return true;
   }
 };
