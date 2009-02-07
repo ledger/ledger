@@ -50,7 +50,6 @@ BOOST_VERSION="1_37"
 
 INCDIRS="-isystem /usr/local/include"
 INCDIRS="$INCDIRS -isystem /opt/local/include"
-INCDIRS="$INCDIRS -isystem /opt/local/include/libofx"
 INCDIRS="$INCDIRS -isystem /usr/local/include/boost-$BOOST_VERSION"
 INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
 
