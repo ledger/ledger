@@ -58,7 +58,7 @@ namespace ledger {
  *
  * Long.
  */
-class session_t : public noncopyable, public scope_t
+class session_t : public symbol_scope_t
 {
   friend void set_session_context(session_t * session);
 

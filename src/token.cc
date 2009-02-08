@@ -258,6 +258,15 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     break;
   case ':':
     in.get(c);
+    c = in.peek();
+    if (c == '=') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = DEFINE;
+      length = 2;
+      break;
+    }
     kind = COLON;
     break;
 

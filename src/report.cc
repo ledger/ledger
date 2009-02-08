@@ -504,6 +504,9 @@ option_t<report_t> * report_t::lookup_option(const char * p)
 
 expr_t::ptr_op_t report_t::lookup(const string& name)
 {
+  if (expr_t::ptr_op_t def = session.lookup(name))
+    return def;
+
   const char * p = name.c_str();
   switch (*p) {
   case 'a':
@@ -639,7 +642,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   if (option_t<report_t> * handler = lookup_option(p))
     return MAKE_OPT_FUNCTOR(report_t, handler);
 
-  return session.lookup(name);
+  return NULL;
 }
 
 } // namespace ledger

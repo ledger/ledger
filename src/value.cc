@@ -1715,7 +1715,7 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
 {
   switch (type()) {
   case VOID:
-    out << "";
+    out << "<null>";
     break;
 
   case BOOLEAN:

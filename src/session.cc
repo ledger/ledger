@@ -206,7 +206,8 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
     }
     break;
   }
-  return NULL;
+
+  return symbol_scope_t::lookup(name);
 }
 
 } // namespace ledger

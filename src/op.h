@@ -110,6 +110,7 @@ public:
 
     O_COMMA,
 
+    O_DEFINE,
     O_LOOKUP,
     O_CALL,
     O_MATCH,

@@ -73,6 +73,7 @@ struct expr_t::token_t : public noncopyable
     GREATER,			// >
     GREATEREQ,			// >=
 
+    DEFINE,			// :=
     ASSIGN,			// =
     MATCH,			// =~
     NMATCH,			// !~

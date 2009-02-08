@@ -66,6 +66,7 @@ public:
     TRACE_DTOR(scope_t);
   }
 
+  virtual void define(const string& name, expr_t::ptr_op_t def) {}
   virtual expr_t::ptr_op_t lookup(const string& name) = 0;
 
   value_t resolve(const string& name) {
@@ -98,6 +99,11 @@ public:
     TRACE_DTOR(child_scope_t);
   }
 
+  virtual void define(const string& name, expr_t::ptr_op_t def) {
+    if (parent)
+      parent->define(name, def);
+  }
+
   virtual expr_t::ptr_op_t lookup(const string& name) {
     if (parent)
       return parent->lookup(name);
@@ -127,12 +133,6 @@ public:
     TRACE_DTOR(symbol_scope_t);
   }
 
-  void define(const string& name, const value_t& val) {
-    define(name, expr_t::op_t::wrap_value(val));
-  }
-  void define(const string& name, const function_t& func) {
-    define(name, expr_t::op_t::wrap_functor(func));
-  }
   virtual void define(const string& name, expr_t::ptr_op_t def);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
@@ -209,6 +209,11 @@ public:
   }
   virtual ~bind_scope_t() {
     TRACE_DTOR(bind_scope_t);
+  }
+
+  virtual void define(const string& name, expr_t::ptr_op_t def) {
+    parent->define(name, def);
+    grandchild.define(name, def);
   }
 
   virtual expr_t::ptr_op_t lookup(const string& name) {

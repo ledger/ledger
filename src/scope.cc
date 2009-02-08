@@ -35,7 +35,7 @@ namespace ledger {
 
 void symbol_scope_t::define(const string& name, expr_t::ptr_op_t def)
 {
-  DEBUG("ledger.xpath.syms", "Defining '" << name << "' = " << def);
+  DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
 
   std::pair<symbol_map::iterator, bool> result
     = symbols.insert(symbol_map::value_type(name, def));
@@ -47,8 +47,7 @@ void symbol_scope_t::define(const string& name, expr_t::ptr_op_t def)
     std::pair<symbol_map::iterator, bool> result2
       = symbols.insert(symbol_map::value_type(name, def));
     if (! result2.second)
-      throw_(compile_error,
-	     "Redefinition of '" << name << "' in same scope");
+      throw_(compile_error, "Redefinition of '" << name << "' in same scope");
   }
 }
 

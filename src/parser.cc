@@ -226,6 +226,9 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
     bool	  negate = false;
 
     switch (tok.kind) {
+    case token_t::DEFINE:
+      kind = op_t::O_DEFINE;
+      break;
     case token_t::EQUAL:
       if (tflags.has_flags(PARSE_NO_ASSIGN))
 	tok.rewind(in);

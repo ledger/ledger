@@ -166,6 +166,10 @@ public:
 
   option_t<report_t> * lookup_option(const char * p);
 
+  virtual void define(const string& name, expr_t::ptr_op_t def) {
+    session.define(name, def);
+  }
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   /**
