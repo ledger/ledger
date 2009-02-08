@@ -217,6 +217,10 @@ namespace {
     return long(item.end_line);
   }
 
+  value_t get_depth(item_t& item) {
+    return 0L;
+  }
+
   template <value_t (*Func)(item_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<item_t>(scope));
@@ -259,6 +263,8 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
   case 'd':
     if (name[1] == '\0' || name == "date")
       return WRAP_FUNCTOR(get_wrapper<&get_date>);
+    else if (name == "depth")
+      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     break;
 
   case 'h':
