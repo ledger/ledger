@@ -126,7 +126,7 @@ namespace {
     return long(item.state());
   }
   value_t get_uncleared(item_t& item) {
-    return item.state() == item_t::CLEARED;
+    return item.state() == item_t::UNCLEARED;
   }
   value_t get_cleared(item_t& item) {
     return item.state() == item_t::CLEARED;
