@@ -33,10 +33,6 @@
 #include "pyutils.h"
 #include "xact.h"
 
-#include <boost/python/exception_translator.hpp>
-#include <boost/python/implicit.hpp>
-#include <boost/python/args.hpp>
-
 namespace ledger {
 
 using namespace boost::python;

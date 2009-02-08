@@ -32,10 +32,6 @@
 #include "pyinterp.h"
 #include "pyutils.h"
 
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
-#include <boost/python/to_python_converter.hpp>
-
 namespace ledger {
 
 using namespace boost::python;

@@ -31,12 +31,6 @@
 
 #include "utils.h"
 
-#ifdef HAVE_UNIX_PIPES
-#include <sys/types.h>
-#include <sys/wait.h>
-#include "fdstream.h"
-#endif
-
 namespace ledger {
 
 namespace {

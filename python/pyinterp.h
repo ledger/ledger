@@ -37,9 +37,6 @@
 
 #if defined(HAVE_BOOST_PYTHON)
 
-#include <boost/python.hpp>
-#include <Python.h>
-
 namespace ledger {
 
 class python_interpreter_t : public session_t

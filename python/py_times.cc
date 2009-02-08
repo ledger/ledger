@@ -32,8 +32,6 @@
 #include "pyinterp.h"
 #include "pyutils.h"
 
-#include <datetime.h>
-
 // jww (2007-05-04): Convert time duration objects to PyDelta
 
 namespace ledger {

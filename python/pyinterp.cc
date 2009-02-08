@@ -31,8 +31,6 @@
 
 #include "pyinterp.h"
 
-#include <boost/python/module_init.hpp>
-
 namespace ledger {
 
 using namespace boost::python;

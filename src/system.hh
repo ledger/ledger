@@ -129,9 +129,19 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <pwd.h>
 #endif
 
+#ifdef HAVE_UNIX_PIPES
+#include <sys/types.h>
+#include <sys/wait.h>
+#include "fdstream.h"
+#endif
+
 #include <gmp.h>
 #include <mpfr.h>
 #include "sha1.h"
+#define SUPPORT_UNICODE 1
+#if defined(SUPPORT_UNICODE)
+#include "utf8.h"
+#endif
 
 #ifdef HAVE_LIBEDIT
 #include <editline/readline.h>
@@ -158,5 +168,22 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
+
+#if defined(HAVE_BOOST_PYTHON)
+
+#include <boost/python.hpp>
+
+#include <Python.h>
+#include <datetime.h>
+
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
+#include <boost/python/args.hpp>
+#include <boost/python/module.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/to_python_converter.hpp>
+#include <boost/python/module_init.hpp>
+
+#endif // HAVE_BOOST_PYTHON
 
 #endif // _SYSTEM_HH

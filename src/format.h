@@ -46,13 +46,8 @@
 #ifndef _FORMAT_H
 #define _FORMAT_H
 
-#define SUPPORT_UNICODE 1
-
 #include "journal.h"
 #include "expr.h"
-#if defined(SUPPORT_UNICODE)
-#include "utf8.h"
-#endif
 
 namespace ledger {
 
