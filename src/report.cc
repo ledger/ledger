@@ -440,6 +440,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'p':
     OPT(pager_);
+    else OPT(pending);
     else OPT(percentage);
     else OPT(performance);
     else OPT_(period_);

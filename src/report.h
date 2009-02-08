@@ -290,6 +290,7 @@ public:
 
   OPTION(report_t, output_); // -o
   OPTION(report_t, pager_);
+  OPTION(report_t, pending);
   OPTION(report_t, percentage); // -%
   OPTION(report_t, performance); // -g
   OPTION(report_t, period_); // -p
