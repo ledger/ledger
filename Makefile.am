@@ -349,7 +349,7 @@ all_tests_sources =				\
 	$(data_tests_SOURCES)			\
 	$(report_tests_SOURCES)
 
-PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
+#PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
 
 all_py_tests_sources = \
 	$(patsubst test/unit/%.cc,$(top_builddir)/test/python/%.py, \
@@ -382,12 +382,12 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: $(srcdir)/test/PyUnitTests.py test/python/UnitTests.py
-	@cat $(srcdir)/test/PyUnitTests.py \
-	    | sed "s/%python%/$(ESC_python)/" \
-	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
-	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
-	chmod 755 $@
+#PyUnitTests: $(srcdir)/test/PyUnitTests.py test/python/UnitTests.py
+#	@cat $(srcdir)/test/PyUnitTests.py \
+#	    | sed "s/%python%/$(ESC_python)/" \
+#	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+#	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
+#	chmod 755 $@
 
 RegressionTests_SOURCES = test/regress.py
 
