@@ -37,7 +37,7 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 			      value_t::sequence_t::const_iterator end)
 {
   std::ostringstream expr;
-  bool		     append_and = false;
+  bool		     append_or = false;
   bool		     only_parenthesis;
 
   while (begin != end) {
@@ -48,29 +48,29 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
     bool only_closed_parenthesis = false;;
 
     if (arg == "not" || arg == "NOT") {
-      if (append_and)
-	prefix = " & ! ";
+      if (append_or)
+	prefix = " | ! ";
       else
 	prefix = " ! ";
       parse_argument = false;
-      append_and = false;
+      append_or = false;
     }
     else if (arg == "and" || arg == "AND") {
       prefix = " & ";
       parse_argument = false;
-      append_and = false;
+      append_or = false;
     }
     else if (arg == "or" || arg == "OR") {
       prefix = " | ";
       parse_argument = false;
-      append_and = false;
+      append_or = false;
     }
-    else if (append_and) {
+    else if (append_or) {
       if (! only_parenthesis)
-	prefix = " & ";
+	prefix = " | ";
     }
     else {
-      append_and = true;
+      append_or = true;
     }
 
     value_t::sequence_t::const_iterator next = begin;
@@ -94,7 +94,6 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 
     if (parse_argument) {
       bool in_prefix	   = true;
-      bool in_suffix	   = false;
       bool found_specifier = false;
       bool no_final_slash  = false;
 
@@ -110,12 +109,6 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 
 	if (in_prefix) {
 	  switch (*c) {
-	  case ')':
-	    if (only_parenthesis)
-	      only_closed_parenthesis = true;
-	    break;
-	  case '(':
-	    break;
 	  case '@':
 	    buf << "(payee =~ /";
 	    found_specifier = true;
@@ -149,8 +142,10 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    consumed = true;
 	    break;
 	  }
-	  case '/':
-	  case '_':
+	  case ')':
+	    if (only_parenthesis)
+	      only_closed_parenthesis = true;
+	    // fall_through...
 	  default:
 	    if (! found_specifier) {
 	      buf << "(account =~ /";
@@ -159,40 +154,22 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    in_prefix = false;
 	    break;
 	  }
-	} else {
-	  switch (*c) {
-	  case ')':
-	    if (! in_suffix) {
-	      if (found_specifier) {
-		if (! no_final_slash)
-		  buf << "/";
-		buf << ")";
-	      }
-	      in_suffix = true;
-	    }
-	    break;
-	  default:
-	    if (in_suffix)
-	      throw_(parse_error, "Invalid text in specification argument");
-	    break;
-	  }
 	}
 
 	if (! consumed)
 	  buf << *c;
       }
 
-      if (! prefix.empty() && ! only_closed_parenthesis)
+      if (! prefix.empty() &&
+	  ! (only_parenthesis && only_closed_parenthesis))
 	expr << prefix;
 
       expr << buf.str();
 
-      if (! in_suffix) {
-	if (found_specifier) {
-	  if (! no_final_slash)
-	    expr << "/";
-	  expr << ")";
-	}
+      if (found_specifier) {
+	if (! no_final_slash)
+	  expr << "/";
+	expr << ")";
       }
     } else {
       expr << prefix;
