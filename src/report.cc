@@ -58,11 +58,11 @@ report_t::report_t(session_t& _session) : session(_session)
     "%48|%-.38A %22.108t %!22.132T\n");
 
   HANDLER(print_format_).on(
-    "%(display_date)%(entry.cleared ? \" *\" : (entry.uncleared ? \"\" : \" !\"))"
+    "%(entry.date)%(entry.cleared ? \" *\" : (entry.uncleared ? \"\" : \" !\"))"
     "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
-    "    %(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%-34(account)"
+    "    %(cleared ? \"* \" : (uncleared ? \"\" : \"! \"))%-34(account)"
     "  %12(amount)%(comment | \"\")\n%/"
-    "    %(cleared ? \" *\" : (uncleared ? \"\" : \" !\"))%-34(account)"
+    "    %(cleared ? \"* \" : (uncleared ? \"\" : \"! \"))%-34(account)"
     "  %12(amount)%(comment | \"\")\n%/\n");
 
   HANDLER(balance_format_).on(
