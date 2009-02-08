@@ -434,7 +434,7 @@ amount_t::precision_t amount_t::display_precision() const
     return quantity->prec;
 }
 
-amount_t& amount_t::in_place_negate()
+void amount_t::in_place_negate()
 {
   if (quantity) {
     _dup();
@@ -442,7 +442,6 @@ amount_t& amount_t::in_place_negate()
   } else {
     throw_(amount_error, "Cannot negate an uninitialized amount");
   }
-  return *this;
 }
 
 amount_t amount_t::inverted() const
@@ -485,7 +484,7 @@ amount_t amount_t::unrounded() const
   return t;
 }
 
-amount_t& amount_t::in_place_reduce()
+void amount_t::in_place_reduce()
 {
   if (! quantity)
     throw_(amount_error, "Cannot reduce an uninitialized amount");
@@ -494,10 +493,9 @@ amount_t& amount_t::in_place_reduce()
     *this *= commodity().smaller()->number();
     commodity_ = commodity().smaller()->commodity_;
   }
-  return *this;
 }
 
-amount_t& amount_t::in_place_unreduce()
+void amount_t::in_place_unreduce()
 {
   if (! quantity)
     throw_(amount_error, "Cannot unreduce an uninitialized amount");
@@ -508,7 +506,6 @@ amount_t& amount_t::in_place_unreduce()
     if (abs() < amount_t(1L))
       break;
   }
-  return *this;
 }
 
 optional<amount_t> amount_t::value(const optional<datetime_t>&   moment,

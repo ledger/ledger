@@ -1404,6 +1404,25 @@ void value_t::in_place_reduce()
   //throw_(value_error, "Cannot reduce " << label());
 }
 
+void value_t::in_place_unreduce()
+{
+  switch (type()) {
+  case AMOUNT:
+    as_amount_lval().in_place_unreduce();
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_unreduce();
+    return;
+  case BALANCE_PAIR:
+    as_balance_pair_lval().in_place_unreduce();
+    return;
+  default:
+    return;
+  }
+
+  //throw_(value_error, "Cannot reduce " << label());
+}
+
 value_t value_t::abs() const
 {
   switch (type()) {

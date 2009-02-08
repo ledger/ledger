@@ -296,7 +296,7 @@ public:
     temp.in_place_negate();
     return temp;
   }
-  amount_t& in_place_negate();
+  void in_place_negate();
 
   amount_t operator-() const {
     return negate();
@@ -335,7 +335,7 @@ public:
     temp.in_place_reduce();
     return temp;
   }
-  amount_t& in_place_reduce();
+  void in_place_reduce();
 
   /** unreduce(), if used with a "scaling commodity", yields the most
       compact form greater than one.  That is, \c 3599s will unreduce to
@@ -346,7 +346,7 @@ public:
     temp.in_place_unreduce();
     return temp;
   }
-  amount_t& in_place_unreduce();
+  void in_place_unreduce();
 
   /** Returns the historical value for an amount -- the default moment
       returns the most recently known price -- based on the price history
