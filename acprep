@@ -181,16 +181,19 @@ while [ -n "$1" ]; do
     --devel)
         # jww (2008-08-07): Sadly, PCH does not work with Boost+gcc4.0 on
 	# OS X.  It does work with gcc4.2, but then _GLIBCXX_DEBUG fails.
-	#SWITCHES="$SWITCHES --enable-pch"
+	SWITCHES="$SWITCHES --enable-pch"
 
-	# The use of this flag requires that Boost be also build with
+	# The use of this flag requires that Boost be also built with
 	# _GLIBCXX_DEBUG.
-	CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
-	CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
-	LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
+	#CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
+	#CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
+	#LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
+	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
+	LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
 
-	# I build mine with _GLIBCXX_DEBUG
-	BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
+	# I build my debug Boost libs with _GLIBCXX_DEBUG
+	#BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
+	BOOST_SUFFIX="-xgcc40"
 
         # Do the same thing as --debug below
 	SWITCHES="$SWITCHES --enable-debug"
@@ -219,11 +222,17 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
 	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
 
-	#if [[ -f /opt/local/bin/g++-mp-4.3 ]]; then
-	#    CXX=/opt/local/bin/g++-mp-4.3
-	#elif [ $SYSTEM = Darwin ]; then
-	#    CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
-	#fi
+	if [[ -f /usr/bin/g++-4.2 ]]; then
+	    CC=/usr/bin/gcc-4.2
+	    CXX=/usr/bin/g++-4.2
+	    LD=/usr/bin/g++-4.2
+	elif [[ -f /opt/local/bin/g++-mp-4.3 ]]; then
+	    CC=/opt/local/bin/gcc-mp-4.3
+	    CXX=/opt/local/bin/g++-mp-4.3
+	    LD=/opt/local/bin/g++-mp-4.3
+	elif [ $SYSTEM = Darwin ]; then
+	    CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
+	fi
 
 	#LDFLAGS="-Wl,-read_only_relocs,suppress"
 	#LIBS=""
