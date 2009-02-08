@@ -201,6 +201,20 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
       result = right()->calc(scope, context);
     break;
 
+  case O_QUERY:
+    assert(right());
+    assert(right()->kind == O_COLON);
+
+    if (value_t temp = left()->calc(scope, context))
+      result = right()->left()->calc(scope, context);
+    else
+      result = right()->right()->calc(scope, context);
+    break;
+
+  case O_COLON:
+    assert(! "We should never calculate an O_COLON operator");
+    break;
+
   case O_COMMA: {
     value_t temp(left()->calc(scope, context));
 
@@ -379,6 +393,22 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     out << ")";
     break;
 
+  case O_QUERY:
+    if (left() && left()->print(out, context))
+      found = true;
+    out << " ? ";
+    if (has_right() && right()->print(out, context))
+      found = true;
+    break;
+
+  case O_COLON:
+    if (left() && left()->print(out, context))
+      found = true;
+    out << " : ";
+    if (has_right() && right()->print(out, context))
+      found = true;
+    break;
+
   case O_COMMA:
     if (left() && left()->print(out, context))
       found = true;
@@ -475,6 +505,9 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   case O_AND:	 out << "O_AND"; break;
   case O_OR:	 out << "O_OR"; break;
+
+  case O_QUERY:  out << "O_QUERY"; break;
+  case O_COLON:	 out << "O_COLON"; break;
 
   case O_COMMA:	 out << "O_COMMA"; break;
 

@@ -340,7 +340,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 
     if (tok.kind == token_t::QUERY) {
       ptr_op_t prev(node);
-      node = new op_t(op_t::O_AND);
+      node = new op_t(op_t::O_QUERY);
       node->set_left(prev);
       node->set_right(parse_or_expr(in, tflags));
       if (! node->right())
@@ -351,13 +351,15 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       if (next_tok.kind != token_t::COLON)
 	next_tok.expected(':');
 
-      prev = node;
-      node = new op_t(op_t::O_OR);
-      node->set_left(prev);
-      node->set_right(parse_or_expr(in, tflags));
-      if (! node->right())
+      prev = node->right();
+      ptr_op_t subnode = new op_t(op_t::O_COLON);
+      subnode->set_left(prev);
+      subnode->set_right(parse_or_expr(in, tflags));
+      if (! subnode->right())
 	throw_(parse_error,
 	       tok.symbol << " operator not followed by argument");
+
+      node->set_right(subnode);
     } else {
       push_token(tok);
     }
