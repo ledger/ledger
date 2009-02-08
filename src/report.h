@@ -219,7 +219,12 @@ public:
   OPTION(report_t, cache_);
   OPTION(report_t, cleared); // -C
   OPTION(report_t, code_as_payee);
-  OPTION(report_t, collapse); // -n
+
+  OPTION_(report_t, collapse, DO() { // -n
+      // Make sure that balance reports are collapsed too
+      parent->append_display_predicate("depth<=1");
+    });
+
   OPTION(report_t, comm_as_payee); // -x
   OPTION(report_t, cost);
   OPTION(report_t, csv_format_);

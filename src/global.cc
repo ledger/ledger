@@ -387,8 +387,6 @@ void global_scope_t::normalize_report_options(const string& verb)
     if (verb[0] == 'b') {
       if (! rep.HANDLED(empty))
 	rep.append_display_predicate("total");
-      if (! rep.HANDLED(subtotal))
-	rep.append_display_predicate("depth<=1");
     }
     else if (verb == "equity") {
       // jww (2008-08-14): ???

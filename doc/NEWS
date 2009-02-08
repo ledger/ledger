@@ -2,22 +2,33 @@
 
 * 3.0
 
-- New commands:
+** Incompatible changes
 
-- New options:
+*** Options changed
 
-  --anon
-      For anonymizing the private details of reports.  This is almost solely
-      for the purpose of easing the creation of accurate bug reports.
+- The balance reports now defaults to showing all relevant accounts, which is
+  the opposite of how it worked before.  That is, "bal" in 3.0 does what "-s
+  bal" did in 2.x.  To get the 2.6 behavior, use "bal -n" in 3.0.  The -s
+  option no longer has any effect on balance reports.
 
-- Removed commands:
+*** Commands removed
 
-- Removed options:
+*** Options removed
 
   --descend
   --descend_if EXPR
   --reconcile
   --reconcile-date DATE
+
+** New features
+
+*** Commands
+
+*** Options
+
+  --anon
+      For anonymizing the private details of reports.  This is almost solely
+      for the purpose of easing the creation of accurate bug reports.
 
 * 2.6.1
 
