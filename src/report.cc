@@ -58,11 +58,13 @@ report_t::report_t(session_t& _session) : session(_session)
     "%48|%-.38A %22.108t %!22.132T\n");
 
   HANDLER(print_format_).on(
-    "%(entry.date)%(entry.cleared ? \" *\" : (entry.uncleared ? \"\" : \" !\"))"
+    "%(entry.date)%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
     "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
-    "    %(cleared ? \"* \" : (uncleared ? \"\" : \"! \"))%-34(account)"
+    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+    "%-34(account)"
     "  %12(amount)%(comment | \"\")\n%/"
-    "    %(cleared ? \"* \" : (uncleared ? \"\" : \"! \"))%-34(account)"
+    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+    "%-34(account)"
     "  %12(amount)%(comment | \"\")\n%/\n");
 
   HANDLER(balance_format_).on(
@@ -84,7 +86,7 @@ report_t::report_t(session_t& _session) : session(_session)
     "%(quoted(payee)),"
     "%(quoted(account)),"
     "%(quoted(display_amount)),"
-    "%(quoted(cleared ? \"*\" : (uncleared ? \"\" : \"!\"))),"
+    "%(quoted((cleared or entry.cleared) ? \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
     "%(quoted(code)),"
     "%(quoted(join(note)))\n");
 }

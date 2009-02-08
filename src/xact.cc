@@ -66,6 +66,10 @@ item_t::state_t xact_t::state() const
 }
 
 namespace {
+  value_t get_this(xact_t& xact) {
+    return value_t(static_cast<scope_t *>(&xact));
+  }
+
   value_t get_entry(xact_t& xact) {
     return value_t(static_cast<scope_t *>(xact.entry));
   }
@@ -197,6 +201,11 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     else if (name == "total_cost")
       return WRAP_FUNCTOR(get_wrapper<&get_total_cost>);
+    break;
+
+  case 'x':
+    if (name == "xact")
+      return WRAP_FUNCTOR(get_wrapper<&get_this>);
     break;
   }
 

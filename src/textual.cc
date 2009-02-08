@@ -752,8 +752,8 @@ xact_t * instance_t::parse_xact(char *		line,
   }
 
   if (entry &&
-      ((entry->_state == item_t::CLEARED && xact->state() != item_t::CLEARED) ||
-       (entry->_state == item_t::PENDING && xact->state() == item_t::UNCLEARED)))
+      ((entry->_state == item_t::CLEARED && xact->_state != item_t::CLEARED) ||
+       (entry->_state == item_t::PENDING && xact->_state == item_t::UNCLEARED)))
     xact->set_state(entry->_state);
 
   // Parse the account name
@@ -1050,15 +1050,14 @@ entry_t * instance_t::parse_entry(char *	  line,
 
   // Parse the optional cleared flag: *
 
-  item_t::state_t state = item_t::UNCLEARED;
   if (next) {
     switch (*next) {
     case '*':
-      state = item_t::CLEARED;
+      curr->_state = item_t::CLEARED;
       next = skip_ws(++next);
       break;
     case '!':
-      state = item_t::PENDING;
+      curr->_state = item_t::PENDING;
       next = skip_ws(++next);
       break;
     }

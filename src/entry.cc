@@ -61,14 +61,14 @@ entry_base_t::~entry_base_t()
 item_t::state_t entry_base_t::state() const
 {
   bool	  first	 = true;
-  state_t result = UNCLEARED;
+  state_t result = CLEARED;
 
   foreach (xact_t * xact, xacts) {
-    if ((result == UNCLEARED && xact->_state != UNCLEARED) ||
-	(result == PENDING   && xact->_state == CLEARED))
-      result = xact->_state;
+    if (xact->_state == UNCLEARED)
+      return UNCLEARED;
+    else if (xact->_state == PENDING)
+      result = PENDING;
   }
-
   return result;
 }
 
