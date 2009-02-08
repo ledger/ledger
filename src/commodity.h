@@ -599,7 +599,7 @@ public:
   commodity_t * find_or_create(commodity_t&	   comm,
 			       const annotation_t& details);
 
-  void parse_commodity_price(const char * optarg);
+  void parse_commodity_price(char * optarg);
 };
 
 } // namespace ledger

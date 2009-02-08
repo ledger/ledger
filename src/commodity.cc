@@ -988,7 +988,7 @@ commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,
   return create(comm, details, name);
 }
 
-void commodity_pool_t::parse_commodity_price(const char * optarg)
+void commodity_pool_t::parse_commodity_price(char * optarg)
 {
   char * equals = std::strchr(optarg, '=');
   if (! equals)
@@ -1001,8 +1001,8 @@ void commodity_pool_t::parse_commodity_price(const char * optarg)
   std::string symbol(optarg, 0, equals - optarg);
   amount_t	price(equals + 1);
 
-  if (commodity_t * commodity = commodity_t::find_or_create(symbol))
-    commodity->add_price(datetime_t::now, price);
+  if (commodity_t * commodity = find_or_create(symbol))
+    commodity->add_price(CURRENT_TIME(), price);
 }
 
 } // namespace ledger
