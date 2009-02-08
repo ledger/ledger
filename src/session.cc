@@ -182,6 +182,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'i':
     OPT(input_date_format_);
     break;
+  case 'l':
+    OPT(leeway_);
+    break;
   case 'p':
     OPT(price_db_);
     break;

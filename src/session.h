@@ -107,6 +107,13 @@ public:
   OPTION(session_t, download); // -Q
 
   OPTION__
+  (session_t, leeway_,
+   CTOR(session_t, leeway_) { value = 24L * 3600L; }
+   DO_(args) {
+     value = args[0].to_long() * 60L;
+   });
+
+  OPTION__
   (session_t, file_, // -f
    std::list<path> data_files;
    CTOR(session_t, file_) {}
