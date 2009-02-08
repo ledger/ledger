@@ -314,7 +314,7 @@ AC_STRUCT_TM
 #AC_FUNC_MKTIME
 #AC_FUNC_STAT
 #AC_FUNC_STRFTIME
-AC_CHECK_FUNCS([access realpath getpwuid getpwnam nl_langinfo])
+AC_CHECK_FUNCS([access realpath getpwuid getpwnam])
 
 # Pepare the Makefiles
 AC_CONFIG_FILES([Makefile])
