@@ -78,21 +78,28 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
 {
   try {
 
+  value_t result;
+
+  DEBUG("op.calc", "calculating '" << op_context(this) << "'");
+
   switch (kind) {
   case VALUE:
-    return as_value();
+    result = as_value();
+    break;
 
   case IDENT:
     if (! left())
       throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
-    return left()->calc(scope, context);
+    result = left()->calc(scope, context);
+    break;
 
   case FUNCTION: {
     // Evaluating a FUNCTION is the same as calling it directly; this happens
     // when certain functions-that-look-like-variables (such as "amount") are
     // resolved.
     call_scope_t call_args(scope);
-    return as_function()(call_args);
+    result = as_function()(call_args);
+    break;
   }
 
   case O_LOOKUP:
@@ -102,18 +109,19 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
       if (value_t obj = left()->left()->as_function()(call_args)) {
 	if (obj.is_pointer()) {
 	  scope_t& objscope(obj.as_ref_lval<scope_t>());
-	  if (ptr_op_t member = objscope.lookup(right()->as_ident()))
-	    return member->calc(objscope);
+	  if (ptr_op_t member = objscope.lookup(right()->as_ident())) {
+	    result = member->calc(objscope);
+	    break;
+	  }
 	}
       }
     }
-    if (right()->kind != IDENT) {
+    if (right()->kind != IDENT)
       throw_(calc_error,
 	     "Right operand of . operator must be an identifier");
-    } else {
+    else
       throw_(calc_error,
 	     "Failed to lookup member '" << right()->as_ident() << "'");
-    }
     break;
 
   case O_CALL: {
@@ -129,7 +137,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     if (! func || func->kind != FUNCTION)
       throw_(calc_error, "Calling non-function '" << name << "'");
 
-    return func->as_function()(call_args);
+    result = func->as_function()(call_args);
+    break;
   }
 
   case O_MATCH:
@@ -137,47 +146,63 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     if (! right()->is_value() || ! right()->as_value().is_mask())
       throw_(calc_error, "Right-hand argument to match operator must be a regex");
 #endif
-    return (right()->calc(scope, context).as_mask()
-	    .match(left()->calc(scope, context).to_string()));
+    result = (right()->calc(scope, context).as_mask()
+	      .match(left()->calc(scope, context).to_string()));
+    break;
 
   case O_EQ:
-    return left()->calc(scope, context) == right()->calc(scope, context);
+    result = left()->calc(scope, context) == right()->calc(scope, context);
+    break;
   case O_LT:
-    return left()->calc(scope, context) <  right()->calc(scope, context);
+    result = left()->calc(scope, context) <  right()->calc(scope, context);
+    break;
   case O_LTE:
-    return left()->calc(scope, context) <= right()->calc(scope, context);
+    result = left()->calc(scope, context) <= right()->calc(scope, context);
+    break;
   case O_GT:
-    return left()->calc(scope, context) >  right()->calc(scope, context);
+    result = left()->calc(scope, context) >  right()->calc(scope, context);
+    break;
   case O_GTE:
-    return left()->calc(scope, context) >= right()->calc(scope, context);
+    result = left()->calc(scope, context) >= right()->calc(scope, context);
+    break;
 
   case O_ADD:
-    return left()->calc(scope, context) + right()->calc(scope, context);
+    result = left()->calc(scope, context) + right()->calc(scope, context);
+    break;
   case O_SUB:
-    return left()->calc(scope, context) - right()->calc(scope, context);
+    result = left()->calc(scope, context) - right()->calc(scope, context);
+    break;
   case O_MUL:
-    return left()->calc(scope, context) * right()->calc(scope, context);
+    result = left()->calc(scope, context) * right()->calc(scope, context);
+    break;
   case O_DIV:
-    return left()->calc(scope, context) / right()->calc(scope, context);
+    result = left()->calc(scope, context) / right()->calc(scope, context);
+    break;
 
   case O_NEG:
-    return left()->calc(scope, context).negate();
+    result = left()->calc(scope, context).negate();
+    break;
 
   case O_NOT:
-    return ! left()->calc(scope, context);
+    result = ! left()->calc(scope, context);
+    break;
 
   case O_AND:
-    return (! left()->calc(scope, context) ? value_t(false) :
-	    right()->calc(scope, context));
+    if (left()->calc(scope, context))
+      result = right()->calc(scope, context);
+    else
+      result = false;
+    break;
 
   case O_OR:
     if (value_t temp = left()->calc(scope, context))
-      return temp;
+      result = temp;
     else
-      return right()->calc(scope, context);
+      result = right()->calc(scope, context);
+    break;
 
   case O_COMMA: {
-    value_t result(left()->calc(scope, context));
+    value_t temp(left()->calc(scope, context));
 
     ptr_op_t next = right();
     while (next) {
@@ -190,9 +215,10 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
 	next     = NULL;
       }
 
-      result.push_back(value_op->calc(scope, context));
+      temp.push_back(value_op->calc(scope, context));
     }
-    return result;
+    result = temp;
+    break;
   }
 
   case LAST:
@@ -201,7 +227,9 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     break;
   }
 
-  return NULL_VALUE;
+  DEBUG("op.calc", "result is '" << result << "'");
+
+  return result;
 
   }
   catch (const std::exception& err) { 
