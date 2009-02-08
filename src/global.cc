@@ -300,12 +300,18 @@ void global_scope_t::read_environment_settings(char * envp[])
 #if 1
   // These are here for backwards compatability, but are deprecated.
 
-  if (const char * p = std::getenv("LEDGER"))
-    process_option("file", report(), p, "LEDGER");
-  if (const char * p = std::getenv("LEDGER_INIT"))
-    process_option("init-file", report(), p, "LEDGER_INIT");
-  if (const char * p = std::getenv("PRICE_HIST"))
-    process_option("price-db", report(), p, "PRICE_HIST");
+  if (const char * p = std::getenv("LEDGER")) {
+    if (! std::getenv("LEDGER_FILE"))
+      process_option("file", report(), p, "LEDGER");
+  }
+  if (const char * p = std::getenv("LEDGER_INIT")) {
+    if (! std::getenv("LEDGER_INIT_FILE"))
+      process_option("init-file", report(), p, "LEDGER_INIT");
+  }
+  if (const char * p = std::getenv("PRICE_HIST")) {
+    if (! std::getenv("LEDGER_PRICEDB"))
+      process_option("price-db", report(), p, "PRICE_HIST");
+  }
   if (const char * p = std::getenv("PRICE_EXP"))
     process_option("price-exp", report(), p, "PRICE_EXP");
 #endif
