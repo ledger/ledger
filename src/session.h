@@ -75,7 +75,7 @@ public:
     TRACE_DTOR(session_t);
   }
 
-  void now_at_command_line(const bool truth) {
+  void set_flush_on_next_data_file(const bool truth) {
     flush_on_next_data_file = true;
   }
 

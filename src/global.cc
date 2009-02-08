@@ -60,8 +60,9 @@ global_scope_t::global_scope_t(char ** envp)
   // Before processing command-line options, we must notify the session object
   // that such options are beginning, since options like -f cause a complete
   // override of files found anywhere else.
-  session().now_at_command_line(false);
+  session().set_flush_on_next_data_file(true);
   read_environment_settings(envp);
+  session().set_flush_on_next_data_file(true);
   read_init();
 }
 
@@ -144,7 +145,7 @@ void global_scope_t::report_error(const std::exception& err)
 
 void global_scope_t::execute_command(strings_list args, bool at_repl)
 {
-  session().now_at_command_line(true);
+  session().set_flush_on_next_data_file(true);
 
   // Process the command verb, arguments and options
   args = read_command_arguments(report(), args);

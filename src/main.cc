@@ -78,7 +78,7 @@ int main(int argc, char * argv[], char * envp[])
   std::auto_ptr<global_scope_t> global_scope(new global_scope_t(envp));
 
   try {
-    global_scope->session().now_at_command_line(true);
+    global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
     strings_list args;
