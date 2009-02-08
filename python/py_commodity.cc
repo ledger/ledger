@@ -70,9 +70,6 @@ void export_commodity()
     ;
 
 #if 0
-  class_< price_point_t, bases<>,
-    commodity_t, boost::noncopyable > ("PricePoint", no_init)
-    ;
   class_< annotation_t, bases<>,
     commodity_t, boost::noncopyable > ("Annotation", no_init)
     ;
@@ -81,12 +78,6 @@ void export_commodity()
     ;
   class_< annotated_commodity_t, bases<>,
     commodity_t, boost::noncopyable > ("AnnotatedCommodity", no_init)
-    ;
-  class_< compare_amount_commodities, bases<>,
-    commodity_t, boost::noncopyable > ("CompareAmountCommodities", no_init)
-    ;
-  class_< commodity_pool_t, bases<>,
-    commodity_t, boost::noncopyable > ("CommodityPool", no_init)
     ;
 #endif
 }

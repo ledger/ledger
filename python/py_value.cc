@@ -41,18 +41,7 @@ namespace ledger {
 
 using namespace boost::python;
 
-boost::optional<value_t> py_value_0(const value_t& amount) {
-  return amount.value();
-}
-boost::optional<value_t> py_value_1(const value_t& amount,
-				    const boost::optional<datetime_t>& moment) {
-  return amount.value(moment);
-}
-boost::optional<value_t> py_value_2(const value_t& amount,
-				    const boost::optional<datetime_t>& moment,
-				    const boost::optional<commodity_t&>& in_terms_of) {
-  return amount.value(moment, in_terms_of);
-}
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 
 string py_dump(const value_t& value) {
   std::ostringstream buf;
@@ -92,11 +81,6 @@ void export_value()
     .def(init<std::string>())
     .def(init<date_t>())
     .def(init<datetime_t>())
-    .def(init<amount_t>())
-#if 0
-    .def(init<balance_t>())
-    .def(init<balance_pair_t>())
-#endif
 
     .def(init<value_t>())
 
@@ -199,9 +183,10 @@ void export_value()
     .def("reduce", &value_t::reduce)
     .def("in_place_reduce", &value_t::in_place_reduce)
 
-    .def("value", py_value_0)
-    .def("value", py_value_1)
-    .def("value", py_value_2)
+    .def("unreduce", &value_t::unreduce)
+    .def("in_place_unreduce", &value_t::in_place_unreduce)
+
+    .def("value", &value_t::value, value_overloads())
 
     .def("cost", &value_t::cost)
 
@@ -230,13 +215,10 @@ void export_value()
     .def("set_long", &value_t::set_long)
 
     .def("is_amount", &value_t::is_amount)
-    .def("set_amount", &value_t::set_amount)
 
     .def("is_balance", &value_t::is_balance)
-    .def("set_balance", &value_t::set_balance)
 
     .def("is_balance_pair", &value_t::is_balance_pair)
-    .def("set_balance_pair", &value_t::set_balance_pair)
 
     .def("is_string", &value_t::is_string)
     .def("set_string", py_set_string)
@@ -249,9 +231,6 @@ void export_value()
     .def("__int__", &value_t::to_long)
     .def("to_datetime", &value_t::to_datetime)
     .def("to_date", &value_t::to_date)
-    .def("to_amount", &value_t::to_amount)
-    .def("to_balance", &value_t::to_balance)
-    .def("to_balance_pair", &value_t::to_balance_pair)
     .def("to_string", &value_t::to_string)
     .def("to_sequence", &value_t::to_sequence)
 
@@ -264,11 +243,17 @@ void export_value()
     .def("simplify", &value_t::simplify)
     .def("in_place_simplify", &value_t::in_place_simplify)
 
+    // jww (2009-02-07): Allow annotating, and retrieving annotations
     .def("strip_annotations", &value_t::strip_annotations)
 
     // jww (2009-01-28): Allow for transparent exchanging with sequence
     // protocol objects in Python too; and conversion to a list.
 #if 0
+    // jww (2009-02-07): Methods to implement:
+    // Allow accepting and returning tuples as sequences
+    // count_commodities
+    // has_commodity(COMM)
+    // decompose
     .def("__getitem__", &value_t::operator[])
 #endif
     .def("push_back", &value_t::push_back)
@@ -308,7 +293,6 @@ void export_value()
   implicitly_convertible<string, value_t>();
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
-  implicitly_convertible<amount_t, value_t>();
 
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);

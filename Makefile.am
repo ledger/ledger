@@ -193,37 +193,19 @@ lib_LTLIBRARIES += libledger_python.la
 libledger_python_la_SOURCES =			\
 	python/pyutils.h			\
 	python/pyfstream.h			\
-	python/py_amount.cc			\
-	python/py_balance.cc			\
-	python/py_balpair.cc			\
 	python/py_chain.cc			\
 	python/py_commodity.cc			\
-	python/py_compare.cc			\
-	python/py_emacs.cc			\
 	python/py_entry.cc			\
-	python/py_expr.cc			\
-	python/py_filters.cc			\
 	python/py_flags.cc			\
 	python/py_format.cc			\
 	python/py_global.cc			\
-	python/py_hooks.cc			\
 	python/py_item.cc			\
-	python/py_iterators.cc			\
 	python/py_journal.cc			\
-	python/py_mask.cc			\
-	python/py_op.cc				\
-	python/py_option.cc			\
-	python/py_output.cc			\
-	python/py_parser.cc			\
-	python/py_predicate.cc			\
-	python/py_quotes.cc			\
 	python/py_report.cc			\
 	python/py_scope.cc			\
 	python/py_session.cc			\
-	python/py_stream.cc			\
 	python/py_timelog.cc			\
 	python/py_times.cc			\
-	python/py_token.cc			\
 	python/py_utils.cc			\
 	python/py_value.cc			\
 	python/py_xact.cc			\
@@ -302,9 +284,9 @@ TESTS +=	     \
 	report_tests
 endif
 
-if HAVE_BOOST_PYTHON
-TESTS += PyUnitTests
-endif
+#if HAVE_BOOST_PYTHON
+#TESTS += PyUnitTests
+#endif
 
 check_PROGRAMS = $(TESTS)
 
