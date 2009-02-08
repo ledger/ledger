@@ -71,19 +71,26 @@ value_t parse_command(call_scope_t& args)
 
 value_t eval_command(call_scope_t& args)
 {
-  var_t<string> arg(args, 0);
+  std::ostringstream buf;
+  bool first = true;
 
-  if (! arg) {
-    throw std::logic_error("Usage: eval TEXT");
-    return 1L;
+  for (std::size_t i = 0; i < args.size(); i++) {
+    if (first) {
+      buf << args[i];
+      first = false;
+    } else {
+      buf << ' ' << args[i];
+    }
   }
 
   report_t& report(find_scope<report_t>(args));
-  std::ostream& out(report.output_stream);
 
-  expr_t expr(*arg);
-  out << expr.calc(args).strip_annotations(report.what_to_keep())
-      << std::endl;
+  expr_t  expr(buf.str());
+  value_t result(expr.calc(args).strip_annotations(report.what_to_keep()));
+
+  if (! result.is_null())
+    report.output_stream << result << std::endl;
+
   return 0L;
 }
 
