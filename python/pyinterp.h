@@ -109,10 +109,18 @@ public:
     python::object sys_dict = module_sys.attr("__dict__");
 
     python::list paths(sys_dict["path"]);
+#if BOOST_VERSION >= 103700
     paths.insert(0, file.parent_path().string());
+#else
+    paths.insert(0, file.branch_path().string());
+#endif
     sys_dict["path"] = paths;
 
+#if BOOST_VERSION >= 103700
     import(file.stem());
+#else
+    import(file.string());
+#endif
     return true;
   }
 };
