@@ -128,6 +128,10 @@ public:
   void     parse(std::istream& in, const uint32_t flags = 0,
 		 const string * original_string = NULL);
 	   
+  void     mark_uncompiled() {
+    compiled = false;
+  }
+  void     recompile(scope_t& scope);
   void     compile(scope_t& scope);
   value_t  calc(scope_t& scope);
   value_t  calc(scope_t& scope) const;

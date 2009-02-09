@@ -107,13 +107,19 @@ void expr_t::parse(std::istream& in, const uint32_t flags,
   compiled = false;
 }
 
-void expr_t::compile(scope_t& scope)
+void expr_t::recompile(scope_t& scope)
 {
-  if (ptr.get() && ! compiled) {
+  if (ptr.get()) {
     ptr	     = ptr->compile(scope);
     context  = &scope;
     compiled = true;
   }
+}
+
+void expr_t::compile(scope_t& scope)
+{
+  if (! compiled)
+    recompile(scope);
 }
 
 value_t expr_t::calc(scope_t& scope)

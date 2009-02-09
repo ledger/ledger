@@ -107,12 +107,16 @@ void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
 
 void report_t::sum_all_accounts()
 {
+  expr_t& expr(HANDLER(amount_).expr);
+  expr.set_context(this);
+
   session_xacts_iterator walker(session);
   pass_down_xacts
     (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value), false),
      walker);
 
-  session.master->calculate_sums(HANDLER(amount_).expr, *this);
+  expr.mark_uncompiled();	// recompile, throw away xact_t bindings
+  session.master->calculate_sums(expr);
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)
