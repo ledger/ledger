@@ -39,7 +39,14 @@ global_scope_t::global_scope_t(char ** envp)
 {
   TRACE_CTOR(global_scope_t, "");
 
-  session_ptr.reset(new LEDGER_SESSION_T);
+#if defined(HAVE_BOOST_PYTHON)
+  if (! python_session.get()) {
+    python_session.reset(new ledger::python_interpreter_t);
+    session_ptr = python_session;
+  }
+#else
+  session_ptr.reset(new session_t);
+#endif
 
   set_session_context(session_ptr.get());
 
@@ -75,6 +82,10 @@ global_scope_t::~global_scope_t()
   // object, and then shutting down the memory tracing subsystem.
   // Otherwise, let it all leak because we're about to exit anyway.
   IF_VERIFY() set_session_context(NULL);
+
+#if defined(HAVE_BOOST_PYTHON)
+  python_session.reset();
+#endif
 }
 
 void global_scope_t::read_init()

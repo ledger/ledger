@@ -35,9 +35,12 @@ namespace ledger {
 
 using namespace boost::python;
 
+shared_ptr<python_interpreter_t> python_session;
+
 void export_chain();
 void export_commodity();
 void export_entry();
+void export_expr();
 void export_flags();
 void export_format();
 void export_global();
@@ -57,6 +60,7 @@ void initialize_for_python()
   export_chain();
   export_commodity();
   export_entry();
+  export_expr();
   export_flags();
   export_format();
   export_global();
@@ -269,8 +273,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	}
 	else if (PyObject * err = PyErr_Occurred()) {
 	  PyErr_Print();
-	  throw_(calc_error,
-		 "Failed call to Python function '" << name << "': " << err);
+	  throw_(calc_error, "Failed call to Python function '" << name << "'");
 	} else {
 	  assert(false);
 	}
@@ -283,20 +286,6 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
     PyErr_Print();
     throw_(calc_error,
 	   "Failed call to Python function '" << name << "'");
-  }
-  return NULL_VALUE;
-}
-
-value_t python_interpreter_t::lambda_t::operator()(call_scope_t& args)
-{
-  try {
-    assert(args.size() == 1);
-    value_t item = args[0];
-    return call<value_t>(func.ptr(), item);
-  }
-  catch (const error_already_set&) {
-    PyErr_Print();
-    throw_(calc_error, "Failed to evaluate Python lambda expression");
   }
   return NULL_VALUE;
 }

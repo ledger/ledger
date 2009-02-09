@@ -42,7 +42,7 @@ namespace ledger {
 class python_interpreter_t : public session_t
 {
 public:
-  boost::python::dict main_nspace;
+  python::dict main_nspace;
   bool is_initialized;
 
   python_interpreter_t()
@@ -59,7 +59,7 @@ public:
 
   void initialize();
 
-  boost::python::object import(const string& name);
+  python::object import(const string& name);
 
   enum py_eval_mode_t {
     PY_EVAL_EXPR,
@@ -67,11 +67,11 @@ public:
     PY_EVAL_MULTI
   };
 
-  boost::python::object eval(std::istream& in,
+  python::object eval(std::istream& in,
 			     py_eval_mode_t mode = PY_EVAL_EXPR);
-  boost::python::object eval(const string& str,
+  python::object eval(const string& str,
 			     py_eval_mode_t mode = PY_EVAL_EXPR);
-  boost::python::object eval(const char * c_str,
+  python::object eval(const char * c_str,
 			     py_eval_mode_t mode = PY_EVAL_EXPR) {
     string str(c_str);
     return eval(str, mode);
@@ -81,14 +81,14 @@ public:
     functor_t();
 
   protected:
-    boost::python::object func;
+    python::object func;
 
   public:
     string name;
 
-    functor_t(const string& _name, boost::python::object _func)
+    functor_t(const string& _name, python::object _func)
       : func(_func), name(_name) {
-      TRACE_CTOR(functor_t, "const string&, boost::python::object");
+      TRACE_CTOR(functor_t, "const string&, python::object");
     }
     functor_t(const functor_t& other)
       : func(other.func), name(other.name) {
@@ -103,25 +103,21 @@ public:
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   value_t option_import_(call_scope_t& args) {
-    import(args[0].to_string());
+    path file(args[0].to_string());
+
+    python::object module_sys = import("sys"); 
+    python::object sys_dict = module_sys.attr("__dict__");
+
+    python::list paths(sys_dict["path"]);
+    paths.insert(0, file.parent_path().string());
+    sys_dict["path"] = paths;
+
+    import(file.stem());
     return true;
   }
-
-  class lambda_t : public functor_t {
-    lambda_t();
-  public:
-    lambda_t(boost::python::object code) : functor_t("<lambda>", code) {
-      TRACE_CTOR(functor_t, "boost::python::object");
-    }
-    lambda_t(const lambda_t& other) : functor_t(other) {
-      TRACE_CTOR(lambda_t, "copy");
-    }
-    virtual ~lambda_t() throw() {
-      TRACE_DTOR(lambda_t);
-    }
-    virtual value_t operator()(call_scope_t& args);
-  };
 };
+
+extern shared_ptr<python_interpreter_t> python_session;
 
 } // namespace ledger
 

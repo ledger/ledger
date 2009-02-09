@@ -33,14 +33,18 @@
 
 using namespace boost::python;
 
-ledger::python_interpreter_t python_session;
-
 namespace ledger {
   extern void initialize_for_python();
 }
 
 BOOST_PYTHON_MODULE(ledger)
 {
-  ledger::set_session_context(&python_session);
-  ledger::initialize_for_python();
+  using namespace ledger;
+
+  if (! python_session.get())
+    python_session.reset(new python_interpreter_t);
+
+  set_session_context(python_session.get());
+
+  initialize_for_python();
 }

@@ -44,7 +44,7 @@ namespace ledger {
 
 class global_scope_t : public noncopyable, public scope_t
 {
-  scoped_ptr<session_t> session_ptr;
+  shared_ptr<session_t> session_ptr;
   ptr_list<report_t>	report_stack;
 
 public:
