@@ -64,23 +64,45 @@ value_t parse_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
+  {
+    string str;
+    {
+      std::ostringstream buf;
+
+      buf << "2004/05/27 Book Store\n"
+	  << "    Expenses:Books                 20 BOOK @ $10\n"
+	  << "    Liabilities:MasterCard        $-200.00\n";
+
+      str = buf.str();
+    }
+    out << "--- Context is first transaction of the following entry ---"
+	<< std::endl << str << std::endl;
+    {
+      std::istringstream in(str);
+      report.session.journal->parse(in, report.session, NULL, NULL);
+    }
+  }
+  entry_t * first = report.session.journal->entries.front();
+  xact_t  * xact  = first->xacts.front();
+
   out << "--- Input expression ---" << std::endl;
-  out << *arg << std::endl;
+  out << arg << std::endl;
 
   out << std::endl << "--- Text as parsed ---" << std::endl;
-  expr_t expr(*arg);
+  expr_t expr(arg);
   expr.print(out);
   out << std::endl;
 
   out << std::endl << "--- Expression tree ---" << std::endl;
   expr.dump(out);
 
-  expr.compile(args);
+  bind_scope_t bound_scope(args, *xact);
+  expr.compile(bound_scope);
   out << std::endl << "--- Compiled tree ---" << std::endl;
   expr.dump(out);
 
   out << std::endl << "--- Calculated value ---" << std::endl;
-  value_t result(expr.calc(args));
+  value_t result(expr.calc());
   result.dump(out);
   out << std::endl;
 
