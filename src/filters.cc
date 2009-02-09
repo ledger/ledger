@@ -191,8 +191,15 @@ void calc_xacts::operator()(xact_t& xact)
       add_or_set_value(xdata.total, last_xact->xdata().total);
 
     if (! xdata.has_flags(XACT_EXT_NO_TOTAL)) {
+#if 0
       bind_scope_t bound_scope(*amount_expr.get_context(), xact);
-      xdata.total += amount_expr.calc();
+      if (xdata.total.is_null())
+	xdata.total = amount_expr.calc();
+      else
+	xdata.total += amount_expr.calc();
+#else
+      xact.add_to_value(xdata.total);
+#endif
     }
 
     item_handler<xact_t>::operator()(xact);

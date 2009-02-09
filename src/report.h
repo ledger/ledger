@@ -186,10 +186,10 @@ public:
    expr_t expr;
    CTOR(report_t, amount_) {
      expr = "amount";
+     on("amount");
    }
    DO_(args) {
      expr = args[0].to_string();
-     expr.set_context(parent);
    });
 
   OPTION(report_t, amount_data); // -j
@@ -246,6 +246,7 @@ public:
    expr_t expr;
    CTOR(report_t, display_amount_) {
      expr = "amount_expr";
+     on("amount_expr");
    }
    DO_(args) {
      expr = args[0].to_string();
@@ -256,6 +257,7 @@ public:
    expr_t expr;
    CTOR(report_t, display_total_) {
      expr = "total_expr";
+     on("total_expr");
    }
    DO_(args) {
      expr = args[0].to_string();
@@ -367,6 +369,7 @@ public:
    expr_t expr;
    CTOR(report_t, total_) {
      expr = "total";
+     on("total");
    }
    DO_(args) {
      expr = args[0].to_string();
