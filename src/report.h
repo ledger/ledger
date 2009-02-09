@@ -189,6 +189,7 @@ public:
    }
    DO_(args) {
      expr = args[0].to_string();
+     expr.set_context(parent);
    });
 
   OPTION(report_t, amount_data); // -j

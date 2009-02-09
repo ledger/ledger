@@ -60,7 +60,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // calc_xacts computes the running total.  When this appears will
     // determine, for example, whether filtered xacts are included or excluded
     // from the running total.
-    handler.reset(new calc_xacts(handler));
+    assert(report.HANDLED(amount_));
+    handler.reset(new calc_xacts(handler, report.HANDLER(amount_).expr));
 
     // filter_xacts will only pass through xacts matching the
     // `secondary_predicate'.

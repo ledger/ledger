@@ -327,13 +327,16 @@ public:
 class calc_xacts : public item_handler<xact_t>
 {
   xact_t * last_xact;
+  expr_t&  amount_expr;
 
   calc_xacts();
 
 public:
-  calc_xacts(xact_handler_ptr handler)
-    : item_handler<xact_t>(handler), last_xact(NULL) {
-    TRACE_CTOR(calc_xacts, "xact_handler_ptr");
+  calc_xacts(xact_handler_ptr handler,
+	     expr_t&          _amount_expr)
+    : item_handler<xact_t>(handler),
+      last_xact(NULL), amount_expr(_amount_expr) {
+    TRACE_CTOR(calc_xacts, "xact_handler_ptr, expr_t&");
   }
   virtual ~calc_xacts() {
     TRACE_DTOR(calc_xacts);
