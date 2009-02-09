@@ -168,6 +168,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
+#include <boost/version.hpp>
 
 #if defined(HAVE_BOOST_PYTHON)
 
