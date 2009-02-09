@@ -100,6 +100,7 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
       only_parenthesis = true;
 
       std::ostringstream buf;
+      string parens;
 
       for (const char * c = arg.c_str(); *c != '\0'; c++) {
 	bool consumed = false;
@@ -109,6 +110,14 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 
 	if (in_prefix) {
 	  switch (*c) {
+	  case ')':
+	    if (only_parenthesis)
+	      only_closed_parenthesis = true;
+	    // fall through...
+	  case '(':
+	    parens += c;
+	    consumed = true;
+	    break;
 	  case '@':
 	    buf << "(payee =~ /";
 	    found_specifier = true;
@@ -142,13 +151,10 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    consumed = true;
 	    break;
 	  }
-	  case ')':
-	    if (only_parenthesis)
-	      only_closed_parenthesis = true;
-	    // fall_through...
 	  default:
 	    if (! found_specifier) {
-	      buf << "(account =~ /";
+	      buf << parens << "(account =~ /";
+	      parens.clear();
 	      found_specifier = true;
 	    }
 	    in_prefix = false;
@@ -164,7 +170,7 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	  ! (only_parenthesis && only_closed_parenthesis))
 	expr << prefix;
 
-      expr << buf.str();
+      expr << parens << buf.str();
 
       if (found_specifier) {
 	if (! no_final_slash)
