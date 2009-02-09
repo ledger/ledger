@@ -54,6 +54,7 @@ INCDIRS="$INCDIRS -isystem /usr/local/include/boost-$BOOST_VERSION"
 INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
 
 
+USE_GLIBCXX_DEBUG=true
 CXXFLAGS=""
 ARCHFLAGS=""
 LDARCHFLAGS=""
@@ -178,9 +179,11 @@ DO_BUILD=false
 
 while [ -n "$1" ]; do
   case "$1" in
-    --devel)
-	USE_GLIBCXX_DEBUG=true
+    --pch)
+	  USE_GLIBCXX_DEBUG=false
+	  shift 1 ;;
 
+    --devel)
 	if [[ $USE_GLIBCXX_DEBUG == true ]]; then
 	    CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
 	    CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
@@ -214,7 +217,7 @@ while [ -n "$1" ]; do
         # Do the same thing as --debug below
 	SWITCHES="$SWITCHES --enable-debug"
 	CXXFLAGS="$CXXFLAGS -g"
-	LDFLAGS="$LDFLAGS -g"
+	LDFLAGS="$LDFLAGS -g -prebind"
 
 	# Warning flags
 	CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
