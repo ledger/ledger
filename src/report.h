@@ -304,6 +304,7 @@ public:
 
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on();
+      parent->HANDLER(display_amount_).on("market_value(amount_expr)");
       parent->HANDLER(display_total_).on("market_value(total_expr)");
     });
 
