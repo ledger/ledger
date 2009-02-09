@@ -32,7 +32,6 @@
 #include "entry.h"
 #include "journal.h"
 #include "format.h"
-#include "session.h"
 #include "report.h"
 
 namespace ledger {
