@@ -87,7 +87,7 @@ namespace {
       // Find command name: its the substring starting right of the
       // rightmost '/' character in the pager pathname.  See manpage for
       // strrchr.
-      path basename(pager_path.leaf());
+      path basename(pager_path.filename());
       execlp(pager_path.string().c_str(), basename.string().c_str(),
 	     (char *)0);
 
