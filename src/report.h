@@ -186,6 +186,9 @@ public:
    expr_t expr;
    CTOR(report_t, amount_) {
      expr = "amount";
+   }
+   DO_(args) {
+     expr = args[0].to_string();
    });
 
   OPTION(report_t, amount_data); // -j
@@ -242,6 +245,9 @@ public:
    expr_t expr;
    CTOR(report_t, display_amount_) {
      expr = "amount_expr";
+   }
+   DO_(args) {
+     expr = args[0].to_string();
    });
 
   OPTION__
@@ -249,6 +255,9 @@ public:
    expr_t expr;
    CTOR(report_t, display_total_) {
      expr = "total_expr";
+   }
+   DO_(args) {
+     expr = args[0].to_string();
    });
 
   OPTION(report_t, dow);
@@ -357,6 +366,9 @@ public:
    expr_t expr;
    CTOR(report_t, total_) {
      expr = "total";
+   }
+   DO_(args) {
+     expr = args[0].to_string();
    });
 
   OPTION(report_t, total_data); // -J
