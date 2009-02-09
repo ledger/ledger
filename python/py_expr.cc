@@ -31,47 +31,37 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#include "scope.h"
+#include "expr.h"
 
 namespace ledger {
 
 using namespace boost::python;
 
 namespace {
-  void py_scope_define(scope_t& scope, const string& name, expr_t& def)
+  value_t py_expr_call(expr_t& expr)
   {
-    return scope.define(name, def.get_op());
+    return expr.calc();
   }
-
-  expr_t py_scope_lookup(scope_t& scope, const string& name)
-  {
-    return scope.lookup(name);
-  }
-
-  expr_t py_scope_getattr(scope_t& scope, const string& name)
-  {
-    return scope.lookup(name);
-  }
-
-  struct scope_wrapper : public scope_t
-  {
-    PyObject * self;
-
-    scope_wrapper(PyObject * self_) : self(self_) {}
-
-    virtual expr_t::ptr_op_t lookup(const string& name) {
-      return NULL;
-    }    
-  };
 }
 
-void export_scope()
+void export_expr()
 {
-  class_< scope_t, scope_wrapper, boost::noncopyable > ("Scope", no_init)
-    .def("define", py_scope_define)
-    .def("lookup", py_scope_lookup)
-    .def("resolve", &scope_t::resolve)
-    .def("__getattr__", py_scope_getattr)
+  class_< expr_t > ("Expr")
+    .def(init<string>())
+
+    .def("__nonzero__", &expr_t::operator bool)
+    .def("text", &expr_t::text)
+    .def("set_text", &expr_t::set_text)
+
+    //.def("parse", &expr_t::parse)
+
+    .def("__call__", py_expr_call)
+    .def("compile", &expr_t::compile)
+    //.def("calc", &expr_t::calc)
+
+    .def("is_constant", &expr_t::is_constant)
+
+    //.def("constant_value", &expr_t::constant_value)
     ;
 }
 

@@ -39,28 +39,40 @@ using namespace boost::python;
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 
-string py_dump(const value_t& value) {
-  std::ostringstream buf;
-  value.dump(buf);
-  return buf.str();
-}
+namespace {
+  expr_t py_value_getattr(value_t& value, const string& name)
+  {
+    if (value.is_pointer()) {
+      if (scope_t * scope = value.as_pointer_lval<scope_t>())
+	return expr_t(scope->lookup(name), scope);
+    }
+    throw_(value_error, "Cannot lookup attributes in " << value.label());
+    return expr_t();
+  }
 
-string py_dump_relaxed(const value_t& value) {
-  std::ostringstream buf;
-  value.dump(buf, true);
-  return buf.str();
-}
+  string py_dump(const value_t& value) {
+    std::ostringstream buf;
+    value.dump(buf);
+    return buf.str();
+  }
 
-void py_set_string(value_t& amount, const string& str) {
-  return amount.set_string(str);
-}
+  string py_dump_relaxed(const value_t& value) {
+    std::ostringstream buf;
+    value.dump(buf, true);
+    return buf.str();
+  }
+
+  void py_set_string(value_t& amount, const string& str) {
+    return amount.set_string(str);
+  }
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
     PyErr_SetString(PyExc_ArithmeticError, err.what());	\
   }
 
-EXC_TRANSLATOR(value_error)
+  EXC_TRANSLATOR(value_error)
+}
 
 void export_value()
 {
@@ -262,6 +274,8 @@ void export_value()
     .def("print", &value_t::print)
 
     .def("valid", &value_t::valid)
+
+    .def("__getattr__", py_value_getattr)
     ;
 
   enum_< value_t::type_t >("ValueType")

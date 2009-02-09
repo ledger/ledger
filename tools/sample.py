@@ -1,7 +1,5 @@
 import ledger
 
-def myvalue(incoming):
-    x = ledger.Amount("$123.12")
-    print x
-    print x * 1
-    return x * 1
+def get_amount(item):
+    print "I found an amount:", item.amount()
+    return 123

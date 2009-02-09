@@ -196,6 +196,7 @@ libledger_python_la_SOURCES =			\
 	python/py_chain.cc			\
 	python/py_commodity.cc			\
 	python/py_entry.cc			\
+	python/py_expr.cc			\
 	python/py_flags.cc			\
 	python/py_format.cc			\
 	python/py_global.cc			\
