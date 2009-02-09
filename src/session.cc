@@ -150,7 +150,7 @@ std::size_t session_t::read_data(const string& master_account)
 
 void session_t::clean_xacts()
 {
-  session_xacts_iterator walker(*this);
+  journal_xacts_iterator walker(*journal.get());
   pass_down_xacts(xact_handler_ptr(new clear_xact_xdata), walker);
 }
 

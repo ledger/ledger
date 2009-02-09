@@ -30,15 +30,15 @@
  */
 
 #include "iterators.h"
-#include "session.h"
+#include "journal.h"
 #include "compare.h"
 
 namespace ledger {
 
-void entries_iterator::reset(session_t& session)
+void entries_iterator::reset(journal_t& journal)
 {
-  entries_i   = session.journal->entries.begin();
-  entries_end = session.journal->entries.end();
+  entries_i   = journal.entries.begin();
+  entries_end = journal.entries.end();
   entries_uninitialized = false;
 }
 
@@ -50,16 +50,16 @@ entry_t * entries_iterator::operator()()
     return NULL;
 }
 
-void session_xacts_iterator::reset(session_t& session)
+void journal_xacts_iterator::reset(journal_t& journal)
 {
-  entries.reset(session);
+  entries.reset(journal);
 
   entry_t * entry = entries();
   if (entry != NULL)
     xacts.reset(*entry);
 }
 
-xact_t * session_xacts_iterator::operator()()
+xact_t * journal_xacts_iterator::operator()()
 {
   xact_t * xact = xacts();
   if (xact == NULL) {

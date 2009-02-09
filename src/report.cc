@@ -93,7 +93,7 @@ report_t::report_t(session_t& _session) : session(_session)
 
 void report_t::xacts_report(xact_handler_ptr handler)
 {
-  session_xacts_iterator walker(session);
+  journal_xacts_iterator walker(*session.journal.get());
   pass_down_xacts(chain_xact_handlers(*this, handler), walker);
   session.clean_xacts();
 }
@@ -110,7 +110,7 @@ void report_t::sum_all_accounts()
   expr_t& expr(HANDLER(amount_).expr);
   expr.set_context(this);
 
-  session_xacts_iterator walker(session);
+  journal_xacts_iterator walker(*session.journal.get());
   pass_down_xacts
     (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value(expr)),
 			 false), walker);

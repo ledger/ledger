@@ -90,18 +90,20 @@ expr_t::parser_t::parse_dot_expr(std::istream& in,
   ptr_op_t node(parse_value_term(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags);
-
-    if (tok.kind == token_t::DOT) {
-      ptr_op_t prev(node);
-      node = new op_t(op_t::O_LOOKUP);
-      node->set_left(prev);
-      node->set_right(parse_dot_expr(in, tflags));
-      if (! node->right())
-	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
-    } else {
-      push_token(tok);
+    while (true) {
+      token_t& tok = next_token(in, tflags);
+      if (tok.kind == token_t::DOT) {
+	ptr_op_t prev(node);
+	node = new op_t(op_t::O_LOOKUP);
+	node->set_left(prev);
+	node->set_right(parse_value_term(in, tflags));
+	if (! node->right())
+	  throw_(parse_error,
+		 tok.symbol << " operator not followed by argument");
+      } else {
+	push_token(tok);
+	break;
+      }
     }
   }
 

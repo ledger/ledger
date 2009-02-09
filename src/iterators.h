@@ -119,15 +119,15 @@ public:
   entries_iterator() : entries_uninitialized(true) {
     TRACE_CTOR(entries_iterator, "");
   }
-  entries_iterator(session_t& session) : entries_uninitialized(true) {
-    TRACE_CTOR(entries_iterator, "session_t&");
-    reset(session);
+  entries_iterator(journal_t& journal) : entries_uninitialized(true) {
+    TRACE_CTOR(entries_iterator, "journal_t&");
+    reset(journal);
   }
   virtual ~entries_iterator() throw() {
     TRACE_DTOR(entries_iterator);
   }
 
-  void reset(session_t& session);
+  void reset(journal_t& journal);
 
   entry_t * operator()();
 };
@@ -137,24 +137,24 @@ public:
  *
  * Long.
  */
-class session_xacts_iterator : public xacts_iterator
+class journal_xacts_iterator : public xacts_iterator
 {
   entries_iterator     entries;
   entry_xacts_iterator xacts;
 
 public:
-  session_xacts_iterator() {
-    TRACE_CTOR(session_xacts_iterator, "");
+  journal_xacts_iterator() {
+    TRACE_CTOR(journal_xacts_iterator, "");
   }
-  session_xacts_iterator(session_t& session) {
-    TRACE_CTOR(session_xacts_iterator, "session_t&");
-    reset(session);
+  journal_xacts_iterator(journal_t& journal) {
+    TRACE_CTOR(journal_xacts_iterator, "journal_t&");
+    reset(journal);
   }
-  virtual ~session_xacts_iterator() throw() {
-    TRACE_DTOR(session_xacts_iterator);
+  virtual ~journal_xacts_iterator() throw() {
+    TRACE_DTOR(journal_xacts_iterator);
   }
 
-  void reset(session_t& session);
+  void reset(journal_t& journal);
 
   virtual xact_t * operator()();
 };
