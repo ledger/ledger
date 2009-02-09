@@ -141,6 +141,13 @@ public:
     return calc(*context);
   }
 
+  scope_t * get_context() {
+    return context;
+  }
+  void set_context(scope_t * scope) {
+    context = scope;
+  }
+
   bool	   is_constant() const;
   bool     is_function() const;
 

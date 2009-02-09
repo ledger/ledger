@@ -40,10 +40,10 @@ using namespace boost::python;
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 
 namespace {
-  expr_t py_value_getattr(value_t& value, const string& name)
+  expr_t py_value_getattr(const value_t& value, const string& name)
   {
     if (value.is_pointer()) {
-      if (scope_t * scope = value.as_pointer_lval<scope_t>())
+      if (scope_t * scope = value.as_pointer<scope_t>())
 	return expr_t(scope->lookup(name), scope);
     }
     throw_(value_error, "Cannot lookup attributes in " << value.label());

@@ -33,7 +33,7 @@
 
 namespace ledger {
 
-using namespace boost::python;
+using namespace python;
 
 shared_ptr<python_interpreter_t> python_session;
 
@@ -100,7 +100,7 @@ void python_interpreter_t::initialize()
     Py_Initialize();
     assert(Py_IsInitialized());
 
-    object main_module = boost::python::import("__main__");
+    object main_module = python::import("__main__");
     if (! main_module)
       throw_(std::logic_error, "Python failed to initialize");
 
@@ -108,7 +108,7 @@ void python_interpreter_t::initialize()
     if (! main_nspace)
       throw_(std::logic_error, "Python failed to initialize");
 
-    boost::python::detail::init_module("ledger", &initialize_for_python);
+    python::detail::init_module("ledger", &initialize_for_python);
 
     is_initialized = true;
   }
@@ -128,7 +128,7 @@ object python_interpreter_t::import(const string& str)
   try {
     TRACE_START(python_import, 1, "Imported Python module: " << str);
 
-    object mod = boost::python::import(str.c_str());
+    object mod = python::import(str.c_str());
     if (! mod)
       throw_(std::logic_error, "Failed to import Python module " << str);
  
@@ -228,14 +228,14 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
     break;
   }
 
-  if (is_initialized && main_nspace.has_key(name)) {
+  if (is_initialized && main_nspace.has_key(name.c_str())) {
     DEBUG("python.interp", "Python lookup: " << name);
 
-    if (boost::python::object obj = main_nspace.get(name))
+    if (python::object obj = main_nspace.get(name.c_str()))
       return WRAP_FUNCTOR(functor_t(name, obj));
   }
 
-  return expr_t::ptr_op_t();
+  return NULL;
 }
   
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
@@ -257,8 +257,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	  arglist.append(args.value());
 
 	if (PyObject * val =
-	    PyObject_CallObject(func.ptr(),
-				boost::python::tuple(arglist).ptr())) {
+	    PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {
 	  extract<value_t> xval(val);
 	  value_t result;
 	  if (xval.check()) {
