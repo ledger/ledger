@@ -49,7 +49,7 @@
 #ifndef _VALUE_H
 #define _VALUE_H
 
-#include "balpair.h"		// pulls in balance.h and amount.h
+#include "balance.h"
 #include "mask.h"
 
 namespace ledger {
@@ -72,16 +72,13 @@ DECLARE_EXCEPTION(value_error, std::runtime_error);
  */
 class value_t
   : public ordered_field_operators<value_t,
-	   equality_comparable<value_t, balance_pair_t,
 	   equality_comparable<value_t, balance_t,
-	   additive<value_t, balance_pair_t,
 	   additive<value_t, balance_t,
-	   multiplicative<value_t, balance_pair_t,
 	   multiplicative<value_t, balance_t,
 	   ordered_field_operators<value_t, amount_t,
 	   ordered_field_operators<value_t, double,
 	   ordered_field_operators<value_t, unsigned long,
-	   ordered_field_operators<value_t, long> > > > > > > > > > >
+	   ordered_field_operators<value_t, long> > > > > > > >
 {
 public:
   /**
@@ -107,7 +104,6 @@ public:
     INTEGER,			// a signed integer value
     AMOUNT,			// a ledger::amount_t
     BALANCE,			// a ledger::balance_t
-    BALANCE_PAIR,		// a ledger::balance_pair_t
     STRING,			// a string object
     MASK,			// a regular expression mask
     SEQUENCE,			// a vector of value_t objects
@@ -297,10 +293,6 @@ public:
     TRACE_CTOR(value_t, "const balance_t&");
     set_balance(val);
   }
-  value_t(const balance_pair_t& val) {
-    TRACE_CTOR(value_t, "const balance_pair_t&");
-    set_balance_pair(val);
-  }
   value_t(const mask_t& val) {
     TRACE_CTOR(value_t, "const mask_t&");
     set_mask(val);
@@ -388,11 +380,6 @@ public:
   value_t& operator-=(const value_t& val);
   value_t& operator*=(const value_t& val);
   value_t& operator/=(const value_t& val);
-
-  // This special form of add is use to produce a balance pair by
-  // simultaneously adding both an amount and its cost.
-  value_t& add(const amount_t& amount,
-	       const optional<amount_t>& cost = none);
 
   /**
    * Unary arithmetic operators.
@@ -488,7 +475,6 @@ public:
    * is_date()
    * is_amount()
    * is_balance()
-   * is_balance_pair()
    * is_string()
    * is_mask()
    * is_sequence()
@@ -620,28 +606,6 @@ public:
     *reinterpret_cast<balance_t **>(storage->data) = new balance_t(val);
   }
 
-  bool is_balance_pair() const {
-    return is_type(BALANCE_PAIR);
-  }
-  balance_pair_t& as_balance_pair_lval() {
-    assert(is_balance_pair());
-    _dup();
-    balance_pair_t& bal_pair(**reinterpret_cast<balance_pair_t **>(storage->data));
-    assert(bal_pair.valid());
-    return bal_pair;
-  }
-  const balance_pair_t& as_balance_pair() const {
-    assert(is_balance_pair());
-    balance_pair_t& bal_pair(**reinterpret_cast<balance_pair_t **>(storage->data));
-    assert(bal_pair.valid());
-    return bal_pair;
-  }
-  void set_balance_pair(const balance_pair_t& val) {
-    assert(val.valid());
-    set_type(BALANCE_PAIR);
-    *reinterpret_cast<balance_pair_t **>(storage->data) = new balance_pair_t(val);
-  }
-
   bool is_string() const {
     return is_type(STRING);
   }
@@ -758,16 +722,15 @@ public:
    * its underlying type, where possible.  If not possible, an
    * exception is thrown.
    */
-  bool		 to_boolean() const;
-  long		 to_long() const;
-  datetime_t     to_datetime() const;
-  date_t         to_date() const;
-  amount_t	 to_amount() const;
-  balance_t	 to_balance() const;
-  balance_pair_t to_balance_pair() const;
-  string	 to_string() const;
-  mask_t	 to_mask() const;
-  sequence_t     to_sequence() const;
+  bool	     to_boolean() const;
+  long	     to_long() const;
+  datetime_t to_datetime() const;
+  date_t     to_date() const;
+  amount_t   to_amount() const;
+  balance_t  to_balance() const;
+  string     to_string() const;
+  mask_t     to_mask() const;
+  sequence_t to_sequence() const;
 
   /**
    * Dynamic typing conversion methods.
@@ -909,8 +872,6 @@ public:
       return "an amount";
     case BALANCE:
       return "a balance";
-    case BALANCE_PAIR:
-      return "a balance pair";
     case STRING:
       return "a string";
     case MASK:

@@ -274,8 +274,6 @@ void format_equity::flush()
     const balance_t * bal;
     if (total.is_type(value_t::BALANCE))
       bal = &(total.as_balance());
-    else if (total.is_type(value_t::BALANCE_PAIR))
-      bal = &(total.as_balance_pair().quantity());
     else
       assert(false);
 
@@ -304,8 +302,6 @@ void format_equity::operator()(account_t& account)
 	const balance_t * bal;
 	if (val.is_type(value_t::BALANCE))
 	  bal = &(val.as_balance());
-	else if (val.is_type(value_t::BALANCE_PAIR))
-	  bal = &(val.as_balance_pair().quantity());
 	else
 	  assert(false);
 

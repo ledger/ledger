@@ -64,12 +64,6 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
 		    (const_cast<char *>(rhs.data)));
     break;
 
-  case BALANCE_PAIR:
-    *reinterpret_cast<balance_pair_t **>(data) =
-      new balance_pair_t(**reinterpret_cast<balance_pair_t **>
-			 (const_cast<char *>(rhs.data)));
-    break;
-
   case STRING:
     new(reinterpret_cast<string *>(data))
       string(*reinterpret_cast<string *>(const_cast<char *>(rhs.data)));
@@ -104,9 +98,6 @@ void value_t::storage_t::destroy()
     break;
   case BALANCE:
     checked_delete(*reinterpret_cast<balance_t **>(data));
-    break;
-  case BALANCE_PAIR:
-    checked_delete(*reinterpret_cast<balance_pair_t **>(data));
     break;
   case STRING:
     reinterpret_cast<string *>(data)->~string();
@@ -147,7 +138,6 @@ void value_t::initialize()
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(long));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(amount_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_t *));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_pair_t *));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(string));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(mask_t));
   BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(sequence_t *));
@@ -165,8 +155,6 @@ void value_t::initialize()
 	 << "  sizeof(amount_t)");
   DEBUG_(std::setw(3) << std::right << sizeof(balance_t *)
 	 << "  sizeof(balance_t *)");
-  DEBUG_(std::setw(3) << std::right << sizeof(balance_pair_t *)
-	 << "  sizeof(balance_pair_t *)");
   DEBUG_(std::setw(3) << std::right << sizeof(string)
 	 << "  sizeof(string)");
   DEBUG_(std::setw(3) << std::right << sizeof(mask_t)
@@ -207,8 +195,6 @@ value_t::operator bool() const
     return as_amount();
   case BALANCE:
     return as_balance();
-  case BALANCE_PAIR:
-    return as_balance_pair();
   case STRING:
     return ! as_string().empty();
   case SEQUENCE:
@@ -289,17 +275,6 @@ balance_t value_t::to_balance() const
   }
 }
 
-balance_pair_t value_t::to_balance_pair() const
-{
-  if (is_balance_pair()) {
-    return as_balance_pair();
-  } else {
-    value_t temp(*this);
-    temp.in_place_cast(BALANCE_PAIR);
-    return temp.as_balance_pair();
-  }
-}
-
 string value_t::to_string() const
 {
   if (is_string()) {
@@ -344,12 +319,6 @@ void value_t::in_place_simplify()
     DEBUG_("Zeroing type " << static_cast<int>(type()));
     set_long(0L);
     return;
-  }
-
-  if (is_balance_pair() &&
-      (! as_balance_pair().cost || as_balance_pair().cost->is_realzero())) {
-    DEBUG_("Reducing balance pair to balance");
-    in_place_cast(BALANCE);
   }
 
   if (is_balance() && as_balance().amounts.size() == 1) {
@@ -428,10 +397,6 @@ value_t& value_t::operator+=(const value_t& val)
       in_place_cast(BALANCE);
       as_balance_lval() += val.as_balance();
       return *this;
-    case BALANCE_PAIR:
-      in_place_cast(BALANCE_PAIR);
-      as_balance_pair_lval() += val.as_balance_pair();
-      return *this;
     default:
       break;
     }
@@ -464,10 +429,6 @@ value_t& value_t::operator+=(const value_t& val)
       as_balance_lval() += val.as_balance();
       return *this;
 
-    case BALANCE_PAIR:
-      in_place_cast(BALANCE_PAIR);
-      as_balance_pair_lval() += val.as_balance_pair();
-      return *this;
     default:
       break;
     }
@@ -483,29 +444,6 @@ value_t& value_t::operator+=(const value_t& val)
       return *this;
     case BALANCE:
       as_balance_lval() += val.as_balance();
-      return *this;
-    case BALANCE_PAIR:
-      in_place_cast(BALANCE_PAIR);
-      as_balance_pair_lval() += val.as_balance_pair();
-      return *this;
-    default:
-      break;
-    }
-    break;
-
-  case BALANCE_PAIR:
-    switch (val.type()) {
-    case INTEGER:
-      as_balance_pair_lval() += val.to_amount();
-      return *this;
-    case AMOUNT:
-      as_balance_pair_lval() += val.as_amount();
-      return *this;
-    case BALANCE:
-      as_balance_pair_lval() += val.as_balance();
-      return *this;
-    case BALANCE_PAIR:
-      as_balance_pair_lval() += val.as_balance_pair();
       return *this;
     default:
       break;
@@ -581,11 +519,6 @@ value_t& value_t::operator-=(const value_t& val)
       as_balance_lval() -= val.as_balance();
       in_place_simplify();
       return *this;
-    case BALANCE_PAIR:
-      in_place_cast(BALANCE_PAIR);
-      as_balance_pair_lval() -= val.as_balance_pair();
-      in_place_simplify();
-      return *this;
     default:
       break;
     }
@@ -625,11 +558,6 @@ value_t& value_t::operator-=(const value_t& val)
       in_place_simplify();
       return *this;
 
-    case BALANCE_PAIR:
-      in_place_cast(BALANCE_PAIR);
-      as_balance_pair_lval() -= val.as_balance_pair();
-      in_place_simplify();
-      return *this;
     default:
       break;
     }
@@ -647,34 +575,6 @@ value_t& value_t::operator-=(const value_t& val)
       return *this;
     case BALANCE:
       as_balance_lval() -= val.as_balance();
-      in_place_simplify();
-      return *this;
-    case BALANCE_PAIR:
-      in_place_cast(BALANCE_PAIR);
-      as_balance_pair_lval() -= val.as_balance_pair();
-      in_place_simplify();
-      return *this;
-    default:
-      break;
-    }
-    break;
-
-  case BALANCE_PAIR:
-    switch (val.type()) {
-    case INTEGER:
-      as_balance_pair_lval() -= val.to_amount();
-      in_place_simplify();
-      return *this;
-    case AMOUNT:
-      as_balance_pair_lval() -= val.as_amount();
-      in_place_simplify();
-      return *this;
-    case BALANCE:
-      as_balance_pair_lval() -= val.as_balance();
-      in_place_simplify();
-      return *this;
-    case BALANCE_PAIR:
-      as_balance_pair_lval() -= val.as_balance_pair();
       in_place_simplify();
       return *this;
     default:
@@ -756,22 +656,6 @@ value_t& value_t::operator*=(const value_t& val)
     }
     break;
 
-  case BALANCE_PAIR:
-    switch (val.type()) {
-    case INTEGER:
-      as_balance_pair_lval() *= val.as_long();
-      return *this;
-    case AMOUNT:
-      if (! val.as_amount().has_commodity()) {
-	as_balance_pair_lval() *= val.as_amount();
-	return *this;
-      }
-      break;
-    default:
-      break;
-    }
-    break;
-
   default:
     break;
   }
@@ -831,22 +715,6 @@ value_t& value_t::operator/=(const value_t& val)
     }
     break;
 
-  case BALANCE_PAIR:
-    switch (val.type()) {
-    case INTEGER:
-      as_balance_pair_lval() /= val.as_long();
-      return *this;
-    case AMOUNT:
-      if (! val.as_amount().has_commodity()) {
-	as_balance_pair_lval() /= val.as_amount();
-	return *this;
-      }
-      break;
-    default:
-      break;
-    }
-    break;
-
   default:
     break;
   }
@@ -886,8 +754,6 @@ bool value_t::is_equal_to(const value_t& val) const
       return val.as_amount() == to_amount();
     case BALANCE:
       return val.as_balance() == to_amount();
-    case BALANCE_PAIR:
-      return val.as_balance_pair() == to_amount();
     default:
       break;
     }
@@ -901,8 +767,6 @@ bool value_t::is_equal_to(const value_t& val) const
       return as_amount() == val.as_amount();
     case BALANCE:
       return val.as_balance() == as_amount();
-    case BALANCE_PAIR:
-      return val.as_balance_pair() == as_amount();
     default:
       break;
     }
@@ -916,23 +780,6 @@ bool value_t::is_equal_to(const value_t& val) const
       return as_balance() == val.as_amount();
     case BALANCE:
       return as_balance() == val.as_balance();
-    case BALANCE_PAIR:
-      return val.as_balance_pair() == as_balance();
-    default:
-      break;
-    }
-    break;
-
-  case BALANCE_PAIR:
-    switch (val.type()) {
-    case INTEGER:
-      return as_balance_pair() == val.to_amount();
-    case AMOUNT:
-      return as_balance_pair() == val.as_amount();
-    case BALANCE:
-      return as_balance_pair() == val.as_balance();
-    case BALANCE_PAIR:
-      return as_balance_pair() == val.as_balance_pair();
     default:
       break;
     }
@@ -1101,9 +948,6 @@ void value_t::in_place_cast(type_t cast_type)
     case BALANCE:
       set_balance(to_amount());
       return;
-    case BALANCE_PAIR:
-      set_balance_pair(to_amount());
-      return;
     case STRING:
       set_string(lexical_cast<string>(as_long()));
       return;
@@ -1126,12 +970,6 @@ void value_t::in_place_cast(type_t cast_type)
 	set_balance(balance_t());
       else
 	set_balance(as_amount()); // creates temporary
-      return;
-    case BALANCE_PAIR:
-      if (amt.is_null())
-	set_balance_pair(balance_pair_t());
-      else
-	set_balance_pair(as_amount()); // creates temporary
       return;
     case STRING:
       if (amt.is_null())
@@ -1166,37 +1004,6 @@ void value_t::in_place_cast(type_t cast_type)
       }
       break;
     }
-    case BALANCE_PAIR:
-      set_balance_pair(as_balance());
-      return;
-    default:
-      break;
-    }
-    break;
-
-  case BALANCE_PAIR:
-    switch (cast_type) {
-    case AMOUNT: {
-      const balance_t& temp(as_balance_pair().quantity());
-      if (temp.amounts.size() == 1) {
-	set_amount(amount_t((*temp.amounts.begin()).second));
-	return;
-      }
-      else if (temp.amounts.size() == 0) {
-	set_amount(0L);
-	return;
-      }
-      else {
-	throw_(value_error, "Cannot convert " << label() <<
-	       " with multiple commodities to " << label(cast_type));
-      }
-      break;
-    }
-    case BALANCE:
-      // A temporary is required, becaues set_balance is going to wipe us out
-      // before assigned the value passed in.
-      set_balance(balance_t(as_balance_pair().quantity()));
-      return;
     default:
       break;
     }
@@ -1249,9 +1056,6 @@ void value_t::in_place_negate()
   case BALANCE:
     as_balance_lval().in_place_negate();
     return;
-  case BALANCE_PAIR:
-    as_balance_pair_lval().in_place_negate();
-    return;
   default:
     break;
   }
@@ -1278,9 +1082,6 @@ void value_t::in_place_not()
   case BALANCE:
     set_boolean(! as_balance());
     return;
-  case BALANCE_PAIR:
-    set_boolean(! as_balance_pair());
-    return;
   case STRING:
     set_boolean(as_string().empty());
     return;
@@ -1306,8 +1107,6 @@ bool value_t::is_realzero() const
     return as_amount().is_realzero();
   case BALANCE:
     return as_balance().is_realzero();
-  case BALANCE_PAIR:
-    return as_balance_pair().is_realzero();
   case STRING:
     return as_string().empty();
   case SEQUENCE:
@@ -1337,8 +1136,6 @@ bool value_t::is_zero() const
     return as_amount().is_zero();
   case BALANCE:
     return as_balance().is_zero();
-  case BALANCE_PAIR:
-    return as_balance_pair().is_zero();
   case STRING:
     return as_string().empty();
   case SEQUENCE:
@@ -1370,12 +1167,6 @@ value_t value_t::value(const optional<datetime_t>&   moment,
       return *bal;
     return false;
   }
-  case BALANCE_PAIR: {
-    if (optional<balance_pair_t> bal_pair =
-	as_balance_pair().value(moment, in_terms_of))
-      return *bal_pair;
-    return false;
-  }
 
   default:
     break;
@@ -1394,9 +1185,6 @@ void value_t::in_place_reduce()
   case BALANCE:
     as_balance_lval().in_place_reduce();
     return;
-  case BALANCE_PAIR:
-    as_balance_pair_lval().in_place_reduce();
-    return;
   default:
     return;
   }
@@ -1412,9 +1200,6 @@ void value_t::in_place_unreduce()
     return;
   case BALANCE:
     as_balance_lval().in_place_unreduce();
-    return;
-  case BALANCE_PAIR:
-    as_balance_pair_lval().in_place_unreduce();
     return;
   default:
     return;
@@ -1436,8 +1221,6 @@ value_t value_t::abs() const
     return as_amount().abs();
   case BALANCE:
     return as_balance().abs();
-  case BALANCE_PAIR:
-    return as_balance_pair().abs();
   default:
     break;
   }
@@ -1567,8 +1350,6 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
     return as_amount().strip_annotations(what_to_keep);
   case BALANCE:
     return as_balance().strip_annotations(what_to_keep);
-  case BALANCE_PAIR:
-    return as_balance_pair().quantity().strip_annotations(what_to_keep);
 
   default:
     assert(false);
@@ -1586,58 +1367,12 @@ value_t value_t::cost() const
   case BALANCE:
     return *this;
 
-  case BALANCE_PAIR:
-    assert(as_balance_pair().cost);
-    if (as_balance_pair().cost)
-      return *(as_balance_pair().cost);
-    else
-      return as_balance_pair().quantity();
-
   default:
     break;
   }
 
   throw_(value_error, "Cannot find the cost of " << label());
   return NULL_VALUE;
-}
-
-value_t& value_t::add(const amount_t& amount, const optional<amount_t>& tcost)
-{
-  switch (type()) {
-  case INTEGER:
-  case AMOUNT:
-    if (tcost) {
-      in_place_cast(BALANCE_PAIR);
-      return add(amount, tcost);
-    }
-    else if ((is_amount() &&
-	      as_amount().commodity() != amount.commodity()) ||
-	     (! is_amount() && amount.commodity())) {
-      in_place_cast(BALANCE);
-      return add(amount, tcost);
-    }
-    else if (! is_amount()) {
-      in_place_cast(AMOUNT);
-    }
-    return *this += amount;
-
-  case BALANCE:
-    if (tcost) {
-      in_place_cast(BALANCE_PAIR);
-      return add(amount, tcost);
-    }
-    return *this += amount;
-
-  case BALANCE_PAIR:
-    as_balance_pair_lval().add(amount, tcost);
-    return *this;
-
-  default:
-    break;
-  }
-
-  throw_(value_error, "Cannot add an amount to " << label());
-  return *this;
 }
 
 void value_t::print(std::ostream&           out,
@@ -1702,9 +1437,6 @@ void value_t::print(std::ostream&           out,
   case BALANCE:
     as_balance().print(out, first_width, latter_width);
     break;
-  case BALANCE_PAIR:
-    as_balance_pair().print(out, first_width, latter_width);
-    break;
 
   default:
     throw_(value_error, "Cannot print " << label());
@@ -1747,9 +1479,6 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
   case BALANCE:
     out << as_balance();
     break;
-  case BALANCE_PAIR:
-    out << as_balance_pair();
-    break;
 
   case STRING:
     out << '"' << as_string() << '"';
@@ -1791,8 +1520,6 @@ bool value_t::valid() const
     return as_amount().valid();
   case BALANCE:
     return as_balance().valid();
-  case BALANCE_PAIR:
-    return as_balance_pair().valid();
   default:
     break;
   }

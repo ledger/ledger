@@ -262,7 +262,6 @@ namespace {
       break;
 
     case value_t::BALANCE:
-    case value_t::BALANCE_PAIR:
       xdata.value = temp;
       flags |= XACT_EXT_COMPOUND;
       break;

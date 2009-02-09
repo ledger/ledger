@@ -927,14 +927,6 @@ xact_t * instance_t::parse_xact(char *		line,
 	  diff = amt;
 	break;
 
-      case value_t::BALANCE_PAIR:
-	if (optional<amount_t> comm_bal =
-	    xdata.value.as_balance_pair().commodity_amount(amt.commodity()))
-	  diff = amt - *comm_bal;
-	else
-	  diff = amt;
-	break;
-
       default:
 	diff = amt;
 	break;

@@ -174,9 +174,6 @@ void export_value()
     .def(self	  /  double())
     .def(double() / self)
 
-    .def("add", &value_t::add,
-	 return_value_policy<reference_existing_object>())
-
     .def("negate", &value_t::negate)
     .def("in_place_negate", &value_t::in_place_negate)
     .def("in_place_not", &value_t::in_place_not)
@@ -223,10 +220,7 @@ void export_value()
     .def("set_long", &value_t::set_long)
 
     .def("is_amount", &value_t::is_amount)
-
     .def("is_balance", &value_t::is_balance)
-
-    .def("is_balance_pair", &value_t::is_balance_pair)
 
     .def("is_string", &value_t::is_string)
     .def("set_string", py_set_string)
@@ -286,7 +280,6 @@ void export_value()
     .value("INTEGER",	   value_t::INTEGER)
     .value("AMOUNT",	   value_t::AMOUNT)
     .value("BALANCE",	   value_t::BALANCE)
-    .value("BALANCE_PAIR", value_t::BALANCE_PAIR)
     .value("STRING",	   value_t::STRING)
     .value("SEQUENCE",	   value_t::SEQUENCE)
     .value("POINTER",	   value_t::POINTER)
