@@ -30,6 +30,7 @@
  */
 
 #include "journal.h"
+#include "account.h"
 
 namespace ledger {
 
