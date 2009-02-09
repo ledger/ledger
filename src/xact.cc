@@ -38,12 +38,18 @@ namespace ledger {
 
 date_t xact_t::date() const
 {
-  // jww (2009-02-06): Why isn't reported_date called here?
+  if (item_t::use_effective_date) {
+    if (_date_eff)
+      return *_date_eff;
+    else if (entry && entry->_date_eff)
+      return *entry->_date_eff;
+  }
+
   if (! _date) {
     assert(entry);
-    return entry->date();
+    return *entry->_date;
   }
-  return item_t::date();
+  return *_date;
 }
 
 optional<date_t> xact_t::effective_date() const
