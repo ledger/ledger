@@ -105,14 +105,17 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     break;
 
   case IDENT: {
-    if (! left())
+    ptr_op_t def = left();
+    if (! def)
+      def = compile(scope);
+    if (! def)
       throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
 
     // Evaluating an identifier is the same as calling its definition
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
     call_scope_t call_args(scope);
-    result = left()->calc(call_args, locus);
+    result = def->calc(call_args, locus);
     break;
   }
 
