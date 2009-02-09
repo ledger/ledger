@@ -320,11 +320,10 @@ bool entry_t::valid() const
 
 void auto_entry_t::extend_entry(entry_base_t& entry, bool post)
 {
-  xacts_list initial_xacts(entry.xacts.begin(),
-				  entry.xacts.end());
+  xacts_list initial_xacts(entry.xacts.begin(), entry.xacts.end());
 
   foreach (xact_t * initial_xact, initial_xacts) {
-    if (predicate(*initial_xact)) {
+    if (! initial_xact->has_flags(XACT_AUTO) && predicate(*initial_xact)) {
       foreach (xact_t * xact, xacts) {
 	amount_t amt;
 	assert(xact->amount);
