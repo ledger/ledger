@@ -381,17 +381,21 @@ class collapse_xacts : public item_handler<xact_t>
   entry_t *   last_entry;
   xact_t *    last_xact;
   account_t   totals_account;
+  bool        only_collapse_if_zero;
 
-  std::list<entry_t> entry_temps;
-  std::list<xact_t>  xact_temps;
+  std::list<entry_t>  entry_temps;
+  std::list<xact_t>   xact_temps;
+  std::list<xact_t *> component_xacts;
 
   collapse_xacts();
 
 public:
-  collapse_xacts(xact_handler_ptr handler, expr_t& _amount_expr)
+  collapse_xacts(xact_handler_ptr handler, expr_t& _amount_expr,
+		 bool _only_collapse_if_zero = false)
     : item_handler<xact_t>(handler), amount_expr(_amount_expr),
       count(0), last_entry(NULL), last_xact(NULL),
-      totals_account(NULL, "<Total>") {
+      totals_account(NULL, "<Total>"),
+      only_collapse_if_zero(_only_collapse_if_zero) {
     TRACE_CTOR(collapse_xacts, "xact_handler_ptr");
   }
   virtual ~collapse_xacts() {

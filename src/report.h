@@ -229,6 +229,10 @@ public:
       parent->append_display_predicate("depth<=1");
     });
 
+  OPTION_(report_t, collapse_if_zero, DO() {
+      parent->HANDLER(collapse).on();
+    });
+
   OPTION(report_t, comm_as_payee); // -x
   OPTION(report_t, cost);
   OPTION(report_t, csv_format_);

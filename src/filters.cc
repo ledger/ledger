@@ -284,7 +284,16 @@ void collapse_xacts::report_subtotal()
 
   if (count == 1) {
     item_handler<xact_t>::operator()(*last_xact);
-  } else {
+  }
+  else if (only_collapse_if_zero && ! subtotal.is_zero()) {
+    foreach (xact_t * xact, component_xacts)
+      item_handler<xact_t>::operator()(*xact);
+    component_xacts.clear();
+  }
+  else {
+    if (only_collapse_if_zero)
+      component_xacts.clear();
+
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
     entry.payee = last_entry->payee;
@@ -310,6 +319,9 @@ void collapse_xacts::operator()(xact_t& xact)
 
   xact.add_to_value(subtotal, amount_expr);
   count++;
+
+  if (only_collapse_if_zero)
+    component_xacts.push_back(&xact);
 
   last_entry = xact.entry;
   last_xact  = &xact;

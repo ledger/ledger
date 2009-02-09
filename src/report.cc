@@ -388,6 +388,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(cleared);
     else OPT(code_as_payee);
     else OPT(collapse);
+    else OPT(collapse_if_zero);
     else OPT(comm_as_payee);
     else OPT(cost);
     else OPT_(current);

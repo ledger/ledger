@@ -92,7 +92,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // collapse_xacts causes entries with multiple xacts to appear as entries
     // with a subtotaled xact for each commodity used.
     if (report.HANDLED(collapse))
-      handler.reset(new collapse_xacts(handler, expr));
+      handler.reset(new collapse_xacts(handler, expr,
+				       report.HANDLED(collapse_if_zero)));
 
     // subtotal_xacts combines all the xacts it receives into one subtotal
     // entry, which has one xact for each commodity in each account.
