@@ -173,7 +173,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <boost/python.hpp>
 
-#include <Python.h>
+#include <boost/python/detail/wrap_python.hpp>
 #include <datetime.h>
 
 #include <boost/python/exception_translator.hpp>
