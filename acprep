@@ -66,6 +66,9 @@ LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python$PYTHON_VERSION/config"
 SYSTEM=$(uname -s)
 
 if [ $SYSTEM = Linux ]; then
+    if [ "$(uname -m)" = x86_64 ]; then
+	SWITCHES="--disable-static"
+    fi
     CXXFLAGS="-pthread"
 elif [ $SYSTEM = Solaris ]; then
     CXXFLAGS="-pthreads"
