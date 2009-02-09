@@ -198,8 +198,7 @@ void calc_xacts::operator()(xact_t& xact)
     last_xact = &xact;
   }
   catch (const std::exception& err) {
-    add_error_context("While calculating transaction:");
-    add_error_context(item_context(xact));
+    add_error_context(item_context(xact, "While calculating transaction"));
     throw;
   }
 }

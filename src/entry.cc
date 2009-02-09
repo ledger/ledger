@@ -222,7 +222,7 @@ bool entry_base_t::finalize()
   DEBUG("entry.finalize", "final balance = " << balance);
 
   if (! balance.is_null() && ! balance.is_zero()) {
-    add_error_context(item_context(*this));
+    add_error_context(item_context(*this, "While balancing entry"));
     add_error_context("Unbalanced remainder is:");
     add_error_context(value_context(balance));
     throw_(balance_error, "Entry does not balance");

@@ -328,7 +328,7 @@ bool item_t::valid() const
   return true;
 }
 
-string item_context(const item_t& item)
+string item_context(const item_t& item, const string& desc)
 {
   std::size_t len = item.end_pos - item.beg_pos;
   assert(len > 0);
@@ -342,8 +342,7 @@ string item_context(const item_t& item)
 
   std::ostringstream out;
       
-  out << "While balancing item from \"" << item.pathname.string()
-      << "\"";
+  out << desc << " from \"" << item.pathname.string() << "\"";
 
   if (item.beg_line != item.end_line)
     out << ", lines " << item.beg_line << "-"

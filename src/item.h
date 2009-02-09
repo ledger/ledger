@@ -148,7 +148,7 @@ public:
 
 value_t get_comment(item_t& item);
 
-string item_context(const item_t& item);
+string item_context(const item_t& item, const string& desc);
 
 } // namespace ledger
 
