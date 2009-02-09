@@ -11,7 +11,7 @@ N $
   Assets:Bank:Checking        $1,000.00
   Equity:Opening Balances
 
-2004/05/01 * Investment balance
+2004/05/03=2004/05/01 * Investment balance
   Assets:Brokerage              50 AAPL @ $30.00
   Equity:Opening Balances
 

@@ -33,6 +33,8 @@
 
 namespace ledger {
 
+bool item_t::use_effective_date = false;
+
 bool item_t::has_tag(const string& tag) const
 {
   if (! metadata)
@@ -136,12 +138,8 @@ namespace {
   }
 
   value_t get_date(item_t& item) {
-    if (optional<date_t> date = item.date())
-      return *date;
-    else
-      return 0L;
+    return item.date();
   }
-
   value_t get_note(item_t& item) {
     return string_value(item.note ? *item.note : empty_string);
   }
@@ -334,6 +332,13 @@ string item_context(const item_t& item, const string& desc)
   assert(len > 0);
   assert(len < 2048);
 
+  std::ostringstream out;
+      
+  if (item.pathname == path("/dev/stdin")) {
+    out << desc << " from standard input:";
+    return out.str();
+  }
+
   ifstream in(item.pathname);
   in.seekg(item.beg_pos, std::ios::beg);
       
@@ -342,8 +347,6 @@ string item_context(const item_t& item, const string& desc)
   assert(static_cast<std::size_t>(in.gcount()) == len);
   buf[len] = '\0';
 
-  std::ostringstream out;
-      
   out << desc << " from \"" << item.pathname.string() << "\"";
 
   if (item.beg_line != item.end_line)

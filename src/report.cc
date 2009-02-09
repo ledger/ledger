@@ -44,7 +44,7 @@ report_t::report_t(session_t& _session) : session(_session)
   HANDLER(date_format_).on("%y-%b-%d");
 
   HANDLER(register_format_).on(
-    "%-.9(display_date) %-.20(payee)"
+    "%-.9(date) %-.20(payee)"
     " %-.23(truncate(account, 23, 2))"
     " %!12(print_balance(strip(display_amount), 12, 67))"
     " %!12(print_balance(strip(display_total), 12, 80, true))\n%/"
@@ -82,7 +82,7 @@ report_t::report_t(session_t& _session) : session(_session)
   HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
 
   HANDLER(csv_format_).on(
-    "%(quoted(display_date)),"
+    "%(quoted(date)),"
     "%(quoted(payee)),"
     "%(quoted(account)),"
     "%(quoted(display_amount)),"
@@ -149,28 +149,6 @@ value_t report_t::fn_amount_expr(call_scope_t& scope)
 value_t report_t::fn_total_expr(call_scope_t& scope)
 {
   return HANDLER(total_).expr.calc(scope);
-}
-
-value_t report_t::fn_display_date(call_scope_t& args)
-{
-  item_t& item(find_scope<item_t>(args));
-
-  // jww (2009-02-06): Should we be calling reported_date here?
-
-  date_t when;
-  if (HANDLED(effective)) {
-    if (optional<date_t> date = item.effective_date())
-      when = *date;
-    else
-      when = item.date();
-  } else {
-    when = item.date();
-  }
-
-  if (HANDLED(date_format_))
-    return string_value(format_date(when, HANDLER(date_format_).str()));
-  else
-    return string_value(format_date(when));
 }
 
 value_t report_t::fn_display_amount(call_scope_t& scope)
@@ -570,9 +548,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'd':
-    if (is_eq(p, "display_date"))
-      return MAKE_FUNCTOR(report_t::fn_display_date);
-    else if (is_eq(p, "display_amount"))
+    if (is_eq(p, "display_amount"))
       return MAKE_FUNCTOR(report_t::fn_display_amount);
     else if (is_eq(p, "display_total"))
       return MAKE_FUNCTOR(report_t::fn_display_total);

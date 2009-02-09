@@ -33,6 +33,10 @@
 
 namespace ledger {
 
+optional<std::string> input_date_format;
+std::string	      output_datetime_format = "%Y-%m-%d %H:%M:%S";
+std::string	      output_date_format     = "%Y-%m-%d";
+
 namespace {
   const char * formats[] = {
     "%y/%m/%d",
@@ -52,8 +56,6 @@ namespace {
     NULL
   };
 }
-
-optional<string> input_date_format;
 
 namespace {
   bool parse_date_mask(const char * date_str, std::tm& result)

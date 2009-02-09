@@ -420,10 +420,12 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
 
 void subtotal_xacts::operator()(xact_t& xact)
 {
-  if (! is_valid(start) || xact.date() < start)
-    start = xact.date();
-  if (! is_valid(finish) || xact.date() > finish)
-    finish = xact.date();
+  date_t when = xact.date();
+
+  if (! is_valid(start) || when < start)
+    start = when;
+  if (! is_valid(finish) || when > finish)
+    finish = when;
 
   account_t * acct = xact.reported_account();
   assert(acct);
@@ -466,7 +468,7 @@ void interval_xacts::report_subtotal(const date_t& date)
 
 void interval_xacts::operator()(xact_t& xact)
 {
-  const date_t& date(xact.date());
+  date_t date = xact.date();
 
   if ((is_valid(interval.begin) && date < interval.begin) ||
       (is_valid(interval.end)   && date >= interval.end))

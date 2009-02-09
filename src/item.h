@@ -126,8 +126,13 @@ public:
   virtual void parse_tags(const char * p, int current_year = -1);
   virtual void append_note(const char * p, int current_year = -1);
 
+  static bool use_effective_date;
+
   virtual date_t date() const {
     assert(_date);
+    if (use_effective_date)
+      if (optional<date_t> effective = effective_date())
+	return *effective;
     return *_date;
   }
   virtual optional<date_t> effective_date() const {
