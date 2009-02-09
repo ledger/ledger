@@ -97,6 +97,7 @@ class account_t : public scope_t
     return fullname();
   }
   string fullname() const;
+  string partial_name() const;
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_map::value_type(acct->name, acct));
@@ -170,6 +171,10 @@ class account_t : public scope_t
   xdata_t& xdata() {
     if (! xdata_)
       xdata_ = xdata_t();
+    return *xdata_;
+  }
+  const xdata_t& xdata() const {
+    assert(xdata_);
     return *xdata_;
   }
 

@@ -125,6 +125,26 @@ string account_t::fullname() const
   }
 }
 
+string account_t::partial_name() const
+{
+  string name;
+
+  for (const account_t * acct = this;
+       acct && acct->parent;
+       acct = acct->parent) {
+    if (acct->has_xdata() &&
+	acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
+      break;
+
+    if (name.empty())
+      name = acct->name;
+    else
+      name = acct->name + ":" + name;
+  }
+
+  return name;
+}
+
 std::ostream& operator<<(std::ostream& out, const account_t& account)
 {
   out << account.fullname();
@@ -132,24 +152,8 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 }
 
 namespace {
-  value_t get_partial_name(account_t& account)
-  {
-    string name;
-
-    for (account_t * acct = &account;
-	 acct && acct->parent;
-	 acct = acct->parent) {
-      if (acct->has_xdata() &&
-	  acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
-	break;
-
-      if (name.empty())
-	name = acct->name;
-      else
-	name = acct->name + ":" + name;
-    }
-
-    return string_value(name);
+  value_t get_partial_name(account_t& account) {
+    return string_value(account.partial_name());
   }
 
   value_t get_total(account_t& account) {

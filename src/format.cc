@@ -30,7 +30,7 @@
  */
 
 #include "format.h"
-#include "account.h"
+#include "scope.h"
 
 namespace ledger {
 
@@ -56,28 +56,6 @@ void format_t::element_t::dump(std::ostream& out) const
   switch (type) {
   case STRING: out << "   str: '" << chars << "'" << std::endl; break;
   case EXPR:   out << "  expr: "   << expr << std::endl; break;
-  }
-}
-
-namespace {
-  string partial_account_name(account_t& account)
-  {
-    string name;
-
-    for (account_t * acct = &account;
-	 acct && acct->parent;
-	 acct = acct->parent) {
-      if (acct->has_xdata() &&
-	  acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
-	break;
-
-      if (name.empty())
-	name = acct->name;
-      else
-	name = acct->name + ":" + name;
-    }
-
-    return name;
   }
 }
 

@@ -46,7 +46,6 @@
 #ifndef _FORMAT_H
 #define _FORMAT_H
 
-#include "journal.h"
 #include "expr.h"
 
 namespace ledger {
