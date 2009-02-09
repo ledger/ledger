@@ -390,6 +390,10 @@ value_t& value_t::operator+=(const value_t& val)
       as_long_lval() += val.as_long();
       return *this;
     case AMOUNT:
+      if (val.as_amount().has_commodity()) {
+	in_place_cast(BALANCE);
+	return *this += val;
+      }
       in_place_cast(AMOUNT);
       as_amount_lval() += val.as_amount();
       return *this;
