@@ -35,19 +35,19 @@
 
 namespace ledger {
 
-expr_t::expr_t() : compiled(false)
+expr_t::expr_t() : context(NULL), compiled(false)
 {
   TRACE_CTOR(expr_t, "");
 }
 
 expr_t::expr_t(const expr_t& other)
-  : ptr(other.ptr), str(other.str), compiled(false)
+  : ptr(other.ptr), context(other.context), str(other.str), compiled(false)
 {
   TRACE_CTOR(expr_t, "copy");
 }
 
 expr_t::expr_t(const string& _str, const uint_least8_t flags)
-  : str(_str), compiled(false)
+  : context(NULL), str(_str), compiled(false)
 {
   TRACE_CTOR(expr_t, "const string&");
   if (! _str.empty())
@@ -55,16 +55,16 @@ expr_t::expr_t(const string& _str, const uint_least8_t flags)
 }
 
 expr_t::expr_t(std::istream& in, const uint_least8_t flags)
-  : compiled(false)
+  : context(NULL), compiled(false)
 {
   TRACE_CTOR(expr_t, "std::istream&");
   parse(in, flags);
 }
 
-expr_t::expr_t(const ptr_op_t& _ptr, const string& _str)
-  : ptr(_ptr), str(_str), compiled(false)
+expr_t::expr_t(const ptr_op_t& _ptr, scope_t * _context, const string& _str)
+  : ptr(_ptr), context(_context), str(_str), compiled(false)
 {
-  TRACE_CTOR(expr_t, "const ptr_op_t&, const string&");
+  TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *, const string&");
 }
 
 expr_t::~expr_t() throw()
@@ -72,11 +72,17 @@ expr_t::~expr_t() throw()
   TRACE_DTOR(expr_t);
 }
 
+expr_t::ptr_op_t expr_t::get_op() throw()
+{
+  return ptr;
+}
+
 expr_t& expr_t::operator=(const expr_t& _expr)
 {
   if (this != &_expr) {
     str	     = _expr.str;
     ptr	     = _expr.ptr;
+    context  = _expr.context;
     compiled = _expr.compiled;
   }
   return *this;
@@ -87,6 +93,7 @@ void expr_t::parse(const string& _str, const uint32_t flags)
   parser_t parser;
   str	   = _str;
   ptr	   = parser.parse(str, flags);
+  context  = NULL;
   compiled = false;
 }
 
@@ -96,6 +103,7 @@ void expr_t::parse(std::istream& in, const uint32_t flags,
   parser_t parser;
   str	   = "<stream>";
   ptr	   = parser.parse(in, flags, original_string);
+  context  = NULL;
   compiled = false;
 }
 
@@ -103,6 +111,7 @@ void expr_t::compile(scope_t& scope)
 {
   if (ptr.get() && ! compiled) {
     ptr	     = ptr->compile(scope);
+    context  = &scope;
     compiled = true;
   }
 }
@@ -124,14 +133,14 @@ value_t expr_t::calc(scope_t& scope)
       }
     }
 
-    ptr_op_t context;
+    ptr_op_t locus;
     try {
-      return ptr->calc(scope, &context);
+      return ptr->calc(scope, &locus);
     }
     catch (const std::exception& err) {
-      if (context) {
+      if (locus) {
 	add_error_context("While evaluating value expression:");
-	add_error_context(op_context(ptr, context));
+	add_error_context(op_context(ptr, locus));
       }
       throw;
     }

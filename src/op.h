@@ -262,7 +262,7 @@ private:
 
 public:
   ptr_op_t compile(scope_t& scope);
-  value_t  calc(scope_t& scope, ptr_op_t * context = NULL);
+  value_t  calc(scope_t& scope, ptr_op_t * locus = NULL);
 
   struct context_t
   {
@@ -314,7 +314,7 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(const function_t& fobj) {
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
 
 string op_context(const expr_t::ptr_op_t op,
-		  const expr_t::ptr_op_t goal = NULL);
+		  const expr_t::ptr_op_t locus = NULL);
 
 } // namespace ledger
 

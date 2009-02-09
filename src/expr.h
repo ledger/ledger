@@ -87,14 +87,16 @@ public:
   };
 
 private:
-  ptr_op_t ptr;
-  string   str;
-  bool     compiled;
+  ptr_op_t  ptr;
+  scope_t * context;
+  string    str;
+  bool	    compiled;
 
 public:
   expr_t();
   expr_t(const expr_t& other);
-  expr_t(const ptr_op_t& _ptr, const string& _str = "");
+  expr_t(const ptr_op_t& _ptr, scope_t * context = NULL,
+	 const string& _str = "");
 
   expr_t(const string& _str, const uint_least8_t flags = 0);
   expr_t(std::istream& in, const uint_least8_t flags = 0);
@@ -110,6 +112,9 @@ public:
   operator bool() const throw() {
     return ptr.get() != NULL;
   }
+
+  ptr_op_t get_op() throw();
+
   string text() const throw() {
     return str;
   }
@@ -126,6 +131,15 @@ public:
   void     compile(scope_t& scope);
   value_t  calc(scope_t& scope);
   value_t  calc(scope_t& scope) const;
+
+  value_t  calc() {
+    assert(context);
+    return calc(*context);
+  }
+  value_t  calc() const {
+    assert(context);
+    return calc(*context);
+  }
 
   bool	   is_constant() const;
   bool     is_function() const;

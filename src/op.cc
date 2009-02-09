@@ -91,7 +91,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
   return intermediate;
 }
 
-value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
+value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 {
   try {
 
@@ -112,7 +112,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
     call_scope_t call_args(scope);
-    result = left()->calc(call_args, context);
+    result = left()->calc(call_args, locus);
     break;
   }
 
@@ -153,7 +153,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
       throw_(calc_error,
 	     "Too many arguments in function call (saw " << args_count << ")");
 
-    result = right()->compile(local_scope)->calc(local_scope, context);
+    result = right()->compile(local_scope)->calc(local_scope, locus);
     break;
   }
 
@@ -183,7 +183,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     call_scope_t call_args(scope);
 
     if (has_right())
-      call_args.set_args(right()->calc(scope, context));
+      call_args.set_args(right()->calc(scope, locus));
 
     ptr_op_t func = left();
     const string& name(func->as_ident());
@@ -195,7 +195,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     if (func->is_function())
       result = func->as_function()(call_args);
     else
-      result = func->calc(call_args, context);
+      result = func->calc(call_args, locus);
     break;
   }
 
@@ -203,69 +203,69 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     if (! right()->is_value() || ! right()->as_value().is_mask())
       throw_(calc_error, "Right-hand argument to match operator must be a regex");
 
-    result = (right()->calc(scope, context).as_mask()
-	      .match(left()->calc(scope, context).to_string()));
+    result = (right()->calc(scope, locus).as_mask()
+	      .match(left()->calc(scope, locus).to_string()));
     break;
 
   case O_EQ:
-    result = left()->calc(scope, context) == right()->calc(scope, context);
+    result = left()->calc(scope, locus) == right()->calc(scope, locus);
     break;
   case O_LT:
-    result = left()->calc(scope, context) <  right()->calc(scope, context);
+    result = left()->calc(scope, locus) <  right()->calc(scope, locus);
     break;
   case O_LTE:
-    result = left()->calc(scope, context) <= right()->calc(scope, context);
+    result = left()->calc(scope, locus) <= right()->calc(scope, locus);
     break;
   case O_GT:
-    result = left()->calc(scope, context) >  right()->calc(scope, context);
+    result = left()->calc(scope, locus) >  right()->calc(scope, locus);
     break;
   case O_GTE:
-    result = left()->calc(scope, context) >= right()->calc(scope, context);
+    result = left()->calc(scope, locus) >= right()->calc(scope, locus);
     break;
 
   case O_ADD:
-    result = left()->calc(scope, context) + right()->calc(scope, context);
+    result = left()->calc(scope, locus) + right()->calc(scope, locus);
     break;
   case O_SUB:
-    result = left()->calc(scope, context) - right()->calc(scope, context);
+    result = left()->calc(scope, locus) - right()->calc(scope, locus);
     break;
   case O_MUL:
-    result = left()->calc(scope, context) * right()->calc(scope, context);
+    result = left()->calc(scope, locus) * right()->calc(scope, locus);
     break;
   case O_DIV:
-    result = left()->calc(scope, context) / right()->calc(scope, context);
+    result = left()->calc(scope, locus) / right()->calc(scope, locus);
     break;
 
   case O_NEG:
-    result = left()->calc(scope, context).negate();
+    result = left()->calc(scope, locus).negate();
     break;
 
   case O_NOT:
-    result = ! left()->calc(scope, context);
+    result = ! left()->calc(scope, locus);
     break;
 
   case O_AND:
-    if (left()->calc(scope, context))
-      result = right()->calc(scope, context);
+    if (left()->calc(scope, locus))
+      result = right()->calc(scope, locus);
     else
       result = false;
     break;
 
   case O_OR:
-    if (value_t temp = left()->calc(scope, context))
+    if (value_t temp = left()->calc(scope, locus))
       result = temp;
     else
-      result = right()->calc(scope, context);
+      result = right()->calc(scope, locus);
     break;
 
   case O_QUERY:
     assert(right());
     assert(right()->kind == O_COLON);
 
-    if (value_t temp = left()->calc(scope, context))
-      result = right()->left()->calc(scope, context);
+    if (value_t temp = left()->calc(scope, locus))
+      result = right()->left()->calc(scope, locus);
     else
-      result = right()->right()->calc(scope, context);
+      result = right()->right()->calc(scope, locus);
     break;
 
   case O_COLON:
@@ -273,7 +273,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
     break;
 
   case O_COMMA: {
-    value_t temp(left()->calc(scope, context));
+    value_t temp(left()->calc(scope, locus));
 
     ptr_op_t next = right();
     while (next) {
@@ -286,7 +286,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
 	next     = NULL;
       }
 
-      temp.push_back(value_op->calc(scope, context));
+      temp.push_back(value_op->calc(scope, locus));
     }
     result = temp;
     break;
@@ -304,8 +304,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * context)
 
   }
   catch (const std::exception& err) { 
-    if (context && ! *context)
-      *context = this;
+    if (locus && ! *locus)
+      *locus = this;
     throw;
   }
 }
@@ -600,10 +600,10 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 }
 
 string op_context(const expr_t::ptr_op_t op,
-		  const expr_t::ptr_op_t goal)
+		  const expr_t::ptr_op_t locus)
 {
   ostream_pos_type start_pos, end_pos;
-  expr_t::op_t::context_t context(op, goal, &start_pos, &end_pos);
+  expr_t::op_t::context_t context(op, locus, &start_pos, &end_pos);
   std::ostringstream buf;
   buf << "  ";
   if (op->print(buf, context)) {
