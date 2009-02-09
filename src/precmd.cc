@@ -80,6 +80,7 @@ value_t parse_command(call_scope_t& args)
     {
       std::istringstream in(str);
       report.session.journal->parse(in, report.session, NULL, NULL);
+      report.session.clean_accounts();
     }
   }
   entry_t * first = report.session.journal->entries.front();

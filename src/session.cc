@@ -84,7 +84,9 @@ std::size_t session_t::read_journal(std::istream& in,
 {
   if (! master)
     master = journal->master;
-  return journal->parse(in, *this, master, &pathname);
+  std::size_t count = journal->parse(in, *this, master, &pathname);
+  clean_accounts();		// remove calculated totals
+  return count;
 }
 
 std::size_t session_t::read_journal(const path& pathname,

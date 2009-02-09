@@ -54,7 +54,6 @@ namespace ledger {
 
 typedef std::list<path>	paths_list;
 
-class session_t;
 class account_t;
 
 /**
@@ -97,7 +96,7 @@ public:
   }
 
   std::size_t parse(std::istream& in,
-		    session_t&    session,
+		    scope_t&      session_scope,
 		    account_t *   master,
 		    const path *  original_file);
 

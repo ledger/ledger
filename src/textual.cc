@@ -29,8 +29,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "session.h"
 #include "journal.h"
+#include "account.h"
+#include "option.h"
 #if defined(TIMELOG_SUPPORT)
 #include "timelog.h"
 #endif
@@ -50,11 +51,12 @@ namespace {
 
     instance_t *      parent;
     std::istream&     in;
-    session_t&	      session;
+    scope_t&	      session_scope;
     journal_t&	      journal;
     account_t *	      master;
     const path *      original_file;
     accounts_map      account_aliases;
+    int               current_year;
 
     path	      pathname;
     char	      linebuf[MAX_LINE + 1];
@@ -71,7 +73,7 @@ namespace {
 	       time_log_t&             _timelog,
 #endif
 	       std::istream&	       _in,
-	       session_t&	       _session,
+	       scope_t&	               _session_scope,
 	       journal_t&	       _journal,
 	       account_t *	       _master        = NULL,
 	       const path *	       _original_file = NULL,
@@ -125,7 +127,7 @@ namespace {
     virtual expr_t::ptr_op_t lookup(const string& name);
   };
 
-  void parse_amount_expr(session_t&    session,
+  void parse_amount_expr(scope_t&      session_scope,
 			 std::istream& in,
 			 amount_t&     amount,
 			 xact_t *      xact,
@@ -145,7 +147,7 @@ namespace {
 #endif
 
     if (expr) {
-      bind_scope_t bound_scope(session, *xact);
+      bind_scope_t bound_scope(session_scope, *xact);
 
       value_t result(expr.calc(bound_scope));
       if (! result.is_amount())
@@ -162,7 +164,7 @@ instance_t::instance_t(std::list<account_t *>& _account_stack,
 		       time_log_t&             _timelog,
 #endif
 		       std::istream&	       _in,
-		       session_t&	       _session,
+		       scope_t&	               _session_scope,
 		       journal_t&	       _journal,
 		       account_t *	       _master,
 		       const path *	       _original_file,
@@ -171,8 +173,8 @@ instance_t::instance_t(std::list<account_t *>& _account_stack,
 #if defined(TIMELOG_SUPPORT)
       timelog(_timelog),
 #endif
-      parent(_parent), in(_in), session(_session), journal(_journal),
-      master(_master), original_file(_original_file)
+      parent(_parent), in(_in), session_scope(_session_scope),
+      journal(_journal), master(_master), original_file(_original_file)
 {
   TRACE_CTOR(instance_t, "...");
 
@@ -387,7 +389,7 @@ void instance_t::clock_in_directive(char * line,
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
 
-  timelog.clock_in(parse_datetime(date, session.current_year),
+  timelog.clock_in(parse_datetime(date, current_year),
 		   account_stack.front()->find_account(p), n ? n : "");
 }
 
@@ -399,7 +401,7 @@ void instance_t::clock_out_directive(char * line,
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
 
-  timelog.clock_out(parse_datetime(date, session.current_year),
+  timelog.clock_out(parse_datetime(date, current_year),
 		    p ? account_stack.front()->find_account(p) : NULL, n);
   count++;
 }
@@ -464,10 +466,10 @@ void instance_t::price_entry_directive(char * line)
     symbol_and_price = next_element(time_field_ptr);
     if (! symbol_and_price) return;
     datetime = parse_datetime(date_field + " " + time_field_ptr,
-			      session.current_year);
+			      current_year);
   } else {
     symbol_and_price = time_field_ptr;
-    datetime = parse_datetime(date_field, session.current_year);
+    datetime = parse_datetime(date_field, current_year);
   }
 
   string symbol;
@@ -493,7 +495,7 @@ void instance_t::nomarket_directive(char * line)
 
 void instance_t::year_directive(char * line)
 {
-  session.current_year = std::atoi(skip_ws(line + 1));
+  current_year = std::atoi(skip_ws(line + 1));
 }
 
 void instance_t::option_directive(char * line)
@@ -504,7 +506,7 @@ void instance_t::option_directive(char * line)
     if (p)
       *p++ = '\0';
   }
-  process_option(line + 2, session, p, line);
+  process_option(line + 2, session_scope, p, line);
 }
 
 void instance_t::automated_entry_directive(char * line)
@@ -608,7 +610,7 @@ void instance_t::include_directive(char * line)
 #if defined(TIMELOG_SUPPORT)
 		      timelog,
 #endif
-		      stream, session, journal, master,
+		      stream, session_scope, journal, master,
 		      &filename, this);
   instance.parse();
 
@@ -654,7 +656,7 @@ void instance_t::alias_directive(char * line)
 void instance_t::define_directive(char * line)
 {
   expr_t def(skip_ws(line + 1));
-  def.compile(session);	// causes definitions to be established
+  def.compile(session_scope);	// causes definitions to be established
 }
 
 void instance_t::general_directive(char * line)
@@ -802,7 +804,7 @@ xact_t * instance_t::parse_xact(char *		line,
     if (*next != '(')		// indicates a value expression
       xact->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
     else
-      parse_amount_expr(session, stream, xact->amount, xact.get(),
+      parse_amount_expr(session_scope, stream, xact->amount, xact.get(),
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
@@ -843,7 +845,7 @@ xact_t * instance_t::parse_xact(char *		line,
 	  if (*p != '(')		// indicates a value expression
 	    xact->cost->parse(cstream, amount_t::PARSE_NO_MIGRATE);
 	  else
-	    parse_amount_expr(session, cstream, *xact->cost, xact.get(),
+	    parse_amount_expr(session_scope, cstream, *xact->cost, xact.get(),
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
@@ -895,7 +897,7 @@ xact_t * instance_t::parse_xact(char *		line,
       if (*p != '(')		// indicates a value expression
 	xact->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
       else
-	parse_amount_expr(session, stream, *xact->assigned_amount, xact.get(),
+	parse_amount_expr(session_scope, stream, *xact->assigned_amount, xact.get(),
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
       if (xact->assigned_amount->is_null())
@@ -967,7 +969,7 @@ xact_t * instance_t::parse_xact(char *		line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    xact->append_note(++next, session.current_year);
+    xact->append_note(++next, current_year);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed a transaction note");
@@ -1036,9 +1038,9 @@ entry_t * instance_t::parse_entry(char *	  line,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    curr->_date_eff = parse_date(p, session.current_year);
+    curr->_date_eff = parse_date(p, current_year);
   }
-  curr->_date = parse_date(line, session.current_year);
+  curr->_date = parse_date(line, current_year);
 
   // Parse the optional cleared flag: *
 
@@ -1077,7 +1079,7 @@ entry_t * instance_t::parse_entry(char *	  line,
   // Parse the entry note
 
   if (next && *next == ';')
-    curr->append_note(next, session.current_year);
+    curr->append_note(next, current_year);
 
   TRACE_STOP(entry_text, 1);
 
@@ -1102,7 +1104,7 @@ entry_t * instance_t::parse_entry(char *	  line,
 	item = curr.get();
 
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, session.current_year);
+      item->append_note(p + 1, current_year);
       item->end_pos = curr_pos;
       item->end_line++;
     }
@@ -1123,11 +1125,11 @@ entry_t * instance_t::parse_entry(char *	  line,
 
 expr_t::ptr_op_t instance_t::lookup(const string& name)
 {
-  return session.lookup(name);
+  return session_scope.lookup(name);
 }
 
 std::size_t journal_t::parse(std::istream& in,
-			     session_t&    session,
+			     scope_t&      session_scope,
 			     account_t *   master,
 			     const path *  original_file)
 {
@@ -1142,10 +1144,9 @@ std::size_t journal_t::parse(std::istream& in,
 #if defined(TIMELOG_SUPPORT)
 			      timelog,
 #endif
-			      in, session, *this, master, original_file);
+			      in, session_scope, *this, master,
+			      original_file);
   parsing_instance.parse();
-
-  session.clean_accounts();	// remove calculated totals
 
   TRACE_STOP(parsing_total, 1);
 
