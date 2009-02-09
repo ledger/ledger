@@ -339,6 +339,8 @@ string item_context(const item_t& item, const string& desc)
       
   scoped_array<char> buf(new char[len + 1]);
   in.read(buf.get(), len);
+  assert(static_cast<std::size_t>(in.gcount()) == len);
+  buf[len] = '\0';
 
   std::ostringstream out;
       
