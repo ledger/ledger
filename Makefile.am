@@ -333,7 +333,7 @@ data_tests_SOURCES =		 \
 	test/data_tests.cc
 
 data_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-data_tests_LDADD    = libledger_data.la $(math_tests_LDADD)
+data_tests_LDADD    = libledger_data.la $(expr_tests_LDADD)
 
 report_tests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -341,7 +341,7 @@ report_tests_SOURCES =		 \
 	test/report_tests.cc
 
 report_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-report_tests_LDADD    = libledger_report.la $(math_tests_LDADD)
+report_tests_LDADD    = libledger_report.la $(data_tests_LDADD)
 
 all_tests_sources =				\
 	$(util_tests_SOURCES)			\
