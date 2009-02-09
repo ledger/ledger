@@ -127,10 +127,15 @@ public:
     value   = value_t();
   }
 
+  virtual void handler_thunk(call_scope_t& args) {}
+
   virtual void handler(call_scope_t& args) {
     if (wants_arg)
-      value = args[0];
-    handled = true;
+      on(args[0]);
+    else
+      on();
+
+    handler_thunk(args);
   }
 
   virtual value_t handler_wrapper(call_scope_t& args) {
@@ -164,8 +169,8 @@ public:
   name ## _option_t() : option_t<type>(#name), var(value)
   
 #define HELP(var) virtual void help(std::ostream& var)
-#define DO()      virtual void handler(call_scope_t&)
-#define DO_(var)  virtual void handler(call_scope_t& var)
+#define DO()      virtual void handler_thunk(call_scope_t&)
+#define DO_(var)  virtual void handler_thunk(call_scope_t& var)
 
 #define END(name) name ## _handler
 
