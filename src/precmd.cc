@@ -34,11 +34,29 @@
 
 namespace ledger {
 
+namespace {
+  string join_args(call_scope_t& args)
+  {
+    std::ostringstream buf;
+    bool first = true;
+
+    for (std::size_t i = 0; i < args.size(); i++) {
+      if (first) {
+	buf << args[i];
+	first = false;
+      } else {
+	buf << ' ' << args[i];
+      }
+    }
+
+    return buf.str();
+  }
+}
+
 value_t parse_command(call_scope_t& args)
 {
-  var_t<string> arg(args, 0);
-
-  if (! arg) {
+  string arg = join_args(args);
+  if (arg.empty()) {
     throw std::logic_error("Usage: parse TEXT");
     return 1L;
   }
@@ -71,22 +89,9 @@ value_t parse_command(call_scope_t& args)
 
 value_t eval_command(call_scope_t& args)
 {
-  std::ostringstream buf;
-  bool first = true;
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    if (first) {
-      buf << args[i];
-      first = false;
-    } else {
-      buf << ' ' << args[i];
-    }
-  }
-
   report_t& report(find_scope<report_t>(args));
-
-  expr_t  expr(buf.str());
-  value_t result(expr.calc(args).strip_annotations(report.what_to_keep()));
+  expr_t    expr(join_args(args));
+  value_t   result(expr.calc(args).strip_annotations(report.what_to_keep()));
 
   if (! result.is_null())
     report.output_stream << result << std::endl;
@@ -96,9 +101,8 @@ value_t eval_command(call_scope_t& args)
 
 value_t format_command(call_scope_t& args)
 {
-  var_t<string> arg(args, 0);
-
-  if (! arg) {
+  string arg = join_args(args);
+  if (arg.empty()) {
     throw std::logic_error("Usage: format TEXT");
     return 1L;
   }
@@ -106,7 +110,7 @@ value_t format_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  format_t fmt(*arg);
+  format_t fmt(arg);
   fmt.dump(out);
 
   return 0L;
@@ -114,9 +118,8 @@ value_t format_command(call_scope_t& args)
 
 value_t period_command(call_scope_t& args)
 {
-  var_t<string> arg(args, 0);
-
-  if (! arg) {
+  string arg = join_args(args);
+  if (arg.empty()) {
     throw std::logic_error("Usage: period TEXT");
     return 1L;
   }
@@ -124,7 +127,7 @@ value_t period_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  interval_t interval(*arg);
+  interval_t interval(arg);
 
   if (! is_valid(interval.begin)) {
     out << "Time period has no beginning." << std::endl;
