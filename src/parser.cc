@@ -169,19 +169,22 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
   ptr_op_t node(parse_unary_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags);
+    while (true) {
+      token_t& tok = next_token(in, tflags);
 
-    if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
-      ptr_op_t prev(node);
-      node = new op_t(tok.kind == token_t::STAR ?
-		      op_t::O_MUL : op_t::O_DIV);
-      node->set_left(prev);
-      node->set_right(parse_mul_expr(in, tflags));
-      if (! node->right())
-	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
-    } else {
-      push_token(tok);
+      if (tok.kind == token_t::STAR || tok.kind == token_t::KW_DIV) {
+	ptr_op_t prev(node);
+	node = new op_t(tok.kind == token_t::STAR ?
+			op_t::O_MUL : op_t::O_DIV);
+	node->set_left(prev);
+	node->set_right(parse_unary_expr(in, tflags));
+	if (! node->right())
+	  throw_(parse_error,
+		 tok.symbol << " operator not followed by argument");
+      } else {
+	push_token(tok);
+	break;
+      }
     }
   }
 
@@ -195,20 +198,23 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
   ptr_op_t node(parse_mul_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags);
+    while (true) {
+      token_t& tok = next_token(in, tflags);
 
-    if (tok.kind == token_t::PLUS ||
-	tok.kind == token_t::MINUS) {
-      ptr_op_t prev(node);
-      node = new op_t(tok.kind == token_t::PLUS ?
-		      op_t::O_ADD : op_t::O_SUB);
-      node->set_left(prev);
-      node->set_right(parse_add_expr(in, tflags));
-      if (! node->right())
-	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
-    } else {
-      push_token(tok);
+      if (tok.kind == token_t::PLUS ||
+	  tok.kind == token_t::MINUS) {
+	ptr_op_t prev(node);
+	node = new op_t(tok.kind == token_t::PLUS ?
+			op_t::O_ADD : op_t::O_SUB);
+	node->set_left(prev);
+	node->set_right(parse_mul_expr(in, tflags));
+	if (! node->right())
+	  throw_(parse_error,
+		 tok.symbol << " operator not followed by argument");
+      } else {
+	push_token(tok);
+	break;
+      }
     }
   }
 
@@ -222,67 +228,70 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
   ptr_op_t node(parse_add_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    op_t::kind_t  kind	 = op_t::LAST;
-    parse_flags_t _flags = tflags;
-    token_t&	  tok	 = next_token(in, tflags);
-    bool	  negate = false;
+    while (true) {
+      op_t::kind_t  kind	 = op_t::LAST;
+      parse_flags_t _flags = tflags;
+      token_t&	  tok	 = next_token(in, tflags);
+      bool	  negate = false;
 
-    switch (tok.kind) {
-    case token_t::DEFINE:
-      kind = op_t::O_DEFINE;
-      break;
-    case token_t::EQUAL:
-      if (tflags.has_flags(PARSE_NO_ASSIGN))
-	tok.rewind(in);
-      else
+      switch (tok.kind) {
+      case token_t::DEFINE:
+	kind = op_t::O_DEFINE;
+	break;
+      case token_t::EQUAL:
+	if (tflags.has_flags(PARSE_NO_ASSIGN))
+	  tok.rewind(in);
+	else
+	  kind = op_t::O_EQ;
+	break;
+      case token_t::NEQUAL:
 	kind = op_t::O_EQ;
-      break;
-    case token_t::NEQUAL:
-      kind = op_t::O_EQ;
-      negate = true;
-      break;
-    case token_t::MATCH:
-      kind = op_t::O_MATCH;
-      break;
-    case token_t::NMATCH:
-      kind = op_t::O_MATCH;
-      negate = true;
-      break;
-    case token_t::LESS:
-      kind = op_t::O_LT;
-      break;
-    case token_t::LESSEQ:
-      kind = op_t::O_LTE;
-      break;
-    case token_t::GREATER:
-      kind = op_t::O_GT;
-      break;
-    case token_t::GREATEREQ:
-      kind = op_t::O_GTE;
-      break;
-    default:
-      push_token(tok);
-      break;
-    }
+	negate = true;
+	break;
+      case token_t::MATCH:
+	kind = op_t::O_MATCH;
+	break;
+      case token_t::NMATCH:
+	kind = op_t::O_MATCH;
+	negate = true;
+	break;
+      case token_t::LESS:
+	kind = op_t::O_LT;
+	break;
+      case token_t::LESSEQ:
+	kind = op_t::O_LTE;
+	break;
+      case token_t::GREATER:
+	kind = op_t::O_GT;
+	break;
+      case token_t::GREATEREQ:
+	kind = op_t::O_GTE;
+	break;
+      default:
+	push_token(tok);
+	goto exit_loop;
+      }
 
-    if (kind != op_t::LAST) {
-      ptr_op_t prev(node);
-      node = new op_t(kind);
-      node->set_left(prev);
-      node->set_right(parse_add_expr(in, _flags));
-
-      if (! node->right())
-	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
-
-      if (negate) {
-	prev = node;
-	node = new op_t(op_t::O_NOT);
+      if (kind != op_t::LAST) {
+	ptr_op_t prev(node);
+	node = new op_t(kind);
 	node->set_left(prev);
+	node->set_right(parse_add_expr(in, _flags));
+
+	if (! node->right())
+	  throw_(parse_error,
+		 tok.symbol << " operator not followed by argument");
+
+	if (negate) {
+	  prev = node;
+	  node = new op_t(op_t::O_NOT);
+	  node->set_left(prev);
+	}
       }
     }
   }
 
+ exit_loop:
   return node;
 }
 
@@ -293,18 +302,21 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
   ptr_op_t node(parse_logic_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags);
+    while (true) {
+      token_t& tok = next_token(in, tflags);
 
-    if (tok.kind == token_t::KW_AND) {
-      ptr_op_t prev(node);
-      node = new op_t(op_t::O_AND);
-      node->set_left(prev);
-      node->set_right(parse_and_expr(in, tflags));
-      if (! node->right())
-	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
-    } else {
-      push_token(tok);
+      if (tok.kind == token_t::KW_AND) {
+	ptr_op_t prev(node);
+	node = new op_t(op_t::O_AND);
+	node->set_left(prev);
+	node->set_right(parse_logic_expr(in, tflags));
+	if (! node->right())
+	  throw_(parse_error,
+		 tok.symbol << " operator not followed by argument");
+      } else {
+	push_token(tok);
+	break;
+      }
     }
   }
   return node;
@@ -317,18 +329,21 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
   ptr_op_t node(parse_and_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags);
+    while (true) {
+      token_t& tok = next_token(in, tflags);
 
-    if (tok.kind == token_t::KW_OR) {
-      ptr_op_t prev(node);
-      node = new op_t(op_t::O_OR);
-      node->set_left(prev);
-      node->set_right(parse_or_expr(in, tflags));
-      if (! node->right())
-	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
-    } else {
-      push_token(tok);
+      if (tok.kind == token_t::KW_OR) {
+	ptr_op_t prev(node);
+	node = new op_t(op_t::O_OR);
+	node->set_left(prev);
+	node->set_right(parse_and_expr(in, tflags));
+	if (! node->right())
+	  throw_(parse_error,
+		 tok.symbol << " operator not followed by argument");
+      } else {
+	push_token(tok);
+	break;
+      }
     }
   }
   return node;
