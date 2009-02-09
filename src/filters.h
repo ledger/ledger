@@ -167,9 +167,11 @@ public:
  */
 class set_account_value : public item_handler<xact_t>
 {
+  expr_t& amount_expr;
+
 public:
-  set_account_value(xact_handler_ptr handler = xact_handler_ptr())
-    : item_handler<xact_t>(handler) {}
+  set_account_value(expr_t& _amount_expr)
+    : item_handler<xact_t>(), amount_expr(_amount_expr) {}
 
   virtual void operator()(xact_t& xact);
 };
@@ -373,6 +375,7 @@ inline void clear_entries_xacts(std::list<entry_t>& entries_list) {
  */
 class collapse_xacts : public item_handler<xact_t>
 {
+  expr_t&     amount_expr;
   value_t     subtotal;
   std::size_t count;
   entry_t *   last_entry;
@@ -385,9 +388,9 @@ class collapse_xacts : public item_handler<xact_t>
   collapse_xacts();
 
 public:
-  collapse_xacts(xact_handler_ptr handler, session_t& session)
-    : item_handler<xact_t>(handler), count(0),
-      last_entry(NULL), last_xact(NULL),
+  collapse_xacts(xact_handler_ptr handler, expr_t& _amount_expr)
+    : item_handler<xact_t>(handler), amount_expr(_amount_expr),
+      count(0), last_entry(NULL), last_xact(NULL),
       totals_account(NULL, "<Total>") {
     TRACE_CTOR(collapse_xacts, "xact_handler_ptr");
   }
@@ -520,6 +523,7 @@ class subtotal_xacts : public item_handler<xact_t>
   subtotal_xacts();
 
 protected:
+  expr_t&	     amount_expr;
   values_map	     values;
   optional<string>   date_format;
   std::list<entry_t> entry_temps;
@@ -529,11 +533,12 @@ public:
   date_t start;
   date_t finish;
 
-  subtotal_xacts(xact_handler_ptr handler,
-		 optional<string> _date_format = none)
-    : item_handler<xact_t>(handler), date_format(_date_format) {
+  subtotal_xacts(xact_handler_ptr handler, expr_t& _amount_expr,
+		 const optional<string>& _date_format = none)
+    : item_handler<xact_t>(handler), amount_expr(_amount_expr),
+      date_format(_date_format) {
     TRACE_CTOR(subtotal_xacts,
-	       "xact_handler_ptr, bool");
+	       "xact_handler_ptr, expr_t&, const optional<string>&");
   }
   virtual ~subtotal_xacts() {
     TRACE_DTOR(subtotal_xacts);
@@ -557,23 +562,23 @@ public:
  */
 class interval_xacts : public subtotal_xacts
 {
-  interval_t      interval;
-  xact_t * last_xact;
-  bool            started;
+  interval_t interval;
+  xact_t *   last_xact;
+  bool       started;
 
   interval_xacts();
 
 public:
-  interval_xacts(xact_handler_ptr  _handler,
+  interval_xacts(xact_handler_ptr  _handler, expr_t& amount_expr,
 		 const interval_t& _interval)
-    : subtotal_xacts(_handler), interval(_interval),
+    : subtotal_xacts(_handler, amount_expr), interval(_interval),
       last_xact(NULL), started(false) {
     TRACE_CTOR(interval_xacts,
 	       "xact_handler_ptr, const interval_t&, bool");
   }
-  interval_xacts(xact_handler_ptr _handler,
+  interval_xacts(xact_handler_ptr _handler, expr_t& amount_expr,
 		 const string&	  _interval)
-    : subtotal_xacts(_handler), interval(_interval),
+    : subtotal_xacts(_handler, amount_expr), interval(_interval),
       last_xact(NULL), started(false) {
     TRACE_CTOR(interval_xacts,
 	       "xact_handler_ptr, const string&, bool");
@@ -602,15 +607,15 @@ class by_payee_xacts : public item_handler<xact_t>
   typedef std::map<string, subtotal_xacts *>  payee_subtotals_map;
   typedef std::pair<string, subtotal_xacts *> payee_subtotals_pair;
 
+  expr_t&	      amount_expr;
   payee_subtotals_map payee_subtotals;
 
   by_payee_xacts();
 
  public:
-  by_payee_xacts(xact_handler_ptr handler)
-    : item_handler<xact_t>(handler) {
-    TRACE_CTOR(by_payee_xacts,
-	       "xact_handler_ptr, bool");
+  by_payee_xacts(xact_handler_ptr handler, expr_t& _amount_expr)
+    : item_handler<xact_t>(handler), amount_expr(_amount_expr) {
+    TRACE_CTOR(by_payee_xacts, "xact_handler_ptr, expr_t&");
   }
   virtual ~by_payee_xacts();
 
@@ -680,8 +685,8 @@ class dow_xacts : public subtotal_xacts
   dow_xacts();
 
 public:
-  dow_xacts(xact_handler_ptr handler)
-    : subtotal_xacts(handler) {
+  dow_xacts(xact_handler_ptr handler, expr_t& amount_expr)
+    : subtotal_xacts(handler, amount_expr) {
     TRACE_CTOR(dow_xacts, "xact_handler_ptr, bool");
   }
   virtual ~dow_xacts() throw() {

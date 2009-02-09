@@ -245,18 +245,18 @@ bool xact_t::valid() const
   return true;
 }
 
-void xact_t::add_to_value(value_t& value)
+void xact_t::add_to_value(value_t& value, expr_t& expr)
 {
   if (xdata_ && xdata_->has_flags(XACT_EXT_COMPOUND)) {
     add_or_set_value(value, xdata_->value);
   }
-  else if (cost || (! value.is_null() && ! value.is_realzero())) {
+
+  if (! xdata_ || ! xdata_->has_flags(XACT_EXT_NO_TOTAL)) {
+    bind_scope_t bound_scope(*expr.get_context(), *this);
     if (value.is_null())
       value = amount_t();
-    value.add(amount, cost);
-  }
-  else {
-    value = amount;
+
+    value += expr.calc(bound_scope);
   }
 }
 

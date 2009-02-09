@@ -174,7 +174,7 @@ public:
     return *xdata_;
   }
 
-  void add_to_value(value_t& value);
+  void add_to_value(value_t& value, expr_t& expr);
 
   date_t reported_date() const {
     if (xdata_ && is_valid(xdata_->date))

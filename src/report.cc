@@ -112,8 +112,8 @@ void report_t::sum_all_accounts()
 
   session_xacts_iterator walker(session);
   pass_down_xacts
-    (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value), false),
-     walker);
+    (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value(expr)),
+			 false), walker);
 
   expr.mark_uncompiled();	// recompile, throw away xact_t bindings
   session.master->calculate_sums(expr);

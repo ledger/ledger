@@ -178,7 +178,7 @@ class account_t : public scope_t
     return *xdata_;
   }
 
-  void calculate_sums(expr_t& amount_expr, scope_t& scope);
+  void calculate_sums(expr_t& amount_expr);
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);

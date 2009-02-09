@@ -92,7 +92,7 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // collapse_xacts causes entries with multiple xacts to appear as entries
     // with a subtotaled xact for each commodity used.
     if (report.HANDLED(collapse))
-      handler.reset(new collapse_xacts(handler, report.session));
+      handler.reset(new collapse_xacts(handler, expr));
 
     // subtotal_xacts combines all the xacts it receives into one subtotal
     // entry, which has one xact for each commodity in each account.
@@ -103,17 +103,18 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // dow_xacts is like period_xacts, except that it reports all the xacts
     // that fall on each subsequent day of the week.
     if (report.HANDLED(subtotal))
-      handler.reset(new subtotal_xacts(handler));
+      handler.reset(new subtotal_xacts(handler, expr));
 
     if (report.HANDLED(dow))
-      handler.reset(new dow_xacts(handler));
+      handler.reset(new dow_xacts(handler, expr));
     else if (report.HANDLED(by_payee))
-      handler.reset(new by_payee_xacts(handler));
+      handler.reset(new by_payee_xacts(handler, expr));
 
     // interval_xacts groups xacts together based on a time period, such as
     // weekly or monthly.
     if (report.HANDLED(period_)) {
-      handler.reset(new interval_xacts(handler, report.HANDLER(period_).str()));
+      handler.reset(new interval_xacts(handler, expr,
+				       report.HANDLER(period_).str()));
       handler.reset(new sort_xacts(handler, "d"));
     }
   }

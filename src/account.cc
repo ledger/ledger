@@ -246,13 +246,12 @@ bool account_t::valid() const
   return true;
 }
 
-void account_t::calculate_sums(expr_t&  amount_expr,
-			       scope_t& scope)
+void account_t::calculate_sums(expr_t& amount_expr)
 {
   xdata_t& xd(xdata());
 
   foreach (accounts_map::value_type& pair, accounts) {
-    (*pair.second).calculate_sums(amount_expr, scope);
+    (*pair.second).calculate_sums(amount_expr);
 
     xdata_t& child_xd((*pair.second).xdata());
     if (! child_xd.total.is_null()) {
@@ -264,10 +263,8 @@ void account_t::calculate_sums(expr_t&  amount_expr,
     }
   }
 
-  bind_scope_t bound_scope(scope, *this);
-  call_scope_t args(bound_scope);
-
-  value_t amount(amount_expr.calc(args));
+  bind_scope_t bound_scope(*amount_expr.get_context(), *this);
+  value_t amount(amount_expr.calc(bound_scope));
 
   if (! amount.is_null()) {
     add_or_set_value(xd.total, amount);

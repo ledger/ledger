@@ -32,7 +32,6 @@
 #include "filters.h"
 #include "iterators.h"
 #include "compare.h"
-#include "session.h"
 #include "format.h"
 
 namespace ledger {
@@ -102,7 +101,7 @@ void set_account_value::operator()(xact_t& xact)
 
   account_t::xdata_t& xdata(acct->xdata());
   DEBUG("account.sums", "Account value was = " << xdata.value);
-  xact.add_to_value(xdata.value);
+  xact.add_to_value(xdata.value, amount_expr);
   DEBUG("account.sums", "Account value is  = " << xdata.value);
 
   xdata.count++;
@@ -190,13 +189,7 @@ void calc_xacts::operator()(xact_t& xact)
     if (last_xact && last_xact->has_xdata())
       add_or_set_value(xdata.total, last_xact->xdata().total);
 
-    if (! xdata.has_flags(XACT_EXT_NO_TOTAL)) {
-      bind_scope_t bound_scope(*amount_expr.get_context(), xact);
-      if (xdata.total.is_null())
-	xdata.total = amount_expr.calc(bound_scope);
-      else
-	xdata.total += amount_expr.calc(bound_scope);
-    }
+    xact.add_to_value(xdata.total, amount_expr);
 
     item_handler<xact_t>::operator()(xact);
 
@@ -316,7 +309,7 @@ void collapse_xacts::operator()(xact_t& xact)
   if (last_entry != xact.entry && count > 0)
     report_subtotal();
 
-  xact.add_to_value(subtotal);
+  xact.add_to_value(subtotal, amount_expr);
   count++;
 
   last_entry = xact.entry;
@@ -427,12 +420,12 @@ void subtotal_xacts::operator()(xact_t& xact)
   values_map::iterator i = values.find(acct->fullname());
   if (i == values.end()) {
     value_t temp;
-    xact.add_to_value(temp);
+    xact.add_to_value(temp, amount_expr);
     std::pair<values_map::iterator, bool> result
       = values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
     assert(result.second);
   } else {
-    xact.add_to_value((*i).second.value);
+    xact.add_to_value((*i).second.value, amount_expr);
   }
 
   // If the account for this xact is all virtual, mark it as
@@ -520,7 +513,8 @@ void by_payee_xacts::operator()(xact_t& xact)
 {
   payee_subtotals_map::iterator i = payee_subtotals.find(xact.entry->payee);
   if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(xact.entry->payee, new subtotal_xacts(handler));
+    payee_subtotals_pair temp(xact.entry->payee,
+			      new subtotal_xacts(handler, amount_expr));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);
 
