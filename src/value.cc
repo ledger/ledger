@@ -41,141 +41,36 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
   type = rhs.type;
 
   switch (type) {
-  case DATETIME:
-    new(reinterpret_cast<datetime_t *>(data))
-      datetime_t(*reinterpret_cast<datetime_t *>
-		 (const_cast<char *>(rhs.data)));
-    break;
-
-  case DATE:
-    new(reinterpret_cast<date_t *>(data))
-      date_t(*reinterpret_cast<date_t *>(const_cast<char *>(rhs.data)));
-    break;
-
-  case AMOUNT:
-    new(reinterpret_cast<amount_t *>(data))
-      amount_t(*reinterpret_cast<amount_t *>
-	       (const_cast<char *>(rhs.data)));
-    break;
-
   case BALANCE:
-    *reinterpret_cast<balance_t **>(data) =
-      new balance_t(**reinterpret_cast<balance_t **>
-		    (const_cast<char *>(rhs.data)));
+    data = new balance_t(*boost::get<balance_t *>(rhs.data));
     break;
-
-  case STRING:
-    new(reinterpret_cast<string *>(data))
-      string(*reinterpret_cast<string *>(const_cast<char *>(rhs.data)));
-    break;
-
-  case MASK:
-    new(reinterpret_cast<mask_t *>(data))
-      mask_t(*reinterpret_cast<mask_t *>(const_cast<char *>(rhs.data)));
-    break;
-
   case SEQUENCE:
-    *reinterpret_cast<sequence_t **>(data) =
-      new sequence_t(**reinterpret_cast<sequence_t **>
-		     (const_cast<char *>(rhs.data)));
+    data = new sequence_t(*boost::get<sequence_t *>(rhs.data));
     break;
 
   default:
-    // The rest are fundamental types, which can be copied using
-    // std::memcpy
-    std::memcpy(data, rhs.data, sizeof(data));
+    data = rhs.data;
     break;
   }
 
   return *this;
 }
 
-void value_t::storage_t::destroy()
-{
-  switch (type) {
-  case AMOUNT:
-    reinterpret_cast<amount_t *>(data)->~amount_t();
-    break;
-  case BALANCE:
-    checked_delete(*reinterpret_cast<balance_t **>(data));
-    break;
-  case STRING:
-    reinterpret_cast<string *>(data)->~string();
-    break;
-  case MASK:
-    reinterpret_cast<mask_t *>(data)->~mask_t();
-    break;
-  case SEQUENCE:
-    checked_delete(*reinterpret_cast<sequence_t **>(data));
-    break;
-  case POINTER:
-    reinterpret_cast<boost::any *>(data)->~any();
-    break;
-
-  default:
-    break;
-  }
-  type = VOID;
-}
-
 void value_t::initialize()
 {
-#if defined(DEBUG_ON)
-  LOGGER("value.init");
-#endif
-
   true_value = new storage_t;
   true_value->type = BOOLEAN;
-  *reinterpret_cast<bool *>(true_value->data) = true;
+  boost::get<bool>(true_value->data) = true;
 
   false_value = new storage_t;
   false_value->type = BOOLEAN;
-  *reinterpret_cast<bool *>(false_value->data) = false;
-
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(bool));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(datetime_t));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(date_t));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(long));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(amount_t));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(balance_t *));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(string));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(mask_t));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(sequence_t *));
-  BOOST_STATIC_ASSERT(sizeof(amount_t) >= sizeof(boost::any));
-
-  DEBUG_(std::setw(3) << std::right << sizeof(bool)
-	 << "  sizeof(bool)");
-  DEBUG_(std::setw(3) << std::right << sizeof(datetime_t)
-	 << "  sizeof(datetime_t)");
-  DEBUG_(std::setw(3) << std::right << sizeof(date_t)
-	 << "  sizeof(date_t)");
-  DEBUG_(std::setw(3) << std::right << sizeof(long)
-	 << "  sizeof(long)");
-  DEBUG_(std::setw(3) << std::right << sizeof(amount_t)
-	 << "  sizeof(amount_t)");
-  DEBUG_(std::setw(3) << std::right << sizeof(balance_t *)
-	 << "  sizeof(balance_t *)");
-  DEBUG_(std::setw(3) << std::right << sizeof(string)
-	 << "  sizeof(string)");
-  DEBUG_(std::setw(3) << std::right << sizeof(mask_t)
-	 << "  sizeof(mask_t)");
-  DEBUG_(std::setw(3) << std::right << sizeof(sequence_t *)
-	 << "  sizeof(sequence_t *)");
-  DEBUG_(std::setw(3) << std::right << sizeof(boost::any)
-	 << "  sizeof(boost::any)");
+  boost::get<bool>(true_value->data) = false;
 }
 
 void value_t::shutdown()
 {
   true_value  = intrusive_ptr<storage_t>();
   false_value = intrusive_ptr<storage_t>();
-}
-
-void value_t::_dup()
-{
-  assert(storage);
-  if (storage->refc > 1)
-    storage = new storage_t(*storage.get());
 }
 
 value_t::operator bool() const
@@ -1263,69 +1158,33 @@ value_t value_t::unrounded() const
   return NULL_VALUE;
 }
 
-#if 0
-value_t value_t::annotated_price() const
+void value_t::annotate(const annotation_t& details)
 {
-  switch (type()) {
-  case AMOUNT: {
-    optional<amount_t> temp = as_amount().annotation_details().price;
-    if (! temp)
-      return false;
-    return *temp;
-  }
-
-  default:
-    break;
-  }
-
-  throw_(value_error, "Cannot find the annotated price of " << label());
-  return NULL_VALUE;
+  if (is_amount())
+    as_amount_lval().annotate(details);
+  else
+    throw_(value_error, "Cannot annotate " << label());
 }
 
-value_t value_t::annotated_date() const
+bool value_t::is_annotated() const
 {
-  switch (type()) {
-  case DATETIME:
-    return *this;
-  case DATE:
-    return *this;
-
-  case AMOUNT: {
-    optional<datetime_t> temp = as_amount().annotation_details().date;
-    if (! temp)
-      return false;
-    return *temp;
-  }
-
-  default:
-    break;
-  }
-
-  throw_(value_error, "Cannot find the annotated date of " << label());
-  return NULL_VALUE;
+  if (is_amount())
+    return as_amount().is_annotated();
+  else
+    throw_(value_error,
+	   "Cannot determine whether " << label() << " is annotated");
+  return false;
 }
 
-value_t value_t::annotated_tag() const
+annotation_t& value_t::annotation()
 {
-  switch (type()) {
-  case AMOUNT: {
-    optional<string> temp = as_amount().annotation_details().tag;
-    if (! temp)
-      return false;
-    return string_value(*temp);
+  if (is_amount())
+    return as_amount_lval().annotation();
+  else {
+    throw_(value_error, "Cannot request annotation of " << label());
+    return as_amount_lval().annotation(); // quiet g++ warning
   }
-
-  case STRING:
-    return *this;
-
-  default:
-    break;
-  }
-
-  throw_(value_error, "Cannot find the annotated tag of " << label());
-  return NULL_VALUE;
 }
-#endif
 
 value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
 {

@@ -125,7 +125,18 @@ private:
      * The `type' member holds the value_t::type_t value representing
      * the type of the object stored.
      */
-    char   data[sizeof(amount_t)];
+    variant<bool,	  // BOOLEAN
+	    datetime_t,	  // DATETIME
+	    date_t,	  // DATE
+	    long,	  // INTEGER
+	    amount_t,	  // AMOUNT
+	    balance_t *,  // BALANCE
+	    string,	  // STRING
+	    mask_t,	  // MASK
+	    sequence_t *, // SEQUENCE
+	    boost::any	  // POINTER
+	    > data;
+    
     type_t type;
 
     /**
@@ -157,10 +168,18 @@ private:
       TRACE_DTOR(value_t::storage_t);
       DEBUG("value.storage.refcount", "Destroying " << this);
       assert(refc == 0);
-      destroy();
-    }
 
-    void destroy();
+      switch (type) {
+      case BALANCE:
+	checked_delete(boost::get<balance_t *>(data));
+	break;
+      case SEQUENCE:
+	checked_delete(boost::get<sequence_t *>(data));
+	break;
+      default:
+	break;
+      }
+    }
 
   private:
     /**
@@ -202,7 +221,7 @@ private:
   };
 
   /**
-   * The actual data for each value_t is kept in the `storage' member.
+   * The actual data for each value_t is kept in reference counted storage.
    * Data is modified using a copy-on-write policy.
    */
   intrusive_ptr<storage_t> storage;
@@ -213,20 +232,19 @@ private:
    *
    * _clear() removes our pointer to the current value and initializes
    * a new storage bin for things to be stored in.
-   *
-   * _reset() makes the current object appear as if it were
-   * uninitialized.
    */
-  void _dup();
-  void _clear() {
-    if (! storage || storage->refc > 1)
-      storage = new storage_t;
-    else
-      storage->destroy();
+  void _dup() {
+    assert(storage);
+    if (storage->refc > 1)
+      storage = new storage_t(*storage.get());
   }
-  void _reset() {
-    if (storage)
-      storage = intrusive_ptr<storage_t>();
+  void _clear() {
+    if (! storage || storage->refc > 1) {
+      storage = new storage_t;
+    } else {
+      storage->data = false;	// destruct any other type
+      storage->type = VOID;
+    }
   }
 
   /**
@@ -455,7 +473,7 @@ private:
   void set_type(type_t new_type) {
     assert(new_type >= VOID && new_type <= POINTER);
     if (new_type == VOID) {
-      _reset();
+      storage.reset();
       assert(is_null());
     } else {
       _clear();
@@ -500,11 +518,11 @@ public:
   bool& as_boolean_lval() {
     assert(is_boolean());
     _dup();
-    return *reinterpret_cast<bool *>(storage->data);
+    return boost::get<bool>(storage->data);
   }
   const bool& as_boolean() const {
     assert(is_boolean());
-    return *reinterpret_cast<bool *>(storage->data);
+    return boost::get<bool>(storage->data);
   }
   void set_boolean(const bool val) {
     set_type(BOOLEAN);
@@ -517,15 +535,15 @@ public:
   datetime_t& as_datetime_lval() {
     assert(is_datetime());
     _dup();
-    return *reinterpret_cast<datetime_t *>(storage->data);
+    return boost::get<datetime_t>(storage->data);
   }
   const datetime_t& as_datetime() const {
     assert(is_datetime());
-    return *reinterpret_cast<datetime_t *>(storage->data);
+    return boost::get<datetime_t>(storage->data);
   }
   void set_datetime(const datetime_t& val) {
     set_type(DATETIME);
-    new(reinterpret_cast<datetime_t *>(storage->data)) datetime_t(val);
+    storage->data = val;
   }
 
   bool is_date() const {
@@ -534,15 +552,15 @@ public:
   date_t& as_date_lval() {
     assert(is_date());
     _dup();
-    return *reinterpret_cast<date_t *>(storage->data);
+    return boost::get<date_t>(storage->data);
   }
   const date_t& as_date() const {
     assert(is_date());
-    return *reinterpret_cast<date_t *>(storage->data);
+    return boost::get<date_t>(storage->data);
   }
   void set_date(const date_t& val) {
     set_type(DATE);
-    new(reinterpret_cast<date_t *>(storage->data)) date_t(val);
+    storage->data = val;
   }
 
   bool is_long() const {
@@ -551,15 +569,15 @@ public:
   long& as_long_lval() {
     assert(is_long());
     _dup();
-    return *reinterpret_cast<long *>(storage->data);
+    return boost::get<long>(storage->data);
   }
   const long& as_long() const {
     assert(is_long());
-    return *reinterpret_cast<long *>(storage->data);
+    return boost::get<long>(storage->data);
   }
   void set_long(const long val) {
     set_type(INTEGER);
-    *reinterpret_cast<long *>(storage->data) = val;
+    storage->data = val;
   }
 
   bool is_amount() const {
@@ -568,20 +586,16 @@ public:
   amount_t& as_amount_lval() {
     assert(is_amount());
     _dup();
-    amount_t& amt(*reinterpret_cast<amount_t *>(storage->data));
-    assert(amt.valid());
-    return amt;
+    return boost::get<amount_t>(storage->data);
   }
   const amount_t& as_amount() const {
     assert(is_amount());
-    amount_t& amt(*reinterpret_cast<amount_t *>(storage->data));
-    assert(amt.valid());
-    return amt;
+    return boost::get<amount_t>(storage->data);
   }
   void set_amount(const amount_t& val) {
     assert(val.valid());
     set_type(AMOUNT);
-    new(reinterpret_cast<amount_t *>(storage->data)) amount_t(val);
+    storage->data = val;
   }
 
   bool is_balance() const {
@@ -590,20 +604,16 @@ public:
   balance_t& as_balance_lval() {
     assert(is_balance());
     _dup();
-    balance_t& bal(**reinterpret_cast<balance_t **>(storage->data));
-    assert(bal.valid());
-    return bal;
+    return *boost::get<balance_t *>(storage->data);
   }
   const balance_t& as_balance() const {
     assert(is_balance());
-    balance_t& bal(**reinterpret_cast<balance_t **>(storage->data));
-    assert(bal.valid());
-    return bal;
+    return *boost::get<balance_t *>(storage->data);
   }
   void set_balance(const balance_t& val) {
     assert(val.valid());
     set_type(BALANCE);
-    *reinterpret_cast<balance_t **>(storage->data) = new balance_t(val);
+    storage->data = new balance_t(val);
   }
 
   bool is_string() const {
@@ -612,19 +622,19 @@ public:
   string& as_string_lval() {
     assert(is_string());
     _dup();
-    return *reinterpret_cast<string *>(storage->data);
+    return boost::get<string>(storage->data);
   }
   const string& as_string() const {
     assert(is_string());
-    return *reinterpret_cast<string *>(storage->data);
+    return boost::get<string>(storage->data);
   }
   void set_string(const string& val = "") {
     set_type(STRING);
-    new(reinterpret_cast<string *>(storage->data)) string(val);
+    storage->data = val;
   }
   void set_string(const char * val = "") {
     set_type(STRING);
-    new(reinterpret_cast<string *>(storage->data)) string(val);
+    storage->data = string(val);
   }
 
   bool is_mask() const {
@@ -633,19 +643,19 @@ public:
   mask_t& as_mask_lval() {
     assert(is_mask());
     _dup();
-    return *reinterpret_cast<mask_t *>(storage->data);
+    return boost::get<mask_t>(storage->data);
   }
   const mask_t& as_mask() const {
     assert(is_mask());
-    return *reinterpret_cast<mask_t *>(storage->data);
+    return boost::get<mask_t>(storage->data);
   }
   void set_mask(const string& val) {
     set_type(MASK);
-    new(reinterpret_cast<mask_t *>(storage->data)) mask_t(val);
+    storage->data = mask_t(val);
   }
   void set_mask(const mask_t& val) {
     set_type(MASK);
-    new(reinterpret_cast<mask_t *>(storage->data)) mask_t(val);
+    storage->data = val;
   }
 
   bool is_sequence() const {
@@ -654,15 +664,15 @@ public:
   sequence_t& as_sequence_lval() {
     assert(is_sequence());
     _dup();
-    return **reinterpret_cast<sequence_t **>(storage->data);
+    return *boost::get<sequence_t *>(storage->data);
   }
   const sequence_t& as_sequence() const {
     assert(is_sequence());
-    return **reinterpret_cast<sequence_t **>(storage->data);
+    return *boost::get<sequence_t *>(storage->data);
   }
   void set_sequence(const sequence_t& val) {
     set_type(SEQUENCE);
-    *reinterpret_cast<sequence_t **>(storage->data) = new sequence_t(val);
+    storage->data = new sequence_t(val);
   }
 
   /**
@@ -679,42 +689,36 @@ public:
   boost::any& as_any_pointer_lval() {
     assert(is_pointer());
     _dup();
-    return *reinterpret_cast<boost::any *>(storage->data);
+    return boost::get<boost::any>(storage->data);
   }
   template <typename T>
   T * as_pointer_lval() {
-    assert(is_pointer());
-    _dup();
-    return any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
+    return any_cast<T *>(as_any_pointer_lval());
   }
   template <typename T>
   T& as_ref_lval() {
-    assert(is_pointer());
-    _dup();
-    return *any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
+    return *as_pointer_lval<T>();
   }
   const boost::any& as_any_pointer() const {
     assert(is_pointer());
-    return *reinterpret_cast<boost::any *>(storage->data);
+    return boost::get<boost::any>(storage->data);
   }
   template <typename T>
   T * as_pointer() const {
-    assert(is_pointer());
-    return any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
+    return any_cast<T *>(as_any_pointer());
   }
   template <typename T>
   T& as_ref() const {
-    assert(is_pointer());
-    return *any_cast<T *>(*reinterpret_cast<boost::any *>(storage->data));
+    return *as_pointer<T>();
   }
   void set_any_pointer(const boost::any& val) {
     set_type(POINTER);
-    new(reinterpret_cast<boost::any *>(storage->data)) boost::any(val);
+    storage->data = val;
   }
   template <typename T>
   void set_pointer(T * val) {
     set_type(POINTER);
-    new(reinterpret_cast<boost::any *>(storage->data)) boost::any(val);
+    storage->data = boost::any(val);
   }
 
   /**
@@ -765,12 +769,13 @@ public:
   /**
    * Annotated commodity methods.
    */
-#if 0
-  // These helper methods only apply to AMOUNT values.
-  value_t annotated_price() const;
-  value_t annotated_date() const;
-  value_t annotated_tag() const;
-#endif
+  void          annotate(const annotation_t& details);
+  bool          is_annotated() const;
+
+  annotation_t& annotation();
+  const annotation_t& annotation() const {
+    return const_cast<value_t&>(*this).annotation();
+  }
 
   value_t strip_annotations(const keep_details_t& what_to_keep) const;
 
@@ -821,14 +826,14 @@ public:
     assert(! is_null());
 
     if (! is_sequence()) {
-      _reset();
+      storage.reset();
     } else {
       as_sequence_lval().pop_back();
 
       const sequence_t& seq(as_sequence());
       std::size_t new_size = seq.size();
       if (new_size == 0)
-	_reset();
+	storage.reset();
       else if (new_size == 1)
 	*this = seq.front();
     }
