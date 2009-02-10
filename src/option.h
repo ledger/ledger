@@ -58,6 +58,8 @@ class option_t
   const char   ch;
   bool	       handled;
 
+  option_t& operator=(const option_t&);
+
 public:
   T *          parent;
   value_t      value;
@@ -75,7 +77,8 @@ public:
       ch(other.ch),
       handled(other.handled),
       parent(NULL),
-      value(other.value)
+      value(other.value),
+      wants_arg(other.wants_arg)
   {
     TRACE_CTOR(option_t, "copy");
   }
@@ -103,6 +106,7 @@ public:
 
   string& str() {
     assert(handled);
+    assert(value);
     return value.as_string_lval();
   }
 
