@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # acprep, version 3.0
 #
@@ -324,7 +324,7 @@ PATH="$PYTHON_HOME/bin:$PATH" \
     "$HERE/configure" --srcdir="$HERE" \
 	CXX="$CXX" CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS" \
 	LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
-	$SWITCHES
+	$SWITCHES "$@"
 
 
 # Alter the Makefile so that it's not nearly so verbose.  This makes errors
