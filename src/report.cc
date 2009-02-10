@@ -543,6 +543,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    (reporter<>(new format_xacts(*this, HANDLER(register_format_).str()),
 			*this));
 	break;
+
+      case 's':
+	if (is_eq(p, "stats"))
+	  return WRAP_FUNCTOR(reporter<>(new gather_statistics(*this), *this));
+	break;
       }
     }
     break;

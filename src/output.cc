@@ -84,6 +84,37 @@ void format_xacts::operator()(xact_t& xact)
   }
 }
 
+void gather_statistics::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  out << "Statistics gathered for this report:" << std::endl
+      << "  Total entries:         " ;
+
+  out << std::right;
+  out.width(6);
+  out << statistics.total_entries << std::endl
+      << "  Total transactions:    ";
+
+  out << std::right;
+  out.width(6);
+  out << statistics.total_xacts << std::endl;
+
+  out.flush();
+}
+
+void gather_statistics::operator()(xact_t& xact)
+{
+  if (last_entry != xact.entry) {
+    statistics.total_entries++;
+    last_entry = xact.entry;
+  }
+  if (last_xact != &xact) {
+    statistics.total_xacts++;
+    last_xact = &xact;
+  }
+}
+
 void format_entries::format_last_entry()
 {
   bool		first = true;

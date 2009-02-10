@@ -83,6 +83,41 @@ public:
  *
  * Long.
  */
+class gather_statistics : public item_handler<xact_t>
+{
+protected:
+  report_t& report;
+  entry_t * last_entry;
+  xact_t *  last_xact;
+
+  struct statistics_t {
+    std::size_t   total_entries;
+    std::size_t   total_xacts;
+
+    statistics_t()
+      : total_entries(0),
+	total_xacts(0) {}
+  }
+    statistics;
+
+public:
+  gather_statistics(report_t& _report)
+    : report(_report), last_entry(NULL), last_xact(NULL) {
+    TRACE_CTOR(gather_statistics, "report&");
+  }
+  virtual ~gather_statistics() {
+    TRACE_DTOR(gather_statistics);
+  }
+
+  virtual void flush();
+  virtual void operator()(xact_t& xact);
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 class format_entries : public format_xacts
 {
  public:
