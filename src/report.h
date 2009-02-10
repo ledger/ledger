@@ -122,7 +122,6 @@ public:
 
   value_t fn_amount_expr(call_scope_t& scope);
   value_t fn_total_expr(call_scope_t& scope);
-  value_t fn_display_date(call_scope_t& scope);
   value_t fn_display_amount(call_scope_t& scope);
   value_t fn_display_total(call_scope_t& scope);
   value_t fn_market_value(call_scope_t& scope);
