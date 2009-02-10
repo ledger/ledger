@@ -3011,7 +3011,7 @@ specifiers:
 $20.00         ; currency: twenty US dollars
 40 AAPL        ; commodity: 40 shares of Apple stock
 60 DM          ; currency: 60 Deutsch Mark
-£50            ; currency: 50 British pounds
+Â£50            ; currency: 50 British pounds
 50 EUR         ; currency: 50 Euros (or use appropriate symbol)
 @end example
 
@@ -3509,16 +3509,16 @@ To view balances without any virtual balances factored in, using the
 @node Automated transactions, Using Emacs to Keep Your Ledger, Virtual transactions, Ledger in Practice
 @section Automated transactions
 
-As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
-It is similar to tithing for Jews and Christians, or to Zakát for
-Muslims.  The exact details of computing Huqúqu'lláh are somewhat
+As a BahÃ¡'Ã­, I need to compute HuqÃºqu'llÃ¡h whenever I acquire assets.
+It is similar to tithing for Jews and Christians, or to ZakÃ¡t for
+Muslims.  The exact details of computing HuqÃºqu'llÃ¡h are somewhat
 complex, but if you have further interest, please consult the Web.
 
 Ledger makes this otherwise difficult law very easy.  Just set up an
 automated transaction at the top of your ledger file:
 
 @smallexample
-; This automated entry will compute Huqúqu'lláh based on this
+; This automated entry will compute HuqÃºqu'llÃ¡h based on this
 ; journal's transactions.  Any that match will affect the
 ; Liabilities:Huququ'llah account by 19% of the value of that
 ; transaction.
@@ -3531,19 +3531,19 @@ This automated transaction works by looking at each transaction in the
 ledger file.  If any match the given value expression, 19% of the
 transaction's value is applied to the @samp{Liabilities:Huququ'llah}
 account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
-added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
-$190 is subtracted.  The ultimate balance of Huqúqu'lláh reflects how
-much is owed in order to fulfill one's obligation to Huqúqu'lláh.
+added to @samp{Liabilities:HuqÃºqu'llÃ¡h}; if $1000 is spent on Rent,
+$190 is subtracted.  The ultimate balance of HuqÃºqu'llÃ¡h reflects how
+much is owed in order to fulfill one's obligation to HuqÃºqu'llÃ¡h.
 When ready to pay, just write a check to cover the amount shown in
 @samp{Liabilities:Huququ'llah}.  That entry would look like:
 
 @smallexample
-2003/01/01 (101) Baha'i Huqúqu'lláh Trust
+2003/01/01 (101) Baha'i HuqÃºqu'llÃ¡h Trust
     Liabilities:Huququ'llah          $1,000.00
     Assets:Checking
 @end smallexample
 
-That's it.  To see how much Huqúq is currently owed based on your
+That's it.  To see how much HuqÃºq is currently owed based on your
 ledger entries, use:
 
 @example
@@ -3551,7 +3551,7 @@ ledger balance Liabilities:Huquq
 @end example
 
 This works fine, but omits one aspect of the law: that Huquq is only
-due once the liability exceeds the value of 19 mithqáls of gold (which
+due once the liability exceeds the value of 19 mithqÃ¡ls of gold (which
 is roughly 2.22 ounces).  So what we want is for the liability to
 appear in the balance report only when it exceeds the present day
 value of 2.22 ounces of gold.  This can be accomplished using the
@@ -3562,7 +3562,7 @@ ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
 @end smallexample
 
 With this command, the current price for gold is downloaded, and the
-Huqúqu'lláh is reported only if its value exceeds that of 2.22 ounces
+HuqÃºqu'llÃ¡h is reported only if its value exceeds that of 2.22 ounces
 of gold.  If you wish the liability to be reflected in the parent
 subtotal either way, use this instead:
 
