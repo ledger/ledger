@@ -662,6 +662,9 @@ void instance_t::define_directive(char * line)
 void instance_t::general_directive(char * line)
 {
   char * p = next_element(line);
+  if (! p)
+    return;
+
   string word(line + 1);
 
   switch (*p) {
@@ -703,6 +706,7 @@ void instance_t::general_directive(char * line)
   std::strcpy(directive.get(), "dir_");
   std::strcpy(directive.get() + textdir_len, p);
 
+  // jww (2009-02-10): This needs some serious work.
   if (expr_t::ptr_op_t op = lookup(directive.get())) {
     call_scope_t args(*this);
     args.push_back(string_value(p));
