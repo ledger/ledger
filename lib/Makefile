@@ -9,17 +9,17 @@ STOW_ROOT = /usr/local/stow
 
 HERE = $(shell pwd)
 
-BOOST_VER = 1_37_0
+BOOST_VER = 1_38_0
 
 # architecture=combined
 boost-release:
-	(cd boost_$(BOOST_VER) && \
+	(cd boost && \
 	bjam release -j3 --prefix=$(STOW_ROOT)/boost_$(BOOST_VER) \
 	    --build-dir=$(HERE)/boost_$(BOOST_VER)/build --toolset=darwin \
 	    --build-type=complete install)
 
 boost-debug:
-	(cd boost_$(BOOST_VER) && \
+	(cd boost && \
 	bjam debug -j3 --prefix=$(STOW_ROOT)/boost_$(BOOST_VER) \
 	    --build-dir=$(HERE)/boost_$(BOOST_VER)/build --toolset=darwin \
 	    --build-type=complete \

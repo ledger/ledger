@@ -45,7 +45,7 @@ do
     break
 done
 
-BOOST_VERSION="1_37"
+BOOST_VERSION="1_38"
 
 
 INCDIRS="-isystem /usr/local/include"
