@@ -835,7 +835,6 @@ public:
 #else
       storage = intrusive_ptr<storage_t>();
 #endif
-      storage.reset();
     } else {
       as_sequence_lval().pop_back();
 
