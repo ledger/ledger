@@ -116,8 +116,6 @@ pkginclude_HEADERS =			   \
 	src/output.h			   \
 	src/emacs.h			   \
 	src/help.h			   \
-					   \
-	src/derive.h			   \
 	src/quotes.h			   \
 					   \
 	src/global.h			   \

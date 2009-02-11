@@ -521,7 +521,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_equity(*this, HANDLER(print_format_).str()), *this));
 	else if (is_eq(p, "entry"))
-	  return NULL;		// jww (2009-02-07): NYI
+	  return WRAP_FUNCTOR(entry_command);
 	else if (is_eq(p, "emacs"))
 	  return NULL;		// jww (2009-02-07): NYI
 	break;
@@ -629,6 +629,23 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     return MAKE_OPT_FUNCTOR(report_t, handler);
 
   return NULL;
+}
+
+string join_args(call_scope_t& args)
+{
+  std::ostringstream buf;
+  bool first = true;
+
+  for (std::size_t i = 0; i < args.size(); i++) {
+    if (first) {
+      buf << args[i];
+      first = false;
+    } else {
+      buf << ' ' << args[i];
+    }
+  }
+
+  return buf.str();
 }
 
 } // namespace ledger

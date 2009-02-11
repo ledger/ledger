@@ -29,15 +29,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "derive.h"
-#include "session.h"
-#include "iterators.h"
+#include "report.h"
+#include "output.h"
 
 namespace ledger {
 
-entry_t * derive_new_entry(report_t&		  report,
-			   strings_list::iterator i,
-			   strings_list::iterator end)
+value_t entry_command(call_scope_t& args)
+{
+  report_t&	      report(find_scope<report_t>(args));
+  scoped_ptr<entry_t> entry(derive_new_entry(report, args.begin(),
+					     args.end()));
+  xact_handler_ptr    handler
+    (new format_xacts(report, report.HANDLER(print_format_).str()));
+
+  report.entry_report(handler, *entry.get());
+
+  return true;
+}
+
+entry_t * derive_new_entry(report_t& report,
+			   value_t::sequence_t::const_iterator i,
+			   value_t::sequence_t::const_iterator end)
 {
   session_t& session(report.session);
 
@@ -45,11 +57,11 @@ entry_t * derive_new_entry(report_t&		  report,
 
   entry_t * matching = NULL;
 
-  added->_date = parse_date(*i++);
+  added->_date = parse_date((*i++).to_string());
   if (i == end)
     throw std::runtime_error("Too few arguments to 'entry'");
 
-  mask_t regexp(*i++);
+  mask_t regexp((*i++).to_string());
 
   entries_list::reverse_iterator j;
 
@@ -64,15 +76,16 @@ entry_t * derive_new_entry(report_t&		  report,
 
   added->payee = matching ? matching->payee : regexp.expr.str();
 
+  string arg = (*i).to_string();
   if (! matching) {
     account_t * acct;
-    if (i == end || ((*i)[0] == '-' || std::isdigit((*i)[0]))) {
+    if (i == end || (arg[0] == '-' || std::isdigit(arg[0]))) {
       acct = session.master->find_account("Expenses");
     }
     else if (i != end) {
-      acct = session.master->find_account_re(*i);
+      acct = session.master->find_account_re(arg);
       if (! acct)
-	acct = session.master->find_account(*i);
+	acct = session.master->find_account(arg);
       assert(acct);
       i++;
     }
@@ -80,7 +93,7 @@ entry_t * derive_new_entry(report_t&		  report,
     if (i == end) {
       added->add_xact(new xact_t(acct));
     } else {
-      xact_t * xact = new xact_t(acct, amount_t(*i++));
+      xact_t * xact = new xact_t(acct, amount_t((*i++).to_string()));
       added->add_xact(xact);
 
       if (! xact->amount.commodity()) {
@@ -102,9 +115,9 @@ entry_t * derive_new_entry(report_t&		  report,
 
     if (i != end) {
       if (! acct)
-	acct = session.master->find_account_re(*i);
+	acct = session.master->find_account_re((*i).to_string());
       if (! acct)
-	acct = session.master->find_account(*i);
+	acct = session.master->find_account((*i).to_string());
     }
 
     if (! acct) {
@@ -124,11 +137,11 @@ entry_t * derive_new_entry(report_t&		  report,
     foreach (xact_t * xact, matching->xacts)
       added->add_xact(new xact_t(*xact));
   }
-  else if ((*i)[0] == '-' || std::isdigit((*i)[0])) {
+  else if (arg[0] == '-' || std::isdigit(arg[0])) {
     xact_t * m_xact, * xact, * first;
     m_xact = matching->xacts.front();
 
-    first = xact = new xact_t(m_xact->account, amount_t(*i++));
+    first = xact = new xact_t(m_xact->account, amount_t((*i++).to_string()));
     added->add_xact(xact);
 
     if (! xact->amount.commodity())
@@ -140,9 +153,9 @@ entry_t * derive_new_entry(report_t&		  report,
     added->add_xact(xact);
 
     if (i != end) {
-      account_t * acct = session.master->find_account_re(*i);
+      account_t * acct = session.master->find_account_re((*i).to_string());
       if (! acct)
-	acct = session.master->find_account(*i);
+	acct = session.master->find_account((*i).to_string());
       assert(acct);
       added->xacts.back()->account = acct;
     }
@@ -151,7 +164,7 @@ entry_t * derive_new_entry(report_t&		  report,
     account_t * draw_acct = NULL;
 
     while (i != end) {
-      string&	  re_pat(*i++);
+      string	  re_pat((*i++).to_string());
       account_t * acct = NULL;
       amount_t *  amt  = NULL;
 
@@ -177,13 +190,13 @@ entry_t * derive_new_entry(report_t&		  report,
 	else
 	  xact = new xact_t(acct);
       } else {
-	amount_t amount(*i++);
+	amount_t amount((*i++).to_string());
 
-	strings_list::iterator x = i;
+	value_t::sequence_t::const_iterator x = i;
 	if (i != end && ++x == end) {
-	  draw_acct = session.master->find_account_re(*i);
+	  draw_acct = session.master->find_account_re((*i).to_string());
 	  if (! draw_acct)
-	    draw_acct = session.master->find_account(*i);
+	    draw_acct = session.master->find_account((*i).to_string());
 	  i++;
 	}
 

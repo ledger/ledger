@@ -182,6 +182,13 @@ public:
     args.pop_back();
   }
 
+  value_t::sequence_t::const_iterator begin() const {
+    return args.begin();
+  }
+  value_t::sequence_t::const_iterator end() const {
+    return args.end();
+  }
+
   std::size_t size() const {
     return args.size();
   }

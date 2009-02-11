@@ -80,11 +80,9 @@
 
 #include <session.h>
 #include <report.h>
-#include <help.h>
-
-#include <derive.h>
 #include <quotes.h>
 #include <emacs.h>
+#include <help.h>
 
 #if defined(HAVE_BOOST_PYTHON)
 #include <pyinterp.h>
