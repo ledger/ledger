@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # acprep, version 3.0
 #
@@ -31,6 +31,7 @@ if [ -z "$PYTHON_VERSION" ]; then
 fi
 
 
+BOOST_VERSION="1_38"
 BOOST_SUFFIX=""
 for lib in $(ls -1 /opt/local/lib/libboost_regex*.a \
                    /usr/local/lib/libboost_regex*.a 2> /dev/null \
@@ -38,14 +39,12 @@ for lib in $(ls -1 /opt/local/lib/libboost_regex*.a \
 do
     lib=$(basename "$lib")
     suffix=$(echo "$lib" | sed 's/libboost_regex-//' | sed 's/\.a//')
-    if [[ "$suffix" != "libboost_regex" ]]; then
+    if [ ! "$suffix" = "libboost_regex" ]; then
 	echo "Discovered Boost suffix: --boost $suffix"
 	BOOST_SUFFIX="-$suffix"
     fi
     break
 done
-
-BOOST_VERSION="1_38"
 
 
 INCDIRS="-isystem /usr/local/include"
@@ -187,7 +186,7 @@ while [ -n "$1" ]; do
 	  shift 1 ;;
 
     --devel)
-	if [[ $USE_GLIBCXX_DEBUG == true ]]; then
+	if [ $USE_GLIBCXX_DEBUG = true ]; then
 	    CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
 	    CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
 	    LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
@@ -199,11 +198,11 @@ while [ -n "$1" ]; do
 
 	    # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
 	    # newer version.
-	    if [[ -f /usr/bin/g++-4.2 ]]; then
+	    if [ -f /usr/bin/g++-4.2 ]; then
 		CC=/usr/bin/gcc-4.2
 		CXX=/usr/bin/g++-4.2
 		LD=/usr/bin/g++-4.2
-	    elif [[ -f /opt/local/bin/g++-mp-4.3 ]]; then
+	    elif [ -f /opt/local/bin/g++-mp-4.3 ]; then
 		CC=/opt/local/bin/gcc-mp-4.3
 		CXX=/opt/local/bin/g++-mp-4.3
 		LD=/opt/local/bin/g++-mp-4.3
@@ -291,6 +290,11 @@ while [ -n "$1" ]; do
 	DO_BUILD=true
 	shift 1 ;;
 
+    --switch)
+	shift 1
+	SWITCHES="$SWITCHES $1"
+	shift 1 ;;
+
     --local)
 	shift 1 ;;
 
@@ -324,7 +328,7 @@ PATH="$PYTHON_HOME/bin:$PATH" \
     "$HERE/configure" --srcdir="$HERE" \
 	CXX="$CXX" CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS" \
 	LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
-	$SWITCHES "$@"
+	$SWITCHES
 
 
 # Alter the Makefile so that it's not nearly so verbose.  This makes errors
