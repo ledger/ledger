@@ -473,7 +473,11 @@ private:
   void set_type(type_t new_type) {
     assert(new_type >= VOID && new_type <= POINTER);
     if (new_type == VOID) {
+#if BOOST_VERSION >= 103700
       storage.reset();
+#else
+      storage = intrusive_ptr<storage_t>();
+#endif
       assert(is_null());
     } else {
       _clear();
@@ -826,16 +830,27 @@ public:
     assert(! is_null());
 
     if (! is_sequence()) {
+#if BOOST_VERSION >= 103700
+      storage.reset();
+#else
+      storage = intrusive_ptr<storage_t>();
+#endif
       storage.reset();
     } else {
       as_sequence_lval().pop_back();
 
       const sequence_t& seq(as_sequence());
       std::size_t new_size = seq.size();
-      if (new_size == 0)
+      if (new_size == 0) {
+#if BOOST_VERSION >= 103700
 	storage.reset();
-      else if (new_size == 1)
+#else
+	storage = intrusive_ptr<storage_t>();
+#endif
+      }
+      else if (new_size == 1) {
 	*this = seq.front();
+      }
     }
   }
 
