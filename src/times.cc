@@ -82,14 +82,22 @@ namespace {
     result.tm_min  = 0;
     result.tm_sec  = 0;
 
-    if (result.tm_year == -1)
-      result.tm_year = (year == -1 ? int(CURRENT_DATE().year()) : year) - 1900;
-
-    if (result.tm_mon == -1)
-      result.tm_mon = 0;
-
     if (result.tm_mday == -1)
       result.tm_mday = 1;
+
+    if (result.tm_mon == -1) {
+      result.tm_mon = 0;
+
+      if (result.tm_mday > (CURRENT_DATE().day() - 1))
+	result.tm_mon = 11;
+    }
+
+    if (result.tm_year == -1) {
+      result.tm_year = (year == -1 ? int(CURRENT_DATE().year()) : year) - 1900;
+
+      if (result.tm_mon > (CURRENT_DATE().month() - 1))
+	result.tm_year--;
+    }
 
     return true;
   }

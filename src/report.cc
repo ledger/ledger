@@ -586,12 +586,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (is_eq(p, "args"))
 	  return WRAP_FUNCTOR(args_command);
 	break;
-      case 'p':
-	if (is_eq(p, "parse"))
-	  return WRAP_FUNCTOR(parse_command);
-	else if (is_eq(p, "period"))
-	  return WRAP_FUNCTOR(period_command);
-	break;
       case 'e':
 	if (is_eq(p, "eval"))
 	  return WRAP_FUNCTOR(eval_command);
@@ -599,6 +593,16 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'f':
 	if (is_eq(p, "format"))
 	  return WRAP_FUNCTOR(format_command);
+	break;
+      case 'p':
+	if (is_eq(p, "parse"))
+	  return WRAP_FUNCTOR(parse_command);
+	else if (is_eq(p, "period"))
+	  return WRAP_FUNCTOR(period_command);
+	break;
+      case 't':
+	if (is_eq(p, "template"))
+	  return WRAP_FUNCTOR(template_command);
 	break;
       }
     }

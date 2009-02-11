@@ -263,9 +263,9 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
-      throw_(amount_error, "Cannot add an amount to an uninitialized amount");
-    else if (amt.quantity)
       throw_(amount_error, "Cannot add an uninitialized amount to an amount");
+    else if (amt.quantity)
+      throw_(amount_error, "Cannot add an amount to an uninitialized amount");
     else
       throw_(amount_error, "Cannot add two uninitialized amounts");
   }

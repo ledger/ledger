@@ -329,6 +329,9 @@ bool item_t::valid() const
 string item_context(const item_t& item, const string& desc)
 {
   std::size_t len = item.end_pos - item.beg_pos;
+  if (! len)
+    return "<no item context>";
+
   assert(len > 0);
   assert(len < 2048);
 

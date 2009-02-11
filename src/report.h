@@ -394,6 +394,7 @@ public:
 
 // jww (2009-02-10): These should perhaps live elsewhere
 value_t entry_command(call_scope_t& args);
+value_t template_command(call_scope_t& args);
 
 entry_t * derive_new_entry(report_t& report,
 			   value_t::sequence_t::const_iterator i,

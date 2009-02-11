@@ -34,204 +34,373 @@
 
 namespace ledger {
 
-value_t entry_command(call_scope_t& args)
-{
-  report_t&	      report(find_scope<report_t>(args));
-  scoped_ptr<entry_t> entry(derive_new_entry(report, args.begin(),
-					     args.end()));
-  xact_handler_ptr    handler
-    (new format_xacts(report, report.HANDLER(print_format_).str()));
+namespace {
+  struct entry_template_t
+  {
+    optional<date_t> date;
+    optional<date_t> eff_date;
+    item_t::state_t  state;
+    optional<string> code;
+    optional<string> note;
+    mask_t           payee_mask;
 
-  report.entry_report(handler, *entry.get());
+    struct xact_template_t {
+      bool               from;
+      optional<mask_t>   account_mask;
+      optional<amount_t> amount;
+
+      xact_template_t() : from(false) {}
+    };
+
+    std::list<xact_template_t> xacts;
+
+    entry_template_t() : state(item_t::UNCLEARED) {}
+
+    void dump(std::ostream& out) const
+    {
+      if (date)
+	out << "Date:       " << *date << std::endl;
+      else
+	out << "Date:       <today>" << std::endl;
+
+      if (eff_date)
+	out << "Effective:  " << *eff_date << std::endl;
+
+      out << "State:      ";
+      switch (state) {
+      case item_t::UNCLEARED:
+	out << "uncleared" << std::endl;
+	break;
+      case item_t::CLEARED:
+	out << "cleared" << std::endl;
+	break;
+      case item_t::PENDING:
+	out << "pending" << std::endl;
+	break;
+      }
+
+      if (code)
+	out << "Code:       " << *code << std::endl;
+      if (note)
+	out << "Note:       " << *note << std::endl;
+
+      if (payee_mask.empty())
+	out << "Payee mask: INVALID (template expression will cause an error)"
+	    << std::endl;
+      else
+	out << "Payee mask: " << payee_mask << std::endl;
+
+      if (xacts.empty()) {
+	out << std::endl
+	    << "<Transaction copied from last related entry>"
+	    << std::endl;
+      } else {
+	bool has_only_from = true;
+	bool has_only_to   = true;
+
+	foreach (const xact_template_t& xact, xacts) {
+	  if (xact.from)
+	    has_only_to = false;
+	  else
+	    has_only_from = false;
+	}
+
+	foreach (const xact_template_t& xact, xacts) {
+	  out << std::endl
+	      << "[Transaction \"" << (xact.from ? "from" : "to")
+	      << "\"]" << std::endl;
+
+	  if (xact.account_mask)
+	    out << "  Account mask: " << *xact.account_mask << std::endl;
+	  else if (xact.from)
+	    out << "  Account mask: <use last of last related accounts>" << std::endl;
+	  else
+	    out << "  Account mask: <use first of last related accounts>" << std::endl;
+
+	  if (xact.amount)
+	    out << "  Amount:       " << *xact.amount << std::endl;
+	}
+      }
+    }
+  };
+  
+  entry_template_t
+  args_to_entry_template(value_t::sequence_t::const_iterator begin,
+			 value_t::sequence_t::const_iterator end)
+  {
+    regex  date_mask("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?(?:=.*)?");
+    smatch what;
+
+    entry_template_t tmpl;
+    bool	     check_for_date = true;
+
+    entry_template_t::xact_template_t * xact = NULL;
+
+    for (; begin != end; begin++) {
+      if (check_for_date &&
+	  regex_match((*begin).to_string(), what, date_mask)) {
+	tmpl.date = parse_date(what[0]);
+	if (what.size() == 2)
+	  tmpl.eff_date = parse_date(what[1]);
+	check_for_date = false;
+      } else {
+	string arg = (*begin).to_string();
+
+	if (arg == "at") {
+	  tmpl.payee_mask = (*++begin).to_string();
+	}
+	else if (arg == "to" || arg == "from") {
+	  if (! xact || xact->account_mask) {
+	    tmpl.xacts.push_back(entry_template_t::xact_template_t());
+	    xact = &tmpl.xacts.back();
+	  }
+	  xact->account_mask = mask_t((*++begin).to_string());
+	  xact->from = arg == "from";
+	}
+	else if (arg == "on") {
+	  tmpl.date = parse_date((*++begin).to_string());
+	  check_for_date = false;
+	}
+	else if (arg == "code") {
+	  tmpl.code = (*++begin).to_string();
+	}
+	else if (arg == "note") {
+	  tmpl.note = (*++begin).to_string();
+	}
+	else {
+	  // Without a preposition, it is either:
+	  //
+	  //  A payee, if we have not seen one
+	  //  An account or an amount, if we have
+	  //  An account if an amount has just been seen
+	  //  An amount if an account has just been seen
+
+	  if (tmpl.payee_mask.empty()) {
+	    tmpl.payee_mask = arg;
+	  }
+	  else {
+	    amount_t	     amt;
+	    optional<mask_t> account;
+
+	    if (! amt.parse(arg, amount_t::PARSE_SOFT_FAIL |
+			    amount_t::PARSE_NO_MIGRATE))
+	      account = mask_t(arg);
+
+	    if (! xact ||
+		(account && xact->account_mask) ||
+		(! account && xact->amount)) {
+	      tmpl.xacts.push_back(entry_template_t::xact_template_t());
+	      xact = &tmpl.xacts.back();
+	    }
+
+	    if (account) {
+	      xact->from = false;
+	      xact->account_mask = account;
+	    } else {
+	      xact->amount = amt;
+	    }
+	  }
+	}
+      }
+    }
+
+    if (! tmpl.xacts.empty()) {
+      bool has_only_from = true;
+      bool has_only_to   = true;
+
+      foreach (entry_template_t::xact_template_t& xact, tmpl.xacts) {
+	if (xact.from)
+	  has_only_to = false;
+	else
+	  has_only_from = false;
+      }
+
+      if (has_only_from) {
+	tmpl.xacts.push_front(entry_template_t::xact_template_t());
+      }
+      else if (has_only_to) {
+	tmpl.xacts.push_back(entry_template_t::xact_template_t());
+	tmpl.xacts.back().from = true;
+      }
+    }
+
+    return tmpl;
+  }
+
+  entry_t * derive_entry_from_template(entry_template_t& tmpl,
+				       report_t&	 report)
+  {
+    if (tmpl.payee_mask.empty())
+      throw std::runtime_error("'entry' command requires at least a payee");
+
+    entry_t *  matching = NULL;
+    journal_t& journal(*report.session.journal.get());
+
+    std::auto_ptr<entry_t> added(new entry_t);
+
+    entries_list::reverse_iterator j;
+
+    for (j = journal.entries.rbegin();
+	 j != journal.entries.rend();
+	 j++) {
+      if (tmpl.payee_mask.match((*j)->payee)) {
+	matching = *j;
+	break;
+      }
+    }
+
+    if (! tmpl.date)
+      added->_date = CURRENT_DATE();
+    else
+      added->_date = tmpl.date;
+
+    if (tmpl.eff_date)
+      added->_date_eff = tmpl.eff_date;
+
+    added->set_state(tmpl.state);
+
+    if (matching) {
+      added->payee = matching->payee;
+      added->code  = matching->code;
+      added->note  = matching->note;
+    } else {
+      added->payee = tmpl.payee_mask.expr.str();
+    }
+
+    if (tmpl.code)
+      added->code = tmpl.code;
+    if (tmpl.note)
+      added->note = tmpl.note;
+
+    if (tmpl.xacts.empty()) {
+      if (matching) {
+	foreach (xact_t * xact, matching->xacts)
+	  added->add_xact(new xact_t(*xact));
+      } else {
+	throw_(std::runtime_error,
+	       "No accounts, and no past entry matching '" << tmpl.payee_mask <<"'");
+      }
+    } else {
+      foreach (entry_template_t::xact_template_t& xact, tmpl.xacts) {
+	std::auto_ptr<xact_t> new_xact;
+
+	commodity_t * found_commodity = NULL;
+
+	if (matching) {
+	  if (xact.account_mask) {
+	    foreach (xact_t * x, matching->xacts) {
+	      if (xact.account_mask->match(x->account->fullname())) {
+		new_xact.reset(new xact_t(*x));
+		break;
+	      }
+	    }
+	  } else {
+	    if (xact.from)
+	      new_xact.reset(new xact_t(*matching->xacts.back()));
+	    else
+	      new_xact.reset(new xact_t(*matching->xacts.front()));
+	  }
+	  if (new_xact.get()) {
+	    found_commodity = &new_xact->amount.commodity();
+	    // Ignore the past amount from these transactions
+	    new_xact->amount = amount_t();
+	  }
+	}
+
+	if (! new_xact.get())
+	  new_xact.reset(new xact_t);
+
+	if (! new_xact->account) {
+	  if (xact.account_mask) {
+	    account_t * acct = NULL;
+	    if (! acct)
+	      acct = journal.find_account_re(xact.account_mask->expr.str());
+	    if (! acct)
+	      acct = journal.find_account(xact.account_mask->expr.str());
+	    new_xact->account = acct;
+
+	    // Find out the default commodity to use by looking at the last
+	    // commodity used in that account
+	    entries_list::reverse_iterator j;
+
+	    for (j = journal.entries.rbegin();
+		 j != journal.entries.rend();
+		 j++) {
+	      foreach (xact_t * x, (*j)->xacts) {
+		if (x->account == acct && ! x->amount.is_null()) {
+		  found_commodity = &x->amount.commodity();
+		  break;
+		}
+	      }
+	    }
+	  } else {
+	    if (xact.from)
+	      new_xact->account = journal.find_account("Liabilities:Unknown");
+	    else
+	      new_xact->account = journal.find_account("Expenses:Unknown");
+	  }
+	}
+
+	if (xact.amount) {
+	  new_xact->amount = *xact.amount;
+	  if (xact.from)
+	    new_xact->amount.in_place_negate();
+	}
+
+	if (found_commodity &&
+	    ! new_xact->amount.is_null() &&
+	    ! new_xact->amount.has_commodity()) {
+	  new_xact->amount.set_commodity(*found_commodity);
+	  new_xact->amount = new_xact->amount.rounded();
+	}
+
+	added->add_xact(new_xact.release());
+      }
+    }
+
+    if (! journal.entry_finalize_hooks.run_hooks(*added.get(), false) ||
+	! added->finalize() ||
+	! journal.entry_finalize_hooks.run_hooks(*added.get(), true))
+      throw std::runtime_error("Failed to finalize derived entry (check commodities)");
+
+    return added.release();
+  }
+}
+
+value_t template_command(call_scope_t& args)
+{
+  report_t& report(find_scope<report_t>(args));
+  std::ostream& out(report.output_stream);
+
+  value_t::sequence_t::const_iterator begin = args.value().begin();
+  value_t::sequence_t::const_iterator end   = args.value().end();
+
+  out << "--- Input arguments ---" << std::endl;
+  args.value().dump(out);
+  out << std::endl << std::endl;
+
+  entry_template_t tmpl = args_to_entry_template(begin, end);
+
+  out << "--- Entry template ---" << std::endl;
+  tmpl.dump(out);
 
   return true;
 }
 
-entry_t * derive_new_entry(report_t& report,
-			   value_t::sequence_t::const_iterator i,
-			   value_t::sequence_t::const_iterator end)
+value_t entry_command(call_scope_t& args)
 {
-  session_t& session(report.session);
+  value_t::sequence_t::const_iterator begin = args.value().begin();
+  value_t::sequence_t::const_iterator end   = args.value().end();
 
-  std::auto_ptr<entry_t> added(new entry_t);
+  report_t&		 report(find_scope<report_t>(args));
+  entry_template_t	 tmpl = args_to_entry_template(begin, end);
+  std::auto_ptr<entry_t> new_entry(derive_entry_from_template(tmpl, report));
 
-  entry_t * matching = NULL;
-
-  added->_date = parse_date((*i++).to_string());
-  if (i == end)
-    throw std::runtime_error("Too few arguments to 'entry'");
-
-  mask_t regexp((*i++).to_string());
-
-  entries_list::reverse_iterator j;
-
-  for (j = report.session.journal->entries.rbegin();
-       j != report.session.journal->entries.rend();
-       j++) {
-    if (regexp.match((*j)->payee)) {
-      matching = *j;
-      break;
-    }
-  }
-
-  added->payee = matching ? matching->payee : regexp.expr.str();
-
-  string arg = (*i).to_string();
-  if (! matching) {
-    account_t * acct;
-    if (i == end || (arg[0] == '-' || std::isdigit(arg[0]))) {
-      acct = session.master->find_account("Expenses");
-    }
-    else if (i != end) {
-      acct = session.master->find_account_re(arg);
-      if (! acct)
-	acct = session.master->find_account(arg);
-      assert(acct);
-      i++;
-    }
-
-    if (i == end) {
-      added->add_xact(new xact_t(acct));
-    } else {
-      xact_t * xact = new xact_t(acct, amount_t((*i++).to_string()));
-      added->add_xact(xact);
-
-      if (! xact->amount.commodity()) {
-	// If the amount has no commodity, we can determine it given
-	// the account by creating a final for the account and then
-	// checking if it contains only a single commodity.  An
-	// account to which only dollars are applied would imply that
-	// dollars are wanted now too.
-
-	report.sum_all_accounts();
-
-	value_t total = acct->xdata().total;
-	if (total.is_type(value_t::AMOUNT))
-	  xact->amount.set_commodity(total.as_amount().commodity());
-      }
-    }
-
-    acct = NULL;
-
-    if (i != end) {
-      if (! acct)
-	acct = session.master->find_account_re((*i).to_string());
-      if (! acct)
-	acct = session.master->find_account((*i).to_string());
-    }
-
-    if (! acct) {
-      if (matching && matching->journal->basket)
-	acct = matching->journal->basket;
-      else
-	acct = session.master->find_account("Equity");
-    }   
-
-    added->add_xact(new xact_t(acct));
-  }
-  else if (i == end) {
-    // If no argument were given but the payee, assume the user wants
-    // to see the same xact as last time.
-    added->code = matching->code;
-
-    foreach (xact_t * xact, matching->xacts)
-      added->add_xact(new xact_t(*xact));
-  }
-  else if (arg[0] == '-' || std::isdigit(arg[0])) {
-    xact_t * m_xact, * xact, * first;
-    m_xact = matching->xacts.front();
-
-    first = xact = new xact_t(m_xact->account, amount_t((*i++).to_string()));
-    added->add_xact(xact);
-
-    if (! xact->amount.commodity())
-      xact->amount.set_commodity(m_xact->amount.commodity());
-
-    m_xact = matching->xacts.back();
-
-    xact = new xact_t(m_xact->account, - first->amount);
-    added->add_xact(xact);
-
-    if (i != end) {
-      account_t * acct = session.master->find_account_re((*i).to_string());
-      if (! acct)
-	acct = session.master->find_account((*i).to_string());
-      assert(acct);
-      added->xacts.back()->account = acct;
-    }
-  }
-  else {
-    account_t * draw_acct = NULL;
-
-    while (i != end) {
-      string	  re_pat((*i++).to_string());
-      account_t * acct = NULL;
-      amount_t *  amt  = NULL;
-
-      mask_t acct_regex(re_pat);
-
-      for (; j != matching->journal->entries.rend(); j++)
-	if (regexp.match((*j)->payee)) {
-	  entry_t * entry = *j;
-	  foreach (xact_t * xact, entry->xacts)
-	    if (acct_regex.match(xact->account->fullname())) {
-	      acct = xact->account;
-	      amt  = &xact->amount;
-	      matching = entry;
-	      goto found;
-	    }
-	}
-
-    found:
-      xact_t * xact;
-      if (i == end) {
-	if (amt)
-	  xact = new xact_t(acct, *amt);
-	else
-	  xact = new xact_t(acct);
-      } else {
-	amount_t amount((*i++).to_string());
-
-	value_t::sequence_t::const_iterator x = i;
-	if (i != end && ++x == end) {
-	  draw_acct = session.master->find_account_re((*i).to_string());
-	  if (! draw_acct)
-	    draw_acct = session.master->find_account((*i).to_string());
-	  i++;
-	}
-
-	if (! acct)
-	  acct = session.master->find_account_re(re_pat);
-	if (! acct)
-	  acct = session.master->find_account(re_pat);
-
-	xact = new xact_t(acct, amount);
-	if (! xact->amount.commodity()) {
-	  if (amt)
-	    xact->amount.set_commodity(amt->commodity());
-	  else if (amount_t::current_pool->default_commodity)
-	    xact->amount.set_commodity(*amount_t::current_pool->default_commodity);
-	}
-      }
-      added->add_xact(xact);
-    }
-
-    if (! draw_acct) {
-      assert(matching->xacts.back()->account);
-      draw_acct = matching->xacts.back()->account;
-    }
-    if (draw_acct)
-      added->add_xact(new xact_t(draw_acct));
-  }
-
-  if ((matching &&
-       ! matching->journal->entry_finalize_hooks.run_hooks(*added, false)) ||
-      ! added->finalize() ||
-      (matching &&
-       ! matching->journal->entry_finalize_hooks.run_hooks(*added, true)))
-    throw std::runtime_error("Failed to finalize derived entry (check commodities)");
-
-  return added.release();
+  report.entry_report(xact_handler_ptr
+		      (new format_xacts(report,
+					report.HANDLER(print_format_).str())),
+		      *new_entry.get());
+  return true;
 }
 
 } // namespace ledger
