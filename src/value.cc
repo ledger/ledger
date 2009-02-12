@@ -243,7 +243,7 @@ void value_t::in_place_simplify()
     DEBUG("ledger.value.reduce", "as an amount it looks like: " << *this);
   }
 
-#if 0
+#ifdef REDUCE_TO_INTEGER	// this is off by default
   if (is_amount() && ! as_amount().has_commodity() &&
       as_amount().fits_in_long()) {
     DEBUG_("Reducing amount to integer");

@@ -112,17 +112,6 @@ namespace {
     }
   }
 
-#if 0
-  value_t get_price(xact_t& xact) {
-    if (xact.has_xdata() &&
-	xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
-      return xact.xdata().value;
-    } else {
-      return xact.amount;
-    }
-  }
-#endif
-
   value_t get_total(xact_t& xact) {
     if (xact.xdata_)
       return xact.xdata_->total;
@@ -196,10 +185,6 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'p':
     if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-#if 0
-    else if (name == "price")
-      return WRAP_FUNCTOR(get_wrapper<&get_price>);
-#endif
     break;
 
   case 't':

@@ -139,11 +139,6 @@ class format_entries : public format_xacts
     format_xacts::flush();
   }
   virtual void operator()(xact_t& xact);
-
-private:
-  void print_entry(std::ostream&       out,
-		   const entry_base_t& entry,
-		   const string&       prefix = "");
 };
 
 /**

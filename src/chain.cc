@@ -145,7 +145,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 						   report.what_to_keep())));
   }
 
-#if 0
   // budget_xacts takes a set of xacts from a data file and uses them to
   // generate "budget xacts" which balance against the reported xacts.
   //
@@ -153,30 +152,35 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   // only for the future, and does not balance them against anything but the
   // future balance.
 
-  if (report.budget_flags) {
+  if (report.budget_flags != BUDGET_NO_BUDGET) {
     budget_xacts * budget_handler = new budget_xacts(handler,
 						     report.budget_flags);
-    budget_handler->add_period_entries(journal->period_entries);
+    budget_handler->add_period_entries(report.session.journal->period_entries);
     handler.reset(budget_handler);
 
     // Apply this before the budget handler, so that only matching xacts are
     // calculated toward the budget.  The use of filter_xacts above will
     // further clean the results so that no automated xacts that don't match
     // the filter get reported.
-    if (! report.predicate.empty())
-      handler.reset(new filter_xacts(handler, report.predicate));
+    if (report.HANDLED(limit_))
+      handler.reset(new filter_xacts
+		    (handler, item_predicate<xact_t>
+		     (report.HANDLER(limit_).str(), report.what_to_keep())));
   }
-  else if (! report.forecast_limit.empty()) {
+  else if (report.HANDLED(forecast_)) {
     forecast_xacts * forecast_handler
-      = new forecast_xacts(handler, report.forecast_limit);
-    forecast_handler->add_period_entries(journal->period_entries);
+      = new forecast_xacts(handler,
+			   item_predicate<xact_t>
+			   (report.HANDLER(forecast_).str(), report.what_to_keep()));
+    forecast_handler->add_period_entries(report.session.journal->period_entries);
     handler.reset(forecast_handler);
 
     // See above, under budget_xacts.
-    if (! report.predicate.empty())
-      handler.reset(new filter_xacts(handler, report.predicate));
+    if (report.HANDLED(limit_))
+      handler.reset(new filter_xacts
+		    (handler, item_predicate<xact_t>
+		     (report.HANDLER(limit_).str(), report.what_to_keep())));
   }
-#endif
 
   if (report.HANDLED(comm_as_payee))
     handler.reset(new set_comm_as_payee(handler));

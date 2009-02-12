@@ -68,9 +68,7 @@ public:
     const char * p   = input.c_str();
     std::size_t	 len = input.length();
 
-#if 0
-    assert(utf8::is_valid(p, p + len));
-#endif
+    //assert(utf8::is_valid(p, p + len));
     utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
   }
   ~unistring() {

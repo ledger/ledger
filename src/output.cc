@@ -146,40 +146,6 @@ void format_entries::operator()(xact_t& xact)
   last_entry = xact.entry;
 }
 
-void print_entry(std::ostream& out, const entry_base_t& entry_base,
-		 const string& prefix)
-{
-  string print_format;
-
-  if (dynamic_cast<const entry_t *>(&entry_base)) {
-    print_format = (prefix + "%D %X%C%P\n" +
-		    prefix + "    %-34A  %12o\n%/" +
-		    prefix + "    %-34A  %12o\n");
-  }
-  else if (const auto_entry_t * entry =
-	   dynamic_cast<const auto_entry_t *>(&entry_base)) {
-    out << "= " << entry->predicate.predicate.text() << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else if (const period_entry_t * entry =
-	   dynamic_cast<const period_entry_t *>(&entry_base)) {
-    out << "~ " << entry->period_string << '\n';
-    print_format = prefix + "    %-34A  %12o\n";
-  }
-  else {
-    assert(false);
-  }
-
-#if 0
-  format_entries formatter(out, print_format);
-  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), formatter);
-  formatter.flush();
-
-  clear_xact_xdata cleaner;
-  walk_xacts(const_cast<xacts_list&>(entry_base.xacts), cleaner);
-#endif
-}
-
 void format_accounts::flush()
 {
   std::ostream& out(report.output_stream);

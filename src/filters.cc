@@ -267,7 +267,7 @@ namespace {
       break;
 
     default:
-      assert(false);		// jww (2008-04-24): What to do here?
+      assert(false);
       break;
     }
 

@@ -196,9 +196,6 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   if (! is_precommand) {
     if (! at_repl)
       read_journal_files();
-
-    // jww (2009-02-02): This is a complete hack, and a leftover from long,
-    // long ago.  The question is, how best to remove its necessity...
     normalize_report_options(verb);
   }
 
@@ -387,7 +384,6 @@ void global_scope_t::normalize_report_options(const string& verb)
 
   // jww (2008-08-14): This code really needs to be rationalized away
   // for 3.0.
-
   if (verb == "print" || verb == "entry" || verb == "dump") {
     rep.HANDLER(related).on();
     rep.HANDLER(related_all).on();

@@ -99,7 +99,7 @@ public:
       amount(xact.amount),
       cost(xact.cost),
       assigned_amount(xact.assigned_amount),
-      xdata_(xact.xdata_)    // jww (2008-07-19): What are the copy semantics?
+      xdata_(xact.xdata_)
   {
     TRACE_CTOR(xact_t, "copy");
   }
