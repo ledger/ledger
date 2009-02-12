@@ -459,24 +459,7 @@ public:
   }
 
 private:
-  void set_type(type_t new_type) {
-    assert(new_type >= VOID && new_type <= POINTER);
-    if (new_type == VOID) {
-#if BOOST_VERSION >= 103700
-      storage.reset();
-#else
-      storage = intrusive_ptr<storage_t>();
-#endif
-      assert(is_null());
-    } else {
-      if (! storage || storage->refc > 1)
-	storage = new storage_t;
-      else
-	storage->data = false;	// destruct all other types
-      storage->type = new_type;
-      assert(is_type(new_type));
-    }
-  }
+  void set_type(type_t new_type);
 
 public:
   /**
