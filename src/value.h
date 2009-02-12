@@ -227,30 +227,19 @@ private:
   intrusive_ptr<storage_t> storage;
 
   /**
-   * _dup() makes a private copy of the current value (if necessary)
-   * so it can subsequently be modified.
-   *
-   * _clear() removes our pointer to the current value and initializes
-   * a new storage bin for things to be stored in.
+   * Make a private copy of the current value (if necessary) so it can
+   * subsequently be modified.
    */
   void _dup() {
     assert(storage);
     if (storage->refc > 1)
       storage = new storage_t(*storage.get());
   }
-  void _clear() {
-    if (! storage || storage->refc > 1) {
-      storage = new storage_t;
-    } else {
-      storage->data = false;	// destruct any other type
-      storage->type = VOID;
-    }
-  }
 
   /**
-   * Because boolean "true" and "false" are so common, a pair of
-   * static references are kept to prevent the creation of throwaway
-   * storage_t objects just to represent these two common values.
+   * Because boolean "true" and "false" are so common, a pair of static
+   * references are kept to prevent the creation of throwaway storage_t
+   * objects just to represent these two common values.
    */
   static intrusive_ptr<storage_t> true_value;
   static intrusive_ptr<storage_t> false_value;
@@ -480,7 +469,10 @@ private:
 #endif
       assert(is_null());
     } else {
-      _clear();
+      if (! storage || storage->refc > 1)
+	storage = new storage_t;
+      else
+	storage->data = false;	// destruct all other types
       storage->type = new_type;
       assert(is_type(new_type));
     }
