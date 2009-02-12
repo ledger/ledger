@@ -58,13 +58,13 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
 
 void value_t::initialize()
 {
-  true_value = new storage_t;
-  true_value->type = BOOLEAN;
-  boost::get<bool>(true_value->data) = true;
+  true_value	    = new storage_t;
+  true_value->type  = BOOLEAN;
+  true_value->data  = true;
 
-  false_value = new storage_t;
+  false_value	    = new storage_t;
   false_value->type = BOOLEAN;
-  boost::get<bool>(true_value->data) = false;
+  false_value->data = false;
 }
 
 void value_t::shutdown()
