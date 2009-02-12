@@ -34,11 +34,13 @@
 #include "filters.h"
 #include "chain.h"
 #include "output.h"
+#include "emacs.h"
 #include "precmd.h"
 
 namespace ledger {
 
-report_t::report_t(session_t& _session) : session(_session)
+report_t::report_t(session_t& _session)
+  : session(_session), budget_flags(BUDGET_NO_BUDGET)
 {
   // Setup default values for some of the option handlers
   HANDLER(date_format_).on("%y-%b-%d");
@@ -524,7 +526,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	else if (is_eq(p, "entry"))
 	  return WRAP_FUNCTOR(entry_command);
 	else if (is_eq(p, "emacs"))
-	  return NULL;		// jww (2009-02-07): NYI
+	  return WRAP_FUNCTOR
+	    (reporter<>(new format_emacs_xacts(output_stream), *this));
 	break;
 
       case 'p':

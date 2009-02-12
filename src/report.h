@@ -108,7 +108,14 @@ public:
   session_t&	  session;
   output_stream_t output_stream;
 
+#define BUDGET_NO_BUDGET  0x00
+#define BUDGET_BUDGETED   0x01
+#define BUDGET_UNBUDGETED 0x02
+
+  uint_least8_t budget_flags;
+
   explicit report_t(session_t& _session);
+
   virtual ~report_t() {
     output_stream.close();
   }
