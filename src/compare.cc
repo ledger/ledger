@@ -33,6 +33,35 @@
 
 namespace ledger {
 
+bool value_is_less_than(const value_t& left, const value_t& right)
+{
+  if (left.is_sequence()) {
+    assert(right.is_sequence());
+
+    const value_t::sequence_t& left_seq(left.as_sequence());
+    value_t::sequence_t::const_iterator left_iter = left_seq.begin();
+
+    const value_t::sequence_t& right_seq(right.as_sequence());
+    value_t::sequence_t::const_iterator right_iter = right_seq.begin();
+
+    while (left_iter != left_seq.end() &&
+	   right_iter != right_seq.end()) {
+      if (*left_iter < *right_iter)
+	return true;
+      else if (*left_iter > *right_iter)
+	return false;
+      left_iter++; right_iter++;
+    }
+
+    assert(left_iter == left_seq.end());
+    assert(right_iter == right_seq.end());
+
+    return true;
+  } else {
+    return left < right;
+  }
+}
+
 template <>
 bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
 {
@@ -58,7 +87,7 @@ bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
   DEBUG("ledger.walk.compare_items_xact",
 	"rxdata.sort_value = " << rxdata.sort_value);
 
-  return lxdata.sort_value < rxdata.sort_value;
+  return value_is_less_than(lxdata.sort_value, rxdata.sort_value);
 }
 
 template <>
@@ -79,7 +108,7 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
-  return lxdata.sort_value < rxdata.sort_value;
+  return value_is_less_than(lxdata.sort_value, rxdata.sort_value);
 }
 
 } // namespace ledger

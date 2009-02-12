@@ -77,6 +77,8 @@ public:
   bool operator()(T * left, T * right);
 };
 
+bool value_is_less_than(const value_t& left, const value_t& right);
+
 template <typename T>
 bool compare_items<T>::operator()(T * left, T * right)
 {
