@@ -200,9 +200,6 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
   }
 
   case O_MATCH:
-    if (! right()->is_value() || ! right()->as_value().is_mask())
-      throw_(calc_error, "Right-hand argument to match operator must be a regex");
-
     result = (right()->calc(scope, locus).as_mask()
 	      .match(left()->calc(scope, locus).to_string()));
     break;
