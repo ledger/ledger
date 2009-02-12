@@ -138,7 +138,7 @@ if USE_PCH
 nodist_libledger_util_la_SOURCES = src/system.hh.gch
 
 BUILT_SOURCES = src/system.hh.gch
-CLEANFILES   += src/system.hh.gch
+CLEANFILES   += $(srcdir)/src/system.hh.gch
 
 $(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
