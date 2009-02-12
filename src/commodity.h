@@ -276,7 +276,6 @@ public:
     base->larger = arg;
   }
 
-protected:
   optional<varied_history_t&> varied_history() {
     if (base->varied_history)
       return *base->varied_history;

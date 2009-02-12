@@ -78,6 +78,7 @@
 #include <map>
 #include <memory>
 #include <new>
+#include <set>
 #include <stack>
 #include <string>
 #include <vector>

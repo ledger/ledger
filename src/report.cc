@@ -78,10 +78,9 @@ report_t::report_t(session_t& _session)
   HANDLER(plot_amount_format_).on("%D %(S(t))\n");
   HANDLER(plot_total_format_).on("%D %(S(T))\n");
 
-  HANDLER(write_hdr_format_).on("%d %Y%C%P\n");
-  HANDLER(write_xact_format_).on("    %-34W  %12o%n\n");
-
-  HANDLER(prices_format_).on("%[%Y/%m/%d %H:%M:%S %Z]   %-10A %12t %12T\n");
+  HANDLER(prices_format_).on(
+    "%-.9(date) %-.10(payee) %-10(account) %12(strip(display_amount))\n%/"
+    "%21|%-.9(date) %-.10(payee) %-10(account) %12(strip(display_amount))\n");
   HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
 
   HANDLER(csv_format_).on(
@@ -140,8 +139,11 @@ void report_t::accounts_report(acct_handler_ptr handler)
   session.clean_accounts();
 }
 
-void report_t::commodities_report(const string& format)
+void report_t::commodities_report(xact_handler_ptr handler)
 {
+  xacts_commodities_iterator walker(*session.journal.get());
+  pass_down_xacts(chain_xact_handlers(*this, handler), walker);
+  session.clean_xacts();
 }
 
 value_t report_t::fn_amount_expr(call_scope_t& scope)
@@ -474,8 +476,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(weekly);
     else OPT_(wide);
     else OPT(wide_register_format_);
-    else OPT(write_hdr_format_);
-    else OPT(write_xact_format_);
     break;
   case 'x':
     OPT_CH(comm_as_payee);
@@ -536,9 +536,13 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    (reporter<>(new format_xacts(*this, HANDLER(print_format_).str()),
 			*this));
 	else if (is_eq(p, "prices"))
-	  return NULL;		// jww (2009-02-07): NYI
+	  return expr_t::op_t::wrap_functor
+	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
+	     (new format_xacts(*this, HANDLER(prices_format_).str()), *this));
 	else if (is_eq(p, "pricesdb"))
-	  return NULL;		// jww (2009-02-07): NYI
+	  return expr_t::op_t::wrap_functor
+	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
+	     (new format_xacts(*this, HANDLER(pricesdb_format_).str()), *this));
 	break;
 
       case 'r':

@@ -110,12 +110,12 @@ public:
  */
 class entries_iterator : public noncopyable
 {
+public:
   entries_list::iterator entries_i;
   entries_list::iterator entries_end;
 
   bool entries_uninitialized;
 
-public:
   entries_iterator() : entries_uninitialized(true) {
     TRACE_CTOR(entries_iterator, "");
   }
@@ -152,6 +152,41 @@ public:
   }
   virtual ~journal_xacts_iterator() throw() {
     TRACE_DTOR(journal_xacts_iterator);
+  }
+
+  void reset(journal_t& journal);
+
+  virtual xact_t * operator()();
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class xacts_commodities_iterator : public xacts_iterator
+{
+protected:
+  journal_xacts_iterator  journal_xacts;
+  entries_iterator	  entries;
+  entry_xacts_iterator	  xacts;
+
+  std::list<xact_t>	  xact_temps;
+  std::list<account_t>    acct_temps;
+  entries_list            entry_temps;
+
+public:
+  xacts_commodities_iterator() {
+    TRACE_CTOR(xacts_commodities_iterator, "");
+  }
+  xacts_commodities_iterator(journal_t& journal) {
+    TRACE_CTOR(xacts_commodities_iterator, "journal_t&");
+    reset(journal);
+  }
+  virtual ~xacts_commodities_iterator() throw() {
+    TRACE_DTOR(xacts_commodities_iterator);
+    foreach (entry_t * entry, entry_temps)
+      checked_delete(entry);
   }
 
   void reset(journal_t& journal);

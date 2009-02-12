@@ -72,6 +72,72 @@ xact_t * journal_xacts_iterator::operator()()
   return xact;
 }
 
+void xacts_commodities_iterator::reset(journal_t& journal)
+{
+  journal_xacts.reset(journal);
+
+  std::set<commodity_t *> commodities;
+
+  for (xact_t * xact = journal_xacts(); xact; xact = journal_xacts()) {
+    commodity_t& comm(xact->amount.commodity());
+    if (comm.flags() & COMMODITY_NOMARKET)
+      continue;
+    commodities.insert(&comm);
+  }
+
+  foreach (commodity_t * comm, commodities) {
+    optional<commodity_t::varied_history_t&> history = comm->varied_history();
+    if (! history)
+      continue;
+
+    entry_temps.push_back(new entry_t);
+    entry_temps.back()->payee = comm->symbol();
+    entry_temps.back()->_date = CURRENT_DATE();
+
+    foreach (commodity_t::base_t::history_by_commodity_map::value_type pair,
+	     history->histories) {
+      commodity_t&	      price_comm(*pair.first);
+      commodity_t::history_t& price_hist(pair.second);
+
+      acct_temps.push_back(account_t(NULL, price_comm.symbol()));
+
+      foreach (commodity_t::base_t::history_map::value_type hpair,
+	       price_hist.prices) {
+	xact_temps.push_back(xact_t(&acct_temps.back()));
+	xact_t& temp = xact_temps.back();
+	temp._date  = hpair.first.date();
+	temp.entry  = entry_temps.back();
+	temp.amount = hpair.second;
+	temp.set_flags(ITEM_GENERATED | ITEM_TEMP);
+
+	entry_temps.back()->add_xact(&temp);
+      }
+    }
+  }
+
+  entries.entries_i   = entry_temps.begin();
+  entries.entries_end = entry_temps.end();
+
+  entries.entries_uninitialized = false;
+
+  entry_t * entry = entries();
+  if (entry != NULL)
+    xacts.reset(*entry);
+}
+
+xact_t * xacts_commodities_iterator::operator()()
+{
+  xact_t * xact = xacts();
+  if (xact == NULL) {
+    entry_t * entry = entries();
+    if (entry != NULL) {
+      xacts.reset(*entry);
+      xact = xacts();
+    }
+  }
+  return xact;
+}
+
 account_t * basic_accounts_iterator::operator()()
 {
   while (! accounts_i.empty() &&

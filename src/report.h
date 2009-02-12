@@ -123,7 +123,7 @@ public:
   void xacts_report(xact_handler_ptr handler);
   void entry_report(xact_handler_ptr handler, entry_t& entry);
   void accounts_report(acct_handler_ptr handler);
-  void commodities_report(const string& format);
+  void commodities_report(xact_handler_ptr handler);
 
   void sum_all_accounts();
 
@@ -394,8 +394,6 @@ public:
   OPTION(report_t, weekly); // -W
   OPTION(report_t, wide); // -w
   OPTION(report_t, wide_register_format_);
-  OPTION(report_t, write_hdr_format_);
-  OPTION(report_t, write_xact_format_);
   OPTION(report_t, yearly); // -Y
 };
 
