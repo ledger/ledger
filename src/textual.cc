@@ -1098,7 +1098,7 @@ entry_t * instance_t::parse_entry(char *	  line,
 
     char * p = skip_ws(line);
     if (! *p)
-      throw parse_error("Line contains only whitespace");
+      break;
 
     if (*p == ';') {
       item_t * item;
