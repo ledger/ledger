@@ -1080,6 +1080,9 @@ the default."
 	  ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
 	   (goto-char (match-beginning 2))
 	   'transaction)
+	  ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
+	   (goto-char (match-end 0))
+	   'entry)
 	  (t
 	   (ignore (goto-char here))))))
 

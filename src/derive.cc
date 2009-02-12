@@ -123,12 +123,33 @@ namespace {
       }
     }
   };
+
+  short string_to_day_of_week(const std::string& str)
+  {
+    if (str == "sun")
+      return 0;
+    else if (str == "mon")
+      return 1;
+    else if (str == "tue")
+      return 2;
+    else if (str == "wed")
+      return 3;
+    else if (str == "thu")
+      return 4;
+    else if (str == "fri")
+      return 5;
+    else if (str == "sat")
+      return 6;
+    assert(false);
+    return -1;
+  }
   
   entry_template_t
   args_to_entry_template(value_t::sequence_t::const_iterator begin,
 			 value_t::sequence_t::const_iterator end)
   {
     regex  date_mask("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?(?:=.*)?");
+    regex  dow_mask("(sun|mon|tue|wed|thu|fri|sat)");
     smatch what;
 
     entry_template_t tmpl;
@@ -143,7 +164,17 @@ namespace {
 	if (what.size() == 2)
 	  tmpl.eff_date = parse_date(what[1]);
 	check_for_date = false;
-      } else {
+      }
+      else if (check_for_date &&
+	  regex_match((*begin).to_string(), what, dow_mask)) {
+	short  dow  = string_to_day_of_week(what[0]);
+	date_t date = CURRENT_DATE() - date_duration(1);
+	while (date.day_of_week() != dow)
+	  date -= date_duration(1);
+	tmpl.date = date;
+	check_for_date = false;
+      }
+      else {
 	string arg = (*begin).to_string();
 
 	if (arg == "at") {
