@@ -1179,7 +1179,10 @@ the default."
 		      (ledger-add-entry text t)
 		    ((error)
 		     (insert text))))
+		(forward-line)
 		(goto-char (line-end-position))
+		(search-backward ";" (line-beginning-position) t)
+		(skip-chars-backward " \t0123456789.,")
 		(throw 'pcompleted t))
 	    (ledger-accounts)))))
 
