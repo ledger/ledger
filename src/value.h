@@ -622,10 +622,12 @@ public:
   mask_t& as_mask_lval() {
     assert(is_mask());
     _dup();
+    VERIFY(boost::get<mask_t>(storage->data).valid());
     return boost::get<mask_t>(storage->data);
   }
   const mask_t& as_mask() const {
     assert(is_mask());
+    VERIFY(boost::get<mask_t>(storage->data).valid());
     return boost::get<mask_t>(storage->data);
   }
   void set_mask(const string& val) {

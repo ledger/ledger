@@ -77,11 +77,22 @@ public:
   }
 
   bool match(const string& str) const {
+    DEBUG("mask.match",
+	  "Matching: \"" << str << "\" =~ /" << expr.str() << "/ = "
+	  << (boost::regex_search(str, expr) ? "true" : "false"));
     return boost::regex_search(str, expr);
   }
 
   bool empty() const {
     return expr.empty();
+  }
+
+  bool valid() const {
+    if (expr.status() != 0) {
+      DEBUG("ledger.validate", "mask_t: expr.status() != 0");
+      return false;
+    }
+    return true;
   }
 };
 

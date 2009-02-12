@@ -42,6 +42,7 @@ mask_t::mask_t(const string& pat) : expr()
 mask_t& mask_t::operator=(const string& pat)
 {
   expr.assign(pat.c_str(), regex::perl | regex::icase);
+  VERIFY(valid());
   return *this;
 }
 
