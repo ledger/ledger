@@ -84,6 +84,7 @@ pkginclude_HEADERS =			   \
 	src/mask.h			   \
 	src/stream.h			   \
 	src/pstream.h			   \
+	src/unistring.h			   \
 					   \
 	src/amount.h			   \
 	src/commodity.h			   \

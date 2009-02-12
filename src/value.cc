@@ -1271,7 +1271,7 @@ void value_t::print(std::ostream&           out,
     break;
 
   case AMOUNT:
-    out << as_amount();
+    as_amount().right_justify(out, first_width);
     break;
 
   case STRING:

@@ -571,7 +571,55 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     else
       throw_(amount_error, "Quoted commodity symbol lacks closing quote");
   } else {
-    READ_INTO(in, buf, 255, c, ! invalid_chars[static_cast<unsigned char>(c)]);
+    char * _p = buf;
+    c = in.peek();
+    while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
+      int bytes = 0;
+      int size  = _p - buf;
+
+      unsigned char d = c;
+
+      // Check for the start of a UTF-8 multi-byte encoded string
+      if (d >= 192 && d <= 223 && size < 254)
+	bytes = 2;
+      else if (d >= 224 && d <= 239 && size < 253)
+	bytes = 3;
+      else if (d >= 240 && d <= 247 && size < 252)
+	bytes = 4;
+      else if (d >= 248 && d <= 251 && size < 251)
+	bytes = 5;
+      else if (d >= 252 && d <= 253 && size < 250)
+	bytes = 6;
+      else if (d >= 254) // UTF-8 encoding error
+	break;
+
+      if (bytes > 0) {		// we're looking at a UTF-8 encoding
+	for (int i = 0; i < bytes; i++) {
+	  in.get(c);
+	  if (in.bad() || in.eof())
+	    break;
+	  *_p++ = c;
+	}
+      }
+      else if (invalid_chars[static_cast<unsigned char>(c)]) {
+	break;
+      }
+      else {
+	in.get(c);
+	if (in.eof())
+	  break;
+	if (c == '\\') {
+	  in.get(c);
+	  if (in.eof())
+	    break;
+	}
+	*_p++ = c;
+      }
+
+      c = in.peek();
+    }
+    *_p = '\0';
+
     if (is_reserved_token(buf))
       buf[0] = '\0';
   }

@@ -138,10 +138,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <gmp.h>
 #include <mpfr.h>
 #include "sha1.h"
-#define SUPPORT_UNICODE 1
-#if defined(SUPPORT_UNICODE)
 #include "utf8.h"
-#endif
 
 #ifdef HAVE_LIBEDIT
 #include <editline/readline.h>

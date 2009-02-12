@@ -31,6 +31,7 @@
 
 #include "amount.h"
 #include "commodity.h"
+#include "unistring.h"
 
 namespace ledger {
 
@@ -999,6 +1000,20 @@ void amount_t::print(std::ostream& _out) const
   // entire amount string, and not just the first part.
 
   _out << out.str();
+}
+
+void amount_t::right_justify(std::ostream& out, int width) const
+{
+  std::ostringstream buf;
+  buf << *this;
+
+  unistring temp(buf.str());
+
+  int spacing = width - int(temp.length());
+  while (spacing-- > 0)
+    out << ' ';
+
+  out << temp.extract();
 }
 
 bool amount_t::valid() const

@@ -240,17 +240,11 @@ void balance_t::print(std::ostream& out,
       first = false;
       width = first_width;
     }
-
-    out.width(width);
-    out.fill(' ');
-    out << std::right << *amount;
+    amount->right_justify(out, width);
   }
 
-  if (first) {
-    out.width(first_width);
-    out.fill(' ');
-    out << std::right << "0";
-  }
+  if (first)
+    amount_t(0L).right_justify(out, first_width);
 }
 
 } // namespace ledger

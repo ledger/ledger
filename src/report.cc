@@ -68,7 +68,8 @@ report_t::report_t(session_t& _session) : session(_session)
     "  %12(amount)%(comment | \"\")\n%/\n");
 
   HANDLER(balance_format_).on(
-    "%20(strip(display_total))  %(depth_spacer)%-(partial_account)\n");
+    "%20(print_balance(strip(display_total), 20))"
+    "  %(depth_spacer)%-(partial_account)\n");
 
   HANDLER(equity_format_).on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
 
@@ -191,7 +192,7 @@ value_t report_t::fn_print_balance(call_scope_t& args)
 
   std::ostringstream out;
   args[0].strip_annotations(what_to_keep())
-    .print(out, *first_width, *latter_width,
+    .print(out, *first_width, latter_width ? *latter_width : -1,
 	   HANDLED(date_format_) ?
 	   HANDLER(date_format_).str() : optional<string>());
 

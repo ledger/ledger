@@ -47,57 +47,11 @@
 #define _FORMAT_H
 
 #include "expr.h"
+#include "unistring.h"
 
 namespace ledger {
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
-
-#if defined(SUPPORT_UNICODE)
-
-/**
- * @class unistring
- *
- * @brief Abstract working with UTF-32 encoded Unicode strings
- *
- * The input to the string is a UTF8 encoded ledger::string, which can
- * then have its true length be taken, or characters extracted.
- */
-class unistring
-{
-  std::vector<uint32_t> utf32chars;
-
-public:
-  unistring(const string& input)
-  {
-    TRACE_CTOR(unistring, "");
-
-    const char * p   = input.c_str();
-    std::size_t	 len = input.length();
-
-    VERIFY(utf8::is_valid(p, p + len));
-
-    utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
-  }
-  ~unistring() {
-    TRACE_DTOR(unistring);
-  }
-
-  std::size_t length() const {
-    return utf32chars.size();
-  }
-
-  string extract(const std::size_t begin = 0,
-		 const std::size_t len   = 0) const
-  {
-    string utf8result;
-    utf8::utf32to8(utf32chars.begin() + begin,
-		   utf32chars.begin() + begin + (len ? len : length()),
-		   std::back_inserter(utf8result));
-    return utf8result;
-  }
-};
-
-#endif // SUPPORT_UNICODE
 
 class report_t;
 
