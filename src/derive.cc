@@ -167,6 +167,9 @@ namespace {
 	else if (arg == "note") {
 	  tmpl.note = (*++begin).to_string();
 	}
+	else if (arg == "rest") {
+	  ;			// just ignore this argument
+	}
 	else {
 	  // Without a preposition, it is either:
 	  //
@@ -281,6 +284,14 @@ namespace {
 	       "No accounts, and no past entry matching '" << tmpl.payee_mask <<"'");
       }
     } else {
+      bool any_xact_has_amount = false;
+      foreach (entry_template_t::xact_template_t& xact, tmpl.xacts) {
+	if (xact.amount) {
+	  any_xact_has_amount = true;
+	  break;
+	}
+      }
+
       foreach (entry_template_t::xact_template_t& xact, tmpl.xacts) {
 	std::auto_ptr<xact_t> new_xact;
 
@@ -300,11 +311,6 @@ namespace {
 	    else
 	      new_xact.reset(new xact_t(*matching->xacts.front()));
 	  }
-	  if (new_xact.get()) {
-	    found_commodity = &new_xact->amount.commodity();
-	    // Ignore the past amount from these transactions
-	    new_xact->amount = amount_t();
-	  }
 	}
 
 	if (! new_xact.get())
@@ -317,7 +323,6 @@ namespace {
 	      acct = journal.find_account_re(xact.account_mask->expr.str());
 	    if (! acct)
 	      acct = journal.find_account(xact.account_mask->expr.str());
-	    new_xact->account = acct;
 
 	    // Find out the default commodity to use by looking at the last
 	    // commodity used in that account
@@ -328,17 +333,31 @@ namespace {
 		 j++) {
 	      foreach (xact_t * x, (*j)->xacts) {
 		if (x->account == acct && ! x->amount.is_null()) {
-		  found_commodity = &x->amount.commodity();
+		  new_xact.reset(new xact_t(*x));
 		  break;
 		}
 	      }
 	    }
+	    if (! new_xact.get())
+	      new_xact.reset(new xact_t);
+
+	    new_xact->account = acct;
 	  } else {
+
 	    if (xact.from)
 	      new_xact->account = journal.find_account("Liabilities:Unknown");
 	    else
 	      new_xact->account = journal.find_account("Expenses:Unknown");
 	  }
+	}
+
+	if (new_xact.get() && ! new_xact->amount.is_null()) {
+	  found_commodity = &new_xact->amount.commodity();
+
+	  if (any_xact_has_amount)
+	    new_xact->amount = amount_t();
+	  else
+	    any_xact_has_amount = true;
 	}
 
 	if (xact.amount) {

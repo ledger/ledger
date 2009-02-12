@@ -201,38 +201,36 @@ Return the difference in the format of a time value."
 	(if (ledger-time-less-p moment date)
 	    (throw 'found t)))))))
 
-(defun ledger-add-entry (entry-text)
+(defun ledger-add-entry (entry-text &optional insert-at-point)
   (interactive
    (list
     (read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((args (with-temp-buffer
 		 (insert entry-text)
 		 (eshell-parse-arguments (point-min) (point-max))))
-	 (date (car args))
-	 (insert-year t)
 	 (ledger-buf (current-buffer))
 	 exit-code)
-    (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
-	(setq date
-	      (encode-time 0 0 0 (string-to-number (match-string 3 date))
-			   (string-to-number (match-string 2 date))
-			   (string-to-number (match-string 1 date)))))
-    (ledger-find-slot date)
-    (save-excursion
-      (if (re-search-backward "^Y " nil t)
-	  (setq insert-year nil)))
+    (unless insert-at-point
+      (let ((date (car args)))
+	(if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
+	    (setq date
+		  (encode-time 0 0 0 (string-to-number (match-string 3 date))
+			       (string-to-number (match-string 2 date))
+			       (string-to-number (match-string 1 date)))))
+	(ledger-find-slot date)))
     (save-excursion
       (insert
        (with-temp-buffer
 	 (setq exit-code
 	       (apply #'ledger-run-ledger ledger-buf "entry"
 		      (mapcar 'eval args)))
-	 (if (= 0 exit-code)
-	     (if insert-year
-		 (buffer-substring 2 (point-max))
-	       (buffer-substring 7 (point-max)))
-	   (concat (if insert-year entry-text
-		     (substring entry-text 6)) "\n"))) "\n"))))
+	 (goto-char (point-min))
+	 (if (looking-at "Error: ")
+	     (progn
+	      (message (buffer-string))
+	      (error))
+	   (buffer-string)))
+       "\n"))))
 
 (defun ledger-current-entry-bounds ()
   (save-excursion
@@ -1172,7 +1170,17 @@ the default."
   (while (pcomplete-here
 	  (if (eq (save-excursion
 		    (ledger-thing-at-point)) 'entry)
-	      (ledger-entries)
+	      (progn
+		(let ((text (buffer-substring (line-beginning-position)
+					      (line-end-position))))
+		  (delete-region (line-beginning-position)
+				 (line-end-position))
+		  (condition-case err
+		      (ledger-add-entry text t)
+		    ((error)
+		     (insert text))))
+		(goto-char (line-end-position))
+		(throw 'pcompleted t))
 	    (ledger-accounts)))))
 
 (defun ledger-fully-complete-entry ()
