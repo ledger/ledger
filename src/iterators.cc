@@ -85,32 +85,46 @@ void xacts_commodities_iterator::reset(journal_t& journal)
     commodities.insert(&comm);
   }
 
+  std::map<string, entry_t *> entries_by_commodity;
+
   foreach (commodity_t * comm, commodities) {
     optional<commodity_t::varied_history_t&> history = comm->varied_history();
     if (! history)
       continue;
 
-    entry_temps.push_back(new entry_t);
-    entry_temps.back()->payee = comm->symbol();
-    entry_temps.back()->_date = CURRENT_DATE();
+    account_t * account = journal.master->find_account(comm->symbol());
 
     foreach (commodity_t::base_t::history_by_commodity_map::value_type pair,
 	     history->histories) {
       commodity_t&	      price_comm(*pair.first);
       commodity_t::history_t& price_hist(pair.second);
 
-      acct_temps.push_back(account_t(NULL, price_comm.symbol()));
-
       foreach (commodity_t::base_t::history_map::value_type hpair,
 	       price_hist.prices) {
-	xact_temps.push_back(xact_t(&acct_temps.back()));
+	entry_t * entry;
+	string    symbol = hpair.second.commodity().symbol();
+
+	std::map<string, entry_t *>::iterator i =
+	  entries_by_commodity.find(symbol);
+	if (i != entries_by_commodity.end()) {
+	  entry = (*i).second;
+	} else {
+	  entry_temps.push_back(new entry_t);
+	  entry = entry_temps.back();
+	  entry->payee = symbol;
+	  entry->_date = hpair.first.date();
+	  entries_by_commodity.insert
+	    (std::pair<string, entry_t *>(symbol, entry));
+	}
+
+	xact_temps.push_back(xact_t(account));
 	xact_t& temp = xact_temps.back();
 	temp._date  = hpair.first.date();
-	temp.entry  = entry_temps.back();
+	temp.entry  = entry;
 	temp.amount = hpair.second;
 	temp.set_flags(ITEM_GENERATED | ITEM_TEMP);
 
-	entry_temps.back()->add_xact(&temp);
+	entry->add_xact(&temp);
       }
     }
   }

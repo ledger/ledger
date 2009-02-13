@@ -80,8 +80,7 @@ report_t::report_t(session_t& _session)
   HANDLER(plot_total_format_).on("%D %(S(T))\n");
 
   HANDLER(prices_format_).on(
-    "%-.9(date) %-.10(payee) %-10(account) %12(strip(display_amount))\n%/"
-    "%21|%-.9(date) %-.10(payee) %-10(account) %12(strip(display_amount))\n");
+    "%-.9(date) %-8(account) %12(strip(display_amount))\n");
   HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
 
   HANDLER(csv_format_).on(
