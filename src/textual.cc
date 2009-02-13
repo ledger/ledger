@@ -812,8 +812,13 @@ xact_t * instance_t::parse_xact(char *		line,
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
+#if 0
+    // jww (2009-02-12): This isn't quite working yet; it causes cost computes
+    // to skyrocket, since the per-unit price isn't also being reduced by the
+    // same factor.
     if (! xact->amount.is_null())
-      xact->amount.reduce();
+      xact->amount.in_place_reduce();
+#endif
 
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "xact amount = " << xact->amount);

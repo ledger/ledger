@@ -330,7 +330,7 @@ public:
       utilize "scaling commodities".  For example, an amount of \c 1h
       after reduction will be \c 3600s.
   */
-  amount_t reduce() const {
+  amount_t reduced() const {
     amount_t temp(*this);
     temp.in_place_reduce();
     return temp;
@@ -341,7 +341,7 @@ public:
       compact form greater than one.  That is, \c 3599s will unreduce to
       \c 59.98m, while \c 3601 unreduces to \c 1h.
   */
-  amount_t unreduce() const {
+  amount_t unreduced() const {
     amount_t temp(*this);
     temp.in_place_unreduce();
     return temp;

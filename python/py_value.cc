@@ -185,10 +185,10 @@ void export_value()
     .def("rounded", &value_t::rounded)
     .def("unrounded", &value_t::unrounded)
 
-    .def("reduce", &value_t::reduce)
+    .def("reduced", &value_t::reduced)
     .def("in_place_reduce", &value_t::in_place_reduce)
 
-    .def("unreduce", &value_t::unreduce)
+    .def("unreduced", &value_t::unreduced)
     .def("in_place_unreduce", &value_t::in_place_unreduce)
 
     .def("value", &value_t::value, value_overloads())

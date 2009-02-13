@@ -408,14 +408,14 @@ public:
   value_t rounded() const;
   value_t unrounded() const;
 
-  value_t reduce() const {
+  value_t reduced() const {
     value_t temp(*this);
     temp.in_place_reduce();
     return temp;
   }
   void    in_place_reduce();	// exists for efficiency's sake
 
-  value_t unreduce() const {
+  value_t unreduced() const {
     value_t temp(*this);
     temp.in_place_unreduce();
     return temp;

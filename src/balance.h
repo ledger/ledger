@@ -325,7 +325,7 @@ public:
     return temp;
   }
 
-  balance_t reduce() const {
+  balance_t reduced() const {
     balance_t temp(*this);
     temp.in_place_reduce();
     return temp;
@@ -335,11 +335,11 @@ public:
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.reduce();
+      temp += pair.second.reduced();
     return *this = temp;
   }
 
-  balance_t unreduce() const {
+  balance_t unreduced() const {
     balance_t temp(*this);
     temp.in_place_unreduce();
     return temp;
@@ -349,7 +349,7 @@ public:
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.unreduce();
+      temp += pair.second.unreduced();
     return *this = temp;
   }
 
