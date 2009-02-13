@@ -45,13 +45,13 @@
 
 2004/01/25 Bank
   ; Transfer to cover car purchase
-  ; :nobudget:
   Assets:Checking                  $ 5,500.00
   Assets:Savings
+  ; :nobudget:
 
 2004/01/25 Tom's Used Cars
-  ; :nobudget:
   Expenses:Auto                    $ 5,500.00
+  ; :nobudget:
   Assets:Checking
 
 2004/01/27 Book Store
