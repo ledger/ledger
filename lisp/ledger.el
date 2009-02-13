@@ -1289,11 +1289,12 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
    (t
     (let ((buf (current-buffer)))
       (with-current-buffer buffer
-	(apply #'call-process-region
-	       (append (list (point-min) (point-max)
-			     ledger-binary-path ledger-delete-after
-			     buf nil "-f" "-")
-		       args)))))))
+	(let ((coding-system-for-write 'utf-8))
+	  (apply #'call-process-region
+		 (append (list (point-min) (point-max)
+			       ledger-binary-path ledger-delete-after
+			       buf nil "-f" "-")
+			 args))))))))
 
 (defun ledger-run-ledger-and-delete (buffer &rest args)
   (let ((ledger-delete-after t))
