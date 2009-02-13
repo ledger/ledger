@@ -30,36 +30,39 @@
  */
 
 #include "compare.h"
+#include "op.h"
 
 namespace ledger {
 
-bool value_is_less_than(const value_t& left, const value_t& right)
-{
-  if (left.is_sequence()) {
-    assert(right.is_sequence());
-
-    const value_t::sequence_t& left_seq(left.as_sequence());
-    value_t::sequence_t::const_iterator left_iter = left_seq.begin();
-
-    const value_t::sequence_t& right_seq(right.as_sequence());
-    value_t::sequence_t::const_iterator right_iter = right_seq.begin();
-
-    while (left_iter != left_seq.end() &&
-	   right_iter != right_seq.end()) {
-      if (*left_iter < *right_iter)
-	return true;
-      else if (*left_iter > *right_iter)
-	return false;
-      left_iter++; right_iter++;
+namespace {
+  template <typename T>
+  void push_sort_value(std::list<sort_value_t>& sort_values,
+		       expr_t::ptr_op_t node, T * scope)
+  {
+    if (node->kind == expr_t::op_t::O_COMMA) {
+      push_sort_value(sort_values, node->left(), scope);
+      push_sort_value(sort_values, node->right(), scope);
     }
+    else {
+      bool inverted = false;
 
-    assert(left_iter == left_seq.end());
-    assert(right_iter == right_seq.end());
+      if (node->kind == expr_t::op_t::O_NEG) {
+	inverted = true;
+	node = node->left();
+      }
 
-    return true;
-  } else {
-    return left < right;
+      sort_values.push_back(sort_value_t());
+      sort_values.back().inverted = inverted;
+      sort_values.back().value = expr_t(node).calc(*scope).reduced();
+    }
   }
+}
+
+template <typename T>
+void compare_items<T>::find_sort_values(std::list<sort_value_t>& sort_values,
+					T * scope)
+{
+  push_sort_value(sort_values, sort_order.get_op(), scope);
 }
 
 template <>
@@ -70,24 +73,17 @@ bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
 
   xact_t::xdata_t& lxdata(left->xdata());
   if (! lxdata.has_flags(XACT_EXT_SORT_CALC)) {
-    lxdata.sort_value = sort_order.calc(*left);
-    lxdata.sort_value.reduce();
+    find_sort_values(lxdata.sort_values, left);
     lxdata.add_flags(XACT_EXT_SORT_CALC);
   }
 
   xact_t::xdata_t& rxdata(right->xdata());
   if (! rxdata.has_flags(XACT_EXT_SORT_CALC)) {
-    rxdata.sort_value = sort_order.calc(*right);
-    rxdata.sort_value.reduce();
+    find_sort_values(rxdata.sort_values, right);
     rxdata.add_flags(XACT_EXT_SORT_CALC);
   }
 
-  DEBUG("ledger.walk.compare_items_xact",
-	"lxdata.sort_value = " << lxdata.sort_value);
-  DEBUG("ledger.walk.compare_items_xact",
-	"rxdata.sort_value = " << rxdata.sort_value);
-
-  return value_is_less_than(lxdata.sort_value, rxdata.sort_value);
+  return value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }
 
 template <>
@@ -98,17 +94,17 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
 
   account_t::xdata_t& lxdata(left->xdata());
   if (! lxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    lxdata.sort_value = sort_order.calc(*left);
+    find_sort_values(lxdata.sort_values, left);
     lxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
   account_t::xdata_t& rxdata(right->xdata());
   if (! rxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    rxdata.sort_value = sort_order.calc(*right);
+    find_sort_values(rxdata.sort_values, right);
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
-  return value_is_less_than(lxdata.sort_value, rxdata.sort_value);
+  return value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }
 
 } // namespace ledger

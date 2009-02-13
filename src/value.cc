@@ -1409,4 +1409,25 @@ bool value_t::valid() const
   return true;
 }
 
+bool value_is_less_than(const std::list<sort_value_t>& left_values,
+			const std::list<sort_value_t>& right_values)
+{
+  std::list<sort_value_t>::const_iterator left_iter  = left_values.begin();
+  std::list<sort_value_t>::const_iterator right_iter = right_values.begin();
+
+  while (left_iter != left_values.end() &&
+	 right_iter != right_values.end()) {
+    if ((*left_iter).value < (*right_iter).value)
+      return ! (*left_iter).inverted;
+    else if ((*left_iter).value > (*right_iter).value)
+      return (*left_iter).inverted;
+    left_iter++; right_iter++;
+  }
+
+  assert(left_iter == left_values.end());
+  assert(right_iter == right_values.end());
+
+  return true;
+}
+
 } // namespace ledger

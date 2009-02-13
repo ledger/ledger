@@ -931,6 +931,17 @@ inline value_t& add_or_set_value(value_t& lhs, const T& rhs) {
   return lhs;
 }
 
+struct sort_value_t
+{
+  bool    inverted;
+  value_t value;
+
+  sort_value_t() : inverted(false) {}
+};
+
+bool value_is_less_than(const std::list<sort_value_t>& left_values,
+			const std::list<sort_value_t>& right_values);
+
 } // namespace ledger
 
 #endif // _VALUE_H

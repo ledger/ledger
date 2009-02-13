@@ -132,11 +132,12 @@ public:
 #define XACT_EXT_MATCHES    0x80
 
     value_t	total;
-    value_t	sort_value;
     value_t	value;
     date_t	date;
     account_t *	account;
     void *	ptr;
+
+    std::list<sort_value_t> sort_values;
 
     xdata_t() : supports_flags<>(), account(NULL), ptr(NULL) {
       TRACE_CTOR(xact_t::xdata_t, "");
@@ -144,11 +145,11 @@ public:
     xdata_t(const xdata_t& other)
       : supports_flags<>(other.flags()),
 	total(other.total),
-	sort_value(other.sort_value),
 	value(other.value),
 	date(other.date),
 	account(other.account),
-	ptr(NULL)
+	ptr(NULL),
+	sort_values(other.sort_values)
     {
       TRACE_CTOR(xact_t::xdata_t, "copy");
     }

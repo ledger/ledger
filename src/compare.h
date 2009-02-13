@@ -74,17 +74,20 @@ public:
   ~compare_items() throw() {
     TRACE_DTOR(compare_items);
   }
+
+  void find_sort_values(std::list<sort_value_t>& sort_values, T * scope);
+
   bool operator()(T * left, T * right);
 };
 
-bool value_is_less_than(const value_t& left, const value_t& right);
+sort_value_t calc_sort_value(const expr_t::ptr_op_t op);
 
 template <typename T>
 bool compare_items<T>::operator()(T * left, T * right)
 {
-  assert(left);
-  assert(right);
-  return sort_order.calc(*left) < sort_order.calc(*right);
+  assert(left); assert(right);
+  return value_is_less_than(find_sort_values(left),
+			    find_sort_values(right));
 }
 
 template <>

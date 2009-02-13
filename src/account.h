@@ -126,11 +126,12 @@ class account_t : public scope_t
 
     value_t	  value;
     value_t	  total;
-    value_t	  sort_value;
     std::size_t   count;	// xacts counted toward amount
     std::size_t   total_count;	// xacts counted toward total
     std::size_t   virtuals;
     uint_least8_t dflags;
+
+    std::list<sort_value_t> sort_values;
 
     xdata_t()
       : supports_flags<>(), count(0), total_count(0),
@@ -142,11 +143,11 @@ class account_t : public scope_t
       : supports_flags<>(other.flags()),
 	value(other.value),
 	total(other.total),
-	sort_value(other.sort_value),
 	count(other.count),
 	total_count(other.total_count),
 	virtuals(other.virtuals),
-	dflags(other.dflags)
+	dflags(other.dflags),
+	sort_values(other.sort_values)
     {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
