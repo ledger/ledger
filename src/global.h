@@ -52,7 +52,6 @@ public:
   ~global_scope_t();
 
   void	       read_init();
-  void	       read_journal_files();
   void         read_environment_settings(char * envp[]);
   strings_list read_command_arguments(scope_t& scope, strings_list args);
   void         normalize_session_options();

@@ -60,7 +60,7 @@ session_t::session_t()
     current_year(CURRENT_DATE().year()),
 
     commodity_pool(new commodity_pool_t),
-    master(new account_t(NULL, "")),
+    master(new account_t),
     journal(new journal_t(master.get()))
 {
   TRACE_CTOR(session_t, "");
@@ -106,48 +106,78 @@ std::size_t session_t::read_data(const string& master_account)
 
   std::size_t entry_count = 0;
 
-  if (entry_count == 0) {
-    account_t * acct = journal->master;
-    if (! master_account.empty())
-      acct = journal->find_account(master_account);
+  account_t * acct = journal->master;
+  if (! master_account.empty())
+    acct = journal->find_account(master_account);
 
-    if (HANDLED(price_db_) && exists(path(HANDLER(price_db_).str()))) {
-      if (read_journal(HANDLER(price_db_).str()))
-	throw_(parse_error, "Entries not allowed in price history file");
+  if (HANDLED(price_db_) && exists(path(HANDLER(price_db_).str()))) {
+    if (read_journal(HANDLER(price_db_).str()))
+      throw_(parse_error, "Entries not allowed in price history file");
+  }
+
+  foreach (const path& pathname, HANDLER(file_).data_files) {
+    if (pathname == "-") {
+      // To avoid problems with stdin and pipes, etc., we read the entire
+      // file in beforehand into a memory buffer, and then parcel it out
+      // from there.
+      std::ostringstream buffer;
+
+      while (std::cin.good() && ! std::cin.eof()) {
+	char line[8192];
+	std::cin.read(line, 8192);
+	std::streamsize count = std::cin.gcount();
+	buffer.write(line, count);
+      }
+      buffer.flush();
+
+      std::istringstream buf_in(buffer.str());
+
+      entry_count += read_journal(buf_in, "/dev/stdin", acct);
     }
-
-
-    foreach (const path& pathname, HANDLER(file_).data_files) {
-      if (pathname == "-") {
-	// To avoid problems with stdin and pipes, etc., we read the entire
-	// file in beforehand into a memory buffer, and then parcel it out
-	// from there.
-	std::ostringstream buffer;
-
-	while (std::cin.good() && ! std::cin.eof()) {
-	  char line[8192];
-	  std::cin.read(line, 8192);
-	  std::streamsize count = std::cin.gcount();
-	  buffer.write(line, count);
-	}
-	buffer.flush();
-
-	std::istringstream buf_in(buffer.str());
-
-	entry_count += read_journal(buf_in, "/dev/stdin", acct);
-      }
-      else if (exists(pathname)) {
-	entry_count += read_journal(pathname, acct);
-      }
-      else {
-	throw_(parse_error, "Could not open journal file '" << pathname << "'");
-      }
+    else if (exists(pathname)) {
+      entry_count += read_journal(pathname, acct);
+    }
+    else {
+      throw_(parse_error, "Could not open journal file '" << pathname << "'");
     }
   }
 
   VERIFY(journal->valid());
 
   return entry_count;
+}
+
+void session_t::read_journal_files()
+{
+  INFO_START(journal, "Read journal file");
+
+  string master_account;
+  if (HANDLED(account_))
+    master_account = HANDLER(account_).str();
+
+  std::size_t count = read_data(master_account);
+  if (count == 0)
+    throw_(parse_error, "Failed to locate any journal entries; "
+	   "did you specify a valid file with -f?");
+
+  INFO_FINISH(journal);
+
+  INFO("Found " << count << " entries");
+}
+
+void session_t::reread_journal_files()
+{
+  journal.reset();
+  master.reset();
+  commodity_pool.reset();
+  amount_t::shutdown();
+  
+  commodity_pool.reset(new commodity_pool_t);
+  amount_t::initialize(commodity_pool);
+  master.reset(new account_t);
+  journal.reset(new journal_t(master.get()));
+
+  read_journal_files();
 }
 
 void session_t::clean_xacts()

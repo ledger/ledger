@@ -109,24 +109,6 @@ void global_scope_t::read_init()
   }
 }
 
-void global_scope_t::read_journal_files()
-{
-  INFO_START(journal, "Read journal file");
-
-  string master_account;
-  if (session().HANDLED(account_))
-    master_account = session().HANDLER(account_).str();
-
-  std::size_t count = session().read_data(master_account);
-  if (count == 0)
-    throw_(parse_error, "Failed to locate any journal entries; "
-	   "did you specify a valid file with -f?");
-
-  INFO_FINISH(journal);
-
-  INFO("Found " << count << " entries");
-}
-
 char * global_scope_t::prompt_string()
 {
   static char prompt[32];
@@ -195,7 +177,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
 
   if (! is_precommand) {
     if (! at_repl)
-      read_journal_files();
+      session().read_journal_files();
     normalize_report_options(verb);
   }
 

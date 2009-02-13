@@ -92,7 +92,7 @@ int main(int argc, char * argv[], char * envp[])
 
     if (global_scope->HANDLED(script_)) {
       // Ledger is being invoked as a script command interpreter
-      global_scope->read_journal_files();
+      global_scope->session().read_journal_files();
 
       status = 0;
 
@@ -115,7 +115,7 @@ int main(int argc, char * argv[], char * envp[])
       // Commence the REPL by displaying the current Ledger version
       global_scope->show_version_info(std::cout);
 
-      global_scope->read_journal_files();
+      global_scope->session().read_journal_files();
 
       bool exit_loop = false;
 

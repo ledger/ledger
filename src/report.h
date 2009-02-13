@@ -143,6 +143,11 @@ public:
     return value_t(static_cast<scope_t *>(this));
   }
 
+  value_t reload_command(call_scope_t& scope) {
+    session.reread_journal_files();
+    return true;
+  }
+
   void append_predicate(const string& str) {
     if (HANDLED(limit_))
       HANDLER(limit_).on(string("(") + HANDLER(limit_).str() + ")&" + str);

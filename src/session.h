@@ -87,6 +87,9 @@ public:
 
   std::size_t read_data(const string& master_account = "");
 
+  void read_journal_files();
+  void reread_journal_files();
+
   void clean_xacts();
   void clean_xacts(entry_t& entry);
   void clean_accounts();
