@@ -83,7 +83,7 @@ bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
     rxdata.add_flags(XACT_EXT_SORT_CALC);
   }
 
-  return value_is_less_than(lxdata.sort_values, rxdata.sort_values);
+  return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }
 
 template <>
@@ -104,7 +104,7 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
-  return value_is_less_than(lxdata.sort_values, rxdata.sort_values);
+  return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }
 
 } // namespace ledger

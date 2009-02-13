@@ -86,8 +86,8 @@ template <typename T>
 bool compare_items<T>::operator()(T * left, T * right)
 {
   assert(left); assert(right);
-  return value_is_less_than(find_sort_values(left),
-			    find_sort_values(right));
+  return sort_value_is_less_than(find_sort_values(left),
+				 find_sort_values(right));
 }
 
 template <>

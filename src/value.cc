@@ -1409,8 +1409,8 @@ bool value_t::valid() const
   return true;
 }
 
-bool value_is_less_than(const std::list<sort_value_t>& left_values,
-			const std::list<sort_value_t>& right_values)
+bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
+			     const std::list<sort_value_t>& right_values)
 {
   std::list<sort_value_t>::const_iterator left_iter  = left_values.begin();
   std::list<sort_value_t>::const_iterator right_iter = right_values.begin();

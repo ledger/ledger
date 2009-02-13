@@ -939,8 +939,8 @@ struct sort_value_t
   sort_value_t() : inverted(false) {}
 };
 
-bool value_is_less_than(const std::list<sort_value_t>& left_values,
-			const std::list<sort_value_t>& right_values);
+bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
+			     const std::list<sort_value_t>& right_values);
 
 } // namespace ledger
 
