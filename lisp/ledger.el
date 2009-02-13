@@ -1289,7 +1289,8 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
    (t
     (let ((buf (current-buffer)))
       (with-current-buffer buffer
-	(let ((coding-system-for-write 'utf-8))
+	(let ((coding-system-for-write 'utf-8)
+	      (coding-system-for-read 'utf-8))
 	  (apply #'call-process-region
 		 (append (list (point-min) (point-max)
 			       ledger-binary-path ledger-delete-after
