@@ -74,6 +74,7 @@
 /ledger.info
 /ledger.so
 /lib/boost*
+/lib/cppunit
 /libtool
 /ltmain.sh
 /make.deps
