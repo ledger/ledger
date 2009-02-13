@@ -231,14 +231,12 @@ while [ -n "$1" ]; do
 
 	    CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
 	    LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
-
-	    BOOST_SUFFIX="-xgcc40"
 	fi
 
         # Do the same thing as --debug below
 	SWITCHES="$SWITCHES --enable-debug"
 	CXXFLAGS="$CXXFLAGS -g"
-	LDFLAGS="$LDFLAGS -g -prebind"
+	LDFLAGS="$LDFLAGS -g"
 
 	# Warning flags
 	CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
