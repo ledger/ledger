@@ -76,6 +76,10 @@ namespace {
     return value_t(static_cast<scope_t *>(&xact));
   }
 
+  value_t get_is_calculated(xact_t& xact) {
+    return xact.has_flags(XACT_CALCULATED);
+  }
+
   value_t get_entry(xact_t& xact) {
     return value_t(static_cast<scope_t *>(xact.entry));
   }
@@ -175,6 +179,8 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     else if (name == "cost")
       return WRAP_FUNCTOR(get_wrapper<&get_cost>);
+    else if (name == "calculated")
+      return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
     break;
 
   case 'e':

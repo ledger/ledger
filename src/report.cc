@@ -64,11 +64,11 @@ report_t::report_t(session_t& _session)
     "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
     "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
     "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-    "%-34(account)"
-    "  %12(amount)%(comment | \"\")\n%/"
+    "%-23(account)"
+    "  %12(calculated ? \"\" : amount)%(comment | \"\")\n%/"
     "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-    "%-34(account)"
-    "  %12(amount)%(comment | \"\")\n%/\n");
+    "%-23(account)"
+    "  %12(calculated ? \"\" : amount)%(comment | \"\")\n%/\n");
 
   HANDLER(balance_format_).on(
     "%20(print_balance(strip(display_total), 20))"
