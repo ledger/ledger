@@ -244,6 +244,11 @@ value_t report_t::fn_join(call_scope_t& args)
   return string_value(out.str());
 }
 
+value_t report_t::fn_format_date(call_scope_t& args)
+{
+  return string_value(format_date(args[0].to_date(), args[1].to_string()));
+}
+
 namespace {
   template <class Type        = xact_t,
 	    class handler_ptr = xact_handler_ptr,
@@ -565,6 +570,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_display_amount);
     else if (is_eq(p, "display_total"))
       return MAKE_FUNCTOR(report_t::fn_display_total);
+    break;
+
+  case 'f':
+    if (is_eq(p, "format_date"))
+      return MAKE_FUNCTOR(report_t::fn_format_date);
     break;
 
   case 'j':
