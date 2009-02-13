@@ -43,15 +43,15 @@ void format_t::element_t::dump(std::ostream& out) const
   case EXPR:   out << "   EXPR"; break;
   }
 
-  out << "  flags: " << flags();
+  out << "  flags: 0x" << std::hex << int(flags());
   out << "  min: ";
   out << std::right;
   out.width(2);
-  out << int(min_width);
+  out << std::dec << int(min_width);
   out << "  max: ";
   out << std::right;
   out.width(2);
-  out << int(max_width);
+  out << std::dec << int(max_width);
 
   switch (type) {
   case STRING: out << "   str: '" << chars << "'" << std::endl; break;

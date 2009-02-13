@@ -34,6 +34,36 @@
 
 namespace ledger {
 
+namespace {
+  xact_t * get_sample_xact(report_t& report)
+  {
+    {
+      string str;
+      {
+	std::ostringstream buf;
+
+	buf << "2004/05/27 Book Store\n"
+	    << "    Expenses:Books                 20 BOOK @ $10\n"
+	    << "    Liabilities:MasterCard        $-200.00\n";
+
+	str = buf.str();
+      }
+
+      std::ostream& out(report.output_stream);
+
+      out << "--- Context is first transaction of the following entry ---"
+	  << std::endl << str << std::endl;
+      {
+	std::istringstream in(str);
+	report.session.journal->parse(in, report.session, NULL, NULL);
+	report.session.clean_accounts();
+      }
+    }
+    entry_t * first = report.session.journal->entries.front();
+    return first->xacts.front();
+  }
+}
+
 value_t parse_command(call_scope_t& args)
 {
   string arg = join_args(args);
@@ -45,27 +75,7 @@ value_t parse_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  {
-    string str;
-    {
-      std::ostringstream buf;
-
-      buf << "2004/05/27 Book Store\n"
-	  << "    Expenses:Books                 20 BOOK @ $10\n"
-	  << "    Liabilities:MasterCard        $-200.00\n";
-
-      str = buf.str();
-    }
-    out << "--- Context is first transaction of the following entry ---"
-	<< std::endl << str << std::endl;
-    {
-      std::istringstream in(str);
-      report.session.journal->parse(in, report.session, NULL, NULL);
-      report.session.clean_accounts();
-    }
-  }
-  entry_t * first = report.session.journal->entries.front();
-  xact_t  * xact  = first->xacts.front();
+  xact_t * xact = get_sample_xact(report);
 
   out << "--- Input expression ---" << std::endl;
   out << arg << std::endl;
@@ -114,8 +124,20 @@ value_t format_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
+  xact_t * xact = get_sample_xact(report);
+
+  out << "--- Input format string ---" << std::endl;
+  out << arg << std::endl << std::endl;
+
+  out << "--- Format elements ---" << std::endl;
   format_t fmt(arg);
   fmt.dump(out);
+
+  out << std::endl << "--- Formatted string ---" << std::endl;
+  bind_scope_t bound_scope(args, *xact);
+  out << '"';
+  fmt.format(out, bound_scope);
+  out << "\"\n";
 
   return 0L;
 }
