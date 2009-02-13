@@ -49,8 +49,7 @@
 ;;
 ;; In the reconcile buffer, use SPACE to toggle the cleared status of
 ;; a transaction, C-x C-s to save changes (to the ledger file as
-;; well), or C-c C-r to attempt an auto-reconcilation based on the
-;; statement's ending date and balance.
+;; well).
 ;;
 ;; The ledger reports command asks the user to select a report to run
 ;; then creates a report buffer containing the results of running the
@@ -497,40 +496,6 @@ dropped."
 				(list 'face))))
     (forward-line)))
 
-(defun ledger-auto-reconcile (balance date)
-  (interactive "sReconcile to balance (negative for a liability): \nsStatement date (default: now): ")
-  (let ((buffer ledger-buf)
-	(account ledger-acct) cleared)
-    ;; attempt to auto-reconcile in the background
-    (with-temp-buffer
-      (let ((exit-code
-	     (ledger-run-ledger buffer "--format" "%xb\\n"
-	      "--reconcile" balance "--reconcile-date" date
-	      "register" account)))
-	(if (/= 0 exit-code)
-	    (error "Failed to reconcile account '%s' to balance '%s'"
-		   account balance)
-	  (goto-char (point-min))
-	  (unless (looking-at "[0-9]")
-	    (error (buffer-string)))
-	  (while (not (eobp))
-	    (setq cleared
-		  (cons (save-excursion
-			  (goto-line (1+ (read (current-buffer))))
-			  (point-marker)) cleared))
-	    (forward-line)))))
-    (goto-char (point-min))
-    (with-current-buffer ledger-buf
-      (setq cleared (mapcar 'copy-marker (nreverse cleared))))
-    (let ((inhibit-redisplay t))
-      (dolist (pos cleared)
-	(while (and (not (eobp))
-		    (/= pos (cdr (get-text-property (point) 'where))))
-	  (forward-line))
-	(unless (eobp)
-	  (ledger-reconcile-toggle))))
-    (goto-char (point-min))))
-
 (defun ledger-reconcile-refresh ()
   (interactive)
   (let ((inhibit-read-only t)
@@ -641,7 +606,7 @@ dropped."
     (set-buffer-modified-p nil)
     (toggle-read-only t)))
 
-(defun ledger-reconcile (account &optional arg)
+(defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: \nP")
   (let ((buf (current-buffer))
 	(rbuf (get-buffer "*Reconcile*")))
@@ -653,10 +618,7 @@ dropped."
       (ledger-reconcile-mode)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-acct) account)
-      (ledger-do-reconcile)
-      (when arg
-	(sit-for 0 0)
-	(call-interactively #'ledger-auto-reconcile)))))
+      (ledger-do-reconcile))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
@@ -666,7 +628,6 @@ dropped."
     (define-key map [(control ?m)] 'ledger-reconcile-visit)
     (define-key map [return] 'ledger-reconcile-visit)
     (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
-    (define-key map [(control ?c) (control ?r)] 'ledger-auto-reconcile)
     (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
     (define-key map [(control ?l)] 'ledger-reconcile-refresh)
     (define-key map [? ] 'ledger-reconcile-toggle)
@@ -674,7 +635,6 @@ dropped."
     (define-key map [?d] 'ledger-reconcile-delete)
     (define-key map [?n] 'next-line)
     (define-key map [?p] 'previous-line)
-    (define-key map [?r] 'ledger-auto-reconcile)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q] 'ledger-reconcile-quit)
     (use-local-map map)))
