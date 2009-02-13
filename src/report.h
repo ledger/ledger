@@ -191,7 +191,9 @@ public:
   OPTION(report_t, abbrev_len_);
   OPTION(report_t, account_);
   OPTION(report_t, actual); // -L
-  OPTION(report_t, add_budget);
+  OPTION_(report_t, add_budget, DO() {
+      parent->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
+    });
 
   OPTION__
   (report_t, amount_, // -t
@@ -230,7 +232,10 @@ public:
       parent->append_predicate(predicate);
     });
 
-  OPTION(report_t, budget);
+  OPTION_(report_t, budget, DO() {
+      parent->budget_flags = BUDGET_BUDGETED;
+    });
+
   OPTION(report_t, by_payee); // -P
   OPTION(report_t, cache_);
   OPTION(report_t, cleared); // -C
@@ -395,7 +400,11 @@ public:
   OPTION(report_t, total_data); // -J
   OPTION(report_t, totals);
   OPTION(report_t, truncate_);
-  OPTION(report_t, unbudgeted);
+
+  OPTION_(report_t, unbudgeted, DO() {
+      parent->budget_flags = BUDGET_UNBUDGETED;
+    });
+
   OPTION(report_t, uncleared); // -U
   OPTION(report_t, weekly); // -W
   OPTION(report_t, wide); // -w
