@@ -245,11 +245,10 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
     else
       out << std::right;
 
-    if (elem->min_width > 0)
-      out.width(elem->min_width);
-
     switch (elem->type) {
     case element_t::STRING:
+      if (elem->min_width > 0)
+	out.width(elem->min_width);
       out << elem->chars;
       break;
 

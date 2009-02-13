@@ -1263,6 +1263,9 @@ void value_t::print(std::ostream&           out,
 		    const int               latter_width,
 		    const optional<string>& date_format) const
 {
+  if (first_width > 0 && ! is_amount() && ! is_balance())
+    out.width(first_width);
+
   switch (type()) {
   case VOID:
     out << "";
