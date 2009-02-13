@@ -202,6 +202,15 @@ while [ -n "$1" ]; do
   case "$1" in
     --pch)
 	  USE_GLIBCXX_DEBUG=false
+	  SWITCHES="$SWITCHES --enable-pch"
+
+	  # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
+	  # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
+	  if [ -f /usr/bin/g++-4.2 ]; then
+	      CC=/usr/bin/gcc-4.2
+	      CXX=/usr/bin/g++-4.2
+	      LD=/usr/bin/g++-4.2
+	  fi
 	  shift 1 ;;
 
     --devel)
@@ -213,62 +222,35 @@ while [ -n "$1" ]; do
 	    # I build my debug Boost libs with _GLIBCXX_DEBUG
 	    BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
 	else
-	    SWITCHES="$SWITCHES --enable-pch"
-
-	    # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
-	    # newer version.
-	    if [ -f /usr/bin/g++-4.2 ]; then
-		CC=/usr/bin/gcc-4.2
-		CXX=/usr/bin/g++-4.2
-		LD=/usr/bin/g++-4.2
-	    elif [ -f /opt/local/bin/g++-mp-4.3 ]; then
-		CC=/opt/local/bin/gcc-mp-4.3
-		CXX=/opt/local/bin/g++-mp-4.3
-		LD=/opt/local/bin/g++-mp-4.3
-	    elif [ $SYSTEM = Darwin ]; then
-		CXXFLAGS="$CXXFLAGS -Wno-shorten-64-to-32"
-	    fi
 
 	    CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
 	    LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
 	fi
+	shift 1 ;;
 
-        # Do the same thing as --debug below
-	SWITCHES="$SWITCHES --enable-debug"
-	CXXFLAGS="$CXXFLAGS -g"
-	LDFLAGS="$LDFLAGS -g"
-
+    --warn)
 	# Warning flags
 	CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
 	CXXFLAGS="$CXXFLAGS -Wextra"
 	CXXFLAGS="$CXXFLAGS -Wcast-align"
 	CXXFLAGS="$CXXFLAGS -Wcast-qual"
-	#CXXFLAGS="$CXXFLAGS -Wconversion"
 	CXXFLAGS="$CXXFLAGS -Wfloat-equal"
 	CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
 	CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
-	#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
 	CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
-	#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
 	CXXFLAGS="$CXXFLAGS -Wsign-compare"
 	CXXFLAGS="$CXXFLAGS -Wsign-promo"
 	CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
 	CXXFLAGS="$CXXFLAGS -Wwrite-strings"
-
-	#CXXFLAGS="$CXXFLAGS -Weffc++"
 	CXXFLAGS="$CXXFLAGS -Wno-unused"
 	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
 	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
 
-	#LDFLAGS="-Wl,-read_only_relocs,suppress"
-	#LIBS=""
-	#if [ -f /opt/local/lib/libgmp.a ]; then
-	#    LIBS="$LIBS /opt/local/lib/libgmp.a"
-	#fi
-	#if [ -f /usr/lib/gcc/i686-apple-darwin9/4.2.1/libgcc_static.a ]; then
-	#    LIBS="$LIBS /usr/lib/gcc/i686-apple-darwin9/4.2.1/libgcc_static.a"
-	#fi
-
+        # These cause problems on some systems
+	#CXXFLAGS="$CXXFLAGS -Wconversion"
+	#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
+	#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
+	#CXXFLAGS="$CXXFLAGS -Weffc++"
 	shift 1 ;;
 
     --debug)
