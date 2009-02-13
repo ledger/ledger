@@ -126,7 +126,9 @@ void process_environment(const char ** envp, const string& tag,
 
       if (*q == '=') {
 	try {
-	  process_option(string(buf), scope, q + 1, string(*p, q - *p));
+	  string value = string(*p, q - *p);
+	  if (! value.empty())
+	    process_option(string(buf), scope, q + 1, value);
 	}
 	catch (const std::exception& err) {
 	  add_error_context("While parsing environment variable option '"
