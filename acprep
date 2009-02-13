@@ -47,19 +47,38 @@ do
 done
 
 
-INCDIRS="-isystem /usr/local/include"
-INCDIRS="$INCDIRS -isystem /opt/local/include"
-INCDIRS="$INCDIRS -isystem /usr/local/include/boost-$BOOST_VERSION"
-INCDIRS="$INCDIRS -isystem $PYTHON_HOME/include/python$PYTHON_VERSION"
-
-
 USE_GLIBCXX_DEBUG=true
 CXXFLAGS=""
 ARCHFLAGS=""
-LDARCHFLAGS=""
 LDFLAGS=""
-LIBDIRS="-L/usr/local/lib -L$PYTHON_HOME/lib -L/opt/local/lib"
-LIBDIRS="$LIBDIRS -L$PYTHON_HOME/lib/python$PYTHON_VERSION/config"
+LDARCHFLAGS=""
+
+
+INCDIRS=""
+for include in					\
+    /usr/local/include				\
+    /usr/local/include/boost-$BOOST_VERSION	\
+    $PYTHON_HOME/include/python$PYTHON_VERSION	\
+    /opt/local/include				\
+    /sw/include
+do
+    if [ -d "$include" ]; then
+	INCDIRS="$INCDIRS -isystem $include"
+    fi
+done
+
+LIBDIRS=""
+for lib in						\
+    /usr/local/lib					\
+    $PYTHON_HOME/lib					\
+    $PYTHON_HOME/lib/python$PYTHON_VERSION/config	\
+    /opt/local/lib					\
+    /sw/lib
+do
+    if [ -d "$lib" ]; then
+	LIBDIRS="$LIBDIRS -L$lib"
+    fi
+done
 
 
 SYSTEM=$(uname -s)
