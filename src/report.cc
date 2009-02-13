@@ -60,7 +60,8 @@ report_t::report_t(session_t& _session)
     "%48|%-.38A %22.108t %!22.132T\n");
 
   HANDLER(print_format_).on(
-    "%(entry.date)%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
+    "%(format_date(entry.date, \"%Y/%m/%d\"))"
+    "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
     "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
     "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
     "%-34(account)"
