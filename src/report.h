@@ -217,7 +217,12 @@ public:
      expr = args[0].to_string();
    });
 
-  OPTION(report_t, amount_data); // -j
+  OPTION_(report_t, amount_data, DO() {
+#if 0
+      format_string = session.plot_amount_format;
+#endif
+    }); // -j
+
   OPTION(report_t, anon);
   OPTION(report_t, ansi);
   OPTION(report_t, ansi_invert);
@@ -431,9 +436,27 @@ public:
      expr = args[0].to_string();
    });
 
-  OPTION(report_t, total_data); // -J
+  OPTION_(report_t, total_data, DO() {
+#if 0
+      format_string = session.plot_total_format;
+#endif
+    }); // -J
+
   OPTION(report_t, totals);
-  OPTION(report_t, truncate_);
+
+  OPTION_(report_t, truncate_, DO_(args) {
+#if 0
+      std::string style(optarg);
+      if (style == "leading")
+	format_t::elision_style = format_t::TRUNCATE_LEADING;
+      else if (style == "middle")
+	format_t::elision_style = format_t::TRUNCATE_MIDDLE;
+      else if (style == "trailing")
+	format_t::elision_style = format_t::TRUNCATE_TRAILING;
+      else if (style == "abbrev")
+	format_t::elision_style = format_t::ABBREVIATE;
+#endif
+    });
 
   OPTION_(report_t, unbudgeted, DO() {
       parent->budget_flags = BUDGET_UNBUDGETED;
