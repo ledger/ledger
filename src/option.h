@@ -106,7 +106,8 @@ public:
 
   string& str() {
     assert(handled);
-    assert(value);
+    if (! value)
+      throw_(std::runtime_error, "No argument provided for " << desc());
     return value.as_string_lval();
   }
 
