@@ -488,7 +488,23 @@ void interval_xacts::operator()(xact_t& xact)
       while (date >= (temp = interval.increment(quant))) {
 	if (quant == temp)
 	  break;
+	interval.begin = quant;
 	quant = temp;
+
+	// Generate a null transaction, so the intervening periods can be seen
+	// when -E is used, or if the calculated amount ends up being non-zero
+	account_t empty_account(NULL, "<Empty>");
+	entry_t null_entry;
+	null_entry.add_flags(ITEM_TEMP);
+	null_entry._date = quant;
+	xact_t null_xact(&empty_account);
+	null_xact.add_flags(ITEM_TEMP);
+	null_xact.amount = 0L;
+	null_entry.add_xact(&null_xact);
+
+	last_xact = &null_xact;
+	subtotal_xacts::operator()(null_xact);
+	report_subtotal(quant);
       }
       start = interval.begin = quant;
     }
