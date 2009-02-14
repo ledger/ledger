@@ -205,49 +205,4 @@ account_t * sorted_accounts_iterator::operator()()
   return account;
 }
 
-#if 0
-// jww (2008-08-03): This needs to be changed into a commodities->xacts
-// iterator.
-
-// jww (2008-08-03): We then could also use a payees->xacts iterator
-
-void walk_commodities(commodity_pool_t::commodities_by_ident& commodities,
-		      item_handler<xact_t>& handler)
-{
-  std::list<xact_t>    xact_temps;
-  std::list<entry_t>   entry_temps;
-  std::list<account_t> acct_temps;
-
-  for (commodity_pool_t::commodities_by_ident::iterator
-	 i = commodities.begin();
-       i != commodities.end();
-       i++) {
-    if ((*i)->has_flags(COMMODITY_NOMARKET))
-      continue;
-
-    entry_temps.push_back(entry_t());
-    acct_temps.push_back(account_t(NULL, (*i)->symbol()));
-
-    if ((*i)->history())
-      foreach (const commodity_t::history_map::value_type& pair,
-	       (*i)->history()->prices) {
-	entry_temps.back()._date = pair.first.date();
-
-	xact_temps.push_back(xact_t(&acct_temps.back()));
-	xact_t& temp = xact_temps.back();
-	temp.entry  = &entry_temps.back();
-	temp.amount = pair.second;
-	temp.add_flags(XACT_TEMP);
-	entry_temps.back().add_xact(&temp);
-
-	handler(xact_temps.back());
-      }
-  }
-
-  handler.flush();
-
-  clear_entries_xacts(entry_temps);
-}
-#endif
-
 } // namespace ledger
