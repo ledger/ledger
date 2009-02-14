@@ -403,7 +403,7 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
     out_date << format_date(finish, string(fmt));
   }
   else {
-    out_date << format_date(finish);
+    out_date << format_date(finish, std::string("- ") + output_date_format);
   }
 
   entry_temps.push_back(entry_t());
@@ -455,11 +455,8 @@ void interval_xacts::report_subtotal(const date_t& date)
 {
   assert(last_xact);
 
-  start = interval.begin;
-  if (is_valid(date))
-    finish = date - gregorian::days(1);
-  else
-    finish = last_xact->date();
+  start	 = interval.begin;
+  finish = date - gregorian::days(1);
 
   subtotal_xacts::report_subtotal();
 

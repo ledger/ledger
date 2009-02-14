@@ -591,11 +591,11 @@ public:
     TRACE_DTOR(interval_xacts);
   }
 
-  void report_subtotal(const date_t& moment = date_t());
+  void report_subtotal(const date_t& moment);
 
   virtual void flush() {
     if (last_xact)
-      report_subtotal();
+      report_subtotal(last_xact->date());
     subtotal_xacts::flush();
   }
   virtual void operator()(xact_t& xact);

@@ -148,6 +148,13 @@ public:
     return true;
   }
 
+  void prefix_to_period(const string& str) {
+    if (! HANDLED(period_))
+      HANDLER(period_).on(str);
+    else
+      HANDLER(period_).on(str + " " + HANDLER(period_).str());
+  }
+
   void append_predicate(const string& str) {
     if (HANDLED(limit_))
       HANDLER(limit_).on(string("(") + HANDLER(limit_).str() + ")&" + str);
@@ -258,7 +265,12 @@ public:
   OPTION(report_t, cost);
   OPTION(report_t, csv_format_);
   OPTION(report_t, current); // -c
-  OPTION(report_t, daily);
+
+  OPTION_(report_t, daily, DO() {
+      // This will turn on HANDLER(period_)
+      parent->prefix_to_period("daily");
+    });
+
   OPTION(report_t, date_format_); // -y
   OPTION(report_t, deviation); // -D
 
@@ -329,7 +341,10 @@ public:
       parent->HANDLER(display_total_).on("market_value(total_expr)");
     });
 
-  OPTION(report_t, monthly); // -M
+  OPTION_(report_t, monthly, DO() { // -M
+      // This will turn on HANDLER(period_)
+      parent->prefix_to_period("monthly");
+    });
 
   OPTION_(report_t, only_, DO_(args) { // -d
       parent->append_secondary_predicate(args[0].to_string());
@@ -366,7 +381,11 @@ public:
       parent->HANDLER(total_).on("total");
     });
 
-  OPTION(report_t, quarterly);
+  OPTION_(report_t, quarterly, DO() {
+      // This will turn on HANDLER(period_)
+      parent->prefix_to_period("quarterly");
+    });
+
   OPTION(report_t, real); // -R
   OPTION(report_t, register_format_);
   OPTION(report_t, related); // -r
@@ -417,10 +436,18 @@ public:
       parent->append_predicate("uncleared|pending");
     });
 
-  OPTION(report_t, weekly); // -W
+  OPTION_(report_t, weekly, DO() { // -W
+      // This will turn on HANDLER(period_)
+      parent->prefix_to_period("weekly");
+    });
+
   OPTION(report_t, wide); // -w
   OPTION(report_t, wide_register_format_);
-  OPTION(report_t, yearly); // -Y
+
+  OPTION_(report_t, yearly, DO() { // -Y
+      // This will turn on HANDLER(period_)
+      parent->prefix_to_period("yearly");
+    });
 };
 
 // jww (2009-02-10): These should perhaps live elsewhere
