@@ -131,13 +131,11 @@ struct interval_t
   date_t begin;
   date_t end;
 
-  mutable bool advanced;
-
   interval_t(int _days = 0, int _months = 0, int _years = 0,
 	     const date_t& _begin = date_t(),
 	     const date_t& _end   = date_t())
     : years(_years), months(_months), days(_days),
-      begin(_begin), end(_end), advanced(false) {
+      begin(_begin), end(_end) {
     TRACE_CTOR(interval_t, "int, int, int, const date_t&, const date_t&");
   }
   interval_t(const interval_t& other)
@@ -145,12 +143,11 @@ struct interval_t
       months(other.months),
       days(other.days),
       begin(other.begin),
-      end(other.end),
-      advanced(other.advanced) {
+      end(other.end) {
     TRACE_CTOR(interval_t, "copy");
   }
   interval_t(const string& desc)
-    : years(0), months(0), days(0), begin(), end(), advanced(false) {
+    : years(0), months(0), days(0), begin(), end() {
     TRACE_CTOR(interval_t, "const string&");
     std::istringstream stream(desc);
     parse(stream);

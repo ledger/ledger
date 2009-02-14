@@ -126,9 +126,6 @@ date_t interval_t::first(const optional<date_t>& moment) const
 
   date_t quant(begin);
 
-  if (! advanced)
-    advanced = true;
-
   if (moment && *moment > quant) {
     // Find an efficient starting point for the upcoming while loop.
     // We want a date early enough that the range will be correct, but
