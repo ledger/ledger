@@ -80,6 +80,18 @@ namespace {
     return xact.has_flags(XACT_CALCULATED);
   }
 
+  value_t get_virtual(xact_t& xact) {
+    return xact.has_flags(XACT_VIRTUAL);
+  }
+
+  value_t get_real(xact_t& xact) {
+    return ! xact.has_flags(XACT_VIRTUAL);
+  }
+
+  value_t get_actual(xact_t& xact) {
+    return ! xact.has_flags(XACT_AUTO);
+  }
+
   value_t get_entry(xact_t& xact) {
     return value_t(static_cast<scope_t *>(xact.entry));
   }
@@ -172,6 +184,8 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "actual")
+      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
     break;
 
   case 'c':
@@ -188,6 +202,11 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_entry>);
     break;
 
+  case 'r':
+    if (name == "real")
+      return WRAP_FUNCTOR(get_wrapper<&get_real>);
+    break;
+
   case 'p':
     if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
@@ -198,6 +217,11 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     else if (name == "total_cost")
       return WRAP_FUNCTOR(get_wrapper<&get_total_cost>);
+    break;
+
+  case 'v':
+    if (name == "virtual")
+      return WRAP_FUNCTOR(get_wrapper<&get_virtual>);
     break;
 
   case 'x':

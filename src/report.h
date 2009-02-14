@@ -197,7 +197,11 @@ public:
 
   OPTION(report_t, abbrev_len_);
   OPTION(report_t, account_);
-  OPTION(report_t, actual); // -L
+
+  OPTION_(report_t, actual, DO() { // -L
+      parent->append_predicate("actual");
+    });
+
   OPTION_(report_t, add_budget, DO() {
       parent->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
     });
@@ -386,7 +390,10 @@ public:
       parent->prefix_to_period("quarterly");
     });
 
-  OPTION(report_t, real); // -R
+  OPTION_(report_t, real, DO() { // -R
+      parent->append_predicate("real");
+    });
+
   OPTION(report_t, register_format_);
   OPTION(report_t, related); // -r
   OPTION(report_t, related_all);
