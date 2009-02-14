@@ -37,18 +37,61 @@ bool item_t::use_effective_date = false;
 
 bool item_t::has_tag(const string& tag) const
 {
-  if (! metadata)
+  DEBUG("item.meta", "Checking if item has tag: " << tag);
+  if (! metadata) {
+    DEBUG("item.meta", "Item has no metadata at all");
     return false;
+  }
   string_map::const_iterator i = metadata->find(tag);
+  if (SHOW_DEBUG("item.meta")) {
+    if (i == metadata->end())
+      DEBUG("item.meta", "Item does not have this tag");
+    else
+      DEBUG("item.meta", "Item has the tag!");
+  }
   return i != metadata->end();
+}
+
+bool item_t::has_tag(const mask_t& tag_mask,
+		     const optional<mask_t>& value_mask) const
+{
+  if (metadata) {
+    foreach (const string_map::value_type& data, *metadata) {
+      if (tag_mask.match(data.first)) {
+	if (! value_mask)
+	  return true;
+	else if (data.second)
+	  return value_mask->match(*data.second);
+      }
+    }
+  }
+  return false;
 }
 
 optional<string> item_t::get_tag(const string& tag) const
 {
+  DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
+    DEBUG("item.meta", "Item has metadata");
     string_map::const_iterator i = metadata->find(tag);
-    if (i != metadata->end())
+    if (i != metadata->end()) {
+      DEBUG("item.meta", "Found the item!");
       return (*i).second;
+    }
+  }
+  return none;
+}
+
+optional<string> item_t::get_tag(const mask_t& tag_mask,
+				 const optional<mask_t>& value_mask) const
+{
+  if (metadata) {
+    foreach (const string_map::value_type& data, *metadata) {
+      if (tag_mask.match(data.first) &&
+	  (! value_mask ||
+	   (data.second && value_mask->match(*data.second))))
+	return data.second;
+    }
   }
   return none;
 }
@@ -146,48 +189,15 @@ namespace {
 
   value_t has_tag(call_scope_t& args) {
     item_t& item(find_scope<item_t>(args));
-    if (! item.metadata)
-      return false;
 
-    IF_DEBUG("item.meta") {
-	foreach (const item_t::string_map::value_type& data, *item.metadata) {
-	  *_log_stream << "  Tag: " << data.first << "\n";
-	  *_log_stream << "Value: ";
-	  if (data.second)
-	    *_log_stream << *data.second << "\n";
-	  else
-	    *_log_stream << "<none>\n";
-	}
-    }
-
-    value_t& arg(args[0]);
-
-    if (arg.is_string()) {
-      if (args.size() == 1) {
+    if (args.size() == 1) {
+      if (args[0].is_string())
 	return item.has_tag(args[0].as_string());
-      }
-      else if (optional<string> tag = item.get_tag(args[0].as_string())) {
-	if (args[1].is_string()) {
-	  return args[1].as_string() == *tag;
-	}
-	else if (args[1].is_mask()) {
-	  return args[1].as_mask().match(*tag);
-	}
-      }
-    }
-    else if (arg.is_mask()) {
-      foreach (const item_t::string_map::value_type& data, *item.metadata) {
-	if (arg.as_mask().match(data.first)) {
-	  if (args.size() == 1)
-	    return true;
-	  else if (data.second) {
-	    if (args[1].is_string())
-	      return args[1].as_string() == *data.second;
-	    else if (args[1].is_mask())
-	      return args[1].as_mask().match(*data.second);
-	  }
-	}
-      }
+      else if (args[0].is_mask())
+	return item.has_tag(args[0].as_mask());
+    } else {
+      return item.has_tag(args[0].to_mask(),
+			  args[1].to_mask());
     }
     return false;
   }

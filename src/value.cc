@@ -943,6 +943,9 @@ void value_t::in_place_cast(type_t cast_type)
     case AMOUNT:
       set_amount(amount_t(as_string()));
       return;
+    case MASK:
+      set_mask(as_string());
+      return;
     default:
       break;
     }

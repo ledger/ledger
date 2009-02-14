@@ -107,6 +107,14 @@ public:
     TRACE_DTOR(xact_t);
   }
 
+  virtual bool has_tag(const string& tag) const;
+  virtual bool has_tag(const mask_t& tag_mask,
+		       const optional<mask_t>& value_mask = none) const;
+
+  virtual optional<string> get_tag(const string& tag) const;
+  virtual optional<string> get_tag(const mask_t& tag_mask,
+				   const optional<mask_t>& value_mask = none) const;
+
   virtual date_t date() const;
   virtual optional<date_t> effective_date() const;
 

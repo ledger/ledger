@@ -36,6 +36,44 @@
 
 namespace ledger {
 
+bool xact_t::has_tag(const string& tag) const
+{
+  if (item_t::has_tag(tag))
+    return true;
+  if (entry)
+    return entry->has_tag(tag);
+  return false;
+}
+
+bool xact_t::has_tag(const mask_t& tag_mask,
+		     const optional<mask_t>& value_mask) const
+{
+  if (item_t::has_tag(tag_mask, value_mask))
+    return true;
+  if (entry)
+    return entry->has_tag(tag_mask, value_mask);
+  return false;
+}
+
+optional<string> xact_t::get_tag(const string& tag) const
+{
+  if (optional<string> value = item_t::get_tag(tag))
+    return value;
+  if (entry)
+    return entry->get_tag(tag);
+  return none;
+}
+
+optional<string> xact_t::get_tag(const mask_t& tag_mask,
+				 const optional<mask_t>& value_mask) const
+{
+  if (optional<string> value = item_t::get_tag(tag_mask, value_mask))
+    return value;
+  if (entry)
+    return entry->get_tag(tag_mask, value_mask);
+  return none;
+}
+
 date_t xact_t::date() const
 {
   if (item_t::use_effective_date) {
