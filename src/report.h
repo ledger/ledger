@@ -238,7 +238,11 @@ public:
 
   OPTION(report_t, by_payee); // -P
   OPTION(report_t, cache_);
-  OPTION(report_t, cleared); // -C
+
+  OPTION_(report_t, cleared, DO() { // -C
+      parent->append_predicate("cleared");
+    });
+
   OPTION(report_t, code_as_payee);
 
   OPTION_(report_t, collapse, DO() { // -n
@@ -333,7 +337,11 @@ public:
 
   OPTION(report_t, output_); // -o
   OPTION(report_t, pager_);
-  OPTION(report_t, pending);
+
+  OPTION_(report_t, pending, DO() { // -C
+      parent->append_predicate("pending");
+    });
+
   OPTION(report_t, percentage); // -%
   OPTION(report_t, performance); // -g
   OPTION(report_t, period_); // -p
@@ -405,7 +413,10 @@ public:
       parent->budget_flags = BUDGET_UNBUDGETED;
     });
 
-  OPTION(report_t, uncleared); // -U
+  OPTION_(report_t, uncleared, DO() { // -U
+      parent->append_predicate("uncleared|pending");
+    });
+
   OPTION(report_t, weekly); // -W
   OPTION(report_t, wide); // -w
   OPTION(report_t, wide_register_format_);
