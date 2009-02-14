@@ -162,10 +162,10 @@ struct interval_t
   }
 
   void   set_start(const date_t& moment) {
-    begin = moment;
+    begin = first(moment);
   }
 
-  date_t first(const optional<date_t>& moment = none) const;
+  date_t first(const optional<date_t>& moment = none);
   date_t increment(const date_t&) const;
 
   void   parse(std::istream& in);

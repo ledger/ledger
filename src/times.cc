@@ -118,21 +118,19 @@ date_t parse_date(const char * str, int current_year)
   return gregorian::date_from_tm(when);
 }
 
-date_t interval_t::first(const optional<date_t>& moment) const
+date_t interval_t::first(const optional<date_t>& moment)
 {
-  if (! is_valid(begin))
-    throw_(date_error,
-	   "Use of interval_t::first() with specifying a range start");
+  if (! is_valid(begin)) {
+    // Find an efficient starting point for the upcoming while loop.  We want
+    // a date early enough that the range will be correct, but late enough
+    // that we don't spend hundreds of thousands of loops skipping through
+    // time.
+    begin = date_t(moment->year(), gregorian::Jan, 1);
+  }
 
   date_t quant(begin);
 
-  if (moment && *moment > quant) {
-    // Find an efficient starting point for the upcoming while loop.
-    // We want a date early enough that the range will be correct, but
-    // late enough that we don't spend hundreds of thousands of loops
-    // skipping through time.
-
-    date_t quant(moment->year(), gregorian::Jan, 1);
+  if (moment && *moment >= quant) {
     date_t temp;
     while (*moment >= (temp = increment(quant))) {
       if (quant == temp)
