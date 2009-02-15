@@ -225,12 +225,6 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
   return result.release();
 }
 
-namespace {
-  inline void mark_plain(std::ostream& out) {
-    out << "\e[0m";
-  }
-}
-
 void format_t::format(std::ostream& out_str, scope_t& scope)
 {
   for (element_t * elem = elements.get(); elem; elem = elem->next.get()) {
