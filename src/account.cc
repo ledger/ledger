@@ -161,6 +161,16 @@ namespace {
     return account.xdata_->total;
   }
 
+  value_t get_count(account_t& account) {
+    assert(account.xdata_);
+    return account.xdata_->total_count;
+  }
+
+  value_t get_subcount(account_t& account) {
+    assert(account.xdata_);
+    return account.xdata_->count;
+  }
+
   value_t get_amount(account_t& account) {
     assert(account.xdata_);
     return account.xdata_->value;
@@ -196,6 +206,11 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     break;
 
+  case 'c':
+    if (name == "count")
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    break;
+
   case 'd':
     if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
@@ -206,6 +221,11 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 'p':
     if (name == "partial_account")
       return WRAP_FUNCTOR(get_wrapper<&get_partial_name>);
+    break;
+
+  case 's':
+    if (name == "subcount")
+      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 't':
@@ -249,7 +269,7 @@ void account_t::calculate_sums(expr_t& amount_expr)
     xdata_t& child_xd((*pair.second).xdata());
     if (! child_xd.total.is_null()) {
       add_or_set_value(xd.total, child_xd.total);
-      xd.total_count += child_xd.total_count + child_xd.count;
+      xd.total_count += child_xd.total_count;
     } else {
       assert(child_xd.total_count == 0);
       assert(child_xd.count == 0);
