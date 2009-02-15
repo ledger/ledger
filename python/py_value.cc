@@ -193,8 +193,6 @@ void export_value()
 
     .def("value", &value_t::value, value_overloads())
 
-    .def("cost", &value_t::cost)
-
     .def("__nonzero__", &value_t::is_nonzero)
     .def("is_nonzero", &value_t::is_nonzero)
     .def("is_realzero", &value_t::is_realzero)

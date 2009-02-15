@@ -157,7 +157,7 @@ namespace {
   value_t get_cost(xact_t& xact) {
     if (xact.has_xdata() &&
 	xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
-      return xact.xdata().value.cost();
+      return xact.xdata().value;
     } else {
       if (xact.cost)
 	return *xact.cost;
@@ -173,18 +173,11 @@ namespace {
       return xact.amount;
   }
 
-  value_t get_total_cost(xact_t& xact) {
-    if (xact.xdata_)
-      return xact.xdata_->total.cost();
-    else if (xact.cost)
-      return *xact.cost;
-    else
-      return xact.amount;
-  }
-
   value_t get_count(xact_t& xact) {
-    assert(xact.xdata_);
-    return xact.xdata_->count;
+    if (xact.xdata_)
+      return xact.xdata_->count;
+    else
+      return 1L;
   }
 
   value_t get_account(call_scope_t& scope)
@@ -260,8 +253,6 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 't':
     if (name[1] == '\0' || name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    else if (name == "total_cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_total_cost>);
     break;
 
   case 'v':

@@ -1245,22 +1245,6 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   return NULL_VALUE;
 }
 
-value_t value_t::cost() const
-{
-  switch (type()) {
-  case INTEGER:
-  case AMOUNT:
-  case BALANCE:
-    return *this;
-
-  default:
-    break;
-  }
-
-  throw_(value_error, "Cannot find the cost of " << label());
-  return NULL_VALUE;
-}
-
 void value_t::print(std::ostream&           out,
 		    const int	            first_width,
 		    const int               latter_width,
