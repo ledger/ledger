@@ -150,6 +150,12 @@ public:
 			 const int account_abbrev_length = -1);
 };
 
+#define FMT_PREFIX "fmt_"
+#define FMT_PREFIX_LEN 4
+
+#define WANT_FMT()					\
+  (std::strncmp(p, FMT_PREFIX, FMT_PREFIX_LEN) == 0)
+
 } // namespace ledger
 
 #endif // _FORMAT_H

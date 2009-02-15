@@ -198,15 +198,11 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       break;
     }
 
-    default: {
+    default:
       current->type  = element_t::EXPR;
-      char buf[2];
-      buf[0] = *p;
-      buf[1] = '\0';
-      current->chars = buf;
-      current->expr.parse(buf);
+      current->chars = string(FMT_PREFIX) + *p;
+      current->expr.parse(current->chars);
       break;
-    }
     }
   }
 
