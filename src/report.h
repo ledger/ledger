@@ -231,7 +231,7 @@ public:
   OPTION(report_t, ansi_invert);
 
   OPTION_(report_t, average, DO() { // -A
-      parent->HANDLER(display_total_).set_expr("total//count");
+      parent->HANDLER(display_total_).set_expr("total/count");
     });
 
   OPTION(report_t, balance_format_);

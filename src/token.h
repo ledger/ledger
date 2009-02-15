@@ -80,7 +80,8 @@ struct expr_t::token_t : public noncopyable
     MINUS,			// -
     PLUS,			// +
     STAR,			// *
-    KW_DIV,			// /
+    SLASH,			// /
+    KW_DIV,			// div
 
     EXCLAM,			// !, not
     KW_AND,			// &, &&, and

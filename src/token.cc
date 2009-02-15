@@ -272,14 +272,9 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '/': {
     in.get(c);
-    c = in.peek();
-    if (c == '/') {
-      in.get(c);
-      symbol[1] = c;
-      symbol[2] = '\0';
-      kind = KW_DIV;
-      length = 2;
-    } else {
+    if (pflags & PARSE_OP_CONTEXT) { // operator context
+      kind = SLASH;
+    } else {			// terminal context
       // Read in the regexp
       char buf[256];
       READ_INTO_(in, buf, 255, c, length, c != '/');
