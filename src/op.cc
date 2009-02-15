@@ -97,7 +97,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 
   value_t result;
 
-  DEBUG("op.calc", "calculating '" << op_context(this) << "'");
+  DEBUG("expr.calc", "calculating '" << op_context(this) << "'");
 
   switch (kind) {
   case VALUE:
@@ -295,7 +295,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     break;
   }
 
-  DEBUG("op.calc", "result is '" << result << "'");
+  DEBUG("expr.calc", "result is '" << result << "'");
 
   return result;
 
