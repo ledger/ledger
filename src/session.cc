@@ -165,7 +165,7 @@ void session_t::read_journal_files()
   INFO("Found " << count << " entries");
 }
 
-void session_t::reread_journal_files()
+void session_t::close_journal_files()
 {
   journal.reset();
   master.reset();
@@ -176,8 +176,6 @@ void session_t::reread_journal_files()
   amount_t::initialize(commodity_pool);
   master.reset(new account_t);
   journal.reset(new journal_t(master.get()));
-
-  read_journal_files();
 }
 
 void session_t::clean_xacts()

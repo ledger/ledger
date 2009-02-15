@@ -144,7 +144,8 @@ public:
   }
 
   value_t reload_command(call_scope_t& scope) {
-    session.reread_journal_files();
+    session.close_journal_files();
+    session.read_journal_files();
     return true;
   }
 
