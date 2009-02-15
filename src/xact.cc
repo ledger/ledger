@@ -316,13 +316,9 @@ void xact_t::add_to_value(value_t& value, expr_t& expr)
   if (xdata_ && xdata_->has_flags(XACT_EXT_COMPOUND)) {
     add_or_set_value(value, xdata_->value);
   }
-
-  if (! xdata_ || ! xdata_->has_flags(XACT_EXT_NO_TOTAL)) {
+  else if (! xdata_ || ! xdata_->has_flags(XACT_EXT_NO_TOTAL)) {
     bind_scope_t bound_scope(*expr.get_context(), *this);
-    if (value.is_null())
-      value = amount_t(0L);
-
-    value += expr.calc(bound_scope);
+    add_or_set_value(value, expr.calc(bound_scope));
   }
 }
 
