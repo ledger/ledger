@@ -228,7 +228,7 @@ namespace {
 		    unsigned int	  flags,
 		    std::list<xact_t>&    temps,
 		    item_handler<xact_t>& handler,
-		    const date_t&         date		  = date_t())
+		    const date_t&         date = date_t())
   {
     temps.push_back(xact_t(account));
     xact_t& xact(temps.back());
@@ -239,13 +239,13 @@ namespace {
     // If the account for this xact is all virtual, then report the xact as
     // such.  This allows subtotal reports to show "(Account)" for accounts
     // that contain only virtual xacts.
-
-    if (account && account->has_xdata())
+    if (account && account->has_xdata()) {
       if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
 	xact.add_flags(XACT_VIRTUAL);
 	if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
 	  xact.add_flags(XACT_MUST_BALANCE);
       }
+    }
 
     xact_t::xdata_t& xdata(xact.xdata());
 
