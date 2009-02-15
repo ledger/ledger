@@ -239,8 +239,7 @@ public:
 
   OPTION_(report_t, basis, DO() { // -B
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).on("cost");
-      parent->HANDLER(total_).on("total_cost");
+      parent->HANDLER(amount_).set_expr("cost");
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
@@ -388,8 +387,8 @@ public:
 
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).on("price");
-      parent->HANDLER(total_).on("total_price");
+      parent->HANDLER(amount_).set_expr("price");
+      parent->HANDLER(total_).set_expr("total_price");
     });
 
   OPTION(report_t, price_exp_); // -Z
@@ -399,8 +398,8 @@ public:
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).on("amount");
-      parent->HANDLER(total_).on("total");
+      parent->HANDLER(amount_).set_expr("amount");
+      parent->HANDLER(total_).set_expr("total");
     });
 
   OPTION_(report_t, quarterly, DO() {
