@@ -493,11 +493,13 @@ void interval_xacts::operator()(xact_t& xact)
 
 	// Generate a null transaction, so the intervening periods can be seen
 	// when -E is used, or if the calculated amount ends up being non-zero
-	account_t empty_account(NULL, "<Empty>");
-	entry_t null_entry;
+	entry_temps.push_back(entry_t());
+	entry_t& null_entry = entry_temps.back();
 	null_entry.add_flags(ITEM_TEMP);
 	null_entry._date = quant;
-	xact_t null_xact(&empty_account);
+
+	xact_temps.push_back(xact_t(&empty_account));
+	xact_t& null_xact = xact_temps.back();
 	null_xact.add_flags(ITEM_TEMP);
 	null_xact.amount = 0L;
 	null_entry.add_xact(&null_xact);

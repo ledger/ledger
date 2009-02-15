@@ -570,22 +570,19 @@ class interval_xacts : public subtotal_xacts
   xact_t *   last_xact;
   bool       started;
 
+  std::list<entry_t> entry_temps;
+  std::list<xact_t>  xact_temps;
+  account_t          empty_account;
+
   interval_xacts();
 
 public:
   interval_xacts(xact_handler_ptr  _handler, expr_t& amount_expr,
-		 const interval_t& _interval)
+		 const interval_t& _interval, account_t * master = NULL)
     : subtotal_xacts(_handler, amount_expr), interval(_interval),
-      last_xact(NULL), started(false) {
+      last_xact(NULL), started(false), empty_account(master, "<Empty>") {
     TRACE_CTOR(interval_xacts,
 	       "xact_handler_ptr, const interval_t&, bool");
-  }
-  interval_xacts(xact_handler_ptr _handler, expr_t& amount_expr,
-		 const string&	  _interval)
-    : subtotal_xacts(_handler, amount_expr), interval(_interval),
-      last_xact(NULL), started(false) {
-    TRACE_CTOR(interval_xacts,
-	       "xact_handler_ptr, const string&, bool");
   }
   virtual ~interval_xacts() throw() {
     TRACE_DTOR(interval_xacts);
