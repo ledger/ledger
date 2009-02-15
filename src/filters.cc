@@ -256,10 +256,8 @@ namespace {
 
     switch (value.type()) {
     case value_t::BOOLEAN:
-    case value_t::DATETIME:
-    case value_t::DATE:
     case value_t::INTEGER:
-      temp.cast(value_t::AMOUNT);
+      temp.in_place_cast(value_t::AMOUNT);
       // fall through...
 
     case value_t::AMOUNT:
@@ -271,6 +269,8 @@ namespace {
       flags |= XACT_EXT_COMPOUND;
       break;
 
+    case value_t::DATETIME:
+    case value_t::DATE:
     default:
       assert(false);
       break;
