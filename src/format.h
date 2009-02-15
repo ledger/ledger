@@ -65,7 +65,6 @@ class format_t : public noncopyable
   struct element_t : public supports_flags<>, public noncopyable
   {
 #define ELEMENT_ALIGN_LEFT 0x01
-#define ELEMENT_FORMATTED  0x02
 
     enum kind_t {
       STRING,

@@ -48,16 +48,16 @@ report_t::report_t(session_t& _session)
   HANDLER(register_format_).on(
     "%-.9(date) %-.20(payee)"
     " %-.23(truncate(account, 23, 2))"
-    " %!12(print_balance(strip(display_amount), 12, 67))"
-    " %!12(print_balance(strip(display_total), 12, 80, true))\n%/"
+    " %12(print_balance(strip(display_amount), 12, 67))"
+    " %12(print_balance(strip(display_total), 12, 80, true))\n%/"
     "%31|%-.23(truncate(account, 23, 2))"
-    " %!12(print_balance(strip(display_amount), 12, 67))"
-    " %!12(print_balance(strip(display_total), 12, 80, true))\n");
+    " %12(print_balance(strip(display_amount), 12, 67))"
+    " %12(print_balance(strip(display_total), 12, 80, true))\n");
 
   // jww (2009-02-06): Most of these still need to be defined
   HANDLER(wide_register_format_).on(
-    "%-.9D  %-.35P %-.39A %22.108t %!22.132T\n%/"
-    "%48|%-.38A %22.108t %!22.132T\n");
+    "%-.9D  %-.35P %-.39A %22.108t %22.132T\n%/"
+    "%48|%-.38A %22.108t %22.132T\n");
 
   HANDLER(print_format_).on(
     "%(format_date(entry.date, \"%Y/%m/%d\"))"

@@ -136,13 +136,10 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
     }
 
     ++p;
-    while (*p == '!' || *p == '-') {
+    while (*p == '-') {
       switch (*p) {
       case '-':
 	current->add_flags(ELEMENT_ALIGN_LEFT);
-	break;
-      case '!':
-	current->add_flags(ELEMENT_FORMATTED);
 	break;
       }
       ++p;
@@ -283,8 +280,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
     unistring temp(out.str());
 
     string result;
-    if (! elem->has_flags(ELEMENT_FORMATTED) &&
-	elem->max_width > 0 && elem->max_width < temp.length()) {
+    if (elem->max_width > 0 && elem->max_width < temp.length()) {
       result = truncate(temp, elem->max_width);
     } else {
       result = temp.extract();
