@@ -210,11 +210,14 @@ public:
   (report_t, amount_, // -t
    expr_t expr;
    CTOR(report_t, amount_) {
-     expr = "amount";
-     on("amount");
+     set_expr("amount");
+   }
+   void set_expr(const string& str) {
+     expr = str;
+     on(str);
    }
    DO_(args) {
-     expr = args[0].to_string();
+     set_expr(args[0].to_string());
    });
 
   OPTION_(report_t, amount_data, DO() {
@@ -291,22 +294,28 @@ public:
   (report_t, display_amount_,
    expr_t expr;
    CTOR(report_t, display_amount_) {
-     expr = "amount_expr";
-     on("amount_expr");
+     set_expr("amount_expr");
+   }
+   void set_expr(const string& str) {
+     expr = str;
+     on(str);
    }
    DO_(args) {
-     expr = args[0].to_string();
+     set_expr(args[0].to_string());
    });
 
   OPTION__
   (report_t, display_total_,
    expr_t expr;
    CTOR(report_t, display_total_) {
-     expr = "total_expr";
-     on("total_expr");
+     set_expr("total_expr");
+   }
+   void set_expr(const string& str) {
+     expr = str;
+     on(str);
    }
    DO_(args) {
-     expr = args[0].to_string();
+     set_expr(args[0].to_string());
    });
 
   OPTION(report_t, dow);
@@ -346,8 +355,8 @@ public:
 
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on();
-      parent->HANDLER(display_amount_).on("market_value(amount_expr)");
-      parent->HANDLER(display_total_).on("market_value(total_expr)");
+      parent->HANDLER(display_amount_).set_expr("market_value(amount_expr)");
+      parent->HANDLER(display_total_).set_expr("market_value(total_expr)");
     });
 
   OPTION_(report_t, monthly, DO() { // -M
@@ -429,11 +438,14 @@ public:
   (report_t, total_, // -T
    expr_t expr;
    CTOR(report_t, total_) {
-     expr = "total";
-     on("total");
+     set_expr("total");
+   }
+   void set_expr(const string& str) {
+     expr = str;
+     on(str);
    }
    DO_(args) {
-     expr = args[0].to_string();
+     set_expr(args[0].to_string());
    });
 
   OPTION_(report_t, total_data, DO() {
