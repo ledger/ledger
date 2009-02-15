@@ -1133,20 +1133,22 @@ the default."
   (while (pcomplete-here
 	  (if (eq (save-excursion
 		    (ledger-thing-at-point)) 'entry)
-	      (progn
-		(let ((text (buffer-substring (line-beginning-position)
-					      (line-end-position))))
-		  (delete-region (line-beginning-position)
-				 (line-end-position))
-		  (condition-case err
-		      (ledger-add-entry text t)
-		    ((error)
-		     (insert text))))
-		(forward-line)
-		(goto-char (line-end-position))
-		(search-backward ";" (line-beginning-position) t)
-		(skip-chars-backward " \t0123456789.,")
-		(throw 'pcompleted t))
+	      (if (null current-prefix-arg)
+		  (ledger-entries)  ; this completes against entry names
+		(progn
+		  (let ((text (buffer-substring (line-beginning-position)
+						(line-end-position))))
+		    (delete-region (line-beginning-position)
+				   (line-end-position))
+		    (condition-case err
+			(ledger-add-entry text t)
+		      ((error)
+		       (insert text))))
+		  (forward-line)
+		  (goto-char (line-end-position))
+		  (search-backward ";" (line-beginning-position) t)
+		  (skip-chars-backward " \t0123456789.,")
+		  (throw 'pcompleted t)))
 	    (ledger-accounts)))))
 
 (defun ledger-fully-complete-entry ()
