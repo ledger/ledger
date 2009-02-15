@@ -95,7 +95,7 @@ value_t parse_command(call_scope_t& args)
 
   out << std::endl << "--- Calculated value ---" << std::endl;
   value_t result(expr.calc());
-  result.dump(out);
+  result.strip_annotations(report.what_to_keep()).dump(out);
   out << std::endl;
 
   return 0L;
