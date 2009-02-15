@@ -182,6 +182,11 @@ namespace {
       return xact.amount;
   }
 
+  value_t get_count(xact_t& xact) {
+    assert(xact.xdata_);
+    return xact.xdata_->count;
+  }
+
   value_t get_account(call_scope_t& scope)
   {
     xact_t& xact(find_scope<xact_t>(scope));
@@ -231,6 +236,8 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     else if (name == "cost")
       return WRAP_FUNCTOR(get_wrapper<&get_cost>);
+    else if (name == "count")
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
     else if (name == "calculated")
       return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
     break;
