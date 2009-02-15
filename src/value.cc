@@ -851,6 +851,9 @@ void value_t::in_place_cast(type_t cast_type)
   switch (type()) {
   case BOOLEAN:
     switch (cast_type) {
+    case AMOUNT:
+      set_amount(as_boolean() ? 1L : 0L);
+      return;
     case STRING:
       set_string(as_boolean() ? "true" : "false");
       return;
