@@ -166,7 +166,10 @@ namespace {
 
   value_t get_total(account_t& account) {
     assert(account.xdata_);
-    return account.xdata_->total;
+    if (account.xdata_->total.is_null())
+      return 0L;
+    else
+      return account.xdata_->total;
   }
 
   value_t get_count(account_t& account) {
