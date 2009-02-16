@@ -267,7 +267,7 @@ namespace {
     value_t operator()(call_scope_t& args)
     {
       if (args.value().size() > 0)
-	report.append_predicate
+	report.HANDLER(limit_).append
 	  (args_to_predicate_expr(args.value().as_sequence().begin(),
 				  args.value().as_sequence().end()));
 

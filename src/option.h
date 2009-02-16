@@ -53,6 +53,7 @@ namespace ledger {
 template <typename T>
 class option_t
 {
+protected:
   const char * name;
   std::size_t  name_len;
   const char   ch;

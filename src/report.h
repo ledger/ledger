@@ -158,34 +158,6 @@ public:
     return true;
   }
 
-  void prefix_to_period(const string& str) {
-    if (! HANDLED(period_))
-      HANDLER(period_).on(str);
-    else
-      HANDLER(period_).on(str + " " + HANDLER(period_).str());
-  }
-
-  void append_predicate(const string& str) {
-    if (HANDLED(limit_))
-      HANDLER(limit_).on(string("(") + HANDLER(limit_).str() + ")&" + str);
-    else
-      HANDLER(limit_).on(str);
-  }
-
-  void append_secondary_predicate(const string& str) {
-    if (HANDLED(only_))
-      HANDLER(only_).on(string("(") + HANDLER(only_).str() + ")&" + str);
-    else
-      HANDLER(only_).on(str);
-  }
-
-  void append_display_predicate(const string& str) {
-    if (HANDLED(display_))
-      HANDLER(display_).on(string("(") + HANDLER(display_).str() + ")&" + str);
-    else
-      HANDLER(display_).on(str);
-  }
-
   keep_details_t what_to_keep() {
     return keep_details_t(HANDLED(lots) || HANDLED(lot_prices),
 			  HANDLED(lots) || HANDLED(lot_dates),
@@ -209,7 +181,7 @@ public:
   OPTION(report_t, account_);
 
   OPTION_(report_t, actual, DO() { // -L
-      parent->append_predicate("actual");
+      parent->HANDLER(limit_).append("actual");
     });
 
   OPTION_(report_t, add_budget, DO() {
@@ -241,7 +213,7 @@ public:
   OPTION(report_t, ansi_invert);
 
   OPTION_(report_t, average, DO() { // -A
-      parent->HANDLER(display_total_).set_expr("total/count");
+      parent->HANDLER(display_total_).set_expr("total_expr/count");
     });
 
   OPTION(report_t, balance_format_);
@@ -261,7 +233,7 @@ public:
 
       string predicate =
 	"date>=[" + to_iso_extended_string(interval.begin) + "]";
-      parent->append_predicate(predicate);
+      parent->HANDLER(limit_).append(predicate);
     });
 
   OPTION_(report_t, budget, DO() {
@@ -272,14 +244,14 @@ public:
   OPTION(report_t, cache_);
 
   OPTION_(report_t, cleared, DO() { // -C
-      parent->append_predicate("cleared");
+      parent->HANDLER(limit_).append("cleared");
     });
 
   OPTION(report_t, code_as_payee);
 
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too
-      parent->append_display_predicate("depth<=1");
+      parent->HANDLER(display_).append("depth<=1");
     });
 
   OPTION_(report_t, collapse_if_zero, DO() {
@@ -292,16 +264,24 @@ public:
   OPTION(report_t, current); // -c
 
   OPTION_(report_t, daily, DO() {
-      // This will turn on HANDLER(period_)
-      parent->prefix_to_period("daily");
+      parent->HANDLER(period_).prepend("daily");
     });
 
   OPTION(report_t, date_format_); // -y
   OPTION(report_t, deviation); // -D
 
-  OPTION_(report_t, display_, DO_(args) { // -d
-      parent->append_display_predicate(args[0].to_string());
-    });
+  OPTION__
+  (report_t, display_, // -d
+   CTOR(report_t, display_) {}
+   void append(const string& text) {
+     if (! handled)
+       on(text);
+     else
+       on(string("(") + str() + ")&" + text);
+   }
+   DO_(args) {
+     append(args[0].to_string());
+   });
 
   OPTION__
   (report_t, display_amount_,
@@ -344,7 +324,7 @@ public:
 
       string predicate =
 	"date<[" + to_iso_extended_string(interval.begin) + "]";
-      parent->append_predicate(predicate);
+      parent->HANDLER(limit_).append(predicate);
 #if 0
       terminus = interval.begin;
 #endif
@@ -357,9 +337,18 @@ public:
   OPTION(report_t, head_);
   OPTION(report_t, invert);
 
-  OPTION_(report_t, limit_, DO_(args) { // -l
-      parent->append_predicate(args[0].to_string());
-    });
+  OPTION__
+  (report_t, limit_, // -l
+   CTOR(report_t, limit_) {}
+   void append(const string& text) {
+     if (! handled)
+       on(text);
+     else
+       on(string("(") + str() + ")&" + text);
+   }
+   DO_(args) {
+     append(args[0].to_string());
+   });
 
   OPTION(report_t, lot_dates);
   OPTION(report_t, lot_prices);
@@ -373,24 +362,45 @@ public:
     });
 
   OPTION_(report_t, monthly, DO() { // -M
-      // This will turn on HANDLER(period_)
-      parent->prefix_to_period("monthly");
+      parent->HANDLER(period_).prepend("monthly");
     });
 
-  OPTION_(report_t, only_, DO_(args) { // -d
-      parent->append_secondary_predicate(args[0].to_string());
-    });
+  OPTION__
+  (report_t, only_,
+   CTOR(report_t, only_) {}
+   void append(const string& text) {
+     if (! handled)
+       on(text);
+     else
+       on(string("(") + str() + ")&" + text);
+   }
+   DO_(args) {
+     append(args[0].to_string());
+   });
 
   OPTION(report_t, output_); // -o
   OPTION(report_t, pager_);
 
   OPTION_(report_t, pending, DO() { // -C
-      parent->append_predicate("pending");
+      parent->HANDLER(limit_).append("pending");
     });
 
   OPTION(report_t, percentage); // -%
   OPTION(report_t, performance); // -g
-  OPTION(report_t, period_); // -p
+
+  OPTION__
+  (report_t, period_, // -p
+   CTOR(report_t, period_) {}
+   void prepend(const string& text) {
+     if (! handled)
+       on(text);
+     else
+       on(text + " " + str());
+   }
+   DO_(args) {
+     prepend(args[0].to_string());
+   });
+
   OPTION(report_t, period_sort_);
   OPTION(report_t, plot_amount_format_);
   OPTION(report_t, plot_total_format_);
@@ -398,7 +408,6 @@ public:
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(revalued).off();
       parent->HANDLER(amount_).set_expr("price");
-      parent->HANDLER(total_).set_expr("total_price");
     });
 
   OPTION(report_t, price_exp_); // -Z
@@ -413,12 +422,11 @@ public:
     });
 
   OPTION_(report_t, quarterly, DO() {
-      // This will turn on HANDLER(period_)
-      parent->prefix_to_period("quarterly");
+      parent->HANDLER(period_).prepend("quarterly");
     });
 
   OPTION_(report_t, real, DO() { // -R
-      parent->append_predicate("real");
+      parent->HANDLER(limit_).append("real");
     });
 
   OPTION(report_t, register_format_);
@@ -488,20 +496,18 @@ public:
     });
 
   OPTION_(report_t, uncleared, DO() { // -U
-      parent->append_predicate("uncleared|pending");
+      parent->HANDLER(limit_).append("uncleared|pending");
     });
 
   OPTION_(report_t, weekly, DO() { // -W
-      // This will turn on HANDLER(period_)
-      parent->prefix_to_period("weekly");
+      parent->HANDLER(period_).prepend("weekly");
     });
 
   OPTION(report_t, wide); // -w
   OPTION(report_t, wide_register_format_);
 
   OPTION_(report_t, yearly, DO() { // -Y
-      // This will turn on HANDLER(period_)
-      parent->prefix_to_period("yearly");
+      parent->HANDLER(period_).prepend("yearly");
     });
 };
 

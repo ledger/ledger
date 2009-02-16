@@ -382,24 +382,11 @@ void global_scope_t::normalize_report_options(const string& verb)
     }
   }
 
+  if (! rep.HANDLED(empty))
+    rep.HANDLER(display_).append("amount|(!xact&total)");
+
   if (verb[0] != 'b' && verb[0] != 'r')
     rep.HANDLER(base).on();
-
-  // Setup the default value for the display predicate
-
-  if (! rep.HANDLED(display_)) {
-    if (verb[0] == 'b') {
-      if (! rep.HANDLED(empty))
-	rep.append_display_predicate("total");
-    }
-    else if (verb == "equity") {
-      // jww (2008-08-14): ???
-      rep.append_display_predicate("amount_expr");
-    }
-    else if (verb[0] == 'r' && ! rep.HANDLED(empty)) {
-      rep.append_display_predicate("amount");
-    }
-  }
 
   if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
     rep.HANDLER(sort_entries_).on();
