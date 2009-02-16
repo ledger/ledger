@@ -85,7 +85,7 @@ date_t xact_t::date() const
 
   if (! _date) {
     assert(entry);
-    return *entry->_date;
+    return entry->date();
   }
   return *_date;
 }
