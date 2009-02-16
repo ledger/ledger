@@ -36,89 +36,85 @@
 namespace ledger {
 
 xact_handler_ptr chain_xact_handlers(report_t&	      report,
-				     xact_handler_ptr base_handler,
-				     const bool	      handle_individual_xacts)
+				     xact_handler_ptr base_handler)
 {
   xact_handler_ptr handler(base_handler);
 
-  // format_xacts write each xact received to the output stream.
-  if (handle_individual_xacts) {
-    // truncate_entries cuts off a certain number of _entries_ from being
-    // displayed.  It does not affect calculation.
-    if (report.HANDLED(head_) || report.HANDLED(tail_))
-      handler.reset(new truncate_entries(handler,
-					 report.HANDLER(head_).value.to_long(),
-					 report.HANDLER(tail_).value.to_long()));
+  // truncate_entries cuts off a certain number of _entries_ from being
+  // displayed.  It does not affect calculation.
+  if (report.HANDLED(head_) || report.HANDLED(tail_))
+    handler.reset(new truncate_entries(handler,
+				       report.HANDLER(head_).value.to_long(),
+				       report.HANDLER(tail_).value.to_long()));
 
-    // filter_xacts will only pass through xacts matching the
-    // `display_predicate'.
-    if (report.HANDLED(display_))
-      handler.reset(new filter_xacts
-		    (handler, item_predicate<xact_t>(report.HANDLER(display_).str(),
-						     report.what_to_keep())));
+  // filter_xacts will only pass through xacts matching the
+  // `display_predicate'.
+  if (report.HANDLED(display_))
+    handler.reset(new filter_xacts
+		  (handler, item_predicate<xact_t>(report.HANDLER(display_).str(),
+						   report.what_to_keep())));
 
-    // calc_xacts computes the running total.  When this appears will
-    // determine, for example, whether filtered xacts are included or excluded
-    // from the running total.
-    assert(report.HANDLED(amount_));
-    expr_t& expr(report.HANDLER(amount_).expr);
-    expr.set_context(&report);
-    handler.reset(new calc_xacts(handler, expr));
+  // calc_xacts computes the running total.  When this appears will
+  // determine, for example, whether filtered xacts are included or excluded
+  // from the running total.
+  assert(report.HANDLED(amount_));
+  expr_t& expr(report.HANDLER(amount_).expr);
+  expr.set_context(&report);
+  handler.reset(new calc_xacts(handler, expr));
 
-    // filter_xacts will only pass through xacts matching the
-    // `secondary_predicate'.
-    if (report.HANDLED(only_))
-      handler.reset(new filter_xacts
-		    (handler, item_predicate<xact_t>
-		     (report.HANDLER(only_).str(), report.what_to_keep())));
+  // filter_xacts will only pass through xacts matching the
+  // `secondary_predicate'.
+  if (report.HANDLED(only_))
+    handler.reset(new filter_xacts
+		  (handler, item_predicate<xact_t>
+		   (report.HANDLER(only_).str(), report.what_to_keep())));
 
-    // sort_xacts will sort all the xacts it sees, based on the `sort_order'
-    // value expression.
-    if (report.HANDLED(sort_)) {
-      if (report.HANDLED(sort_entries_))
-	handler.reset(new sort_entries(handler, report.HANDLER(sort_).str()));
-      else
-	handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
-    }
+  // sort_xacts will sort all the xacts it sees, based on the `sort_order'
+  // value expression.
+  if (report.HANDLED(sort_)) {
+    if (report.HANDLED(sort_entries_))
+      handler.reset(new sort_entries(handler, report.HANDLER(sort_).str()));
+    else
+      handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
+  }
 
-    // changed_value_xacts adds virtual xacts to the list to account for
-    // changes in market value of commodities, which otherwise would affect
-    // the running total unpredictably.
-    if (report.HANDLED(revalued))
-      handler.reset(new changed_value_xacts(handler,
-					    report.HANDLER(total_).expr,
-					    report.HANDLED(revalued_only)));
+  // changed_value_xacts adds virtual xacts to the list to account for
+  // changes in market value of commodities, which otherwise would affect
+  // the running total unpredictably.
+  if (report.HANDLED(revalued))
+    handler.reset(new changed_value_xacts(handler,
+					  report.HANDLER(total_).expr,
+					  report.HANDLED(revalued_only)));
 
-    // collapse_xacts causes entries with multiple xacts to appear as entries
-    // with a subtotaled xact for each commodity used.
-    if (report.HANDLED(collapse))
-      handler.reset(new collapse_xacts(handler, expr,
-				       report.HANDLED(collapse_if_zero)));
+  // collapse_xacts causes entries with multiple xacts to appear as entries
+  // with a subtotaled xact for each commodity used.
+  if (report.HANDLED(collapse))
+    handler.reset(new collapse_xacts(handler, expr,
+				     report.HANDLED(collapse_if_zero)));
 
-    // subtotal_xacts combines all the xacts it receives into one subtotal
-    // entry, which has one xact for each commodity in each account.
-    //
-    // period_xacts is like subtotal_xacts, but it subtotals according to time
-    // periods rather than totalling everything.
-    //
-    // dow_xacts is like period_xacts, except that it reports all the xacts
-    // that fall on each subsequent day of the week.
-    if (report.HANDLED(subtotal))
-      handler.reset(new subtotal_xacts(handler, expr));
+  // subtotal_xacts combines all the xacts it receives into one subtotal
+  // entry, which has one xact for each commodity in each account.
+  //
+  // period_xacts is like subtotal_xacts, but it subtotals according to time
+  // periods rather than totalling everything.
+  //
+  // dow_xacts is like period_xacts, except that it reports all the xacts
+  // that fall on each subsequent day of the week.
+  if (report.HANDLED(subtotal))
+    handler.reset(new subtotal_xacts(handler, expr));
 
-    if (report.HANDLED(dow))
-      handler.reset(new dow_xacts(handler, expr));
-    else if (report.HANDLED(by_payee))
-      handler.reset(new by_payee_xacts(handler, expr));
+  if (report.HANDLED(dow))
+    handler.reset(new dow_xacts(handler, expr));
+  else if (report.HANDLED(by_payee))
+    handler.reset(new by_payee_xacts(handler, expr));
 
-    // interval_xacts groups xacts together based on a time period, such as
-    // weekly or monthly.
-    if (report.HANDLED(period_)) {
-      handler.reset(new interval_xacts(handler, expr,
-				       report.HANDLER(period_).str(),
-				       report.session.master.get()));
-      handler.reset(new sort_xacts(handler, "date"));
-    }
+  // interval_xacts groups xacts together based on a time period, such as
+  // weekly or monthly.
+  if (report.HANDLED(period_)) {
+    handler.reset(new interval_xacts(handler, expr,
+				     report.HANDLER(period_).str(),
+				     report.session.master.get()));
+    handler.reset(new sort_xacts(handler, "date"));
   }
 
   // invert_xacts inverts the value of the xacts it receives.

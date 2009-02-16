@@ -88,11 +88,8 @@ typedef shared_ptr<item_handler<xact_t> > xact_handler_ptr;
 typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
 
 class report_t;
-
-xact_handler_ptr
-chain_xact_handlers(report_t&	     report,
-		    xact_handler_ptr base_handler,
-		    const bool	     handle_individual_xacts = true);
+xact_handler_ptr chain_xact_handlers(report_t&	      report,
+				     xact_handler_ptr base_handler);
 
 } // namespace ledger
 

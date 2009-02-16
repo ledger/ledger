@@ -113,9 +113,9 @@ void report_t::sum_all_accounts()
   expr.set_context(this);
 
   journal_xacts_iterator walker(*session.journal.get());
-  pass_down_xacts
-    (chain_xact_handlers(*this, xact_handler_ptr(new set_account_value(expr)),
-			 false), walker);
+  pass_down_xacts(chain_xact_handlers
+		  (*this, xact_handler_ptr(new set_account_value(expr))),
+		  walker);
 
   expr.mark_uncompiled();	// recompile, throw away xact_t bindings
   session.master->calculate_sums(expr);
