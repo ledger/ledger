@@ -36,31 +36,35 @@
 namespace ledger {
 
 xact_handler_ptr chain_xact_handlers(report_t&	      report,
-				     xact_handler_ptr base_handler)
+				     xact_handler_ptr base_handler,
+				     bool             only_preliminaries)
 {
   xact_handler_ptr handler(base_handler);
 
-  // truncate_entries cuts off a certain number of _entries_ from being
-  // displayed.  It does not affect calculation.
-  if (report.HANDLED(head_) || report.HANDLED(tail_))
-    handler.reset(new truncate_entries(handler,
-				       report.HANDLER(head_).value.to_long(),
-				       report.HANDLER(tail_).value.to_long()));
-
-  // filter_xacts will only pass through xacts matching the
-  // `display_predicate'.
-  if (report.HANDLED(display_))
-    handler.reset(new filter_xacts
-		  (handler, item_predicate(report.HANDLER(display_).str(),
-					   report.what_to_keep())));
-
-  // calc_xacts computes the running total.  When this appears will
-  // determine, for example, whether filtered xacts are included or excluded
-  // from the running total.
   assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
-  handler.reset(new calc_xacts(handler, expr));
+
+  if (! only_preliminaries) {
+    // truncate_entries cuts off a certain number of _entries_ from being
+    // displayed.  It does not affect calculation.
+    if (report.HANDLED(head_) || report.HANDLED(tail_))
+      handler.reset(new truncate_entries(handler,
+					 report.HANDLER(head_).value.to_long(),
+					 report.HANDLER(tail_).value.to_long()));
+
+    // filter_xacts will only pass through xacts matching the
+    // `display_predicate'.
+    if (report.HANDLED(display_))
+      handler.reset(new filter_xacts
+		    (handler, item_predicate(report.HANDLER(display_).str(),
+					     report.what_to_keep())));
+
+    // calc_xacts computes the running total.  When this appears will
+    // determine, for example, whether filtered xacts are included or excluded
+    // from the running total.
+    handler.reset(new calc_xacts(handler, expr));
+  }
 
   // filter_xacts will only pass through xacts matching the
   // `secondary_predicate'.
@@ -78,19 +82,21 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
       handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
   }
 
-  // changed_value_xacts adds virtual xacts to the list to account for
-  // changes in market value of commodities, which otherwise would affect
-  // the running total unpredictably.
-  if (report.HANDLED(revalued))
-    handler.reset(new changed_value_xacts(handler,
-					  report.HANDLER(total_).expr,
-					  report.HANDLED(revalued_only)));
+  if (! only_preliminaries) {
+    // changed_value_xacts adds virtual xacts to the list to account for
+    // changes in market value of commodities, which otherwise would affect
+    // the running total unpredictably.
+    if (report.HANDLED(revalued))
+      handler.reset(new changed_value_xacts(handler,
+					    report.HANDLER(total_).expr,
+					    report.HANDLED(revalued_only)));
 
-  // collapse_xacts causes entries with multiple xacts to appear as entries
-  // with a subtotaled xact for each commodity used.
-  if (report.HANDLED(collapse))
-    handler.reset(new collapse_xacts(handler, expr,
-				     report.HANDLED(collapse_if_zero)));
+    // collapse_xacts causes entries with multiple xacts to appear as entries
+    // with a subtotaled xact for each commodity used.
+    if (report.HANDLED(collapse))
+      handler.reset(new collapse_xacts(handler, expr,
+				       report.HANDLED(collapse_if_zero)));
+  }
 
   // subtotal_xacts combines all the xacts it receives into one subtotal
   // entry, which has one xact for each commodity in each account.
