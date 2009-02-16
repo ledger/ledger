@@ -48,10 +48,12 @@ int main(int argc, char* argv[])
 {
   int index = 1;
 
+#if defined(VERIFY_ON)
   if (argc > index && std::string(argv[index]) == "--verify") {
     ledger::verify_enabled = true;
     index++;
   }
+#endif
 
   // Retreive test path from command line first argument. Default to
   // "" which resolves to the top level suite.
@@ -77,19 +79,23 @@ int main(int argc, char* argv[])
   CPPUNIT_NS::TestRunner runner;
   runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
   try {
+#if defined(VERIFY_ON)
     IF_VERIFY()
       ledger::initialize_memory_tracing();
+#endif
 
     runner.run(controller, testPath);
 
+#if defined(VERIFY_ON)
     IF_VERIFY()
       ledger::shutdown_memory_tracing();
+#endif
 
+#if 1
     // Print test in a compiler compatible format.
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
     outputter.write();
-
-#if 0
+#else
     // Uncomment this for XML output
     std::ofstream file("tests.xml");
     CPPUNIT_NS::XmlOutputter xml(&result, file);

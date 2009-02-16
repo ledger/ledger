@@ -463,12 +463,14 @@ bool logger_func(log_level_t level)
   *_log_stream << std::right << std::setw(5)
 	       << (CURRENT_TIME() - logger_start).total_milliseconds() << "ms";
 
+#if defined(VERIFY_ON)
   IF_VERIFY() {
     *_log_stream << std::right << std::setw(6) << std::setprecision(3);
     stream_memory_size(*_log_stream, current_objects_size());
     *_log_stream << std::right << std::setw(6) << std::setprecision(3);
     stream_memory_size(*_log_stream, current_memory_size());
   }
+#endif
 
   *_log_stream << "  " << std::left << std::setw(7);
 

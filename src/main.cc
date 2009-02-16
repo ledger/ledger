@@ -62,7 +62,9 @@ int main(int argc, char * argv[], char * envp[])
   //   --debug CATEGORY    ; turns on debug logging
   //   --trace LEVEL       ; turns on trace logging
   handle_debug_options(argc, argv);
+#if defined(VERIFY_ON)
   IF_VERIFY() initialize_memory_tracing();
+#endif
 
   INFO("Ledger starting");
 
@@ -193,7 +195,9 @@ int main(int argc, char * argv[], char * envp[])
     global_scope.reset();
 
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
+#if defined(VERIFY_ON)
     shutdown_memory_tracing();
+#endif
   } else {
     // Don't free anything, just let it all leak.
     global_scope.release();
