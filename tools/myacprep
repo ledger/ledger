@@ -4,6 +4,8 @@ OUT=$HOME/Products/ledger
 
 if [ "$1" = "--local" ]; then
     OUT=""
+elif [ "$1" = "--output" ]; then
+    OUT=""
 fi
 
 SWITCHES=""
