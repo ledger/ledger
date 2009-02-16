@@ -298,6 +298,11 @@ public:
   }
 };
 
+inline void clear_entries_xacts(std::list<entry_t>& entries_list) {
+  foreach (entry_t& entry, entries_list)
+    entry.xacts.clear();
+}
+
 /**
  * @brief Brief
  *
@@ -319,6 +324,7 @@ public:
   }
   virtual ~anonymize_xacts() {
     TRACE_DTOR(anonymize_xacts);
+    clear_entries_xacts(entry_temps);
   }
 
   virtual void operator()(xact_t& xact);
@@ -365,11 +371,6 @@ public:
 
   virtual void operator()(xact_t& xact);
 };
-
-inline void clear_entries_xacts(std::list<entry_t>& entries_list) {
-  foreach (entry_t& entry, entries_list)
-    entry.xacts.clear();
-}
 
 /**
  * @brief Brief
@@ -570,11 +571,8 @@ class interval_xacts : public subtotal_xacts
 {
   interval_t interval;
   xact_t *   last_xact;
-
-  std::list<entry_t> entry_temps;
-  std::list<xact_t>  xact_temps;
-  account_t          empty_account;
-  bool		     generate_empty_xacts;
+  account_t  empty_account;
+  bool	     generate_empty_xacts;
 
   interval_xacts();
 
@@ -637,22 +635,24 @@ class by_payee_xacts : public item_handler<xact_t>
  *
  * Long.
  */
-class set_comm_as_payee : public item_handler<xact_t>
+class transfer_details : public item_handler<xact_t>
 {
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
 
-  set_comm_as_payee();
+  transfer_details();
 
 public:
-  set_comm_as_payee(xact_handler_ptr handler)
+  transfer_details(xact_handler_ptr handler)
     : item_handler<xact_t>(handler) {
-    TRACE_CTOR(set_comm_as_payee, "xact_handler_ptr");
+    TRACE_CTOR(transfer_details, "xact_handler_ptr");
   }
-  virtual ~set_comm_as_payee() {
-    TRACE_DTOR(set_comm_as_payee);
+  virtual ~transfer_details() {
+    TRACE_DTOR(transfer_details);
     clear_entries_xacts(entry_temps);
   }
+
+  virtual void set_details(entry_t& entry, xact_t& xact) = 0;
 
   virtual void operator()(xact_t& xact);
 };
@@ -662,24 +662,129 @@ public:
  *
  * Long.
  */
-class set_code_as_payee : public item_handler<xact_t>
+class set_comm_as_payee : public transfer_details
 {
-  std::list<entry_t> entry_temps;
-  std::list<xact_t>  xact_temps;
+  set_comm_as_payee();
 
+public:
+  set_comm_as_payee(xact_handler_ptr handler)
+    : transfer_details(handler) {
+    TRACE_CTOR(set_comm_as_payee, "xact_handler_ptr");
+  }
+  virtual ~set_comm_as_payee() {
+    TRACE_DTOR(set_comm_as_payee);
+  }
+
+  virtual void set_details(entry_t& entry, xact_t& xact) {
+    if (xact.amount.commodity())
+      entry.payee = xact.amount.commodity().symbol();
+    else
+      entry.payee = "<none>";
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class set_code_as_payee : public transfer_details
+{
   set_code_as_payee();
 
 public:
   set_code_as_payee(xact_handler_ptr handler)
-    : item_handler<xact_t>(handler) {
+    : transfer_details(handler) {
     TRACE_CTOR(set_code_as_payee, "xact_handler_ptr");
   }
   virtual ~set_code_as_payee() {
     TRACE_DTOR(set_code_as_payee);
-    clear_entries_xacts(entry_temps);
   }
 
-  virtual void operator()(xact_t& xact);
+  virtual void set_details(entry_t& entry, xact_t& xact) {
+    if (xact.entry->code)
+      entry.payee = *xact.entry->code;
+    else
+      entry.payee = "<none>";
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class set_payee_as_account : public transfer_details
+{
+  account_t * master;
+
+  set_payee_as_account();
+
+public:
+  set_payee_as_account(xact_handler_ptr handler,
+		       account_t * _master)
+    : transfer_details(handler), master(_master) {
+    TRACE_CTOR(set_payee_as_account, "xact_handler_ptr");
+  }
+  virtual ~set_payee_as_account() {
+    TRACE_DTOR(set_payee_as_account);
+  }
+
+  virtual void set_details(entry_t& entry, xact_t& xact) {
+    xact.account = master->find_account(entry.payee);
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class set_comm_as_account : public transfer_details
+{
+  account_t * master;
+
+  set_comm_as_account();
+
+public:
+  set_comm_as_account(xact_handler_ptr handler,
+		      account_t * _master)
+    : transfer_details(handler), master(_master) {
+    TRACE_CTOR(set_comm_as_account, "xact_handler_ptr");
+  }
+  virtual ~set_comm_as_account() {
+    TRACE_DTOR(set_comm_as_account);
+  }
+
+  virtual void set_details(entry_t&, xact_t& xact) {
+    xact.account = master->find_account(xact.amount.commodity().symbol());
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class set_code_as_account : public transfer_details
+{
+  account_t * master;
+
+  set_code_as_account();
+
+public:
+  set_code_as_account(xact_handler_ptr handler,
+		      account_t * _master)
+    : transfer_details(handler), master(_master) {
+    TRACE_CTOR(set_code_as_account, "xact_handler_ptr");
+  }
+  virtual ~set_code_as_account() {
+    TRACE_DTOR(set_code_as_account);
+  }
+
+  virtual void set_details(entry_t& entry, xact_t& xact) {
+    xact.account = master->find_account(entry.code ? *entry.code : "<none>");
+  }
 };
 
 /**

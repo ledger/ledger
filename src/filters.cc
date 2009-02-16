@@ -560,49 +560,20 @@ void by_payee_xacts::operator()(xact_t& xact)
   (*(*i).second)(xact);
 }
 
-void set_comm_as_payee::operator()(xact_t& xact)
+void transfer_details::operator()(xact_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry._date = xact._date;
-  entry._date_eff = xact._date_eff;
-  entry.code  = xact.entry->code;
-
-  if (xact.amount.commodity())
-    entry.payee = xact.amount.commodity().symbol();
-  else
-    entry.payee = "<none>";
+  entry._date = xact.reported_date();
 
   xact_temps.push_back(xact);
   xact_t& temp = xact_temps.back();
   temp.entry = &entry;
   temp.set_state(xact.state());
   temp.add_flags(ITEM_TEMP);
-
   entry.add_xact(&temp);
 
-  item_handler<xact_t>::operator()(temp);
-}
-
-void set_code_as_payee::operator()(xact_t& xact)
-{
-  entry_temps.push_back(*xact.entry);
-  entry_t& entry = entry_temps.back();
-  entry._date = xact._date;
-  entry._date_eff = xact._date_eff;
-
-  if (xact.entry->code)
-    entry.payee = *xact.entry->code;
-  else
-    entry.payee = "<none>";
-
-  xact_temps.push_back(xact);
-  xact_t& temp = xact_temps.back();
-  temp.entry = &entry;
-  temp.set_state(xact.state());
-  temp.add_flags(ITEM_TEMP);
-
-  entry.add_xact(&temp);
+  set_details(entry, temp);
 
   item_handler<xact_t>::operator()(temp);
 }

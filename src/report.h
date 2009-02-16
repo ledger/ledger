@@ -248,6 +248,9 @@ public:
     });
 
   OPTION(report_t, code_as_payee);
+  OPTION(report_t, comm_as_payee); // -x
+  OPTION(report_t, code_as_account);
+  OPTION(report_t, comm_as_account);
 
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too, but only apply it
@@ -259,7 +262,6 @@ public:
       parent->HANDLER(collapse).on();
     });
 
-  OPTION(report_t, comm_as_payee); // -x
   OPTION(report_t, cost);
   OPTION(report_t, csv_format_);
   OPTION(report_t, current); // -c
@@ -381,6 +383,7 @@ public:
 
   OPTION(report_t, output_); // -o
   OPTION(report_t, pager_);
+  OPTION(report_t, payee_as_account);
 
   OPTION_(report_t, pending, DO() { // -C
       parent->HANDLER(limit_).append("pending");

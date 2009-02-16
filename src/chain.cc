@@ -199,6 +199,12 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     handler.reset(new set_comm_as_payee(handler));
   else if (report.HANDLED(code_as_payee))
     handler.reset(new set_code_as_payee(handler));
+  else if (report.HANDLED(payee_as_account))
+    handler.reset(new set_payee_as_account(handler, report.session.master.get()));
+  else if (report.HANDLED(comm_as_account))
+    handler.reset(new set_comm_as_account(handler, report.session.master.get()));
+  else if (report.HANDLED(code_as_account))
+    handler.reset(new set_code_as_account(handler, report.session.master.get()));
 
   return handler;
 }

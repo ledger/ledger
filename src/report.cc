@@ -381,9 +381,11 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(csv_format_);
     else OPT(cleared);
     else OPT(code_as_payee);
+    else OPT_ALT(comm_as_payee, commodity_as_payee);
+    else OPT(code_as_account);
+    else OPT_ALT(comm_as_account, commodity_as_account);
     else OPT(collapse);
     else OPT(collapse_if_zero);
-    else OPT(comm_as_payee);
     else OPT(cost);
     else OPT_(current);
     break;
@@ -441,6 +443,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'p':
     OPT(pager_);
+    else OPT(payee_as_account);
     else OPT(pending);
     else OPT(percentage);
     else OPT(performance);
