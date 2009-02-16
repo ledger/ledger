@@ -574,7 +574,8 @@ void set_comm_as_payee::operator()(xact_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry._date = xact.date();
+  entry._date = xact._date;
+  entry._date_eff = xact._date_eff;
   entry.code  = xact.entry->code;
 
   if (xact.amount.commodity())
@@ -597,7 +598,8 @@ void set_code_as_payee::operator()(xact_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry._date = xact.date();
+  entry._date = xact._date;
+  entry._date_eff = xact._date_eff;
 
   if (xact.entry->code)
     entry.payee = *xact.entry->code;
