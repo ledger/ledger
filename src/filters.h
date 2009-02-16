@@ -531,16 +531,14 @@ protected:
   typedef std::pair<string, acct_value_t> values_pair;
 
 protected:
-  expr_t&	     amount_expr;
-  values_map	     values;
-  optional<string>   date_format;
-  std::list<entry_t> entry_temps;
-  std::list<xact_t>  xact_temps;
+  expr_t&	      amount_expr;
+  values_map	      values;
+  optional<string>    date_format;
+  std::list<entry_t>  entry_temps;
+  std::list<xact_t>   xact_temps;
+  std::list<xact_t *> component_xacts;
 
 public:
-  date_t start;
-  date_t finish;
-
   subtotal_xacts(xact_handler_ptr handler, expr_t& _amount_expr,
 		 const optional<string>& _date_format = none)
     : item_handler<xact_t>(handler), amount_expr(_amount_expr),
@@ -572,7 +570,6 @@ class interval_xacts : public subtotal_xacts
 {
   interval_t interval;
   xact_t *   last_xact;
-  bool	     started;
 
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
@@ -586,7 +583,7 @@ public:
 		 const interval_t& _interval, account_t * master = NULL,
 		 bool _generate_empty_xacts = false)
     : subtotal_xacts(_handler, amount_expr), interval(_interval),
-      last_xact(NULL), started(false), empty_account(master, "<None>"),
+      last_xact(NULL), empty_account(master, "<None>"),
       generate_empty_xacts(_generate_empty_xacts) {
     TRACE_CTOR(interval_xacts,
 	       "xact_handler_ptr, expr_t&, const interval_t&, account_t *, bool");
@@ -595,11 +592,15 @@ public:
     TRACE_DTOR(interval_xacts);
   }
 
-  void report_subtotal(const date_t& moment);
+  void report_subtotal() {
+    assert(last_xact);
+    subtotal_xacts::report_subtotal();
+    last_xact = NULL;
+  }
 
   virtual void flush() {
     if (last_xact)
-      report_subtotal(last_xact->date());
+      report_subtotal();
     subtotal_xacts::flush();
   }
   virtual void operator()(xact_t& xact);

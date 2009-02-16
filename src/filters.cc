@@ -405,6 +405,17 @@ void changed_value_xacts::operator()(xact_t& xact)
 
 void subtotal_xacts::report_subtotal(const char * spec_fmt)
 {
+  date_t start;
+  date_t finish;
+  foreach (xact_t * xact, component_xacts) {
+    date_t date = xact->reported_date();
+    if (! is_valid(start) || date < start)
+      start = date;
+    if (! is_valid(finish) || date > finish)
+      finish = date;
+  }
+  component_xacts.clear();
+
   std::ostringstream out_date;
   if (spec_fmt) {
     out_date << format_date(finish, string(spec_fmt));
@@ -432,12 +443,7 @@ void subtotal_xacts::report_subtotal(const char * spec_fmt)
 
 void subtotal_xacts::operator()(xact_t& xact)
 {
-  date_t when = xact.date();
-
-  if (! is_valid(start) || when < start)
-    start = when;
-  if (! is_valid(finish) || when > finish)
-    finish = when;
+  component_xacts.push_back(&xact);
 
   account_t * acct = xact.reported_account();
   assert(acct);
@@ -463,67 +469,54 @@ void subtotal_xacts::operator()(xact_t& xact)
     xact.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS);
 }
 
-void interval_xacts::report_subtotal(const date_t& date)
-{
-  assert(last_xact);
-
-  start	 = interval.begin;
-  finish = date - gregorian::days(1);
-
-  subtotal_xacts::report_subtotal();
-
-  last_xact = NULL;
-}
-
 void interval_xacts::operator()(xact_t& xact)
 {
   date_t date = xact.date();
 
-  if ((is_valid(interval.begin) && date < interval.begin) ||
-      (is_valid(interval.end)   && date >= interval.end))
+  if (! is_valid(interval.begin)) {
+    interval.set_start(date);
+  }
+  else if ((is_valid(interval.begin) && date < interval.begin) ||
+	   (is_valid(interval.end)   && date >= interval.end)) {
     return;
-
-  if (! started) {
-    if (! is_valid(interval.begin))
-      interval.set_start(date);
-    start   = interval.begin;
-    started = true;
   }
 
-  date_t quant = interval.increment(interval.begin);
-  if (date >= quant) {
-    if (last_xact)
-      report_subtotal(quant);
+  if (interval) {
+    date_t quant = interval.increment(interval.begin);
+    if (date >= quant) {
+      if (last_xact)
+	report_subtotal();
 
-    date_t temp;
-    while (date >= (temp = interval.increment(quant))) {
-      if (quant == temp)
-	break;
-      interval.begin = quant;
-      quant = temp;
+      date_t temp;
+      while (date >= (temp = interval.increment(quant))) {
+	if (quant == temp)
+	  break;
+	interval.begin = quant;
+	quant = temp;
 
-      if (generate_empty_xacts) {
-	// Generate a null transaction, so the intervening periods can be
-	// seen when -E is used, or if the calculated amount ends up being
-	// non-zero
-	entry_temps.push_back(entry_t());
-	entry_t& null_entry = entry_temps.back();
-	null_entry.add_flags(ITEM_TEMP);
-	null_entry._date = quant;
+	if (generate_empty_xacts) {
+	  // Generate a null transaction, so the intervening periods can be
+	  // seen when -E is used, or if the calculated amount ends up being
+	  // non-zero
+	  entry_temps.push_back(entry_t());
+	  entry_t& null_entry = entry_temps.back();
+	  null_entry.add_flags(ITEM_TEMP);
+	  null_entry._date = quant;
 
-	xact_temps.push_back(xact_t(&empty_account));
-	xact_t& null_xact = xact_temps.back();
-	null_xact.add_flags(ITEM_TEMP);
-	null_xact.amount = 0L;
-	null_entry.add_xact(&null_xact);
+	  xact_temps.push_back(xact_t(&empty_account));
+	  xact_t& null_xact = xact_temps.back();
+	  null_xact.add_flags(ITEM_TEMP);
+	  null_xact.amount = 0L;
+	  null_entry.add_xact(&null_xact);
 
-	last_xact = &null_xact;
-	subtotal_xacts::operator()(null_xact);
+	  last_xact = &null_xact;
+	  subtotal_xacts::operator()(null_xact);
 
-	report_subtotal(quant);
+	  report_subtotal();
+	}
       }
+      interval.begin = quant;
     }
-    start = interval.begin = quant;
   }
 
   subtotal_xacts::operator()(xact);
@@ -564,9 +557,6 @@ void by_payee_xacts::operator()(xact_t& xact)
     i = result.first;
   }
 
-  if (xact.date() > (*i).second->start)
-    (*i).second->start = xact.date();
-
   (*(*i).second)(xact);
 }
 
@@ -574,7 +564,8 @@ void set_comm_as_payee::operator()(xact_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry._date = xact.date();
+  entry._date = xact._date;
+  entry._date_eff = xact._date_eff;
   entry.code  = xact.entry->code;
 
   if (xact.amount.commodity())
@@ -597,7 +588,8 @@ void set_code_as_payee::operator()(xact_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry._date = xact.date();
+  entry._date = xact._date;
+  entry._date_eff = xact._date_eff;
 
   if (xact.entry->code)
     entry.payee = *xact.entry->code;
@@ -618,7 +610,6 @@ void set_code_as_payee::operator()(xact_t& xact)
 void dow_xacts::flush()
 {
   for (int i = 0; i < 7; i++) {
-    start = finish = date_t();
     foreach (xact_t * xact, days_of_the_week[i])
       subtotal_xacts::operator()(*xact);
     subtotal_xacts::report_subtotal("%As");
