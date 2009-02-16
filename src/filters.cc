@@ -293,20 +293,28 @@ void collapse_xacts::report_subtotal()
   else if (only_collapse_if_zero && ! subtotal.is_zero()) {
     foreach (xact_t * xact, component_xacts)
       item_handler<xact_t>::operator()(*xact);
-    component_xacts.clear();
   }
   else {
-    if (only_collapse_if_zero)
-      component_xacts.clear();
+    date_t earliest_date;
+
+    foreach (xact_t * xact, component_xacts) {
+      date_t reported = xact->reported_date();
+      if (! is_valid(earliest_date) ||
+	  reported < earliest_date)
+	earliest_date = reported;
+    }
 
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
-    entry.payee = last_entry->payee;
-    entry._date = last_entry->_date;
+    entry.payee	   = last_entry->payee;
+    entry._date	   = (is_valid(earliest_date) ?
+		      earliest_date : last_entry->_date);
+    DEBUG("filters.collapse", "Pseudo-entry date = " << *entry._date);
 
-    handle_value(subtotal, &totals_account, last_entry, 0, xact_temps,
-		 *handler);
+    handle_value(subtotal, &totals_account, &entry, 0, xact_temps, *handler);
   }
+
+  component_xacts.clear();
 
   last_entry = NULL;
   last_xact  = NULL;
@@ -325,8 +333,7 @@ void collapse_xacts::operator()(xact_t& xact)
   xact.add_to_value(subtotal, amount_expr);
   count++;
 
-  if (only_collapse_if_zero)
-    component_xacts.push_back(&xact);
+  component_xacts.push_back(&xact);
 
   last_entry = xact.entry;
   last_xact  = &xact;
