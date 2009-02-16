@@ -1284,7 +1284,10 @@ void value_t::print(std::ostream&           out,
     break;
 
   case AMOUNT:
-    as_amount().right_justify(out, first_width);
+    if (as_amount().is_zero())
+      out << 0L;
+    else
+      as_amount().right_justify(out, first_width);
     break;
 
   case STRING:
