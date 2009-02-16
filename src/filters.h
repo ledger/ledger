@@ -273,22 +273,25 @@ public:
 class filter_xacts : public item_handler<xact_t>
 {
   item_predicate pred;
+  scope_t&       context;
 
   filter_xacts();
 
 public:
   filter_xacts(xact_handler_ptr	     handler,
-	       const item_predicate& predicate)
-    : item_handler<xact_t>(handler), pred(predicate) {
+	       const item_predicate& predicate,
+	       scope_t&              _context)
+    : item_handler<xact_t>(handler), pred(predicate), context(_context) {
     TRACE_CTOR(filter_xacts,
-	       "xact_handler_ptr, const item_predicate<xact_t>&");
+	       "xact_handler_ptr, const item_predicate&, scope_t&");
   }
   virtual ~filter_xacts() {
     TRACE_DTOR(filter_xacts);
   }
 
   virtual void operator()(xact_t& xact) {
-    if (pred(xact)) {
+    bind_scope_t bound_scope(context, xact);
+    if (pred(bound_scope)) {
       xact.xdata().add_flags(XACT_EXT_MATCHES);
       (*handler)(xact);
     }
@@ -775,13 +778,15 @@ public:
 class forecast_xacts : public generate_xacts
 {
   item_predicate pred;
+  scope_t&       context;
 
  public:
   forecast_xacts(xact_handler_ptr      handler,
-		 const item_predicate& predicate)
-    : generate_xacts(handler), pred(predicate) {
+		 const item_predicate& predicate,
+		 scope_t&              _context)
+    : generate_xacts(handler), pred(predicate), context(_context) {
     TRACE_CTOR(forecast_xacts,
-	       "xact_handler_ptr, const item_predicate<xact_t>&");
+	       "xact_handler_ptr, const item_predicate&, scope_t&");
   }
   virtual ~forecast_xacts() throw() {
     TRACE_DTOR(forecast_xacts);
@@ -822,11 +827,13 @@ class pass_down_accounts : public item_handler<account_t>
   pass_down_accounts();
 
   optional<item_predicate> pred;
+  optional<scope_t&>       context;
 
 public:
-  pass_down_accounts(acct_handler_ptr	handler,
-		     accounts_iterator&	iter,
-		     const optional<item_predicate>& predicate = none);
+  pass_down_accounts(acct_handler_ptr		     handler,
+		     accounts_iterator&		     iter,
+		     const optional<item_predicate>& _pred    = none,
+		     const optional<scope_t&>&	     _context = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

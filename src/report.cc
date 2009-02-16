@@ -125,16 +125,21 @@ void report_t::accounts_report(acct_handler_ptr handler)
 {
   sum_all_accounts();
 
-  if (! HANDLED(sort_)) {
-    basic_accounts_iterator walker(*session.master);
-    pass_down_accounts(handler, walker,
-		       item_predicate("total", what_to_keep()));
-  } else {
-    sorted_accounts_iterator walker(*session.master, HANDLER(sort_).str());
-    pass_down_accounts(handler, walker,
-		       item_predicate("total", what_to_keep()));
-  }
-    
+  scoped_ptr<accounts_iterator> iter;
+
+  if (! HANDLED(sort_))
+    iter.reset(new basic_accounts_iterator(*session.master));
+  else
+    iter.reset(new sorted_accounts_iterator(*session.master,
+					    HANDLER(sort_).str()));
+
+  if (HANDLED(display_))
+    pass_down_accounts(handler, *iter.get(),
+		       item_predicate(HANDLER(display_).str(), what_to_keep()),
+		       *this);
+  else
+    pass_down_accounts(handler, *iter.get());
+
   session.clean_xacts();
   session.clean_accounts();
 }
@@ -266,13 +271,13 @@ namespace {
 
     value_t operator()(call_scope_t& args)
     {
-      if (args.value().size() > 0)
+      if (args.value().size() > 0) {
 	report.HANDLER(limit_).append
 	  (args_to_predicate_expr(args.value().as_sequence().begin(),
 				  args.value().as_sequence().end()));
-
-      DEBUG("report.predicate",
-	    "Predicate = " << report.HANDLER(limit_).str());
+	DEBUG("report.predicate",
+	      "Predicate = " << report.HANDLER(limit_).str());
+      }
 
       (report.*report_method)(handler_ptr(handler));
 

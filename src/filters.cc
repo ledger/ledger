@@ -764,7 +764,8 @@ void forecast_xacts::flush()
 
     if (temp.has_xdata() &&
 	temp.xdata().has_flags(XACT_EXT_MATCHES)) {
-      if (! pred(temp))
+      bind_scope_t bound_scope(context, temp);
+      if (! pred(bound_scope))
 	break;
       last = temp.date();
       passed.clear();
@@ -789,15 +790,21 @@ void forecast_xacts::flush()
 
 pass_down_accounts::pass_down_accounts(acct_handler_ptr		       handler,
 				       accounts_iterator&	       iter,
-				       const optional<item_predicate>& predicate)
-  : item_handler<account_t>(handler), pred(predicate)
+				       const optional<item_predicate>& _pred,
+				       const optional<scope_t&>&       _context)
+  : item_handler<account_t>(handler), pred(_pred), context(_context)
 {
-  TRACE_CTOR(pass_down_accounts,
-	     "acct_handler_ptr, accounts_iterator");
+  TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
 
-  for (account_t * account = iter(); account; account = iter())
-    if (! pred || (*pred)(*account))
+  for (account_t * account = iter(); account; account = iter()) {
+    if (! pred) {
       item_handler<account_t>::operator()(*account);
+    } else {
+      bind_scope_t bound_scope(*context, *account);
+      if ((*pred)(bound_scope))
+	item_handler<account_t>::operator()(*account);
+    }
+  }
 
   item_handler<account_t>::flush();
 }

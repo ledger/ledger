@@ -58,7 +58,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     if (report.HANDLED(display_))
       handler.reset(new filter_xacts
 		    (handler, item_predicate(report.HANDLER(display_).str(),
-					     report.what_to_keep())));
+					     report.what_to_keep()),
+		     report));
 
     // calc_xacts computes the running total.  When this appears will
     // determine, for example, whether filtered xacts are included or excluded
@@ -71,7 +72,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   if (report.HANDLED(only_))
     handler.reset(new filter_xacts
 		  (handler, item_predicate(report.HANDLER(only_).str(),
-					   report.what_to_keep())));
+					   report.what_to_keep()),
+		   report));
 
   // sort_xacts will sort all the xacts it sees, based on the `sort_order'
   // value expression.
@@ -146,7 +148,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 	  "Report predicate expression = " << report.HANDLER(limit_).str());
     handler.reset(new filter_xacts
 		  (handler, item_predicate(report.HANDLER(limit_).str(),
-					   report.what_to_keep())));
+					   report.what_to_keep()),
+		   report));
   }
 
   // budget_xacts takes a set of xacts from a data file and uses them to
@@ -169,13 +172,15 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     if (report.HANDLED(limit_))
       handler.reset(new filter_xacts
 		    (handler, item_predicate(report.HANDLER(limit_).str(),
-					     report.what_to_keep())));
+					     report.what_to_keep()),
+		     report));
   }
   else if (report.HANDLED(forecast_)) {
     forecast_xacts * forecast_handler
       = new forecast_xacts(handler,
 			   item_predicate(report.HANDLER(forecast_).str(),
-					  report.what_to_keep()));
+					  report.what_to_keep()),
+			   report);
     forecast_handler->add_period_entries(report.session.journal->period_entries);
     handler.reset(forecast_handler);
 
@@ -183,7 +188,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     if (report.HANDLED(limit_))
       handler.reset(new filter_xacts
 		    (handler, item_predicate(report.HANDLER(limit_).str(),
-					     report.what_to_keep())));
+					     report.what_to_keep()),
+		     report));
   }
 
   if (report.HANDLED(comm_as_payee))

@@ -250,8 +250,9 @@ public:
   OPTION(report_t, code_as_payee);
 
   OPTION_(report_t, collapse, DO() { // -n
-      // Make sure that balance reports are collapsed too
-      parent->HANDLER(display_).append("depth<=1");
+      // Make sure that balance reports are collapsed too, but only apply it
+      // to account entries
+      parent->HANDLER(display_).append("xact|depth<=1");
     });
 
   OPTION_(report_t, collapse_if_zero, DO() {
