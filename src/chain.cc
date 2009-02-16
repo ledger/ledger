@@ -49,9 +49,12 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // truncate_entries cuts off a certain number of _entries_ from being
     // displayed.  It does not affect calculation.
     if (report.HANDLED(head_) || report.HANDLED(tail_))
-      handler.reset(new truncate_entries(handler,
-					 report.HANDLER(head_).value.to_long(),
-					 report.HANDLER(tail_).value.to_long()));
+      handler.reset
+	(new truncate_entries(handler,
+			      report.HANDLED(head_) ?
+			      report.HANDLER(head_).value.to_long() : 0,
+			      report.HANDLED(tail_) ?
+			      report.HANDLER(tail_).value.to_long() : 0));
 
     // filter_xacts will only pass through xacts matching the
     // `display_predicate'.
