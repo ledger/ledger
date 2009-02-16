@@ -476,28 +476,29 @@ void interval_xacts::operator()(xact_t& xact)
       (is_valid(interval.end)   && date >= interval.end))
     return;
 
-  if (interval) {
-    if (! started) {
-      if (! is_valid(interval.begin))
-	interval.set_start(date);
-      start   = interval.begin;
-      started = true;
-    }
+  if (! started) {
+    if (! is_valid(interval.begin))
+      interval.set_start(date);
+    start   = interval.begin;
+    started = true;
+  }
 
-    date_t quant = interval.increment(interval.begin);
-    if (date >= quant) {
-      if (last_xact)
-	report_subtotal(quant);
+  date_t quant = interval.increment(interval.begin);
+  if (date >= quant) {
+    if (last_xact)
+      report_subtotal(quant);
 
-      date_t temp;
-      while (date >= (temp = interval.increment(quant))) {
-	if (quant == temp)
-	  break;
-	interval.begin = quant;
-	quant = temp;
+    date_t temp;
+    while (date >= (temp = interval.increment(quant))) {
+      if (quant == temp)
+	break;
+      interval.begin = quant;
+      quant = temp;
 
-	// Generate a null transaction, so the intervening periods can be seen
-	// when -E is used, or if the calculated amount ends up being non-zero
+      if (generate_empty_xacts) {
+	// Generate a null transaction, so the intervening periods can be
+	// seen when -E is used, or if the calculated amount ends up being
+	// non-zero
 	entry_temps.push_back(entry_t());
 	entry_t& null_entry = entry_temps.back();
 	null_entry.add_flags(ITEM_TEMP);
@@ -511,15 +512,14 @@ void interval_xacts::operator()(xact_t& xact)
 
 	last_xact = &null_xact;
 	subtotal_xacts::operator()(null_xact);
+
 	report_subtotal(quant);
       }
-      start = interval.begin = quant;
     }
-
-    subtotal_xacts::operator()(xact);
-  } else {
-    item_handler<xact_t>::operator()(xact);
+    start = interval.begin = quant;
   }
+
+  subtotal_xacts::operator()(xact);
 
   last_xact = &xact;
 }

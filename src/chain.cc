@@ -113,7 +113,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   if (report.HANDLED(period_)) {
     handler.reset(new interval_xacts(handler, expr,
 				     report.HANDLER(period_).str(),
-				     report.session.master.get()));
+				     report.session.master.get(),
+				     report.HANDLED(empty)));
     handler.reset(new sort_xacts(handler, "date"));
   }
 

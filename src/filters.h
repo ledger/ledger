@@ -498,6 +498,9 @@ public:
  */
 class subtotal_xacts : public item_handler<xact_t>
 {
+  subtotal_xacts();
+
+protected:
   class acct_value_t
   {
     acct_value_t();
@@ -523,8 +526,6 @@ class subtotal_xacts : public item_handler<xact_t>
 
   typedef std::map<string, acct_value_t>  values_map;
   typedef std::pair<string, acct_value_t> values_pair;
-
-  subtotal_xacts();
 
 protected:
   expr_t&	     amount_expr;
@@ -568,21 +569,24 @@ class interval_xacts : public subtotal_xacts
 {
   interval_t interval;
   xact_t *   last_xact;
-  bool       started;
+  bool	     started;
 
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
   account_t          empty_account;
+  bool		     generate_empty_xacts;
 
   interval_xacts();
 
 public:
   interval_xacts(xact_handler_ptr  _handler, expr_t& amount_expr,
-		 const interval_t& _interval, account_t * master = NULL)
+		 const interval_t& _interval, account_t * master = NULL,
+		 bool _generate_empty_xacts = false)
     : subtotal_xacts(_handler, amount_expr), interval(_interval),
-      last_xact(NULL), started(false), empty_account(master, "<Empty>") {
+      last_xact(NULL), started(false), empty_account(master, "<None>"),
+      generate_empty_xacts(_generate_empty_xacts) {
     TRACE_CTOR(interval_xacts,
-	       "xact_handler_ptr, const interval_t&, bool");
+	       "xact_handler_ptr, expr_t&, const interval_t&, account_t *, bool");
   }
   virtual ~interval_xacts() throw() {
     TRACE_DTOR(interval_xacts);
