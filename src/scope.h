@@ -371,6 +371,8 @@ inline datetime_t var_t<datetime_t>::operator *() const {
   return value->to_datetime();
 }
 
+string join_args(call_scope_t& args);
+
 } // namespace ledger
 
 #endif // _SCOPE_H

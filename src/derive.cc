@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "report.h"
+#include "derive.h"
 #include "output.h"
 
 namespace ledger {

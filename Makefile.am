@@ -114,6 +114,7 @@ pkginclude_HEADERS =			   \
 	src/filters.h			   \
 	src/chain.h			   \
 	src/precmd.h			   \
+	src/derive.h			   \
 	src/output.h			   \
 	src/emacs.h			   \
 	src/help.h			   \

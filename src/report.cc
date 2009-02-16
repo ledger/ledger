@@ -34,8 +34,9 @@
 #include "filters.h"
 #include "chain.h"
 #include "output.h"
-#include "emacs.h"
 #include "precmd.h"
+#include "emacs.h"
+#include "derive.h"
 
 namespace ledger {
 
@@ -669,23 +670,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     return MAKE_OPT_FUNCTOR(report_t, handler);
 
   return NULL;
-}
-
-string join_args(call_scope_t& args)
-{
-  std::ostringstream buf;
-  bool first = true;
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    if (first) {
-      buf << args[i];
-      first = false;
-    } else {
-      buf << ' ' << args[i];
-    }
-  }
-
-  return buf.str();
 }
 
 } // namespace ledger

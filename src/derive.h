@@ -29,52 +29,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup derive
+ */
+
+/**
+ * @file   derive.h
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Brief
+ *
+ * Long.
+ */
+#ifndef _DERIVE_H
+#define _DERIVE_H
+
 #include "scope.h"
 
 namespace ledger {
 
-void symbol_scope_t::define(const string& name, expr_t::ptr_op_t def)
-{
-  DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
+value_t entry_command(call_scope_t& args);
+value_t template_command(call_scope_t& args);
 
-  std::pair<symbol_map::iterator, bool> result
-    = symbols.insert(symbol_map::value_type(name, def));
-  if (! result.second) {
-    symbol_map::iterator i = symbols.find(name);
-    assert(i != symbols.end());
-    symbols.erase(i);
-
-    std::pair<symbol_map::iterator, bool> result2
-      = symbols.insert(symbol_map::value_type(name, def));
-    if (! result2.second)
-      throw_(compile_error, "Redefinition of '" << name << "' in same scope");
-  }
-}
-
-expr_t::ptr_op_t symbol_scope_t::lookup(const string& name)
-{
-  symbol_map::const_iterator i = symbols.find(name);
-  if (i != symbols.end())
-    return (*i).second;
-
-  return child_scope_t::lookup(name);
-}
-
-string join_args(call_scope_t& args)
-{
-  std::ostringstream buf;
-  bool first = true;
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    if (first) {
-      buf << args[i];
-      first = false;
-    } else {
-      buf << ' ' << args[i];
-    }
-  }
-
-  return buf.str();
-}
+class entry_t;
+class report_t;
+entry_t * derive_new_entry(report_t& report,
+			   value_t::sequence_t::const_iterator i,
+			   value_t::sequence_t::const_iterator end);
 
 } // namespace ledger
+
+#endif // _DERIVE_H
