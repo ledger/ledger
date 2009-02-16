@@ -138,6 +138,9 @@ public:
   value_t fn_quoted(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
+  value_t fn_false(call_scope_t&) {
+    return false;
+  }
 
   value_t fn_options(call_scope_t& scope) {
     return value_t(static_cast<scope_t *>(this));

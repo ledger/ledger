@@ -646,6 +646,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     else if (is_eq(p, "total_expr"))
       return MAKE_FUNCTOR(report_t::fn_total_expr);
     break;
+
+  case 'x':
+    if (is_eq(p, "xact"))
+      return MAKE_FUNCTOR(report_t::fn_false);
+    break;
   }
 
   // Check if they are trying to access an option's setting or value.
