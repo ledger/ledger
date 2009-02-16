@@ -204,6 +204,10 @@ namespace {
     return string_value(xact.reported_account()->name);
   }
 
+  value_t get_account_depth(xact_t& xact) {
+    return long(xact.reported_account()->depth);
+  }
+
   template <value_t (*Func)(xact_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<xact_t>(scope));
@@ -233,6 +237,11 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
     else if (name == "calculated")
       return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
+    break;
+
+  case 'd':
+    if (name == "depth")
+      return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
     break;
 
   case 'e':
