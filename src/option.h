@@ -90,10 +90,17 @@ public:
 
   string desc() const {
     std::ostringstream out;
+    out << "--";
+    for (const char * p = name; *p; p++) {
+      if (*p == '_') {
+	if (*(p + 1))
+	  out << '-';
+      } else {
+	out << *p;
+      }
+    }
     if (ch)
-      out << "--" << name << " (-" << ch << ")";
-    else
-      out << "--" << name;
+      out << " (-" << ch << ")";
     return out.str();
   }
 
@@ -136,10 +143,13 @@ public:
   virtual void handler_thunk(call_scope_t&) {}
 
   virtual void handler(call_scope_t& args) {
-    if (wants_arg)
+    if (wants_arg) {
+      if (args.empty())
+	throw_(std::runtime_error, "No argument provided for " << desc());
       on(args[0]);
-    else
+    } else {
       on();
+    }
 
     handler_thunk(args);
   }

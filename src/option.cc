@@ -194,8 +194,8 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       if (! opt.first)
 	throw_(option_error, "illegal option --" << name);
 
-      if (opt.second && value == NULL) {
-	value = (*++i).c_str();
+      if (opt.second && ++i != args.end() && value == NULL) {
+	value = (*i).c_str();
 	DEBUG("option.args", "  read option value from arg: " << value);
 	if (value == NULL)
 	  throw_(option_error, "missing option argument for --" << name);
@@ -222,8 +222,8 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 
       foreach (op_bool_char_tuple& o, option_queue) {
 	const char * value = NULL;
-	if (o.truth) {
-	  value = (*++i).c_str();
+	if (o.truth && ++i != args.end()) {
+	  value = (*i).c_str();
 	  DEBUG("option.args", "  read option value from arg: " << value);
 	  if (value == NULL)
 	    throw_(option_error,
