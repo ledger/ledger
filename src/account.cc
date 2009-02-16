@@ -156,6 +156,14 @@ namespace {
     return string_value(account.partial_name());
   }
 
+  value_t get_account(account_t& account) { // this gets the name
+    return string_value(account.fullname());
+  }
+
+  value_t get_account_base(account_t& account) {
+    return string_value(account.name);
+  }
+
   value_t get_total(account_t& account) {
     assert(account.xdata_);
     return account.xdata_->total;
@@ -204,6 +212,10 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 'a':
     if (name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
+    else if (name == "account")
+      return WRAP_FUNCTOR(get_wrapper<&get_account>);
+    else if (name == "account_base")
+      return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     break;
 
   case 'c':
