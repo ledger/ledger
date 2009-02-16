@@ -76,7 +76,7 @@ public:
   }
 
   void set_flush_on_next_data_file(const bool truth) {
-    flush_on_next_data_file = true;
+    flush_on_next_data_file = truth;
   }
 
   std::size_t read_journal(std::istream& in,

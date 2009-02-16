@@ -7,10 +7,8 @@ using namespace ledger;
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DateTimeTestCase, "util");
 
 void DateTimeTestCase::setUp() {
-  int x = 1;
 }
 void DateTimeTestCase::tearDown() {
-  int x = 1;
 }
 
 void DateTimeTestCase::testConstructors()

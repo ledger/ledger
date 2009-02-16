@@ -633,12 +633,12 @@ void finish_timer(const char * name)
 
 caught_signal_t caught_signal = NONE_CAUGHT;
 
-void sigint_handler(int sig)
+void sigint_handler(int)
 {
   caught_signal = INTERRUPTED;
 }
 
-void sigpipe_handler(int sig)
+void sigpipe_handler(int)
 {
   caught_signal = PIPE_CLOSED;
 }

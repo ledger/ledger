@@ -36,7 +36,7 @@
 
 namespace ledger {
 
-entry_base_t::entry_base_t(const entry_base_t& e)
+entry_base_t::entry_base_t(const entry_base_t&)
   : item_t(), journal(NULL)
 {
   TRACE_CTOR(entry_base_t, "copy");
@@ -56,7 +56,6 @@ entry_base_t::~entry_base_t()
 
 item_t::state_t entry_base_t::state() const
 {
-  bool	  first	 = true;
   state_t result = CLEARED;
 
   foreach (xact_t * xact, xacts) {

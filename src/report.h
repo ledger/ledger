@@ -142,7 +142,7 @@ public:
     return false;
   }
 
-  value_t fn_options(call_scope_t& scope) {
+  value_t fn_options(call_scope_t&) {
     return value_t(static_cast<scope_t *>(this));
   }
 
@@ -152,7 +152,7 @@ public:
     return option.str();
   }
 
-  value_t reload_command(call_scope_t& scope) {
+  value_t reload_command(call_scope_t&) {
     session.close_journal_files();
     session.read_journal_files();
     return true;
@@ -478,9 +478,9 @@ public:
 
   OPTION(report_t, totals);
 
-  OPTION_(report_t, truncate_, DO_(args) {
+  OPTION_(report_t, truncate_, DO() {
 #if 0
-      std::string style(optarg);
+      string style(args[0].to_string());
       if (style == "leading")
 	format_t::elision_style = format_t::TRUNCATE_LEADING;
       else if (style == "middle")

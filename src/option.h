@@ -133,7 +133,7 @@ public:
     value   = value_t();
   }
 
-  virtual void handler_thunk(call_scope_t& args) {}
+  virtual void handler_thunk(call_scope_t&) {}
 
   virtual void handler(call_scope_t& args) {
     if (wants_arg)

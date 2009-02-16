@@ -97,9 +97,7 @@ public:
       bool remove_price(const datetime_t& date);
 
       optional<price_point_t>
-      find_price(const commodity_t&	       source,
-		 const optional<commodity_t&>& commodity,
-		 const optional<datetime_t>&   moment = none,
+      find_price(const optional<datetime_t>&   moment = none,
 		 const optional<datetime_t>&   oldest = none
 #if defined(DEBUG_ON)
 		 , const int indent = 0
@@ -218,10 +216,10 @@ public:
   virtual const commodity_t& referent() const {
     return *this;
   }
-  virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep) {
+  virtual commodity_t& strip_annotations(const keep_details_t&) {
     return *this;
   }
-  virtual void write_annotations(std::ostream& out) const {}
+  virtual void write_annotations(std::ostream&) const {}
 
   commodity_pool_t& parent() const {
     return *parent_;

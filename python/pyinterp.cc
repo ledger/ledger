@@ -270,7 +270,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	  }
 	  return result;
 	}
-	else if (PyObject * err = PyErr_Occurred()) {
+	else if (PyErr_Occurred()) {
 	  PyErr_Print();
 	  throw_(calc_error, "Failed call to Python function '" << name << "'");
 	} else {

@@ -26,5 +26,4 @@ void BalanceTestCase::tearDown()
 
 void BalanceTestCase::testConstructors()
 {
-  int x = 1;
 }

@@ -66,7 +66,7 @@ public:
     TRACE_DTOR(scope_t);
   }
 
-  virtual void define(const string& name, expr_t::ptr_op_t def) {}
+  virtual void define(const string&, expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const string& name) = 0;
 
   value_t resolve(const string& name) {

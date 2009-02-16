@@ -970,7 +970,6 @@ void amount_t::print(std::ostream& _out) const
   std::ostringstream out;
 
   commodity_t& comm(commodity());
-  precision_t  precision = 0;
 
   if (! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     comm.print(out);

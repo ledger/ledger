@@ -96,11 +96,8 @@ void xacts_commodities_iterator::reset(journal_t& journal)
 
     foreach (commodity_t::base_t::history_by_commodity_map::value_type pair,
 	     history->histories) {
-      commodity_t&	      price_comm(*pair.first);
-      commodity_t::history_t& price_hist(pair.second);
-
       foreach (commodity_t::base_t::history_map::value_type hpair,
-	       price_hist.prices) {
+	       pair.second.prices) {
 	entry_t * entry;
 	string    symbol = hpair.second.commodity().symbol();
 

@@ -53,6 +53,9 @@ class ptristream : public std::istream
 {
   class ptrinbuf : public std::streambuf
   {
+    ptrinbuf(const ptrinbuf&);
+    ptrinbuf& operator=(const ptrinbuf&);
+
   protected:
     char *	ptr;
     std::size_t len;
@@ -77,8 +80,7 @@ class ptristream : public std::istream
     }
 
     virtual pos_type seekoff(off_type off, ios_base::seekdir way,
-			     ios_base::openmode mode =
-			     ios_base::in | ios_base::out)
+			     ios_base::openmode)
     {
       switch (way) {
       case std::ios::cur:

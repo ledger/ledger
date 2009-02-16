@@ -102,19 +102,13 @@ void CommodityTestCase::testPriceHistory()
 
 void CommodityTestCase::testLots()
 {
-  // jww (2007-04-17): tbd
-  int x = 1;
 }
 
 void CommodityTestCase::testScalingBase()
 {
-  // jww (2007-04-17): tbd
-  int x = 1;
 }
 
 void CommodityTestCase::testReduction()
 {
-  // jww (2007-04-17): tbd
-  int x = 1;
 }
 

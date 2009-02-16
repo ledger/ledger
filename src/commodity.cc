@@ -99,9 +99,7 @@ bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date
 
 optional<price_point_t>
   commodity_t::base_t::history_t::
-    find_price(const commodity_t&	     source,
-	       const optional<commodity_t&>& commodity,
-	       const optional<datetime_t>&   moment,
+    find_price(const optional<datetime_t>&   moment,
 	       const optional<datetime_t>&   oldest
 #if defined(DEBUG_ON)
 	       , const int indent
@@ -275,7 +273,7 @@ optional<price_point_t>
 	  "  searching for price via commodity '" << comm << "'");
 #endif
 
-    point = hist.second.find_price(source, commodity, moment, limit
+    point = hist.second.find_price(moment, limit
 #if defined(DEBUG_ON)
 				   , indent + 2
 #endif

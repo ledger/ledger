@@ -63,6 +63,8 @@ namespace ledger {
  */
 class output_stream_t
 {
+  output_stream_t& operator=(const output_stream_t&);
+
 private:
   int pipe_to_pager_fd;
 
@@ -85,7 +87,7 @@ public:
    * allows large classes to rely on their default copy-constructor without
    * worrying about pointer copying within output_stream_t.
    */
-  output_stream_t(const output_stream_t& other)
+  output_stream_t(const output_stream_t&)
     : pipe_to_pager_fd(-1), os(&std::cout) {
     TRACE_CTOR(output_stream_t, "copy");
   }

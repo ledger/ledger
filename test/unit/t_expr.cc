@@ -18,5 +18,4 @@ void ValueExprTestCase::tearDown()
 
 void ValueExprTestCase::testConstructors()
 {
-  int x = 1;
 }

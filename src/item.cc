@@ -225,7 +225,7 @@ namespace {
     return long(item.end_line);
   }
 
-  value_t get_depth(item_t& item) {
+  value_t get_depth(item_t&) {
     return 0L;
   }
 

@@ -155,8 +155,6 @@ int main(int argc, char * argv[], char * envp[])
 
 #endif // HAVE_LIBEDIT
 
-	bool do_command = true;
-
 	check_for_signal();
 
 	if (*p && *p != '#') {

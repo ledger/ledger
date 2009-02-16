@@ -117,8 +117,7 @@ namespace {
 			entry_t *	entry);
 
     bool parse_xacts(account_t *   account,
-		     entry_base_t& entry,
-		     const string& kind);
+		     entry_base_t& entry);
 
     entry_t * parse_entry(char *	  line,
 			  std::streamsize len,
@@ -526,7 +525,7 @@ void instance_t::automated_entry_directive(char * line)
     (new auto_entry_t(item_predicate(skip_ws(line + 1),
 				     keep_details_t(true, true, true, true))));
 
-  if (parse_xacts(account_stack.front(), *ae.get(), "automated")) {
+  if (parse_xacts(account_stack.front(), *ae.get())) {
     journal.auto_entries.push_back(ae.get());
 
     ae->pathname = pathname;
@@ -548,7 +547,7 @@ void instance_t::period_entry_directive(char * line)
   istream_pos_type pos	= curr_pos;
   std::size_t      lnum = linenum;
 
-  if (parse_xacts(account_stack.front(), *pe.get(), "period")) {
+  if (parse_xacts(account_stack.front(), *pe.get())) {
     if (pe->finalize()) {
       extend_entry_base(&journal, *pe.get(), true);
 
@@ -629,7 +628,7 @@ void instance_t::account_directive(char * line)
     assert(! "Failed to create account");
 }
 
-void instance_t::end_directive(char * line)
+void instance_t::end_directive(char *)
 {
   account_stack.pop_front();
 }
@@ -1008,8 +1007,7 @@ xact_t * instance_t::parse_xact(char *		line,
 }
 
 bool instance_t::parse_xacts(account_t *   account,
-			     entry_base_t& entry,
-			     const string& kind)
+			     entry_base_t& entry)
 {
   TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
 

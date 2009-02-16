@@ -59,7 +59,7 @@ namespace {
 
     scope_wrapper(PyObject * self_) : self(self_) {}
 
-    virtual expr_t::ptr_op_t lookup(const string& name) {
+    virtual expr_t::ptr_op_t lookup(const string&) {
       return NULL;
     }    
   };
