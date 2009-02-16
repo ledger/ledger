@@ -512,22 +512,24 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, HANDLER(balance_format_).str()),
+	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
 	      *this));
 	break;
 
       case 'c':
 	if (is_eq(p, "csv"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, HANDLER(csv_format_).str()),
-			*this));
+	    (reporter<>
+	     (new format_xacts(*this, report_format(HANDLER(csv_format_))),
+	      *this));
 	break;
 
       case 'e':
 	if (is_eq(p, "equity"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_equity(*this, HANDLER(print_format_).str()), *this));
+	     (new format_equity(*this, report_format(HANDLER(print_format_))),
+	      *this));
 	else if (is_eq(p, "entry"))
 	  return WRAP_FUNCTOR(entry_command);
 	else if (is_eq(p, "emacs"))
@@ -538,23 +540,27 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'p':
 	if (*(p + 1) == '\0' || is_eq(p, "print"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, HANDLER(print_format_).str()),
-			*this));
+	    (reporter<>
+	     (new format_xacts(*this, report_format(HANDLER(print_format_))),
+	      *this));
 	else if (is_eq(p, "prices"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
-	     (new format_xacts(*this, HANDLER(prices_format_).str()), *this));
+	     (new format_xacts(*this, report_format(HANDLER(prices_format_))),
+	      *this));
 	else if (is_eq(p, "pricesdb"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
-	     (new format_xacts(*this, HANDLER(pricesdb_format_).str()), *this));
+	     (new format_xacts(*this, report_format(HANDLER(pricesdb_format_))),
+	      *this));
 	break;
 
       case 'r':
 	if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_xacts(*this, HANDLER(register_format_).str()),
-			*this));
+	    (reporter<>
+	     (new format_xacts(*this, report_format(HANDLER(register_format_))),
+	      *this));
 	else if (is_eq(p, "reload"))
 	  return MAKE_FUNCTOR(report_t::reload_command);
 	break;

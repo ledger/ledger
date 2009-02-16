@@ -146,6 +146,12 @@ public:
     return value_t(static_cast<scope_t *>(this));
   }
 
+  string report_format(option_t<report_t>& option) {
+    if (HANDLED(format_))
+      return HANDLER(format_).str();
+    return option.str();
+  }
+
   value_t reload_command(call_scope_t& scope) {
     session.close_journal_files();
     session.read_journal_files();
