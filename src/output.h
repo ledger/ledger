@@ -91,14 +91,26 @@ protected:
   xact_t *  last_xact;
 
   struct statistics_t {
-    std::size_t   total_entries;
-    std::size_t   total_xacts;
+    std::set<path> filenames;
+
+    std::size_t total_entries;
+    std::size_t total_xacts;
+    std::size_t total_uncleared_xacts;
+    std::size_t total_last_7_days;
+    std::size_t total_last_30_days;
+    std::size_t total_this_month;
+
+    date_t earliest_xact;
+    date_t latest_xact;
+
+    std::set<string> accounts_referenced;
+    std::set<string> payees_referenced;
+    std::set<date_t> unique_dates;
 
     statistics_t()
-      : total_entries(0),
-	total_xacts(0) {}
-  }
-    statistics;
+      : total_entries(0), total_xacts(0), total_uncleared_xacts(0),
+	total_last_7_days(0), total_last_30_days(0), total_this_month(0) {}
+  } statistics;
 
 public:
   gather_statistics(report_t& _report)

@@ -88,17 +88,58 @@ void gather_statistics::flush()
 {
   std::ostream& out(report.output_stream);
 
-  out << "Statistics gathered for this report:" << std::endl
-      << "  Total entries:         " ;
+  out << "Statistics gathered for this report:" << std::endl;
 
-  out << std::right;
-  out.width(6);
-  out << statistics.total_entries << std::endl
-      << "  Total transactions:    ";
+  out << std::endl << "  Time period: "
+      << statistics.earliest_xact << " to "
+      << statistics.latest_xact << std::endl << std::endl;
 
-  out << std::right;
-  out.width(6);
-  out << statistics.total_xacts << std::endl;
+  out << "  Files these transactions came from:" << std::endl;
+
+  bool first = true;
+  foreach (const path& pathname, statistics.filenames)
+    out << "    " << pathname.string() << std::endl;
+  out << std::endl;
+
+  out << "  Unique payees:          ";
+  out.width(8);
+  out << std::right << statistics.payees_referenced.size() << std::endl;
+
+  out << "  Unique accounts:        ";
+  out.width(8);
+  out << std::right << statistics.accounts_referenced.size() << std::endl;
+
+  out << "  Number of entries:      " ;
+  out.width(8);
+  out << std::right << statistics.total_entries << std::endl;
+
+  out << "  Number of transactions: ";
+  out.width(8);
+  out << std::right << statistics.total_xacts;
+
+  out << " (";
+  out.precision(2);
+  out << (double(statistics.unique_dates.size()) /
+	  double(statistics.total_xacts)) << " per day)" << std::endl;
+
+  out << "  Days since last xact:   ";
+  out.width(8);
+  out << std::right << (CURRENT_DATE() - statistics.latest_xact).days()
+      << std::endl;
+
+  out << "  Xacts in last 7 days:   ";
+  out.width(8);
+  out << std::right << statistics.total_last_7_days << std::endl;
+  out << "  Xacts in last 30 days:  ";
+  out.width(8);
+  out << std::right << statistics.total_last_30_days << std::endl;
+  out << "  Xacts seen this month:  ";
+  out.width(8);
+  out << std::right << statistics.total_this_month << std::endl;
+
+  out << "  Uncleared transactions: ";
+  out.width(8);
+  out << std::right << statistics.total_uncleared_xacts << std::endl;
 
   out.flush();
 }
@@ -112,6 +153,34 @@ void gather_statistics::operator()(xact_t& xact)
   if (last_xact != &xact) {
     statistics.total_xacts++;
     last_xact = &xact;
+
+    statistics.filenames.insert(xact.pathname);
+
+    date_t date = xact.reported_date();
+
+    statistics.unique_dates.insert(date);
+
+    if (date.year() == CURRENT_DATE().year() &&
+	date.month() == CURRENT_DATE().month())
+      statistics.total_this_month++;
+
+    if ((CURRENT_DATE() - date).days() <= 30)
+      statistics.total_last_30_days++;
+    if ((CURRENT_DATE() - date).days() <= 7)
+      statistics.total_last_7_days++;
+
+    if (xact.state() != item_t::CLEARED)
+      statistics.total_uncleared_xacts++;
+
+    if (! is_valid(statistics.earliest_xact) ||
+	xact.reported_date() < statistics.earliest_xact)
+      statistics.earliest_xact = xact.reported_date();
+    if (! is_valid(statistics.latest_xact) ||
+	xact.reported_date() > statistics.latest_xact)
+      statistics.latest_xact = xact.reported_date();
+
+    statistics.accounts_referenced.insert(xact.account->fullname());
+    statistics.payees_referenced.insert(xact.entry->payee);
   }
 }
 
