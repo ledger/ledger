@@ -88,17 +88,14 @@ void gather_statistics::flush()
 {
   std::ostream& out(report.output_stream);
 
-  out << "Statistics gathered for this report:" << std::endl;
-
-  out << std::endl << "  Time period: "
-      << statistics.earliest_xact << " to "
+  out << "Time period: " << statistics.earliest_xact << " to "
       << statistics.latest_xact << std::endl << std::endl;
 
   out << "  Files these transactions came from:" << std::endl;
 
-  bool first = true;
   foreach (const path& pathname, statistics.filenames)
-    out << "    " << pathname.string() << std::endl;
+    if (! pathname.empty())
+      out << "    " << pathname.string() << std::endl;
   out << std::endl;
 
   out << "  Unique payees:          ";
@@ -119,7 +116,7 @@ void gather_statistics::flush()
 
   out << " (";
   out.precision(2);
-  out << (double(statistics.unique_dates.size()) /
+  out << (double((statistics.latest_xact - statistics.earliest_xact).days()) /
 	  double(statistics.total_xacts)) << " per day)" << std::endl;
 
   out << "  Days since last xact:   ";
@@ -157,8 +154,6 @@ void gather_statistics::operator()(xact_t& xact)
     statistics.filenames.insert(xact.pathname);
 
     date_t date = xact.reported_date();
-
-    statistics.unique_dates.insert(date);
 
     if (date.year() == CURRENT_DATE().year() &&
 	date.month() == CURRENT_DATE().month())

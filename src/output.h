@@ -105,7 +105,6 @@ protected:
 
     std::set<string> accounts_referenced;
     std::set<string> payees_referenced;
-    std::set<date_t> unique_dates;
 
     statistics_t()
       : total_entries(0), total_xacts(0), total_uncleared_xacts(0),
