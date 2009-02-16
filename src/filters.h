@@ -272,13 +272,13 @@ public:
  */
 class filter_xacts : public item_handler<xact_t>
 {
-  item_predicate<xact_t> pred;
+  item_predicate pred;
 
   filter_xacts();
 
 public:
-  filter_xacts(xact_handler_ptr		     handler,
-	       const item_predicate<xact_t>& predicate)
+  filter_xacts(xact_handler_ptr	     handler,
+	       const item_predicate& predicate)
     : item_handler<xact_t>(handler), pred(predicate) {
     TRACE_CTOR(filter_xacts,
 	       "xact_handler_ptr, const item_predicate<xact_t>&");
@@ -770,11 +770,11 @@ public:
  */
 class forecast_xacts : public generate_xacts
 {
-  item_predicate<xact_t> pred;
+  item_predicate pred;
 
  public:
-  forecast_xacts(xact_handler_ptr	       handler,
-		 const item_predicate<xact_t>& predicate)
+  forecast_xacts(xact_handler_ptr      handler,
+		 const item_predicate& predicate)
     : generate_xacts(handler), pred(predicate) {
     TRACE_CTOR(forecast_xacts,
 	       "xact_handler_ptr, const item_predicate<xact_t>&");
@@ -817,12 +817,12 @@ class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
-  optional<item_predicate<account_t> > pred;
+  optional<item_predicate> pred;
 
 public:
   pass_down_accounts(acct_handler_ptr	handler,
 		     accounts_iterator&	iter,
-		     const optional<item_predicate<account_t> >& predicate = none);
+		     const optional<item_predicate>& predicate = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

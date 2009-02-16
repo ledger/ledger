@@ -56,7 +56,6 @@ namespace ledger {
  *
  * Long.
  */
-template <typename T>
 class item_predicate
 {
 public:
@@ -84,7 +83,7 @@ public:
     TRACE_DTOR(item_predicate);
   }
 
-  bool operator()(T& item) {
+  bool operator()(scope_t& item) {
     return ! predicate || predicate.calc(item).strip_annotations(what_to_keep);
   }
 };

@@ -149,10 +149,10 @@ class format_entries : public format_xacts
 class format_accounts : public item_handler<account_t>
 {
 protected:
-  report_t&		    report;
-  format_t		    format;
-  item_predicate<account_t> disp_pred;
-  bool			    print_final_total;
+  report_t&	 report;
+  format_t	 format;
+  item_predicate disp_pred;
+  bool		 print_final_total;
 
   bool disp_subaccounts_p(account_t& account, account_t *& to_show);
   bool display_account(account_t& account);

@@ -787,10 +787,9 @@ void forecast_xacts::flush()
   item_handler<xact_t>::flush();
 }
 
-pass_down_accounts::pass_down_accounts
-  (acct_handler_ptr   handler,
-   accounts_iterator& iter,
-   const optional<item_predicate<account_t> >& predicate)
+pass_down_accounts::pass_down_accounts(acct_handler_ptr		       handler,
+				       accounts_iterator&	       iter,
+				       const optional<item_predicate>& predicate)
   : item_handler<account_t>(handler), pred(predicate)
 {
   TRACE_CTOR(pass_down_accounts,

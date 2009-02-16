@@ -126,7 +126,7 @@ struct entry_finalizer_t {
 class auto_entry_t : public entry_base_t
 {
 public:
-  item_predicate<xact_t> predicate;
+  item_predicate predicate;
 
   auto_entry_t() {
     TRACE_CTOR(auto_entry_t, "");
@@ -135,7 +135,7 @@ public:
     : entry_base_t(), predicate(other.predicate) {
     TRACE_CTOR(auto_entry_t, "copy");
   }
-  auto_entry_t(const item_predicate<xact_t>& _predicate)
+  auto_entry_t(const item_predicate& _predicate)
     : predicate(_predicate)
   {
     TRACE_CTOR(auto_entry_t, "const item_predicate<xact_t>&");

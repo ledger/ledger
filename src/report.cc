@@ -128,11 +128,11 @@ void report_t::accounts_report(acct_handler_ptr handler)
   if (! HANDLED(sort_)) {
     basic_accounts_iterator walker(*session.master);
     pass_down_accounts(handler, walker,
-		       item_predicate<account_t>("total", what_to_keep()));
+		       item_predicate("total", what_to_keep()));
   } else {
     sorted_accounts_iterator walker(*session.master, HANDLER(sort_).str());
     pass_down_accounts(handler, walker,
-		       item_predicate<account_t>("total", what_to_keep()));
+		       item_predicate("total", what_to_keep()));
   }
     
   session.clean_xacts();

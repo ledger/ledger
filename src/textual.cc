@@ -519,10 +519,9 @@ void instance_t::automated_entry_directive(char * line)
   istream_pos_type pos	= curr_pos;
   std::size_t      lnum = linenum;
 
-  std::auto_ptr<auto_entry_t>
-    ae(new auto_entry_t(item_predicate<xact_t>
-			(skip_ws(line + 1),
-			 keep_details_t(true, true, true, true))));
+  std::auto_ptr<auto_entry_t> ae
+    (new auto_entry_t(item_predicate(skip_ws(line + 1),
+				     keep_details_t(true, true, true, true))));
 
   if (parse_xacts(account_stack.front(), *ae.get(), "automated")) {
     journal.auto_entries.push_back(ae.get());
