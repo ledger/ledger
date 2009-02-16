@@ -112,6 +112,7 @@ See LICENSE file included with the distribution for details and disclaimer.";
 
   virtual expr_t::ptr_op_t lookup(const string& name);
 
+  OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);
 
   OPTION(global_scope_t, full_help); // -H

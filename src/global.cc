@@ -67,10 +67,12 @@ global_scope_t::global_scope_t(char ** envp)
   // Before processing command-line options, we must notify the session object
   // that such options are beginning, since options like -f cause a complete
   // override of files found anywhere else.
-  session().set_flush_on_next_data_file(true);
-  read_environment_settings(envp);
-  session().set_flush_on_next_data_file(true);
-  read_init();
+  if (! HANDLED(args_only)) {
+    session().set_flush_on_next_data_file(true);
+    read_environment_settings(envp);
+    session().set_flush_on_next_data_file(true);
+    read_init();
+  }
 }
 
 global_scope_t::~global_scope_t()
@@ -231,6 +233,9 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
 option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
 {
   switch (*p) {
+  case 'a':
+    OPT(args_only);
+    break;
   case 'd':
     OPT(debug_);
     break;
