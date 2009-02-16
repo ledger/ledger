@@ -204,7 +204,13 @@ while [ -n "$1" ]; do
   case "$1" in
     --pch)
 	  USE_GLIBCXX_DEBUG=false
+
 	  SWITCHES="$SWITCHES --enable-pch"
+
+          # These can cause problems when run against a full set of headers,
+          # but with PCH, they only apply to Ledger itself
+	  CXXFLAGS="$CXXFLAGS -Wconversion"
+	  CXXFLAGS="$CXXFLAGS -Wold-style-cast"
 
 	  # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
 	  # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
@@ -250,15 +256,8 @@ while [ -n "$1" ]; do
 	CXXFLAGS="$CXXFLAGS -Wsign-promo"
 	CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
 	CXXFLAGS="$CXXFLAGS -Wwrite-strings"
-	CXXFLAGS="$CXXFLAGS -Wno-unused"
 	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
 	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
-
-        # These cause problems on some systems
-	#CXXFLAGS="$CXXFLAGS -Wconversion"
-	#CXXFLAGS="$CXXFLAGS -Wold-style-cast"
-	#CXXFLAGS="$CXXFLAGS -Wshorten-64-to-32"
-	#CXXFLAGS="$CXXFLAGS -Weffc++"
 	shift 1 ;;
 
     --debug)
