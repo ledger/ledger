@@ -405,6 +405,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'f':
     OPT(forecast_);
     else OPT(format_);
+    else OPT_ALT(head_, first_);
     break;
   case 'g':
     OPT_CH(performance);
@@ -425,6 +426,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(lot_prices);
     else OPT(lot_tags);
     else OPT(lots);
+    else OPT_ALT(tail_, last_);
     break;
   case 'm':
     OPT(market);

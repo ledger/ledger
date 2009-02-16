@@ -202,6 +202,10 @@ inline bool is_eq(const char * p, const char * n) {
   if (is_eq(p, #name))							\
     return ((name ## _handler).parent = this, &(name ## _handler))
 
+#define OPT_ALT(name, alt)						\
+  if (is_eq(p, #name) || is_eq(p, #alt))				\
+    return ((name ## _handler).parent = this, &(name ## _handler))
+
 #define OPT_(name)							\
   if (! *(p + 1) ||							\
       ((name ## _handler).wants_arg &&					\
