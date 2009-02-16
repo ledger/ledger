@@ -572,7 +572,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 's':
-	if (is_eq(p, "stats"))
+	if (is_eq(p, "stats") || is_eq(p, "stat"))
 	  return WRAP_FUNCTOR(reporter<>(new gather_statistics(*this), *this));
 	break;
       }
