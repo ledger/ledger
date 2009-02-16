@@ -731,14 +731,14 @@ public:
    *   in_place_cast
    *   in_place_simplify
    */
-  value_t cast(type_t cast_type) const {
+  value_t casted(type_t cast_type) const {
     value_t temp(*this);
     temp.in_place_cast(cast_type);
     return temp;
   }
   void    in_place_cast(type_t cast_type);
 
-  value_t simplify() const {
+  value_t simplified() const {
     value_t temp = *this;
     temp.in_place_simplify();
     return temp;

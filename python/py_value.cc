@@ -237,10 +237,10 @@ void export_value()
     .def("__str__", py_dump_relaxed)
     .def("__repr__", py_dump)
 
-    .def("cast", &value_t::cast)
+    .def("casted", &value_t::casted)
     .def("in_place_cast", &value_t::in_place_cast)
 
-    .def("simplify", &value_t::simplify)
+    .def("simplified", &value_t::simplified)
     .def("in_place_simplify", &value_t::in_place_simplify)
 
     // jww (2009-02-07): Allow annotating, and retrieving annotations
