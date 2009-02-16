@@ -1314,6 +1314,10 @@ void value_t::print(std::ostream&           out,
     as_balance().print(out, first_width, latter_width);
     break;
 
+  case POINTER:
+    out << "<POINTER>";
+    break;
+
   default:
     throw_(value_error, "Cannot print " << label());
   }
