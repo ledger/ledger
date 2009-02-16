@@ -278,7 +278,7 @@ public:
      if (! handled)
        on(text);
      else
-       on(string("(") + str() + ")&" + text);
+       on(string("(") + str() + ")&(" + text + ")");
    }
    DO_(args) {
      append(args[0].to_string());
@@ -345,7 +345,7 @@ public:
      if (! handled)
        on(text);
      else
-       on(string("(") + str() + ")&" + text);
+       on(string("(") + str() + ")&(" + text + ")");
    }
    DO_(args) {
      append(args[0].to_string());
@@ -373,7 +373,7 @@ public:
      if (! handled)
        on(text);
      else
-       on(string("(") + str() + ")&" + text);
+       on(string("(") + str() + ")&(" + text + ")");
    }
    DO_(args) {
      append(args[0].to_string());
