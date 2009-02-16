@@ -236,6 +236,9 @@ void instance_t::parse()
       add_error_context("While parsing file "
 			<< file_context(pathname, linenum));
 
+      if (caught_signal != NONE_CAUGHT)
+	throw;
+
       string context = error_context();
       if (! context.empty())
 	std::cerr << context << std::endl;
