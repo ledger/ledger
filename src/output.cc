@@ -242,14 +242,11 @@ void format_accounts::flush()
 
 void format_accounts::operator()(account_t& account)
 {
-  if (display_account(account)) {
-    if (! account.parent) {
-      account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
-    } else {
-      bind_scope_t bound_scope(report, account);
-      format.format(report.output_stream, bound_scope);
-      account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
-    }
+  // Never display the top-most account (the "root", or master, account)
+  if (account.parent && display_account(account)) {
+    bind_scope_t bound_scope(report, account);
+    format.format(report.output_stream, bound_scope);
+    account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
   }
 }
 
@@ -265,6 +262,8 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
 
   to_show = NULL;
 
+  bind_scope_t account_scope(report, account);
+
   foreach (accounts_map::value_type pair, account.accounts) {
     if (! should_display(*pair.second))
       continue;
@@ -273,7 +272,6 @@ bool format_accounts::disp_subaccounts_p(account_t&   account,
     call_scope_t args(bound_scope);
     result = report.fn_total_expr(args);
     if (! computed) {
-      bind_scope_t account_scope(report, account);
       call_scope_t args(account_scope);
       acct_total = report.fn_total_expr(args);
       computed = true;
