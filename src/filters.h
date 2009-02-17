@@ -514,10 +514,10 @@ protected:
     value_t	value;
 
     acct_value_t(account_t * a) : account(a) {
-      TRACE_CTOR(acct_value_t, "acount_t *");
+      TRACE_CTOR(acct_value_t, "account_t *");
     }
     acct_value_t(account_t * a, value_t& v) : account(a), value(v) {
-      TRACE_CTOR(acct_value_t, "acount_t *, value_t&");
+      TRACE_CTOR(acct_value_t, "account_t *, value_t&");
     }
     acct_value_t(const acct_value_t& av)
       : account(av.account), value(av.value) {
