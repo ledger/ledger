@@ -291,7 +291,13 @@ void collapse_xacts::report_subtotal()
 {
   assert(count >= 1);
 
-  if (count == 1) {
+  std::size_t displayed_count = 0;
+  foreach (xact_t * xact, component_xacts) {
+    if (only_predicate(*xact) && display_predicate(*xact))
+      displayed_count++;
+  }  
+
+  if (displayed_count == 1) {
     item_handler<xact_t>::operator()(*last_xact);
   }
   else if (only_collapse_if_zero && ! subtotal.is_zero()) {

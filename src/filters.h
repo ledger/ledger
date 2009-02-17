@@ -379,13 +379,15 @@ public:
  */
 class collapse_xacts : public item_handler<xact_t>
 {
-  expr_t&     amount_expr;
-  value_t     subtotal;
-  std::size_t count;
-  entry_t *   last_entry;
-  xact_t *    last_xact;
-  account_t   totals_account;
-  bool        only_collapse_if_zero;
+  expr_t&	 amount_expr;
+  item_predicate display_predicate;
+  item_predicate only_predicate;
+  value_t	 subtotal;
+  std::size_t	 count;
+  entry_t *	 last_entry;
+  xact_t *	 last_xact;
+  account_t	 totals_account;
+  bool		 only_collapse_if_zero;
 
   std::list<entry_t>  entry_temps;
   std::list<xact_t>   xact_temps;
@@ -394,10 +396,15 @@ class collapse_xacts : public item_handler<xact_t>
   collapse_xacts();
 
 public:
-  collapse_xacts(xact_handler_ptr handler, expr_t& _amount_expr,
-		 bool _only_collapse_if_zero = false)
+  collapse_xacts(xact_handler_ptr handler,
+		 expr_t&	  _amount_expr,
+		 item_predicate   _display_predicate,
+		 item_predicate   _only_predicate,
+		 bool             _only_collapse_if_zero = false)
     : item_handler<xact_t>(handler), amount_expr(_amount_expr),
-      count(0), last_entry(NULL), last_xact(NULL),
+      display_predicate(_display_predicate),
+      only_predicate(_only_predicate), count(0),
+      last_entry(NULL), last_xact(NULL),
       totals_account(NULL, "<Total>"),
       only_collapse_if_zero(_only_collapse_if_zero) {
     TRACE_CTOR(collapse_xacts, "xact_handler_ptr");

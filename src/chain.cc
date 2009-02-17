@@ -40,6 +40,8 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 				     bool             only_preliminaries)
 {
   xact_handler_ptr handler(base_handler);
+  item_predicate   display_predicate;
+  item_predicate   only_predicate;
 
   assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
@@ -58,11 +60,11 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 
     // filter_xacts will only pass through xacts matching the
     // `display_predicate'.
-    if (report.HANDLED(display_))
-      handler.reset(new filter_xacts
-		    (handler, item_predicate(report.HANDLER(display_).str(),
-					     report.what_to_keep()),
-		     report));
+    if (report.HANDLED(display_)) {
+      display_predicate = item_predicate(report.HANDLER(display_).str(),
+					 report.what_to_keep());
+      handler.reset(new filter_xacts(handler, display_predicate, report));
+    }
 
     // calc_xacts computes the running total.  When this appears will
     // determine, for example, whether filtered xacts are included or excluded
@@ -72,11 +74,11 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 
   // filter_xacts will only pass through xacts matching the
   // `secondary_predicate'.
-  if (report.HANDLED(only_))
-    handler.reset(new filter_xacts
-		  (handler, item_predicate(report.HANDLER(only_).str(),
-					   report.what_to_keep()),
-		   report));
+  if (report.HANDLED(only_)) {
+    only_predicate = item_predicate(report.HANDLER(only_).str(),
+				    report.what_to_keep());
+    handler.reset(new filter_xacts(handler, only_predicate, report));
+  }
 
   // sort_xacts will sort all the xacts it sees, based on the `sort_order'
   // value expression.
@@ -100,6 +102,7 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // with a subtotaled xact for each commodity used.
     if (report.HANDLED(collapse))
       handler.reset(new collapse_xacts(handler, expr,
+				       display_predicate, only_predicate,
 				       report.HANDLED(collapse_if_zero)));
   }
 
