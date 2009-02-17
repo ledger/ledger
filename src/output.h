@@ -165,9 +165,6 @@ protected:
   item_predicate disp_pred;
   bool		 print_final_total;
 
-  bool disp_subaccounts_p(account_t& account, account_t *& to_show);
-  bool display_account(account_t& account);
-
 public:
   format_accounts(report_t&	_report,
 		  const string& _format = "",
@@ -176,14 +173,20 @@ public:
       print_final_total(_print_final_total)
   {
     TRACE_CTOR(format_accounts, "report&, const string&, const bool");
+
+    if (report.HANDLED(display_)) {
+      DEBUG("account.display",
+	    "Account display predicate: " << report.HANDLER(display_).str());
+      disp_pred.predicate.parse(report.HANDLER(display_).str());
+    }
   }
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }
 
-  bool should_display(account_t& account);
-
+  virtual void post_accounts(account_t& account);
   virtual void flush();
+
   virtual void operator()(account_t& account);
 };
 
@@ -207,7 +210,7 @@ class format_equity : public format_accounts
   }
 
   virtual void flush();
-  virtual void operator()(account_t& account);
+  virtual void post_accounts(account_t& account);
 };
 
 } // namespace ledger

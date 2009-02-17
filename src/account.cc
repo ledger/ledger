@@ -127,22 +127,18 @@ string account_t::fullname() const
 
 string account_t::partial_name() const
 {
-  string name;
+  string pname = name;
 
-  for (const account_t * acct = this;
+  for (const account_t * acct = parent;
        acct && acct->parent;
        acct = acct->parent) {
-    if (acct->has_xdata() &&
-	acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
+    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_MATCHING);
+    assert(count > 0);
+    if (count > 1)
       break;
-
-    if (name.empty())
-      name = acct->name;
-    else
-      name = acct->name + ":" + name;
+    pname = acct->name + ":" + pname;
   }
-
-  return name;
+  return pname;
 }
 
 std::ostream& operator<<(std::ostream& out, const account_t& account)
@@ -193,13 +189,20 @@ namespace {
 
   value_t get_depth_spacer(account_t& account)
   {
+    std::size_t depth = 0;
+    for (const account_t * acct = account.parent;
+	 acct && acct->parent;
+	 acct = acct->parent) {
+      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_MATCHING);
+      assert(count > 0);
+      if (count > 1)
+	depth++;
+    }
+
     std::ostringstream out;
-    for (account_t * acct = &account;
-	 acct;
-	 acct = acct->parent)
-      if (acct->has_xdata() &&
-	  acct->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
-	out << "  ";
+    for (std::size_t i = 0; i < depth; i++)
+      out << "  ";
+
     return string_value(out.str());
   }
 
@@ -272,6 +275,25 @@ bool account_t::valid() const
   }
 
   return true;
+}
+
+std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
+{
+  std::size_t count = 0;
+  bool        grandchildren_visited = false;
+
+  foreach (const accounts_map::value_type& pair, accounts) {
+    if (pair.second->has_flags(flags) ||
+	pair.second->children_with_flags(flags))
+      count++;
+  }
+
+  // Although no immediately children were visited, if any progeny at all were
+  // visited, it counts as one.
+  if (count == 0 && grandchildren_visited)
+    count = 1;
+
+  return count;
 }
 
 void account_t::calculate_sums(expr_t& amount_expr)

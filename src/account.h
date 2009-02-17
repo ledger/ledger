@@ -122,19 +122,18 @@ class account_t : public scope_t
 #define ACCOUNT_EXT_SORT_CALC	     0x02
 #define ACCOUNT_EXT_HAS_NON_VIRTUALS 0x04
 #define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x08
+#define ACCOUNT_EXT_VISITED          0x10
+#define ACCOUNT_EXT_MATCHING         0x20
 
     value_t	  value;
     value_t	  total;
     std::size_t   count;	// xacts counted toward amount
     std::size_t   total_count;	// xacts counted toward total
     std::size_t   virtuals;
-    uint_least8_t dflags;
 
     std::list<sort_value_t> sort_values;
 
-    xdata_t()
-      : supports_flags<>(), count(0), total_count(0),
-	virtuals(0), dflags(0)
+    xdata_t() : supports_flags<>(), count(0), total_count(0), virtuals(0)
     {
       TRACE_CTOR(account_t::xdata_t, "");
     }
@@ -145,7 +144,6 @@ class account_t : public scope_t
 	count(other.count),
 	total_count(other.total_count),
 	virtuals(other.virtuals),
-	dflags(other.dflags),
 	sort_values(other.sort_values)
     {
       TRACE_CTOR(account_t::xdata_t, "copy");
@@ -177,6 +175,11 @@ class account_t : public scope_t
     assert(xdata_);
     return *xdata_;
   }
+
+  bool has_flags(xdata_t::flags_t flags) const {
+    return xdata_ && xdata_->has_flags(flags);
+  }
+  std::size_t children_with_flags(xdata_t::flags_t flags) const;
 
   void calculate_sums(expr_t& amount_expr);
 };

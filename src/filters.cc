@@ -108,6 +108,10 @@ void set_account_value::operator()(xact_t& xact)
   if (xact.has_flags(XACT_VIRTUAL))
     xdata.virtuals++;
 
+  DEBUG("account.display",
+	"Visiting account: " << xact.account->fullname());
+  xact.account->xdata().add_flags(ACCOUNT_EXT_VISITED);
+
   item_handler<xact_t>::operator()(xact);
 }
 

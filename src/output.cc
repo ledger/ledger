@@ -210,23 +210,54 @@ void format_entries::operator()(xact_t& xact)
   last_entry = xact.entry;
 }
 
-bool format_accounts::should_display(account_t& account)
+void format_accounts::post_accounts(account_t& account)
 {
-  if (! disp_pred.predicate && report.HANDLED(display_))
-    disp_pred.predicate.parse(report.HANDLER(display_).str());
+  // Don't ever print the top-most account
+  if (account.parent) {
+    bind_scope_t bound_scope(report, account);
+    bool	 format_account = false;
 
-  bind_scope_t bound_scope(report, account);
-  return disp_pred(bound_scope);
+    DEBUG("account.display", "Should we display " << account.fullname());
+
+    if (account.has_flags(ACCOUNT_EXT_MATCHING) ||
+	account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1) {
+      DEBUG("account.display", "  Yes, because it matched");
+      format_account = true;
+    }
+    else if (account.children_with_flags(ACCOUNT_EXT_VISITED) &&
+	     ! account.children_with_flags(ACCOUNT_EXT_MATCHING)) {
+      DEBUG("account.display",
+	    "  Maybe, because it has visited, but no matching, children");
+      if (disp_pred(bound_scope)) {
+	DEBUG("account.display",
+	      "    And yes, because it matches the display predicate");
+	format_account = true;
+      } else {
+	DEBUG("account.display",
+	      "    And no, because it didn't match the display predicate");
+      }
+    }
+    else {
+      DEBUG("account.display",
+	    "  No, neither it nor its children were eligible for display");
+    }
+
+    if (format_account)
+      format.format(report.output_stream, bound_scope);
+  }
+
+  foreach (accounts_map::value_type pair, account.accounts)
+    post_accounts(*pair.second);
 }
 
 void format_accounts::flush()
 {
   std::ostream& out(report.output_stream);
 
-  if (print_final_total) {
-    assert(out);
-    assert(report.session.master->has_xdata());
+  post_accounts(*report.session.master.get());
 
+  if (print_final_total) {
+    assert(report.session.master->has_xdata());
     account_t::xdata_t& xdata(report.session.master->xdata());
 
     if (! report.HANDLED(collapse) && xdata.total) {
@@ -242,71 +273,23 @@ void format_accounts::flush()
 
 void format_accounts::operator()(account_t& account)
 {
-  // Never display the top-most account (the "root", or master, account)
-  if (account.parent && display_account(account)) {
+  DEBUG("account.display",
+	"Proposing to format account: " << account.fullname());
+
+  if (account.has_flags(ACCOUNT_EXT_VISITED)) {
+    DEBUG("account.display",
+	  "  Account or its children visited by sum_all_accounts");
+
     bind_scope_t bound_scope(report, account);
-    format.format(report.output_stream, bound_scope);
-    account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
-  }
-}
-
-bool format_accounts::disp_subaccounts_p(account_t&   account,
-					 account_t *& to_show)
-{
-  bool	      display  = false;
-  std::size_t counted  = 0;
-  bool        matches  = should_display(account);
-  bool        computed = false;
-  value_t     acct_total;
-  value_t     result;
-
-  to_show = NULL;
-
-  bind_scope_t account_scope(report, account);
-
-  foreach (accounts_map::value_type pair, account.accounts) {
-    if (! should_display(*pair.second))
-      continue;
-
-    bind_scope_t bound_scope(report, *pair.second);
-    call_scope_t args(bound_scope);
-    result = report.fn_total_expr(args);
-    if (! computed) {
-      call_scope_t args(account_scope);
-      acct_total = report.fn_total_expr(args);
-      computed = true;
+    if (disp_pred(bound_scope)) {
+      DEBUG("account.display",
+	    "  And the account matched the display predicate");
+      account.xdata().add_flags(ACCOUNT_EXT_MATCHING);
+    } else {
+      DEBUG("account.display",
+	    "  But it did not match the display predicate");
     }
-
-    if ((result != acct_total) || counted > 0) {
-      display = matches;
-      break;
-    }
-    to_show = pair.second;
-    counted++;
   }
-
-  return display;
-}
-
-bool format_accounts::display_account(account_t& account)
-{
-  // Never display an account that has already been displayed.
-  if (account.has_xdata() &&
-      account.xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
-    return false;
-
-  // At this point, one of two possibilities exists: the account is a
-  // leaf which matches the predicate restrictions; or it is a parent
-  // and two or more children must be subtotaled; or it is a parent
-  // and its child has been hidden by the predicate.  So first,
-  // determine if it is a parent that must be displayed regardless of
-  // the predicate.
-
-  account_t * account_to_show = NULL;
-  if (disp_subaccounts_p(account, account_to_show))
-    return true;
-
-  return ! account_to_show && should_display(account);
 }
 
 format_equity::format_equity(report_t& _report, const string& _format)
@@ -358,35 +341,33 @@ void format_equity::flush()
   out.flush();
 }
 
-void format_equity::operator()(account_t& account)
+void format_equity::post_accounts(account_t& account)
 {
   std::ostream& out(report.output_stream);
 
-  if (display_account(account)) {
-    if (account.has_xdata()) {
-      value_t val = account.xdata().value;
+  if (! account.has_flags(ACCOUNT_EXT_MATCHING))
+    return;
 
-      if (val.type() >= value_t::BALANCE) {
-	const balance_t * bal;
-	if (val.is_type(value_t::BALANCE))
-	  bal = &(val.as_balance());
-	else
-	  assert(false);
+  value_t val = account.xdata().value;
 
-	foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
-	  account.xdata().value = pair.second;
-	  bind_scope_t bound_scope(report, account);
-	  next_lines_format.format(out, bound_scope);
-	}
-	account.xdata().value = val;
-      } else {
-	bind_scope_t bound_scope(report, account);
-	next_lines_format.format(out, bound_scope);
-      }
-      total += val;
+  if (val.type() >= value_t::BALANCE) {
+    const balance_t * bal;
+    if (val.is_type(value_t::BALANCE))
+      bal = &(val.as_balance());
+    else
+      assert(false);
+
+    foreach (balance_t::amounts_map::value_type pair, bal->amounts) {
+      account.xdata().value = pair.second;
+      bind_scope_t bound_scope(report, account);
+      next_lines_format.format(out, bound_scope);
     }
-    account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
+    account.xdata().value = val;
+  } else {
+    bind_scope_t bound_scope(report, account);
+    next_lines_format.format(out, bound_scope);
   }
+  total += val;
 }
 
 } // namespace ledger
