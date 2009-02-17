@@ -163,14 +163,11 @@ protected:
   report_t&	 report;
   format_t	 format;
   item_predicate disp_pred;
-  bool		 print_final_total;
 
 public:
   format_accounts(report_t&	_report,
-		  const string& _format = "",
-		  const bool    _print_final_total = true)
-    : report(_report), format(_format), disp_pred(),
-      print_final_total(_print_final_total)
+		  const string& _format = "")
+    : report(_report), format(_format), disp_pred()
   {
     TRACE_CTOR(format_accounts, "report&, const string&, const bool");
 
@@ -184,8 +181,8 @@ public:
     TRACE_DTOR(format_accounts);
   }
 
-  virtual void post_accounts(account_t& account);
-  virtual void flush();
+  virtual std::size_t post_accounts(account_t& account);
+  virtual void	      flush();
 
   virtual void operator()(account_t& account);
 };
@@ -209,8 +206,8 @@ class format_equity : public format_accounts
     TRACE_DTOR(format_equity);
   }
 
-  virtual void flush();
-  virtual void post_accounts(account_t& account);
+  virtual std::size_t post_accounts(account_t& account);
+  virtual void	      flush();
 };
 
 } // namespace ledger

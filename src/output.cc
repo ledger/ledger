@@ -210,8 +210,10 @@ void format_entries::operator()(xact_t& xact)
   last_entry = xact.entry;
 }
 
-void format_accounts::post_accounts(account_t& account)
+std::size_t format_accounts::post_accounts(account_t& account)
 {
+  std::size_t displayed = 0;
+
   // Don't ever print the top-most account
   if (account.parent) {
     bind_scope_t bound_scope(report, account);
@@ -242,30 +244,36 @@ void format_accounts::post_accounts(account_t& account)
 	    "  No, neither it nor its children were eligible for display");
     }
 
-    if (format_account)
+    if (format_account) {
+      account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
+      displayed++;
+
       format.format(report.output_stream, bound_scope);
+    }
   }
 
-  foreach (accounts_map::value_type pair, account.accounts)
-    post_accounts(*pair.second);
+  foreach (accounts_map::value_type pair, account.accounts) {
+    if (post_accounts(*pair.second) > 0)
+      displayed++;
+  }
+
+  return displayed;
 }
 
 void format_accounts::flush()
 {
   std::ostream& out(report.output_stream);
 
-  post_accounts(*report.session.master.get());
+  std::size_t top_displayed = post_accounts(*report.session.master.get());
 
-  if (print_final_total) {
-    assert(report.session.master->has_xdata());
-    account_t::xdata_t& xdata(report.session.master->xdata());
+  assert(report.session.master->has_xdata());
+  account_t::xdata_t& xdata(report.session.master->xdata());
 
-    if (! report.HANDLED(collapse) && xdata.total) {
-      out << "--------------------\n";
-      xdata.value = xdata.total;
-      bind_scope_t bound_scope(report, *report.session.master);
-      format.format(out, bound_scope);
-    }
+  if (top_displayed > 1 && ! report.HANDLED(collapse) && xdata.total) {
+    out << "--------------------\n";
+    xdata.value = xdata.total;
+    bind_scope_t bound_scope(report, *report.session.master);
+    format.format(out, bound_scope);
   }
 
   out.flush();
@@ -341,12 +349,12 @@ void format_equity::flush()
   out.flush();
 }
 
-void format_equity::post_accounts(account_t& account)
+std::size_t format_equity::post_accounts(account_t& account)
 {
   std::ostream& out(report.output_stream);
 
   if (! account.has_flags(ACCOUNT_EXT_MATCHING))
-    return;
+    return 0;
 
   value_t val = account.xdata().value;
 
@@ -368,6 +376,8 @@ void format_equity::post_accounts(account_t& account)
     next_lines_format.format(out, bound_scope);
   }
   total += val;
+
+  return 1;
 }
 
 } // namespace ledger
