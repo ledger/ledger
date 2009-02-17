@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+SRCDIR=$(pwd)
+
+if [ -d ~/Products/ledger ]; then
+    cd ~/Products/ledger
+fi
+
+if [ ! -f Makefile -o \
+     $SRCDIR/acprep -nt Makefile -o \
+     $SRCDIR/tools/myacprep -nt Makefile ]; then
+    (cd $SRCDIR && tools/myacprep)
+fi
+
+make -j3 TAGS check
