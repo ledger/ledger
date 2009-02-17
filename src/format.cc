@@ -170,11 +170,6 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       current->chars = "%";
       break;
 
-    case '|':
-      current->type  = element_t::STRING;
-      current->chars = " ";
-      break;
-
     case '(':
     case '[': {
       std::istringstream str(p);
