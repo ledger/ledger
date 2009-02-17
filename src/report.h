@@ -438,6 +438,8 @@ public:
   OPTION(report_t, related_all);
   OPTION(report_t, revalued);
   OPTION(report_t, revalued_only);
+  OPTION(report_t, set_account_);
+  OPTION(report_t, set_payee_);
   OPTION(report_t, set_price_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S

@@ -470,7 +470,9 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(revalued_only);
     break;
   case 's':
-    OPT(set_price_);
+    OPT(set_account_);
+    else OPT(set_payee_);
+    else OPT(set_price_);
     else OPT(sort_);
     else OPT(sort_all_);
     else OPT(sort_entries_);

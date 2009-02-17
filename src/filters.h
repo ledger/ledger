@@ -639,152 +639,34 @@ class transfer_details : public item_handler<xact_t>
 {
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
+  account_t *        master;
+  expr_t             expr;
+  scope_t&           scope;
 
   transfer_details();
 
 public:
-  transfer_details(xact_handler_ptr handler)
-    : item_handler<xact_t>(handler) {
-    TRACE_CTOR(transfer_details, "xact_handler_ptr");
+  enum element_t {
+    SET_PAYEE,
+    SET_ACCOUNT
+  } which_element;
+
+  transfer_details(xact_handler_ptr handler,
+		   element_t	    _which_element,
+		   account_t *	    _master,
+		   const expr_t&    _expr,
+		   scope_t&         _scope)
+    : item_handler<xact_t>(handler), master(_master),
+      expr(_expr), scope(_scope), which_element(_which_element) {
+    TRACE_CTOR(transfer_details,
+	       "xact_handler_ptr, element_t, account_t *, expr_t, scope_t&");
   }
   virtual ~transfer_details() {
     TRACE_DTOR(transfer_details);
     clear_entries_xacts(entry_temps);
   }
 
-  virtual void set_details(entry_t& entry, xact_t& xact) = 0;
-
   virtual void operator()(xact_t& xact);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class set_comm_as_payee : public transfer_details
-{
-  set_comm_as_payee();
-
-public:
-  set_comm_as_payee(xact_handler_ptr handler)
-    : transfer_details(handler) {
-    TRACE_CTOR(set_comm_as_payee, "xact_handler_ptr");
-  }
-  virtual ~set_comm_as_payee() {
-    TRACE_DTOR(set_comm_as_payee);
-  }
-
-  virtual void set_details(entry_t& entry, xact_t& xact) {
-    if (xact.amount.commodity())
-      entry.payee = xact.amount.commodity().symbol();
-    else
-      entry.payee = "<none>";
-  }
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class set_code_as_payee : public transfer_details
-{
-  set_code_as_payee();
-
-public:
-  set_code_as_payee(xact_handler_ptr handler)
-    : transfer_details(handler) {
-    TRACE_CTOR(set_code_as_payee, "xact_handler_ptr");
-  }
-  virtual ~set_code_as_payee() {
-    TRACE_DTOR(set_code_as_payee);
-  }
-
-  virtual void set_details(entry_t& entry, xact_t& xact) {
-    if (xact.entry->code)
-      entry.payee = *xact.entry->code;
-    else
-      entry.payee = "<none>";
-  }
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class set_payee_as_account : public transfer_details
-{
-  account_t * master;
-
-  set_payee_as_account();
-
-public:
-  set_payee_as_account(xact_handler_ptr handler,
-		       account_t * _master)
-    : transfer_details(handler), master(_master) {
-    TRACE_CTOR(set_payee_as_account, "xact_handler_ptr");
-  }
-  virtual ~set_payee_as_account() {
-    TRACE_DTOR(set_payee_as_account);
-  }
-
-  virtual void set_details(entry_t& entry, xact_t& xact) {
-    xact.account = master->find_account(entry.payee);
-  }
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class set_comm_as_account : public transfer_details
-{
-  account_t * master;
-
-  set_comm_as_account();
-
-public:
-  set_comm_as_account(xact_handler_ptr handler,
-		      account_t * _master)
-    : transfer_details(handler), master(_master) {
-    TRACE_CTOR(set_comm_as_account, "xact_handler_ptr");
-  }
-  virtual ~set_comm_as_account() {
-    TRACE_DTOR(set_comm_as_account);
-  }
-
-  virtual void set_details(entry_t&, xact_t& xact) {
-    xact.account = master->find_account(xact.amount.commodity().symbol());
-  }
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class set_code_as_account : public transfer_details
-{
-  account_t * master;
-
-  set_code_as_account();
-
-public:
-  set_code_as_account(xact_handler_ptr handler,
-		      account_t * _master)
-    : transfer_details(handler), master(_master) {
-    TRACE_CTOR(set_code_as_account, "xact_handler_ptr");
-  }
-  virtual ~set_code_as_account() {
-    TRACE_DTOR(set_code_as_account);
-  }
-
-  virtual void set_details(entry_t& entry, xact_t& xact) {
-    xact.account = master->find_account(entry.code ? *entry.code : "<none>");
-  }
 };
 
 /**

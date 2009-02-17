@@ -573,7 +573,19 @@ void transfer_details::operator()(xact_t& xact)
   temp.add_flags(ITEM_TEMP);
   entry.add_xact(&temp);
 
-  set_details(entry, temp);
+  bind_scope_t bound_scope(scope, temp);
+
+  switch (which_element) {
+  case SET_PAYEE:
+    entry.payee = expr.calc(bound_scope).to_string();
+    break;
+  case SET_ACCOUNT:
+    temp.account = master->find_account(expr.calc(bound_scope).to_string());
+    break;
+  default:
+    assert(false);
+    break;
+  }
 
   item_handler<xact_t>::operator()(temp);
 }
