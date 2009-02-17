@@ -14,4 +14,4 @@ if [ ! -f Makefile -o \
     (cd $SRCDIR && tools/myacprep)
 fi
 
-make -j3 TAGS check
+make "$@"
