@@ -210,6 +210,15 @@ void format_entries::operator()(xact_t& xact)
   last_entry = xact.entry;
 }
 
+bool format_accounts::should_display(account_t& account)
+{
+  if (! disp_pred.predicate && report.HANDLED(display_))
+    disp_pred.predicate.parse(report.HANDLER(display_).str());
+
+  bind_scope_t bound_scope(report, account);
+  return disp_pred(bound_scope);
+}
+
 void format_accounts::flush()
 {
   std::ostream& out(report.output_stream);

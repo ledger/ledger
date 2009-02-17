@@ -181,13 +181,7 @@ public:
     TRACE_DTOR(format_accounts);
   }
 
-  bool should_display(account_t& account) {
-    if (! disp_pred.predicate && report.HANDLED(display_))
-      disp_pred.predicate.parse(report.HANDLER(display_).str());
-
-    bind_scope_t bound_scope(report, account);
-    return disp_pred(bound_scope);
-  }
+  bool should_display(account_t& account);
 
   virtual void flush();
   virtual void operator()(account_t& account);
