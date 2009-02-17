@@ -262,7 +262,6 @@ public:
       parent->HANDLER(collapse).on();
     });
 
-  OPTION(report_t, cost);
   OPTION(report_t, csv_format_);
   OPTION(report_t, current); // -c
 
