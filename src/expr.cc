@@ -126,15 +126,15 @@ value_t expr_t::calc(scope_t& scope)
 {
   if (ptr.get()) {
     if (! compiled) {
-      if (SHOW_DEBUG("expr.calc")) {
-	DEBUG("expr.calc", "Before compilation:");
+      if (SHOW_DEBUG("expr.compile")) {
+	DEBUG("expr.compile", "Before compilation:");
 	dump(*_log_stream);
       }
 
       compile(scope);
 
-      if (SHOW_DEBUG("expr.calc")) {
-	DEBUG("expr.calc", "After compilation:");
+      if (SHOW_DEBUG("expr.compile")) {
+	DEBUG("expr.compile", "After compilation:");
 	dump(*_log_stream);
       }
     }
