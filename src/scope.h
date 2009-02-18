@@ -345,6 +345,15 @@ public:
 };
 
 template <>
+inline bool var_t<bool>::operator *() {
+  return value->to_boolean();
+}
+template <>
+inline bool var_t<bool>::operator *() const {
+  return value->to_boolean();
+}
+
+template <>
 inline long var_t<long>::operator *() {
   return value->to_long();
 }

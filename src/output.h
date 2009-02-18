@@ -163,13 +163,16 @@ protected:
   report_t&	 report;
   format_t	 format;
   item_predicate disp_pred;
+  bool           flatten_list;
 
 public:
   format_accounts(report_t&	_report,
-		  const string& _format = "")
-    : report(_report), format(_format), disp_pred()
+		  const string& _format = "",
+		  bool          _flatten_list = false)
+    : report(_report), format(_format), disp_pred(),
+      flatten_list(_flatten_list)
   {
-    TRACE_CTOR(format_accounts, "report&, const string&, const bool");
+    TRACE_CTOR(format_accounts, "report&, const string&, bool");
 
     if (report.HANDLED(display_)) {
       DEBUG("account.display",

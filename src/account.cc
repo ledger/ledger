@@ -125,17 +125,19 @@ string account_t::fullname() const
   }
 }
 
-string account_t::partial_name() const
+string account_t::partial_name(bool flat) const
 {
   string pname = name;
 
   for (const account_t * acct = parent;
        acct && acct->parent;
        acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_MATCHING);
-    assert(count > 0);
-    if (count > 1)
-      break;
+    if (! flat) {
+      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_MATCHING);
+      assert(count > 0);
+      if (count > 1)
+	break;
+    }
     pname = acct->name + ":" + pname;
   }
   return pname;
@@ -148,8 +150,13 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 }
 
 namespace {
-  value_t get_partial_name(account_t& account) {
-    return string_value(account.partial_name());
+  value_t get_partial_name(call_scope_t& scope)
+  {
+    account_t& account(find_scope<account_t>(scope));
+
+    var_t<bool> flatten(scope, 0);
+
+    return string_value(account.partial_name(flatten ? *flatten : false));
   }
 
   value_t get_account(account_t& account) { // this gets the name
@@ -238,7 +245,7 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
 
   case 'p':
     if (name == "partial_account")
-      return WRAP_FUNCTOR(get_wrapper<&get_partial_name>);
+      return WRAP_FUNCTOR(get_partial_name);
     break;
 
   case 's':

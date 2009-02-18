@@ -333,6 +333,7 @@ public:
     });
 
   OPTION(report_t, equity_format_);
+  OPTION(report_t, flat);
   OPTION(report_t, forecast_);
   OPTION(report_t, format_); // -F
   OPTION(report_t, gain); // -G

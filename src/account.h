@@ -97,7 +97,7 @@ class account_t : public scope_t
     return fullname();
   }
   string fullname() const;
-  string partial_name() const;
+  string partial_name(bool flat = false) const;
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_map::value_type(acct->name, acct));

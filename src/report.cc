@@ -73,7 +73,8 @@ report_t::report_t(session_t& _session)
 
   HANDLER(balance_format_).on(
     "%20(print_balance(strip(display_total), 20))"
-    "  %(depth_spacer)%-(partial_account)\n");
+    "  %(!options.flat ? depth_spacer : \"\")"
+    "%-(partial_account(options.flat))\n");
 
   HANDLER(equity_format_).on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
 
@@ -404,7 +405,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(equity_format_);
     break;
   case 'f':
-    OPT(forecast_);
+    OPT(flat);
+    else OPT(forecast_);
     else OPT(format_);
     else OPT_ALT(head_, first_);
     break;
@@ -524,8 +526,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
-	      *this));
+	     (new format_accounts(*this, report_format(HANDLER(balance_format_)),
+				  HANDLED(flat)), *this));
 	break;
 
       case 'c':

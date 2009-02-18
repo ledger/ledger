@@ -222,11 +222,13 @@ std::size_t format_accounts::post_accounts(account_t& account)
     DEBUG("account.display", "Should we display " << account.fullname());
 
     if (account.has_flags(ACCOUNT_EXT_MATCHING) ||
-	account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1) {
+	(! flatten_list &&
+	 account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1)) {
       DEBUG("account.display", "  Yes, because it matched");
       format_account = true;
     }
-    else if (account.children_with_flags(ACCOUNT_EXT_VISITED) &&
+    else if (! flatten_list &&
+	     account.children_with_flags(ACCOUNT_EXT_VISITED) &&
 	     ! account.children_with_flags(ACCOUNT_EXT_MATCHING)) {
       DEBUG("account.display",
 	    "  Maybe, because it has visited, but no matching, children");
