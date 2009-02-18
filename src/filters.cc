@@ -527,9 +527,10 @@ void interval_xacts::operator()(xact_t& xact)
       }
       interval.begin = quant;
     }
+    subtotal_xacts::operator()(xact);
+  } else {
+    item_handler<xact_t>::operator()(xact);
   }
-
-  subtotal_xacts::operator()(xact);
 
   last_xact = &xact;
 }

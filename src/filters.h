@@ -598,8 +598,8 @@ public:
   }
 
   void report_subtotal() {
-    assert(last_xact);
-    subtotal_xacts::report_subtotal();
+    if (last_xact && interval)
+      subtotal_xacts::report_subtotal();
     last_xact = NULL;
   }
 
