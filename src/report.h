@@ -134,6 +134,7 @@ public:
   value_t fn_display_total(call_scope_t& scope);
   value_t fn_market_value(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
+  value_t fn_quantity(call_scope_t& scope);
   value_t fn_truncate(call_scope_t& scope);
   value_t fn_print(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
@@ -204,11 +205,9 @@ public:
      set_expr(args[0].to_string());
    });
 
-  OPTION_(report_t, amount_data, DO() {
-#if 0
-      format_string = session.plot_amount_format;
-#endif
-    }); // -j
+  OPTION_(report_t, amount_data, DO() { // -j
+      parent->HANDLER(format_).on(parent->HANDLER(plot_amount_format_).str());
+    });
 
   OPTION(report_t, anon);
   OPTION(report_t, ansi);
@@ -536,11 +535,9 @@ public:
      set_expr(args[0].to_string());
    });
 
-  OPTION_(report_t, total_data, DO() {
-#if 0
-      format_string = session.plot_total_format;
-#endif
-    }); // -J
+  OPTION_(report_t, total_data, DO() { // -J
+      parent->HANDLER(format_).on(parent->HANDLER(plot_total_format_).str());
+    });
 
   OPTION(report_t, totals);
 

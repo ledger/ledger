@@ -143,6 +143,11 @@ value_t report_t::fn_strip(call_scope_t& args)
   return args[0].strip_annotations(what_to_keep());
 }
 
+value_t report_t::fn_quantity(call_scope_t& args)
+{
+  return args[0].to_amount().number();
+}
+
 value_t report_t::fn_truncate(call_scope_t& args)
 {
   var_t<long> width(args, 1);
@@ -602,6 +607,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'q':
     if (is_eq(p, "quoted"))
       return MAKE_FUNCTOR(report_t::fn_quoted);
+    else if (is_eq(p, "quantity"))
+      return MAKE_FUNCTOR(report_t::fn_quantity);
     break;
 
   case 's':
