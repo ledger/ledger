@@ -119,18 +119,13 @@ public:
     return value.as_string_lval();
   }
 
-  void on() {
+  void on_only() {
     handled = true;
-  }
-  void on(const char * str) {
-    handled = true;
-    value   = string_value(str);
   }
   void on(const string& str) {
-    handled = true;
-    value   = string_value(str);
+    on_with(string_value(str));
   }
-  void on(const value_t& val) {
+  virtual void on_with(const value_t& val) {
     handled = true;
     value   = val;
   }
@@ -146,9 +141,9 @@ public:
     if (wants_arg) {
       if (args.empty())
 	throw_(std::runtime_error, "No argument provided for " << desc());
-      on(args[0]);
+      on_with(args[0]);
     } else {
-      on();
+      on_only();
     }
 
     handler_thunk(args);

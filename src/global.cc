@@ -372,29 +372,29 @@ void global_scope_t::normalize_report_options(const string& verb)
   // jww (2008-08-14): This code really needs to be rationalized away
   // for 3.0.
   if (verb == "print" || verb == "entry" || verb == "dump") {
-    rep.HANDLER(related).on();
-    rep.HANDLER(related_all).on();
+    rep.HANDLER(related).on_only();
+    rep.HANDLER(related_all).on_only();
   }
   else if (verb == "equity") {
-    rep.HANDLER(subtotal).on();
+    rep.HANDLER(subtotal).on_only();
   }
   else if (rep.HANDLED(related)) {
     if (verb[0] == 'r') {
-      rep.HANDLER(invert).on();
+      rep.HANDLER(invert).on_only();
     } else {
-      rep.HANDLER(subtotal).on();
-      rep.HANDLER(related_all).on();
+      rep.HANDLER(subtotal).on_only();
+      rep.HANDLER(related_all).on_only();
     }
   }
 
   if (! rep.HANDLED(empty))
-    rep.HANDLER(display_).append("amount|(!xact&total)");
+    rep.HANDLER(display_).on("amount|(!xact&total)");
 
   if (verb[0] != 'b' && verb[0] != 'r')
-    rep.HANDLER(base).on();
+    rep.HANDLER(base).on_only();
 
   if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
-    rep.HANDLER(sort_entries_).on();
+    rep.HANDLER(sort_entries_).on_only();
 }
 
 void handle_debug_options(int argc, char * argv[])

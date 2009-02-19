@@ -180,11 +180,11 @@ public:
    */
 
   OPTION__(report_t, abbrev_len_,
-	   CTOR(report_t, abbrev_len_) { on(2L); });
+	   CTOR(report_t, abbrev_len_) { on_with(2L); });
   OPTION(report_t, account_);
 
   OPTION_(report_t, actual, DO() { // -L
-      parent->HANDLER(limit_).append("actual");
+      parent->HANDLER(limit_).on("actual");
     });
 
   OPTION_(report_t, add_budget, DO() {
@@ -206,7 +206,7 @@ public:
    });
 
   OPTION_(report_t, amount_data, DO() { // -j
-      parent->HANDLER(format_).on(parent->HANDLER(plot_amount_format_).str());
+      parent->HANDLER(format_).on_with(parent->HANDLER(plot_amount_format_).value);
     });
 
   OPTION(report_t, anon);
@@ -240,7 +240,7 @@ public:
 
       string predicate =
 	"date>=[" + to_iso_extended_string(interval.begin) + "]";
-      parent->HANDLER(limit_).append(predicate);
+      parent->HANDLER(limit_).on(predicate);
     });
 
   OPTION_(report_t, budget, DO() {
@@ -251,7 +251,7 @@ public:
   OPTION(report_t, cache_);
 
   OPTION_(report_t, cleared, DO() { // -C
-      parent->HANDLER(limit_).append("cleared");
+      parent->HANDLER(limit_).on("cleared");
     });
 
   OPTION(report_t, code_as_payee);
@@ -262,11 +262,11 @@ public:
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too, but only apply it
       // to account entries
-      parent->HANDLER(display_).append("xact|depth<=1");
+      parent->HANDLER(display_).on("xact|depth<=1");
     });
 
   OPTION_(report_t, collapse_if_zero, DO() {
-      parent->HANDLER(collapse).on();
+      parent->HANDLER(collapse).on_only();
     });
 
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
@@ -284,7 +284,7 @@ public:
   OPTION(report_t, current); // -c
 
   OPTION_(report_t, daily, DO() {
-      parent->HANDLER(period_).prepend("daily");
+      parent->HANDLER(period_).on("daily");
     });
 
   OPTION__(report_t, date_format_, // -y
@@ -297,14 +297,12 @@ public:
   OPTION__
   (report_t, display_, // -d
    CTOR(report_t, display_) {}
-   void append(const string& text) {
+   virtual void on_with(const value_t& text) {
      if (! handled)
-       on(text);
+       option_t<report_t>::on_with(text);
      else
-       on(string("(") + str() + ")&(" + text + ")");
-   }
-   DO_(args) {
-     append(args[0].to_string());
+       option_t<report_t>::on_with(string_value(string("(") + str() + ")&(" +
+						text.as_string() + ")"));
    });
 
   OPTION__
@@ -348,7 +346,7 @@ public:
 
       string predicate =
 	"date<[" + to_iso_extended_string(interval.begin) + "]";
-      parent->HANDLER(limit_).append(predicate);
+      parent->HANDLER(limit_).on(predicate);
 #if 0
       terminus = interval.begin;
 #endif
@@ -368,14 +366,12 @@ public:
   OPTION__
   (report_t, limit_, // -l
    CTOR(report_t, limit_) {}
-   void append(const string& text) {
+   virtual void on_with(const value_t& text) {
      if (! handled)
-       on(text);
+       option_t<report_t>::on_with(text);
      else
-       on(string("(") + str() + ")&(" + text + ")");
-   }
-   DO_(args) {
-     append(args[0].to_string());
+       option_t<report_t>::on_with(string_value(string("(") + str() + ")&(" +
+						text.as_string() + ")"));
    });
 
   OPTION(report_t, lot_dates);
@@ -384,26 +380,24 @@ public:
   OPTION(report_t, lots);
 
   OPTION_(report_t, market, DO() { // -V
-      parent->HANDLER(revalued).on();
+      parent->HANDLER(revalued).on_only();
       parent->HANDLER(display_amount_).set_expr("market_value(amount_expr)");
       parent->HANDLER(display_total_).set_expr("market_value(total_expr)");
     });
 
   OPTION_(report_t, monthly, DO() { // -M
-      parent->HANDLER(period_).prepend("monthly");
+      parent->HANDLER(period_).on("monthly");
     });
 
   OPTION__
   (report_t, only_,
    CTOR(report_t, only_) {}
-   void append(const string& text) {
+   virtual void on_with(const value_t& text) {
      if (! handled)
-       on(text);
+       option_t<report_t>::on_with(text);
      else
-       on(string("(") + str() + ")&(" + text + ")");
-   }
-   DO_(args) {
-     append(args[0].to_string());
+       option_t<report_t>::on_with(string_value(string("(") + str() + ")&(" +
+						text.as_string() + ")"));
    });
 
   OPTION(report_t, output_); // -o
@@ -411,7 +405,7 @@ public:
   OPTION(report_t, payee_as_account);
 
   OPTION_(report_t, pending, DO() { // -C
-      parent->HANDLER(limit_).append("pending");
+      parent->HANDLER(limit_).on("pending");
     });
 
   OPTION(report_t, percentage); // -%
@@ -420,19 +414,22 @@ public:
   OPTION__
   (report_t, period_, // -p
    CTOR(report_t, period_) {}
-   void prepend(const string& text) {
+   virtual void on_with(const value_t& text) {
      if (! handled)
-       on(text);
+       option_t<report_t>::on_with(text);
      else
-       on(text + " " + str());
-   }
-   DO_(args) {
-     prepend(args[0].to_string());
+       option_t<report_t>::on_with(string_value(text.as_string() + " " + str()));
    });
 
   OPTION(report_t, period_sort_);
-  OPTION(report_t, plot_amount_format_);
-  OPTION(report_t, plot_total_format_);
+
+  OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
+      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(strip(amount)))\n");
+    });
+
+  OPTION__(report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
+      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(strip(total)))\n");
+    });
 
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(revalued).off();
@@ -469,11 +466,11 @@ public:
     });
 
   OPTION_(report_t, quarterly, DO() {
-      parent->HANDLER(period_).prepend("quarterly");
+      parent->HANDLER(period_).on("quarterly");
     });
 
   OPTION_(report_t, real, DO() { // -R
-      parent->HANDLER(limit_).append("real");
+      parent->HANDLER(limit_).on("real");
     });
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
@@ -503,18 +500,18 @@ public:
   OPTION(report_t, set_price_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
-      on(args[0].to_string());
+      on_with(args[0]);
       parent->HANDLER(sort_entries_).off();
       parent->HANDLER(sort_all_).off();
     });
 
   OPTION_(report_t, sort_all_, DO_(args) {
-      parent->HANDLER(sort_).on(args[0].to_string());
+      parent->HANDLER(sort_).on_with(args[0]);
       parent->HANDLER(sort_entries_).off();
     });
 
   OPTION_(report_t, sort_entries_, DO_(args) {
-      parent->HANDLER(sort_).on(args[0].to_string());
+      parent->HANDLER(sort_).on_with(args[0]);
       parent->HANDLER(sort_all_).off();
     });
 
@@ -536,7 +533,7 @@ public:
    });
 
   OPTION_(report_t, total_data, DO() { // -J
-      parent->HANDLER(format_).on(parent->HANDLER(plot_total_format_).str());
+      parent->HANDLER(format_).on_with(parent->HANDLER(plot_total_format_).value);
     });
 
   OPTION(report_t, totals);
@@ -560,39 +557,39 @@ public:
     });
 
   OPTION_(report_t, uncleared, DO() { // -U
-      parent->HANDLER(limit_).append("uncleared|pending");
+      parent->HANDLER(limit_).on("uncleared|pending");
     });
 
   OPTION_(report_t, weekly, DO() { // -W
-      parent->HANDLER(period_).prepend("weekly");
+      parent->HANDLER(period_).on("weekly");
     });
 
   OPTION_(report_t, wide, DO() { // -w
-      parent->HANDLER(date_width_).on(9L);
-      parent->HANDLER(payee_width_).on(35L);
-      parent->HANDLER(account_width_).on(39L);
-      parent->HANDLER(amount_width_).on(22L);
-      parent->HANDLER(total_width_).on(22L);
+      parent->HANDLER(date_width_).on_with(9L);
+      parent->HANDLER(payee_width_).on_with(35L);
+      parent->HANDLER(account_width_).on_with(39L);
+      parent->HANDLER(amount_width_).on_with(22L);
+      parent->HANDLER(total_width_).on_with(22L);
     });
 
   OPTION_(report_t, yearly, DO() { // -Y
-      parent->HANDLER(period_).prepend("yearly");
+      parent->HANDLER(period_).on("yearly");
     });
 
   OPTION__(report_t, date_width_,
-	   CTOR(report_t, date_width_) { on(9L); }
+	   CTOR(report_t, date_width_) { on_with(9L); }
 	   DO_(args) { value = args[0].to_long(); });
   OPTION__(report_t, payee_width_,
-	   CTOR(report_t, payee_width_) { on(20L); }
+	   CTOR(report_t, payee_width_) { on_with(20L); }
 	   DO_(args) { value = args[0].to_long(); });
   OPTION__(report_t, account_width_,
-	   CTOR(report_t, account_width_) { on(23L); }
+	   CTOR(report_t, account_width_) { on_with(23L); }
 	   DO_(args) { value = args[0].to_long(); });
   OPTION__(report_t, amount_width_,
-	   CTOR(report_t, amount_width_) { on(12L); }
+	   CTOR(report_t, amount_width_) { on_with(12L); }
 	   DO_(args) { value = args[0].to_long(); });
   OPTION__(report_t, total_width_,
-	   CTOR(report_t, total_width_) { on(12L); }
+	   CTOR(report_t, total_width_) { on_with(12L); }
 	   DO_(args) { value = args[0].to_long(); });
 };
 
