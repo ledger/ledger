@@ -613,7 +613,6 @@ public:
 	     const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
     bool result = parse(stream, flags);
-    assert(stream.eof());
     return result;
   }
 
