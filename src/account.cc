@@ -187,7 +187,10 @@ namespace {
 
   value_t get_amount(account_t& account) {
     assert(account.xdata_);
-    return account.xdata_->value;
+    if (account.xdata_->value.is_null())
+      return 0L;
+    else
+      return account.xdata_->value;
   }
 
   value_t get_depth(account_t& account) {
