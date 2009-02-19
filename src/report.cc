@@ -339,6 +339,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(comm_as_account, commodity_as_account);
     else OPT(collapse);
     else OPT(collapse_if_zero);
+    else OPT(columns_);
     else OPT_(current);
     break;
   case 'd':

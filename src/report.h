@@ -269,6 +269,8 @@ public:
       parent->HANDLER(collapse).on_only();
     });
 
+  OPTION(report_t, columns_);
+
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
       on(
     "%(quoted(date)),"
