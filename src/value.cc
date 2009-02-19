@@ -747,7 +747,7 @@ bool value_t::is_less_than(const value_t& val) const
     case INTEGER:
       return as_long() < val.as_long();
     case AMOUNT:
-      return val.as_amount() < as_long();
+      return val.as_amount() >= as_long();
     default:
       break;
     }
@@ -1424,20 +1424,27 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
 
   while (left_iter != left_values.end() &&
 	 right_iter != right_values.end()) {
-    DEBUG("value.sort",
-	  "Comparing " << (*left_iter).value << " < " << (*right_iter).value);
-
-    if ((*left_iter).value < (*right_iter).value)
-      return ! (*left_iter).inverted;
-    else if ((*left_iter).value > (*right_iter).value)
-      return (*left_iter).inverted;
+    // Don't even try to sort balance values
+    if (! (*left_iter).value.is_balance() &&
+	! (*right_iter).value.is_balance()) {
+      DEBUG("value.sort",
+	    "Comparing " << (*left_iter).value << " < " << (*right_iter).value);
+      if ((*left_iter).value < (*right_iter).value) {
+	DEBUG("value.sort", "  is less");
+	return ! (*left_iter).inverted;
+      }
+      else if ((*left_iter).value > (*right_iter).value) {
+	DEBUG("value.sort", "  is greater");
+	return (*left_iter).inverted;
+      }
+    }
     left_iter++; right_iter++;
   }
 
   assert(left_iter == left_values.end());
   assert(right_iter == right_values.end());
 
-  return false;
+  return true;
 }
 
 } // namespace ledger
