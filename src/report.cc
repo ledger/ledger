@@ -47,18 +47,15 @@ report_t::report_t(session_t& _session)
   HANDLER(date_format_).on("%y-%b-%d");
 
   HANDLER(register_format_).on(
-    "%-.9(date) %-.20(payee)"
-    " %-.23(truncate(account, 23, 2))"
-    " %12(print_balance(strip(display_amount), 12, 67))"
-    " %12(print_balance(strip(display_total), 12, 80, true))\n%/"
-    "%31(\" \")%-.23(truncate(account, 23, 2))"
-    " %12(print_balance(strip(display_amount), 12, 67))"
-    " %12(print_balance(strip(display_total), 12, 80, true))\n");
-
-  // jww (2009-02-06): Most of these still need to be defined
-  HANDLER(wide_register_format_).on(
-    "%-.9D  %-.35P %-.39A %22.108t %22.132T\n%/"
-    "%48(\" \")%-.38A %22.108t %22.132T\n");
+    "%(print(date, date_width))"
+    " %(print(truncate(payee, payee_width), payee_width))"
+    " %(print(truncate(account, account_width, abbrev_len), account_width))"
+    " %(print(strip(display_amount), amount_width, 3 + date_width + payee_width + account_width + amount_width))"
+    " %(print(strip(display_total), total_width, 4 + date_width + payee_width + account_width + amount_width + total_width, true))\n%/"
+    "%(print(\" \", 2 + date_width + payee_width))"
+    "%(print(truncate(account, account_width, abbrev_len), account_width))"
+    " %(print(strip(display_amount), amount_width, 3 + date_width + payee_width + account_width + amount_width))"
+    " %(print(strip(display_total), total_width, 4 + date_width + payee_width + account_width + amount_width + total_width, true))\n");
 
   HANDLER(print_format_).on(
     "%(format_date(entry.date, \"%Y/%m/%d\"))"
@@ -72,7 +69,7 @@ report_t::report_t(session_t& _session)
     "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/\n");
 
   HANDLER(balance_format_).on(
-    "%20(print_balance(strip(display_total), 20))"
+    "%20(print(strip(display_total), 20))"
     "  %(!options.flat ? depth_spacer : \"\")"
     "%-(partial_account(options.flat))\n");
 
@@ -193,23 +190,6 @@ value_t report_t::fn_market_value(call_scope_t& args)
   return result;
 }
 
-value_t report_t::fn_print_balance(call_scope_t& args)
-{
-  var_t<long> first_width(args, 1);
-  var_t<long> latter_width(args, 2);
-#if 0
-  var_t<bool> bold_negative(args, 3);
-#endif
-
-  std::ostringstream out;
-  args[0].strip_annotations(what_to_keep())
-    .print(out, *first_width, latter_width ? *latter_width : -1,
-	   HANDLED(date_format_) ?
-	   HANDLER(date_format_).str() : optional<string>());
-
-  return string_value(out.str());
-}
-
 value_t report_t::fn_strip(call_scope_t& args)
 {
   return args[0].strip_annotations(what_to_keep());
@@ -222,6 +202,23 @@ value_t report_t::fn_truncate(call_scope_t& args)
 
   return string_value(format_t::truncate(args[0].as_string(), *width,
 					 account_abbrev ? *account_abbrev : -1));
+}
+
+value_t report_t::fn_print(call_scope_t& args)
+{
+  var_t<long> first_width(args, 1);
+  var_t<long> latter_width(args, 2);
+  var_t<string> date_format(args, 3);
+
+  std::ostringstream out;
+
+  args[0].strip_annotations(what_to_keep())
+    .print(out, *first_width, latter_width ? *latter_width : -1,
+	   date_format ? *date_format :
+	   (HANDLED(date_format_) ?
+	    HANDLER(date_format_).str() : optional<string>()));
+
+  return string_value(out.str());
 }
 
 value_t report_t::fn_quoted(call_scope_t& args)
@@ -368,6 +365,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(ansi);
     else OPT(ansi_invert);
     else OPT(average);
+    else OPT(account_width_);
+    else OPT(amount_width_);
     break;
   case 'b':
     OPT(balance_format_);
@@ -397,6 +396,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(display_amount_);
     else OPT(display_total_);
     else OPT(dow);
+    else OPT(date_width_);
     break;
   case 'e':
     OPT(effective);
@@ -457,6 +457,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(prices_format_);
     else OPT(pricesdb_format_);
     else OPT(print_format_);
+    else OPT(payee_width_);
     break;
   case 'q':
     OPT(quantity);
@@ -486,6 +487,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(total_data);
     else OPT(totals);
     else OPT(truncate_);
+    else OPT(total_width_);
     break;
   case 'u':
     OPT(unbudgeted);
@@ -494,7 +496,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'w':
     OPT(weekly);
     else OPT_(wide);
-    else OPT(wide_register_format_);
     break;
   case 'x':
     OPT_CH(comm_as_payee);
@@ -646,8 +647,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
-    else if (is_eq(p, "print_balance"))
-      return MAKE_FUNCTOR(report_t::fn_print_balance);
+    else if (is_eq(p, "print"))
+      return MAKE_FUNCTOR(report_t::fn_print);
     break;
 
   case 'q':

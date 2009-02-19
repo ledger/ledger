@@ -132,9 +132,9 @@ public:
   value_t fn_display_amount(call_scope_t& scope);
   value_t fn_display_total(call_scope_t& scope);
   value_t fn_market_value(call_scope_t& scope);
-  value_t fn_print_balance(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_truncate(call_scope_t& scope);
+  value_t fn_print(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
@@ -177,7 +177,8 @@ public:
    * Option handlers
    */
 
-  OPTION(report_t, abbrev_len_);
+  OPTION__(report_t, abbrev_len_,
+	   CTOR(report_t, abbrev_len_) { on(2L); });
   OPTION(report_t, account_);
 
   OPTION_(report_t, actual, DO() { // -L
@@ -509,12 +510,33 @@ public:
       parent->HANDLER(period_).prepend("weekly");
     });
 
-  OPTION(report_t, wide); // -w
-  OPTION(report_t, wide_register_format_);
+  OPTION_(report_t, wide, DO() { // -w
+      parent->HANDLER(date_width_).on(9L);
+      parent->HANDLER(payee_width_).on(35L);
+      parent->HANDLER(account_width_).on(39L);
+      parent->HANDLER(amount_width_).on(22L);
+      parent->HANDLER(total_width_).on(22L);
+    });
 
   OPTION_(report_t, yearly, DO() { // -Y
       parent->HANDLER(period_).prepend("yearly");
     });
+
+  OPTION__(report_t, date_width_,
+	   CTOR(report_t, date_width_) { on(9L); }
+	   DO_(args) { value = args[0].to_long(); });
+  OPTION__(report_t, payee_width_,
+	   CTOR(report_t, payee_width_) { on(20L); }
+	   DO_(args) { value = args[0].to_long(); });
+  OPTION__(report_t, account_width_,
+	   CTOR(report_t, account_width_) { on(23L); }
+	   DO_(args) { value = args[0].to_long(); });
+  OPTION__(report_t, amount_width_,
+	   CTOR(report_t, amount_width_) { on(12L); }
+	   DO_(args) { value = args[0].to_long(); });
+  OPTION__(report_t, total_width_,
+	   CTOR(report_t, total_width_) { on(12L); }
+	   DO_(args) { value = args[0].to_long(); });
 };
 
 } // namespace ledger
