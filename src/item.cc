@@ -209,6 +209,10 @@ namespace {
     return false;
   }
 
+  value_t get_pathname(item_t& item) {
+    return string_value(item.pathname.string());
+  }
+
   value_t get_beg_pos(item_t& item) {
     return long(item.beg_pos);
   }
@@ -261,6 +265,13 @@ value_t get_comment(item_t& item)
 expr_t::ptr_op_t item_t::lookup(const string& name)
 {
   switch (name[0]) {
+  case 'b':
+    if (name == "beg_line")
+      return WRAP_FUNCTOR(get_wrapper<&get_beg_line>);
+    else if (name == "beg_pos")
+      return WRAP_FUNCTOR(get_wrapper<&get_beg_pos>);
+    break;
+
   case 'c':
     if (name == "cleared")
       return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
@@ -273,6 +284,18 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_date>);
     else if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
+    break;
+
+  case 'e':
+    if (name == "end_line")
+      return WRAP_FUNCTOR(get_wrapper<&get_end_line>);
+    else if (name == "end_pos")
+      return WRAP_FUNCTOR(get_wrapper<&get_end_pos>);
+    break;
+
+  case 'f':
+    if (name == "filename")
+      return WRAP_FUNCTOR(get_wrapper<&get_pathname>);
     break;
 
   case 'h':
