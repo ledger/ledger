@@ -42,8 +42,15 @@ pass_down_xacts::pass_down_xacts(xact_handler_ptr handler,
 {
   TRACE_CTOR(pass_down_xacts, "xact_handler_ptr, xacts_iterator");
 
-  for (xact_t * xact = iter(); xact; xact = iter())
-    item_handler<xact_t>::operator()(*xact);
+  for (xact_t * xact = iter(); xact; xact = iter()) {
+    try {
+      item_handler<xact_t>::operator()(*xact);
+    }
+    catch (const std::exception& err) {
+      add_error_context(item_context(*xact, "While handling transaction"));
+      throw;
+    }
+  }
 
   item_handler<xact_t>::flush();
 }
@@ -187,27 +194,21 @@ void anonymize_xacts::operator()(xact_t& xact)
 
 void calc_xacts::operator()(xact_t& xact)
 {
-  try {
-    xact_t::xdata_t& xdata(xact.xdata());
+  xact_t::xdata_t& xdata(xact.xdata());
 
-    if (last_xact) {
-      assert(last_xact->has_xdata());
-      add_or_set_value(xdata.total, last_xact->xdata().total);
-      xdata.count = last_xact->xdata().count + 1;
-    } else {
-      xdata.count = 1;
-    }
-
-    xact.add_to_value(xdata.total, amount_expr);
-
-    item_handler<xact_t>::operator()(xact);
-
-    last_xact = &xact;
+  if (last_xact) {
+    assert(last_xact->has_xdata());
+    add_or_set_value(xdata.total, last_xact->xdata().total);
+    xdata.count = last_xact->xdata().count + 1;
+  } else {
+    xdata.count = 1;
   }
-  catch (const std::exception& err) {
-    add_error_context(item_context(xact, "While calculating transaction"));
-    throw;
-  }
+
+  xact.add_to_value(xdata.total, amount_expr);
+
+  item_handler<xact_t>::operator()(xact);
+
+  last_xact = &xact;
 }
 
 void invert_xacts::operator()(xact_t& xact)
