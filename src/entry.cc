@@ -31,8 +31,8 @@
 
 #include "entry.h"
 #include "journal.h"
+#include "account.h"
 #include "format.h"
-#include "report.h"
 
 namespace ledger {
 
