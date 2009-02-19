@@ -320,7 +320,7 @@ void collapse_xacts::report_subtotal()
     entry.payee	   = last_entry->payee;
     entry._date	   = (is_valid(earliest_date) ?
 		      earliest_date : last_entry->_date);
-    DEBUG("filters.collapse", "Pseudo-entry date = " << *entry._date);
+    DEBUG("filter.collapse", "Pseudo-entry date = " << *entry._date);
 
     handle_value(subtotal, &totals_account, &entry, 0, xact_temps, *handler);
   }
