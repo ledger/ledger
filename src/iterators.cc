@@ -198,6 +198,12 @@ void sorted_accounts_iterator::push_back(account_t& account)
     std::stable_sort(accounts_list.back().begin(),
 		     accounts_list.back().end(),
 		     compare_items<account_t>(sort_cmp));
+#if defined(DEBUG_ON)
+    if (SHOW_DEBUG("accounts.sorted")) {
+      foreach (account_t * account, accounts_list.back())
+	DEBUG("accounts.sorted", "Account: " << account->fullname());
+    }
+#endif
   } else {
     sort_accounts(account, accounts_list.back());
   }
