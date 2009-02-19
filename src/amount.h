@@ -640,7 +640,6 @@ public:
       of its commodity's display precision.
   */
   void print(std::ostream& out) const;
-  void right_justify(std::ostream& out, int width) const;
 
   /*@}*/
 

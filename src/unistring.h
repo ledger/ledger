@@ -90,4 +90,22 @@ public:
   }
 };
 
+inline void justify(std::ostream&      out,
+		    const std::string& str,
+		    int		       width,
+		    bool               right = false)
+{
+  if (! right)
+    out << str;
+
+  unistring temp(str);
+
+  int spacing = width - int(temp.length());
+  while (spacing-- > 0)
+    out << ' ';
+
+  if (right)
+    out << str;
+}
+
 #endif // _UNISTRING_H

@@ -30,6 +30,7 @@
  */
 
 #include "balance.h"
+#include "unistring.h"
 
 namespace ledger {
 
@@ -240,11 +241,17 @@ void balance_t::print(std::ostream& out,
       first = false;
       width = first_width;
     }
-    amount->right_justify(out, width);
+
+    std::ostringstream buf;
+    buf << *amount;
+    justify(out, buf.str(), width, true);
   }
 
-  if (first)
-    amount_t(0L).right_justify(out, first_width);
+  if (first) {
+    std::ostringstream buf;
+    buf << amount_t(0L);
+    justify(out, buf.str(), first_width, true);
+  }
 }
 
 } // namespace ledger

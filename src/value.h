@@ -886,7 +886,7 @@ public:
    * Printing methods.
    */
   void print(std::ostream&	     out,
-	     const int		     first_width,
+	     const int		     first_width = - 1,
 	     const int		     latter_width = -1,
 	     const optional<string>& date_format  = none) const;
   void dump(std::ostream& out, const bool relaxed = true) const;
@@ -908,7 +908,7 @@ inline value_t mask_value(const string& str) {
 }
 
 inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
-  val.print(out, 12);
+  val.print(out);
   return out;
 }
 

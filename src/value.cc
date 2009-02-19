@@ -30,6 +30,7 @@
  */
 
 #include "value.h"
+#include "unistring.h"
 
 namespace ledger {
 
@@ -1253,8 +1254,11 @@ void value_t::print(std::ostream&           out,
 		    const int               latter_width,
 		    const optional<string>& date_format) const
 {
-  if (first_width > 0 && ! is_amount() && ! is_balance())
+  if (first_width > 0 &&
+      ! is_amount() && ! is_balance() && ! is_string()) {
     out.width(first_width);
+    out << std::left;
+  }
 
   switch (type()) {
   case VOID:
@@ -1283,15 +1287,18 @@ void value_t::print(std::ostream&           out,
     out << as_long();
     break;
 
-  case AMOUNT:
+  case AMOUNT: {
+    std::ostringstream buf;
     if (as_amount().is_zero())
-      out << 0L;
+      buf << 0L;
     else
-      as_amount().right_justify(out, first_width);
+      buf << as_amount();
+    justify(out, buf.str(), first_width, true);
     break;
+  }
 
   case STRING:
-    out << as_string();
+    justify(out, as_string(), first_width);
     break;
 
   case MASK:
