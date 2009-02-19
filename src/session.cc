@@ -110,13 +110,15 @@ std::size_t session_t::read_data(const string& master_account)
   if (! master_account.empty())
     acct = journal->find_account(master_account);
 
-  if (HANDLED(price_db_) && exists(path(HANDLER(price_db_).str()))) {
-    if (read_journal(HANDLER(price_db_).str()))
-      throw_(parse_error, "Entries not allowed in price history file");
+  if (HANDLED(price_db_)) {
+    path price_db_path = resolve_path(HANDLER(price_db_).str());
+    if (exists(price_db_path) && read_journal(price_db_path) > 0)
+	throw_(parse_error, "Entries not allowed in price history file");
   }
 
   foreach (const path& pathname, HANDLER(file_).data_files) {
-    if (pathname == "-") {
+    path filename = resolve_path(pathname);
+    if (filename == "-") {
       // To avoid problems with stdin and pipes, etc., we read the entire
       // file in beforehand into a memory buffer, and then parcel it out
       // from there.
@@ -134,11 +136,11 @@ std::size_t session_t::read_data(const string& master_account)
 
       entry_count += read_journal(buf_in, "/dev/stdin", acct);
     }
-    else if (exists(pathname)) {
-      entry_count += read_journal(pathname, acct);
+    else if (exists(filename)) {
+      entry_count += read_journal(filename, acct);
     }
     else {
-      throw_(parse_error, "Could not open journal file '" << pathname << "'");
+      throw_(parse_error, "Could not read journal file '" << filename << "'");
     }
   }
 
