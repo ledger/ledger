@@ -165,7 +165,7 @@ public:
     }
     else if (wants_arg) {
       if (handled)
-	return string_value(str());
+	return value;
       else
 	return false;
     }
