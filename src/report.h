@@ -383,8 +383,8 @@ public:
 
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on_only();
-      parent->HANDLER(display_amount_).set_expr("market_value(amount_expr)");
-      parent->HANDLER(display_total_).set_expr("market_value(total_expr)");
+      parent->HANDLER(display_amount_).set_expr("market(amount_expr)");
+      parent->HANDLER(display_total_).set_expr("market(total_expr)");
     });
 
   OPTION_(report_t, monthly, DO() { // -M
