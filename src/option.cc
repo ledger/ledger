@@ -194,7 +194,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       if (! opt.first)
 	throw_(option_error, "illegal option --" << name);
 
-      if (opt.second && ++i != args.end() && value == NULL) {
+      if (opt.second && ! value && ++i != args.end() && value == NULL) {
 	value = (*i).c_str();
 	DEBUG("option.args", "  read option value from arg: " << value);
 	if (value == NULL)
