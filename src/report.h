@@ -114,7 +114,8 @@ public:
 
   uint_least8_t budget_flags;
 
-  explicit report_t(session_t& _session);
+  explicit report_t(session_t& _session)
+    : session(_session), budget_flags(BUDGET_NO_BUDGET) {}
 
   virtual ~report_t() {
     output_stream.close();
@@ -217,7 +218,13 @@ public:
       parent->HANDLER(display_total_).set_expr("total_expr/count");
     });
 
-  OPTION(report_t, balance_format_);
+  OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
+      on(
+    "%20(print(strip(display_total), 20))"
+    "  %(!options.flat ? depth_spacer : \"\")"
+    "%-(partial_account(options.flat))\n");
+    });
+
   OPTION(report_t, base);
 
   OPTION_(report_t, basis, DO() { // -B
@@ -263,14 +270,29 @@ public:
       parent->HANDLER(collapse).on();
     });
 
-  OPTION(report_t, csv_format_);
+  OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
+      on(
+    "%(quoted(date)),"
+    "%(quoted(payee)),"
+    "%(quoted(account)),"
+    "%(quoted(display_amount)),"
+    "%(quoted((cleared or entry.cleared) ?"
+      " \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
+    "%(quoted(code)),"
+    "%(quoted(join(note)))\n");
+    });
+
   OPTION(report_t, current); // -c
 
   OPTION_(report_t, daily, DO() {
       parent->HANDLER(period_).prepend("daily");
     });
 
-  OPTION(report_t, date_format_); // -y
+  OPTION__(report_t, date_format_, // -y
+	   CTOR(report_t, date_format_) {
+	     on("%y-%b-%d");
+	   });
+
   OPTION(report_t, deviation); // -D
 
   OPTION__
@@ -333,7 +355,10 @@ public:
 #endif
     });
 
-  OPTION(report_t, equity_format_);
+  OPTION__(report_t, equity_format_, CTOR(report_t, equity_format_) {
+      on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
+    });
+
   OPTION(report_t, flat);
   OPTION(report_t, forecast_);
   OPTION(report_t, format_); // -F
@@ -416,9 +441,27 @@ public:
     });
 
   OPTION(report_t, price_exp_); // -Z
-  OPTION(report_t, prices_format_);
-  OPTION(report_t, pricesdb_format_);
-  OPTION(report_t, print_format_);
+
+  OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
+      on("%-.9(date) %-8(account) %12(strip(display_amount))\n");
+    });
+
+  OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
+      on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
+    });
+
+  OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
+      on(
+    "%(format_date(entry.date, \"%Y/%m/%d\"))"
+    "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
+    "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
+    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+    "%-34(account)"
+    "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/"
+    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+    "%-34(account)"
+    "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/\n");
+    });
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();
@@ -434,7 +477,24 @@ public:
       parent->HANDLER(limit_).append("real");
     });
 
-  OPTION(report_t, register_format_);
+  OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
+      on(
+    "%(print(date, date_width))"
+    " %(print(truncate(payee, payee_width), payee_width))"
+    " %(print(truncate(account, account_width, abbrev_len), account_width))"
+    " %(print(strip(display_amount), amount_width, "
+      "3 + date_width + payee_width + account_width + amount_width))"
+    " %(print(strip(display_total), total_width, "
+      "4 + date_width + payee_width + account_width + amount_width "
+      "+ total_width, true))\n%/"
+    "%(print(\" \", 2 + date_width + payee_width))"
+    "%(print(truncate(account, account_width, abbrev_len), account_width))"
+    " %(print(strip(display_amount), amount_width, 3 + date_width "
+      "+ payee_width + account_width + amount_width))"
+    " %(print(strip(display_total), total_width, 4 + date_width "
+      "+ payee_width + account_width + amount_width + total_width, true))\n");
+    });
+
   OPTION(report_t, related); // -r
   OPTION(report_t, related_all);
   OPTION(report_t, revalued);

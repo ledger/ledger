@@ -40,58 +40,6 @@
 
 namespace ledger {
 
-report_t::report_t(session_t& _session)
-  : session(_session), budget_flags(BUDGET_NO_BUDGET)
-{
-  // Setup default values for some of the option handlers
-  HANDLER(date_format_).on("%y-%b-%d");
-
-  HANDLER(register_format_).on(
-    "%(print(date, date_width))"
-    " %(print(truncate(payee, payee_width), payee_width))"
-    " %(print(truncate(account, account_width, abbrev_len), account_width))"
-    " %(print(strip(display_amount), amount_width, 3 + date_width + payee_width + account_width + amount_width))"
-    " %(print(strip(display_total), total_width, 4 + date_width + payee_width + account_width + amount_width + total_width, true))\n%/"
-    "%(print(\" \", 2 + date_width + payee_width))"
-    "%(print(truncate(account, account_width, abbrev_len), account_width))"
-    " %(print(strip(display_amount), amount_width, 3 + date_width + payee_width + account_width + amount_width))"
-    " %(print(strip(display_total), total_width, 4 + date_width + payee_width + account_width + amount_width + total_width, true))\n");
-
-  HANDLER(print_format_).on(
-    "%(format_date(entry.date, \"%Y/%m/%d\"))"
-    "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
-    "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
-    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-    "%-34(account)"
-    "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/"
-    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-    "%-34(account)"
-    "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/\n");
-
-  HANDLER(balance_format_).on(
-    "%20(print(strip(display_total), 20))"
-    "  %(!options.flat ? depth_spacer : \"\")"
-    "%-(partial_account(options.flat))\n");
-
-  HANDLER(equity_format_).on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
-
-  HANDLER(plot_amount_format_).on("%D %(S(t))\n");
-  HANDLER(plot_total_format_).on("%D %(S(T))\n");
-
-  HANDLER(prices_format_).on(
-    "%-.9(date) %-8(account) %12(strip(display_amount))\n");
-  HANDLER(pricesdb_format_).on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
-
-  HANDLER(csv_format_).on(
-    "%(quoted(date)),"
-    "%(quoted(payee)),"
-    "%(quoted(account)),"
-    "%(quoted(display_amount)),"
-    "%(quoted((cleared or entry.cleared) ? \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
-    "%(quoted(code)),"
-    "%(quoted(join(note)))\n");
-}
-
 void report_t::xacts_report(xact_handler_ptr handler)
 {
   journal_xacts_iterator walker(*session.journal.get());
