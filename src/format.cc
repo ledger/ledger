@@ -262,18 +262,21 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
       break;
     }
 
-    unistring temp(out.str());
+    if (elem->max_width > 0 || elem->min_width > 0) {
+      unistring temp(out.str());
 
-    string result;
-    if (elem->max_width > 0 && elem->max_width < temp.length()) {
-      result = truncate(temp, elem->max_width);
+      string result;
+      if (elem->max_width > 0 && elem->max_width < temp.length()) {
+	result = truncate(temp, elem->max_width);
+      } else {
+	result = temp.extract();
+	for (int i = 0; i < (int)elem->min_width - (int)temp.length(); i++)
+	  result += " ";
+      }
+      out_str << result;
     } else {
-      result = temp.extract();
-      for (int i = 0; i < (int)elem->min_width - (int)temp.length(); i++)
-	result += " ";
+      out_str << out.str();
     }
-
-    out_str << result;
   }
 }
 
