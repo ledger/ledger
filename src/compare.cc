@@ -54,6 +54,9 @@ namespace {
       sort_values.push_back(sort_value_t());
       sort_values.back().inverted = inverted;
       sort_values.back().value = expr_t(node).calc(*scope).reduced();
+
+      if (sort_values.back().value.is_null())
+	throw calc_error("Could not determine sorting value based an expression");
     }
   }
 }
