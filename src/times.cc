@@ -106,12 +106,14 @@ namespace {
   }
 }
 
-datetime_t parse_datetime(const char * str, int current_year)
+datetime_t parse_datetime(const char * str, int)
 {
   std::tm when;
-  // jww (2008-08-01): Needs to look for HH:MM:SS as well.
-  quick_parse_date(str, when, current_year);
-  return posix_time::ptime_from_tm(when);
+  std::memset(&when, -1, sizeof(std::tm));
+  if (strptime(str, "%Y/%m/%d %H:%M:%S", &when))
+    return posix_time::ptime_from_tm(when);
+  else
+    return datetime_t();
 }
 
 date_t parse_date(const char * str, int current_year)

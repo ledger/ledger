@@ -32,6 +32,7 @@
 #include "journal.h"
 #include "account.h"
 #include "option.h"
+#define TIMELOG_SUPPORT 1
 #if defined(TIMELOG_SUPPORT)
 #include "timelog.h"
 #endif
@@ -299,9 +300,11 @@ void instance_t::read_next_directive()
 
   case ' ':
   case '\t': {
+#if 0
     char * p = skip_ws(line);
     if (*p)
       throw parse_error("Line begins with whitespace");
+#endif
     break;
   }
 
@@ -384,29 +387,30 @@ void instance_t::read_next_directive()
 #if defined(TIMELOG_SUPPORT)
 
 void instance_t::clock_in_directive(char * line,
-				    bool   capitalized)
+				    bool   /*capitalized*/)
 {
-  string date(line, 2, 19);
+  string datetime(line, 2, 19);
 
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
 
-  timelog.clock_in(parse_datetime(date, current_year),
+  timelog.clock_in(parse_datetime(datetime, current_year),
 		   account_stack.front()->find_account(p), n ? n : "");
 }
 
 void instance_t::clock_out_directive(char * line,
-				     bool   capitalized)
+				     bool   /*capitalized*/)
 {  
-  string date(line, 2, 19);
+  string datetime(line, 2, 19);
 
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
 
-  timelog.clock_out(parse_datetime(date, current_year),
-		    p ? account_stack.front()->find_account(p) : NULL, n);
+  timelog.clock_out(parse_datetime(datetime, current_year),
+		    p ? account_stack.front()->find_account(p) : NULL, n ? n : "");
   count++;
 }
+
 #endif // TIMELOG_SUPPORT
 
 void instance_t::default_commodity_directive(char * line)
