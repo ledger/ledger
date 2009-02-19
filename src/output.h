@@ -165,6 +165,8 @@ protected:
   item_predicate disp_pred;
   bool           flatten_list;
 
+  std::list<account_t *> posted_accounts;
+
 public:
   format_accounts(report_t&	_report,
 		  const string& _format = "",
@@ -184,8 +186,8 @@ public:
     TRACE_DTOR(format_accounts);
   }
 
-  virtual std::size_t post_accounts(account_t& account);
-  virtual void	      flush();
+  virtual void post_account(account_t& account);
+  virtual void flush();
 
   virtual void operator()(account_t& account);
 };
@@ -209,8 +211,8 @@ class format_equity : public format_accounts
     TRACE_DTOR(format_equity);
   }
 
-  virtual std::size_t post_accounts(account_t& account);
-  virtual void	      flush();
+  virtual void post_account(account_t& account);
+  virtual void flush();
 };
 
 } // namespace ledger

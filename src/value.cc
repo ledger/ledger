@@ -1424,6 +1424,9 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
 
   while (left_iter != left_values.end() &&
 	 right_iter != right_values.end()) {
+    DEBUG("value.sort",
+	  "Comparing " << (*left_iter).value << " < " << (*right_iter).value);
+
     if ((*left_iter).value < (*right_iter).value)
       return ! (*left_iter).inverted;
     else if ((*left_iter).value > (*right_iter).value)
@@ -1434,7 +1437,7 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
   assert(left_iter == left_values.end());
   assert(right_iter == right_values.end());
 
-  return true;
+  return false;
 }
 
 } // namespace ledger

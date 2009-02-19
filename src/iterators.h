@@ -244,6 +244,7 @@ public:
 class sorted_accounts_iterator : public accounts_iterator
 {
   expr_t sort_cmp;
+  bool   flatten_all;
 
   typedef std::deque<account_t *> accounts_deque_t;
 
@@ -252,13 +253,14 @@ class sorted_accounts_iterator : public accounts_iterator
   std::list<accounts_deque_t::const_iterator> sorted_accounts_end;
 
 public:
-  sorted_accounts_iterator(const string& sort_order) {
-    TRACE_CTOR(sorted_accounts_iterator, "const string&");
-    sort_cmp = expr_t(sort_order);
+  sorted_accounts_iterator(const expr_t& _sort_cmp, bool _flatten_all)
+    : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
+    TRACE_CTOR(sorted_accounts_iterator, "const expr_t&, bool");
   }
-  sorted_accounts_iterator(account_t& account, const string& sort_order) {
-    TRACE_CTOR(sorted_accounts_iterator, "account_t&, const string&");
-    sort_cmp = expr_t(sort_order);
+  sorted_accounts_iterator(const expr_t& _sort_cmp, bool _flatten_all,
+			   account_t& account)
+    : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
+    TRACE_CTOR(sorted_accounts_iterator, "const expr_t&, bool, account_t&");
     push_back(account);
   }
   virtual ~sorted_accounts_iterator() throw() {
@@ -266,14 +268,8 @@ public:
   }
 
   void sort_accounts(account_t& account, accounts_deque_t& deque);
-
-  void push_back(account_t& account) {
-    accounts_list.push_back(accounts_deque_t());
-    sort_accounts(account, accounts_list.back());
-
-    sorted_accounts_i.push_back(accounts_list.back().begin());
-    sorted_accounts_end.push_back(accounts_list.back().end());
-  }
+  void push_all(account_t& account);
+  void push_back(account_t& account);
 
   virtual account_t * operator()();
 };

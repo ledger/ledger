@@ -179,6 +179,33 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
 		   compare_items<account_t>(sort_cmp));
 }
 
+void sorted_accounts_iterator::push_all(account_t& account)
+{
+  accounts_deque_t& deque(accounts_list.back());
+
+  foreach (accounts_map::value_type& pair, account.accounts) {
+    deque.push_back(pair.second);
+    push_all(*pair.second);
+  }
+}
+
+void sorted_accounts_iterator::push_back(account_t& account)
+{
+  accounts_list.push_back(accounts_deque_t());
+
+  if (flatten_all) {
+    push_all(account);
+    std::stable_sort(accounts_list.back().begin(),
+		     accounts_list.back().end(),
+		     compare_items<account_t>(sort_cmp));
+  } else {
+    sort_accounts(account, accounts_list.back());
+  }
+
+  sorted_accounts_i.push_back(accounts_list.back().begin());
+  sorted_accounts_end.push_back(accounts_list.back().end());
+}
+
 account_t * sorted_accounts_iterator::operator()()
 {
   while (! sorted_accounts_i.empty() &&
@@ -195,9 +222,10 @@ account_t * sorted_accounts_iterator::operator()()
   assert(account);
 
   // If this account has children, queue them up to be iterated next.
-  if (! account->accounts.empty())
+  if (! flatten_all && ! account->accounts.empty())
     push_back(*account);
 
+  // Make sure the sorting value gets recalculated for this account
   account->xdata().drop_flags(ACCOUNT_EXT_SORT_CALC);
   return account;
 }

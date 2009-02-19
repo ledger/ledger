@@ -210,63 +210,64 @@ void format_entries::operator()(xact_t& xact)
   last_entry = xact.entry;
 }
 
-std::size_t format_accounts::post_accounts(account_t& account)
+void format_accounts::post_account(account_t& account)
 {
-  std::size_t displayed = 0;
+  bind_scope_t bound_scope(report, account);
+  bool	       format_account = false;
 
-  // Don't ever print the top-most account
-  if (account.parent) {
-    bind_scope_t bound_scope(report, account);
-    bool	 format_account = false;
+  DEBUG("account.display", "Should we display " << account.fullname());
 
-    DEBUG("account.display", "Should we display " << account.fullname());
-
-    if (account.has_flags(ACCOUNT_EXT_MATCHING) ||
-	(! flatten_list &&
-	 account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1)) {
-      DEBUG("account.display", "  Yes, because it matched");
+  if (account.has_flags(ACCOUNT_EXT_MATCHING) ||
+      (! flatten_list &&
+       account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1)) {
+    DEBUG("account.display", "  Yes, because it matched");
+    format_account = true;
+  }
+  else if (! flatten_list &&
+	   account.children_with_flags(ACCOUNT_EXT_VISITED) &&
+	   ! account.children_with_flags(ACCOUNT_EXT_MATCHING)) {
+    DEBUG("account.display",
+	  "  Maybe, because it has visited, but no matching, children");
+    if (disp_pred(bound_scope)) {
+      DEBUG("account.display",
+	    "    And yes, because it matches the display predicate");
       format_account = true;
-    }
-    else if (! flatten_list &&
-	     account.children_with_flags(ACCOUNT_EXT_VISITED) &&
-	     ! account.children_with_flags(ACCOUNT_EXT_MATCHING)) {
+    } else {
       DEBUG("account.display",
-	    "  Maybe, because it has visited, but no matching, children");
-      if (disp_pred(bound_scope)) {
-	DEBUG("account.display",
-	      "    And yes, because it matches the display predicate");
-	format_account = true;
-      } else {
-	DEBUG("account.display",
-	      "    And no, because it didn't match the display predicate");
-      }
-    }
-    else {
-      DEBUG("account.display",
-	    "  No, neither it nor its children were eligible for display");
-    }
-
-    if (format_account) {
-      account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
-      displayed++;
-
-      format.format(report.output_stream, bound_scope);
+	    "    And no, because it didn't match the display predicate");
     }
   }
-
-  foreach (accounts_map::value_type pair, account.accounts) {
-    if (post_accounts(*pair.second) > 0)
-      displayed++;
+  else {
+    DEBUG("account.display",
+	  "  No, neither it nor its children were eligible for display");
   }
 
-  return displayed;
+  if (format_account) {
+    account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
+    format.format(report.output_stream, bound_scope);
+  }
 }
 
 void format_accounts::flush()
 {
   std::ostream& out(report.output_stream);
 
-  std::size_t top_displayed = post_accounts(*report.session.master.get());
+  std::size_t top_displayed = 0;
+
+  foreach (account_t * account, posted_accounts) {
+    post_account(*account);
+
+    if (flatten_list && account->has_flags(ACCOUNT_EXT_DISPLAYED))
+      top_displayed++;
+  }
+
+  if (! flatten_list) {
+    foreach (accounts_map::value_type pair, report.session.master->accounts) {
+      if (pair.second->has_flags(ACCOUNT_EXT_DISPLAYED) ||
+	  pair.second->children_with_flags(ACCOUNT_EXT_DISPLAYED))
+	top_displayed++;
+    }
+  }
 
   assert(report.session.master->has_xdata());
   account_t::xdata_t& xdata(report.session.master->xdata());
@@ -300,6 +301,7 @@ void format_accounts::operator()(account_t& account)
 	    "  But it did not match the display predicate");
     }
   }
+  posted_accounts.push_back(&account);
 }
 
 format_equity::format_equity(report_t& _report, const string& _format)
@@ -351,12 +353,12 @@ void format_equity::flush()
   out.flush();
 }
 
-std::size_t format_equity::post_accounts(account_t& account)
+void format_equity::post_account(account_t& account)
 {
   std::ostream& out(report.output_stream);
 
   if (! account.has_flags(ACCOUNT_EXT_MATCHING))
-    return 0;
+    return;
 
   value_t val = account.xdata().value;
 
@@ -378,8 +380,6 @@ std::size_t format_equity::post_accounts(account_t& account)
     next_lines_format.format(out, bound_scope);
   }
   total += val;
-
-  return 1;
 }
 
 } // namespace ledger

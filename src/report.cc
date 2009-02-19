@@ -77,8 +77,8 @@ void report_t::accounts_report(acct_handler_ptr handler)
   if (! HANDLED(sort_))
     iter.reset(new basic_accounts_iterator(*session.master));
   else
-    iter.reset(new sorted_accounts_iterator(*session.master,
-					    HANDLER(sort_).str()));
+    iter.reset(new sorted_accounts_iterator(HANDLER(sort_).str(),
+					    HANDLED(flat), *session.master.get()));
 
   if (HANDLED(display_))
     pass_down_accounts(handler, *iter.get(),
