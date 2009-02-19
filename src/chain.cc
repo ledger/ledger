@@ -80,16 +80,16 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     handler.reset(new filter_xacts(handler, only_predicate, report));
   }
 
-  // sort_xacts will sort all the xacts it sees, based on the `sort_order'
-  // value expression.
-  if (report.HANDLED(sort_)) {
-    if (report.HANDLED(sort_entries_))
-      handler.reset(new sort_entries(handler, report.HANDLER(sort_).str()));
-    else
-      handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
-  }
-
   if (! only_preliminaries) {
+    // sort_xacts will sort all the xacts it sees, based on the `sort_order'
+    // value expression.
+    if (report.HANDLED(sort_)) {
+      if (report.HANDLED(sort_entries_))
+	handler.reset(new sort_entries(handler, report.HANDLER(sort_).str()));
+      else
+	handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
+    }
+
     // changed_value_xacts adds virtual xacts to the list to account for
     // changes in market value of commodities, which otherwise would affect
     // the running total unpredictably.
@@ -104,18 +104,18 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
       handler.reset(new collapse_xacts(handler, expr,
 				       display_predicate, only_predicate,
 				       report.HANDLED(collapse_if_zero)));
-  }
 
-  // subtotal_xacts combines all the xacts it receives into one subtotal
-  // entry, which has one xact for each commodity in each account.
-  //
-  // period_xacts is like subtotal_xacts, but it subtotals according to time
-  // periods rather than totalling everything.
-  //
-  // dow_xacts is like period_xacts, except that it reports all the xacts
-  // that fall on each subsequent day of the week.
-  if (report.HANDLED(subtotal))
-    handler.reset(new subtotal_xacts(handler, expr));
+    // subtotal_xacts combines all the xacts it receives into one subtotal
+    // entry, which has one xact for each commodity in each account.
+    //
+    // period_xacts is like subtotal_xacts, but it subtotals according to time
+    // periods rather than totalling everything.
+    //
+    // dow_xacts is like period_xacts, except that it reports all the xacts
+    // that fall on each subsequent day of the week.
+    if (report.HANDLED(subtotal))
+      handler.reset(new subtotal_xacts(handler, expr));
+  }
 
   if (report.HANDLED(dow))
     handler.reset(new dow_xacts(handler, expr));
