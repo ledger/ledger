@@ -171,7 +171,7 @@ namespace {
   }
 
   value_t get_total(xact_t& xact) {
-    if (xact.xdata_)
+    if (xact.xdata_ && ! xact.xdata_->total.is_null())
       return xact.xdata_->total;
     else
       return xact.amount;
