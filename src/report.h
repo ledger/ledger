@@ -565,10 +565,15 @@ public:
 
   OPTION_(report_t, wide, DO() { // -w
       parent->HANDLER(date_width_).on_with(9L);
+      parent->HANDLER(date_width_).specified = true;
       parent->HANDLER(payee_width_).on_with(35L);
+      parent->HANDLER(payee_width_).specified = true;
       parent->HANDLER(account_width_).on_with(39L);
+      parent->HANDLER(account_width_).specified = true;
       parent->HANDLER(amount_width_).on_with(22L);
+      parent->HANDLER(amount_width_).specified = true;
       parent->HANDLER(total_width_).on_with(22L);
+      parent->HANDLER(total_width_).specified = true;
     });
 
   OPTION_(report_t, yearly, DO() { // -Y
@@ -576,20 +581,25 @@ public:
     });
 
   OPTION__(report_t, date_width_,
-	   CTOR(report_t, date_width_) { on_with(9L); }
-	   DO_(args) { value = args[0].to_long(); });
+	   bool specified;
+	   CTOR(report_t, date_width_) { on_with(9L); specified = false; }
+	   DO_(args) { value = args[0].to_long(); specified = true; });
   OPTION__(report_t, payee_width_,
-	   CTOR(report_t, payee_width_) { on_with(20L); }
-	   DO_(args) { value = args[0].to_long(); });
+	   bool specified;
+	   CTOR(report_t, payee_width_) { on_with(20L); specified = false; }
+	   DO_(args) { value = args[0].to_long(); specified = true; });
   OPTION__(report_t, account_width_,
-	   CTOR(report_t, account_width_) { on_with(23L); }
-	   DO_(args) { value = args[0].to_long(); });
+	   bool specified;
+	   CTOR(report_t, account_width_) { on_with(23L); specified = false; }
+	   DO_(args) { value = args[0].to_long(); specified = true; });
   OPTION__(report_t, amount_width_,
-	   CTOR(report_t, amount_width_) { on_with(12L); }
-	   DO_(args) { value = args[0].to_long(); });
+	   bool specified;
+	   CTOR(report_t, amount_width_) { on_with(12L); specified = false; }
+	   DO_(args) { value = args[0].to_long(); specified = true; });
   OPTION__(report_t, total_width_,
-	   CTOR(report_t, total_width_) { on_with(12L); }
-	   DO_(args) { value = args[0].to_long(); });
+	   bool specified;
+	   CTOR(report_t, total_width_) { on_with(12L); specified = false; }
+	   DO_(args) { value = args[0].to_long(); specified = true; });
 };
 
 } // namespace ledger

@@ -407,30 +407,49 @@ void global_scope_t::normalize_report_options(const string& verb)
     DEBUG("auto.columns", "cols = " << cols);
 
     long date_width    = rep.HANDLER(date_width_).value.to_long();
-    long payee_width   = int(double(cols) * 0.263157);
-    long account_width = int(double(cols) * 0.302631);
-    long amount_width  = int(double(cols) * 0.157894);
-    long total_width   = amount_width;
+    long payee_width   = (rep.HANDLER(payee_width_).specified ?
+			  rep.HANDLER(payee_width_).value.to_long() :
+			  int(double(cols) * 0.263157));
+    long account_width = (rep.HANDLER(account_width_).specified ?
+			  rep.HANDLER(account_width_).value.to_long() :
+			  int(double(cols) * 0.302631));
+    long amount_width  = (rep.HANDLER(amount_width_).specified ?
+			  rep.HANDLER(amount_width_).value.to_long() :
+			  int(double(cols) * 0.157894));
+    long total_width   = (rep.HANDLER(total_width_).specified ?
+			  rep.HANDLER(total_width_).value.to_long() :
+			  amount_width);
 
-    DEBUG("auto.columns", "date_width = " << date_width);
-    DEBUG("auto.columns", "payee_width = " << payee_width);
+    DEBUG("auto.columns", "date_width	 = " << date_width);
+    DEBUG("auto.columns", "payee_width	 = " << payee_width);
     DEBUG("auto.columns", "account_width = " << account_width);
-    DEBUG("auto.columns", "amount_width = " << amount_width);
-    DEBUG("auto.columns", "total_width = " << total_width);
+    DEBUG("auto.columns", "amount_width	 = " << amount_width);
+    DEBUG("auto.columns", "total_width	 = " << total_width);
 
-    long total = (4 /* the spaces between */ + date_width + payee_width +
-		  account_width + amount_width + total_width);
-    if (total > cols) {
-      DEBUG("auto.columns", "adjusting account down");
-      account_width -= total - cols;
-      DEBUG("auto.columns", "account_width now = " << account_width);
+    if (! rep.HANDLER(date_width_).specified &&
+	! rep.HANDLER(payee_width_).specified &&
+	! rep.HANDLER(account_width_).specified &&
+	! rep.HANDLER(amount_width_).specified &&
+	! rep.HANDLER(total_width_).specified) {
+      long total = (4 /* the spaces between */ + date_width + payee_width +
+		    account_width + amount_width + total_width);
+      if (total > cols) {
+	DEBUG("auto.columns", "adjusting account down");
+	account_width -= total - cols;
+	DEBUG("auto.columns", "account_width now = " << account_width);
+      }
     }
 
-    rep.HANDLER(date_width_).on_with(date_width);
-    rep.HANDLER(payee_width_).on_with(payee_width);
-    rep.HANDLER(account_width_).on_with(account_width);
-    rep.HANDLER(amount_width_).on_with(amount_width);
-    rep.HANDLER(total_width_).on_with(total_width);
+    if (! rep.HANDLER(date_width_).specified)
+      rep.HANDLER(date_width_).on_with(date_width);
+    if (! rep.HANDLER(payee_width_).specified)
+      rep.HANDLER(payee_width_).on_with(payee_width);
+    if (! rep.HANDLER(account_width_).specified)
+      rep.HANDLER(account_width_).on_with(account_width);
+    if (! rep.HANDLER(amount_width_).specified)
+      rep.HANDLER(amount_width_).on_with(amount_width);
+    if (! rep.HANDLER(total_width_).specified)
+      rep.HANDLER(total_width_).on_with(total_width);
   }
 }
 
