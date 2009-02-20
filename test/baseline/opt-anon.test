@@ -1,11 +1,11 @@
-reg --args-only --columns=80 --abbrev-len=4
+reg --columns=80 --anon
 <<<
 2007/02/02 RD VMMXX
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 >>>1
-07-Feb-02 RD VMMXX              Asse:Inve:Vang:VMMXX    0.350 VMMXX  0.350 VMMXX
-                                Inco:Divi:Vang:VMMXX         $-0.35       $-0.35
+07-Feb-02 6a93dcb30aa7722e967.. ..8000cfb2807d6a978b43  0.350 VMMXX  0.350 VMMXX
+                                ..b52e4fbac0065bfcc300       $-0.35       $-0.35
                                                                      0.350 VMMXX
 >>>2
 === 0

@@ -14,7 +14,7 @@ tests  = sys.argv[2]
 
 if not os.path.isfile(ledger):
     sys.exit(1)
-if not os.path.isdir(tests):
+if not os.path.isdir(tests) and not os.path.isfile(tests):
     sys.exit(1)
 
 succeeded = 0
@@ -44,7 +44,7 @@ def test_regression(test_file):
     else:
         tempdata = tempfile.mkstemp()
 
-        os.write(tempdata[0], string.join(data))
+        os.write(tempdata[0], string.join(data, ''))
         os.close(tempdata[0])
 
         command = ("%s -f \"%s\" " % (ledger, tempdata[1])) + command
@@ -74,7 +74,6 @@ def test_regression(test_file):
     p.stdin.close()
 
     success = True
-
     printed = False
     index   = 0
     for line in difflib.unified_diff(output, p.stdout.readlines()):
@@ -119,9 +118,12 @@ def test_regression(test_file):
     if not use_stdin:
         os.remove(tempdata[1])
 
-for test in os.listdir(tests):
-    if re.search('\.test$', test):
-        test_regression(os.path.join(tests, test))
+if os.path.isdir(tests):
+    for test in os.listdir(tests):
+        if re.search('\.test$', test):
+            test_regression(os.path.join(tests, test))
+else:
+    test_regression(tests)
 
 print
 if succeeded > 0:
