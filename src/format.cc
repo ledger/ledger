@@ -346,7 +346,7 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 	// Even abbreviated its too big to show the last account, so
 	// abbreviate all but the last and truncate at the beginning.
 	unistring temp(result.str());
-	buf << ".." << temp.extract(temp.length() - width, width);
+	buf << ".." << temp.extract(temp.length() - width - 2, width - 2);
       } else {
 	buf << result.str();
       }
@@ -356,7 +356,7 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 
   case TRUNCATE_TRAILING:
     // This method truncates at the end (the default).
-    buf << ustr.extract(0, width -2) << "..";
+    buf << ustr.extract(0, width - 2) << "..";
     break;
   }
 
