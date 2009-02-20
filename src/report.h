@@ -290,7 +290,7 @@ public:
     "%(quoted(date)),"
     "%(quoted(payee)),"
     "%(quoted(account)),"
-    "%(quoted(display_amount)),"
+    "%(quoted(strip(display_amount))),"
     "%(quoted((cleared or entry.cleared) ?"
       " \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
     "%(quoted(code)),"
