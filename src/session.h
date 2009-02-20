@@ -131,6 +131,7 @@ public:
 
   OPTION(session_t, input_date_format_);
   OPTION(session_t, price_db_);
+  OPTION(session_t, strict);
 };
 
 /**

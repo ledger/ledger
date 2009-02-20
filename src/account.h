@@ -69,6 +69,7 @@ class account_t : public scope_t
   optional<string> note;
   unsigned short   depth;
   accounts_map	   accounts;
+  bool		   known;
 
   mutable void *   data;
   mutable string   _fullname;
@@ -77,7 +78,8 @@ class account_t : public scope_t
 	    const string& _name   = "",
 	    const optional<string>& _note = none)
     : scope_t(), parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0), data(NULL) {
+      depth(parent ? parent->depth + 1 : 0),
+      known(false), data(NULL) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
@@ -87,6 +89,7 @@ class account_t : public scope_t
       note(other.note),
       depth(other.depth),
       accounts(other.accounts),
+      known(other.known),
       data(NULL) {
     TRACE_CTOR(account_t, "copy");
     assert(other.data == NULL);

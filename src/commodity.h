@@ -150,6 +150,7 @@ public:
 #define COMMODITY_NOMARKET        0x10
 #define COMMODITY_BUILTIN         0x20
 #define COMMODITY_WALKED          0x40
+#define COMMODITY_KNOWN           0x80
 
     string		       symbol;
     amount_t::precision_t      precision;

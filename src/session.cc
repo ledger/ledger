@@ -84,7 +84,8 @@ std::size_t session_t::read_journal(std::istream& in,
 {
   if (! master)
     master = journal->master;
-  std::size_t count = journal->parse(in, *this, master, &pathname);
+  std::size_t count = journal->parse(in, *this, master, &pathname,
+				     HANDLED(strict));
   clean_accounts();		// remove calculated totals
   return count;
 }
@@ -219,6 +220,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'p':
     OPT(price_db_);
+    break;
+  case 's':
+    OPT(strict);
     break;
   case 'Q':
     OPT_CH(download); // -Q

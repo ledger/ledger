@@ -97,8 +97,9 @@ public:
 
   std::size_t parse(std::istream& in,
 		    scope_t&      session_scope,
-		    account_t *   master,
-		    const path *  original_file);
+		    account_t *   master	= NULL,
+		    const path *  original_file = NULL,
+		    bool          strict	= false);
 
   bool valid() const;
 };

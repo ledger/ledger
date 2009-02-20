@@ -55,7 +55,7 @@ namespace {
 	  << std::endl << str << std::endl;
       {
 	std::istringstream in(str);
-	report.session.journal->parse(in, report.session, NULL, NULL);
+	report.session.journal->parse(in, report.session);
 	report.session.clean_accounts();
       }
     }

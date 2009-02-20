@@ -58,6 +58,7 @@ namespace {
     const path *      original_file;
     accounts_map      account_aliases;
     int               current_year;
+    bool              strict;
 
     path	      pathname;
     char	      linebuf[MAX_LINE + 1];
@@ -78,6 +79,7 @@ namespace {
 	       journal_t&	       _journal,
 	       account_t *	       _master        = NULL,
 	       const path *	       _original_file = NULL,
+	       bool                    _strict        = false,
 	       instance_t *            _parent        = NULL);
 
     ~instance_t();
@@ -115,7 +117,8 @@ namespace {
     xact_t * parse_xact(char *		line,
 			std::streamsize len,
 			account_t *	account,
-			entry_t *	entry);
+			entry_t *	entry,
+			bool            honor_strict = true);
 
     bool parse_xacts(account_t *   account,
 		     entry_base_t& entry);
@@ -168,13 +171,15 @@ instance_t::instance_t(std::list<account_t *>& _account_stack,
 		       journal_t&	       _journal,
 		       account_t *	       _master,
 		       const path *	       _original_file,
+		       bool                    _strict,
 		       instance_t *            _parent)
     : account_stack(_account_stack),
 #if defined(TIMELOG_SUPPORT)
       timelog(_timelog),
 #endif
       parent(_parent), in(_in), session_scope(_session_scope),
-      journal(_journal), master(_master), original_file(_original_file)
+      journal(_journal), master(_master),
+      original_file(_original_file), strict(_strict)
 {
   TRACE_CTOR(instance_t, "...");
 
@@ -418,11 +423,13 @@ void instance_t::default_commodity_directive(char * line)
   amount_t amt(skip_ws(line + 1));
   assert(amt.valid());
   amount_t::current_pool->default_commodity = &amt.commodity();
+  amt.commodity().add_flags(COMMODITY_KNOWN);
 }
 
 void instance_t::default_account_directive(char * line)
 {
   journal.basket = account_stack.front()->find_account(skip_ws(line + 1));
+  journal.basket->known = true;
 }
 
 void instance_t::price_conversion_directive(char * line)
@@ -484,8 +491,12 @@ void instance_t::price_entry_directive(char * line)
   assert(price.valid());
 
   if (commodity_t * commodity =
-      amount_t::current_pool->find_or_create(symbol))
+      amount_t::current_pool->find_or_create(symbol)) {
     commodity->add_price(datetime, price);
+    commodity->add_flags(COMMODITY_KNOWN);
+  } else {
+    assert(false);
+  }
 }
 
 void instance_t::nomarket_directive(char * line)
@@ -496,7 +507,7 @@ void instance_t::nomarket_directive(char * line)
 
   if (commodity_t * commodity =
       amount_t::current_pool->find_or_create(symbol))
-    commodity->add_flags(COMMODITY_NOMARKET);
+    commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
 }
 
 void instance_t::year_directive(char * line)
@@ -616,7 +627,7 @@ void instance_t::include_directive(char * line)
 		      timelog,
 #endif
 		      stream, session_scope, journal, master,
-		      &filename, this);
+		      &filename, strict, this);
   instance.parse();
 
   errors += instance.errors;
@@ -722,7 +733,8 @@ void instance_t::general_directive(char * line)
 xact_t * instance_t::parse_xact(char *		line,
 				std::streamsize len,
 				account_t *	account,
-				entry_t *	entry)
+				entry_t *	entry,
+				bool            honor_strict)
 {
   TRACE_START(xact_details, 1, "Time spent parsing transactions:");
 
@@ -800,6 +812,14 @@ xact_t * instance_t::parse_xact(char *		line,
   if (! xact->account)
     xact->account = account->find_account(name);
 
+  if (honor_strict && strict && ! xact->account->known) {
+    if (xact->_state == item_t::UNCLEARED)
+      std::cerr << "Warning: \"" << pathname << "\", line " << linenum
+		<< ": Unknown account '" << xact->account->fullname()
+		<< "'" << std::endl;
+    xact->account->known = true;
+  }
+
   // Parse the optional amount
 
   bool saw_amount = false;
@@ -817,6 +837,15 @@ xact_t * instance_t::parse_xact(char *		line,
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
+    if (! xact->amount.is_null() && honor_strict && strict &&
+	xact->amount.has_commodity() &&
+	! xact->amount.commodity().has_flags(COMMODITY_KNOWN)) {
+      if (xact->_state == item_t::UNCLEARED)
+	std::cerr << "Warning: \"" << pathname << "\", line " << linenum
+		  << ": Unknown commodity '" << xact->amount.commodity()
+		  << "'" << std::endl;
+      xact->amount.commodity().add_flags(COMMODITY_KNOWN);
+    }
 #if 0
     // jww (2009-02-12): This isn't quite working yet; it causes cost computes
     // to skyrocket, since the per-unit price isn't also being reduced by the
@@ -1022,7 +1051,7 @@ bool instance_t::parse_xacts(account_t *   account,
     std::streamsize len = read_line(line);
     assert(len > 0);
 
-    if (xact_t * xact = parse_xact(line, len, account, NULL)) {
+    if (xact_t * xact = parse_xact(line, len, account, NULL, false)) {
       entry.add_xact(xact);
       added = true;
     }
@@ -1144,7 +1173,8 @@ expr_t::ptr_op_t instance_t::lookup(const string& name)
 std::size_t journal_t::parse(std::istream& in,
 			     scope_t&      session_scope,
 			     account_t *   master,
-			     const path *  original_file)
+			     const path *  original_file,
+			     bool          strict)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 
@@ -1158,7 +1188,7 @@ std::size_t journal_t::parse(std::istream& in,
 			      timelog,
 #endif
 			      in, session_scope, *this, master,
-			      original_file);
+			      original_file, strict);
   parsing_instance.parse();
 
   TRACE_STOP(parsing_total, 1);
