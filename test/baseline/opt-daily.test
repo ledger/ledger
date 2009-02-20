@@ -1,0 +1,56 @@
+reg --daily
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+>>>1
+08-Jan-01 - 08-Jan-01           Assets:Cash                 $-60.00      $-60.00
+                                Expenses:Books               $60.00            0
+08-Feb-01 - 08-Feb-01           Assets:Cash                $-120.00     $-120.00
+                                Expenses:Books              $120.00            0
+>>>2
+=== 0

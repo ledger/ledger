@@ -416,6 +416,9 @@ void changed_value_xacts::operator()(xact_t& xact)
 
 void subtotal_xacts::report_subtotal(const char * spec_fmt)
 {
+  if (component_xacts.empty())
+    return;
+
   date_t start;
   date_t finish;
   foreach (xact_t * xact, component_xacts) {

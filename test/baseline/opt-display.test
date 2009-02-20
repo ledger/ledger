@@ -1,0 +1,59 @@
+reg --display='payee =~ /February/' books
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+>>>1
+08-Feb-01 February              Expenses:Books               $20.00       $80.00
+08-Feb-01 End of February       Expenses:Books               $20.00      $100.00
+08-Feb-01 February              Expenses:Books               $20.00      $120.00
+08-Feb-01 End of February       Expenses:Books               $20.00      $140.00
+08-Feb-01 February              Expenses:Books               $20.00      $160.00
+08-Feb-01 End of February       Expenses:Books               $20.00      $180.00
+>>>2
+=== 0

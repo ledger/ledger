@@ -1,0 +1,65 @@
+reg --display-total='amount * 10' books
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/01 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+>>>1
+08-Jan-01 January               Expenses:Books               $10.00      $100.00
+08-Jan-01 End of January        Expenses:Books               $10.00      $100.00
+08-Jan-01 January               Expenses:Books               $10.00      $100.00
+08-Jan-01 End of January        Expenses:Books               $10.00      $100.00
+08-Jan-01 January               Expenses:Books               $10.00      $100.00
+08-Jan-01 End of January        Expenses:Books               $10.00      $100.00
+08-Feb-01 February              Expenses:Books               $20.00      $200.00
+08-Feb-01 End of February       Expenses:Books               $20.00      $200.00
+08-Feb-01 February              Expenses:Books               $20.00      $200.00
+08-Feb-01 End of February       Expenses:Books               $20.00      $200.00
+08-Feb-01 February              Expenses:Books               $20.00      $200.00
+08-Feb-01 End of February       Expenses:Books               $20.00      $200.00
+>>>2
+=== 0
