@@ -91,7 +91,12 @@ def test_regression(test_file):
 
     printed = False
     index   = 0
-    for line in difflib.unified_diff(error, p.stderr.readlines()):
+    lines   = p.stderr.readlines()
+    if len(lines) > 0:
+        while re.match('While (parsing file|balancing entry from)', lines[0]):
+            lines = lines[1:]
+            error = error[1:]
+    for line in difflib.unified_diff(error, lines):
         index += 1
         if index < 3:
             continue

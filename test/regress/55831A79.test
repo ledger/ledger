@@ -1,0 +1,24 @@
+bal --args-only discover
+<<<
+2008/01/01 * previous balances
+    liabilities:credit cards:discover 4462            $-1094.38
+    equity:opening balances
+
+2008/01/18 * DISCOVER FEES
+    liabilities:credit cards:discover 4462:interest          $-36.59
+    assets:bank:wells fargo:checking
+
+2008/01/18 * DISCOVER FEES
+    liabilities:credit cards:discover 4462:fee          $-39
+    liabilities:credit cards:discover 4462:interest    $-28.17
+    assets:bank:wells fargo:checking
+
+2008/3/1 * discover card payment
+    liabilities:credit cards:discover 4462        $1198.14
+    assets:bank:wells fargo:checking
+>>>1
+                   0  liabilities:credit cards:discover 4462
+             $-39.00    fee
+             $-64.76    interest
+>>>2
+=== 0
