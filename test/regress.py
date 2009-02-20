@@ -40,15 +40,22 @@ def test_regression(test_file):
     if command.startswith("-f - "):
         use_stdin = True
 
-        command = ("%s" % ledger) + " --args-only --columns=80 " + command
+        if re.search('--columns', command):
+            command = ("%s" % ledger) + " --args-only " + command
+        else:
+            command = ("%s" % ledger) + " --args-only --columns=80 " + command
     else:
         tempdata = tempfile.mkstemp()
 
         os.write(tempdata[0], string.join(data, ''))
         os.close(tempdata[0])
 
-        command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
-                   " --args-only --columns=80 " + command)
+        if re.search('--columns', command):
+            command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
+                       " --args-only " + command)
+        else:
+            command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
+                       " --args-only --columns=80 " + command)
 
     output = []
     while line != ">>>2\n":
