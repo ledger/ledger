@@ -135,6 +135,7 @@ public:
   value_t fn_market_value(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
+  value_t fn_rounded(call_scope_t& scope);
   value_t fn_truncate(call_scope_t& scope);
   value_t fn_print(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
@@ -183,6 +184,20 @@ public:
 	   CTOR(report_t, abbrev_len_) { on_with(2L); });
   OPTION(report_t, account_);
 
+  OPTION__
+  (report_t, account_amount_,
+   expr_t expr;
+   CTOR(report_t, account_amount_) {
+     set_expr("amount");
+   }
+   void set_expr(const string& str) {
+     expr = str;
+     on(str);
+   }
+   DO_(args) {
+     set_expr(args[0].to_string());
+   });
+
   OPTION_(report_t, actual, DO() { // -L
       parent->HANDLER(limit_).on("actual");
     });
@@ -228,7 +243,7 @@ public:
 
   OPTION_(report_t, basis, DO() { // -B
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).set_expr("cost");
+      parent->HANDLER(amount_).set_expr("rounded(cost)");
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b

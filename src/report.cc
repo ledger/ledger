@@ -56,16 +56,17 @@ void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
 
 void report_t::sum_all_accounts()
 {
-  expr_t& expr(HANDLER(amount_).expr);
-  expr.set_context(this);
+  expr_t& amount_expr(HANDLER(amount_).expr);
+  amount_expr.set_context(this);
 
   journal_xacts_iterator walker(*session.journal.get());
   pass_down_xacts(chain_xact_handlers
-		  (*this, xact_handler_ptr(new set_account_value(expr)), true),
-		  walker);
+		  (*this, xact_handler_ptr(new set_account_value(amount_expr)),
+		   true), walker);
 
-  expr.mark_uncompiled();	// recompile, throw away xact_t bindings
-  session.master->calculate_sums(expr);
+  expr_t& account_amount_expr(HANDLER(account_amount_).expr);
+  account_amount_expr.set_context(this);
+  session.master->calculate_sums(account_amount_expr);
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)
@@ -141,6 +142,11 @@ value_t report_t::fn_market_value(call_scope_t& args)
 value_t report_t::fn_strip(call_scope_t& args)
 {
   return args[0].strip_annotations(what_to_keep());
+}
+
+value_t report_t::fn_rounded(call_scope_t& args)
+{
+  return args[0].rounded();
 }
 
 value_t report_t::fn_quantity(call_scope_t& args)
@@ -310,6 +316,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'a':
     OPT(abbrev_len_);
     else OPT(account_);
+    else OPT(account_amount_);
     else OPT(actual);
     else OPT(add_budget);
     else OPT(amount_);
@@ -611,6 +618,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_quoted);
     else if (is_eq(p, "quantity"))
       return MAKE_FUNCTOR(report_t::fn_quantity);
+    break;
+
+  case 'r':
+    if (is_eq(p, "rounded"))
+      return MAKE_FUNCTOR(report_t::fn_rounded);
     break;
 
   case 's':
