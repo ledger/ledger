@@ -271,7 +271,7 @@ endif
 TESTS =
 
 if HAVE_PYTHON
-TESTS += RegressionTests
+TESTS += RegressionTests BaselineTests
 endif
 
 if HAVE_CPPUNIT
@@ -396,6 +396,14 @@ RegressionTests: $(srcdir)/test/regress.py
 	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
+BaselineTests_SOURCES = test/regress.py
+
+EXTRA_DIST += test/baseline
+
+BaselineTests: $(srcdir)/test/regress.py
+	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/baseline" > $@
+	chmod 755 $@
+
 FULLCHECK=$(srcdir)/tools/fullcheck
 
 if HAVE_CPPUNIT
@@ -486,15 +494,15 @@ copy-sources:
 	rsync -av --delete --exclude=/.libs/ --exclude=/.deps/ \
 	    --exclude=/plan/ --exclude=/2.6*/ --exclude=/archive/ \
 	    $(srcdir)/ $(STAGING)/
-	(cd $(STAGING); git clean -x -d -f)
+	-(cd $(STAGING); git clean -x -d -f)
 
 release: copy-sources
 	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --opt --build -j3)
+	 nice -n 20 ./acprep --release --opt --build -j3 clean all)
 
 release-distcheck: copy-sources
 	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --build -j3 distcheck)
+	 nice -n 20 ./acprep --release --build -j3 clean distcheck)
 
 benchmark: release
 	PATH=$(PATH):$(srcdir)/tools \
