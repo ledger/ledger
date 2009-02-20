@@ -863,6 +863,25 @@ void value_t::in_place_cast(type_t cast_type)
     }
     break;
 
+  case DATE:
+    switch (cast_type) {
+    case STRING:
+      set_string(format_date(as_date(), string("%Y-%m-%d")));
+      return;
+    default:
+      break;
+    }
+    break;
+  case DATETIME:
+    switch (cast_type) {
+    case STRING:
+      set_string(format_datetime(as_datetime(), string("%Y-%m-%d %H:%M:%S")));
+      return;
+    default:
+      break;
+    }
+    break;
+
   case INTEGER:
     switch (cast_type) {
     case AMOUNT:
