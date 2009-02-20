@@ -86,7 +86,7 @@ namespace {
 	("Timelog check-out date less than corresponding check-in");
 
     char buf[32];
-    std::sprintf(buf, "%lds", long((when - event.checkin).seconds()));
+    std::sprintf(buf, "%lds", long((when - event.checkin).total_seconds()));
     amount_t amt;
     amt.parse(buf);
     assert(amt.valid());
