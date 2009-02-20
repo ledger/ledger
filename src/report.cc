@@ -391,6 +391,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'n':
     OPT_CH(collapse);
+    else OPT(no_total);
     break;
   case 'o':
     OPT(only_);
@@ -481,8 +482,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, report_format(HANDLER(balance_format_)),
-				  HANDLED(flat)), *this));
+	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
+	      *this));
 	break;
 
       case 'c':

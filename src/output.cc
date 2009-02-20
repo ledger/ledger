@@ -218,12 +218,12 @@ void format_accounts::post_account(account_t& account)
   DEBUG("account.display", "Should we display " << account.fullname());
 
   if (account.has_flags(ACCOUNT_EXT_MATCHING) ||
-      (! flatten_list &&
+      (! report.HANDLED(flat) &&
        account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1)) {
     DEBUG("account.display", "  Yes, because it matched");
     format_account = true;
   }
-  else if (! flatten_list &&
+  else if (! report.HANDLED(flat) &&
 	   account.children_with_flags(ACCOUNT_EXT_VISITED) &&
 	   ! account.children_with_flags(ACCOUNT_EXT_MATCHING)) {
     DEBUG("account.display",
@@ -257,11 +257,11 @@ void format_accounts::flush()
   foreach (account_t * account, posted_accounts) {
     post_account(*account);
 
-    if (flatten_list && account->has_flags(ACCOUNT_EXT_DISPLAYED))
+    if (report.HANDLED(flat) && account->has_flags(ACCOUNT_EXT_DISPLAYED))
       top_displayed++;
   }
 
-  if (! flatten_list) {
+  if (! report.HANDLED(flat)) {
     foreach (accounts_map::value_type pair, report.session.master->accounts) {
       if (pair.second->has_flags(ACCOUNT_EXT_DISPLAYED) ||
 	  pair.second->children_with_flags(ACCOUNT_EXT_DISPLAYED))
@@ -272,7 +272,7 @@ void format_accounts::flush()
   assert(report.session.master->has_xdata());
   account_t::xdata_t& xdata(report.session.master->xdata());
 
-  if (top_displayed > 1 && ! report.HANDLED(collapse) && xdata.total) {
+  if (! report.HANDLED(no_total) && top_displayed > 1 && xdata.total) {
     out << "--------------------\n";
     xdata.value = xdata.total;
     bind_scope_t bound_scope(report, *report.session.master);

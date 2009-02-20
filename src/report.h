@@ -388,6 +388,8 @@ public:
       parent->HANDLER(period_).on("monthly");
     });
 
+  OPTION(report_t, no_total);
+
   OPTION__
   (report_t, only_,
    CTOR(report_t, only_) {}
