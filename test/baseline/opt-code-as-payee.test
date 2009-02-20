@@ -1,0 +1,34 @@
+reg --code-as-payee
+<<<
+2008/01/01 * (100) January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/31 (101) End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 * (102) February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/28 (103) End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/03/01 * March
+    Expenses:Books          $30.00
+    Assets:Cash
+>>>1
+08-Jan-01 100                   Expenses:Books               $10.00       $10.00
+08-Jan-01 100                   Assets:Cash                 $-10.00            0
+08-Jan-31 101                   Expenses:Books               $10.00       $10.00
+08-Jan-31 101                   Assets:Cash                 $-10.00            0
+08-Feb-01 102                   Expenses:Books               $20.00       $20.00
+08-Feb-01 102                   Assets:Cash                 $-20.00            0
+08-Feb-28 103                   Expenses:Books               $20.00       $20.00
+08-Feb-28 103                   Assets:Cash                 $-20.00            0
+08-Mar-01                       Expenses:Books               $30.00       $30.00
+08-Mar-01                       Assets:Cash                 $-30.00            0
+>>>2
+=== 0

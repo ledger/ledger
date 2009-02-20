@@ -1,4 +1,4 @@
-bal --args-only --balance-format='%(account)\n' --no-total
+bal --balance-format='%(account)\n' --no-total
 <<<
 2007/02/02 RD VMMXX
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00

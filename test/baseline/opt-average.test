@@ -1,4 +1,4 @@
-reg --args-only --columns=80 --average books
+reg --average books
 <<<
 2008/01/01 January
     Expenses:Books          $10.00

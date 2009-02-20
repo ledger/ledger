@@ -1,4 +1,4 @@
-equity --args-only assets
+equity assets
 <<<
 2009/01/01 sample
     Assets:Super:ARF                 $1000.00

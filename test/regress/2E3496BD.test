@@ -1,4 +1,4 @@
-bal --args-only
+bal
 <<<
 D 1,000.00 USD
 

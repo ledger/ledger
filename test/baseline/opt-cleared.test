@@ -1,6 +1,6 @@
-reg --by-payee not @End
+reg --cleared
 <<<
-2008/01/01 January
+2008/01/01 * January
     Expenses:Books          $10.00
     Assets:Cash
 
@@ -8,7 +8,7 @@ reg --by-payee not @End
     Expenses:Books          $10.00
     Assets:Cash
 
-2008/02/01 February
+2008/02/01 * February
     Expenses:Books          $20.00
     Assets:Cash
 
@@ -16,7 +16,7 @@ reg --by-payee not @End
     Expenses:Books          $20.00
     Assets:Cash
 
-2008/03/01 March
+2008/03/01 * March
     Expenses:Books          $30.00
     Assets:Cash
 
@@ -25,20 +25,20 @@ reg --by-payee not @End
     Assets:Cash
 
 2008/04/01 April
-    Expenses:Books          $40.00
+    * Expenses:Books        $40.00
     Assets:Cash
 
 2008/04/30 End of April
-    Expenses:Books          $40.00
+    * Expenses:Books        $40.00
     Assets:Cash
 
 2008/05/01 May
     Expenses:Books          $50.00
-    Assets:Cash
+    * Assets:Cash
 
 2008/05/31 End of May
     Expenses:Books          $50.00
-    Assets:Cash
+    * Assets:Cash
 
 2008/06/01 June
     Expenses:Books          $60.00
@@ -192,29 +192,15 @@ reg --by-payee not @End
     Expenses:Books         $120.00
     Assets:Cash
 >>>1
-08-Apr-01 April                 Assets:Cash                 $-80.00      $-80.00
-                                Expenses:Books               $80.00            0
-08-Aug-01 August                Assets:Cash                $-160.00     $-160.00
-                                Expenses:Books              $160.00            0
-08-Dec-01 December              Assets:Cash                $-240.00     $-240.00
-                                Expenses:Books              $240.00            0
-08-Feb-01 February              Assets:Cash                 $-40.00      $-40.00
-                                Expenses:Books               $40.00            0
-08-Jan-01 January               Assets:Cash                 $-20.00      $-20.00
-                                Expenses:Books               $20.00            0
-08-Jul-01 July                  Assets:Cash                $-140.00     $-140.00
-                                Expenses:Books              $140.00            0
-08-Jun-01 June                  Assets:Cash                $-120.00     $-120.00
-                                Expenses:Books              $120.00            0
-08-Mar-01 March                 Assets:Cash                 $-60.00      $-60.00
-                                Expenses:Books               $60.00            0
-08-May-01 May                   Assets:Cash                $-100.00     $-100.00
-                                Expenses:Books              $100.00            0
-08-Nov-01 November              Assets:Cash                $-220.00     $-220.00
-                                Expenses:Books              $220.00            0
-08-Oct-01 October               Assets:Cash                $-200.00     $-200.00
-                                Expenses:Books              $200.00            0
-08-Sep-01 September             Assets:Cash                $-180.00     $-180.00
-                                Expenses:Books              $180.00            0
+08-Jan-01 January               Expenses:Books               $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+08-Feb-01 February              Expenses:Books               $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+08-Mar-01 March                 Expenses:Books               $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+08-Apr-01 April                 Expenses:Books               $40.00       $40.00
+08-Apr-30 End of April          Expenses:Books               $40.00       $80.00
+08-May-01 May                   Assets:Cash                 $-50.00       $30.00
+08-May-31 End of May            Assets:Cash                 $-50.00      $-20.00
 >>>2
 === 0

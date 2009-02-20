@@ -1,4 +1,4 @@
-bal --args-only discover
+bal discover
 <<<
 2008/01/01 * previous balances
     liabilities:credit cards:discover 4462            $-1094.38

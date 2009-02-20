@@ -1,4 +1,4 @@
-reg --args-only --columns=80
+reg
 <<<
 2007/12/31 * Cost basis for: RED HAT INC RHT
   Assets:Investments:RBC-Broker:Account-RSP                    4 RHT
