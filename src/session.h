@@ -98,6 +98,10 @@ public:
     clean_accounts();
   }
 
+  value_t fn_today(call_scope_t&) {
+    return CURRENT_DATE();
+  }
+
   option_t<session_t> * lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const string& name);

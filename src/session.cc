@@ -241,6 +241,11 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 	return MAKE_OPT_HANDLER(session_t, handler);
     }
     break;
+
+  case 't':
+    if (is_eq(p, "today"))
+      return MAKE_FUNCTOR(session_t::fn_today);
+    break;
   }
 
   return symbol_scope_t::lookup(name);

@@ -297,7 +297,9 @@ public:
     "%(quoted(join(note)))\n");
     });
 
-  OPTION(report_t, current); // -c
+  OPTION_(report_t, current, DO() { // -c
+      parent->HANDLER(limit_).on("date<=today");
+    });
 
   OPTION_(report_t, daily, DO() {
       parent->HANDLER(period_).on("daily");
