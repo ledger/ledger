@@ -339,7 +339,7 @@ void global_scope_t::normalize_session_options()
 function_t global_scope_t::look_for_precommand(scope_t&	     scope,
 					       const string& verb)
 {
-  if (expr_t::ptr_op_t def = scope.lookup(string("precmd_") + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(string(PRECMD_PREFIX) + verb))
     return def->as_function();
   else
     return function_t();
@@ -348,7 +348,7 @@ function_t global_scope_t::look_for_precommand(scope_t&	     scope,
 function_t global_scope_t::look_for_command(scope_t&	  scope,
 					    const string& verb)
 {
-  if (expr_t::ptr_op_t def = scope.lookup(string("cmd_") + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(string(CMD_PREFIX) + verb))
     return def->as_function();
   else
     return function_t();
@@ -361,7 +361,7 @@ void global_scope_t::normalize_report_options(const string& verb)
 
   report_t& rep(report());
 
-  // jww (2009-02-09): These global are a hack, but hard to avoid
+  // jww (2009-02-09): These global are a hack, but hard to avoid.
   item_t::use_effective_date = rep.HANDLED(effective);
 
   if (rep.HANDLED(date_format_)) {
@@ -369,14 +369,15 @@ void global_scope_t::normalize_report_options(const string& verb)
     output_date_format     = rep.HANDLER(date_format_).str();
   }
 
-  // jww (2008-08-14): This code really needs to be rationalized away
-  // for 3.0.
+  // jww (2008-08-14): This code really needs to be rationalized away for 3.0.
+  // I might be able to do it with command objects, like register_t, which
+  // each know how to adjust the report based on its current option settings.
   if (verb == "print" || verb == "entry" || verb == "dump") {
     rep.HANDLER(related).on_only();
     rep.HANDLER(related_all).on_only();
   }
   else if (verb == "equity") {
-    rep.HANDLER(subtotal).on_only();
+    rep.HANDLER(equity).on_only();
   }
   else if (rep.HANDLED(related)) {
     if (verb[0] == 'r') {

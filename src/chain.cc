@@ -113,7 +113,9 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     //
     // dow_xacts is like period_xacts, except that it reports all the xacts
     // that fall on each subsequent day of the week.
-    if (report.HANDLED(subtotal))
+    if (report.HANDLED(equity))
+      handler.reset(new xacts_as_equity(handler, expr));
+    else if (report.HANDLED(subtotal))
       handler.reset(new subtotal_xacts(handler, expr));
   }
 

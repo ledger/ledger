@@ -356,7 +356,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(effective);
     else OPT(empty);
     else OPT_(end_);
-    else OPT(equity_format_);
+    else OPT(equity);
     break;
   case 'f':
     OPT(flat);
@@ -475,10 +475,10 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'c':
-    if (WANT_CMD()) { p += CMD_PREFIX_LEN;
-      switch (*p) {
+    if (WANT_CMD()) { const char * q = p + CMD_PREFIX_LEN;
+      switch (*q) {
       case 'b':
-	if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance"))
+	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_accounts(*this, report_format(HANDLER(balance_format_)),
@@ -486,7 +486,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'c':
-	if (is_eq(p, "csv"))
+	if (is_eq(q, "csv"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_xacts(*this, report_format(HANDLER(csv_format_))),
@@ -494,30 +494,30 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'e':
-	if (is_eq(p, "equity"))
-	  return expr_t::op_t::wrap_functor
-	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_equity(*this, report_format(HANDLER(print_format_))),
+	if (is_eq(q, "equity"))
+	  return WRAP_FUNCTOR
+	    (reporter<>
+	     (new format_xacts(*this, report_format(HANDLER(print_format_))),
 	      *this));
-	else if (is_eq(p, "entry"))
+	else if (is_eq(q, "entry"))
 	  return WRAP_FUNCTOR(entry_command);
-	else if (is_eq(p, "emacs"))
+	else if (is_eq(q, "emacs"))
 	  return WRAP_FUNCTOR
 	    (reporter<>(new format_emacs_xacts(output_stream), *this));
 	break;
 
       case 'p':
-	if (*(p + 1) == '\0' || is_eq(p, "print"))
+	if (*(q + 1) == '\0' || is_eq(q, "print"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_xacts(*this, report_format(HANDLER(print_format_))),
 	      *this));
-	else if (is_eq(p, "prices"))
+	else if (is_eq(q, "prices"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
 	     (new format_xacts(*this, report_format(HANDLER(prices_format_))),
 	      *this));
-	else if (is_eq(p, "pricesdb"))
+	else if (is_eq(q, "pricesdb"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
 	     (new format_xacts(*this, report_format(HANDLER(pricesdb_format_))),
@@ -525,17 +525,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'r':
-	if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
+	if (*(q + 1) == '\0' || is_eq(q, "reg") || is_eq(q, "register"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_xacts(*this, report_format(HANDLER(register_format_))),
 	      *this));
-	else if (is_eq(p, "reload"))
+	else if (is_eq(q, "reload"))
 	  return MAKE_FUNCTOR(report_t::reload_command);
 	break;
 
       case 's':
-	if (is_eq(p, "stats") || is_eq(p, "stat"))
+	if (is_eq(q, "stats") || is_eq(q, "stat"))
 	  return WRAP_FUNCTOR(reporter<>(new gather_statistics(*this), *this));
 	break;
       }
@@ -565,8 +565,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'o':
-    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      if (option_t<report_t> * handler = lookup_option(p))
+    if (WANT_OPT()) { const char * q = p + OPT_PREFIX_LEN;
+      if (option_t<report_t> * handler = lookup_option(q))
 	return MAKE_OPT_HANDLER(report_t, handler);
     }
     else if (is_eq(p, "options")) {
@@ -575,28 +575,28 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'p':
-    if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;
-      switch (*p) {
+    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
+      switch (*q) {
       case 'a':
-	if (is_eq(p, "args"))
+	if (is_eq(q, "args"))
 	  return WRAP_FUNCTOR(args_command);
 	break;
       case 'e':
-	if (is_eq(p, "eval"))
+	if (is_eq(q, "eval"))
 	  return WRAP_FUNCTOR(eval_command);
 	break;
       case 'f':
-	if (is_eq(p, "format"))
+	if (is_eq(q, "format"))
 	  return WRAP_FUNCTOR(format_command);
 	break;
       case 'p':
-	if (is_eq(p, "parse"))
+	if (is_eq(q, "parse"))
 	  return WRAP_FUNCTOR(parse_command);
-	else if (is_eq(p, "period"))
+	else if (is_eq(q, "period"))
 	  return WRAP_FUNCTOR(period_command);
 	break;
       case 't':
-	if (is_eq(p, "template"))
+	if (is_eq(q, "template"))
 	  return WRAP_FUNCTOR(template_command);
 	break;
       }

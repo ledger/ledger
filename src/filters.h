@@ -611,6 +611,34 @@ public:
   virtual void operator()(xact_t& xact);
 };
 
+class xacts_as_equity : public subtotal_xacts
+{
+  interval_t  interval;
+  xact_t *    last_xact;
+  account_t   equity_account;
+  account_t * balance_account;
+
+  xacts_as_equity();
+
+public:
+  xacts_as_equity(xact_handler_ptr _handler, expr_t& amount_expr)
+    : subtotal_xacts(_handler, amount_expr),
+      equity_account(NULL, "Equity") {
+    TRACE_CTOR(xacts_as_equity, "xact_handler_ptr, expr_t&");
+    balance_account = equity_account.find_account("Opening Balances");
+  }
+  virtual ~xacts_as_equity() throw() {
+    TRACE_DTOR(xacts_as_equity);
+  }
+
+  void report_subtotal();
+
+  virtual void flush() {
+    report_subtotal();
+    subtotal_xacts::flush();
+  }
+};
+
 /**
  * @brief Brief
  *

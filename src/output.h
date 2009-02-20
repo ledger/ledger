@@ -192,29 +192,6 @@ public:
   virtual void operator()(account_t& account);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
-class format_equity : public format_accounts
-{
-  format_t first_line_format;
-  format_t next_lines_format;
-
-  mutable value_t total;
-
- public:
-  format_equity(report_t&     _report,
-		const string& _format);
-  virtual ~format_equity() {
-    TRACE_DTOR(format_equity);
-  }
-
-  virtual void post_account(account_t& account);
-  virtual void flush();
-};
-
 } // namespace ledger
 
 #endif // _OUTPUT_H

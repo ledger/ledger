@@ -516,7 +516,7 @@ void interval_xacts::operator()(xact_t& xact)
 
 	  xact_temps.push_back(xact_t(&empty_account));
 	  xact_t& null_xact = xact_temps.back();
-	  null_xact.add_flags(ITEM_TEMP);
+	  null_xact.add_flags(ITEM_TEMP | XACT_CALCULATED);
 	  null_xact.amount = 0L;
 	  null_entry.add_xact(&null_xact);
 
@@ -534,6 +534,49 @@ void interval_xacts::operator()(xact_t& xact)
   }
 
   last_xact = &xact;
+}
+
+void xacts_as_equity::report_subtotal()
+{
+  date_t finish;
+  foreach (xact_t * xact, component_xacts) {
+    date_t date = xact->reported_date();
+    if (! is_valid(finish) || date > finish)
+      finish = date;
+  }
+  component_xacts.clear();
+
+  entry_temps.push_back(entry_t());
+  entry_t& entry = entry_temps.back();
+  entry.payee = "Opening Balances";
+  entry._date = finish;
+
+  value_t total = 0L;
+  foreach (values_map::value_type& pair, values) {
+    handle_value(pair.second.value, pair.second.account, &entry, 0,
+		 xact_temps, *handler);
+    total += pair.second.value;
+  }
+  values.clear();
+
+  if (total.is_balance()) {
+    foreach (balance_t::amounts_map::value_type pair,
+	     total.as_balance().amounts) {
+      xact_temps.push_back(xact_t(balance_account));
+      xact_t& balance_xact = xact_temps.back();
+      balance_xact.add_flags(ITEM_TEMP);
+      balance_xact.amount = - pair.second;
+      entry.add_xact(&balance_xact);
+      (*handler)(balance_xact);
+    }
+  } else {
+    xact_temps.push_back(xact_t(balance_account));
+    xact_t& balance_xact = xact_temps.back();
+    balance_xact.add_flags(ITEM_TEMP);
+    balance_xact.amount = - total.to_amount();
+    entry.add_xact(&balance_xact);
+    (*handler)(balance_xact);
+  }
 }
 
 by_payee_xacts::~by_payee_xacts()

@@ -354,10 +354,7 @@ public:
 #endif
     });
 
-  OPTION__(report_t, equity_format_, CTOR(report_t, equity_format_) {
-      on("\n%D %Y%C%P\n%/    %-34W  %12t\n");
-    });
-
+  OPTION(report_t, equity);
   OPTION(report_t, flat);
   OPTION(report_t, forecast_);
   OPTION(report_t, format_); // -F
