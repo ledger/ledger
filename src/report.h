@@ -263,7 +263,6 @@ public:
     });
 
   OPTION(report_t, by_payee); // -P
-  OPTION(report_t, cache_);
 
   OPTION_(report_t, cleared, DO() { // -C
       parent->HANDLER(limit_).on("cleared");

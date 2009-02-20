@@ -337,8 +337,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(by_payee);
     break;
   case 'c':
-    OPT(cache_);
-    else OPT(csv_format_);
+    OPT(csv_format_);
     else OPT(cleared);
     else OPT(code_as_payee);
     else OPT_ALT(comm_as_payee, commodity_as_payee);
@@ -347,6 +346,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(collapse);
     else OPT(collapse_if_zero);
     else OPT(columns_);
+    else OPT_ALT(basis, cost);
     else OPT_(current);
     break;
   case 'd':
