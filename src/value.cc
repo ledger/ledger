@@ -1422,13 +1422,12 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
   std::list<sort_value_t>::const_iterator left_iter  = left_values.begin();
   std::list<sort_value_t>::const_iterator right_iter = right_values.begin();
 
-  while (left_iter != left_values.end() &&
-	 right_iter != right_values.end()) {
+  while (left_iter != left_values.end() && right_iter != right_values.end()) {
     // Don't even try to sort balance values
     if (! (*left_iter).value.is_balance() &&
 	! (*right_iter).value.is_balance()) {
       DEBUG("value.sort",
-	    "Comparing " << (*left_iter).value << " < " << (*right_iter).value);
+	    " Comparing " << (*left_iter).value << " < " << (*right_iter).value);
       if ((*left_iter).value < (*right_iter).value) {
 	DEBUG("value.sort", "  is less");
 	return ! (*left_iter).inverted;

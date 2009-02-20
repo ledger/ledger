@@ -177,6 +177,13 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
 
   std::stable_sort(deque.begin(), deque.end(),
 		   compare_items<account_t>(sort_cmp));
+
+#if defined(DEBUG_ON)
+  if (SHOW_DEBUG("accounts.sorted")) {
+    foreach (account_t * account, deque)
+      DEBUG("accounts.sorted", "Account: " << account->fullname());
+  }
+#endif
 }
 
 void sorted_accounts_iterator::push_all(account_t& account)

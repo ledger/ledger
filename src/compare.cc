@@ -53,10 +53,12 @@ namespace {
 
       sort_values.push_back(sort_value_t());
       sort_values.back().inverted = inverted;
-      sort_values.back().value = expr_t(node).calc(*scope).reduced();
+      sort_values.back().value =
+	expr_t(node).calc(*scope).reduced().simplified();
 
       if (sort_values.back().value.is_null())
-	throw calc_error("Could not determine sorting value based an expression");
+	throw_(calc_error,
+	       "Could not determine sorting value based an expression");
     }
   }
 }
@@ -106,6 +108,9 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
     find_sort_values(rxdata.sort_values, right);
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
+
+  DEBUG("value.sort", "Comparing accounts " << left->fullname()
+	<< " <> " << right->fullname());
 
   return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }
