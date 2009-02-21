@@ -134,6 +134,7 @@ public:
   value_t fn_display_total(call_scope_t& scope);
   value_t fn_market_value(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
+  value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
   value_t fn_rounded(call_scope_t& scope);
   value_t fn_truncate(call_scope_t& scope);
@@ -233,10 +234,9 @@ public:
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
-      on(
-    "%20(print(strip(display_total), 20))"
-    "  %(!options.flat ? depth_spacer : \"\")"
-    "%-(partial_account(options.flat))\n");
+      on("%20(print(scrub(display_total), 20))"
+	 "  %(!options.flat ? depth_spacer : \"\")"
+	 "%-(partial_account(options.flat))\n");
     });
 
   OPTION(report_t, base);
@@ -286,15 +286,14 @@ public:
   OPTION(report_t, columns_);
 
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
-      on(
-    "%(quoted(date)),"
-    "%(quoted(payee)),"
-    "%(quoted(account)),"
-    "%(quoted(strip(display_amount))),"
-    "%(quoted((cleared or entry.cleared) ?"
-      " \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
-    "%(quoted(code)),"
-    "%(quoted(join(note)))\n");
+      on("%(quoted(date)),"
+	 "%(quoted(payee)),"
+	 "%(quoted(account)),"
+	 "%(quoted(scrub(display_amount))),"
+	 "%(quoted((cleared or entry.cleared) ?"
+	 " \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
+	 "%(quoted(code)),"
+	 "%(quoted(join(note)))\n");
     });
 
   OPTION_(report_t, current, DO() { // -c
@@ -444,11 +443,11 @@ public:
   OPTION(report_t, period_sort_);
 
   OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
-      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(strip(amount)))\n");
+      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(amount)))\n");
     });
 
   OPTION__(report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(strip(total)))\n");
+      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(total)))\n");
     });
 
   OPTION_(report_t, price, DO() { // -I
@@ -459,7 +458,7 @@ public:
   OPTION(report_t, price_exp_); // -Z
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
-      on("%-.9(date) %-8(account) %12(strip(display_amount))\n");
+      on("%-.9(date) %-8(account) %12(scrub(display_amount))\n");
     });
 
   OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
@@ -467,16 +466,15 @@ public:
     });
 
   OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
-      on(
-    "%(format_date(entry.date, \"%Y/%m/%d\"))"
-    "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
-    "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
-    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-    "%-34(account)"
-    "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/"
-    "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-    "%-34(account)"
-    "  %12(calculated ? \"\" : strip(amount))%(comment | \"\")\n%/\n");
+      on("%(format_date(entry.date, \"%Y/%m/%d\"))"
+	 "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
+	 "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
+	 "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+	 "%-34(account)"
+	 "  %12(calculated ? \"\" : scrub(amount))%(comment | \"\")\n%/"
+	 "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+	 "%-34(account)"
+	 "  %12(calculated ? \"\" : scrub(amount))%(comment | \"\")\n%/\n");
     });
 
   OPTION_(report_t, quantity, DO() { // -O
@@ -494,21 +492,20 @@ public:
     });
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
-      on(
-    "%(print(date, date_width))"
-    " %(print(truncate(payee, payee_width), payee_width))"
-    " %(print(truncate(account, account_width, abbrev_len), account_width))"
-    " %(print(strip(display_amount), amount_width, "
-      "3 + date_width + payee_width + account_width + amount_width))"
-    " %(print(strip(display_total), total_width, "
-      "4 + date_width + payee_width + account_width + amount_width "
-      "+ total_width))\n%/"
-    "%(print(\" \", 2 + date_width + payee_width))"
-    "%(print(truncate(account, account_width, abbrev_len), account_width))"
-    " %(print(strip(display_amount), amount_width, 3 + date_width "
-      "+ payee_width + account_width + amount_width))"
-    " %(print(strip(display_total), total_width, 4 + date_width "
-      "+ payee_width + account_width + amount_width + total_width))\n");
+      on("%(print(date, date_width))"
+	 " %(print(truncate(payee, payee_width), payee_width))"
+	 " %(print(truncate(account, account_width, abbrev_len), account_width))"
+	 " %(print(scrub(display_amount), amount_width, "
+	 "3 + date_width + payee_width + account_width + amount_width))"
+	 " %(print(scrub(display_total), total_width, "
+	 "4 + date_width + payee_width + account_width + amount_width "
+	 "+ total_width))\n%/"
+	 "%(print(\" \", 2 + date_width + payee_width))"
+	 "%(print(truncate(account, account_width, abbrev_len), account_width))"
+	 " %(print(scrub(display_amount), amount_width, 3 + date_width "
+	 "+ payee_width + account_width + amount_width))"
+	 " %(print(scrub(display_total), total_width, 4 + date_width "
+	 "+ payee_width + account_width + amount_width + total_width))\n");
     });
 
   OPTION(report_t, related); // -r

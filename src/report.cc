@@ -143,6 +143,11 @@ value_t report_t::fn_market_value(call_scope_t& args)
 
 value_t report_t::fn_strip(call_scope_t& args)
 {
+  return args[0].strip_annotations(what_to_keep());
+}
+
+value_t report_t::fn_scrub(call_scope_t& args)
+{
   value_t temp(args[0].strip_annotations(what_to_keep()));
   if (HANDLED(base))
     return temp;
@@ -632,7 +637,9 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 's':
-    if (is_eq(p, "strip"))
+    if (is_eq(p, "scrub"))
+      return MAKE_FUNCTOR(report_t::fn_scrub);
+    else if (is_eq(p, "strip"))
       return MAKE_FUNCTOR(report_t::fn_strip);
     break;
 
