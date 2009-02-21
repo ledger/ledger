@@ -368,6 +368,8 @@ void global_scope_t::normalize_report_options(const string& verb)
     output_datetime_format = rep.HANDLER(date_format_).str() + " %H:%M:%S";
     output_date_format     = rep.HANDLER(date_format_).str();
   }
+  if (rep.HANDLED(start_of_week_))
+    start_of_week = string_to_day_of_week(rep.HANDLER(start_of_week_).str());
 
   // jww (2008-08-14): This code really needs to be rationalized away for 3.0.
   // I might be able to do it with command objects, like register_t, which

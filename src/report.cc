@@ -447,6 +447,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(sort_all_);
     else OPT(sort_entries_);
     else OPT_(subtotal);
+    else OPT(start_of_week_);
     break;
   case 't':
     OPT_CH(amount_);

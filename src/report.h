@@ -535,6 +535,7 @@ public:
       parent->HANDLER(sort_all_).off();
     });
 
+  OPTION(report_t, start_of_week_);
   OPTION(report_t, subtotal); // -s
   OPTION(report_t, tail_);
 
