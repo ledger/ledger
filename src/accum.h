@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -34,60 +34,67 @@
  */
 
 /**
- * @file   error.h
+ * @file   accum.h
  * @author John Wiegley
  *
  * @ingroup util
  *
  * @brief Brief
  *
- * Long.
+ * Full.
  */
-#ifndef _ERROR_H
-#define _ERROR_H
-
-#include "accum.h"
+#ifndef _ACCUM_H
+#define _ACCUM_H
 
 namespace ledger {
 
-extern straccstream       _desc_accum;
-extern std::ostringstream _desc_buffer;
+/**
+ * @brief Brief
+ *
+ * Full.
+ */
+class straccbuf : public std::streambuf
+{
+protected:
+  std::string str;		// accumulator
+  std::size_t index;
 
-template <typename T>
-inline void throw_func(const string& message) {
-  _desc_buffer.str("");
-  throw T(message);
-}
+public:
+  straccbuf() : index(0) {}
 
-#define throw_(cls, msg)			\
-  ((_desc_buffer << ACCUM(_desc_accum << msg)),	\
-   _desc_accum.clear(),				\
-   throw_func<cls>(_desc_buffer.str()))
+protected:
+  virtual std::streamsize xsputn(const char * s, std::streamsize num);
 
-extern straccstream	  _ctxt_accum;
-extern std::ostringstream _ctxt_buffer;
+  friend class straccstream;
+};
 
-#define add_error_context(msg)					\
-  ((long(_ctxt_buffer.tellp()) == 0) ?				\
-   ((_ctxt_buffer << ACCUM(_ctxt_accum << msg)),		\
-    _ctxt_accum.clear()) :					\
-   ((_ctxt_buffer << std::endl << ACCUM(_ctxt_accum << msg)),	\
-    _ctxt_accum.clear()))
+/**
+ * @brief Brief
+ *
+ * Full.
+ */
+class straccstream : public std::ostream
+{
+protected:
+  straccbuf buf;
 
-string error_context();
-
-string file_context(const path& file, std::size_t line);
-string line_context(const string& line,
-		    std::size_t	  pos     = 0,
-		    std::size_t	  end_pos = 0);
-
-#define DECLARE_EXCEPTION(name, kind)				\
-  class name : public kind {					\
-  public:							\
-  explicit name(const string& why) throw() : kind(why) {}	\
-  virtual ~name() throw() {}					\
+public:
+  straccstream() : std::ostream(0) {
+    rdbuf(&buf);
   }
+
+  void clear() {
+    buf.str.clear();
+    buf.index = 0;
+  }
+
+  std::string str() const {
+    return buf.str;
+  }
+};
+
+#define ACCUM(obj) (static_cast<straccstream&>(obj).str())
 
 } // namespace ledger
 
-#endif // _ERROR_H
+#endif // _ACCUM_H

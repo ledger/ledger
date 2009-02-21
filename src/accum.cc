@@ -29,65 +29,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @addtogroup util
- */
-
-/**
- * @file   error.h
- * @author John Wiegley
- *
- * @ingroup util
- *
- * @brief Brief
- *
- * Long.
- */
-#ifndef _ERROR_H
-#define _ERROR_H
-
-#include "accum.h"
+#include "utils.h"
 
 namespace ledger {
 
-extern straccstream       _desc_accum;
-extern std::ostringstream _desc_buffer;
+std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
+{
+  if (index == 0) {
+    // The first item received is the format string
+    str = std::string(s, num);
+    index++;
+    return num;
+  }
+  else {
+    std::ostringstream buf;
 
-template <typename T>
-inline void throw_func(const string& message) {
-  _desc_buffer.str("");
-  throw T(message);
+    // Every item thereafter is an argument that substitutes for %# in the
+    // format string
+    for (const char * p = str.c_str(); *p; p++) {
+      if (*p == '%') {
+	const char * q = p + 1;
+	if (*q && *q != '%' && std::isdigit(*q) &&
+	    std::size_t(*q - '0') == index) {
+	  p++;
+	  buf << std::string(s, num);
+	} else {
+	  buf << *p;
+	}
+      } else {
+	buf << *p;
+      }
+    }
+    str = buf.str();
+    index++;
+
+    return num;
+  }
 }
 
-#define throw_(cls, msg)			\
-  ((_desc_buffer << ACCUM(_desc_accum << msg)),	\
-   _desc_accum.clear(),				\
-   throw_func<cls>(_desc_buffer.str()))
-
-extern straccstream	  _ctxt_accum;
-extern std::ostringstream _ctxt_buffer;
-
-#define add_error_context(msg)					\
-  ((long(_ctxt_buffer.tellp()) == 0) ?				\
-   ((_ctxt_buffer << ACCUM(_ctxt_accum << msg)),		\
-    _ctxt_accum.clear()) :					\
-   ((_ctxt_buffer << std::endl << ACCUM(_ctxt_accum << msg)),	\
-    _ctxt_accum.clear()))
-
-string error_context();
-
-string file_context(const path& file, std::size_t line);
-string line_context(const string& line,
-		    std::size_t	  pos     = 0,
-		    std::size_t	  end_pos = 0);
-
-#define DECLARE_EXCEPTION(name, kind)				\
-  class name : public kind {					\
-  public:							\
-  explicit name(const string& why) throw() : kind(why) {}	\
-  virtual ~name() throw() {}					\
-  }
-
 } // namespace ledger
-
-#endif // _ERROR_H
