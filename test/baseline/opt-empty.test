@@ -1,0 +1,19 @@
+reg --collapse --empty
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/31=2008/01/01 End of January
+    Expenses:Books          $10.00  ; [=2008/02/01]
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+>>>1
+08-Jan-01 January               <Total>                           0            0
+08-Jan-31 End of January        <Total>                           0            0
+08-Feb-01 February              <Total>                           0            0
+>>>2
+=== 0
