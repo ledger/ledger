@@ -192,13 +192,13 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 
       op_bool_tuple opt(find_option(scope, opt_name));
       if (! opt.first)
-	throw_(option_error, "illegal option --" << name);
+	throw_(option_error, "Illegal option --" << name);
 
       if (opt.second && ! value && ++i != args.end() && value == NULL) {
 	value = (*i).c_str();
 	DEBUG("option.args", "  read option value from arg: " << value);
 	if (value == NULL)
-	  throw_(option_error, "missing option argument for --" << name);
+	  throw_(option_error, "Missing option argument for --" << name);
       }
       process_option(opt.first->as_function(), scope, value,
 		     string("--") + name);
@@ -215,7 +215,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
 	op_bool_tuple opt(find_option(scope, c));
 	if (! opt.first)
-	  throw_(option_error, "illegal option -" << c);
+	  throw_(option_error, "Illegal option -" << c);
 
 	option_queue.push_back(op_bool_char_tuple(opt.first, opt.second, c));
       }
@@ -227,7 +227,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 	  DEBUG("option.args", "  read option value from arg: " << value);
 	  if (value == NULL)
 	    throw_(option_error,
-		   "missing option argument for -" << o.ch);
+		   "Missing option argument for -" << o.ch);
 	}
 	process_option(o.op->as_function(), scope, value, string("-") + o.ch);
       }
