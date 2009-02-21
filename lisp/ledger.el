@@ -982,10 +982,11 @@ the default."
   (ledger-do-report ledger-report-cmd))
 
 (defun ledger-report-quit ()
-  "Quit the ledger report buffer."
+  "Quit the ledger report buffer by burying it."
   (interactive)
   (ledger-report-goto)
-  (set-window-configuration ledger-original-window-cfg))
+  (set-window-configuration ledger-original-window-cfg)
+  (bury-buffer (get-buffer ledger-report-buffer-name)))
 
 (defun ledger-report-kill ()
   "Kill the ledger report buffer."
