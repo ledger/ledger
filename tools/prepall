@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+tools/myacprep --opt
+tools/myacprep --gprof
+tools/myacprep --gcov
+tools/myacprep
+
+touch ~/Products/ledger-gcov/config.status
+touch ~/Products/ledger-gprof/config.status
+touch ~/Products/ledger-opt/touch config.status

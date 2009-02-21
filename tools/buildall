@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+(cd ~/Products/ledger && make "$@") &
+(cd ~/Products/ledger-gcov && make "$@") &
+(cd ~/Products/ledger-gprof && make "$@") &
+(cd ~/Products/ledger-opt && make "$@") &
+
+wait

@@ -1,21 +1,48 @@
 #!/bin/sh
 
-OUT=$HOME/Products/ledger
+OUT=$HOME/Products
+SWITCHES=""
 
-if [ "$1" = "--local" ]; then
-    OUT=""
-elif [ "$1" = "--output" ]; then
-    OUT=""
+saw_opt=false
+while [ -n "$1" ]; do
+  case "$1" in
+    --local)
+      OUT=""
+      SWITCHES="$SWITCHES --local"
+      shift 1 ;;
+    --output)
+      OUT=""
+      shift 1
+      SWITCHES="$SWITCHES --output $1"
+      shift 1 ;;
+    --gprof)
+      OUT="$OUT/ledger-gprof"
+      SWITCHES="$SWITCHES $1 --release"
+      saw_opt=true
+      shift 1 ;;
+    --gcov)
+      OUT="$OUT/ledger-gcov"
+      SWITCHES="$SWITCHES $1 --debug --devel"
+      saw_opt=true
+      shift 1 ;;
+    --opt)
+      OUT="$OUT/ledger-opt"
+      SWITCHES="$SWITCHES $1 --release"
+      saw_opt=true
+      shift 1 ;;
+  esac
+done
+
+if [ $saw_opt = false ]; then
+    SWITCHES="$SWITCHES --pch"	 # build using pre-compiled headers
+    SWITCHES="$SWITCHES --warn"	 # show full compiler warnings
+    SWITCHES="$SWITCHES --debug" # enable debug code generation
+    SWITCHES="$SWITCHES --devel" # use GLIBCXX_DEBUG if possible
+    OUT="$OUT/ledger"
 fi
 
-SWITCHES=""
-SWITCHES="$SWITCHES --pch"	# build using pre-compiled headers
-SWITCHES="$SWITCHES --warn"	# show full compiler warnings
-SWITCHES="$SWITCHES --debug"	# enable debug code generation
-SWITCHES="$SWITCHES --devel"	# use GLIBCXX_DEBUG if possible
-
-if [ -n "$OUT" -a -d "$OUT" ]; then
-    # build in another directory, if it exists and there were no 
+if [ -n "$OUT" ]; then
+    [ -d "$OUT" ] || mkdir -p "$OUT"
     SWITCHES="$SWITCHES --output $OUT"
 fi
 
