@@ -46,9 +46,11 @@
 #ifndef _PRECMD_H
 #define _PRECMD_H
 
-#include "scope.h"
+#include "value.h"
 
 namespace ledger {
+
+class call_scope_t;
 
 value_t parse_command(call_scope_t& args);
 value_t eval_command(call_scope_t& args);

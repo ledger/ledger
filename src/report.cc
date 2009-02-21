@@ -30,6 +30,7 @@
  */
 
 #include "report.h"
+#include "interactive.h"
 #include "iterators.h"
 #include "filters.h"
 #include "chain.h"
@@ -121,19 +122,20 @@ value_t report_t::fn_display_total(call_scope_t& scope)
 
 value_t report_t::fn_market_value(call_scope_t& args)
 {
-  var_t<datetime_t> date(args, 1);
-  var_t<string>	    in_terms_of(args, 2);
+  interactive_t env(args, "a&ts");
 
   commodity_t * commodity = NULL;
-  if (in_terms_of)
-    commodity = amount_t::current_pool->find_or_create(*in_terms_of);
+  if (env.has(2))
+    commodity = amount_t::current_pool->find_or_create(env.get<string>(2));
 
-  DEBUG("report.market", "getting market value of: " << args[0]);
+  DEBUG("report.market", "getting market value of: " << env.value_at(0));
 
   value_t result =
-    args[0].value(date ? optional<datetime_t>(*date) : optional<datetime_t>(),
-		  commodity ? optional<commodity_t&>(*commodity) :
-		  optional<commodity_t&>());
+    env.value_at(0).value(env.has(1) ?
+			  env.get<datetime_t>(1) : optional<datetime_t>(),
+			  commodity ?
+			  optional<commodity_t&>(*commodity) :
+			  optional<commodity_t&>());
 
   DEBUG("report.market", "result is: " << result);
   return result;
@@ -160,28 +162,24 @@ value_t report_t::fn_quantity(call_scope_t& args)
 
 value_t report_t::fn_truncate(call_scope_t& args)
 {
-  var_t<long> width(args, 1);
-  var_t<long> account_abbrev(args, 2);
-
-  return string_value(format_t::truncate(args[0].as_string(),
-					 width && *width > 0 ? *width : 0,
-					 account_abbrev ? *account_abbrev : -1));
+  interactive_t env(args, "v&ll");
+  return string_value(format_t::truncate
+		      (env.get<string>(0),
+		       env.has(1) && env.get<long>(1) > 0 ? env.get<long>(1) : 0,
+		       env.has(2) ? env.get<long>(2) : -1));
 }
 
 value_t report_t::fn_print(call_scope_t& args)
 {
-  var_t<long> first_width(args, 1);
-  var_t<long> latter_width(args, 2);
-  var_t<string> date_format(args, 3);
-
+  interactive_t env(args, "vl&ls");
   std::ostringstream out;
-
-  args[0].strip_annotations(what_to_keep())
-    .print(out, *first_width, latter_width ? *latter_width : -1,
-	   date_format ? *date_format :
+  env.value_at(0)
+    .strip_annotations(what_to_keep())
+    .print(out, env.get<long>(1),
+	   env.has(2) ? env.get<long>(2) : -1,
+	   env.has(3) ? env.get<string>(3) :
 	   (HANDLED(date_format_) ?
 	    HANDLER(date_format_).str() : optional<string>()));
-
   return string_value(out.str());
 }
 

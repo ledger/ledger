@@ -30,6 +30,7 @@
  */
 
 #include "precmd.h"
+#include "interactive.h"
 #include "report.h"
 
 namespace ledger {

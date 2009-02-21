@@ -32,6 +32,7 @@
 #include "xact.h"
 #include "journal.h"
 #include "account.h"
+#include "interactive.h"
 #include "format.h"
 
 namespace ledger {
@@ -186,17 +187,15 @@ namespace {
 
   value_t get_account(call_scope_t& scope)
   {
-    xact_t& xact(find_scope<xact_t>(scope));
+    in_context_t<xact_t> env(scope, "&l");
 
-    var_t<long> max_width(scope, 0);
+    string name = env->reported_account()->fullname();
 
-    string name = xact.reported_account()->fullname();
+    if (env.has(0) && env.get<long>(0) > 2)
+      name = format_t::truncate(name, env.get<long>(0) - 2, true);
 
-    if (max_width && *max_width > 2)
-      name = format_t::truncate(name, *max_width - 2, true);
-
-    if (xact.has_flags(XACT_VIRTUAL)) {
-      if (xact.must_balance())
+    if (env->has_flags(XACT_VIRTUAL)) {
+      if (env->must_balance())
 	name = string("[") + name + "]";
       else
 	name = string("(") + name + ")";

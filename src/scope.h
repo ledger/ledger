@@ -158,13 +158,9 @@ public:
   }
 
   void set_args(const value_t& _args) {
-    if (_args.is_sequence())
-      args = _args;
-    else
-      args = _args.to_sequence();
+    args = _args;
   }
   value_t& value() {
-    assert(args.is_null() || args.is_sequence());
     return args;
   }
 
@@ -290,97 +286,6 @@ public:
   T& operator *() { return *value; }
   T * operator->() { return value; }
 };
-
-/**
- * @brief Brief
- *
- * Long.
- */
-template <typename T>
-class var_t : public noncopyable
-{
-  optional<value_t> value;
-
-  var_t();
-
-public:
-  var_t(scope_t& scope, const string& name)
-  {
-    TRACE_CTOR(var_t, "scope_t&, const string&");
-
-    try {
-      value = scope.resolve(name);
-    }
-    catch (...) {
-      DEBUG("scope.var_t", "Failed lookup var_t(\"" << name << "\")");
-      value = none;
-    }
-  }
-
-  var_t(call_scope_t& scope, const std::size_t idx)
-  {
-    TRACE_CTOR(var_t, "call_scope_t&, const std::size_t");
-
-    if (idx < scope.size())
-      value = scope[idx];
-    else
-      value = none;
-  }
-
-  ~var_t() throw() {
-    TRACE_DTOR(var_t);
-  }
-
-  operator bool() { return value; }
-
-  T operator *();
-  T operator *() const;
-
-  T * operator->() {
-    return &**this;
-  }
-  const T * operator->() const {
-    return &**this;
-  }
-};
-
-template <>
-inline bool var_t<bool>::operator *() {
-  return value->to_boolean();
-}
-template <>
-inline bool var_t<bool>::operator *() const {
-  return value->to_boolean();
-}
-
-template <>
-inline long var_t<long>::operator *() {
-  return value->to_long();
-}
-template <>
-inline long var_t<long>::operator *() const {
-  return value->to_long();
-}
-
-template <>
-inline string var_t<string>::operator *() {
-  return value->to_string();
-}
-template <>
-inline string var_t<string>::operator *() const {
-  return value->to_string();
-}
-
-template <>
-inline datetime_t var_t<datetime_t>::operator *() {
-  return value->to_datetime();
-}
-template <>
-inline datetime_t var_t<datetime_t>::operator *() const {
-  return value->to_datetime();
-}
-
-string join_args(call_scope_t& args);
 
 } // namespace ledger
 

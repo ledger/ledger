@@ -502,13 +502,13 @@ public:
       "3 + date_width + payee_width + account_width + amount_width))"
     " %(print(strip(display_total), total_width, "
       "4 + date_width + payee_width + account_width + amount_width "
-      "+ total_width, true))\n%/"
+      "+ total_width))\n%/"
     "%(print(\" \", 2 + date_width + payee_width))"
     "%(print(truncate(account, account_width, abbrev_len), account_width))"
     " %(print(strip(display_amount), amount_width, 3 + date_width "
       "+ payee_width + account_width + amount_width))"
     " %(print(strip(display_total), total_width, 4 + date_width "
-      "+ payee_width + account_width + amount_width + total_width, true))\n");
+      "+ payee_width + account_width + amount_width + total_width))\n");
     });
 
   OPTION(report_t, related); // -r

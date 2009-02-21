@@ -30,6 +30,7 @@
  */
 
 #include "account.h"
+#include "interactive.h"
 
 namespace ledger {
 
@@ -152,11 +153,9 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 namespace {
   value_t get_partial_name(call_scope_t& scope)
   {
-    account_t& account(find_scope<account_t>(scope));
-
-    var_t<bool> flatten(scope, 0);
-
-    return string_value(account.partial_name(flatten ? *flatten : false));
+    in_context_t<account_t> env(scope, "&b");
+    return string_value(env->partial_name(env.has(0) ?
+					  env.get<bool>(0) : false));
   }
 
   value_t get_account(account_t& account) { // this gets the name

@@ -60,21 +60,4 @@ expr_t::ptr_op_t symbol_scope_t::lookup(const string& name)
   return child_scope_t::lookup(name);
 }
 
-string join_args(call_scope_t& args)
-{
-  std::ostringstream buf;
-  bool first = true;
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    if (first) {
-      buf << args[i];
-      first = false;
-    } else {
-      buf << ' ' << args[i];
-    }
-  }
-
-  return buf.str();
-}
-
 } // namespace ledger
