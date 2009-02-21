@@ -33,8 +33,11 @@
 
 namespace ledger {
 
-format_xacts::format_xacts(report_t& _report, const string& format)
-  : report(_report), last_entry(NULL), last_xact(NULL)
+format_xacts::format_xacts(report_t&	 _report,
+			   const string& format,
+			   bool		 _print_raw)
+  : report(_report), last_entry(NULL), last_xact(NULL),
+    print_raw(_print_raw)
 {
   TRACE_CTOR(format_xacts, "report&, const string&");
 
@@ -59,23 +62,37 @@ void format_xacts::operator()(xact_t& xact)
 {
   std::ostream& out(report.output_stream);
 
-  if (! xact.has_xdata() ||
-      ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
+  if (print_raw) {
+    if (! xact.has_xdata() ||
+	! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
+      if (last_entry != xact.entry) {
+	if (last_entry) {
+	  bind_scope_t entry_scope(report, *last_entry);
+	  between_format.format(out, entry_scope);
+	}
+	print_item(out, *xact.entry);
+	out << '\n';
+	last_entry = xact.entry;
+      }
+      xact.xdata().add_flags(XACT_EXT_DISPLAYED);
+      last_xact = &xact;
+    }
+  }
+  else if (! xact.has_xdata() ||
+	   ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
+    bind_scope_t bound_scope(report, xact);
     if (last_entry != xact.entry) {
       if (last_entry) {
-	bind_scope_t bound_scope(report, *last_entry);
-	between_format.format(out, bound_scope);
+	bind_scope_t entry_scope(report, *last_entry);
+	between_format.format(out, entry_scope);
       }
-      bind_scope_t bound_scope(report, xact);
       first_line_format.format(out, bound_scope);
       last_entry = xact.entry;
     }
     else if (last_xact && last_xact->date() != xact.date()) {
-      bind_scope_t bound_scope(report, xact);
       first_line_format.format(out, bound_scope);
     }
     else {
-      bind_scope_t bound_scope(report, xact);
       next_lines_format.format(out, bound_scope);
     }
 

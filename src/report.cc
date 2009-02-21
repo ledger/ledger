@@ -530,8 +530,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (*(q + 1) == '\0' || is_eq(q, "print"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
-	     (new format_xacts(*this, report_format(HANDLER(print_format_))),
-	      *this));
+	     (new format_xacts(*this, report_format(HANDLER(print_format_)),
+			       HANDLED(raw)), *this));
 	else if (is_eq(q, "prices"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>

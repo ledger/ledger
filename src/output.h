@@ -65,9 +65,11 @@ protected:
   format_t  between_format;
   entry_t * last_entry;
   xact_t *  last_xact;
+  bool      print_raw;
 
 public:
-  format_xacts(report_t& _report, const string& format);
+  format_xacts(report_t& _report, const string& format,
+	       bool _print_raw = false);
   virtual ~format_xacts() {
     TRACE_DTOR(format_xacts);
   }
