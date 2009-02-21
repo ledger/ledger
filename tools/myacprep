@@ -38,7 +38,9 @@ if [ $saw_opt = false ]; then
     SWITCHES="$SWITCHES --warn"	 # show full compiler warnings
     SWITCHES="$SWITCHES --debug" # enable debug code generation
     SWITCHES="$SWITCHES --devel" # use GLIBCXX_DEBUG if possible
-    OUT="$OUT/ledger"
+    if [ -n "$OUT" ]; then
+	OUT="$OUT/ledger"
+    fi
 fi
 
 if [ -n "$OUT" ]; then
@@ -46,4 +48,4 @@ if [ -n "$OUT" ]; then
     SWITCHES="$SWITCHES --output $OUT"
 fi
 
-./acprep $SWITCHES "$@"
+./acprep $SWITCHES
