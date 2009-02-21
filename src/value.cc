@@ -119,7 +119,7 @@ void value_t::set_type(type_t new_type)
     if (! storage || storage->refc > 1)
       storage = new storage_t;
     else
-      storage->data = false;	// destruct all other types
+      storage->destroy();
     storage->type = new_type;
     assert(is_type(new_type));
   }
@@ -911,7 +911,7 @@ void value_t::in_place_cast(type_t cast_type)
       if (amt.is_null())
 	set_balance(balance_t());
       else
-	set_balance(as_amount()); // creates temporary
+	set_balance(as_amount());
       return;
     case STRING:
       if (amt.is_null())

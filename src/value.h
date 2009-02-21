@@ -166,19 +166,8 @@ private:
      */
     ~storage_t() {
       TRACE_DTOR(value_t::storage_t);
-      DEBUG("value.storage.refcount", "Destroying " << this);
       assert(refc == 0);
-
-      switch (type) {
-      case BALANCE:
-	checked_delete(boost::get<balance_t *>(data));
-	break;
-      case SEQUENCE:
-	checked_delete(boost::get<sequence_t *>(data));
-	break;
-      default:
-	break;
-      }
+      destroy();
     }
 
   private:
@@ -217,6 +206,21 @@ private:
     }
     friend inline void intrusive_ptr_release(value_t::storage_t * storage) {
       storage->release();
+    }
+
+    void destroy() {
+      DEBUG("value.storage.refcount", "Destroying " << this);
+      switch (type) {
+      case BALANCE:
+	checked_delete(boost::get<balance_t *>(data));
+	break;
+      case SEQUENCE:
+	checked_delete(boost::get<sequence_t *>(data));
+	break;
+      default:
+	break;
+      }
+      type = VOID;
     }
   };
 
