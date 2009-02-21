@@ -1303,16 +1303,18 @@ void value_t::print(std::ostream&           out,
     break;
 
   case INTEGER:
-    out << as_long();
+    out << std::right << as_long();
     break;
 
   case AMOUNT: {
-    std::ostringstream buf;
-    if (as_amount().is_zero())
-      buf << 0L;
-    else
+    if (as_amount().is_zero()) {
+      out.width(first_width);
+      out << std::right << 0L;
+    } else {
+      std::ostringstream buf;
       buf << as_amount();
-    justify(out, buf.str(), first_width, true);
+      justify(out, buf.str(), first_width, true);
+    }
     break;
   }
 
