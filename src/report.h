@@ -372,7 +372,7 @@ public:
 
   OPTION(report_t, equity);
   OPTION(report_t, flat);
-  OPTION(report_t, forecast_);
+  OPTION(report_t, forecast_while_);
   OPTION(report_t, format_); // -F
   OPTION(report_t, gain); // -G
   OPTION(report_t, head_);

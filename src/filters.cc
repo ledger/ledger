@@ -660,16 +660,14 @@ void dow_xacts::flush()
   subtotal_xacts::flush();
 }
 
-void generate_xacts::add_period_entries
-  (period_entries_list& period_entries)
+void generate_xacts::add_period_entries(period_entries_list& period_entries)
 {
   foreach (period_entry_t * entry, period_entries)
     foreach (xact_t * xact, entry->xacts)
       add_xact(entry->period, *xact);
 }
 
-void generate_xacts::add_xact(const interval_t& period,
-					    xact_t& xact)
+void generate_xacts::add_xact(const interval_t& period, xact_t& xact)
 {
   pending_xacts.push_back(pending_xacts_pair(period, &xact));
 }
@@ -722,7 +720,7 @@ void budget_xacts::operator()(xact_t& xact)
 {
   bool xact_in_budget = false;
 
-  foreach (pending_xacts_list::value_type& pair, pending_xacts)
+  foreach (pending_xacts_list::value_type& pair, pending_xacts) {
     for (account_t * acct = xact.reported_account();
 	 acct;
 	 acct = acct->parent) {
@@ -735,6 +733,7 @@ void budget_xacts::operator()(xact_t& xact)
 	goto handle;
       }
     }
+  }
 
  handle:
   if (xact_in_budget && flags & BUDGET_BUDGETED) {
@@ -763,7 +762,7 @@ void forecast_xacts::add_xact(const interval_t& period, xact_t& xact)
 void forecast_xacts::flush()
 {
   xacts_list passed;
-  date_t last;
+  date_t     last;
 
   while (pending_xacts.size() > 0) {
     pending_xacts_list::iterator least = pending_xacts.begin();

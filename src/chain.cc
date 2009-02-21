@@ -48,6 +48,14 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   expr.set_context(&report);
 
   if (! only_preliminaries) {
+    // Make sure only forecast transactions which match are allowed through
+    if (report.HANDLED(forecast_while_)) {
+      handler.reset(new filter_xacts
+		    (handler, item_predicate(report.HANDLER(forecast_while_).str(),
+					     report.what_to_keep()),
+		     report));
+    }
+
     // truncate_entries cuts off a certain number of _entries_ from being
     // displayed.  It does not affect calculation.
     if (report.HANDLED(head_) || report.HANDLED(tail_))
@@ -183,10 +191,10 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
 					     report.what_to_keep()),
 		     report));
   }
-  else if (report.HANDLED(forecast_)) {
+  else if (report.HANDLED(forecast_while_)) {
     forecast_xacts * forecast_handler
       = new forecast_xacts(handler,
-			   item_predicate(report.HANDLER(forecast_).str(),
+			   item_predicate(report.HANDLER(forecast_while_).str(),
 					  report.what_to_keep()),
 			   report);
     forecast_handler->add_period_entries(report.session.journal->period_entries);

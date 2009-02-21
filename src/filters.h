@@ -741,7 +741,7 @@ class generate_xacts : public item_handler<xact_t>
 
 protected:
   typedef std::pair<interval_t, xact_t *> pending_xacts_pair;
-  typedef std::list<pending_xacts_pair>          pending_xacts_list;
+  typedef std::list<pending_xacts_pair>   pending_xacts_list;
 
   pending_xacts_list pending_xacts;
   std::list<entry_t> entry_temps;
@@ -815,8 +815,7 @@ class forecast_xacts : public generate_xacts
     TRACE_DTOR(forecast_xacts);
   }
 
-  virtual void add_xact(const interval_t& period,
-			       xact_t&	 xact);
+  virtual void add_xact(const interval_t& period, xact_t& xact);
   virtual void flush();
 };
 

@@ -1,0 +1,14 @@
+print --actual
+<<<
+= account =~ /Books/
+    Expenses:Taxes            0.05
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash            $-10.00
+>>>1
+2008/01/01 January
+    Expenses:Books                            $10.00
+    Assets:Cash                              $-10.00
+>>>2
+=== 0
