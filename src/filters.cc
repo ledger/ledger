@@ -596,14 +596,6 @@ void xacts_as_equity::report_subtotal()
   }
 }
 
-by_payee_xacts::~by_payee_xacts()
-{
-  TRACE_DTOR(by_payee_xacts);
-
-  foreach (payee_subtotals_map::value_type& pair, payee_subtotals)
-    checked_delete(pair.second);
-}
-
 void by_payee_xacts::flush()
 {
   foreach (payee_subtotals_map::value_type& pair, payee_subtotals)
@@ -618,8 +610,9 @@ void by_payee_xacts::operator()(xact_t& xact)
 {
   payee_subtotals_map::iterator i = payee_subtotals.find(xact.entry->payee);
   if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(xact.entry->payee,
-			      new subtotal_xacts(handler, amount_expr));
+    payee_subtotals_pair
+      temp(xact.entry->payee,
+	   shared_ptr<subtotal_xacts>(new subtotal_xacts(handler, amount_expr)));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);
 

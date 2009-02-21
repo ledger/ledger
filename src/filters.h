@@ -651,8 +651,8 @@ public:
  */
 class by_payee_xacts : public item_handler<xact_t>
 {
-  typedef std::map<string, subtotal_xacts *>  payee_subtotals_map;
-  typedef std::pair<string, subtotal_xacts *> payee_subtotals_pair;
+  typedef std::map<string, shared_ptr<subtotal_xacts> >  payee_subtotals_map;
+  typedef std::pair<string, shared_ptr<subtotal_xacts> > payee_subtotals_pair;
 
   expr_t&	      amount_expr;
   payee_subtotals_map payee_subtotals;
@@ -664,7 +664,9 @@ class by_payee_xacts : public item_handler<xact_t>
     : item_handler<xact_t>(handler), amount_expr(_amount_expr) {
     TRACE_CTOR(by_payee_xacts, "xact_handler_ptr, expr_t&");
   }
-  virtual ~by_payee_xacts();
+  virtual ~by_payee_xacts() {
+    TRACE_DTOR(by_payee_xacts);
+  }
 
   virtual void flush();
   virtual void operator()(xact_t& xact);
@@ -755,7 +757,7 @@ protected:
 public:
   generate_xacts(xact_handler_ptr handler)
     : item_handler<xact_t>(handler) {
-    TRACE_CTOR(dow_xacts, "xact_handler_ptr");
+    TRACE_CTOR(generate_xacts, "xact_handler_ptr");
   }
 
   virtual ~generate_xacts() {
