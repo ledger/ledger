@@ -1,0 +1,267 @@
+.Dd February 21, 2009
+.Dt ledger 1
+.Sh NAME
+.Nm ledger
+.Nd Command-line, double-entry account reporting tool
+.Sh SYNOPSIS
+ledger
+.Op Ar command
+.Op Ar options
+.Op Ar arguments
+.Sh DESCRIPTION
+Ledger is a command-line accounting tool providing the user access to the
+power of double-entry accounting.  It is only a reporting tool, which means it
+never modifies your data files, nor can it be used to create or remove data.
+.Pp
+.Sh COMMANDS
+Ledger accepts several top-level commands, each of which is used to generate a
+different report.  Most of them accept a
+.Ar report-query
+argument, in order to determine what to report.  To understand what is
+accepted by
+.Ar report-query ,
+see the section on
+.Sx QUERIES .
+In its most basic form, simply specifying one or more strings will produce a
+report for all accounts containing those strings.
+.Pp
+If no command at all is given, Ledger enters a
+.Tn REPL ,
+or command loop, allowing several commands to be executed against the same
+dataset without reparsing.
+.Pp
+The following is a summary of all the reporting commands accepted by Ledger:
+.Pp
+.Bl -tag -width foo
+.It Nm balance Oo Ar query Oc
+Produce a balance report showing subtotals for matching leaf accounts, and
+aggregate totals for all the parents of those accounts.  The most common
+options with this command are:
+.Pp
+.Bl -tag -compact -width "--collapse (-n)"
+.It Fl \-collapse Pq Fl n
+Only show totals in the top-most accounts.
+.It Fl \-empty Pq Fl E
+Show matching accounts whose total happens to be zero.
+.It Fl \-flat
+Rather than displaying a hierarchical tree, flatten it to show only subtotals
+for accounts directly matching the query.
+.It Fl \-no\-total
+Suppress the final total usually shown at the bottom of the report.
+.El
+.Pp
+The synonyms
+.Nm bal
+and
+.Nm b
+are also accepted.
+.It Nm csv Oo Ar query Oc
+.It Nm emacs Oo Ar query Oc
+The synonym
+.Nm lisp
+is also accepted.
+.It Nm entry Oo Ar date Oc
+.It Nm equity Oo Ar query Oc
+.It Nm prices Oo Ar query Oc
+.It Nm pricesdb Oo Ar query Oc
+.It Nm print Oo Ar query Oc
+.It Nm register Oo Ar query Oc
+The synonyms
+.Nm reg
+and
+.Nm r
+are also accepted.
+.It Nm reload
+Used solely by the
+.Tn REPL ,
+and causes an immediate reloading of all journal files in the session.
+.It Nm stats Oo Ar query Oc
+.El
+.Pp
+.Sh QUERIES
+The syntax for reporting queries can get somewhat complex.  It is a series of
+query terms with an implicit OR operator between them.  The following terms
+are accepted:
+.Bl -tag -offset foo -width "term and term"
+.It Ar regex
+A bare string is taken as a regular expression matching the full account name.
+Thus, to report the current balance for all assets and liabilities, you would
+use:
+.Pp
+.Dl ledger bal asset liab
+.It Nm payee Ar regex
+Query on the payee, rather than the account.
+.It \&@ Ns Ar regex
+Same as
+.Nm payee Ar regex .
+.It Nm tag Ar regex Pq \&% Ns Ar regex
+.It Nm note Ar regex Pq \&= Ns Ar regex
+Query on anything found in an item's note.
+.It Ar term Nm and Ar term
+Query terms are joined by an implicit OR operator.  You can change this to AND
+by using that keyword.  For example, to show food expenditures occurring at
+Shakee's Pizza, you could say:
+.Pp
+.Dl ledger reg food and @Shakee
+.It Ar term Nm or Ar term
+When you wish to be more explicit, use the OR operator.
+.It Nm not Ar term
+Reverse the logical meaning of the following term.  This can be used with
+parentheses to great effect:
+.Pp
+.Dl ledger reg food and @Shakee and not dining
+.It \&( Ar term No \&)
+If you wish to mix OR and AND operators, it is often helpful to surround
+logical units with parentheses.  \fBNOTE\fR: Because of the way some shells
+interpret parentheses, you should always escape them:
+.Pp
+.Dl ledger bal \e\\\&( assets or liab \e\\\&) and not food
+.El
+.Pp
+.Sh VALUE EXPRESSIONS
+.Pp
+.Sh OPTIONS
+.Pp
+.Bl -tag -width -indent
+.It Fl \-abbrev-len Ar INT
+.It Fl \-account Ar STR
+.It Fl \-account-width Ar INT
+.It Fl \-actual Pq Fl L
+.It Fl \-add-budget
+.It Fl \-amount Ar EXPR Pq Fl t
+.It Fl \-amount-data Pq Fl j
+.It Fl \-amount-width Ar INT
+.It Fl \-anon
+.It Fl \-ansi
+.It Fl \-ansi-invert
+.It Fl \-args-only
+.It Fl \-average Pq Fl A
+.It Fl \-balance-format Ar FMT
+.It Fl \-base
+.It Fl \-basis Pq Fl B
+.It Fl \-begin Ar DATE Pq Fl b
+.It Fl \-budget
+.It Fl \-by-payee Pq Fl P
+.It Fl \-cleared Pq Fl C
+.It Fl \-code-as-account
+.It Fl \-code-as-payee
+.It Fl \-collapse Pq Fl n
+.It Fl \-collapse-if-zero
+.It Fl \-columns Ar INT
+.It Fl \-commodity-as-account
+(Also \fB\-\-comm\-as\-account\fR).
+.It Fl \-commodity-as-payee Pq Fl x
+(Also \fB\-\-comm\-as\-payee\fR).
+.It Fl \-cost
+See \fB\-\-basis\fR.
+.It Fl \-csv-format Ar FMT
+.It Fl \-current Pq Fl c
+.It Fl \-daily
+.It Fl \-date-format Ar DATEFMT Pq Fl y
+.It Fl \-date-width Ar INT
+.It Fl \-debug Ar STR
+.It Fl \-deviation Pq Fl D
+.It Fl \-display Ar EXPR Pq Fl d
+.It Fl \-display-amount Ar EXPR
+.It Fl \-display-total Ar EXPR
+.It Fl \-dow
+.It Fl \-download
+.It Fl \-effective
+.It Fl \-empty Pq Fl E
+.It Fl \-end Pq Fl e
+.It Fl \-equity
+.It Fl \-exact
+.It Fl \-file Ar FILE
+.It Fl \-first Ar INT
+See \fB\-\-head\fR.
+.It Fl \-flat
+.It Fl \-forecast-while Ar EXPR
+(Also \fB\-\-forecast\fR).
+.It Fl \-format Ar FMT Pq Fl F
+.It Fl \-gain Pq Fl G
+.It Fl \-head Ar INT
+.It Fl \-init-file Ar FILE
+.It Fl \-input-date-format Ar DATEFMT
+.It Fl \-invert
+.It Fl \-last Ar INT
+See \fB\-\-tail\fR.
+.It Fl \-leeway Ar INT Pq Fl Z
+.It Fl \-limit Ar EXPR Pq Fl l
+.It Fl \-lot-dates
+.It Fl \-lot-prices
+.It Fl \-lot-tags
+.It Fl \-lots
+.It Fl \-market Pq Fl V
+.It Fl \-monthly Pq Fl M
+.It Fl \-only Ar EXPR
+.It Fl \-output Ar FILE Pq Fl o
+.It Fl \-pager Ar STR
+.It Fl \-payee-as-account
+.It Fl \-payee-width Ar INT
+.It Fl \-pending
+.It Fl \-percentage Pq Fl \%
+.It Fl \-performance Pq Fl g
+.It Fl \-period Ar PERIOD Pq Fl p
+.It Fl \-period-sort
+.It Fl \-plot-amount-format Ar FMT
+.It Fl \-plot-total-format Ar FMT
+.It Fl \-price Pq Fl I
+.It Fl \-price-db Ar FILE
+.It Fl \-price-exp Ar STR
+See \fB\-\-leeway\fR.
+.It Fl \-prices-format Ar FMT
+.It Fl \-pricesdb-format Ar FMT
+.It Fl \-print-format Ar FMT
+.It Fl \-quantity Pq Fl O
+.It Fl \-quarterly
+.It Fl \-real Pq Fl R
+.It Fl \-register-format Ar FMT
+.It Fl \-related Pq Fl r
+.It Fl \-related-all
+.It Fl \-revalued
+.It Fl \-revalued-only
+.It Fl \-script
+.It Fl \-set-account Ar EXPR
+.It Fl \-set-payee Ar EXPR
+.It Fl \-set-price Ar EXPR
+.It Fl \-sort Ar EXPR Pq Fl S
+.It Fl \-sort-all
+.It Fl \-sort-entries
+.It Fl \-start-of-week Ar STR
+.It Fl \-strict
+.It Fl \-subtotal Pq Fl s
+.It Fl \-tail Ar INT
+.It Fl \-total Ar EXPR
+.It Fl \-total-data Pq Fl J
+.It Fl \-total-width Ar INT
+.It Fl \-totals
+.It Fl \-trace Ar INT
+.It Fl \-truncate
+.It Fl \-unbudgeted
+.It Fl \-uncleared Pq Fl U
+.It Fl \-verbose
+.It Fl \-verify
+.It Fl \-version
+.It Fl \-weekly Pq Fl W
+.It Fl \-wide Pq Fl w
+.It Fl \-yearly Pq Fl Y
+.El
+.Pp
+.Sh PRECOMMANDS
+.Pp
+.Bl -tag -width -indent
+.It \fBargs\fR
+.It \fBeval\fR
+.It \fBformat\fR
+.It \fBparse\fR
+.It \fBperiod\fR
+.It \fBtemplate\fR
+.El
+.Pp
+.Sh SEE ALSO
+.Xr beancount 1,
+.Xr hledger 1
+.Sh AUTHORS
+.An "John Wiegley" Aq johnw@newartisans.com
+.\" .Sh BUGS              \" Document known, unremedied bugs
+.\" .Sh HISTORY           \" Document history if command behaves in a unique manner
