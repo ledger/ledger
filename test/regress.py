@@ -41,9 +41,10 @@ def test_regression(test_file):
         use_stdin = True
 
         if re.search('--columns', command):
-            command = ("%s" % ledger) + " --args-only " + command
+            command = ("%s" % ledger) + " --verify --args-only " + command
         else:
-            command = ("%s" % ledger) + " --args-only --columns=80 " + command
+            command = (("%s" % ledger) +
+                       " --verify --args-only --columns=80 " + command)
     else:
         tempdata = tempfile.mkstemp()
 
@@ -52,10 +53,10 @@ def test_regression(test_file):
 
         if re.search('--columns', command):
             command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
-                       " --args-only " + command)
+                       " --verify --args-only " + command)
         else:
             command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
-                       " --args-only --columns=80 " + command)
+                       " --verify --args-only --columns=80 " + command)
 
     output = []
     while line != ">>>2\n":
