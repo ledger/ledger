@@ -78,48 +78,6 @@ and causes an immediate reloading of all journal files in the session.
 .It Nm stats Oo Ar query Oc
 .El
 .Pp
-.Sh QUERIES
-The syntax for reporting queries can get somewhat complex.  It is a series of
-query terms with an implicit OR operator between them.  The following terms
-are accepted:
-.Bl -tag -offset foo -width "term and term"
-.It Ar regex
-A bare string is taken as a regular expression matching the full account name.
-Thus, to report the current balance for all assets and liabilities, you would
-use:
-.Pp
-.Dl ledger bal asset liab
-.It Nm payee Ar regex
-Query on the payee, rather than the account.
-.It \&@ Ns Ar regex
-Same as
-.Nm payee Ar regex .
-.It Nm tag Ar regex Pq \&% Ns Ar regex
-.It Nm note Ar regex Pq \&= Ns Ar regex
-Query on anything found in an item's note.
-.It Ar term Nm and Ar term
-Query terms are joined by an implicit OR operator.  You can change this to AND
-by using that keyword.  For example, to show food expenditures occurring at
-Shakee's Pizza, you could say:
-.Pp
-.Dl ledger reg food and @Shakee
-.It Ar term Nm or Ar term
-When you wish to be more explicit, use the OR operator.
-.It Nm not Ar term
-Reverse the logical meaning of the following term.  This can be used with
-parentheses to great effect:
-.Pp
-.Dl ledger reg food and @Shakee and not dining
-.It \&( Ar term No \&)
-If you wish to mix OR and AND operators, it is often helpful to surround
-logical units with parentheses.  \fBNOTE\fR: Because of the way some shells
-interpret parentheses, you should always escape them:
-.Pp
-.Dl ledger bal \e\\\&( assets or liab \e\\\&) and not food
-.El
-.Pp
-.Sh VALUE EXPRESSIONS
-.Pp
 .Sh OPTIONS
 .Pp
 .Bl -tag -width -indent
@@ -256,6 +214,100 @@ See \fB\-\-leeway\fR.
 .It \fBparse\fR
 .It \fBperiod\fR
 .It \fBtemplate\fR
+.El
+.Pp
+.Sh QUERIES
+The syntax for reporting queries can get somewhat complex.  It is a series of
+query terms with an implicit OR operator between them.  The following terms
+are accepted:
+.Bl -tag foo -width "term and term"
+.It Ar regex
+A bare string is taken as a regular expression matching the full account name.
+Thus, to report the current balance for all assets and liabilities, you would
+use:
+.Pp
+.Dl ledger bal asset liab
+.It Nm payee Ar regex
+Query on the payee, rather than the account.
+.It \&@ Ns Ar regex
+Same as
+.Nm payee Ar regex .
+.It Nm tag Ar regex Pq \&% Ns Ar regex
+.It Nm note Ar regex Pq \&= Ns Ar regex
+Query on anything found in an item's note.
+.It Ar term Nm and Ar term
+Query terms are joined by an implicit OR operator.  You can change this to AND
+by using that keyword.  For example, to show food expenditures occurring at
+Shakee's Pizza, you could say:
+.Pp
+.Dl ledger reg food and @Shakee
+.It Ar term Nm or Ar term
+When you wish to be more explicit, use the OR operator.
+.It Nm not Ar term
+Reverse the logical meaning of the following term.  This can be used with
+parentheses to great effect:
+.Pp
+.Dl ledger reg food and @Shakee and not dining
+.It \&( Ar term No \&)
+If you wish to mix OR and AND operators, it is often helpful to surround
+logical units with parentheses.  \fBNOTE\fR: Because of the way some shells
+interpret parentheses, you should always escape them:
+.Pp
+.Dl ledger bal \e\\\&( assets or liab \e\\\&) and not food
+.El
+.Pp
+.Sh EXPRESSIONS
+.Bl -tag foo -width "partial_account"
+.It Nm account
+.It Nm account_base
+.It Nm actual
+.It Nm amount
+.It Nm amount_expr
+.It Nm beg_line
+.It Nm beg_pos
+.It Nm calculated
+.It Nm cleared
+.It Nm code
+.It Nm comment
+.It Nm commodity
+.It Nm cost
+.It Nm count
+.It Nm date
+.It Nm depth
+.It Nm depth_spacer
+.It Nm display_amount
+.It Nm display_total
+.It Nm end_line
+.It Nm end_pos
+.It Nm entry
+.It Nm filename
+.It Nm format_date
+.It Nm has_meta
+.It Nm has_tag
+.It Nm join
+.It Nm market
+.It Nm meta
+.It Nm note
+.It Nm options
+.It Nm partial_account
+.It Nm payee
+.It Nm pending
+.It Nm print
+.It Nm quantity
+.It Nm quoted
+.It Nm real
+.It Nm rounded
+.It Nm status
+.It Nm strip
+.It Nm subcount
+.It Nm tag
+.It Nm today
+.It Nm total
+.It Nm total_expr
+.It Nm truncate
+.It Nm uncleared
+.It Nm virtual
+.It Nm xact
 .El
 .Pp
 .Sh SEE ALSO
