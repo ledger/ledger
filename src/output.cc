@@ -179,37 +179,6 @@ void gather_statistics::operator()(xact_t& xact)
   }
 }
 
-void format_entries::format_last_entry()
-{
-  bool		first = true;
-  std::ostream& out(report.output_stream);
-
-  foreach (xact_t * xact, last_entry->xacts) {
-    if (xact->has_xdata() &&
-	xact->xdata().has_flags(XACT_EXT_TO_DISPLAY)) {
-      if (first) {
-	bind_scope_t bound_scope(report, *xact);
-	first_line_format.format(out, bound_scope);
-	first = false;
-      } else {
-	bind_scope_t bound_scope(report, *xact);
-	next_lines_format.format(out, bound_scope);
-      }
-      xact->xdata().add_flags(XACT_EXT_DISPLAYED);
-    }
-  }
-}
-
-void format_entries::operator()(xact_t& xact)
-{
-  xact.xdata().add_flags(XACT_EXT_TO_DISPLAY);
-
-  if (last_entry && xact.entry != last_entry)
-    format_last_entry();
-
-  last_entry = xact.entry;
-}
-
 void format_accounts::post_account(account_t& account)
 {
   bind_scope_t bound_scope(report, account);

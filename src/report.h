@@ -487,6 +487,8 @@ public:
       parent->HANDLER(period_).on("quarterly");
     });
 
+  OPTION(report_t, raw);
+
   OPTION_(report_t, real, DO() { // -R
       parent->HANDLER(limit_).on("real");
     });

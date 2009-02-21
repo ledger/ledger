@@ -436,7 +436,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(quarterly);
     break;
   case 'r':
-    OPT(real);
+    OPT(raw);
+    else OPT(real);
     else OPT(register_format_);
     else OPT_(related);
     else OPT(related_all);

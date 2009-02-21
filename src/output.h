@@ -129,34 +129,6 @@ public:
  *
  * Long.
  */
-class format_entries : public format_xacts
-{
- public:
-  format_entries(report_t& _report, const string& format)
-    : format_xacts(_report, format) {
-    TRACE_CTOR(format_entries, "report_t&, const string&");
-  }
-  virtual ~format_entries() {
-    TRACE_DTOR(format_entries);
-  }
-
-  virtual void format_last_entry();
-
-  virtual void flush() {
-    if (last_entry) {
-      format_last_entry();
-      last_entry = NULL;
-    }
-    format_xacts::flush();
-  }
-  virtual void operator()(xact_t& xact);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
 class format_accounts : public item_handler<account_t>
 {
 protected:
