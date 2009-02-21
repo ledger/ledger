@@ -140,16 +140,16 @@ bool entry_base_t::finalize()
       const balance_t& bal(balance.as_balance());
       foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
 	if (first) {
-	  null_xact->amount = pair.second.negate();
+	  null_xact->amount = pair.second.negated();
 	  first = false;
 	} else {
-	  add_xact(new xact_t(null_xact->account, pair.second.negate(),
+	  add_xact(new xact_t(null_xact->account, pair.second.negated(),
 			      ITEM_GENERATED));
 	}
       }
     }
     else if (balance.is_amount()) {
-      null_xact->amount = balance.as_amount().negate();
+      null_xact->amount = balance.as_amount().negated();
       null_xact->add_flags(XACT_CALCULATED);
     }
     else if (! balance.is_null() && ! balance.is_realzero()) {

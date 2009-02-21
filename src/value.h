@@ -391,7 +391,7 @@ public:
   /**
    * Unary arithmetic operators.
    */
-  value_t negate() const {
+  value_t negated() const {
     value_t temp = *this;
     temp.in_place_negate();
     return temp;
@@ -400,7 +400,7 @@ public:
   void    in_place_not();	// exists for efficiency's sake
 
   value_t operator-() const {
-    return negate();
+    return negated();
   }
 
   value_t abs() const;

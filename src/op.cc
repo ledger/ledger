@@ -234,7 +234,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     break;
 
   case O_NEG:
-    result = left()->calc(scope, locus).negate();
+    result = left()->calc(scope, locus).negated();
     break;
 
   case O_NOT:

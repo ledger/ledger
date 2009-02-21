@@ -174,7 +174,7 @@ void export_value()
     .def(self	  /  double())
     .def(double() / self)
 
-    .def("negate", &value_t::negate)
+    .def("negated", &value_t::negated)
     .def("in_place_negate", &value_t::in_place_negate)
     .def("in_place_not", &value_t::in_place_not)
     .def(- self)

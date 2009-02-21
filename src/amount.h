@@ -291,7 +291,7 @@ public:
   /** Returns the negated value of an amount.
       @see operator-()
   */
-  amount_t negate() const {
+  amount_t negated() const {
     amount_t temp(*this);
     temp.in_place_negate();
     return temp;
@@ -299,7 +299,7 @@ public:
   void in_place_negate();
 
   amount_t operator-() const {
-    return negate();
+    return negated();
   }
 
   /** Returns the absolute value of an amount.  Equivalent to:
@@ -309,7 +309,7 @@ public:
   */
   amount_t abs() const {
     if (sign() < 0)
-      return negate();
+      return negated();
     return *this;
   }
 

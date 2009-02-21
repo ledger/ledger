@@ -993,15 +993,15 @@ void AmountTestCase::testNegation()
   amount_t x8(string("-123.456"));
   amount_t x9(- x3);
 
-  assertThrow(x0.negate(), amount_error);
+  assertThrow(x0.negated(), amount_error);
   assertEqual(x5, x1);
   assertEqual(x7, x1);
   assertEqual(x6, x3);
   assertEqual(x8, x3);
   assertEqual(- x6, x9);
-  assertEqual(x3.negate(), x9);
+  assertEqual(x3.negated(), x9);
 
-  amount_t x10(x9.negate());
+  amount_t x10(x9.negated());
 
   assertEqual(x3, x10);
 
@@ -1039,9 +1039,9 @@ void AmountTestCase::testCommodityNegation()
   assertEqual(amount_t("-123.45€"), - x9);
   assertEqual(amount_t("123.45€"), - x10);
 
-  assertEqual(amount_t("$-123.45"), x1.negate());
-  assertEqual(amount_t("$123.45"), x2.negate());
-  assertEqual(amount_t("$123.45"), x3.negate());
+  assertEqual(amount_t("$-123.45"), x1.negated());
+  assertEqual(amount_t("$123.45"), x2.negated());
+  assertEqual(amount_t("$123.45"), x3.negated());
 
   assertEqual(string("$-123.45"), (- x1).to_string());
   assertEqual(string("$123.45"), (- x2).to_string());
@@ -1054,9 +1054,9 @@ void AmountTestCase::testCommodityNegation()
   assertEqual(string("-123.45€"), (- x9).to_string());
   assertEqual(string("123.45€"), (- x10).to_string());
 
-  assertEqual(amount_t("$-123.45"), x1.negate());
-  assertEqual(amount_t("$123.45"), x2.negate());
-  assertEqual(amount_t("$123.45"), x3.negate());
+  assertEqual(amount_t("$-123.45"), x1.negated());
+  assertEqual(amount_t("$123.45"), x2.negated());
+  assertEqual(amount_t("$123.45"), x3.negated());
 
   assertValid(x1);
   assertValid(x2);

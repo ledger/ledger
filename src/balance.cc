@@ -81,7 +81,7 @@ balance_t& balance_t::operator-=(const amount_t& amt)
     if (i->second.is_realzero())
       amounts.erase(i);
   } else {
-    amounts.insert(amounts_map::value_type(&amt.commodity(), amt.negate()));
+    amounts.insert(amounts_map::value_type(&amt.commodity(), amt.negated()));
   }
   return *this;
 }

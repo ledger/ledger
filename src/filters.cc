@@ -215,11 +215,11 @@ void invert_xacts::operator()(xact_t& xact)
 {
   if (xact.has_xdata() &&
       xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
-    xact.xdata().value.negate();
+    xact.xdata().value.in_place_negate();
   } else {
-    xact.amount.negate();
+    xact.amount.in_place_negate();
     if (xact.cost)
-      xact.cost->negate();
+      xact.cost->in_place_negate();
   }
 
   item_handler<xact_t>::operator()(xact);
@@ -705,7 +705,7 @@ void budget_xacts::report_budget_items(const date_t& date)
 	xact_t& temp = xact_temps.back();
 	temp.entry = &entry;
 	temp.add_flags(XACT_AUTO | ITEM_TEMP);
-	temp.amount.negate();
+	temp.amount.in_place_negate();
 	entry.add_xact(&temp);
 
 	begin = pair.first.increment(begin);
