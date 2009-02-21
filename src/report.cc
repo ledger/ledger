@@ -397,6 +397,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(lot_tags);
     else OPT(lots);
     else OPT_ALT(tail_, last_);
+    else OPT_ALT(price_exp_, leeway_);
     break;
   case 'm':
     OPT(market);
