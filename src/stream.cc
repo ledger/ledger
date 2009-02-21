@@ -94,7 +94,7 @@ namespace {
 	     (char *)0);
 
       // We should never, ever reach here
-      perror((std::string("execl: ") + pager_path.string()).c_str());
+      perror((std::string("execlp: ") + pager_path.string()).c_str());
       exit(1);
     }
     else {			// parent

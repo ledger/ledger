@@ -62,7 +62,6 @@ libledger_data_la_LDFLAGS  = -release $(VERSION).0
 libledger_report_la_SOURCES  =			\
 	src/quotes.cc				\
 	src/derive.cc				\
-	src/help.cc				\
 	src/emacs.cc                            \
 	src/output.cc				\
 	src/precmd.cc				\
@@ -118,7 +117,6 @@ pkginclude_HEADERS =			   \
 	src/derive.h			   \
 	src/output.h			   \
 	src/emacs.h			   \
-	src/help.h			   \
 	src/quotes.h			   \
 					   \
 	src/global.h			   \

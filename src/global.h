@@ -115,11 +115,13 @@ See LICENSE file included with the distribution for details and disclaimer.";
   OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);
 
-  OPTION(global_scope_t, full_help); // -H
-  OPTION(global_scope_t, help); // -h
-  OPTION(global_scope_t, help_calc);
-  OPTION(global_scope_t, help_comm);
-  OPTION(global_scope_t, help_disp);
+  void visit_man_page() const;
+
+  OPTION_(global_scope_t, full_help, DO() { parent->visit_man_page(); }); // -H
+  OPTION_(global_scope_t, help,      DO() { parent->visit_man_page(); }); // -h
+  OPTION_(global_scope_t, help_calc, DO() { parent->visit_man_page(); });
+  OPTION_(global_scope_t, help_comm, DO() { parent->visit_man_page(); });
+  OPTION_(global_scope_t, help_disp, DO() { parent->visit_man_page(); });
 
   OPTION__
   (global_scope_t, init_file_, // -i

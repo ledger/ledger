@@ -239,6 +239,15 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   case 'd':
     OPT(debug_);
     break;
+  case 'f':
+    OPT(full_help);
+    break;
+  case 'h':
+    OPT_(help);
+    else OPT(help_calc);
+    else OPT(help_comm);
+    else OPT(help_disp);
+    break;
   case 'i':
     OPT(init_file_);
     break;
@@ -453,6 +462,25 @@ void global_scope_t::normalize_report_options(const string& verb)
     if (! rep.HANDLER(total_width_).specified)
       rep.HANDLER(total_width_).on_with(total_width);
   }
+}
+
+void global_scope_t::visit_man_page() const
+{
+  int pid = fork();
+  if (pid < 0) {
+    throw std::logic_error("Failed to fork child process");
+  }
+  else if (pid == 0) {	// child
+    execlp("man", "man", "1", "ledger", (char *)0);
+
+    // We should never, ever reach here
+    perror("execlp: man");
+    exit(1);
+  }
+
+  int status = -1;
+  wait(&status);
+  exit(0);			// parent
 }
 
 void handle_debug_options(int argc, char * argv[])
