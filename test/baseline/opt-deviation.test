@@ -1,0 +1,244 @@
+reg --deviation books
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/28 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/03/01 March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2008/03/31 End of March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2008/04/01 April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2008/04/30 End of April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2008/05/01 May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2008/05/31 End of May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2008/06/01 June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2008/06/30 End of June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2008/07/01 July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2008/07/31 End of July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2008/08/01 August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2008/08/31 End of August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2008/09/01 September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2008/09/30 End of September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2008/10/01 October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2008/10/31 End of October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2008/11/01 November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2008/11/30 End of November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2008/12/01 December
+    Expenses:Books         $120.00
+    Assets:Cash
+
+2008/12/31 End of December
+    Expenses:Books         $120.00
+    Assets:Cash
+
+2009/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2009/01/31 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2009/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2009/02/28 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2009/03/01 March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2009/03/31 End of March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2009/04/01 April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2009/04/30 End of April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2009/05/01 May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2009/05/31 End of May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2009/06/01 June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2009/06/30 End of June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2009/07/01 July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2009/07/31 End of July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2009/08/01 August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2009/08/31 End of August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2009/09/01 September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2009/09/30 End of September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2009/10/01 October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2009/10/31 End of October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2009/11/01 November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2009/11/30 End of November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2009/12/01 December
+    Expenses:Books         $120.00
+    Assets:Cash
+
+2009/12/31 End of December
+    Expenses:Books         $120.00
+    Assets:Cash
+>>>1
+08-Jan-01 January               Expenses:Books               $10.00            0
+08-Jan-31 End of January        Expenses:Books               $10.00            0
+08-Feb-01 February              Expenses:Books               $20.00        $6.67
+08-Feb-28 End of February       Expenses:Books               $20.00        $5.00
+08-Mar-01 March                 Expenses:Books               $30.00       $12.00
+08-Mar-31 End of March          Expenses:Books               $30.00       $10.00
+08-Apr-01 April                 Expenses:Books               $40.00       $17.14
+08-Apr-30 End of April          Expenses:Books               $40.00       $15.00
+08-May-01 May                   Expenses:Books               $50.00       $22.22
+08-May-31 End of May            Expenses:Books               $50.00       $20.00
+08-Jun-01 June                  Expenses:Books               $60.00       $27.27
+08-Jun-30 End of June           Expenses:Books               $60.00       $25.00
+08-Jul-01 July                  Expenses:Books               $70.00       $32.31
+08-Jul-31 End of July           Expenses:Books               $70.00       $30.00
+08-Aug-01 August                Expenses:Books               $80.00       $37.33
+08-Aug-31 End of August         Expenses:Books               $80.00       $35.00
+08-Sep-01 September             Expenses:Books               $90.00       $42.35
+08-Sep-30 End of September      Expenses:Books               $90.00       $40.00
+08-Oct-01 October               Expenses:Books              $100.00       $47.37
+08-Oct-31 End of October        Expenses:Books              $100.00       $45.00
+08-Nov-01 November              Expenses:Books              $110.00       $52.38
+08-Nov-30 End of November       Expenses:Books              $110.00       $50.00
+08-Dec-01 December              Expenses:Books              $120.00       $57.39
+08-Dec-31 End of December       Expenses:Books              $120.00       $55.00
+09-Jan-01 January               Expenses:Books               $10.00      $-52.80
+09-Jan-31 End of January        Expenses:Books               $10.00      $-50.77
+09-Feb-01 February              Expenses:Books               $20.00      $-39.26
+09-Feb-28 End of February       Expenses:Books               $20.00      $-37.86
+09-Mar-01 March                 Expenses:Books               $30.00      $-26.90
+09-Mar-31 End of March          Expenses:Books               $30.00      $-26.00
+09-Apr-01 April                 Expenses:Books               $40.00      $-15.48
+09-Apr-30 End of April          Expenses:Books               $40.00      $-15.00
+09-May-01 May                   Expenses:Books               $50.00       $-4.85
+09-May-31 End of May            Expenses:Books               $50.00       $-4.71
+09-Jun-01 June                  Expenses:Books               $60.00        $5.14
+09-Jun-30 End of June           Expenses:Books               $60.00        $5.00
+09-Jul-01 July                  Expenses:Books               $70.00       $14.59
+09-Jul-31 End of July           Expenses:Books               $70.00       $14.21
+09-Aug-01 August                Expenses:Books               $80.00       $23.59
+09-Aug-31 End of August         Expenses:Books               $80.00       $23.00
+09-Sep-01 September             Expenses:Books               $90.00       $32.20
+09-Sep-30 End of September      Expenses:Books               $90.00       $31.43
+09-Oct-01 October               Expenses:Books              $100.00       $40.47
+09-Oct-31 End of October        Expenses:Books              $100.00       $39.55
+09-Nov-01 November              Expenses:Books              $110.00       $48.44
+09-Nov-30 End of November       Expenses:Books              $110.00       $47.39
+09-Dec-01 December              Expenses:Books              $120.00       $56.17
+09-Dec-31 End of December       Expenses:Books              $120.00       $55.00
+>>>2
+=== 0

@@ -310,7 +310,9 @@ public:
 	     on("%y-%b-%d");
 	   });
 
-  OPTION(report_t, deviation); // -D
+  OPTION_(report_t, deviation, DO() { // -D
+      parent->HANDLER(display_total_).set_expr("amount_expr-total_expr/count");
+    });
 
   OPTION__
   (report_t, display_, // -d
