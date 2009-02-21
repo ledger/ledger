@@ -70,7 +70,10 @@ inline bool is_valid(const date_t& moment) {
 #endif
 #define CURRENT_DATE() boost::gregorian::day_clock::universal_day()
 
+extern int                   start_of_week;
 extern optional<std::string> input_date_format;
+
+int string_to_day_of_week(const std::string& str);
 
 datetime_t parse_datetime(const char * str, int current_year = -1);
 
@@ -128,26 +131,32 @@ struct interval_t
   int	 years;
   int	 months;
   int	 days;
+  bool	 weekly;
   date_t begin;
   date_t end;
 
-  interval_t(int _days = 0, int _months = 0, int _years = 0,
-	     const date_t& _begin = date_t(),
-	     const date_t& _end   = date_t())
+  interval_t(int	   _days   = 0,
+	     int	   _months = 0,
+	     int	   _years  = 0,
+	     bool	   _weekly = false,
+	     const date_t& _begin  = date_t(),
+	     const date_t& _end	   = date_t())
     : years(_years), months(_months), days(_days),
-      begin(_begin), end(_end) {
-    TRACE_CTOR(interval_t, "int, int, int, const date_t&, const date_t&");
+      weekly(_weekly), begin(_begin), end(_end) {
+    TRACE_CTOR(interval_t,
+	       "int, int, int, bool, const date_t&, const date_t&");
   }
   interval_t(const interval_t& other)
     : years(other.years),
       months(other.months),
       days(other.days),
+      weekly(other.weekly),
       begin(other.begin),
       end(other.end) {
     TRACE_CTOR(interval_t, "copy");
   }
   interval_t(const string& desc)
-    : years(0), months(0), days(0), begin(), end() {
+    : years(0), months(0), days(0), weekly(false), begin(), end() {
     TRACE_CTOR(interval_t, "const string&");
     std::istringstream stream(desc);
     parse(stream);

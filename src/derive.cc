@@ -124,26 +124,6 @@ namespace {
     }
   };
 
-  short string_to_day_of_week(const std::string& str)
-  {
-    if (str == "sun")
-      return 0;
-    else if (str == "mon")
-      return 1;
-    else if (str == "tue")
-      return 2;
-    else if (str == "wed")
-      return 3;
-    else if (str == "thu")
-      return 4;
-    else if (str == "fri")
-      return 5;
-    else if (str == "sat")
-      return 6;
-    assert(false);
-    return -1;
-  }
-  
   entry_template_t
   args_to_entry_template(value_t::sequence_t::const_iterator begin,
 			 value_t::sequence_t::const_iterator end)

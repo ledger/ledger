@@ -33,6 +33,7 @@
 
 namespace ledger {
 
+int                   start_of_week          = 0;
 optional<std::string> input_date_format;
 std::string	      output_datetime_format = "%Y-%m-%d %H:%M:%S";
 std::string	      output_date_format     = "%Y-%m-%d";
@@ -58,9 +59,7 @@ namespace {
     "%Y",
     NULL
   };
-}
 
-namespace {
   bool parse_date_mask(const char * date_str, std::tm& result)
   {
     if (input_date_format) {
@@ -106,6 +105,27 @@ namespace {
   }
 }
 
+int string_to_day_of_week(const std::string& str)
+{
+  if (str == "sun" || str == "sunday" || str == "0")
+    return 0;
+  else if (str == "mon" || str == "monday" || str == "1")
+    return 1;
+  else if (str == "tue" || str == "tuesday" || str == "2")
+    return 2;
+  else if (str == "wed" || str == "wednesday" || str == "3")
+    return 3;
+  else if (str == "thu" || str == "thursday" || str == "4")
+    return 4;
+  else if (str == "fri" || str == "friday" || str == "5")
+    return 5;
+  else if (str == "sat" || str == "saturday" || str == "6")
+    return 6;
+
+  assert(false);
+  return -1;
+}
+  
 datetime_t parse_datetime(const char * str, int)
 {
   std::tm when;
@@ -130,7 +150,19 @@ date_t interval_t::first(const optional<date_t>& moment)
     // a date early enough that the range will be correct, but late enough
     // that we don't spend hundreds of thousands of loops skipping through
     // time.
-    begin = date_t(moment->year(), gregorian::Jan, 1);
+    assert(moment);
+
+    if (months > 0 || years > 0) {
+      begin = date_t(moment->year(), gregorian::Jan, 1);
+    } else {
+      begin = date_t(*moment - gregorian::days(400));
+
+      // jww (2009-02-21): Add support for starting a week on any day
+      if (weekly) {		// move it to a Sunday
+	while (begin.day_of_week() != start_of_week)
+	  begin += gregorian::days(1);
+      }
+    }
   }
 
   date_t quant(begin);
@@ -281,12 +313,14 @@ void interval_t::parse(std::istream& in)
     if (word == "every") {
       read_lower_word(in, word);
       if (std::isdigit(word[0])) {
-	int quantity = std::atol(word.c_str());
+	int quantity = lexical_cast<int>(word);
 	read_lower_word(in, word);
 	if (word == "days")
 	  days = quantity;
-	else if (word == "weeks")
+	else if (word == "weeks") {
 	  days = 7 * quantity;
+	  weekly = true;
+	}
 	else if (word == "months")
 	  months = quantity;
 	else if (word == "quarters")
@@ -296,8 +330,10 @@ void interval_t::parse(std::istream& in)
       }
       else if (word == "day")
 	days = 1;
-      else if (word == "week")
+      else if (word == "week") {
 	days = 7;
+	weekly = true;
+      }
       else if (word == "month")
 	months = 1;
       else if (word == "quarter")
@@ -307,8 +343,10 @@ void interval_t::parse(std::istream& in)
     }
     else if (word == "daily")
       days = 1;
-    else if (word == "weekly")
+    else if (word == "weekly") {
       days = 7;
+      weekly = true;
+    }
     else if (word == "biweekly")
       days = 14;
     else if (word == "monthly")

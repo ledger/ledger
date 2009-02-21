@@ -512,7 +512,7 @@ void instance_t::nomarket_directive(char * line)
 
 void instance_t::year_directive(char * line)
 {
-  current_year = std::atoi(skip_ws(line + 1));
+  current_year = lexical_cast<int>(skip_ws(line + 1));
 }
 
 void instance_t::option_directive(char * line)
