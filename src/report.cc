@@ -368,6 +368,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(empty);
     else OPT_(end_);
     else OPT(equity);
+    else OPT(exact);
     break;
   case 'f':
     OPT(flat);

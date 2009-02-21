@@ -414,43 +414,45 @@ void changed_value_xacts::operator()(xact_t& xact)
   last_xact    = &xact;
 }
 
-void subtotal_xacts::report_subtotal(const char * spec_fmt)
+void subtotal_xacts::report_subtotal(const char *  spec_fmt,
+				     const date_t& start,
+				     const date_t& finish)
 {
   if (component_xacts.empty())
     return;
 
-  date_t start;
-  date_t finish;
+  date_t range_start  = start;
+  date_t range_finish = finish;
   foreach (xact_t * xact, component_xacts) {
     date_t date = xact->reported_date();
-    if (! is_valid(start) || date < start)
-      start = date;
-    if (! is_valid(finish) || date > finish)
-      finish = date;
+    if (! is_valid(range_start) || date < range_start)
+      range_start = date;
+    if (! is_valid(range_finish) || date > range_finish)
+      range_finish = date;
   }
   component_xacts.clear();
 
   std::ostringstream out_date;
   if (spec_fmt) {
-    out_date << format_date(finish, string(spec_fmt));
+    out_date << format_date(range_finish, string(spec_fmt));
   }
   else if (date_format) {
     string fmt = "- ";
     fmt += *date_format;
-    out_date << format_date(finish, string(fmt));
+    out_date << format_date(range_finish, string(fmt));
   }
   else {
-    out_date << format_date(finish, std::string("- ") + output_date_format);
+    out_date << format_date(range_finish, std::string("- ") + output_date_format);
   }
 
   entry_temps.push_back(entry_t());
   entry_t& entry = entry_temps.back();
   entry.payee = out_date.str();
-  entry._date = start;
+  entry._date = range_start;
 
   foreach (values_map::value_type& pair, values)
     handle_value(pair.second.value, pair.second.account, &entry, 0,
-		 xact_temps, *handler, finish);
+		 xact_temps, *handler, range_finish);
 
   values.clear();
 }
@@ -483,23 +485,35 @@ void subtotal_xacts::operator()(xact_t& xact)
     xact.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS);
 }
 
+void interval_xacts::report_subtotal(const date_t& finish)
+{
+  if (last_xact && interval) {
+    if (exact_periods)
+      subtotal_xacts::report_subtotal();
+    else
+      subtotal_xacts::report_subtotal(NULL, interval.begin, finish);
+  }
+
+  last_xact = NULL;
+}
+
 void interval_xacts::operator()(xact_t& xact)
 {
-  date_t date = xact.date();
+  date_t date = xact.reported_date();
 
-  if (! is_valid(interval.begin)) {
-    interval.set_start(date);
-  }
-  else if ((is_valid(interval.begin) && date < interval.begin) ||
-	   (is_valid(interval.end)   && date >= interval.end)) {
+  if ((is_valid(interval.begin) && date < interval.begin) ||
+      (is_valid(interval.end)   && date >= interval.end))
     return;
-  }
 
   if (interval) {
+    if (! is_valid(interval.begin))
+      interval.set_start(date);
+    start = interval.begin;
+
     date_t quant = interval.increment(interval.begin);
     if (date >= quant) {
       if (last_xact)
-	report_subtotal();
+	report_subtotal(quant - gregorian::days(1));
 
       date_t temp;
       while (date >= (temp = interval.increment(quant))) {
@@ -515,7 +529,7 @@ void interval_xacts::operator()(xact_t& xact)
 	  entry_temps.push_back(entry_t());
 	  entry_t& null_entry = entry_temps.back();
 	  null_entry.add_flags(ITEM_TEMP);
-	  null_entry._date = quant;
+	  null_entry._date = quant - gregorian::days(1);
 
 	  xact_temps.push_back(xact_t(&empty_account));
 	  xact_t& null_xact = xact_temps.back();
@@ -526,10 +540,10 @@ void interval_xacts::operator()(xact_t& xact)
 	  last_xact = &null_xact;
 	  subtotal_xacts::operator()(null_xact);
 
-	  report_subtotal();
+	  report_subtotal(quant - gregorian::days(1));
 	}
       }
-      interval.begin = quant;
+      start = interval.begin = quant;
     }
     subtotal_xacts::operator()(xact);
   } else {

@@ -559,7 +559,9 @@ public:
     clear_entries_xacts(entry_temps);
   }
 
-  void report_subtotal(const char * spec_fmt = NULL);
+  void report_subtotal(const char * spec_fmt = NULL,
+		       const date_t& start   = date_t(),
+		       const date_t& finish  = date_t());
 
   virtual void flush() {
     if (values.size() > 0)
@@ -579,33 +581,36 @@ class interval_xacts : public subtotal_xacts
   interval_t interval;
   xact_t *   last_xact;
   account_t  empty_account;
+  bool	     exact_periods;
   bool	     generate_empty_xacts;
+  date_t     start;
 
   interval_xacts();
 
 public:
-  interval_xacts(xact_handler_ptr  _handler, expr_t& amount_expr,
-		 const interval_t& _interval, account_t * master = NULL,
-		 bool _generate_empty_xacts = false)
+
+  interval_xacts(xact_handler_ptr  _handler,
+		 expr_t&	   amount_expr,
+		 const interval_t& _interval,
+		 account_t *	   master		 = NULL,
+		 bool		   _exact_periods	 = false,
+		 bool              _generate_empty_xacts = false)
     : subtotal_xacts(_handler, amount_expr), interval(_interval),
       last_xact(NULL), empty_account(master, "<None>"),
+      exact_periods(_exact_periods),
       generate_empty_xacts(_generate_empty_xacts) {
     TRACE_CTOR(interval_xacts,
-	       "xact_handler_ptr, expr_t&, const interval_t&, account_t *, bool");
+	       "xact_handler_ptr, expr_t&, interval_t, account_t *, bool, bool");
   }
   virtual ~interval_xacts() throw() {
     TRACE_DTOR(interval_xacts);
   }
 
-  void report_subtotal() {
-    if (last_xact && interval)
-      subtotal_xacts::report_subtotal();
-    last_xact = NULL;
-  }
+  void report_subtotal(const date_t& finish);
 
   virtual void flush() {
-    if (last_xact)
-      report_subtotal();
+    if (last_xact && interval)
+      report_subtotal(interval.increment(interval.begin) - gregorian::days(1));
     subtotal_xacts::flush();
   }
   virtual void operator()(xact_t& xact);
