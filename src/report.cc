@@ -141,7 +141,11 @@ value_t report_t::fn_market_value(call_scope_t& args)
 
 value_t report_t::fn_strip(call_scope_t& args)
 {
-  return args[0].strip_annotations(what_to_keep());
+  value_t temp(args[0].strip_annotations(what_to_keep()));
+  if (HANDLED(base))
+    return temp;
+  else
+    return temp.unreduced();
 }
 
 value_t report_t::fn_rounded(call_scope_t& args)
