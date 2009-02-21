@@ -9,4 +9,4 @@ tools/myacprep
 
 touch ~/Products/ledger-gcov/config.status
 touch ~/Products/ledger-gprof/config.status
-touch ~/Products/ledger-opt/touch config.status
+touch ~/Products/ledger-opt/config.status
