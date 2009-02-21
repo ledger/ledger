@@ -277,6 +277,7 @@ while [ -n "$1" ]; do
 
     --gprof)
         CXXFLAGS="$CXXFLAGS -g -pg"
+        LDFLAGS="$LDFLAGS -g -pg"
 	shift 1 ;;
 
     --pic)
