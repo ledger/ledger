@@ -163,7 +163,8 @@ value_t report_t::fn_truncate(call_scope_t& args)
   var_t<long> width(args, 1);
   var_t<long> account_abbrev(args, 2);
 
-  return string_value(format_t::truncate(args[0].as_string(), *width,
+  return string_value(format_t::truncate(args[0].as_string(),
+					 width && *width > 0 ? *width : 0,
 					 account_abbrev ? *account_abbrev : -1));
 }
 

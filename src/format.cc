@@ -286,7 +286,7 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
   assert(width < 4095);
 
   const std::size_t len = ustr.length();
-  if (len <= width)
+  if (width == 0 || len <= width)
     return ustr.extract();
 
   std::ostringstream buf;
