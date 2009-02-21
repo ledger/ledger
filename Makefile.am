@@ -1,5 +1,6 @@
-VERSION    = 3.0
-EXTRA_DIST = autogen.sh contrib
+VERSION	      = 3.0
+dist_man_MANS = doc/ledger.1
+EXTRA_DIST    = autogen.sh contrib
 
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
