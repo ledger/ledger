@@ -858,7 +858,9 @@ used to generate the buffer, navigating the buffer, etc."
       (set (make-local-variable 'ledger-report-name) report-name)
       (set (make-local-variable 'ledger-original-window-cfg) wcfg)
       (ledger-do-report (ledger-report-cmd report-name edit))
-      (shrink-window-if-larger-than-buffer))))
+      (shrink-window-if-larger-than-buffer)
+      (set-buffer-modified-p nil)
+      (setq buffer-read-only t))))
 
 (defun string-empty-p (s)
   "Check for the empty string."
@@ -979,8 +981,10 @@ the default."
   "Redo the report in the current ledger report buffer."
   (interactive)
   (ledger-report-goto)
+  (setq buffer-read-only nil)
   (erase-buffer)
-  (ledger-do-report ledger-report-cmd))
+  (ledger-do-report ledger-report-cmd)
+  (setq buffer-read-only nil))
 
 (defun ledger-report-quit ()
   "Quit the ledger report buffer by burying it."
