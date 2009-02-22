@@ -159,6 +159,10 @@ namespace {
     return string_value(xact.amount.commodity().symbol());
   }
 
+  value_t get_commodity_is_primary(xact_t& xact) {
+    return xact.amount.commodity().has_flags(COMMODITY_PRIMARY);
+  }
+
   value_t get_cost(xact_t& xact) {
     if (xact.has_xdata() &&
 	xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
@@ -262,6 +266,8 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'p':
     if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+    else if (name == "primary")
+      return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
     break;
 
   case 't':

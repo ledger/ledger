@@ -98,6 +98,9 @@ public:
     clean_accounts();
   }
 
+  value_t fn_now(call_scope_t&) {
+    return CURRENT_TIME();
+  }
   value_t fn_today(call_scope_t&) {
     return CURRENT_DATE();
   }

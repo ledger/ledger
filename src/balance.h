@@ -353,8 +353,10 @@ public:
     return *this = temp;
   }
 
-  optional<balance_t> value(const optional<datetime_t>&	  moment      = none,
-			    const optional<commodity_t&>& in_terms_of = none) const;
+  optional<balance_t>
+  value(const bool		      primary_only = false,
+	const optional<datetime_t>&   moment	   = none,
+	const optional<commodity_t&>& in_terms_of  = none) const;
 
   /**
    * Truth tests.  An balance may be truth test in two ways:

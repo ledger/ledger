@@ -269,7 +269,7 @@ public:
     });
 
   OPTION(report_t, code_as_payee);
-  OPTION(report_t, comm_as_payee); // -x
+  OPTION(report_t, comm_as_payee);
   OPTION(report_t, code_as_account);
   OPTION(report_t, comm_as_account);
   OPTION(report_t, color);
@@ -374,6 +374,14 @@ public:
 
   OPTION(report_t, equity);
   OPTION(report_t, exact);
+
+  OPTION_(report_t, exchange_, DO_(args) { // -x
+      on_with(args[0]);
+      call_scope_t no_args(*parent);
+      parent->HANDLER(market).parent = parent;
+      parent->HANDLER(market).handler(no_args);
+    });
+
   OPTION(report_t, flat);
   OPTION(report_t, forecast_while_);
   OPTION(report_t, format_); // -F
@@ -402,8 +410,10 @@ public:
 
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on_only();
-      parent->HANDLER(display_amount_).set_expr("market(amount_expr)");
-      parent->HANDLER(display_total_).set_expr("market(total_expr)");
+      parent->HANDLER(display_amount_)
+	.set_expr("exchange ? market(amount_expr, now, exchange) : market(amount_expr)");
+      parent->HANDLER(display_total_)
+	.set_expr("exchange ? market(total_expr, now, exchange) : market(total_expr)");
     });
 
   OPTION_(report_t, monthly, DO() { // -M
@@ -447,11 +457,11 @@ public:
   OPTION(report_t, period_sort_);
 
   OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
-      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(amount)))\n");
+      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
     });
 
   OPTION__(report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(total)))\n");
+      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
     });
 
   OPTION_(report_t, price, DO() { // -I

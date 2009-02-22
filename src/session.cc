@@ -235,6 +235,11 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
+  case 'n':
+    if (is_eq(p, "now"))
+      return MAKE_FUNCTOR(session_t::fn_now);
+    break;
+
   case 'o':
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
       if (option_t<session_t> * handler = lookup_option(p))

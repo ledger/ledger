@@ -33,10 +33,10 @@
 
 namespace ledger {
 
-void commodity_t::base_t::history_t::add_price(const commodity_t& source,
-					       const datetime_t&  date,
-					       const amount_t&	  price,
-					       const bool	  reflexive)
+void commodity_t::base_t::history_t::add_price(commodity_t&      source,
+					       const datetime_t& date,
+					       const amount_t&	 price,
+					       const bool	 reflexive)
 {
   DEBUG("commodity.prices",
 	"add_price to " << source << " : " << date << ", " << price);
@@ -50,10 +50,13 @@ void commodity_t::base_t::history_t::add_price(const commodity_t& source,
     assert(result.second);
   }
 
-  if (reflexive && ! price.commodity().has_flags(COMMODITY_NOMARKET)) {
-    amount_t inverse = price.inverted();
-    inverse.set_commodity(const_cast<commodity_t&>(source));
-    price.commodity().add_price(date, inverse, false);
+  if (reflexive) {
+    if (! price.commodity().has_flags(COMMODITY_NOMARKET)) {
+      amount_t inverse = price.inverted();
+      inverse.set_commodity(const_cast<commodity_t&>(source));
+      price.commodity().add_price(date, inverse, false);
+    }
+    source.add_flags(COMMODITY_PRIMARY);
   }
 }
 
@@ -68,10 +71,10 @@ bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
 }
 
 void commodity_t::base_t::varied_history_t::
-  add_price(const commodity_t& source,
-	    const datetime_t&  date,
-	    const amount_t&    price,
-	    const bool	       reflexive)
+  add_price(commodity_t&      source,
+	    const datetime_t& date,
+	    const amount_t&   price,
+	    const bool	      reflexive)
 {
   optional<history_t&> hist = history(price.commodity());
   if (! hist) {

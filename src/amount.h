@@ -357,7 +357,8 @@ public:
       $100.00.
   */
   optional<amount_t>
-  value(const optional<datetime_t>&   moment	  = none,
+  value(const bool		    primary_only  = true,
+	const optional<datetime_t>& moment	  = none,
 	const optional<commodity_t&>& in_terms_of = none) const;
 
   /*@}*/

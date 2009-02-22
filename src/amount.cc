@@ -509,13 +509,19 @@ void amount_t::in_place_unreduce()
   }
 }
 
-optional<amount_t> amount_t::value(const optional<datetime_t>&   moment,
-				   const optional<commodity_t&>& in_terms_of) const
+optional<amount_t>
+amount_t::value(const bool		      primary_only,
+		const optional<datetime_t>&   moment,
+		const optional<commodity_t&>& in_terms_of) const
 {
   if (quantity) {
-    optional<price_point_t> point(commodity().find_price(in_terms_of, moment));
-    if (point)
-      return (point->price * number()).rounded();
+    if (has_commodity() &&
+	(! primary_only || commodity().has_flags(COMMODITY_PRIMARY)) &&
+	(! in_terms_of || commodity() != *in_terms_of)) {
+      optional<price_point_t> point(commodity().find_price(in_terms_of, moment));
+      if (point)
+	return (point->price * number()).rounded();
+    }
   } else {
     throw_(amount_error, "Cannot determine value of an uninitialized amount");
   }

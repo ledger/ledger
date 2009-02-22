@@ -1137,23 +1137,25 @@ bool value_t::is_zero() const
   return false;
 }
 
-value_t value_t::value(const optional<datetime_t>&   moment,
+value_t value_t::value(const bool		     primary_only,
+		       const optional<datetime_t>&   moment,
 		       const optional<commodity_t&>& in_terms_of) const
 {
   switch (type()) {
   case INTEGER:
     return *this;
 
-  case AMOUNT: {
-    if (optional<amount_t> val = as_amount().value(moment, in_terms_of))
+  case AMOUNT:
+    if (optional<amount_t> val =
+	as_amount().value(primary_only, moment, in_terms_of))
       return *val;
-    return false;
-  }
-  case BALANCE: {
-    if (optional<balance_t> bal = as_balance().value(moment, in_terms_of))
+    return *this;
+
+  case BALANCE:
+    if (optional<balance_t> bal =
+	as_balance().value(primary_only, moment, in_terms_of))
       return *bal;
-    return false;
-  }
+    return *this;
 
   default:
     break;

@@ -72,13 +72,13 @@ struct price_point_t
  * Long.
  */
 class commodity_t
-  : public delegates_flags<>,
+  : public delegates_flags<uint_least16_t>,
     public equality_comparable1<commodity_t, noncopyable>
 {
   friend class commodity_pool_t;
 
 public:
-  class base_t : public noncopyable, public supports_flags<>
+  class base_t : public noncopyable, public supports_flags<uint_least16_t>
   {
     base_t();
 
@@ -90,7 +90,7 @@ public:
       history_map prices;
       ptime	  last_lookup;
 
-      void add_price(const commodity_t&	source,
+      void add_price(commodity_t&	source,
 		     const datetime_t&	date,
 		     const amount_t&	price,
 		     const bool		reflexive = true);
@@ -111,14 +111,14 @@ public:
     {
       history_by_commodity_map histories;
 
-      void add_price(const commodity_t&	source,
+      void add_price(commodity_t&	source,
 		     const datetime_t&	date,
 		     const amount_t&	price,
 		     const bool		reflexive = true);
       bool remove_price(const datetime_t& date, commodity_t& commodity);
 
       optional<price_point_t>
-      find_price(const commodity_t&            source,
+      find_price(const commodity_t&	       source,
 		 const optional<commodity_t&>& commodity = none,
 		 const optional<datetime_t>&   moment    = none,
 		 const optional<datetime_t>&   oldest    = none
@@ -127,7 +127,7 @@ public:
 #endif
 		 ) const;
       optional<price_point_t>
-      find_price(const commodity_t&                source,
+      find_price(const commodity_t&		   source,
 		 const std::vector<commodity_t *>& commodities,
 		 const optional<datetime_t>&	   moment = none,
 		 const optional<datetime_t>&       oldest = none
@@ -142,15 +142,16 @@ public:
       history(const std::vector<commodity_t *>& commodities);
     };
 
-#define COMMODITY_STYLE_DEFAULTS  0x00
-#define COMMODITY_STYLE_SUFFIXED  0x01
-#define COMMODITY_STYLE_SEPARATED 0x02
-#define COMMODITY_STYLE_EUROPEAN  0x04
-#define COMMODITY_STYLE_THOUSANDS 0x08
-#define COMMODITY_NOMARKET        0x10
-#define COMMODITY_BUILTIN         0x20
-#define COMMODITY_WALKED          0x40
-#define COMMODITY_KNOWN           0x80
+#define COMMODITY_STYLE_DEFAULTS  0x000
+#define COMMODITY_STYLE_SUFFIXED  0x001
+#define COMMODITY_STYLE_SEPARATED 0x002
+#define COMMODITY_STYLE_EUROPEAN  0x004
+#define COMMODITY_STYLE_THOUSANDS 0x008
+#define COMMODITY_NOMARKET        0x010
+#define COMMODITY_BUILTIN         0x020
+#define COMMODITY_WALKED          0x040
+#define COMMODITY_KNOWN           0x080
+#define COMMODITY_PRIMARY         0x100
 
     string		       symbol;
     amount_t::precision_t      precision;
@@ -164,7 +165,7 @@ public:
 
   public:
     explicit base_t(const string& _symbol)
-      : supports_flags<>(COMMODITY_STYLE_DEFAULTS),
+      : supports_flags<uint_least16_t>(COMMODITY_STYLE_DEFAULTS),
 	symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
     }
@@ -191,7 +192,7 @@ public:
 public:
   explicit commodity_t(commodity_pool_t *	 _parent,
 		       const shared_ptr<base_t>& _base)
-    : delegates_flags<>(*_base.get()), base(_base),
+    : delegates_flags<uint_least16_t>(*_base.get()), base(_base),
       parent_(_parent), annotated(false) {
     TRACE_CTOR(commodity_t, "");
   }
