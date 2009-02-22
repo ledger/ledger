@@ -1223,6 +1223,8 @@ value_t value_t::rounded() const
     return *this;
   case AMOUNT:
     return as_amount().rounded();
+  case BALANCE:
+    return as_balance().rounded();
   default:
     break;
   }
@@ -1238,6 +1240,8 @@ value_t value_t::unrounded() const
     return *this;
   case AMOUNT:
     return as_amount().unrounded();
+  case BALANCE:
+    return as_balance().unrounded();
   default:
     break;
   }
