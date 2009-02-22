@@ -143,9 +143,11 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   session().set_flush_on_next_data_file(true);
 
   // Process the command verb, arguments and options
-  args = read_command_arguments(report(), args);
-  if (args.empty())
-    return;
+  if (at_repl) {
+    args = read_command_arguments(report(), args);
+    if (args.empty())
+      return;
+  }
 
   strings_list::iterator arg  = args.begin();
   string		 verb = *arg++;
