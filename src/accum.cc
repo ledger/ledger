@@ -46,6 +46,7 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
 
     // Every item thereafter is an argument that substitutes for %# in the
     // format string
+    bool matched = false;
     for (const char * p = str.c_str(); *p; p++) {
       if (*p == '%') {
 	const char * q = p + 1;
@@ -53,6 +54,7 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
 	    std::size_t(*q - '0') == index) {
 	  p++;
 	  buf << std::string(s, num);
+	  matched = true;
 	} else {
 	  buf << *p;
 	}
@@ -60,9 +62,11 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
 	buf << *p;
       }
     }
+    if (! matched)
+      buf << std::string(s, num);
+
     str = buf.str();
     index++;
-
     return num;
   }
 }
