@@ -41,8 +41,8 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
   if (c == 'a' || c == 'd' || c == 'f' || c == 'o' || c == 'n' || c == 't') {
     length = 0;
 
-    char buf[5];
-    READ_INTO_(in, buf, 4, c, length, std::isalpha(c));
+    char buf[6];
+    READ_INTO_(in, buf, 5, c, length, std::isalpha(c));
 
     switch (buf[0]) {
     case 'a':
