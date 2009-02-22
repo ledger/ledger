@@ -47,22 +47,30 @@ h2. Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies:
 
+h3. For building the current master branch
+
   |_. Library |_. Min.Ver. |_. When needed |
-  | Boost | 1.35 or higher | if you're building *CURRENT* |
-  | pcre | 7.7 | if you're building *BETA* or *RELEASE* |
-  | GMP | 4.2.2 | for all builds |
-  | MPFR | 2.4.0 | if you're building *CURRENT* |
-  | libedit | 20090111-3.0 | _optional_, if you're building *CURRENT* |
-  | cppunit | 1.12.1 | _optional_, if you're building *CURRENT*, for @make check@ |
+  | Boost | 1.35 or higher | |
+  | GMP | 4.2.2 | |
+  | MPFR | 2.4.0 | |
+  | gettext | 0.17 | _optional_ |
+  | libedit | 20090111-3.0 | _optional_ |
   | Python | 2.4 or higher | _optional_ |
-  | libofx | 0.8.3 | _optional_, if you're building *BETA* or *RELEASE* |
-  | expat | 2.0.1 | _optional_, if you're building *BETA* or *RELEASE* |
-  | libxml2 | 2.7.2 | _optional_, if you're building *BETA* or *RELEASE* |
-  | lcov | 1.6 | _optional_, for @make report@, used with @./acprep --gcov@|
+  | cppunit | 1.12.1 | _optional_, for @make check@ |
   | doxygen | 1.5.7.1 | _optional_, for @make docs@ |
   | graphviz | 2.20.3 | _optional_, for @make docs@ |
   | texinfo | 4.13 | _optional_, for @make docs@ |
+  | lcov | 1.6 | _optional_, for @make report@, used with @./acprep --gcov@|
   | sloccount | 2.26 | _optional_, for @make sloc@ |
+
+h3. For building the beta or release branches
+
+  |_. Library |_. Min.Ver. |_. When needed |
+  | GMP | 4.2.2 | |
+  | pcre | 7.7 | |
+  | libofx | 0.8.3 | _optional_ |
+  | expat | 2.0.1 | _optional_ |
+  | libxml2 | 2.7.2 | _optional_ |
 
 h3. MacPorts
 
