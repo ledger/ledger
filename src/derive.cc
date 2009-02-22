@@ -39,7 +39,6 @@ namespace {
   {
     optional<date_t> date;
     optional<date_t> eff_date;
-    item_t::state_t  state;
     optional<string> code;
     optional<string> note;
     mask_t           payee_mask;
@@ -54,7 +53,7 @@ namespace {
 
     std::list<xact_template_t> xacts;
 
-    entry_template_t() : state(item_t::UNCLEARED) {}
+    entry_template_t() {}
 
     void dump(std::ostream& out) const
     {
@@ -65,19 +64,6 @@ namespace {
 
       if (eff_date)
 	out << "Effective:  " << *eff_date << std::endl;
-
-      out << "State:      ";
-      switch (state) {
-      case item_t::UNCLEARED:
-	out << "uncleared" << std::endl;
-	break;
-      case item_t::CLEARED:
-	out << "cleared" << std::endl;
-	break;
-      case item_t::PENDING:
-	out << "pending" << std::endl;
-	break;
-      }
 
       if (code)
 	out << "Code:       " << *code << std::endl;
@@ -270,8 +256,6 @@ namespace {
 
     if (tmpl.eff_date)
       added->_date_eff = tmpl.eff_date;
-
-    added->set_state(tmpl.state);
 
     if (matching) {
       added->payee = matching->payee;
