@@ -156,7 +156,7 @@ void interactive_t::verify_arguments() const
 	   "Expected " << label << " for argument " << offset
 	   << ", but received " << vlabel);
   }
-  else if (! optional && ! next_arg) {
+  else if (*p && ! optional && ! next_arg) {
     throw_(std::logic_error, "Too few arguments to function");
   }
   else if (! *p && next_arg) {
