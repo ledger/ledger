@@ -485,7 +485,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(tail_);
     else OPT(total_);
     else OPT(total_data);
-    else OPT(totals);
     else OPT(truncate_);
     else OPT(total_width_);
     break;

@@ -563,8 +563,6 @@ public:
       parent->HANDLER(format_).on_with(parent->HANDLER(plot_total_format_).value);
     });
 
-  OPTION(report_t, totals);
-
   OPTION_(report_t, truncate_, DO() {
 #if 0
       string style(args[0].to_string());
