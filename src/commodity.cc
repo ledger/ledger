@@ -352,29 +352,6 @@ optional<price_point_t>
   return none;
 }
 
-optional<price_point_t>
-  commodity_t::base_t::varied_history_t::
-    find_price(const commodity_t&                source,
-	       const std::vector<commodity_t *>& commodities,
-	       const optional<datetime_t>&       moment,
-	       const optional<datetime_t>&       oldest
-#if defined(DEBUG_ON)
-	       , const int indent
-#endif
-	       ) const
-{
-  foreach (commodity_t * commodity, commodities) {
-    if (optional<price_point_t> point = find_price(source, *commodity,
-						   moment, oldest
-#if defined(DEBUG_ON)
-						   , indent
-#endif
-						   ))
-      return point;
-  }
-  return none;
-}
-
 optional<commodity_t::base_t::history_t&>
   commodity_t::base_t::varied_history_t::
     history(const optional<commodity_t&>& commodity)
@@ -397,22 +374,6 @@ optional<commodity_t::base_t::history_t&>
   if (i != histories.end())
     return (*i).second;
 
-  return none;
-}
-
-optional<commodity_t::history_t&>
-commodity_t::base_t::varied_history_t::history
-  (const std::vector<commodity_t *>& commodities)
-{
-  // This function differs from the single commodity case avoid in that
-  // 'commodities' represents a list of preferred valuation commodities.
-  // If no price can be located in terms of the first commodity, then
-  // the second is chosen, etc.
-
-  foreach (commodity_t * commodity, commodities) {
-    if (optional<history_t&> hist = history(*commodity))
-      return hist;
-  }
   return none;
 }
 

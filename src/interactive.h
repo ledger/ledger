@@ -73,7 +73,7 @@ public:
   void verify_arguments() const;
 
   bool has(std::size_t index) const {
-    if (index < args.size())
+    if (index < args.size() && ! args[index].is_null())
       return true;
     return false;
   }

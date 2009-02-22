@@ -411,9 +411,9 @@ public:
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on_only();
       parent->HANDLER(display_amount_)
-	.set_expr("exchange ? market(amount_expr, now, exchange) : market(amount_expr)");
+	.set_expr("market(amount_expr, now, exchange)");
       parent->HANDLER(display_total_)
-	.set_expr("exchange ? market(total_expr, now, exchange) : market(total_expr)");
+	.set_expr("market(total_expr, now, exchange)");
     });
 
   OPTION_(report_t, monthly, DO() { // -M

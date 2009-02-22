@@ -126,20 +126,9 @@ public:
 		 , const int indent = 0
 #endif
 		 ) const;
-      optional<price_point_t>
-      find_price(const commodity_t&		   source,
-		 const std::vector<commodity_t *>& commodities,
-		 const optional<datetime_t>&	   moment = none,
-		 const optional<datetime_t>&       oldest = none
-#if defined(DEBUG_ON)
-		 , const int indent = 0
-#endif
-		 ) const;
 
       optional<history_t&>
       history(const optional<commodity_t&>& commodity = none);
-      optional<history_t&>
-      history(const std::vector<commodity_t *>& commodities);
     };
 
 #define COMMODITY_STYLE_DEFAULTS  0x000
@@ -283,7 +272,6 @@ public:
   }
 
   optional<history_t&> history(const optional<commodity_t&>& commodity);
-  optional<history_t&> history(const std::vector<commodity_t *>& commodities);
 
 public:
   // These methods provide a transparent pass-through to the underlying
@@ -323,23 +311,6 @@ public:
     }
     return none;
   }    
-
-  optional<price_point_t>
-  find_price(const std::vector<commodity_t *>& commodities,
-	     const optional<datetime_t>&       moment = none,
-	     const optional<datetime_t>&       oldest = none
-#if defined(DEBUG_ON)
-	     , const int indent = 0
-#endif
-	     ) const {
-    if (base->varied_history)
-      return base->varied_history->find_price(*this, commodities, moment, oldest
-#if defined(DEBUG_ON)
-					      , indent
-#endif
-					      );
-    return none;
-  }
 
   // Methods to exchange one commodity for another, while recording the
   // factored price.

@@ -124,22 +124,34 @@ value_t report_t::fn_market_value(call_scope_t& scope)
 {
   interactive_t args(scope, "a&ts");
 
-  commodity_t * commodity = NULL;
-  if (args.has(2))
-    commodity = amount_t::current_pool->find_or_create(args.get<string>(2));
+  if (args.has(2)) {
+    scoped_array<char> buf(new char[args.get<string>(2).length() + 1]);
+    std::strcpy(buf.get(), args.get<string>(2).c_str());
 
-  DEBUG("report.market", "getting market value of: " << args.value_at(0));
-
-  value_t result =
-    args.value_at(0).value(! args.has(2),
-			   args.has(1) ?
-			   args.get<datetime_t>(1) : optional<datetime_t>(),
-			   commodity ?
-			   optional<commodity_t&>(*commodity) :
-			   optional<commodity_t&>());
-
-  DEBUG("report.market", "result is: " << result);
-  return result;
+    bool primary_only = false;
+    for (char * p = std::strtok(buf.get(), ",");
+	 p;
+	 p = std::strtok(NULL, ",")) {
+      if (commodity_t * commodity = amount_t::current_pool->find(trim_ws(p))) {
+	value_t result =
+	  args.value_at(0).value(primary_only, args.has(1) ?
+				 args.get<datetime_t>(1) :
+				 optional<datetime_t>(), *commodity);
+	if (! result.is_null())
+	  return result;
+      }
+      // For subsequent, secondary commodities, don't convert primaries
+      primary_only = true;
+    }
+  } else {
+    value_t result =
+      args.value_at(0).value(! args.has(2), args.has(1) ?
+			     args.get<datetime_t>(1) :
+			     optional<datetime_t>());
+    if (! result.is_null())
+      return result;
+  }
+  return args.value_at(0);
 }
 
 value_t report_t::fn_strip(call_scope_t& args)

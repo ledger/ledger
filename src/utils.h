@@ -522,6 +522,14 @@ inline char * skip_ws(char * ptr) {
   return ptr;
 }
 
+inline char * trim_ws(char * ptr) {
+  std::size_t len = std::strlen(ptr);
+  int i = int(len) - 1;
+  while (i >= 0 && ptr[i] == ' ' || ptr[i] == '\t' || ptr[i] == '\n')
+    ptr[i--] = '\0';
+  return skip_ws(ptr);
+}
+
 inline char * next_element(char * buf, bool variable = false) {
   for (char * p = buf; *p; p++) {
     if (! (*p == ' ' || *p == '\t'))

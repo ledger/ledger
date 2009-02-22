@@ -1143,19 +1143,19 @@ value_t value_t::value(const bool		     primary_only,
 {
   switch (type()) {
   case INTEGER:
-    return *this;
+    return NULL_VALUE;
 
   case AMOUNT:
     if (optional<amount_t> val =
 	as_amount().value(primary_only, moment, in_terms_of))
       return *val;
-    return *this;
+    return NULL_VALUE;
 
   case BALANCE:
     if (optional<balance_t> bal =
 	as_balance().value(primary_only, moment, in_terms_of))
       return *bal;
-    return *this;
+    return NULL_VALUE;
 
   default:
     break;

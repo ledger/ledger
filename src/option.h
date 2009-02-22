@@ -162,7 +162,7 @@ public:
       if (handled)
 	return value;
       else
-	return false;
+	return NULL_VALUE;
     }
     else {
       return handled;
