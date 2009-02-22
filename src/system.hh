@@ -139,7 +139,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include "gettext.h"
 #define _(str) gettext(str)
 #else
-#define textdomain(name)
 #define _(str) str
 #endif
 

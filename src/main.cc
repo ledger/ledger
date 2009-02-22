@@ -75,7 +75,9 @@ int main(int argc, char * argv[], char * envp[])
   std::signal(SIGINT, sigint_handler);
   std::signal(SIGPIPE, sigpipe_handler);
 
+#if defined(HAVE_GETTEXT)
   ::textdomain("ledger");
+#endif
 
   // Create the session object, which maintains nearly all state relating to
   // this invocation of Ledger; and register all known journal parsers.
