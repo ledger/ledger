@@ -211,21 +211,6 @@ void calc_xacts::operator()(xact_t& xact)
   last_xact = &xact;
 }
 
-void invert_xacts::operator()(xact_t& xact)
-{
-  if (xact.has_xdata() &&
-      xact.xdata().has_flags(XACT_EXT_COMPOUND)) {
-    xact.xdata().value.in_place_negate();
-  } else {
-    xact.amount.in_place_negate();
-    if (xact.cost)
-      xact.cost->in_place_negate();
-  }
-
-  item_handler<xact_t>::operator()(xact);
-}
-
-
 namespace {
   void handle_value(const value_t&	  value,
 		    account_t *		  account,

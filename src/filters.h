@@ -361,22 +361,6 @@ public:
  *
  * Long.
  */
-class invert_xacts : public item_handler<xact_t>
-{
-  invert_xacts();
-
-public:
-  invert_xacts(xact_handler_ptr handler)
-    : item_handler<xact_t>(handler) {}
-
-  virtual void operator()(xact_t& xact);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
 class collapse_xacts : public item_handler<xact_t>
 {
   expr_t&	 amount_expr;

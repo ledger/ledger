@@ -143,10 +143,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     handler.reset(new sort_xacts(handler, "date"));
   }
 
-  // invert_xacts inverts the value of the xacts it receives.
-  if (report.HANDLED(invert))
-    handler.reset(new invert_xacts(handler));
-
   // related_xacts will pass along all xacts related to the xact received.  If
   // the `related_all' handler is on, then all the entry's xacts are passed;
   // meaning that if one xact of an entry is to be printed, all the xact for

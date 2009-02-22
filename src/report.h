@@ -379,7 +379,10 @@ public:
   OPTION(report_t, format_); // -F
   OPTION(report_t, gain); // -G
   OPTION(report_t, head_);
-  OPTION(report_t, invert);
+
+  OPTION_(report_t, invert, DO() {
+      parent->HANDLER(amount_).set_expr("-amount");
+    });
 
   OPTION__
   (report_t, limit_, // -l
