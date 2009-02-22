@@ -103,7 +103,7 @@ and causes an immediate reloading of all journal files in the session.
 .It Fl \-code-as-payee
 .It Fl \-collapse Pq Fl n
 .It Fl \-collapse-if-zero
-.It Fl \-colors
+.It Fl \-color
 .It Fl \-columns Ar INT
 .It Fl \-commodity-as-account
 (Also \fB\-\-comm\-as\-account\fR).
@@ -274,9 +274,9 @@ as a string, applying the proper ANSI escape codes to display it in the given
 if
 .Ar bool
 is true.  It typically checks the value of the option
-.Nm Fl \-colors ,
+.Nm Fl \-color ,
 for example:
-.Dl ansify_if(amount, "blue", options.colors)
+.Dl ansify_if(amount, "blue", options.color)
 .It Nm beg_line
 .It Nm beg_pos
 .It Nm calculated
