@@ -79,6 +79,9 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	  arg == "payee" || arg == "PAYEE") {
 	arg = string("@") + (*++begin).as_string();
       }
+      else if (arg == "code" || arg == "CODE") {
+	arg = string("#") + (*++begin).as_string();
+      }
       else if (arg == "note" || arg == "NOTE") {
 	arg = string("&") + (*++begin).as_string();
       }
@@ -120,6 +123,11 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
 	    break;
 	  case '@':
 	    buf << "(payee =~ /";
+	    found_specifier = true;
+	    consumed = true;
+	    break;
+	  case '#':
+	    buf << "(code =~ /";
 	    found_specifier = true;
 	    consumed = true;
 	    break;
