@@ -8,13 +8,13 @@
 Makefile
 Makefile.in
 RegressionTests
-acconf.h
-acconf.h.in
-acconf.h.in~
 aclocal.m4
 autom4te.cache/
 build/
 config.guess
+config.h
+config.h.in
+config.h.in~
 config.log
 config.rpath
 config.status
