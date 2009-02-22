@@ -1,4 +1,4 @@
-reg --amount 10
+reg --amount=10
 <<<
 2007/02/02 RD VMMXX
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00

@@ -1,0 +1,296 @@
+reg --unbudgeted
+<<<
+~ monthly
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2008/02/28 End of February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2008/03/01 March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2008/03/31 End of March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2008/04/01 April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2008/04/30 End of April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2008/05/01 May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2008/05/31 End of May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2008/06/01 June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2008/06/30 End of June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2008/07/01 July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2008/07/31 End of July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2008/08/01 August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2008/08/31 End of August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2008/09/01 September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2008/09/30 End of September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2008/10/01 October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2008/10/31 End of October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2008/11/01 November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2008/11/30 End of November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2008/12/01 December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+
+2008/12/31 End of December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+
+2009/01/01 January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2009/01/31 End of January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2009/02/01 February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2009/02/28 End of February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2009/03/01 March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2009/03/31 End of March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2009/04/01 April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2009/04/30 End of April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2009/05/01 May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2009/05/31 End of May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2009/06/01 June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2009/06/30 End of June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2009/07/01 July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2009/07/31 End of July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2009/08/01 August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2009/08/31 End of August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2009/09/01 September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2009/09/30 End of September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2009/10/01 October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2009/10/31 End of October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2009/11/01 November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2009/11/30 End of November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2009/12/01 December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+
+2009/12/31 End of December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+>>>1
+08-Jan-01 January               Liabilities:Cards            $10.00       $10.00
+08-Jan-31 End of January        Liabilities:Cards            $10.00       $20.00
+08-Feb-01 February              Liabilities:Cards            $20.00       $40.00
+08-Feb-28 End of February       Liabilities:Cards            $20.00       $60.00
+08-Mar-01 March                 Liabilities:Cards            $30.00       $90.00
+08-Mar-31 End of March          Liabilities:Cards            $30.00      $120.00
+08-Apr-01 April                 Liabilities:Cards            $40.00      $160.00
+08-Apr-30 End of April          Liabilities:Cards            $40.00      $200.00
+08-May-01 May                   Liabilities:Cards            $50.00      $250.00
+08-May-31 End of May            Liabilities:Cards            $50.00      $300.00
+08-Jun-01 June                  Liabilities:Cards            $60.00      $360.00
+08-Jun-30 End of June           Liabilities:Cards            $60.00      $420.00
+08-Jul-01 July                  Liabilities:Cards            $70.00      $490.00
+08-Jul-31 End of July           Liabilities:Cards            $70.00      $560.00
+08-Aug-01 August                Liabilities:Cards            $80.00      $640.00
+08-Aug-31 End of August         Liabilities:Cards            $80.00      $720.00
+08-Sep-01 September             Liabilities:Cards            $90.00      $810.00
+08-Sep-30 End of September      Liabilities:Cards            $90.00      $900.00
+08-Oct-01 October               Liabilities:Cards           $100.00     $1000.00
+08-Oct-31 End of October        Liabilities:Cards           $100.00     $1100.00
+08-Nov-01 November              Liabilities:Cards           $110.00     $1210.00
+08-Nov-30 End of November       Liabilities:Cards           $110.00     $1320.00
+08-Dec-01 December              Liabilities:Cards           $120.00     $1440.00
+08-Dec-31 End of December       Liabilities:Cards           $120.00     $1560.00
+09-Jan-01 January               Liabilities:Cards            $10.00     $1570.00
+09-Jan-31 End of January        Liabilities:Cards            $10.00     $1580.00
+09-Feb-01 February              Liabilities:Cards            $20.00     $1600.00
+09-Feb-28 End of February       Liabilities:Cards            $20.00     $1620.00
+09-Mar-01 March                 Liabilities:Cards            $30.00     $1650.00
+09-Mar-31 End of March          Liabilities:Cards            $30.00     $1680.00
+09-Apr-01 April                 Liabilities:Cards            $40.00     $1720.00
+09-Apr-30 End of April          Liabilities:Cards            $40.00     $1760.00
+09-May-01 May                   Liabilities:Cards            $50.00     $1810.00
+09-May-31 End of May            Liabilities:Cards            $50.00     $1860.00
+09-Jun-01 June                  Liabilities:Cards            $60.00     $1920.00
+09-Jun-30 End of June           Liabilities:Cards            $60.00     $1980.00
+09-Jul-01 July                  Liabilities:Cards            $70.00     $2050.00
+09-Jul-31 End of July           Liabilities:Cards            $70.00     $2120.00
+09-Aug-01 August                Liabilities:Cards            $80.00     $2200.00
+09-Aug-31 End of August         Liabilities:Cards            $80.00     $2280.00
+09-Sep-01 September             Liabilities:Cards            $90.00     $2370.00
+09-Sep-30 End of September      Liabilities:Cards            $90.00     $2460.00
+09-Oct-01 October               Liabilities:Cards           $100.00     $2560.00
+09-Oct-31 End of October        Liabilities:Cards           $100.00     $2660.00
+09-Nov-01 November              Liabilities:Cards           $110.00     $2770.00
+09-Nov-30 End of November       Liabilities:Cards           $110.00     $2880.00
+09-Dec-01 December              Liabilities:Cards           $120.00     $3000.00
+09-Dec-31 End of December       Liabilities:Cards           $120.00     $3120.00
+>>>2
+=== 0
