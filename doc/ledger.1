@@ -128,7 +128,7 @@ See \fB\-\-basis\fR.
 .It Fl \-end Pq Fl e
 .It Fl \-equity
 .It Fl \-exact
-.It Fl \-exchange Ar COMM Pq Fl x
+.It Fl \-exchange Ar COMM Oo , COMM, ... Oc Pq Fl x
 .It Fl \-file Ar FILE
 .It Fl \-first Ar INT
 See \fB\-\-head\fR.
@@ -231,14 +231,13 @@ Thus, to report the current balance for all assets and liabilities, you would
 use:
 .Pp
 .Dl ledger bal asset liab
-.It Nm payee Ar regex
+.It Nm payee Ar regex Pq \&@ Ns Ar regex
 Query on the payee, rather than the account.
-.It \&@ Ns Ar regex
-Same as
-.Nm payee Ar regex .
 .It Nm tag Ar regex Pq \&% Ns Ar regex
 .It Nm note Ar regex Pq \&= Ns Ar regex
 Query on anything found in an item's note.
+.It Nm code Ar regex Pq \&# Ns Ar regex
+Query on the entry's optional code (which can be any string the user wishes).
 .It Ar term Nm and Ar term
 Query terms are joined by an implicit OR operator.  You can change this to AND
 by using that keyword.  For example, to show food expenditures occurring at
