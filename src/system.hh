@@ -58,7 +58,7 @@
  * configure is re-run) are expected to change.
  */
 
-#include "acconf.h"
+#include "config.h"
 
 #if defined(__GNUG__) && __GNUG__ < 3
 #define _XOPEN_SOURCE

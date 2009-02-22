@@ -78,7 +78,7 @@ libledger_report_la_CPPFLAGS = $(lib_cppflags)
 libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
 pkginclude_HEADERS =			   \
-	$(top_builddir)/acconf.h	   \
+	$(top_builddir)/config.h	   \
 	src/system.hh			   \
 	src/utils.h			   \
 	src/flags.h			   \
@@ -148,7 +148,7 @@ nodist_libledger_util_la_SOURCES = src/system.hh.gch
 BUILT_SOURCES = src/system.hh.gch
 CLEANFILES   += $(srcdir)/src/system.hh.gch
 
-$(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/acconf.h
+$(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/config.h
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(lib_cppflags) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	    -g -o $@ $(srcdir)/src/system.hh
