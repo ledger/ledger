@@ -861,7 +861,8 @@ used to generate the buffer, navigating the buffer, etc."
       (ledger-do-report (ledger-report-cmd report-name edit))
       (shrink-window-if-larger-than-buffer)
       (set-buffer-modified-p nil)
-      (setq buffer-read-only t))))
+      (setq buffer-read-only t)
+      (message "q to quit; r to redo; e to edit; k to kill; s to save; SPC and DEL to scroll"))))
 
 (defun string-empty-p (s)
   "Check for the empty string."
