@@ -960,7 +960,8 @@ the default."
 (defun ledger-do-report (cmd)
   "Run a report command line."
   (goto-char (point-min))
-  (insert (format "Report: %s\n" cmd)
+  (insert (format "Report: %s\n" ledger-report-name)
+	  (format "Command: %s\n" cmd)
 	  (make-string (- (window-width) 1) ?=)
 	  "\n")
   (shell-command cmd t nil))
