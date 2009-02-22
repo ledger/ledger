@@ -220,6 +220,32 @@ value_t report_t::fn_format_date(call_scope_t& args)
   return string_value(format_date(args[0].to_date(), args[1].to_string()));
 }
 
+value_t report_t::fn_ansify_if(call_scope_t& scope)
+{
+  interactive_t args(scope, "vsb");
+
+  if (args.get<bool>(2)) {
+    string color = args.get<string>(1);
+    std::ostringstream buf;
+    if (color == "black")	   buf << "\e[30m";
+    else if (color == "red")	   buf << "\e[31m";
+    else if (color == "green")	   buf << "\e[32m";
+    else if (color == "yellow")	   buf << "\e[33m";
+    else if (color == "blue")	   buf << "\e[34m";
+    else if (color == "magenta")   buf << "\e[35m";
+    else if (color == "cyan")	   buf << "\e[36m";
+    else if (color == "white")	   buf << "\e[37m";
+    else if (color == "bold")	   buf << "\e[1m";
+    else if (color == "underline") buf << "\e[4m";
+    else if (color == "blink")	   buf << "\e[5m";
+    buf << args.value_at(0);
+    buf << "\e[0m";
+    return string_value(buf.str());
+  } else {
+    return args.value_at(0);
+  }
+}
+
 namespace {
   template <class Type        = xact_t,
 	    class handler_ptr = xact_handler_ptr,
@@ -330,8 +356,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(amount_);
     else OPT(amount_data);
     else OPT(anon);
-    else OPT(ansi);
-    else OPT(ansi_invert);
+    else OPT_ALT(colors, ansi);
     else OPT(average);
     else OPT(account_width_);
     else OPT(amount_width_);
@@ -353,6 +378,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(comm_as_account, commodity_as_account);
     else OPT(collapse);
     else OPT(collapse_if_zero);
+    else OPT(colors);
     else OPT(columns_);
     else OPT_ALT(basis, cost);
     else OPT_(current);
@@ -492,6 +518,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'a':
     if (is_eq(p, "amount_expr"))
       return MAKE_FUNCTOR(report_t::fn_amount_expr);
+    else if (is_eq(p, "ansify_if"))
+      return MAKE_FUNCTOR(report_t::fn_ansify_if);
     break;
 
   case 'c':

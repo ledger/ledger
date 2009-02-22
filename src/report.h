@@ -142,6 +142,7 @@ public:
   value_t fn_quoted(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
+  value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_false(call_scope_t&) {
     return false;
   }
@@ -226,17 +227,16 @@ public:
     });
 
   OPTION(report_t, anon);
-  OPTION(report_t, ansi);
-  OPTION(report_t, ansi_invert);
 
   OPTION_(report_t, average, DO() { // -A
       parent->HANDLER(display_total_).set_expr("total_expr/count");
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
-      on("%20(print(scrub(display_total), 20))"
+      on("%(ansify_if(print(scrub(display_total), 20), \"red\", "
+	 "    colors & scrub(display_total) < 0))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
-	 "%-(partial_account(options.flat))\n");
+	 "%-(ansify_if(partial_account(options.flat), \"blue\", colors))\n");
     });
 
   OPTION(report_t, base);
@@ -272,6 +272,7 @@ public:
   OPTION(report_t, comm_as_payee); // -x
   OPTION(report_t, code_as_account);
   OPTION(report_t, comm_as_account);
+  OPTION(report_t, colors);
 
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too, but only apply it
@@ -494,20 +495,26 @@ public:
     });
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
-      on("%(print(date, date_width))"
-	 " %(print(truncate(payee, payee_width), payee_width))"
-	 " %(print(truncate(account, account_width, abbrev_len), account_width))"
-	 " %(print(scrub(display_amount), amount_width, "
-	 "3 + date_width + payee_width + account_width + amount_width))"
-	 " %(print(scrub(display_total), total_width, "
-	 "4 + date_width + payee_width + account_width + amount_width "
-	 "+ total_width))\n%/"
+      on("%(ansify_if(print(date, date_width), \"green\", colors & date > today))"
+	 " %(ansify_if(print(truncate(payee, payee_width), payee_width), "
+	 "    \"bold\", colors & !cleared))"
+	 " %(ansify_if(print(truncate(account, account_width, abbrev_len), "
+	 "    account_width), \"blue\", colors))"
+	 " %(ansify_if(print(scrub(display_amount), amount_width, "
+	 "    3 + date_width + payee_width + account_width + amount_width), "
+	 "    \"red\", colors & scrub(display_amount) < 0))"
+	 " %(ansify_if(print(scrub(display_total), total_width, "
+	 "    4 + date_width + payee_width + account_width + amount_width "
+	 "    + total_width), \"red\", colors & scrub(display_amount) < 0))\n%/"
 	 "%(print(\" \", 2 + date_width + payee_width))"
-	 "%(print(truncate(account, account_width, abbrev_len), account_width))"
-	 " %(print(scrub(display_amount), amount_width, 3 + date_width "
-	 "+ payee_width + account_width + amount_width))"
-	 " %(print(scrub(display_total), total_width, 4 + date_width "
-	 "+ payee_width + account_width + amount_width + total_width))\n");
+	 "%(ansify_if(print(truncate(account, account_width, abbrev_len), "
+	 "    account_width), \"blue\", colors))"
+	 " %(ansify_if(print(scrub(display_amount), amount_width, "
+	 "    3 + date_width + payee_width + account_width + amount_width), "
+	 "    \"red\", colors & scrub(display_amount) < 0))"
+	 " %(ansify_if(print(scrub(display_total), total_width, "
+	 "    4 + date_width + payee_width + account_width + amount_width "
+	 "    + total_width), \"red\", colors & scrub(display_amount) < 0))\n");
     });
 
   OPTION(report_t, related); // -r
