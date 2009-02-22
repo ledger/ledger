@@ -33,7 +33,7 @@ git ls-files '*.cc' '*.h' | egrep '^(src|python)/' > po/POTFILES.in
 aclocal -I m4
 
 
-SWITCHES="--disable-shared"
+SWITCHES="--disable-shared --with-included-gettext"
 
 if [ -z "$PYTHON_HOME" ]; then
     PYTHON_HOME="/usr"
