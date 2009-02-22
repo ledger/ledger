@@ -469,8 +469,10 @@ public:
    * relative amounts of those commodities.  There is no option to
    * change this behavior.
    */
-  void print(std::ostream& out, const int first_width,
-	     const int latter_width = -1) const;
+  void print(std::ostream& out,
+	     const int	   first_width	 = -1,
+	     const int	   latter_width	 = -1,
+	     const bool	   right_justify = true) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with

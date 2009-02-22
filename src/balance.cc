@@ -215,7 +215,8 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 
 void balance_t::print(std::ostream& out,
 		      const int     first_width,
-		      const int     latter_width) const
+		      const int     latter_width,
+		      const bool    right_justify) const
 {
   bool first  = true;
   int  lwidth = latter_width;
@@ -244,13 +245,12 @@ void balance_t::print(std::ostream& out,
 
     std::ostringstream buf;
     buf << *amount;
-    justify(out, buf.str(), width, true);
+    justify(out, buf.str(), width, right_justify);
   }
 
   if (first) {
-    std::ostringstream buf;
-    buf << amount_t(0L);
-    justify(out, buf.str(), first_width, true);
+    out.width(first_width);
+    out << (right_justify ? std::right : std::left) << 0;
   }
 }
 

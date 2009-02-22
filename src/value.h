@@ -890,9 +890,10 @@ public:
    * Printing methods.
    */
   void print(std::ostream&	     out,
-	     const int		     first_width = - 1,
-	     const int		     latter_width = -1,
-	     const optional<string>& date_format  = none) const;
+	     const int		     first_width   = -1,
+	     const int		     latter_width  = -1,
+	     const bool              right_justify = false,
+	     const optional<string>& date_format   = none) const;
   void dump(std::ostream& out, const bool relaxed = true) const;
 
   /**

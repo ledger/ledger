@@ -174,15 +174,16 @@ value_t report_t::fn_truncate(call_scope_t& args)
 		       env.has(2) ? env.get<long>(2) : -1));
 }
 
-value_t report_t::fn_print(call_scope_t& args)
+value_t report_t::fn_justify(call_scope_t& scope)
 {
-  interactive_t env(args, "vl&ls");
+  interactive_t args(scope, "vl&lbs");
   std::ostringstream out;
-  env.value_at(0)
+  args.value_at(0)
     .strip_annotations(what_to_keep())
-    .print(out, env.get<long>(1),
-	   env.has(2) ? env.get<long>(2) : -1,
-	   env.has(3) ? env.get<string>(3) :
+    .print(out, args.get<long>(1),
+	   args.has(2) ? args.get<long>(2) : -1,
+	   args.has(3),
+	   args.has(4) ? args.get<string>(4) :
 	   (HANDLED(date_format_) ?
 	    HANDLER(date_format_).str() : optional<string>()));
   return string_value(out.str());
@@ -602,7 +603,9 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 'j':
-    if (is_eq(p, "join"))
+    if (is_eq(p, "justify"))
+      return MAKE_FUNCTOR(report_t::fn_justify);
+    else if (is_eq(p, "join"))
       return MAKE_FUNCTOR(report_t::fn_join);
     break;
 
@@ -648,8 +651,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
-    else if (is_eq(p, "print"))
-      return MAKE_FUNCTOR(report_t::fn_print);
     break;
 
   case 'q':
