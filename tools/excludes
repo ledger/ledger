@@ -16,6 +16,7 @@ autom4te.cache/
 build/
 config.guess
 config.log
+config.rpath
 config.status
 config.sub
 configure
@@ -26,15 +27,18 @@ doc/ledger.info
 elisp-comp
 expr_tests
 install-sh
+intl/
 ledger
 ledger.so
 lib/cppunit/
 lib/utfcpp/
 libtool
 ltmain.sh
+m4/
 make.sh
 math_tests
 missing
+po/
 report_tests
 src/system.hh.gch
 stamp-h1
