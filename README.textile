@@ -10,15 +10,19 @@ h2. For the Impatient
 I know, you just want to build and play.  Do this:
 
 <pre>
+<code>
 git clone git://github.com/jwiegley/ledger.git
 cd ledger && ./acprep && make check
+</code>
 </pre>
 
 If you have all the dependencies installed (see below), this is all you need.
 Now try your first ledger command:
 
 <pre>
+<code>
 ./ledger -f doc/sample.dat reg
+</code>
 </pre>
 
 h2. To the Rest
@@ -77,15 +81,19 @@ h3. MacPorts
 If you build stuff using MacPorts, as I do, here is what you would run:
 
 <pre>
-sudo port install boost +python25+st
-sudo port install gmp mpfr libedit pcre libofx
-sudo port install cppunit doxygen texlive texinfo lcov
+<code>
+sudo port install boost +python25+st gmp mpfr gettext libedit
+sudo port install cppunit texlive doxygen graphviz texinfo lcov
+sudo port install sloccount pcre libofx expat
+</code>
 </pre>
 
 You can even just install the current Ledger *RELEASE* directly:
 
 <pre>
+<code>
 sudo port install ledger
+</code>
 </pre>
 
 h3. Ubuntu
@@ -94,9 +102,12 @@ If you're going to be build on Ubuntu, @sudo apt-get install ...@
 the following packages (current as of Ubuntu Hardy):
 
 <pre>
-build-essential libtool autoconf automake texinfo python-dev
-zlib1g-dev libbz2-dev stow libgmp3-dev bjam libboost-dev
-libboost-regex-dev libboost-date-time-dev libboost-filesystem-dev
+<code>
+sudo apt-get install build-essential libtool autoconf automake   \
+     texinfo python-dev zlib1g-dev libbz2-dev stow libgmp3-dev   \
+     bjam libboost-dev libboost-regex-dev libboost-date-time-dev \
+     libboost-filesystem-dev
+</code>
 </pre>
 
 h2. Preparing the Build
@@ -106,17 +117,10 @@ The next step is preparing your environment for building.  While you can use
 you:
 
 <pre>
-./acprep
+<code>
+tools/myacprep
+</code>
 </pre>
-
-If you want to run with complete debugging on, as I do, use this:
-
-<pre>
-./acprep --devel --boost SUFFIX
-</pre>
-
-Where *SUFFIX* is the letters that occur after @libboost_regex-SUFFIX.a@ in
-your library directory.  It might be @mt@, or @xgcc40@, or @st@, etc.
 
 Please read the contents of @config.log@ if the configure step fails.
 
