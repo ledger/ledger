@@ -6,4 +6,4 @@ tools/prepall
 tools/buildall clean check
 
 cd ~/Products/ledger
-make release-distcheck
+make fullcheck release-distcheck

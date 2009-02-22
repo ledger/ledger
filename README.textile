@@ -10,19 +10,15 @@ h2. For the Impatient
 I know, you just want to build and play.  Do this:
 
 <pre>
-<code>
 git clone git://github.com/jwiegley/ledger.git
 cd ledger && ./acprep && make check
-</code>
 </pre>
 
 If you have all the dependencies installed (see below), this is all you need.
 Now try your first ledger command:
 
 <pre>
-<code>
 ./ledger -f doc/sample.dat reg
-</code>
 </pre>
 
 h2. To the Rest
@@ -81,19 +77,15 @@ h3. MacPorts
 If you build stuff using MacPorts, as I do, here is what you would run:
 
 <pre>
-<code>
-sudo port install boost +python25+st gmp mpfr gettext libedit
-sudo port install cppunit texlive doxygen graphviz texinfo lcov
-sudo port install sloccount pcre libofx expat
-</code>
+sudo port install boost +python25+st gmp mpfr gettext libedit \
+     cppunit texlive doxygen graphviz texinfo lcov            \
+     sloccount pcre libofx expat
 </pre>
 
 You can even just install the current Ledger *RELEASE* directly:
 
 <pre>
-<code>
 sudo port install ledger
-</code>
 </pre>
 
 h3. Ubuntu
@@ -102,12 +94,10 @@ If you're going to be build on Ubuntu, @sudo apt-get install ...@
 the following packages (current as of Ubuntu Hardy):
 
 <pre>
-<code>
 sudo apt-get install build-essential libtool autoconf automake   \
      texinfo python-dev zlib1g-dev libbz2-dev stow libgmp3-dev   \
-     bjam libboost-dev libboost-regex-dev libboost-date-time-dev \
-     libboost-filesystem-dev
-</code>
+     bjam libboost1.35-dev libboost-regex1.35-dev                \
+     libboost-date-time1.35-dev libboost-filesystem1.35-dev
 </pre>
 
 h2. Preparing the Build
@@ -117,9 +107,7 @@ The next step is preparing your environment for building.  While you can use
 you:
 
 <pre>
-<code>
 tools/myacprep
-</code>
 </pre>
 
 Please read the contents of @config.log@ if the configure step fails.
@@ -131,8 +119,8 @@ run @make@.  If you have CppUnit installed, I prefer you always run
 @make fullcheck@, as this will verify Ledger against the unit tests, the 
 Python unit tests (if applicable), and the regression tests.
 
-If you have extra CPU cycles to burn, perhaps try @make release-distcheck@,
-which provides the most thorough shakedown of a healthy source tree.
+If you have extra CPU cycles to burn, try @tools/proof@, which provides the
+most thorough shakedown of a healthy source tree.
 
 h2. Resources
 
