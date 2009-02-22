@@ -1,0 +1,34 @@
+reg --payee-as-account
+<<<
+2008/01/01 * (100) January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/31 (101) End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 * (102) February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/28 (103) End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/03/01 * March
+    Expenses:Books          $30.00
+    Assets:Cash
+>>>1
+08-Jan-01 January               January                      $10.00       $10.00
+08-Jan-01 January               January                     $-10.00            0
+08-Jan-31 End of January        End of January               $10.00       $10.00
+08-Jan-31 End of January        End of January              $-10.00            0
+08-Feb-01 February              February                     $20.00       $20.00
+08-Feb-01 February              February                    $-20.00            0
+08-Feb-28 End of February       End of February              $20.00       $20.00
+08-Feb-28 End of February       End of February             $-20.00            0
+08-Mar-01 March                 March                        $30.00       $30.00
+08-Mar-01 March                 March                       $-30.00            0
+>>>2
+=== 0
