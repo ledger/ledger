@@ -7,14 +7,14 @@ few alternatives.
 
 h2. For the Impatient
 
-I know, you just want to build and play.  Do this:
+I know, you just want to build and play.  If you have all the dependencies
+installed (see below), then simply do this:
 
 <pre>
 git clone git://github.com/jwiegley/ledger.git
 cd ledger && ./acprep && make check
 </pre>
 
-If you have all the dependencies installed (see below), this is all you need.
 Now try your first ledger command:
 
 <pre>
