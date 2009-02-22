@@ -801,6 +801,7 @@ specified line, returns nil."
   "A mode for viewing ledger reports."
   (let ((map (make-sparse-keymap)))
     (define-key map [? ] 'scroll-up)
+    (define-key map (kbd "<backspace>") 'scroll-down)
     (define-key map [?r] 'ledger-report-redo)
     (define-key map [?s] 'ledger-report-save)
     (define-key map [?k] 'ledger-report-kill)
