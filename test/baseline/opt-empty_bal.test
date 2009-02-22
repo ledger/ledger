@@ -1,0 +1,39 @@
+bal --empty
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:One:Books          $10.00
+    Expenses:One:Two:Books          $10.00
+    Expenses:One:Two:Three:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Assets:Cash    0
+    Income:Books
+
+2008/01/01 January
+    Assets:Cash
+    Income:One:Books          $-10.00
+    Income:One:Two:Books          $-10.00
+    Income:One:Two:Three:Books          $-10.00
+>>>1
+             $-10.00  Assets:Cash
+              $40.00  Expenses
+              $10.00    Books
+              $30.00    One
+              $10.00      Books
+              $20.00      Two
+              $10.00        Books
+              $10.00        Three:Books
+             $-30.00  Income
+                   0    Books
+             $-30.00    One
+             $-10.00      Books
+             $-20.00      Two
+             $-10.00        Books
+             $-10.00        Three:Books
+>>>2
+=== 0

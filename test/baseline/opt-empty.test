@@ -1,19 +1,36 @@
-reg --collapse --empty
+reg --empty
 <<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
 
-2008/01/31=2008/01/01 End of January
-    Expenses:Books          $10.00  ; [=2008/02/01]
+2008/01/01 January
+    Expenses:One:Books          $10.00
+    Expenses:One:Two:Books          $10.00
+    Expenses:One:Two:Three:Books          $10.00
     Assets:Cash
 
-2008/02/01 February
-    Expenses:Books          $20.00
+2008/01/01 January
+    Assets:Cash    0
+    Income:Books
+
+2008/01/01 January
     Assets:Cash
+    Income:One:Books          $-10.00
+    Income:One:Two:Books          $-10.00
+    Income:One:Two:Three:Books          $-10.00
 >>>1
-08-Jan-01 January               <Total>                           0            0
-08-Jan-31 End of January        <Total>                           0            0
-08-Feb-01 February              <Total>                           0            0
+08-Jan-01 January               Expenses:Books               $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+08-Jan-01 January               Expenses:One:Books           $10.00       $10.00
+                                Expenses:One:Two:Books       $10.00       $20.00
+                                Ex:One:Two:Three:Books       $10.00       $30.00
+                                Assets:Cash                 $-30.00            0
+08-Jan-01 January               Assets:Cash                       0            0
+                                Income:Books                      0            0
+08-Jan-01 January               Assets:Cash                  $30.00       $30.00
+                                Income:One:Books            $-10.00       $20.00
+                                Income:One:Two:Books        $-10.00       $10.00
+                                In:One:Two:Three:Books      $-10.00            0
 >>>2
 === 0

@@ -1,0 +1,301 @@
+reg --weekly --empty books
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/02/28 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2008/03/01 March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2008/03/31 End of March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2008/04/01 April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2008/04/30 End of April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2008/05/01 May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2008/05/31 End of May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2008/06/01 June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2008/06/30 End of June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2008/07/01 July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2008/07/31 End of July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2008/08/01 August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2008/08/31 End of August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2008/09/01 September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2008/09/30 End of September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2008/10/01 October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2008/10/31 End of October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2008/11/01 November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2008/11/30 End of November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2008/12/01 December
+    Expenses:Books         $120.00
+    Assets:Cash
+
+2008/12/31 End of December
+    Expenses:Books         $120.00
+    Assets:Cash
+
+2009/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2009/01/31 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2009/02/01 February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2009/02/28 End of February
+    Expenses:Books          $20.00
+    Assets:Cash
+
+2009/03/01 March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2009/03/31 End of March
+    Expenses:Books          $30.00
+    Assets:Cash
+
+2009/04/01 April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2009/04/30 End of April
+    Expenses:Books          $40.00
+    Assets:Cash
+
+2009/05/01 May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2009/05/31 End of May
+    Expenses:Books          $50.00
+    Assets:Cash
+
+2009/06/01 June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2009/06/30 End of June
+    Expenses:Books          $60.00
+    Assets:Cash
+
+2009/07/01 July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2009/07/31 End of July
+    Expenses:Books          $70.00
+    Assets:Cash
+
+2009/08/01 August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2009/08/31 End of August
+    Expenses:Books          $80.00
+    Assets:Cash
+
+2009/09/01 September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2009/09/30 End of September
+    Expenses:Books          $90.00
+    Assets:Cash
+
+2009/10/01 October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2009/10/31 End of October
+    Expenses:Books         $100.00
+    Assets:Cash
+
+2009/11/01 November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2009/11/30 End of November
+    Expenses:Books         $110.00
+    Assets:Cash
+
+2009/12/01 December
+    Expenses:Books         $120.00
+    Assets:Cash
+
+2009/12/31 End of December
+    Expenses:Books         $120.00
+    Assets:Cash
+>>>1
+07-Dec-30 - 08-Jan-05           Expenses:Books               $10.00       $10.00
+08-Jan-06 - 08-Jan-12           <None>                            0       $10.00
+08-Jan-13 - 08-Jan-19           <None>                            0       $10.00
+08-Jan-20 - 08-Jan-26           <None>                            0       $10.00
+08-Jan-27 - 08-Feb-02           Expenses:Books               $30.00       $40.00
+08-Feb-03 - 08-Feb-09           <None>                            0       $40.00
+08-Feb-10 - 08-Feb-16           <None>                            0       $40.00
+08-Feb-17 - 08-Feb-23           <None>                            0       $40.00
+08-Feb-24 - 08-Mar-01           Expenses:Books               $50.00       $90.00
+08-Mar-02 - 08-Mar-08           <None>                            0       $90.00
+08-Mar-09 - 08-Mar-15           <None>                            0       $90.00
+08-Mar-16 - 08-Mar-22           <None>                            0       $90.00
+08-Mar-23 - 08-Mar-29           <None>                            0       $90.00
+08-Mar-30 - 08-Apr-05           Expenses:Books               $70.00      $160.00
+08-Apr-06 - 08-Apr-12           <None>                            0      $160.00
+08-Apr-13 - 08-Apr-19           <None>                            0      $160.00
+08-Apr-20 - 08-Apr-26           <None>                            0      $160.00
+08-Apr-27 - 08-May-03           Expenses:Books               $90.00      $250.00
+08-May-04 - 08-May-10           <None>                            0      $250.00
+08-May-11 - 08-May-17           <None>                            0      $250.00
+08-May-18 - 08-May-24           <None>                            0      $250.00
+08-May-25 - 08-May-31           Expenses:Books               $50.00      $300.00
+08-Jun-01 - 08-Jun-07           Expenses:Books               $60.00      $360.00
+08-Jun-08 - 08-Jun-14           <None>                            0      $360.00
+08-Jun-15 - 08-Jun-21           <None>                            0      $360.00
+08-Jun-22 - 08-Jun-28           <None>                            0      $360.00
+08-Jun-29 - 08-Jul-05           Expenses:Books              $130.00      $490.00
+08-Jul-06 - 08-Jul-12           <None>                            0      $490.00
+08-Jul-13 - 08-Jul-19           <None>                            0      $490.00
+08-Jul-20 - 08-Jul-26           <None>                            0      $490.00
+08-Jul-27 - 08-Aug-02           Expenses:Books              $150.00      $640.00
+08-Aug-03 - 08-Aug-09           <None>                            0      $640.00
+08-Aug-10 - 08-Aug-16           <None>                            0      $640.00
+08-Aug-17 - 08-Aug-23           <None>                            0      $640.00
+08-Aug-24 - 08-Aug-30           <None>                            0      $640.00
+08-Aug-31 - 08-Sep-06           Expenses:Books              $170.00      $810.00
+08-Sep-07 - 08-Sep-13           <None>                            0      $810.00
+08-Sep-14 - 08-Sep-20           <None>                            0      $810.00
+08-Sep-21 - 08-Sep-27           <None>                            0      $810.00
+08-Sep-28 - 08-Oct-04           Expenses:Books              $190.00     $1000.00
+08-Oct-05 - 08-Oct-11           <None>                            0     $1000.00
+08-Oct-12 - 08-Oct-18           <None>                            0     $1000.00
+08-Oct-19 - 08-Oct-25           <None>                            0     $1000.00
+08-Oct-26 - 08-Nov-01           Expenses:Books              $210.00     $1210.00
+08-Nov-02 - 08-Nov-08           <None>                            0     $1210.00
+08-Nov-09 - 08-Nov-15           <None>                            0     $1210.00
+08-Nov-16 - 08-Nov-22           <None>                            0     $1210.00
+08-Nov-23 - 08-Nov-29           <None>                            0     $1210.00
+08-Nov-30 - 08-Dec-06           Expenses:Books              $230.00     $1440.00
+08-Dec-07 - 08-Dec-13           <None>                            0     $1440.00
+08-Dec-14 - 08-Dec-20           <None>                            0     $1440.00
+08-Dec-21 - 08-Dec-27           <None>                            0     $1440.00
+08-Dec-28 - 09-Jan-03           Expenses:Books              $130.00     $1570.00
+09-Jan-04 - 09-Jan-10           <None>                            0     $1570.00
+09-Jan-11 - 09-Jan-17           <None>                            0     $1570.00
+09-Jan-18 - 09-Jan-24           <None>                            0     $1570.00
+09-Jan-25 - 09-Jan-31           Expenses:Books               $10.00     $1580.00
+09-Feb-01 - 09-Feb-07           Expenses:Books               $20.00     $1600.00
+09-Feb-08 - 09-Feb-14           <None>                            0     $1600.00
+09-Feb-15 - 09-Feb-21           <None>                            0     $1600.00
+09-Feb-22 - 09-Feb-28           Expenses:Books               $20.00     $1620.00
+09-Mar-01 - 09-Mar-07           Expenses:Books               $30.00     $1650.00
+09-Mar-08 - 09-Mar-14           <None>                            0     $1650.00
+09-Mar-15 - 09-Mar-21           <None>                            0     $1650.00
+09-Mar-22 - 09-Mar-28           <None>                            0     $1650.00
+09-Mar-29 - 09-Apr-04           Expenses:Books               $70.00     $1720.00
+09-Apr-05 - 09-Apr-11           <None>                            0     $1720.00
+09-Apr-12 - 09-Apr-18           <None>                            0     $1720.00
+09-Apr-19 - 09-Apr-25           <None>                            0     $1720.00
+09-Apr-26 - 09-May-02           Expenses:Books               $90.00     $1810.00
+09-May-03 - 09-May-09           <None>                            0     $1810.00
+09-May-10 - 09-May-16           <None>                            0     $1810.00
+09-May-17 - 09-May-23           <None>                            0     $1810.00
+09-May-24 - 09-May-30           <None>                            0     $1810.00
+09-May-31 - 09-Jun-06           Expenses:Books              $110.00     $1920.00
+09-Jun-07 - 09-Jun-13           <None>                            0     $1920.00
+09-Jun-14 - 09-Jun-20           <None>                            0     $1920.00
+09-Jun-21 - 09-Jun-27           <None>                            0     $1920.00
+09-Jun-28 - 09-Jul-04           Expenses:Books              $130.00     $2050.00
+09-Jul-05 - 09-Jul-11           <None>                            0     $2050.00
+09-Jul-12 - 09-Jul-18           <None>                            0     $2050.00
+09-Jul-19 - 09-Jul-25           <None>                            0     $2050.00
+09-Jul-26 - 09-Aug-01           Expenses:Books              $150.00     $2200.00
+09-Aug-02 - 09-Aug-08           <None>                            0     $2200.00
+09-Aug-09 - 09-Aug-15           <None>                            0     $2200.00
+09-Aug-16 - 09-Aug-22           <None>                            0     $2200.00
+09-Aug-23 - 09-Aug-29           <None>                            0     $2200.00
+09-Aug-30 - 09-Sep-05           Expenses:Books              $170.00     $2370.00
+09-Sep-06 - 09-Sep-12           <None>                            0     $2370.00
+09-Sep-13 - 09-Sep-19           <None>                            0     $2370.00
+09-Sep-20 - 09-Sep-26           <None>                            0     $2370.00
+09-Sep-27 - 09-Oct-03           Expenses:Books              $190.00     $2560.00
+09-Oct-04 - 09-Oct-10           <None>                            0     $2560.00
+09-Oct-11 - 09-Oct-17           <None>                            0     $2560.00
+09-Oct-18 - 09-Oct-24           <None>                            0     $2560.00
+09-Oct-25 - 09-Oct-31           Expenses:Books              $100.00     $2660.00
+09-Nov-01 - 09-Nov-07           Expenses:Books              $110.00     $2770.00
+09-Nov-08 - 09-Nov-14           <None>                            0     $2770.00
+09-Nov-15 - 09-Nov-21           <None>                            0     $2770.00
+09-Nov-22 - 09-Nov-28           <None>                            0     $2770.00
+09-Nov-29 - 09-Dec-05           Expenses:Books              $230.00     $3000.00
+09-Dec-06 - 09-Dec-12           <None>                            0     $3000.00
+09-Dec-13 - 09-Dec-19           <None>                            0     $3000.00
+09-Dec-20 - 09-Dec-26           <None>                            0     $3000.00
+09-Dec-27 - 10-Jan-02           Expenses:Books              $120.00     $3120.00
+>>>2
+=== 0
