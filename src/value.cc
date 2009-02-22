@@ -769,6 +769,27 @@ bool value_t::is_less_than(const value_t& val) const
     }
     break;
 
+  case BALANCE:
+    switch (val.type()) {
+    case INTEGER:
+      if (val.as_long() != 0)
+	break;
+      // fall through...
+    case AMOUNT:
+      if (val.is_nonzero())
+	break;
+
+      foreach (const balance_t::amounts_map::value_type& pair,
+	       as_balance().amounts) {
+	if (pair.second > 0L)
+	  return false;
+      }
+      return true;
+    default:
+      break;
+    }
+    break;
+
   case STRING:
     if (val.is_string())
       return as_string() < val.as_string();
@@ -813,6 +834,27 @@ bool value_t::is_greater_than(const value_t& val) const
       return as_amount() > val.as_long();
     case AMOUNT:
       return as_amount() > val.as_amount();
+    default:
+      break;
+    }
+    break;
+
+  case BALANCE:
+    switch (val.type()) {
+    case INTEGER:
+      if (val.as_long() != 0)
+	break;
+      // fall through...
+    case AMOUNT:
+      if (val.is_nonzero())
+	break;
+
+      foreach (const balance_t::amounts_map::value_type& pair,
+	       as_balance().amounts) {
+	if (pair.second < 0L)
+	  return false;
+      }
+      return true;
     default:
       break;
     }
