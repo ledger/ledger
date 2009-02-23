@@ -367,7 +367,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 	amount_t amt;
 	assert(post->amount);
 	if (! post->amount.commodity()) {
-	  if (! post_handler)
+	  if (post_handler)
 	    continue;
 	  assert(initial_post->amount);
 	  amt = initial_post->amount * post->amount;
