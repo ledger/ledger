@@ -280,7 +280,8 @@ namespace {
 
 void collapse_xacts::report_subtotal()
 {
-  assert(count >= 1);
+  if (! count)
+    return;
 
   std::size_t displayed_count = 0;
   foreach (xact_t * xact, component_xacts) {
