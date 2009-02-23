@@ -1,0 +1,66 @@
+reg --gain stocks
+<<<
+2009/01/01 Sample 1a
+    Assets:Brokerage:Stocks                100 S
+    Assets:Brokerage:Cash                 -100 P
+
+P 2009/01/15 00:00:00 S 2 P
+
+2009/02/01 Sample 2a
+    Assets:Brokerage:Stocks                100 S @ 1 P
+    Assets:Brokerage:Cash
+
+P 2009/02/01 00:00:00 S 4 P
+
+2009/03/01 Sample 3a
+    Assets:Brokerage:Stocks                100 S @@ 100 P
+    Assets:Brokerage:Cash
+
+P 2009/03/01 00:00:00 S 8 P
+
+2009/04/01 Sample 4a
+    Assets:Brokerage:Cash                  100 P
+    Assets:Brokerage:Stocks               -100 S {1 P}
+
+P 2009/04/01 00:00:00 S 16 P
+
+; In this usage case, the top amount is always secondary
+; 2010/01/01 Sample 1b
+;     Assets:Brokerage:Cash               -100 P
+;     Assets:Brokerage:Stocks              100 S
+; 
+; P 2010/01/01 00:00:00 S 2 P
+
+2010/02/01 Sample 2b
+    Assets:Brokerage:Cash
+    Assets:Brokerage:Stocks                100 S @ 1 P
+
+P 2010/02/01 00:00:00 S 4 P
+
+2010/03/01 Sample 3b
+    Assets:Brokerage:Cash
+    Assets:Brokerage:Stocks                100 S @@ 100 P
+
+P 2010/03/01 00:00:00 S 8 P
+
+2010/04/01 Sample 4b
+    Assets:Brokerage:Stocks               -100 S {1 P}
+    Assets:Brokerage:Cash                  100 P
+
+P 2010/04/01 00:00:00 S 16 P
+>>>1
+09-Jan-01 Sample 1a             As:Brokerage:Stocks               0            0
+09-Feb-01 Commodities revalued  <Revalued>                    300 P        300 P
+09-Feb-01 Sample 2a             As:Brokerage:Stocks           300 P        600 P
+09-Mar-01 Commodities revalued  <Revalued>                    800 P       1400 P
+09-Mar-01 Sample 3a             As:Brokerage:Stocks           700 P       2100 P
+09-Apr-01 Commodities revalued  <Revalued>                   2400 P       4500 P
+09-Apr-01 Sample 4a             As:Brokerage:Stocks         -1500 P       3000 P
+10-Feb-01 Commodities revalued  <Revalued>                  -2400 P        600 P
+10-Feb-01 Sample 2b             As:Brokerage:Stocks           300 P        900 P
+10-Mar-01 Commodities revalued  <Revalued>                   1200 P       2100 P
+10-Mar-01 Sample 3b             As:Brokerage:Stocks           700 P       2800 P
+10-Apr-01 Commodities revalued  <Revalued>                   3200 P       6000 P
+10-Apr-01 Sample 4b             As:Brokerage:Stocks         -1500 P       4500 P
+>>>2
+=== 0
