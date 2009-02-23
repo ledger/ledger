@@ -537,6 +537,19 @@ public:
   OPTION(report_t, related_all);
   OPTION(report_t, revalued);
   OPTION(report_t, revalued_only);
+
+  OPTION__
+  (report_t, revalued_total_,
+   expr_t expr;
+   CTOR(report_t, revalued_total_) {}
+   void set_expr(const string& str) {
+     expr = str;
+     on(str);
+   }
+   DO_(args) {
+     set_expr(args[0].to_string());
+   });
+
   OPTION(report_t, set_account_);
   OPTION(report_t, set_payee_);
   OPTION(report_t, set_price_);

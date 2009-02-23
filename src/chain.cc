@@ -78,10 +78,11 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
     // changes in market value of commodities, which otherwise would affect
     // the running total unpredictably.
     if (report.HANDLED(revalued))
-      handler.reset(new changed_value_xacts(handler,
-					    report.HANDLER(display_total_).expr,
-					    report,
-					    report.HANDLED(revalued_only)));
+      handler.reset(new changed_value_xacts
+		    (handler, report.HANDLED(revalued_total_) ?
+		     report.HANDLER(revalued_total_).expr :
+		     report.HANDLER(display_total_).expr,
+		     report, report.HANDLED(revalued_only)));
 
     // calc_xacts computes the running total.  When this appears will
     // determine, for example, whether filtered xacts are included or excluded
