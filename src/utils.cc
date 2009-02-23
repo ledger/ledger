@@ -529,7 +529,7 @@ struct __maybe_enable_debugging {
 
 /**********************************************************************
  *
- * Timers (allows log entries to specify cumulative time spent)
+ * Timers (allows log xacts to specify cumulative time spent)
  */
 
 #if defined(LOGGING_ON) && defined(TIMERS_ON)

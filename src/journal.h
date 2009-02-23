@@ -48,7 +48,7 @@
 
 #include "utils.h"
 #include "hooks.h"
-#include "entry.h"
+#include "xact.h"
 
 namespace ledger {
 
@@ -66,12 +66,12 @@ class journal_t : public noncopyable
 public:
   account_t *  master;
   account_t *  basket;
-  entries_list entries;
+  xacts_list xacts;
 
-  auto_entries_list   auto_entries;
-  period_entries_list period_entries;
+  auto_xacts_list   auto_xacts;
+  period_xacts_list period_xacts;
 
-  hooks_t<entry_finalizer_t, entry_t> entry_finalize_hooks;
+  hooks_t<xact_finalizer_t, xact_t> xact_finalize_hooks;
 
   journal_t(account_t * _master = NULL) : master(_master) {
     TRACE_CTOR(journal_t, "");
@@ -85,14 +85,14 @@ public:
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
-  bool add_entry(entry_t * entry);
-  bool remove_entry(entry_t * entry);
+  bool add_xact(xact_t * xact);
+  bool remove_xact(xact_t * xact);
 
-  void add_entry_finalizer(entry_finalizer_t * finalizer) {
-    entry_finalize_hooks.add_hook(finalizer);
+  void add_xact_finalizer(xact_finalizer_t * finalizer) {
+    xact_finalize_hooks.add_hook(finalizer);
   }
-  void remove_entry_finalizer(entry_finalizer_t * finalizer) {
-    entry_finalize_hooks.remove_hook(finalizer);
+  void remove_xact_finalizer(xact_finalizer_t * finalizer) {
+    xact_finalize_hooks.remove_hook(finalizer);
   }
 
   std::size_t parse(std::istream& in,

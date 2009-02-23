@@ -130,8 +130,8 @@ class account_t : public scope_t
 
     value_t	  value;
     value_t	  total;
-    std::size_t   count;	// xacts counted toward amount
-    std::size_t   total_count;	// xacts counted toward total
+    std::size_t   count;	// posts counted toward amount
+    std::size_t   total_count;	// posts counted toward total
     std::size_t   virtuals;
 
     std::list<sort_value_t> sort_values;
@@ -158,7 +158,7 @@ class account_t : public scope_t
   };
 
   // This variable holds optional "extended data" which is usually produced
-  // only during reporting, and only for the transaction set being reported.
+  // only during reporting, and only for the posting set being reported.
   // It's a memory-saving measure to delay allocation until the last possible
   // moment.
   mutable optional<xdata_t> xdata_;

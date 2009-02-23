@@ -47,7 +47,19 @@ using namespace boost::python;
 void export_xact()
 {
 #if 0
+  class_< xact_base_t > ("XactBase")
+    ;
   class_< xact_t > ("Xact")
+    ;
+  struct_< xact_finalizer_t > ("XactFinalizer")
+    ;
+  class_< auto_xact_t > ("AutoXact")
+    ;
+  struct_< auto_xact_finalizer_t > ("AutoXactFinalizer")
+    ;
+  class_< period_xact_t > ("PeriodXact")
+    ;
+  class_< func_finalizer_t > ("FuncFinalizer")
     ;
 #endif
 

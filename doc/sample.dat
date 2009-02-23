@@ -34,10 +34,10 @@ N $
     Liabilities:MasterCard
 
 2004/05/27 (100) Credit card company
-    ; This is an entry note!
+    ; This is an xact note!
     ; Sample: Value
     Liabilities:MasterCard         $20.00
-    ; This is a transaction note!
+    ; This is a posting note!
     ; Sample: Another Value
     ; :MyTag:
     Assets:Bank:Checking

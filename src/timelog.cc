@@ -34,19 +34,19 @@
 namespace ledger {
 
 namespace {
-  void clock_out_from_timelog(std::list<time_entry_t>& time_entries,
+  void clock_out_from_timelog(std::list<time_xact_t>& time_xacts,
 			      const datetime_t&	       when,
 			      account_t *	       account,
 			      const char *	       desc,
 			      journal_t&	       journal)
   {
-    time_entry_t event;
+    time_xact_t event;
 
-    if (time_entries.size() == 1) {
-      event = time_entries.back();
-      time_entries.clear();
+    if (time_xacts.size() == 1) {
+      event = time_xacts.back();
+      time_xacts.clear();
     }
-    else if (time_entries.empty()) {
+    else if (time_xacts.empty()) {
       throw parse_error("Timelog check-out event without a check-in");
     }
     else if (! account) {
@@ -56,13 +56,13 @@ namespace {
     else {
       bool found = false;
 
-      for (std::list<time_entry_t>::iterator i = time_entries.begin();
-	   i != time_entries.end();
+      for (std::list<time_xact_t>::iterator i = time_xacts.begin();
+	   i != time_xacts.end();
 	   i++)
 	if (account == (*i).account) {
 	  event = *i;
 	  found = true;
-	  time_entries.erase(i);
+	  time_xacts.erase(i);
 	  break;
 	}
 
@@ -76,7 +76,7 @@ namespace {
       desc = NULL;
     }
 
-    std::auto_ptr<entry_t> curr(new entry_t);
+    std::auto_ptr<xact_t> curr(new xact_t);
     curr->_date = when.date();
     curr->code  = desc ? desc : "";
     curr->payee = event.desc;
@@ -91,12 +91,12 @@ namespace {
     amt.parse(buf);
     assert(amt.valid());
 
-    xact_t * xact = new xact_t(event.account, amt, XACT_VIRTUAL);
-    xact->set_state(item_t::CLEARED);
-    curr->add_xact(xact);
+    post_t * post = new post_t(event.account, amt, POST_VIRTUAL);
+    post->set_state(item_t::CLEARED);
+    curr->add_post(post);
 
-    if (! journal.add_entry(curr.get()))
-      throw parse_error("Failed to record 'out' timelog entry");
+    if (! journal.add_xact(curr.get()))
+      throw parse_error("Failed to record 'out' timelog transaction");
     else
       curr.release();
   }
@@ -106,17 +106,17 @@ time_log_t::~time_log_t()
 {
   TRACE_DTOR(time_log_t);
 
-  if (! time_entries.empty()) {
+  if (! time_xacts.empty()) {
     std::list<account_t *> accounts;
 
-    foreach (time_entry_t& time_entry, time_entries)
-      accounts.push_back(time_entry.account);
+    foreach (time_xact_t& time_xact, time_xacts)
+      accounts.push_back(time_xact.account);
 
     foreach (account_t * account, accounts)
-      clock_out_from_timelog(time_entries, CURRENT_TIME(), account, NULL,
+      clock_out_from_timelog(time_xacts, CURRENT_TIME(), account, NULL,
 			     journal);
 
-    assert(time_entries.empty());
+    assert(time_xacts.empty());
   }
 }
 
@@ -124,26 +124,26 @@ void time_log_t::clock_in(const datetime_t& checkin,
 			  account_t *	    account,
 			  const string&     desc)
 {
-  time_entry_t event(checkin, account, desc);
+  time_xact_t event(checkin, account, desc);
 
-  if (! time_entries.empty()) {
-    foreach (time_entry_t& time_entry, time_entries) {
-      if (event.account == time_entry.account)
+  if (! time_xacts.empty()) {
+    foreach (time_xact_t& time_xact, time_xacts) {
+      if (event.account == time_xact.account)
 	throw parse_error("Cannot double check-in to the same account");
     }
   }
 
-  time_entries.push_back(event);
+  time_xacts.push_back(event);
 }
 
 void time_log_t::clock_out(const datetime_t& checkin,
 			   account_t *	     account,
 			   const string&     desc)
 {
-  if (time_entries.empty())
+  if (time_xacts.empty())
     throw std::logic_error("Timelog check-out event without a check-in");
 
-  clock_out_from_timelog(time_entries, checkin, account, desc.c_str(),
+  clock_out_from_timelog(time_xacts, checkin, account, desc.c_str(),
 			 journal);
 }
 

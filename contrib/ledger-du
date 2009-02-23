@@ -23,14 +23,14 @@ def report_file(path):
     print
 
 def find_files(path):
-    entries = os.listdir(path)
-    for entry in entries:
-        entry = join(path, entry)
-	if not islink(entry):
-	    if isdir(entry) and entry != "/proc":
-		find_files(entry)
+    xacts = os.listdir(path)
+    for xact in xacts:
+        xact = join(path, xact)
+	if not islink(xact):
+	    if isdir(xact) and xact != "/proc":
+		find_files(xact)
 	    else:
-		report_file(entry)
+		report_file(xact)
 
 args = sys.argv[1:]
 if len(args):

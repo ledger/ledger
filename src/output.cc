@@ -33,13 +33,13 @@
 
 namespace ledger {
 
-format_xacts::format_xacts(report_t&	 _report,
+format_posts::format_posts(report_t&	 _report,
 			   const string& format,
 			   bool		 _print_raw)
-  : report(_report), last_entry(NULL), last_xact(NULL),
+  : report(_report), last_xact(NULL), last_post(NULL),
     print_raw(_print_raw)
 {
-  TRACE_CTOR(format_xacts, "report&, const string&");
+  TRACE_CTOR(format_posts, "report&, const string&");
 
   const char * f = format.c_str();
 
@@ -58,46 +58,46 @@ format_xacts::format_xacts(report_t&	 _report,
   }
 }
 
-void format_xacts::operator()(xact_t& xact)
+void format_posts::operator()(post_t& post)
 {
   std::ostream& out(report.output_stream);
 
   if (print_raw) {
-    if (! xact.has_xdata() ||
-	! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
-      if (last_entry != xact.entry) {
-	if (last_entry) {
-	  bind_scope_t entry_scope(report, *last_entry);
-	  between_format.format(out, entry_scope);
+    if (! post.has_xdata() ||
+	! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+      if (last_xact != post.xact) {
+	if (last_xact) {
+	  bind_scope_t xact_scope(report, *last_xact);
+	  between_format.format(out, xact_scope);
 	}
-	print_item(out, *xact.entry);
+	print_item(out, *post.xact);
 	out << '\n';
-	last_entry = xact.entry;
+	last_xact = post.xact;
       }
-      xact.xdata().add_flags(XACT_EXT_DISPLAYED);
-      last_xact = &xact;
+      post.xdata().add_flags(POST_EXT_DISPLAYED);
+      last_post = &post;
     }
   }
-  else if (! xact.has_xdata() ||
-	   ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
-    bind_scope_t bound_scope(report, xact);
-    if (last_entry != xact.entry) {
-      if (last_entry) {
-	bind_scope_t entry_scope(report, *last_entry);
-	between_format.format(out, entry_scope);
+  else if (! post.has_xdata() ||
+	   ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+    bind_scope_t bound_scope(report, post);
+    if (last_xact != post.xact) {
+      if (last_xact) {
+	bind_scope_t xact_scope(report, *last_xact);
+	between_format.format(out, xact_scope);
       }
       first_line_format.format(out, bound_scope);
-      last_entry = xact.entry;
+      last_xact = post.xact;
     }
-    else if (last_xact && last_xact->date() != xact.date()) {
+    else if (last_post && last_post->date() != post.date()) {
       first_line_format.format(out, bound_scope);
     }
     else {
       next_lines_format.format(out, bound_scope);
     }
 
-    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
-    last_xact = &xact;
+    post.xdata().add_flags(POST_EXT_DISPLAYED);
+    last_post = &post;
   }
 }
 
@@ -105,10 +105,10 @@ void gather_statistics::flush()
 {
   std::ostream& out(report.output_stream);
 
-  out << "Time period: " << statistics.earliest_xact << " to "
-      << statistics.latest_xact << std::endl << std::endl;
+  out << "Time period: " << statistics.earliest_post << " to "
+      << statistics.latest_post << std::endl << std::endl;
 
-  out << "  Files these transactions came from:" << std::endl;
+  out << "  Files these postings came from:" << std::endl;
 
   foreach (const path& pathname, statistics.filenames)
     if (! pathname.empty())
@@ -123,54 +123,54 @@ void gather_statistics::flush()
   out.width(8);
   out << std::right << statistics.accounts_referenced.size() << std::endl;
 
-  out << "  Number of entries:      " ;
+  out << "  Number of transactions: " ;
   out.width(8);
-  out << std::right << statistics.total_entries << std::endl;
+  out << std::right << statistics.total_xacts << std::endl;
 
-  out << "  Number of transactions: ";
+  out << "  Number of postings:     ";
   out.width(8);
-  out << std::right << statistics.total_xacts;
+  out << std::right << statistics.total_posts;
 
   out << " (";
   out.precision(2);
-  out << (double((statistics.latest_xact - statistics.earliest_xact).days()) /
-	  double(statistics.total_xacts)) << " per day)" << std::endl;
+  out << (double((statistics.latest_post - statistics.earliest_post).days()) /
+	  double(statistics.total_posts)) << " per day)" << std::endl;
 
-  out << "  Days since last xact:   ";
+  out << "  Days since last post:   ";
   out.width(8);
-  out << std::right << (CURRENT_DATE() - statistics.latest_xact).days()
+  out << std::right << (CURRENT_DATE() - statistics.latest_post).days()
       << std::endl;
 
-  out << "  Xacts in last 7 days:   ";
+  out << "  Posts in last 7 days:   ";
   out.width(8);
   out << std::right << statistics.total_last_7_days << std::endl;
-  out << "  Xacts in last 30 days:  ";
+  out << "  Posts in last 30 days:  ";
   out.width(8);
   out << std::right << statistics.total_last_30_days << std::endl;
-  out << "  Xacts seen this month:  ";
+  out << "  Posts seen this month:  ";
   out.width(8);
   out << std::right << statistics.total_this_month << std::endl;
 
-  out << "  Uncleared transactions: ";
+  out << "  Uncleared postings:     ";
   out.width(8);
-  out << std::right << statistics.total_uncleared_xacts << std::endl;
+  out << std::right << statistics.total_uncleared_posts << std::endl;
 
   out.flush();
 }
 
-void gather_statistics::operator()(xact_t& xact)
+void gather_statistics::operator()(post_t& post)
 {
-  if (last_entry != xact.entry) {
-    statistics.total_entries++;
-    last_entry = xact.entry;
-  }
-  if (last_xact != &xact) {
+  if (last_xact != post.xact) {
     statistics.total_xacts++;
-    last_xact = &xact;
+    last_xact = post.xact;
+  }
+  if (last_post != &post) {
+    statistics.total_posts++;
+    last_post = &post;
 
-    statistics.filenames.insert(xact.pathname);
+    statistics.filenames.insert(post.pathname);
 
-    date_t date = xact.date();
+    date_t date = post.date();
 
     if (date.year() == CURRENT_DATE().year() &&
 	date.month() == CURRENT_DATE().month())
@@ -181,18 +181,18 @@ void gather_statistics::operator()(xact_t& xact)
     if ((CURRENT_DATE() - date).days() <= 7)
       statistics.total_last_7_days++;
 
-    if (xact.state() != item_t::CLEARED)
-      statistics.total_uncleared_xacts++;
+    if (post.state() != item_t::CLEARED)
+      statistics.total_uncleared_posts++;
 
-    if (! is_valid(statistics.earliest_xact) ||
-	xact.date() < statistics.earliest_xact)
-      statistics.earliest_xact = xact.date();
-    if (! is_valid(statistics.latest_xact) ||
-	xact.date() > statistics.latest_xact)
-      statistics.latest_xact = xact.date();
+    if (! is_valid(statistics.earliest_post) ||
+	post.date() < statistics.earliest_post)
+      statistics.earliest_post = post.date();
+    if (! is_valid(statistics.latest_post) ||
+	post.date() > statistics.latest_post)
+      statistics.latest_post = post.date();
 
-    statistics.accounts_referenced.insert(xact.account->fullname());
-    statistics.payees_referenced.insert(xact.entry->payee);
+    statistics.accounts_referenced.insert(post.account->fullname());
+    statistics.payees_referenced.insert(post.xact->payee);
   }
 }
 

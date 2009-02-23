@@ -246,122 +246,122 @@ reg --add-budget books cards
 >>>1
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
                                 Liabilities:Cards            $10.00       $20.00
-08-Jan-01 Budget entry          Expenses:Books              $-10.00       $10.00
+08-Jan-01 Budget transaction    Expenses:Books              $-10.00       $10.00
 08-Jan-31 End of January        Expenses:Books               $10.00       $20.00
                                 Liabilities:Cards            $10.00       $30.00
 08-Feb-01 February              Expenses:Books               $20.00       $50.00
                                 Liabilities:Cards            $20.00       $70.00
-08-Feb-01 Budget entry          Expenses:Books              $-10.00       $60.00
+08-Feb-01 Budget transaction    Expenses:Books              $-10.00       $60.00
 08-Feb-28 End of February       Expenses:Books               $20.00       $80.00
                                 Liabilities:Cards            $20.00      $100.00
 08-Mar-01 March                 Expenses:Books               $30.00      $130.00
                                 Liabilities:Cards            $30.00      $160.00
-08-Mar-01 Budget entry          Expenses:Books              $-10.00      $150.00
+08-Mar-01 Budget transaction    Expenses:Books              $-10.00      $150.00
 08-Mar-31 End of March          Expenses:Books               $30.00      $180.00
                                 Liabilities:Cards            $30.00      $210.00
 08-Apr-01 April                 Expenses:Books               $40.00      $250.00
                                 Liabilities:Cards            $40.00      $290.00
-08-Apr-01 Budget entry          Expenses:Books              $-10.00      $280.00
+08-Apr-01 Budget transaction    Expenses:Books              $-10.00      $280.00
 08-Apr-30 End of April          Expenses:Books               $40.00      $320.00
                                 Liabilities:Cards            $40.00      $360.00
 08-May-01 May                   Expenses:Books               $50.00      $410.00
                                 Liabilities:Cards            $50.00      $460.00
-08-May-01 Budget entry          Expenses:Books              $-10.00      $450.00
+08-May-01 Budget transaction    Expenses:Books              $-10.00      $450.00
 08-May-31 End of May            Expenses:Books               $50.00      $500.00
                                 Liabilities:Cards            $50.00      $550.00
 08-Jun-01 June                  Expenses:Books               $60.00      $610.00
                                 Liabilities:Cards            $60.00      $670.00
-08-Jun-01 Budget entry          Expenses:Books              $-10.00      $660.00
+08-Jun-01 Budget transaction    Expenses:Books              $-10.00      $660.00
 08-Jun-30 End of June           Expenses:Books               $60.00      $720.00
                                 Liabilities:Cards            $60.00      $780.00
 08-Jul-01 July                  Expenses:Books               $70.00      $850.00
                                 Liabilities:Cards            $70.00      $920.00
-08-Jul-01 Budget entry          Expenses:Books              $-10.00      $910.00
+08-Jul-01 Budget transaction    Expenses:Books              $-10.00      $910.00
 08-Jul-31 End of July           Expenses:Books               $70.00      $980.00
                                 Liabilities:Cards            $70.00     $1050.00
 08-Aug-01 August                Expenses:Books               $80.00     $1130.00
                                 Liabilities:Cards            $80.00     $1210.00
-08-Aug-01 Budget entry          Expenses:Books              $-10.00     $1200.00
+08-Aug-01 Budget transaction    Expenses:Books              $-10.00     $1200.00
 08-Aug-31 End of August         Expenses:Books               $80.00     $1280.00
                                 Liabilities:Cards            $80.00     $1360.00
 08-Sep-01 September             Expenses:Books               $90.00     $1450.00
                                 Liabilities:Cards            $90.00     $1540.00
-08-Sep-01 Budget entry          Expenses:Books              $-10.00     $1530.00
+08-Sep-01 Budget transaction    Expenses:Books              $-10.00     $1530.00
 08-Sep-30 End of September      Expenses:Books               $90.00     $1620.00
                                 Liabilities:Cards            $90.00     $1710.00
 08-Oct-01 October               Expenses:Books              $100.00     $1810.00
                                 Liabilities:Cards           $100.00     $1910.00
-08-Oct-01 Budget entry          Expenses:Books              $-10.00     $1900.00
+08-Oct-01 Budget transaction    Expenses:Books              $-10.00     $1900.00
 08-Oct-31 End of October        Expenses:Books              $100.00     $2000.00
                                 Liabilities:Cards           $100.00     $2100.00
 08-Nov-01 November              Expenses:Books              $110.00     $2210.00
                                 Liabilities:Cards           $110.00     $2320.00
-08-Nov-01 Budget entry          Expenses:Books              $-10.00     $2310.00
+08-Nov-01 Budget transaction    Expenses:Books              $-10.00     $2310.00
 08-Nov-30 End of November       Expenses:Books              $110.00     $2420.00
                                 Liabilities:Cards           $110.00     $2530.00
 08-Dec-01 December              Expenses:Books              $120.00     $2650.00
                                 Liabilities:Cards           $120.00     $2770.00
-08-Dec-01 Budget entry          Expenses:Books              $-10.00     $2760.00
+08-Dec-01 Budget transaction    Expenses:Books              $-10.00     $2760.00
 08-Dec-31 End of December       Expenses:Books              $120.00     $2880.00
                                 Liabilities:Cards           $120.00     $3000.00
 09-Jan-01 January               Expenses:Books               $10.00     $3010.00
                                 Liabilities:Cards            $10.00     $3020.00
-09-Jan-01 Budget entry          Expenses:Books              $-10.00     $3010.00
+09-Jan-01 Budget transaction    Expenses:Books              $-10.00     $3010.00
 09-Jan-31 End of January        Expenses:Books               $10.00     $3020.00
                                 Liabilities:Cards            $10.00     $3030.00
 09-Feb-01 February              Expenses:Books               $20.00     $3050.00
                                 Liabilities:Cards            $20.00     $3070.00
-09-Feb-01 Budget entry          Expenses:Books              $-10.00     $3060.00
+09-Feb-01 Budget transaction    Expenses:Books              $-10.00     $3060.00
 09-Feb-28 End of February       Expenses:Books               $20.00     $3080.00
                                 Liabilities:Cards            $20.00     $3100.00
 09-Mar-01 March                 Expenses:Books               $30.00     $3130.00
                                 Liabilities:Cards            $30.00     $3160.00
-09-Mar-01 Budget entry          Expenses:Books              $-10.00     $3150.00
+09-Mar-01 Budget transaction    Expenses:Books              $-10.00     $3150.00
 09-Mar-31 End of March          Expenses:Books               $30.00     $3180.00
                                 Liabilities:Cards            $30.00     $3210.00
 09-Apr-01 April                 Expenses:Books               $40.00     $3250.00
                                 Liabilities:Cards            $40.00     $3290.00
-09-Apr-01 Budget entry          Expenses:Books              $-10.00     $3280.00
+09-Apr-01 Budget transaction    Expenses:Books              $-10.00     $3280.00
 09-Apr-30 End of April          Expenses:Books               $40.00     $3320.00
                                 Liabilities:Cards            $40.00     $3360.00
 09-May-01 May                   Expenses:Books               $50.00     $3410.00
                                 Liabilities:Cards            $50.00     $3460.00
-09-May-01 Budget entry          Expenses:Books              $-10.00     $3450.00
+09-May-01 Budget transaction    Expenses:Books              $-10.00     $3450.00
 09-May-31 End of May            Expenses:Books               $50.00     $3500.00
                                 Liabilities:Cards            $50.00     $3550.00
 09-Jun-01 June                  Expenses:Books               $60.00     $3610.00
                                 Liabilities:Cards            $60.00     $3670.00
-09-Jun-01 Budget entry          Expenses:Books              $-10.00     $3660.00
+09-Jun-01 Budget transaction    Expenses:Books              $-10.00     $3660.00
 09-Jun-30 End of June           Expenses:Books               $60.00     $3720.00
                                 Liabilities:Cards            $60.00     $3780.00
 09-Jul-01 July                  Expenses:Books               $70.00     $3850.00
                                 Liabilities:Cards            $70.00     $3920.00
-09-Jul-01 Budget entry          Expenses:Books              $-10.00     $3910.00
+09-Jul-01 Budget transaction    Expenses:Books              $-10.00     $3910.00
 09-Jul-31 End of July           Expenses:Books               $70.00     $3980.00
                                 Liabilities:Cards            $70.00     $4050.00
 09-Aug-01 August                Expenses:Books               $80.00     $4130.00
                                 Liabilities:Cards            $80.00     $4210.00
-09-Aug-01 Budget entry          Expenses:Books              $-10.00     $4200.00
+09-Aug-01 Budget transaction    Expenses:Books              $-10.00     $4200.00
 09-Aug-31 End of August         Expenses:Books               $80.00     $4280.00
                                 Liabilities:Cards            $80.00     $4360.00
 09-Sep-01 September             Expenses:Books               $90.00     $4450.00
                                 Liabilities:Cards            $90.00     $4540.00
-09-Sep-01 Budget entry          Expenses:Books              $-10.00     $4530.00
+09-Sep-01 Budget transaction    Expenses:Books              $-10.00     $4530.00
 09-Sep-30 End of September      Expenses:Books               $90.00     $4620.00
                                 Liabilities:Cards            $90.00     $4710.00
 09-Oct-01 October               Expenses:Books              $100.00     $4810.00
                                 Liabilities:Cards           $100.00     $4910.00
-09-Oct-01 Budget entry          Expenses:Books              $-10.00     $4900.00
+09-Oct-01 Budget transaction    Expenses:Books              $-10.00     $4900.00
 09-Oct-31 End of October        Expenses:Books              $100.00     $5000.00
                                 Liabilities:Cards           $100.00     $5100.00
 09-Nov-01 November              Expenses:Books              $110.00     $5210.00
                                 Liabilities:Cards           $110.00     $5320.00
-09-Nov-01 Budget entry          Expenses:Books              $-10.00     $5310.00
+09-Nov-01 Budget transaction    Expenses:Books              $-10.00     $5310.00
 09-Nov-30 End of November       Expenses:Books              $110.00     $5420.00
                                 Liabilities:Cards           $110.00     $5530.00
 09-Dec-01 December              Expenses:Books              $120.00     $5650.00
                                 Liabilities:Cards           $120.00     $5770.00
-09-Dec-01 Budget entry          Expenses:Books              $-10.00     $5760.00
+09-Dec-01 Budget transaction    Expenses:Books              $-10.00     $5760.00
 09-Dec-31 End of December       Expenses:Books              $120.00     $5880.00
                                 Liabilities:Cards           $120.00     $6000.00
 >>>2

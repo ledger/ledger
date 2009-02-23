@@ -35,57 +35,57 @@
 
 namespace ledger {
 
-void entries_iterator::reset(journal_t& journal)
+void xacts_iterator::reset(journal_t& journal)
 {
-  entries_i   = journal.entries.begin();
-  entries_end = journal.entries.end();
-  entries_uninitialized = false;
+  xacts_i   = journal.xacts.begin();
+  xacts_end = journal.xacts.end();
+  xacts_uninitialized = false;
 }
 
-entry_t * entries_iterator::operator()()
+xact_t * xacts_iterator::operator()()
 {
-  if (entries_i != entries_end)
-    return *entries_i++;
+  if (xacts_i != xacts_end)
+    return *xacts_i++;
   else
     return NULL;
 }
 
-void journal_xacts_iterator::reset(journal_t& journal)
+void journal_posts_iterator::reset(journal_t& journal)
 {
-  entries.reset(journal);
+  xacts.reset(journal);
 
-  entry_t * entry = entries();
-  if (entry != NULL)
-    xacts.reset(*entry);
+  xact_t * xact = xacts();
+  if (xact != NULL)
+    posts.reset(*xact);
 }
 
-xact_t * journal_xacts_iterator::operator()()
+post_t * journal_posts_iterator::operator()()
 {
-  xact_t * xact = xacts();
-  if (xact == NULL) {
-    entry_t * entry = entries();
-    if (entry != NULL) {
-      xacts.reset(*entry);
-      xact = xacts();
+  post_t * post = posts();
+  if (post == NULL) {
+    xact_t * xact = xacts();
+    if (xact != NULL) {
+      posts.reset(*xact);
+      post = posts();
     }
   }
-  return xact;
+  return post;
 }
 
-void xacts_commodities_iterator::reset(journal_t& journal)
+void posts_commodities_iterator::reset(journal_t& journal)
 {
-  journal_xacts.reset(journal);
+  journal_posts.reset(journal);
 
   std::set<commodity_t *> commodities;
 
-  for (xact_t * xact = journal_xacts(); xact; xact = journal_xacts()) {
-    commodity_t& comm(xact->amount.commodity());
+  for (post_t * post = journal_posts(); post; post = journal_posts()) {
+    commodity_t& comm(post->amount.commodity());
     if (comm.flags() & COMMODITY_NOMARKET)
       continue;
     commodities.insert(&comm);
   }
 
-  std::map<string, entry_t *> entries_by_commodity;
+  std::map<string, xact_t *> xacts_by_commodity;
 
   foreach (commodity_t * comm, commodities) {
     optional<commodity_t::varied_history_t&> history = comm->varied_history();
@@ -98,55 +98,55 @@ void xacts_commodities_iterator::reset(journal_t& journal)
 	     history->histories) {
       foreach (commodity_t::base_t::history_map::value_type hpair,
 	       pair.second.prices) {
-	entry_t * entry;
+	xact_t * xact;
 	string    symbol = hpair.second.commodity().symbol();
 
-	std::map<string, entry_t *>::iterator i =
-	  entries_by_commodity.find(symbol);
-	if (i != entries_by_commodity.end()) {
-	  entry = (*i).second;
+	std::map<string, xact_t *>::iterator i =
+	  xacts_by_commodity.find(symbol);
+	if (i != xacts_by_commodity.end()) {
+	  xact = (*i).second;
 	} else {
-	  entry_temps.push_back(new entry_t);
-	  entry = entry_temps.back();
-	  entry->payee = symbol;
-	  entry->_date = hpair.first.date();
-	  entries_by_commodity.insert
-	    (std::pair<string, entry_t *>(symbol, entry));
+	  xact_temps.push_back(new xact_t);
+	  xact = xact_temps.back();
+	  xact->payee = symbol;
+	  xact->_date = hpair.first.date();
+	  xacts_by_commodity.insert
+	    (std::pair<string, xact_t *>(symbol, xact));
 	}
 
-	xact_temps.push_back(xact_t(account));
-	xact_t& temp = xact_temps.back();
+	post_temps.push_back(post_t(account));
+	post_t& temp = post_temps.back();
 	temp._date  = hpair.first.date();
-	temp.entry  = entry;
+	temp.xact  = xact;
 	temp.amount = hpair.second;
 	temp.set_flags(ITEM_GENERATED | ITEM_TEMP);
 
-	entry->add_xact(&temp);
+	xact->add_post(&temp);
       }
     }
   }
 
-  entries.entries_i   = entry_temps.begin();
-  entries.entries_end = entry_temps.end();
+  xacts.xacts_i   = xact_temps.begin();
+  xacts.xacts_end = xact_temps.end();
 
-  entries.entries_uninitialized = false;
+  xacts.xacts_uninitialized = false;
 
-  entry_t * entry = entries();
-  if (entry != NULL)
-    xacts.reset(*entry);
+  xact_t * xact = xacts();
+  if (xact != NULL)
+    posts.reset(*xact);
 }
 
-xact_t * xacts_commodities_iterator::operator()()
+post_t * posts_commodities_iterator::operator()()
 {
-  xact_t * xact = xacts();
-  if (xact == NULL) {
-    entry_t * entry = entries();
-    if (entry != NULL) {
-      xacts.reset(*entry);
-      xact = xacts();
+  post_t * post = posts();
+  if (post == NULL) {
+    xact_t * xact = xacts();
+    if (xact != NULL) {
+      posts.reset(*xact);
+      post = posts();
     }
   }
-  return xact;
+  return post;
 }
 
 account_t * basic_accounts_iterator::operator()()

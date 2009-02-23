@@ -50,12 +50,12 @@
 
 namespace ledger {
 
-value_t entry_command(call_scope_t& args);
+value_t xact_command(call_scope_t& args);
 value_t template_command(call_scope_t& args);
 
-class entry_t;
+class xact_t;
 class report_t;
-entry_t * derive_new_entry(report_t& report,
+xact_t * derive_new_xact(report_t& report,
 			   value_t::sequence_t::const_iterator i,
 			   value_t::sequence_t::const_iterator end);
 

@@ -47,7 +47,7 @@
 #define _COMPARE_H
 
 #include "expr.h"
-#include "xact.h"
+#include "post.h"
 #include "account.h"
 
 namespace ledger {
@@ -91,7 +91,7 @@ bool compare_items<T>::operator()(T * left, T * right)
 }
 
 template <>
-bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right);
+bool compare_items<post_t>::operator()(post_t * left, post_t * right);
 template <>
 bool compare_items<account_t>::operator()(account_t * left,
 					  account_t * right);

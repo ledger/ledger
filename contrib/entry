@@ -6,11 +6,11 @@ fi
 
 line=`wc -l $LEDGER | awk '{print $1}'`
 
-if ledger entry "$@" > /tmp/entry; then
-   cat /tmp/entry >> $LEDGER
+if ledger xact "$@" > /tmp/xact; then
+   cat /tmp/xact >> $LEDGER
 else
    echo "$@" >> $LEDGER
 fi
-rm /tmp/entry
+rm /tmp/xact
 
 vi +$line $LEDGER

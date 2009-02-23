@@ -55,29 +55,29 @@ namespace ledger {
  *
  * Long.
  */
-class time_entry_t
+class time_xact_t
 {
 public:
   datetime_t  checkin;
   account_t * account;
   string      desc;
 
-  time_entry_t() : account(NULL) {
-    TRACE_CTOR(time_entry_t, "");
+  time_xact_t() : account(NULL) {
+    TRACE_CTOR(time_xact_t, "");
   }
-  time_entry_t(const datetime_t& _checkin,
+  time_xact_t(const datetime_t& _checkin,
 	       account_t *	 _account = NULL,
 	       const string&     _desc	  = "")
     : checkin(_checkin), account(_account), desc(_desc) {
-    TRACE_CTOR(time_entry_t, "const datetime_t&, account_t *, const string&");
+    TRACE_CTOR(time_xact_t, "const datetime_t&, account_t *, const string&");
   }
-  time_entry_t(const time_entry_t& entry)
-    : checkin(entry.checkin), account(entry.account),
-      desc(entry.desc) {
-    TRACE_CTOR(time_entry_t, "copy");
+  time_xact_t(const time_xact_t& xact)
+    : checkin(xact.checkin), account(xact.account),
+      desc(xact.desc) {
+    TRACE_CTOR(time_xact_t, "copy");
   }
-  ~time_entry_t() throw() {
-    TRACE_DTOR(time_entry_t);
+  ~time_xact_t() throw() {
+    TRACE_DTOR(time_xact_t);
   }
 };
 
@@ -88,7 +88,7 @@ public:
  */
 class time_log_t
 {
-  std::list<time_entry_t> time_entries;
+  std::list<time_xact_t> time_xacts;
   journal_t&		  journal;
 
 public:

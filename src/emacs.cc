@@ -34,50 +34,50 @@
 
 namespace ledger {
 
-void format_emacs_xacts::write_entry(entry_t& entry)
+void format_emacs_posts::write_xact(xact_t& xact)
 {
-  out << "\"" << entry.pathname << "\" "
-      << (static_cast<std::size_t>(entry.beg_line) + 1) << " ";
+  out << "\"" << xact.pathname << "\" "
+      << (static_cast<std::size_t>(xact.beg_line) + 1) << " ";
 
-  tm	      when = gregorian::to_tm(entry.date());
+  tm	      when = gregorian::to_tm(xact.date());
   std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?
 
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
-  if (! entry.code)
+  if (! xact.code)
     out << "nil ";
   else
-    out << "\"" << *entry.code << "\" ";
+    out << "\"" << *xact.code << "\" ";
 
-  if (entry.payee.empty())
+  if (xact.payee.empty())
     out << "nil";
   else
-    out << "\"" << entry.payee << "\"";
+    out << "\"" << xact.payee << "\"";
 
   out << "\n";
 }
 
-void format_emacs_xacts::operator()(xact_t& xact)
+void format_emacs_posts::operator()(post_t& post)
 {
-  if (! xact.has_xdata() ||
-      ! xact.xdata().has_flags(XACT_EXT_DISPLAYED)) {
-    if (! last_entry) {
+  if (! post.has_xdata() ||
+      ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+    if (! last_xact) {
       out << "((";
-      write_entry(*xact.entry);
+      write_xact(*post.xact);
     }
-    else if (xact.entry != last_entry) {
+    else if (post.xact != last_xact) {
       out << ")\n (";
-      write_entry(*xact.entry);
+      write_xact(*post.xact);
     }
     else {
       out << "\n";
     }
 
-    out << "  (" << (static_cast<std::size_t>(xact.beg_line) + 1) << " ";
-    out << "\"" << xact.reported_account()->fullname() << "\" \""
-	<< xact.amount << "\"";
+    out << "  (" << (static_cast<std::size_t>(post.beg_line) + 1) << " ";
+    out << "\"" << post.reported_account()->fullname() << "\" \""
+	<< post.amount << "\"";
 
-    switch (xact.state()) {
+    switch (post.state()) {
     case item_t::CLEARED:
       out << " t";
       break;
@@ -89,15 +89,15 @@ void format_emacs_xacts::operator()(xact_t& xact)
       break;
     }
 
-    if (xact.cost)
-      out << " \"" << *xact.cost << "\"";
-    if (xact.note)
-      out << " \"" << *xact.note << "\"";
+    if (post.cost)
+      out << " \"" << *post.cost << "\"";
+    if (post.note)
+      out << " \"" << *post.note << "\"";
     out << ")";
 
-    last_entry = xact.entry;
+    last_xact = post.xact;
 
-    xact.xdata().add_flags(XACT_EXT_DISPLAYED);
+    post.xdata().add_flags(POST_EXT_DISPLAYED);
   }
 }
 

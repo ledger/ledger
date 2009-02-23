@@ -380,7 +380,7 @@ inline bool category_matches(const char * cat) {
 
 /**
  * @name Timers
- * This allows log entries to specify cumulative time spent.
+ * This allows log xacts to specify cumulative time spent.
  */
 /*@{*/
 

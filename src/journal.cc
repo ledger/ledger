@@ -40,17 +40,17 @@ journal_t::~journal_t()
 {
   TRACE_DTOR(journal_t);
 
-  // Don't bother unhooking each entry's xacts from the
+  // Don't bother unhooking each xact's posts from the
   // accounts they refer to, because all accounts are about to
   // be deleted.
-  foreach (entry_t * entry, entries)
-    checked_delete(entry);
+  foreach (xact_t * xact, xacts)
+    checked_delete(xact);
 
-  foreach (auto_entry_t * entry, auto_entries)
-    checked_delete(entry);
+  foreach (auto_xact_t * xact, auto_xacts)
+    checked_delete(xact);
 
-  foreach (period_entry_t * entry, period_entries)
-    checked_delete(entry);
+  foreach (period_xact_t * xact, period_xacts)
+    checked_delete(xact);
 }
 
 void journal_t::add_account(account_t * acct)
@@ -73,36 +73,36 @@ account_t * journal_t::find_account_re(const string& regexp)
   return master->find_account_re(regexp);
 }
 
-bool journal_t::add_entry(entry_t * entry)
+bool journal_t::add_xact(xact_t * xact)
 {
-  entry->journal = this;
+  xact->journal = this;
 
-  if (! entry_finalize_hooks.run_hooks(*entry, false) ||
-      ! entry->finalize() ||
-      ! entry_finalize_hooks.run_hooks(*entry, true)) {
-    entry->journal = NULL;
+  if (! xact_finalize_hooks.run_hooks(*xact, false) ||
+      ! xact->finalize() ||
+      ! xact_finalize_hooks.run_hooks(*xact, true)) {
+    xact->journal = NULL;
     return false;
   }
 
-  entries.push_back(entry);
+  xacts.push_back(xact);
 
   return true;
 }
 
-bool journal_t::remove_entry(entry_t * entry)
+bool journal_t::remove_xact(xact_t * xact)
 {
   bool found = false;
-  entries_list::iterator i;
-  for (i = entries.begin(); i != entries.end(); i++)
-    if (*i == entry) {
+  xacts_list::iterator i;
+  for (i = xacts.begin(); i != xacts.end(); i++)
+    if (*i == xact) {
       found = true;
       break;
     }
   if (! found)
     return false;
 
-  entries.erase(i);
-  entry->journal = NULL;
+  xacts.erase(i);
+  xact->journal = NULL;
 
   return true;
 }
@@ -114,9 +114,9 @@ bool journal_t::valid() const
     return false;
   }
 
-  foreach (const entry_t * entry, entries)
-    if (! entry->valid()) {
-      DEBUG("ledger.validate", "journal_t: entry not valid");
+  foreach (const xact_t * xact, xacts)
+    if (! xact->valid()) {
+      DEBUG("ledger.validate", "journal_t: xact not valid");
       return false;
     }
 

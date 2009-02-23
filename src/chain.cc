@@ -35,11 +35,11 @@
 
 namespace ledger {
 
-xact_handler_ptr chain_xact_handlers(report_t&	      report,
-				     xact_handler_ptr base_handler,
+post_handler_ptr chain_post_handlers(report_t&	      report,
+				     post_handler_ptr base_handler,
 				     bool             only_preliminaries)
 {
-  xact_handler_ptr handler(base_handler);
+  post_handler_ptr handler(base_handler);
   item_predicate   display_predicate;
   item_predicate   only_predicate;
 
@@ -48,159 +48,159 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   expr.set_context(&report);
 
   if (! only_preliminaries) {
-    // Make sure only forecast transactions which match are allowed through
+    // Make sure only forecast postings which match are allowed through
     if (report.HANDLED(forecast_while_)) {
-      handler.reset(new filter_xacts
+      handler.reset(new filter_posts
 		    (handler, item_predicate(report.HANDLER(forecast_while_).str(),
 					     report.what_to_keep()),
 		     report));
     }
 
-    // truncate_entries cuts off a certain number of _entries_ from being
+    // truncate_xacts cuts off a certain number of _xacts_ from being
     // displayed.  It does not affect calculation.
     if (report.HANDLED(head_) || report.HANDLED(tail_))
       handler.reset
-	(new truncate_entries(handler,
+	(new truncate_xacts(handler,
 			      report.HANDLED(head_) ?
 			      report.HANDLER(head_).value.to_long() : 0,
 			      report.HANDLED(tail_) ?
 			      report.HANDLER(tail_).value.to_long() : 0));
 
-    // filter_xacts will only pass through xacts matching the
+    // filter_posts will only pass through posts matching the
     // `display_predicate'.
     if (report.HANDLED(display_)) {
       display_predicate = item_predicate(report.HANDLER(display_).str(),
 					 report.what_to_keep());
-      handler.reset(new filter_xacts(handler, display_predicate, report));
+      handler.reset(new filter_posts(handler, display_predicate, report));
     }
 
-    // changed_value_xacts adds virtual xacts to the list to account for
+    // changed_value_posts adds virtual posts to the list to account for
     // changes in market value of commodities, which otherwise would affect
     // the running total unpredictably.
     if (report.HANDLED(revalued))
-      handler.reset(new changed_value_xacts
+      handler.reset(new changed_value_posts
 		    (handler, report.HANDLED(revalued_total_) ?
 		     report.HANDLER(revalued_total_).expr :
 		     report.HANDLER(display_total_).expr,
 		     report, report.HANDLED(revalued_only)));
 
-    // calc_xacts computes the running total.  When this appears will
-    // determine, for example, whether filtered xacts are included or excluded
+    // calc_posts computes the running total.  When this appears will
+    // determine, for example, whether filtered posts are included or excluded
     // from the running total.
-    handler.reset(new calc_xacts(handler, expr));
+    handler.reset(new calc_posts(handler, expr));
   }
 
-  // filter_xacts will only pass through xacts matching the
+  // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
   if (report.HANDLED(only_)) {
     only_predicate = item_predicate(report.HANDLER(only_).str(),
 				    report.what_to_keep());
-    handler.reset(new filter_xacts(handler, only_predicate, report));
+    handler.reset(new filter_posts(handler, only_predicate, report));
   }
 
   if (! only_preliminaries) {
-    // sort_xacts will sort all the xacts it sees, based on the `sort_order'
+    // sort_posts will sort all the posts it sees, based on the `sort_order'
     // value expression.
     if (report.HANDLED(sort_)) {
-      if (report.HANDLED(sort_entries_))
-	handler.reset(new sort_entries(handler, report.HANDLER(sort_).str()));
-      else
+      if (report.HANDLED(sort_xacts_))
 	handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
+      else
+	handler.reset(new sort_posts(handler, report.HANDLER(sort_).str()));
     }
 
-    // collapse_xacts causes entries with multiple xacts to appear as entries
-    // with a subtotaled xact for each commodity used.
+    // collapse_posts causes xacts with multiple posts to appear as xacts
+    // with a subtotaled post for each commodity used.
     if (report.HANDLED(collapse))
-      handler.reset(new collapse_xacts(handler, expr,
+      handler.reset(new collapse_posts(handler, expr,
 				       display_predicate, only_predicate,
 				       report.HANDLED(collapse_if_zero)));
 
-    // subtotal_xacts combines all the xacts it receives into one subtotal
-    // entry, which has one xact for each commodity in each account.
+    // subtotal_posts combines all the posts it receives into one subtotal
+    // xact, which has one post for each commodity in each account.
     //
-    // period_xacts is like subtotal_xacts, but it subtotals according to time
+    // period_posts is like subtotal_posts, but it subtotals according to time
     // periods rather than totalling everything.
     //
-    // dow_xacts is like period_xacts, except that it reports all the xacts
+    // dow_posts is like period_posts, except that it reports all the posts
     // that fall on each subsequent day of the week.
     if (report.HANDLED(equity))
-      handler.reset(new xacts_as_equity(handler, expr));
+      handler.reset(new posts_as_equity(handler, expr));
     else if (report.HANDLED(subtotal))
-      handler.reset(new subtotal_xacts(handler, expr));
+      handler.reset(new subtotal_posts(handler, expr));
   }
 
   if (report.HANDLED(dow))
-    handler.reset(new dow_xacts(handler, expr));
+    handler.reset(new dow_posts(handler, expr));
   else if (report.HANDLED(by_payee))
-    handler.reset(new by_payee_xacts(handler, expr));
+    handler.reset(new by_payee_posts(handler, expr));
 
-  // interval_xacts groups xacts together based on a time period, such as
+  // interval_posts groups posts together based on a time period, such as
   // weekly or monthly.
   if (report.HANDLED(period_)) {
-    handler.reset(new interval_xacts(handler, expr,
+    handler.reset(new interval_posts(handler, expr,
 				     report.HANDLER(period_).str(),
 				     report.HANDLED(exact),
 				     report.HANDLED(empty)));
-    handler.reset(new sort_xacts(handler, "date"));
+    handler.reset(new sort_posts(handler, "date"));
   }
 
-  // related_xacts will pass along all xacts related to the xact received.  If
-  // the `related_all' handler is on, then all the entry's xacts are passed;
-  // meaning that if one xact of an entry is to be printed, all the xact for
-  // that entry will be printed.
+  // related_posts will pass along all posts related to the post received.  If
+  // the `related_all' handler is on, then all the xact's posts are passed;
+  // meaning that if one post of an xact is to be printed, all the post for
+  // that xact will be printed.
   if (report.HANDLED(related))
-    handler.reset(new related_xacts(handler, report.HANDLED(related_all)));
+    handler.reset(new related_posts(handler, report.HANDLED(related_all)));
 
-  // anonymize_xacts removes all meaningful information from entry payee's and
+  // anonymize_posts removes all meaningful information from xact payee's and
   // account names, for the sake of creating useful bug reports.
   if (report.HANDLED(anon))
-    handler.reset(new anonymize_xacts(handler));
+    handler.reset(new anonymize_posts(handler));
 
-  // This filter_xacts will only pass through xacts matching the `predicate'.
+  // This filter_posts will only pass through posts matching the `predicate'.
   if (report.HANDLED(limit_)) {
     DEBUG("report.predicate",
 	  "Report predicate expression = " << report.HANDLER(limit_).str());
-    handler.reset(new filter_xacts
+    handler.reset(new filter_posts
 		  (handler, item_predicate(report.HANDLER(limit_).str(),
 					   report.what_to_keep()),
 		   report));
   }
 
-  // budget_xacts takes a set of xacts from a data file and uses them to
-  // generate "budget xacts" which balance against the reported xacts.
+  // budget_posts takes a set of posts from a data file and uses them to
+  // generate "budget posts" which balance against the reported posts.
   //
-  // forecast_xacts is a lot like budget_xacts, except that it adds entries
+  // forecast_posts is a lot like budget_posts, except that it adds xacts
   // only for the future, and does not balance them against anything but the
   // future balance.
 
   if (report.budget_flags != BUDGET_NO_BUDGET) {
-    budget_xacts * budget_handler = new budget_xacts(handler,
+    budget_posts * budget_handler = new budget_posts(handler,
 						     report.budget_flags);
-    budget_handler->add_period_entries(report.session.journal->period_entries);
+    budget_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(budget_handler);
 
-    // Apply this before the budget handler, so that only matching xacts are
-    // calculated toward the budget.  The use of filter_xacts above will
-    // further clean the results so that no automated xacts that don't match
+    // Apply this before the budget handler, so that only matching posts are
+    // calculated toward the budget.  The use of filter_posts above will
+    // further clean the results so that no automated posts that don't match
     // the filter get reported.
     if (report.HANDLED(limit_))
-      handler.reset(new filter_xacts
+      handler.reset(new filter_posts
 		    (handler, item_predicate(report.HANDLER(limit_).str(),
 					     report.what_to_keep()),
 		     report));
   }
   else if (report.HANDLED(forecast_while_)) {
-    forecast_xacts * forecast_handler
-      = new forecast_xacts(handler,
+    forecast_posts * forecast_handler
+      = new forecast_posts(handler,
 			   item_predicate(report.HANDLER(forecast_while_).str(),
 					  report.what_to_keep()),
 			   report);
-    forecast_handler->add_period_entries(report.session.journal->period_entries);
+    forecast_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(forecast_handler);
 
-    // See above, under budget_xacts.
+    // See above, under budget_posts.
     if (report.HANDLED(limit_))
-      handler.reset(new filter_xacts
+      handler.reset(new filter_posts
 		    (handler, item_predicate(report.HANDLER(limit_).str(),
 					     report.what_to_keep()),
 		     report));

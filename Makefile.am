@@ -56,8 +56,8 @@ libledger_data_la_SOURCES  =			\
 	src/textual.cc				\
 	src/journal.cc				\
 	src/account.cc				\
-	src/entry.cc				\
 	src/xact.cc				\
+	src/post.cc				\
 	src/item.cc
 
 libledger_data_la_CPPFLAGS = $(lib_cppflags)
@@ -107,8 +107,8 @@ pkginclude_HEADERS =			   \
 	src/option.h			   \
 					   \
 	src/item.h			   \
+	src/post.h			   \
 	src/xact.h			   \
-	src/entry.h			   \
 	src/account.h			   \
 	src/journal.h			   \
 	src/timelog.h			   \
@@ -199,7 +199,7 @@ libledger_python_la_SOURCES =			\
 	python/pyfstream.h			\
 	python/py_chain.cc			\
 	python/py_commodity.cc			\
-	python/py_entry.cc			\
+	python/py_xact.cc			\
 	python/py_expr.cc			\
 	python/py_flags.cc			\
 	python/py_format.cc			\
@@ -213,7 +213,7 @@ libledger_python_la_SOURCES =			\
 	python/py_times.cc			\
 	python/py_utils.cc			\
 	python/py_value.cc			\
-	python/py_xact.cc			\
+	python/py_post.cc			\
 	python/pyinterp.cc			\
 	python/setup.py
 

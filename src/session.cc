@@ -105,7 +105,7 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLER(file_).data_files.empty())
     throw_(parse_error, "No journal file was specified (please use -f)");
 
-  std::size_t entry_count = 0;
+  std::size_t xact_count = 0;
 
   account_t * acct = journal->master;
   if (! master_account.empty())
@@ -114,7 +114,7 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLED(price_db_)) {
     path price_db_path = resolve_path(HANDLER(price_db_).str());
     if (exists(price_db_path) && read_journal(price_db_path) > 0)
-	throw_(parse_error, "Entries not allowed in price history file");
+	throw_(parse_error, "Transactions not allowed in price history file");
   }
 
   foreach (const path& pathname, HANDLER(file_).data_files) {
@@ -135,10 +135,10 @@ std::size_t session_t::read_data(const string& master_account)
 
       std::istringstream buf_in(buffer.str());
 
-      entry_count += read_journal(buf_in, "/dev/stdin", acct);
+      xact_count += read_journal(buf_in, "/dev/stdin", acct);
     }
     else if (exists(filename)) {
-      entry_count += read_journal(filename, acct);
+      xact_count += read_journal(filename, acct);
     }
     else {
       throw_(parse_error, "Could not read journal file '" << filename << "'");
@@ -147,7 +147,7 @@ std::size_t session_t::read_data(const string& master_account)
 
   VERIFY(journal->valid());
 
-  return entry_count;
+  return xact_count;
 }
 
 void session_t::read_journal_files()
@@ -160,12 +160,12 @@ void session_t::read_journal_files()
 
   std::size_t count = read_data(master_account);
   if (count == 0)
-    throw_(parse_error, "Failed to locate any journal entries; "
+    throw_(parse_error, "Failed to locate any transactions; "
 	   "did you specify a valid file with -f?");
 
   INFO_FINISH(journal);
 
-  INFO("Found " << count << " entries");
+  INFO("Found " << count << " transactions");
 }
 
 void session_t::close_journal_files()
@@ -181,16 +181,16 @@ void session_t::close_journal_files()
   journal.reset(new journal_t(master.get()));
 }
 
-void session_t::clean_xacts()
+void session_t::clean_posts()
 {
-  journal_xacts_iterator walker(*journal.get());
-  pass_down_xacts(xact_handler_ptr(new clear_xact_xdata), walker);
+  journal_posts_iterator walker(*journal.get());
+  pass_down_posts(post_handler_ptr(new clear_post_xdata), walker);
 }
 
-void session_t::clean_xacts(entry_t& entry)
+void session_t::clean_posts(xact_t& xact)
 {
-  entry_xacts_iterator walker(entry);
-  pass_down_xacts(xact_handler_ptr(new clear_xact_xdata), walker);
+  xact_posts_iterator walker(xact);
+  pass_down_posts(post_handler_ptr(new clear_post_xdata), walker);
 }
 
 void session_t::clean_accounts()

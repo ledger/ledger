@@ -246,76 +246,76 @@ reg --budget books
     Assets:Cash
 >>>1
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
-08-Jan-01 Budget entry          Expenses:Books              $-10.00            0
+08-Jan-01 Budget transaction    Expenses:Books              $-10.00            0
 08-Jan-31 End of January        Expenses:Books               $10.00       $10.00
 08-Feb-01 February              Expenses:Books               $20.00       $30.00
-08-Feb-01 Budget entry          Expenses:Books              $-10.00       $20.00
+08-Feb-01 Budget transaction    Expenses:Books              $-10.00       $20.00
 08-Feb-28 End of February       Expenses:Books               $20.00       $40.00
 08-Mar-01 March                 Expenses:Books               $30.00       $70.00
-08-Mar-01 Budget entry          Expenses:Books              $-10.00       $60.00
+08-Mar-01 Budget transaction    Expenses:Books              $-10.00       $60.00
 08-Mar-31 End of March          Expenses:Books               $30.00       $90.00
 08-Apr-01 April                 Expenses:Books               $40.00      $130.00
-08-Apr-01 Budget entry          Expenses:Books              $-10.00      $120.00
+08-Apr-01 Budget transaction    Expenses:Books              $-10.00      $120.00
 08-Apr-30 End of April          Expenses:Books               $40.00      $160.00
 08-May-01 May                   Expenses:Books               $50.00      $210.00
-08-May-01 Budget entry          Expenses:Books              $-10.00      $200.00
+08-May-01 Budget transaction    Expenses:Books              $-10.00      $200.00
 08-May-31 End of May            Expenses:Books               $50.00      $250.00
 08-Jun-01 June                  Expenses:Books               $60.00      $310.00
-08-Jun-01 Budget entry          Expenses:Books              $-10.00      $300.00
+08-Jun-01 Budget transaction    Expenses:Books              $-10.00      $300.00
 08-Jun-30 End of June           Expenses:Books               $60.00      $360.00
 08-Jul-01 July                  Expenses:Books               $70.00      $430.00
-08-Jul-01 Budget entry          Expenses:Books              $-10.00      $420.00
+08-Jul-01 Budget transaction    Expenses:Books              $-10.00      $420.00
 08-Jul-31 End of July           Expenses:Books               $70.00      $490.00
 08-Aug-01 August                Expenses:Books               $80.00      $570.00
-08-Aug-01 Budget entry          Expenses:Books              $-10.00      $560.00
+08-Aug-01 Budget transaction    Expenses:Books              $-10.00      $560.00
 08-Aug-31 End of August         Expenses:Books               $80.00      $640.00
 08-Sep-01 September             Expenses:Books               $90.00      $730.00
-08-Sep-01 Budget entry          Expenses:Books              $-10.00      $720.00
+08-Sep-01 Budget transaction    Expenses:Books              $-10.00      $720.00
 08-Sep-30 End of September      Expenses:Books               $90.00      $810.00
 08-Oct-01 October               Expenses:Books              $100.00      $910.00
-08-Oct-01 Budget entry          Expenses:Books              $-10.00      $900.00
+08-Oct-01 Budget transaction    Expenses:Books              $-10.00      $900.00
 08-Oct-31 End of October        Expenses:Books              $100.00     $1000.00
 08-Nov-01 November              Expenses:Books              $110.00     $1110.00
-08-Nov-01 Budget entry          Expenses:Books              $-10.00     $1100.00
+08-Nov-01 Budget transaction    Expenses:Books              $-10.00     $1100.00
 08-Nov-30 End of November       Expenses:Books              $110.00     $1210.00
 08-Dec-01 December              Expenses:Books              $120.00     $1330.00
-08-Dec-01 Budget entry          Expenses:Books              $-10.00     $1320.00
+08-Dec-01 Budget transaction    Expenses:Books              $-10.00     $1320.00
 08-Dec-31 End of December       Expenses:Books              $120.00     $1440.00
 09-Jan-01 January               Expenses:Books               $10.00     $1450.00
-09-Jan-01 Budget entry          Expenses:Books              $-10.00     $1440.00
+09-Jan-01 Budget transaction    Expenses:Books              $-10.00     $1440.00
 09-Jan-31 End of January        Expenses:Books               $10.00     $1450.00
 09-Feb-01 February              Expenses:Books               $20.00     $1470.00
-09-Feb-01 Budget entry          Expenses:Books              $-10.00     $1460.00
+09-Feb-01 Budget transaction    Expenses:Books              $-10.00     $1460.00
 09-Feb-28 End of February       Expenses:Books               $20.00     $1480.00
 09-Mar-01 March                 Expenses:Books               $30.00     $1510.00
-09-Mar-01 Budget entry          Expenses:Books              $-10.00     $1500.00
+09-Mar-01 Budget transaction    Expenses:Books              $-10.00     $1500.00
 09-Mar-31 End of March          Expenses:Books               $30.00     $1530.00
 09-Apr-01 April                 Expenses:Books               $40.00     $1570.00
-09-Apr-01 Budget entry          Expenses:Books              $-10.00     $1560.00
+09-Apr-01 Budget transaction    Expenses:Books              $-10.00     $1560.00
 09-Apr-30 End of April          Expenses:Books               $40.00     $1600.00
 09-May-01 May                   Expenses:Books               $50.00     $1650.00
-09-May-01 Budget entry          Expenses:Books              $-10.00     $1640.00
+09-May-01 Budget transaction    Expenses:Books              $-10.00     $1640.00
 09-May-31 End of May            Expenses:Books               $50.00     $1690.00
 09-Jun-01 June                  Expenses:Books               $60.00     $1750.00
-09-Jun-01 Budget entry          Expenses:Books              $-10.00     $1740.00
+09-Jun-01 Budget transaction    Expenses:Books              $-10.00     $1740.00
 09-Jun-30 End of June           Expenses:Books               $60.00     $1800.00
 09-Jul-01 July                  Expenses:Books               $70.00     $1870.00
-09-Jul-01 Budget entry          Expenses:Books              $-10.00     $1860.00
+09-Jul-01 Budget transaction    Expenses:Books              $-10.00     $1860.00
 09-Jul-31 End of July           Expenses:Books               $70.00     $1930.00
 09-Aug-01 August                Expenses:Books               $80.00     $2010.00
-09-Aug-01 Budget entry          Expenses:Books              $-10.00     $2000.00
+09-Aug-01 Budget transaction    Expenses:Books              $-10.00     $2000.00
 09-Aug-31 End of August         Expenses:Books               $80.00     $2080.00
 09-Sep-01 September             Expenses:Books               $90.00     $2170.00
-09-Sep-01 Budget entry          Expenses:Books              $-10.00     $2160.00
+09-Sep-01 Budget transaction    Expenses:Books              $-10.00     $2160.00
 09-Sep-30 End of September      Expenses:Books               $90.00     $2250.00
 09-Oct-01 October               Expenses:Books              $100.00     $2350.00
-09-Oct-01 Budget entry          Expenses:Books              $-10.00     $2340.00
+09-Oct-01 Budget transaction    Expenses:Books              $-10.00     $2340.00
 09-Oct-31 End of October        Expenses:Books              $100.00     $2440.00
 09-Nov-01 November              Expenses:Books              $110.00     $2550.00
-09-Nov-01 Budget entry          Expenses:Books              $-10.00     $2540.00
+09-Nov-01 Budget transaction    Expenses:Books              $-10.00     $2540.00
 09-Nov-30 End of November       Expenses:Books              $110.00     $2650.00
 09-Dec-01 December              Expenses:Books              $120.00     $2770.00
-09-Dec-01 Budget entry          Expenses:Books              $-10.00     $2760.00
+09-Dec-01 Budget transaction    Expenses:Books              $-10.00     $2760.00
 09-Dec-31 End of December       Expenses:Books              $120.00     $2880.00
 >>>2
 === 0

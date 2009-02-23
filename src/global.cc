@@ -100,10 +100,10 @@ void global_scope_t::read_init()
       ifstream init(init_file);
 
       if (session().read_journal(init_file) > 0 ||
-	  session().journal->auto_entries.size() > 0 ||
-	  session().journal->period_entries.size() > 0) {
-	throw_(parse_error,
-	       "Entries found in initialization file '" << init_file << "'");
+	  session().journal->auto_xacts.size() > 0 ||
+	  session().journal->period_xacts.size() > 0) {
+	throw_(parse_error, "Transactions found in initialization file '"
+	       << init_file << "'");
       }
 
       TRACE_FINISH(init, 1);
@@ -385,7 +385,7 @@ void global_scope_t::normalize_report_options(const string& verb)
   // jww (2008-08-14): This code really needs to be rationalized away for 3.0.
   // I might be able to do it with command objects, like register_t, which
   // each know how to adjust the report based on its current option settings.
-  if (verb == "print" || verb == "entry" || verb == "dump") {
+  if (verb == "print" || verb == "xact" || verb == "dump") {
     rep.HANDLER(related).on_only();
     rep.HANDLER(related_all).on_only();
   }
@@ -402,13 +402,13 @@ void global_scope_t::normalize_report_options(const string& verb)
   }
 
   if (! rep.HANDLED(empty))
-    rep.HANDLER(display_).on("amount|(!xact&total)");
+    rep.HANDLER(display_).on("amount|(!post&total)");
 
   if (verb[0] != 'b' && verb[0] != 'r')
     rep.HANDLER(base).on_only();
 
   if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
-    rep.HANDLER(sort_entries_).on_only();
+    rep.HANDLER(sort_xacts_).on_only();
 
   long cols = 0;
   if (rep.HANDLED(columns_))

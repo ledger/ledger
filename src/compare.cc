@@ -71,21 +71,21 @@ void compare_items<T>::find_sort_values(std::list<sort_value_t>& sort_values,
 }
 
 template <>
-bool compare_items<xact_t>::operator()(xact_t * left, xact_t * right)
+bool compare_items<post_t>::operator()(post_t * left, post_t * right)
 {
   assert(left);
   assert(right);
 
-  xact_t::xdata_t& lxdata(left->xdata());
-  if (! lxdata.has_flags(XACT_EXT_SORT_CALC)) {
+  post_t::xdata_t& lxdata(left->xdata());
+  if (! lxdata.has_flags(POST_EXT_SORT_CALC)) {
     find_sort_values(lxdata.sort_values, left);
-    lxdata.add_flags(XACT_EXT_SORT_CALC);
+    lxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
-  xact_t::xdata_t& rxdata(right->xdata());
-  if (! rxdata.has_flags(XACT_EXT_SORT_CALC)) {
+  post_t::xdata_t& rxdata(right->xdata());
+  if (! rxdata.has_flags(POST_EXT_SORT_CALC)) {
     find_sort_values(rxdata.sort_values, right);
-    rxdata.add_flags(XACT_EXT_SORT_CALC);
+    rxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
   return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);

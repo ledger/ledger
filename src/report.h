@@ -63,10 +63,10 @@ namespace ledger {
 //
 // 3. Mode of the report.  Currently there are four modes:
 // 
-//    a. Transaction or commodity iteration.  In this mode, all the journal's
-//       entries, the transactions of a specific entry, or all the journal's
+//    a. Posting or commodity iteration.  In this mode, all the journal's
+//       xacts, the postings of a specific xact, or all the journal's
 //       commodities are walked.  In the first two cases, it's the underlying
-//       transactions which are passed to #2; in the second case, each
+//       postings which are passed to #2; in the second case, each
 //       commodity is passed to #2.
 //
 //    b. Account iteration.  This employs step 'a', but add a prologue and
@@ -79,7 +79,7 @@ namespace ledger {
 //
 //    c. Write journal.  In this mode, a single function is called that output
 //       the journal object as a textual file.  #2 is used to print out each
-//       transaction in the journal.
+//       posting in the journal.
 // 
 //    d. Dump binary file.  This is just like 'c', except that it dumps out a
 //       binary file and #2 is completely ignored.
@@ -87,8 +87,8 @@ namespace ledger {
 // 4. For 'a' and 'b' in #3, there is a different iteration function called,
 //    depending on whether we're iterating:
 //
-//    a. The transactions of an entry: walk_transactions.
-//    b. The entries of a journal: walk_entries.
+//    a. The postings of an xact: walk_postings.
+//    b. The xacts of a journal: walk_xacts.
 //    c. The commodities of a journal: walk_commodities.
 //
 // 5. Finally, for the 'a' and 'b' reporting modes, there is a variant which
@@ -121,10 +121,10 @@ public:
     output_stream.close();
   }
 
-  void xacts_report(xact_handler_ptr handler);
-  void entry_report(xact_handler_ptr handler, entry_t& entry);
+  void posts_report(post_handler_ptr handler);
+  void xact_report(post_handler_ptr handler, xact_t& xact);
   void accounts_report(acct_handler_ptr handler);
-  void commodities_report(xact_handler_ptr handler);
+  void commodities_report(post_handler_ptr handler);
 
   void sum_all_accounts();
 
@@ -277,8 +277,8 @@ public:
 
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too, but only apply it
-      // to account entries
-      parent->HANDLER(display_).on("xact|depth<=1");
+      // to account xacts
+      parent->HANDLER(display_).on("post|depth<=1");
     });
 
   OPTION_(report_t, collapse_if_zero, DO() {
@@ -292,8 +292,8 @@ public:
 	 "%(quoted(payee)),"
 	 "%(quoted(account)),"
 	 "%(quoted(scrub(display_amount))),"
-	 "%(quoted((cleared or entry.cleared) ?"
-	 " \"*\" : ((pending or entry.pending) ? \"!\" : \"\"))),"
+	 "%(quoted((cleared or xact.cleared) ?"
+	 " \"*\" : ((pending or xact.pending) ? \"!\" : \"\"))),"
 	 "%(quoted(code)),"
 	 "%(quoted(join(note)))\n");
     });
@@ -390,7 +390,7 @@ public:
   OPTION_(report_t, gain, DO() { // -G
       parent->HANDLER(revalued).on_only();
       parent->HANDLER(amount_).set_expr("(amount, cost)");
-      // Since we are displaying the amounts of revalued transactions, they
+      // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.
       parent->HANDLER(display_amount_)
 	.set_expr("is_seq(get_at(amount_expr, 0)) ?"
@@ -499,14 +499,14 @@ public:
     });
 
   OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
-      on("%(format_date(entry.date, \"%Y/%m/%d\"))"
-	 "%(entry.cleared ? \" *\" : (entry.pending ? \" !\" : \"\"))"
-	 "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(entry.comment | \"\")\n"
-	 "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+      on("%(format_date(xact.date, \"%Y/%m/%d\"))"
+	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
+	 "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(xact.comment | \"\")\n"
+	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
 	 "%(comment | \"\")\n%/"
-	 "    %(entry.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
+	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
 	 "%(comment | \"\")\n%/\n");
@@ -574,16 +574,16 @@ public:
 
   OPTION_(report_t, sort_, DO_(args) { // -S
       on_with(args[0]);
-      parent->HANDLER(sort_entries_).off();
+      parent->HANDLER(sort_xacts_).off();
       parent->HANDLER(sort_all_).off();
     });
 
   OPTION_(report_t, sort_all_, DO_(args) {
       parent->HANDLER(sort_).on_with(args[0]);
-      parent->HANDLER(sort_entries_).off();
+      parent->HANDLER(sort_xacts_).off();
     });
 
-  OPTION_(report_t, sort_entries_, DO_(args) {
+  OPTION_(report_t, sort_xacts_, DO_(args) {
       parent->HANDLER(sort_).on_with(args[0]);
       parent->HANDLER(sort_all_).off();
     });

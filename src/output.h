@@ -56,28 +56,28 @@ namespace ledger {
  *
  * Long.
  */
-class format_xacts : public item_handler<xact_t>
+class format_posts : public item_handler<post_t>
 {
 protected:
   report_t& report;
   format_t  first_line_format;
   format_t  next_lines_format;
   format_t  between_format;
-  entry_t * last_entry;
-  xact_t *  last_xact;
+  xact_t * last_xact;
+  post_t *  last_post;
   bool      print_raw;
 
 public:
-  format_xacts(report_t& _report, const string& format,
+  format_posts(report_t& _report, const string& format,
 	       bool _print_raw = false);
-  virtual ~format_xacts() {
-    TRACE_DTOR(format_xacts);
+  virtual ~format_posts() {
+    TRACE_DTOR(format_posts);
   }
 
   virtual void flush() {
     report.output_stream.flush();
   }
-  virtual void operator()(xact_t& xact);
+  virtual void operator()(post_t& post);
 };
 
 /**
@@ -85,37 +85,37 @@ public:
  *
  * Long.
  */
-class gather_statistics : public item_handler<xact_t>
+class gather_statistics : public item_handler<post_t>
 {
 protected:
   report_t& report;
-  entry_t * last_entry;
-  xact_t *  last_xact;
+  xact_t * last_xact;
+  post_t *  last_post;
 
   struct statistics_t {
     std::set<path> filenames;
 
-    std::size_t total_entries;
     std::size_t total_xacts;
-    std::size_t total_uncleared_xacts;
+    std::size_t total_posts;
+    std::size_t total_uncleared_posts;
     std::size_t total_last_7_days;
     std::size_t total_last_30_days;
     std::size_t total_this_month;
 
-    date_t earliest_xact;
-    date_t latest_xact;
+    date_t earliest_post;
+    date_t latest_post;
 
     std::set<string> accounts_referenced;
     std::set<string> payees_referenced;
 
     statistics_t()
-      : total_entries(0), total_xacts(0), total_uncleared_xacts(0),
+      : total_xacts(0), total_posts(0), total_uncleared_posts(0),
 	total_last_7_days(0), total_last_30_days(0), total_this_month(0) {}
   } statistics;
 
 public:
   gather_statistics(report_t& _report)
-    : report(_report), last_entry(NULL), last_xact(NULL) {
+    : report(_report), last_xact(NULL), last_post(NULL) {
     TRACE_CTOR(gather_statistics, "report&");
   }
   virtual ~gather_statistics() {
@@ -123,7 +123,7 @@ public:
   }
 
   virtual void flush();
-  virtual void operator()(xact_t& xact);
+  virtual void operator()(post_t& post);
 };
 
 /**

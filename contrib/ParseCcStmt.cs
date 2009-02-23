@@ -41,7 +41,7 @@ using CSVReader;
 /**
  * @file ParseCcStmt.cs
  *
- * @brief Provides a .NET way to turn a CSV report into Ledger entries.
+ * @brief Provides a .NET way to turn a CSV report into Ledger transactions.
  *
  * I use this code for converting the statements from my own credit card
  * issuer.  I realize it's strange for this to be in C#, but I wrote it
@@ -52,7 +52,7 @@ using CSVReader;
 
 namespace JohnWiegley
 {
-  public class Transaction
+  public class Posting
   {
     public DateTime Date;
     public DateTime PostedDate;
@@ -63,90 +63,90 @@ namespace JohnWiegley
 
   public interface IStatementConverter
   {
-    List<Transaction> ConvertRecords(Stream s);
+    List<Posting> ConvertRecords(Stream s);
   }
 
   public class ConvertGoldMasterCardStatement : IStatementConverter
   {
-    public List<Transaction> ConvertRecords(Stream s)
+    public List<Posting> ConvertRecords(Stream s)
     {
-      List<Transaction> xacts = new List<Transaction>();
+      List<Posting> posts = new List<Posting>();
 
       using (CSVReader.CSVReader csv = new CSVReader.CSVReader(s)) {
 	string[] fields;
 	while ((fields = csv.GetCSVLine()) != null) {
-	  if (fields[0] == "TRANSACTION DATE")
+	  if (fields[0] == "POSTING DATE")
 	    continue;
 					
-	  Transaction xact = new Transaction();
+	  Posting post = new Posting();
 
-	  xact.Date	  = DateTime.ParseExact(fields[0], "mm/dd/yy", null);
-	  xact.PostedDate = DateTime.ParseExact(fields[1], "mm/dd/yy", null);
-	  xact.Payee	  = fields[2].Trim();
-	  xact.Code	  = fields[3].Trim();
-	  xact.Amount	  = Convert.ToDecimal(fields[4].Trim());
+	  post.Date	  = DateTime.ParseEpost(fields[0], "mm/dd/yy", null);
+	  post.PostedDate = DateTime.ParseEpost(fields[1], "mm/dd/yy", null);
+	  post.Payee	  = fields[2].Trim();
+	  post.Code	  = fields[3].Trim();
+	  post.Amount	  = Convert.ToDecimal(fields[4].Trim());
 
-	  if (xact.Code.Length == 0)
-	    xact.Code = null;
+	  if (post.Code.Length == 0)
+	    post.Code = null;
 
-	  xacts.Add(xact);
+	  posts.Add(post);
 	}
       }
-      return xacts;
+      return posts;
     }
   }
 	
   public class ConvertMastercardStatement : IStatementConverter
   {
-    public List<Transaction> ConvertRecords(Stream s)
+    public List<Posting> ConvertRecords(Stream s)
     {
-      List<Transaction> xacts = new List<Transaction>();
+      List<Posting> posts = new List<Posting>();
 
       using (CSVReader.CSVReader csv = new CSVReader.CSVReader(s)) {
 	string[] fields;
 	while ((fields = csv.GetCSVLine()) != null) {
-	  Transaction xact = new Transaction();
+	  Posting post = new Posting();
 
-	  xact.Date   = DateTime.ParseExact(fields[0], "m/dd/yyyy", null);
-	  xact.Payee  = fields[2].Trim();
-	  xact.Code   = fields[3].Trim();
-	  xact.Amount = - Convert.ToDecimal(fields[4].Trim());
+	  post.Date   = DateTime.ParseEpost(fields[0], "m/dd/yyyy", null);
+	  post.Payee  = fields[2].Trim();
+	  post.Code   = fields[3].Trim();
+	  post.Amount = - Convert.ToDecimal(fields[4].Trim());
 
-	  if (xact.Code.Length == 0)
-	    xact.Code = null;
+	  if (post.Code.Length == 0)
+	    post.Code = null;
 
-	  xacts.Add(xact);
+	  posts.Add(post);
 	}
       }
-      return xacts;
+      return posts;
     }
   }
 
-  public class PrintTransactions
+  public class PrintPostings
   {
-    public string DefaultAccount(Transaction xact) {
-      if (Regex.IsMatch(xact.Payee, "IGA"))
+    public string DefaultAccount(Posting post) {
+      if (Regex.IsMatch(post.Payee, "IGA"))
 	return "Expenses:Food";
       return "Expenses:Food";
     }
 		
     public void Print(string AccountName, string PayAccountName,
-		      List<Transaction> xacts)
+		      List<Posting> posts)
     {
-      foreach (Transaction xact in xacts) {
-	if (xact.Amount < 0) {
-	  Console.WriteLine("{0} * {1}{2}", xact.Date.ToString("yyyy/mm/dd"),
-			    xact.Code != null ? "(" + xact.Code + ") " : "",
-			    xact.Payee);
+      foreach (Posting post in posts) {
+	if (post.Amount < 0) {
+	  Console.WriteLine("{0} * {1}{2}", post.Date.ToString("yyyy/mm/dd"),
+			    post.Code != null ? "(" + post.Code + ") " : "",
+			    post.Payee);
 	  Console.WriteLine("    {0,-36}{1,12}", AccountName,
-			    "$" + (- xact.Amount).ToString());
+			    "$" + (- post.Amount).ToString());
 	  Console.WriteLine("    {0}", PayAccountName);
 	} else {
-	  Console.WriteLine("{0} {1}{2}", xact.Date.ToString("yyyy/mm/dd"),
-			    xact.Code != null ? "(" + xact.Code + ") " : "",
-			    xact.Payee);
-	  Console.WriteLine("    {0,-36}{1,12}", DefaultAccount(xact),
-			    "$" + xact.Amount.ToString());
+	  Console.WriteLine("{0} {1}{2}", post.Date.ToString("yyyy/mm/dd"),
+			    post.Code != null ? "(" + post.Code + ") " : "",
+			    post.Payee);
+	  Console.WriteLine("    {0,-36}{1,12}", DefaultAccount(post),
+			    "$" + post.Amount.ToString());
 	  Console.WriteLine("    * {0}", AccountName);
 	}
 	Console.WriteLine();
@@ -166,17 +166,17 @@ namespace JohnWiegley
 
       IStatementConverter converter;
 
-      if (firstLine.StartsWith("TRANSACTION DATE")) {
+      if (firstLine.StartsWith("POSTING DATE")) {
 	converter = new ConvertGoldMasterCardStatement();
       } else {
 	converter = new ConvertMastercardStatement();
       }
 
       reader = new StreamReader(args[0]);
-      List<Transaction> xacts = converter.ConvertRecords(reader.BaseStream);
+      List<Posting> posts = converter.ConvertRecords(reader.BaseStream);
 
-      PrintTransactions printer = new PrintTransactions();
-      printer.Print(CardAccount, BankAccount, xacts);
+      PrintPostings printer = new PrintPostings();
+      printer.Print(CardAccount, BankAccount, posts);
 
       return 0;
     }

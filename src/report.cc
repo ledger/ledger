@@ -41,18 +41,18 @@
 
 namespace ledger {
 
-void report_t::xacts_report(xact_handler_ptr handler)
+void report_t::posts_report(post_handler_ptr handler)
 {
-  journal_xacts_iterator walker(*session.journal.get());
-  pass_down_xacts(chain_xact_handlers(*this, handler), walker);
-  session.clean_xacts();
+  journal_posts_iterator walker(*session.journal.get());
+  pass_down_posts(chain_post_handlers(*this, handler), walker);
+  session.clean_posts();
 }
 
-void report_t::entry_report(xact_handler_ptr handler, entry_t& entry)
+void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 {
-  entry_xacts_iterator walker(entry);
-  pass_down_xacts(chain_xact_handlers(*this, handler), walker);
-  session.clean_xacts(entry);
+  xact_posts_iterator walker(xact);
+  pass_down_posts(chain_post_handlers(*this, handler), walker);
+  session.clean_posts(xact);
 }
 
 void report_t::sum_all_accounts()
@@ -60,9 +60,9 @@ void report_t::sum_all_accounts()
   expr_t& amount_expr(HANDLER(amount_).expr);
   amount_expr.set_context(this);
 
-  journal_xacts_iterator walker(*session.journal.get());
-  pass_down_xacts(chain_xact_handlers
-		  (*this, xact_handler_ptr(new set_account_value(amount_expr)),
+  journal_posts_iterator walker(*session.journal.get());
+  pass_down_posts(chain_post_handlers
+		  (*this, post_handler_ptr(new set_account_value(amount_expr)),
 		   true), walker);
 
   expr_t& account_amount_expr(HANDLER(account_amount_).expr);
@@ -89,15 +89,15 @@ void report_t::accounts_report(acct_handler_ptr handler)
   else
     pass_down_accounts(handler, *iter.get());
 
-  session.clean_xacts();
+  session.clean_posts();
   session.clean_accounts();
 }
 
-void report_t::commodities_report(xact_handler_ptr handler)
+void report_t::commodities_report(post_handler_ptr handler)
 {
-  xacts_commodities_iterator walker(*session.journal.get());
-  pass_down_xacts(chain_xact_handlers(*this, handler), walker);
-  session.clean_xacts();
+  posts_commodities_iterator walker(*session.journal.get());
+  pass_down_posts(chain_post_handlers(*this, handler), walker);
+  session.clean_posts();
 }
 
 value_t report_t::fn_amount_expr(call_scope_t& scope)
@@ -286,10 +286,10 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
 }
 
 namespace {
-  template <class Type        = xact_t,
-	    class handler_ptr = xact_handler_ptr,
+  template <class Type        = post_t,
+	    class handler_ptr = post_handler_ptr,
 	    void (report_t::*report_method)(handler_ptr) =
-	      &report_t::xacts_report>
+	      &report_t::posts_report>
   class reporter
   {
     shared_ptr<item_handler<Type> > handler;
@@ -516,7 +516,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(set_price_);
     else OPT(sort_);
     else OPT(sort_all_);
-    else OPT(sort_entries_);
+    else OPT(sort_xacts_);
     else OPT_(subtotal);
     else OPT(start_of_week_);
     break;
@@ -576,7 +576,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (is_eq(q, "csv"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
-	     (new format_xacts(*this, report_format(HANDLER(csv_format_))),
+	     (new format_posts(*this, report_format(HANDLER(csv_format_))),
 	      *this));
 	break;
 
@@ -584,30 +584,30 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (is_eq(q, "equity"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
-	     (new format_xacts(*this, report_format(HANDLER(print_format_))),
+	     (new format_posts(*this, report_format(HANDLER(print_format_))),
 	      *this));
-	else if (is_eq(q, "entry"))
-	  return WRAP_FUNCTOR(entry_command);
+	else if (is_eq(q, "xact") || is_eq(q, "entry"))
+	  return WRAP_FUNCTOR(xact_command);
 	else if (is_eq(q, "emacs"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_emacs_xacts(output_stream), *this));
+	    (reporter<>(new format_emacs_posts(output_stream), *this));
 	break;
 
       case 'p':
 	if (*(q + 1) == '\0' || is_eq(q, "print"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
-	     (new format_xacts(*this, report_format(HANDLER(print_format_)),
+	     (new format_posts(*this, report_format(HANDLER(print_format_)),
 			       HANDLED(raw)), *this));
 	else if (is_eq(q, "prices"))
 	  return expr_t::op_t::wrap_functor
-	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
-	     (new format_xacts(*this, report_format(HANDLER(prices_format_))),
+	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
+	     (new format_posts(*this, report_format(HANDLER(prices_format_))),
 	      *this));
 	else if (is_eq(q, "pricesdb"))
 	  return expr_t::op_t::wrap_functor
-	    (reporter<xact_t, xact_handler_ptr, &report_t::commodities_report>
-	     (new format_xacts(*this, report_format(HANDLER(pricesdb_format_))),
+	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
+	     (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
 	      *this));
 	break;
 
@@ -615,7 +615,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (*(q + 1) == '\0' || is_eq(q, "reg") || is_eq(q, "register"))
 	  return WRAP_FUNCTOR
 	    (reporter<>
-	     (new format_xacts(*this, report_format(HANDLER(register_format_))),
+	     (new format_posts(*this, report_format(HANDLER(register_format_))),
 	      *this));
 	else if (is_eq(q, "reload"))
 	  return MAKE_FUNCTOR(report_t::reload_command);
@@ -700,6 +700,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
+    else if (is_eq(p, "post"))
+      return MAKE_FUNCTOR(report_t::fn_false);
     break;
 
   case 'q':
@@ -726,11 +728,6 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_truncate);
     else if (is_eq(p, "total_expr"))
       return MAKE_FUNCTOR(report_t::fn_total_expr);
-    break;
-
-  case 'x':
-    if (is_eq(p, "xact"))
-      return MAKE_FUNCTOR(report_t::fn_false);
     break;
   }
 

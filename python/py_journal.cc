@@ -64,57 +64,57 @@ void export_journal()
 } // namespace ledger
 
 #if 0
-entry_t& transaction_entry(const transaction_t& xact)
+xact_t& post_xact(const post_t& post)
 {
-  return *xact.entry;
+  return *post.xact;
 }
 
-unsigned int transactions_len(entry_base_t& entry)
+unsigned int posts_len(xact_base_t& xact)
 {
-  return entry.transactions.size();
+  return xact.posts.size();
 }
 
-transaction_t& transactions_getitem(entry_base_t& entry, int i)
+post_t& posts_getitem(xact_base_t& xact, int i)
 {
   static int last_index = 0;
-  static entry_base_t * last_entry = NULL;
-  static transactions_list::iterator elem;
+  static xact_base_t * last_xact = NULL;
+  static posts_list::iterator elem;
 
-  std::size_t len = entry.transactions.size();
+  std::size_t len = xact.posts.size();
 
   if (abs(i) >= len) {
     PyErr_SetString(PyExc_IndexError, "Index out of range");
     throw_error_already_set();
   }
 
-  if (&entry == last_entry && i == last_index + 1) {
+  if (&xact == last_xact && i == last_index + 1) {
     last_index = i;
     return **++elem;
   }
 
   int x = i < 0 ? len + i : i;
-  elem = entry.transactions.begin();
+  elem = xact.posts.begin();
   while (--x >= 0)
     elem++;
 
-  last_entry = &entry;
+  last_xact = &xact;
   last_index = i;
 
   return **elem;
 }
 
-unsigned int entries_len(journal_t& journal)
+unsigned int xacts_len(journal_t& journal)
 {
-  return journal.entries.size();
+  return journal.xacts.size();
 }
 
-entry_t& entries_getitem(journal_t& journal, int i)
+xact_t& xacts_getitem(journal_t& journal, int i)
 {
   static int last_index = 0;
   static journal_t * last_journal = NULL;
-  static entries_list::iterator elem;
+  static xacts_list::iterator elem;
 
-  std::size_t len = journal.entries.size();
+  std::size_t len = journal.xacts.size();
 
   if (abs(i) >= len) {
     PyErr_SetString(PyExc_IndexError, "Index out of range");
@@ -127,7 +127,7 @@ entry_t& entries_getitem(journal_t& journal, int i)
   }
 
   int x = i < 0 ? len + i : i;
-  elem = journal.entries.begin();
+  elem = journal.xacts.begin();
   while (--x >= 0)
     elem++;
 
@@ -192,58 +192,58 @@ account_t * py_find_account_2(journal_t& journal, const string& name,
   return journal.find_account(name, auto_create);
 }
 
-bool py_add_entry(journal_t& journal, entry_t * entry) {
-  return journal.add_entry(new entry_t(*entry));
+bool py_add_xact(journal_t& journal, xact_t * xact) {
+  return journal.add_xact(new xact_t(*xact));
 }
 
-void py_add_transaction(entry_base_t& entry, transaction_t * xact) {
-  return entry.add_transaction(new transaction_t(*xact));
+void py_add_post(xact_base_t& xact, post_t * post) {
+  return xact.add_post(new post_t(*post));
 }
 
-struct entry_base_wrap : public entry_base_t
+struct xact_base_wrap : public xact_base_t
 {
   PyObject * self;
-  entry_base_wrap(PyObject * self_) : self(self_) {}
+  xact_base_wrap(PyObject * self_) : self(self_) {}
 
   virtual bool valid() const {
     return call_method<bool>(self, "valid");
   }
 };
 
-struct py_entry_finalizer_t : public entry_finalizer_t {
+struct py_xact_finalizer_t : public xact_finalizer_t {
   object pyobj;
-  py_entry_finalizer_t() {}
-  py_entry_finalizer_t(object obj) : pyobj(obj) {}
-  py_entry_finalizer_t(const py_entry_finalizer_t& other)
+  py_xact_finalizer_t() {}
+  py_xact_finalizer_t(object obj) : pyobj(obj) {}
+  py_xact_finalizer_t(const py_xact_finalizer_t& other)
     : pyobj(other.pyobj) {}
-  virtual bool operator()(entry_t& entry, bool post) {
-    return call<bool>(pyobj.ptr(), entry, post);
+  virtual bool operator()(xact_t& xact, bool post) {
+    return call<bool>(pyobj.ptr(), xact, post);
   }
 };
 
-std::list<py_entry_finalizer_t> py_finalizers;
+std::list<py_xact_finalizer_t> py_finalizers;
 
-void py_add_entry_finalizer(journal_t& journal, object x)
+void py_add_xact_finalizer(journal_t& journal, object x)
 {
-  py_finalizers.push_back(py_entry_finalizer_t(x));
-  journal.add_entry_finalizer(&py_finalizers.back());
+  py_finalizers.push_back(py_xact_finalizer_t(x));
+  journal.add_xact_finalizer(&py_finalizers.back());
 }
 
-void py_remove_entry_finalizer(journal_t& journal, object x)
+void py_remove_xact_finalizer(journal_t& journal, object x)
 {
-  for (std::list<py_entry_finalizer_t>::iterator i = py_finalizers.begin();
+  for (std::list<py_xact_finalizer_t>::iterator i = py_finalizers.begin();
        i != py_finalizers.end();
        i++)
     if ((*i).pyobj == x) {
-      journal.remove_entry_finalizer(&(*i));
+      journal.remove_xact_finalizer(&(*i));
       py_finalizers.erase(i);
       return;
     }
 }
 
-void py_run_entry_finalizers(journal_t& journal, entry_t& entry, bool post)
+void py_run_xact_finalizers(journal_t& journal, xact_t& xact, bool post)
 {
-  run_hooks(journal.entry_finalize_hooks, entry, post);
+  run_hooks(journal.xact_finalize_hooks, xact, post);
 }
 
 #define EXC_TRANSLATOR(type)				\
@@ -256,70 +256,70 @@ EXC_TRANSLATOR(interval_expr_error)
 EXC_TRANSLATOR(format_error)
 EXC_TRANSLATOR(parse_error)
 
-value_t py_transaction_amount(transaction_t * xact) {
-  return value_t(xact->amount);
+value_t py_post_amount(post_t * post) {
+  return value_t(post->amount);
 }
 
-transaction_t::state_t py_entry_state(entry_t * entry) {
-  transaction_t::state_t state;
-  if (entry->get_state(&state))
+post_t::state_t py_xact_state(xact_t * xact) {
+  post_t::state_t state;
+  if (xact->get_state(&state))
     return state;
   else
-    return transaction_t::UNCLEARED;
+    return post_t::UNCLEARED;
 }
 
 void export_journal()
 {
-  scope().attr("TRANSACTION_NORMAL")	 = TRANSACTION_NORMAL;
-  scope().attr("TRANSACTION_VIRTUAL")	 = TRANSACTION_VIRTUAL;
-  scope().attr("TRANSACTION_BALANCE")	 = TRANSACTION_BALANCE;
-  scope().attr("TRANSACTION_AUTO")	 = TRANSACTION_AUTO;
-  scope().attr("TRANSACTION_BULK_ALLOC") = TRANSACTION_BULK_ALLOC;
-  scope().attr("TRANSACTION_CALCULATED") = TRANSACTION_CALCULATED;
+  scope().attr("POST_NORMAL")     = POST_NORMAL;
+  scope().attr("POST_VIRTUAL")    = POST_VIRTUAL;
+  scope().attr("POST_BALANCE")    = POST_BALANCE;
+  scope().attr("POST_AUTO")	  = POST_AUTO;
+  scope().attr("POST_BULK_ALLOC") = POST_BULK_ALLOC;
+  scope().attr("POST_CALCULATED") = POST_CALCULATED;
 
-  enum_< transaction_t::state_t > ("State")
-    .value("Uncleared", transaction_t::UNCLEARED)
-    .value("Cleared",   transaction_t::CLEARED)
-    .value("Pending",   transaction_t::PENDING)
+  enum_< post_t::state_t > ("State")
+    .value("Uncleared", post_t::UNCLEARED)
+    .value("Cleared",   post_t::CLEARED)
+    .value("Pending",   post_t::PENDING)
     ;
 
-  class_< transaction_t > ("Transaction")
+  class_< post_t > ("Post")
     .def(init<optional<account_t *> >())
     .def(init<account_t *, amount_t, optional<unsigned int, const string&> >())
 
     .def(self == self)
     .def(self != self)
 
-    .add_property("entry",
-		  make_getter(&transaction_t::entry,
+    .add_property("xact",
+		  make_getter(&post_t::xact,
 			      return_value_policy<reference_existing_object>()))
     .add_property("account",
-		  make_getter(&transaction_t::account,
+		  make_getter(&post_t::account,
 			      return_value_policy<reference_existing_object>()))
 
-    .add_property("amount", &py_transaction_amount)
-    .def_readonly("amount_expr", &transaction_t::amount_expr)
+    .add_property("amount", &py_post_amount)
+    .def_readonly("amount_expr", &post_t::amount_expr)
     .add_property("cost",
-		  make_getter(&transaction_t::cost,
+		  make_getter(&post_t::cost,
 			      return_internal_reference<1>()))
-    .def_readonly("cost_expr", &transaction_t::cost_expr)
+    .def_readonly("cost_expr", &post_t::cost_expr)
 
-    .def_readwrite("state", &transaction_t::state)
-    .def_readwrite("flags", &transaction_t::flags)
-    .def_readwrite("note", &transaction_t::note)
+    .def_readwrite("state", &post_t::state)
+    .def_readwrite("flags", &post_t::flags)
+    .def_readwrite("note", &post_t::note)
 
-    .def_readonly("beg_pos", &transaction_t::beg_pos)
-    .def_readonly("beg_line", &transaction_t::beg_line)
-    .def_readonly("end_pos", &transaction_t::end_pos)
-    .def_readonly("end_line", &transaction_t::end_line)
+    .def_readonly("beg_pos", &post_t::beg_pos)
+    .def_readonly("beg_line", &post_t::beg_line)
+    .def_readonly("end_pos", &post_t::end_pos)
+    .def_readonly("end_line", &post_t::end_line)
 
-    .def("actual_date", &transaction_t::actual_date)
-    .def("effective_date", &transaction_t::effective_date)
-    .def("date", &transaction_t::date)
+    .def("actual_date", &post_t::actual_date)
+    .def("effective_date", &post_t::effective_date)
+    .def("date", &post_t::date)
 
-    .def("use_effective_date", &transaction_t::use_effective_date)
+    .def("use_effective_date", &post_t::use_effective_date)
 
-    .def("valid", &transaction_t::valid)
+    .def("valid", &post_t::valid)
     ;
 
   class_< account_t >
@@ -360,8 +360,8 @@ void export_journal()
     .def(self == self)
     .def(self != self)
 
-    .def("__len__", entries_len)
-    .def("__getitem__", entries_getitem, return_internal_reference<1>())
+    .def("__len__", xacts_len)
+    .def("__getitem__", xacts_getitem, return_internal_reference<1>())
 
     .add_property("master", make_getter(&journal_t::master,
 					return_internal_reference<1>()))
@@ -380,50 +380,50 @@ void export_journal()
     .def("find_account_re", &journal_t::find_account_re,
 	 return_internal_reference<1>())
 
-    .def("add_entry", py_add_entry)
-    .def("remove_entry", &journal_t::remove_entry)
+    .def("add_xact", py_add_xact)
+    .def("remove_xact", &journal_t::remove_xact)
 
-    .def("add_entry_finalizer", py_add_entry_finalizer)
-    .def("remove_entry_finalizer", py_remove_entry_finalizer)
-    .def("run_entry_finalizers", py_run_entry_finalizers)
+    .def("add_xact_finalizer", py_add_xact_finalizer)
+    .def("remove_xact_finalizer", py_remove_xact_finalizer)
+    .def("run_xact_finalizers", py_run_xact_finalizers)
 
     .def("valid", &journal_t::valid)
     ;
 
-  class_< entry_base_t, entry_base_wrap, boost::noncopyable > ("EntryBase")
-    .def("__len__", transactions_len)
-    .def("__getitem__", transactions_getitem,
+  class_< xact_base_t, xact_base_wrap, boost::noncopyable > ("XactBase")
+    .def("__len__", posts_len)
+    .def("__getitem__", posts_getitem,
 	 return_internal_reference<1>())
 
-    .def_readonly("journal", &entry_base_t::journal)
+    .def_readonly("journal", &xact_base_t::journal)
 
-    .def_readonly("src_idx", &entry_base_t::src_idx)
-    .def_readonly("beg_pos", &entry_base_t::beg_pos)
-    .def_readonly("beg_line", &entry_base_t::beg_line)
-    .def_readonly("end_pos", &entry_base_t::end_pos)
-    .def_readonly("end_line", &entry_base_t::end_line)
+    .def_readonly("src_idx", &xact_base_t::src_idx)
+    .def_readonly("beg_pos", &xact_base_t::beg_pos)
+    .def_readonly("beg_line", &xact_base_t::beg_line)
+    .def_readonly("end_pos", &xact_base_t::end_pos)
+    .def_readonly("end_line", &xact_base_t::end_line)
 
-    .def("add_transaction", py_add_transaction)
-    .def("remove_transaction", &entry_base_t::remove_transaction)
+    .def("add_post", py_add_post)
+    .def("remove_post", &xact_base_t::remove_post)
 
     .def(self == self)
     .def(self != self)
 
-    .def("finalize", &entry_base_t::finalize)
-    .def("valid", &entry_base_t::valid)
+    .def("finalize", &xact_base_t::finalize)
+    .def("valid", &xact_base_t::valid)
     ;
 
-  class_< entry_t, bases<entry_base_t> > ("Entry")
-    .add_property("date", &entry_t::date)
-    .add_property("effective_date", &entry_t::effective_date)
-    .add_property("actual_date", &entry_t::actual_date)
+  class_< xact_t, bases<xact_base_t> > ("Xact")
+    .add_property("date", &xact_t::date)
+    .add_property("effective_date", &xact_t::effective_date)
+    .add_property("actual_date", &xact_t::actual_date)
 
-    .def_readwrite("code", &entry_t::code)
-    .def_readwrite("payee", &entry_t::payee)
+    .def_readwrite("code", &xact_t::code)
+    .def_readwrite("payee", &xact_t::payee)
 
-    .add_property("state", &py_entry_state)
+    .add_property("state", &py_xact_state)
 
-    .def("valid", &entry_t::valid)
+    .def("valid", &xact_t::valid)
     ;
 
 #define EXC_TRANSLATE(type)					\

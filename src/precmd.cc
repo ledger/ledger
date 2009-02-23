@@ -36,7 +36,7 @@
 namespace ledger {
 
 namespace {
-  xact_t * get_sample_xact(report_t& report)
+  post_t * get_sample_post(report_t& report)
   {
     {
       string str;
@@ -52,7 +52,7 @@ namespace {
 
       std::ostream& out(report.output_stream);
 
-      out << "--- Context is first transaction of the following entry ---"
+      out << "--- Context is first posting of the following transaction ---"
 	  << std::endl << str << std::endl;
       {
 	std::istringstream in(str);
@@ -60,8 +60,8 @@ namespace {
 	report.session.clean_accounts();
       }
     }
-    entry_t * first = report.session.journal->entries.front();
-    return first->xacts.front();
+    xact_t * first = report.session.journal->xacts.front();
+    return first->posts.front();
   }
 }
 
@@ -76,7 +76,7 @@ value_t parse_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  xact_t * xact = get_sample_xact(report);
+  post_t * post = get_sample_post(report);
 
   out << "--- Input expression ---" << std::endl;
   out << arg << std::endl;
@@ -89,7 +89,7 @@ value_t parse_command(call_scope_t& args)
   out << std::endl << "--- Expression tree ---" << std::endl;
   expr.dump(out);
 
-  bind_scope_t bound_scope(args, *xact);
+  bind_scope_t bound_scope(args, *post);
   expr.compile(bound_scope);
   out << std::endl << "--- Compiled tree ---" << std::endl;
   expr.dump(out);
@@ -125,7 +125,7 @@ value_t format_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  xact_t * xact = get_sample_xact(report);
+  post_t * post = get_sample_post(report);
 
   out << "--- Input format string ---" << std::endl;
   out << arg << std::endl << std::endl;
@@ -135,7 +135,7 @@ value_t format_command(call_scope_t& args)
   fmt.dump(out);
 
   out << std::endl << "--- Formatted string ---" << std::endl;
-  bind_scope_t bound_scope(args, *xact);
+  bind_scope_t bound_scope(args, *post);
   out << '"';
   fmt.format(out, bound_scope);
   out << "\"\n";

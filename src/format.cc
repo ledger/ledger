@@ -73,12 +73,12 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
   //   d: COMPLETE_DATE_STRING
   //   D: DATE_STRING
   //   S: SOURCE; break
-  //   B: ENTRY_BEG_POS
-  //   b: ENTRY_BEG_LINE
-  //   E: ENTRY_END_POS
-  //   e: ENTRY_END_LINE
+  //   B: XACT_BEG_POS
+  //   b: XACT_BEG_LINE
+  //   E: XACT_END_POS
+  //   e: XACT_END_LINE
   //   X: CLEARED
-  //   Y: ENTRY_CLEARED
+  //   Y: XACT_CLEARED
   //   C: CODE
   //   P: PAYEE
   //   W: OPT_ACCOUNT
@@ -91,10 +91,10 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
   //   n: OPT_NOTE
   //   _: DEPTH_SPACER
   //   
-  //   xB: XACT_BEG_POS
-  //   xb: XACT_BEG_LINE
-  //   xE: XACT_END_POS
-  //   xe: XACT_END_LINE
+  //   xB: POST_BEG_POS
+  //   xb: POST_BEG_LINE
+  //   xE: POST_END_POS
+  //   xe: POST_END_LINE
 
   for (const char * p = fmt.c_str(); *p; p++) {
     if (*p != '%' && *p != '\\') {

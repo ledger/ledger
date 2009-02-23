@@ -46,162 +46,209 @@
 #ifndef _XACT_H
 #define _XACT_H
 
-#include "item.h"
+#include "post.h"
+#include "predicate.h"
 
 namespace ledger {
 
-class entry_t;
-class account_t;
-
-class xact_t;
-typedef std::list<xact_t *> xacts_list;
+class journal_t;
 
 /**
  * @brief Brief
  *
  * Long.
  */
-class xact_t : public item_t
+class xact_base_t : public item_t
 {
 public:
-#define XACT_VIRTUAL	  0x10 // the account was specified with (parens)
-#define XACT_MUST_BALANCE 0x20 // the account was specified with [brackets]
-#define XACT_AUTO	  0x40 // transaction created by automated entry
-#define XACT_CALCULATED	  0x80 // transaction's amount was auto-calculated
+  journal_t * journal;
 
-  entry_t *	     entry;	// only set for xacts of regular entries
-  account_t *	     account;
+  posts_list  posts;
 
-  amount_t	     amount;	// can be null until finalization
-  optional<amount_t> cost;
-  optional<amount_t> assigned_amount;
-
-  xact_t(account_t * _account = NULL,
-	 flags_t     _flags   = ITEM_NORMAL)
-    : item_t(_flags),
-      entry(NULL), account(_account)
-  {
-    TRACE_CTOR(xact_t, "account_t *, flags_t");
+  xact_base_t() : item_t(), journal(NULL) {
+    TRACE_CTOR(xact_base_t, "");
   }
-  xact_t(account_t *	         _account,
-	 const amount_t&         _amount,
-	 flags_t                 _flags = ITEM_NORMAL,
-	 const optional<string>& _note = none)
-    : item_t(_flags, _note),
-      entry(NULL), account(_account), amount(_amount)
-  {
-    TRACE_CTOR(xact_t, "account_t *, const amount_t&, flags_t, const optional<string>&");
-  }
-  xact_t(const xact_t& xact)
-    : item_t(xact),
-      entry(xact.entry),
-      account(xact.account),
-      amount(xact.amount),
-      cost(xact.cost),
-      assigned_amount(xact.assigned_amount),
-      xdata_(xact.xdata_)
-  {
-    TRACE_CTOR(xact_t, "copy");
-  }
-  ~xact_t() {
-    TRACE_DTOR(xact_t);
-  }
+  xact_base_t(const xact_base_t& e);  
 
-  virtual bool has_tag(const string& tag) const;
-  virtual bool has_tag(const mask_t& tag_mask,
-		       const optional<mask_t>& value_mask = none) const;
-
-  virtual optional<string> get_tag(const string& tag) const;
-  virtual optional<string> get_tag(const mask_t& tag_mask,
-				   const optional<mask_t>& value_mask = none) const;
-
-  virtual date_t date() const;
-  virtual optional<date_t> effective_date() const;
+  virtual ~xact_base_t();
 
   virtual state_t state() const;
 
-  bool must_balance() const {
-    return ! has_flags(XACT_VIRTUAL) || has_flags(XACT_MUST_BALANCE);
+  virtual void add_post(post_t * post);
+  virtual bool remove_post(post_t * post);
+
+  virtual bool finalize();
+  virtual bool valid() const = 0;
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class xact_t : public xact_base_t
+{
+public:
+  optional<string> code;
+  string	   payee;
+
+  xact_t() {
+    TRACE_CTOR(xact_t, "");
   }
+  xact_t(const xact_t& e);
+
+  virtual ~xact_t() {
+    TRACE_DTOR(xact_t);
+  }
+
+  virtual void add_post(post_t * post);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
 
-  bool valid() const;
-
-  struct xdata_t : public supports_flags<>
-  {
-#define XACT_EXT_RECEIVED   0x01
-#define XACT_EXT_HANDLED    0x02
-#define XACT_EXT_TO_DISPLAY 0x04
-#define XACT_EXT_DISPLAYED  0x08
-#define XACT_EXT_NO_TOTAL   0x10
-#define XACT_EXT_SORT_CALC  0x20
-#define XACT_EXT_COMPOUND   0x40
-#define XACT_EXT_MATCHES    0x80
-
-    value_t	total;
-    std::size_t	count;
-    value_t	value;
-    date_t	date;
-    account_t *	account;
-    void *	ptr;
-
-    std::list<sort_value_t> sort_values;
-
-    xdata_t()
-      : supports_flags<>(), count(0), account(NULL), ptr(NULL) {
-      TRACE_CTOR(xact_t::xdata_t, "");
-    }
-    xdata_t(const xdata_t& other)
-      : supports_flags<>(other.flags()),
-	total(other.total),
-	count(other.count),
-	value(other.value),
-	date(other.date),
-	account(other.account),
-	ptr(NULL),
-	sort_values(other.sort_values)
-    {
-      TRACE_CTOR(xact_t::xdata_t, "copy");
-    }
-    ~xdata_t() throw() {
-      TRACE_DTOR(xact_t::xdata_t);
-    }
-  };
-
-  // This variable holds optional "extended data" which is usually produced
-  // only during reporting, and only for the transaction set being reported.
-  // It's a memory-saving measure to delay allocation until the last possible
-  // moment.
-  mutable optional<xdata_t> xdata_;
-
-  bool has_xdata() const {
-    return xdata_;
-  }
-  void clear_xdata() {
-    xdata_ = none;
-  }
-  xdata_t& xdata() {
-    if (! xdata_)
-      xdata_ = xdata_t();
-    return *xdata_;
-  }
-
-  void add_to_value(value_t& value, expr_t& expr);
-
-  account_t * reported_account() {
-    if (xdata_)
-      if (account_t * acct = xdata_->account)
-	return acct;
-    return account;
-  }
-
-  const account_t * reported_account() const {
-    return const_cast<xact_t *>(this)->reported_account();
-  }
-
-  friend class entry_t;
+  virtual bool valid() const;
 };
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+struct xact_finalizer_t {
+  virtual ~xact_finalizer_t() {}
+  virtual bool operator()(xact_t& xact, bool post) = 0;
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class auto_xact_t : public xact_base_t
+{
+public:
+  item_predicate predicate;
+
+  auto_xact_t() {
+    TRACE_CTOR(auto_xact_t, "");
+  }
+  auto_xact_t(const auto_xact_t& other)
+    : xact_base_t(), predicate(other.predicate) {
+    TRACE_CTOR(auto_xact_t, "copy");
+  }
+  auto_xact_t(const item_predicate& _predicate)
+    : predicate(_predicate)
+  {
+    TRACE_CTOR(auto_xact_t, "const item_predicate<post_t>&");
+  }
+
+  virtual ~auto_xact_t() {
+    TRACE_DTOR(auto_xact_t);
+  }
+
+  virtual void extend_xact(xact_base_t& xact, bool post);
+  virtual bool valid() const {
+    return true;
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+struct auto_xact_finalizer_t : public xact_finalizer_t
+{
+  journal_t * journal;
+
+  auto_xact_finalizer_t() : journal(NULL) {
+    TRACE_CTOR(auto_xact_finalizer_t, "");
+  }
+  auto_xact_finalizer_t(const auto_xact_finalizer_t& other)
+    : xact_finalizer_t(), journal(other.journal) {
+    TRACE_CTOR(auto_xact_finalizer_t, "copy");
+  }
+  auto_xact_finalizer_t(journal_t * _journal) : journal(_journal) {
+    TRACE_CTOR(auto_xact_finalizer_t, "journal_t *");
+  }
+  ~auto_xact_finalizer_t() throw() {
+    TRACE_DTOR(auto_xact_finalizer_t);
+  }
+
+  virtual bool operator()(xact_t& xact, bool post);
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class period_xact_t : public xact_base_t
+{
+ public:
+  interval_t period;
+  string     period_string;
+
+  period_xact_t() {
+    TRACE_CTOR(period_xact_t, "");
+  }
+  period_xact_t(const period_xact_t& e)
+    : xact_base_t(e), period(e.period), period_string(e.period_string) {
+    TRACE_CTOR(period_xact_t, "copy");
+  }
+  period_xact_t(const string& _period)
+    : period(_period), period_string(_period) {
+    TRACE_CTOR(period_xact_t, "const string&");
+  }
+
+  virtual ~period_xact_t() throw() {
+    TRACE_DTOR(period_xact_t);
+  }
+
+  virtual bool valid() const {
+    return period;
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class func_finalizer_t : public xact_finalizer_t
+{
+  func_finalizer_t();
+
+public:
+  typedef function<bool (xact_t& xact, bool post)> func_t;
+
+  func_t func;
+
+  func_finalizer_t(func_t _func) : func(_func) {
+    TRACE_CTOR(func_finalizer_t, "func_t");
+  }
+  func_finalizer_t(const func_finalizer_t& other) :
+    xact_finalizer_t(), func(other.func) {
+    TRACE_CTOR(func_finalizer_t, "copy");
+  }
+  ~func_finalizer_t() throw() {
+    TRACE_DTOR(func_finalizer_t);
+  }
+
+  virtual bool operator()(xact_t& xact, bool post) {
+    return func(xact, post);
+  }
+};
+
+void extend_xact_base(journal_t * journal, xact_base_t& xact, bool post);
+
+inline bool auto_xact_finalizer_t::operator()(xact_t& xact, bool post) {
+  extend_xact_base(journal, xact, post);
+  return true;
+}
+
+typedef std::list<xact_t *>	    xacts_list;
+typedef std::list<auto_xact_t *>   auto_xacts_list;
+typedef std::list<period_xact_t *> period_xacts_list;
 
 } // namespace ledger
 

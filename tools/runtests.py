@@ -89,9 +89,6 @@ options = [
   #"--version",
   "--weekly",
   "--wide",
-  #"--wide-register-format",
-  #"--write-hdr-format",
-  #"--write-xact-format",
   "--yearly",
 ]
 

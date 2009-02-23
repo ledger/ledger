@@ -59,9 +59,9 @@ namespace ledger {
 class item_t : public supports_flags<>, public scope_t
 {
 public:
-#define ITEM_NORMAL     0x00	// no flags at all, a basic transaction
-#define ITEM_GENERATED  0x01	// transaction was not found in a journal
-#define ITEM_TEMP       0x02	// transaction is a temporary object
+#define ITEM_NORMAL     0x00	// no flags at all, a basic posting
+#define ITEM_GENERATED  0x01	// posting was not found in a journal
+#define ITEM_TEMP       0x02	// posting is a temporary object
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
@@ -112,11 +112,11 @@ public:
     end_line  = item.end_line;
   }
 
-  virtual bool operator==(const item_t& entry) {
-    return this == &entry;
+  virtual bool operator==(const item_t& xact) {
+    return this == &xact;
   }
-  virtual bool operator!=(const item_t& entry) {
-    return ! (*this == entry);
+  virtual bool operator!=(const item_t& xact) {
+    return ! (*this == xact);
   }
 
   virtual bool has_tag(const string& tag) const;

@@ -47,7 +47,7 @@ using namespace boost::python;
 void export_timelog()
 {
 #if 0
-  class_< time_entry_t > ("TimeEntry")
+  class_< time_xact_t > ("TimeXact")
     ;
   class_< time_log_t > ("TimeLog")
     ;

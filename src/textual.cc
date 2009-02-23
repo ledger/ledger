@@ -68,7 +68,7 @@ namespace {
     std::size_t       count;
     std::size_t       errors;
 
-    scoped_ptr<auto_entry_finalizer_t> auto_entry_finalizer;
+    scoped_ptr<auto_xact_finalizer_t> auto_xact_finalizer;
 
     instance_t(std::list<account_t *>& _account_stack,
 #if defined(TIMELOG_SUPPORT)
@@ -100,13 +100,13 @@ namespace {
     void default_commodity_directive(char * line);
     void default_account_directive(char * line);
     void price_conversion_directive(char * line);
-    void price_entry_directive(char * line);
+    void price_xact_directive(char * line);
     void nomarket_directive(char * line);
     void year_directive(char * line);
     void option_directive(char * line);
-    void automated_entry_directive(char * line);
-    void period_entry_directive(char * line);
-    void entry_directive(char * line, std::streamsize len);
+    void automated_xact_directive(char * line);
+    void period_xact_directive(char * line);
+    void xact_directive(char * line, std::streamsize len);
     void include_directive(char * line);
     void account_directive(char * line);
     void end_directive(char * line);
@@ -114,16 +114,16 @@ namespace {
     void define_directive(char * line);
     void general_directive(char * line);
 
-    xact_t * parse_xact(char *		line,
+    post_t * parse_post(char *		line,
 			std::streamsize len,
 			account_t *	account,
-			entry_t *	entry,
+			xact_t *	xact,
 			bool            honor_strict = true);
 
-    bool parse_xacts(account_t *   account,
-		     entry_base_t& entry);
+    bool parse_posts(account_t *   account,
+		     xact_base_t& xact);
 
-    entry_t * parse_entry(char *	  line,
+    xact_t * parse_xact(char *	  line,
 			  std::streamsize len,
 			  account_t *	  account);
 
@@ -133,7 +133,7 @@ namespace {
   void parse_amount_expr(scope_t&      session_scope,
 			 std::istream& in,
 			 amount_t&     amount,
-			 xact_t *      xact,
+			 post_t *      post,
 			 uint_least8_t flags = 0)
   {
     expr_t expr(in, flags | static_cast<uint_least8_t>(expr_t::PARSE_PARTIAL));
@@ -150,14 +150,14 @@ namespace {
 #endif
 
     if (expr) {
-      bind_scope_t bound_scope(session_scope, *xact);
+      bind_scope_t bound_scope(session_scope, *post);
 
       value_t result(expr.calc(bound_scope));
       if (! result.is_amount())
-	throw_(parse_error, "Transactions may only specify simple amounts");
+	throw_(parse_error, "Postings may only specify simple amounts");
 
       amount = result.as_amount();
-      DEBUG("textual.parse", "The transaction amount is " << amount);
+      DEBUG("textual.parse", "The posting amount is " << amount);
     }
   }
 }
@@ -199,8 +199,8 @@ instance_t::~instance_t()
 
   account_stack.pop_front();
 
-  if (auto_entry_finalizer.get())
-    journal.remove_entry_finalizer(auto_entry_finalizer.get());
+  if (auto_xact_finalizer.get())
+    journal.remove_xact_finalizer(auto_xact_finalizer.get());
 }
 
 void instance_t::parse()
@@ -331,13 +331,13 @@ void instance_t::read_next_directive()
   case '7':
   case '8':
   case '9':
-    entry_directive(line, len);
+    xact_directive(line, len);
     break;
-  case '=':			// automated entry
-    automated_entry_directive(line);
+  case '=':			// automated xact
+    automated_xact_directive(line);
     break;
-  case '~':			// period entry
-    period_entry_directive(line);
+  case '~':			// period xact
+    period_xact_directive(line);
     break;
 
 #if defined(TIMELOG_SUPPORT)
@@ -360,20 +360,20 @@ void instance_t::read_next_directive()
     break;
 #endif // TIMELOG_SUPPORT
 
-  case 'A':		        // a default account for unbalanced xacts
+  case 'A':		        // a default account for unbalanced posts
     default_account_directive(line);
     break;
   case 'C':			// a set of conversions
     price_conversion_directive(line);
     break;
-  case 'D':			// a default commodity for "entry"
+  case 'D':			// a default commodity for "xact"
     default_commodity_directive(line);
     break;
   case 'N':			// don't download prices
     nomarket_directive(line);
     break;
-  case 'P':			// a pricing entry
-    price_entry_directive(line);
+  case 'P':			// a pricing xact
+    price_xact_directive(line);
     break;
   case 'Y':			// set the current year
     year_directive(line);
@@ -465,7 +465,7 @@ namespace {
   }
 }
 
-void instance_t::price_entry_directive(char * line)
+void instance_t::price_xact_directive(char * line)
 {
   char * date_field_ptr = skip_ws(line + 1);
   char * time_field_ptr = next_element(date_field_ptr);
@@ -526,22 +526,22 @@ void instance_t::option_directive(char * line)
   process_option(line + 2, session_scope, p, line);
 }
 
-void instance_t::automated_entry_directive(char * line)
+void instance_t::automated_xact_directive(char * line)
 {
-  if (! auto_entry_finalizer.get()) {
-    auto_entry_finalizer.reset(new auto_entry_finalizer_t(&journal));
-    journal.add_entry_finalizer(auto_entry_finalizer.get());
+  if (! auto_xact_finalizer.get()) {
+    auto_xact_finalizer.reset(new auto_xact_finalizer_t(&journal));
+    journal.add_xact_finalizer(auto_xact_finalizer.get());
   }
 
   istream_pos_type pos	= curr_pos;
   std::size_t      lnum = linenum;
 
-  std::auto_ptr<auto_entry_t> ae
-    (new auto_entry_t(item_predicate(skip_ws(line + 1),
+  std::auto_ptr<auto_xact_t> ae
+    (new auto_xact_t(item_predicate(skip_ws(line + 1),
 				     keep_details_t(true, true, true))));
 
-  if (parse_xacts(account_stack.front(), *ae.get())) {
-    journal.auto_entries.push_back(ae.get());
+  if (parse_posts(account_stack.front(), *ae.get())) {
+    journal.auto_xacts.push_back(ae.get());
 
     ae->pathname = pathname;
     ae->beg_pos  = pos;
@@ -553,20 +553,20 @@ void instance_t::automated_entry_directive(char * line)
   }
 }
 
-void instance_t::period_entry_directive(char * line)
+void instance_t::period_xact_directive(char * line)
 {
-  std::auto_ptr<period_entry_t> pe(new period_entry_t(skip_ws(line + 1)));
+  std::auto_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
   if (! pe->period)
     throw_(parse_error, "Parsing time period '" << line << "'");
 
   istream_pos_type pos	= curr_pos;
   std::size_t      lnum = linenum;
 
-  if (parse_xacts(account_stack.front(), *pe.get())) {
+  if (parse_posts(account_stack.front(), *pe.get())) {
     if (pe->finalize()) {
-      extend_entry_base(&journal, *pe.get(), true);
+      extend_xact_base(&journal, *pe.get(), true);
 
-      journal.period_entries.push_back(pe.get());
+      journal.period_xacts.push_back(pe.get());
 
       pe->pathname = pathname;
       pe->beg_pos  = pos;
@@ -576,30 +576,30 @@ void instance_t::period_entry_directive(char * line)
 
       pe.release();
     } else {
-      throw parse_error("Period entry failed to balance");
+      throw parse_error("Period transaction failed to balance");
     }
   }
 }
 
-void instance_t::entry_directive(char * line, std::streamsize len)
+void instance_t::xact_directive(char * line, std::streamsize len)
 {
-  TRACE_START(entries, 1, "Time spent handling entries:");
+  TRACE_START(xacts, 1, "Time spent handling transactions:");
 
-  if (entry_t * entry = parse_entry(line, len, account_stack.front())) {
-    std::auto_ptr<entry_t> manager(entry);
+  if (xact_t * xact = parse_xact(line, len, account_stack.front())) {
+    std::auto_ptr<xact_t> manager(xact);
 
-    if (journal.add_entry(entry)) {
+    if (journal.add_xact(xact)) {
       manager.release();	// it's owned by the journal now
       count++;
     }
-    // It's perfectly valid for the journal to reject the entry, which it will
-    // do if the entry has no substantive effect (for example, a checking
-    // entry, all of whose transactions have null amounts).
+    // It's perfectly valid for the journal to reject the xact, which it will
+    // do if the xact has no substantive effect (for example, a checking
+    // xact, all of whose postings have null amounts).
   } else {
-    throw parse_error("Failed to parse entry");
+    throw parse_error("Failed to parse transaction");
   }
 
-  TRACE_STOP(entries, 1);
+  TRACE_STOP(xacts, 1);
 }
 
 void instance_t::include_directive(char * line)
@@ -660,7 +660,7 @@ void instance_t::alias_directive(char * line)
 
     // Once we have an alias name (b) and the target account
     // name (e), add a reference to the account in the
-    // `account_aliases' map, which is used by the xact
+    // `account_aliases' map, which is used by the post
     // parser to resolve alias references.
     account_t * acct = account_stack.front()->find_account(e);
     std::pair<accounts_map::iterator, bool> result
@@ -730,20 +730,20 @@ void instance_t::general_directive(char * line)
   }
 }
 
-xact_t * instance_t::parse_xact(char *		line,
+post_t * instance_t::parse_post(char *		line,
 				std::streamsize len,
 				account_t *	account,
-				entry_t *	entry,
+				xact_t *	xact,
 				bool            honor_strict)
 {
-  TRACE_START(xact_details, 1, "Time spent parsing transactions:");
+  TRACE_START(post_details, 1, "Time spent parsing postings:");
 
-  std::auto_ptr<xact_t> xact(new xact_t);
+  std::auto_ptr<post_t> post(new post_t);
 
-  xact->entry    = entry;	// this could be NULL
-  xact->pathname = pathname;
-  xact->beg_pos  = line_beg_pos;
-  xact->beg_line = linenum;
+  post->xact    = xact;	// this could be NULL
+  post->pathname = pathname;
+  post->beg_pos  = line_beg_pos;
+  post->beg_line = linenum;
 
   char buf[MAX_LINE + 1];
   std::strcpy(buf, line);
@@ -760,42 +760,42 @@ xact_t * instance_t::parse_xact(char *		line,
 
   switch (*p) {
   case '*':
-    xact->set_state(item_t::CLEARED);
+    post->set_state(item_t::CLEARED);
     p = skip_ws(p + 1);
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed the CLEARED flag");
     break;
 
   case '!':
-    xact->set_state(item_t::PENDING);
+    post->set_state(item_t::PENDING);
     p = skip_ws(p + 1);
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed the PENDING flag");
     break;
   }
 
-  if (entry &&
-      ((entry->_state == item_t::CLEARED && xact->_state != item_t::CLEARED) ||
-       (entry->_state == item_t::PENDING && xact->_state == item_t::UNCLEARED)))
-    xact->set_state(entry->_state);
+  if (xact &&
+      ((xact->_state == item_t::CLEARED && post->_state != item_t::CLEARED) ||
+       (xact->_state == item_t::PENDING && post->_state == item_t::UNCLEARED)))
+    post->set_state(xact->_state);
 
   // Parse the account name
 
   if (! *p)
-    throw parse_error("Transaction has no account");
+    throw parse_error("Posting has no account");
 
   char * next = next_element(p, true);
   char * e = p + std::strlen(p);
 
   if ((*p == '[' && *(e - 1) == ']') || (*p == '(' && *(e - 1) == ')')) {
-    xact->add_flags(XACT_VIRTUAL);
+    post->add_flags(POST_VIRTUAL);
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed a virtual account name");
 
     if (*p == '[') {
-      xact->add_flags(XACT_MUST_BALANCE);
+      post->add_flags(POST_MUST_BALANCE);
       DEBUG("textual.parse", "line " << linenum << ": "
-	    << "Transaction must balance");
+	    << "Posting must balance");
     }
     p++; e--;
   }
@@ -807,17 +807,17 @@ xact_t * instance_t::parse_xact(char *		line,
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(name);
     if (i != account_aliases.end())
-      xact->account = (*i).second;
+      post->account = (*i).second;
   }
-  if (! xact->account)
-    xact->account = account->find_account(name);
+  if (! post->account)
+    post->account = account->find_account(name);
 
-  if (honor_strict && strict && ! xact->account->known) {
-    if (xact->_state == item_t::UNCLEARED)
+  if (honor_strict && strict && ! post->account->known) {
+    if (post->_state == item_t::UNCLEARED)
       std::cerr << "Warning: \"" << pathname << "\", line " << linenum
-		<< ": Unknown account '" << xact->account->fullname()
+		<< ": Unknown account '" << post->account->fullname()
 		<< "'" << std::endl;
-    xact->account->known = true;
+    post->account->known = true;
   }
 
   // Parse the optional amount
@@ -831,31 +831,31 @@ xact_t * instance_t::parse_xact(char *		line,
     ptristream stream(next, len - beg);
 
     if (*next != '(')		// indicates a value expression
-      xact->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
+      post->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
     else
-      parse_amount_expr(session_scope, stream, xact->amount, xact.get(),
+      parse_amount_expr(session_scope, stream, post->amount, post.get(),
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
-    if (! xact->amount.is_null() && honor_strict && strict &&
-	xact->amount.has_commodity() &&
-	! xact->amount.commodity().has_flags(COMMODITY_KNOWN)) {
-      if (xact->_state == item_t::UNCLEARED)
+    if (! post->amount.is_null() && honor_strict && strict &&
+	post->amount.has_commodity() &&
+	! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
+      if (post->_state == item_t::UNCLEARED)
 	std::cerr << "Warning: \"" << pathname << "\", line " << linenum
-		  << ": Unknown commodity '" << xact->amount.commodity()
+		  << ": Unknown commodity '" << post->amount.commodity()
 		  << "'" << std::endl;
-      xact->amount.commodity().add_flags(COMMODITY_KNOWN);
+      post->amount.commodity().add_flags(COMMODITY_KNOWN);
     }
 #if 0
     // jww (2009-02-12): This isn't quite working yet; it causes cost computes
     // to skyrocket, since the per-unit price isn't also being reduced by the
     // same factor.
-    if (! xact->amount.is_null())
-      xact->amount.in_place_reduce();
+    if (! post->amount.is_null())
+      post->amount.in_place_reduce();
 #endif
 
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "xact amount = " << xact->amount);
+	  << "post amount = " << post->amount);
 
     if (stream.eof()) {
       next = NULL;
@@ -880,28 +880,28 @@ xact_t * instance_t::parse_xact(char *		line,
 
 	p = skip_ws(next);
 	if (*p) {
-	  xact->cost = amount_t();
+	  post->cost = amount_t();
 
 	  beg = p - line;
 	  ptristream cstream(p, len - beg);
 
 	  if (*p != '(')		// indicates a value expression
-	    xact->cost->parse(cstream, amount_t::PARSE_NO_MIGRATE);
+	    post->cost->parse(cstream, amount_t::PARSE_NO_MIGRATE);
 	  else
-	    parse_amount_expr(session_scope, cstream, *xact->cost, xact.get(),
+	    parse_amount_expr(session_scope, cstream, *post->cost, post.get(),
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
-	  if (xact->cost->sign() < 0)
-	    throw parse_error("A transaction's cost may not be negative");
+	  if (post->cost->sign() < 0)
+	    throw parse_error("A posting's cost may not be negative");
 
 	  if (per_unit)
-	    *xact->cost *= xact->amount;
+	    *post->cost *= post->amount;
 
 	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Total cost is " << *xact->cost);
+		<< "Total cost is " << *post->cost);
 	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Annotated amount is " << xact->amount);
+		<< "Annotated amount is " << post->amount);
 
 	  if (cstream.eof())
 	    next = NULL;
@@ -916,7 +916,7 @@ xact_t * instance_t::parse_xact(char *		line,
 
   // Parse the optional balance assignment
 
-  if (entry && next && *next == '=') {
+  if (xact && next && *next == '=') {
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Found a balance assignment indicator");
 
@@ -924,30 +924,30 @@ xact_t * instance_t::parse_xact(char *		line,
 
     p = skip_ws(next);
     if (*p) {
-      xact->assigned_amount = amount_t();
+      post->assigned_amount = amount_t();
 
       beg = p - line;
       ptristream stream(p, len - beg);
 
       if (*p != '(')		// indicates a value expression
-	xact->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
+	post->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
       else
-	parse_amount_expr(session_scope, stream, *xact->assigned_amount, xact.get(),
+	parse_amount_expr(session_scope, stream, *post->assigned_amount, post.get(),
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
-      if (xact->assigned_amount->is_null())
+      if (post->assigned_amount->is_null())
 	throw parse_error("An assigned balance must evaluate to a constant value");
 
       DEBUG("textual.parse", "line " << linenum << ": "
-	    << "XACT assign: parsed amt = " << *xact->assigned_amount);
+	    << "POST assign: parsed amt = " << *post->assigned_amount);
 
-      account_t::xdata_t& xdata(xact->account->xdata());
-      amount_t&		  amt(*xact->assigned_amount);
+      account_t::xdata_t& xdata(post->account->xdata());
+      amount_t&		  amt(*post->assigned_amount);
 
-      DEBUG("xact.assign", "line " << linenum << ": "
+      DEBUG("post.assign", "line " << linenum << ": "
 	    "account balance = " << xdata.value);
-      DEBUG("xact.assign", "line " << linenum << ": "
-	    "xact amount = " << amt);
+      DEBUG("post.assign", "line " << linenum << ": "
+	    "post amount = " << amt);
 
       amount_t diff;
 
@@ -969,26 +969,26 @@ xact_t * instance_t::parse_xact(char *		line,
 	break;
       }
 
-      DEBUG("xact.assign",  "line " << linenum << ": "
+      DEBUG("post.assign",  "line " << linenum << ": "
 	    << "diff = " << diff);
       DEBUG("textual.parse", "line " << linenum << ": "
-	    << "XACT assign: diff = " << diff);
+	    << "POST assign: diff = " << diff);
 
       if (! diff.is_zero()) {
-	if (! xact->amount.is_null()) {
-	  diff -= xact->amount;
+	if (! post->amount.is_null()) {
+	  diff -= post->amount;
 	  if (! diff.is_zero()) {
-	    xact_t * temp = new xact_t(xact->account, diff,
-				       ITEM_GENERATED | XACT_CALCULATED);
-	    entry->add_xact(temp);
+	    post_t * temp = new post_t(post->account, diff,
+				       ITEM_GENERATED | POST_CALCULATED);
+	    xact->add_post(temp);
 
 	    DEBUG("textual.parse", "line " << linenum << ": "
-		  << "Created balancing transaction");
+		  << "Created balancing posting");
 	  }
 	} else {
-	  xact->amount = diff;
+	  post->amount = diff;
 	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Overwrite null transaction");
+		<< "Overwrite null posting");
 	}
       }
 
@@ -1004,10 +1004,10 @@ xact_t * instance_t::parse_xact(char *		line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    xact->append_note(++next, current_year);
+    post->append_note(++next, current_year);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "Parsed a transaction note");
+	  << "Parsed a posting note");
   }
 
   // There should be nothing more to read
@@ -1016,25 +1016,25 @@ xact_t * instance_t::parse_xact(char *		line,
     throw_(parse_error, "Unexpected char '" << *next
 	   << "' (Note: inline math requires parentheses)");
 
-  xact->end_pos  = curr_pos;
-  xact->end_line = linenum;
+  post->end_pos  = curr_pos;
+  post->end_line = linenum;
 
-  TRACE_STOP(xact_details, 1);
+  TRACE_STOP(post_details, 1);
 
-  return xact.release();
+  return post.release();
 
   }
   catch (const std::exception& err) {
-    add_error_context("While parsing transaction:");
+    add_error_context("While parsing posting:");
     add_error_context(line_context(buf, beg, len));
     throw;
   }
 }
 
-bool instance_t::parse_xacts(account_t *   account,
-			     entry_base_t& entry)
+bool instance_t::parse_posts(account_t *   account,
+			     xact_base_t& xact)
 {
-  TRACE_START(entry_xacts, 1, "Time spent parsing transactions:");
+  TRACE_START(xact_posts, 1, "Time spent parsing postings:");
 
   bool added = false;
 
@@ -1043,24 +1043,24 @@ bool instance_t::parse_xacts(account_t *   account,
     std::streamsize len = read_line(line);
     assert(len > 0);
 
-    if (xact_t * xact = parse_xact(line, len, account, NULL, false)) {
-      entry.add_xact(xact);
+    if (post_t * post = parse_post(line, len, account, NULL, false)) {
+      xact.add_post(post);
       added = true;
     }
   }
 
-  TRACE_STOP(entry_xacts, 1);
+  TRACE_STOP(xact_posts, 1);
 
   return added;
 }
 
-entry_t * instance_t::parse_entry(char *	  line,
+xact_t * instance_t::parse_xact(char *	  line,
 				  std::streamsize len,
 				  account_t *	  account)
 {
-  TRACE_START(entry_text, 1, "Time spent parsing entry text:");
+  TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
-  std::auto_ptr<entry_t> curr(new entry_t);
+  std::auto_ptr<xact_t> curr(new xact_t);
 
   curr->pathname = pathname;
   curr->beg_pos  = line_beg_pos;
@@ -1110,18 +1110,18 @@ entry_t * instance_t::parse_entry(char *	  line,
     curr->payee = "<Unspecified payee>";
   }
 
-  // Parse the entry note
+  // Parse the xact note
 
   if (next && *next == ';')
     curr->append_note(next, current_year);
 
-  TRACE_STOP(entry_text, 1);
+  TRACE_STOP(xact_text, 1);
 
-  // Parse all of the xacts associated with this entry
+  // Parse all of the posts associated with this xact
 
-  TRACE_START(entry_details, 1, "Time spent parsing entry details:");
+  TRACE_START(xact_details, 1, "Time spent parsing transaction details:");
 
-  xact_t * last_xact = NULL;
+  post_t * last_post = NULL;
 
   while (peek_whitespace_line()) {
     len = read_line(line);
@@ -1132,8 +1132,8 @@ entry_t * instance_t::parse_entry(char *	  line,
 
     if (*p == ';') {
       item_t * item;
-      if (last_xact)
-	item = last_xact;
+      if (last_post)
+	item = last_post;
       else
 	item = curr.get();
 
@@ -1142,17 +1142,17 @@ entry_t * instance_t::parse_entry(char *	  line,
       item->end_pos = curr_pos;
       item->end_line++;
     }
-    else if (xact_t * xact = parse_xact(p, len - (p - line), account,
+    else if (post_t * post = parse_post(p, len - (p - line), account,
 					curr.get())) {
-      curr->add_xact(xact);
-      last_xact = xact;
+      curr->add_post(post);
+      last_post = post;
     }
   }
 
   curr->end_pos  = curr_pos;
   curr->end_line = linenum;
 
-  TRACE_STOP(entry_details, 1);
+  TRACE_STOP(xact_details, 1);
 
   return curr.release();
 }
@@ -1186,10 +1186,10 @@ std::size_t journal_t::parse(std::istream& in,
   TRACE_STOP(parsing_total, 1);
 
   // These tracers were started in textual.cc
-  TRACE_FINISH(entry_text, 1);
-  TRACE_FINISH(entry_details, 1);
-  TRACE_FINISH(entry_xacts, 1);
-  TRACE_FINISH(entries, 1);
+  TRACE_FINISH(xact_text, 1);
+  TRACE_FINISH(xact_details, 1);
+  TRACE_FINISH(xact_posts, 1);
+  TRACE_FINISH(xacts, 1);
   TRACE_FINISH(instance_parse, 1); // report per-instance timers
   TRACE_FINISH(parsing_total, 1);
 

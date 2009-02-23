@@ -6,7 +6,7 @@
 " Revision history
 "  2009-01-28  S.Karrmann: minor fixes
 "  2009-01-27  third version by S.Karrmann.
-"              better extraction of the amount of the transaction
+"              better extraction of the amount of the posting
 "              decimal separator can be one of '.' and ','.
 "  2005-02-05  first version (partly copied from ledger.vim 0.0.1)
  
@@ -19,7 +19,7 @@ endif
 " for debugging
 syntax clear
  
-" region: a normal transaction
+" region: a normal posting
 syn region transNorm start=/^\d/ skip=/^\s/ end=/^/ fold keepend transparent contains=transDate
 syn match transDate /^\d\S\+/ contained
 syn match Comment /^;.*$/
@@ -27,7 +27,7 @@ syn match Comment /^;.*$/
 highlight default link Comment SpecialKey
 highlight default link transDate Question
  
-" folding: how to represent a transaction in one line.
+" folding: how to represent a posting in one line.
 function! LedgerFoldText()
    let line = strpart(getline(v:foldstart), 0, 99)
    " get the amount at the end of the second line
@@ -48,7 +48,7 @@ endfunction
 set foldtext=LedgerFoldText()
 set foldmethod=syntax
  
-" syncinc is easy: search for the first transaction.
+" syncinc is easy: search for the first posting.
 syn sync clear
 syn sync match ledgerSync grouphere transNorm "^\d"
  

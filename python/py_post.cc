@@ -31,7 +31,7 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#include "entry.h"
+#include "post.h"
 
 namespace ledger {
 
@@ -42,24 +42,12 @@ using namespace boost::python;
     PyErr_SetString(PyExc_ArithmeticError, err.what());	\
   }
 
-//EXC_TRANSLATOR(entry_error)
+//EXC_TRANSLATOR(post_error)
 
-void export_entry()
+void export_post()
 {
 #if 0
-  class_< entry_base_t > ("EntryBase")
-    ;
-  class_< entry_t > ("Entry")
-    ;
-  struct_< entry_finalizer_t > ("EntryFinalizer")
-    ;
-  class_< auto_entry_t > ("AutoEntry")
-    ;
-  struct_< auto_entry_finalizer_t > ("AutoEntryFinalizer")
-    ;
-  class_< period_entry_t > ("PeriodEntry")
-    ;
-  class_< func_finalizer_t > ("FuncFinalizer")
+  class_< post_t > ("Post")
     ;
 #endif
 
@@ -70,7 +58,7 @@ void export_entry()
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);
 
-  //EXC_TRANSLATE(entry_error);
+  //EXC_TRANSLATE(post_error);
 }
 
 } // namespace ledger

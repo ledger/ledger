@@ -24,7 +24,7 @@
  * INT1       -- a one digit wide number
  *
  * Except for 1) the 'spacer' production (see below), 2) EOL, and 3) the
- * WHITESPACE required to begin a transaction, whitespace is otherwise
+ * WHITESPACE required to begin a posting, whitespace is otherwise
  * ignored.
  *
  * Yes, this grammar is confusing and not so happy for machine readers,
@@ -36,7 +36,7 @@
 /*
  * Journals
  *
- * A journal is a file which primarily contains entries, among other elements.
+ * A journal is a file which primarily contains xacts, among other elements.
  */
 
 journal:
@@ -47,7 +47,7 @@ journal:
 journal_item:
     whitespace
     directive |
-    entry |
+    xact |
     ;
 
 whitespace:
@@ -83,7 +83,7 @@ char_directive:
     'D' amount |		/* sets display parameters for a commodity */
     'A' TEXT |			/* sets the "default balancing account" */
     'C' commodity '=' amount |	/* specifies a commodity conversion */
-    'P' date time commodity amount | /* a pricing history entry */
+    'P' date time commodity amount | /* a pricing history xact */
     'N' commodity |		/* commodity's price is never downloaded */
     'Y' INT4 |			/* sets the default year for date parsing */
     '-' '-' STRING TEXT |	/* specify command-line options in the file */
@@ -100,20 +100,20 @@ commodity:
     STRING ;
 
 /*
- * Entries
+ * Xacts
  *
- * Entries are the atomic units of accounting, which are composed of
- * multiple transactions between accounts, so long as it all balances in
+ * Xacts are the atomic units of accounting, which are composed of
+ * multiple postings between accounts, so long as it all balances in
  * the end.
  */
 
-entry: plain_entry |
-       periodic_entry |
-       automated_entry ;
+xact: plain_xact |
+       periodic_xact |
+       automated_xact ;
 
-plain_entry:
+plain_xact:
     date date_opt status_opt code_opt FULLSTRING note_opt EOL
-    transactions ;
+    postings ;
 
 status_opt: status | /* epsilon */ ;
 status: '*' | '!' | /* epsilon */ ;
@@ -128,9 +128,9 @@ note: ';' TEXT ;
 
 /* ---------------------------------------------------------------------- */
 
-periodic_entry:
+periodic_xact:
     '~' period_expr note_opt EOL
-    transaction transactions ;
+    posting postings ;
 
 /*
  * A period expression has its own sub-grammar, which I don't quite have
@@ -142,9 +142,9 @@ period_expr: FULLSTRING ;
 
 /* ---------------------------------------------------------------------- */
 
-automated_entry:
+automated_xact:
     '=' value_expr note_opt EOL
-    transaction transactions ;
+    posting postings ;
 
 /*
  * Value expressions are a algebraic math expressions very similar to
@@ -183,21 +183,21 @@ amount:
 amount_expr: amount | value_expr ;
 
 /*
- * Transactions
+ * Postings
  *
- * Transactions are the fundamental unit of accounting, and represent
+ * Postings are the fundamental unit of accounting, and represent
  * the movement of commodities to or from an account.  Thus, paying off
- * your credit card consists of two balancing transactions: one that
+ * your credit card consists of two balancing postings: one that
  * withdraws money from your checking account, and another which pays
  * money to your credit institution.
  */
 
-transactions:
-    transaction transactions |
+postings:
+    posting postings |
     /* epsilon */
     ;
 
-transaction:
+posting:
     WHITESPACE status_opt account values_opt note_opt EOL;
 
 account_name: FULLSTRING ;

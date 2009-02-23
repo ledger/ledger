@@ -90,11 +90,11 @@ public:
   void read_journal_files();
   void close_journal_files();
 
-  void clean_xacts();
-  void clean_xacts(entry_t& entry);
+  void clean_posts();
+  void clean_posts(xact_t& xact);
   void clean_accounts();
   void clean_all() {
-    clean_xacts();
+    clean_posts();
     clean_accounts();
   }
 

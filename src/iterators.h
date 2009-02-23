@@ -47,7 +47,7 @@
 #define _ITERATORS_H
 
 #include "journal.h"
-#include "entry.h"
+#include "xact.h"
 #include "account.h"
 
 namespace ledger {
@@ -57,11 +57,11 @@ namespace ledger {
  *
  * Long.
  */
-class xacts_iterator : public noncopyable
+class posts_iterator : public noncopyable
 {
 public:
-  virtual ~xacts_iterator() throw() {}
-  virtual xact_t * operator()() = 0;
+  virtual ~posts_iterator() throw() {}
+  virtual post_t * operator()() = 0;
 };
 
 /**
@@ -69,67 +69,67 @@ public:
  *
  * Long.
  */
-class entry_xacts_iterator : public xacts_iterator
+class xact_posts_iterator : public posts_iterator
 {
+  posts_list::iterator posts_i;
+  posts_list::iterator posts_end;
+
+  bool posts_uninitialized;
+
+public:
+  xact_posts_iterator() : posts_uninitialized(true) {
+    TRACE_CTOR(xact_posts_iterator, "");
+  }
+  xact_posts_iterator(xact_t& xact)
+    : posts_uninitialized(true) {
+    TRACE_CTOR(xact_posts_iterator, "xact_t&");
+    reset(xact);
+  }
+  virtual ~xact_posts_iterator() throw() {
+    TRACE_DTOR(xact_posts_iterator);
+  }
+
+  void reset(xact_t& xact) {
+    posts_i   = xact.posts.begin();
+    posts_end = xact.posts.end();
+
+    posts_uninitialized = false;
+  }
+
+  virtual post_t * operator()() {
+    if (posts_i == posts_end || posts_uninitialized)
+      return NULL;
+    return *posts_i++;
+  }
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class xacts_iterator : public noncopyable
+{
+public:
   xacts_list::iterator xacts_i;
   xacts_list::iterator xacts_end;
 
   bool xacts_uninitialized;
 
-public:
-  entry_xacts_iterator() : xacts_uninitialized(true) {
-    TRACE_CTOR(entry_xacts_iterator, "");
+  xacts_iterator() : xacts_uninitialized(true) {
+    TRACE_CTOR(xacts_iterator, "");
   }
-  entry_xacts_iterator(entry_t& entry)
-    : xacts_uninitialized(true) {
-    TRACE_CTOR(entry_xacts_iterator, "entry_t&");
-    reset(entry);
-  }
-  virtual ~entry_xacts_iterator() throw() {
-    TRACE_DTOR(entry_xacts_iterator);
-  }
-
-  void reset(entry_t& entry) {
-    xacts_i   = entry.xacts.begin();
-    xacts_end = entry.xacts.end();
-
-    xacts_uninitialized = false;
-  }
-
-  virtual xact_t * operator()() {
-    if (xacts_i == xacts_end || xacts_uninitialized)
-      return NULL;
-    return *xacts_i++;
-  }
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class entries_iterator : public noncopyable
-{
-public:
-  entries_list::iterator entries_i;
-  entries_list::iterator entries_end;
-
-  bool entries_uninitialized;
-
-  entries_iterator() : entries_uninitialized(true) {
-    TRACE_CTOR(entries_iterator, "");
-  }
-  entries_iterator(journal_t& journal) : entries_uninitialized(true) {
-    TRACE_CTOR(entries_iterator, "journal_t&");
+  xacts_iterator(journal_t& journal) : xacts_uninitialized(true) {
+    TRACE_CTOR(xacts_iterator, "journal_t&");
     reset(journal);
   }
-  virtual ~entries_iterator() throw() {
-    TRACE_DTOR(entries_iterator);
+  virtual ~xacts_iterator() throw() {
+    TRACE_DTOR(xacts_iterator);
   }
 
   void reset(journal_t& journal);
 
-  entry_t * operator()();
+  xact_t * operator()();
 };
 
 /**
@@ -137,26 +137,26 @@ public:
  *
  * Long.
  */
-class journal_xacts_iterator : public xacts_iterator
+class journal_posts_iterator : public posts_iterator
 {
-  entries_iterator     entries;
-  entry_xacts_iterator xacts;
+  xacts_iterator     xacts;
+  xact_posts_iterator posts;
 
 public:
-  journal_xacts_iterator() {
-    TRACE_CTOR(journal_xacts_iterator, "");
+  journal_posts_iterator() {
+    TRACE_CTOR(journal_posts_iterator, "");
   }
-  journal_xacts_iterator(journal_t& journal) {
-    TRACE_CTOR(journal_xacts_iterator, "journal_t&");
+  journal_posts_iterator(journal_t& journal) {
+    TRACE_CTOR(journal_posts_iterator, "journal_t&");
     reset(journal);
   }
-  virtual ~journal_xacts_iterator() throw() {
-    TRACE_DTOR(journal_xacts_iterator);
+  virtual ~journal_posts_iterator() throw() {
+    TRACE_DTOR(journal_posts_iterator);
   }
 
   void reset(journal_t& journal);
 
-  virtual xact_t * operator()();
+  virtual post_t * operator()();
 };
 
 /**
@@ -164,34 +164,34 @@ public:
  *
  * Long.
  */
-class xacts_commodities_iterator : public xacts_iterator
+class posts_commodities_iterator : public posts_iterator
 {
 protected:
-  journal_xacts_iterator  journal_xacts;
-  entries_iterator	  entries;
-  entry_xacts_iterator	  xacts;
+  journal_posts_iterator  journal_posts;
+  xacts_iterator	  xacts;
+  xact_posts_iterator	  posts;
 
-  std::list<xact_t>	  xact_temps;
+  std::list<post_t>	  post_temps;
   std::list<account_t>    acct_temps;
-  entries_list            entry_temps;
+  xacts_list            xact_temps;
 
 public:
-  xacts_commodities_iterator() {
-    TRACE_CTOR(xacts_commodities_iterator, "");
+  posts_commodities_iterator() {
+    TRACE_CTOR(posts_commodities_iterator, "");
   }
-  xacts_commodities_iterator(journal_t& journal) {
-    TRACE_CTOR(xacts_commodities_iterator, "journal_t&");
+  posts_commodities_iterator(journal_t& journal) {
+    TRACE_CTOR(posts_commodities_iterator, "journal_t&");
     reset(journal);
   }
-  virtual ~xacts_commodities_iterator() throw() {
-    TRACE_DTOR(xacts_commodities_iterator);
-    foreach (entry_t * entry, entry_temps)
-      checked_delete(entry);
+  virtual ~posts_commodities_iterator() throw() {
+    TRACE_DTOR(posts_commodities_iterator);
+    foreach (xact_t * xact, xact_temps)
+      checked_delete(xact);
   }
 
   void reset(journal_t& journal);
 
-  virtual xact_t * operator()();
+  virtual post_t * operator()();
 };
 
 /**

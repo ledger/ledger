@@ -39,7 +39,7 @@ shared_ptr<python_interpreter_t> python_session;
 
 void export_chain();
 void export_commodity();
-void export_entry();
+void export_xact();
 void export_expr();
 void export_flags();
 void export_format();
@@ -53,13 +53,13 @@ void export_timelog();
 void export_times();
 void export_utils();
 void export_value();
-void export_xact();
+void export_post();
 
 void initialize_for_python()
 {
   export_chain();
   export_commodity();
-  export_entry();
+  export_xact();
   export_expr();
   export_flags();
   export_format();
@@ -73,7 +73,7 @@ void initialize_for_python()
   export_times();
   export_utils();
   export_value();
-  export_xact();
+  export_post();
 }
 
 struct python_run
@@ -132,7 +132,7 @@ object python_interpreter_t::import(const string& str)
     if (! mod)
       throw_(std::logic_error, "Failed to import Python module " << str);
  
-    // Import all top-level entries directly into the main namespace
+    // Import all top-level xacts directly into the main namespace
     main_nspace.update(mod.attr("__dict__"));
 
     TRACE_FINISH(python_import, 1);
