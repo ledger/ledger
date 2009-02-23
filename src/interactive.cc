@@ -58,6 +58,8 @@ void interactive_t::verify_arguments() const
   }
 
   for (; ! wrong_arg && ! exit_loop && *p && next_arg; p++) {
+    DEBUG("interactive.verify",
+	  "Want " << *p << " got: " << next_arg->label());
     switch (*p) {
     case 'a':
       label = "an amount";
@@ -117,7 +119,7 @@ void interactive_t::verify_arguments() const
       break;
     case 'S':
       label = "a sequence";
-      wrong_arg = ! next_arg->is_sequence();
+      wrong_arg = false;
       break;
     case '&':
       optional = true;
@@ -150,6 +152,8 @@ void interactive_t::verify_arguments() const
 
   if (*p == '&' || *p == '*')
     optional = true;
+
+  DEBUG("interactive.verify", "Remaining args are optional");
 
   if (wrong_arg) {
     throw_(std::logic_error,
