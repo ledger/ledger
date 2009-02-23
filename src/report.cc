@@ -194,12 +194,13 @@ value_t report_t::fn_scrub(call_scope_t& args)
 
 value_t report_t::fn_rounded(call_scope_t& args)
 {
-  return args[0].rounded();
+  return args.value().rounded();
 }
 
-value_t report_t::fn_quantity(call_scope_t& args)
+value_t report_t::fn_quantity(call_scope_t& scope)
 {
-  return args[0].to_amount().number();
+  interactive_t args(scope, "a");
+  return args.get<amount_t>(0).number();
 }
 
 value_t report_t::fn_truncate(call_scope_t& scope)
