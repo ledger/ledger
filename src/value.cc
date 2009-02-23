@@ -811,6 +811,26 @@ bool value_t::is_less_than(const value_t& val) const
       return as_string() < val.as_string();
     break;
 
+  case SEQUENCE:
+    switch (val.type()) {
+    case INTEGER:
+    case AMOUNT: {
+      if (val.is_nonzero())
+	break;
+
+      bool no_amounts = true;
+      foreach (const value_t& value, as_sequence()) {
+	if (value >= 0L)
+	  return false;
+	no_amounts = false;
+      }
+      return ! no_amounts;
+    }
+    default:
+      break;
+    }
+    break;
+
   default:
     break;
   }
@@ -879,6 +899,26 @@ bool value_t::is_greater_than(const value_t& val) const
   case STRING:
     if (val.is_string())
       return as_string() > val.as_string();
+    break;
+
+  case SEQUENCE:
+    switch (val.type()) {
+    case INTEGER:
+    case AMOUNT: {
+      if (val.is_nonzero())
+	break;
+
+      bool no_amounts = true;
+      foreach (const value_t& value, as_sequence()) {
+	if (value <= 0L)
+	  return false;
+	no_amounts = false;
+      }
+      return ! no_amounts;
+    }
+    default:
+      break;
+    }
     break;
 
   default:
