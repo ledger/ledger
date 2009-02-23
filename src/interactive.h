@@ -78,38 +78,52 @@ public:
     return false;
   }
 
-  const value_t& value_at(std::size_t index) const {
+  value_t& value_at(std::size_t index) {
     assert(has(index));
     return args[index];
   }
 
   template <typename T>
-  T get(std::size_t index) const;
+  T get(std::size_t index);
 };
 
 template <>
-inline bool interactive_t::get<bool>(std::size_t index) const {
+inline bool interactive_t::get<bool>(std::size_t index) {
   return value_at(index).to_boolean();
 }
 template <>
-inline long interactive_t::get<long>(std::size_t index) const {
+inline long interactive_t::get<long>(std::size_t index) {
   return value_at(index).to_long();
 }
 template <>
-inline string interactive_t::get<string>(std::size_t index) const {
+inline amount_t interactive_t::get<amount_t>(std::size_t index) {
+  return value_at(index).to_amount();
+}
+template <>
+inline string interactive_t::get<string>(std::size_t index) {
   return value_at(index).to_string();
 }
 template <>
-inline mask_t interactive_t::get<mask_t>(std::size_t index) const {
+inline mask_t interactive_t::get<mask_t>(std::size_t index) {
   return value_at(index).to_mask();
 }
 template <>
-inline date_t interactive_t::get<date_t>(std::size_t index) const {
+inline date_t interactive_t::get<date_t>(std::size_t index) {
   return value_at(index).to_date();
 }
 template <>
-inline datetime_t interactive_t::get<datetime_t>(std::size_t index) const {
+inline datetime_t interactive_t::get<datetime_t>(std::size_t index) {
   return value_at(index).to_datetime();
+}
+template <>
+inline value_t::sequence_t&
+interactive_t::get<value_t::sequence_t&>(std::size_t index) {
+  return value_at(index).as_sequence_lval();
+}
+template <>
+inline const value_t::sequence_t&
+interactive_t::get<const value_t::sequence_t&>(std::size_t index) {
+  return value_at(index).as_sequence();
 }
 
 template <typename T>
