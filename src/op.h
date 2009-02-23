@@ -108,7 +108,7 @@ public:
     O_QUERY,
     O_COLON,
 
-    O_COMMA,
+    O_CONS,
 
     O_DEFINE,
     O_LOOKUP,

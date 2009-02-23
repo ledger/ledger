@@ -137,7 +137,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 	 sym;
 	 sym = sym->has_right() ? sym->right() : NULL) {
       ptr_op_t varname = sym;
-      if (sym->kind == O_COMMA)
+      if (sym->kind == O_CONS)
 	varname = sym->left();
 
       if (! varname->is_ident())
@@ -269,25 +269,30 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     assert(! "We should never calculate an O_COLON operator");
     break;
 
-  case O_COMMA: {
-    value_t temp(left()->calc(scope, locus));
+  case O_CONS:
+    result = left()->calc(scope, locus);
+    DEBUG("op.cons", "car = " << result);
 
-    ptr_op_t next = right();
-    while (next) {
-      ptr_op_t value_op;
-      if (next->kind == O_COMMA) {
-	value_op = next->left();
-	next     = next->right();
-      } else {
-	value_op = next;
-	next     = NULL;
+    if (has_right()) {
+      value_t temp;
+      temp.push_back(result);
+
+      ptr_op_t next = right();
+      while (next) {
+	ptr_op_t value_op;
+	if (next->kind == O_CONS) {
+	  value_op = next->left();
+	  next     = next->right();
+	} else {
+	  value_op = next;
+	  next     = NULL;
+	}
+	temp.push_back(value_op->calc(scope, locus));
+	DEBUG("op.cons", "temp now = " << temp);
       }
-
-      temp.push_back(value_op->calc(scope, locus));
+      result = temp;
     }
-    result = temp;
     break;
-  }
 
   case LAST:
   default:
@@ -463,12 +468,19 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
       found = true;
     break;
 
-  case O_COMMA:
-    if (left() && left()->print(out, context))
+  case O_CONS:
+    if (has_right()) {
+      out << "(";
+      if (left() && left()->print(out, context))
+	found = true;
+      out << ", ";
+      if (has_right() && right()->print(out, context))
+	found = true;
+      out << ")";
+    }
+    else if (left() && left()->print(out, context)) {
       found = true;
-    out << ", ";
-    if (has_right() && right()->print(out, context))
-      found = true;
+    }
     break;
 
   case O_DEFINE:
@@ -490,10 +502,19 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
   case O_CALL:
     if (left() && left()->print(out, context))
       found = true;
-    out << "(";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    out << ")";
+    if (has_right()) {
+      if (right()->kind == O_CONS) {
+	if (right()->print(out, context))
+	  found = true;
+      } else {
+	out << "(";
+	if (has_right() && right()->print(out, context))
+	  found = true;
+	out << ")";
+      }
+    } else {
+      out << "()";
+    }
     break;
 
   case O_MATCH:
@@ -572,7 +593,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   case O_QUERY:  out << "O_QUERY"; break;
   case O_COLON:	 out << "O_COLON"; break;
 
-  case O_COMMA:	 out << "O_COMMA"; break;
+  case O_CONS:	 out << "O_CONS"; break;
 
   case LAST:
   default:

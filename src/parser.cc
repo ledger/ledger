@@ -69,7 +69,8 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
   }
 
   case token_t::LPAREN:
-    node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL).minus_flags(PARSE_SINGLE));
+    node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL)
+			    .minus_flags(PARSE_SINGLE));
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.expected(')');
@@ -399,7 +400,7 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 
     if (tok.kind == token_t::COMMA) {
       ptr_op_t prev(node);
-      node = new op_t(op_t::O_COMMA);
+      node = new op_t(op_t::O_CONS);
       node->set_left(prev);
       node->set_right(parse_value_expr(in, tflags));
       if (! node->right())
