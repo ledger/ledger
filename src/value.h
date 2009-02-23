@@ -826,6 +826,18 @@ public:
     }
   }
 
+  sequence_t::iterator begin() {
+    assert(is_sequence());
+    return as_sequence_lval().begin();
+  }
+
+  sequence_t::iterator end() {
+    assert(is_sequence());
+    // This special hack is because we never used end() in a context which
+    // needs us to call _dup().
+    return boost::get<sequence_t *>(storage->data)->end();
+  }
+
   sequence_t::const_iterator begin() const {
     assert(is_sequence());
     return as_sequence().begin();
