@@ -74,6 +74,15 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
       handler.reset(new filter_xacts(handler, display_predicate, report));
     }
 
+    // changed_value_xacts adds virtual xacts to the list to account for
+    // changes in market value of commodities, which otherwise would affect
+    // the running total unpredictably.
+    if (report.HANDLED(revalued))
+      handler.reset(new changed_value_xacts(handler,
+					    report.HANDLER(display_total_).expr,
+					    report,
+					    report.HANDLED(revalued_only)));
+
     // calc_xacts computes the running total.  When this appears will
     // determine, for example, whether filtered xacts are included or excluded
     // from the running total.
@@ -97,14 +106,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
       else
 	handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
     }
-
-    // changed_value_xacts adds virtual xacts to the list to account for
-    // changes in market value of commodities, which otherwise would affect
-    // the running total unpredictably.
-    if (report.HANDLED(revalued))
-      handler.reset(new changed_value_xacts(handler,
-					    report.HANDLER(total_).expr,
-					    report.HANDLED(revalued_only)));
 
     // collapse_xacts causes entries with multiple xacts to appear as entries
     // with a subtotaled xact for each commodity used.
@@ -137,7 +138,6 @@ xact_handler_ptr chain_xact_handlers(report_t&	      report,
   if (report.HANDLED(period_)) {
     handler.reset(new interval_xacts(handler, expr,
 				     report.HANDLER(period_).str(),
-				     report.session.master.get(),
 				     report.HANDLED(exact),
 				     report.HANDLED(empty)));
     handler.reset(new sort_xacts(handler, "date"));

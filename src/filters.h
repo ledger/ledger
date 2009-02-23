@@ -449,10 +449,12 @@ class changed_value_xacts : public item_handler<xact_t>
   // This filter requires that calc_xacts be used at some point
   // later in the chain.
 
-  expr_t   total_expr;
-  bool	   changed_values_only;
-  xact_t * last_xact;
-  value_t  last_balance;
+  expr_t    total_expr;
+  report_t& report;
+  bool	    changed_values_only;
+  xact_t *  last_xact;
+  value_t   last_balance;
+  account_t revalued_account;
 
   std::list<entry_t> entry_temps;
   std::list<xact_t>  xact_temps;
@@ -462,11 +464,13 @@ class changed_value_xacts : public item_handler<xact_t>
 public:
   changed_value_xacts(xact_handler_ptr handler,
 		      const expr_t&    _total_expr,
+		      report_t&        _report,
 		      bool	       _changed_values_only)
     : item_handler<xact_t>(handler), total_expr(_total_expr),
-      changed_values_only(_changed_values_only), last_xact(NULL) {
+      report(_report), changed_values_only(_changed_values_only),
+      last_xact(NULL), revalued_account(NULL, "<Revalued>") {
     TRACE_CTOR(changed_value_xacts,
-	       "xact_handler_ptr, bool");
+	       "xact_handler_ptr, const expr_t&, report_t&, bool");
   }
   virtual ~changed_value_xacts() {
     TRACE_DTOR(changed_value_xacts);
@@ -474,14 +478,14 @@ public:
   }
 
   virtual void flush() {
-    if (last_xact) {
-      output_diff(CURRENT_DATE());
+    if (last_xact && last_xact->date() <= CURRENT_DATE()) {
+      output_diff(last_xact, CURRENT_DATE());
       last_xact = NULL;
     }
     item_handler<xact_t>::flush();
   }
 
-  void output_diff(const date_t& current);
+  void output_diff(xact_t * xact, const date_t& current);
 
   virtual void operator()(xact_t& xact);
 };
@@ -576,11 +580,10 @@ public:
   interval_xacts(xact_handler_ptr  _handler,
 		 expr_t&	   amount_expr,
 		 const interval_t& _interval,
-		 account_t *	   master		 = NULL,
 		 bool		   _exact_periods	 = false,
 		 bool              _generate_empty_xacts = false)
     : subtotal_xacts(_handler, amount_expr), interval(_interval),
-      last_xact(NULL), empty_account(master, "<None>"),
+      last_xact(NULL), empty_account(NULL, "<None>"),
       exact_periods(_exact_periods),
       generate_empty_xacts(_generate_empty_xacts) {
     TRACE_CTOR(interval_xacts,

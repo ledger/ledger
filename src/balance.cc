@@ -163,18 +163,19 @@ balance_t::value(const bool		       primary_only,
 		 const optional<datetime_t>&   moment,
 		 const optional<commodity_t&>& in_terms_of) const
 {
-  optional<balance_t> temp;
+  balance_t temp;
+  bool      resolved = false;
 
   foreach (const amounts_map::value_type& pair, amounts) {
-    if (! temp)
-      temp = balance_t();
     if (optional<amount_t> val = pair.second.value(primary_only, moment,
-						   in_terms_of))
-      *temp += *val;
-    else
-      *temp += pair.second;
+						   in_terms_of)) {
+      temp += *val;
+      resolved = true;
+    } else {
+      temp += pair.second;
+    }
   }
-  return temp;
+  return resolved ? temp : optional<balance_t>();
 }
 
 optional<amount_t>

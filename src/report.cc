@@ -120,7 +120,7 @@ value_t report_t::fn_display_total(call_scope_t& scope)
   return HANDLER(display_total_).expr.calc(scope);
 }
 
-value_t report_t::fn_market_value(call_scope_t& scope)
+value_t report_t::fn_market(call_scope_t& scope)
 {
   interactive_t args(scope, "a&ts");
 
@@ -132,12 +132,16 @@ value_t report_t::fn_market_value(call_scope_t& scope)
 	 p;
 	 p = std::strtok(NULL, ",")) {
       if (commodity_t * commodity = amount_t::current_pool->find(trim_ws(p))) {
+	DEBUG("report.market", "Searching for value of " << args.value_at(0)
+	      << " in terms of commodity " << commodity->symbol());
 	value_t result =
 	  args.value_at(0).value(false, args.has(1) ?
 				 args.get<datetime_t>(1) :
 				 optional<datetime_t>(), *commodity);
-	if (! result.is_null())
+	if (! result.is_null()) {
+	  DEBUG("report.market", "Market value is = " << result);
 	  return result;
+	}
       }
     }
   } else {
@@ -621,7 +625,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 
   case 'm':
     if (is_eq(p, "market"))
-      return MAKE_FUNCTOR(report_t::fn_market_value);
+      return MAKE_FUNCTOR(report_t::fn_market);
     break;
 
   case 'o':

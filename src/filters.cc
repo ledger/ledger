@@ -33,6 +33,7 @@
 #include "iterators.h"
 #include "compare.h"
 #include "format.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -218,7 +219,8 @@ namespace {
 		    unsigned int	  flags,
 		    std::list<xact_t>&    temps,
 		    item_handler<xact_t>& handler,
-		    const date_t&         date = date_t())
+		    const date_t&         date  = date_t(),
+		    const value_t&        total = value_t())
   {
     temps.push_back(xact_t(account));
     xact_t& xact(temps.back());
@@ -266,6 +268,9 @@ namespace {
       break;
     }
 
+    if (! total.is_null())
+      xdata.total = total;
+
     if (flags)
       xdata.add_flags(flags);
 
@@ -294,7 +299,7 @@ void collapse_xacts::report_subtotal()
     date_t earliest_date;
 
     foreach (xact_t * xact, component_xacts) {
-      date_t reported = xact->reported_date();
+      date_t reported = xact->date();
       if (! is_valid(earliest_date) ||
 	  reported < earliest_date)
 	earliest_date = reported;
@@ -367,36 +372,55 @@ void related_xacts::flush()
   item_handler<xact_t>::flush();
 }
 
-void changed_value_xacts::output_diff(const date_t& date)
+void changed_value_xacts::output_diff(xact_t * xact, const date_t& date)
 {
-  value_t cur_bal;
+  if (is_valid(date))
+    xact->xdata().date = date;
 
-  last_xact->xdata().date = date;
-  cur_bal = total_expr.calc(*last_xact).rounded();
+  value_t repriced_total;
+  try {
+    bind_scope_t bound_scope(report, *xact);
+    repriced_total = total_expr.calc(bound_scope);
+  }
+  catch (...) {
+    xact->xdata().date = date_t();
+    throw;
+  }
+  xact->xdata().date = date_t();
 
-  if (value_t diff = cur_bal - last_balance) {
+  DEBUG("filter.changed_value",
+	"output_diff(last_balance) = " << last_balance);
+  DEBUG("filter.changed_value",
+	"output_diff(repriced_total) = " << repriced_total);
+
+  if (value_t diff = repriced_total - last_balance) {
+    DEBUG("filter.changed_value", "output_diff(strip(diff)) = "
+	  << diff.strip_annotations(report.what_to_keep()));
+
     entry_temps.push_back(entry_t());
     entry_t& entry = entry_temps.back();
     entry.payee = "Commodities revalued";
-    entry._date = date;
+    entry._date = is_valid(date) ? date : xact->date();
 
-    handle_value(diff, NULL, &entry, XACT_EXT_NO_TOTAL, xact_temps,
-		 *handler);
+    handle_value(diff, &revalued_account, &entry, XACT_EXT_NO_TOTAL,
+		 xact_temps, *handler, *entry._date, repriced_total);
   }
 }
 
 void changed_value_xacts::operator()(xact_t& xact)
 {
   if (last_xact)
-    output_diff(last_xact->reported_date());
+    output_diff(last_xact, xact.date());
 
   if (changed_values_only)
     xact.xdata().add_flags(XACT_EXT_DISPLAYED);
 
   item_handler<xact_t>::operator()(xact);
 
-  last_balance = total_expr.calc(xact).rounded();
-  last_xact    = &xact;
+  bind_scope_t bound_scope(report, xact);
+  last_balance = total_expr.calc(bound_scope);
+
+  last_xact = &xact;
 }
 
 void subtotal_xacts::report_subtotal(const char *  spec_fmt,
@@ -409,7 +433,7 @@ void subtotal_xacts::report_subtotal(const char *  spec_fmt,
   date_t range_start  = start;
   date_t range_finish = finish;
   foreach (xact_t * xact, component_xacts) {
-    date_t date = xact->reported_date();
+    date_t date = xact->date();
     if (! is_valid(range_start) || date < range_start)
       range_start = date;
     if (! is_valid(range_finish) || date > range_finish)
@@ -437,7 +461,7 @@ void subtotal_xacts::report_subtotal(const char *  spec_fmt,
 
   foreach (values_map::value_type& pair, values)
     handle_value(pair.second.value, pair.second.account, &entry, 0,
-		 xact_temps, *handler, range_finish);
+		 xact_temps, *handler);
 
   values.clear();
 }
@@ -484,7 +508,7 @@ void interval_xacts::report_subtotal(const date_t& finish)
 
 void interval_xacts::operator()(xact_t& xact)
 {
-  date_t date = xact.reported_date();
+  date_t date = xact.date();
 
   if ((is_valid(interval.begin) && date < interval.begin) ||
       (is_valid(interval.end)   && date >= interval.end))
@@ -542,7 +566,7 @@ void xacts_as_equity::report_subtotal()
 {
   date_t finish;
   foreach (xact_t * xact, component_xacts) {
-    date_t date = xact->reported_date();
+    date_t date = xact->date();
     if (! is_valid(finish) || date > finish)
       finish = date;
   }
@@ -614,7 +638,7 @@ void transfer_details::operator()(xact_t& xact)
 {
   entry_temps.push_back(*xact.entry);
   entry_t& entry = entry_temps.back();
-  entry._date = xact.reported_date();
+  entry._date = xact.date();
 
   xact_temps.push_back(xact);
   xact_t& temp = xact_temps.back();

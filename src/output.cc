@@ -170,7 +170,7 @@ void gather_statistics::operator()(xact_t& xact)
 
     statistics.filenames.insert(xact.pathname);
 
-    date_t date = xact.reported_date();
+    date_t date = xact.date();
 
     if (date.year() == CURRENT_DATE().year() &&
 	date.month() == CURRENT_DATE().month())
@@ -185,11 +185,11 @@ void gather_statistics::operator()(xact_t& xact)
       statistics.total_uncleared_xacts++;
 
     if (! is_valid(statistics.earliest_xact) ||
-	xact.reported_date() < statistics.earliest_xact)
-      statistics.earliest_xact = xact.reported_date();
+	xact.date() < statistics.earliest_xact)
+      statistics.earliest_xact = xact.date();
     if (! is_valid(statistics.latest_xact) ||
-	xact.reported_date() > statistics.latest_xact)
-      statistics.latest_xact = xact.reported_date();
+	xact.date() > statistics.latest_xact)
+      statistics.latest_xact = xact.date();
 
     statistics.accounts_referenced.insert(xact.account->fullname());
     statistics.payees_referenced.insert(xact.entry->payee);

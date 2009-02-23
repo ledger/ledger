@@ -77,6 +77,9 @@ optional<string> xact_t::get_tag(const mask_t& tag_mask,
 
 date_t xact_t::date() const
 {
+  if (xdata_ && is_valid(xdata_->date))
+    return xdata_->date;
+
   if (item_t::use_effective_date) {
     if (_date_eff)
       return *_date_eff;
