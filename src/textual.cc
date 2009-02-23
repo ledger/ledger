@@ -538,7 +538,7 @@ void instance_t::automated_entry_directive(char * line)
 
   std::auto_ptr<auto_entry_t> ae
     (new auto_entry_t(item_predicate(skip_ws(line + 1),
-				     keep_details_t(true, true, true, true))));
+				     keep_details_t(true, true, true))));
 
   if (parse_xacts(account_stack.front(), *ae.get())) {
     journal.auto_entries.push_back(ae.get());

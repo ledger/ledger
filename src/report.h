@@ -166,8 +166,7 @@ public:
   keep_details_t what_to_keep() {
     return keep_details_t(HANDLED(lots) || HANDLED(lot_prices),
 			  HANDLED(lots) || HANDLED(lot_dates),
-			  HANDLED(lots) || HANDLED(lot_tags),
-			  HANDLED(base));
+			  HANDLED(lots) || HANDLED(lot_tags));
   }
 
   option_t<report_t> * lookup_option(const char * p);
