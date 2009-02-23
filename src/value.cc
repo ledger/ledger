@@ -907,6 +907,9 @@ void value_t::in_place_cast(type_t cast_type)
 
   case DATE:
     switch (cast_type) {
+    case DATETIME:
+      set_datetime(datetime_t(as_date(), time_duration(0, 0, 0, 0)));
+      return;
     case STRING:
       set_string(format_date(as_date(), string("%Y-%m-%d")));
       return;
@@ -916,6 +919,9 @@ void value_t::in_place_cast(type_t cast_type)
     break;
   case DATETIME:
     switch (cast_type) {
+    case DATE:
+      set_date(as_datetime().date());
+      return;
     case STRING:
       set_string(format_datetime(as_datetime(), string("%Y-%m-%d %H:%M:%S")));
       return;
