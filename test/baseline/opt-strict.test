@@ -1,0 +1,23 @@
+reg --strict
+<<<
+2007/02/02 * Foo
+    Expenses:Food                         $10.00
+    Assets:Cash
+
+2007/02/03 Bar
+    * Expenses:Food                       $20.00
+    Assets:Cash
+
+2007/02/02 Baz
+    Expenses:Foodx                        $30.00
+    Assets:Cash
+>>>1
+07-Feb-02 Foo                   Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+07-Feb-03 Bar                   Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+07-Feb-02 Baz                   Expenses:Foodx               $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+>>>2
+Warning: "$FILE", line 10: Unknown account 'Expenses:Foodx'
+=== 0

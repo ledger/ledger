@@ -1,0 +1,9 @@
+reg --pager=wc
+<<<
+2007/02/02 RD VMMXX
+    Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
+    Income:Dividends:Vanguard:VMMXX        $-0.35
+>>>1
+       3      13     243
+>>>2
+=== 0
