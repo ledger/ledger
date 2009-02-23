@@ -1,0 +1,81 @@
+reg --exchange=' C, A '
+<<<
+2009/01/01 January 1st, 2009 (1)
+    Assets:Brokerage                100 A
+    Assets:Brokerage               -200 B
+
+2009/01/01 January 1st, 2009 (2)
+    Assets:Brokerage                100 A
+    Assets:Brokerage               -300 B
+
+2009/01/01 January 1st, 2009 (3)
+    Assets:Brokerage                100 A
+    Assets:Brokerage               -400 B
+
+2009/01/02 January 2nd, 2009
+    Assets:Brokerage                250 B
+    Assets:Brokerage               -500 C
+
+2009/01/03 January 3rd, 2009
+    Assets:Brokerage                600 C
+    Assets:Brokerage              -1000 D
+
+2009/01/04 January 4th, 2009
+    Assets:Brokerage                300 A
+    Assets:Brokerage             -15000 F
+
+2009/01/05 January 5th, 2009
+    Assets:Brokerage               2000 E
+    Assets:Brokerage              -8000 F
+
+2009/01/06 January 6th, 2009
+    Assets:Brokerage                155 A @ 2 D
+    Assets:Brokerage
+
+2009/01/07 January 7th, 2009
+    Assets:Brokerage                155 A @@ 200 C
+    Assets:Brokerage
+
+2009/01/08 January 8th, 2009
+    Assets:Brokerage                155 A (A123) @@ 500 F
+    Assets:Brokerage
+
+2009/01/09 January 9th, 2009
+    Assets:Brokerage            1000.00 E
+    Assets:Brokerage               -155 A {2 D}
+
+2009/01/10 January 10th, 2009
+    Assets:Brokerage            $2,000.00
+    Assets:Brokerage               -155 A [2009/01/06]
+>>>1
+09-Jan-01 January 1st, 2009 (1) Assets:Brokerage              100 A        100 A
+                                Assets:Brokerage              -50 A        100 A
+                                                                          -200 B
+09-Jan-01 January 1st, 2009 (2) Assets:Brokerage              100 A        200 A
+                                                                          -200 B
+                                Assets:Brokerage              -75 A        200 A
+                                                                          -500 B
+09-Jan-01 January 1st, 2009 (3) Assets:Brokerage              100 A        300 A
+                                                                          -500 B
+                                Assets:Brokerage             -100 A        300 A
+                                                                          -900 B
+09-Jan-02 January 2nd, 2009     Assets:Brokerage              500 C       1100 C
+                                Assets:Brokerage             -500 C        600 C
+09-Jan-03 January 3rd, 2009     Assets:Brokerage              600 C       1200 C
+                                Assets:Brokerage             -600 C        600 C
+09-Jan-04 January 4th, 2009     Assets:Brokerage             2400 C       3000 C
+                                Assets:Brokerage            -2400 C        600 C
+09-Jan-05 January 5th, 2009     Assets:Brokerage             1280 C       1880 C
+                                Assets:Brokerage            -1280 C        600 C
+09-Jan-06 January 6th, 2009     Assets:Brokerage              186 C      -1254 C
+                                Assets:Brokerage             -186 C      -1440 C
+09-Jan-07 January 7th, 2009     Assets:Brokerage              200 C      -1258 C
+                                Assets:Brokerage             -200 C      -1458 C
+09-Jan-08 January 8th, 2009     Assets:Brokerage              200 C      -6871 C
+                                Assets:Brokerage             -200 C      -7071 C
+09-Jan-09 January 9th, 2009     Assets:Brokerage              200 C      -9671 C
+                                Assets:Brokerage             -200 C      -9871 C
+09-Jan-10 January 10th, 2009    Assets:Brokerage              200 C      -9671 C
+                                Assets:Brokerage             -200 C      -9871 C
+>>>2
+=== 0

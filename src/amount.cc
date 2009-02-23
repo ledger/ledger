@@ -515,12 +515,25 @@ amount_t::value(const bool		      primary_only,
 		const optional<commodity_t&>& in_terms_of) const
 {
   if (quantity) {
+#if defined(DEBUG_ON)
+    DEBUG("commodity.prices.find",
+	  "amount_t::value of " << commodity().symbol());
+    if (moment)
+      DEBUG("commodity.prices.find",
+	    "amount_t::value: moment =  " << *moment);
+    if (in_terms_of)
+      DEBUG("commodity.prices.find",
+	    "amount_t::value: in_terms_of = " << in_terms_of->symbol());
+#endif
     if (has_commodity() &&
-	(! primary_only || commodity().has_flags(COMMODITY_PRIMARY)) &&
-	(! in_terms_of || commodity() != *in_terms_of)) {
-      optional<price_point_t> point(commodity().find_price(in_terms_of, moment));
-      if (point)
+	(! primary_only || ! commodity().has_flags(COMMODITY_PRIMARY))) {
+      if (in_terms_of && commodity() == *in_terms_of) {
+	return *this;
+      }
+      else if (optional<price_point_t> point =
+	       commodity().find_price(in_terms_of, moment)) {
 	return (point->price * number()).rounded();
+      }
     }
   } else {
     throw_(amount_error, "Cannot determine value of an uninitialized amount");
@@ -996,7 +1009,7 @@ void amount_t::print(std::ostream& _out) const
 
   if (comm.annotated) {
     annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
-    assert(&*ann.details.price != this);
+    assert(! ann.details.price || &*ann.details.price != this);
     ann.write_annotations(out);
   }
 

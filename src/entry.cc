@@ -85,9 +85,6 @@ bool entry_base_t::finalize()
   // for auto-calculating the value of entries with no cost, and the per-unit
   // price of unpriced commodities.
 
-  // (let ((balance 0)
-  //       null-xact)
-
   value_t  balance;
   xact_t * null_xact = NULL;
 
@@ -119,8 +116,8 @@ bool entry_base_t::finalize()
 
   DEBUG("entry.finalize", "initial balance = " << balance);
 
-  // If there is only one xact, balance against the default account if
-  // one has been set.
+  // If there is only one xact, balance against the default account if one has
+  // been set.
 
   if (journal && journal->basket && xacts.size() == 1 && ! balance.is_null()) {
     // jww (2008-07-24): Need to make the rest of the code aware of what to do
@@ -131,9 +128,9 @@ bool entry_base_t::finalize()
   }
 
   if (null_xact != NULL) {
-    // If one xact has no value at all, its value will become the
-    // inverse of the rest.  If multiple commodities are involved, multiple
-    // xacts are generated to balance them all.
+    // If one xact has no value at all, its value will become the inverse of
+    // the rest.  If multiple commodities are involved, multiple xacts are
+    // generated to balance them all.
 
     if (balance.is_balance()) {
       bool first = true;
@@ -161,41 +158,88 @@ bool entry_base_t::finalize()
   else if (balance.is_balance() &&
 	   balance.as_balance().amounts.size() == 2) {
     // When an entry involves two different commodities (regardless of how
-    // many xacts there are) determine the conversion ratio by dividing
-    // the total value of one commodity by the total value of the other.  This
-    // establishes the per-unit cost for this xact for both
-    // commodities.
+    // many xacts there are) determine the conversion ratio by dividing the
+    // total value of one commodity by the total value of the other.  This
+    // establishes the per-unit cost for this xact for both commodities.
 
-    const balance_t& bal(balance.as_balance());
+    DEBUG("entry.finalize", "there were exactly two commodities");
 
-    balance_t::amounts_map::const_iterator a = bal.amounts.begin();
+    bool     saw_cost = false;
+    xact_t * top_xact = NULL;
+
+    foreach (xact_t * xact, xacts) {
+      if (! xact->amount.is_null())
+	if (xact->amount.is_annotated())
+	  top_xact = xact;
+	else if (! top_xact)
+	  top_xact = xact;
+
+      if (xact->cost) {
+	saw_cost = true;
+	break;
+      }
+    }
+
+    if (! saw_cost && top_xact) {
+      const balance_t& bal(balance.as_balance());
+
+      DEBUG("entry.finalize", "there were no costs, and a valid top_xact");
+
+      balance_t::amounts_map::const_iterator a = bal.amounts.begin();
     
-    const amount_t& x((*a++).second);
-    const amount_t& y((*a++).second);
+      const amount_t * x = &(*a++).second;
+      const amount_t * y = &(*a++).second;
 
-    if (! y.is_realzero()) {
-      amount_t per_unit_cost = (x / y).abs();
+      if (x->commodity() != top_xact->amount.commodity()) {
+	const amount_t * t = x;
+	x = y;
+	y = t;
+      }
 
-      commodity_t& comm(x.commodity());
+      DEBUG("entry.finalize", "primary   amount = " << *y);
+      DEBUG("entry.finalize", "secondary amount = " << *x);
+
+      commodity_t& comm(x->commodity());
+      amount_t	   per_unit_cost;
+      amount_t	   total_cost;
+
+      foreach (xact_t * xact, xacts) {
+	if (xact != top_xact && xact->must_balance() &&
+	    ! xact->amount.is_null() &&
+	    xact->amount.is_annotated() &&
+	    xact->amount.annotation().price) {
+	  amount_t temp = *xact->amount.annotation().price * xact->amount;
+	  if (total_cost.is_null()) {
+	    total_cost = temp;
+	    y = &total_cost;
+	  } else {
+	    total_cost += temp;
+	  }
+	  DEBUG("entry.finalize", "total_cost = " << total_cost);
+	}
+      }
+      per_unit_cost = (*y / *x).abs();
+
+      DEBUG("entry.finalize", "per_unit_cost = " << per_unit_cost);
 
       foreach (xact_t * xact, xacts) {
 	const amount_t& amt(xact->amount);
 
-	if (! (xact->cost || ! xact->must_balance() ||
-	       amt.commodity() == comm)) {
+	if (xact->must_balance() && amt.commodity() == comm) {
 	  balance -= amt;
 	  xact->cost = per_unit_cost * amt;
 	  balance += *xact->cost;
-	}
 
+	  DEBUG("entry.finalize", "set xact->cost to = " << *xact->cost);
+	}
       }
     }
 
     DEBUG("entry.finalize", "resolved balance = " << balance);
   }
 
-  // Now that the xact list has its final form, calculate the balance
-  // once more in terms of total cost, accounting for any possible gain/loss
+  // Now that the xact list has its final form, calculate the balance once
+  // more in terms of total cost, accounting for any possible gain/loss
   // amounts.
 
   foreach (xact_t * xact, xacts) {
@@ -204,9 +248,12 @@ bool entry_base_t::finalize()
 	throw_(balance_error, "Transaction's cost must be of a different commodity");
 
       commodity_t::cost_breakdown_t breakdown =
-	commodity_t::exchange(xact->amount, *xact->cost);
+	commodity_t::exchange(xact->amount, *xact->cost, false,
+			      datetime_t(date(), time_duration(0, 0, 0, 0)));
 
-      if (xact->amount.is_annotated())
+      if (xact->amount.is_annotated() &&
+	  breakdown.basis_cost.commodity() ==
+	  breakdown.final_cost.commodity())
 	add_or_set_value(balance, (breakdown.basis_cost -
 				   breakdown.final_cost).rounded());
       else
@@ -231,8 +278,8 @@ bool entry_base_t::finalize()
       if (! xact->amount.is_null()) {
 	all_null = false;
 
-	// jww (2008-08-09): For now, this feature only works for
-	// non-specific commodities.
+	// jww (2008-08-09): For now, this feature only works for non-specific
+	// commodities.
 	add_or_set_value(xact->account->xdata().value, xact->amount);
 
 	DEBUG("entry.finalize.totals",

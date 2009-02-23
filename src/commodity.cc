@@ -38,8 +38,9 @@ void commodity_t::base_t::history_t::add_price(commodity_t&      source,
 					       const amount_t&	 price,
 					       const bool	 reflexive)
 {
-  DEBUG("commodity.prices",
-	"add_price to " << source << " : " << date << ", " << price);
+  DEBUG("commodity.prices.add", "add_price to " << source
+	<< (reflexive ? " (secondary)" : " (primary)")
+	<< " : " << date << ", " << price);
 
   history_map::iterator i = prices.find(date);
   if (i != prices.end()) {
@@ -51,18 +52,19 @@ void commodity_t::base_t::history_t::add_price(commodity_t&      source,
   }
 
   if (reflexive) {
-    if (! price.commodity().has_flags(COMMODITY_NOMARKET)) {
-      amount_t inverse = price.inverted();
-      inverse.set_commodity(const_cast<commodity_t&>(source));
-      price.commodity().add_price(date, inverse, false);
-    }
+    amount_t inverse = price.inverted();
+    inverse.set_commodity(const_cast<commodity_t&>(source));
+    price.commodity().add_price(date, inverse, false);
+  } else {
+    DEBUG("commodity.prices.add",
+	  "marking commodity " << source.symbol() << " as primary");
     source.add_flags(COMMODITY_PRIMARY);
   }
 }
 
 bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
 {
-  DEBUG("commodity.prices", "remove_price: " << date);
+  DEBUG("commodity.prices.add", "remove_price: " << date);
 
   history_map::size_type n = prices.erase(date);
   if (n > 0)
@@ -93,7 +95,7 @@ void commodity_t::base_t::varied_history_t::
 bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date,
 							 commodity_t& comm)
 {
-  DEBUG("commodity.prices", "varied_remove_price: " << date << ", " << comm);
+  DEBUG("commodity.prices.add", "varied_remove_price: " << date << ", " << comm);
 
   if (optional<history_t&> hist = history(comm))
     return hist->remove_price(date);
@@ -120,22 +122,22 @@ optional<price_point_t>
   } while (false)
 
 #if defined(DEBUG_ON)
-  DEBUG_INDENT("commodity.prices", indent);
+  DEBUG_INDENT("commodity.prices.find", indent);
   if (moment)
-    DEBUG("commodity.prices", "find price nearest before or on: " << *moment);
+    DEBUG("commodity.prices.find", "find price nearest before or on: " << *moment);
   else
-    DEBUG("commodity.prices", "find any price");
+    DEBUG("commodity.prices.find", "find any price");
 
   if (oldest) {
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  but no older than: " << *oldest);
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  but no older than: " << *oldest);
   }
 #endif
 
   if (prices.size() == 0) {
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  there are no prices in this history");
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  there are no prices in this history");
 #endif
     return none;
   }
@@ -146,8 +148,8 @@ optional<price_point_t>
     point.price = (*r).second;
     found = true;
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  using most recent price");
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  using most recent price");
 #endif
   } else {
     history_map::const_iterator i = prices.lower_bound(*moment);
@@ -157,8 +159,8 @@ optional<price_point_t>
       point.price = (*r).second;
       found = true;
 #if defined(DEBUG_ON)
-      DEBUG_INDENT("commodity.prices", indent);
-      DEBUG("commodity.prices", "  using last price");
+      DEBUG_INDENT("commodity.prices.find", indent);
+      DEBUG("commodity.prices.find", "  using last price");
 #endif
     } else {
       point.when = (*i).first;
@@ -174,8 +176,8 @@ optional<price_point_t>
 	found = true;
       }
 #if defined(DEBUG_ON)
-      DEBUG_INDENT("commodity.prices", indent);
-      DEBUG("commodity.prices", "  using found price");
+      DEBUG_INDENT("commodity.prices.find", indent);
+      DEBUG("commodity.prices.find", "  using found price");
 #endif
     }
   }
@@ -192,29 +194,29 @@ optional<price_point_t>
 
   if (! found) {
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  could not find a price");
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  could not find a price");
 #endif
     return none;
   }
   else if (moment && point.when > *moment) {
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  price is too young ");
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  price is too young ");
 #endif
     return none;
   }
   else if (oldest && point.when < *oldest) {
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  price is too old ");
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  price is too old ");
 #endif
     return none;
   }
   else {
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices",
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find",
 	  "  returning price: " << point.when << ", " << point.price);
 #endif
     return point;
@@ -238,23 +240,23 @@ optional<price_point_t>
   assert(! commodity || source != *commodity);
 
 #if defined(DEBUG_ON)
-  DEBUG_INDENT("commodity.prices", indent);
-  DEBUG("commodity.prices", "varied_find_price for: " << source);
+  DEBUG_INDENT("commodity.prices.find", indent);
+  DEBUG("commodity.prices.find", "varied_find_price for: " << source);
 
-  DEBUG_INDENT("commodity.prices", indent);
+  DEBUG_INDENT("commodity.prices.find", indent);
   if (commodity)
-    DEBUG("commodity.prices", "  looking for: commodity '" << *commodity << "'");
+    DEBUG("commodity.prices.find", "  looking for: commodity '" << *commodity << "'");
   else
-    DEBUG("commodity.prices", "  looking for: any commodity");
+    DEBUG("commodity.prices.find", "  looking for: any commodity");
 
   if (moment) {
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  time index: " << *moment);
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  time index: " << *moment);
   }
 
   if (oldest) {
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices", "  only consider prices younger than: " << *oldest);
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find", "  only consider prices younger than: " << *oldest);
   }
 #endif
 
@@ -271,8 +273,8 @@ optional<price_point_t>
       continue;
 
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent + 1);
-    DEBUG("commodity.prices",
+    DEBUG_INDENT("commodity.prices.find", indent + 1);
+    DEBUG("commodity.prices.find",
 	  "  searching for price via commodity '" << comm << "'");
 #endif
 
@@ -288,8 +290,8 @@ optional<price_point_t>
 
       if (commodity && comm != *commodity) {
 #if defined(DEBUG_ON)
-	DEBUG_INDENT("commodity.prices", indent + 1);
-	DEBUG("commodity.prices", "  looking for translation price");
+	DEBUG_INDENT("commodity.prices.find", indent + 1);
+	DEBUG("commodity.prices.find", "  looking for translation price");
 #endif
 
 	xlat = comm.find_price(commodity, moment, limit
@@ -299,8 +301,8 @@ optional<price_point_t>
 			       );
 	if (xlat) {
 #if defined(DEBUG_ON)
-	  DEBUG_INDENT("commodity.prices", indent + 1);
-	  DEBUG("commodity.prices", "  found translated price "
+	  DEBUG_INDENT("commodity.prices.find", indent + 1);
+	  DEBUG("commodity.prices.find", "  found translated price "
 		<< xlat->price << " from " << xlat->when);
 #endif
 
@@ -308,15 +310,15 @@ optional<price_point_t>
 	  if (xlat->when < point->when) {
 	    point->when = xlat->when;
 #if defined(DEBUG_ON)
-	    DEBUG_INDENT("commodity.prices", indent + 1);
-	    DEBUG("commodity.prices",
+	    DEBUG_INDENT("commodity.prices.find", indent + 1);
+	    DEBUG("commodity.prices.find",
 		  "  adjusting date of result back to " << point->when);
 #endif
 	  }
 	} else {
 #if defined(DEBUG_ON)
-	  DEBUG_INDENT("commodity.prices", indent + 1);
-	  DEBUG("commodity.prices", "  saw no translated price there");
+	  DEBUG_INDENT("commodity.prices.find", indent + 1);
+	  DEBUG("commodity.prices.find", "  saw no translated price there");
 #endif
 	  continue;
 	}
@@ -324,8 +326,8 @@ optional<price_point_t>
 
       assert(! commodity || point->price.commodity() == *commodity);
 #if defined(DEBUG_ON)
-      DEBUG_INDENT("commodity.prices", indent + 1);
-      DEBUG("commodity.prices",
+      DEBUG_INDENT("commodity.prices.find", indent + 1);
+      DEBUG("commodity.prices.find",
 	    "  saw a price there: " << point->price << " from " << point->when);
 #endif
       if (! limit || point->when > *limit) {
@@ -335,16 +337,16 @@ optional<price_point_t>
       }
     } else {
 #if defined(DEBUG_ON)
-      DEBUG_INDENT("commodity.prices", indent + 1);
-      DEBUG("commodity.prices", "  saw no price there");
+      DEBUG_INDENT("commodity.prices.find", indent + 1);
+      DEBUG("commodity.prices.find", "  saw no price there");
 #endif
     }
   }
 
   if (found) {
 #if defined(DEBUG_ON)
-    DEBUG_INDENT("commodity.prices", indent);
-    DEBUG("commodity.prices",
+    DEBUG_INDENT("commodity.prices.find", indent);
+    DEBUG("commodity.prices.find",
 	  "  found price " << best.price << " from " << best.when);
 #endif
     return best;
@@ -381,16 +383,14 @@ void commodity_t::exchange(commodity_t&	     commodity,
 			   const amount_t&   per_unit_cost,
 			   const datetime_t& moment)
 {
-  if (! commodity.has_flags(COMMODITY_NOMARKET)) {
-    DEBUG("commodity.prices", "exchanging commodity " << commodity
-	  << " at per unit cost " << per_unit_cost << " on " << moment);
+  DEBUG("commodity.prices.add", "exchanging commodity " << commodity
+	<< " at per unit cost " << per_unit_cost << " on " << moment);
 
-    commodity_t& base_commodity
-      (commodity.annotated ?
-       as_annotated_commodity(commodity).referent() : commodity);
+  commodity_t& base_commodity
+    (commodity.annotated ?
+     as_annotated_commodity(commodity).referent() : commodity);
 
-    base_commodity.add_price(moment, per_unit_cost);
-  }
+  base_commodity.add_price(moment, per_unit_cost);
 }
 
 commodity_t::cost_breakdown_t
@@ -400,17 +400,12 @@ commodity_t::exchange(const amount_t&		  amount,
 		      const optional<datetime_t>& moment,
 		      const optional<string>&     tag)
 {
-  // (let* ((commodity (amount-commodity amount))
-  //        (current-annotation
-  //         (and (annotated-commodity-p commodity)
-  //              (commodity-annotation commodity)))
-  //        (base-commodity (if (annotated-commodity-p commodity)
-  //                            (get-referent commodity)
-  //                            commodity))
-  //        (per-unit-cost (or per-unit-cost
-  //                           (divide total-cost amount)))
-  //        (total-cost (or total-cost
-  //                        (multiply per-unit-cost amount))))
+  DEBUG("commodity.prices.add", "exchange: " << amount << " for " << cost);
+  DEBUG("commodity.prices.add", "exchange: is-per-unit   = " << is_per_unit);
+  if (moment)
+    DEBUG("commodity.prices.add", "exchange: moment        = " << *moment);
+  if (tag)
+    DEBUG("commodity.prices.add", "exchange: tag           = " << *tag);
 
   commodity_t& commodity(amount.commodity());
 
@@ -418,43 +413,32 @@ commodity_t::exchange(const amount_t&		  amount,
   if (commodity.annotated)
     current_annotation = &as_annotated_commodity(commodity).details;
 
-  commodity_t& base_commodity
-    (current_annotation ?
-     as_annotated_commodity(commodity).referent() : commodity);
+  amount_t per_unit_cost(is_per_unit ? cost : (cost / amount).unrounded());
 
-  amount_t per_unit_cost(is_per_unit ? cost : cost / amount);
+  DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
+
+  exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
 
   cost_breakdown_t breakdown;
-  breakdown.final_cost = ! is_per_unit ? cost : cost * amount;
+  breakdown.final_cost = ! is_per_unit ? cost : (cost * amount).unrounded();
 
-  // Add a price history entry for this conversion if we know when it took
-  // place
-
-  // (if (and moment (not (commodity-no-market-price-p base-commodity)))
-  //     (add-price base-commodity per-unit-cost moment))
-
-  if (moment && ! commodity.has_flags(COMMODITY_NOMARKET))
-    base_commodity.add_price(*moment, per_unit_cost);
-
-  // ;; returns: ANNOTATED-AMOUNT TOTAL-COST BASIS-COST
-  // (values (annotate-commodity
-  //          amount
-  //          (make-commodity-annotation :price per-unit-cost
-  //                                     :date  moment
-  //                                     :tag   tag))
-  //         total-cost
-  //         (if current-annotation
-  //             (multiply (annotation-price current-annotation) amount)
-  //             total-cost))))
+  DEBUG("commodity.prices.add",
+	"exchange: final-cost    = " << breakdown.final_cost);
 
   if (current_annotation && current_annotation->price)
-    breakdown.basis_cost = *current_annotation->price * amount;
+    breakdown.basis_cost = (*current_annotation->price * amount).unrounded();
   else
     breakdown.basis_cost = breakdown.final_cost;
+
+  DEBUG("commodity.prices.add",
+	"exchange: basis-cost    = " << breakdown.basis_cost);
 
   breakdown.amount =
     amount_t(amount, annotation_t(per_unit_cost, moment ?
 				  moment->date() : optional<date_t>(), tag));
+
+  DEBUG("commodity.prices.add",
+	"exchange: amount        = " << breakdown.amount);
 
   return breakdown;
 }
@@ -755,7 +739,7 @@ void annotated_commodity_t::write_annotations(std::ostream&       out,
     out << " {" << *info.price << '}';
 
   if (info.date)
-    out << " [" << format_date(*info.date) << ']';
+    out << " [" << format_date(*info.date, string("%Y/%m/%d")) << ']';
 
   if (info.tag)
     out << " (" << *info.tag << ')';

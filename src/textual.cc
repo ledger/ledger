@@ -492,7 +492,7 @@ void instance_t::price_entry_directive(char * line)
 
   if (commodity_t * commodity =
       amount_t::current_pool->find_or_create(symbol)) {
-    commodity->add_price(datetime, price);
+    commodity->add_price(datetime, price, true);
     commodity->add_flags(COMMODITY_KNOWN);
   } else {
     assert(false);
@@ -895,19 +895,11 @@ xact_t * instance_t::parse_xact(char *		line,
 	  if (xact->cost->sign() < 0)
 	    throw parse_error("A transaction's cost may not be negative");
 
-	  amount_t per_unit_cost(*xact->cost);
 	  if (per_unit)
 	    *xact->cost *= xact->amount;
-	  else
-	    per_unit_cost /= xact->amount;
-
-	  commodity_t::exchange(xact->amount.commodity(),
-				per_unit_cost, datetime_t(xact->date()));
 
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "Total cost is " << *xact->cost);
-	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Per-unit cost is " << per_unit_cost);
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "Annotated amount is " << xact->amount);
 
