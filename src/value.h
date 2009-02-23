@@ -795,14 +795,7 @@ public:
 	*this = sequence_t();
       if (! is_sequence())
 	in_place_cast(SEQUENCE);
-
-      if (! val.is_sequence()) {
-	as_sequence_lval().push_back(val);
-      } else {
-	const sequence_t& val_seq(val.as_sequence());
-	std::copy(val_seq.begin(), val_seq.end(),
-		  back_inserter(as_sequence_lval()));
-      }
+      as_sequence_lval().push_back(val);
     }
   }
 
