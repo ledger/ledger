@@ -270,9 +270,15 @@ value_t& value_t::operator+=(const value_t& val)
   }
   else if (is_sequence()) {
     if (val.is_sequence()) {
-      sequence_t& seq(as_sequence_lval());
-      seq.insert(seq.end(), val.as_sequence().begin(),
-		 val.as_sequence().end());
+      if (size() == val.size()) {
+	sequence_t::iterator	   i = begin();
+	sequence_t::const_iterator j = val.begin();
+
+	for (; i != end(); i++, j++)
+	  *i += *j;
+      } else {
+	throw_(value_error, "Cannot add sequences of different lengths");
+      }
     } else {
       as_sequence_lval().push_back(val);
     }
@@ -390,10 +396,14 @@ value_t& value_t::operator-=(const value_t& val)
     sequence_t& seq(as_sequence_lval());
 
     if (val.is_sequence()) {
-      foreach (const value_t& v, val.as_sequence()) {
-	sequence_t::iterator j = std::find(seq.begin(), seq.end(), v);
-	if (j != seq.end())
-	  seq.erase(j);
+      if (size() == val.size()) {
+	sequence_t::iterator	   i = begin();
+	sequence_t::const_iterator j = val.begin();
+
+	for (; i != end(); i++, j++)
+	  *i -= *j;
+      } else {
+	throw_(value_error, "Cannot subtract sequences of different lengths");
       }
     } else {
       sequence_t::iterator i = std::find(seq.begin(), seq.end(), val);
