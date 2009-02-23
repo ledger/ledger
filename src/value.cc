@@ -94,7 +94,13 @@ value_t::operator bool() const
   case STRING:
     return ! as_string().empty();
   case SEQUENCE:
-    return ! as_sequence().empty();
+    if (! as_sequence().empty()) {
+      foreach (const value_t& value, as_sequence()) {
+	if (value)
+	  return true;
+      }
+    }
+    return false;
   case POINTER:
     return ! as_any_pointer().empty();
   default:
