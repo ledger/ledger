@@ -257,6 +257,7 @@ namespace {
       break;
 
     case value_t::BALANCE:
+    case value_t::SEQUENCE:
       xdata.value = temp;
       flags |= XACT_EXT_COMPOUND;
       break;
