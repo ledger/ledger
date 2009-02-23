@@ -4,9 +4,9 @@ import sys
 import os
 import re
 import string
-import difflib
 import tempfile
 
+from difflib import unified_diff
 from subprocess import Popen, PIPE
 
 ledger = sys.argv[1]
@@ -85,7 +85,7 @@ def test_regression(test_file):
     success = True
     printed = False
     index   = 0
-    for line in difflib.unified_diff(output, p.stdout.readlines()):
+    for line in unified_diff(output, p.stdout.readlines()):
         index += 1
         if index < 3:
             continue
@@ -100,12 +100,9 @@ def test_regression(test_file):
 
     printed = False
     index   = 0
-    lines   = p.stderr.readlines()
-    if len(lines) > 0:
-        while re.match('While (parsing file|balancing entry from)', lines[0]):
-            lines = lines[1:]
-            error = error[1:]
-    for line in difflib.unified_diff(error, lines):
+    for line in unified_diff([re.sub('\$FILE', tempdata[1], line)
+                              for line in error],
+                             p.stderr.readlines()):
         index += 1
         if index < 3:
             continue

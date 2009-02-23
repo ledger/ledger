@@ -7,8 +7,8 @@ D 1,000.00 USD
   Account2   -1000 EUR @ 1.5 USD
 >>>1
 >>>2
-While parsing file "bug.dat", line 8: 
-While balancing entry from "bug.dat", lines 6-8:
+While parsing file "$FILE", line 5: 
+While balancing entry from "$FILE", lines 3-5:
 > 2007-12-31 * Start of year / Opening balances.
 >   Account1   1000 EUR @ 1.6 USD
 >   Account2   -1000 EUR @ 1.5 USD
