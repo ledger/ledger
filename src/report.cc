@@ -154,14 +154,38 @@ value_t report_t::fn_market(call_scope_t& scope)
   return args.value_at(0);
 }
 
+value_t report_t::fn_get_at(call_scope_t& scope)
+{
+  interactive_t args(scope, "Sl");
+
+  DEBUG("report.get_at", "get_at[0] = " << args.value_at(0));
+  DEBUG("report.get_at", "get_at[1] = " << args.value_at(1));
+
+  if (args.get<long>(1) == 0) {
+    if (! args.value_at(0).is_sequence())
+      return args.value_at(0);
+  } else {
+    if (! args.value_at(0).is_sequence())
+      throw_(std::runtime_error,
+	     _("Attempting to get argument at index %1 from %2")
+	     << args.get<long>(1) << args.value_at(0).label());
+  }
+  return args.get<const value_t::sequence_t&>(0)[args.get<long>(1)];
+}
+
+value_t report_t::fn_is_seq(call_scope_t& scope)
+{
+  return scope.value().is_sequence();
+}
+
 value_t report_t::fn_strip(call_scope_t& args)
 {
-  return args[0].strip_annotations(what_to_keep());
+  return args.value().strip_annotations(what_to_keep());
 }
 
 value_t report_t::fn_scrub(call_scope_t& args)
 {
-  value_t temp(args[0].strip_annotations(what_to_keep()));
+  value_t temp(args.value().strip_annotations(what_to_keep()));
   if (HANDLED(base))
     return temp;
   else
@@ -614,6 +638,16 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'f':
     if (is_eq(p, "format_date"))
       return MAKE_FUNCTOR(report_t::fn_format_date);
+    break;
+
+  case 'g':
+    if (is_eq(p, "get_at"))
+      return MAKE_FUNCTOR(report_t::fn_get_at);
+    break;
+
+  case 'i':
+    if (is_eq(p, "is_seq"))
+      return MAKE_FUNCTOR(report_t::fn_is_seq);
     break;
 
   case 'j':
