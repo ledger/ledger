@@ -77,67 +77,67 @@ libledger_report_la_SOURCES  =			\
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
 libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
-pkginclude_HEADERS =			   \
-	$(top_builddir)/config.h	   \
-	src/system.hh			   \
-	src/utils.h			   \
-	src/flags.h			   \
-	src/hooks.h			   \
-	src/error.h			   \
-	src/times.h			   \
-	src/mask.h			   \
-	src/stream.h			   \
-	src/pstream.h			   \
-	src/unistring.h			   \
-	src/accum.h			   \
-					   \
-	src/amount.h			   \
-	src/commodity.h			   \
-	src/balance.h			   \
-	src/value.h			   \
-					   \
-	src/token.h			   \
-	src/parser.h			   \
-	src/op.h			   \
-	src/expr.h			   \
-	src/scope.h			   \
-	src/interactive.h		   \
-	src/predicate.h			   \
-	src/format.h			   \
-	src/option.h			   \
-					   \
-	src/item.h			   \
-	src/post.h			   \
-	src/xact.h			   \
-	src/account.h			   \
-	src/journal.h			   \
-	src/timelog.h			   \
-	src/iterators.h			   \
-	src/compare.h			   \
-					   \
-	src/session.h			   \
-	src/report.h			   \
-	src/filters.h			   \
-	src/chain.h			   \
-	src/precmd.h			   \
-	src/derive.h			   \
-	src/output.h			   \
-	src/emacs.h			   \
-	src/quotes.h			   \
-					   \
-	src/global.h			   \
-	src/ledger.h			   \
-					   \
-	python/pyledger.h		   \
-	python/pyinterp.h                  \
-					   \
-	lib/fdstream.h			   \
-	lib/sha1.h			   \
-	lib/gettext.h			   \
-					   \
-	lib/utfcpp/source/utf8.h	   \
-	lib/utfcpp/source/utf8/checked.h   \
-	lib/utfcpp/source/utf8/core.h	   \
+pkginclude_HEADERS =				\
+	$(top_builddir)/config.h		\
+	src/system.hh				\
+	src/utils.h				\
+	src/flags.h				\
+	src/hooks.h				\
+	src/error.h				\
+	src/times.h				\
+	src/mask.h				\
+	src/stream.h				\
+	src/pstream.h				\
+	src/unistring.h				\
+	src/accum.h				\
+						\
+	src/amount.h				\
+	src/commodity.h				\
+	src/balance.h				\
+	src/value.h				\
+						\
+	src/token.h				\
+	src/parser.h				\
+	src/op.h				\
+	src/expr.h				\
+	src/scope.h				\
+	src/interactive.h			\
+	src/predicate.h				\
+	src/format.h				\
+	src/option.h				\
+						\
+	src/item.h				\
+	src/post.h				\
+	src/xact.h				\
+	src/account.h				\
+	src/journal.h				\
+	src/timelog.h				\
+	src/iterators.h				\
+	src/compare.h				\
+						\
+	src/session.h				\
+	src/report.h				\
+	src/filters.h				\
+	src/chain.h				\
+	src/precmd.h				\
+	src/derive.h				\
+	src/output.h				\
+	src/emacs.h				\
+	src/quotes.h				\
+						\
+	src/global.h				\
+	src/ledger.h				\
+						\
+	src/pyledger.h				\
+	src/pyinterp.h				\
+						\
+	lib/fdstream.h				\
+	lib/sha1.h				\
+	lib/gettext.h				\
+						\
+	lib/utfcpp/source/utf8.h		\
+	lib/utfcpp/source/utf8/checked.h	\
+	lib/utfcpp/source/utf8/core.h		\
 	lib/utfcpp/source/utf8/unchecked.h
 
 CLEANFILES =
@@ -179,7 +179,7 @@ all_sources     = $(libledger_util_la_SOURCES)		\
 		  $(libledger_data_la_SOURCES)		\
 		  $(libledger_report_la_SOURCES)	\
 		  $(libledger_python_la_SOURCES)	\
-		  python/pyledger.cc
+		  src/pyledger.cc
 
 all_files       = $(all_sources) $(pkginclude_HEADERS)
 
@@ -195,35 +195,35 @@ if HAVE_BOOST_PYTHON
 lib_LTLIBRARIES += libledger_python.la
 
 libledger_python_la_SOURCES =			\
-	python/pyutils.h			\
-	python/pyfstream.h			\
-	python/py_amount.cc			\
-	python/py_balance.cc			\
-	python/py_chain.cc			\
-	python/py_commodity.cc			\
-	python/py_xact.cc			\
-	python/py_expr.cc			\
-	python/py_flags.cc			\
-	python/py_format.cc			\
-	python/py_global.cc			\
-	python/py_item.cc			\
-	python/py_journal.cc			\
-	python/py_report.cc			\
-	python/py_scope.cc			\
-	python/py_session.cc			\
-	python/py_timelog.cc			\
-	python/py_times.cc			\
-	python/py_utils.cc			\
-	python/py_value.cc			\
-	python/py_post.cc			\
-	python/pyinterp.cc
+	src/pyutils.h				\
+	src/pyfstream.h				\
+	src/py_amount.cc			\
+	src/py_balance.cc			\
+	src/py_chain.cc				\
+	src/py_commodity.cc			\
+	src/py_expr.cc				\
+	src/py_flags.cc				\
+	src/py_format.cc			\
+	src/py_global.cc			\
+	src/py_item.cc				\
+	src/py_journal.cc			\
+	src/py_post.cc				\
+	src/py_report.cc			\
+	src/py_scope.cc				\
+	src/py_session.cc			\
+	src/py_timelog.cc			\
+	src/py_times.cc				\
+	src/py_utils.cc				\
+	src/py_value.cc				\
+	src/py_xact.cc				\
+	src/pyinterp.cc
 
 libledger_python_la_CPPFLAGS = $(lib_cppflags) -I$(srcdir)/python
 
 pyexec_LTLIBRARIES = ledger.la
 
 ledger_la_CPPFLAGS     = $(libledger_python_la_CPPFLAGS)
-ledger_la_SOURCES      = python/pyledger.cc
+ledger_la_SOURCES      = src/pyledger.cc
 ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
 ledger_la_LDFLAGS      = -avoid-version -module
 ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)

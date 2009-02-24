@@ -116,7 +116,7 @@ for line in fd.readlines():
     line = re.sub('amount_t::precision_t\(([^)]+?)\)', '\\1', line)
 
     # Determine this list automatically by scanning the class_ lines in
-    # python/*.cc
+    # src/py_*.cc
     line = re.sub('amount_t::', 'Amount.', line)
     line = re.sub('Amount\.PARSE_', 'AmountParse.', line)
     line = re.sub('commodity_t\(([^)]+?)\)', '\\1', line)
