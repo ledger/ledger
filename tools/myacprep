@@ -49,3 +49,8 @@ if [ -n "$OUT" ]; then
 fi
 
 ./acprep $SWITCHES
+
+if [ -n "$OUT" ]; then
+    ln -sf $OUT/TAGS .
+    ln -sf $OUT/ledger .
+fi
