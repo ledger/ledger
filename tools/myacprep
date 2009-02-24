@@ -30,6 +30,9 @@ while [ -n "$1" ]; do
       SWITCHES="$SWITCHES $1 --release"
       saw_opt=true
       shift 1 ;;
+    *)
+      SWITCHES="$SWITCHES $1"
+      shift 1 ;;
   esac
 done
 
