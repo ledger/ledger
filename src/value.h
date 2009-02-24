@@ -925,9 +925,7 @@ inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
 
 inline string value_context(const value_t& val) {
   std::ostringstream buf;
-  buf << std::right;
-  buf.width(20);
-  val.dump(buf);
+  val.print(buf, 20, 20, true);
   return buf.str();
 }
 
