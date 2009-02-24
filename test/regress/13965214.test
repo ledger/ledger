@@ -1,0 +1,30 @@
+reg
+<<<
+Y2008
+
+01/30 A
+	Bank	130
+	Income
+
+02/01 B
+	Bank	140
+	Income
+
+02/20 C
+	Bank	150
+	Income
+
+03/01 D
+	Bank	160
+	Income
+>>>1
+08-Jan-30 A                     Bank                            130          130
+                                Income                         -130            0
+08-Feb-01 B                     Bank                            140          140
+                                Income                         -140            0
+08-Feb-20 C                     Bank                            150          150
+                                Income                         -150            0
+07-Mar-01 D                     Bank                            160          160
+                                Income                         -160            0
+>>>2
+=== 0
