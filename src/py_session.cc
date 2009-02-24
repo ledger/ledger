@@ -46,14 +46,13 @@ using namespace boost::python;
 
 void export_session()
 {
-#if 0
-  class_< session_t > ("Session")
+  class_< session_t, bases<symbol_scope_t>,
+          shared_ptr<session_t>, boost::noncopyable > ("SessionBase")
     ;
-#endif
 
-  //register_optional_to_python<amount_t>();
-
-  //implicitly_convertible<string, amount_t>();
+  class_< python_interpreter_t, bases<session_t>,
+          shared_ptr<python_interpreter_t>, boost::noncopyable > ("Session")
+    ;
 
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);

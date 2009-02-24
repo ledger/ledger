@@ -32,7 +32,7 @@
 #ifndef _PYINTERP_H
 #define _PYINTERP_H
 
-#include "scope.h"
+#include "interactive.h"
 #include "session.h"
 
 #if defined(HAVE_BOOST_PYTHON)
@@ -100,29 +100,36 @@ public:
     virtual value_t operator()(call_scope_t& args);
   };
 
+  option_t<python_interpreter_t> * lookup_option(const char * p);
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 
-  value_t option_import_(call_scope_t& args) {
-    path file(args[0].to_string());
+  OPTION_(python_interpreter_t, import_, DO_(scope) {
+      interactive_t args(scope, "s");
 
-    python::object module_sys = import("sys"); 
-    python::object sys_dict = module_sys.attr("__dict__");
+      path file(args.get<string>(0));
 
-    python::list paths(sys_dict["path"]);
+      python::object module_sys = parent->import("sys"); 
+      python::object sys_dict	= module_sys.attr("__dict__");
+
+      python::list paths(sys_dict["path"]);
 #if BOOST_VERSION >= 103700
-    paths.insert(0, file.parent_path().string());
+      paths.insert(0, file.parent_path().string());
 #else
-    paths.insert(0, file.branch_path().string());
+      paths.insert(0, file.branch_path().string());
 #endif
-    sys_dict["path"] = paths;
+      sys_dict["path"] = paths;
 
 #if BOOST_VERSION >= 103700
-    import(file.stem());
+      string name = file.filename();
+      if (contains(name, ".py"))
+	parent->import(file.stem());
+      else
+	parent->import(name);
 #else
-    import(file.string());
+      parent->import(file.leaf());
 #endif
-    return true;
-  }
+    });
 };
 
 extern shared_ptr<python_interpreter_t> python_session;

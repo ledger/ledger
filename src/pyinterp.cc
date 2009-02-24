@@ -41,13 +41,13 @@ void export_amount();
 void export_balance();
 void export_chain();
 void export_commodity();
-void export_xact();
 void export_expr();
 void export_flags();
 void export_format();
 void export_global();
 void export_item();
 void export_journal();
+void export_post();
 void export_report();
 void export_scope();
 void export_session();
@@ -55,7 +55,7 @@ void export_timelog();
 void export_times();
 void export_utils();
 void export_value();
-void export_post();
+void export_xact();
 
 void initialize_for_python()
 {
@@ -63,13 +63,13 @@ void initialize_for_python()
   export_balance();
   export_chain();
   export_commodity();
-  export_xact();
   export_expr();
   export_flags();
   export_format();
   export_global();
   export_item();
   export_journal();
+  export_post();
   export_report();
   export_scope();
   export_session();
@@ -77,7 +77,9 @@ void initialize_for_python()
   export_times();
   export_utils();
   export_value();
-  export_post();
+  export_xact();
+
+  scope().attr("session") = python_session;
 }
 
 struct python_run
@@ -106,15 +108,53 @@ void python_interpreter_t::initialize()
 
     object main_module = python::import("__main__");
     if (! main_module)
-      throw_(std::logic_error, "Python failed to initialize");
+      throw_(std::logic_error,
+	     "Python failed to initialize (couldn't find __main__)");
 
     main_nspace = extract<dict>(main_module.attr("__dict__"));
     if (! main_nspace)
-      throw_(std::logic_error, "Python failed to initialize");
+      throw_(std::logic_error,
+	     "Python failed to initialize (couldn't find __dict__)");
 
     python::detail::init_module("ledger", &initialize_for_python);
 
     is_initialized = true;
+
+    // Hack ledger.__path__ so it points to a real location
+    python::object module_sys = import("sys"); 
+    python::object sys_dict   = module_sys.attr("__dict__");
+
+    python::list paths(sys_dict["path"]);
+
+    bool path_initialized = false;
+    int n = python::extract<int>(paths.attr("__len__")());
+    for (int i = 0; i < n; i++) {
+      python::extract<std::string> str(paths[i]);
+      path pathname(str);
+      DEBUG("python.interp", "sys.path = " << pathname);
+
+      if (exists(pathname / "ledger" / "__init__.py")) {
+	if (python::object module_ledger = import("ledger")) {
+	  DEBUG("python.interp",
+		"Setting ledger.__path__ = " << (pathname / "ledger"));
+
+	  python::object ledger_dict = module_ledger.attr("__dict__");
+	  python::list temp_list;
+	  temp_list.append((pathname / "ledger").string());
+
+	  ledger_dict["__path__"] = temp_list;
+	} else {
+	  throw_(std::logic_error,
+		 "Python failed to initialize (couldn't find ledger)");
+	}
+	path_initialized = true;
+	break;
+      }
+    }
+    if (! path_initialized)
+      std::cerr
+	<< "Warning: Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH"
+	<< std::endl;
   }
   catch (const error_already_set&) {
     PyErr_Print();
@@ -130,16 +170,12 @@ object python_interpreter_t::import(const string& str)
     initialize();
 
   try {
-    TRACE_START(python_import, 1, "Imported Python module: " << str);
-
     object mod = python::import(str.c_str());
     if (! mod)
       throw_(std::logic_error, "Failed to import Python module " << str);
  
-    // Import all top-level xacts directly into the main namespace
+    // Import all top-level entries directly into the main namespace
     main_nspace.update(mod.attr("__dict__"));
-
-    TRACE_FINISH(python_import, 1);
 
     return mod;
   }
@@ -209,6 +245,17 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   return object();
 }
 
+option_t<python_interpreter_t> *
+python_interpreter_t::lookup_option(const char * p)
+{
+  switch (*p) {
+  case 'i':
+    OPT(import_);
+    break;
+  }
+  return NULL;
+}
+
 expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
 {
   // Give our superclass first dibs on symbol definitions
@@ -218,16 +265,9 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
   const char * p = name.c_str();
   switch (*p) {
   case 'o':
-    if (std::strncmp(p, "opt_", 4) == 0) {
-      p = p + 4;
-      switch (*p) {
-      case 'i':
-	if (std::strcmp(p, "import_") == 0)
-	  return MAKE_FUNCTOR(python_interpreter_t::option_import_);
-	else if (std::strcmp(p, "import") == 0)
-	  return expr_t::ptr_op_t();
-	break;
-      }
+    if (WANT_OPT()) { const char * q = p + OPT_PREFIX_LEN;
+      if (option_t<python_interpreter_t> * handler = lookup_option(q))
+	return MAKE_OPT_HANDLER(python_interpreter_t, handler);
     }
     break;
   }
@@ -245,12 +285,20 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 {
   try {
+    std::signal(SIGINT, SIG_DFL);
     if (! PyCallable_Check(func.ptr())) {
       extract<value_t> val(func);
+      std::signal(SIGINT, sigint_handler);
       if (val.check())
 	return val();
+#if 1
+      // jww (2009-02-24): Distinguish between "no return" and a value with an
+      // unconvertable type
+      return NULL_VALUE;
+#else
       throw_(calc_error,
 	     "Could not evaluate Python variable '" << name << "'");
+#endif
     } else {
       if (args.size() > 0) {
 	list arglist;
@@ -272,6 +320,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	    throw_(calc_error,
 		   "Could not evaluate Python variable '" << name << "'");
 	  }
+	  std::signal(SIGINT, sigint_handler);
 	  return result;
 	}
 	else if (PyErr_Occurred()) {
@@ -281,15 +330,22 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	  assert(false);
 	}
       } else {
+	std::signal(SIGINT, sigint_handler);
 	return call<value_t>(func.ptr());
       }
     }
   }
   catch (const error_already_set&) {
+    std::signal(SIGINT, sigint_handler);
     PyErr_Print();
     throw_(calc_error,
 	   "Failed call to Python function '" << name << "'");
   }
+  catch (...) {
+    std::signal(SIGINT, sigint_handler);
+  }
+  std::signal(SIGINT, sigint_handler);
+
   return NULL_VALUE;
 }
 

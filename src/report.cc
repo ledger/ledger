@@ -317,6 +317,15 @@ namespace {
   };
 }
 
+bool report_t::maybe_import(const string& module)
+{
+  if (lookup(string(OPT_PREFIX) + "import_")) {
+    expr_t(string(OPT_PREFIX) + "import_(\"" + module + "\")").calc(*this);
+    return true;
+  }
+  return false;
+}
+
 option_t<report_t> * report_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -607,6 +616,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	     (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
 	      *this));
+	else if (is_eq(q, "python") && maybe_import("ledger.interp"))
+	  return session.lookup(string(CMD_PREFIX) + "python");
 	break;
 
       case 'r':
@@ -622,6 +633,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 's':
 	if (is_eq(q, "stats") || is_eq(q, "stat"))
 	  return WRAP_FUNCTOR(reporter<>(new gather_statistics(*this), *this));
+	else if (is_eq(q, "server") && maybe_import("ledger.server"))
+	  return session.lookup(string(CMD_PREFIX) + "server");
 	break;
       }
     }
@@ -685,6 +698,10 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       case 'f':
 	if (is_eq(q, "format"))
 	  return WRAP_FUNCTOR(format_command);
+	break;
+      case 'h':
+	if (is_eq(q, "hello") && maybe_import("ledger.hello"))
+	  return session.lookup(string(PRECMD_PREFIX) + "hello");
 	break;
       case 'p':
 	if (is_eq(q, "parse"))

@@ -171,6 +171,8 @@ public:
 			  HANDLED(lots) || HANDLED(lot_tags));
   }
 
+  bool maybe_import(const string& module);
+
   option_t<report_t> * lookup_option(const char * p);
 
   virtual void define(const string& name, expr_t::ptr_op_t def) {
