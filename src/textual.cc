@@ -436,10 +436,7 @@ void instance_t::price_conversion_directive(char * line)
 {
   if (char * p = std::strchr(line + 1, '=')) {
     *p++ = '\0';
-#if 0
-    // jww (2008-04-22): NYI!
-    parse_conversion(line + 1, p);
-#endif
+    amount_t::parse_conversion(line + 1, p);
   }
 }
 
