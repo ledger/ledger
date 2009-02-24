@@ -228,6 +228,11 @@ ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
 ledger_la_LDFLAGS      = -avoid-version -module
 ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)
 
+pkgpython_PYTHON = python/__init__.py		\
+	python/hello.py				\
+	python/interp.py			\
+	python/server.py
+
 endif
 
 ######################################################################
@@ -397,7 +402,7 @@ dist-hook:
 	rm -fr $(distdir)/doc/latex \
 	       $(distdir)/doc/Doxyfile.bak \
 	       $(distdir)/doc/Doxyfile.gen
-	cp -pR $(srcdir)/doc/html $(distdir)/doc
+	cp -pR doc/html $(distdir)/doc
 	rm -f $(distdir)/README.textile
 	cp -p $(srcdir)/doc/README $(distdir)/README
 
