@@ -7,7 +7,7 @@ class ValueExprTestCase : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE(ValueExprTestCase);
 
-  CPPUNIT_TEST(testConstructors);
+  //CPPUNIT_TEST(testConstructors);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -18,7 +18,7 @@ public:
   virtual void setUp();
   virtual void tearDown();
 
-  void testConstructors();
+  //void testConstructors();
 
 private:
   ValueExprTestCase(const ValueExprTestCase &copy);

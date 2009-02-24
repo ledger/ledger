@@ -15,7 +15,3 @@ void ValueExprTestCase::tearDown()
 {
   amount_t::shutdown();
 }
-
-void ValueExprTestCase::testConstructors()
-{
-}

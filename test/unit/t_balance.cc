@@ -23,7 +23,3 @@ void BalanceTestCase::tearDown()
   amount_t::stream_fullstrings = false;
   amount_t::shutdown();
 }
-
-void BalanceTestCase::testConstructors()
-{
-}

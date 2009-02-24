@@ -7,7 +7,7 @@ class UtilitiesTestCase : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE(UtilitiesTestCase);
 
-  CPPUNIT_TEST(testConstructors);
+  //CPPUNIT_TEST(testConstructors);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -15,10 +15,10 @@ public:
   UtilitiesTestCase() {}
   virtual ~UtilitiesTestCase() {}
 
-  virtual void setUp();
-  virtual void tearDown();
+  //virtual void setUp();
+  //virtual void tearDown();
 
-  void testConstructors();
+  //void testConstructors();
 
 private:
   UtilitiesTestCase(const UtilitiesTestCase &copy);

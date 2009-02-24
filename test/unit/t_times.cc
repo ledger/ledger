@@ -6,11 +6,6 @@ using namespace ledger;
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DateTimeTestCase, "util");
 
-void DateTimeTestCase::setUp() {
-}
-void DateTimeTestCase::tearDown() {
-}
-
 void DateTimeTestCase::testConstructors()
 {
 #ifndef NOT_FOR_PYTHON

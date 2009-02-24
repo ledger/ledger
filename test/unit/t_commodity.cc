@@ -99,16 +99,3 @@ void CommodityTestCase::testPriceHistory()
 
   assertValid(x1);
 }
-
-void CommodityTestCase::testLots()
-{
-}
-
-void CommodityTestCase::testScalingBase()
-{
-}
-
-void CommodityTestCase::testReduction()
-{
-}
-

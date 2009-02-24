@@ -15,8 +15,8 @@ public:
   DateTimeTestCase() {}
   virtual ~DateTimeTestCase() {}
 
-  virtual void setUp();
-  virtual void tearDown();
+  //virtual void setUp();
+  //virtual void tearDown();
 
   void testConstructors();
 
