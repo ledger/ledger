@@ -216,61 +216,17 @@ libledger_python_la_SOURCES =			\
 	python/py_utils.cc			\
 	python/py_value.cc			\
 	python/py_post.cc			\
-	python/pyinterp.cc			\
-	python/setup.py
+	python/pyinterp.cc
 
 libledger_python_la_CPPFLAGS = $(lib_cppflags) -I$(srcdir)/python
 
-pyexec_PROGRAMS = ledger.so
+pyexec_LTLIBRARIES = ledger.la
 
-clean-local:
-	rm -fr build test/python
-
-uninstall-hook:
-	rm -f $(DESTDIR)$(libdir)/Ledger-$(VERSION)-py$(PYTHON_VERSION).egg-info
-
-install-exec-hook:
-	BUILD_DIR=`cd $(top_builddir); pwd`; \
-	SRC_DIR=`cd $(srcdir); pwd`; \
-	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
-	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
-	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
-	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py -q install \
-		--skip-build \
-		--root=$(DESTDIR)/ \
-		--prefix=$(prefix) \
-		--install-lib=$(libdir) \
-		--install-headers=$(pkgincludedir) \
-		--install-data=$(datadir))
-
-ledger_so_SOURCES      = $(all_sources)
-ledger_so_DEPENDENCIES = $(lib_LTLIBRARIES)
-
-PYLIBS  = ledger_python				\
-	  ledger_report				\
-	  ledger_data				\
-	  ledger_expr				\
-	  ledger_math				\
-	  ledger_util				\
-	  gmp					\
-	  mpfr					\
-	  boost_system$(BOOST_SUFFIX)		\
-	  boost_date_time$(BOOST_SUFFIX)	\
-          boost_filesystem$(BOOST_SUFFIX)	\
-          boost_regex$(BOOST_SUFFIX)		\
-          boost_python$(BOOST_SUFFIX)
-
-ledger.so: $(ledger_so_SOURCES) $(ledger_so_DEPENDENCIES)
-	@echo "    PY ledger.so"
-	@BUILD_DIR=`cd $(top_builddir); pwd`; \
-	SRC_DIR=`cd $(srcdir); pwd`; \
-	(cd $(srcdir); \
-	 CFLAGS="$(CPPFLAGS) -I$(srcdir) -I$$BUILD_DIR $(libledger_python_la_CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)" \
-	 LDFLAGS="$(LDFLAGS) -L$$BUILD_DIR -L$$BUILD_DIR/.libs" \
-	 ARCHFLAGS="$(ARCHFLAGS)" PYLIBS="$(PYLIBS)" VERSION="$(VERSION)" \
-	     SRCDIR="$$SRC_DIR" $(PYTHON) python/setup.py -q build \
-		--build-lib=$$BUILD_DIR/ --build-temp=$$BUILD_DIR/build -f)
+ledger_la_CPPFLAGS     = $(libledger_python_la_CPPFLAGS)
+ledger_la_SOURCES      = python/pyledger.cc
+ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
+ledger_la_LDFLAGS      = -avoid-version -module
+ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)
 
 endif
 
