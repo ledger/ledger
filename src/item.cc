@@ -180,6 +180,10 @@ namespace {
     return item.state() == item_t::PENDING;
   }
 
+  value_t get_actual(item_t& item) {
+    return ! item.has_flags(ITEM_GENERATED);
+  }
+
   value_t get_date(item_t& item) {
     return item.date();
   }
@@ -196,8 +200,7 @@ namespace {
       else if (args[0].is_mask())
 	return item.has_tag(args[0].as_mask());
     } else {
-      return item.has_tag(args[0].to_mask(),
-			  args[1].to_mask());
+      return item.has_tag(args[0].to_mask(), args[1].to_mask());
     }
     return false;
   }
@@ -265,6 +268,11 @@ value_t get_comment(item_t& item)
 expr_t::ptr_op_t item_t::lookup(const string& name)
 {
   switch (name[0]) {
+  case 'a':
+    if (name == "actual")
+      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
+    break;
+
   case 'b':
     if (name == "beg_line")
       return WRAP_FUNCTOR(get_wrapper<&get_beg_line>);

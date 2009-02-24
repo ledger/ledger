@@ -351,7 +351,7 @@ void related_posts::flush()
 	  post_t::xdata_t& xdata(r_post->xdata());
 	  if (! xdata.has_flags(POST_EXT_HANDLED) &&
 	      (! xdata.has_flags(POST_EXT_RECEIVED) ?
-	       ! r_post->has_flags(POST_AUTO | POST_VIRTUAL) :
+	       ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
 	       also_matching)) {
 	    xdata.add_flags(POST_EXT_HANDLED);
 	    item_handler<post_t>::operator()(*r_post);
@@ -363,7 +363,7 @@ void related_posts::flush()
 	// output auto or period xacts.
 	post_t::xdata_t& xdata(post->xdata());
 	if (! xdata.has_flags(POST_EXT_HANDLED) &&
-	    ! post->has_flags(POST_AUTO)) {
+	    ! post->has_flags(ITEM_GENERATED)) {
 	  xdata.add_flags(POST_EXT_HANDLED);
 	  item_handler<post_t>::operator()(*post);
 	}
@@ -720,7 +720,7 @@ void budget_posts::report_budget_items(const date_t& date)
 	post_temps.push_back(post);
 	post_t& temp = post_temps.back();
 	temp.xact = &xact;
-	temp.add_flags(POST_AUTO | ITEM_TEMP);
+	temp.add_flags(ITEM_TEMP);
 	temp.amount.in_place_negate();
 	xact.add_post(&temp);
 
@@ -808,7 +808,7 @@ void forecast_posts::flush()
     post_temps.push_back(post);
     post_t& temp = post_temps.back();
     temp.xact = &xact;
-    temp.add_flags(POST_AUTO | ITEM_TEMP);
+    temp.add_flags(ITEM_TEMP);
     xact.add_post(&temp);
 
     date_t next = (*least).first.increment(begin);

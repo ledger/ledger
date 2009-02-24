@@ -130,10 +130,6 @@ namespace {
     return ! post.has_flags(POST_VIRTUAL);
   }
 
-  value_t get_actual(post_t& post) {
-    return ! post.has_flags(POST_AUTO);
-  }
-
   value_t get_xact(post_t& post) {
     return value_t(static_cast<scope_t *>(post.xact));
   }
@@ -234,8 +230,6 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
-    else if (name == "actual")
-      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
     break;
 
   case 'c':

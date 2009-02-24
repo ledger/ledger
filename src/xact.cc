@@ -362,7 +362,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
   foreach (post_t * initial_post, initial_posts) {
-    if (! initial_post->has_flags(POST_AUTO) && predicate(*initial_post)) {
+    if (! initial_post->has_flags(ITEM_GENERATED) &&
+	predicate(*initial_post)) {
       foreach (post_t * post, posts) {
 	amount_t amt;
 	assert(post->amount);
@@ -408,7 +409,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 	// the automated xact's one.
 	post_t * new_post = new post_t(account, amt);
 	new_post->copy_details(*post);
-	new_post->add_flags(POST_AUTO);
+	new_post->add_flags(ITEM_GENERATED);
 
 	xact.add_post(new_post);
       }
