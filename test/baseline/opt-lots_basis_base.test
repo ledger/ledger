@@ -1,0 +1,891 @@
+reg --basis --base
+<<<
+C 1.00s = 100c
+C 1.00G = 100s
+
+D 1.00G
+
+2006/03/14 Opening Balances
+    Assets:Tajer                1339829c
+    Assets:Gruulmorg             248720c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          1428c
+    Expenses:Fees:Auction           768c
+    Expenses:Fees:Auction           612c
+    Expenses:Fees:Auction          4764c
+    Expenses:Fees:Auction          3372c
+    Expenses:Fees:Auction          1296c
+    Expenses:Fees:Auction          1332c
+    Expenses:Fees:Auction           660c
+    Expenses:Fees:Auction         10044c
+    Expenses:Fees:Auction          3588c
+    Expenses:Fees:Auction          1632c
+    Expenses:Fees:Auction          8388c
+    Expenses:Fees:Auction          9984c
+    Expenses:Fees:Auction          2316c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Tajer                 158860c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          1320c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Tajer                  11496c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          3216c
+    Assets:Tajer
+
+2006/03/14 Post
+    Expenses:Fees:Mail               30c
+    Assets:Gruulmorg
+
+2006/03/14 Auction House
+    Assets:Tajer                  34678c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          2316c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Gruulmorg                  1G
+    Equity:Gold
+
+2006/03/14 Auction House
+    Assets:Tajer                  59389c
+    Equity:Gold
+
+2006/03/14 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/14 Player
+    Assets:Tajer                      3G
+    Equity:Gold
+
+2006/03/14 Player
+    Assets:Tajer                      6G
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Items                   35s
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Tajer:Items                  "Plans: Wildthorn Mail" 1 @ 125s
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Bids                     259c
+    Assets:Bids                      45s
+    Assets:Bids                    4720c
+    Assets:Tajer
+
+2006/03/14 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Expenses:Items                    8G
+    Assets:Tajer
+
+2006/03/14 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/14 Puldoost
+    Assets:Tajer                      8G
+    Expenses:Items
+
+2006/03/14 Auction House
+    Assets:Wyshona:Items                "Plans: Wildthorn Mail" 1 {1.25G}
+    Assets:Tajer:Items
+
+2006/03/15 Auction House
+    Assets:Tajer                     45s
+    Assets:Tajer                    259c
+    Assets:Bids
+
+2006/03/15 Auction House
+    Assets:Tajer                   4720c
+    Assets:Bids
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction         12542c  ; something got lost here
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction          2375c
+    Expenses:Fees:Auction         -2375c
+    Assets:Gruulmorg
+
+2006/03/15 Auction House
+    Assets:Danell                     4c
+    Equity:Gold
+
+2006/03/15 Transfer
+    Assets:Gruulmorg                  2c
+    Assets:Danell
+
+2006/03/15 Transfer
+    Assets:Danell                  4250c
+    Expenses:Fees:Auction           750c
+    Assets:Gruulmorg                -50s
+
+2006/03/15 Post
+    Expenses:Fees:Mail               60c
+    Assets:Danell
+
+2006/03/15 Player
+    Assets:Tajer                      3G
+    Equity:Gold
+
+2006/03/15 Post
+    Assets:Wyshona                   40s
+    Expenses:Fees:Mail               30c
+    Assets:Danell
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction             8s
+    Expenses:Fees:Auction            11s
+    Assets:Wyshona
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Beaststalker's Belt" 1 @ 65G
+    Assets:Tajer
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction          8268c
+    Assets:Tajer
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Vendor
+    Assets:Tajer                  16744c
+    Assets:Tajer                  16640c
+    Equity:Gold
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction           772c
+    Expenses:Fees:Auction           544c
+    Expenses:Fees:Auction           444c
+    Expenses:Fees:Auction           432c
+    Expenses:Fees:Auction           204c
+    Assets:Tajer
+
+2006/03/15 Player
+    Assets:Tajer                     12s
+    Equity:Gold
+
+2006/03/15 Vendor
+    Assets:Tajer                     22s
+    Equity:Gold
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Recipe: Elixir of Giant Growth" 1 @ 1G
+    Assets:Tajer
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction          8268c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Plans: Mithril Shield Spike" 1 @ 21050c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Plans: Mithril Shield Spike" 1 @ 23000c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Recipe: Elixir of Giant Growth" 1 @ 150s
+    Assets:Tajer
+
+2006/03/16 Player
+    Assets:Tajer                      3G
+    Equity:Gold
+
+2006/03/16 Post
+    Expenses:Fees:Mail               90c
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Assets:Tajer                1195768c
+    Assets:Tajer:Items                  "Beaststalker's Belt" -1 {65G} @ 1195768c
+    Income:Brokering            -545768c
+
+2006/03/16 Auction House
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" 1 {21050c}
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" 1 {2.3G}
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" 1 {1G}
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" 1 {1.5G}
+    Assets:Tajer:Items
+
+2006/03/16 Player
+    Assets:Tajer                      4G
+    Equity:Gold
+
+2006/03/16 Auction House
+    Assets:Wyshona                 1341s
+    Equity:Gold
+
+2006/03/16 Auction House
+    Assets:Gruulmorg                  4c
+    Assets:Danell
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction             4c
+    Expenses:Fees:Mail              120c
+    Assets:Danell
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction            24s
+    Expenses:Fees:Auction            12s
+    Expenses:Fees:Auction            12s
+    Expenses:Fees:Auction            84c
+    Expenses:Fees:Auction            84c
+    Assets:Wyshona
+
+2006/03/16 Crazy Cat Lady
+    Expenses:Items                   40s
+    Expenses:Items                   40s
+    Assets:Wyshona
+
+2006/03/16 Transfer
+    Expenses:Fees:Mail               60c
+    Assets:Danell                     5G
+    Assets:Wyshona
+
+2006/03/16 Transfer
+    Expenses:Fees:Mail               30c
+    Assets:Tajer                     20G
+    Assets:Gruulmorg
+
+2006/03/16 Auction House
+    Assets:Tajer:Items                  "Pulsating Hydra Heart" 1 @ 1G
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction           936c
+    Assets:Tajer
+
+2006/03/16 Transfer
+    Expenses:Fees:Mail               30c
+    Assets:Gruulmorg                 30G
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Assets:Gruulmorg:Items              "Ace of Warlords" 2 @ 15G
+    Assets:Gruulmorg
+
+2006/03/16 Transfer
+    Assets:Tajer:Items                  "Ace of Warlords" 2 {15G}
+    Assets:Gruulmorg:Items
+
+2006/03/16 Post
+    Expenses:Fees:Mail               60c
+    Assets:Gruulmorg
+
+2006/03/16 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Assets:Tajer                   2104c
+    Equity:Gold
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction            75s
+    Expenses:Fees:Auction            75s
+    Assets:Tajer
+
+2006/03/16 Transfer
+    Assets:Danell                     6c
+    Assets:Gruulmorg
+
+2006/03/16 Post
+    Expenses:Fees:Mail               60c
+    Assets:Gruulmorg
+
+2006/03/16 Post
+    Expenses:Fees:Mail               60c
+    Assets:Tajer
+
+2006/03/16 General Goods Vendor
+    Expenses:Items                   50c  ; wrapping paper
+    Assets:Tajer
+
+2006/03/16 Player
+    Assets:Tajer                      1G
+    Equity:Gold
+
+2006/03/17 Auction House
+    Assets:Wyshona               180584c
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" -1 {1.5G} @ 180584c
+    Income:Brokering            -165584c
+
+2006/03/17 Auction House
+    Assets:Wyshona               180584c
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" -1 {1G} @ 180584c
+    Income:Brokering            -170584c
+
+2006/03/17 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/17 Player: raev
+    Assets:Tajer:Items                  "Wildheart Belt" 1 {30G}
+    Assets:Tajer:Items                  "Ace of Warlords" -2 {15G}
+
+2006/03/17 Auction House
+    Expenses:Fees:Auction          7482c
+    Assets:Tajer
+
+2006/03/17 Post
+    Expenses:Fees:Mail              300c
+    Assets:Wyshona
+
+2006/03/17 Player
+    Assets:Wyshona                    1G
+    Assets:Wyshona:Items                "Plans: Wildthorn Mail" -1 {1.25G} @ 1G
+    Expenses:Capital Loss            25s
+
+2006/03/17 Auction House (implicit transfer)
+    Expenses:Items                  279s  ; Recipe: Swiftness Potion
+    Assets:Wyshona
+
+2006/03/17 Auction House (implicit transfer)
+    Assets:Danell:Items                 "Ace of Warlords" 1 @ 3G
+    Assets:Tajer:Items                  "Ace of Warlords" 1 @ 3.9G
+    Assets:Tajer:Items                  "Holy Bologna" 1 @ 2G
+    Assets:Tajer:Items                  "The Emerald Dream" 1 @ 4G
+    Assets:Tajer:Items                  "The Arcanist's Cookbook" 1 @ 4G
+    Assets:Tajer:Items                  "Harnessing Shadows" 1 @ 5G
+    Assets:Tajer:Items                  "Garona: Book on Treachery" 1 @ 4G
+    Assets:Tajer:Items                  "Preserved Holly" 5 @ 20s
+    Assets:Wyshona
+
+2006/03/17 Auction House
+    Assets:Tajer                      4G
+    Assets:Tajer:Items                  "Pulsating Hydra Heart" -1 {1G} @ 4G
+    Income:Brokering                 -3G
+
+2006/03/17 Auction House
+    Assets:Danell                  3171c
+    Assets:Danell:Items                 "Ace of Warlords" -1 {3G} @ 3171c
+    Expenses:Capital Loss         26829c
+
+2006/03/17 Auction House
+    Expenses:Fees:Auction         12537c
+    Assets:Danell
+
+2006/03/17 Transfer
+    Assets:Gruulmorg                 15G
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/17 Auction House
+    Assets:Wyshona               362450c
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" -1 {21050c} @ 181225c
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" -1 {2.3G} @ 181225c
+    Income:Brokering            -318400c
+
+2006/03/17 Transfer
+    Assets:Danell                499560c
+    Expenses:Gifts                    1G
+    Expenses:Fees:Mail               30c
+    Assets:Wyshona
+
+2006/03/17 Post
+    Expenses:Fees:Mail               90c
+    Expenses:Fees:Auction           166c
+    Assets:Gruulmorg
+
+2006/03/17 Transfer
+    Assets:Gruulmorg             459211c
+    Expenses:Fees:Auction         81023c
+    Assets:Danell               -540234c
+
+2006/03/17 Transfer
+    Assets:Tajer                 662465c
+    Expenses:Fees:Mail               30c
+    Assets:Gruulmorg
+
+2006/03/17 Auction House
+    Expenses:Fees:Auction            75s
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/18 Auction House
+    Assets:Tajer                     15G
+    Assets:Tajer:Items                  "Ace of Warlords" -1 {3.9G} @ 15G
+    Income:Brokering            -111000c
+
+2006/03/18 Auction House
+    Assets:Tajer                 434472c
+    Assets:Tajer:Items                  "Wildheart Belt" -1 {30G} @ 434472c
+    Income:Brokering            -134472c
+
+2006/03/18 Auction House
+    Assets:Tajer                   1995s
+    Assets:Tajer:Items                  "Harnessing Shadows" -1 {5G} @ 1995s
+    Income:Brokering              -1495s
+
+2006/03/19 Auction House
+    Assets:Tajer                   2850s
+    Assets:Tajer:Items                  "Garona: Book on Treachery" -1 {4G} @ 2850s
+    Income:Brokering              -2450s
+
+2006/03/19 Auction House
+    Assets:Tajer                   1710s
+    Assets:Tajer:Items                  "The Arcanist's Cookbook" -1 {4G} @ 1710s
+    Income:Brokering              -1310s
+
+2006/03/19 Auction House
+    Assets:Tajer                  46550c
+    Assets:Tajer:Items                  "Preserved Holly" -5 {20s} @ 9310c
+    Income:Brokering             -36550c
+
+2006/03/19 Auction House
+    Assets:Tajer:Items                  "Two of Portals" 1 @ 3G
+    Assets:Tajer:Items                  "Two of Portals" 1 @ 2.5G
+    Assets:Tajer
+
+2006/03/20 Auction House
+    Assets:Tajer                 163443c
+    Assets:Tajer:Items                  "Holy Bologna" -1 {2G} @ 163443c
+    Income:Brokering            -143443c
+
+2006/03/20 Auction House
+    Assets:Tajer                      5G
+    Assets:Tajer:Items                  "Two of Portals" -1 {3G} @ 5G
+    Income:Brokering                 -2G
+
+2006/03/20 Auction House
+    Assets:Tajer                     15G
+    Assets:Tajer:Items                  "The Emerald Dream" -1 {4G} @ 15G
+    Income:Brokering                -11G
+
+2006/03/20 Auction House
+    Expenses:Fees:Mail               60c
+    Assets:Tajer
+
+2006/03/21 Auction House
+    Assets:Tajer:Items                  "Orb of Deception" 1 @ 170G
+    Assets:Tajer
+
+2006/03/21 Auction House
+    Expenses:Fees:Auction          2760c
+    Expenses:Fees:Auction          2760c
+    Assets:Tajer
+
+2006/03/22 Auction House
+    Assets:Tajer:Items                  "Nightblade" 1 @ 200G
+    Assets:Tajer
+
+2006/03/22 Auction House
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction            75s
+    Assets:Tajer
+
+2006/03/23 Auction House
+    Assets:Tajer                1665260c
+    Assets:Tajer:Items                  "Orb of Deception" -1 {170G} @ 1665260c
+    Expenses:Capital Loss         34740c
+
+2006/03/26 Auction House
+    Assets:Tajer                  81980c
+    Assets:Tajer:Items                  "Two of Portals" -1 {2.5G} @ 81980c
+    Income:Brokering             -56980c
+
+2006/03/26 Player
+    Expenses:Items                  150s  ; Recipe: Elixir of Minor Agility
+    Expenses:Fees:Mail               30c
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/27 Player
+    Assets:Tajer                    160G
+    Assets:Tajer:Items                  "Nightblade" -1 {200G} @ 160G
+    Expenses:Capital Loss            40G
+
+2006/03/27 Player
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/26 Player
+    Expenses:Items                   (9G * 6)  ; Traveler's backpacks
+    Expenses:Items                   10G
+    Expenses:Fees:Bank               10G
+    Expenses:Fees:Mail              630c
+    Expenses:Fees:Mail              330c
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/04/01 Auction House
+    Assets:Tajer:Items                  "Orb of Deception" 1 @ 155G
+    Assets:Tajer
+
+>>>1
+06-Mar-14 Opening Balances      Assets:Tajer               1339829c     1339829c
+                                Assets:Gruulmorg            248720c     1588549c
+                                Equity:Gold               -1588549c            0
+06-Mar-14 Auction House         Expenses:Fees:Auction         1428c        1428c
+                                Expenses:Fees:Auction          768c        2196c
+                                Expenses:Fees:Auction          612c        2808c
+                                Expenses:Fees:Auction         4764c        7572c
+                                Expenses:Fees:Auction         3372c       10944c
+                                Expenses:Fees:Auction         1296c       12240c
+                                Expenses:Fees:Auction         1332c       13572c
+                                Expenses:Fees:Auction          660c       14232c
+                                Expenses:Fees:Auction        10044c       24276c
+                                Expenses:Fees:Auction         3588c       27864c
+                                Expenses:Fees:Auction         1632c       29496c
+                                Expenses:Fees:Auction         8388c       37884c
+                                Expenses:Fees:Auction         9984c       47868c
+                                Expenses:Fees:Auction         2316c       50184c
+                                Assets:Tajer                -50184c            0
+06-Mar-14 Auction House         Assets:Tajer                158860c      158860c
+                                Equity:Gold                -158860c            0
+06-Mar-14 Auction House         Expenses:Fees:Auction         1320c        1320c
+                                Assets:Tajer                 -1320c            0
+06-Mar-14 Auction House         Assets:Tajer                 11496c       11496c
+                                Equity:Gold                 -11496c            0
+06-Mar-14 Auction House         Expenses:Fees:Auction         3216c        3216c
+                                Assets:Tajer                 -3216c            0
+06-Mar-14 Post                  Expenses:Fees:Mail              30c          30c
+                                Assets:Gruulmorg               -30c            0
+06-Mar-14 Auction House         Assets:Tajer                 34678c       34678c
+                                Equity:Gold                 -34678c            0
+06-Mar-14 Auction House         Expenses:Fees:Auction         2316c        2316c
+                                Assets:Tajer                 -2316c            0
+06-Mar-14 Auction House         Assets:Gruulmorg             10000c       10000c
+                                Equity:Gold                 -10000c            0
+06-Mar-14 Auction House         Assets:Tajer                 59389c       59389c
+                                Equity:Gold                 -59389c            0
+06-Mar-14 Post                  Expenses:Fees:Mail             120c         120c
+                                Assets:Tajer                  -120c            0
+06-Mar-14 Player                Assets:Tajer                 30000c       30000c
+                                Equity:Gold                 -30000c            0
+06-Mar-14 Player                Assets:Tajer                 60000c       60000c
+                                Equity:Gold                 -60000c            0
+06-Mar-14 Auction House         Expenses:Items                3500c        3500c
+                                Assets:Tajer                 -3500c            0
+06-Mar-14 Auction House         Assets:Tajer:Items           12500c       12500c
+                                Assets:Tajer                -12500c            0
+06-Mar-14 Auction House         Assets:Bids                    259c         259c
+                                Assets:Bids                   4500c        4759c
+                                Assets:Bids                   4720c        9479c
+                                Assets:Tajer                 -9479c            0
+06-Mar-14 Post                  Expenses:Fees:Mail             120c         120c
+                                Assets:Tajer                  -120c            0
+06-Mar-14 Auction House         Expenses:Items               80000c       80000c
+                                Assets:Tajer                -80000c            0
+06-Mar-14 Post                  Expenses:Fees:Mail             120c         120c
+                                Assets:Tajer                  -120c            0
+06-Mar-14 Puldoost              Assets:Tajer                 80000c       80000c
+                                Expenses:Items              -80000c            0
+06-Mar-14 Auction House         Assets:Wyshona:Items         12500c       12500c
+                                Assets:Tajer:Items          -12500c            0
+06-Mar-15 Auction House         Assets:Tajer                  4500c        4500c
+                                Assets:Tajer                   259c        4759c
+                                Assets:Bids                  -4759c            0
+06-Mar-15 Auction House         Assets:Tajer                  4720c        4720c
+                                Assets:Bids                  -4720c            0
+06-Mar-15 Auction House         Expenses:Fees:Auction        12542c       12542c
+                                Assets:Tajer                -12542c            0
+06-Mar-15 Auction House         Expenses:Fees:Auction         2375c        2375c
+                                Expenses:Fees:Auction        -2375c            0
+06-Mar-15 Auction House         Assets:Danell                    4c           4c
+                                Equity:Gold                     -4c            0
+06-Mar-15 Transfer              Assets:Gruulmorg                 2c           2c
+                                Assets:Danell                   -2c            0
+06-Mar-15 Transfer              Assets:Danell                 4250c        4250c
+                                Expenses:Fees:Auction          750c        5000c
+                                Assets:Gruulmorg             -5000c            0
+06-Mar-15 Post                  Expenses:Fees:Mail              60c          60c
+                                Assets:Danell                  -60c            0
+06-Mar-15 Player                Assets:Tajer                 30000c       30000c
+                                Equity:Gold                 -30000c            0
+06-Mar-15 Post                  Assets:Wyshona                4000c        4000c
+                                Expenses:Fees:Mail              30c        4030c
+                                Assets:Danell                -4030c            0
+06-Mar-15 Auction House         Expenses:Fees:Auction          800c         800c
+                                Expenses:Fees:Auction         1100c        1900c
+                                Assets:Wyshona               -1900c            0
+06-Mar-15 Auction House         Assets:Tajer:Items          650000c      650000c
+                                Assets:Tajer               -650000c            0
+06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
+06-Mar-15 Auction House         Expenses:Fees:Auction         8268c        8268c
+                                Assets:Tajer                 -8268c            0
+06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
+06-Mar-15 Vendor                Assets:Tajer                 16744c       16744c
+                                Assets:Tajer                 16640c       33384c
+                                Equity:Gold                 -33384c            0
+06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
+06-Mar-15 Auction House         Expenses:Fees:Auction          772c         772c
+                                Expenses:Fees:Auction          544c        1316c
+                                Expenses:Fees:Auction          444c        1760c
+                                Expenses:Fees:Auction          432c        2192c
+                                Expenses:Fees:Auction          204c        2396c
+                                Assets:Tajer                 -2396c            0
+06-Mar-15 Player                Assets:Tajer                  1200c        1200c
+                                Equity:Gold                  -1200c            0
+06-Mar-15 Vendor                Assets:Tajer                  2200c        2200c
+                                Equity:Gold                  -2200c            0
+06-Mar-15 Auction House         Assets:Tajer:Items           10000c       10000c
+                                Assets:Tajer                -10000c            0
+06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
+06-Mar-15 Auction House         Expenses:Fees:Auction         8268c        8268c
+                                Assets:Tajer                 -8268c            0
+06-Mar-15 Auction House         Assets:Tajer:Items           21050c       21050c
+                                Assets:Tajer                -21050c            0
+06-Mar-15 Auction House         Assets:Tajer:Items           23000c       23000c
+                                Assets:Tajer                -23000c            0
+06-Mar-15 Auction House         Assets:Tajer:Items           15000c       15000c
+                                Assets:Tajer                -15000c            0
+06-Mar-16 Player                Assets:Tajer                 30000c       30000c
+                                Equity:Gold                 -30000c            0
+06-Mar-16 Post                  Expenses:Fees:Mail              90c          90c
+                                Assets:Tajer                   -90c            0
+06-Mar-16 Auction House         Assets:Tajer               1195768c     1195768c
+                                Assets:Tajer:Items        -1195768c            0
+                                Income:Brokering           -545768c     -545768c
+                                Equity:Capital Gains        545768c            0
+06-Mar-16 Auction House         Assets:Wyshona:Items         21050c       21050c
+                                Assets:Wyshona:Items         23000c       44050c
+                                Assets:Wyshona:Items         10000c       54050c
+                                Assets:Wyshona:Items         15000c       69050c
+                                Assets:Tajer:Items          -69050c            0
+06-Mar-16 Player                Assets:Tajer                 40000c       40000c
+                                Equity:Gold                 -40000c            0
+06-Mar-16 Auction House         Assets:Wyshona              134100c      134100c
+                                Equity:Gold                -134100c            0
+06-Mar-16 Auction House         Assets:Gruulmorg                 4c           4c
+                                Assets:Danell                   -4c            0
+06-Mar-16 Auction House         Expenses:Fees:Auction            4c           4c
+                                Expenses:Fees:Mail             120c         124c
+                                Assets:Danell                 -124c            0
+06-Mar-16 Auction House         Expenses:Fees:Auction         2400c        2400c
+                                Expenses:Fees:Auction         1200c        3600c
+                                Expenses:Fees:Auction         1200c        4800c
+                                Expenses:Fees:Auction           84c        4884c
+                                Expenses:Fees:Auction           84c        4968c
+                                Assets:Wyshona               -4968c            0
+06-Mar-16 Crazy Cat Lady        Expenses:Items                4000c        4000c
+                                Expenses:Items                4000c        8000c
+                                Assets:Wyshona               -8000c            0
+06-Mar-16 Transfer              Expenses:Fees:Mail              60c          60c
+                                Assets:Danell                50000c       50060c
+                                Assets:Wyshona              -50060c            0
+06-Mar-16 Transfer              Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                200000c      200030c
+                                Assets:Gruulmorg           -200030c            0
+06-Mar-16 Auction House         Assets:Tajer:Items           10000c       10000c
+                                Assets:Tajer                -10000c            0
+06-Mar-16 Auction House         Expenses:Fees:Auction          936c         936c
+                                Assets:Tajer                  -936c            0
+06-Mar-16 Transfer              Expenses:Fees:Mail              30c          30c
+                                Assets:Gruulmorg            300000c      300030c
+                                Assets:Tajer               -300030c            0
+06-Mar-16 Auction House         Assets:Gruulmorg:Items      300000c      300000c
+                                Assets:Gruulmorg           -300000c            0
+06-Mar-16 Transfer              Assets:Tajer:Items          300000c      300000c
+                                Assets:Gruulmorg:Items     -300000c            0
+06-Mar-16 Post                  Expenses:Fees:Mail              60c          60c
+                                Assets:Gruulmorg               -60c            0
+06-Mar-16 Post                  Expenses:Fees:Mail             120c         120c
+                                Assets:Tajer                  -120c            0
+06-Mar-16 Auction House         Assets:Tajer                  2104c        2104c
+                                Equity:Gold                  -2104c            0
+06-Mar-16 Auction House         Expenses:Fees:Auction         7500c        7500c
+                                Expenses:Fees:Auction         7500c       15000c
+                                Assets:Tajer                -15000c            0
+06-Mar-16 Transfer              Assets:Danell                    6c           6c
+                                Assets:Gruulmorg                -6c            0
+06-Mar-16 Post                  Expenses:Fees:Mail              60c          60c
+                                Assets:Gruulmorg               -60c            0
+06-Mar-16 Post                  Expenses:Fees:Mail              60c          60c
+                                Assets:Tajer                   -60c            0
+06-Mar-16 General Goods Vendor  Expenses:Items                  50c          50c
+                                Assets:Tajer                   -50c            0
+06-Mar-16 Player                Assets:Tajer                 10000c       10000c
+                                Equity:Gold                 -10000c            0
+06-Mar-17 Auction House         Assets:Wyshona              180584c      180584c
+                                Assets:Wyshona:Items       -180584c            0
+                                Income:Brokering           -165584c     -165584c
+                                Equity:Capital Gains        165584c            0
+06-Mar-17 Auction House         Assets:Wyshona              180584c      180584c
+                                Assets:Wyshona:Items       -180584c            0
+                                Income:Brokering           -170584c     -170584c
+                                Equity:Capital Gains        170584c            0
+06-Mar-17 Post                  Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
+06-Mar-17 Player: raev          Assets:Tajer:Items          300000c      300000c
+                                Assets:Tajer:Items         -300000c            0
+06-Mar-17 Auction House         Expenses:Fees:Auction         7482c        7482c
+                                Assets:Tajer                 -7482c            0
+06-Mar-17 Post                  Expenses:Fees:Mail             300c         300c
+                                Assets:Wyshona                -300c            0
+06-Mar-17 Player                Assets:Wyshona               10000c       10000c
+                                Assets:Wyshona:Items        -10000c            0
+                                Expenses:Capital Loss         2500c        2500c
+                                Equity:Capital Losses        -2500c            0
+06-Mar-17 Auction House (impl.. Expenses:Items               27900c       27900c
+                                Assets:Wyshona              -27900c            0
+06-Mar-17 Auction House (impl.. Assets:Danell:Items          30000c       30000c
+                                Assets:Tajer:Items           39000c       69000c
+                                Assets:Tajer:Items           20000c       89000c
+                                Assets:Tajer:Items           40000c      129000c
+                                Assets:Tajer:Items           40000c      169000c
+                                Assets:Tajer:Items           50000c      219000c
+                                Assets:Tajer:Items           40000c      259000c
+                                Assets:Tajer:Items           10000c      269000c
+                                Assets:Wyshona             -269000c            0
+06-Mar-17 Auction House         Assets:Tajer                 40000c       40000c
+                                Assets:Tajer:Items          -40000c            0
+                                Income:Brokering            -30000c      -30000c
+                                Equity:Capital Gains         30000c            0
+06-Mar-17 Auction House         Assets:Danell                 3171c        3171c
+                                Assets:Danell:Items          -3171c            0
+                                Expenses:Capital Loss        26829c       26829c
+                                Equity:Capital Losses       -26829c            0
+06-Mar-17 Auction House         Expenses:Fees:Auction        12537c       12537c
+                                Assets:Danell               -12537c            0
+06-Mar-17 Transfer              Assets:Gruulmorg            150000c      150000c
+                                Expenses:Fees:Mail              30c      150030c
+                                Assets:Tajer               -150030c            0
+06-Mar-17 Auction House         Assets:Wyshona              362450c      362450c
+                                Assets:Wyshona:Items       -181225c      181225c
+                                Assets:Wyshona:Items       -181225c            0
+                                Income:Brokering           -318400c     -318400c
+                                Equity:Capital Gains        160175c     -158225c
+                                Equity:Capital Gains        158225c            0
+06-Mar-17 Transfer              Assets:Danell               499560c      499560c
+                                Expenses:Gifts               10000c      509560c
+                                Expenses:Fees:Mail              30c      509590c
+                                Assets:Wyshona             -509590c            0
+06-Mar-17 Post                  Expenses:Fees:Mail              90c          90c
+                                Expenses:Fees:Auction          166c         256c
+                                Assets:Gruulmorg              -256c            0
+06-Mar-17 Transfer              Assets:Gruulmorg            459211c      459211c
+                                Expenses:Fees:Auction        81023c      540234c
+                                Assets:Danell              -540234c            0
+06-Mar-17 Transfer              Assets:Tajer                662465c      662465c
+                                Expenses:Fees:Mail              30c      662495c
+                                Assets:Gruulmorg           -662495c            0
+06-Mar-17 Auction House         Expenses:Fees:Auction         7500c        7500c
+                                Expenses:Fees:Mail              30c        7530c
+                                Assets:Tajer                 -7530c            0
+06-Mar-18 Auction House         Assets:Tajer                150000c      150000c
+                                Assets:Tajer:Items         -150000c            0
+                                Income:Brokering           -111000c     -111000c
+                                Equity:Capital Gains        111000c            0
+06-Mar-18 Auction House         Assets:Tajer                434472c      434472c
+                                Assets:Tajer:Items         -434472c            0
+                                Income:Brokering           -134472c     -134472c
+                                Equity:Capital Gains        134472c            0
+06-Mar-18 Auction House         Assets:Tajer                199500c      199500c
+                                Assets:Tajer:Items         -199500c            0
+                                Income:Brokering           -149500c     -149500c
+                                Equity:Capital Gains        149500c            0
+06-Mar-19 Auction House         Assets:Tajer                285000c      285000c
+                                Assets:Tajer:Items         -285000c            0
+                                Income:Brokering           -245000c     -245000c
+                                Equity:Capital Gains        245000c            0
+06-Mar-19 Auction House         Assets:Tajer                171000c      171000c
+                                Assets:Tajer:Items         -171000c            0
+                                Income:Brokering           -131000c     -131000c
+                                Equity:Capital Gains        131000c            0
+06-Mar-19 Auction House         Assets:Tajer                 46550c       46550c
+                                Assets:Tajer:Items          -46550c            0
+                                Income:Brokering            -36550c      -36550c
+                                Equity:Capital Gains         36550c            0
+06-Mar-19 Auction House         Assets:Tajer:Items           30000c       30000c
+                                Assets:Tajer:Items           25000c       55000c
+                                Assets:Tajer                -55000c            0
+06-Mar-20 Auction House         Assets:Tajer                163443c      163443c
+                                Assets:Tajer:Items         -163443c            0
+                                Income:Brokering           -143443c     -143443c
+                                Equity:Capital Gains        143443c            0
+06-Mar-20 Auction House         Assets:Tajer                 50000c       50000c
+                                Assets:Tajer:Items          -50000c            0
+                                Income:Brokering            -20000c      -20000c
+                                Equity:Capital Gains         20000c            0
+06-Mar-20 Auction House         Assets:Tajer                150000c      150000c
+                                Assets:Tajer:Items         -150000c            0
+                                Income:Brokering           -110000c     -110000c
+                                Equity:Capital Gains        110000c            0
+06-Mar-20 Auction House         Expenses:Fees:Mail              60c          60c
+                                Assets:Tajer                   -60c            0
+06-Mar-21 Auction House         Assets:Tajer:Items         1700000c     1700000c
+                                Assets:Tajer              -1700000c            0
+06-Mar-21 Auction House         Expenses:Fees:Auction         2760c        2760c
+                                Expenses:Fees:Auction         2760c        5520c
+                                Assets:Tajer                 -5520c            0
+06-Mar-22 Auction House         Assets:Tajer:Items         2000000c     2000000c
+                                Assets:Tajer              -2000000c            0
+06-Mar-22 Auction House         Expenses:Fees:Auction        17700c       17700c
+                                Expenses:Fees:Auction        17700c       35400c
+                                Expenses:Fees:Auction        17700c       53100c
+                                Expenses:Fees:Auction        17700c       70800c
+                                Expenses:Fees:Auction         7500c       78300c
+                                Assets:Tajer                -78300c            0
+06-Mar-23 Auction House         Assets:Tajer               1665260c     1665260c
+                                Assets:Tajer:Items        -1665260c            0
+                                Expenses:Capital Loss        34740c       34740c
+                                Equity:Capital Losses       -34740c            0
+06-Mar-26 Auction House         Assets:Tajer                 81980c       81980c
+                                Assets:Tajer:Items          -81980c            0
+                                Income:Brokering            -56980c      -56980c
+                                Equity:Capital Gains         56980c            0
+06-Mar-26 Player                Expenses:Items               15000c       15000c
+                                Expenses:Fees:Mail              30c       15030c
+                                Expenses:Fees:Mail              30c       15060c
+                                Assets:Tajer                -15060c            0
+06-Mar-27 Player                Assets:Tajer               1600000c     1600000c
+                                Assets:Tajer:Items        -1600000c            0
+                                Expenses:Capital Loss       400000c      400000c
+                                Equity:Capital Losses      -400000c            0
+06-Mar-27 Player                Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
+06-Mar-26 Player                Expenses:Items              540000c      540000c
+                                Expenses:Items              100000c      640000c
+                                Expenses:Fees:Bank          100000c      740000c
+                                Expenses:Fees:Mail             630c      740630c
+                                Expenses:Fees:Mail             330c      740960c
+                                Expenses:Fees:Mail              30c      740990c
+                                Assets:Tajer               -740990c            0
+06-Apr-01 Auction House         Assets:Tajer:Items         1550000c     1550000c
+                                Assets:Tajer              -1550000c            0
+>>>2
+=== 0
