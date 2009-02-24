@@ -1014,19 +1014,13 @@ void amount_t::print(std::ostream& _out) const
     comm.print(out);
   }
 
-  // If there are any annotations associated with this commodity,
-  // output them now.
+  // If there are any annotations associated with this commodity, output them
+  // now.
+  comm.write_annotations(out);
 
-  if (comm.annotated) {
-    annotated_commodity_t& ann(static_cast<annotated_commodity_t&>(comm));
-    assert(! ann.details.price || &*ann.details.price != this);
-    ann.write_annotations(out);
-  }
-
-  // Things are output to a string first, so that if anyone has
-  // specified a width or fill for _out, it will be applied to the
-  // entire amount string, and not just the first part.
-
+  // Things are output to a string first, so that if anyone has specified a
+  // width or fill for _out, it will be applied to the entire amount string,
+  // and not just the first part.
   _out << out.str();
 }
 

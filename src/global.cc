@@ -373,7 +373,8 @@ void global_scope_t::normalize_report_options(const string& verb)
   report_t& rep(report());
 
   // jww (2009-02-09): These global are a hack, but hard to avoid.
-  item_t::use_effective_date = rep.HANDLED(effective);
+  item_t::use_effective_date		= rep.HANDLED(effective);
+  rep.session.commodity_pool->keep_base = rep.HANDLED(base);
 
   if (rep.HANDLED(date_format_)) {
     output_datetime_format = rep.HANDLER(date_format_).str() + " %H:%M:%S";

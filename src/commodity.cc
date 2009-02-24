@@ -737,17 +737,21 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
   return *new_comm;
 }
 
-void annotated_commodity_t::write_annotations(std::ostream&       out,
-					      const annotation_t& info)
+void annotated_commodity_t::write_annotations(std::ostream& out) const
 {
-  if (info.price)
-    out << " {" << *info.price << '}';
+  details.print(out, parent().keep_base);
+}
 
-  if (info.date)
-    out << " [" << format_date(*info.date, string("%Y/%m/%d")) << ']';
+void annotation_t::print(std::ostream& out, bool keep_base) const
+{
+  if (price)
+    out << " {" << (keep_base ? *price : price->unreduced()).rounded() << '}';
 
-  if (info.tag)
-    out << " (" << *info.tag << ')';
+  if (date)
+    out << " [" << format_date(*date, string("%Y/%m/%d")) << ']';
+
+  if (tag)
+    out << " (" << *tag << ')';
 }
 
 bool compare_amount_commodities::operator()(const amount_t * left,
@@ -817,7 +821,8 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   }
 }
 
-commodity_pool_t::commodity_pool_t() : default_commodity(NULL)
+commodity_pool_t::commodity_pool_t()
+  : default_commodity(NULL), keep_base(false)
 {
   TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");
@@ -894,7 +899,7 @@ namespace {
 
     std::ostringstream name;
     comm.print(name);
-    annotated_commodity_t::write_annotations(name, details);
+    details.print(name, comm.parent().keep_base);
 
     DEBUG("amounts.commodities", "make_qualified_name for "
 	  << comm.qualified_symbol << std::endl << details);
