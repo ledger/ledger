@@ -850,11 +850,11 @@ void AmountTestCase::testIntegerDivision()
   assertEqual(amount_t(0L), amount_t(0L) / x1);
   assertEqual(amount_t(0L), 0L / x1);
   assertEqual(x1, x1 / 1L);
-  assertEqual(string("0.008130"), (amount_t(1L) / x1).to_string());
-  assertEqual(string("0.008130"), (1L / x1).to_string());
+  assertEqual(string("0.00813"), (amount_t(1L) / x1).to_string());
+  assertEqual(string("0.00813"), (1L / x1).to_string());
   assertEqual(- x1, x1 / -1L);
-  assertEqual(string("-0.008130"), (amount_t(-1L) / x1).to_string());
-  assertEqual(string("-0.008130"), (-1L / x1).to_string());
+  assertEqual(string("-0.00813"), (amount_t(-1L) / x1).to_string());
+  assertEqual(string("-0.00813"), (-1L / x1).to_string());
   assertEqual(string("0.269737"), (x1 / y1).to_string());
   assertEqual(string("3.707317"), (y1 / x1).to_string());
   assertEqual(string("0.269737"), (x1 / 456L).to_string());
@@ -906,7 +906,7 @@ void AmountTestCase::testFractionalDivision()
   x1 /= amount_t("456.456");
   assertEqual(string("0.000590937225286255757169884601508201951"), x1.to_string());
   x1 /= 456L;
-  assertEqual(string("0.000001295914967733017011337466214297678193292890066687335298289595263924317558590360"), x1.to_string());
+  assertEqual(string("0.00000129591496773301701133746621429767819329289006668733529828959526392431755859036"), x1.to_string());
 
   amount_t x4("1234567891234567.89123456789");
   amount_t y4("56.789");

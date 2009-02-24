@@ -561,9 +561,11 @@ int amount_t::sign() const
 }
 
 namespace {
-  void stream_out_mpq(std::ostream& out, mpq_t quant,
-		      amount_t::precision_t prec,
-		      const optional<commodity_t&>& comm = none)
+  void stream_out_mpq(std::ostream&	            out,
+		      mpq_t		            quant,
+		      amount_t::precision_t         prec,
+		      bool		            no_trailing_zeroes = false,
+		      const optional<commodity_t&>& comm               = none)
   {
     char * buf = NULL;
     try {
@@ -583,6 +585,23 @@ namespace {
       mpfr_asprintf(&buf, "%.*Rf", prec, tempfb);
       DEBUG("amount.convert",
 	    "mpfr_print = " << buf << " (precision " << prec << ")");
+
+      if (no_trailing_zeroes) {
+	int index = std::strlen(buf);
+	int point = 0;
+	for (int i = 0; i < index; i++) {
+	  if (buf[i] == '.') {
+	    point = i;
+	    break;
+	  }
+	}
+	if (point > 0) {
+	  while (--index >= point && buf[index] == '0')
+	    buf[index] = '\0';
+	  if (index >= point && buf[index] == '.')
+	    buf[index] = '\0';
+	}
+      }
 
       if (comm) {
 	int integer_digits = 0;
@@ -1006,7 +1025,7 @@ void amount_t::print(std::ostream& _out) const
       out << " ";
   }
 
-  stream_out_mpq(out, MP(quantity), display_precision(), comm);
+  stream_out_mpq(out, MP(quantity), display_precision(), ! comm, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
