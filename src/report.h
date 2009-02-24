@@ -504,10 +504,12 @@ public:
 	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
+	 "%(has_cost & !priced ? \" @ \" + justify(scrub(cost / amount), 0) : \"\")"
 	 "%(comment | \"\")\n%/"
 	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
+	 "%(has_cost & !priced ? \" @ \" + justify(scrub(cost / amount), 0) : \"\")"
 	 "%(comment | \"\")\n%/\n");
     });
 

@@ -122,6 +122,10 @@ namespace {
     return post.has_flags(POST_CALCULATED);
   }
 
+  value_t get_is_priced(post_t& post) {
+    return post.has_flags(POST_PRICED);
+  }
+
   value_t get_virtual(post_t& post) {
     return post.has_flags(POST_VIRTUAL);
   }
@@ -162,16 +166,18 @@ namespace {
     return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
   }
 
+  value_t get_has_cost(post_t& post) {
+    return post.cost ? true : false;
+  }
+
   value_t get_cost(post_t& post) {
-    if (post.has_xdata() &&
-	post.xdata().has_flags(POST_EXT_COMPOUND)) {
+    if (post.cost)
+      return *post.cost;
+    else if (post.has_xdata() &&
+	     post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().value;
-    } else {
-      if (post.cost)
-	return *post.cost;
-      else
-	return post.amount;
-    }
+    else
+      return post.amount;
   }
 
   value_t get_total(post_t& post) {
@@ -250,9 +256,9 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
     break;
 
-  case 'r':
-    if (name == "real")
-      return WRAP_FUNCTOR(get_wrapper<&get_real>);
+  case 'h':
+    if (name == "has_cost")
+      return WRAP_FUNCTOR(get_wrapper<&get_has_cost>);
     break;
 
   case 'p':
@@ -262,6 +268,13 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     else if (name == "primary")
       return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
+    else if (name == "priced")
+      return WRAP_FUNCTOR(get_wrapper<&get_is_priced>);
+    break;
+
+  case 'r':
+    if (name == "real")
+      return WRAP_FUNCTOR(get_wrapper<&get_real>);
     break;
 
   case 't':
