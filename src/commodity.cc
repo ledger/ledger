@@ -638,7 +638,8 @@ void annotation_t::parse(std::istream& in)
 
       amount_t temp;
       temp.parse(buf, amount_t::PARSE_NO_MIGRATE);
-      temp.in_place_reduce();
+
+      DEBUG("commodity.annotations", "Parsed annotation price: " << temp);
 
       // Since this price will maintain its own precision, make sure
       // it is at least as large as the base commodity, since the user
@@ -683,8 +684,12 @@ void annotation_t::parse(std::istream& in)
     }
   } while (true);
 
-  DEBUG("amounts.commodities",
-	"Parsed commodity annotations: " << std::endl << *this);
+#if defined(DEBUG_ON)
+  if (SHOW_DEBUG("amounts.commodities") && *this) {
+    DEBUG("amounts.commodities",
+	  "Parsed commodity annotations: " << std::endl << *this);
+  }
+#endif
 }
 
 bool annotated_commodity_t::operator==(const commodity_t& comm) const
@@ -775,9 +780,7 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
     if (aleftcomm.details.price && arightcomm.details.price) {
       amount_t leftprice(*aleftcomm.details.price);
-      leftprice.in_place_reduce();
       amount_t rightprice(*arightcomm.details.price);
-      rightprice.in_place_reduce();
 
       if (leftprice.commodity() == rightprice.commodity()) {
 	return (leftprice - rightprice).sign() < 0;

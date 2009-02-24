@@ -828,10 +828,9 @@ post_t * instance_t::parse_post(char *		line,
     ptristream stream(next, len - beg);
 
     if (*next != '(')		// indicates a value expression
-      post->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
+      post->amount.parse(stream);
     else
       parse_amount_expr(session_scope, stream, post->amount, post.get(),
-			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
     if (! post->amount.is_null() && honor_strict && strict &&
@@ -843,13 +842,6 @@ post_t * instance_t::parse_post(char *		line,
 		  << "'" << std::endl;
       post->amount.commodity().add_flags(COMMODITY_KNOWN);
     }
-#if 0
-    // jww (2009-02-12): This isn't quite working yet; it causes cost computes
-    // to skyrocket, since the per-unit price isn't also being reduced by the
-    // same factor.
-    if (! post->amount.is_null())
-      post->amount.in_place_reduce();
-#endif
 
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "post amount = " << post->amount);

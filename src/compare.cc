@@ -53,8 +53,7 @@ namespace {
 
       sort_values.push_back(sort_value_t());
       sort_values.back().inverted = inverted;
-      sort_values.back().value =
-	expr_t(node).calc(*scope).reduced().simplified();
+      sort_values.back().value	  = expr_t(node).calc(*scope).simplified();
 
       if (sort_values.back().value.is_null())
 	throw_(calc_error,

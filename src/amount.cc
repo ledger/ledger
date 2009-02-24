@@ -501,11 +501,21 @@ void amount_t::in_place_unreduce()
   if (! quantity)
     throw_(amount_error, "Cannot unreduce an uninitialized amount");
 
-  while (commodity_ && commodity().larger()) {
-    *this /= commodity().larger()->number();
-    commodity_ = commodity().larger()->commodity_;
-    if (abs() < amount_t(1L))
+  amount_t	temp	= *this;
+  commodity_t * comm	= commodity_;
+  bool		shifted = false;
+
+  while (comm && comm->larger()) {
+    temp /= comm->larger()->number();
+    if (temp.abs() < amount_t(1L))
       break;
+    shifted = true;
+    comm = comm->larger()->commodity_;
+  }
+
+  if (shifted) {
+    *this      = temp;
+    commodity_ = comm;
   }
 }
 
@@ -718,7 +728,7 @@ void amount_t::annotate(const annotation_t& details)
     assert(false);
 #endif
 
-  DEBUG("amounts.commodities", "  Annotated amount is " << *this);
+  DEBUG("amounts.commodities", "Annotated amount is " << *this);
 }
 
 bool amount_t::is_annotated() const
