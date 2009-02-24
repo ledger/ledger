@@ -828,9 +828,10 @@ post_t * instance_t::parse_post(char *		line,
     ptristream stream(next, len - beg);
 
     if (*next != '(')		// indicates a value expression
-      post->amount.parse(stream);
+      post->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
     else
       parse_amount_expr(session_scope, stream, post->amount, post.get(),
+			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
     if (! post->amount.is_null() && honor_strict && strict &&

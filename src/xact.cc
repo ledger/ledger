@@ -89,36 +89,39 @@ bool xact_base_t::finalize()
   post_t * null_post = NULL;
 
   foreach (post_t * post, posts) {
-    if (post->must_balance()) {
-      amount_t& p(post->cost ? *post->cost : post->amount);
-      DEBUG("xact.finalize", "post must balance = " << p);
-      if (! p.is_null()) {
-	if (! post->cost && post->amount.is_annotated() &&
-	    post->amount.annotation().price) {
-	  // If the amount has no cost, but is annotated with a per-unit
-	  // price, use the price times the amount as the cost
-	  post->cost = *post->amount.annotation().price * post->amount;
-	  DEBUG("xact.finalize",
-		"annotation price = " << *post->amount.annotation().price);
-	  DEBUG("xact.finalize", "amount = " << post->amount);
-	  DEBUG("xact.finalize", "priced cost = " << *post->cost);
-	  post->add_flags(POST_PRICED);
-	  add_or_set_value(balance, post->cost->rounded());
-	} else {
-	  // If the amount was a cost, it very likely has the "keep_precision"
-	  // flag set, meaning commodity display precision is ignored when
-	  // displaying the amount.  We never want this set for the balance,
-	  // so we must clear the flag in a temporary to avoid it propagating
-	  // into the balance.
-	  add_or_set_value(balance, p.keep_precision() ? p.rounded() : p);
-	}
+    if (! post->must_balance())
+      continue;
+	
+    amount_t& p(post->cost ? *post->cost : post->amount);
+    DEBUG("xact.finalize", "post must balance = " << p.reduced());
+    if (! p.is_null()) {
+      if (! post->cost && post->amount.is_annotated() &&
+	  post->amount.annotation().price) {
+	// If the amount has no cost, but is annotated with a per-unit
+	// price, use the price times the amount as the cost
+	post->cost = *post->amount.annotation().price * post->amount;
+	DEBUG("xact.finalize",
+	      "annotation price = " << *post->amount.annotation().price);
+	DEBUG("xact.finalize", "amount = " << post->amount);
+	DEBUG("xact.finalize", "priced cost = " << *post->cost);
+	post->add_flags(POST_PRICED);
+	add_or_set_value(balance, post->cost->rounded().reduced());
       } else {
-	if (null_post)
-	  throw_(std::logic_error,
-		 "Only one posting with null amount allowed per transaction");
-	else
-	  null_post = post;
+	// If the amount was a cost, it very likely has the "keep_precision"
+	// flag set, meaning commodity display precision is ignored when
+	// displaying the amount.  We never want this set for the balance,
+	// so we must clear the flag in a temporary to avoid it propagating
+	// into the balance.
+	add_or_set_value(balance, p.keep_precision() ?
+			 p.rounded().reduced() : p.reduced());
       }
+    }
+    else if (null_post) {
+      throw_(std::logic_error,
+	     _("Only one posting with null amount allowed per transaction"));
+    }
+    else {
+      null_post = post;
     }
   }
   assert(balance.valid());
@@ -213,42 +216,44 @@ bool xact_base_t::finalize()
 	y = t;
       }
 
-      DEBUG("xact.finalize", "primary   amount = " << *x);
-      DEBUG("xact.finalize", "secondary amount = " << *y);
+      if (*x && *y) {
+	DEBUG("xact.finalize", "primary   amount = " << *x);
+	DEBUG("xact.finalize", "secondary amount = " << *y);
 
-      commodity_t& comm(x->commodity());
-      amount_t	   per_unit_cost;
-      amount_t	   total_cost;
+	commodity_t& comm(x->commodity());
+	amount_t	   per_unit_cost;
+	amount_t	   total_cost;
 
-      foreach (post_t * post, posts) {
-	if (post != top_post && post->must_balance() &&
-	    ! post->amount.is_null() &&
-	    post->amount.is_annotated() &&
-	    post->amount.annotation().price) {
-	  amount_t temp = *post->amount.annotation().price * post->amount;
-	  if (total_cost.is_null()) {
-	    total_cost = temp;
-	    y = &total_cost;
-	  } else {
-	    total_cost += temp;
+	foreach (post_t * post, posts) {
+	  if (post != top_post && post->must_balance() &&
+	      ! post->amount.is_null() &&
+	      post->amount.is_annotated() &&
+	      post->amount.annotation().price) {
+	    amount_t temp = *post->amount.annotation().price * post->amount;
+	    if (total_cost.is_null()) {
+	      total_cost = temp;
+	      y = &total_cost;
+	    } else {
+	      total_cost += temp;
+	    }
+	    DEBUG("xact.finalize", "total_cost = " << total_cost);
 	  }
-	  DEBUG("xact.finalize", "total_cost = " << total_cost);
 	}
-      }
-      per_unit_cost = (*y / *x).abs();
+	per_unit_cost = (*y / *x).abs();
 
-      DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
+	DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
-      foreach (post_t * post, posts) {
-	const amount_t& amt(post->amount);
+	foreach (post_t * post, posts) {
+	  const amount_t& amt(post->amount);
 
-	if (post->must_balance() && amt.commodity() == comm) {
-	  balance -= amt;
-	  post->cost = per_unit_cost * amt;
-	  post->add_flags(POST_PRICED);
-	  balance += *post->cost;
+	  if (post->must_balance() && amt.commodity() == comm) {
+	    balance -= amt;
+	    post->cost = per_unit_cost * amt;
+	    post->add_flags(POST_PRICED);
+	    balance += *post->cost;
 
-	  DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
+	    DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
+	  }
 	}
       }
     }
@@ -279,7 +284,7 @@ bool xact_base_t::finalize()
 				breakdown.final_cost).rounded()) {
 	DEBUG("xact.finalize", "gain_loss = " << gain_loss);
 
-	add_or_set_value(balance, gain_loss);
+	add_or_set_value(balance, gain_loss.reduced());
 
 	account_t * account;
 	if (gain_loss.sign() > 0)
@@ -308,22 +313,28 @@ bool xact_base_t::finalize()
   // Add the final calculated totals each to their related account
 
   if (dynamic_cast<xact_t *>(this)) {
-    bool all_null = true;
+    bool all_null  = true;
+    bool some_null = false;
     foreach (post_t * post, posts) {
       if (! post->amount.is_null()) {
 	all_null = false;
 
-	// jww (2008-08-09): For now, this feature only works for non-specific
-	// commodities.
+	post->amount.in_place_reduce();
+
 	add_or_set_value(post->account->xdata().value, post->amount);
 
 	DEBUG("xact.finalize.totals",
 	      "Total for " << post->account->fullname() << " + "
 	      << post->amount << ": " << post->account->xdata().value);
+      } else {
+	some_null = true;
       }
     }
     if (all_null)
       return false;		// ignore this xact completely
+    else if (some_null)
+      throw_(balance_error,
+	     "There cannot be null amounts after balancing a transaction");
   }
 
   return true;
@@ -403,9 +414,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 	amount_t amt;
 	assert(post->amount);
 	if (! post->amount.commodity()) {
-	  if (post_handler)
+	  if (post_handler || initial_post->amount.is_null())
 	    continue;
-	  assert(initial_post->amount);
 	  amt = initial_post->amount * post->amount;
 	} else {
 	  if (post_handler)

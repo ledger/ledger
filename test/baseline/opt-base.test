@@ -4,10 +4,26 @@ i 2007/03/01 23:00:00 A
 o 2007/03/02 01:00:00
 i 2007/03/11 23:00:00 B
 o 2007/03/12 01:00:00
+
+2006/05/22 * Company
+    Assets:Receivable            $4,000.00
+    Income:Contracts                  -40h @ $100.00
+
+2006/05/22 * Company
+    Assets:Receivable            $4,000.00
+    Income:Contracts            -40h {$20} @ $100.00
+    Income:Gains                $-3,200.00
 >>>1
                7200s  A
+           $8,000.00  Assets:Receivable
                7200s  B
+           $3,200.00  Equity:Capital Gains
+          $-3,200.00
+            -288000s  Income
+            -288000s    Contracts
+          $-3,200.00    Gains
 --------------------
-              14400s  
+           $8,000.00
+            -273600s  
 >>>2
 === 0
