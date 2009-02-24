@@ -461,7 +461,6 @@ public:
     });
 
   OPTION(report_t, percentage); // -%
-  OPTION(report_t, performance); // -g
 
   OPTION__
   (report_t, period_, // -p

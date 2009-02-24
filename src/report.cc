@@ -447,8 +447,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(head_, first_);
     break;
   case 'g':
-    OPT_CH(performance);
-    else OPT(gain);
+    OPT(gain);
     break;
   case 'h':
     OPT(head_);
@@ -485,7 +484,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(payee_as_account);
     else OPT(pending);
     else OPT(percentage);
-    else OPT(performance);
     else OPT_(period_);
     else OPT(period_sort_);
     else OPT(plot_amount_format_);

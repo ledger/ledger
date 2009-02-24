@@ -810,10 +810,6 @@ Reports the cost basis for all postings.
 @item -V, --market
 Reports the last known market value for all commodities.
 
-@item -g, --performance
-Reports the net gain/loss for each posting in a @command{register}
-report.
-
 @item -G --gain
 Reports the net gain/loss for all commodities in the report that have
 a price history.
