@@ -37,6 +37,8 @@ using namespace python;
 
 shared_ptr<python_interpreter_t> python_session;
 
+void export_amount();
+void export_balance();
 void export_chain();
 void export_commodity();
 void export_xact();
@@ -57,6 +59,8 @@ void export_post();
 
 void initialize_for_python()
 {
+  export_amount();
+  export_balance();
   export_chain();
   export_commodity();
   export_xact();

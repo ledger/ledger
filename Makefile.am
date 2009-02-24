@@ -197,6 +197,8 @@ lib_LTLIBRARIES += libledger_python.la
 libledger_python_la_SOURCES =			\
 	python/pyutils.h			\
 	python/pyfstream.h			\
+	python/py_amount.cc			\
+	python/py_balance.cc			\
 	python/py_chain.cc			\
 	python/py_commodity.cc			\
 	python/py_xact.cc			\
