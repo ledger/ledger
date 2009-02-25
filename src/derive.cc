@@ -208,6 +208,11 @@ namespace {
       bool has_only_from = true;
       bool has_only_to   = true;
 
+      // A single account at the end of the line is the "from" account
+      if (tmpl.posts.size() > 1 &&
+	  tmpl.posts.back().account_mask && ! tmpl.posts.back().amount)
+	tmpl.posts.back().from = true;
+
       foreach (xact_template_t::post_template_t& post, tmpl.posts) {
 	if (post.from)
 	  has_only_to = false;
