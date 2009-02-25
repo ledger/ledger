@@ -607,7 +607,7 @@ dropped."
     (toggle-read-only t)))
 
 (defun ledger-reconcile (account)
-  (interactive "sAccount to reconcile: \nP")
+  (interactive "sAccount to reconcile: ")
   (let ((buf (current-buffer))
 	(rbuf (get-buffer "*Reconcile*")))
     (if rbuf
