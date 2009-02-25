@@ -396,6 +396,7 @@ public:
 
   OPTION_(report_t, gain, DO() { // -G
       parent->HANDLER(revalued).on_only();
+      parent->HANDLER(account_amount_).set_expr("amount | (0, 0)");
       parent->HANDLER(amount_).set_expr("(amount, cost)");
       // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.

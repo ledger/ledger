@@ -326,6 +326,7 @@ void account_t::calculate_sums(expr_t& amount_expr)
   value_t amount(amount_expr.calc(bound_scope));
 
   if (! amount.is_null()) {
+    DEBUG("account.sums", "Added " << amount << " to " << fullname());
     add_or_set_value(xd.total, amount);
     xd.total_count += xd.count;
   } else {
