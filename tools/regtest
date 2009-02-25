@@ -12,7 +12,7 @@ for test in						\
     "-G \$cmd c0226fafdf9e6711ac9121cf263e2d50791859cb"
 do
   echo testing: $test
-  python tools/confirm.py "ledger -f tools/standard.dat $test"
+  python tools/confirm.py "ledger -f tools/standard.dat --args-only --columns=80 $test"
   errors=`expr $errors + $?`
 done
 

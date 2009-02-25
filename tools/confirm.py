@@ -21,7 +21,7 @@ errors = 0
 
 args = sys.argv[1]
 for line in os.popen(re.sub('\$cmd', 'reg', args)):
-    match = re.match("\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)", line[55:])
+    match = re.match("\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)", line[54:])
     if not match:
         continue
     value = clean(match.group(1))
@@ -29,7 +29,7 @@ for line in os.popen(re.sub('\$cmd', 'reg', args)):
 
     running_total += value
     diff = abs(running_total - total)
-    if (re.search(' -V ', args) or re.search(' -G ', args)) and diff < 0.015:
+    if re.search(' -[VGB] ', args) and diff < 0.015:
         diff = 0.0
     if diff > 0.001:
         print "DISCREPANCY: %.3f (%.3f - %.3f) at line %d:" % \
@@ -48,7 +48,7 @@ for line in os.popen(re.sub('\$cmd', 'bal', args)):
         balance_total = clean(line[:20])
 
 diff = abs(balance_total - running_total)
-if (re.search(' -V ', args) or re.search(' -G ', args)) and diff < 0.015:
+if re.search(' -[VGB] ', args) and diff < 0.015:
     diff = 0.0
 if diff > 0.001:
     print
