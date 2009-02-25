@@ -258,6 +258,10 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
     break;
   }
 
+  // Check if they are trying to access an option's setting or value.
+  if (option_t<session_t> * handler = lookup_option(p))
+    return MAKE_OPT_FUNCTOR(session_t, handler);
+
   return symbol_scope_t::lookup(name);
 }
 
