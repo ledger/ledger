@@ -46,7 +46,7 @@
 #ifndef _OPTION_H
 #define _OPTION_H
 
-#include "scope.h"
+#include "interactive.h"
 
 namespace ledger {
 

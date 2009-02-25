@@ -434,6 +434,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'd':
     OPT(daily);
     else OPT(date_format_);
+    else OPT(depth_);
     else OPT(deviation);
     else OPT_(display_);
     else OPT(display_amount_);

@@ -32,7 +32,6 @@
 #ifndef _PYINTERP_H
 #define _PYINTERP_H
 
-#include "interactive.h"
 #include "session.h"
 
 #if defined(HAVE_BOOST_PYTHON)
