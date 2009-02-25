@@ -111,7 +111,7 @@ public:
     TRACE_CTOR(balance_t, "const amount_t&");
     if (amt.is_null())
       throw_(balance_error,
-	     "Cannot initialize a balance from an uninitialized amount");
+	     _("Cannot initialize a balance from an uninitialized amount"));
     if (! amt.is_realzero())
       amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
   }
@@ -165,7 +165,7 @@ public:
   balance_t& operator=(const amount_t& amt) {
     if (amt.is_null())
       throw_(balance_error,
-	     "Cannot assign an uninitialized amount to a balance");
+	     _("Cannot assign an uninitialized amount to a balance"));
 
     amounts.clear();
     if (! amt.is_realzero())
@@ -209,7 +209,7 @@ public:
   bool operator==(const amount_t& amt) const {
     if (amt.is_null())
       throw_(balance_error,
-	     "Cannot compare a balance to an uninitialized amount");
+	     _("Cannot compare a balance to an uninitialized amount"));
 
     if (amt.is_realzero())
       return amounts.empty();
@@ -413,12 +413,12 @@ public:
    */
   amount_t to_amount() const {
     if (is_empty())
-      throw_(balance_error, "Cannot convert an empty balance to an amount");
+      throw_(balance_error, _("Cannot convert an empty balance to an amount"));
     else if (amounts.size() == 1)
       return amounts.begin()->second;
     else
       throw_(balance_error,
-	     "Cannot convert a balance with multiple commodities to an amount");
+	     _("Cannot convert a balance with multiple commodities to an amount"));
   }
 
   /**

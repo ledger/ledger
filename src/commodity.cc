@@ -365,7 +365,7 @@ optional<commodity_t::base_t::history_t&>
 #if 0
       // jww (2008-09-20): Document which option switch to use here
       throw_(commodity_error,
-	     "Cannot determine price history: prices known for multiple commodities (use -?)");
+	     _("Cannot determine price history: prices known for multiple commodities (use -x)"));
 #endif
     comm = (*histories.begin()).first;
   } else {
@@ -515,7 +515,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     if (c == '"')
       in.get(c);
     else
-      throw_(amount_error, "Quoted commodity symbol lacks closing quote");
+      throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
   } else {
     char * _p = buf;
     c = in.peek();
@@ -582,7 +582,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
   if (*p == '"') {
     char * q = std::strchr(p + 1, '"');
     if (! q)
-      throw_(amount_error, "Quoted commodity symbol lacks closing quote");
+      throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
     symbol = string(p + 1, 0, q - p - 1);
     p = q + 2;
   } else {
@@ -594,7 +594,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
       p += symbol.length();
   }
   if (symbol.empty())
-    throw_(amount_error, "Failed to parse commodity");
+    throw_(amount_error, _("Failed to parse commodity"));
 }
 
 bool commodity_t::valid() const
@@ -627,14 +627,14 @@ void annotation_t::parse(std::istream& in)
     char c = peek_next_nonws(in);
     if (c == '{') {
       if (price)
-	throw_(amount_error, "Commodity specifies more than one price");
+	throw_(amount_error, _("Commodity specifies more than one price"));
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}')
 	in.get(c);
       else
-	throw_(amount_error, "Commodity price lacks closing brace");
+	throw_(amount_error, _("Commodity price lacks closing brace"));
 
       amount_t temp;
       temp.parse(buf, amount_t::PARSE_NO_MIGRATE);
@@ -653,27 +653,27 @@ void annotation_t::parse(std::istream& in)
     }
     else if (c == '[') {
       if (date)
-	throw_(amount_error, "Commodity specifies more than one date");
+	throw_(amount_error, _("Commodity specifies more than one date"));
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ']');
       if (c == ']')
 	in.get(c);
       else
-	throw_(amount_error, "Commodity date lacks closing bracket");
+	throw_(amount_error, _("Commodity date lacks closing bracket"));
 
       date = parse_date(buf);
     }
     else if (c == '(') {
       if (tag)
-	throw_(amount_error, "Commodity specifies more than one tag");
+	throw_(amount_error, _("Commodity specifies more than one tag"));
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ')');
       if (c == ')')
 	in.get(c);
       else
-	throw_(amount_error, "Commodity tag lacks closing parenthesis");
+	throw_(amount_error, _("Commodity tag lacks closing parenthesis"));
 
       tag = buf;
     }
@@ -895,7 +895,7 @@ namespace {
     assert(details);
 
     if (details.price && details.price->sign() < 0)
-      throw_(amount_error, "A commodity's price may not be negative");
+      throw_(amount_error, _("A commodity's price may not be negative"));
 
     std::ostringstream name;
     comm.print(name);

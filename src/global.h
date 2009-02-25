@@ -100,11 +100,11 @@ public:
 
   void show_version_info(std::ostream& out) {
     out <<
-      "Ledger " << ledger::version << ", the command-line accounting tool";
+      "Ledger " << ledger::version << _(", the command-line accounting tool");
     out <<
-      "\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2009, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
-See LICENSE file included with the distribution for details and disclaimer.";
+See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
   }
 

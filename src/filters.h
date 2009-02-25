@@ -389,7 +389,7 @@ public:
       display_predicate(_display_predicate),
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
-      totals_account(NULL, "<Total>"),
+      totals_account(NULL, _("<Total>")),
       only_collapse_if_zero(_only_collapse_if_zero) {
     TRACE_CTOR(collapse_posts, "post_handler_ptr");
   }
@@ -468,7 +468,7 @@ public:
 		      bool	       _changed_values_only)
     : item_handler<post_t>(handler), total_expr(_total_expr),
       report(_report), changed_values_only(_changed_values_only),
-      last_post(NULL), revalued_account(NULL, "<Revalued>") {
+      last_post(NULL), revalued_account(NULL, _("<Revalued>")) {
     TRACE_CTOR(changed_value_posts,
 	       "post_handler_ptr, const expr_t&, report_t&, bool");
   }
@@ -583,7 +583,7 @@ public:
 		 bool		   _exact_periods	 = false,
 		 bool              _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), interval(_interval),
-      last_post(NULL), empty_account(NULL, "<None>"),
+      last_post(NULL), empty_account(NULL, _("<None>")),
       exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
     TRACE_CTOR(interval_posts,
@@ -615,9 +615,9 @@ class posts_as_equity : public subtotal_posts
 public:
   posts_as_equity(post_handler_ptr _handler, expr_t& amount_expr)
     : subtotal_posts(_handler, amount_expr),
-      equity_account(NULL, "Equity") {
+      equity_account(NULL, _("Equity")) {
     TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
-    balance_account = equity_account.find_account("Opening Balances");
+    balance_account = equity_account.find_account(_("Opening Balances"));
   }
   virtual ~posts_as_equity() throw() {
     TRACE_DTOR(posts_as_equity);

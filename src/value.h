@@ -863,33 +863,33 @@ public:
   string label(optional<type_t> the_type = none) const {
     switch (the_type ? *the_type : type()) {
     case VOID:
-      return "an uninitialized value";
+      return _("an uninitialized value");
     case BOOLEAN:
-      return "a boolean";
+      return _("a boolean");
     case DATETIME:
-      return "a date/time";
+      return _("a date/time");
     case DATE:
-      return "a date";
+      return _("a date");
     case INTEGER:
-      return "an integer";
+      return _("an integer");
     case AMOUNT:
-      return "an amount";
+      return _("an amount");
     case BALANCE:
-      return "a balance";
+      return _("a balance");
     case STRING:
-      return "a string";
+      return _("a string");
     case MASK:
-      return "a regexp";
+      return _("a regexp");
     case SEQUENCE:
-      return "a sequence";
+      return _("a sequence");
     case POINTER:
-      return "a pointer";
+      return _("a pointer");
     default:
       assert(false);
       break;
     }
     assert(false);
-    return "<invalid>";
+    return _("<invalid>");
   }
 
   /**

@@ -105,53 +105,56 @@ void gather_statistics::flush()
 {
   std::ostream& out(report.output_stream);
 
-  out << "Time period: " << statistics.earliest_post << " to "
-      << statistics.latest_post << std::endl << std::endl;
+  {
+    straccstream accum;
+    out << ACCUM(accum << "Time period: %1 to %2" << statistics.earliest_post
+		 << statistics.latest_post) << std::endl << std::endl;
+  }
 
-  out << "  Files these postings came from:" << std::endl;
+  out << _("  Files these postings came from:") << std::endl;
 
   foreach (const path& pathname, statistics.filenames)
     if (! pathname.empty())
       out << "    " << pathname.string() << std::endl;
   out << std::endl;
 
-  out << "  Unique payees:          ";
+  out << _("  Unique payees:          ");
   out.width(8);
   out << std::right << statistics.payees_referenced.size() << std::endl;
 
-  out << "  Unique accounts:        ";
+  out << _("  Unique accounts:        ");
   out.width(8);
   out << std::right << statistics.accounts_referenced.size() << std::endl;
 
-  out << "  Number of transactions: " ;
+  out << _("  Number of transactions: ") ;
   out.width(8);
   out << std::right << statistics.total_xacts << std::endl;
 
-  out << "  Number of postings:     ";
+  out << _("  Number of postings:     ");
   out.width(8);
   out << std::right << statistics.total_posts;
 
   out << " (";
   out.precision(2);
   out << (double((statistics.latest_post - statistics.earliest_post).days()) /
-	  double(statistics.total_posts)) << " per day)" << std::endl;
+	  double(statistics.total_posts)) << _(" per day)") << std::endl;
 
-  out << "  Days since last post:   ";
+  out << _("  Days since last post:   ");
   out.width(8);
   out << std::right << (CURRENT_DATE() - statistics.latest_post).days()
       << std::endl;
 
-  out << "  Posts in last 7 days:   ";
+  out << _("  Posts in last 7 days:   ");
   out.width(8);
   out << std::right << statistics.total_last_7_days << std::endl;
-  out << "  Posts in last 30 days:  ";
+  out << _("  Posts in last 30 days:  ");
   out.width(8);
   out << std::right << statistics.total_last_30_days << std::endl;
-  out << "  Posts seen this month:  ";
+  out << _("  Posts seen this month:  ");
   out.width(8);
   out << std::right << statistics.total_this_month << std::endl;
 
-  out << "  Uncleared postings:     ";
+  out << _("  Uncleared postings:     ");
   out.width(8);
   out << std::right << statistics.total_uncleared_posts << std::endl;
 

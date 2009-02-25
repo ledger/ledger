@@ -104,10 +104,6 @@ public:
     return out.str();
   }
 
-  virtual void help(std::ostream& out) {
-    out << "No help for " << desc() << "\n";
-  }
-
   operator bool() const {
     return handled;
   }
@@ -115,7 +111,7 @@ public:
   string& str() {
     assert(handled);
     if (! value)
-      throw_(std::runtime_error, "No argument provided for " << desc());
+      throw_(std::runtime_error, _("No argument provided for %1") << desc());
     return value.as_string_lval();
   }
 
@@ -140,7 +136,7 @@ public:
   virtual void handler(call_scope_t& args) {
     if (wants_arg) {
       if (args.empty())
-	throw_(std::runtime_error, "No argument provided for " << desc());
+	throw_(std::runtime_error, _("No argument provided for %1") << desc());
       on_with(args[0]);
     } else {
       on_only();
@@ -179,7 +175,6 @@ public:
   vartype var ;						\
   name ## _option_t() : option_t<type>(#name), var(value)
   
-#define HELP(var) virtual void help(std::ostream& var)
 #define DO()      virtual void handler_thunk(call_scope_t&)
 #define DO_(var)  virtual void handler_thunk(call_scope_t& var)
 

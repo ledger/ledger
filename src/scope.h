@@ -246,7 +246,7 @@ inline T& find_scope(child_scope_t& scope, bool skip_this = true)
   if (T * sought = search_scope<T>(skip_this ? scope.parent : &scope))
     return *sought;
 
-  throw_(std::runtime_error, "Could not find scope");
+  throw_(std::runtime_error, _("Could not find scope"));
   return reinterpret_cast<T&>(scope); // never executed
 }
 

@@ -83,7 +83,7 @@ post_t& posts_getitem(xact_base_t& xact, int i)
   std::size_t len = xact.posts.size();
 
   if (abs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
     throw_error_already_set();
   }
 
@@ -117,7 +117,7 @@ xact_t& xacts_getitem(journal_t& journal, int i)
   std::size_t len = journal.xacts.size();
 
   if (abs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
     throw_error_already_set();
   }
 
@@ -151,7 +151,7 @@ account_t& accounts_getitem(account_t& account, int i)
   std::size_t len = account.accounts.size();
 
   if (abs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
     throw_error_already_set();
   }
 

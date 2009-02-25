@@ -57,7 +57,7 @@ namespace {
 
       if (sort_values.back().value.is_null())
 	throw_(calc_error,
-	       "Could not determine sorting value based an expression");
+	       _("Could not determine sorting value based an expression"));
     }
   }
 }

@@ -58,27 +58,27 @@ namespace {
     void dump(std::ostream& out) const
     {
       if (date)
-	out << "Date:       " << *date << std::endl;
+	out << _("Date:       ") << *date << std::endl;
       else
-	out << "Date:       <today>" << std::endl;
+	out << _("Date:       <today>") << std::endl;
 
       if (eff_date)
-	out << "Effective:  " << *eff_date << std::endl;
+	out << _("Effective:  ") << *eff_date << std::endl;
 
       if (code)
-	out << "Code:       " << *code << std::endl;
+	out << _("Code:       ") << *code << std::endl;
       if (note)
-	out << "Note:       " << *note << std::endl;
+	out << _("Note:       ") << *note << std::endl;
 
       if (payee_mask.empty())
-	out << "Payee mask: INVALID (template expression will cause an error)"
+	out << _("Payee mask: INVALID (template expression will cause an error)")
 	    << std::endl;
       else
-	out << "Payee mask: " << payee_mask << std::endl;
+	out << _("Payee mask: ") << payee_mask << std::endl;
 
       if (posts.empty()) {
 	out << std::endl
-	    << "<Posting copied from last related transaction>"
+	    << _("<Posting copied from last related transaction>")
 	    << std::endl;
       } else {
 	bool has_only_from = true;
@@ -92,19 +92,21 @@ namespace {
 	}
 
 	foreach (const post_template_t& post, posts) {
+	  straccstream accum;
 	  out << std::endl
-	      << "[Posting \"" << (post.from ? "from" : "to")
-	      << "\"]" << std::endl;
+	      << ACCUM(accum << _("[Posting \"%1\"]_")
+		       << (post.from ? _("from") : _("to")))
+	      << std::endl;
 
 	  if (post.account_mask)
-	    out << "  Account mask: " << *post.account_mask << std::endl;
+	    out << _("  Account mask: ") << *post.account_mask << std::endl;
 	  else if (post.from)
-	    out << "  Account mask: <use last of last related accounts>" << std::endl;
+	    out << _("  Account mask: <use last of last related accounts>") << std::endl;
 	  else
-	    out << "  Account mask: <use first of last related accounts>" << std::endl;
+	    out << _("  Account mask: <use first of last related accounts>") << std::endl;
 
 	  if (post.amount)
-	    out << "  Amount:       " << *post.amount << std::endl;
+	    out << _("  Amount:       ") << *post.amount << std::endl;
 	}
       }
     }
@@ -114,8 +116,8 @@ namespace {
   args_to_xact_template(value_t::sequence_t::const_iterator begin,
 			 value_t::sequence_t::const_iterator end)
   {
-    regex  date_mask("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?(?:=.*)?");
-    regex  dow_mask("(sun|mon|tue|wed|thu|fri|sat)");
+    regex  date_mask(_("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?(?:=.*)?"));
+    regex  dow_mask(_("(sun|mon|tue|wed|thu|fri|sat)"));
     smatch what;
 
     xact_template_t tmpl;
@@ -236,7 +238,7 @@ namespace {
 				       report_t&	 report)
   {
     if (tmpl.payee_mask.empty())
-      throw std::runtime_error("'xact' command requires at least a payee");
+      throw std::runtime_error(_("'xact' command requires at least a payee"));
 
     xact_t *  matching = NULL;
     journal_t& journal(*report.session.journal.get());
@@ -281,8 +283,8 @@ namespace {
 	  added->add_post(new post_t(*post));
       } else {
 	throw_(std::runtime_error,
-	       "No accounts, and no past transaction matching '"
-	       << tmpl.payee_mask <<"'");
+	       _("No accounts, and no past transaction matching '%1'")
+	       << tmpl.payee_mask);
       }
     } else {
       bool any_post_has_amount = false;
@@ -346,9 +348,9 @@ namespace {
 	  } else {
 
 	    if (post.from)
-	      new_post->account = journal.find_account("Liabilities:Unknown");
+	      new_post->account = journal.find_account(_("Liabilities:Unknown"));
 	    else
-	      new_post->account = journal.find_account("Expenses:Unknown");
+	      new_post->account = journal.find_account(_("Expenses:Unknown"));
 	  }
 	}
 
@@ -382,7 +384,7 @@ namespace {
 	! added->finalize() ||
 	! journal.xact_finalize_hooks.run_hooks(*added.get(), true))
       throw_(std::runtime_error,
-	     "Failed to finalize derived transaction (check commodities)");
+	     _("Failed to finalize derived transaction (check commodities)"));
 
     return added.release();
   }
@@ -396,13 +398,13 @@ value_t template_command(call_scope_t& args)
   value_t::sequence_t::const_iterator begin = args.value().begin();
   value_t::sequence_t::const_iterator end   = args.value().end();
 
-  out << "--- Input arguments ---" << std::endl;
+  out << _("--- Input arguments ---") << std::endl;
   args.value().dump(out);
   out << std::endl << std::endl;
 
   xact_template_t tmpl = args_to_xact_template(begin, end);
 
-  out << "--- Transaction template ---" << std::endl;
+  out << _("--- Transaction template ---") << std::endl;
   tmpl.dump(out);
 
   return true;

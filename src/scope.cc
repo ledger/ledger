@@ -47,7 +47,7 @@ void symbol_scope_t::define(const string& name, expr_t::ptr_op_t def)
     std::pair<symbol_map::iterator, bool> result2
       = symbols.insert(symbol_map::value_type(name, def));
     if (! result2.second)
-      throw_(compile_error, "Redefinition of '" << name << "' in same scope");
+      throw_(compile_error, _("Redefinition of '%1' in same scope") << name);
   }
 }
 

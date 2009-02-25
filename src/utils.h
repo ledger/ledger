@@ -485,9 +485,9 @@ inline void check_for_signal() {
   case NONE_CAUGHT:
     break;
   case INTERRUPTED:
-    throw std::runtime_error("Interrupted by user (use Control-D to quit)");
+    throw std::runtime_error(_("Interrupted by user (use Control-D to quit)"));
   case PIPE_CLOSED:
-    throw std::runtime_error("Pipe terminated");
+    throw std::runtime_error(_("Pipe terminated"));
   }
 }
 

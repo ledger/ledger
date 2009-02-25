@@ -78,7 +78,7 @@ amount_t balance_getitem(balance_t& bal, int i)
   std::size_t len = bal.amounts.size();
 
   if (abs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, "Index out of range");
+    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
     throw_error_already_set();
   }
 

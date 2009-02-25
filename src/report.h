@@ -253,8 +253,8 @@ public:
       interval_t interval(args[0].to_string());
       if (! is_valid(interval.begin))
 	throw_(std::invalid_argument,
-	       "Could not determine beginning of period '"
-	       << args[0].to_string() << "'");
+	       _("Could not determine beginning of period '%1'")
+	       << args[0].to_string());
 
       string predicate =
 	"date>=[" + to_iso_extended_string(interval.begin) + "]";
@@ -369,8 +369,8 @@ public:
       interval_t interval(args[0].to_string());
       if (! is_valid(interval.begin))
 	throw_(std::invalid_argument,
-	       "Could not determine end of period '"
-	       << args[0].to_string() << "'");
+	       _("Could not determine end of period '%1'")
+	       << args[0].to_string());
 
       string predicate =
 	"date<[" + to_iso_extended_string(interval.begin) + "]";

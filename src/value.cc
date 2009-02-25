@@ -107,7 +107,7 @@ value_t::operator bool() const
     break;
   }
 
-  throw_(value_error, "Cannot determine truth of " << label());
+  throw_(value_error, _("Cannot determine truth of %1") << label());
   return false;
 }
 
@@ -277,7 +277,7 @@ value_t& value_t::operator+=(const value_t& val)
 	for (; i != end(); i++, j++)
 	  *i += *j;
       } else {
-	throw_(value_error, "Cannot add sequences of different lengths");
+	throw_(value_error, _("Cannot add sequences of different lengths"));
       }
     } else {
       as_sequence_lval().push_back(val);
@@ -386,7 +386,7 @@ value_t& value_t::operator+=(const value_t& val)
     break;
   }
 
-  throw_(value_error, "Cannot add " << val.label() << " to " << label());
+  throw_(value_error, _("Cannot add %1 to %2") << val.label() << label());
   return *this;
 }
 
@@ -403,7 +403,7 @@ value_t& value_t::operator-=(const value_t& val)
 	for (; i != end(); i++, j++)
 	  *i -= *j;
       } else {
-	throw_(value_error, "Cannot subtract sequences of different lengths");
+	throw_(value_error, _("Cannot subtract sequences of different lengths"));
       }
     } else {
       sequence_t::iterator i = std::find(seq.begin(), seq.end(), val);
@@ -522,7 +522,7 @@ value_t& value_t::operator-=(const value_t& val)
     break;
   }
 
-  throw_(value_error, "Cannot subtract " << val.label() << " from " << label());
+  throw_(value_error, _("Cannot subtract %1 from %2") << val.label() << label());
 
   return *this;
 }
@@ -596,7 +596,7 @@ value_t& value_t::operator*=(const value_t& val)
     break;
   }
 
-  throw_(value_error, "Cannot multiply " << label() << " with " << val.label());
+  throw_(value_error, _("Cannot multiply %1 with %2") << label() << val.label());
 
   return *this;
 }
@@ -651,7 +651,7 @@ value_t& value_t::operator/=(const value_t& val)
     break;
   }
 
-  throw_(value_error, "Cannot divide " << label() << " by " << val.label());
+  throw_(value_error, _("Cannot divide %1 by %2") << label() << val.label());
 
   return *this;
 }
@@ -736,7 +736,7 @@ bool value_t::is_equal_to(const value_t& val) const
     break;
   }
 
-  throw_(value_error, "Cannot compare " << label() << " to " << val.label());
+  throw_(value_error, _("Cannot compare %1 by %2") << label() << val.label());
 
   return *this;
 }
@@ -831,7 +831,7 @@ bool value_t::is_less_than(const value_t& val) const
     break;
   }
 
-  throw_(value_error, "Cannot compare " << label() << " to " << val.label());
+  throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
 }
@@ -921,7 +921,7 @@ bool value_t::is_greater_than(const value_t& val) const
     break;
   }
 
-  throw_(value_error, "Cannot compare " << label() << " to " << val.label());
+  throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
 }
@@ -1041,8 +1041,8 @@ void value_t::in_place_cast(type_t cast_type)
 	return;
       }
       else {
-	throw_(value_error, "Cannot convert " << label() <<
-	       " with multiple commodities to " << label(cast_type));
+	throw_(value_error, _("Cannot convert %1 with multiple commodities to %2")
+	       << label() << label(cast_type));
       }
       break;
     }
@@ -1057,9 +1057,6 @@ void value_t::in_place_cast(type_t cast_type)
       if (all(as_string(), is_digit())) {
 	set_long(lexical_cast<long>(as_string()));
 	return;
-      } else {
-	throw_(value_error,
-	       "Cannot convert string '" << *this << "' to an integer");
       }
       break;
     }
@@ -1079,7 +1076,7 @@ void value_t::in_place_cast(type_t cast_type)
   }
 
   throw_(value_error,
-	 "Cannot convert " << label() << " to " << label(cast_type));
+	 _("Cannot convert %1 to %2") << label() << label(cast_type));
 }
 
 void value_t::in_place_negate()
@@ -1105,7 +1102,7 @@ void value_t::in_place_negate()
     break;
   }
 
-  throw_(value_error, "Cannot negate " << label());
+  throw_(value_error, _("Cannot negate %1") << label());
 }
 
 void value_t::in_place_not()
@@ -1134,7 +1131,7 @@ void value_t::in_place_not()
     break;
   }
 
-  throw_(value_error, "Cannot not " << label());
+  throw_(value_error, _("Cannot 'not' %1") << label());
 }
 
 bool value_t::is_realzero() const
@@ -1161,7 +1158,7 @@ bool value_t::is_realzero() const
     return as_any_pointer().empty();
 
   default:
-    throw_(value_error, "Cannot determine if " << label() << " is really zero");
+    throw_(value_error, _("Cannot determine if %1 is really zero") << label());
   }
   return false;
 }
@@ -1190,7 +1187,7 @@ bool value_t::is_zero() const
     return as_any_pointer().empty();
 
   default:
-    throw_(value_error, "Cannot determine if " << label() << " is zero");
+    throw_(value_error, _("Cannot determine if %1 is zero") << label());
   }
   return false;
 }
@@ -1219,7 +1216,7 @@ value_t value_t::value(const bool		     primary_only,
     break;
   }
 
-  throw_(value_error, "Cannot find the value of " << label());
+  throw_(value_error, _("Cannot find the value of %1") << label());
   return NULL_VALUE;
 }
 
@@ -1272,7 +1269,7 @@ value_t value_t::abs() const
     break;
   }
 
-  throw_(value_error, "Cannot abs " << label());
+  throw_(value_error, _("Cannot abs %1") << label());
   return NULL_VALUE;
 }
 
@@ -1289,7 +1286,7 @@ value_t value_t::rounded() const
     break;
   }
 
-  throw_(value_error, "Cannot set rounding for " << label());
+  throw_(value_error, _("Cannot set rounding for %1") << label());
   return NULL_VALUE;
 }
 
@@ -1306,7 +1303,7 @@ value_t value_t::unrounded() const
     break;
   }
 
-  throw_(value_error, "Cannot unround " << label());
+  throw_(value_error, _("Cannot unround %1") << label());
   return NULL_VALUE;
 }
 
@@ -1315,7 +1312,7 @@ void value_t::annotate(const annotation_t& details)
   if (is_amount())
     as_amount_lval().annotate(details);
   else
-    throw_(value_error, "Cannot annotate " << label());
+    throw_(value_error, _("Cannot annotate %1") << label());
 }
 
 bool value_t::is_annotated() const
@@ -1324,7 +1321,7 @@ bool value_t::is_annotated() const
     return as_amount().is_annotated();
   else
     throw_(value_error,
-	   "Cannot determine whether " << label() << " is annotated");
+	   _("Cannot determine whether %1 is annotated") << label());
   return false;
 }
 
@@ -1333,7 +1330,7 @@ annotation_t& value_t::annotation()
   if (is_amount())
     return as_amount_lval().annotation();
   else {
-    throw_(value_error, "Cannot request annotation of " << label());
+    throw_(value_error, _("Cannot request annotation of %1") << label());
     return as_amount_lval().annotation(); // quiet g++ warning
   }
 }
@@ -1462,7 +1459,7 @@ void value_t::print(std::ostream&           out,
     break;
 
   default:
-    throw_(value_error, "Cannot print " << label());
+    throw_(value_error, _("Cannot print %1") << label());
   }
 }
 

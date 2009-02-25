@@ -65,11 +65,11 @@ namespace {
 
     int status = pipe(pfd);
     if (status == -1)
-      throw std::logic_error("Failed to create pipe");
+      throw std::logic_error(_("Failed to create pipe"));
 
     status = fork();
     if (status < 0) {
-      throw std::logic_error("Failed to fork child process");
+      throw std::logic_error(_("Failed to fork child process"));
     }
     else if (status == 0) {	// child
       // Duplicate pipe's reading end into stdin
@@ -130,7 +130,7 @@ void output_stream_t::close()
     int status;
     wait(&status);
     if (! WIFEXITED(status) || WEXITSTATUS(status) != 0)
-      throw std::logic_error("Error in the pager");
+      throw std::logic_error(_("Error in the pager"));
   }
 }
 

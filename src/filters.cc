@@ -48,7 +48,7 @@ pass_down_posts::pass_down_posts(post_handler_ptr handler,
       item_handler<post_t>::operator()(*post);
     }
     catch (const std::exception& err) {
-      add_error_context(item_context(*post, "While handling posting"));
+      add_error_context(item_context(*post, _("While handling posting")));
       throw;
     }
   }
@@ -401,7 +401,7 @@ void changed_value_posts::output_diff(post_t * post, const date_t& date)
 
     xact_temps.push_back(xact_t());
     xact_t& xact = xact_temps.back();
-    xact.payee = "Commodities revalued";
+    xact.payee = _("Commodities revalued");
     xact._date = is_valid(date) ? date : post->date();
 
     handle_value(diff, &revalued_account, &xact, POST_EXT_NO_TOTAL,
@@ -576,7 +576,7 @@ void posts_as_equity::report_subtotal()
 
   xact_temps.push_back(xact_t());
   xact_t& xact = xact_temps.back();
-  xact.payee = "Opening Balances";
+  xact.payee = _("Opening Balances");
   xact._date = finish;
 
   value_t total = 0L;
@@ -714,7 +714,7 @@ void budget_posts::report_budget_items(const date_t& date)
 
 	xact_temps.push_back(xact_t());
 	xact_t& xact = xact_temps.back();
-	xact.payee = "Budget transaction";
+	xact.payee = _("Budget transaction");
 	xact._date = begin;
 
 	post_temps.push_back(post);
@@ -802,7 +802,7 @@ void forecast_posts::flush()
 
     xact_temps.push_back(xact_t());
     xact_t& xact = xact_temps.back();
-    xact.payee = "Forecast transaction";
+    xact.payee = _("Forecast transaction");
     xact._date = begin;
 
     post_temps.push_back(post);

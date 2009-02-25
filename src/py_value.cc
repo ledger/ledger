@@ -46,7 +46,7 @@ namespace {
       if (scope_t * scope = value.as_pointer<scope_t>())
 	return expr_t(scope->lookup(name), scope);
     }
-    throw_(value_error, "Cannot lookup attributes in " << value.label());
+    throw_(value_error, _("Cannot lookup attributes in %1") << value.label());
     return expr_t();
   }
 

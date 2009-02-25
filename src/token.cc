@@ -122,7 +122,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     return;
   }
   if (! in.good())
-    throw_(parse_error, "Input stream no longer valid");
+    throw_(parse_error, _("Input stream no longer valid"));
 
   char c = peek_next_nonws(in);
 
@@ -131,7 +131,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     return;
   }
   if (! in.good())
-    throw_(parse_error, "Input stream no longer valid");
+    throw_(parse_error, _("Input stream no longer valid"));
 
   symbol[0] = c;
   symbol[1] = '\0';
@@ -362,7 +362,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
       in.clear();
       in.seekg(pos, std::ios::beg);
       if (in.fail())
-	throw_(parse_error, "Failed to reset input stream");
+	throw_(parse_error, _("Failed to reset input stream"));
     }
 
     // When in relaxed parsing mode, we want to migrate commodity flags
@@ -385,7 +385,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 	in.clear();
 	in.seekg(pos, std::ios::beg);
 	if (in.fail())
-	  throw_(parse_error, "Failed to reset input stream");
+	  throw_(parse_error, _("Failed to reset input stream"));
 
 	c = in.peek();
 	if (std::isdigit(c) || c == '.')
@@ -412,7 +412,7 @@ void expr_t::token_t::rewind(std::istream& in)
 {
   in.seekg(- length, std::ios::cur);
   if (in.fail())
-    throw_(parse_error, "Failed to rewind input stream");
+    throw_(parse_error, _("Failed to rewind input stream"));
 }
 
 
@@ -424,13 +424,13 @@ void expr_t::token_t::unexpected()
 
   switch (prev_kind) {
   case TOK_EOF:
-    throw_(parse_error, "Unexpected end of expression");
+    throw_(parse_error, _("Unexpected end of expression"));
   case IDENT:
-    throw_(parse_error, "Unexpected symbol '" << value << "'");
+    throw_(parse_error, _("Unexpected symbol '%1'") << value);
   case VALUE:
-    throw_(parse_error, "Unexpected value '" << value << "'");
+    throw_(parse_error, _("Unexpected value '%1'") << value);
   default:
-    throw_(parse_error, "Unexpected operator '" << symbol << "'");
+    throw_(parse_error, _("Unexpected operator '%1'") << symbol);
   }
 }
 
@@ -440,15 +440,14 @@ void expr_t::token_t::expected(char wanted, char c)
 
   if (c == '\0' || c == -1) {
     if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, "Unexpected end");
+      throw_(parse_error, _("Unexpected end"));
     else
-      throw_(parse_error, "Missing '" << wanted << "'");
+      throw_(parse_error, _("Missing '%1'") << wanted);
   } else {
     if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, "Invalid char '" << c << "'");
+      throw_(parse_error, _("Invalid char '%1'") << c);
     else
-      throw_(parse_error, "Invalid char '" << c
-	     << "' (wanted '" << wanted << "')");
+      throw_(parse_error, _("Invalid char '%1' (wanted '%2')") << c << wanted);
   }
 }
 

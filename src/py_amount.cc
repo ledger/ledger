@@ -66,7 +66,7 @@ void py_parse_2(amount_t& amount, object in, unsigned char flags) {
     amount.parse(instr, flags);
   } else {
     PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.parse(file) is not a file object");
+		    _("Argument to amount.parse(file) is not a file object"));
   }
 }
 void py_parse_1(amount_t& amount, object in) {
@@ -87,7 +87,7 @@ void py_print(amount_t& amount, object out)
     amount.print(outstr);
   } else {
     PyErr_SetString(PyExc_IOError,
-		    "Argument to amount.print_(file) is not a file object");
+		    _("Argument to amount.print_(file) is not a file object"));
   }
 }
 
@@ -125,8 +125,8 @@ void export_amount()
     .def(init<std::string>())
 
     .def("exact", &amount_t::exact, args("value"),
-	 "Construct an amount object whose display precision is always equal to its\n\
-internal precision.")
+	 _("Construct an amount object whose display precision is always equal to its\n\
+internal precision."))
     .staticmethod("exact")
 
     .def(init<amount_t>())

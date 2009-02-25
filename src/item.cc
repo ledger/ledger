@@ -397,7 +397,7 @@ string item_context(const item_t& item, const string& desc)
 {
   std::size_t len = item.end_pos - item.beg_pos;
   if (! len)
-    return "<no item context>";
+    return _("<no item context>");
 
   assert(len > 0);
   assert(len < 2048);
@@ -405,17 +405,17 @@ string item_context(const item_t& item, const string& desc)
   std::ostringstream out;
       
   if (item.pathname == path("/dev/stdin")) {
-    out << desc << " from standard input:";
+    out << desc << _(" from standard input:");
     return out.str();
   }
 
-  out << desc << " from \"" << item.pathname.string() << "\"";
+  out << desc << _(" from \"") << item.pathname.string() << "\"";
 
   if (item.beg_line != item.end_line)
-    out << ", lines " << item.beg_line << "-"
+    out << _(", lines ") << item.beg_line << "-"
 	<< item.end_line << ":\n";
   else
-    out << ", line " << item.beg_line << ":\n";
+    out << _(", line ") << item.beg_line << ":\n";
 
   print_item(out, item, "> ");
 

@@ -109,12 +109,12 @@ void python_interpreter_t::initialize()
     object main_module = python::import("__main__");
     if (! main_module)
       throw_(std::logic_error,
-	     "Python failed to initialize (couldn't find __main__)");
+	     _("Python failed to initialize (couldn't find __main__)"));
 
     main_nspace = extract<dict>(main_module.attr("__dict__"));
     if (! main_nspace)
       throw_(std::logic_error,
-	     "Python failed to initialize (couldn't find __dict__)");
+	     _("Python failed to initialize (couldn't find __dict__)"));
 
     python::detail::init_module("ledger", &initialize_for_python);
 
@@ -145,7 +145,7 @@ void python_interpreter_t::initialize()
 	  ledger_dict["__path__"] = temp_list;
 	} else {
 	  throw_(std::logic_error,
-		 "Python failed to initialize (couldn't find ledger)");
+		 _("Python failed to initialize (couldn't find ledger)"));
 	}
 	path_initialized = true;
 	break;
@@ -153,12 +153,12 @@ void python_interpreter_t::initialize()
     }
     if (! path_initialized)
       std::cerr
-	<< "Warning: Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH"
+	<< _("Warning: Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH")
 	<< std::endl;
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, "Python failed to initialize");
+    throw_(std::logic_error, _("Python failed to initialize"));
   }
 
   TRACE_FINISH(python_init, 1);
@@ -172,7 +172,7 @@ object python_interpreter_t::import(const string& str)
   try {
     object mod = python::import(str.c_str());
     if (! mod)
-      throw_(std::logic_error, "Failed to import Python module " << str);
+      throw_(std::logic_error, _("Failed to import Python module %1") << str);
  
     // Import all top-level entries directly into the main namespace
     main_nspace.update(mod.attr("__dict__"));
@@ -218,7 +218,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, "Failed to evaluate Python code");
+    throw_(std::logic_error, _("Failed to evaluate Python code"));
   }
   return object();
 }
@@ -240,7 +240,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, "Failed to evaluate Python code");
+    throw_(std::logic_error, _("Failed to evaluate Python code"));
   }
   return object();
 }
@@ -297,7 +297,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       return NULL_VALUE;
 #else
       throw_(calc_error,
-	     "Could not evaluate Python variable '" << name << "'");
+	     _("Could not evaluate Python variable '%1'") << name);
 #endif
     } else {
       if (args.size() > 0) {
@@ -318,14 +318,14 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 	  } else {
 	    Py_DECREF(val);
 	    throw_(calc_error,
-		   "Could not evaluate Python variable '" << name << "'");
+		   _("Could not evaluate Python variable '%1'") << name);
 	  }
 	  std::signal(SIGINT, sigint_handler);
 	  return result;
 	}
 	else if (PyErr_Occurred()) {
 	  PyErr_Print();
-	  throw_(calc_error, "Failed call to Python function '" << name << "'");
+	  throw_(calc_error, _("Failed call to Python function '%1'") << name);
 	} else {
 	  assert(false);
 	}
@@ -338,8 +338,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
   catch (const error_already_set&) {
     std::signal(SIGINT, sigint_handler);
     PyErr_Print();
-    throw_(calc_error,
-	   "Failed call to Python function '" << name << "'");
+    throw_(calc_error, _("Failed call to Python function '%1'") << name);
   }
   catch (...) {
     std::signal(SIGINT, sigint_handler);

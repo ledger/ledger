@@ -38,7 +38,7 @@ void interactive_t::verify_arguments() const
   value_t::sequence_t::const_iterator i;
 
   const char *	  p	    = spec.c_str();
-  const char *	  label	    = "unknown";
+  const char *	  label	    = _("unknown");
   bool		  wrong_arg = false;
   bool		  dont_skip = false;
   bool		  optional  = *p == '&';
@@ -62,22 +62,22 @@ void interactive_t::verify_arguments() const
 	  "Want " << *p << " got: " << next_arg->label());
     switch (*p) {
     case 'a':
-      label = "an amount";
+      label = _("an amount");
       wrong_arg = (! next_arg->is_long() &&
 		   ! next_arg->is_amount() &&
 		   ! next_arg->is_balance());
       break;
     case 'b':
-      label = "a boolean";
+      label = _("a boolean");
       wrong_arg = false;	// booleans are converted
       break;
     case 'd':
-      label = "a date";
+      label = _("a date");
       wrong_arg = ! next_arg->is_date();
       break;
     case 'i':
     case 'l':
-      label = "an integer";
+      label = _("an integer");
       if (next_arg->is_long() ||
 	  (next_arg->is_amount() &&
 	   ! next_arg->as_amount().has_commodity())) {
@@ -97,28 +97,28 @@ void interactive_t::verify_arguments() const
       }
       break;
     case 'm':
-      label = "a regex";
+      label = _("a regex");
       wrong_arg = ! next_arg->is_mask();
       break;
     case 's':
-      label = "a string";
+      label = _("a string");
       wrong_arg = ! next_arg->is_string();
       break;
     case 't':
-      label = "a date or time";
+      label = _("a date or time");
       wrong_arg = (! next_arg->is_date() &&
 		   ! next_arg->is_datetime());
       break;
     case 'v':
-      label = "any value";
+      label = _("any value");
       wrong_arg = false;
       break;
     case 'P':
-      label = "a pointer";
+      label = _("a pointer");
       wrong_arg = ! next_arg->is_pointer();
       break;
     case 'S':
-      label = "a sequence";
+      label = _("a sequence");
       wrong_arg = false;
       break;
     case '&':
@@ -157,14 +157,14 @@ void interactive_t::verify_arguments() const
 
   if (wrong_arg) {
     throw_(std::logic_error,
-	   "Expected " << label << " for argument " << offset
-	   << ", but received " << vlabel);
+	   _("Expected %1 for argument %2, but received %3")
+	   << label << offset << vlabel);
   }
   else if (*p && ! optional && ! next_arg) {
-    throw_(std::logic_error, "Too few arguments to function");
+    throw_(std::logic_error, _("Too few arguments to function"));
   }
   else if (! *p && next_arg) {
-    throw_(std::logic_error, "Too many arguments to function");
+    throw_(std::logic_error, _("Too many arguments to function"));
   }
 }
 

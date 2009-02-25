@@ -86,11 +86,10 @@ namespace {
     }
     catch (const std::exception& err) {
       if (name[0] == '-')
-	add_error_context("While parsing option '" << name << "':");
+	add_error_context(_("While parsing option '%1'") << name);
 	  
       else
-	add_error_context("While parsing environent variable '"
-			  << name << "':");
+	add_error_context(_("While parsing environent variable '%1'") << name);
       throw;
     }
   }
@@ -131,8 +130,8 @@ void process_environment(const char ** envp, const string& tag,
 	    process_option(string(buf), scope, q + 1, value);
 	}
 	catch (const std::exception& err) {
-	  add_error_context("While parsing environment variable option '"
-			    << *p << "':");
+	  add_error_context(_("While parsing environment variable option '%1':")
+			    << *p);
 	  throw;
 	}
       }
@@ -192,19 +191,19 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 
       op_bool_tuple opt(find_option(scope, opt_name));
       if (! opt.first)
-	throw_(option_error, "Illegal option --" << name);
+	throw_(option_error, _("Illegal option --%1") << name);
 
       if (opt.second && ! value && ++i != args.end() && value == NULL) {
 	value = (*i).c_str();
 	DEBUG("option.args", "  read option value from arg: " << value);
 	if (value == NULL)
-	  throw_(option_error, "Missing option argument for --" << name);
+	  throw_(option_error, _("Missing option argument for --%1") << name);
       }
       process_option(opt.first->as_function(), scope, value,
 		     string("--") + name);
     }
     else if ((*i)[1] == '\0') {
-      throw_(option_error, "illegal option -");
+      throw_(option_error, _("illegal option -%1") << (*i)[0]);
     }
     else {
       DEBUG("option.args", "  single-char option");
@@ -215,7 +214,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
 	op_bool_tuple opt(find_option(scope, c));
 	if (! opt.first)
-	  throw_(option_error, "Illegal option -" << c);
+	  throw_(option_error, _("Illegal option -%1") << c);
 
 	option_queue.push_back(op_bool_char_tuple(opt.first, opt.second, c));
       }
@@ -227,7 +226,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 	  DEBUG("option.args", "  read option value from arg: " << value);
 	  if (value == NULL)
 	    throw_(option_error,
-		   "Missing option argument for -" << o.ch);
+		   _("Missing option argument for -%1") << o.ch);
 	}
 	process_option(o.op->as_function(), scope, value, string("-") + o.ch);
       }

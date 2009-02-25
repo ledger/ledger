@@ -102,8 +102,8 @@ void global_scope_t::read_init()
       if (session().read_journal(init_file) > 0 ||
 	  session().journal->auto_xacts.size() > 0 ||
 	  session().journal->period_xacts.size() > 0) {
-	throw_(parse_error, "Transactions found in initialization file '"
-	       << init_file << "'");
+	throw_(parse_error, _("Transactions found in initialization file '%1'")
+	       << init_file);
       }
 
       TRACE_FINISH(init, 1);
@@ -132,7 +132,7 @@ void global_scope_t::report_error(const std::exception& err)
     if (! context.empty())
       std::cerr << context << std::endl;
     
-    std::cerr << "Error: " << err.what() << std::endl;
+    std::cerr << _("Error: ") << err.what() << std::endl;
   } else {
     caught_signal = NONE_CAUGHT;
   }
@@ -173,7 +173,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   if (bool(command = look_for_precommand(bound_scope, verb)))
     is_precommand = true;
   else if (! bool(command = look_for_command(bound_scope, verb)))
-    throw_(std::logic_error, "Unrecognized command '" << verb << "'");
+    throw_(std::logic_error, _("Unrecognized command '%1'") << verb);
 
   // If it is not a pre-command, then parse the user's ledger data at this
   // time if not done alreday (i.e., if not at a REPL).  Then patch up the
@@ -471,7 +471,7 @@ void global_scope_t::visit_man_page() const
 {
   int pid = fork();
   if (pid < 0) {
-    throw std::logic_error("Failed to fork child process");
+    throw std::logic_error(_("Failed to fork child process"));
   }
   else if (pid == 0) {	// child
     execlp("man", "man", "1", "ledger", (char *)0);
@@ -516,7 +516,7 @@ void handle_debug_options(int argc, char * argv[])
 	  _trace_level = boost::lexical_cast<int>(argv[i + 1]);
 	}
 	catch (const boost::bad_lexical_cast& e) {
-	  throw std::logic_error("Argument to --trace must be an integer");
+	  throw std::logic_error(_("Argument to --trace must be an integer"));
 	}
 	i++;
 #endif

@@ -100,7 +100,7 @@ expr_t::parser_t::parse_dot_expr(std::istream& in,
 	node->set_right(parse_value_term(in, tflags));
 	if (! node->right())
 	  throw_(parse_error,
-		 tok.symbol << " operator not followed by argument");
+		 _("%1 operator not followed by argument") << tok.symbol);
       } else {
 	push_token(tok);
 	break;
@@ -124,7 +124,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
     ptr_op_t term(parse_dot_expr(in, tflags));
     if (! term)
       throw_(parse_error,
-	     tok.symbol << " operator not followed by argument");
+	     _("%1 operator not followed by argument") << tok.symbol);
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
@@ -141,7 +141,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
     ptr_op_t term(parse_dot_expr(in, tflags));
     if (! term)
       throw_(parse_error,
-	     tok.symbol << " operator not followed by argument");
+	     _("%1 operator not followed by argument") << tok.symbol);
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
@@ -182,7 +182,7 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
 	node->set_right(parse_unary_expr(in, tflags));
 	if (! node->right())
 	  throw_(parse_error,
-		 tok.symbol << " operator not followed by argument");
+		 _("%1 operator not followed by argument") << tok.symbol);
       } else {
 	push_token(tok);
 	break;
@@ -212,7 +212,7 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
 	node->set_right(parse_mul_expr(in, tflags));
 	if (! node->right())
 	  throw_(parse_error,
-		 tok.symbol << " operator not followed by argument");
+		 _("%1 operator not followed by argument") << tok.symbol);
       } else {
 	push_token(tok);
 	break;
@@ -282,7 +282,7 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
 
 	if (! node->right())
 	  throw_(parse_error,
-		 tok.symbol << " operator not followed by argument");
+		 _("%1 operator not followed by argument") << tok.symbol);
 
 	if (negate) {
 	  prev = node;
@@ -314,7 +314,7 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
 	node->set_right(parse_logic_expr(in, tflags));
 	if (! node->right())
 	  throw_(parse_error,
-		 tok.symbol << " operator not followed by argument");
+		 _("%1 operator not followed by argument") << tok.symbol);
       } else {
 	push_token(tok);
 	break;
@@ -341,7 +341,7 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
 	node->set_right(parse_and_expr(in, tflags));
 	if (! node->right())
 	  throw_(parse_error,
-		 tok.symbol << " operator not followed by argument");
+		 _("%1 operator not followed by argument") << tok.symbol);
       } else {
 	push_token(tok);
 	break;
@@ -367,7 +367,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       node->set_right(parse_or_expr(in, tflags));
       if (! node->right())
 	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
+	       _("%1 operator not followed by argument") << tok.symbol);
 
       token_t& next_tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (next_tok.kind != token_t::COLON)
@@ -379,7 +379,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       subnode->set_right(parse_or_expr(in, tflags));
       if (! subnode->right())
 	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
+	       _("%1 operator not followed by argument") << tok.symbol);
 
       node->set_right(subnode);
     } else {
@@ -405,7 +405,7 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
       node->set_right(parse_value_expr(in, tflags));
       if (! node->right())
 	throw_(parse_error,
-	       tok.symbol << " operator not followed by argument");
+	       _("%1 operator not followed by argument") << tok.symbol);
       tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
     }
 
@@ -418,7 +418,7 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
   }
   else if (! tflags.has_flags(PARSE_PARTIAL) &&
 	   ! tflags.has_flags(PARSE_SINGLE)) {
-    throw_(parse_error, "Failed to parse value expression");
+    throw_(parse_error, _("Failed to parse value expression"));
   }
 
   return node;
@@ -441,7 +441,7 @@ expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
   }
   catch (const std::exception& err) {
     if (original_string) {
-      add_error_context("While parsing value expression:");
+      add_error_context(_("While parsing value expression:"));
 
       istream_pos_type end_pos = in.tellg();
       istream_pos_type pos     = end_pos;

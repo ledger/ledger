@@ -154,7 +154,7 @@ namespace {
 
       value_t result(expr.calc(bound_scope));
       if (! result.is_amount())
-	throw_(parse_error, "Postings may only specify simple amounts");
+	throw_(parse_error, _("Postings may only specify simple amounts"));
 
       amount = result.as_amount();
       DEBUG("textual.parse", "The posting amount is " << amount);
@@ -234,11 +234,11 @@ void instance_t::parse()
 	  instances.push_front(instance);
 
 	foreach (instance_t * instance, instances)
-	  add_error_context("In file included from "
+	  add_error_context(_("In file included from %1")
 			    << file_context(instance->pathname,
 					    instance->linenum));
       }
-      add_error_context("While parsing file "
+      add_error_context(_("While parsing file %1")
 			<< file_context(pathname, linenum));
 
       if (caught_signal != NONE_CAUGHT)
@@ -251,7 +251,7 @@ void instance_t::parse()
       if (! current_context.empty())
 	std::cerr << current_context << std::endl;
 
-      std::cerr << "Error: " << err.what() << std::endl;
+      std::cerr << _("Error: ") << err.what() << std::endl;
       errors++;
     }
   }
@@ -308,7 +308,7 @@ void instance_t::read_next_directive()
 #if 0
     char * p = skip_ws(line);
     if (*p)
-      throw parse_error("Line begins with whitespace");
+      throw parse_error(_("Line begins with whitespace"));
 #endif
     break;
   }
@@ -446,7 +446,7 @@ namespace {
     if (*p == '"') {
       char * q = std::strchr(p + 1, '"');
       if (! q)
-	throw parse_error("Quoted commodity symbol lacks closing quote");
+	throw parse_error(_("Quoted commodity symbol lacks closing quote"));
       symbol = string(p + 1, 0, q - p - 1);
       p = q + 2;
     } else {
@@ -458,7 +458,7 @@ namespace {
 	p += symbol.length();
     }
     if (symbol.empty())
-      throw parse_error("Failed to parse commodity");
+      throw parse_error(_("Failed to parse commodity"));
   }
 }
 
@@ -554,7 +554,7 @@ void instance_t::period_xact_directive(char * line)
 {
   std::auto_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
   if (! pe->period)
-    throw_(parse_error, "Parsing time period '" << line << "'");
+    throw_(parse_error, _("Parsing time period '%1'") << line);
 
   istream_pos_type pos	= curr_pos;
   std::size_t      lnum = linenum;
@@ -573,7 +573,7 @@ void instance_t::period_xact_directive(char * line)
 
       pe.release();
     } else {
-      throw parse_error("Period transaction failed to balance");
+      throw parse_error(_("Period transaction failed to balance"));
     }
   }
 }
@@ -593,7 +593,7 @@ void instance_t::xact_directive(char * line, std::streamsize len)
     // do if the xact has no substantive effect (for example, a checking
     // xact, all of whose postings have null amounts).
   } else {
-    throw parse_error("Failed to parse transaction");
+    throw parse_error(_("Failed to parse transaction"));
   }
 
   TRACE_STOP(xacts, 1);
@@ -779,7 +779,7 @@ post_t * instance_t::parse_post(char *		line,
   // Parse the account name
 
   if (! *p)
-    throw parse_error("Posting has no account");
+    throw parse_error(_("Posting has no account"));
 
   char * next = next_element(p, true);
   char * e = p + std::strlen(p);
@@ -810,10 +810,13 @@ post_t * instance_t::parse_post(char *		line,
     post->account = account->find_account(name);
 
   if (honor_strict && strict && ! post->account->known) {
-    if (post->_state == item_t::UNCLEARED)
-      std::cerr << "Warning: \"" << pathname << "\", line " << linenum
-		<< ": Unknown account '" << post->account->fullname()
-		<< "'" << std::endl;
+    if (post->_state == item_t::UNCLEARED) {
+      straccstream accum;
+      std::cerr
+	<< ACCUM(accum << _("Warning: \"%1\", line %2: Unknown account '%3'")
+		 << pathname << linenum << post->account->fullname())
+	<< std::endl;
+    }
     post->account->known = true;
   }
 
@@ -837,10 +840,13 @@ post_t * instance_t::parse_post(char *		line,
     if (! post->amount.is_null() && honor_strict && strict &&
 	post->amount.has_commodity() &&
 	! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
-      if (post->_state == item_t::UNCLEARED)
-	std::cerr << "Warning: \"" << pathname << "\", line " << linenum
-		  << ": Unknown commodity '" << post->amount.commodity()
-		  << "'" << std::endl;
+      if (post->_state == item_t::UNCLEARED) {
+	straccstream accum;
+	std::cerr
+	  << ACCUM(accum << _("Warning: \"%1\", line %2: Unknown commodity '%3'")
+		   << pathname << linenum << post->amount.commodity())
+	  << std::endl;
+      }
       post->amount.commodity().add_flags(COMMODITY_KNOWN);
     }
 
@@ -883,7 +889,7 @@ post_t * instance_t::parse_post(char *		line,
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
 	  if (post->cost->sign() < 0)
-	    throw parse_error("A posting's cost may not be negative");
+	    throw parse_error(_("A posting's cost may not be negative"));
 
 	  if (per_unit)
 	    *post->cost *= post->amount;
@@ -898,7 +904,7 @@ post_t * instance_t::parse_post(char *		line,
 	  else
 	    next = skip_ws(p + cstream.tellg());
 	} else {
-	  throw parse_error("Expected a cost amount");
+	  throw parse_error(_("Expected a cost amount"));
 	}
       }
     }
@@ -926,7 +932,7 @@ post_t * instance_t::parse_post(char *		line,
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
       if (post->assigned_amount->is_null())
-	throw parse_error("An assigned balance must evaluate to a constant value");
+	throw parse_error(_("An assigned balance must evaluate to a constant value"));
 
       DEBUG("textual.parse", "line " << linenum << ": "
 	    << "POST assign: parsed amt = " << *post->assigned_amount);
@@ -987,7 +993,7 @@ post_t * instance_t::parse_post(char *		line,
       else
 	next = skip_ws(p + stream.tellg());
     } else {
-      throw parse_error("Expected an assigned balance amount");
+      throw parse_error(_("Expected an assigned balance amount"));
     }
   }
 
@@ -1003,8 +1009,9 @@ post_t * instance_t::parse_post(char *		line,
   // There should be nothing more to read
 
   if (next && *next)
-    throw_(parse_error, "Unexpected char '" << *next
-	   << "' (Note: inline math requires parentheses)");
+    throw_(parse_error,
+	   _("Unexpected char '%1' (Note: inline math requires parentheses)")
+	   << *next);
 
   post->end_pos  = curr_pos;
   post->end_line = linenum;
@@ -1015,7 +1022,7 @@ post_t * instance_t::parse_post(char *		line,
 
   }
   catch (const std::exception& err) {
-    add_error_context("While parsing posting:");
+    add_error_context(_("While parsing posting:"));
     add_error_context(line_context(buf, beg, len));
     throw;
   }
@@ -1097,7 +1104,7 @@ xact_t * instance_t::parse_xact(char *	  line,
     curr->payee = next;
     next = next_element(next, true);
   } else {
-    curr->payee = "<Unspecified payee>";
+    curr->payee = _("<Unspecified payee>");
   }
 
   // Parse the xact note

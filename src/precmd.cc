@@ -52,7 +52,7 @@ namespace {
 
       std::ostream& out(report.output_stream);
 
-      out << "--- Context is first posting of the following transaction ---"
+      out << _("--- Context is first posting of the following transaction ---")
 	  << std::endl << str << std::endl;
       {
 	std::istringstream in(str);
@@ -69,7 +69,7 @@ value_t parse_command(call_scope_t& args)
 {
   string arg = join_args(args);
   if (arg.empty()) {
-    throw std::logic_error("Usage: parse TEXT");
+    throw std::logic_error(_("Usage: parse TEXT"));
     return 1L;
   }
 
@@ -78,23 +78,23 @@ value_t parse_command(call_scope_t& args)
 
   post_t * post = get_sample_post(report);
 
-  out << "--- Input expression ---" << std::endl;
+  out << _("--- Input expression ---") << std::endl;
   out << arg << std::endl;
 
-  out << std::endl << "--- Text as parsed ---" << std::endl;
+  out << std::endl << _("--- Text as parsed ---") << std::endl;
   expr_t expr(arg);
   expr.print(out);
   out << std::endl;
 
-  out << std::endl << "--- Expression tree ---" << std::endl;
+  out << std::endl << _("--- Expression tree ---") << std::endl;
   expr.dump(out);
 
   bind_scope_t bound_scope(args, *post);
   expr.compile(bound_scope);
-  out << std::endl << "--- Compiled tree ---" << std::endl;
+  out << std::endl << _("--- Compiled tree ---") << std::endl;
   expr.dump(out);
 
-  out << std::endl << "--- Calculated value ---" << std::endl;
+  out << std::endl << _("--- Calculated value ---") << std::endl;
   value_t result(expr.calc());
   result.strip_annotations(report.what_to_keep()).dump(out);
   out << std::endl;
@@ -118,7 +118,7 @@ value_t format_command(call_scope_t& args)
 {
   string arg = join_args(args);
   if (arg.empty()) {
-    throw std::logic_error("Usage: format TEXT");
+    throw std::logic_error(_("Usage: format TEXT"));
     return 1L;
   }
 
@@ -127,14 +127,14 @@ value_t format_command(call_scope_t& args)
 
   post_t * post = get_sample_post(report);
 
-  out << "--- Input format string ---" << std::endl;
+  out << _("--- Input format string ---") << std::endl;
   out << arg << std::endl << std::endl;
 
-  out << "--- Format elements ---" << std::endl;
+  out << _("--- Format elements ---") << std::endl;
   format_t fmt(arg);
   fmt.dump(out);
 
-  out << std::endl << "--- Formatted string ---" << std::endl;
+  out << std::endl << _("--- Formatted string ---") << std::endl;
   bind_scope_t bound_scope(args, *post);
   out << '"';
   fmt.format(out, bound_scope);
@@ -147,7 +147,7 @@ value_t period_command(call_scope_t& args)
 {
   string arg = join_args(args);
   if (arg.empty()) {
-    throw std::logic_error("Usage: period TEXT");
+    throw std::logic_error(_("Usage: period TEXT"));
     return 1L;
   }
 
@@ -157,10 +157,10 @@ value_t period_command(call_scope_t& args)
   interval_t interval(arg);
 
   if (! is_valid(interval.begin)) {
-    out << "Time period has no beginning." << std::endl;
+    out << _("Time period has no beginning.") << std::endl;
   } else {
-    out << "begin: " << format_date(interval.begin) << std::endl;
-    out << "  end: " << format_date(interval.end) << std::endl;
+    out << _("begin: ") << format_date(interval.begin) << std::endl;
+    out << _("  end: ") << format_date(interval.end) << std::endl;
     out << std::endl;
 
     date_t date = interval.first();
@@ -169,7 +169,7 @@ value_t period_command(call_scope_t& args)
       out << std::right;
       out.width(2);
 
-      out << i << ": " << format_date(date) << std::endl;
+      out << i << "): " << format_date(date) << std::endl;
 
       date = interval.increment(date);
       if (is_valid(interval.end) && date >= interval.end)
@@ -187,7 +187,7 @@ value_t args_command(call_scope_t& args)
   value_t::sequence_t::const_iterator begin = args.value().begin();
   value_t::sequence_t::const_iterator end   = args.value().end();
 
-  out << "--- Input arguments ---" << std::endl;
+  out << _("--- Input arguments ---") << std::endl;
   args.value().dump(out);
   out << std::endl << std::endl;
 

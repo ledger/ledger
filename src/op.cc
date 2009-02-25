@@ -67,10 +67,10 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
       if (left()->left()->is_ident())
 	scope.define(left()->left()->as_ident(), this);
       else
-	throw_(compile_error, "Invalid function definition");
+	throw_(compile_error, _("Invalid function definition"));
       break;
     default:
-      throw_(compile_error, "Invalid function definition");
+      throw_(compile_error, _("Invalid function definition"));
     }
     return wrap_value(value_t());
   }
@@ -106,7 +106,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 
   case IDENT: {
     if (! left())
-      throw_(calc_error, "Unknown identifier '" << as_ident() << "'");
+      throw_(calc_error, _("Unknown identifier '%1'") << as_ident());
 
     // Evaluating an identifier is the same as calling its definition
     // directly, so we create an empty call_scope_t to reflect the scope for
@@ -141,7 +141,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 	varname = sym->left();
 
       if (! varname->is_ident())
-	throw_(calc_error, "Invalid function definition");
+	throw_(calc_error, _("Invalid function definition"));
       else if (args_index == args_count)
 	local_scope.define(varname->as_ident(), wrap_value(false));
       else
@@ -151,7 +151,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 
     if (args_index < args_count)
       throw_(calc_error,
-	     "Too many arguments in function call (saw " << args_count << ")");
+	     _("Too many arguments in function call (saw %1)") << args_count);
 
     result = right()->compile(local_scope)->calc(local_scope, locus);
     break;
@@ -173,10 +173,10 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     }
     if (right()->kind != IDENT)
       throw_(calc_error,
-	     "Right operand of . operator must be an identifier");
+	     _("Right operand of . operator must be an identifier"));
     else
       throw_(calc_error,
-	     "Failed to lookup member '" << right()->as_ident() << "'");
+	     _("Failed to lookup member '%1'") << right()->as_ident());
     break;
 
   case O_CALL: {
@@ -190,7 +190,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 
     func = func->left();
     if (! func)
-      throw_(calc_error, "Calling unknown function '" << name << "'");
+      throw_(calc_error, _("Calling unknown function '%1'") << name);
 
     if (func->is_function())
       result = func->as_function()(call_args);

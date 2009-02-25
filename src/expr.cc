@@ -145,7 +145,7 @@ value_t expr_t::calc(scope_t& scope)
     }
     catch (const std::exception& err) {
       if (locus) {
-	add_error_context("While evaluating value expression:");
+	add_error_context(_("While evaluating value expression:"));
 	add_error_context(op_context(ptr, locus));
       }
       throw;
@@ -207,7 +207,7 @@ std::ostream& operator<<(std::ostream& out, const expr_t& expr) {
 
 string expr_context(const expr_t& expr)
 {
-  return expr ? op_context(expr.ptr) : "<empty expression>";
+  return expr ? op_context(expr.ptr) : _("<empty expression>");
 }
 
 } // namespace ledger

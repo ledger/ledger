@@ -251,7 +251,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	value.print(out, elem->min_width);
       }
       catch (const calc_error&) {
-	add_error_context("While calculating format expression:");
+	add_error_context(_("While calculating format expression:"));
 	add_error_context(expr_context(elem->expr));
 	throw;
       }

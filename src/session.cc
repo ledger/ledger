@@ -94,7 +94,7 @@ std::size_t session_t::read_journal(const path& pathname,
 				    account_t * master)
 {
   if (! exists(pathname))
-    throw_(std::logic_error, "Cannot read file" << pathname);
+    throw_(std::logic_error, _("Cannot read file '%1'") << pathname);
 
   ifstream stream(pathname);
   return read_journal(stream, pathname, master);
@@ -114,7 +114,7 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLED(price_db_)) {
     path price_db_path = resolve_path(HANDLER(price_db_).str());
     if (exists(price_db_path) && read_journal(price_db_path) > 0)
-	throw_(parse_error, "Transactions not allowed in price history file");
+	throw_(parse_error, _("Transactions not allowed in price history file"));
   }
 
   foreach (const path& pathname, HANDLER(file_).data_files) {
@@ -141,7 +141,7 @@ std::size_t session_t::read_data(const string& master_account)
       xact_count += read_journal(filename, acct);
     }
     else {
-      throw_(parse_error, "Could not read journal file '" << filename << "'");
+      throw_(parse_error, _("Could not read journal file '%1'") << filename);
     }
   }
 
@@ -160,8 +160,8 @@ void session_t::read_journal_files()
 
   std::size_t count = read_data(master_account);
   if (count == 0)
-    throw_(parse_error, "Failed to locate any transactions; "
-	   "did you specify a valid file with -f?");
+    throw_(parse_error,
+	   _("Failed to locate any transactions; did you specify a valid file with -f?"));
 
   INFO_FINISH(journal);
 

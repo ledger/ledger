@@ -47,11 +47,11 @@ namespace {
       time_xacts.clear();
     }
     else if (time_xacts.empty()) {
-      throw parse_error("Timelog check-out event without a check-in");
+      throw parse_error(_("Timelog check-out event without a check-in"));
     }
     else if (! account) {
       throw parse_error
-	("When multiple check-ins are active, checking out requires an account");
+	(_("When multiple check-ins are active, checking out requires an account"));
     }
     else {
       bool found = false;
@@ -68,7 +68,7 @@ namespace {
 
       if (! found)
 	throw parse_error
-	  ("Timelog check-out event does not match any current check-ins");
+	  (_("Timelog check-out event does not match any current check-ins"));
     }
 
     if (desc && event.desc.empty()) {
@@ -83,7 +83,7 @@ namespace {
 
     if (when < event.checkin)
       throw parse_error
-	("Timelog check-out date less than corresponding check-in");
+	(_("Timelog check-out date less than corresponding check-in"));
 
     char buf[32];
     std::sprintf(buf, "%lds", long((when - event.checkin).total_seconds()));
@@ -96,7 +96,7 @@ namespace {
     curr->add_post(post);
 
     if (! journal.add_xact(curr.get()))
-      throw parse_error("Failed to record 'out' timelog transaction");
+      throw parse_error(_("Failed to record 'out' timelog transaction"));
     else
       curr.release();
   }
@@ -129,7 +129,7 @@ void time_log_t::clock_in(const datetime_t& checkin,
   if (! time_xacts.empty()) {
     foreach (time_xact_t& time_xact, time_xacts) {
       if (event.account == time_xact.account)
-	throw parse_error("Cannot double check-in to the same account");
+	throw parse_error(_("Cannot double check-in to the same account"));
     }
   }
 
@@ -141,7 +141,7 @@ void time_log_t::clock_out(const datetime_t& checkin,
 			   const string&     desc)
 {
   if (time_xacts.empty())
-    throw std::logic_error("Timelog check-out event without a check-in");
+    throw std::logic_error(_("Timelog check-out event without a check-in"));
 
   clock_out_from_timelog(time_xacts, checkin, account, desc.c_str(),
 			 journal);

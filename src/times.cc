@@ -107,19 +107,19 @@ namespace {
 
 int string_to_day_of_week(const std::string& str)
 {
-  if (str == "sun" || str == "sunday" || str == "0")
+  if (str == _("sun") || str == _("sunday") || str == "0")
     return 0;
-  else if (str == "mon" || str == "monday" || str == "1")
+  else if (str == _("mon") || str == _("monday") || str == "1")
     return 1;
-  else if (str == "tue" || str == "tuesday" || str == "2")
+  else if (str == _("tue") || str == _("tuesday") || str == "2")
     return 2;
-  else if (str == "wed" || str == "wednesday" || str == "3")
+  else if (str == _("wed") || str == _("wednesday") || str == "3")
     return 3;
-  else if (str == "thu" || str == "thursday" || str == "4")
+  else if (str == _("thu") || str == _("thursday") || str == "4")
     return 4;
-  else if (str == "fri" || str == "friday" || str == "5")
+  else if (str == _("fri") || str == _("friday") || str == "5")
     return 5;
-  else if (str == "sat" || str == "saturday" || str == "6")
+  else if (str == _("sat") || str == _("saturday") || str == "6")
     return 6;
 
   assert(false);
@@ -197,7 +197,7 @@ namespace {
     struct std::tm when;
 
     if (! parse_date_mask(word.c_str(), when))
-      throw_(date_error, "Could not parse date mask: " << word);
+      throw_(date_error, _("Could not parse date mask: %1") << word);
 
     when.tm_hour   = 0;
     when.tm_min	   = 0;
@@ -251,23 +251,23 @@ namespace {
     bool mon_spec = false;
     char buf[32];
 
-    if (word == "this" || word == "last" || word == "next") {
+    if (word == _("this") || word == _("last") || word == _("next")) {
       type = word;
       if (! in.eof())
 	read_lower_word(in, word);
       else
-	word = "month";
+	word = _("month");
     } else {
-      type = "this";
+      type = _("this");
     }
 
-    if (word == "month") {
+    if (word == _("month")) {
       time_t now = to_time_t(CURRENT_TIME());
       std::strftime(buf, 31, "%B", localtime(&now));
       word = buf;
       mon_spec = true;
     }
-    else if (word == "year") {
+    else if (word == _("year")) {
       int year = CURRENT_DATE().year();
       std::sprintf(buf, "%04d", year);
       word = buf;
@@ -275,7 +275,7 @@ namespace {
 
     parse_inclusion_specifier(word, begin, end);
 
-    if (type == "last") {
+    if (type == _("last")) {
       if (mon_spec) {
 	if (begin)
 	  *begin = interval_t(0, -1, 0).increment(*begin);
@@ -288,7 +288,7 @@ namespace {
 	  *end   = interval_t(0, 0, -1).increment(*end);
       }
     }
-    else if (type == "next") {
+    else if (type == _("next")) {
       if (mon_spec) {
 	if (begin)
 	  *begin = interval_t(0, 1, 0).increment(*begin);
@@ -310,65 +310,65 @@ void interval_t::parse(std::istream& in)
 
   while (! in.eof()) {
     read_lower_word(in, word);
-    if (word == "every") {
+    if (word == _("every")) {
       read_lower_word(in, word);
       if (std::isdigit(word[0])) {
 	int quantity = lexical_cast<int>(word);
 	read_lower_word(in, word);
-	if (word == "days")
+	if (word == _("days"))
 	  days = quantity;
-	else if (word == "weeks") {
+	else if (word == _("weeks")) {
 	  days = 7 * quantity;
 	  weekly = true;
 	}
-	else if (word == "months")
+	else if (word == _("months"))
 	  months = quantity;
-	else if (word == "quarters")
+	else if (word == _("quarters"))
 	  months = 3 * quantity;
-	else if (word == "years")
+	else if (word == _("years"))
 	  years = quantity;
       }
-      else if (word == "day")
+      else if (word == _("day"))
 	days = 1;
-      else if (word == "week") {
+      else if (word == _("week")) {
 	days = 7;
 	weekly = true;
       }
-      else if (word == "month")
+      else if (word == _("month"))
 	months = 1;
-      else if (word == "quarter")
+      else if (word == _("quarter"))
 	months = 3;
-      else if (word == "year")
+      else if (word == _("year"))
 	years = 1;
     }
-    else if (word == "daily")
+    else if (word == _("daily"))
       days = 1;
-    else if (word == "weekly") {
+    else if (word == _("weekly")) {
       days = 7;
       weekly = true;
     }
-    else if (word == "biweekly")
+    else if (word == _("biweekly"))
       days = 14;
-    else if (word == "monthly")
+    else if (word == _("monthly"))
       months = 1;
-    else if (word == "bimonthly")
+    else if (word == _("bimonthly"))
       months = 2;
-    else if (word == "quarterly")
+    else if (word == _("quarterly"))
       months = 3;
-    else if (word == "yearly")
+    else if (word == _("yearly"))
       years = 1;
-    else if (word == "this" || word == "last" || word == "next") {
+    else if (word == _("this") || word == _("last") || word == _("next")) {
       parse_date_words(in, word, &begin, &end);
     }
-    else if (word == "in") {
+    else if (word == _("in")) {
       read_lower_word(in, word);
       parse_date_words(in, word, &begin, &end);
     }
-    else if (word == "from" || word == "since") {
+    else if (word == _("from") || word == _("since")) {
       read_lower_word(in, word);
       parse_date_words(in, word, &begin, NULL);
     }
-    else if (word == "to" || word == "until") {
+    else if (word == _("to") || word == _("until")) {
       read_lower_word(in, word);
       parse_date_words(in, word, NULL, &end);
     }

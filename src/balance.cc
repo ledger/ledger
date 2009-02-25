@@ -45,7 +45,7 @@ balance_t& balance_t::operator+=(const amount_t& amt)
 {
   if (amt.is_null())
     throw_(balance_error,
-	   "Cannot add an uninitialized amount to a balance");
+	   _("Cannot add an uninitialized amount to a balance"));
 
   if (amt.is_realzero())
     return *this;
@@ -70,7 +70,7 @@ balance_t& balance_t::operator-=(const amount_t& amt)
 {
   if (amt.is_null())
     throw_(balance_error,
-	   "Cannot subtract an uninitialized amount from a balance");
+	   _("Cannot subtract an uninitialized amount from a balance"));
 
   if (amt.is_realzero())
     return *this;
@@ -90,7 +90,7 @@ balance_t& balance_t::operator*=(const amount_t& amt)
 {
   if (amt.is_null())
     throw_(balance_error,
-	   "Cannot multiply a balance by an uninitialized amount");
+	   _("Cannot multiply a balance by an uninitialized amount"));
 
   if (is_realzero()) {
     ;
@@ -112,12 +112,12 @@ balance_t& balance_t::operator*=(const amount_t& amt)
       amounts.begin()->second *= amt;
     else
       throw_(balance_error,
-	     "Cannot multiply a balance with annotated commodities by a commoditized amount");
+	     _("Cannot multiply a balance with annotated commodities by a commoditized amount"));
   }
   else {
     assert(amounts.size() > 1);
     throw_(balance_error,
-	   "Cannot multiply a multi-commodity balance by a commoditized amount");
+	   _("Cannot multiply a multi-commodity balance by a commoditized amount"));
   }
   return *this;
 }
@@ -126,13 +126,13 @@ balance_t& balance_t::operator/=(const amount_t& amt)
 {
   if (amt.is_null())
     throw_(balance_error,
-	   "Cannot divide a balance by an uninitialized amount");
+	   _("Cannot divide a balance by an uninitialized amount"));
 
   if (is_realzero()) {
     ;
   }
   else if (amt.is_realzero()) {
-    throw_(balance_error, "Divide by zero");
+    throw_(balance_error, _("Divide by zero"));
   }
   else if (! amt.commodity()) {
     // Dividing by an amount with no commodity causes all the
@@ -148,12 +148,12 @@ balance_t& balance_t::operator/=(const amount_t& amt)
       amounts.begin()->second /= amt;
     else
       throw_(balance_error,
-	     "Cannot divide a balance with annotated commodities by a commoditized amount");
+	     _("Cannot divide a balance with annotated commodities by a commoditized amount"));
   }
   else {
     assert(amounts.size() > 1);
     throw_(balance_error,
-	   "Cannot divide a multi-commodity balance by a commoditized amount");
+	   _("Cannot divide a multi-commodity balance by a commoditized amount"));
   }
   return *this;
 }
@@ -193,7 +193,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 	return temp.commodity_amount(commodity);
 
       throw_(amount_error,
-	     "Requested amount of a balance with multiple commodities: " << temp);
+	     _("Requested amount of a balance with multiple commodities: %1") << temp);
     }
 #endif
   }
