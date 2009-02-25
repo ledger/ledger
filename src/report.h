@@ -383,7 +383,7 @@ public:
   OPTION(report_t, equity);
   OPTION(report_t, exact);
 
-  OPTION_(report_t, exchange_, DO_(args) { // -x
+  OPTION_(report_t, exchange_, DO_(args) { // -X
       on_with(args[0]);
       call_scope_t no_args(*parent);
       parent->HANDLER(market).parent = parent;

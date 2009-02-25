@@ -389,6 +389,9 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'W':
     OPT_CH(weekly);
     break;
+  case 'X':
+    OPT_CH(exchange_);
+    break;
   case 'Y':
     OPT_CH(yearly);
     break;
@@ -543,9 +546,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'w':
     OPT(weekly);
     else OPT_(wide);
-    break;
-  case 'x':
-    OPT_CH(exchange_);
     break;
   case 'y':
     OPT_CH(date_format_);
