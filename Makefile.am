@@ -317,7 +317,7 @@ all_tests_sources =				\
 	$(data_tests_SOURCES)			\
 	$(report_tests_SOURCES)
 
-PyUnitTests_SOURCES = test/__init__.py test/PyUnitTests.py
+PyUnitTests_SOURCES = test/PyUnitTests.py
 
 all_py_tests_sources = \
 	$(patsubst test/unit/%.cc,$(top_builddir)/test/python/%.py, \
