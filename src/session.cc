@@ -235,6 +235,11 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
+  case 'd':
+    if (is_eq(p, "date"))
+      return MAKE_FUNCTOR(session_t::fn_today);
+    break;
+
   case 'n':
     if (is_eq(p, "now"))
       return MAKE_FUNCTOR(session_t::fn_now);
