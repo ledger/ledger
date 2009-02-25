@@ -189,7 +189,7 @@ namespace {
 
   value_t get_count(post_t& post) {
     if (post.xdata_)
-      return post.xdata_->count;
+      return long(post.xdata_->count);
     else
       return 1L;
   }

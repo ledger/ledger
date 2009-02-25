@@ -176,12 +176,12 @@ namespace {
 
   value_t get_count(account_t& account) {
     assert(account.xdata_);
-    return account.xdata_->total_count;
+    return long(account.xdata_->total_count);
   }
 
   value_t get_subcount(account_t& account) {
     assert(account.xdata_);
-    return account.xdata_->count;
+    return long(account.xdata_->count);
   }
 
   value_t get_amount(account_t& account) {
