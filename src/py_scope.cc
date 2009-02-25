@@ -50,7 +50,7 @@ namespace {
 
   expr_t py_scope_getattr(scope_t& scope, const string& name)
   {
-    return scope.lookup(name);
+    return expr_t(scope.lookup(name), &scope);
   }
 
   struct scope_wrapper : public scope_t
