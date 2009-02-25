@@ -68,14 +68,6 @@ public:
 
   virtual void define(const string&, expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const string& name) = 0;
-
-  value_t resolve(const string& name) {
-    expr_t::ptr_op_t definition = lookup(name);
-    if (definition)
-      return definition->calc(*this);
-    else
-      return NULL_VALUE;
-  }
 };
 
 /**
@@ -258,36 +250,6 @@ inline T& find_scope(child_scope_t& scope, bool skip_this = true)
   return reinterpret_cast<T&>(scope); // never executed
 }
 
-/**
- * @brief Brief
- *
- * Long.
- */
-template <typename T>
-class ptr_t : public noncopyable
-{
-  T * value;
-
-  ptr_t();
-
-public:
-  ptr_t(scope_t& scope, const string& name)
-    : value(scope.resolve(name).template as_pointer<T>()) {
-    TRACE_CTOR(ptr_t, "scope_t&, const string&");
-  }
-  ptr_t(call_scope_t& scope, const std::size_t idx)
-    : value(scope[idx].template as_pointer<T>()) {
-    TRACE_CTOR(ptr_t, "call_scope_t&, const std::size_t");
-  }
-  ~ptr_t() throw() {
-    TRACE_DTOR(ptr_t);
-  }
-
-  T& operator *() { return *value; }
-  T * operator->() { return value; }
-};
-
 } // namespace ledger
 
 #endif // _SCOPE_H
-
