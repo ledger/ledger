@@ -93,6 +93,13 @@ value_t::operator bool() const
     return as_balance();
   case STRING:
     return ! as_string().empty();
+  case MASK: {
+    std::ostringstream out;
+    out << *this;
+    throw_(value_error,
+	   _("Cannot determine truth of %1 (did you mean 'account =~ %2'?)")
+	   << label() << out.str());
+  }
   case SEQUENCE:
     if (! as_sequence().empty()) {
       foreach (const value_t& value, as_sequence()) {
