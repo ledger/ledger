@@ -525,19 +525,27 @@ void instance_t::option_directive(char * line)
 
 void instance_t::automated_xact_directive(char * line)
 {
+  istream_pos_type pos	= line_beg_pos;
+  std::size_t      lnum = linenum;
+
+  bool reveal_context = true;
+
+  try {
+
   if (! auto_xact_finalizer.get()) {
     auto_xact_finalizer.reset(new auto_xact_finalizer_t(&journal));
     journal.add_xact_finalizer(auto_xact_finalizer.get());
   }
 
-  istream_pos_type pos	= curr_pos;
-  std::size_t      lnum = linenum;
-
   std::auto_ptr<auto_xact_t> ae
     (new auto_xact_t(item_predicate(skip_ws(line + 1),
 				     keep_details_t(true, true, true))));
 
+  reveal_context = false;
+
   if (parse_posts(account_stack.front(), *ae.get())) {
+    reveal_context = true;
+
     journal.auto_xacts.push_back(ae.get());
 
     ae->pathname = pathname;
@@ -548,18 +556,35 @@ void instance_t::automated_xact_directive(char * line)
 
     ae.release();
   }
+
+  }
+  catch (const std::exception& err) {
+    if (reveal_context) {
+      add_error_context(_("While parsing periodic transaction:"));
+      add_error_context(source_context(pathname, pos, curr_pos, "> "));
+    }
+    throw;
+  }
 }
 
 void instance_t::period_xact_directive(char * line)
 {
+  istream_pos_type pos	= line_beg_pos;
+  std::size_t      lnum = linenum;
+
+  bool reveal_context = true;
+
+  try {
+
   std::auto_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
   if (! pe->period)
     throw_(parse_error, _("Parsing time period '%1'") << line);
 
-  istream_pos_type pos	= curr_pos;
-  std::size_t      lnum = linenum;
+  reveal_context = false;
 
   if (parse_posts(account_stack.front(), *pe.get())) {
+    reveal_context = true;
+
     if (pe->finalize()) {
       extend_xact_base(&journal, *pe.get(), true);
 
@@ -575,6 +600,15 @@ void instance_t::period_xact_directive(char * line)
     } else {
       throw parse_error(_("Period transaction failed to balance"));
     }
+  }
+
+  }
+  catch (const std::exception& err) {
+    if (reveal_context) {
+      add_error_context(_("While parsing periodic transaction:"));
+      add_error_context(source_context(pathname, pos, curr_pos, "> "));
+    }
+    throw;
   }
 }
 
@@ -1043,17 +1077,21 @@ bool instance_t::parse_posts(account_t *   account,
   return added;
 }
 
-xact_t * instance_t::parse_xact(char *	  line,
-				  std::streamsize len,
-				  account_t *	  account)
+xact_t * instance_t::parse_xact(char *		line,
+				std::streamsize len,
+				account_t *	account)
 {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
-  std::auto_ptr<xact_t> curr(new xact_t);
+  std::auto_ptr<xact_t> xact(new xact_t);
 
-  curr->pathname = pathname;
-  curr->beg_pos  = line_beg_pos;
-  curr->beg_line = linenum;
+  xact->pathname = pathname;
+  xact->beg_pos  = line_beg_pos;
+  xact->beg_line = linenum;
+
+  bool reveal_context = true;
+
+  try {
 
   // Parse the date
 
@@ -1061,20 +1099,20 @@ xact_t * instance_t::parse_xact(char *	  line,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    curr->_date_eff = parse_date(p, current_year);
+    xact->_date_eff = parse_date(p, current_year);
   }
-  curr->_date = parse_date(line, current_year);
+  xact->_date = parse_date(line, current_year);
 
   // Parse the optional cleared flag: *
 
   if (next) {
     switch (*next) {
     case '*':
-      curr->_state = item_t::CLEARED;
+      xact->_state = item_t::CLEARED;
       next = skip_ws(++next);
       break;
     case '!':
-      curr->_state = item_t::PENDING;
+      xact->_state = item_t::PENDING;
       next = skip_ws(++next);
       break;
     }
@@ -1085,7 +1123,7 @@ xact_t * instance_t::parse_xact(char *	  line,
   if (next && *next == '(') {
     if (char * p = std::strchr(next++, ')')) {
       *p++ = '\0';
-      curr->code = next;
+      xact->code = next;
       next = skip_ws(p);
     }
   }
@@ -1093,16 +1131,16 @@ xact_t * instance_t::parse_xact(char *	  line,
   // Parse the description text
 
   if (next && *next) {
-    curr->payee = next;
+    xact->payee = next;
     next = next_element(next, true);
   } else {
-    curr->payee = _("<Unspecified payee>");
+    xact->payee = _("<Unspecified payee>");
   }
 
   // Parse the xact note
 
   if (next && *next == ';')
-    curr->append_note(next, current_year);
+    xact->append_note(next, current_year);
 
   TRACE_STOP(xact_text, 1);
 
@@ -1124,26 +1162,39 @@ xact_t * instance_t::parse_xact(char *	  line,
       if (last_post)
 	item = last_post;
       else
-	item = curr.get();
+	item = xact.get();
 
       // This is a trailing note, and possibly a metadata info tag
       item->append_note(p + 1, current_year);
       item->end_pos = curr_pos;
       item->end_line++;
-    }
-    else if (post_t * post = parse_post(p, len - (p - line), account,
-					curr.get())) {
-      curr->add_post(post);
-      last_post = post;
+    } else {
+      reveal_context = false;
+
+      if (post_t * post =
+	  parse_post(p, len - (p - line), account, xact.get())) {
+	xact->add_post(post);
+	last_post = post;
+      }
     }
   }
 
-  curr->end_pos  = curr_pos;
-  curr->end_line = linenum;
+  xact->end_pos  = curr_pos;
+  xact->end_line = linenum;
 
   TRACE_STOP(xact_details, 1);
 
-  return curr.release();
+  return xact.release();
+
+  }
+  catch (const std::exception& err) {
+    if (reveal_context) {
+      add_error_context(_("While parsing transaction:"));
+      add_error_context(source_context(xact->pathname,
+				       xact->beg_pos, curr_pos, "> "));
+    }
+    throw;
+  }
 }
 
 expr_t::ptr_op_t instance_t::lookup(const string& name)
