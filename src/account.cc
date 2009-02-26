@@ -196,6 +196,10 @@ namespace {
     return long(account.depth);
   }
 
+  value_t ignore(account_t&) {
+    return false;
+  }
+
   value_t get_depth_spacer(account_t& account)
   {
     std::size_t depth = 0;
@@ -258,6 +262,11 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 't':
     if (name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
+    break;
+
+  case 'u':
+    if (name == "use_direct_amount")
+      return WRAP_FUNCTOR(get_wrapper<&ignore>);
     break;
   }
 

@@ -213,14 +213,17 @@ void calc_posts::operator()(post_t& post)
 }
 
 namespace {
-  void handle_value(const value_t&	  value,
-		    account_t *		  account,
-		    xact_t *		  xact,
-		    unsigned int	  flags,
-		    std::list<post_t>&    temps,
-		    item_handler<post_t>& handler,
-		    const date_t&         date  = date_t(),
-		    const value_t&        total = value_t())
+  typedef function<void (post_t *)> post_functor_t;
+
+  void handle_value(const value_t&	            value,
+		    account_t *		            account,
+		    xact_t *		            xact,
+		    std::list<post_t>&              temps,
+		    item_handler<post_t>&           handler,
+		    const date_t&                   date          = date_t(),
+		    const value_t&                  total         = value_t(),
+		    const bool                      direct_amount = false,
+		    const optional<post_functor_t>& functor       = none)
   {
     temps.push_back(post_t(account));
     post_t& post(temps.back());
@@ -259,7 +262,7 @@ namespace {
     case value_t::BALANCE:
     case value_t::SEQUENCE:
       xdata.value = temp;
-      flags |= POST_EXT_COMPOUND;
+      xdata.add_flags(POST_EXT_COMPOUND);
       break;
 
     case value_t::DATETIME:
@@ -272,8 +275,13 @@ namespace {
     if (! total.is_null())
       xdata.total = total;
 
-    if (flags)
-      xdata.add_flags(flags);
+    if (direct_amount)
+      xdata.add_flags(POST_EXT_DIRECT_AMT);
+
+    if (functor)
+      (*functor)(&post);
+
+    DEBUG("filter.changed_value.rounding", "post.amount = " << post.amount);
 
     handler(post);
   }
@@ -314,7 +322,7 @@ void collapse_posts::report_subtotal()
 		      earliest_date : last_xact->_date);
     DEBUG("filter.collapse", "Pseudo-xact date = " << *xact._date);
 
-    handle_value(subtotal, &totals_account, &xact, 0, post_temps, *handler);
+    handle_value(subtotal, &totals_account, &xact, post_temps, *handler);
   }
 
   component_posts.clear();
@@ -374,7 +382,7 @@ void related_posts::flush()
   item_handler<post_t>::flush();
 }
 
-void changed_value_posts::output_diff(post_t * post, const date_t& date)
+void changed_value_posts::output_revaluation(post_t * post, const date_t& date)
 {
   if (is_valid(date))
     post->xdata().date = date;
@@ -391,36 +399,80 @@ void changed_value_posts::output_diff(post_t * post, const date_t& date)
   post->xdata().date = date_t();
 
   DEBUG("filter.changed_value",
-	"output_diff(last_balance) = " << last_balance);
+	"output_revaluation(last_balance) = " << last_total);
   DEBUG("filter.changed_value",
-	"output_diff(repriced_total) = " << repriced_total);
+	"output_revaluation(repriced_total) = " << repriced_total);
 
-  if (value_t diff = repriced_total - last_balance) {
-    DEBUG("filter.changed_value", "output_diff(strip(diff)) = "
-	  << diff.strip_annotations(report.what_to_keep()));
+  if (! last_total.is_null()) {
+    if (value_t diff = repriced_total - last_total) {
+      DEBUG("filter.changed_value", "output_revaluation(strip(diff)) = "
+	    << diff.strip_annotations(report.what_to_keep()));
 
-    xact_temps.push_back(xact_t());
-    xact_t& xact = xact_temps.back();
-    xact.payee = _("Commodities revalued");
-    xact._date = is_valid(date) ? date : post->date();
+      xact_temps.push_back(xact_t());
+      xact_t& xact = xact_temps.back();
+      xact.payee = _("Commodities revalued");
+      xact._date = is_valid(date) ? date : post->date();
 
-    handle_value(diff, &revalued_account, &xact, POST_EXT_NO_TOTAL,
-		 post_temps, *handler, *xact._date, repriced_total);
+      handle_value(diff, &revalued_account, &xact, post_temps, *handler,
+		   *xact._date, repriced_total, false,
+		   optional<post_functor_t>
+		   (bind(&changed_value_posts::output_rounding, this, _1)));
+    }
   }
+}
+
+void changed_value_posts::output_rounding(post_t * post)
+{
+  bind_scope_t bound_scope(report, *post);
+  value_t      new_display_total(display_total_expr.calc(bound_scope));
+
+  DEBUG("filter.changed_value.rounding",
+	"rounding.new_display_total     = " << new_display_total);
+
+  if (! last_display_total.is_null()) {
+    if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
+      DEBUG("filter.changed_value.rounding",
+	    "rounding.repriced_amount       = " << repriced_amount);
+
+      value_t precise_display_total(new_display_total.truncated() -
+				    repriced_amount.truncated());
+
+      DEBUG("filter.changed_value.rounding",
+	    "rounding.precise_display_total = " << precise_display_total);
+      DEBUG("filter.changed_value.rounding",
+	    "rounding.last_display_total    = " << last_display_total);
+
+      if (value_t diff = precise_display_total - last_display_total) {
+	DEBUG("filter.changed_value.rounding",
+	      "rounding.diff                  = " << diff);
+
+	xact_temps.push_back(xact_t());
+	xact_t& xact = xact_temps.back();
+	xact.payee = _("Commodity rounding");
+	xact._date = post->date();
+
+	handle_value(diff, &rounding_account, &xact, post_temps,
+		     *handler, *xact._date, precise_display_total, true);
+      }
+    }    
+  }
+  last_display_total = new_display_total;
 }
 
 void changed_value_posts::operator()(post_t& post)
 {
   if (last_post)
-    output_diff(last_post, post.date());
+    output_revaluation(last_post, post.date());
 
   if (changed_values_only)
     post.xdata().add_flags(POST_EXT_DISPLAYED);
 
+  output_rounding(&post);
+
   item_handler<post_t>::operator()(post);
 
   bind_scope_t bound_scope(report, post);
-  last_balance = total_expr.calc(bound_scope);
+  last_total = total_expr.calc(bound_scope);
 
   last_post = &post;
 }
@@ -462,8 +514,8 @@ void subtotal_posts::report_subtotal(const char *  spec_fmt,
   xact._date = range_start;
 
   foreach (values_map::value_type& pair, values)
-    handle_value(pair.second.value, pair.second.account, &xact, 0,
-		 post_temps, *handler);
+    handle_value(pair.second.value, pair.second.account, &xact, post_temps,
+		 *handler);
 
   values.clear();
 }
@@ -581,8 +633,8 @@ void posts_as_equity::report_subtotal()
 
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
-    handle_value(pair.second.value, pair.second.account, &xact, 0,
-		 post_temps, *handler);
+    handle_value(pair.second.value, pair.second.account, &xact, post_temps,
+		 *handler);
     total += pair.second.value;
   }
   values.clear();

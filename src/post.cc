@@ -158,6 +158,10 @@ namespace {
     }
   }
 
+  value_t get_use_direct_amount(post_t& post) {
+    return post.has_xdata() && post.xdata().has_flags(POST_EXT_DIRECT_AMT);
+  }
+
   value_t get_commodity(post_t& post) {
     return string_value(post.amount.commodity().symbol());
   }
@@ -282,6 +286,11 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
 
+  case 'u':
+    if (name == "use_direct_amount")
+      return WRAP_FUNCTOR(get_wrapper<&get_use_direct_amount>);
+    break;
+
   case 'v':
     if (name == "virtual")
       return WRAP_FUNCTOR(get_wrapper<&get_virtual>);
@@ -333,8 +342,7 @@ void post_t::add_to_value(value_t& value, expr_t& expr)
 {
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
     add_or_set_value(value, xdata_->value);
-  }
-  else if (! xdata_ || ! xdata_->has_flags(POST_EXT_NO_TOTAL)) {
+  } else {
     bind_scope_t bound_scope(*expr.get_context(), *this);
     add_or_set_value(value, expr.calc(bound_scope));
   }

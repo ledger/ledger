@@ -240,16 +240,16 @@ endif
 TESTS =
 
 if HAVE_PYTHON
-TESTS += RegressionTests BaselineTests
+TESTS += RegressTests BaselineTests ConfirmTests
 endif
 
 if HAVE_CPPUNIT
 TESTS +=	     \
-	util_tests   \
-	math_tests   \
-	expr_tests   \
-	data_tests   \
-	report_tests
+	UtilTests   \
+	MathTests   \
+	ExprTests   \
+	DataTests   \
+	ReportTests
 endif
 
 if HAVE_BOOST_PYTHON
@@ -258,22 +258,22 @@ endif
 
 check_PROGRAMS = $(TESTS)
 
-util_tests_SOURCES =		 \
+UtilTests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/util_tests.cc	 \
+	test/UtilTests.cc	 \
 	test/unit/t_utils.cc	 \
 	test/unit/t_utils.h	 \
 	test/unit/t_times.cc	 \
 	test/unit/t_times.h
 
-util_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-util_tests_LDADD    = libledger_util.la -lcppunit
+UtilTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+UtilTests_LDADD    = libledger_util.la -lcppunit
 
-math_tests_SOURCES =		 \
+MathTests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/math_tests.cc	 \
+	test/MathTests.cc	 \
 	test/unit/t_commodity.cc \
 	test/unit/t_commodity.h	 \
 	test/unit/t_amount.cc	 \
@@ -281,41 +281,41 @@ math_tests_SOURCES =		 \
 	test/unit/t_balance.cc	 \
 	test/unit/t_balance.h
 
-math_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-math_tests_LDADD    = libledger_math.la $(util_tests_LDADD)
+MathTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+MathTests_LDADD    = libledger_math.la $(UtilTests_LDADD)
 
-expr_tests_SOURCES =		 \
+ExprTests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/expr_tests.cc	 \
+	test/ExprTests.cc	 \
 	test/unit/t_expr.cc	 \
 	test/unit/t_expr.h
 
-expr_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-expr_tests_LDADD    = libledger_expr.la $(math_tests_LDADD)
+ExprTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+ExprTests_LDADD    = libledger_expr.la $(MathTests_LDADD)
 
-data_tests_SOURCES =		 \
+DataTests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/data_tests.cc
+	test/DataTests.cc
 
-data_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-data_tests_LDADD    = libledger_data.la $(expr_tests_LDADD)
+DataTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+DataTests_LDADD    = libledger_data.la $(ExprTests_LDADD)
 
-report_tests_SOURCES =		 \
+ReportTests_SOURCES =		 \
 	test/UnitTests.cc	 \
 	test/UnitTests.h	 \
-	test/report_tests.cc
+	test/ReportTests.cc
 
-report_tests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-report_tests_LDADD    = libledger_report.la $(data_tests_LDADD)
+ReportTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
+ReportTests_LDADD    = libledger_report.la $(DataTests_LDADD)
 
 all_tests_sources =				\
-	$(util_tests_SOURCES)			\
-	$(math_tests_SOURCES)			\
-	$(expr_tests_SOURCES)			\
-	$(data_tests_SOURCES)			\
-	$(report_tests_SOURCES)
+	$(UtilTests_SOURCES)			\
+	$(MathTests_SOURCES)			\
+	$(ExprTests_SOURCES)			\
+	$(DataTests_SOURCES)			\
+	$(ReportTests_SOURCES)
 
 PyUnitTests_SOURCES = test/PyUnitTests.py
 
@@ -358,31 +358,39 @@ PyUnitTests: $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%builddir%/$(ESC_builddir)/g" > $@
 	chmod 755 $@
 
-RegressionTests_SOURCES = test/regress.py
+RegressTests_SOURCES = test/RegressTests.py
 
 EXTRA_DIST += test/regress test/convert.py
 
-RegressionTests: $(srcdir)/test/regress.py
-	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
+RegressTests: $(srcdir)/test/RegressTests.py
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
 	chmod 755 $@
 
-BaselineTests_SOURCES = test/regress.py
+BaselineTests_SOURCES = test/RegressTests.py
 
 EXTRA_DIST += test/baseline
 
-BaselineTests: $(srcdir)/test/regress.py
-	echo "$(PYTHON) $(srcdir)/test/regress.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/baseline" > $@
+BaselineTests: $(srcdir)/test/RegressTests.py
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/baseline" > $@
 	chmod 755 $@
 
-FULLCHECK=$(srcdir)/tools/fullcheck
+ConfirmTests_SOURCES = test/ConfirmTests.py
+
+EXTRA_DIST += test/input
+
+ConfirmTests: $(srcdir)/test/ConfirmTests.py
+	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input" > $@
+	chmod 755 $@
+
+FULLCHECK=$(srcdir)/test/fullcheck.sh
 
 if HAVE_CPPUNIT
 fullcheck: $(TESTS)
-	sh $(FULLCHECK) $(top_builddir)/util_tests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/math_tests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/expr_tests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/data_tests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/report_tests$(EXEEXT) --verify
+	sh $(FULLCHECK) $(top_builddir)/UtilTests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/ExprTests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify
+	sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify
 else
 fullcheck: check
 	@test 1 -eq 1

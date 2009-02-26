@@ -125,6 +125,8 @@ def test_regression(test_file):
     if success:
         succeeded += 1
         print ".",
+    else:
+        print "E",
 
     if not use_stdin:
         os.remove(tempdata[1])

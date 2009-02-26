@@ -449,12 +449,16 @@ class changed_value_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
+  expr_t    display_amount_expr;
   expr_t    total_expr;
+  expr_t    display_total_expr;
   report_t& report;
   bool	    changed_values_only;
   post_t *  last_post;
-  value_t   last_balance;
+  value_t   last_total;
+  value_t   last_display_total;
   account_t revalued_account;
+  account_t rounding_account;
 
   std::list<xact_t> xact_temps;
   std::list<post_t>  post_temps;
@@ -463,14 +467,19 @@ class changed_value_posts : public item_handler<post_t>
 
 public:
   changed_value_posts(post_handler_ptr handler,
+		      const expr_t&    _display_amount_expr,
 		      const expr_t&    _total_expr,
+		      const expr_t&    _display_total_expr,
 		      report_t&        _report,
 		      bool	       _changed_values_only)
-    : item_handler<post_t>(handler), total_expr(_total_expr),
-      report(_report), changed_values_only(_changed_values_only),
-      last_post(NULL), revalued_account(NULL, _("<Revalued>")) {
+    : item_handler<post_t>(handler),
+      display_amount_expr(_display_amount_expr), total_expr(_total_expr),
+      display_total_expr(_display_total_expr), report(_report),
+      changed_values_only(_changed_values_only), last_post(NULL),
+      revalued_account(NULL, _("<Revalued>")),
+      rounding_account(NULL, _("<Rounding>")){
     TRACE_CTOR(changed_value_posts,
-	       "post_handler_ptr, const expr_t&, report_t&, bool");
+	       "post_handler_ptr, const expr_t&, const expr_t&, report_t&, bool");
   }
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
@@ -479,13 +488,14 @@ public:
 
   virtual void flush() {
     if (last_post && last_post->date() <= CURRENT_DATE()) {
-      output_diff(last_post, CURRENT_DATE());
+      output_revaluation(last_post, CURRENT_DATE());
       last_post = NULL;
     }
     item_handler<post_t>::flush();
   }
 
-  void output_diff(post_t * post, const date_t& current);
+  void output_revaluation(post_t * post, const date_t& current);
+  void output_rounding(post_t * post);
 
   virtual void operator()(post_t& post);
 };
