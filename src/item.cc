@@ -140,7 +140,8 @@ void item_t::parse_tags(const char * p, int current_year)
        q = std::strtok(NULL, " \t")) {
     const std::size_t len = std::strlen(q);
     if (! tag.empty()) {
-      set_tag(tag, string(p + (q - buf.get())));
+      if (! has_tag(tag))
+	set_tag(tag, string(p + (q - buf.get())));
       break;
     }
     else if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
