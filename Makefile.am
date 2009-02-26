@@ -418,7 +418,7 @@ dist-hook:
 distclean-local:
 	rm -fr doc/html doc/latex
 	rm -f doc/refman.pdf
-	rm -f test/python
+	rm -fr test/python
 
 ESC_top_builddir=`cd $(top_builddir); pwd | sed 's/\//\\\\\//g'`
 
