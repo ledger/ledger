@@ -810,13 +810,9 @@ post_t * instance_t::parse_post(char *		line,
     post->account = account->find_account(name);
 
   if (honor_strict && strict && ! post->account->known) {
-    if (post->_state == item_t::UNCLEARED) {
-      straccstream accum;
-      std::cerr
-	<< ACCUM(accum << _("Warning: \"%1\", line %2: Unknown account '%3'")
-		 << pathname << linenum << post->account->fullname())
-	<< std::endl;
-    }
+    if (post->_state == item_t::UNCLEARED)
+      warning_(_("\"%1\", line %2: Unknown account '%3'")
+	       << pathname << linenum << post->account->fullname());
     post->account->known = true;
   }
 
@@ -840,13 +836,9 @@ post_t * instance_t::parse_post(char *		line,
     if (! post->amount.is_null() && honor_strict && strict &&
 	post->amount.has_commodity() &&
 	! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
-      if (post->_state == item_t::UNCLEARED) {
-	straccstream accum;
-	std::cerr
-	  << ACCUM(accum << _("Warning: \"%1\", line %2: Unknown commodity '%3'")
-		   << pathname << linenum << post->amount.commodity())
-	  << std::endl;
-      }
+      if (post->_state == item_t::UNCLEARED)
+	warning_(_("\"%1\", line %2: Unknown commodity '%3'")
+		 << pathname << linenum << post->amount.commodity());
       post->amount.commodity().add_flags(COMMODITY_KNOWN);
     }
 

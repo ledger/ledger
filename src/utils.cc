@@ -300,8 +300,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
   live_objects_map::iterator i = live_objects->find(ptr);
   if (i == live_objects->end()) {
-    std::cerr << "Attempting to delete " << ptr << " a non-living " << cls_name
-	      << std::endl;
+    warning_(_("Attempting to delete %1 a non-living %2") << ptr << cls_name);
     memory_tracing_active = true;
     return;
   }
@@ -316,8 +315,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
   object_count_map::iterator k = live_object_count->find(cls_name);
   if (k == live_object_count->end()) {
-    std::cerr << "Failed to find " << cls_name << " in live object counts"
-	      << std::endl;
+    warning_(_("Failed to find %1 in live object counts") << cls_name);
     memory_tracing_active = true;
     return;
   }

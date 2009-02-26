@@ -64,6 +64,16 @@ inline void throw_func(const string& message) {
    _desc_accum.clear(),				\
    throw_func<cls>(_desc_buffer.str()))
 
+inline void warning_func(const string& message) {
+  std::cerr << "Warning: " << message << std::endl;
+  _desc_buffer.str("");
+}
+
+#define warning_(msg)				\
+  ((_desc_buffer << ACCUM(_desc_accum << msg)),	\
+   _desc_accum.clear(),				\
+   warning_func(_desc_buffer.str()))
+
 extern straccstream	  _ctxt_accum;
 extern std::ostringstream _ctxt_buffer;
 

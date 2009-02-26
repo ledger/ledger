@@ -152,9 +152,7 @@ void python_interpreter_t::initialize()
       }
     }
     if (! path_initialized)
-      std::cerr
-	<< _("Warning: Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH")
-	<< std::endl;
+      warning_(_("Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH"));
   }
   catch (const error_already_set&) {
     PyErr_Print();
