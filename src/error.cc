@@ -77,4 +77,40 @@ string line_context(const string& line,
   return buf.str();
 }
 
+string source_context(const path&   file,
+		      std::size_t   pos,
+		      std::size_t   end_pos,
+		      const string& prefix)
+{
+  std::size_t len = end_pos - pos;
+  if (! len)
+    return _("<no source context>");
+
+  assert(len > 0);
+  assert(len < 2048);
+
+  std::ostringstream out;
+      
+  ifstream in(file);
+  in.seekg(pos, std::ios::beg);
+      
+  scoped_array<char> buf(new char[len + 1]);
+  in.read(buf.get(), len);
+  assert(static_cast<std::size_t>(in.gcount()) == len);
+  buf[len] = '\0';
+
+  bool first = true;
+  for (char * p = std::strtok(buf.get(), "\n");
+       p;
+       p = std::strtok(NULL, "\n")) {
+    if (first)
+      first = false;
+    else
+      out << '\n';
+    out << prefix << p;
+  }
+
+  return out.str();
+}
+
 } // namespace ledger

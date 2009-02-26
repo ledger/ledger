@@ -367,30 +367,9 @@ bool item_t::valid() const
   return true;
 }
 
-void print_item(std::ostream& out,
-		const item_t& item,
-		const string& prefix)
+void print_item(std::ostream& out, const item_t& item, const string& prefix)
 {
-  std::size_t len = item.end_pos - item.beg_pos;
-
-  ifstream in(item.pathname);
-  in.seekg(item.beg_pos, std::ios::beg);
-      
-  scoped_array<char> buf(new char[len + 1]);
-  in.read(buf.get(), len);
-  assert(static_cast<std::size_t>(in.gcount()) == len);
-  buf[len] = '\0';
-
-  bool first = true;
-  for (char * p = std::strtok(buf.get(), "\n");
-       p;
-       p = std::strtok(NULL, "\n")) {
-    if (first)
-      first = false;
-    else
-      out << '\n';
-    out << prefix << p;
-  }
+  out << source_context(item.pathname, item.beg_pos, item.end_pos, prefix);
 }
 
 string item_context(const item_t& item, const string& desc)
