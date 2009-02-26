@@ -271,7 +271,8 @@ amount_t& amount_t::operator+=(const amount_t& amt)
       throw_(amount_error, _("Cannot add two uninitialized amounts"));
   }
 
-  if (commodity() != amt.commodity())
+  if (has_commodity() && amt.has_commodity() &&
+      commodity() != amt.commodity())
     throw_(amount_error,
 	   _("Adding amounts with different commodities: %1 != %2")
 	   << (has_commodity() ? commodity().symbol() : _("NONE"))
@@ -281,8 +282,9 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
   mpq_add(MP(quantity), MP(quantity), MP(amt.quantity));
 
-  if (quantity->prec < amt.quantity->prec)
-    quantity->prec = amt.quantity->prec;
+  if (has_commodity() == amt.has_commodity())
+    if (quantity->prec < amt.quantity->prec)
+      quantity->prec = amt.quantity->prec;
 
   return *this;
 }
@@ -300,7 +302,8 @@ amount_t& amount_t::operator-=(const amount_t& amt)
       throw_(amount_error, _("Cannot subtract two uninitialized amounts"));
   }
 
-  if (commodity() != amt.commodity())
+  if (has_commodity() && amt.has_commodity() &&
+      commodity() != amt.commodity())
     throw_(amount_error,
 	   _("Subtracting amounts with different commodities: %1 != %2")
 	   << (has_commodity() ? commodity().symbol() : _("NONE"))
@@ -310,8 +313,9 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
   mpq_sub(MP(quantity), MP(quantity), MP(amt.quantity));
 
-  if (quantity->prec < amt.quantity->prec)
-    quantity->prec = amt.quantity->prec;
+  if (has_commodity() == amt.has_commodity())
+    if (quantity->prec < amt.quantity->prec)
+      quantity->prec = amt.quantity->prec;
 
   return *this;
 }

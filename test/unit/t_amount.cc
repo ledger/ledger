@@ -540,11 +540,11 @@ void AmountTestCase::testCommodityAddition()
   assertThrow(x1 + x3, amount_error);
   assertThrow(x1 + x4, amount_error);
   assertThrow(x1 + x5, amount_error);
-  assertThrow(x1 + x6, amount_error);
+  assertEqual(string("$246.90"), (x1 + x6).to_string());
 #ifndef NOT_FOR_PYTHON
-  assertThrow(x1 + 123.45, amount_error);
+  assertEqual(string("$246.90"), (x1 + 123.45).to_string());
 #endif // NOT_FOR_PYTHON
-  assertThrow(x1 + 123L, amount_error);
+  assertEqual(string("$246.45"), (x1 + 123L).to_string());
 
   assertEqual(amount_t("DM 246.90"), x3 + x3);
   assertEqual(amount_t("246.90 euro"), x4 + x4);
@@ -656,11 +656,11 @@ void AmountTestCase::testCommoditySubtraction()
   assertThrow(x1 - x3, amount_error);
   assertThrow(x1 - x4, amount_error);
   assertThrow(x1 - x5, amount_error);
-  assertThrow(x1 - x6, amount_error);
+  assertEqual(string("$0.00"), (x1 - x6).to_string());
 #ifndef NOT_FOR_PYTHON
-  assertThrow(x1 - 123.45, amount_error);
+  assertEqual(string("$-0.00"), (x1 - 123.45).to_string());
 #endif // NOT_FOR_PYTHON
-  assertThrow(x1 - 123L, amount_error);
+  assertEqual(string("$0.45"), (x1 - 123L).to_string());
 
   assertEqual(amount_t("DM 0.00"), x3 - x3);
   assertEqual(amount_t("DM 23.45"), x3 - amount_t("DM 100.00"));
