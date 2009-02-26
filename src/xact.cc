@@ -407,6 +407,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
+  try {
+
   foreach (post_t * initial_post, initial_posts) {
     if (! initial_post->has_flags(ITEM_GENERATED) &&
 	predicate(*initial_post)) {
@@ -459,6 +461,13 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 	xact.add_post(new_post);
       }
     }
+  }
+
+  }
+  catch (const std::exception& err) {
+    add_error_context(item_context(*this, _("While applying automated transaction")));
+    add_error_context(item_context(xact, _("While extending transaction")));
+    throw;
   }
 }
 
