@@ -2,8 +2,56 @@
 
 set -e
 
-tools/prepall
-tools/buildall clean check
+echo %%% Configuring --opt %%%
+if ! tools/myacprep --opt; then
+    echo %%% FAILED to configure --opt %%%
+    exit 1
+fi
 
-cd ~/Products/ledger
-make fullcheck release-distcheck
+echo %%% Building --opt %%%
+if ! (cd ~/Products/ledger-opt && make clean fullcheck); then
+    echo %%% FAILED to build --opt %%%
+    exit 1
+fi
+
+echo %%% Configuring --gprof %%%
+if ! tools/myacprep --gprof; then
+    echo %%% FAILED to configure --gprof %%%
+    exit 1
+fi
+
+echo %%% Building --gprof %%%
+if ! (cd ~/Products/ledger-gprof && make clean fullcheck); then
+    echo %%% FAILED to build --gprof %%%
+    exit 1
+fi
+
+echo %%% Configuring --gcov %%%
+if ! tools/myacprep --gcov; then
+    echo %%% FAILED to configure --gcov %%%
+    exit 1
+fi
+
+echo %%% Building --gcov %%%
+if ! (cd ~/Products/ledger-gcov && make clean fullcheck); then
+    echo %%% FAILED to build --gcov %%%
+    exit 1
+fi
+
+echo %%% Configuring std %%%
+if ! tools/myacprep; then
+    echo %%% FAILED to configure std %%%
+    exit 1
+fi
+
+echo %%% Building std %%%
+if ! (cd ~/Products/ledger-opt && make clean fullcheck); then
+    echo %%% FAILED to build std %%%
+    exit 1
+fi
+
+echo %%% Building release-distcheck %%%
+if ! (cd ~/Products/ledger-opt && make release-distcheck); then
+    echo %%% FAILED to build release-distcheck %%%
+    exit 1
+fi
