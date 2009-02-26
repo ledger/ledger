@@ -84,7 +84,14 @@ public:
   }
 
   bool operator()(scope_t& item) {
-    return ! predicate || predicate.calc(item).strip_annotations(what_to_keep);
+    try {
+      return ! predicate || predicate.calc(item).strip_annotations(what_to_keep);
+    }
+    catch (const std::exception& err) {
+      add_error_context(_("While determining truth of predicate expression:"));
+      add_error_context(expr_context(predicate));
+      throw;
+    }
   }
 };
 
