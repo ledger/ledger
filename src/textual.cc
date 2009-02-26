@@ -635,7 +635,7 @@ void instance_t::xact_directive(char * line, std::streamsize len)
 
 void instance_t::include_directive(char * line)
 {
-  path filename(next_element(line));
+  path filename(line);
 
 #if 0
   if (filename[0] != '/' && filename[0] != '\\' && filename[0] != '~') {
@@ -667,8 +667,7 @@ void instance_t::include_directive(char * line)
 
 void instance_t::account_directive(char * line)
 {
-  if (account_t * acct =
-      account_stack.front()->find_account(next_element(line)))
+  if (account_t * acct = account_stack.front()->find_account(line))
     account_stack.push_front(acct);
   else
     assert(! "Failed to create account");
@@ -676,12 +675,18 @@ void instance_t::account_directive(char * line)
 
 void instance_t::end_directive(char *)
 {
-  account_stack.pop_front();
+  // jww (2009-02-26): Allow end to be "end account" or "end tag".  End by
+  // itself is assumed to be "end account".
+  if (account_stack.empty())
+    throw_(std::runtime_error,
+	   _("'end' directive found, but no account currently active"));
+  else
+    account_stack.pop_back();
 }
 
 void instance_t::alias_directive(char * line)
 {
-  char * b = skip_ws(line + 1);
+  char * b = skip_ws(line);
   if (char * e = std::strchr(b, '=')) {
     char * z = e - 1;
     while (std::isspace(*z))
@@ -702,58 +707,57 @@ void instance_t::alias_directive(char * line)
 
 void instance_t::define_directive(char * line)
 {
-  expr_t def(skip_ws(line + 1));
+  expr_t def(skip_ws(line));
   def.compile(session_scope);	// causes definitions to be established
 }
 
 void instance_t::general_directive(char * line)
 {
-  char * p = next_element(line);
-  if (! p)
-    return;
+  char * p   = line;
+  char * arg = next_element(line);
 
-  string word(line + 1);
+  if (*p == '@' || *p == '!')
+    p++;
 
   switch (*p) {
   case 'a':
     if (std::strcmp(p, "account") == 0) {
-      account_directive(line);
+      account_directive(arg);
       return;
     }
     else if (std::strcmp(p, "alias") == 0) {
-      alias_directive(line);
+      alias_directive(arg);
       return;
     }
     break;
 
   case 'd':
     if (std::strcmp(p, "def") == 0) {
-      define_directive(line);
+      define_directive(arg);
       return;
     }
     break;
 
   case 'e':
     if (std::strcmp(p, "end") == 0) {
-      end_directive(line);
+      end_directive(arg);
       return;
     }
     break;
 
   case 'i':
     if (std::strcmp(p, "include") == 0) {
-      include_directive(line);
+      include_directive(arg);
       return;
     }
     break;
   }
 
-  static const std::size_t textdir_len = std::strlen("dir_");
-  scoped_array<char> directive(new char[std::strlen(p) + textdir_len + 1]);
-  std::strcpy(directive.get(), "dir_");
-  std::strcpy(directive.get() + textdir_len, p);
-
   // jww (2009-02-10): This needs some serious work.
+  scoped_array<char> directive(new char[std::strlen(p) + DIR_PREFIX_LEN + 1]);
+  std::strcpy(directive.get(),DIR_PREFIX);
+  std::strcpy(directive.get() + DIR_PREFIX_LEN, p);
+
   if (expr_t::ptr_op_t op = lookup(directive.get())) {
     call_scope_t args(*this);
     args.push_back(string_value(p));
