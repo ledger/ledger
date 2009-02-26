@@ -1282,6 +1282,12 @@ value_t value_t::rounded() const
     return as_amount().rounded();
   case BALANCE:
     return as_balance().rounded();
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.rounded());
+    return temp;
+  }
   default:
     break;
   }
@@ -1299,6 +1305,12 @@ value_t value_t::unrounded() const
     return as_amount().unrounded();
   case BALANCE:
     return as_balance().unrounded();
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.unrounded());
+    return temp;
+  }
   default:
     break;
   }
