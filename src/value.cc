@@ -1296,6 +1296,29 @@ value_t value_t::rounded() const
   return NULL_VALUE;
 }
 
+value_t value_t::truncated() const
+{
+  switch (type()) {
+  case INTEGER:
+    return *this;
+  case AMOUNT:
+    return as_amount().truncated();
+  case BALANCE:
+    return as_balance().truncated();
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.truncated());
+    return temp;
+  }
+  default:
+    break;
+  }
+
+  throw_(value_error, _("Cannot truncate %1") << label());
+  return NULL_VALUE;
+}
+
 value_t value_t::unrounded() const
 {
   switch (type()) {

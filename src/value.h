@@ -410,6 +410,7 @@ public:
   value_t abs() const;
 
   value_t rounded() const;
+  value_t truncated() const;
   value_t unrounded() const;
 
   value_t reduced() const {

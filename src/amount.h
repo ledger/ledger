@@ -322,6 +322,12 @@ public:
       @see set_keep_precision */
   amount_t rounded() const;
 
+  /** Yields an amount which has lost all of its extra precision, beyond what
+      the display precision of the commodity would have printed. */
+  amount_t truncated() const {
+    return amount_t(to_string());
+  }
+
   /** Yields an amount whose display precision is never truncated, even
       though its commodity normally displays only rounded values. */
   amount_t unrounded() const;

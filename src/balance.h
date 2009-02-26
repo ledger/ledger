@@ -318,6 +318,13 @@ public:
     return temp;
   }
 
+  balance_t truncated() const {
+    balance_t temp;
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.truncated();
+    return temp;
+  }
+
   balance_t unrounded() const {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
