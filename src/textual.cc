@@ -46,6 +46,7 @@ namespace {
 
   public:
     std::list<account_t *>& account_stack;
+    std::list<string>&      tag_stack;
 #if defined(TIMELOG_SUPPORT)
     time_log_t&		    timelog;
 #endif
@@ -71,6 +72,7 @@ namespace {
     scoped_ptr<auto_xact_finalizer_t> auto_xact_finalizer;
 
     instance_t(std::list<account_t *>& _account_stack,
+	       std::list<string>&      _tag_stack,
 #if defined(TIMELOG_SUPPORT)
 	       time_log_t&             _timelog,
 #endif
@@ -111,6 +113,8 @@ namespace {
     void account_directive(char * line);
     void end_directive(char * line);
     void alias_directive(char * line);
+    void tag_directive(char * line);
+    void pop_directive(char * line);
     void define_directive(char * line);
     void general_directive(char * line);
 
@@ -163,6 +167,7 @@ namespace {
 }
 
 instance_t::instance_t(std::list<account_t *>& _account_stack,
+		       std::list<string>&      _tag_stack,
 #if defined(TIMELOG_SUPPORT)
 		       time_log_t&             _timelog,
 #endif
@@ -173,13 +178,13 @@ instance_t::instance_t(std::list<account_t *>& _account_stack,
 		       const path *	       _original_file,
 		       bool                    _strict,
 		       instance_t *            _parent)
-    : account_stack(_account_stack),
+  : account_stack(_account_stack), tag_stack(_tag_stack),
 #if defined(TIMELOG_SUPPORT)
-      timelog(_timelog),
+    timelog(_timelog),
 #endif
-      parent(_parent), in(_in), session_scope(_session_scope),
-      journal(_journal), master(_master),
-      original_file(_original_file), strict(_strict)
+    parent(_parent), in(_in), session_scope(_session_scope),
+    journal(_journal), master(_master),
+    original_file(_original_file), strict(_strict)
 {
   TRACE_CTOR(instance_t, "...");
 
@@ -653,7 +658,7 @@ void instance_t::include_directive(char * line)
 
   ifstream stream(filename);
 
-  instance_t instance(account_stack,
+  instance_t instance(account_stack, tag_stack,
 #if defined(TIMELOG_SUPPORT)
 		      timelog,
 #endif
@@ -705,6 +710,20 @@ void instance_t::alias_directive(char * line)
   }
 }
 
+void instance_t::tag_directive(char * line)
+{
+  tag_stack.push_back(trim_ws(line));
+}
+
+void instance_t::pop_directive(char *)
+{
+  if (tag_stack.empty())
+    throw_(std::runtime_error,
+	   _("'pop' directive found, but no tags currently active"));
+  else
+    tag_stack.pop_back();
+}
+
 void instance_t::define_directive(char * line)
 {
   expr_t def(skip_ws(line));
@@ -748,6 +767,20 @@ void instance_t::general_directive(char * line)
   case 'i':
     if (std::strcmp(p, "include") == 0) {
       include_directive(arg);
+      return;
+    }
+    break;
+
+  case 'p':
+    if (std::strcmp(p, "pop") == 0) {
+      pop_directive(arg);
+      return;
+    }
+    break;
+
+  case 't':
+    if (std::strcmp(p, "tag") == 0) {
+      tag_directive(arg);
       return;
     }
     break;
@@ -1046,6 +1079,10 @@ post_t * instance_t::parse_post(char *		line,
   post->end_pos  = curr_pos;
   post->end_line = linenum;
 
+  if (! tag_stack.empty())
+    foreach (const string& tag, tag_stack)
+      post->parse_tags(tag.c_str());
+
   TRACE_STOP(post_details, 1);
 
   return post.release();
@@ -1186,6 +1223,10 @@ xact_t * instance_t::parse_xact(char *		line,
   xact->end_pos  = curr_pos;
   xact->end_line = linenum;
 
+  if (! tag_stack.empty())
+    foreach (const string& tag, tag_stack)
+      xact->parse_tags(tag.c_str());
+
   TRACE_STOP(xact_details, 1);
 
   return xact.release();
@@ -1215,11 +1256,12 @@ std::size_t journal_t::parse(std::istream& in,
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 
   std::list<account_t *> account_stack;
+  std::list<string>      tag_stack;
 #if defined(TIMELOG_SUPPORT)
   time_log_t		 timelog(*this);
 #endif
 
-  instance_t parsing_instance(account_stack,
+  instance_t parsing_instance(account_stack, tag_stack,
 #if defined(TIMELOG_SUPPORT)
 			      timelog,
 #endif
