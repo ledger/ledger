@@ -244,7 +244,9 @@ while [ -n "$1" ]; do
 	    LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
 
 	    # I build my debug Boost libs with _GLIBCXX_DEBUG
-	    BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
+	    if [ -f /usr/local/lib/libboost_regex-xgcc40-d-1_38.a ]; then
+		BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
+	    fi
 	else
 
 	    CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
