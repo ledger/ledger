@@ -1172,8 +1172,9 @@ xact_t * instance_t::parse_xact(char *		line,
   // Parse the description text
 
   if (next && *next) {
+    char * p = next_element(next, true);
     xact->payee = next;
-    next = next_element(next, true);
+    next = p;
   } else {
     xact->payee = _("<Unspecified payee>");
   }
@@ -1181,7 +1182,7 @@ xact_t * instance_t::parse_xact(char *		line,
   // Parse the xact note
 
   if (next && *next == ';')
-    xact->append_note(next, current_year);
+    xact->append_note(++next, current_year);
 
   TRACE_STOP(xact_text, 1);
 
