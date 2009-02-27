@@ -53,7 +53,9 @@ void report_t::generate_report(post_handler_ptr handler)
 {
   generate_posts_iterator walker
     (session, HANDLED(seed_) ?
-     static_cast<unsigned int>(HANDLER(seed_).value.to_long()) : 0);
+     static_cast<unsigned int>(HANDLER(seed_).value.to_long()) : 0,
+     HANDLED(head_) ?
+     static_cast<unsigned int>(HANDLER(head_).value.to_long()) : 50);
   pass_down_posts(chain_post_handlers(*this, handler), walker);
 }
 
