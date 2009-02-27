@@ -1220,6 +1220,20 @@ xact_t * instance_t::parse_xact(char *		line,
     }
   }
 
+  if (xact->_state == item_t::UNCLEARED) {
+    item_t::state_t result = item_t::CLEARED;
+
+    foreach (post_t * post, xact->posts) {
+      if (post->_state == item_t::UNCLEARED) {
+	result = item_t::UNCLEARED;
+	break;
+      }
+      else if (post->_state == item_t::PENDING) {
+	result = item_t::PENDING;
+      }
+    }
+  }
+
   xact->end_pos  = curr_pos;
   xact->end_line = linenum;
 

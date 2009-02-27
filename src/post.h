@@ -118,8 +118,6 @@ public:
   virtual date_t date() const;
   virtual optional<date_t> effective_date() const;
 
-  virtual state_t state() const;
-
   bool must_balance() const {
     return ! has_flags(POST_VIRTUAL) || has_flags(POST_MUST_BALANCE);
   }

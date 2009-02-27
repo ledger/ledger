@@ -54,19 +54,6 @@ xact_base_t::~xact_base_t()
   }
 }
 
-item_t::state_t xact_base_t::state() const
-{
-  state_t result = CLEARED;
-
-  foreach (post_t * post, posts) {
-    if (post->_state == UNCLEARED)
-      return UNCLEARED;
-    else if (post->_state == PENDING)
-      result = PENDING;
-  }
-  return result;
-}
-
 void xact_base_t::add_post(post_t * post)
 {
   posts.push_back(post);
@@ -160,8 +147,10 @@ bool xact_base_t::finalize()
 	  null_post->amount = pair.second.negated();
 	  first = false;
 	} else {
-	  add_post(new post_t(null_post->account, pair.second.negated(),
-			      ITEM_GENERATED));
+	  post_t * p = new post_t(null_post->account, pair.second.negated(),
+				  ITEM_GENERATED);
+	  p->set_state(null_post->state());
+	  add_post(p);
 	}
       }
     }
@@ -292,7 +281,9 @@ bool xact_base_t::finalize()
 	else
 	  account = journal->find_account(_("Equity:Capital Losses"));
 
-	add_post(new post_t(account, gain_loss.rounded(), ITEM_GENERATED));
+	post_t * p = new post_t(account, gain_loss.rounded(), ITEM_GENERATED);
+	p->set_state(post->state());
+	add_post(p);
 	DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
       }
     } else {

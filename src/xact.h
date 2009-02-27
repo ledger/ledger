@@ -72,8 +72,6 @@ public:
 
   virtual ~xact_base_t();
 
-  virtual state_t state() const;
-
   virtual void add_post(post_t * post);
   virtual bool remove_post(post_t * post);
 

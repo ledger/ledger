@@ -102,17 +102,6 @@ optional<date_t> post_t::effective_date() const
   return date;
 }
 
-item_t::state_t post_t::state() const
-{
-  if (xact) {
-    state_t xact_state = xact->state();
-    if ((_state == UNCLEARED && xact_state != UNCLEARED) ||
-	(_state == PENDING && xact_state == CLEARED))
-      return xact_state;
-  }
-  return _state;
-}
-
 namespace {
   value_t get_this(post_t& post) {
     return value_t(static_cast<scope_t *>(&post));
