@@ -464,32 +464,26 @@ amount_t amount_t::inverted() const
   return t;
 }
 
-amount_t amount_t::rounded() const
+void amount_t::in_place_round()
 {
   if (! quantity)
     throw_(amount_error, _("Cannot set rounding for an uninitialized amount"));
   else if (! keep_precision())
-    return *this;
+    return;
 
-  amount_t t(*this);
-  t._dup();
-  t.set_keep_precision(false);
-
-  return t;
+  _dup();
+  set_keep_precision(false);
 }
 
-amount_t amount_t::unrounded() const
+void amount_t::in_place_unround()
 {
   if (! quantity)
     throw_(amount_error, _("Cannot unround an uninitialized amount"));
   else if (keep_precision())
-    return *this;
+    return;
 
-  amount_t t(*this);
-  t._dup();
-  t.set_keep_precision(true);
-
-  return t;
+  _dup();
+  set_keep_precision(true);
 }
 
 void amount_t::in_place_reduce()

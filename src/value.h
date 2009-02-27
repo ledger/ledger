@@ -409,9 +409,26 @@ public:
 
   value_t abs() const;
 
-  value_t rounded() const;
-  value_t truncated() const;
-  value_t unrounded() const;
+  value_t rounded() const {
+    value_t temp(*this);
+    temp.in_place_round();
+    return temp;
+  }
+  void in_place_round();
+
+  value_t truncated() const {
+    value_t temp(*this);
+    temp.in_place_truncate();
+    return temp;
+  }
+  void in_place_truncate();
+
+  value_t unrounded() const {
+    value_t temp(*this);
+    temp.in_place_unround();
+    return temp;
+  }
+  void in_place_unround();
 
   value_t reduced() const {
     value_t temp(*this);

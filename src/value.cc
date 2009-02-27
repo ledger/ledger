@@ -1280,73 +1280,79 @@ value_t value_t::abs() const
   return NULL_VALUE;
 }
 
-value_t value_t::rounded() const
+void value_t::in_place_round()
 {
   switch (type()) {
   case INTEGER:
-    return *this;
+    return;
   case AMOUNT:
-    return as_amount().rounded();
+    as_amount_lval().in_place_round();
+    return;
   case BALANCE:
-    return as_balance().rounded();
+    as_balance_lval().in_place_round();
+    return;
   case SEQUENCE: {
     value_t temp;
     foreach (const value_t& value, as_sequence())
       temp.push_back(value.rounded());
-    return temp;
+    *this = temp;
+    return;
   }
   default:
     break;
   }
 
   throw_(value_error, _("Cannot set rounding for %1") << label());
-  return NULL_VALUE;
 }
 
-value_t value_t::truncated() const
+void value_t::in_place_truncate()
 {
   switch (type()) {
   case INTEGER:
-    return *this;
+    return;
   case AMOUNT:
-    return as_amount().truncated();
+    as_amount_lval().in_place_truncate();
+    return;
   case BALANCE:
-    return as_balance().truncated();
+    as_balance_lval().in_place_truncate();
+    return;
   case SEQUENCE: {
     value_t temp;
     foreach (const value_t& value, as_sequence())
       temp.push_back(value.truncated());
-    return temp;
+    *this = temp;
+    return;
   }
   default:
     break;
   }
 
   throw_(value_error, _("Cannot truncate %1") << label());
-  return NULL_VALUE;
 }
 
-value_t value_t::unrounded() const
+void value_t::in_place_unround()
 {
   switch (type()) {
   case INTEGER:
-    return *this;
+    return;
   case AMOUNT:
-    return as_amount().unrounded();
+    as_amount_lval().unrounded();
+    return;
   case BALANCE:
-    return as_balance().unrounded();
+    as_balance_lval().unrounded();
+    return;
   case SEQUENCE: {
     value_t temp;
     foreach (const value_t& value, as_sequence())
       temp.push_back(value.unrounded());
-    return temp;
+    *this = temp;
+    return;
   }
   default:
     break;
   }
 
   throw_(value_error, _("Cannot unround %1") << label());
-  return NULL_VALUE;
 }
 
 void value_t::annotate(const annotation_t& details)

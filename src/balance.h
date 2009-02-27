@@ -312,24 +312,39 @@ public:
   }
 
   balance_t rounded() const {
+    balance_t temp(*this);
+    temp.in_place_round();
+    return temp;
+  }
+  void in_place_round() {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
       temp += pair.second.rounded();
-    return temp;
+    *this = temp;
   }
 
   balance_t truncated() const {
+    balance_t temp(*this);
+    temp.in_place_truncate();
+    return temp;
+  }
+  void in_place_truncate() {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
       temp += pair.second.truncated();
-    return temp;
+    *this = temp;
   }
 
   balance_t unrounded() const {
+    balance_t temp(*this);
+    temp.in_place_unround();
+    return temp;
+  }
+  void in_place_unround() {
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
       temp += pair.second.unrounded();
-    return temp;
+    *this = temp;
   }
 
   balance_t reduced() const {

@@ -320,17 +320,32 @@ public:
       default state of an amount, but if one has become unrounded, this
       sets the "keep precision" state back to false.
       @see set_keep_precision */
-  amount_t rounded() const;
+  amount_t rounded() const {
+    amount_t temp(*this);
+    temp.in_place_round();
+    return temp;
+  }
+  void in_place_round();
 
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
   amount_t truncated() const {
-    return amount_t(to_string());
+    amount_t temp(*this);
+    temp.in_place_truncate();
+    return temp;
   }
-
+  void in_place_truncate() {
+    *this = amount_t(to_string());
+  }
+    
   /** Yields an amount whose display precision is never truncated, even
       though its commodity normally displays only rounded values. */
-  amount_t unrounded() const;
+  amount_t unrounded() const {
+    amount_t temp(*this);
+    temp.in_place_unround();
+    return temp;
+  }
+  void in_place_unround();
 
   /** reduces a value to its most basic commodity form, for amounts that
       utilize "scaling commodities".  For example, an amount of \c 1h
