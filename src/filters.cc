@@ -61,22 +61,22 @@ void truncate_xacts::flush()
   if (! posts.size())
     return;
 
-  xact_t * last_xact = (*posts.begin())->xact;
+  xact_t * xact = (*posts.begin())->xact;
 
   int l = 0;
   foreach (post_t * post, posts)
-    if (last_xact != post->xact) {
+    if (xact != post->xact) {
       l++;
-      last_xact = post->xact;
+      xact = post->xact;
     }
   l++;
 
-  last_xact = (*posts.begin())->xact;
+  xact = (*posts.begin())->xact;
 
   int i = 0;
   foreach (post_t * post, posts) {
-    if (last_xact != post->xact) {
-      last_xact = post->xact;
+    if (xact != post->xact) {
+      xact = post->xact;
       i++;
     }
 
@@ -101,6 +101,21 @@ void truncate_xacts::flush()
   posts.clear();
 
   item_handler<post_t>::flush();
+}
+
+void truncate_xacts::operator()(post_t& post)
+{
+  if (last_xact != post.xact) {
+    if (last_xact)
+      xacts_seen++;
+    last_xact = post.xact;
+  }
+
+  if (tail_count == 0 && head_count > 0 &&
+      static_cast<int>(xacts_seen) >= head_count)
+    return;
+
+  posts.push_back(&post);
 }
 
 void set_account_value::operator()(post_t& post)

@@ -159,15 +159,17 @@ class truncate_xacts : public item_handler<post_t>
   int head_count;
   int tail_count;
 
-  posts_list posts;
+  posts_list  posts;
+  std::size_t xacts_seen;
+  xact_t *    last_xact;
 
   truncate_xacts();
 
 public:
-  truncate_xacts(post_handler_ptr handler,
-		   int _head_count, int _tail_count)
+  truncate_xacts(post_handler_ptr handler, int _head_count, int _tail_count)
     : item_handler<post_t>(handler),
-      head_count(_head_count), tail_count(_tail_count) {
+      head_count(_head_count), tail_count(_tail_count),
+      xacts_seen(0), last_xact(NULL) {
     TRACE_CTOR(truncate_xacts, "post_handler_ptr, int, int");
   }
   virtual ~truncate_xacts() {
@@ -175,12 +177,7 @@ public:
   }
 
   virtual void flush();
-
-  virtual void operator()(post_t& post) {
-    if (! (tail_count == 0 && head_count > 0 &&
-	   static_cast<int>(posts.size()) >= head_count))
-      posts.push_back(&post);
-  }
+  virtual void operator()(post_t& post);
 };
 
 /**
