@@ -75,12 +75,17 @@ struct amount_t::bigint_t : public supports_flags<>
   }
 
   bool valid() const {
-    if (prec > 128) {
+    if (prec > 1024) {
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 128");
       return false;
     }
     if (ref > 16535) {
       DEBUG("ledger.validate", "amount_t::bigint_t: ref > 16535");
+      return false;
+    }
+    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC)) {
+      DEBUG("ledger.validate",
+	    "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC)");
       return false;
     }
     return true;
@@ -142,12 +147,12 @@ void amount_t::_copy(const amount_t& amt)
   }
   commodity_ = amt.commodity_;
 
-  assert(valid());
+  VERIFY(valid());
 }
 
 void amount_t::_dup()
 {
-  assert(valid());
+  VERIFY(valid());
 
   if (quantity->ref > 1) {
     bigint_t * q = new bigint_t(*quantity);
@@ -155,7 +160,7 @@ void amount_t::_dup()
     quantity = q;
   }
 
-  assert(valid());
+  VERIFY(valid());
 }
 
 void amount_t::_clear()
@@ -171,7 +176,7 @@ void amount_t::_clear()
 
 void amount_t::_release()
 {
-  assert(valid());
+  VERIFY(valid());
 
   DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
 
@@ -184,7 +189,7 @@ void amount_t::_release()
     commodity_ = NULL;
   }
 
-  assert(valid());
+  VERIFY(valid());
 }
 
 
@@ -982,7 +987,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   safe_holder.release();	// `this->quantity' owns the pointer
 
-  assert(valid());
+  VERIFY(valid());
 
   return true;
 }
@@ -1008,7 +1013,7 @@ void amount_t::parse_conversion(const string& larger_str,
 
 void amount_t::print(std::ostream& _out) const
 {
-  assert(valid());
+  VERIFY(valid());
 
   if (! quantity) {
     _out << "<null>";
