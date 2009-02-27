@@ -199,6 +199,35 @@ void gather_statistics::operator()(post_t& post)
   }
 }
 
+format_accounts::format_accounts(report_t&     _report,
+				 const string& format)
+  : report(_report), disp_pred()
+{
+  TRACE_CTOR(format_accounts, "report&, const string&");
+
+  if (report.HANDLED(display_)) {
+    DEBUG("account.display",
+	  "Account display predicate: " << report.HANDLER(display_).str());
+    disp_pred.predicate.parse(report.HANDLER(display_).str());
+  }
+
+  const char * f = format.c_str();
+
+  if (const char * p = std::strstr(f, "%/")) {
+    account_line_format.parse(string(f, 0, p - f));
+    const char * n = p + 2;
+    if (const char * p = std::strstr(n, "%/")) {
+      total_line_format.parse(string(n, 0, p - n));
+      separator_format.parse(string(p + 2));
+    } else {
+      total_line_format.parse(n);
+    }
+  } else {
+    account_line_format.parse(format);
+    total_line_format.parse(format);
+  }
+}
+
 void format_accounts::post_account(account_t& account)
 {
   bind_scope_t bound_scope(report, account);
@@ -233,7 +262,7 @@ void format_accounts::post_account(account_t& account)
 
   if (format_account) {
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
-    format.format(report.output_stream, bound_scope);
+    account_line_format.format(report.output_stream, bound_scope);
   }
 }
 
@@ -262,10 +291,10 @@ void format_accounts::flush()
   account_t::xdata_t& xdata(report.session.master->xdata());
 
   if (! report.HANDLED(no_total) && top_displayed > 1 && xdata.total) {
-    out << "--------------------\n";
     xdata.value = xdata.total;
     bind_scope_t bound_scope(report, *report.session.master);
-    format.format(out, bound_scope);
+    separator_format.format(out, bound_scope);
+    total_line_format.format(out, bound_scope);
   }
 
   out.flush();

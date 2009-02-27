@@ -63,7 +63,7 @@ protected:
   format_t  first_line_format;
   format_t  next_lines_format;
   format_t  between_format;
-  xact_t * last_xact;
+  xact_t *  last_xact;
   post_t *  last_post;
   bool      print_raw;
 
@@ -135,24 +135,15 @@ class format_accounts : public item_handler<account_t>
 {
 protected:
   report_t&	 report;
-  format_t	 format;
+  format_t	 account_line_format;
+  format_t	 total_line_format;
+  format_t	 separator_format;
   item_predicate disp_pred;
 
   std::list<account_t *> posted_accounts;
 
 public:
-  format_accounts(report_t&	_report,
-		  const string& _format = "")
-    : report(_report), format(_format), disp_pred()
-  {
-    TRACE_CTOR(format_accounts, "report&, const string&, bool");
-
-    if (report.HANDLED(display_)) {
-      DEBUG("account.display",
-	    "Account display predicate: " << report.HANDLER(display_).str());
-      disp_pred.predicate.parse(report.HANDLER(display_).str());
-    }
-  }
+  format_accounts(report_t& _report, const string& _format);
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }

@@ -243,7 +243,10 @@ public:
       on("%(ansify_if(justify(scrub(display_total), 20, -1, true), \"red\", "
 	 "    color & scrub(display_total) < 0))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
-	 "%-(ansify_if(partial_account(options.flat), \"blue\", color))\n");
+	 "%-(ansify_if(partial_account(options.flat), \"blue\", color))\n%/"
+	 "%(ansify_if(justify(scrub(display_total), 20, -1, true), \"red\", "
+	 "    color & scrub(display_total) < 0))\n%/"
+	 "--------------------\n");
     });
 
   OPTION(report_t, base);
