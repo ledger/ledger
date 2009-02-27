@@ -954,6 +954,8 @@ post_t * instance_t::parse_post(char *		line,
 	  if (post->cost->sign() < 0)
 	    throw parse_error(_("A posting's cost may not be negative"));
 
+	  post->cost->in_place_unround();
+
 	  if (per_unit)
 	    *post->cost *= post->amount;
 

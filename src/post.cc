@@ -319,9 +319,15 @@ bool post_t::valid() const
     return false;
   }
 
-  if (cost && ! cost->valid()) {
-    DEBUG("ledger.validate", "post_t: cost && ! cost->valid()");
-    return false;
+  if (cost) {
+    if (! cost->valid()) {
+      DEBUG("ledger.validate", "post_t: cost && ! cost->valid()");
+      return false;
+    }
+    if (! cost->keep_precision()) {
+      DEBUG("ledger.validate", "post_t: ! cost->keep_precision()");
+      return false;
+    }
   }
 
   return true;

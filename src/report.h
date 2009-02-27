@@ -140,6 +140,7 @@ public:
   value_t fn_quantity(call_scope_t& scope);
   value_t fn_rounded(call_scope_t& scope);
   value_t fn_truncated(call_scope_t& scope);
+  value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
@@ -514,12 +515,12 @@ public:
 	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
-	 "%(has_cost & !priced ? \" @ \" + justify(scrub(cost / amount), 0) : \"\")"
+	 "%(has_cost & !priced ? \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
 	 "%(comment | \"\")\n%/"
 	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
-	 "%(has_cost & !priced ? \" @ \" + justify(scrub(cost / amount), 0) : \"\")"
+	 "%(has_cost & !priced ? \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
 	 "%(comment | \"\")\n%/\n");
     });
 

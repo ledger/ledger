@@ -203,6 +203,12 @@ value_t report_t::fn_quantity(call_scope_t& scope)
   return args.get<amount_t>(0).number();
 }
 
+value_t report_t::fn_abs(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  return args.value_at(0).abs();
+}
+
 value_t report_t::fn_truncated(call_scope_t& scope)
 {
   interactive_t args(scope, "v&ll");
@@ -568,6 +574,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_amount_expr);
     else if (is_eq(p, "ansify_if"))
       return MAKE_FUNCTOR(report_t::fn_ansify_if);
+    else if (is_eq(p, "abs"))
+      return MAKE_FUNCTOR(report_t::fn_abs);
     break;
 
   case 'c':
