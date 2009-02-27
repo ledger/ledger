@@ -168,9 +168,11 @@ public:
   }
 
   keep_details_t what_to_keep() {
-    return keep_details_t(HANDLED(lots) || HANDLED(lot_prices),
-			  HANDLED(lots) || HANDLED(lot_dates),
-			  HANDLED(lots) || HANDLED(lot_tags));
+    bool lots = HANDLED(lots) || HANDLED(lots_actual);
+    return keep_details_t(lots || HANDLED(lot_prices),
+			  lots || HANDLED(lot_dates),
+			  lots || HANDLED(lot_tags),
+			  HANDLED(lots_actual));
   }
 
   bool maybe_import(const string& module);
@@ -438,6 +440,7 @@ public:
   OPTION(report_t, lot_prices);
   OPTION(report_t, lot_tags);
   OPTION(report_t, lots);
+  OPTION(report_t, lots_actual);
 
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on_only();

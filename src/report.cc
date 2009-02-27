@@ -232,7 +232,6 @@ value_t report_t::fn_justify(call_scope_t& scope)
   interactive_t args(scope, "vl&lbs");
   std::ostringstream out;
   args.value_at(0)
-    .strip_annotations(what_to_keep())
     .print(out, args.get<long>(1),
 	   args.has(2) ? args.get<long>(2) : -1,
 	   args.has(3),
@@ -492,6 +491,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(lot_prices);
     else OPT(lot_tags);
     else OPT(lots);
+    else OPT(lots_actual);
     else OPT_ALT(tail_, last_);
     else OPT_ALT(price_exp_, leeway_);
     break;

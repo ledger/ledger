@@ -434,9 +434,16 @@ commodity_t::exchange(const amount_t&		  amount,
   DEBUG("commodity.prices.add",
 	"exchange: basis-cost    = " << breakdown.basis_cost);
 
-  breakdown.amount =
-    amount_t(amount, annotation_t(per_unit_cost, moment ?
-				  moment->date() : optional<date_t>(), tag));
+  annotation_t annotation(per_unit_cost, moment ?
+			  moment->date() : optional<date_t>(), tag);
+
+  annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
+  if (moment)
+    annotation.add_flags(ANNOTATION_DATE_CALCULATED);
+  if (tag)
+    annotation.add_flags(ANNOTATION_TAG_CALCULATED);
+  
+  breakdown.amount = amount_t(amount, annotation);
 
   DEBUG("commodity.prices.add",
 	"exchange: amount        = " << breakdown.amount);
@@ -720,16 +727,24 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 
   commodity_t * new_comm;
 
-  if (what_to_keep.keep_any(*this) &&
-      ((what_to_keep.keep_price && details.price) ||
-       (what_to_keep.keep_date  && details.date) ||
-       (what_to_keep.keep_tag   && details.tag)))
+  bool keep_price = (what_to_keep.keep_price	  &&
+		     (! what_to_keep.only_actuals ||
+		      ! details.has_flags(ANNOTATION_PRICE_CALCULATED)));
+  bool keep_date  = (what_to_keep.keep_date	  &&
+		     (! what_to_keep.only_actuals ||
+		      ! details.has_flags(ANNOTATION_DATE_CALCULATED)));
+  bool keep_tag	  = (what_to_keep.keep_tag	  &&
+		     (! what_to_keep.only_actuals ||
+		      ! details.has_flags(ANNOTATION_TAG_CALCULATED)));
+
+  if ((keep_price && details.price) ||
+      (keep_date  && details.date)  ||
+      (keep_tag   && details.tag))
   {
     new_comm = parent().find_or_create
-      (referent(),
-       annotation_t(what_to_keep.keep_price ? details.price : none,
-		    what_to_keep.keep_date  ? details.date  : none,
-		    what_to_keep.keep_tag   ? details.tag   : none));
+      (referent(), annotation_t(keep_price ? details.price : none,
+				keep_date  ? details.date  : none,
+				keep_tag   ? details.tag   : none));
   } else {
     new_comm = parent().find_or_create(base_symbol());
   }

@@ -359,8 +359,13 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
  *
  * Long.
  */
-struct annotation_t : public equality_comparable<annotation_t>
+struct annotation_t : public supports_flags<>,
+		      public equality_comparable<annotation_t>
 {
+#define ANNOTATION_PRICE_CALCULATED 0x01
+#define ANNOTATION_DATE_CALCULATED  0x02
+#define ANNOTATION_TAG_CALCULATED   0x04
+
   optional<amount_t> price;
   optional<date_t>   date;
   optional<string>   tag;
@@ -368,14 +373,14 @@ struct annotation_t : public equality_comparable<annotation_t>
   explicit annotation_t(const optional<amount_t>& _price = none,
 			const optional<date_t>&   _date  = none,
 			const optional<string>&   _tag   = none)
-    : price(_price), date(_date), tag(_tag) {
+    : supports_flags<>(), price(_price), date(_date), tag(_tag) {
     TRACE_CTOR(annotation_t, "const optional<amount_t>& + date_t + string");
   }
   annotation_t(const annotation_t& other)
-    : price(other.price), date(other.date), tag(other.tag) {
+    : supports_flags<>(other.flags()),
+      price(other.price), date(other.date), tag(other.tag) {
     TRACE_CTOR(annotation_t, "copy");
   }
-
   ~annotation_t() {
     TRACE_DTOR(annotation_t);
   }
@@ -405,31 +410,34 @@ struct keep_details_t
   bool keep_price;
   bool keep_date;
   bool keep_tag;
+  bool only_actuals;
 
-  explicit keep_details_t(bool _keep_price = false,
-			  bool _keep_date  = false,
-			  bool _keep_tag   = false)
+  explicit keep_details_t(bool _keep_price   = false,
+			  bool _keep_date    = false,
+			  bool _keep_tag     = false,
+			  bool _only_actuals = false)
     : keep_price(_keep_price),
       keep_date(_keep_date),
-      keep_tag(_keep_tag)
+      keep_tag(_keep_tag),
+      only_actuals(_only_actuals)
   {
-    TRACE_CTOR(keep_details_t, "bool, bool, bool");
+    TRACE_CTOR(keep_details_t, "bool, bool, bool, bool");
   }
   keep_details_t(const keep_details_t& other)
     : keep_price(other.keep_price), keep_date(other.keep_date),
-      keep_tag(other.keep_tag) {
+      keep_tag(other.keep_tag), only_actuals(other.only_actuals) {
     TRACE_CTOR(keep_details_t, "copy");
   }
-
   ~keep_details_t() throw() {
     TRACE_DTOR(keep_details_t);
   }
 
   bool keep_all() const {
-    return keep_price && keep_date && keep_tag;
+    return keep_price && keep_date && keep_tag && ! only_actuals;
   }
   bool keep_all(const commodity_t& comm) const {
-    return ! comm.annotated || (keep_price && keep_date && keep_tag);
+    return (! comm.annotated ||
+	    (keep_price && keep_date && keep_tag && ! only_actuals));
   }
 
   bool keep_any() const {
@@ -440,7 +448,8 @@ struct keep_details_t
   }
 };
 
-inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) {
+inline std::ostream& operator<<(std::ostream&       out,
+				const annotation_t& details) {
   details.print(out);
   return out;
 }
