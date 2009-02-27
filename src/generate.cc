@@ -364,14 +364,14 @@ post_t * generate_posts_iterator::operator()()
       }
     }
     catch (std::exception& err) {
-      add_error_context(_("While parsing generated transaction (seed %1):"
-			  << seed));
+      add_error_context(_("While parsing generated transaction (seed %1):")
+			<< seed);
       add_error_context(buf.str());
       throw;
     }
     catch (int status) {
-      add_error_context(_("While parsing generated transaction (seed %1):"
-			  << seed));
+      add_error_context(_("While parsing generated transaction (seed %1):")
+			<< seed);
       add_error_context(buf.str());
       throw;
     }
