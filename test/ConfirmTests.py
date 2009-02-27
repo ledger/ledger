@@ -91,7 +91,7 @@ def confirm_report(args):
     return not failure
 
 for cmd in commands:
-    if confirm_report("%s --args-only --columns=80 %s" %
+    if confirm_report("%s --args-only --verify --columns=80 %s" %
                       (ledger, re.sub('\$tests', tests, cmd))):
         print ".",
         succeeded += 1
