@@ -93,10 +93,10 @@ def confirm_report(args):
 for cmd in commands:
     if confirm_report("%s --args-only --verify --columns=80 %s" %
                       (ledger, re.sub('\$tests', tests, cmd))):
-        print ".",
+        sys.stdout.write(".")
         succeeded += 1
     else:
-        print "E",
+        sys.stdout.write("E")
         failed += 1
 
 print
