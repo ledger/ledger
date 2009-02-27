@@ -386,8 +386,6 @@ ConfirmTests: $(srcdir)/test/ConfirmTests.py
 
 GenerateTests_SOURCES = test/GenerateTests.py
 
-EXTRA_DIST += test/input
-
 GenerateTests: $(srcdir)/test/GenerateTests.py
 	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input" > $@
 	chmod 755 $@
