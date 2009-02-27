@@ -565,8 +565,8 @@ namespace {
   void stream_out_mpq(std::ostream&	            out,
 		      mpq_t		            quant,
 		      amount_t::precision_t         prec,
-		      bool		            no_trailing_zeroes = false,
-		      const optional<commodity_t&>& comm               = none)
+		      int                           zeros_prec = -1,
+		      const optional<commodity_t&>& comm       = none)
   {
     char * buf = NULL;
     try {
@@ -587,7 +587,7 @@ namespace {
       DEBUG("amount.convert",
 	    "mpfr_print = " << buf << " (precision " << prec << ")");
 
-      if (no_trailing_zeroes) {
+      if (zeros_prec >= 0) {
 	int index = std::strlen(buf);
 	int point = 0;
 	for (int i = 0; i < index; i++) {
@@ -597,9 +597,9 @@ namespace {
 	  }
 	}
 	if (point > 0) {
-	  while (--index >= point && buf[index] == '0')
+	  while (--index >= (point + 1 + zeros_prec) && buf[index] == '0')
 	    buf[index] = '\0';
-	  if (index >= point && buf[index] == '.')
+	  if (index >= (point + zeros_prec) && buf[index] == '.')
 	    buf[index] = '\0';
 	}
       }
@@ -1024,7 +1024,8 @@ void amount_t::print(std::ostream& _out) const
       out << " ";
   }
 
-  stream_out_mpq(out, MP(quantity), display_precision(), ! comm, comm);
+  stream_out_mpq(out, MP(quantity), display_precision(),
+		 comm ? commodity().precision() : 0, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

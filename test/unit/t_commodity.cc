@@ -78,7 +78,7 @@ void CommodityTestCase::testPriceHistory()
 #ifdef INTEGER_MATH
   assertEqual(string("$2124.12"), amt->to_fullstring());
 #else
-  assertEqual(string("$2124.1220"), amt->to_fullstring());
+  assertEqual(string("$2124.122"), amt->to_fullstring());
 #endif
 
   amt = x1.value(false, CURRENT_TIME(), euro);
