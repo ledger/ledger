@@ -507,11 +507,12 @@ void amount_t::in_place_unreduce()
   bool		shifted = false;
 
   while (comm && comm->larger()) {
-    temp /= comm->larger()->number();
-    if (temp.abs() < amount_t(1L))
+    amount_t next_temp = temp / comm->larger()->number();
+    if (next_temp.abs() < amount_t(1L))
       break;
-    shifted = true;
+    temp = next_temp;
     comm = comm->larger()->commodity_;
+    shifted = true;
   }
 
   if (shifted) {

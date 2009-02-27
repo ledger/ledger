@@ -550,100 +550,99 @@ D 1.00G
 2006/04/01 Auction House
     Assets:Tajer:Items                  "Orb of Deception" 1 @ 155G
     Assets:Tajer
-
 >>>1
 06-Mar-14 Opening Balances      Assets:Tajer                133.98G      133.98G
                                 Assets:Gruulmorg             24.87G      158.85G
                                 Equity:Gold                -158.85G            0
-06-Mar-14 Auction House         Expenses:Fees:Auction         0.14s        0.14s
-                                Expenses:Fees:Auction         0.08s        0.22s
-                                Expenses:Fees:Auction         0.06s        0.28s
-                                Expenses:Fees:Auction         0.48s        0.76s
-                                Expenses:Fees:Auction         0.34s        1.09G
-                                Expenses:Fees:Auction         0.13s        1.22G
-                                Expenses:Fees:Auction         0.13s        1.36G
-                                Expenses:Fees:Auction         0.07s        1.42G
+06-Mar-14 Auction House         Expenses:Fees:Auction        14.28s       14.28s
+                                Expenses:Fees:Auction         7.68s       21.96s
+                                Expenses:Fees:Auction         6.12s       28.08s
+                                Expenses:Fees:Auction        47.64s       75.72s
+                                Expenses:Fees:Auction        33.72s        1.09G
+                                Expenses:Fees:Auction        12.96s        1.22G
+                                Expenses:Fees:Auction        13.32s        1.36G
+                                Expenses:Fees:Auction         6.60s        1.42G
                                 Expenses:Fees:Auction         1.00G        2.43G
-                                Expenses:Fees:Auction         0.36s        2.79G
-                                Expenses:Fees:Auction         0.16s        2.95G
-                                Expenses:Fees:Auction         0.84s        3.79G
-                                Expenses:Fees:Auction         1.00s        4.79G
-                                Expenses:Fees:Auction         0.23s        5.02G
+                                Expenses:Fees:Auction        35.88s        2.79G
+                                Expenses:Fees:Auction        16.32s        2.95G
+                                Expenses:Fees:Auction        83.88s        3.79G
+                                Expenses:Fees:Auction        99.84s        4.79G
+                                Expenses:Fees:Auction        23.16s        5.02G
                                 Assets:Tajer                 -5.02G            0
 06-Mar-14 Auction House         Assets:Tajer                 15.89G       15.89G
                                 Equity:Gold                 -15.89G            0
-06-Mar-14 Auction House         Expenses:Fees:Auction         0.13s        0.13s
-                                Assets:Tajer                 -0.13s            0
+06-Mar-14 Auction House         Expenses:Fees:Auction        13.20s       13.20s
+                                Assets:Tajer                -13.20s            0
 06-Mar-14 Auction House         Assets:Tajer                  1.15G        1.15G
                                 Equity:Gold                  -1.15G            0
-06-Mar-14 Auction House         Expenses:Fees:Auction         0.32s        0.32s
-                                Assets:Tajer                 -0.32s            0
+06-Mar-14 Auction House         Expenses:Fees:Auction        32.16s       32.16s
+                                Assets:Tajer                -32.16s            0
 06-Mar-14 Post                  Expenses:Fees:Mail              30c          30c
                                 Assets:Gruulmorg               -30c            0
 06-Mar-14 Auction House         Assets:Tajer                  3.47G        3.47G
                                 Equity:Gold                  -3.47G            0
-06-Mar-14 Auction House         Expenses:Fees:Auction         0.23s        0.23s
-                                Assets:Tajer                 -0.23s            0
+06-Mar-14 Auction House         Expenses:Fees:Auction        23.16s       23.16s
+                                Assets:Tajer                -23.16s            0
 06-Mar-14 Auction House         Assets:Gruulmorg              1.00G        1.00G
                                 Equity:Gold                  -1.00G            0
 06-Mar-14 Auction House         Assets:Tajer                  5.94G        5.94G
                                 Equity:Gold                  -5.94G            0
-06-Mar-14 Post                  Expenses:Fees:Mail            0.01s        0.01s
-                                Assets:Tajer                 -0.01s            0
+06-Mar-14 Post                  Expenses:Fees:Mail            1.20s        1.20s
+                                Assets:Tajer                 -1.20s            0
 06-Mar-14 Player                Assets:Tajer                  3.00G        3.00G
                                 Equity:Gold                  -3.00G            0
 06-Mar-14 Player                Assets:Tajer                  6.00G        6.00G
                                 Equity:Gold                  -6.00G            0
-06-Mar-14 Auction House         Expenses:Items                0.35s        0.35s
-                                Assets:Tajer                 -0.35s            0
+06-Mar-14 Auction House         Expenses:Items               35.00s       35.00s
+                                Assets:Tajer                -35.00s            0
 06-Mar-14 Auction House         Assets:Tajer:Items            1.25G        1.25G
                                 Assets:Tajer                 -1.25G            0
-06-Mar-14 Auction House         Assets:Bids                   0.03s        0.03s
-                                Assets:Bids                   0.45s        0.48s
-                                Assets:Bids                   0.47s        0.95s
-                                Assets:Tajer                 -0.95s            0
-06-Mar-14 Post                  Expenses:Fees:Mail            0.01s        0.01s
-                                Assets:Tajer                 -0.01s            0
+06-Mar-14 Auction House         Assets:Bids                   2.59s        2.59s
+                                Assets:Bids                  45.00s       47.59s
+                                Assets:Bids                  47.20s       94.79s
+                                Assets:Tajer                -94.79s            0
+06-Mar-14 Post                  Expenses:Fees:Mail            1.20s        1.20s
+                                Assets:Tajer                 -1.20s            0
 06-Mar-14 Auction House         Expenses:Items                8.00G        8.00G
                                 Assets:Tajer                 -8.00G            0
-06-Mar-14 Post                  Expenses:Fees:Mail            0.01s        0.01s
-                                Assets:Tajer                 -0.01s            0
+06-Mar-14 Post                  Expenses:Fees:Mail            1.20s        1.20s
+                                Assets:Tajer                 -1.20s            0
 06-Mar-14 Puldoost              Assets:Tajer                  8.00G        8.00G
                                 Expenses:Items               -8.00G            0
 06-Mar-14 Auction House         Assets:Wyshona:Items          1.25G        1.25G
                                 Assets:Tajer:Items           -1.25G            0
-06-Mar-15 Auction House         Assets:Tajer                  0.45s        0.45s
-                                Assets:Tajer                  0.03s        0.48s
-                                Assets:Bids                  -0.48s            0
-06-Mar-15 Auction House         Assets:Tajer                  0.47s        0.47s
-                                Assets:Bids                  -0.47s            0
+06-Mar-15 Auction House         Assets:Tajer                 45.00s       45.00s
+                                Assets:Tajer                  2.59s       47.59s
+                                Assets:Bids                 -47.59s            0
+06-Mar-15 Auction House         Assets:Tajer                 47.20s       47.20s
+                                Assets:Bids                 -47.20s            0
 06-Mar-15 Auction House         Expenses:Fees:Auction         1.25G        1.25G
                                 Assets:Tajer                 -1.25G            0
-06-Mar-15 Auction House         Expenses:Fees:Auction         0.24s        0.24s
-                                Expenses:Fees:Auction        -0.24s            0
+06-Mar-15 Auction House         Expenses:Fees:Auction        23.75s       23.75s
+                                Expenses:Fees:Auction       -23.75s            0
 06-Mar-15 Auction House         Assets:Danell                    4c           4c
                                 Equity:Gold                     -4c            0
 06-Mar-15 Transfer              Assets:Gruulmorg                 2c           2c
                                 Assets:Danell                   -2c            0
-06-Mar-15 Transfer              Assets:Danell                 0.43s        0.43s
-                                Expenses:Fees:Auction         0.08s        0.50s
-                                Assets:Gruulmorg             -0.50s            0
+06-Mar-15 Transfer              Assets:Danell                42.50s       42.50s
+                                Expenses:Fees:Auction         7.50s       50.00s
+                                Assets:Gruulmorg            -50.00s            0
 06-Mar-15 Post                  Expenses:Fees:Mail              60c          60c
                                 Assets:Danell                  -60c            0
 06-Mar-15 Player                Assets:Tajer                  3.00G        3.00G
                                 Equity:Gold                  -3.00G            0
-06-Mar-15 Post                  Assets:Wyshona                0.40s        0.40s
-                                Expenses:Fees:Mail              30c        0.40s
-                                Assets:Danell                -0.40s            0
-06-Mar-15 Auction House         Expenses:Fees:Auction         0.08s        0.08s
-                                Expenses:Fees:Auction         0.11s        0.19s
-                                Assets:Wyshona               -0.19s            0
+06-Mar-15 Post                  Assets:Wyshona               40.00s       40.00s
+                                Expenses:Fees:Mail              30c       40.30s
+                                Assets:Danell               -40.30s            0
+06-Mar-15 Auction House         Expenses:Fees:Auction         8.00s        8.00s
+                                Expenses:Fees:Auction        11.00s       19.00s
+                                Assets:Wyshona              -19.00s            0
 06-Mar-15 Auction House         Assets:Tajer:Items           65.00G       65.00G
                                 Assets:Tajer                -65.00G            0
 06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
                                 Assets:Tajer                   -30c            0
-06-Mar-15 Auction House         Expenses:Fees:Auction         0.83s        0.83s
-                                Assets:Tajer                 -0.83s            0
+06-Mar-15 Auction House         Expenses:Fees:Auction        82.68s       82.68s
+                                Assets:Tajer                -82.68s            0
 06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
                                 Assets:Tajer                   -30c            0
 06-Mar-15 Vendor                Assets:Tajer                  1.67G        1.67G
@@ -651,22 +650,22 @@ D 1.00G
                                 Equity:Gold                  -3.34G            0
 06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
                                 Assets:Tajer                   -30c            0
-06-Mar-15 Auction House         Expenses:Fees:Auction         0.08s        0.08s
-                                Expenses:Fees:Auction         0.05s        0.13s
-                                Expenses:Fees:Auction         0.04s        0.18s
-                                Expenses:Fees:Auction         0.04s        0.22s
-                                Expenses:Fees:Auction         0.02s        0.24s
-                                Assets:Tajer                 -0.24s            0
-06-Mar-15 Player                Assets:Tajer                  0.12s        0.12s
-                                Equity:Gold                  -0.12s            0
-06-Mar-15 Vendor                Assets:Tajer                  0.22s        0.22s
-                                Equity:Gold                  -0.22s            0
+06-Mar-15 Auction House         Expenses:Fees:Auction         7.72s        7.72s
+                                Expenses:Fees:Auction         5.44s       13.16s
+                                Expenses:Fees:Auction         4.44s       17.60s
+                                Expenses:Fees:Auction         4.32s       21.92s
+                                Expenses:Fees:Auction         2.04s       23.96s
+                                Assets:Tajer                -23.96s            0
+06-Mar-15 Player                Assets:Tajer                 12.00s       12.00s
+                                Equity:Gold                 -12.00s            0
+06-Mar-15 Vendor                Assets:Tajer                 22.00s       22.00s
+                                Equity:Gold                 -22.00s            0
 06-Mar-15 Auction House         Assets:Tajer:Items            1.00G        1.00G
                                 Assets:Tajer                 -1.00G            0
 06-Mar-15 Post                  Expenses:Fees:Mail              30c          30c
                                 Assets:Tajer                   -30c            0
-06-Mar-15 Auction House         Expenses:Fees:Auction         0.83s        0.83s
-                                Assets:Tajer                 -0.83s            0
+06-Mar-15 Auction House         Expenses:Fees:Auction        82.68s       82.68s
+                                Assets:Tajer                -82.68s            0
 06-Mar-15 Auction House         Assets:Tajer:Items            2.11G        2.11G
                                 Assets:Tajer                 -2.11G            0
 06-Mar-15 Auction House         Assets:Tajer:Items            2.30G        2.30G
@@ -693,17 +692,17 @@ D 1.00G
 06-Mar-16 Auction House         Assets:Gruulmorg                 4c           4c
                                 Assets:Danell                   -4c            0
 06-Mar-16 Auction House         Expenses:Fees:Auction            4c           4c
-                                Expenses:Fees:Mail            0.01s        0.01s
-                                Assets:Danell                -0.01s            0
-06-Mar-16 Auction House         Expenses:Fees:Auction         0.24s        0.24s
-                                Expenses:Fees:Auction         0.12s        0.36s
-                                Expenses:Fees:Auction         0.12s        0.48s
-                                Expenses:Fees:Auction           84c        0.49s
-                                Expenses:Fees:Auction           84c        0.50s
-                                Assets:Wyshona               -0.50s            0
-06-Mar-16 Crazy Cat Lady        Expenses:Items                0.40s        0.40s
-                                Expenses:Items                0.40s        0.80s
-                                Assets:Wyshona               -0.80s            0
+                                Expenses:Fees:Mail            1.20s        1.24s
+                                Assets:Danell                -1.24s            0
+06-Mar-16 Auction House         Expenses:Fees:Auction        24.00s       24.00s
+                                Expenses:Fees:Auction        12.00s       36.00s
+                                Expenses:Fees:Auction        12.00s       48.00s
+                                Expenses:Fees:Auction           84c       48.84s
+                                Expenses:Fees:Auction           84c       49.68s
+                                Assets:Wyshona              -49.68s            0
+06-Mar-16 Crazy Cat Lady        Expenses:Items               40.00s       40.00s
+                                Expenses:Items               40.00s       80.00s
+                                Assets:Wyshona              -80.00s            0
 06-Mar-16 Transfer              Expenses:Fees:Mail              60c          60c
                                 Assets:Danell                 5.00G        5.01G
                                 Assets:Wyshona               -5.01G            0
@@ -712,8 +711,8 @@ D 1.00G
                                 Assets:Gruulmorg            -20.00G            0
 06-Mar-16 Auction House         Assets:Tajer:Items            1.00G        1.00G
                                 Assets:Tajer                 -1.00G            0
-06-Mar-16 Auction House         Expenses:Fees:Auction         0.09s        0.09s
-                                Assets:Tajer                 -0.09s            0
+06-Mar-16 Auction House         Expenses:Fees:Auction         9.36s        9.36s
+                                Assets:Tajer                 -9.36s            0
 06-Mar-16 Transfer              Expenses:Fees:Mail              30c          30c
                                 Assets:Gruulmorg             30.00G       30.00G
                                 Assets:Tajer                -30.00G            0
@@ -723,12 +722,12 @@ D 1.00G
                                 Assets:Gruulmorg:Items      -30.00G            0
 06-Mar-16 Post                  Expenses:Fees:Mail              60c          60c
                                 Assets:Gruulmorg               -60c            0
-06-Mar-16 Post                  Expenses:Fees:Mail            0.01s        0.01s
-                                Assets:Tajer                 -0.01s            0
-06-Mar-16 Auction House         Assets:Tajer                  0.21s        0.21s
-                                Equity:Gold                  -0.21s            0
-06-Mar-16 Auction House         Expenses:Fees:Auction         0.75s        0.75s
-                                Expenses:Fees:Auction         0.75s        1.50G
+06-Mar-16 Post                  Expenses:Fees:Mail            1.20s        1.20s
+                                Assets:Tajer                 -1.20s            0
+06-Mar-16 Auction House         Assets:Tajer                 21.04s       21.04s
+                                Equity:Gold                 -21.04s            0
+06-Mar-16 Auction House         Expenses:Fees:Auction        75.00s       75.00s
+                                Expenses:Fees:Auction        75.00s        1.50G
                                 Assets:Tajer                 -1.50G            0
 06-Mar-16 Transfer              Assets:Danell                    6c           6c
                                 Assets:Gruulmorg                -6c            0
@@ -752,14 +751,14 @@ D 1.00G
                                 Assets:Tajer                   -30c            0
 06-Mar-17 Player: raev          Assets:Tajer:Items           30.00G       30.00G
                                 Assets:Tajer:Items          -30.00G            0
-06-Mar-17 Auction House         Expenses:Fees:Auction         0.75s        0.75s
-                                Assets:Tajer                 -0.75s            0
-06-Mar-17 Post                  Expenses:Fees:Mail            0.03s        0.03s
-                                Assets:Wyshona               -0.03s            0
+06-Mar-17 Auction House         Expenses:Fees:Auction        74.82s       74.82s
+                                Assets:Tajer                -74.82s            0
+06-Mar-17 Post                  Expenses:Fees:Mail            3.00s        3.00s
+                                Assets:Wyshona               -3.00s            0
 06-Mar-17 Player                Assets:Wyshona                1.00G        1.00G
                                 Assets:Wyshona:Items         -1.00G            0
-                                Expenses:Capital Loss         0.25s        0.25s
-                                Equity:Capital Losses        -0.25s            0
+                                Expenses:Capital Loss        25.00s       25.00s
+                                Equity:Capital Losses       -25.00s            0
 06-Mar-17 Auction House (impl.. Expenses:Items                2.79G        2.79G
                                 Assets:Wyshona               -2.79G            0
 06-Mar-17 Auction House (impl.. Assets:Danell:Items           3.00G        3.00G
@@ -775,8 +774,8 @@ D 1.00G
                                 Assets:Tajer:Items           -4.00G            0
                                 Income:Brokering             -3.00G       -3.00G
                                 Equity:Capital Gains          3.00G            0
-06-Mar-17 Auction House         Assets:Danell                 0.32s        0.32s
-                                Assets:Danell:Items          -0.32s            0
+06-Mar-17 Auction House         Assets:Danell                31.71s       31.71s
+                                Assets:Danell:Items         -31.71s            0
                                 Expenses:Capital Loss         2.68G        2.68G
                                 Equity:Capital Losses        -2.68G            0
 06-Mar-17 Auction House         Expenses:Fees:Auction         1.25G        1.25G
@@ -795,17 +794,17 @@ D 1.00G
                                 Expenses:Fees:Mail              30c       50.96G
                                 Assets:Wyshona              -50.96G            0
 06-Mar-17 Post                  Expenses:Fees:Mail              90c          90c
-                                Expenses:Fees:Auction         0.02s        0.03s
-                                Assets:Gruulmorg             -0.03s            0
+                                Expenses:Fees:Auction         1.66s        2.56s
+                                Assets:Gruulmorg             -2.56s            0
 06-Mar-17 Transfer              Assets:Gruulmorg             45.92G       45.92G
                                 Expenses:Fees:Auction         8.10G       54.02G
                                 Assets:Danell               -54.02G            0
 06-Mar-17 Transfer              Assets:Tajer                 66.25G       66.25G
                                 Expenses:Fees:Mail              30c       66.25G
                                 Assets:Gruulmorg            -66.25G            0
-06-Mar-17 Auction House         Expenses:Fees:Auction         0.75s        0.75s
-                                Expenses:Fees:Mail              30c        0.75s
-                                Assets:Tajer                 -0.75s            0
+06-Mar-17 Auction House         Expenses:Fees:Auction        75.00s       75.00s
+                                Expenses:Fees:Mail              30c       75.30s
+                                Assets:Tajer                -75.30s            0
 06-Mar-18 Auction House         Assets:Tajer                 15.00G       15.00G
                                 Assets:Tajer:Items          -15.00G            0
                                 Income:Brokering            -11.10G      -11.10G
@@ -849,16 +848,16 @@ D 1.00G
                                 Assets:Tajer                   -60c            0
 06-Mar-21 Auction House         Assets:Tajer:Items          170.00G      170.00G
                                 Assets:Tajer               -170.00G            0
-06-Mar-21 Auction House         Expenses:Fees:Auction         0.28s        0.28s
-                                Expenses:Fees:Auction         0.28s        0.55s
-                                Assets:Tajer                 -0.55s            0
+06-Mar-21 Auction House         Expenses:Fees:Auction        27.60s       27.60s
+                                Expenses:Fees:Auction        27.60s       55.20s
+                                Assets:Tajer                -55.20s            0
 06-Mar-22 Auction House         Assets:Tajer:Items          200.00G      200.00G
                                 Assets:Tajer               -200.00G            0
 06-Mar-22 Auction House         Expenses:Fees:Auction         1.77G        1.77G
                                 Expenses:Fees:Auction         1.77G        3.54G
                                 Expenses:Fees:Auction         1.77G        5.31G
                                 Expenses:Fees:Auction         1.77G        7.08G
-                                Expenses:Fees:Auction         0.75s        7.83G
+                                Expenses:Fees:Auction        75.00s        7.83G
                                 Assets:Tajer                 -7.83G            0
 06-Mar-23 Auction House         Assets:Tajer                166.53G      166.53G
                                 Assets:Tajer:Items         -166.53G            0
@@ -881,8 +880,8 @@ D 1.00G
 06-Mar-26 Player                Expenses:Items               54.00G       54.00G
                                 Expenses:Items               10.00G       64.00G
                                 Expenses:Fees:Bank           10.00G       74.00G
-                                Expenses:Fees:Mail            0.06s       74.06G
-                                Expenses:Fees:Mail            0.03s       74.10G
+                                Expenses:Fees:Mail            6.30s       74.06G
+                                Expenses:Fees:Mail            3.30s       74.10G
                                 Expenses:Fees:Mail              30c       74.10G
                                 Assets:Tajer                -74.10G            0
 06-Apr-01 Auction House         Assets:Tajer:Items          155.00G      155.00G
