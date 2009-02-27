@@ -146,7 +146,7 @@ public:
    * Destructor.  Destroys all of the accumulated amounts in the
    * balance.
    */
-  virtual ~balance_t() {
+  ~balance_t() {
     TRACE_DTOR(balance_t);
   }
 
@@ -232,7 +232,7 @@ public:
   balance_t& operator-=(const balance_t& bal);
   balance_t& operator-=(const amount_t& amt);
 
-  virtual balance_t& operator*=(const amount_t& amt);
+  balance_t& operator*=(const amount_t& amt);
 
   balance_t& operator*=(const double val) {
     return *this *= amount_t(val);
@@ -244,7 +244,7 @@ public:
     return *this *= amount_t(val);
   }
 
-  virtual balance_t& operator/=(const amount_t& amt);
+  balance_t& operator/=(const amount_t& amt);
 
   balance_t& operator/=(const double val) {
     return *this /= amount_t(val);
@@ -295,10 +295,9 @@ public:
     temp.in_place_negate();
     return temp;
   }
-  virtual balance_t& in_place_negate() {
+  void in_place_negate() {
     foreach (amounts_map::value_type& pair, amounts)
       pair.second.in_place_negate();
-    return *this;
   }
   balance_t operator-() const {
     return negate();
@@ -352,13 +351,13 @@ public:
     temp.in_place_reduce();
     return temp;
   }
-  virtual balance_t& in_place_reduce() {
+  void in_place_reduce() {
     // A temporary must be used here because reduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
       temp += pair.second.reduced();
-    return *this = temp;
+    *this = temp;
   }
 
   balance_t unreduced() const {
@@ -366,13 +365,13 @@ public:
     temp.in_place_unreduce();
     return temp;
   }
-  virtual balance_t& in_place_unreduce() {
+  void in_place_unreduce() {
     // A temporary must be used here because unreduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
     foreach (const amounts_map::value_type& pair, amounts)
       temp += pair.second.unreduced();
-    return *this = temp;
+    *this = temp;
   }
 
   optional<balance_t>
@@ -522,7 +521,7 @@ public:
     out << ")";
   }
 
-  virtual bool valid() const {
+  bool valid() const {
     foreach (const amounts_map::value_type& pair, amounts)
       if (! pair.second.valid())
 	return false;
