@@ -510,6 +510,8 @@ public:
 
   OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
       on("%(format_date(xact.date, \"%Y/%m/%d\"))"
+	 "%(!effective & xact.effective_date ?"
+	 " \"=\" + format_date(xact.effective_date, \"%Y/%m/%d\") : \"\")"
 	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
 	 "%(code ? \" (\" + code + \")\" : \"\") %(payee)%(xact.comment | \"\")\n"
 	 "    %(xact.uncleared ? (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"

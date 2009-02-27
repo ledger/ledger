@@ -188,6 +188,11 @@ namespace {
   value_t get_date(item_t& item) {
     return item.date();
   }
+  value_t get_effective_date(item_t& item) {
+    if (optional<date_t> effective = item.effective_date())
+      return *effective;
+    return NULL_VALUE;
+  }
   value_t get_note(item_t& item) {
     return string_value(item.note ? *item.note : empty_string);
   }
@@ -300,6 +305,8 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_end_line>);
     else if (name == "end_pos")
       return WRAP_FUNCTOR(get_wrapper<&get_end_pos>);
+    else if (name == "effective_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_effective_date>);
     break;
 
   case 'f':
