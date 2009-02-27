@@ -200,26 +200,26 @@ string generate_posts_iterator::generate_amount(std::ostream& out,
     generate_commodity(buf);
   }
 
-#if 0
   // Possibly generate an annotized commodity, but make it rarer
   if (! no_negative && three_gen() == 1) {
-    if (truth_gen()) {
-      out << " {";
-      generate_amount(out, value_t(), true);
-      out << '}';
+    if (three_gen() == 1) {
+      buf << " {";
+      generate_amount(buf, value_t(), true);
+      buf << '}';
     }
-    if (truth_gen()) {
-      out << " [";
-      generate_date(out);
-      out << ']';
+#if 0
+    if (six_gen() == 1) {
+      buf << " [";
+      generate_date(buf);
+      buf << ']';
     }
-    if (truth_gen()) {
-      out << " (";
-      generate_string(out, strlen_gen());
-      out << ')';
+#endif
+    if (six_gen() == 1) {
+      buf << " (";
+      generate_string(buf, six_gen());
+      buf << ')';
     }
   }
-#endif
 
   if (! not_this_amount.is_null() &&
       value_t(buf.str()).as_amount().commodity() ==
