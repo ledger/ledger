@@ -933,14 +933,14 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   // Set the commodity's flags and precision accordingly
 
-  if (commodity_ && (newly_created || ! flags.has_flags(PARSE_NO_MIGRATE))) {
+  if (flags.has_flags(PARSE_NO_MIGRATE)) {
+    set_keep_precision(true);
+  }
+  else if (commodity_) {
     commodity().add_flags(comm_flags);
 
     if (quantity->prec > commodity().precision())
       commodity().set_precision(quantity->prec);
-  }
-  else if (flags.has_flags(PARSE_NO_MIGRATE)) {
-    set_keep_precision(true);
   }
 
   // Now we have the final number.  Remove commas and periods, if
