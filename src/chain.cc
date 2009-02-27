@@ -93,6 +93,10 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     handler.reset(new calc_posts(handler, expr));
   }
 
+  // unround_posts will unround the amounts in all postings
+  if (report.HANDLED(unround))
+    handler.reset(new unround_posts(handler));
+
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
   if (report.HANDLED(only_)) {

@@ -83,6 +83,29 @@ public:
   }
 };
 
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class unround_posts : public item_handler<post_t>
+{
+public:
+  unround_posts(post_handler_ptr handler)
+  : item_handler<post_t>(handler) {
+    TRACE_CTOR(unround_posts, "posts_list&");
+  }
+  virtual ~unround_posts() {
+    TRACE_DTOR(unround_posts);
+  }
+
+  virtual void operator()(post_t& post) {
+    post.xdata().value = post.amount.unrounded();
+    post.xdata().add_flags(POST_EXT_COMPOUND);
+    item_handler<post_t>::operator()(post);
+  }
+};
+
 class posts_iterator;
 
 /**

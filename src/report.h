@@ -643,6 +643,8 @@ public:
       parent->HANDLER(limit_).on("uncleared|pending");
     });
 
+  OPTION(report_t, unround);
+
   OPTION_(report_t, weekly, DO() { // -W
       parent->HANDLER(period_).on("weekly");
     });
