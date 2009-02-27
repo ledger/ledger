@@ -64,10 +64,10 @@ typedef std::list<post_t *> posts_list;
 class post_t : public item_t
 {
 public:
-#define POST_VIRTUAL	  0x10 // the account was specified with (parens)
-#define POST_MUST_BALANCE 0x20 // posting must balance in the transaction
-#define POST_CALCULATED	  0x40 // posting's amount was calculated
-#define POST_PRICED	  0x80 // posting's cost was calculated
+#define POST_VIRTUAL	     0x10 // the account was specified with (parens)
+#define POST_MUST_BALANCE    0x20 // posting must balance in the transaction
+#define POST_CALCULATED	     0x40 // posting's amount was calculated
+#define POST_COST_CALCULATED 0x80 // posting's cost was calculated
 
   xact_t *	     xact;	// only set for posts of regular xacts
   account_t *	     account;

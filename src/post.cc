@@ -111,8 +111,8 @@ namespace {
     return post.has_flags(POST_CALCULATED);
   }
 
-  value_t get_is_priced(post_t& post) {
-    return post.has_flags(POST_PRICED);
+  value_t get_is_cost_calculated(post_t& post) {
+    return post.has_flags(POST_COST_CALCULATED);
   }
 
   value_t get_virtual(post_t& post) {
@@ -236,6 +236,8 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     else if (name == "cost")
       return WRAP_FUNCTOR(get_wrapper<&get_cost>);
+    else if (name == "cost_calculated")
+      return WRAP_FUNCTOR(get_wrapper<&get_is_cost_calculated>);
     else if (name == "count")
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
     else if (name == "calculated")
@@ -261,8 +263,6 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     else if (name == "primary")
       return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
-    else if (name == "priced")
-      return WRAP_FUNCTOR(get_wrapper<&get_is_priced>);
     break;
 
   case 'r':

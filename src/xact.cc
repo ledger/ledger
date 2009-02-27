@@ -92,7 +92,7 @@ bool xact_base_t::finalize()
 	      "annotation price = " << *post->amount.annotation().price);
 	DEBUG("xact.finalize", "amount = " << post->amount);
 	DEBUG("xact.finalize", "priced cost = " << *post->cost);
-	post->add_flags(POST_PRICED);
+	post->add_flags(POST_COST_CALCULATED);
 	add_or_set_value(balance, post->cost->rounded().reduced());
       } else {
 	// If the amount was a cost, it very likely has the "keep_precision"
@@ -185,7 +185,7 @@ bool xact_base_t::finalize()
 	else if (! top_post)
 	  top_post = post;
 
-      if (post->cost && ! post->has_flags(POST_PRICED)) {
+      if (post->cost && ! post->has_flags(POST_COST_CALCULATED)) {
 	saw_cost = true;
 	break;
       }
@@ -240,7 +240,7 @@ bool xact_base_t::finalize()
 	  if (post->must_balance() && amt.commodity() == comm) {
 	    balance -= amt;
 	    post->cost = per_unit_cost * amt;
-	    post->add_flags(POST_PRICED);
+	    post->add_flags(POST_COST_CALCULATED);
 	    balance += *post->cost;
 
 	    DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
