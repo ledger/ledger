@@ -51,6 +51,7 @@ void report_t::posts_report(post_handler_ptr handler)
 
 void report_t::generate_report(post_handler_ptr handler)
 {
+  HANDLER(limit_).on("actual");	// jww (2009-02-27): make this more general
   generate_posts_iterator walker
     (session, HANDLED(seed_) ?
      static_cast<unsigned int>(HANDLER(seed_).value.to_long()) : 0,
