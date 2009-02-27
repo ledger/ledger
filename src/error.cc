@@ -83,7 +83,7 @@ string source_context(const path&   file,
 		      const string& prefix)
 {
   std::size_t len = end_pos - pos;
-  if (! len)
+  if (! len || file == path("/dev/stdin"))
     return _("<no source context>");
 
   assert(len > 0);
