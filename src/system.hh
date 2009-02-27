@@ -170,6 +170,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
 #include <boost/version.hpp>

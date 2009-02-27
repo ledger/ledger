@@ -32,6 +32,7 @@
 #include "report.h"
 #include "interactive.h"
 #include "iterators.h"
+#include "generate.h"
 #include "filters.h"
 #include "chain.h"
 #include "output.h"
@@ -46,6 +47,14 @@ void report_t::posts_report(post_handler_ptr handler)
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts(chain_post_handlers(*this, handler), walker);
   session.clean_posts();
+}
+
+void report_t::generate_report(post_handler_ptr handler)
+{
+  generate_posts_iterator walker
+    (session, HANDLED(seed_) ?
+     static_cast<unsigned int>(HANDLER(seed_).value.to_long()) : 0);
+  pass_down_posts(chain_post_handlers(*this, handler), walker);
 }
 
 void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
@@ -536,6 +545,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(sort_xacts_);
     else OPT_(subtotal);
     else OPT(start_of_week_);
+    else OPT(seed_);
     break;
   case 't':
     OPT_CH(amount_);
@@ -709,6 +719,12 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	if (is_eq(q, "format"))
 	  return WRAP_FUNCTOR(format_command);
 	break;
+      case 'g':
+	if (is_eq(q, "generate"))
+	  return expr_t::op_t::wrap_functor
+	    (reporter<post_t, post_handler_ptr, &report_t::generate_report>
+	     (new format_posts(*this, report_format(HANDLER(print_format_)),
+			       false), *this));
       case 'h':
 	if (is_eq(q, "hello") && maybe_import("ledger.hello"))
 	  return session.lookup(string(PRECMD_PREFIX) + "hello");

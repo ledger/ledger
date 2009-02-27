@@ -65,6 +65,7 @@ libledger_data_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_report_la_SOURCES  =			\
 	src/quotes.cc				\
+	src/generate.cc				\
 	src/derive.cc				\
 	src/emacs.cc                            \
 	src/output.cc				\
@@ -121,6 +122,7 @@ pkginclude_HEADERS =				\
 	src/chain.h				\
 	src/precmd.h				\
 	src/derive.h				\
+	src/generate.h				\
 	src/output.h				\
 	src/emacs.h				\
 	src/quotes.h				\
@@ -240,7 +242,7 @@ endif
 TESTS =
 
 if HAVE_PYTHON
-TESTS += RegressTests BaselineTests ConfirmTests
+TESTS += RegressTests BaselineTests ConfirmTests GenerateTests
 endif
 
 if HAVE_CPPUNIT
@@ -380,6 +382,14 @@ EXTRA_DIST += test/input
 
 ConfirmTests: $(srcdir)/test/ConfirmTests.py
 	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input" > $@
+	chmod 755 $@
+
+GenerateTests_SOURCES = test/GenerateTests.py
+
+EXTRA_DIST += test/input
+
+GenerateTests: $(srcdir)/test/GenerateTests.py
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh

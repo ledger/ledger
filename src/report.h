@@ -122,6 +122,7 @@ public:
   }
 
   void posts_report(post_handler_ptr handler);
+  void generate_report(post_handler_ptr handler);
   void xact_report(post_handler_ptr handler, xact_t& xact);
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(post_handler_ptr handler);
@@ -582,6 +583,7 @@ public:
      set_expr(args[0].to_string());
    });
 
+  OPTION(report_t, seed_);
   OPTION(report_t, set_account_);
   OPTION(report_t, set_payee_);
   OPTION(report_t, set_price_);
