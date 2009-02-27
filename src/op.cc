@@ -473,9 +473,11 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
       out << "(";
       if (left() && left()->print(out, context))
 	found = true;
-      out << ", ";
-      if (has_right() && right()->print(out, context))
-	found = true;
+      for (ptr_op_t next = right(); next; next = next->right()) {
+	out << ", ";
+	if (next->print(out, context))
+	  found = true;
+      }
       out << ")";
     }
     else if (left() && left()->print(out, context)) {
