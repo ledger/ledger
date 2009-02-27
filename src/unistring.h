@@ -48,6 +48,8 @@
 
 #include "utils.h"
 
+namespace ledger {
+
 /**
  * @class unistring
  *
@@ -68,7 +70,7 @@ public:
     const char * p   = input.c_str();
     std::size_t	 len = input.length();
 
-    //assert(utf8::is_valid(p, p + len));
+    assert(utf8::is_valid(p, p + len));
     utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
   }
   ~unistring() {
@@ -83,9 +85,14 @@ public:
 		      const std::size_t len   = 0) const
   {
     std::string utf8result;
-    utf8::utf32to8(utf32chars.begin() + begin,
-		   utf32chars.begin() + begin + (len ? len : length()),
-		   std::back_inserter(utf8result));
+    std::size_t this_len = length();
+    assert(begin <= this_len);
+    assert(begin + len <= this_len);
+    if (this_len)
+      utf8::utf32to8(utf32chars.begin() + begin,
+		     utf32chars.begin() + begin +
+		     (len ? (len > this_len ? this_len : len) : this_len),
+		     std::back_inserter(utf8result));
     return utf8result;
   }
 };
@@ -107,5 +114,7 @@ inline void justify(std::ostream&      out,
   if (right)
     out << str;
 }
+
+} // namespace ledger
 
 #endif // _UNISTRING_H

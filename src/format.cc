@@ -335,8 +335,13 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 
 	if (newlen > width) {
 	  unistring temp(*i);
-	  result << temp.extract(0, account_abbrev_length) << ":";
-	  newlen -= temp.length() - account_abbrev_length;
+	  if (temp.length() > static_cast<std::size_t>(account_abbrev_length)) {
+	    result << temp.extract(0, account_abbrev_length) << ":";
+	    newlen -= temp.length() - account_abbrev_length;
+	  } else {
+	    result << temp.extract() << ":";
+	    newlen -= temp.length();
+	  }
 	} else {
 	  result << *i << ":";
 	}
@@ -346,7 +351,8 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 	// Even abbreviated its too big to show the last account, so
 	// abbreviate all but the last and truncate at the beginning.
 	unistring temp(result.str());
-	buf << ".." << temp.extract(temp.length() - width - 2, width - 2);
+	assert(temp.length() > width - 2);
+	buf << ".." << temp.extract(temp.length() - (width - 2), width - 2);
       } else {
 	buf << result.str();
       }
