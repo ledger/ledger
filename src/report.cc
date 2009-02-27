@@ -203,7 +203,7 @@ value_t report_t::fn_quantity(call_scope_t& scope)
   return args.get<amount_t>(0).number();
 }
 
-value_t report_t::fn_truncate(call_scope_t& scope)
+value_t report_t::fn_truncated(call_scope_t& scope)
 {
   interactive_t args(scope, "v&ll");
   return string_value(format_t::truncate
@@ -740,8 +740,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     break;
 
   case 't':
-    if (is_eq(p, "truncate"))
-      return MAKE_FUNCTOR(report_t::fn_truncate);
+    if (is_eq(p, "truncated"))
+      return MAKE_FUNCTOR(report_t::fn_truncated);
     else if (is_eq(p, "total_expr"))
       return MAKE_FUNCTOR(report_t::fn_total_expr);
     break;
