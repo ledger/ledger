@@ -1,0 +1,550 @@
+C 1.00s = 100c
+C 1.00G = 100s
+
+D 1.00G
+
+2006/03/14 Opening Balances
+    Assets:Tajer                1339829c
+    Assets:Gruulmorg             248720c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          1428c
+    Expenses:Fees:Auction           768c
+    Expenses:Fees:Auction           612c
+    Expenses:Fees:Auction          4764c
+    Expenses:Fees:Auction          3372c
+    Expenses:Fees:Auction          1296c
+    Expenses:Fees:Auction          1332c
+    Expenses:Fees:Auction           660c
+    Expenses:Fees:Auction         10044c
+    Expenses:Fees:Auction          3588c
+    Expenses:Fees:Auction          1632c
+    Expenses:Fees:Auction          8388c
+    Expenses:Fees:Auction          9984c
+    Expenses:Fees:Auction          2316c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Tajer                 158860c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          1320c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Tajer                  11496c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          3216c
+    Assets:Tajer
+
+2006/03/14 Post
+    Expenses:Fees:Mail               30c
+    Assets:Gruulmorg
+
+2006/03/14 Auction House
+    Assets:Tajer                  34678c
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Fees:Auction          2316c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Gruulmorg                  1G
+    Equity:Gold
+
+2006/03/14 Auction House
+    Assets:Tajer                  59389c
+    Equity:Gold
+
+2006/03/14 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/14 Player
+    Assets:Tajer                      3G
+    Equity:Gold
+
+2006/03/14 Player
+    Assets:Tajer                      6G
+    Equity:Gold
+
+2006/03/14 Auction House
+    Expenses:Items                   35s
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Tajer:Items                  "Plans: Wildthorn Mail" 1 @ 125s
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Assets:Bids                     259c
+    Assets:Bids                      45s
+    Assets:Bids                    4720c
+    Assets:Tajer
+
+2006/03/14 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/14 Auction House
+    Expenses:Items                    8G
+    Assets:Tajer
+
+2006/03/14 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/14 Puldoost
+    Assets:Tajer                      8G
+    Expenses:Items
+
+2006/03/14 Auction House
+    Assets:Wyshona:Items                "Plans: Wildthorn Mail" 1 {1.25G}
+    Assets:Tajer:Items
+
+2006/03/15 Auction House
+    Assets:Tajer                     45s
+    Assets:Tajer                    259c
+    Assets:Bids
+
+2006/03/15 Auction House
+    Assets:Tajer                   4720c
+    Assets:Bids
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction         12542c  ; something got lost here
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction          2375c
+    Expenses:Fees:Auction         -2375c
+    Assets:Gruulmorg
+
+2006/03/15 Auction House
+    Assets:Danell                     4c
+    Equity:Gold
+
+2006/03/15 Transfer
+    Assets:Gruulmorg                  2c
+    Assets:Danell
+
+2006/03/15 Transfer
+    Assets:Danell                  4250c
+    Expenses:Fees:Auction           750c
+    Assets:Gruulmorg                -50s
+
+2006/03/15 Post
+    Expenses:Fees:Mail               60c
+    Assets:Danell
+
+2006/03/15 Player
+    Assets:Tajer                      3G
+    Equity:Gold
+
+2006/03/15 Post
+    Assets:Wyshona                   40s
+    Expenses:Fees:Mail               30c
+    Assets:Danell
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction             8s
+    Expenses:Fees:Auction            11s
+    Assets:Wyshona
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Beaststalker's Belt" 1 @ 65G
+    Assets:Tajer
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction          8268c
+    Assets:Tajer
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Vendor
+    Assets:Tajer                  16744c
+    Assets:Tajer                  16640c
+    Equity:Gold
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction           772c
+    Expenses:Fees:Auction           544c
+    Expenses:Fees:Auction           444c
+    Expenses:Fees:Auction           432c
+    Expenses:Fees:Auction           204c
+    Assets:Tajer
+
+2006/03/15 Player
+    Assets:Tajer                     12s
+    Equity:Gold
+
+2006/03/15 Vendor
+    Assets:Tajer                     22s
+    Equity:Gold
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Recipe: Elixir of Giant Growth" 1 @ 1G
+    Assets:Tajer
+
+2006/03/15 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Expenses:Fees:Auction          8268c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Plans: Mithril Shield Spike" 1 @ 21050c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Plans: Mithril Shield Spike" 1 @ 23000c
+    Assets:Tajer
+
+2006/03/15 Auction House
+    Assets:Tajer:Items                  "Recipe: Elixir of Giant Growth" 1 @ 150s
+    Assets:Tajer
+
+2006/03/16 Player
+    Assets:Tajer                      3G
+    Equity:Gold
+
+2006/03/16 Post
+    Expenses:Fees:Mail               90c
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Assets:Tajer                1195768c
+    Assets:Tajer:Items                  "Beaststalker's Belt" -1 {65G} @ 1195768c
+    Income:Brokering            -545768c
+
+2006/03/16 Auction House
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" 1 {21050c}
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" 1 {2.3G}
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" 1 {1G}
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" 1 {1.5G}
+    Assets:Tajer:Items
+
+2006/03/16 Player
+    Assets:Tajer                      4G
+    Equity:Gold
+
+2006/03/16 Auction House
+    Assets:Wyshona                 1341s
+    Equity:Gold
+
+2006/03/16 Auction House
+    Assets:Gruulmorg                  4c
+    Assets:Danell
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction             4c
+    Expenses:Fees:Mail              120c
+    Assets:Danell
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction            24s
+    Expenses:Fees:Auction            12s
+    Expenses:Fees:Auction            12s
+    Expenses:Fees:Auction            84c
+    Expenses:Fees:Auction            84c
+    Assets:Wyshona
+
+2006/03/16 Crazy Cat Lady
+    Expenses:Items                   40s
+    Expenses:Items                   40s
+    Assets:Wyshona
+
+2006/03/16 Transfer
+    Expenses:Fees:Mail               60c
+    Assets:Danell                     5G
+    Assets:Wyshona
+
+2006/03/16 Transfer
+    Expenses:Fees:Mail               30c
+    Assets:Tajer                     20G
+    Assets:Gruulmorg
+
+2006/03/16 Auction House
+    Assets:Tajer:Items                  "Pulsating Hydra Heart" 1 @ 1G
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction           936c
+    Assets:Tajer
+
+2006/03/16 Transfer
+    Expenses:Fees:Mail               30c
+    Assets:Gruulmorg                 30G
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Assets:Gruulmorg:Items              "Ace of Warlords" 2 @ 15G
+    Assets:Gruulmorg
+
+2006/03/16 Transfer
+    Assets:Tajer:Items                  "Ace of Warlords" 2 {15G}
+    Assets:Gruulmorg:Items
+
+2006/03/16 Post
+    Expenses:Fees:Mail               60c
+    Assets:Gruulmorg
+
+2006/03/16 Post
+    Expenses:Fees:Mail              120c
+    Assets:Tajer
+
+2006/03/16 Auction House
+    Assets:Tajer                   2104c
+    Equity:Gold
+
+2006/03/16 Auction House
+    Expenses:Fees:Auction            75s
+    Expenses:Fees:Auction            75s
+    Assets:Tajer
+
+2006/03/16 Transfer
+    Assets:Danell                     6c
+    Assets:Gruulmorg
+
+2006/03/16 Post
+    Expenses:Fees:Mail               60c
+    Assets:Gruulmorg
+
+2006/03/16 Post
+    Expenses:Fees:Mail               60c
+    Assets:Tajer
+
+2006/03/16 General Goods Vendor
+    Expenses:Items                   50c  ; wrapping paper
+    Assets:Tajer
+
+2006/03/16 Player
+    Assets:Tajer                      1G
+    Equity:Gold
+
+2006/03/17 Auction House
+    Assets:Wyshona               180584c
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" -1 {1.5G} @ 180584c
+    Income:Brokering            -165584c
+
+2006/03/17 Auction House
+    Assets:Wyshona               180584c
+    Assets:Wyshona:Items                "Recipe: Elixir of Giant Growth" -1 {1G} @ 180584c
+    Income:Brokering            -170584c
+
+2006/03/17 Post
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/17 Player: raev
+    Assets:Tajer:Items                  "Wildheart Belt" 1 {30G}
+    Assets:Tajer:Items                  "Ace of Warlords" -2 {15G}
+
+2006/03/17 Auction House
+    Expenses:Fees:Auction          7482c
+    Assets:Tajer
+
+2006/03/17 Post
+    Expenses:Fees:Mail              300c
+    Assets:Wyshona
+
+2006/03/17 Player
+    Assets:Wyshona                    1G
+    Assets:Wyshona:Items                "Plans: Wildthorn Mail" -1 {1.25G} @ 1G
+    Expenses:Capital Loss            25s
+
+2006/03/17 Auction House (implicit transfer)
+    Expenses:Items                  279s  ; Recipe: Swiftness Potion
+    Assets:Wyshona
+
+2006/03/17 Auction House (implicit transfer)
+    Assets:Danell:Items                 "Ace of Warlords" 1 @ 3G
+    Assets:Tajer:Items                  "Ace of Warlords" 1 @ 3.9G
+    Assets:Tajer:Items                  "Holy Bologna" 1 @ 2G
+    Assets:Tajer:Items                  "The Emerald Dream" 1 @ 4G
+    Assets:Tajer:Items                  "The Arcanist's Cookbook" 1 @ 4G
+    Assets:Tajer:Items                  "Harnessing Shadows" 1 @ 5G
+    Assets:Tajer:Items                  "Garona: Book on Treachery" 1 @ 4G
+    Assets:Tajer:Items                  "Preserved Holly" 5 @ 20s
+    Assets:Wyshona
+
+2006/03/17 Auction House
+    Assets:Tajer                      4G
+    Assets:Tajer:Items                  "Pulsating Hydra Heart" -1 {1G} @ 4G
+    Income:Brokering                 -3G
+
+2006/03/17 Auction House
+    Assets:Danell                  3171c
+    Assets:Danell:Items                 "Ace of Warlords" -1 {3G} @ 3171c
+    Expenses:Capital Loss         26829c
+
+2006/03/17 Auction House
+    Expenses:Fees:Auction         12537c
+    Assets:Danell
+
+2006/03/17 Transfer
+    Assets:Gruulmorg                 15G
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/17 Auction House
+    Assets:Wyshona               362450c
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" -1 {21050c} @ 181225c
+    Assets:Wyshona:Items                "Plans: Mithril Shield Spike" -1 {2.3G} @ 181225c
+    Income:Brokering            -318400c
+
+2006/03/17 Transfer
+    Assets:Danell                499560c
+    Expenses:Gifts                    1G
+    Expenses:Fees:Mail               30c
+    Assets:Wyshona
+
+2006/03/17 Post
+    Expenses:Fees:Mail               90c
+    Expenses:Fees:Auction           166c
+    Assets:Gruulmorg
+
+2006/03/17 Transfer
+    Assets:Gruulmorg             459211c
+    Expenses:Fees:Auction         81023c
+    Assets:Danell               -540234c
+
+2006/03/17 Transfer
+    Assets:Tajer                 662465c
+    Expenses:Fees:Mail               30c
+    Assets:Gruulmorg
+
+2006/03/17 Auction House
+    Expenses:Fees:Auction            75s
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/18 Auction House
+    Assets:Tajer                     15G
+    Assets:Tajer:Items                  "Ace of Warlords" -1 {3.9G} @ 15G
+    Income:Brokering            -111000c
+
+2006/03/18 Auction House
+    Assets:Tajer                 434472c
+    Assets:Tajer:Items                  "Wildheart Belt" -1 {30G} @ 434472c
+    Income:Brokering            -134472c
+
+2006/03/18 Auction House
+    Assets:Tajer                   1995s
+    Assets:Tajer:Items                  "Harnessing Shadows" -1 {5G} @ 1995s
+    Income:Brokering              -1495s
+
+2006/03/19 Auction House
+    Assets:Tajer                   2850s
+    Assets:Tajer:Items                  "Garona: Book on Treachery" -1 {4G} @ 2850s
+    Income:Brokering              -2450s
+
+2006/03/19 Auction House
+    Assets:Tajer                   1710s
+    Assets:Tajer:Items                  "The Arcanist's Cookbook" -1 {4G} @ 1710s
+    Income:Brokering              -1310s
+
+2006/03/19 Auction House
+    Assets:Tajer                  46550c
+    Assets:Tajer:Items                  "Preserved Holly" -5 {20s} @ 9310c
+    Income:Brokering             -36550c
+
+2006/03/19 Auction House
+    Assets:Tajer:Items                  "Two of Portals" 1 @ 3G
+    Assets:Tajer:Items                  "Two of Portals" 1 @ 2.5G
+    Assets:Tajer
+
+2006/03/20 Auction House
+    Assets:Tajer                 163443c
+    Assets:Tajer:Items                  "Holy Bologna" -1 {2G} @ 163443c
+    Income:Brokering            -143443c
+
+2006/03/20 Auction House
+    Assets:Tajer                      5G
+    Assets:Tajer:Items                  "Two of Portals" -1 {3G} @ 5G
+    Income:Brokering                 -2G
+
+2006/03/20 Auction House
+    Assets:Tajer                     15G
+    Assets:Tajer:Items                  "The Emerald Dream" -1 {4G} @ 15G
+    Income:Brokering                -11G
+
+2006/03/20 Auction House
+    Expenses:Fees:Mail               60c
+    Assets:Tajer
+
+2006/03/21 Auction House
+    Assets:Tajer:Items                  "Orb of Deception" 1 @ 170G
+    Assets:Tajer
+
+2006/03/21 Auction House
+    Expenses:Fees:Auction          2760c
+    Expenses:Fees:Auction          2760c
+    Assets:Tajer
+
+2006/03/22 Auction House
+    Assets:Tajer:Items                  "Nightblade" 1 @ 200G
+    Assets:Tajer
+
+2006/03/22 Auction House
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction           177s
+    Expenses:Fees:Auction            75s
+    Assets:Tajer
+
+2006/03/23 Auction House
+    Assets:Tajer                1665260c
+    Assets:Tajer:Items                  "Orb of Deception" -1 {170G} @ 1665260c
+    Expenses:Capital Loss         34740c
+
+2006/03/26 Auction House
+    Assets:Tajer                  81980c
+    Assets:Tajer:Items                  "Two of Portals" -1 {2.5G} @ 81980c
+    Income:Brokering             -56980c
+
+2006/03/26 Player
+    Expenses:Items                  150s  ; Recipe: Elixir of Minor Agility
+    Expenses:Fees:Mail               30c
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/27 Player
+    Assets:Tajer                    160G
+    Assets:Tajer:Items                  "Nightblade" -1 {200G} @ 160G
+    Expenses:Capital Loss            40G
+
+2006/03/27 Player
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/03/26 Player
+    Expenses:Items                   (9G * 6)  ; Traveler's backpacks
+    Expenses:Items                   10G
+    Expenses:Fees:Bank               10G
+    Expenses:Fees:Mail              630c
+    Expenses:Fees:Mail              330c
+    Expenses:Fees:Mail               30c
+    Assets:Tajer
+
+2006/04/01 Auction House
+    Assets:Tajer:Items                  "Orb of Deception" 1 @ 155G
+    Assets:Tajer
