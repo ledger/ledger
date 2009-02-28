@@ -675,10 +675,13 @@ bool amount_t::is_zero() const
 
       std::ostringstream out;
       stream_out_mpq(out, MP(quantity), commodity().precision());
-      
-      for (const char * p = out.str().c_str(); *p; p++)
-	if (*p != '0' && *p != '.' && *p  != '-')
-	  return false;
+
+      string output = out.str();
+      if (! output.empty()) {
+	for (const char * p = output.c_str(); *p; p++)
+	  if (*p != '0' && *p != '.' && *p  != '-')
+	    return false;
+      }
       return true;
     }
   }
