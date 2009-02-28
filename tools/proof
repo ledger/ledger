@@ -50,6 +50,12 @@ if ! (cd ~/Products/ledger-opt && make clean fullcheck); then
     exit 1
 fi
 
+echo %%% Building default %%%
+if ! (cd ~/Products/ledger && make clean fullcheck); then
+    echo %%% FAILED to build default %%%
+    exit 1
+fi
+
 echo %%% Building release-distcheck %%%
 if ! (cd ~/Products/ledger-opt && make release-distcheck); then
     echo %%% FAILED to build release-distcheck %%%
