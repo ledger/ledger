@@ -20,7 +20,7 @@ fi
 
 
 echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
-sh autogen.sh
+sh tools/autogen.sh
 
 
 # configure the template files
