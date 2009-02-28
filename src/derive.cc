@@ -135,7 +135,7 @@ namespace {
       }
       else if (check_for_date &&
 	  regex_match((*begin).to_string(), what, dow_mask)) {
-	short  dow  = string_to_day_of_week(what[0]);
+	short  dow  = static_cast<short>(string_to_day_of_week(what[0]));
 	date_t date = CURRENT_DATE() - date_duration(1);
 	while (date.day_of_week() != dow)
 	  date -= date_duration(1);

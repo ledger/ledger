@@ -382,7 +382,7 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix)
 
 string item_context(const item_t& item, const string& desc)
 {
-  std::size_t len = item.end_pos - item.beg_pos;
+  std::streamoff len = item.end_pos - item.beg_pos;
   if (! len)
     return _("<no item context>");
 

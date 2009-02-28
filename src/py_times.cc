@@ -63,14 +63,21 @@ struct date_from_python
     return 0;
   }
 
-  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+  static void construct(PyObject * obj_ptr,
+			converter::rvalue_from_python_stage1_data * data)
   {
     MY_PyDateTime_IMPORT;
-    int y = PyDateTime_GET_YEAR(obj_ptr);
-    int m = PyDateTime_GET_MONTH(obj_ptr);
-    int d = PyDateTime_GET_DAY(obj_ptr);
-    date* dte = new date(y,m,d);
-    data->convertible = (void*)dte;
+
+    int year = PyDateTime_GET_YEAR(obj_ptr);
+    date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));
+    date::month_type m =
+      static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));
+    date::day_type d =
+      static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));
+
+    date * dte = new date(y, m, d);
+
+    data->convertible = (void *) dte;
   }
 };
 
@@ -83,11 +90,15 @@ struct datetime_to_python
   static PyObject* convert(const datetime_t& moment)
   {
     MY_PyDateTime_IMPORT;
+
     date dte = moment.date();
     datetime_t::time_duration_type tod = moment.time_of_day();
-    return PyDateTime_FromDateAndTime(dte.year(), dte.month(), dte.day(),
-				      tod.hours(), tod.minutes(), tod.seconds(),
-				      tod.total_microseconds() % 1000000);
+
+    return PyDateTime_FromDateAndTime
+      (static_cast<int>(dte.year()), static_cast<int>(dte.month()),
+       static_cast<int>(dte.day()), static_cast<int>(tod.hours()),
+       static_cast<int>(tod.minutes()), static_cast<int>(tod.seconds()),
+       static_cast<int>(tod.total_microseconds() % 1000000));
   }
 };
 
@@ -100,18 +111,36 @@ struct datetime_from_python
     return 0;
   }
 
-  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data)
+  static void construct(PyObject * obj_ptr,
+			converter::rvalue_from_python_stage1_data * data)
   {
     MY_PyDateTime_IMPORT;
-    int y = PyDateTime_GET_YEAR(obj_ptr);
-    int m = PyDateTime_GET_MONTH(obj_ptr);
-    int d = PyDateTime_GET_DAY(obj_ptr);
-    int h = PyDateTime_DATE_GET_HOUR(obj_ptr);
-    int min = PyDateTime_DATE_GET_MINUTE(obj_ptr);
-    int s = PyDateTime_DATE_GET_SECOND(obj_ptr);
-    datetime_t* moment = new datetime_t(date(y,m,d),
-				    datetime_t::time_duration_type(h, min, s));
-    data->convertible = (void*)moment;
+
+    int year = PyDateTime_GET_YEAR(obj_ptr);
+    date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));
+    date::month_type m =
+      static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));
+    date::day_type d =
+      static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));
+
+    datetime_t::time_duration_type::hour_type h =
+      static_cast<datetime_t::time_duration_type::hour_type>
+        (PyDateTime_DATE_GET_HOUR(obj_ptr));
+    datetime_t::time_duration_type::min_type min =
+      static_cast<datetime_t::time_duration_type::min_type>
+        (PyDateTime_DATE_GET_MINUTE(obj_ptr));
+    datetime_t::time_duration_type::sec_type s =
+      static_cast<datetime_t::time_duration_type::sec_type>
+        (PyDateTime_DATE_GET_SECOND(obj_ptr));
+    datetime_t::time_duration_type::fractional_seconds_type ms =
+      static_cast<datetime_t::time_duration_type::fractional_seconds_type>
+        (PyDateTime_DATE_GET_MICROSECOND(obj_ptr)) * 1000000;
+
+    datetime_t * moment
+      = new datetime_t(date(y, m, d),
+		       datetime_t::time_duration_type(h, min, s, ms));
+
+    data->convertible = (void *) moment;
   }
 };
 

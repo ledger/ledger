@@ -68,7 +68,7 @@ class fdoutbuf : public std::streambuf {
     // write one character
     virtual int_type overflow (int_type c) {
 	if (c != EOF) {
-	    char z = c;
+	    char z = static_cast<char>(c);
 	    if (write (fd, &z, 1) != 1) {
 		return EOF;
 	    }

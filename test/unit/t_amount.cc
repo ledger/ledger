@@ -369,10 +369,10 @@ void AmountTestCase::testCommodityEquality()
   assertTrue(x0.is_null());
   assertThrow(x0.is_zero(), amount_error);
   assertThrow(x0.is_realzero(), amount_error);
-  assertThrow(x0.sign() == 0, amount_error);
-  assertThrow(x0.compare(x1) < 0, amount_error);
-  assertThrow(x0.compare(x2) > 0, amount_error);
-  assertThrow(x0.compare(x0) == 0, amount_error);
+  assertThrow(x0.sign(), amount_error);
+  assertThrow(x0.compare(x1), amount_error);
+  assertThrow(x0.compare(x2), amount_error);
+  assertThrow(x0.compare(x0), amount_error);
 
   assertTrue(x1 != x2);
   assertTrue(x1 != x4);
@@ -1170,7 +1170,9 @@ void AmountTestCase::testTruth()
   amount_t x1("1234");
   amount_t x2("1234.56");
 
-  assertThrow(x0 ? 1 : 0, amount_error);
+#ifndef NOT_FOR_PYTHON
+  assertThrow(x0.operator bool(), amount_error);
+#endif // NOT_FOR_PYTHON
 
   assertTrue(x1);
   assertTrue(x2);

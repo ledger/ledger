@@ -62,7 +62,8 @@ struct amount_t::bigint_t : public supports_flags<>
     mpq_init(val);
   }
   bigint_t(const bigint_t& other)
-    : supports_flags<>(other.flags() & ~BIGINT_BULK_ALLOC),
+    : supports_flags<>(static_cast<uint_least8_t>
+		       (other.flags() & ~BIGINT_BULK_ALLOC)),
       prec(other.prec), ref(1) {
     TRACE_CTOR(bigint_t, "copy");
     mpq_init(val);
@@ -341,7 +342,8 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   _dup();
 
   mpq_mul(MP(quantity), MP(quantity), MP(amt.quantity));
-  quantity->prec += amt.quantity->prec;
+  quantity->prec = static_cast<precision_t>(quantity->prec +
+					    amt.quantity->prec);
 
   if (! has_commodity())
     commodity_ = amt.commodity_;
@@ -349,7 +351,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   if (has_commodity() && ! keep_precision()) {
     precision_t comm_prec = commodity().precision();
     if (quantity->prec > comm_prec + extend_by_digits)
-      quantity->prec = comm_prec + extend_by_digits;
+      quantity->prec = static_cast<precision_t>(comm_prec + extend_by_digits);
   }
 
   return *this;
@@ -377,7 +379,9 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   // the divide.  Round up in the last position.
 
   mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
-  quantity->prec += amt.quantity->prec + quantity->prec + extend_by_digits;
+  quantity->prec =
+    static_cast<precision_t>(quantity->prec + amt.quantity->prec +
+			     quantity->prec + extend_by_digits);
 
   if (! has_commodity())
     commodity_ = amt.commodity_;
@@ -390,7 +394,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   if (has_commodity() && ! keep_precision()) {
     precision_t comm_prec = commodity().precision();
     if (quantity->prec > comm_prec + extend_by_digits)
-      quantity->prec = comm_prec + extend_by_digits;
+      quantity->prec = static_cast<precision_t>(comm_prec + extend_by_digits);
   }
 
   return *this;
@@ -837,7 +841,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   if (std::isdigit(c)) {
     parse_quantity(in, quant);
 
-    if (! in.eof() && ((n = in.peek()) != '\n')) {
+    if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
       if (std::isspace(n))
 	comm_flags |= COMMODITY_STYLE_SEPARATED;
 
@@ -846,19 +850,20 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
       if (! symbol.empty())
 	comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
-      if (! in.eof() && ((n = in.peek()) != '\n'))
+      if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n'))
 	details.parse(in);
     }
   } else {
     commodity_t::parse_symbol(in, symbol);
 
-    if (! in.eof() && ((n = in.peek()) != '\n')) {
-      if (std::isspace(in.peek()))
+    if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
+      if (std::isspace(static_cast<char>(in.peek())))
 	comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       parse_quantity(in, quant);
 
-      if (! quant.empty() && ! in.eof() && ((n = in.peek()) != '\n'))
+      if (! quant.empty() && ! in.eof() &&
+	  ((n = static_cast<char>(in.peek())) != '\n'))
 	details.parse(in);
     }
   }
@@ -917,19 +922,21 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     comm_flags |= COMMODITY_STYLE_THOUSANDS;
     if (last_comma > last_period) {
       comm_flags |= COMMODITY_STYLE_EUROPEAN;
-      quantity->prec = quant.length() - last_comma - 1;
+      quantity->prec = static_cast<precision_t>(quant.length() -
+						last_comma - 1);
     } else {
-      quantity->prec = quant.length() - last_period - 1;
+      quantity->prec = static_cast<precision_t>(quant.length() -
+						last_period - 1);
     }
   }
   else if (last_comma != string::npos &&
 	   commodity().has_flags(COMMODITY_STYLE_EUROPEAN)) {
     comm_flags |= COMMODITY_STYLE_EUROPEAN;
-    quantity->prec = quant.length() - last_comma - 1;
+    quantity->prec = static_cast<precision_t>(quant.length() - last_comma - 1);
   }
   else if (last_period != string::npos &&
 	   ! (commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
-    quantity->prec = quant.length() - last_period - 1;
+    quantity->prec = static_cast<precision_t>(quant.length() - last_period - 1);
   }
   else {
     quantity->prec = 0;

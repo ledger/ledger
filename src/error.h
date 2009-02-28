@@ -91,10 +91,10 @@ string line_context(const string& line,
 		    std::size_t	  pos     = 0,
 		    std::size_t	  end_pos = 0);
 
-string source_context(const path&   file,
-		      std::size_t   pos,
-		      std::size_t   end_pos,
-		      const string& prefix = "");
+string source_context(const path&      file,
+		      istream_pos_type pos,
+		      istream_pos_type end_pos,
+		      const string&    prefix = "");
 
 #define DECLARE_EXCEPTION(name, kind)				\
   class name : public kind {					\

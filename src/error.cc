@@ -77,12 +77,12 @@ string line_context(const string& line,
   return buf.str();
 }
 
-string source_context(const path&   file,
-		      std::size_t   pos,
-		      std::size_t   end_pos,
-		      const string& prefix)
+string source_context(const path&      file,
+		      istream_pos_type pos,
+		      istream_pos_type end_pos,
+		      const string&    prefix)
 {
-  std::size_t len = end_pos - pos;
+  std::streamoff len = end_pos - pos;
   if (! len || file == path("/dev/stdin"))
     return _("<no source context>");
 
@@ -95,9 +95,9 @@ string source_context(const path&   file,
   in.seekg(pos, std::ios::beg);
       
   scoped_array<char> buf(new char[len + 1]);
-  in.read(buf.get(), len);
+  in.read(buf.get(), static_cast<int>(len));
   assert(static_cast<std::size_t>(in.gcount()) == len);
-  buf[len] = '\0';
+  buf[static_cast<int>(len)] = '\0';
 
   bool first = true;
   for (char * p = std::strtok(buf.get(), "\n");

@@ -120,7 +120,7 @@ void process_environment(const char ** envp, const string& tag,
 	if (*q == '_')
 	  *r++ = '-';
 	else
-	  *r++ = std::tolower(*q);
+	  *r++ = static_cast<char>(std::tolower(*q));
       *r = '\0';
 
       if (*q == '=') {

@@ -92,7 +92,8 @@ void expr_t::parse(const string& _str, const uint32_t flags)
 {
   parser_t parser;
   str	   = _str;
-  ptr	   = parser.parse(str, flags);
+  ptr	   = parser.parse(str, parser_t::parse_flags_t
+			  (static_cast<uint_least8_t>(flags)));
   context  = NULL;
   compiled = false;
 }
@@ -102,7 +103,8 @@ void expr_t::parse(std::istream& in, const uint32_t flags,
 {
   parser_t parser;
   str	   = "<stream>";
-  ptr	   = parser.parse(in, flags, original_string);
+  ptr	   = parser.parse(in, parser_t::parse_flags_t
+			  (static_cast<uint_least8_t>(flags)), original_string);
   context  = NULL;
   compiled = false;
 }

@@ -919,7 +919,7 @@ post_t * instance_t::parse_post(char *		line,
     if (stream.eof()) {
       next = NULL;
     } else {
-      next = skip_ws(next + stream.tellg());
+      next = skip_ws(next + static_cast<std::ptrdiff_t>(stream.tellg()));
 
       // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
 
@@ -967,7 +967,7 @@ post_t * instance_t::parse_post(char *		line,
 	  if (cstream.eof())
 	    next = NULL;
 	  else
-	    next = skip_ws(p + cstream.tellg());
+	    next = skip_ws(p + static_cast<std::ptrdiff_t>(cstream.tellg()));
 	} else {
 	  throw parse_error(_("Expected a cost amount"));
 	}
@@ -1056,7 +1056,7 @@ post_t * instance_t::parse_post(char *		line,
       if (stream.eof())
 	next = NULL;
       else
-	next = skip_ws(p + stream.tellg());
+	next = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
     } else {
       throw parse_error(_("Expected an assigned balance amount"));
     }
@@ -1081,9 +1081,10 @@ post_t * instance_t::parse_post(char *		line,
   post->end_pos  = curr_pos;
   post->end_line = linenum;
 
-  if (! tag_stack.empty())
+  if (! tag_stack.empty()) {
     foreach (const string& tag, tag_stack)
       post->parse_tags(tag.c_str());
+  }
 
   TRACE_STOP(post_details, 1);
 
@@ -1240,9 +1241,10 @@ xact_t * instance_t::parse_xact(char *		line,
   xact->end_pos  = curr_pos;
   xact->end_line = linenum;
 
-  if (! tag_stack.empty())
+  if (! tag_stack.empty()) {
     foreach (const string& tag, tag_stack)
       xact->parse_tags(tag.c_str());
+  }
 
   TRACE_STOP(xact_details, 1);
 

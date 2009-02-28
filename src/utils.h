@@ -525,7 +525,7 @@ inline char * skip_ws(char * ptr) {
 inline char * trim_ws(char * ptr) {
   std::size_t len = std::strlen(ptr);
   int i = int(len) - 1;
-  while (i >= 0 && ptr[i] == ' ' || ptr[i] == '\t' || ptr[i] == '\n')
+  while (i >= 0 && (ptr[i] == ' ' || ptr[i] == '\t' || ptr[i] == '\n'))
     ptr[i--] = '\0';
   return skip_ws(ptr);
 }
@@ -552,17 +552,17 @@ inline char * next_element(char * buf, bool variable = false) {
 }
 
 inline char peek_next_nonws(std::istream& in) {
-  char c = in.peek();
+  char c = static_cast<char>(in.peek());
   while (in.good() && ! in.eof() && std::isspace(c)) {
     in.get(c);
-    c = in.peek();
+    c = static_cast<char>(in.peek());
   }
   return c;
 }
 
 #define READ_INTO(str, targ, size, var, cond) {		\
     char * _p = targ;					\
-    var = str.peek();					\
+    var = static_cast<char>(str.peek());		\
     while (str.good() && ! str.eof() && var != '\n' &&	\
 	   (cond) && _p - targ < size) {		\
       str.get(var);					\
@@ -574,14 +574,14 @@ inline char peek_next_nonws(std::istream& in) {
 	  break;					\
       }							\
       *_p++ = var;					\
-      var = str.peek();					\
+      var = static_cast<char>(str.peek());		\
     }							\
     *_p = '\0';						\
   }
 
 #define READ_INTO_(str, targ, size, var, idx, cond) {	\
     char * _p = targ;					\
-    var = str.peek();					\
+    var = static_cast<char>(str.peek());		\
     while (str.good() && ! str.eof() && var != '\n' &&	\
 	   (cond) && _p - targ < size) {		\
       str.get(var);					\
@@ -595,7 +595,7 @@ inline char peek_next_nonws(std::istream& in) {
 	idx++;						\
       }							\
       *_p++ = var;					\
-      var = str.peek();					\
+      var = static_cast<char>(str.peek());		\
     }							\
     *_p = '\0';						\
   }

@@ -240,7 +240,7 @@ namespace {
   inline void read_lower_word(std::istream& in, string& word) {
     in >> word;
     for (int i = 0, l = word.length(); i < l; i++)
-      word[i] = std::tolower(word[i]);
+      word[i] = static_cast<char>(std::tolower(word[i]));
   }
 
   void parse_date_words(std::istream& in, string& word,

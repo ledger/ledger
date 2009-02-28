@@ -145,7 +145,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       ++p;
     }
 
-    int num = 0;
+    std::size_t num = 0;
     while (*p && std::isdigit(*p)) {
       num *= 10;
       num += *p++ - '0';

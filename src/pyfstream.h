@@ -56,7 +56,7 @@ protected:
   virtual int_type overflow (int_type c) {
     if (c != EOF) {
       char z[2];
-      z[0] = c;
+      z[0] = static_cast<char>(c);
       z[1] = '\0';
       if (PyFile_WriteString(z, reinterpret_cast<PyObject *>(fo)) < 0) {
 	return EOF;

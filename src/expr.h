@@ -74,7 +74,8 @@ class expr_t
 
 public:
   class op_t;
-  typedef intrusive_ptr<op_t> ptr_op_t;
+  typedef intrusive_ptr<op_t>	    ptr_op_t;
+  typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
   enum parse_flags_enum_t {
     PARSE_NORMAL     = 0x00,

@@ -78,7 +78,7 @@ class account_t : public scope_t
 	    const string& _name   = "",
 	    const optional<string>& _note = none)
     : scope_t(), parent(_parent), name(_name), note(_note),
-      depth(parent ? parent->depth + 1 : 0),
+      depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)),
       known(false), data(NULL) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }

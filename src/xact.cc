@@ -179,11 +179,12 @@ bool xact_base_t::finalize()
     post_t * top_post = NULL;
 
     foreach (post_t * post, posts) {
-      if (! post->amount.is_null())
+      if (! post->amount.is_null()) {
 	if (post->amount.is_annotated())
 	  top_post = post;
 	else if (! top_post)
 	  top_post = post;
+      }
 
       if (post->cost && ! post->has_flags(POST_COST_CALCULATED)) {
 	saw_cost = true;

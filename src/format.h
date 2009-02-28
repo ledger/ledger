@@ -69,11 +69,11 @@ class format_t : public noncopyable
       EXPR,
     };
 
-    kind_t	  type;
-    unsigned char min_width;
-    unsigned char max_width;
-    string	  chars;
-    expr_t	  expr;
+    kind_t	type;
+    std::size_t min_width;
+    std::size_t max_width;
+    string	chars;
+    expr_t	expr;
 
     scoped_ptr<struct element_t> next;
 

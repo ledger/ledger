@@ -526,7 +526,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
   } else {
     char * _p = buf;
-    c = in.peek();
+    c = static_cast<char>(in.peek());
     while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
       int bytes = 0;
       int size  = _p - buf;
@@ -570,7 +570,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 	*_p++ = c;
       }
 
-      c = in.peek();
+      c = static_cast<char>(in.peek());
     }
     *_p = '\0';
 

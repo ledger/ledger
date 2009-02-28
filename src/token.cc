@@ -36,7 +36,7 @@ namespace ledger {
 
 int expr_t::token_t::parse_reserved_word(std::istream& in)
 {
-  char c = in.peek();
+  char c = static_cast<char>(in.peek());
 
   if (c == 'a' || c == 'd' || c == 'f' || c == 'o' || c == 'n' || c == 't') {
     length = 0;
@@ -141,7 +141,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
   switch (c) {
   case '&':
     in.get(c);
-    c = in.peek();
+    c = static_cast<char>(in.peek());
     if (c == '&') {
       in.get(c);
       kind = KW_AND;
@@ -152,7 +152,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     break;
   case '|':
     in.get(c);
-    c = in.peek();
+    c = static_cast<char>(in.peek());
     if (c == '|') {
       in.get(c);
       kind = KW_OR;
@@ -218,7 +218,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '!':
     in.get(c);
-    c = in.peek();
+    c = static_cast<char>(in.peek());
     if (c == '=') {
       in.get(c);
       symbol[1] = c;
@@ -258,7 +258,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     break;
   case ':':
     in.get(c);
-    c = in.peek();
+    c = static_cast<char>(in.peek());
     if (c == '=') {
       in.get(c);
       symbol[1] = c;
@@ -291,7 +291,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '=':
     in.get(c);
-    c = in.peek();
+    c = static_cast<char>(in.peek());
     if (c == '~') {
       in.get(c);
       symbol[1] = c;
@@ -313,7 +313,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '<':
     in.get(c);
-    if (in.peek() == '=') {
+    if (static_cast<char>(in.peek()) == '=') {
       in.get(c);
       symbol[1] = c;
       symbol[2] = '\0';
@@ -326,7 +326,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '>':
     in.get(c);
-    if (in.peek() == '=') {
+    if (static_cast<char>(in.peek()) == '=') {
       in.get(c);
       symbol[1] = c;
       symbol[2] = '\0';
@@ -387,7 +387,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 	if (in.fail())
 	  throw_(parse_error, _("Failed to reset input stream"));
 
-	c = in.peek();
+	c = static_cast<char>(in.peek());
 	if (std::isdigit(c) || c == '.')
 	  expected('\0', c);
 
@@ -395,12 +395,12 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
       } else {
 	kind   = VALUE;
 	value  = temp;
-	length = in.tellg() - pos;
+	length = static_cast<std::size_t>(in.tellg() - pos);
       }
     }
     catch (const std::exception& err) {
       kind   = ERROR;
-      length = in.tellg() - pos;
+      length = static_cast<std::size_t>(in.tellg() - pos);
       throw;
     }
     break;
