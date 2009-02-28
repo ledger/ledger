@@ -224,7 +224,17 @@ while [ -n "$1" ]; do
 
 	  # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
 	  # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
-	  if [ -f /usr/bin/g++-4.2 ]; then
+	  if [ -f /opt/local/bin/g++-mp-4.3 ]; then
+	      if [ -f /opt/local/bin/ccache ]; then
+		  CC="ccache /opt/local/bin/gcc-mp-4.3"
+		  CXX="ccache /opt/local/bin/g++-mp-4.3"
+		  LD="ccache /opt/local/bin/g++-mp-4.3"
+	      else
+		  CC=/opt/local/bin/gcc-mp-4.3
+		  CXX=/opt/local/bin/g++-mp-4.3
+		  LD=/opt/local/bin/g++-mp-4.3
+	      fi
+	  elif [ -f /usr/bin/g++-4.2 ]; then
 	      if [ -f /opt/local/bin/ccache ]; then
 		  CC="ccache /usr/bin/gcc-4.2"
 		  CXX="ccache /usr/bin/g++-4.2"
