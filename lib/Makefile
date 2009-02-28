@@ -31,19 +31,19 @@ cppunit-release:
 	-(cd cppunit; make distclean)
 	(cd cppunit; sh autogen.sh; \
 	 ./configure CFLAGS="$(ARCH_CFLAGS)" \
-		   LDFLAGS="$(ARCH_LDFLAGS)" \
-		--prefix=$(STOW_ROOT)/cppunit \
-		--disable-dependency-tracking && \
+		     LDFLAGS="$(ARCH_LDFLAGS)" \
+		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
+		     --prefix=$(STOW_ROOT)/cppunit && \
 	 make install)
 
 cppunit-debug:
 	-(cd cppunit; make distclean)
 	(cd cppunit; sh autogen.sh; \
 	 ./configure CPPFLAGS="-D_GLIBCXX_DEBUG=1" \
-		   CFLAGS="-g $(ARCH_CFLAGS)" \
-		   LDFLAGS="-g $(ARCH_LDFLAGS)" \
-		--prefix=$(STOW_ROOT)/cppunit-debug \
-		--disable-dependency-tracking && \
+		     CFLAGS="-g $(ARCH_CFLAGS)" \
+		     LDFLAGS="-g $(ARCH_LDFLAGS)" \
+		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
+		     --prefix=$(STOW_ROOT)/cppunit-debug && \
 	 make install)
 
 cppunit-build: cppunit-release cppunit-debug
