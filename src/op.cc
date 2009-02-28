@@ -312,6 +312,27 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
   }
 }
 
+namespace {
+  bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t op,
+		  const expr_t::op_t::context_t& context)
+  {
+    bool found = false;
+
+    assert(op->left());
+    if (op->left()->print(out, context))
+      found = true;
+
+    if (op->has_right()) {
+      out << ", ";
+      if (op->right()->kind == expr_t::op_t::O_CONS)
+	found = print_cons(out, op->right(), context);
+      else if (op->right()->print(out, context))
+	found = true;
+    }
+    return found;
+  }
+}
+
 bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 {
   bool found = false;
@@ -469,20 +490,10 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_CONS:
-    if (has_right()) {
-      out << "(";
-      if (left() && left()->print(out, context))
-	found = true;
-      for (ptr_op_t next = right(); next; next = next->right()) {
-	out << ", ";
-	if (next->print(out, context))
-	  found = true;
-      }
-      out << ")";
-    }
-    else if (left() && left()->print(out, context)) {
-      found = true;
-    }
+    assert(has_right());
+    out << "(";
+    found = print_cons(out, this, context);
+    out << ")";
     break;
 
   case O_DEFINE:

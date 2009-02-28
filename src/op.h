@@ -243,10 +243,10 @@ private:
       checked_delete(this);
   }
 
-  friend inline void intrusive_ptr_add_ref(op_t * op) {
+  friend inline void intrusive_ptr_add_ref(const op_t * op) {
     op->acquire();
   }
-  friend inline void intrusive_ptr_release(op_t * op) {
+  friend inline void intrusive_ptr_release(const op_t * op) {
     op->release();
   }
 
