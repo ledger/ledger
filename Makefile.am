@@ -173,7 +173,6 @@ info_TEXINFOS	= doc/ledger.texi
 dist_lisp_LISP	= lisp/ledger.el lisp/timeclock.el
 ELCFILES	=
 DISTCLEANFILES	= ledger.elc timeclock.elc
-CLEANFILES     += TAGS
 
 all_sources     = $(libledger_util_la_SOURCES)		\
 		  $(libledger_math_la_SOURCES)		\
@@ -184,11 +183,6 @@ all_sources     = $(libledger_util_la_SOURCES)		\
 		  src/pyledger.cc
 
 all_files       = $(all_sources) $(pkginclude_HEADERS)
-
-TAGS: $(all_files)
-	@BUILD_DIR=`cd $(top_builddir); pwd`; \
-	(cd $(srcdir); etags -l c++ -o $$BUILD_DIR/TAGS $(all_files) 2> /dev/null)
-	@echo TAGS rebuilt.
 
 ######################################################################
 
