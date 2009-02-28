@@ -3,26 +3,20 @@
 import sys
 import os
 import re
-import string
 import tempfile
 
+from string import join
 from difflib import unified_diff
-from subprocess import Popen, PIPE
 
-ledger = sys.argv[1]
-tests  = sys.argv[2]
+from LedgerHarness import LedgerHarness
 
-if not os.path.isfile(ledger):
-    sys.exit(1)
+harness = LedgerHarness(sys.argv)
+tests   = sys.argv[2]
+
 if not os.path.isdir(tests) and not os.path.isfile(tests):
     sys.exit(1)
 
-succeeded = 0
-failed    = 0
-
 def test_regression(test_file):
-    global succeeded, failed
-
     bug     = open(test_file)
     command = bug.readline()
 
@@ -40,23 +34,14 @@ def test_regression(test_file):
     if command.startswith("-f - "):
         use_stdin = True
 
-        if re.search('--columns', command):
-            command = ("%s" % ledger) + " --verify --args-only " + command
-        else:
-            command = (("%s" % ledger) +
-                       " --verify --args-only --columns=80 " + command)
+        command = '$ledger ' + command
     else:
         tempdata = tempfile.mkstemp()
 
-        os.write(tempdata[0], string.join(data, ''))
+        os.write(tempdata[0], join(data, ''))
         os.close(tempdata[0])
 
-        if re.search('--columns', command):
-            command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
-                       " --verify --args-only " + command)
-        else:
-            command = (("%s -f \"%s\" " % (ledger, tempdata[1])) +
-                       " --verify --args-only --columns=80 " + command)
+        command = ('$ledger -f "%s" ' % tempdata[1]) + command
 
     output = []
     while line != ">>>2\n":
@@ -74,26 +59,23 @@ def test_regression(test_file):
 
     exitcode = int(match.group(1))
 
-    p = Popen(command[:-1], shell=True,
-              stdin=PIPE, stdout=PIPE, stderr=PIPE,
-              close_fds=True)
+    p = harness.run(command, columns=(not re.search('--columns', command)))
 
     if use_stdin:
-        p.stdin.write(string.join(data))
+        p.stdin.write(join(data))
     p.stdin.close()
 
     success = True
     printed = False
     index   = 0
-    for line in unified_diff(output, p.stdout.readlines()):
+    for line in unified_diff(output, harness.readlines(p.stdout)):
         index += 1
         if index < 3:
             continue
         if not printed:
             if success: print
-            print "Regression failure in output from %s:" \
-                % os.path.basename(test_file)
-            if success: failed += 1
+            print "Regression failure in output from %s:" % \
+                os.path.basename(test_file)
             success = False
             printed = True
         print " ", line,
@@ -101,32 +83,25 @@ def test_regression(test_file):
     printed = False
     index   = 0
     for line in unified_diff([re.sub('\$FILE', tempdata[1], line)
-                              for line in error],
-                             p.stderr.readlines()):
+                              for line in error], harness.readlines(p.stderr)):
         index += 1
         if index < 3:
             continue
         if not printed:
             if success: print
-            print "Regression failure in error output from %s:" \
-                % os.path.basename(test_file)
-            if success: failed += 1
+            print "Regression failure in error output from %s:" % \
+                os.path.basename(test_file)
             success = False
             printed = True
         print " ", line,
 
-    if exitcode != p.wait():
-        if success: print
-        if success: failed += 1
-        success = False
-        print "Regression failure in exitcode from %s: %d (expected) != %d" \
-            % (os.path.basename(test_file), exitcode, p.returncode)
-
-    if success:
-        succeeded += 1
-        sys.stdout.write(".")
+    if exitcode == p.wait():
+        harness.success()
     else:
-        sys.stdout.write("E")
+        if success: print
+        print "Regression failure in exitcode from %s: %d (expected) != %d" % \
+            (os.path.basename(test_file), exitcode, p.returncode)
+        harness.failure()
 
     if not use_stdin:
         os.remove(tempdata[1])
@@ -138,11 +113,4 @@ if os.path.isdir(tests):
 else:
     test_regression(tests)
 
-print
-if succeeded > 0:
-    print "OK (%d) " % succeeded,
-if failed > 0:
-    print "FAILED (%d)" % failed,
-print
-
-sys.exit(failed)
+harness.exit()

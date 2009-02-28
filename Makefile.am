@@ -359,7 +359,7 @@ RegressTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/regress test/convert.py
 
 RegressTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress \"\$$@\"" > $@
 	chmod 755 $@
 
 BaselineTests_SOURCES = test/RegressTests.py
@@ -367,7 +367,7 @@ BaselineTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/baseline
 
 BaselineTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/baseline" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/baseline \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -375,28 +375,34 @@ ConfirmTests_SOURCES = test/ConfirmTests.py
 EXTRA_DIST += test/input
 
 ConfirmTests: $(srcdir)/test/ConfirmTests.py
-	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input" > $@
+	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input \"\$$@\"" > $@
 	chmod 755 $@
 
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) 1 20 \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
 
 if HAVE_CPPUNIT
-fullcheck: $(TESTS)
-	sh $(FULLCHECK) $(top_builddir)/UtilTests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/ExprTests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify
-	sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify
+cppunittests: $(TESTS)
+	@sh $(FULLCHECK) $(top_builddir)/UtilTests$(EXEEXT)   --verify
+	@sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify
+	@sh $(FULLCHECK) $(top_builddir)/ExprTests$(EXEEXT)   --verify
+	@sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify
+	@sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify
 else
-fullcheck: check
+cppunittests: $(TESTS)
 	@test 1 -eq 1
 endif
+
+fullcheck: cppunittests
+	@$(top_builddir)/RegressTests  --verify --gmalloc
+	@$(top_builddir)/BaselineTests --verify --gmalloc
+	@$(top_builddir)/ConfirmTests  --verify --gmalloc
+	@$(top_builddir)/GenerateTests --verify --gmalloc
 
 ######################################################################
 

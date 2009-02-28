@@ -4,68 +4,44 @@
 # final balance is the same as what the balance report shows.
 
 import sys
-import os
-import re
+#import re
 
-from subprocess import Popen, PIPE
 from difflib import ndiff
 
-ledger    = sys.argv[1]
-succeeded = 0
-failed    = 0
+from LedgerHarness import LedgerHarness
 
-if not os.path.isfile(ledger):
-    sys.exit(1)
+harness = LedgerHarness(sys.argv)
 
-def normalize(line):
-    match = re.match("((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$", line)
-    if match:
-        if match.group(3):
-            prefix = match.group(3) + " " + match.group(5)
-            if match.group(8):
-                return prefix + match.group(8)
-            return prefix
-        elif match.group(7):
-            prefix = match.group(7) + " " + match.group(5)
-            if match.group(8):
-                return prefix + match.group(8)
-            return prefix
-    return line
+#def normalize(line):
+#    match = re.match("((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$", line)
+#    if match:
+#        if match.group(3):
+#            prefix = match.group(3) + " " + match.group(5)
+#            if match.group(8):
+#                return prefix + match.group(8)
+#            return prefix
+#        elif match.group(7):
+#            prefix = match.group(7) + " " + match.group(5)
+#            if match.group(8):
+#                return prefix + match.group(8)
+#            return prefix
+#    return line
 
 def generation_test(seed):
-    global succeeded, failed
+    p_gen = harness.run('$ledger --seed=%d generate' % seed)
 
-    p_gen = Popen("%s --args-only --actual --seed=%d generate" % (ledger, seed),
-                  shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                  close_fds=True)
-    cout = ""
-    cout_data = os.read(p_gen.stdout.fileno(), 8192)
-    while cout_data:
-        if cout_data:
-            cout += cout_data
-        cout_data = os.read(p_gen.stdout.fileno(), 8192)
-    if cout_data:
-        cout += cout_data
+    cout = harness.read(p_gen.stdout)
 
-    if p_gen.wait() != 0:
-        print "Generation for seed %d failed due to error:" % seed
-        print p_gen.stderr.read()
-        del p_gen
+    if not harness.wait(p_gen, msg=("Generation for seed %d failed:" % seed)):
         return False
-    del p_gen
 
-    p_print = Popen("%s --args-only --actual -f - print" % ledger, shell=True,
-                    stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    p_print = harness.run('$ledger --actual -f - print')
     p_print.stdin.write(cout)
     p_print.stdin.close()
     p_print_out = p_print.stdout.read()
 
-    if p_print.wait() != 0:
-        print "Print for seed %d failed due to error:" % seed
-        print p_print.stderr.read()
-        del p_print
+    if not harness.wait(p_print, msg=("Print for seed %d failed:" % seed)):
         return False
-    del p_print
 
     #p_cerr_bal = Popen("%s --args-only -f - bal" % ledger, shell=True,
     #                   stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
@@ -81,34 +57,24 @@ def generation_test(seed):
     #    return False
     #del p_cerr_bal
 
-    p_cout_bal = Popen("%s --args-only -f - bal" % ledger, shell=True,
-                       stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    p_cout_bal = harness.run('$ledger -f - bal')
     p_cout_bal.stdin.write(cout)
     p_cout_bal.stdin.close()
 
-    cout_lines = p_cout_bal.stdout.readlines()
-    norm_cout_lines = [normalize(line) for line in cout_lines]
+    cout_lines = harness.readlines(p_cout_bal.stdout)
+    #norm_cout_lines = [normalize(line) for line in cout_lines]
 
-    if p_cout_bal.wait() != 0:
-        print "Stdout balance for seed %d failed due to error:" % seed
-        print p_cout_bal.stderr.read()
-        del p_cout_bal
+    if not harness.wait(p_cout_bal, msg=("Stdout balance for seed %d failed:" % seed)):
         return False
-    del p_cout_bal
 
-    p_print_bal = Popen("%s --args-only -f - bal" % ledger, shell=True,
-                        stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    p_print_bal = harness.run('$ledger -f - bal')
     p_print_bal.stdin.write(p_print_out)
     p_print_bal.stdin.close()
 
-    print_lines = p_print_bal.stdout.readlines()
+    print_lines = harness.readlines(p_print_bal.stdout)
 
-    if p_print_bal.wait() != 0:
-        print "Print balance for seed %d failed due to error:" % seed
-        print p_print_bal.stderr.read()
-        del p_print_bal
+    if not harness.wait(p_print_bal, msg=("Print balance for seed %d failed:" % seed)):
         return False
-    del p_print_bal
 
     success = True
     #printed = False
@@ -130,7 +96,6 @@ def generation_test(seed):
         if not printed:
             if success: print
             print "Generation failure in output from seed %d (cout vs. print):" % seed
-            if success: failed += 1
             success = False
             printed = True
         print " ", line
@@ -145,18 +110,8 @@ if len(sys.argv) > 3:
 
 for i in range(beg_range, end_range):
     if generation_test(i):
-        sys.stdout.write(".")
-        succeeded += 1
+        harness.success()
     else:
-        sys.stdout.write("E")
-        failed += 1
+        harness.failure()
 
-print
-if succeeded > 0:
-    print "OK (%d) " % succeeded,
-if failed > 0:
-    print "FAILED (%d)" % failed,
-print
-
-sys.exit(failed)
-
+harness.exit()

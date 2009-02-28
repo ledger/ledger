@@ -7,7 +7,13 @@ import sys
 import os
 import re
 
-from subprocess import Popen, PIPE
+from LedgerHarness import LedgerHarness
+
+harness = LedgerHarness(sys.argv)
+tests   = sys.argv[2]
+
+if not os.path.isdir(tests) and not os.path.isfile(tests):
+    sys.exit(1)
 
 commands = [
     "-f '$tests/standard.dat' -O 0ecbb1b15e2cf3e515cc0f8533e5bb0fb2326728",
@@ -19,16 +25,6 @@ commands = [
     "-f '$tests/standard.dat' -G c0226fafdf9e6711ac9121cf263e2d50791859cb"
 ]
 
-ledger    = sys.argv[1]
-tests     = sys.argv[2]
-succeeded = 0
-failed    = 0
-
-if not os.path.isfile(ledger):
-    sys.exit(1)
-if not os.path.isdir(tests) and not os.path.isfile(tests):
-    sys.exit(1)
-
 def clean(num):
     num = re.sub("(\s+|\$|,)","", num)
     m = re.search("([-0-9.]+)", num)
@@ -37,26 +33,25 @@ def clean(num):
     else:
         return float(num)
 
-def confirm_report(args):
+def confirm_report(command):
     index         = 1
     last_line     = ""
     failure       = False
     running_total = 0.0
 
-    p = Popen(re.sub('\$cmd', 'reg', args), shell=True,
-              stdin=PIPE, stdout=PIPE, stderr=PIPE,
-              close_fds=True)
+    p = harness.run(re.sub('\$cmd', 'reg', command))
 
-    for line in p.stdout.readlines():
+    for line in harness.readlines(p.stdout):
         match = re.match("\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)", line[54:])
         if not match:
             continue
+
         value = clean(match.group(1))
         total = clean(match.group(2))
-
         running_total += value
+
         diff = abs(running_total - total)
-        if re.search(' -[VGB] ', args) and diff < 0.015:
+        if re.search(' -[VGB] ', command) and diff < 0.015:
             diff = 0.0
         if diff > 0.001:
             print "DISCREPANCY: %.3f (%.3f - %.3f) at line %d:" % \
@@ -70,16 +65,14 @@ def confirm_report(args):
 
     balance_total = 0.0
 
-    p = Popen(re.sub('\$cmd', 'bal', args), shell=True,
-              stdin=PIPE, stdout=PIPE, stderr=PIPE,
-              close_fds=True)
+    p = harness.run(re.sub('\$cmd', 'bal', command))
 
-    for line in p.stdout.readlines():
+    for line in harness.readlines(p.stdout):
         if line[0] != '-':
             balance_total = clean(line[:20])
 
     diff = abs(balance_total - running_total)
-    if re.search(' -[VGB] ', args) and diff < 0.015:
+    if re.search(' -[VGB] ', command) and diff < 0.015:
         diff = 0.0
     if diff > 0.001:
         print
@@ -91,20 +84,9 @@ def confirm_report(args):
     return not failure
 
 for cmd in commands:
-    if confirm_report("%s --args-only --verify --columns=80 %s" %
-                      (ledger, re.sub('\$tests', tests, cmd))):
-        sys.stdout.write(".")
-        succeeded += 1
+    if confirm_report('$ledger $cmd ' + re.sub('\$tests', tests, cmd)):
+        harness.success()
     else:
-        sys.stdout.write("E")
-        failed += 1
+        harness.failure()
 
-print
-if succeeded > 0:
-    print "OK (%d) " % succeeded,
-if failed > 0:
-    print "FAILED (%d)" % failed,
-print
-
-sys.exit(failed)
-
+harness.exit()
