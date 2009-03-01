@@ -2,7 +2,7 @@ VERSION		= 3.0
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS         = po intl
-EXTRA_DIST	= config.rpath autogen.sh contrib
+EXTRA_DIST	= config.rpath contrib
 
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
@@ -411,7 +411,7 @@ fullcheck: cppunittests
 
 ######################################################################
 
-EXTRA_DIST += doc/LICENSE doc/NEWS doc/README
+EXTRA_DIST += doc/LICENSE doc/NEWS
 EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/refman.pdf
 
 DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
@@ -426,7 +426,9 @@ dist-hook:
 	       $(distdir)/doc/Doxyfile.gen
 	cp -pR doc/html $(distdir)/doc
 	rm -f $(distdir)/README.textile
+	rm -f $(distdir)/ABOUT-NLS
 	cp -p $(srcdir)/doc/README $(distdir)/README
+	cp -p $(srcdir)/tools/autogen.sh $(distdir)/autogen.sh
 
 distclean-local:
 	rm -fr doc/html doc/latex
