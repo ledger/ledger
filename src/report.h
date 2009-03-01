@@ -301,10 +301,9 @@ public:
 	 "%(quoted(payee)),"
 	 "%(quoted(account)),"
 	 "%(quoted(scrub(display_amount))),"
-	 "%(quoted((cleared or xact.cleared) ?"
-	 " \"*\" : ((pending or xact.pending) ? \"!\" : \"\"))),"
+	 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
 	 "%(quoted(code)),"
-	 "%(quoted(join(note)))\n");
+	 "%(quoted(join(note | xact.note)))\n");
     });
 
   OPTION_(report_t, current, DO() { // -c
@@ -521,21 +520,21 @@ public:
 	 " \"=\" + format_date(xact.effective_date, \"%Y/%m/%d\") : \"\")"
 	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
 	 "%(code ? \" (\" + code + \")\" :"
-	 " \"\") %(payee)%(xact.comment | \"\")\n"
+	 " \"\") %(payee)%(xact.comment)\n"
 	 "    %(xact.uncleared ?"
 	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
 	 "%(has_cost & !cost_calculated ?"
 	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
-	 "%(comment | \"\")\n%/"
+	 "%(comment)\n%/"
 	 "    %(xact.uncleared ?"
 	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
 	 "%-34(account)"
 	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
 	 "%(has_cost & !cost_calculated ?"
 	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
-	 "%(comment | \"\")\n%/\n");
+	 "%(comment)\n%/\n");
     });
 
   OPTION_(report_t, quantity, DO() { // -O

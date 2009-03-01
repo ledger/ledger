@@ -267,6 +267,8 @@ value_t report_t::fn_join(call_scope_t& args)
   foreach (const char ch, args[0].to_string())
     if (ch != '\n')
       out << ch;
+    else
+      out << "\\n";
 
   return string_value(out.str());
 }

@@ -158,11 +158,12 @@ void item_t::parse_tags(const char * p, int current_year)
 
 void item_t::append_note(const char * p, int current_year)
 {
-  if (note)
+  if (note) {
+    *note += '\n';
     *note += p;
-  else
+  } else {
     note = p;
-  *note += '\n';
+  }
 
   parse_tags(p, current_year);
 }
@@ -251,15 +252,17 @@ namespace {
 value_t get_comment(item_t& item)
 {
   if (! item.note) {
-    return false;
+    return string_value("");
   } else {
+    // jww (2009-03-01): If the comment is a short one-liner, put it at the
+    // end of the post/xact
     std::ostringstream buf;
     buf << "\n    ;";
     bool need_separator = false;
     for (const char * p = item.note->c_str(); *p; p++) {
-      if (*p == '\n')
+      if (*p == '\n') {
 	need_separator = true;
-      else {
+      } else {
 	if (need_separator) {
 	  buf << "\n    ;";
 	  need_separator = false;
