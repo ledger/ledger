@@ -2,62 +2,54 @@
 
 set -e
 
-echo %%% Configuring --opt %%%
-if ! tools/myacprep --opt; then
-    echo %%% FAILED to configure --opt %%%
-    exit 1
-fi
+function build_and_test() {
+    if [ ! $1 = std ]; then
+	NAME=--$1
 
-echo %%% Building --opt %%%
-if ! (cd ~/Products/ledger-opt && make clean fullcheck); then
-    echo %%% FAILED to build --opt %%%
-    exit 1
-fi
+	echo %%% Configuring $NAME %%%
+	if ! tools/myacprep $NAME; then
+	    echo %%% FAILED to configure $NAME %%%
+	    exit 1
+	fi
 
-echo %%% Configuring --gprof %%%
-if ! tools/myacprep --gprof; then
-    echo %%% FAILED to configure --gprof %%%
-    exit 1
-fi
+	DIR=$HOME/Products/ledger-$1
+    else
+	NAME="$1"
+	DIR=$HOME/Products/ledger-$1
 
-echo %%% Building --gprof %%%
-if ! (cd ~/Products/ledger-gprof && make clean fullcheck); then
-    echo %%% FAILED to build --gprof %%%
-    exit 1
-fi
+	echo %%% Configuring $NAME %%%
+	if ! tools/myacprep --output $DIR; then
+	    echo %%% FAILED to configure $NAME %%%
+	    exit 1
+	fi
+    fi
 
-echo %%% Configuring --gcov %%%
-if ! tools/myacprep --gcov; then
-    echo %%% FAILED to configure --gcov %%%
-    exit 1
-fi
+    echo %%% Cleaning $NAME %%%
+    if ! (cd $DIR && make clean); then
+	echo %%% FAILED to clean $NAME %%%
+	exit 1
+    fi
 
-echo %%% Building --gcov %%%
-if ! (cd ~/Products/ledger-gcov && make clean fullcheck); then
-    echo %%% FAILED to build --gcov %%%
-    exit 1
-fi
+    echo %%% Building $NAME %%%
+    if ! (cd $DIR && make); then
+	echo %%% FAILED to build $NAME %%%
+	exit 1
+    fi
 
-echo %%% Configuring std %%%
-if ! tools/myacprep; then
-    echo %%% FAILED to configure std %%%
-    exit 1
-fi
+    echo %%% Testing $NAME %%%
+    if ! (cd $DIR && make fullcheck); then
+	echo %%% FAILED to test $NAME %%%
+	exit 1
+    fi
+}
 
-echo %%% Building std %%%
-if ! (cd ~/Products/ledger-opt && make clean fullcheck); then
-    echo %%% FAILED to build std %%%
-    exit 1
-fi
-
-echo %%% Building default %%%
-if ! (cd ~/Products/ledger && make clean fullcheck); then
-    echo %%% FAILED to build default %%%
-    exit 1
-fi
+build_and_test opt
+build_and_test gprof
+build_and_test gcov
+build_and_test std
 
 echo %%% Building release-distcheck %%%
-if ! (cd ~/Products/ledger-opt && make release-distcheck); then
+if ! (cd ~/Products/ledger-std && make release-distcheck); then
     echo %%% FAILED to build release-distcheck %%%
     exit 1
 fi
