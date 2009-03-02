@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
 {
   int index = 1;
 
-#if defined(VERIFY_ON)
   if (argc > index && std::string(argv[index]) == "--verify") {
+#if defined(VERIFY_ON)
     ledger::verify_enabled = true;
+#endif
     index++;
   }
-#endif
 
   // Retreive test path from command line first argument. Default to
   // "" which resolves to the top level suite.
