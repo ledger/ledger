@@ -96,7 +96,10 @@ def test_regression(test_file):
         print " ", line,
 
     if exitcode == p.wait():
-        harness.success()
+        if success:
+            harness.success()
+        else:
+            harness.failure()
     else:
         if success: print
         print "Regression failure in exitcode from %s: %d (expected) != %d" % \
