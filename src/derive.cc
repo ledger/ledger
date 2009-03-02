@@ -255,6 +255,8 @@ namespace {
     else
       added->_date = tmpl.date;
 
+    added->set_state(item_t::UNCLEARED);
+
     if (matching) {
       added->payee = matching->payee;
       added->code  = matching->code;
@@ -270,8 +272,10 @@ namespace {
 
     if (tmpl.posts.empty()) {
       if (matching) {
-	foreach (post_t * post, matching->posts)
+	foreach (post_t * post, matching->posts) {
 	  added->add_post(new post_t(*post));
+	  added->posts.back()->set_state(item_t::UNCLEARED);
+	}
       } else {
 	throw_(std::runtime_error,
 	       _("No accounts, and no past transaction matching '%1'")
@@ -368,6 +372,7 @@ namespace {
 	}
 
 	added->add_post(new_post.release());
+	added->posts.back()->set_state(item_t::UNCLEARED);
       }
     }
 
