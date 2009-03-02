@@ -363,8 +363,9 @@ struct annotation_t : public supports_flags<>,
 		      public equality_comparable<annotation_t>
 {
 #define ANNOTATION_PRICE_CALCULATED 0x01
-#define ANNOTATION_DATE_CALCULATED  0x02
-#define ANNOTATION_TAG_CALCULATED   0x04
+#define ANNOTATION_PRICE_FIXATED    0x02
+#define ANNOTATION_DATE_CALCULATED  0x04
+#define ANNOTATION_TAG_CALCULATED   0x08
 
   optional<amount_t> price;
   optional<date_t>   date;

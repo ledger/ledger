@@ -638,6 +638,12 @@ void annotation_t::parse(std::istream& in)
 	throw_(amount_error, _("Commodity specifies more than one price"));
 
       in.get(c);
+      c = peek_next_nonws(in);
+      if (c == '=') {
+	in.get(c);
+	add_flags(ANNOTATION_PRICE_FIXATED);
+      }
+
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}')
 	in.get(c);
@@ -761,7 +767,10 @@ void annotated_commodity_t::write_annotations(std::ostream& out) const
 void annotation_t::print(std::ostream& out, bool keep_base) const
 {
   if (price)
-    out << " {" << (keep_base ? *price : price->unreduced()).rounded() << '}';
+    out << " {"
+	<< (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
+	<< (keep_base ? *price : price->unreduced()).rounded()
+	<< '}';
 
   if (date)
     out << " [" << format_date(*date, string("%Y/%m/%d")) << ']';

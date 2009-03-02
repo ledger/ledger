@@ -546,6 +546,10 @@ amount_t::value(const bool		      primary_only,
       if (in_terms_of && commodity() == *in_terms_of) {
 	return *this;
       }
+      else if (is_annotated() && annotation().price &&
+	       annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
+	return (*annotation().price * number()).rounded();
+      }
       else if (optional<price_point_t> point =
 	       commodity().find_price(in_terms_of, moment)) {
 	return (point->price * number()).rounded();
