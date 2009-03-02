@@ -97,7 +97,7 @@ namespace {
     if (result.tm_year == -1) {
       result.tm_year = (year == -1 ? int(CURRENT_DATE().year()) : year) - 1900;
 
-      if (result.tm_mon > (CURRENT_DATE().month() - 1))
+      if (year == -1 && result.tm_mon > (CURRENT_DATE().month() - 1))
 	result.tm_year--;
     }
 
