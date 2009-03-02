@@ -387,7 +387,7 @@ GenerateTests: $(srcdir)/test/GenerateTests.py
 FULLCHECK=$(srcdir)/test/fullcheck.sh
 
 if HAVE_CPPUNIT
-cppunittests: $(TESTS)
+cppunittests: check
 	@sh $(FULLCHECK) $(top_builddir)/UtilTests$(EXEEXT)   --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
 	@sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify \
@@ -399,7 +399,7 @@ cppunittests: $(TESTS)
 	@sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
 else
-cppunittests: $(TESTS)
+cppunittests: check
 	@test 1 -eq 1
 endif
 
