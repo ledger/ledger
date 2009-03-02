@@ -38,7 +38,6 @@ namespace {
   struct xact_template_t
   {
     optional<date_t> date;
-    optional<date_t> eff_date;
     optional<string> code;
     optional<string> note;
     mask_t           payee_mask;
@@ -61,9 +60,6 @@ namespace {
 	out << _("Date:       ") << *date << std::endl;
       else
 	out << _("Date:       <today>") << std::endl;
-
-      if (eff_date)
-	out << _("Effective:  ") << *eff_date << std::endl;
 
       if (code)
 	out << _("Code:       ") << *code << std::endl;
@@ -116,7 +112,7 @@ namespace {
   args_to_xact_template(value_t::sequence_t::const_iterator begin,
 			 value_t::sequence_t::const_iterator end)
   {
-    regex  date_mask(_("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?(?:=.*)?"));
+    regex  date_mask(_("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?"));
     regex  dow_mask(_("(sun|mon|tue|wed|thu|fri|sat)"));
     smatch what;
 
@@ -129,8 +125,6 @@ namespace {
       if (check_for_date &&
 	  regex_match((*begin).to_string(), what, date_mask)) {
 	tmpl.date = parse_date(what[0]);
-	if (what.size() == 2)
-	  tmpl.eff_date = parse_date(what[1]);
 	check_for_date = false;
       }
       else if (check_for_date &&
@@ -260,9 +254,6 @@ namespace {
       added->_date = CURRENT_DATE();
     else
       added->_date = tmpl.date;
-
-    if (tmpl.eff_date)
-      added->_date_eff = tmpl.eff_date;
 
     if (matching) {
       added->payee = matching->payee;
