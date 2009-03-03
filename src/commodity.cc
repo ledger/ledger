@@ -473,8 +473,12 @@ namespace {
       return std::strcmp(buf, "and") == 0;
     case 'd':
       return std::strcmp(buf, "div") == 0;
+    case 'e':
+      return std::strcmp(buf, "else") == 0;
     case 'f':
       return std::strcmp(buf, "false") == 0;
+    case 'i':
+      return std::strcmp(buf, "if") == 0;
     case 'o':
       return std::strcmp(buf, "or") == 0;
     case 'n':

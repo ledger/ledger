@@ -38,7 +38,8 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 {
   char c = static_cast<char>(in.peek());
 
-  if (c == 'a' || c == 'd' || c == 'f' || c == 'o' || c == 'n' || c == 't') {
+  if (c == 'a' || c == 'd' || c == 'e' || c == 'f' ||
+      c == 'i' || c == 'o' || c == 'n' || c == 't') {
     length = 0;
 
     char buf[6];
@@ -64,10 +65,30 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
       }
       break;
 
+    case 'e':
+      if (std::strcmp(buf, "else") == 0) {
+	symbol[0] = 'L';
+	symbol[1] = 'S';
+	symbol[2] = '\0';
+	kind = KW_ELSE;
+	return 1;
+      }
+      break;
+
     case 'f':
       if (std::strcmp(buf, "false") == 0) {
 	kind = VALUE;
 	value = false;
+	return 1;
+      }
+      break;
+
+    case 'i':
+      if (std::strcmp(buf, "if") == 0) {
+	symbol[0] = 'i';
+	symbol[1] = 'f';
+	symbol[2] = '\0';
+	kind = KW_IF;
 	return 1;
       }
       break;

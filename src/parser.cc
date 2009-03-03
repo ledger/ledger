@@ -382,7 +382,41 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 	       _("%1 operator not followed by argument") << tok.symbol);
 
       node->set_right(subnode);
-    } else {
+    }
+    else if (tok.kind == token_t::KW_IF) {
+      ptr_op_t if_op(parse_or_expr(in, tflags));
+      if (! if_op)
+	throw_(parse_error, _("'if' keyword not followed by argument"));
+
+      tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+      if (tok.kind == token_t::KW_ELSE) {
+	ptr_op_t else_op(parse_or_expr(in, tflags));
+	if (! else_op)
+	  throw_(parse_error, _("'else' keyword not followed by argument"));
+
+	ptr_op_t subnode = new op_t(op_t::O_COLON);
+	subnode->set_left(node);
+	subnode->set_right(else_op);
+
+	node = new op_t(op_t::O_QUERY);
+	node->set_left(if_op);
+	node->set_right(subnode);
+      } else {
+	ptr_op_t null_node = new op_t(op_t::VALUE);
+	null_node->set_value(NULL_VALUE);
+
+	ptr_op_t subnode = new op_t(op_t::O_COLON);
+	subnode->set_left(node);
+	subnode->set_right(null_node);
+
+	node = new op_t(op_t::O_QUERY);
+	node->set_left(if_op);
+	node->set_right(subnode);
+
+	push_token(tok);
+      }
+    }
+    else {
       push_token(tok);
     }
   }

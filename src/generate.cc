@@ -171,7 +171,8 @@ void generate_posts_iterator::generate_commodity(std::ostream& out)
   }
   while (comm == "h" || comm == "m" || comm == "s" ||
 	 comm == "and" || comm == "div" || comm == "false" ||
-	 comm == "or" || comm == "not" || comm == "true");
+	 comm == "or" || comm == "not" || comm == "true" ||
+	 comm == "if" || comm == "else");
 
   out << comm;
 }
