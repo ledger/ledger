@@ -305,6 +305,9 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
 }
 
 namespace {
+  value_t fn_false(call_scope_t&) {
+    return false;
+  }
   value_t fn_null(call_scope_t&) {
     return NULL_VALUE;
   }
@@ -773,7 +776,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       }
     }
     else if (is_eq(p, "post"))
-      return MAKE_FUNCTOR(report_t::fn_false);
+      return WRAP_FUNCTOR(fn_false);
     break;
 
   case 'q':
