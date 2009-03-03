@@ -50,9 +50,15 @@ namespace {
   }
 }
 
+namespace ledger {
+  extern char * argv0;
+}
+
 int main(int argc, char * argv[], char * envp[])
 {
   int status;
+
+  argv0 = argv[0];
 
   // The very first thing we do is handle some very special command-line
   // options, since they affect how the environment is setup:

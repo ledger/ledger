@@ -76,6 +76,8 @@ public:
     return eval(str, mode);
   }
 
+  value_t python_command(call_scope_t& scope);
+
   class functor_t {
     functor_t();
 

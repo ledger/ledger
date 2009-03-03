@@ -37,6 +37,8 @@ using namespace python;
 
 shared_ptr<python_interpreter_t> python_session;
 
+char * argv0;
+
 void export_amount();
 void export_balance();
 void export_chain();
@@ -243,6 +245,34 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   return object();
 }
 
+value_t python_interpreter_t::python_command(call_scope_t& args)
+{
+  if (! is_initialized)
+    initialize();
+
+  char ** argv(new char *[args.size() + 1]);
+
+  argv[0] = new char[std::strlen(argv0) + 1];
+  std::strcpy(argv[0], argv0);
+
+  for (std::size_t i = 0; i < args.size(); i++) {
+    string arg = args[i].as_string();
+    argv[i + 1] = new char[arg.length() + 1];
+    std::strcpy(argv[i + 1], arg.c_str());
+  }
+
+  int status = Py_Main(args.size() + 1, argv);
+
+  for (std::size_t i = 0; i < args.size() + 1; i++)
+    delete[] argv[i];
+  delete[] argv;
+  
+  if (status != 0)
+    throw status;
+
+  return NULL_VALUE;
+}
+
 option_t<python_interpreter_t> *
 python_interpreter_t::lookup_option(const char * p)
 {
@@ -266,6 +296,17 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
     if (WANT_OPT()) { const char * q = p + OPT_PREFIX_LEN;
       if (option_t<python_interpreter_t> * handler = lookup_option(q))
 	return MAKE_OPT_HANDLER(python_interpreter_t, handler);
+    }
+    break;
+
+  case 'p':
+    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
+      switch (*q) {
+      case 'p':
+	if (is_eq(q, "python"))
+	  return MAKE_FUNCTOR(python_interpreter_t::python_command);
+	break;
+      }
     }
     break;
   }
