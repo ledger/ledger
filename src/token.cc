@@ -451,7 +451,7 @@ void expr_t::token_t::unexpected()
   case VALUE:
     throw_(parse_error, _("Unexpected value '%1'") << value);
   default:
-    throw_(parse_error, _("Unexpected operator '%1'") << symbol);
+    throw_(parse_error, _("Unexpected token '%1'") << symbol);
   }
 }
 

@@ -477,10 +477,12 @@ expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
     if (original_string) {
       add_error_context(_("While parsing value expression:"));
 
-      istream_pos_type end_pos = in.tellg();
-      istream_pos_type pos     = end_pos;
+      std::size_t end_pos =
+	in.good() ? static_cast<std::size_t>(in.tellg()) : 0;
+      std::size_t pos = static_cast<std::size_t>(end_pos);
 
-      pos -= lookahead.length;
+      if (pos > 0)
+	pos -= lookahead.length;
 
       DEBUG("parser.error", "original_string = '" << *original_string << "'");
       DEBUG("parser.error", "            pos = " << pos);
@@ -488,9 +490,7 @@ expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
       DEBUG("parser.error", "     token kind = " << int(lookahead.kind));
       DEBUG("parser.error", "   token length = " << lookahead.length);
 
-      add_error_context(line_context(*original_string,
-				     static_cast<std::size_t>(pos),
-				     static_cast<std::size_t>(end_pos)));
+      add_error_context(line_context(*original_string, pos, end_pos));
     }
     throw;
   }
