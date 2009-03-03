@@ -62,6 +62,9 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
 
       push_token(tok);		// let the parser see it again
       node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
+
+      if (node->has_right() && node->right()->kind == op_t::O_CONS)
+	node->set_right(node->right()->left());
     } else {
       push_token(tok);
     }
@@ -74,6 +77,12 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
     tok = next_token(in, tflags);
     if (tok.kind != token_t::RPAREN)
       tok.expected(')');
+
+    if (node->kind == op_t::O_CONS) {
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_CONS);
+      node->set_left(prev);
+    }
     break;
 
   default:

@@ -490,7 +490,6 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_CONS:
-    assert(has_right());
     out << "(";
     found = print_cons(out, this, context);
     out << ")";

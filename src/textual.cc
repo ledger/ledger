@@ -902,6 +902,7 @@ post_t * instance_t::parse_post(char *		line,
     else
       parse_amount_expr(session_scope, stream, post->amount, post.get(),
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
+			static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
     if (! post->amount.is_null() && honor_strict && strict &&
@@ -949,6 +950,7 @@ post_t * instance_t::parse_post(char *		line,
 	  else
 	    parse_amount_expr(session_scope, cstream, *post->cost, post.get(),
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
+			      static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
 
 	  if (post->cost->sign() < 0)
@@ -994,6 +996,7 @@ post_t * instance_t::parse_post(char *		line,
 	post->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
       else
 	parse_amount_expr(session_scope, stream, *post->assigned_amount, post.get(),
+			  static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
       if (post->assigned_amount->is_null())
