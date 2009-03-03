@@ -305,6 +305,39 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
 }
 
 namespace {
+  value_t fn_black(call_scope_t&) {
+    return string_value("black");
+  }
+  value_t fn_blink(call_scope_t&) {
+    return string_value("blink");
+  }
+  value_t fn_blue(call_scope_t&) {
+    return string_value("blue");
+  }
+  value_t fn_bold(call_scope_t&) {
+    return string_value("bold");
+  }
+  value_t fn_cyan(call_scope_t&) {
+    return string_value("cyan");
+  }
+  value_t fn_green(call_scope_t&) {
+    return string_value("green");
+  }
+  value_t fn_magenta(call_scope_t&) {
+    return string_value("magenta");
+  }
+  value_t fn_red(call_scope_t&) {
+    return string_value("red");
+  }
+  value_t fn_underline(call_scope_t&) {
+    return string_value("underline");
+  }
+  value_t fn_white(call_scope_t&) {
+    return string_value("white");
+  }
+  value_t fn_yellow(call_scope_t&) {
+    return string_value("yellow");
+  }
   value_t fn_false(call_scope_t&) {
     return false;
   }
@@ -617,6 +650,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_abs);
     break;
 
+  case 'b':
+    if (is_eq(p, "black"))
+      return WRAP_FUNCTOR(fn_black);
+    else if (is_eq(p, "blink"))
+      return WRAP_FUNCTOR(fn_blink);
+    else if (is_eq(p, "blue"))
+      return WRAP_FUNCTOR(fn_blue);
+    else if (is_eq(p, "bold"))
+      return WRAP_FUNCTOR(fn_bold);
+    break;
+
   case 'c':
     if (WANT_CMD()) { const char * q = p + CMD_PREFIX_LEN;
       switch (*q) {
@@ -687,6 +731,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
       }
     }
+    else if (is_eq(p, "cyan"))
+      return WRAP_FUNCTOR(fn_cyan);
     break;
 
   case 'd':
@@ -704,6 +750,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'g':
     if (is_eq(p, "get_at"))
       return MAKE_FUNCTOR(report_t::fn_get_at);
+    else if (is_eq(p, "green"))
+      return WRAP_FUNCTOR(fn_green);
     break;
 
   case 'i':
@@ -721,6 +769,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'm':
     if (is_eq(p, "market"))
       return MAKE_FUNCTOR(report_t::fn_market);
+    else if (is_eq(p, "magenta"))
+      return WRAP_FUNCTOR(fn_magenta);
     break;
 
   case 'n':
@@ -789,6 +839,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'r':
     if (is_eq(p, "rounded"))
       return MAKE_FUNCTOR(report_t::fn_rounded);
+    else if (is_eq(p, "red"))
+      return WRAP_FUNCTOR(fn_red);
     break;
 
   case 's':
@@ -803,6 +855,21 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_truncated);
     else if (is_eq(p, "total_expr"))
       return MAKE_FUNCTOR(report_t::fn_total_expr);
+    break;
+
+  case 'u':
+    if (is_eq(p, "underline"))
+      return WRAP_FUNCTOR(fn_underline);
+    break;
+
+  case 'w':
+    if (is_eq(p, "white"))
+      return WRAP_FUNCTOR(fn_white);
+    break;
+
+  case 'y':
+    if (is_eq(p, "yellow"))
+      return WRAP_FUNCTOR(fn_yellow);
     break;
   }
 
