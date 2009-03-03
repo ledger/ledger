@@ -166,7 +166,7 @@ ledger_CPPFLAGS	+= -I$(srcdir)/python
 endif
 ledger_SOURCES	= src/main.cc src/global.cc
 ledger_LDADD	= $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)
-ledger_LDFLAGS	= 
+ledger_LDFLAGS	= -static
 
 info_TEXINFOS	= doc/ledger.texi
 
@@ -339,7 +339,9 @@ $(top_builddir)/test/python/UnitTests.py: $(all_py_tests_sources)
 	@echo "]" >> $@
 	@echo "TextTestRunner().run(TestSuite(suites))" >> $@
 
-ESC_python=`echo "$(PYTHON)" | sed 's/\//\\\\\//g'`
+ledger_python = $(top_builddir)/ledger$(EXEEXT) python
+
+ESC_python=`echo "$(ledger_python)" | sed 's/\//\\\\\//g'`
 ESC_srcdir=`echo "$(srcdir)" | sed 's/\//\\\\\//g'`
 ESC_builddir=`echo "$(top_builddir)" | sed 's/\//\\\\\//g'`
 ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
