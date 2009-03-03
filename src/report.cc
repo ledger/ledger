@@ -67,27 +67,13 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
   session.clean_posts(xact);
 }
 
-void report_t::sum_all_accounts()
-{
-  expr_t& amount_expr(HANDLER(amount_).expr);
-  amount_expr.set_context(this);
-
-  journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts(chain_post_handlers
-		  (*this, post_handler_ptr(new set_account_value(amount_expr)),
-		   true), walker);
-
-  expr_t& account_amount_expr(HANDLER(account_amount_).expr);
-  account_amount_expr.set_context(this);
-  session.master->calculate_sums(account_amount_expr);
-}
-
 void report_t::accounts_report(acct_handler_ptr handler)
 {
-  sum_all_accounts();
+  journal_posts_iterator walker(*session.journal.get());
+  pass_down_posts(chain_post_handlers(*this, post_handler_ptr(new ignore_posts),
+				      true), walker);
 
   scoped_ptr<accounts_iterator> iter;
-
   if (! HANDLED(sort_))
     iter.reset(new basic_accounts_iterator(*session.master));
   else
@@ -477,7 +463,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'a':
     OPT(abbrev_len_);
     else OPT(account_);
-    else OPT(account_amount_);
     else OPT(actual);
     else OPT(add_budget);
     else OPT(amount_);
@@ -613,6 +598,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT_CH(amount_);
     else OPT(tail_);
     else OPT(total_);
+    else OPT(totals);
     else OPT(total_data);
     else OPT(truncate_);
     else OPT(total_width_);

@@ -127,8 +127,6 @@ public:
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(post_handler_ptr handler);
 
-  void sum_all_accounts();
-
   value_t fn_amount_expr(call_scope_t& scope);
   value_t fn_total_expr(call_scope_t& scope);
   value_t fn_display_amount(call_scope_t& scope);
@@ -189,20 +187,6 @@ public:
   OPTION__(report_t, abbrev_len_,
 	   CTOR(report_t, abbrev_len_) { on_with(2L); });
   OPTION(report_t, account_);
-
-  OPTION__
-  (report_t, account_amount_,
-   expr_t expr;
-   CTOR(report_t, account_amount_) {
-     set_expr("amount");
-   }
-   void set_expr(const string& str) {
-     expr = str;
-     on(str);
-   }
-   DO_(args) {
-     set_expr(args[0].to_string());
-   });
 
   OPTION_(report_t, actual, DO() { // -L
       parent->HANDLER(limit_).on("actual");
@@ -399,7 +383,6 @@ public:
 
   OPTION_(report_t, gain, DO() { // -G
       parent->HANDLER(revalued).on_only();
-      parent->HANDLER(account_amount_).set_expr("amount | (0, 0)");
       parent->HANDLER(amount_).set_expr("(amount, cost)");
       // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.
@@ -628,6 +611,8 @@ public:
    DO_(args) {
      set_expr(args[0].to_string());
    });
+
+  OPTION(report_t, totals);
 
   OPTION_(report_t, total_data, DO() { // -J
       parent->HANDLER(format_).on_with(parent->HANDLER(plot_total_format_).value);

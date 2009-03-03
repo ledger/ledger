@@ -287,14 +287,15 @@ void format_accounts::flush()
     }
   }
 
-  assert(report.session.master->has_xdata());
-  account_t::xdata_t& xdata(report.session.master->xdata());
+  if (report.session.master->has_xdata()) {
+    account_t::xdata_t& xdata(report.session.master->xdata());
 
-  if (! report.HANDLED(no_total) && top_displayed > 1 && xdata.total) {
-    xdata.value = xdata.total;
-    bind_scope_t bound_scope(report, *report.session.master);
-    separator_format.format(out, bound_scope);
-    total_line_format.format(out, bound_scope);
+    if (! report.HANDLED(no_total) && top_displayed > 1 && xdata.total) {
+      xdata.value = xdata.total;
+      bind_scope_t bound_scope(report, *report.session.master);
+      separator_format.format(out, bound_scope);
+      total_line_format.format(out, bound_scope);
+    }
   }
 
   out.flush();
@@ -306,8 +307,7 @@ void format_accounts::operator()(account_t& account)
 	"Proposing to format account: " << account.fullname());
 
   if (account.has_flags(ACCOUNT_EXT_VISITED)) {
-    DEBUG("account.display",
-	  "  Account or its children visited by sum_all_accounts");
+    DEBUG("account.display", "  Account or its children was visited");
 
     bind_scope_t bound_scope(report, account);
     if (disp_pred(bound_scope)) {

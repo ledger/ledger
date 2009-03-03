@@ -133,6 +133,7 @@ class account_t : public scope_t
     std::size_t   count;	// posts counted toward amount
     std::size_t   total_count;	// posts counted toward total
     std::size_t   virtuals;
+    std::size_t   total_virtuals;
 
     std::list<sort_value_t> sort_values;
 
@@ -183,8 +184,6 @@ class account_t : public scope_t
     return xdata_ && xdata_->has_flags(flags);
   }
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
-
-  void calculate_sums(expr_t& amount_expr);
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);

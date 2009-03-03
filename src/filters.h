@@ -185,22 +185,6 @@ public:
  *
  * Long.
  */
-class set_account_value : public item_handler<post_t>
-{
-  expr_t& amount_expr;
-
-public:
-  set_account_value(expr_t& _amount_expr)
-    : item_handler<post_t>(), amount_expr(_amount_expr) {}
-
-  virtual void operator()(post_t& post);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_posts : public item_handler<post_t>
 {
   typedef std::deque<post_t *> posts_deque;
@@ -359,15 +343,17 @@ class calc_posts : public item_handler<post_t>
 {
   post_t * last_post;
   expr_t&  amount_expr;
+  bool     calc_totals;
 
   calc_posts();
 
 public:
   calc_posts(post_handler_ptr handler,
-	     expr_t&          _amount_expr)
-    : item_handler<post_t>(handler),
-      last_post(NULL), amount_expr(_amount_expr) {
-    TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&");
+	     expr_t&          _amount_expr,
+	     bool             _calc_totals = false)
+    : item_handler<post_t>(handler), last_post(NULL),
+      amount_expr(_amount_expr), calc_totals(_calc_totals) {
+    TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   virtual ~calc_posts() {
     TRACE_DTOR(calc_posts);

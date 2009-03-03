@@ -167,26 +167,29 @@ namespace {
   }
 
   value_t get_total(account_t& account) {
-    assert(account.xdata_);
-    if (account.xdata_->total.is_null())
+    if (! account.xdata_ || account.xdata_->total.is_null())
       return 0L;
     else
       return account.xdata_->total;
   }
 
   value_t get_count(account_t& account) {
-    assert(account.xdata_);
-    return long(account.xdata_->total_count);
+    if (account.xdata_)
+      return long(account.xdata_->total_count);
+    else
+      return 0L;
   }
 
   value_t get_subcount(account_t& account) {
-    assert(account.xdata_);
-    return long(account.xdata_->count);
+    if (account.xdata_)
+      return long(account.xdata_->count);
+    else
+      return 0L;
   }
 
   value_t get_amount(account_t& account) {
-    assert(account.xdata_);
-    if (account.xdata_->value.is_null())
+    if (! account.xdata_ ||
+	account.xdata_->value.is_null())
       return 0L;
     else
       return account.xdata_->value;
@@ -312,35 +315,6 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
     count = 1;
 
   return count;
-}
-
-void account_t::calculate_sums(expr_t& amount_expr)
-{
-  xdata_t& xd(xdata());
-
-  foreach (accounts_map::value_type& pair, accounts) {
-    (*pair.second).calculate_sums(amount_expr);
-
-    xdata_t& child_xd((*pair.second).xdata());
-    if (! child_xd.total.is_null()) {
-      add_or_set_value(xd.total, child_xd.total);
-      xd.total_count += child_xd.total_count;
-    } else {
-      assert(child_xd.total_count == 0);
-      assert(child_xd.count == 0);
-    }
-  }
-
-  bind_scope_t bound_scope(*amount_expr.get_context(), *this);
-  value_t amount(amount_expr.calc(bound_scope));
-
-  if (! amount.is_null()) {
-    DEBUG("account.sums", "Added " << amount << " to " << fullname());
-    add_or_set_value(xd.total, amount);
-    xd.total_count += xd.count;
-  } else {
-    assert(xd.count == 0);
-  }
 }
 
 } // namespace ledger

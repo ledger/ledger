@@ -118,26 +118,6 @@ void truncate_xacts::operator()(post_t& post)
   posts.push_back(&post);
 }
 
-void set_account_value::operator()(post_t& post)
-{
-  account_t * acct = post.reported_account();
-
-  account_t::xdata_t& xdata(acct->xdata());
-  DEBUG("account.sums", "Account value was = " << xdata.value);
-  post.add_to_value(xdata.value, amount_expr);
-  DEBUG("account.sums", "Account value is  = " << xdata.value);
-
-  xdata.count++;
-  if (post.has_flags(POST_VIRTUAL))
-    xdata.virtuals++;
-
-  DEBUG("account.display",
-	"Visiting account: " << post.account->fullname());
-  post.account->xdata().add_flags(ACCOUNT_EXT_VISITED);
-
-  item_handler<post_t>::operator()(post);
-}
-
 void sort_posts::post_accumulated_posts()
 {
   std::stable_sort(posts.begin(), posts.end(),
@@ -221,6 +201,32 @@ void calc_posts::operator()(post_t& post)
   }
 
   post.add_to_value(xdata.total, amount_expr);
+
+  if (calc_totals) {
+    account_t * acct = post.reported_account();
+
+    account_t::xdata_t * acct_xdata = &acct->xdata();
+
+    post.add_to_value(acct_xdata->value, amount_expr);
+
+    acct_xdata->count++;
+    acct_xdata->virtuals++;
+    acct_xdata->add_flags(ACCOUNT_EXT_VISITED);
+
+    while (true) {
+      post.add_to_value(acct_xdata->total, amount_expr);
+
+      acct_xdata->total_count++;
+      if (post.has_flags(POST_VIRTUAL))
+	acct_xdata->total_virtuals++;
+
+      acct = acct->parent;
+      if (acct)
+	acct_xdata = &acct->xdata();
+      else
+	break;
+    }
+  }
 
   item_handler<post_t>::operator()(post);
 
