@@ -209,6 +209,35 @@ namespace {
     return string_value(post.reported_account()->name);
   }
 
+  value_t get_account_amount(call_scope_t& scope)
+  {
+    in_context_t<post_t> env(scope, "&v");
+
+    account_t * account = NULL;
+    if (env.has(0)) {
+      account_t * master = env->account;
+      while (master->parent)
+	master = master->parent;
+
+      if (env.value_at(0).is_string())
+	account = master->find_account(env.get<string>(0), false);
+      else if (env.value_at(0).is_mask())
+	account = master->find_account_re(env.get<mask_t>(0).expr.str());
+    } else {
+      account = env->reported_account();
+    }
+
+    if (! account)
+      throw_(std::runtime_error, _("Cannot locate referenced account"));
+
+    DEBUG("post.account_amount", "Found account: " << account->fullname());
+
+    if (account->xdata().value.is_null())
+      return 0L;
+    else
+      return account->xdata().value.simplified();
+  }
+
   value_t get_account_depth(post_t& post) {
     return long(post.reported_account()->depth);
   }
@@ -227,6 +256,8 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
       return WRAP_FUNCTOR(get_account);
+    else if (name == "account_amount")
+      return WRAP_FUNCTOR(get_account_amount);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     break;
