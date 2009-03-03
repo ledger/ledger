@@ -1,18 +1,24 @@
 reg -V gas
 <<<
-2009/01/01 Payee
+1990/01/01 Payee
     Expenses:Gas                100 GAL {=$2}
     Liabilities:MasterCard        $-200
 
-2009/01/01 Payee
+P 1990/01/15 12:00:00 GAL $3
+
+1990/02/01 Payee
     Expenses:Gas                100 FOO {$2}
     Liabilities:MasterCard        $-200
 
-P 2009/03/01 12:00:00 GAL $3
-P 2009/03/01 12:00:00 FOO $3
+P 1990/02/15 12:00:00 FOO $3
+
+1990/02/20 Payee
+    Expenses:Gas                100 FOO
+    Liabilities:MasterCard
 >>>1
-09-Jan-01 Payee                 Expenses:Gas                   $200         $200
-09-Jan-01 Payee                 Expenses:Gas                   $200         $400
-09-Mar-02 Commodities revalued  <Revalued>                     $100         $500
+90-Jan-01 Payee                 Expenses:Gas                   $200         $200
+90-Feb-01 Payee                 Expenses:Gas                   $200         $400
+90-Feb-20 Commodities revalued  <Revalued>                     $100         $500
+90-Feb-20 Payee                 Expenses:Gas                   $300         $800
 >>>2
 === 0
