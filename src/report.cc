@@ -305,6 +305,10 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
 }
 
 namespace {
+  value_t fn_null(call_scope_t&) {
+    return NULL_VALUE;
+  }
+
   template <class Type        = post_t,
 	    class handler_ptr = post_handler_ptr,
 	    void (report_t::*report_method)(handler_ptr) =
@@ -714,6 +718,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'm':
     if (is_eq(p, "market"))
       return MAKE_FUNCTOR(report_t::fn_market);
+    break;
+
+  case 'n':
+    if (is_eq(p, "null"))
+      return WRAP_FUNCTOR(fn_null);
     break;
 
   case 'o':
