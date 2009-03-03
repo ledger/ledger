@@ -356,7 +356,7 @@ PyUnitTests: $(srcdir)/test/PyUnitTests.py \
 
 RegressTests_SOURCES = test/RegressTests.py
 
-EXTRA_DIST += test/regress test/convert.py
+EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
 RegressTests: $(srcdir)/test/RegressTests.py
 	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress \"\$$@\"" > $@
