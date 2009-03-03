@@ -237,12 +237,12 @@ public:
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
-      on("%(ansify_if(justify(scrub(display_total), 20, -1, true), \"red\", "
-	 "    color & scrub(display_total) < 0))"
+      on("%(ansify_if(justify(scrub(display_total), 20, -1, true), "
+	 "    red if color & scrub(display_total) < 0))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
-	 "%-(ansify_if(partial_account(options.flat), \"blue\", color))\n%/"
-	 "%(ansify_if(justify(scrub(display_total), 20, -1, true), \"red\", "
-	 "    color & scrub(display_total) < 0))\n%/"
+	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+	 "%(ansify_if(justify(scrub(display_total), 20, -1, true), "
+	 "    red if color & scrub(display_total) < 0))\n%/"
 	 "--------------------\n");
     });
 
@@ -551,26 +551,26 @@ public:
     });
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
-      on("%(ansify_if(justify(date, date_width), \"green\", color & date > today))"
+      on("%(ansify_if(justify(date, date_width), green if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
-	 "    \"bold\", color & !cleared))"
+	 "    bold if color & !cleared))"
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
-	 "    account_width), \"blue\", color))"
+	 "    account_width), blue if color))"
 	 " %(ansify_if(justify(scrub(display_amount), amount_width, "
 	 "    3 + date_width + payee_width + account_width + amount_width, true), "
-	 "    \"red\", color & scrub(display_amount) < 0))"
+	 "    red if color & scrub(display_amount) < 0))"
 	 " %(ansify_if(justify(scrub(display_total), total_width, "
 	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true), \"red\", color & scrub(display_amount) < 0))\n%/"
+	 "    + total_width, true), red if color & scrub(display_amount) < 0))\n%/"
 	 "%(justify(\" \", 2 + date_width + payee_width))"
 	 "%(ansify_if(justify(truncated(account, account_width, abbrev_len), "
-	 "    account_width), \"blue\", color))"
+	 "    account_width), blue if color))"
 	 " %(ansify_if(justify(scrub(display_amount), amount_width, "
 	 "    3 + date_width + payee_width + account_width + amount_width, true), "
-	 "    \"red\", color & scrub(display_amount) < 0))"
+	 "    red if color & scrub(display_amount) < 0))"
 	 " %(ansify_if(justify(scrub(display_total), total_width, "
 	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true), \"red\", color & scrub(display_amount) < 0))\n");
+	 "    + total_width, true), red if color & scrub(display_amount) < 0))\n");
     });
 
   OPTION(report_t, related); // -r

@@ -280,9 +280,9 @@ value_t report_t::fn_format_date(call_scope_t& args)
 
 value_t report_t::fn_ansify_if(call_scope_t& scope)
 {
-  interactive_t args(scope, "vsb");
+  interactive_t args(scope, "v&s");
 
-  if (args.get<bool>(2)) {
+  if (args.has(1)) {
     string color = args.get<string>(1);
     std::ostringstream buf;
     if (color == "black")	   buf << "\e[30m";

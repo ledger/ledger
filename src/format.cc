@@ -59,6 +59,32 @@ void format_t::element_t::dump(std::ostream& out) const
   }
 }
 
+namespace {
+  expr_t parse_single_expression(const char *& p, bool single_expr = true)
+  {
+    string temp(p);
+    ptristream str(const_cast<char *&>(p));
+    expr_t expr;
+    expr.parse(str, single_expr ? expr_t::PARSE_SINGLE : expr_t::PARSE_PARTIAL,
+	       &temp);
+    if (str.eof()) {
+      expr.set_text(p);
+      p += std::strlen(p);
+    } else {
+      assert(str.good());
+      istream_pos_type pos = str.tellg();
+      expr.set_text(string(p, p + long(pos)));
+      p += long(pos) - 1;
+
+      // Don't gobble up any whitespace
+      const char * base = p;
+      while (p >= base && std::isspace(*p))
+	p--;
+    }
+    return expr;
+  }
+}
+
 format_t::element_t * format_t::parse_elements(const string& fmt)
 {
   std::auto_ptr<element_t> result;
@@ -171,24 +197,88 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       break;
 
     case '(':
-    case '[': {
-      std::istringstream str(p);
-      current->type = element_t::EXPR;
-      string temp(p);
-      current->expr.parse(str, expr_t::PARSE_SINGLE, &temp);
-      if (str.eof()) {
-	current->expr.set_text(p);
-	p += std::strlen(p);
-      } else {
-	assert(str.good());
-	istream_pos_type pos = str.tellg();
-	current->expr.set_text(string(p, p + long(pos)));
-	p += long(pos) - 1;
+    case '{': {
+      bool format_amount = *p == '{';
+      if (format_amount) p++;
 
-	// Don't gobble up any whitespace
-	const char * base = p;
-	while (p >= base && std::isspace(*p))
-	  p--;
+      current->type = element_t::EXPR;
+      current->expr = parse_single_expression(p, ! format_amount);
+
+      // Wrap the subexpression in calls to justify and scrub
+      if (format_amount) {
+	if (! *p || *(p + 1) != '}')
+	  throw_(format_error, _("Expected closing brace"));
+	else
+	  p++;
+
+	expr_t::ptr_op_t op = current->expr.get_op();
+
+	expr_t::ptr_op_t amount_op;
+	expr_t::ptr_op_t colorize_op;
+	if (op->kind == expr_t::op_t::O_CONS) {
+	  amount_op   = op->left();
+	  colorize_op = op->right();
+	} else {
+	  amount_op = op;
+	}
+
+	expr_t::ptr_op_t scrub_node(new expr_t::op_t(expr_t::op_t::IDENT));
+	scrub_node->set_ident("scrub");
+
+	expr_t::ptr_op_t call1_node(new expr_t::op_t(expr_t::op_t::O_CALL));
+	call1_node->set_left(scrub_node);
+	call1_node->set_right(amount_op);
+
+	expr_t::ptr_op_t arg1_node(new expr_t::op_t(expr_t::op_t::VALUE));
+	expr_t::ptr_op_t arg2_node(new expr_t::op_t(expr_t::op_t::VALUE));
+	expr_t::ptr_op_t arg3_node(new expr_t::op_t(expr_t::op_t::VALUE));
+
+	arg1_node->set_value(current->min_width > 0 ? long(current->min_width) : -1);
+	arg2_node->set_value(current->max_width > 0 ? long(current->max_width) : -1);
+	arg3_node->set_value(! current->has_flags(ELEMENT_ALIGN_LEFT));
+
+	current->min_width = 0;
+	current->max_width = 0;
+
+	expr_t::ptr_op_t args1_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+	args1_node->set_left(arg2_node);
+	args1_node->set_right(arg3_node);
+
+	expr_t::ptr_op_t args2_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+	args2_node->set_left(arg1_node);
+	args2_node->set_right(args1_node);
+
+	expr_t::ptr_op_t args3_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+	args3_node->set_left(call1_node);
+	args3_node->set_right(args2_node);
+
+	expr_t::ptr_op_t justify_node(new expr_t::op_t(expr_t::op_t::IDENT));
+	justify_node->set_ident("justify");
+
+	expr_t::ptr_op_t call2_node(new expr_t::op_t(expr_t::op_t::O_CALL));
+	call2_node->set_left(justify_node);
+	call2_node->set_right(args3_node);
+
+	string prev_expr = current->expr.text();
+
+	if (colorize_op) {
+	  expr_t::ptr_op_t ansify_if_node(new expr_t::op_t(expr_t::op_t::IDENT));
+	  ansify_if_node->set_ident("ansify_if");
+
+	  expr_t::ptr_op_t args4_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+	  args4_node->set_left(call2_node);
+	  args4_node->set_right(colorize_op);
+
+	  expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
+	  call3_node->set_left(ansify_if_node);
+	  call3_node->set_right(args4_node);
+
+	  current->expr = expr_t(call3_node);
+	} else {
+	  current->expr = expr_t(call2_node);
+	}
+
+	current->expr.set_text(prev_expr);
       }
       break;
     }
