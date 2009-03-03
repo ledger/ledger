@@ -157,10 +157,14 @@ namespace {
       bind_scope_t bound_scope(session_scope, *post);
 
       value_t result(expr.calc(bound_scope));
-      if (! result.is_amount())
-	throw_(parse_error, _("Postings may only specify simple amounts"));
+      if (result.is_long()) {
+	amount = result.to_amount();
+      } else {
+	if (! result.is_amount())
+	  throw_(parse_error, _("Postings may only specify simple amounts"));
 
-      amount = result.as_amount();
+	amount = result.as_amount();
+      }
       DEBUG("textual.parse", "The posting amount is " << amount);
     }
   }
