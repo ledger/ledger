@@ -294,6 +294,25 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     }
     break;
 
+  case O_SEQ: {
+    left()->calc(scope, locus);
+    assert(has_right());
+
+    ptr_op_t next = right();
+    while (next) {
+      ptr_op_t value_op;
+      if (next->kind == O_SEQ) {
+	value_op = next->left();
+	next     = next->right();
+      } else {
+	value_op = next;
+	next     = NULL;
+      }
+      result = value_op->calc(scope, locus);
+    }
+    break;
+  }
+
   case LAST:
   default:
     assert(false);
@@ -329,6 +348,26 @@ namespace {
       else if (op->right()->print(out, context))
 	found = true;
     }
+    return found;
+  }
+
+  bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t op,
+		 const expr_t::op_t::context_t& context)
+  {
+    bool found = false;
+
+    assert(op->left());
+    if (op->left()->print(out, context))
+      found = true;
+
+    assert(op->has_right());
+    out << "; ";
+
+    if (op->right()->kind == expr_t::op_t::O_CONS)
+      found = print_cons(out, op->right(), context);
+    else if (op->right()->print(out, context))
+      found = true;
+
     return found;
   }
 }
@@ -495,6 +534,12 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     out << ")";
     break;
 
+  case O_SEQ:
+    out << "(";
+    found = print_seq(out, this, context);
+    out << ")";
+    break;
+
   case O_DEFINE:
     if (left() && left()->print(out, context))
       found = true;
@@ -606,6 +651,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   case O_COLON:	 out << "O_COLON"; break;
 
   case O_CONS:	 out << "O_CONS"; break;
+  case O_SEQ:	 out << "O_SEQ"; break;
 
   case LAST:
   default:

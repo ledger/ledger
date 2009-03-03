@@ -368,6 +368,11 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     kind = COMMA;
     break;
 
+  case ';':
+    in.get(c);
+    kind = SEMI;
+    break;
+
   default: {
     istream_pos_type pos = in.tellg();
 

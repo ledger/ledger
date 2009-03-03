@@ -109,6 +109,7 @@ public:
     O_COLON,
 
     O_CONS,
+    O_SEQ,
 
     O_DEFINE,
     O_LOOKUP,

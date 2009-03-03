@@ -96,6 +96,7 @@ struct expr_t::token_t : public noncopyable
 
     DOT,			// .
     COMMA,			// ,
+    SEMI,			// ;
 
     TOK_EOF,
     UNKNOWN

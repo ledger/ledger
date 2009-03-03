@@ -441,14 +441,17 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
-    if (tok.kind == token_t::COMMA) {
+    if (tok.kind == token_t::COMMA || tok.kind == token_t::SEMI) {
+      bool comma_op = tok.kind == token_t::COMMA;
+
       ptr_op_t prev(node);
-      node = new op_t(op_t::O_CONS);
+      node = new op_t(comma_op ? op_t::O_CONS : op_t::O_SEQ);
       node->set_left(prev);
       node->set_right(parse_value_expr(in, tflags));
       if (! node->right())
 	throw_(parse_error,
 	       _("%1 operator not followed by argument") << tok.symbol);
+
       tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
     }
 
