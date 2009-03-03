@@ -1,4 +1,4 @@
-.Dd February 27, 2009
+.Dd March  3, 2009
 .Dt ledger 1
 .Sh NAME
 .Nm ledger
@@ -87,7 +87,6 @@ and causes an immediate reloading of all journal files in the session.
 .Bl -tag -width -indent
 .It Fl \-abbrev-len Ar INT
 .It Fl \-account Ar STR
-.It Fl \-account-amount Ar EXPR
 .It Fl \-account-width Ar INT
 .It Fl \-actual Pq Fl L
 .It Fl \-add-budget
@@ -111,11 +110,16 @@ and causes an immediate reloading of all journal files in the session.
 .It Fl \-color
 .It Fl \-columns Ar INT
 .It Fl \-commodity-as-account
-(Also \fB\-\-comm\-as\-account\fR).
+(Also
+.Fl \-\-comm\-as\-account
+).
 .It Fl \-commodity-as-payee
-(Also \fB\-\-comm\-as\-payee\fR).
+(Also
+.Fl \-\-comm\-as\-payee
+).
 .It Fl \-cost
-See \fB\-\-basis\fR.
+See
+.Fl \-basis .
 .It Fl \-csv-format Ar FMT
 .It Fl \-current Pq Fl c
 .It Fl \-daily
@@ -137,10 +141,13 @@ See \fB\-\-basis\fR.
 .It Fl \-exchange Ar COMM Oo , COMM, ... Oc Pq Fl X
 .It Fl \-file Ar FILE
 .It Fl \-first Ar INT
-See \fB\-\-head\fR.
+See
+.Fl \-head .
 .It Fl \-flat
 .It Fl \-forecast-while Ar EXPR
-(Also \fB\-\-forecast\fR).
+(Also
+.Fl \-forecast
+).
 .It Fl \-format Ar FMT Pq Fl F
 .It Fl \-gain Pq Fl G
 .It Fl \-head Ar INT
@@ -148,7 +155,8 @@ See \fB\-\-head\fR.
 .It Fl \-input-date-format Ar DATEFMT
 .It Fl \-invert
 .It Fl \-last Ar INT
-See \fB\-\-tail\fR.
+See
+.Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
 .It Fl \-limit Ar EXPR Pq Fl l
 .It Fl \-lot-dates
@@ -172,7 +180,8 @@ See \fB\-\-tail\fR.
 .It Fl \-price Pq Fl I
 .It Fl \-price-db Ar FILE
 .It Fl \-price-exp Ar STR
-See \fB\-\-leeway\fR.
+See
+.Fl \-leeway .
 .It Fl \-prices-format Ar FMT
 .It Fl \-pricesdb-format Ar FMT
 .It Fl \-print-format Ar FMT
@@ -221,12 +230,13 @@ appeared in the original journal file.
 .Sh PRECOMMANDS
 .Pp
 .Bl -tag -width -indent
-.It \fBargs\fR
-.It \fBeval\fR
-.It \fBformat\fR
-.It \fBparse\fR
-.It \fBperiod\fR
-.It \fBtemplate\fR
+.It Nm args
+.It Nm eval
+.It Nm format
+.It Nm parse
+.It Nm period
+.It Nm python
+.It Nm template
 .El
 .Pp
 .Sh QUERIES
@@ -255,6 +265,7 @@ Shakee's Pizza, you could say:
 .Dl ledger reg food and @Shakee
 .It Ar term Nm or Ar term
 When you wish to be more explicit, use the OR operator.
+.It Nm show
 .It Nm not Ar term
 Reverse the logical meaning of the following term.  This can be used with
 parentheses to great effect:
@@ -272,6 +283,7 @@ interpret parentheses, you should always escape them:
 .Bl -tag foo -width "partial_account"
 .It Nm account
 .It Nm account_base
+.It Nm account_amount
 .It Nm actual
 .It Nm amount
 .It Nm amount_expr
@@ -312,6 +324,7 @@ for example:
 .It Nm market
 .It Nm meta
 .It Nm note
+.It Nm null
 .It Nm options
 .It Nm partial_account
 .It Nm payee
