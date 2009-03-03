@@ -33,7 +33,7 @@
 
 namespace ledger {
 
-string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
+string args_to_predicate_expr(value_t::sequence_t::const_iterator& begin,
 			      value_t::sequence_t::const_iterator end)
 {
   std::ostringstream expr;
@@ -43,6 +43,11 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
   while (begin != end) {
     string arg = (*begin).as_string();
     string prefix;
+
+    if (arg == "show") {
+      ++begin;
+      break;
+    }
 
     bool parse_argument		 = true;
     bool only_closed_parenthesis = false;;

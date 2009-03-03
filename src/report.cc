@@ -322,11 +322,28 @@ namespace {
     value_t operator()(call_scope_t& args)
     {
       if (args.size() > 0) {
-	report.HANDLER(limit_).on
-	  (args_to_predicate_expr(args.value().as_sequence().begin(),
-				  args.value().as_sequence().end()));
+	value_t::sequence_t::const_iterator begin =
+	  args.value().as_sequence().begin();
+	value_t::sequence_t::const_iterator end   =
+	  args.value().as_sequence().end();
+
+	string limit = args_to_predicate_expr(begin, end);
+
+	if (! limit.empty())
+	  report.HANDLER(limit_).on(limit);
+
 	DEBUG("report.predicate",
 	      "Predicate = " << report.HANDLER(limit_).str());
+
+	string display;
+	if (begin != end)
+	  display = args_to_predicate_expr(begin, end);
+
+	if (! display.empty())
+	  report.HANDLER(display_).on(display);
+
+	DEBUG("report.predicate",
+	      "Display predicate = " << report.HANDLER(display_).str());
       }
 
       (report.*report_method)(handler_ptr(handler));

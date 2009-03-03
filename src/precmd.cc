@@ -99,7 +99,7 @@ value_t parse_command(call_scope_t& args)
   result.strip_annotations(report.what_to_keep()).dump(out);
   out << std::endl;
 
-  return 0L;
+  return NULL_VALUE;
 }
 
 value_t eval_command(call_scope_t& args)
@@ -111,7 +111,7 @@ value_t eval_command(call_scope_t& args)
   if (! result.is_null())
     report.output_stream << result << std::endl;
 
-  return 0L;
+  return NULL_VALUE;
 }
 
 value_t format_command(call_scope_t& args)
@@ -140,7 +140,7 @@ value_t format_command(call_scope_t& args)
   fmt.format(out, bound_scope);
   out << "\"\n";
 
-  return 0L;
+  return NULL_VALUE;
 }
 
 value_t period_command(call_scope_t& args)
@@ -176,7 +176,7 @@ value_t period_command(call_scope_t& args)
 	break;
     }
   }
-  return 0L;
+  return NULL_VALUE;
 }
 
 value_t args_command(call_scope_t& args)
@@ -196,7 +196,20 @@ value_t args_command(call_scope_t& args)
   call_scope_t sub_args(static_cast<scope_t&>(args));
   sub_args.push_back(string_value(predicate));
 
-  return parse_command(sub_args);
+  parse_command(sub_args);
+
+  if (begin != end) {
+    out << std::endl << _("====== Display predicate ======")
+	<< std::endl << std::endl;
+
+    predicate = args_to_predicate_expr(begin, end);
+
+    call_scope_t disp_sub_args(static_cast<scope_t&>(args));
+    disp_sub_args.push_back(string_value(predicate));
+
+    parse_command(disp_sub_args);
+  }
+  return NULL_VALUE;
 }
 
 } // namespace ledger

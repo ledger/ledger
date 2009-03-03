@@ -95,7 +95,7 @@ public:
   }
 };
 
-string args_to_predicate_expr(value_t::sequence_t::const_iterator begin,
+string args_to_predicate_expr(value_t::sequence_t::const_iterator& begin,
 			      value_t::sequence_t::const_iterator end);
 
 } // namespace ledger
