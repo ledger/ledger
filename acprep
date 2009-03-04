@@ -220,7 +220,7 @@ while [ -n "$1" ]; do
           # These can cause problems when run against a full set of headers,
           # but with PCH, they only apply to Ledger itself
 	  CXXFLAGS="$CXXFLAGS -Wconversion"
-	  CXXFLAGS="$CXXFLAGS -Wold-style-cast"
+	  #CXXFLAGS="$CXXFLAGS -Wold-style-cast"
 
 	  # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
 	  # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
