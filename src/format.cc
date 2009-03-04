@@ -360,7 +360,8 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	result = truncate(temp, elem->max_width);
       } else {
 	result = temp.extract();
-	for (int i = 0; i < (int)elem->min_width - (int)temp.length(); i++)
+	for (int i = 0; i < (static_cast<int>(elem->min_width) -
+	                     static_cast<int>(temp.length())); i++)
 	  result += " ";
       }
       out_str << result;

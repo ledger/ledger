@@ -477,7 +477,7 @@ void global_scope_t::visit_man_page() const
     throw std::logic_error(_("Failed to fork child process"));
   }
   else if (pid == 0) {	// child
-    execlp("man", "man", "1", "ledger", (char *)0);
+    execlp("man", "man", "1", "ledger", NULL);
 
     // We should never, ever reach here
     perror("execlp: man");

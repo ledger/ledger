@@ -431,8 +431,10 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 		<< "amount " << initial_post->amount << " (precision "
 		<< initial_post->amount.precision() << ")");
 
+#if defined(DEBUG_ON)
 	  if (initial_post->amount.keep_precision())
 	    DEBUG("xact.extend", "  precision is kept");
+#endif
 
 	  DEBUG("xact.extend",
 		"Posting on line " << post->beg_line << ": "
@@ -440,10 +442,12 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 		<< " (precision " << post->amount.precision()
 		<< " != " << amt.precision() << ")");
 
+#if defined(DEBUG_ON)
 	  if (post->amount.keep_precision())
 	    DEBUG("xact.extend", "  precision is kept");
 	  if (amt.keep_precision())
 	    DEBUG("xact.extend", "  amt precision is kept");
+#endif
 	}
 
 	account_t * account  = post->account;

@@ -90,8 +90,7 @@ namespace {
 #else
       path basename(pager_path.leaf());
 #endif
-      execlp(pager_path.string().c_str(), basename.string().c_str(),
-	     (char *)0);
+      execlp(pager_path.string().c_str(), basename.string().c_str(), NULL);
 
       // We should never, ever reach here
       perror((std::string("execlp: ") + pager_path.string()).c_str());

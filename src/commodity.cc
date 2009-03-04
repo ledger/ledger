@@ -402,10 +402,12 @@ commodity_t::exchange(const amount_t&		  amount,
 {
   DEBUG("commodity.prices.add", "exchange: " << amount << " for " << cost);
   DEBUG("commodity.prices.add", "exchange: is-per-unit   = " << is_per_unit);
+#if defined(DEBUG_ON)
   if (moment)
     DEBUG("commodity.prices.add", "exchange: moment        = " << *moment);
   if (tag)
     DEBUG("commodity.prices.add", "exchange: tag           = " << *tag);
+#endif
 
   commodity_t& commodity(amount.commodity());
 
