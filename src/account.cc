@@ -167,32 +167,32 @@ namespace {
   }
 
   value_t get_total(account_t& account) {
-    if (! account.xdata_ || account.xdata_->total.is_null())
+    if (! account.xdata_ || account.xdata_->family_details.total.is_null())
       return 0L;
     else
-      return account.xdata_->total;
+      return account.xdata_->family_details.total;
   }
 
   value_t get_count(account_t& account) {
     if (account.xdata_)
-      return long(account.xdata_->total_count);
+      return long(account.xdata_->family_details.posts_count);
     else
       return 0L;
   }
 
   value_t get_subcount(account_t& account) {
     if (account.xdata_)
-      return long(account.xdata_->count);
+      return long(account.xdata_->self_details.posts_count);
     else
       return 0L;
   }
 
   value_t get_amount(account_t& account) {
     if (! account.xdata_ ||
-	account.xdata_->value.is_null())
+	account.xdata_->self_details.total.is_null())
       return 0L;
     else
-      return account.xdata_->value;
+      return account.xdata_->self_details.total;
   }
 
   value_t get_depth(account_t& account) {

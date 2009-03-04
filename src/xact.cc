@@ -317,11 +317,13 @@ bool xact_base_t::finalize()
 
 	post->amount.in_place_reduce();
 
-	add_or_set_value(post->account->xdata().value, post->amount);
+	add_or_set_value(post->account->xdata().self_details.total,
+			 post->amount);
 
 	DEBUG("xact.finalize.totals",
 	      "Total for " << post->account->fullname() << " + "
-	      << post->amount << ": " << post->account->xdata().value);
+	      << post->amount << ": "
+	      << post->account->xdata().self_details.total);
       } else {
 	some_null = true;
       }

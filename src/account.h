@@ -128,26 +128,31 @@ class account_t : public scope_t
 #define ACCOUNT_EXT_MATCHING         0x10
 #define ACCOUNT_EXT_DISPLAYED	     0x20
 
-    value_t	  value;
-    value_t	  total;
-    std::size_t   count;	// posts counted toward amount
-    std::size_t   total_count;	// posts counted toward total
-    std::size_t   virtuals;
-    std::size_t   total_virtuals;
+    struct details_t
+    {
+      value_t	  total;
+
+      std::size_t posts_count;
+      std::size_t posts_virtuals_count;
+
+      details_t()
+	: posts_count(0),
+	  posts_virtuals_count(0) {}
+    };
+
+    details_t self_details;
+    details_t family_details;
 
     std::list<sort_value_t> sort_values;
 
-    xdata_t() : supports_flags<>(), count(0), total_count(0), virtuals(0)
+    xdata_t() : supports_flags<>()
     {
       TRACE_CTOR(account_t::xdata_t, "");
     }
     xdata_t(const xdata_t& other)
       : supports_flags<>(other.flags()),
-	value(other.value),
-	total(other.total),
-	count(other.count),
-	total_count(other.total_count),
-	virtuals(other.virtuals),
+	self_details(other.self_details),
+	family_details(other.family_details),
 	sort_values(other.sort_values)
     {
       TRACE_CTOR(account_t::xdata_t, "copy");

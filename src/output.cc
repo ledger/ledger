@@ -290,8 +290,10 @@ void format_accounts::flush()
   if (report.session.master->has_xdata()) {
     account_t::xdata_t& xdata(report.session.master->xdata());
 
-    if (! report.HANDLED(no_total) && top_displayed > 1 && xdata.total) {
-      xdata.value = xdata.total;
+    if (! report.HANDLED(no_total) && top_displayed > 1 &&
+	xdata.family_details.total) {
+      xdata.self_details.total = xdata.family_details.total;
+
       bind_scope_t bound_scope(report, *report.session.master);
       separator_format.format(out, bound_scope);
       total_line_format.format(out, bound_scope);

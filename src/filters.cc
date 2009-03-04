@@ -200,25 +200,29 @@ void calc_posts::operator()(post_t& post)
     xdata.count = 1;
   }
 
-  post.add_to_value(xdata.total, amount_expr);
+  value_t amount;
+  post.add_to_value(amount, amount_expr);
+
+  add_or_set_value(xdata.total, amount);
 
   if (calc_totals) {
     account_t * acct = post.reported_account();
 
     account_t::xdata_t * acct_xdata = &acct->xdata();
 
-    post.add_to_value(acct_xdata->value, amount_expr);
+    add_or_set_value(acct_xdata->self_details.total, amount);
 
-    acct_xdata->count++;
-    acct_xdata->virtuals++;
+    acct_xdata->self_details.posts_count++;
+    acct_xdata->self_details.posts_virtuals_count++;
+
     acct_xdata->add_flags(ACCOUNT_EXT_VISITED);
 
     while (true) {
-      post.add_to_value(acct_xdata->total, amount_expr);
+      add_or_set_value(acct_xdata->family_details.total, amount);
+      acct_xdata->family_details.posts_count++;
 
-      acct_xdata->total_count++;
       if (post.has_flags(POST_VIRTUAL))
-	acct_xdata->total_virtuals++;
+	acct_xdata->family_details.posts_virtuals_count++;
 
       acct = acct->parent;
       if (acct)

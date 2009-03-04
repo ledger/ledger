@@ -232,10 +232,10 @@ namespace {
 
     DEBUG("post.account_amount", "Found account: " << account->fullname());
 
-    if (account->xdata().value.is_null())
+    if (account->xdata().self_details.total.is_null())
       return 0L;
     else
-      return account->xdata().value.simplified();
+      return account->xdata().self_details.total.simplified();
   }
 
   value_t get_account_depth(post_t& post) {
