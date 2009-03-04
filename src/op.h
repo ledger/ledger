@@ -148,14 +148,14 @@ public:
   value_t& as_value_lval() {
     assert(is_value());
     value_t& val(boost::get<value_t>(data));
-    assert(val.valid());
+    VERIFY(val.valid());
     return val;
   }
   const value_t& as_value() const {
     return const_cast<op_t *>(this)->as_value_lval();
   }
   void set_value(const value_t& val) {
-    assert(val.valid());
+    VERIFY(val.valid());
     data = val;
   }
 

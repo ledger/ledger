@@ -89,7 +89,7 @@ namespace {
     std::sprintf(buf, "%lds", long((when - event.checkin).total_seconds()));
     amount_t amt;
     amt.parse(buf);
-    assert(amt.valid());
+    VERIFY(amt.valid());
 
     post_t * post = new post_t(event.account, amt, POST_VIRTUAL);
     post->set_state(item_t::CLEARED);

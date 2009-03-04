@@ -166,7 +166,7 @@ private:
      */
     ~storage_t() {
       TRACE_DTOR(value_t::storage_t);
-      assert(refc == 0);
+      VERIFY(refc == 0);
       destroy();
     }
 
@@ -190,13 +190,13 @@ private:
     void acquire() const {
       DEBUG("value.storage.refcount",
 	     "Acquiring " << this << ", refc now " << refc + 1);
-      assert(refc >= 0);
+      VERIFY(refc >= 0);
       refc++;
     }
     void release() const {
       DEBUG("value.storage.refcount",
 	     "Releasing " << this << ", refc now " << refc - 1);
-      assert(refc > 0);
+      VERIFY(refc > 0);
       if (--refc == 0)
 	checked_delete(this);
     }
@@ -235,7 +235,7 @@ private:
    * subsequently be modified.
    */
   void _dup() {
-    assert(storage);
+    VERIFY(storage);
     if (storage->refc > 1)
       storage = new storage_t(*storage.get());
   }
@@ -462,18 +462,16 @@ public:
   bool is_zero() const;
   bool is_null() const {
     if (! storage) {
-      assert(is_type(VOID));
+      VERIFY(is_type(VOID));
       return true;
     } else {
-      assert(! is_type(VOID));
+      VERIFY(! is_type(VOID));
       return false;
     }
   }
 
   type_t type() const {
-    type_t result = storage ? storage->type : VOID;
-    assert(result >= VOID && result <= POINTER);
-    return result;
+    return storage ? storage->type : VOID;
   }
   bool is_type(type_t _type) const {
     return type() == _type;
@@ -516,12 +514,12 @@ public:
     return is_type(BOOLEAN);
   }
   bool& as_boolean_lval() {
-    assert(is_boolean());
+    VERIFY(is_boolean());
     _dup();
     return boost::get<bool>(storage->data);
   }
   const bool& as_boolean() const {
-    assert(is_boolean());
+    VERIFY(is_boolean());
     return boost::get<bool>(storage->data);
   }
   void set_boolean(const bool val) {
@@ -533,12 +531,12 @@ public:
     return is_type(DATETIME);
   }
   datetime_t& as_datetime_lval() {
-    assert(is_datetime());
+    VERIFY(is_datetime());
     _dup();
     return boost::get<datetime_t>(storage->data);
   }
   const datetime_t& as_datetime() const {
-    assert(is_datetime());
+    VERIFY(is_datetime());
     return boost::get<datetime_t>(storage->data);
   }
   void set_datetime(const datetime_t& val) {
@@ -550,12 +548,12 @@ public:
     return is_type(DATE);
   }
   date_t& as_date_lval() {
-    assert(is_date());
+    VERIFY(is_date());
     _dup();
     return boost::get<date_t>(storage->data);
   }
   const date_t& as_date() const {
-    assert(is_date());
+    VERIFY(is_date());
     return boost::get<date_t>(storage->data);
   }
   void set_date(const date_t& val) {
@@ -567,12 +565,12 @@ public:
     return is_type(INTEGER);
   }
   long& as_long_lval() {
-    assert(is_long());
+    VERIFY(is_long());
     _dup();
     return boost::get<long>(storage->data);
   }
   const long& as_long() const {
-    assert(is_long());
+    VERIFY(is_long());
     return boost::get<long>(storage->data);
   }
   void set_long(const long val) {
@@ -584,16 +582,16 @@ public:
     return is_type(AMOUNT);
   }
   amount_t& as_amount_lval() {
-    assert(is_amount());
+    VERIFY(is_amount());
     _dup();
     return boost::get<amount_t>(storage->data);
   }
   const amount_t& as_amount() const {
-    assert(is_amount());
+    VERIFY(is_amount());
     return boost::get<amount_t>(storage->data);
   }
   void set_amount(const amount_t& val) {
-    assert(val.valid());
+    VERIFY(val.valid());
     set_type(AMOUNT);
     storage->data = val;
   }
@@ -602,16 +600,16 @@ public:
     return is_type(BALANCE);
   }
   balance_t& as_balance_lval() {
-    assert(is_balance());
+    VERIFY(is_balance());
     _dup();
     return *boost::get<balance_t *>(storage->data);
   }
   const balance_t& as_balance() const {
-    assert(is_balance());
+    VERIFY(is_balance());
     return *boost::get<balance_t *>(storage->data);
   }
   void set_balance(const balance_t& val) {
-    assert(val.valid());
+    VERIFY(val.valid());
     set_type(BALANCE);
     storage->data = new balance_t(val);
   }
@@ -620,12 +618,12 @@ public:
     return is_type(STRING);
   }
   string& as_string_lval() {
-    assert(is_string());
+    VERIFY(is_string());
     _dup();
     return boost::get<string>(storage->data);
   }
   const string& as_string() const {
-    assert(is_string());
+    VERIFY(is_string());
     return boost::get<string>(storage->data);
   }
   void set_string(const string& val = "") {
@@ -641,13 +639,13 @@ public:
     return is_type(MASK);
   }
   mask_t& as_mask_lval() {
-    assert(is_mask());
+    VERIFY(is_mask());
     _dup();
     VERIFY(boost::get<mask_t>(storage->data).valid());
     return boost::get<mask_t>(storage->data);
   }
   const mask_t& as_mask() const {
-    assert(is_mask());
+    VERIFY(is_mask());
     VERIFY(boost::get<mask_t>(storage->data).valid());
     return boost::get<mask_t>(storage->data);
   }
@@ -664,12 +662,12 @@ public:
     return is_type(SEQUENCE);
   }
   sequence_t& as_sequence_lval() {
-    assert(is_sequence());
+    VERIFY(is_sequence());
     _dup();
     return *boost::get<sequence_t *>(storage->data);
   }
   const sequence_t& as_sequence() const {
-    assert(is_sequence());
+    VERIFY(is_sequence());
     return *boost::get<sequence_t *>(storage->data);
   }
   void set_sequence(const sequence_t& val) {
@@ -689,7 +687,7 @@ public:
     return is_type(POINTER);
   }
   boost::any& as_any_pointer_lval() {
-    assert(is_pointer());
+    VERIFY(is_pointer());
     _dup();
     return boost::get<boost::any>(storage->data);
   }
@@ -702,7 +700,7 @@ public:
     return *as_pointer_lval<T>();
   }
   const boost::any& as_any_pointer() const {
-    assert(is_pointer());
+    VERIFY(is_pointer());
     return boost::get<boost::any>(storage->data);
   }
   template <typename T>
@@ -785,7 +783,7 @@ public:
    * Collection-style access methods for SEQUENCE values.
    */
   value_t& operator[](const int index) {
-    assert(! is_null());
+    VERIFY(! is_null());
     if (is_sequence())
       return as_sequence_lval()[index];
     else if (index == 0)
@@ -796,7 +794,7 @@ public:
     return null;
   }
   const value_t& operator[](const int index) const {
-    assert(! is_null());
+    VERIFY(! is_null());
     if (is_sequence())
       return as_sequence()[index];
     else if (index == 0)
@@ -818,7 +816,7 @@ public:
   }
 
   void pop_back() {
-    assert(! is_null());
+    VERIFY(! is_null());
 
     if (! is_sequence()) {
 #if BOOST_VERSION >= 103700
@@ -845,24 +843,24 @@ public:
   }
 
   sequence_t::iterator begin() {
-    assert(is_sequence());
+    VERIFY(is_sequence());
     return as_sequence_lval().begin();
   }
 
   sequence_t::iterator end() {
-    assert(is_sequence());
+    VERIFY(is_sequence());
     // This special hack is because we never used end() in a context which
     // needs us to call _dup().
     return boost::get<sequence_t *>(storage->data)->end();
   }
 
   sequence_t::const_iterator begin() const {
-    assert(is_sequence());
+    VERIFY(is_sequence());
     return as_sequence().begin();
   }
 
   sequence_t::const_iterator end() const {
-    assert(is_sequence());
+    VERIFY(is_sequence());
     return as_sequence().end();
   }
 

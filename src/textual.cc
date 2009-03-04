@@ -430,7 +430,7 @@ void instance_t::clock_out_directive(char * line,
 void instance_t::default_commodity_directive(char * line)
 {
   amount_t amt(skip_ws(line + 1));
-  assert(amt.valid());
+  VERIFY(amt.valid());
   amount_t::current_pool->default_commodity = &amt.commodity();
   amt.commodity().add_flags(COMMODITY_KNOWN);
 }
@@ -494,7 +494,7 @@ void instance_t::price_xact_directive(char * line)
   string symbol;
   parse_symbol(symbol_and_price, symbol);
   amount_t price(symbol_and_price);
-  assert(price.valid());
+  VERIFY(price.valid());
 
   if (commodity_t * commodity =
       amount_t::current_pool->find_or_create(symbol)) {

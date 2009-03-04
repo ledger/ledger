@@ -112,7 +112,7 @@ bool xact_base_t::finalize()
       null_post = post;
     }
   }
-  assert(balance.valid());
+  VERIFY(balance.valid());
 
 #if defined(DEBUG_ON)
   DEBUG("xact.finalize", "initial balance = " << balance);

@@ -129,7 +129,7 @@ void amount_t::shutdown()
 
 void amount_t::_copy(const amount_t& amt)
 {
-  assert(amt.valid());
+  VERIFY(amt.valid());
 
   if (quantity != amt.quantity) {
     if (quantity)
@@ -231,7 +231,7 @@ amount_t& amount_t::operator=(const amount_t& amt)
 
 int amount_t::compare(const amount_t& amt) const
 {
-  assert(amt.valid());
+  VERIFY(amt.valid());
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
@@ -266,7 +266,7 @@ bool amount_t::operator==(const amount_t& amt) const
 
 amount_t& amount_t::operator+=(const amount_t& amt)
 {
-  assert(amt.valid());
+  VERIFY(amt.valid());
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
@@ -297,7 +297,7 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
 amount_t& amount_t::operator-=(const amount_t& amt)
 {
-  assert(amt.valid());
+  VERIFY(amt.valid());
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
@@ -328,7 +328,7 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
 amount_t& amount_t::operator*=(const amount_t& amt)
 {
-  assert(amt.valid());
+  VERIFY(amt.valid());
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
@@ -359,7 +359,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
 
 amount_t& amount_t::operator/=(const amount_t& amt)
 {
-  assert(amt.valid());
+  VERIFY(amt.valid());
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
