@@ -15,10 +15,10 @@ function build_and_test() {
 	DIR=$HOME/Products/ledger-$1
     else
 	NAME="$1"
-	DIR=$HOME/Products/ledger-$1
+	DIR=$HOME/Products/ledger
 
 	echo %%% Configuring $NAME %%%
-	if ! tools/myacprep --output $DIR; then
+	if ! tools/myacprep; then
 	    echo %%% FAILED to configure $NAME %%%
 	    exit 1
 	fi
@@ -44,12 +44,11 @@ function build_and_test() {
 }
 
 build_and_test opt
-build_and_test gprof
 build_and_test gcov
 build_and_test std
 
 echo %%% Building release-distcheck %%%
-if ! (cd ~/Products/ledger-std && make release-distcheck); then
+if ! (cd ~/Products/ledger && make release-distcheck); then
     echo %%% FAILED to build release-distcheck %%%
     exit 1
 fi
