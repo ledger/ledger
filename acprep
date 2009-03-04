@@ -8,29 +8,32 @@
 # This script simply sets up the compiler and linker flags for all the various
 # build permutations I use for testing and profiling.
 
-if [ -d .git ]; then
-    # Make sure that all of the dependencies are available
-    git submodule init
-    git submodule update
+if [ ! -f configure   -o configure.ac -nt configure -o \
+     ! -f Makefile.in -o Makefile.am  -nt Makefile.in ]
+then
+    if [ -d .git ]; then
+	# Make sure that all of the dependencies are available
+	git submodule init
+	git submodule update
 
-    COMMIT=$(git describe --all --long | sed 's/heads\///')
-else
-    COMMIT=unknown
+	COMMIT=$(git describe --all --long | sed 's/heads\///')
+    else
+	COMMIT=unknown
+    fi
+
+    echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
+
+    sh tools/autogen.sh
+
+    # configure the template files
+    if [ ! -f po/Makevars ]; then
+	mv po/Makevars.template po/Makevars
+    fi
+    git ls-files '*.cc' '*.h' | egrep '^(src|python)/' > po/POTFILES.in
+
+    # regenerate aclocal.m4
+    aclocal -I m4
 fi
-
-
-echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
-sh tools/autogen.sh
-
-
-# configure the template files
-if [ ! -f po/Makevars ]; then
-    mv po/Makevars.template po/Makevars
-fi
-git ls-files '*.cc' '*.h' | egrep '^(src|python)/' > po/POTFILES.in
-
-# regenerate aclocal.m4
-aclocal -I m4
 
 
 SWITCHES="--disable-shared --with-included-gettext"

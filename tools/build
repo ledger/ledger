@@ -9,11 +9,10 @@ if [ -d ~/Products/ledger ]; then
 fi
 
 if [ ! -f Makefile -o \
-     $SRCDIR/Makefile.am -nt Makefile -o \
+     $SRCDIR/Makefile.am  -nt Makefile -o \
      $SRCDIR/configure.ac -nt Makefile -o \
-     $SRCDIR/acprep -nt Makefile -o \
-     $SRCDIR/acprep -nt Makefile -o \
-     $SRCDIR/tools/myacprep -nt Makefile ]; then
+     $SRCDIR/acprep       -nt Makefile -o \
+     $SRCDIR/myacprep     -nt Makefile ]; then
     (cd $SRCDIR && tools/myacprep)
 fi
 
