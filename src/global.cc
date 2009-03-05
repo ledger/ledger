@@ -29,9 +29,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ledger.h>
-
 #include "global.h"
+#if defined(HAVE_BOOST_PYTHON)
+#include "pyinterp.h"
+#endif
+#include "item.h"
+#include "journal.h"
 
 namespace ledger {
 

@@ -38,9 +38,14 @@
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 
+#include "interactive.h"
+#include "option.h"
 #include "report.h"
 
 namespace ledger {
+
+class session_t;
+class report_t;
 
 class global_scope_t : public noncopyable, public scope_t
 {

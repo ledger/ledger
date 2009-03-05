@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils.h"
+#include "times.h"
 
 /**********************************************************************
  *
@@ -655,6 +655,8 @@ void sigpipe_handler(int)
  */
 
 namespace ledger {
+
+const string version = PACKAGE_VERSION;
 
 path expand_path(const path& pathname)
 {

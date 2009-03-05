@@ -31,6 +31,8 @@
 
 #include "compare.h"
 #include "op.h"
+#include "post.h"
+#include "account.h"
 
 namespace ledger {
 

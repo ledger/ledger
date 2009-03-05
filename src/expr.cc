@@ -31,7 +31,6 @@
 
 #include "expr.h"
 #include "parser.h"
-#include "op.h"
 
 namespace ledger {
 

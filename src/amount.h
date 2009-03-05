@@ -54,6 +54,8 @@
 #define _AMOUNT_H
 
 #include "utils.h"
+#include "times.h"
+#include "flags.h"
 
 namespace ledger {
 

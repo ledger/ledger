@@ -48,6 +48,8 @@
 #ifndef _STREAM_H
 #define _STREAM_H
 
+#include "utils.h"
+
 namespace ledger {
 
 /**

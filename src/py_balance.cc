@@ -30,12 +30,6 @@
  */
 
 #include "pyinterp.h"
-#include "pyutils.h"
-#include "balance.h"
-
-#include <boost/python/exception_translator.hpp>
-#include <boost/python/implicit.hpp>
-#include <boost/python/args.hpp>
 
 namespace ledger {
 

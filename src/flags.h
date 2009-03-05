@@ -46,7 +46,6 @@
 #ifndef _FLAGS_H
 #define _FLAGS_H
 
-#include "utils.h"
 
 /**
  * @brief Brief

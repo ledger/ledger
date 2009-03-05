@@ -48,13 +48,21 @@
 
 #include "utils.h"
 #include "hooks.h"
-#include "xact.h"
 
 namespace ledger {
 
 typedef std::list<path>	paths_list;
 
+class xact_t;
+class auto_xact_t;
+class xact_finalizer_t;
+class period_xact_t;
 class account_t;
+class scope_t;
+
+typedef std::list<xact_t *>	   xacts_list;
+typedef std::list<auto_xact_t *>   auto_xacts_list;
+typedef std::list<period_xact_t *> period_xacts_list;
 
 /**
  * @brief Brief
@@ -64,9 +72,9 @@ class account_t;
 class journal_t : public noncopyable
 {
 public:
-  account_t *  master;
-  account_t *  basket;
-  xacts_list xacts;
+  account_t * master;
+  account_t * basket;
+  xacts_list  xacts;
 
   auto_xacts_list   auto_xacts;
   period_xacts_list period_xacts;
@@ -103,8 +111,6 @@ public:
 
   bool valid() const;
 };
-
-extern const string version;
 
 } // namespace ledger
 

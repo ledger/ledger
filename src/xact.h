@@ -46,12 +46,15 @@
 #ifndef _XACT_H
 #define _XACT_H
 
-#include "post.h"
+#include "item.h"
 #include "predicate.h"
 
 namespace ledger {
 
+class post_t;
 class journal_t;
+
+typedef std::list<post_t *> posts_list;
 
 /**
  * @brief Brief
@@ -244,7 +247,7 @@ inline bool auto_xact_finalizer_t::operator()(xact_t& xact, bool post) {
   return true;
 }
 
-typedef std::list<xact_t *>	    xacts_list;
+typedef std::list<xact_t *>	   xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 

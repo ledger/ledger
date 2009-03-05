@@ -30,6 +30,8 @@
  */
 
 #include "emacs.h"
+#include "xact.h"
+#include "post.h"
 #include "account.h"
 
 namespace ledger {

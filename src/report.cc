@@ -30,15 +30,16 @@
  */
 
 #include "report.h"
-#include "interactive.h"
-#include "iterators.h"
-#include "generate.h"
-#include "filters.h"
-#include "chain.h"
+#include "session.h"
+#include "unistring.h"		// jww (2009-03-04): really??
+#include "format.h"		// jww (2009-03-04): really??
 #include "output.h"
+#include "iterators.h"
+#include "filters.h"
 #include "precmd.h"
-#include "emacs.h"
+#include "generate.h"
 #include "derive.h"
+#include "emacs.h"
 
 namespace ledger {
 
@@ -379,6 +380,13 @@ namespace {
   };
 }
 
+value_t report_t::reload_command(call_scope_t&)
+{
+  session.close_journal_files();
+  session.read_journal_files();
+  return true;
+}
+
 bool report_t::maybe_import(const string& module)
 {
   if (lookup(string(OPT_PREFIX) + "import_")) {
@@ -618,6 +626,11 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   }
   return NULL;
+}
+
+void report_t::define(const string& name, expr_t::ptr_op_t def)
+{
+  session.define(name, def);
 }
 
 expr_t::ptr_op_t report_t::lookup(const string& name)

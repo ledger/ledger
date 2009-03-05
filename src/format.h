@@ -47,9 +47,10 @@
 #define _FORMAT_H
 
 #include "expr.h"
-#include "unistring.h"
 
 namespace ledger {
+
+class unistring;
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 

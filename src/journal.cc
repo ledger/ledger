@@ -30,11 +30,10 @@
  */
 
 #include "journal.h"
+#include "xact.h"
 #include "account.h"
 
 namespace ledger {
-
-const string version = PACKAGE_VERSION;
 
 journal_t::~journal_t()
 {

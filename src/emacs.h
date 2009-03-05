@@ -46,9 +46,11 @@
 #ifndef _EMACS_H
 #define _EMACS_H
 
-#include "output.h"
+#include "chain.h"
 
 namespace ledger {
+
+class xact_t;
 
 /**
  * @brief Brief

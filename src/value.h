@@ -49,7 +49,7 @@
 #ifndef _VALUE_H
 #define _VALUE_H
 
-#include "balance.h"
+#include "balance.h"		// includes amount.h
 #include "mask.h"
 
 namespace ledger {

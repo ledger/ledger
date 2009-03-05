@@ -30,7 +30,6 @@
  */
 
 #include "quotes.h"
-#include "utils.h"
 
 namespace ledger {
 

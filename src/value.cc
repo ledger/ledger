@@ -30,6 +30,7 @@
  */
 
 #include "value.h"
+#include "commodity.h"
 #include "unistring.h"
 
 namespace ledger {

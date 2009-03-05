@@ -30,8 +30,12 @@
  */
 
 #include "precmd.h"
-#include "interactive.h"
+#include "xact.h"
+#include "post.h"
+#include "account.h"
+#include "session.h"
 #include "report.h"
+#include "format.h"
 
 namespace ledger {
 

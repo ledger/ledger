@@ -46,10 +46,12 @@
 #ifndef _CHAIN_H
 #define _CHAIN_H
 
-#include "post.h"
-#include "account.h"
+#include "utils.h"
 
 namespace ledger {
+
+class post_t;
+class account_t;
 
 /**
  * @brief Brief

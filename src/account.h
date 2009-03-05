@@ -46,7 +46,6 @@
 #ifndef _ACCOUNT_H
 #define _ACCOUNT_H
 
-#include "utils.h"
 #include "scope.h"
 
 namespace ledger {

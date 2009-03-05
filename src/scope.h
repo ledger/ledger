@@ -46,7 +46,6 @@
 #ifndef _SCOPE_H
 #define _SCOPE_H
 
-#include "expr.h"
 #include "op.h"
 
 namespace ledger {

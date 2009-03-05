@@ -47,7 +47,7 @@
 #define _PREDICATE_H
 
 #include "expr.h"
-#include "scope.h"
+#include "commodity.h"
 
 namespace ledger {
 

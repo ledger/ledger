@@ -30,8 +30,6 @@
  */
 
 #include "pyinterp.h"
-#include "pyutils.h"
-#include "expr.h"
 
 namespace ledger {
 

@@ -46,10 +46,16 @@
 #ifndef _OUTPUT_H
 #define _OUTPUT_H
 
-#include "report.h"
+#include "chain.h"
+#include "predicate.h"
 #include "format.h"
 
 namespace ledger {
+
+class xact_t;
+class post_t;
+class account_t;
+class report_t;
 
 /**
  * @brief Brief
@@ -74,9 +80,7 @@ public:
     TRACE_DTOR(format_posts);
   }
 
-  virtual void flush() {
-    report.output_stream.flush();
-  }
+  virtual void flush();
   virtual void operator()(post_t& post);
 };
 

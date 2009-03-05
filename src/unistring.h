@@ -46,7 +46,6 @@
 #ifndef _UNISTRING_H
 #define _UNISTRING_H
 
-#include "utils.h"
 
 namespace ledger {
 

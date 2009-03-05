@@ -46,12 +46,15 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include "option.h"
-#include "journal.h"
+#include "interactive.h"
 #include "account.h"
-#include "format.h"
+#include "journal.h"
+#include "option.h"
 
 namespace ledger {
+
+class commodity_pool_t;
+class xact_t;
 
 /**
  * @brief Brief

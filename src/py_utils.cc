@@ -31,6 +31,7 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
+#include "pyfstream.h"
 
 namespace ledger {
 

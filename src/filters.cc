@@ -31,9 +31,9 @@
 
 #include "filters.h"
 #include "iterators.h"
-#include "compare.h"
-#include "format.h"
+#include "journal.h"
 #include "report.h"
+#include "compare.h"
 
 namespace ledger {
 

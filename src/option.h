@@ -46,9 +46,11 @@
 #ifndef _OPTION_H
 #define _OPTION_H
 
-#include "interactive.h"
+#include "scope.h"
 
 namespace ledger {
+
+class call_scope_t;
 
 template <typename T>
 class option_t

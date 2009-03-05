@@ -30,9 +30,9 @@
  */
 
 #include "xact.h"
-#include "journal.h"
+#include "post.h"
 #include "account.h"
-#include "format.h"
+#include "journal.h"
 
 namespace ledger {
 

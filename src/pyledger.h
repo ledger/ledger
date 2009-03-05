@@ -32,7 +32,5 @@
 #ifndef _PYLEDGER_H
 #define _PYLEDGER_H
 
-#include <ledger.h>
-#include <pyinterp.h>
 
 #endif // _PYLEDGER_H

@@ -30,10 +30,11 @@
  */
 
 #include "post.h"
-#include "journal.h"
+#include "xact.h"
 #include "account.h"
 #include "interactive.h"
-#include "format.h"
+#include "unistring.h"		// jww (2009-03-04): really??
+#include "format.h"		// jww (2009-03-04): really??
 
 namespace ledger {
 

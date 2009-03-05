@@ -50,6 +50,8 @@
 
 namespace ledger {
 
+class session_t;
+
 class generate_posts_iterator : public posts_iterator
 {
   session_t&   session;

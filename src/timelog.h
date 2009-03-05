@@ -46,9 +46,13 @@
 #ifndef _TIMELOG_H
 #define _TIMELOG_H
 
-#include "journal.h"
+#include "utils.h"
+#include "times.h"
 
 namespace ledger {
+
+class account_t;
+class journal_t;
 
 /**
  * @brief Brief

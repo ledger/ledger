@@ -67,24 +67,12 @@
 #ifndef _LEDGER_H
 #define _LEDGER_H
 
-#include <utils.h>
-#include <option.h>
 
-#include <value.h>
 
-#include <expr.h>
 
-#include <journal.h>
-#include <iterators.h>
-#include <compare.h>
 
-#include <session.h>
-#include <report.h>
-#include <quotes.h>
-#include <emacs.h>
 
 #if defined(HAVE_BOOST_PYTHON)
-#include <pyinterp.h>
 #define LEDGER_SESSION_T python_interpreter_t
 #else
 #define LEDGER_SESSION_T session_t

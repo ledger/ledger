@@ -46,11 +46,13 @@
 #ifndef _ITERATORS_H
 #define _ITERATORS_H
 
-#include "journal.h"
 #include "xact.h"
+#include "post.h"
 #include "account.h"
 
 namespace ledger {
+
+class journal_t;
 
 /**
  * @brief Brief

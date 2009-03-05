@@ -31,7 +31,6 @@
 
 #include "amount.h"
 #include "commodity.h"
-#include "unistring.h"
 
 namespace ledger {
 

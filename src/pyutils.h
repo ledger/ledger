@@ -32,7 +32,6 @@
 #ifndef _PY_UTILS_H
 #define _PY_UTILS_H
 
-#include "pyfstream.h"
 
 template <typename T, typename TfromPy>
 struct object_from_python

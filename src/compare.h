@@ -47,10 +47,11 @@
 #define _COMPARE_H
 
 #include "expr.h"
-#include "post.h"
-#include "account.h"
 
 namespace ledger {
+
+class post_t;
+class account_t;
 
 /**
  * @brief Brief

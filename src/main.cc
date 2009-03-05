@@ -29,10 +29,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ledger.h>		// Read this file for a top-level overview
-
 #include "global.h"		// This is where the meat of main() is, which
-				// was moved there for the sake of clarity
+				// was moved there for the sake of clarity here
+#include "session.h"
+
 using namespace ledger;
 
 namespace {

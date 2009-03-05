@@ -46,10 +46,17 @@
 #ifndef _REPORT_H
 #define _REPORT_H
 
-#include "session.h"
+#include "interactive.h"
+#include "expr.h"
 #include "chain.h"
+#include "stream.h"
+#include "option.h"
+#include "commodity.h"
 
 namespace ledger {
+
+class session_t;
+class xact_t;
 
 // These are the elements of any report:
 //
@@ -156,11 +163,7 @@ public:
     return option.str();
   }
 
-  value_t reload_command(call_scope_t&) {
-    session.close_journal_files();
-    session.read_journal_files();
-    return true;
-  }
+  value_t reload_command(call_scope_t&);
 
   keep_details_t what_to_keep() {
     bool lots = HANDLED(lots) || HANDLED(lots_actual);
@@ -174,9 +177,7 @@ public:
 
   option_t<report_t> * lookup_option(const char * p);
 
-  virtual void define(const string& name, expr_t::ptr_op_t def) {
-    session.define(name, def);
-  }
+  virtual void define(const string& name, expr_t::ptr_op_t def);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
 

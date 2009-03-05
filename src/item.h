@@ -46,7 +46,6 @@
 #ifndef _ITEM_H
 #define _ITEM_H
 
-#include "utils.h"
 #include "scope.h"
 
 namespace ledger {

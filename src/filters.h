@@ -47,7 +47,6 @@
 #define _FILTERS_H
 
 #include "chain.h"
-#include "predicate.h"
 #include "xact.h"
 #include "post.h"
 #include "account.h"

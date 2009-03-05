@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pyledger.h>
+#include "pyinterp.h"
 
 using namespace boost::python;
 

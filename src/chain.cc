@@ -30,8 +30,10 @@
  */
 
 #include "chain.h"
-#include "report.h"
+#include "predicate.h"
 #include "filters.h"
+#include "report.h"
+#include "session.h"
 
 namespace ledger {
 

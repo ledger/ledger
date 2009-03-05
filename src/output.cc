@@ -30,6 +30,11 @@
  */
 
 #include "output.h"
+#include "xact.h"
+#include "post.h"
+#include "account.h"
+#include "session.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -56,6 +61,11 @@ format_posts::format_posts(report_t&	 _report,
     first_line_format.parse(format);
     next_lines_format.parse(format);
   }
+}
+
+void format_posts::flush()
+{
+  report.output_stream.flush();
 }
 
 void format_posts::operator()(post_t& post)

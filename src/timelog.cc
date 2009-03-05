@@ -30,6 +30,10 @@
  */
 
 #include "timelog.h"
+#include "xact.h"
+#include "post.h"
+#include "account.h"
+#include "journal.h"
 
 namespace ledger {
 

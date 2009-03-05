@@ -464,10 +464,6 @@ void finish_timer(const char * name);
  */
 
 #include "error.h"
-#include "times.h"
-#include "flags.h"
-#include "stream.h"		// output_stream_t
-#include "pstream.h"		// pstristream
 
 enum caught_signal_t {
   NONE_CAUGHT,
@@ -599,6 +595,8 @@ inline char peek_next_nonws(std::istream& in) {
     }							\
     *_p = '\0';						\
   }
+
+extern const string version;
 
 } // namespace ledger
 

@@ -5,75 +5,75 @@ SUBDIRS         = po intl
 EXTRA_DIST	= config.rpath contrib
 
 lib_LTLIBRARIES =				\
-	libledger_report.la			\
-	libledger_data.la			\
-	libledger_expr.la			\
+	libledger_util.la			\
 	libledger_math.la			\
-	libledger_util.la
+	libledger_expr.la			\
+	libledger_data.la			\
+	libledger_report.la
 
 lib_cppflags  = -I$(srcdir)/src -I$(srcdir)/lib	\
 		-I$(srcdir)/lib/utfcpp/source
 
 libledger_util_la_SOURCES =			\
-	src/stream.cc				\
-	src/mask.cc				\
-	src/times.cc				\
-	src/error.cc				\
-	src/utils.cc				\
+	lib/sha1.cpp				\
 	src/accum.cc				\
-	lib/sha1.cpp
+	src/utils.cc				\
+	src/error.cc				\
+	src/times.cc				\
+	src/mask.cc				\
+	src/stream.cc
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
 libledger_util_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_math_la_SOURCES =			\
-	src/value.cc				\
-	src/balance.cc				\
+	src/amount.cc				\
 	src/commodity.cc			\
-	src/amount.cc
+	src/balance.cc				\
+	src/value.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
 libledger_math_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_expr_la_SOURCES =			\
-	src/option.cc				\
-	src/format.cc				\
-	src/predicate.cc			\
-	src/scope.cc				\
-	src/interactive.cc			\
-	src/expr.cc				\
-	src/op.cc				\
+	src/token.cc				\
 	src/parser.cc				\
-	src/token.cc
+	src/op.cc				\
+	src/expr.cc				\
+	src/interactive.cc			\
+	src/scope.cc				\
+	src/predicate.cc			\
+	src/format.cc				\
+	src/option.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
 libledger_expr_la_LDFLAGS    = -release $(VERSION).0
 
 libledger_data_la_SOURCES  =			\
-	src/compare.cc				\
-	src/iterators.cc			\
-	src/timelog.cc				\
-	src/textual.cc				\
-	src/journal.cc				\
-	src/account.cc				\
-	src/xact.cc				\
+	src/item.cc				\
 	src/post.cc				\
-	src/item.cc
+	src/xact.cc				\
+	src/account.cc				\
+	src/journal.cc				\
+	src/textual.cc				\
+	src/timelog.cc				\
+	src/iterators.cc			\
+	src/compare.cc
 
 libledger_data_la_CPPFLAGS = $(lib_cppflags)
 libledger_data_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_report_la_SOURCES  =			\
-	src/quotes.cc				\
-	src/generate.cc				\
-	src/derive.cc				\
-	src/emacs.cc                            \
-	src/output.cc				\
-	src/precmd.cc				\
-	src/chain.cc				\
-	src/filters.cc				\
+	src/session.cc				\
 	src/report.cc				\
-	src/session.cc
+	src/filters.cc				\
+	src/chain.cc				\
+	src/precmd.cc				\
+	src/output.cc				\
+	src/emacs.cc                            \
+	src/derive.cc				\
+	src/generate.cc				\
+	src/quotes.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
 libledger_report_la_LDFLAGS  = -release $(VERSION).0

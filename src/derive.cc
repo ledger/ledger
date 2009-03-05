@@ -30,6 +30,12 @@
  */
 
 #include "derive.h"
+#include "xact.h"
+#include "post.h"
+#include "account.h"
+#include "journal.h"
+#include "session.h"
+#include "report.h"
 #include "output.h"
 
 namespace ledger {
@@ -229,7 +235,7 @@ namespace {
   }
 
   xact_t * derive_xact_from_template(xact_template_t& tmpl,
-				       report_t&	 report)
+				     report_t&	      report)
   {
     if (tmpl.payee_mask.empty())
       throw std::runtime_error(_("'xact' command requires at least a payee"));

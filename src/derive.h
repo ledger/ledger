@@ -46,9 +46,11 @@
 #ifndef _DERIVE_H
 #define _DERIVE_H
 
-#include "scope.h"
+#include "value.h"
 
 namespace ledger {
+
+class call_scope_t;
 
 value_t xact_command(call_scope_t& args);
 value_t template_command(call_scope_t& args);
@@ -56,8 +58,8 @@ value_t template_command(call_scope_t& args);
 class xact_t;
 class report_t;
 xact_t * derive_new_xact(report_t& report,
-			   value_t::sequence_t::const_iterator i,
-			   value_t::sequence_t::const_iterator end);
+			 value_t::sequence_t::const_iterator i,
+			 value_t::sequence_t::const_iterator end);
 
 } // namespace ledger
 

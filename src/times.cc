@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "utils.h"		// this brings in times.h
+#include "times.h"
 
 namespace ledger {
 

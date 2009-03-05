@@ -30,7 +30,10 @@
  */
 
 #include "session.h"
-#include "report.h"
+#include "commodity.h"
+#include "xact.h"
+#include "account.h"
+#include "journal.h"
 #include "iterators.h"
 #include "filters.h"
 

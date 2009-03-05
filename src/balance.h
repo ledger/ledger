@@ -49,7 +49,7 @@
 #ifndef _BALANCE_H
 #define _BALANCE_H
 
-#include "commodity.h"
+#include "amount.h"
 
 namespace ledger {
 
@@ -115,21 +115,9 @@ public:
     if (! amt.is_realzero())
       amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
   }
-  balance_t(const double val) {
-    TRACE_CTOR(balance_t, "const double");
-    amounts.insert
-      (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
-  }
-  balance_t(const unsigned long val) {
-    TRACE_CTOR(balance_t, "const unsigned long");
-    amounts.insert
-      (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
-  }
-  balance_t(const long val) {
-    TRACE_CTOR(balance_t, "const long");
-    amounts.insert
-      (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
-  }
+  balance_t(const double val);
+  balance_t(const unsigned long val);
+  balance_t(const long val);
 
   explicit balance_t(const string& val) {
     TRACE_CTOR(balance_t, "const string&");

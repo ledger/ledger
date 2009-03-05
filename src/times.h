@@ -44,6 +44,8 @@
 #ifndef _TIMES_H
 #define _TIMES_H
 
+#include "utils.h"
+
 namespace ledger {
 
 DECLARE_EXCEPTION(datetime_error, std::runtime_error);

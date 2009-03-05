@@ -46,7 +46,6 @@
 #ifndef _QUOTES_H
 #define _QUOTES_H
 
-#include "amount.h"
 
 namespace ledger {
 

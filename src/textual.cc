@@ -30,8 +30,12 @@
  */
 
 #include "journal.h"
+#include "xact.h"
+#include "post.h"
 #include "account.h"
 #include "option.h"
+#include "pstream.h"
+
 #define TIMELOG_SUPPORT 1
 #if defined(TIMELOG_SUPPORT)
 #include "timelog.h"
