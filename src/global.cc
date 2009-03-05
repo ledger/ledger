@@ -32,6 +32,8 @@
 #include "global.h"
 #if defined(HAVE_BOOST_PYTHON)
 #include "pyinterp.h"
+#else
+#include "session.h"
 #endif
 #include "item.h"
 #include "journal.h"
