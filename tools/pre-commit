@@ -1,5 +1,7 @@
 #!/bin/sh
 
+"$(tg --hooks-path)"/pre-commit "$@" || exit $?
+
 # These are the locations I keep my temporary source and build trees in
 TMPDIR=$HOME/Products/ledger-pre-commit
 MIRROR=$HOME/Products/ledger-pre-commit-mirror
