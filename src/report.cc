@@ -606,7 +606,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT_CH(amount_);
     else OPT(tail_);
     else OPT(total_);
-    else OPT(totals);
     else OPT(total_data);
     else OPT(truncate_);
     else OPT(total_width_);

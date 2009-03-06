@@ -413,9 +413,6 @@ void global_scope_t::normalize_report_options(const string& verb)
   if (verb[0] != 'b' && verb[0] != 'r')
     rep.HANDLER(base).on_only();
 
-  if (verb[0] == 'b' || verb == "equity")
-    rep.HANDLER(totals).on_only();
-
   if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
     rep.HANDLER(sort_xacts_).on_only();
 

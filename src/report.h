@@ -613,8 +613,6 @@ public:
      set_expr(args[0].to_string());
    });
 
-  OPTION(report_t, totals);
-
   OPTION_(report_t, total_data, DO() { // -J
       parent->HANDLER(format_).on_with(parent->HANDLER(plot_total_format_).value);
     });
