@@ -433,7 +433,6 @@ dist-hook:
 	       $(distdir)/doc/Doxyfile.gen
 	cp -pR doc/html $(distdir)/doc
 	rm -f $(distdir)/README.textile
-	rm -f $(distdir)/ABOUT-NLS
 	cp -p $(srcdir)/doc/README $(distdir)/README
 	cp -p $(srcdir)/tools/autogen.sh $(distdir)/autogen.sh
 
