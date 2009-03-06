@@ -306,7 +306,7 @@ bool xact_base_t::finalize()
     throw_(balance_error, _("Transaction does not balance"));
   }
 
-  // Add the final calculated totals each to their related account
+  // Add a pointer to each posting to their related accounts
 
   if (dynamic_cast<xact_t *>(this)) {
     bool all_null  = true;
@@ -314,19 +314,15 @@ bool xact_base_t::finalize()
     foreach (post_t * post, posts) {
       if (! post->amount.is_null()) {
 	all_null = false;
-
 	post->amount.in_place_reduce();
-
-	add_or_set_value(post->account->xdata().self_details.total,
-			 post->amount);
-
-	DEBUG("xact.finalize.totals",
-	      "Total for " << post->account->fullname() << " + "
-	      << post->amount << ": "
-	      << post->account->xdata().self_details.total);
       } else {
 	some_null = true;
       }
+
+      post->account->add_post(post);
+
+      post->xdata().add_flags(POST_EXT_VISITED);
+      post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
     }
     if (all_null)
       return false;		// ignore this xact completely

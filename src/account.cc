@@ -30,6 +30,8 @@
  */
 
 #include "account.h"
+#include "post.h"
+#include "xact.h"
 #include "interactive.h"
 
 namespace ledger {
@@ -166,33 +168,20 @@ namespace {
     return string_value(account.name);
   }
 
-  value_t get_total(account_t& account) {
-    if (! account.xdata_ || account.xdata_->family_details.total.is_null())
-      return 0L;
-    else
-      return account.xdata_->family_details.total;
+  value_t get_amount(account_t& account) {
+    return VALUE_OR_ZERO(account.self_total());
   }
 
-  value_t get_count(account_t& account) {
-    if (account.xdata_)
-      return long(account.xdata_->family_details.posts_count);
-    else
-      return 0L;
+  value_t get_total(account_t& account) {
+    return VALUE_OR_ZERO(account.family_total());
   }
 
   value_t get_subcount(account_t& account) {
-    if (account.xdata_)
-      return long(account.xdata_->self_details.posts_count);
-    else
-      return 0L;
+    return long(account.self_details().posts_count);
   }
 
-  value_t get_amount(account_t& account) {
-    if (! account.xdata_ ||
-	account.xdata_->self_details.total.is_null())
-      return 0L;
-    else
-      return account.xdata_->self_details.total;
+  value_t get_count(account_t& account) {
+    return long(account.family_details().posts_count);
   }
 
   value_t get_depth(account_t& account) {
@@ -315,6 +304,134 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
     count = 1;
 
   return count;
+}
+
+account_t::xdata_t::details_t&
+account_t::xdata_t::details_t::operator+=(const details_t& other)
+{
+  // jww (2009-03-05): NYI
+  return *this;
+}
+
+value_t account_t::self_total(const optional<expr_t&>& expr) const
+{
+  if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
+    if (! xdata_) xdata_ = xdata_t();
+
+    posts_deque::const_iterator i =
+      posts.begin() + xdata_->self_details.last_size;
+
+    for (; i != posts.end(); i++) {
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED) &&
+	  ! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+	(*i)->add_to_value(xdata_->self_details.total, expr);
+	(*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+      }
+    }
+
+    xdata_->self_details.last_size = posts.size();
+
+    return xdata_->self_details.total;
+  } else {
+    return NULL_VALUE;
+  }
+}
+
+value_t account_t::family_total(const optional<expr_t&>& expr) const
+{
+  if (! (xdata_ && xdata_->family_details.calculated)) {
+    const_cast<account_t&>(*this).xdata().family_details.calculated = true;
+
+    value_t temp;
+    foreach (const accounts_map::value_type& pair, accounts) {
+      temp = pair.second->family_total(expr);
+      if (! temp.is_null())
+	add_or_set_value(xdata_->family_details.total, temp);
+    }
+
+    temp = self_total(expr);
+    if (! temp.is_null())
+      add_or_set_value(xdata_->family_details.total, temp);
+  }
+  return xdata_->family_details.total;
+}
+
+const account_t::xdata_t::details_t&
+account_t::self_details(bool gather_all) const
+{
+  if (! (xdata_ && xdata_->self_details.gathered)) {
+    const_cast<account_t&>(*this).xdata().self_details.gathered = true;
+
+    foreach (const post_t * post, posts)
+      xdata_->self_details.update(const_cast<post_t&>(*post), gather_all);
+  }
+  return xdata_->self_details;
+}
+
+const account_t::xdata_t::details_t&
+account_t::family_details(bool gather_all) const
+{
+  if (! (xdata_ && xdata_->family_details.gathered)) {
+    const_cast<account_t&>(*this).xdata().family_details.gathered = true;
+
+    foreach (const accounts_map::value_type& pair, accounts)
+      xdata_->family_details += pair.second->family_details(gather_all);
+
+    xdata_->self_details += self_details(gather_all);
+  }
+  return xdata_->family_details;
+}
+
+void account_t::xdata_t::details_t::update(post_t& post,
+					   bool	   gather_all)
+{
+  if (last_xact != post.xact) {
+    xacts_count++;
+    last_xact = post.xact;
+  }
+  if (last_post == &post)
+    return;
+
+  last_post = &post;
+
+  posts_count++;
+  if (post.has_flags(POST_VIRTUAL))
+    posts_virtuals_count++;
+
+  if (gather_all)
+    filenames.insert(post.pathname);
+
+  date_t date = post.date();
+
+  if (date.year() == CURRENT_DATE().year() &&
+      date.month() == CURRENT_DATE().month())
+    posts_this_month_count++;
+
+  if ((CURRENT_DATE() - date).days() <= 30)
+    posts_last_30_count++;
+  if ((CURRENT_DATE() - date).days() <= 7)
+    posts_last_7_count++;
+
+  if (! is_valid(earliest_post) || post.date() < earliest_post)
+    earliest_post = post.date();
+  if (! is_valid(latest_post) || post.date() > latest_post)
+    latest_post = post.date();
+
+  if (post.state() == item_t::CLEARED) {
+    posts_cleared_count++;
+
+    if (! is_valid(earliest_cleared_post) ||
+	post.date() < earliest_cleared_post)
+      earliest_cleared_post = post.date();
+    if (! is_valid(latest_cleared_post) ||
+	post.date() > latest_cleared_post)
+      latest_cleared_post = post.date();
+  }
+
+  if (gather_all) {
+    accounts_referenced.insert(post.account->fullname());
+    payees_referenced.insert(post.xact->payee);
+  }
 }
 
 } // namespace ledger

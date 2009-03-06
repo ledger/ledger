@@ -93,11 +93,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
   // running total.
-  handler.reset(new calc_posts(handler, expr, report.HANDLED(totals)));
-
-  // unround_posts will unround the amounts in all postings
-  if (report.HANDLED(unround))
-    handler.reset(new unround_posts(handler));
+  handler.reset(new calc_posts(handler, expr, only_preliminaries));
 
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.

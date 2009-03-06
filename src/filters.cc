@@ -194,43 +194,21 @@ void calc_posts::operator()(post_t& post)
 
   if (last_post) {
     assert(last_post->has_xdata());
-    add_or_set_value(xdata.total, last_post->xdata().total);
+    if (! account_wise)
+      xdata.total = last_post->xdata().total;
     xdata.count = last_post->xdata().count + 1;
   } else {
     xdata.count = 1;
   }
 
-  value_t amount;
-  post.add_to_value(amount, amount_expr);
+  post.add_to_value(xdata.visited_value, amount_expr);
+  xdata.add_flags(POST_EXT_VISITED);
 
-  add_or_set_value(xdata.total, amount);
+  account_t * acct = post.reported_account();
+  acct->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
-  if (calc_totals) {
-    account_t * acct = post.reported_account();
-
-    account_t::xdata_t * acct_xdata = &acct->xdata();
-
-    add_or_set_value(acct_xdata->self_details.total, amount);
-
-    acct_xdata->self_details.posts_count++;
-    acct_xdata->self_details.posts_virtuals_count++;
-
-    acct_xdata->add_flags(ACCOUNT_EXT_VISITED);
-
-    while (true) {
-      add_or_set_value(acct_xdata->family_details.total, amount);
-      acct_xdata->family_details.posts_count++;
-
-      if (post.has_flags(POST_VIRTUAL))
-	acct_xdata->family_details.posts_virtuals_count++;
-
-      acct = acct->parent;
-      if (acct)
-	acct_xdata = &acct->xdata();
-      else
-	break;
-    }
-  }
+  if (! account_wise)
+    add_or_set_value(xdata.total, xdata.visited_value);
 
   item_handler<post_t>::operator()(post);
 
@@ -259,7 +237,8 @@ namespace {
     // If the account for this post is all virtual, then report the post as
     // such.  This allows subtotal reports to show "(Account)" for accounts
     // that contain only virtual posts.
-    if (account && account->has_xdata()) {
+    if (account && account->has_xdata() &&
+	account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
       if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
 	post.add_flags(POST_VIRTUAL);
 	if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
@@ -286,7 +265,7 @@ namespace {
 
     case value_t::BALANCE:
     case value_t::SEQUENCE:
-      xdata.value = temp;
+      xdata.compound_value = temp;
       xdata.add_flags(POST_EXT_COMPOUND);
       break;
 
@@ -566,6 +545,8 @@ void subtotal_posts::operator()(post_t& post)
   // If the account for this post is all virtual, mark it as
   // such, so that `handle_value' can show "(Account)" for accounts
   // that contain only virtual posts.
+
+  post.reported_account()->xdata().add_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE);
 
   if (! post.has_flags(POST_VIRTUAL))
     post.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS);
