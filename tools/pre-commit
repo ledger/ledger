@@ -1,5 +1,11 @@
 #!/bin/sh
 
+"$(tg --hooks-path)"/pre-commit "$@" || exit $?
+
+if [ ! $(git rev-parse --symbolic-full-name HEAD) = refs/heads/master ]; then
+    exit 0
+fi
+
 # These are the locations I keep my temporary source and build trees in
 TMPDIR=$HOME/Products/ledger-pre-commit
 MIRROR=$HOME/Products/ledger-pre-commit-mirror
