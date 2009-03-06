@@ -1013,25 +1013,24 @@ post_t * instance_t::parse_post(char *		line,
       DEBUG("textual.parse", "line " << linenum << ": "
 	    << "POST assign: parsed amt = " << *post->assigned_amount);
 
-      account_t::xdata_t& xdata(post->account->xdata());
-      amount_t&		  amt(*post->assigned_amount);
+      amount_t&	amt(*post->assigned_amount);
+      value_t   account_total(post->account->self_total(false));
 
       DEBUG("post.assign", "line " << linenum << ": "
-	    "account balance = " << xdata.self_details.total);
+	    "account balance = " << account_total);
       DEBUG("post.assign", "line " << linenum << ": "
 	    "post amount = " << amt);
 
       amount_t diff;
 
-      switch (xdata.self_details.total.type()) {
+      switch (account_total.type()) {
       case value_t::AMOUNT:
-	diff = amt - xdata.self_details.total.as_amount();
+	diff = amt - account_total.as_amount();
 	break;
 
       case value_t::BALANCE:
 	if (optional<amount_t> comm_bal =
-	    xdata.self_details.total.as_balance()
-	      .commodity_amount(amt.commodity()))
+	    account_total.as_balance().commodity_amount(amt.commodity()))
 	  diff = amt - *comm_bal;
 	else
 	  diff = amt;

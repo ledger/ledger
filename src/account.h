@@ -50,9 +50,12 @@
 
 namespace ledger {
 
-class account_t;
 class session_t;
+class account_t;
+class xact_t;
+class post_t;
 
+typedef std::deque<post_t *>                posts_deque;
 typedef std::map<const string, account_t *> accounts_map;
 
 /**
@@ -68,14 +71,15 @@ class account_t : public scope_t
   optional<string> note;
   unsigned short   depth;
   accounts_map	   accounts;
+  posts_deque	   posts;
   bool		   known;
 
   mutable void *   data;
   mutable string   _fullname;
 
-  account_t(account_t *   _parent = NULL,
-	    const string& _name   = "",
-	    const optional<string>& _note = none)
+  account_t(account_t *             _parent = NULL,
+	    const string&           _name   = "",
+	    const optional<string>& _note   = none)
     : scope_t(), parent(_parent), name(_name), note(_note),
       depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)),
       known(false), data(NULL) {
@@ -112,6 +116,10 @@ class account_t : public scope_t
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
+  void add_post(post_t * post) {
+    posts.push_back(post);
+  }
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   bool valid() const;
@@ -130,14 +138,61 @@ class account_t : public scope_t
 
     struct details_t
     {
-      value_t	  total;
+      value_t	       total;
+      bool             calculated;
+      bool             gathered;
 
-      std::size_t posts_count;
-      std::size_t posts_virtuals_count;
+      // The following are only calculated if --totals is enabled
+      std::size_t      xacts_count;
+
+      std::size_t      posts_count;
+      std::size_t      posts_virtuals_count;
+      std::size_t      posts_cleared_count;
+      std::size_t      posts_last_7_count;
+      std::size_t      posts_last_30_count;
+      std::size_t      posts_this_month_count;
+
+      date_t	       earliest_post;
+      date_t	       earliest_cleared_post;
+      date_t	       latest_post;
+      date_t	       latest_cleared_post;
+
+      xact_t *         last_xact;
+      post_t *         last_post;
+
+      std::size_t      last_size;
+
+      // The following are only calculated if --gather is enabled
+      std::set<path>   filenames;
+      std::set<string> accounts_referenced;
+      std::set<string> payees_referenced;
 
       details_t()
-	: posts_count(0),
-	  posts_virtuals_count(0) {}
+	: calculated(false),
+	  gathered(false),
+
+	  xacts_count(0),
+
+	  posts_count(0),
+	  posts_virtuals_count(0),
+	  posts_cleared_count(0),
+	  posts_last_7_count(0),
+	  posts_last_30_count(0),
+	  posts_this_month_count(0),
+
+	  earliest_post(0),
+	  earliest_cleared_post(0),
+	  latest_post(0),
+	  latest_cleared_post(0),
+
+	  last_xact(NULL),
+	  last_post(NULL),
+
+	  last_size(0) {}
+
+      details_t& operator+=(const details_t& other);
+
+      void update(post_t& post, bool gather_all = false);
     };
 
     details_t self_details;
@@ -184,6 +239,12 @@ class account_t : public scope_t
     assert(xdata_);
     return *xdata_;
   }
+
+  value_t self_total(const optional<expr_t&>& expr = none) const;
+  value_t family_total(const optional<expr_t&>& expr = none) const;
+
+  const xdata_t::details_t& self_details(bool gather_all = true) const;
+  const xdata_t::details_t& family_details(bool gather_all = true) const;
 
   bool has_flags(xdata_t::flags_t flags) const {
     return xdata_ && xdata_->has_flags(flags);
