@@ -406,10 +406,14 @@ cppunittests: check
 endif
 
 fullcheck: cppunittests
-	@$(top_builddir)/RegressTests  --verify --gmalloc
-	@$(top_builddir)/BaselineTests --verify --gmalloc
-	@$(top_builddir)/ConfirmTests  --verify --gmalloc
-	@$(top_builddir)/GenerateTests --verify --gmalloc
+	@$(top_builddir)/RegressTests  --verify
+	@$(top_builddir)/BaselineTests --verify
+	@$(top_builddir)/ConfirmTests  --verify
+	@$(top_builddir)/GenerateTests --verify
+	@$(top_builddir)/RegressTests  --gmalloc
+	@$(top_builddir)/BaselineTests --gmalloc
+	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/GenerateTests --gmalloc
 
 ######################################################################
 
