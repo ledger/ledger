@@ -123,9 +123,10 @@ class account_t : public scope_t
 #define ACCOUNT_EXT_SORT_CALC	     0x01
 #define ACCOUNT_EXT_HAS_NON_VIRTUALS 0x02
 #define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x04
-#define ACCOUNT_EXT_VISITED          0x08
-#define ACCOUNT_EXT_MATCHING         0x10
-#define ACCOUNT_EXT_DISPLAYED	     0x20
+#define ACCOUNT_EXT_AUTO_VIRTUALIZE  0x08
+#define ACCOUNT_EXT_VISITED          0x10
+#define ACCOUNT_EXT_MATCHING         0x20
+#define ACCOUNT_EXT_DISPLAYED	     0x40
 
     struct details_t
     {
