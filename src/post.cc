@@ -367,9 +367,27 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
 {
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
     add_or_set_value(value, xdata_->compound_value);
-  } else {
-    bind_scope_t bound_scope(*expr->get_context(), const_cast<post_t&>(*this));
-    add_or_set_value(value, expr->calc(bound_scope));
+  }
+  else if (expr) {
+    bind_scope_t bound_scope(*expr->get_context(),
+			     const_cast<post_t&>(*this));
+#if 1
+    value_t temp(expr->calc(bound_scope));
+    add_or_set_value(value, temp);
+#else
+    if (! xdata_) xdata_ = xdata_t();
+    xdata_->value = expr->calc(bound_scope);
+    xdata_->add_flags(POST_EXT_COMPOUND);
+
+    add_or_set_value(value, xdata_->value);
+#endif
+  }
+  else if (xdata_ && xdata_->has_flags(POST_EXT_VISITED) &&
+	   ! xdata_->visited_value.is_null()) {
+    add_or_set_value(value, xdata_->visited_value);
+  }
+  else {
+    add_or_set_value(value, amount);
   }
 }
 
