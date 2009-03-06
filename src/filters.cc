@@ -286,7 +286,7 @@ namespace {
 
     case value_t::BALANCE:
     case value_t::SEQUENCE:
-      xdata.value = temp;
+      xdata.compound_value = temp;
       xdata.add_flags(POST_EXT_COMPOUND);
       break;
 

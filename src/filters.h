@@ -99,7 +99,7 @@ public:
   }
 
   virtual void operator()(post_t& post) {
-    post.xdata().value = post.amount.unrounded();
+    post.xdata().compound_value = post.amount.unrounded();
     post.xdata().add_flags(POST_EXT_COMPOUND);
     item_handler<post_t>::operator()(post);
   }

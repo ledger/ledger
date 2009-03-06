@@ -140,12 +140,10 @@ namespace {
   }
 
   value_t get_amount(post_t& post) {
-    if (post.has_xdata() &&
-	post.xdata().has_flags(POST_EXT_COMPOUND)) {
-      return post.xdata().value;
-    } else {
+    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+      return post.xdata().compound_value;
+    else
       return post.amount;
-    }
   }
 
   value_t get_use_direct_amount(post_t& post) {
@@ -169,7 +167,7 @@ namespace {
       return *post.cost;
     else if (post.has_xdata() &&
 	     post.xdata().has_flags(POST_EXT_COMPOUND))
-      return post.xdata().value;
+      return post.xdata().compound_value;
     else
       return post.amount;
   }
@@ -365,13 +363,13 @@ bool post_t::valid() const
   return true;
 }
 
-void post_t::add_to_value(value_t& value, expr_t& expr)
+void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
 {
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
-    add_or_set_value(value, xdata_->value);
+    add_or_set_value(value, xdata_->compound_value);
   } else {
-    bind_scope_t bound_scope(*expr.get_context(), *this);
-    add_or_set_value(value, expr.calc(bound_scope));
+    bind_scope_t bound_scope(*expr->get_context(), const_cast<post_t&>(*this));
+    add_or_set_value(value, expr->calc(bound_scope));
   }
 }
 

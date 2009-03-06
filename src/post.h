@@ -53,9 +53,6 @@ namespace ledger {
 class xact_t;
 class account_t;
 
-class post_t;
-typedef std::list<post_t *> posts_list;
-
 /**
  * @brief Brief
  *
@@ -126,20 +123,22 @@ public:
 
   bool valid() const;
 
-  struct xdata_t : public supports_flags<>
+  struct xdata_t : public supports_flags<uint_least16_t>
   {
-#define POST_EXT_RECEIVED   0x01
-#define POST_EXT_HANDLED    0x02
-#define POST_EXT_TO_DISPLAY 0x04
-#define POST_EXT_DISPLAYED  0x08
-#define POST_EXT_DIRECT_AMT 0x10
-#define POST_EXT_SORT_CALC  0x20
-#define POST_EXT_COMPOUND   0x40
-#define POST_EXT_MATCHES    0x80
+#define POST_EXT_RECEIVED   0x0001
+#define POST_EXT_HANDLED    0x0002
+#define POST_EXT_DISPLAYED  0x0004
+#define POST_EXT_DIRECT_AMT 0x0008
+#define POST_EXT_SORT_CALC  0x0010
+#define POST_EXT_COMPOUND   0x0020
+#define POST_EXT_VISITED    0x0040
+#define POST_EXT_MATCHES    0x0080
+#define POST_EXT_CONSIDERED 0x0100
 
+    value_t	visited_value;
+    value_t	compound_value;
     value_t	total;
     std::size_t	count;
-    value_t	value;
     date_t	date;
     account_t *	account;
     void *	ptr;
@@ -147,14 +146,16 @@ public:
     std::list<sort_value_t> sort_values;
 
     xdata_t()
-      : supports_flags<>(), count(0), account(NULL), ptr(NULL) {
+      : supports_flags<uint_least16_t>(), count(0),
+	account(NULL), ptr(NULL) {
       TRACE_CTOR(post_t::xdata_t, "");
     }
     xdata_t(const xdata_t& other)
-      : supports_flags<>(other.flags()),
+      : supports_flags<uint_least16_t>(other.flags()),
+	visited_value(other.visited_value),
+	compound_value(other.compound_value),
 	total(other.total),
 	count(other.count),
-	value(other.value),
 	date(other.date),
 	account(other.account),
 	ptr(NULL),
@@ -184,8 +185,12 @@ public:
       xdata_ = xdata_t();
     return *xdata_;
   }
+  const xdata_t& xdata() const {
+    return const_cast<post_t *>(this)->xdata();
+  }
 
-  void add_to_value(value_t& value, expr_t& expr);
+  void add_to_value(value_t& value,
+		    const optional<expr_t&>& expr = none) const;
 
   account_t * reported_account() {
     if (xdata_)
