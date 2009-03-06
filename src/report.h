@@ -145,6 +145,7 @@ public:
   value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
   value_t fn_rounded(call_scope_t& scope);
+  value_t fn_unrounded(call_scope_t& scope);
   value_t fn_truncated(call_scope_t& scope);
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
@@ -639,7 +640,9 @@ public:
       parent->HANDLER(limit_).on("uncleared|pending");
     });
 
-  OPTION(report_t, unround);
+  OPTION_(report_t, unround, DO() {
+      parent->HANDLER(amount_).set_expr("unrounded(amount)");
+    });
 
   OPTION_(report_t, weekly, DO() { // -W
       parent->HANDLER(period_).on("weekly");

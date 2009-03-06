@@ -196,6 +196,11 @@ value_t report_t::fn_rounded(call_scope_t& args)
   return args.value().rounded();
 }
 
+value_t report_t::fn_unrounded(call_scope_t& args)
+{
+  return args.value().unrounded();
+}
+
 value_t report_t::fn_quantity(call_scope_t& scope)
 {
   interactive_t args(scope, "a");
@@ -858,6 +863,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'u':
     if (is_eq(p, "underline"))
       return WRAP_FUNCTOR(fn_underline);
+    else if (is_eq(p, "unrounded"))
+      return MAKE_FUNCTOR(report_t::fn_unrounded);
     break;
 
   case 'w':
