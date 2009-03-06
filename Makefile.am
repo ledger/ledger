@@ -228,7 +228,6 @@ ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)
 
 pkgpython_PYTHON = python/__init__.py		\
 	python/hello.py				\
-	python/interp.py			\
 	python/server.py
 
 endif
