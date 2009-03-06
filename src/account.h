@@ -138,40 +138,33 @@ class account_t : public scope_t
 
     struct details_t
     {
-      value_t	       total;
-      bool             calculated;
-      bool             gathered;
+      value_t		 total;
+      bool		 calculated;
+      bool		 gathered;
 
       // The following are only calculated if --totals is enabled
-      std::size_t      xacts_count;
+      std::size_t	 posts_count;
+      std::size_t	 posts_virtuals_count;
+      std::size_t	 posts_cleared_count;
+      std::size_t	 posts_last_7_count;
+      std::size_t	 posts_last_30_count;
+      std::size_t	 posts_this_month_count;
 
-      std::size_t      posts_count;
-      std::size_t      posts_virtuals_count;
-      std::size_t      posts_cleared_count;
-      std::size_t      posts_last_7_count;
-      std::size_t      posts_last_30_count;
-      std::size_t      posts_this_month_count;
+      date_t		 earliest_post;
+      date_t		 earliest_cleared_post;
+      date_t		 latest_post;
+      date_t		 latest_cleared_post;
 
-      date_t	       earliest_post;
-      date_t	       earliest_cleared_post;
-      date_t	       latest_post;
-      date_t	       latest_cleared_post;
-
-      xact_t *         last_xact;
-      post_t *         last_post;
-
-      std::size_t      last_size;
+      std::size_t	 last_size;
 
       // The following are only calculated if --gather is enabled
-      std::set<path>   filenames;
-      std::set<string> accounts_referenced;
-      std::set<string> payees_referenced;
+      std::set<path>	 filenames;
+      std::set<string>	 accounts_referenced;
+      std::set<string>	 payees_referenced;
 
       details_t()
 	: calculated(false),
 	  gathered(false),
-
-	  xacts_count(0),
 
 	  posts_count(0),
 	  posts_virtuals_count(0),
@@ -179,14 +172,6 @@ class account_t : public scope_t
 	  posts_last_7_count(0),
 	  posts_last_30_count(0),
 	  posts_this_month_count(0),
-
-	  earliest_post(0),
-	  earliest_cleared_post(0),
-	  latest_post(0),
-	  latest_cleared_post(0),
-
-	  last_xact(NULL),
-	  last_post(NULL),
 
 	  last_size(0) {}
 

@@ -30,11 +30,11 @@
  */
 
 /**
- * @addtogroup report
+ * @addtogroup stats
  */
 
 /**
- * @file   output.h
+ * @file   stats.h
  * @author John Wiegley
  *
  * @ingroup report
@@ -43,75 +43,17 @@
  *
  * Long.
  */
-#ifndef _OUTPUT_H
-#define _OUTPUT_H
+#ifndef _STATS_H
+#define _STATS_H
 
-#include "chain.h"
-#include "predicate.h"
-#include "format.h"
+#include "value.h"
 
 namespace ledger {
 
-class xact_t;
-class post_t;
-class account_t;
-class report_t;
+class call_scope_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
-class format_posts : public item_handler<post_t>
-{
-protected:
-  report_t& report;
-  format_t  first_line_format;
-  format_t  next_lines_format;
-  format_t  between_format;
-  xact_t *  last_xact;
-  post_t *  last_post;
-  bool      print_raw;
-
-public:
-  format_posts(report_t& _report, const string& format,
-	       bool _print_raw = false);
-  virtual ~format_posts() {
-    TRACE_DTOR(format_posts);
-  }
-
-  virtual void flush();
-  virtual void operator()(post_t& post);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class format_accounts : public item_handler<account_t>
-{
-protected:
-  report_t&	 report;
-  format_t	 account_line_format;
-  format_t	 total_line_format;
-  format_t	 separator_format;
-  item_predicate disp_pred;
-
-  std::list<account_t *> posted_accounts;
-
-public:
-  format_accounts(report_t& _report, const string& _format);
-  virtual ~format_accounts() {
-    TRACE_DTOR(format_accounts);
-  }
-
-  virtual void post_account(account_t& account);
-  virtual void flush();
-
-  virtual void operator()(account_t& account);
-};
+value_t report_statistics(call_scope_t& scope);
 
 } // namespace ledger
 
-#endif // _OUTPUT_H
+#endif // _STATS_H

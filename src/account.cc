@@ -309,7 +309,36 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 account_t::xdata_t::details_t&
 account_t::xdata_t::details_t::operator+=(const details_t& other)
 {
-  // jww (2009-03-05): NYI
+  posts_count    	 += other.posts_count;
+  posts_virtuals_count	 += other.posts_virtuals_count;
+  posts_cleared_count	 += other.posts_cleared_count;
+  posts_last_7_count	 += other.posts_last_7_count;
+  posts_last_30_count	 += other.posts_last_30_count;
+  posts_this_month_count += other.posts_this_month_count;
+
+  if (! is_valid(earliest_post) ||
+      (is_valid(other.earliest_post) &&
+       other.earliest_post < earliest_post))
+    earliest_post = other.earliest_post;
+  if (! is_valid(earliest_cleared_post) ||
+      (is_valid(other.earliest_cleared_post) &&
+       other.earliest_cleared_post < earliest_cleared_post))
+    earliest_cleared_post = other.earliest_cleared_post;
+
+  if (! is_valid(latest_post) ||
+      (is_valid(other.latest_post) &&
+       other.latest_post > latest_post))
+    latest_post = other.latest_post;
+  if (! is_valid(latest_cleared_post) ||
+      (is_valid(other.latest_cleared_post) &&
+       other.latest_cleared_post > latest_cleared_post))
+    latest_cleared_post = other.latest_cleared_post;
+
+  filenames.insert(other.filenames.begin(), other.filenames.end());
+  accounts_referenced.insert(other.accounts_referenced.begin(),
+			     other.accounts_referenced.end());
+  payees_referenced.insert(other.payees_referenced.begin(),
+			   other.payees_referenced.end());
   return *this;
 }
 
@@ -377,7 +406,7 @@ account_t::family_details(bool gather_all) const
     foreach (const accounts_map::value_type& pair, accounts)
       xdata_->family_details += pair.second->family_details(gather_all);
 
-    xdata_->self_details += self_details(gather_all);
+    xdata_->family_details += self_details(gather_all);
   }
   return xdata_->family_details;
 }
@@ -385,16 +414,8 @@ account_t::family_details(bool gather_all) const
 void account_t::xdata_t::details_t::update(post_t& post,
 					   bool	   gather_all)
 {
-  if (last_xact != post.xact) {
-    xacts_count++;
-    last_xact = post.xact;
-  }
-  if (last_post == &post)
-    return;
-
-  last_post = &post;
-
   posts_count++;
+
   if (post.has_flags(POST_VIRTUAL))
     posts_virtuals_count++;
 
