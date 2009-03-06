@@ -930,6 +930,8 @@ inline value_t string_value(const string& str) {
   return value_t(str, true);
 }
 
+#define VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val))
+
 inline value_t mask_value(const string& str) {
   return value_t(mask_t(str));
 }
