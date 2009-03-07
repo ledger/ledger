@@ -23,7 +23,7 @@ then
 
     echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
 
-    sh tools/autogen.sh
+    sh autogen.sh
 
     # configure the template files
     if [ ! -f po/Makevars ]; then

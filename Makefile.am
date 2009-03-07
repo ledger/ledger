@@ -2,7 +2,7 @@ VERSION		= 3.0
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS         = po intl
-EXTRA_DIST	= config.rpath contrib
+EXTRA_DIST	= autogen.sh config.rpath contrib
 
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
@@ -418,7 +418,7 @@ fullcheck: cppunittests
 
 ######################################################################
 
-EXTRA_DIST += doc/LICENSE doc/NEWS
+EXTRA_DIST += doc/README doc/LICENSE doc/NEWS
 EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/refman.pdf
 
 DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
@@ -434,7 +434,6 @@ dist-hook:
 	cp -pR doc/html $(distdir)/doc
 	rm -f $(distdir)/README.textile
 	cp -p $(srcdir)/doc/README $(distdir)/README
-	cp -p $(srcdir)/tools/autogen.sh $(distdir)/autogen.sh
 
 distclean-local:
 	rm -fr doc/html doc/latex
@@ -498,11 +497,11 @@ copy-sources:
 
 release: copy-sources
 	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --opt --build -j3 clean all)
+	 nice -n 20 ./acprep --release --opt --build -j3)
 
 release-distcheck: copy-sources
 	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --build -j3 clean distcheck)
+	 nice -n 20 ./acprep --release --build -j3 distcheck)
 
 benchmark: release
 	PATH=$(PATH):$(srcdir)/tools \
