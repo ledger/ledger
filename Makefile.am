@@ -418,28 +418,47 @@ fullcheck: cppunittests
 
 ######################################################################
 
-EXTRA_DIST += doc/README doc/LICENSE doc/NEWS
-EXTRA_DIST += doc/Doxyfile doc/ledger.pdf doc/refman.pdf
+EXTRA_DIST += doc/README doc/LICENSE doc/NEWS doc/ledger.pdf
+if USE_DOXYGEN
+EXTRA_DIST += doc/Doxyfile doc/refman.pdf
+endif
 
-DISTCLEANFILES += doc/ledger.info doc/ledger.pdf \
-		  Doxyfile.gen doc/Doxyfile.bak doc/refman.pdf
+DISTCLEANFILES += doc/ledger.info doc/ledger.pdf
+if USE_DOXYGEN
+DISTCLEANFILES += Doxyfile.gen doc/Doxyfile.bak doc/refman.pdf
+endif
 
-dist-hook:
-	find $(distdir) -name .DS_Store -delete
-	find $(distdir) -name .localized -delete
+if USE_DOXYGEN
+dist-hook-doxygen:
 	find $(distdir)/doc -name .dirstamp -delete
 	rm -fr $(distdir)/doc/latex \
 	       $(distdir)/doc/Doxyfile.bak \
 	       $(distdir)/doc/Doxyfile.gen
 	cp -pR doc/html $(distdir)/doc
+else
+dist-hook-doxygen:
+	@test 1 -eq 1
+endif
+
+dist-hook: dist-hook-doxygen
+	find $(distdir) -name .DS_Store -delete
+	find $(distdir) -name .localized -delete
 	rm -f $(distdir)/README.textile
 	cp -p $(srcdir)/doc/README $(distdir)/README
 
-distclean-local:
+if USE_DOXYGEN
+distclean-local-doxygen:
 	rm -fr doc/html doc/latex
 	rm -f doc/refman.pdf
+else
+distclean-local-doxygen:
+	@test 1 -eq 1
+endif
+
+distclean-local: distclean-local-doxygen
 	rm -fr test/python
 
+if USE_DOXYGEN
 ESC_top_builddir=`cd $(top_builddir); pwd | sed 's/\//\\\\\//g'`
 
 $(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
@@ -461,6 +480,9 @@ $(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
 	cp $(top_builddir)/doc/latex/refman.pdf $@
 
 docs: pdf $(top_builddir)/doc/refman.pdf
+else
+docs: pdf
+endif
 
 libs:
 	@echo Building dependency libs and installing in /usr/local/stow ...

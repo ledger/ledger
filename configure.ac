@@ -51,6 +51,16 @@ if [ test x$pch = xtrue ]; then
 fi
 AM_CONDITIONAL(USE_PCH, test x$pch = xtrue)
 
+AC_ARG_ENABLE(doxygen,
+  [  --enable-doxygen        Turns on generation of code documentation],
+  [case "${enableval}" in
+    yes) doxygen=true ;;
+    no)  doxygen=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-doxygen) ;;
+  esac],[doxygen=false])
+
+AM_CONDITIONAL(USE_DOXYGEN, test x$doxygen = xtrue)
+
 AC_ARG_WITH(boost-suffix,
   [  --with-boost-suffix=X   Append X to the Boost library names],
   [BOOST_SUFFIX="${withval}"],
