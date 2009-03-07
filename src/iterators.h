@@ -99,7 +99,7 @@ public:
   }
 
   virtual post_t * operator()() {
-    if (posts_i == posts_end || posts_uninitialized)
+    if (posts_uninitialized || posts_i == posts_end)
       return NULL;
     return *posts_i++;
   }
