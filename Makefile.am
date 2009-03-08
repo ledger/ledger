@@ -413,8 +413,8 @@ fullcheck: cppunittests
 	@$(top_builddir)/GenerateTests --verify
 	@$(top_builddir)/RegressTests  --gmalloc
 	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/ConfirmTests  --gmalloc
-	@$(top_builddir)/GenerateTests --gmalloc
+#	@$(top_builddir)/ConfirmTests  --gmalloc
+#	@$(top_builddir)/GenerateTests --gmalloc
 
 ######################################################################
 
