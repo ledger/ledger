@@ -1,0 +1,60 @@
+bal --depth 1 --flat
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Expenses:One:Books          $10.00
+    Expenses:One:Two:Books          $10.00
+    Expenses:One:Two:Three:Books          $10.00
+    Assets:Cash
+
+2008/01/01 January
+    Assets:Cash    0
+    Income:Books
+
+2008/01/01 January
+    Assets:Cash
+    Income:One:Books          $-10.00
+    Income:One:Two:Books          $-10.00
+    Income:One:Two:Three:Books          $-10.00
+>>>1
+>>>2
+=== 0
+bal --depth 2 --flat
+>>>1
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Books
+>>>2
+=== 0
+bal --depth 3 --flat
+>>>1
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Books
+              $10.00  Expenses:One:Books
+             $-10.00  Income:One:Books
+>>>2
+=== 0
+bal --depth 4 --flat
+>>>1
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Books
+              $10.00  Expenses:One:Books
+              $10.00  Expenses:One:Two:Books
+             $-10.00  Income:One:Books
+             $-10.00  Income:One:Two:Books
+>>>2
+=== 0
+bal --depth 5 --flat
+>>>1
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Books
+              $10.00  Expenses:One:Books
+              $10.00  Expenses:One:Two:Books
+              $10.00  Expenses:One:Two:Three:Books
+             $-10.00  Income:One:Books
+             $-10.00  Income:One:Two:Books
+             $-10.00  Income:One:Two:Three:Books
+>>>2
+=== 0

@@ -49,12 +49,12 @@
 #include "chain.h"
 #include "predicate.h"
 #include "format.h"
+#include "account.h"
 
 namespace ledger {
 
 class xact_t;
 class post_t;
-class account_t;
 class report_t;
 
 /**
@@ -105,6 +105,9 @@ public:
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }
+
+  std::pair<std::size_t, std::size_t>
+  mark_accounts(account_t& account, const bool flat);
 
   virtual void post_account(account_t& account);
   virtual void flush();

@@ -134,7 +134,8 @@ class account_t : public scope_t
 #define ACCOUNT_EXT_AUTO_VIRTUALIZE  0x08
 #define ACCOUNT_EXT_VISITED          0x10
 #define ACCOUNT_EXT_MATCHING         0x20
-#define ACCOUNT_EXT_DISPLAYED	     0x40
+#define ACCOUNT_EXT_TO_DISPLAY	     0x40
+#define ACCOUNT_EXT_DISPLAYED	     0x80
 
     struct details_t
     {

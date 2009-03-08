@@ -136,7 +136,7 @@ string account_t::partial_name(bool flat) const
        acct && acct->parent;
        acct = acct->parent) {
     if (! flat) {
-      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_MATCHING);
+      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
       if (count > 1)
 	break;
@@ -198,7 +198,7 @@ namespace {
     for (const account_t * acct = account.parent;
 	 acct && acct->parent;
 	 acct = acct->parent) {
-      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_MATCHING);
+      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
       if (count > 1)
 	depth++;

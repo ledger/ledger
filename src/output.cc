@@ -117,12 +117,6 @@ format_accounts::format_accounts(report_t&     _report,
 {
   TRACE_CTOR(format_accounts, "report&, const string&");
 
-  if (report.HANDLED(display_)) {
-    DEBUG("account.display",
-	  "Account display predicate: " << report.HANDLER(display_).str());
-    disp_pred.predicate.parse(report.HANDLER(display_).str());
-  }
-
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
@@ -142,47 +136,61 @@ format_accounts::format_accounts(report_t&     _report,
 
 void format_accounts::post_account(account_t& account)
 {
-  bind_scope_t bound_scope(report, account);
-  bool	       format_account = false;
-
-  DEBUG("account.display", "Should we display " << account.fullname());
-
-  if (account.has_flags(ACCOUNT_EXT_MATCHING) ||
-      (! report.HANDLED(flat) &&
-       account.children_with_flags(ACCOUNT_EXT_MATCHING) > 1)) {
-    DEBUG("account.display", "  Yes, because it matched");
-    format_account = true;
-  }
-  else if (! report.HANDLED(flat) &&
-	   account.children_with_flags(ACCOUNT_EXT_VISITED) &&
-	   ! account.children_with_flags(ACCOUNT_EXT_MATCHING)) {
-    DEBUG("account.display",
-	  "  Maybe, because it has visited, but no matching, children");
-    if (disp_pred(bound_scope)) {
-      DEBUG("account.display",
-	    "    And yes, because it matches the display predicate");
-      format_account = true;
-    } else {
-      DEBUG("account.display",
-	    "    And no, because it didn't match the display predicate");
-    }
-  }
-  else {
-    DEBUG("account.display",
-	  "  No, neither it nor its children were eligible for display");
-  }
-
-  if (format_account) {
+  if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY)) {
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
+
+    bind_scope_t bound_scope(report, account);
     account_line_format.format(report.output_stream, bound_scope);
   }
+}
+
+std::pair<std::size_t, std::size_t>
+format_accounts::mark_accounts(account_t& account, const bool flat)
+{
+  std::size_t visited	 = 0;
+  std::size_t to_display = 0;
+
+  foreach (accounts_map::value_type& pair, account.accounts) {
+    std::pair<std::size_t, std::size_t> i = mark_accounts(*pair.second, flat);
+    visited    += i.first;
+    to_display += i.second;
+  }
+
+#if defined(DEBUG_ON)
+  DEBUG("account.display", "Considering account: " << account.fullname());
+  if (account.has_flags(ACCOUNT_EXT_VISITED))
+    DEBUG("account.display", "  it was visited itself");
+  DEBUG("account.display", "  it has " << visited << " visited children");
+  DEBUG("account.display",
+	"  it has " << to_display << " children to display");
+#endif
+
+  if (account.has_flags(ACCOUNT_EXT_VISITED) || (! flat && visited > 0)) {
+    bind_scope_t bound_scope(report, account);
+    if (disp_pred(bound_scope) && (flat || to_display != 1)) {
+      account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+      DEBUG("account.display", "Marking account as TO_DISPLAY");
+      to_display = 1;
+    }
+    visited = 1;
+  }
+
+  return std::pair<std::size_t, std::size_t>(visited, to_display);
 }
 
 void format_accounts::flush()
 {
   std::ostream& out(report.output_stream);
 
+  if (report.HANDLED(display_)) {
+    DEBUG("account.display",
+	  "Account display predicate: " << report.HANDLER(display_).str());
+    disp_pred.predicate.parse(report.HANDLER(display_).str());
+  }
+
   std::size_t top_displayed = 0;
+
+  mark_accounts(*report.session.master, report.HANDLED(flat));
 
   foreach (account_t * account, posted_accounts) {
     post_account(*account);
@@ -194,8 +202,9 @@ void format_accounts::flush()
   if (! report.HANDLED(flat)) {
     foreach (accounts_map::value_type pair, report.session.master->accounts) {
       if (pair.second->has_flags(ACCOUNT_EXT_DISPLAYED) ||
-	  pair.second->children_with_flags(ACCOUNT_EXT_DISPLAYED))
+	  pair.second->children_with_flags(ACCOUNT_EXT_DISPLAYED)) {
 	top_displayed++;
+      }
     }
   }
 
@@ -211,22 +220,6 @@ void format_accounts::flush()
 
 void format_accounts::operator()(account_t& account)
 {
-  DEBUG("account.display",
-	"Proposing to format account: " << account.fullname());
-
-  if (account.has_flags(ACCOUNT_EXT_VISITED)) {
-    DEBUG("account.display", "  Account or its children was visited");
-
-    bind_scope_t bound_scope(report, account);
-    if (disp_pred(bound_scope)) {
-      DEBUG("account.display",
-	    "  And the account matched the display predicate");
-      account.xdata().add_flags(ACCOUNT_EXT_MATCHING);
-    } else {
-      DEBUG("account.display",
-	    "  But it did not match the display predicate");
-    }
-  }
   posted_accounts.push_back(&account);
 }
 

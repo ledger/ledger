@@ -304,7 +304,7 @@ public:
 
   OPTION_(report_t, depth_, DO_(scope) {
       interactive_t args(scope, "l");
-      parent->HANDLER(limit_).on(string("depth<=") + args.get<string>(0));
+      parent->HANDLER(display_).on(string("depth<=") + args.get<string>(0));
     });
 
   OPTION_(report_t, deviation, DO() { // -D
