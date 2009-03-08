@@ -17,17 +17,27 @@ while [ -n "$1" ]; do
       shift 1 ;;
     --gprof)
       OUT="$OUT/ledger-gprof"
-      SWITCHES="$SWITCHES $1 --release"
+      SWITCHES="$SWITCHES $1 --release --pch"
       saw_opt=true
       shift 1 ;;
     --gcov)
       OUT="$OUT/ledger-gcov"
-      SWITCHES="$SWITCHES $1 --debug --devel"
+      SWITCHES="$SWITCHES $1 --release --pch"
       saw_opt=true
       shift 1 ;;
     --opt)
       OUT="$OUT/ledger-opt"
-      SWITCHES="$SWITCHES $1 --release"
+      SWITCHES="$SWITCHES $1 --release --pch --warn"
+      saw_opt=true
+      shift 1 ;;
+    --std)
+      OUT="$OUT/ledger-std"
+      SWITCHES="$SWITCHES --release --pch --warn"
+      saw_opt=true
+      shift 1 ;;
+    --debug)
+      OUT="$OUT/ledger-debug"
+      SWITCHES="$SWITCHES $1 --pch --warn --devel"
       saw_opt=true
       shift 1 ;;
     *)
@@ -53,7 +63,7 @@ fi
 
 ./acprep $SWITCHES
 
-if [ -n "$OUT" ]; then
+if [ $saw_opt = false -a -n "$OUT" ]; then
     ln -sf $OUT/TAGS .
     ln -sf $OUT/ledger .
 fi
