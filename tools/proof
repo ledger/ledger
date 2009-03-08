@@ -3,26 +3,15 @@
 set -e
 
 function build_and_test() {
-    if [ ! $1 = std ]; then
-	NAME=--$1
+    NAME=--$1
 
-	echo %%% Configuring $NAME %%%
-	if ! tools/myacprep $NAME; then
-	    echo %%% FAILED to configure $NAME %%%
-	    exit 1
-	fi
-
-	DIR=$HOME/Products/ledger-$1
-    else
-	NAME="$1"
-	DIR=$HOME/Products/ledger
-
-	echo %%% Configuring $NAME %%%
-	if ! tools/myacprep; then
-	    echo %%% FAILED to configure $NAME %%%
-	    exit 1
-	fi
+    echo %%% Configuring $NAME %%%
+    if ! tools/myacprep $NAME; then
+	echo %%% FAILED to configure $NAME %%%
+	exit 1
     fi
+
+    DIR=$HOME/Products/ledger-$1
 
     echo %%% Cleaning $NAME %%%
     if ! (cd $DIR && make clean); then
@@ -36,7 +25,7 @@ function build_and_test() {
 	exit 1
     fi
 
-    if [ "$NAME" = "gcov" ]; then
+    if [ "$NAME" = "--gcov" ]; then
 	echo %%% Testing $NAME %%%
 	if ! (cd $DIR && make check); then
 	    echo %%% FAILED to test $NAME %%%
@@ -51,17 +40,28 @@ function build_and_test() {
     fi
 }
 
+echo %%% Copying src %%%
+rsync -a --delete ~/Projects/ledger/ ~/Products/ledger-src/
+cd ~/Products/ledger-src
+
+echo %%% Removing old opt %%%
 rm -fr ~/Products/ledger-opt
 build_and_test opt
 
+echo %%% Removing old gcov %%%
 rm -fr ~/Products/ledger-gcov
 build_and_test gcov
 
-rm -fr ~/Products/ledger
+echo %%% Removing old std %%%
+rm -fr ~/Products/ledger-std
 build_and_test std
 
+echo %%% Removing old debug %%%
+rm -fr ~/Products/ledger-debug
+build_and_test debug
+
 echo %%% Building release-distcheck %%%
-if ! (cd ~/Products/ledger && make release-distcheck); then
+if ! (cd ~/Products/ledger-std && make release-distcheck); then
     echo %%% FAILED to build release-distcheck %%%
     exit 1
 fi
