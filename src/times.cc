@@ -272,6 +272,15 @@ namespace {
       std::sprintf(buf, "%04d", year);
       word = buf;
     }
+    else if (word == _("today")) {
+      if (begin)
+	*begin = CURRENT_DATE();
+      if (end) {
+	*end  = CURRENT_DATE();
+	*end += gregorian::days(1);
+      }
+      return;
+    }
 
     parse_inclusion_specifier(word, begin, end);
 
@@ -357,7 +366,8 @@ void interval_t::parse(std::istream& in)
       months = 3;
     else if (word == _("yearly"))
       years = 1;
-    else if (word == _("this") || word == _("last") || word == _("next")) {
+    else if (word == _("this") || word == _("last") || word == _("next") ||
+	     word == _("today")) {
       parse_date_words(in, word, &begin, &end);
     }
     else if (word == _("in")) {
