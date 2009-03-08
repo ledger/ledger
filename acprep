@@ -297,7 +297,7 @@ while [ -n "$1" ]; do
 	shift 1 ;;
 
     --gcov)
-	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+	CXXFLAGS="$CXXFLAGS -g -fprofile-arcs -ftest-coverage"
 	shift 1 ;;
 
     --gprof)
