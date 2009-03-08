@@ -42,7 +42,8 @@ target = os.path.abspath(sys.argv[2])
 
 dirname = os.path.dirname(target)
 if not os.path.isdir(dirname):
-    os.makedirs(dirname)
+    try: os.makedirs(dirname)
+    except: pass
 
 fd = open(source, "r")
 fo = open(target, "w")
