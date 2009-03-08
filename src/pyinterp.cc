@@ -207,7 +207,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
     initialize();
 
   try {
-    int input_mode;
+    int input_mode = -1;
     switch (mode) {
     case PY_EVAL_EXPR:  input_mode = Py_eval_input;   break;
     case PY_EVAL_STMT:  input_mode = Py_single_input; break;
@@ -229,7 +229,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
     initialize();
 
   try {
-    int input_mode;
+    int input_mode = -1;
     switch (mode) {
     case PY_EVAL_EXPR:  input_mode = Py_eval_input;   break;
     case PY_EVAL_STMT:  input_mode = Py_single_input; break;

@@ -58,7 +58,7 @@ namespace ledger {
 
 int main(int argc, char * argv[], char * envp[])
 {
-  int status;
+  int status = 1;
 
 #ifdef HAVE_BOOST_PYTHON
   argv0 = argv[0];

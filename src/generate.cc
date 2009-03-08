@@ -79,7 +79,7 @@ void generate_posts_iterator::generate_string(std::ostream& out, int len,
   DEBUG("generate.post.string",
 	"Generating string of length " << len << ", only alpha " << only_alpha);
 
-  int last;
+  int last = -1;
   bool first = true;
   for (int i = 0; i < len; i++) {
     int next = only_alpha ? 3 : three_gen();

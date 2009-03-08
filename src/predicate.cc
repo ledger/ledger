@@ -37,8 +37,9 @@ string args_to_predicate_expr(value_t::sequence_t::const_iterator& begin,
 			      value_t::sequence_t::const_iterator end)
 {
   std::ostringstream expr;
-  bool		     append_or = false;
-  bool		     only_parenthesis;
+
+  bool append_or	= false;
+  bool only_parenthesis = false;
 
   while (begin != end) {
     string arg = (*begin).as_string();
