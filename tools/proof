@@ -43,8 +43,13 @@ function build_and_test() {
     fi
 }
 
+rm -fr ~/Products/ledger-opt
 build_and_test opt
+
+rm -fr ~/Products/ledger-gcov
 build_and_test gcov
+
+rm -fr ~/Products/ledger
 build_and_test std
 
 echo %%% Building release-distcheck %%%
