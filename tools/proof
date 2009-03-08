@@ -36,10 +36,18 @@ function build_and_test() {
 	exit 1
     fi
 
-    echo %%% Testing $NAME %%%
-    if ! (cd $DIR && make fullcheck); then
-	echo %%% FAILED to test $NAME %%%
-	exit 1
+    if [ "$NAME" = "gcov" ]; then
+	echo %%% Testing $NAME %%%
+	if ! (cd $DIR && make check); then
+	    echo %%% FAILED to test $NAME %%%
+	    exit 1
+	fi
+    else
+	echo %%% Testing $NAME %%%
+	if ! (cd $DIR && make fullcheck); then
+	    echo %%% FAILED to test $NAME %%%
+	    exit 1
+	fi
     fi
 }
 
