@@ -136,7 +136,7 @@ class RegressFile:
         test = self.read_test()
         while test:
             self.run_test(test)
-            test = self.read_test()
+            test = self.read_test(test)
 
     def close(self):
         self.fd.close()
