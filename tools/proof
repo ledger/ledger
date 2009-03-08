@@ -2,6 +2,12 @@
 
 set -e
 
+OUTPUT=$(tools/outdir)
+PRODUCTS=$(dirname "$OUTPUT")
+
+# We know which target pathnames are used here, because they are encoded in
+# tools/myacprep when specific build targets are requested (such as gcov).
+
 function build_and_test() {
     NAME=--$1
 
@@ -11,7 +17,7 @@ function build_and_test() {
 	exit 1
     fi
 
-    DIR=$HOME/Products/ledger-$1
+    DIR=$PRODUCTS/ledger-$1
 
     echo %%% Cleaning $NAME %%%
     if ! (cd $DIR && make clean); then
@@ -40,28 +46,24 @@ function build_and_test() {
     fi
 }
 
-echo %%% Copying src %%%
-rsync -a --delete ~/Projects/ledger/ ~/Products/ledger-src/
-cd ~/Products/ledger-src
-
 echo %%% Removing old opt %%%
-rm -fr ~/Products/ledger-opt
+rm -fr $PRODUCTS/ledger-opt
 build_and_test opt
 
 echo %%% Removing old gcov %%%
-rm -fr ~/Products/ledger-gcov
+rm -fr $PRODUCTS/ledger-gcov
 build_and_test gcov
 
 echo %%% Removing old std %%%
-rm -fr ~/Products/ledger-std
+rm -fr $PRODUCTS/ledger-std
 build_and_test std
 
 echo %%% Removing old debug %%%
-rm -fr ~/Products/ledger-debug
+rm -fr $PRODUCTS/ledger-debug
 build_and_test debug
 
 echo %%% Building release-distcheck %%%
-if ! (cd ~/Products/ledger-std && make release-distcheck); then
+if ! (cd $PRODUCTS/ledger-std && make release-distcheck); then
     echo %%% FAILED to build release-distcheck %%%
     exit 1
 fi

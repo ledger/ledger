@@ -3,9 +3,12 @@
 set -e
 
 SRCDIR=$(pwd)
+OUTPUT=$(tools/outdir)
+SWITCHES=""
 
-if [ -d ~/Products/ledger ]; then
-    cd ~/Products/ledger
+if [ -n "$OUTPUT" -a -d "$OUTPUT" ]; then
+    cd "$OUTPUT"
+    SWITCHES="--output $OUTPUT"
 fi
 
 if [ ! -f Makefile -o \
@@ -13,7 +16,7 @@ if [ ! -f Makefile -o \
      $SRCDIR/configure.ac -nt Makefile -o \
      $SRCDIR/acprep       -nt Makefile -o \
      $SRCDIR/myacprep     -nt Makefile ]; then
-    (cd $SRCDIR && tools/myacprep)
+    (cd $SRCDIR && tools/myacprep "$SWITCHES")
 fi
 
 make "$@"

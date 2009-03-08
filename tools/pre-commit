@@ -10,8 +10,18 @@ if [ $(git rev-parse --symbolic-full-name HEAD) = refs/heads/test ]; then
 fi
 
 # These are the locations I keep my temporary source and build trees in
-TMPDIR=$HOME/Products/ledger-pre-commit
-MIRROR=$HOME/Products/ledger-pre-commit-mirror
+OUTPUT=$(tools/outdir)		# generates a build directory name such as
+                                # ~/Products/ledger
+PRODUCTS=$(dirname "$OUTPUT")
+BASE=$(basename "$OUTPUT")
+
+if [ -z "$BASE" ]; then
+    TMPDIR=$PWD/pre-commit
+    MIRROR=$PWD/pre-commit-mirror
+else
+    TMPDIR=$PRODUCTS/$BASE-pre-commit
+    MIRROR=$PRODUCTS/$BASE-pre-commit-mirror
+fi
 
 # Exit with status 1 if any command below fails
 set -e

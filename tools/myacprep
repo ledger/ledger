@@ -1,44 +1,37 @@
 #!/bin/sh
 
-OUT=$HOME/Products
-SWITCHES=""
+OUTPUT=$(tools/outdir)
+PRODUCTS=$(dirname "$OUTPUT")
+SWITCHES="--pch --warn --devel --debug"
 
-saw_opt=false
 while [ -n "$1" ]; do
   case "$1" in
     --local)
-      OUT=""
       SWITCHES="$SWITCHES --local"
       shift 1 ;;
     --output)
-      OUT=""
       shift 1
       SWITCHES="$SWITCHES --output $1"
       shift 1 ;;
     --gprof)
-      OUT="$OUT/ledger-gprof"
-      SWITCHES="$SWITCHES $1 --release --pch"
-      saw_opt=true
+      SWITCHES="$1 --release --pch"
+      SWITCHES="$SWITCHES --output $PRODUCTS/ledger-gprof"
       shift 1 ;;
     --gcov)
-      OUT="$OUT/ledger-gcov"
-      SWITCHES="$SWITCHES $1 --release --pch"
-      saw_opt=true
+      SWITCHES="$1 --release --pch"
+      SWITCHES="$SWITCHES --output $PRODUCTS/ledger-gcov"
       shift 1 ;;
     --opt)
-      OUT="$OUT/ledger-opt"
-      SWITCHES="$SWITCHES $1 --release --pch --warn"
-      saw_opt=true
-      shift 1 ;;
-    --std)
-      OUT="$OUT/ledger-std"
-      SWITCHES="$SWITCHES --release --pch --warn"
-      saw_opt=true
+      SWITCHES="$1 --release --pch --warn"
+      SWITCHES="$SWITCHES --output $PRODUCTS/ledger-opt"
       shift 1 ;;
     --debug)
-      OUT="$OUT/ledger-debug"
-      SWITCHES="$SWITCHES $1 --pch --warn --devel"
-      saw_opt=true
+      SWITCHES="$1 --pch --warn --devel"
+      SWITCHES="$SWITCHES --output $PRODUCTS/ledger-debug"
+      shift 1 ;;
+    --std)
+      SWITCHES="--release --pch --warn"
+      SWITCHES="$SWITCHES --output $PRODUCTS/ledger-std"
       shift 1 ;;
     *)
       SWITCHES="$SWITCHES $1"
@@ -46,24 +39,10 @@ while [ -n "$1" ]; do
   esac
 done
 
-if [ $saw_opt = false ]; then
-    SWITCHES="$SWITCHES --pch"	 # build using pre-compiled headers
-    SWITCHES="$SWITCHES --warn"	 # show full compiler warnings
-    SWITCHES="$SWITCHES --debug" # enable debug code generation
-    SWITCHES="$SWITCHES --devel" # use GLIBCXX_DEBUG if possible
-    if [ -n "$OUT" ]; then
-	OUT="$OUT/ledger"
+if [ -n "$OUTPUT" ]; then
+    if echo "$SWITCHES" | egrep -qv '(output|local)'; then
+	SWITCHES="$SWITCHES --output $OUTPUT"
     fi
 fi
 
-if [ -n "$OUT" ]; then
-    [ -d "$OUT" ] || mkdir -p "$OUT"
-    SWITCHES="$SWITCHES --output $OUT"
-fi
-
 ./acprep $SWITCHES
-
-if [ $saw_opt = false -a -n "$OUT" ]; then
-    ln -sf $OUT/TAGS .
-    ln -sf $OUT/ledger .
-fi
