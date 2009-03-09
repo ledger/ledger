@@ -31,25 +31,9 @@
 
 /**
  * @addtogroup util
- */
-
-/**
+ *
  * @file   system.hh
  * @author John Wiegley
- *
- * @ingroup util
- *
- * @brief Brief
- *
- * Long.
- */
-#ifndef _SYSTEM_HH
-#define _SYSTEM_HH
-
-/**
- * @file   system.hh
- * @author John Wiegley
- * @date   Mon Apr 23 03:43:05 2007
  *
  * @brief  All system headers needed by Ledger.
  *
@@ -57,6 +41,8 @@
  * None of these header files (with the exception of acconf.h, when
  * configure is re-run) are expected to change.
  */
+#ifndef _SYSTEM_HH
+#define _SYSTEM_HH
 
 #include "config.h"
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env python
 
 # acprep, version 3.0
 #
@@ -8,383 +8,1267 @@
 # This script simply sets up the compiler and linker flags for all the various
 # build permutations I use for testing and profiling.
 
-if [ ! -f configure   -o configure.ac -nt configure -o \
-     ! -f Makefile.in -o Makefile.am  -nt Makefile.in ]
-then
-    if [ -d .git ]; then
-	# Make sure that all of the dependencies are available
-	git submodule init
-	git submodule update
+import inspect
+import logging
+import logging.handlers
+import optparse
+import os
+import re
+import shutil
+import string
+import sys
+import time
 
-	COMMIT=$(git describe --all --long | sed 's/heads\///')
-    else
-	COMMIT=unknown
-    fi
+from os.path import *
+from stat import *
+from subprocess import Popen, PIPE, call
 
-    echo "m4_define([VERSION_NUMBER], [$COMMIT])" > version.m4
-
-    sh autogen.sh
-
-    # configure the template files
-    if [ ! -f po/Makevars ]; then
-	mv po/Makevars.template po/Makevars
-    fi
-    git ls-files '*.cc' '*.h' | egrep '^(src|python)/' > po/POTFILES.in
-
-    # regenerate aclocal.m4
-    aclocal -I m4
-fi
+LEVELS = {'DEBUG':    logging.DEBUG,
+          'INFO':     logging.INFO,
+          'WARNING':  logging.WARNING,
+          'ERROR':    logging.ERROR,
+          'CRITICAL': logging.CRITICAL}
 
 
-SWITCHES="--disable-shared --with-included-gettext"
+class CommandLineApp(object):
+    "Base class for building command line applications."
 
-if [ -z "$PYTHON_HOME" ]; then
-    PYTHON_HOME="/usr"
-fi
-if [ -z "$PYTHON_VERSION" ]; then
-    PYTHON_VERSION="2.5"
-fi
+    force_exit  = True           # If true, always ends run() with sys.exit()
+    log_handler = None
 
+    options = {
+        'debug':    False,
+        'verbose':  False,
+        'logfile':  False,
+        'loglevel': False
+    }
 
-BOOST_VERSION="1_38"
-BOOST_SUFFIX=""
-for lib in $(ls -1 /opt/local/lib/libboost_regex*.a \
-                   /usr/local/lib/libboost_regex*.a 2> /dev/null \
-             | sort -r)
-do
-    lib=$(basename "$lib")
-    suffix=$(echo "$lib" | sed 's/libboost_regex-//' | sed 's/\.a//')
-    if [ ! "$suffix" = "libboost_regex" ]; then
-	echo "Discovered Boost suffix: --boost $suffix"
-	BOOST_SUFFIX="-$suffix"
-    fi
-    break
-done
+    def __init__(self):
+        "Initialize CommandLineApp."
+        # Create the logger
+        self.log = logging.getLogger(os.path.basename(sys.argv[0]))
+        ch = logging.StreamHandler()
+        formatter = logging.Formatter("%(name)s: %(levelname)s: %(message)s")
+        ch.setFormatter(formatter)
+        self.log.addHandler(ch)
+        self.log_handler = ch
 
+        # Setup the options parser
+        usage = 'usage: %prog [OPTIONS...] [ARGS...]'
+        op = self.option_parser = optparse.OptionParser(usage = usage,
+                                                        conflict_handler = 'resolve')
+        op.add_option('', '--debug',
+                      action='store_true', dest='debug',
+                      default=False, help='show debug messages and pass exceptions')
+        op.add_option('-v', '--verbose',
+                      action='store_true', dest='verbose',
+                      default=False, help='show informational messages')
+        op.add_option('-q', '--quiet',
+                      action='store_true', dest='quiet',
+                      default=False, help='do not show log messages on console')
+        op.add_option('', '--log', metavar='FILE',
+                      type='string', action='store', dest='logfile',
+                      default=False, help='append logging data to FILE')
+        op.add_option('', '--loglevel', metavar='LEVEL',
+                      type='string', action='store', dest='loglevel',
+                      default=False, help='set log level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
+        return
 
-USE_GLIBCXX_DEBUG=true
-CXXFLAGS=""
-ARCHFLAGS=""
-LDFLAGS=""
-LDARCHFLAGS=""
+    def main(self, *args):
+        """Main body of your application.
 
+        This is the main portion of the app, and is run after all of the
+        arguments are processed.  Override this method to implment the primary
+        processing section of your application."""
+        pass
 
-INCDIRS=""
-for include in					\
-    /usr/local/include				\
-    /usr/local/include/boost-$BOOST_VERSION	\
-    $PYTHON_HOME/include/python$PYTHON_VERSION	\
-    /opt/local/include				\
-    /sw/include
-do
-    if [ -d "$include" ]; then
-	INCDIRS="$INCDIRS -isystem $include"
-    fi
-done
+    def handleInterrupt(self):
+        """Called when the program is interrupted via Control-C or SIGINT.
+        Returns exit code."""
+        self.log.error('Canceled by user.')
+        return 1
 
-LIBDIRS=""
-for lib in						\
-    /usr/local/lib					\
-    $PYTHON_HOME/lib					\
-    $PYTHON_HOME/lib/python$PYTHON_VERSION/config	\
-    /opt/local/lib					\
-    /sw/lib
-do
-    if [ -d "$lib" ]; then
-	LIBDIRS="$LIBDIRS -L$lib"
-    fi
-done
+    def handleMainException(self):
+        "Invoked when there is an error in the main() method."
+        if not self.options.debug:
+            self.log.exception('Caught exception')
+        return 1
 
+    ## INTERNALS (Subclasses should not need to override these methods)
 
-SYSTEM=$(uname -s)
+    def run(self):
+        """Entry point.
 
-if [ $SYSTEM = Linux ]; then
-    if [ "$(uname -m)" = x86_64 ]; then
-	SWITCHES="--disable-static"
-    fi
-    CXXFLAGS="-pthread"
-elif [ $SYSTEM = Solaris ]; then
-    CXXFLAGS="-pthreads"
-elif [ $SYSTEM = Darwin ]; then
-    ARCHFLAGS="-arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk"
-    LDARCHFLAGS="$ARCHFLAGS -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk"
-fi
+        Process options and execute callback functions as needed.  This method
+        should not need to be overridden, if the main() method is defined."""
+        # Process the options supported and given
+        self.options, main_args = self.option_parser.parse_args()
 
+        if self.options.logfile:
+            fh = logging.handlers.RotatingFileHandler(self.options.logfile,
+                                                      maxBytes = (1024 * 1024),
+                                                      backupCount = 5)
+            formatter = logging.Formatter("%(asctime)s - %(levelname)s: %(message)s")
+            fh.setFormatter(formatter)
+            self.log.addHandler(fh)
 
-# Building the command-line tool as a shared library is a luxury,
-# since there are no clients except a GUI tool which might use it (and
-# that is built again anyway by Xcode).
-CPPFLAGS="$INCDIRS"
-CXXFLAGS="$CXXFLAGS -pipe"
-LDFLAGS="$LDFLAGS $LIBDIRS"
-BUILD_DIR=false
+        if self.options.quiet:
+            self.log.removeHandler(self.log_handler)
+            ch = logging.handlers.SysLogHandler()
+            formatter = logging.Formatter("%(name)s: %(levelname)s: %(message)s")
+            ch.setFormatter(formatter)
+            self.log.addHandler(ch)
+            self.log_handler = ch
 
+        if self.options.loglevel:
+            self.log.setLevel(LEVELS[self.options.loglevel])
+        elif self.options.debug:
+            self.log.setLevel(logging.DEBUG)
+        elif self.options.verbose:
+            self.log.setLevel(logging.INFO)
+        
+        exit_code = 0
+        try:
+            # We could just call main() and catch a TypeError, but that would
+            # not let us differentiate between application errors and a case
+            # where the user has not passed us enough arguments.  So, we check
+            # the argument count ourself.
+            argspec = inspect.getargspec(self.main)
+            expected_arg_count = len(argspec[0]) - 1
 
-# The following are options to prepare a developer tree of Ledger for
-# building:
-#
-# --debug
-#
-#   Build with debugging information.  This doesn't slow things down by much,
-#   but gives you useful stack traces to mention in your bug reports.
-#   Recommended if you're not running a release version.
-#
-# --build PATH
-#
-#   Building the sources in PATH instead of in the source directory.  This
-#   breaks pre-compiled headers, but keeps your source tree clean.
-#
-# --boost SUFFIX
-#
-#   Use the boost library with the given SUFFIX.  Check the Boost "Getting
-#   Started" documentation for what the different suffixes are and what they
-#   mean.  Usually you can see the available suffixes on your system using
-#   something like this command:
-#
-#    $ ls /usr/local/lib/libboost_date_time*
-#
-#   Here's everything that's available on my machine right now:
-#
-#    ""      - dynamic optimized Boost library
-#    d       - dynamic debug
-#    s       - static optimized
-#    sd      - static debug
-#    mt      - multi-threaded optimized
-#    mt-d    - multi-threaded debug
-#    mt-s    - multi-threaded static optimized
-#    mt-sd   - multi-threaded static debug
-#
-#   Since Ledger does not use threading, I recommend using the static
-#   optimized library unless you wish to build with debugging enabled.  If you
-#   want to do that, see the --devel switch below.
-#
-# --devel
-#
-#   This means you want to build like the developer does, which means:
-#
-#    * using pre-compiled headers
-#    * with glibc debugging enabled
-#    * static linking as much as possible
-#
-#   The glibc debugging is the only tricky part, since you must have Boost
-#   compiled with _GLIBCXX_DEBUG defined also -- which it won't be on your
-#   system by default.
-#  
-#   So, you have to roll your own set of Boost debug libraries in order to
-#   support this.  I like this because it gives me the most amount of safety
-#   and checking possible, which is great for testing.  Here's how I build a
-#   super-debugging Boost:
-#
-#      src $ git clone git://repo.or.cz/boost.git
-#      src $ git checkout svn/Version_$BOOST_VERSION
-#      src $ cd boost
-#    boost $ sudo bjam release --prefix=/usr/local/stow/boost_$BOOST_VERSION \
-#                --build-dir=$HOME/Products/boost_$BOOST_VERSION --toolset=darwin \
-#                architecture=combined install
-#    boost $ sudo bjam debug --prefix=/usr/local/stow/boost_$BOOST_VERSION \
-#                --build-dir=$HOME/Products/boost_$BOOST_VERSION --toolset=darwin \
-#                architecture=combined define=_GLIBCXX_DEBUG=1 install
-#    boost $ cd /usr/local/stow
-#     stow $ stow boost_$BOOST_VERSION
-#
-#   Of course, you'll need MacPorts to do this, with both the "bjam" and "stow"
-#   packages installed.
-#
-#   Lastly, you need to build cppunit by hand with GLIBCXX_DEBUG also, or else
-#   you'll see UniTests crash in flames and none of the unit tests will run.
-#  
-#   Now you're ready to run acprep like this:
-#  
-#    $ ./acprep --devel --debug --boost sd
-#
-#   Or, as I do it:
-#
-#    $ ./myacprep
-#
-# --release
-#
-#   This is the opposite of --devel: it means you wish to build in a release
-#   scenario, preparing a universal binary and building against the non-debug
-#   versions of Boost and CppUnit.
-#
-# NOTE: I do not expect anyone but me to use --devel or --release, so don't be
-# surprised if it doesn't work as advertised.  In that case, look for me in
-# the #ledger channel on the IRC server irc.freenode.net.
+            if len(main_args) >= expected_arg_count:
+                exit_code = self.main(*main_args)
+            else:
+                self.log.debug('Incorrect argument count (expected %d, got %d)' %
+                               (expected_arg_count, len(main_args)))
+                self.option_parser.print_help()
+                exit_code = 1
 
-DO_BUILD=false
+        except KeyboardInterrupt:
+            exit_code = self.handleInterrupt()
 
-while [ -n "$1" ]; do
-  case "$1" in
-    --pch)
-	  USE_GLIBCXX_DEBUG=false
+        except SystemExit, msg:
+            exit_code = msg.args[0]
 
-	  SWITCHES="$SWITCHES --enable-pch"
-
-          # These can cause problems when run against a full set of headers,
-          # but with PCH, they only apply to Ledger itself
-	  CXXFLAGS="$CXXFLAGS -Wconversion"
-	  #CXXFLAGS="$CXXFLAGS -Wold-style-cast"
-
-	  # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
-	  # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
-	  if [ -f /opt/local/bin/g++-mp-4.3 ]; then
-	      if [ -f /opt/local/bin/ccache ]; then
-		  CC="ccache /opt/local/bin/gcc-mp-4.3"
-		  CXX="ccache /opt/local/bin/g++-mp-4.3"
-		  LD="ccache /opt/local/bin/g++-mp-4.3"
-	      else
-		  CC=/opt/local/bin/gcc-mp-4.3
-		  CXX=/opt/local/bin/g++-mp-4.3
-		  LD=/opt/local/bin/g++-mp-4.3
-	      fi
-	  elif [ -f /usr/bin/g++-4.2 ]; then
-	      if [ -f /opt/local/bin/ccache ]; then
-		  CC="ccache /usr/bin/gcc-4.2"
-		  CXX="ccache /usr/bin/g++-4.2"
-		  LD="ccache /usr/bin/g++-4.2"
-	      else
-		  CC=/usr/bin/gcc-4.2
-		  CXX=/usr/bin/g++-4.2
-		  LD=/usr/bin/g++-4.2
-	      fi
-	  fi
-	  shift 1 ;;
-
-    --devel)
-	if [ $USE_GLIBCXX_DEBUG = true ]; then
-	    CPPFLAGS="$CPPFLAGS -D_GLIBCXX_DEBUG=1"
-	    CPPFLAGS="-isystem /usr/local/stow/cppunit-debug/include $CPPFLAGS"
-	    LDFLAGS="-L/usr/local/stow/cppunit-debug/lib $LDFLAGS"
-
-	    # I build my debug Boost libs with _GLIBCXX_DEBUG
-	    if [ -f /usr/local/lib/libboost_regex-xgcc40-d-1_38.a ]; then
-		BOOST_SUFFIX="-xgcc40-d-$BOOST_VERSION"
-	    fi
-	else
-
-	    CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
-	    LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
-	fi
-	shift 1 ;;
-
-    --warn)
-	# Warning flags
-	CXXFLAGS="$CXXFLAGS -Wall -ansi -Winvalid-pch"
-	CXXFLAGS="$CXXFLAGS -Wextra"
-	CXXFLAGS="$CXXFLAGS -Wcast-align"
-	CXXFLAGS="$CXXFLAGS -Wcast-qual"
-	CXXFLAGS="$CXXFLAGS -Wfloat-equal"
-	CXXFLAGS="$CXXFLAGS -Wmissing-field-initializers"
-	CXXFLAGS="$CXXFLAGS -Wno-endif-labels"
-	CXXFLAGS="$CXXFLAGS -Woverloaded-virtual"
-	CXXFLAGS="$CXXFLAGS -Wsign-compare"
-	CXXFLAGS="$CXXFLAGS -Wsign-promo"
-	CXXFLAGS="$CXXFLAGS -Wstrict-null-sentinel"
-	CXXFLAGS="$CXXFLAGS -Wwrite-strings"
-	CXXFLAGS="$CXXFLAGS -Wno-old-style-cast"
-	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
-	shift 1 ;;
-
-    --debug)
-	SWITCHES="$SWITCHES --enable-debug"
-	CXXFLAGS="$CXXFLAGS -g"
-	LDFLAGS="$LDFLAGS -g"
-	shift 1 ;;
-      
-    --boost)
-	shift 1
-	BOOST_SUFFIX="-$1"
-	shift 1 ;;
-
-    --gcov)
-	CXXFLAGS="$CXXFLAGS -g -fprofile-arcs -ftest-coverage"
-	shift 1 ;;
-
-    --gprof)
-        CXXFLAGS="$CXXFLAGS -g -pg"
-        LDFLAGS="$LDFLAGS -g -pg"
-	shift 1 ;;
-
-    --pic)
-	CXXFLAGS="$CXXFLAGS -fPIC"
-	shift 1 ;;
-
-    --opt)
-	CXXFLAGS="$CXXFLAGS -fomit-frame-pointer -O3"
-	shift 1 ;;
-
-    --output)
-	shift 1
-	BUILD_DIR="$1"
-	shift 1 ;;
-
-    --build)
-	DO_BUILD=true
-	shift 1 ;;
-
-    --switch)
-	shift 1
-	SWITCHES="$SWITCHES $1"
-	shift 1 ;;
-
-    --local)
-	shift 1 ;;
-
-    --release)
-	SWITCHES="$SWITCHES --disable-dependency-tracking"
-	CPPFLAGS="-isystem /usr/local/stow/cppunit/include $CPPFLAGS"
-	#CXXFLAGS="$CXXFLAGS $ARCHFLAGS"
-	#LDFLAGS="$LDFLAGS $LDARCHFLAGS"
-	LDFLAGS="-L/usr/local/stow/cppunit/lib $LDFLAGS"
-
-	shift 1 ;;
-
-    *)
-	break ;;
-  esac
-done
+        except Exception:
+            exit_code = self.handleMainException()
+            if self.options.debug:
+                raise
+            
+        if self.force_exit:
+            sys.exit(exit_code)
+        return exit_code
 
 
-HERE="$PWD"
+class PrepareBuild(CommandLineApp):
+    #########################################################################
+    # Initialization routines                                               #
+    #########################################################################
 
-if [ ! "$BUILD_DIR" = "false" ]; then
-    if [ ! -d "$BUILD_DIR" ]; then
-	mkdir -p "$BUILD_DIR"
-    fi
-    cd "$BUILD_DIR" || (echo "Cannot change to $BUILD_DIR"; exit 1)
-fi
+    def initialize(self):
+        self.log.debug('Initializing all state variables')
 
-SWITCHES="$SWITCHES --with-boost-suffix=$BOOST_SUFFIX"
+        self.force             = False
+        self.no_pch            = False
+        self.should_clean      = False
+        self.configured        = False
+        self.current_ver       = None
+        #self.current_flavor    = 'default'
+        self.current_flavor    = 'debug'
+        self.products_dir      = None
+        self.build_dir         = self.source_dir
+        self.configure_args    = ['--disable-shared',
+                                  '--with-included-gettext']
+        self.use_glibcxx_debug = True
+        self.sys_include_dirs  = []
+        self.sys_library_dirs  = []
 
-PATH="$PYTHON_HOME/bin:$PATH" \
-    "$HERE/configure" --srcdir="$HERE" \
-	CXX="$CXX" CPPFLAGS="$CPPFLAGS" CXXFLAGS="$CXXFLAGS" \
-	LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
-	$SWITCHES
+        self.CPPFLAGS          = []
+        self.CCFLAGS           = []
+        self.ARCHFLAGS         = []
+        self.CXXFLAGS          = []
+        self.LDFLAGS           = []
+        self.LDARCHFLAGS       = []
 
+        self.envvars = {
+            'PYTHON_HOME':     '/usr',
+            'PYTHON_VERSION':  '2.5',
+            'BOOST_VERSION':   None,
+            'BOOST_SUFFIX':    None,
+            'BOOST_HOME':      '/usr',
+            'LEDGER_PRODUCTS': None,
+            'CC':              'gcc',
+            'CPPFLAGS':        '',
+            'CCFLAGS':         '',
+            'CXX':             'g++',
+            'CXXFLAGS':        '',
+            'ARCHFLAGS':       '',
+            'LD':              'g++',
+            'LDFLAGS':         '',
+            'LDARCHFLAGS':     '',
+        }
 
-# Alter the Makefile so that it's not nearly so verbose.  This makes errors
-# and warnings much easier to spot.
+        for varname in self.envvars.keys():
+            if os.environ.has_key(varname):
+                self.envvars[varname] = os.environ[varname]
 
-if [ -f Makefile ]; then
-    perl -i -pe 's/^\t(\$\((LIBTOOL|CXX)\).*?\.(cc|cpp))$/\t\@echo "   " CXX \$\@;$1 > \/dev\/null/;' Makefile
-    perl -i -pe 's/^\tmv -f/\t\@mv -f/;' Makefile
-    perl -i -pe 's/^\t(\$\((.*?)LINK\).*)/\t\@echo "   " LD \$\@;$1 > \/dev\/null/;' Makefile
-fi
+                if varname.endswith('FLAGS'):
+                    self.__dict__[varname] = string.split(os.environ[varname])
 
+        # If ~/Products/ or build/ exists, use them instead of the source tree
+        # for building
+        products = self.default_products_directory()
+        if (exists(products) and isdir(products)) or \
+           (exists('build') and isdir('build')):
+            self.build_dir = None
 
-# If the --build flag was passed, start a build right away with the right
-# options.
+    def __init__(self):
+        CommandLineApp.__init__(self)
+        self.log.setLevel(logging.INFO)
 
-echo '#!/bin/bash' > make.sh
-MAKE_VARS="ARCHFLAGS=\"$ARCHFLAGS\""
-MAKE_VARS="$MAKE_VARS CPPFLAGS=\"$CPPFLAGS\""
-MAKE_VARS="$MAKE_VARS LDFLAGS=\"$LDFLAGS\""
-MAKE_VARS="$MAKE_VARS CXXFLAGS=\"$CXXFLAGS\""
-MAKE_VARS="$MAKE_VARS DISTCHECK_CONFIGURE_FLAGS=\"$SWITCHES\""
-echo "make $MAKE_VARS \"\$@\"" >> make.sh
-chmod u+x make.sh
+        op = self.option_parser
+        op.add_option('-j', '--jobs', metavar='N',
+                      type='int', action='store', dest='jobs',
+                      default=1, help='Allow N make jobs at once')
+        op.add_option('', '--boost', metavar='SUFFIX',
+                      action="callback",
+                      callback=self.option_boost,
+                      help='Set Boost library suffix (ex: "--boost=-mt")')
+        op.add_option('', '--force', action="callback",
+                      callback=self.option_force,
+                      help="Perform every action, without checking")
+        op.add_option('', '--help', action="callback",
+                      callback=self.option_help,
+                      help='Show this help text')
+        op.add_option('', '--local', action="callback",
+                      callback=self.option_local,
+                      help='Build directly within the source tree (default)')
+        op.add_option('', '--no-pch', action="callback",
+                      callback=self.option_no_pch,
+                      help='Do not use pre-compiled headers')
+        op.add_option('', '--no-patch', action='store_true', dest='no_patch',
+                      default=False,
+                      help='Do not patch the Makefile for prettier output')
+        op.add_option('', '--output', metavar='DIR', action="callback",
+                      callback=self.option_output,
+                      help='Build in the specified directory')
+        op.add_option('', '--pch', action="callback",
+                      callback=self.option_pch,
+                      help='Enable use of pre-compiled headers')
+        op.add_option('', '--pic', action="callback",
+                      callback=self.option_pic,
+                      help='Compile with explicit PIC support')
+        op.add_option('', '--products', metavar='DIR', action="callback",
+                      callback=self.option_products,
+                      help='Collect all build products in this directory')
+        op.add_option('', '--trees', action="callback",
+                      callback=self.option_trees,
+                      help='Use separate build trees for each flavor')
+        op.add_option('', '--release', action="callback",
+                      callback=self.option_release,
+                      help='Setup for doing a faster, once-only build')
+        op.add_option('', '--warn', action="callback",
+                      callback=self.option_warn,
+                      help='Enable full warning flags')
 
-if [ $DO_BUILD = true ]; then
-    sh -x make.sh "$@"
-fi
+        self.source_dir = os.getcwd()
+        self.initialize()
+
+    def main(self, *args):
+        if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
+            self.current_flavor = args[0]
+            args = args[1:]
+
+        if args:
+            cmd = args[0]
+            if not PrepareBuild.__dict__.has_key('phase_' + cmd):
+                cmd = 'config'
+            else:
+                args = args[1:]
+        else:
+            cmd = 'config'
+
+        self.log.debug('Invoking primary phase: ' + cmd)
+        PrepareBuild.__dict__['phase_' + cmd](self, *args)
+
+    #########################################################################
+    # General utility code                                                  #
+    #########################################################################
+
+    def execute(self, *args):
+        try:
+            self.log.debug('Executing command: ' + string.join(args, ' '))
+
+            retcode = call(args, shell=False)
+            if retcode < 0:
+                print >>sys.stderr, "Child was terminated by signal", -retcode
+        except OSError, e:
+            print >>sys.stderr, "Execution failed:", e
+
+    def get_stdout(self, *args):
+        try:
+            self.log.debug('Executing command: ' + string.join(args, ' '))
+
+            proc = Popen(args, shell=False, stdout=PIPE)
+            stdout = proc.stdout.read()
+            if proc.wait() < 0:
+                print >>sys.stderr, "Child was terminated by signal", \
+                    -proc.returncode
+            return stdout[:-1]
+        except OSError, e:
+            print >>sys.stderr, "Execution failed:", e
+
+    def isnewer(self, file1, file2):
+        "Check if file1 is newer than file2."
+        if not exists(file2):
+            return True
+        return os.stat(file1)[ST_MTIME] > os.stat(file2)[ST_MTIME]
+
+    #########################################################################
+    # Determine information about the surroundings                          #
+    #########################################################################
+
+    def default_products_directory(self):
+        if self.envvars['LEDGER_PRODUCTS']:
+            return self.envvars['LEDGER_PRODUCTS']
+        else:
+            return join(os.environ['HOME'], "Products")
+
+    def products_directory(self):
+        if not self.products_dir:
+            products = self.default_products_directory()
+
+            if not exists(products) or not isdir(products):
+                products = join(self.source_dir, 'build')
+
+            products = join(products, basename(self.source_dir))
+
+            self.products_dir = products
+
+        return self.products_dir
+
+    def build_directory(self):
+        if not self.build_dir:
+            self.build_dir = join(self.products_directory(),
+                                  self.current_flavor)
+        return self.build_dir
+
+    def ensure_build_directory(self):
+        build_dir = self.build_directory()
+        if not exists(build_dir) and not isdir(build_dir):
+            self.log.debug('Making directory => ' + build_dir)
+            os.makedirs(build_dir)
+        return build_dir
+
+    def current_version(self):
+        if not self.current_ver:
+            if exists('.git') and isdir('.git'):
+                tag = self.get_stdout('git', 'describe', '--all', '--long')
+                self.current_ver = re.sub('heads/', '', tag)
+            else:
+                self.current_ver = "3.0a"
+        return self.current_ver
+
+    def need_to_prepare_autotools(self):
+        if self.force:
+            return 'because it was forced'
+        elif self.isnewer('acprep', 'configure'):
+            return 'because acprep is newer than configure'
+        elif self.isnewer('acprep', 'Makefile.in'):
+            return 'because acprep is newer than Makefile.in'
+        elif self.isnewer('configure.ac', 'configure'):
+            return 'because confgure.ac is newer than configure'
+        elif self.isnewer('Makefile.am', 'Makefile.in'):
+            return 'because Makefile.am is newer than Makefile.in'
+        return False
+
+    def phase_products(self, *args):
+        self.log.debug('Executing phase: products')
+        print self.products_directory()
+
+    def phase_info(self, *args):
+        self.log.debug('Executing phase: info')
+
+        (environ, conf_args) = self.configure_environment()
+
+        self.log.info("Current version          => " + self.current_version())
+        self.log.info("Current flavor           => " + self.current_flavor)
+        self.log.info("Source directory         => " + self.source_dir)
+        self.log.info("Need to run autogen.sh   => " +
+                      str(self.need_to_prepare_autotools()))
+        self.log.info("Products directory       => " + self.products_directory())
+        self.log.info("Build directory          => " + self.build_directory())
+        self.log.info("Need to run configure    => " +
+                      str(self.need_to_run_configure()))
+        self.log.info("Use _GLIBCXX_DEBUG       => " +
+                      str(self.use_glibcxx_debug))
+        self.log.info("Use pre-compiled headers => " +
+                      str('--enable-pch' in conf_args))
+
+        self.log.debug('Configure environment =>')
+
+        keys = environ.keys()
+        keys.sort()
+        for key in keys:
+            if key in ['PATH', 'CC', 'LD', 'CXX'] or \
+               key.endswith('FLAGS'):
+                self.log.debug('  %s=%s' % (key, environ[key]))
+
+        self.log.debug('Configure arguments   =>')
+
+        for arg in conf_args + list(args):
+            self.log.debug('  %s' % arg)
+
+    def phase_sloc(self, *args):
+        self.log.debug('Executing phase: sloc')
+	self.execute('sloccount', 'src', 'python', 'lisp', 'test')
+
+    #########################################################################
+    # Configure source tree using autogen                                   #
+    #########################################################################
+
+    def phase_gettext(self, *args):
+        self.log.debug('Executing phase: gettext')
+
+        # configure the template files
+        assert exists('po') and isdir('po')
+        if not exists(join('po', 'Makevars')):
+            assert exists(join('po', 'Makevars.template'))
+            self.log.debug('Moving po/Makevars.template -> po/Makevars')
+            os.rename(join('po', 'Makevars.template'),
+                      join('po', 'Makevars'))
+
+        POTFILES_in = open('po/POTFILES.in', 'w')
+        for filename in self.get_stdout('git', 'ls-files', '-z',
+                                        '*.cc', '*.h').split('\0'):
+            if not re.match('(src|python)/', filename):
+                POTFILES_in.write(filename)
+                POTFILES_in.write('\n')
+        POTFILES_in.close()
+
+    def phase_version(self, *args):
+        self.log.debug('Executing phase: version')
+        version_m4 = open('version.m4', 'w')
+        version_m4.write("m4_define([VERSION_NUMBER], [%s])" %
+                         self.current_version())
+        version_m4.close()
+
+    def phase_autogen(self, *args):
+        self.log.debug('Executing phase: autogen')
+        self.execute('sh', 'autogen.sh')
+
+    def phase_aclocal(self, *args):
+        self.log.debug('Executing phase: aclocal')
+        self.execute('aclocal', '-I', 'm4')
+
+    def phase_autoconf(self, *args):
+        self.log.debug('Executing phase: autoconf')
+        reason = self.need_to_prepare_autotools()
+        if reason:
+            self.log.info('autogen.sh must be run ' + reason)
+            self.phase_version()
+            self.phase_autogen()
+            self.phase_gettext()
+            self.phase_aclocal()
+            self.should_clean = True
+        else:
+            self.log.debug('autogen.sh does not need to be run')
+
+    #########################################################################
+    # Update local files with the latest information                        #
+    #########################################################################
+
+    def phase_submodule(self, *args):
+        self.log.debug('Executing phase: submodule')
+        if exists('.git') and isdir('.git'):
+            self.execute('git', 'submodule', 'init')
+            self.execute('git', 'submodule', 'update')
+
+    def phase_pull(self, *args):
+        self.log.debug('Executing phase: pull')
+        if not exists('.git') and not isdir('.git'):
+            print >>sys.stderr, "This is not a Git clone."
+            sys.exit(1)
+        self.execute('git', 'pull')
+        self.phase_submodule()
+
+    #########################################################################
+    # Automatic installation of build dependencies                          #
+    #########################################################################
+
+    def phase_dependencies(self, *args):
+        self.log.debug('Executing phase: dependencies')
+
+        self.log.info("Installing Ledger's build dependencies ...")
+
+        system = self.get_stdout('uname', '-s')
+
+        if system == 'Darwin':
+            if exists('/opt/local/bin/port'):
+                self.log.info('Looks like you are using MacPorts on OS X')
+                packages = [
+                    'sudo', 'port', 'install',
+                     'boost', '+python25+debug+st',
+                     'gmp', 'mpfr', 'gettext',
+                     'libedit', 'cppunit',
+                     #'texlive', 'doxygen', 'graphviz', 'texinfo',
+                     'lcov', 'sloccount'
+                ]
+                self.log.info('Executing: ' + string.join(packages, ' '))
+                self.execute(*packages)
+            elif exists('/sw/bin/fink'):
+                self.log.info('Looks like you are using Fink on OS X')
+                self.log.error("I don't know the package names for Fink yet!")
+
+        elif system == 'Linux':
+            if exists('/etc/issue'):
+                issue = open('/etc/issue')
+                if issue.readline().startswith('Ubuntu'):
+                    self.log.info('Looks like you are using APT on Ubuntu')
+                    packages = [
+                        'sudo', 'apt-get', 'install',
+                         'build-essential',
+                         'libtool', 'autoconf', 'automake',
+                         'zlib1g-dev', 'libbz2-dev', 'python-dev',
+                         'libboost1.35-dev',
+                         'libboost-python1.35-dev',
+                         'libboost-regex1.35-dev',
+                         'libboost-date-time1.35-dev',
+                         'libboost-filesystem1.35-dev'
+                         'libgmp3-dev', 'libmpfr-dev', 'gettext',
+                         'libedit-dev', 'libcppunit-dev',
+                         #'texlive-full',
+                         #'doxygen', 'graphviz', 'texinfo',
+                         'lcov', 'sloccount'
+                    ]
+                    self.log.info('Executing: ' + string.join(packages, ' '))
+                    self.execute(*packages)
+            elif exists('/etc/redhat-release'):
+                release = open('/etc/redhat-release')
+                if issue.readline().startswith('CentOS'):
+                    self.log.info('Looks like you are using YUM on CentOS')
+                    packages = [
+                        'sudo', 'apt-get', 'install',
+                         'build-essential',
+                         'libtool', 'autoconf', 'automake',
+                         'zlib1g-dev', 'libbz2-dev', 'python-dev',
+                         'libboost-dev',
+                         'libboost-python-dev',
+                         'libboost-regex-dev',
+                         'libboost-date-time-dev',
+                         'libboost-filesystem-dev'
+                         'libgmp3-dev', 'libmpfr-dev', 'gettext',
+                         'libedit-dev', 'libcppunit-dev',
+                         #'texlive-full',
+                         #'doxygen', 'graphviz', 'texinfo',
+                         'lcov', 'sloccount'
+                    ]
+                    self.log.info('Executing: ' + string.join(packages, ' '))
+                    self.execute(*packages)
+
+    #########################################################################
+    # Determine the system's basic configuration                            #
+    #########################################################################
+
+    def locate_boost_in_dir(self, path):
+        if exists(path) and isdir(path):
+            entries = os.listdir(path)
+            entries.sort()
+            for entry in entries:
+                if re.search('boost_regex', entry):
+                    self.log.debug('Found a Boost library: ' + entry)
+
+                match = re.match('libboost_regex([^.]*)\.(a|so|dylib)', entry)
+                if match:
+                    suffix = match.group(1)
+                    self.log.debug('Found Boost suffix => ' + suffix)
+                    self.envvars['BOOST_HOME'] = dirname(path)
+
+                    match = re.search('[0-9]+_[0-9]+', suffix)
+                    if match:
+                        version = match.group(0)
+                        self.log.debug('Found Boost version in suffix => ' +
+                                       version)
+                        if not self.envvars['BOOST_VERSION']:
+                            self.envvars['BOOST_VERSION'] = version
+                    return suffix
+        else:
+            self.log.debug('The directory "%s" is not valid, skipping' %
+                           path)
+        return None
+
+    def locate_boost(self):
+        if self.envvars['BOOST_SUFFIX']:
+            self.log.debug(("Not looking for Boost, since " +
+                            "a suffix of '%s' was given") %
+                           self.envvars['BOOST_SUFFIX'])
+        else:
+            suffix = None
+            for path in ['/usr/local/lib', '/opt/local/lib',
+                         '/sw/lib', '/usr/lib']:
+                self.log.debug('Looking for Boost in %s...' % path)
+                suffix = self.locate_boost_in_dir(path)
+                if suffix is not None:
+                    self.log.debug('Boost is located here:')
+                    self.log.debug('BOOST_HOME    => ' +
+                                   self.envvars['BOOST_HOME'])
+                    self.log.debug('BOOST_VERSION => ' +
+                                   str(self.envvars['BOOST_VERSION']))
+                    self.log.debug('BOOST_SUFFIX  => ' + suffix)
+                    break
+            if suffix is None:
+                print >>sys.stderr, "Boost could not be found."
+                sys.exit(1)
+            self.envvars['BOOST_SUFFIX'] = suffix
+        return self.envvars['BOOST_SUFFIX']
+
+    def setup_system_directories(self):
+        boost_suffix = self.locate_boost()
+
+        # Each of these becomes '-isystem <name>'
+        for path in ['/usr/local/include',
+                        '%s/include/boost-%s' %
+                        (self.envvars['BOOST_HOME'],
+                         self.envvars['BOOST_VERSION']),
+                        '%s/include' % self.envvars['BOOST_HOME'],
+                        '%s/include/python%s' %
+                        (self.envvars['PYTHON_HOME'],
+                         self.envvars['PYTHON_VERSION'].strip()),
+                        '/opt/local/include',
+                        '/sw/include']:
+            if exists(path) and isdir(path) and \
+               path != '/usr/include':
+                self.log.debug('Noticing include directory => ' + path)
+                self.sys_include_dirs.append(path)
+
+        # Each of these becomes '-L<name>'
+        for path in ['/usr/local/lib',
+                     '%s/lib' % self.envvars['PYTHON_HOME'],
+                     '%s/lib/python%s/config'
+                     % (self.envvars['PYTHON_HOME'],
+                        self.envvars['PYTHON_VERSION'].strip()),
+                     '/opt/local/lib',
+                     '/sw/lib']:
+            if exists(path) and isdir(path):
+                self.log.debug('Noticing library directory => ' + path)
+                self.sys_library_dirs.append(path)
+
+    def setup_for_system(self):
+        self.setup_system_directories()
+
+        system = self.get_stdout('uname', '-s')
+
+        self.log.debug('System type is => ' + system)
+
+        if system == 'Linux':
+            arch = self.get_stdout('uname', '-m')
+            if arch == 'x86_64':
+                self.configure_args.remove('--disable-shared')
+                self.configure_args.append('--disable-static')
+            self.CXXFLAGS.append('-pthread')
+
+        elif system == 'Solaris':
+            self.CXXFLAGS.append('-pthread')
+
+        elif system == 'Darwin':
+            self.ARCHFLAGS += ['-arch', 'i386', '-arch', 'ppc',
+                               '-isysroot', '/Developer/SDKs/MacOSX10.5.sdk']
+            self.LDARCHFLAGS += self.ARCHFLAGS
+            ldflag = '-Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk'
+            self.LDARCHFLAGS.append(ldflag)
+
+        # jww (2009-03-09): Some peculiarities specific to my system
+        if exists('/usr/local/stow/cppunit/include'):
+	    self.sys_include_dirs.append('/usr/local/stow/cppunit/include')
+	    self.sys_library_dirs.append('/usr/local/stow/cppunit/lib')
+
+            self.option_pch()
+            self.option_warn()
+
+        if '--enable-pch' not in self.configure_args and \
+           exists('/opt/local/bin/ccache') or exists('/usr/local/bin/ccache'):
+            self.envvars['CC']  = 'ccache ' + self.envvars['CC']
+            self.envvars['CXX'] = 'ccache ' + self.envvars['CXX']
+            self.envvars['LD']  = 'ccache ' + self.envvars['LD']
+
+    def setup_flags(self):
+        for path in self.sys_include_dirs:
+            self.CPPFLAGS.append('-isystem')
+            self.CPPFLAGS.append(path)
+
+        self.CXXFLAGS.append('-pipe')
+
+        for path in self.sys_library_dirs:
+            self.LDFLAGS.append('-L' + path)
+
+    def setup_flavor(self):
+        self.setup_for_system()
+
+        if not PrepareBuild.__dict__.has_key('setup_flavor_' +
+                                             self.current_flavor):
+            self.log.error('Unknown build flavor "%s"' % self.current_flavor)
+            sys.exit(1)
+
+        self.log.debug('Setting up build flavor => ' + self.current_flavor)
+        PrepareBuild.__dict__['setup_flavor_' + self.current_flavor](self)
+
+        self.setup_flags()
+
+    def escape_string(self, data):
+        return re.sub('(["\\\\])', '\\\\\\1', data)
+
+    def finalize_config(self):
+        self.setup_flavor()
+
+        for var in ('CPPFLAGS', 'CCFLAGS', 'ARCHFLAGS',
+                    'CXXFLAGS', 'LDFLAGS', 'LDARCHFLAGS'):
+            value = self.__dict__[var]
+            if value:
+                self.envvars[var] = ''
+                first = True
+                for member in value:
+                    #escaped = self.escape_string(member)
+                    #if member != escaped:
+                    #    member = escaped
+                    if first:
+                        first = False
+                    else:
+                        self.envvars[var] += ' '
+                    self.envvars[var] += member
+                self.log.debug('Final value of %s: %s' %
+                               (var, self.envvars[var]))
+
+            elif self.envvars.has_key(var):
+                del self.envvars[var]
+
+    #########################################################################
+    # Options that can modify any build flavor                              #
+    #########################################################################
+
+    def option_pch(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --pch')
+
+        self.use_glibcxx_debug = False
+
+        self.configure_args.append('--enable-pch')
+
+        self.CXXFLAGS.append('-Wconversion')
+        #self.CXXFLAGS.append('-Wold-style-cast')
+
+        system = self.get_stdout('uname', '-s')
+
+        # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
+        # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
+        if system == "Darwin":
+            if False and exists('/opt/local/bin/g++-mp-4.3'):
+                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
+                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
+            elif exists('/usr/bin/g++-4.2'):
+                self.envvars['CC']  = '/usr/bin/gcc-4.2'
+                self.envvars['CXX'] = '/usr/bin/g++-4.2'
+                self.envvars['LD']  = '/usr/bin/g++-4.2'
+
+    def option_no_pch(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --no-pch')
+
+        self.no_pch            = True
+        self.use_glibcxx_debug = True
+
+        self.configure_args.remove('--enable-pch')
+
+        self.CXXFLAGS.remove('-Wconversion')
+        #self.CXXFLAGS.remove('-Wold-style-cast')
+
+        system = self.get_stdout('uname', '-s')
+
+        if system == "Darwin":
+            self.envvars['CC']  = 'gcc'
+            self.envvars['CXX'] = 'g++'
+            self.envvars['LD']  = 'g++'
+
+    def option_force(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --force')
+        self.force = True
+
+    def option_warn(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --warn')
+	self.CXXFLAGS.append('-ansi')
+	self.CXXFLAGS.append('-Wall')
+	self.CXXFLAGS.append('-Winvalid-pch')
+	self.CXXFLAGS.append('-Wextra')
+	self.CXXFLAGS.append('-Wcast-align')
+	self.CXXFLAGS.append('-Wcast-qual')
+	self.CXXFLAGS.append('-Wfloat-equal')
+	self.CXXFLAGS.append('-Wmissing-field-initializers')
+	self.CXXFLAGS.append('-Wno-endif-labels')
+	self.CXXFLAGS.append('-Woverloaded-virtual')
+	self.CXXFLAGS.append('-Wsign-compare')
+	self.CXXFLAGS.append('-Wsign-promo')
+	self.CXXFLAGS.append('-Wstrict-null-sentinel')
+	self.CXXFLAGS.append('-Wwrite-strings')
+	self.CXXFLAGS.append('-Wno-old-style-cast')
+	self.CXXFLAGS.append('-Wno-deprecated')
+
+    def option_boost(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --boost')
+        self.envvars['BOOST_SUFFIX'] = value
+
+    def option_pic(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --pic')
+	self.CXXFLAGS.append('-fPIC')
+
+    def option_output(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --output')
+        self.build_dir = value
+
+    def option_products(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --products')
+        self.products_dir = value
+
+    def option_local(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --local')
+        self.build_dir = self.source_dir
+
+    def option_trees(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --trees')
+        self.build_dir = None
+
+    def option_release(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --release')
+        self.configure_args.remove('--disable-shared')
+        self.configure_args.append('--disable-dependency-tracking')
+
+    def option_help(self, option=None, opt_str=None, value=None, parser=None):
+        self.phase_help()
+
+    #########################################################################
+    # The various build flavors                                             #
+    #########################################################################
+
+    def setup_flavor_default(self):
+        pass
+
+    def setup_flavor_debug(self):
+        self.configure_args.append('--enable-debug')
+
+        self.CXXFLAGS.append('-g')
+        self.LDFLAGS.append('-g')
+
+        if not self.use_glibcxx_debug:
+            return
+
+        self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
+
+        self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
+
+        if exists('/usr/local/stow/cppunit-debug/include'):
+            if '/usr/local/stow/cppunit/include' in self.sys_include_dirs:
+                self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
+                self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
+
+            self.sys_include_dirs.append('/usr/local/stow/cppunit-debug/include')
+            self.sys_library_dirs.append('/usr/local/stow/cppunit-debug/lib')
+
+        if exists('/usr/local/lib/libboost_regex-xgcc40-d-1_38.a'):
+            self.envvars['BOOST_HOME']   = '/usr/local'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc40-d-1_38'
+            self.envvars['BOOST_VERSION'] = '1_38'
+
+            self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                           self.envvars['BOOST_SUFFIX'])
+            self.log.debug('Setting BOOST_VERSION => %s' %
+                           self.envvars['BOOST_VERSION'])
+
+            self.sys_include_dirs.append('/usr/local/include/boost-1_38')
+
+    def setup_flavor_opt(self):
+        self.CXXFLAGS.append('-O3')
+        self.CXXFLAGS.append('-fomit-frame-pointer')
+
+    def setup_flavor_gcov(self):
+        self.CXXFLAGS.append('-g')
+        self.CXXFLAGS.append('-fprofile-arcs')
+        self.CXXFLAGS.append('-ftest-coverage')
+        self.LDFLAGS.append('-g')
+
+    def setup_flavor_gprof(self):
+        self.CXXFLAGS.append('-g')
+        self.CXXFLAGS.append('-pg')
+        self.LDFLAGS.append('-g')
+        self.LDFLAGS.append('-pg')
+
+    #########################################################################
+    # Prettify the output from automake, by rewriting the Makefile          #
+    #########################################################################
+
+    def phase_patch(self, *args):
+        """Alter the Makefile so that it's not nearly so verbose.
+
+        This makes errors and warnings much easier to spot."""
+        self.log.debug('Executing phase: patch')
+
+        if exists('Makefile'):
+            self.log.debug('Patching generated Makefile')
+            Makefile = open('Makefile')
+            Makefile_new = open('Makefile.new', 'w')
+            for line in Makefile.readlines():
+                line = re.sub('^\t(\$\((LIBTOOL|CXX)\).*?\.(cc|cpp))$',
+                              '\t@echo "   " CXX \$@;\\1 > /dev/null', line)
+                line = re.sub('^\tmv -f', '\t@mv -f', line)
+                line = re.sub('^\t(\$\((.*?)LINK\).*)',
+                              '\t@echo "   " LD \$@;\\1 > /dev/null', line)
+                Makefile_new.write(line)
+            Makefile_new.close()
+            Makefile.close()
+
+            os.remove('Makefile')
+            os.rename('Makefile.new', 'Makefile')
+
+            stamp = open('.timestamp', 'w')
+            stamp.write('timestamp')
+            stamp.close()
+
+    #########################################################################
+    # Configure build tree using autoconf                                   #
+    #########################################################################
+
+    def configure_environment(self):
+        self.finalize_config()
+
+        environ = os.environ
+        for key, value in self.envvars.items():
+            if value:
+                environ[key] = value
+
+        environ['PATH'] = ('%s/bin:%s' %
+                           (environ['PYTHON_HOME'], environ['PATH']))
+
+        if self.build_directory() == self.source_dir:
+            conf_args = ['sh', 'configure']
+        else:
+            conf_args = ['sh', join(self.source_dir, 'configure'),
+                         '--srcdir', self.source_dir]
+
+        for var in ('CC', 'CPPFLAGS', 'CCFLAGS', 'ARCHFLAGS',
+                    'CXX', 'CXXFLAGS', 'LD', 'LDFLAGS', 'LDARCHFLAGS'):
+            if self.envvars.has_key(var) and self.envvars[var] and \
+               (var.endswith('FLAGS') or exists(self.envvars[var])):
+                conf_args.append('%s=%s' % (var, self.envvars[var]))
+                del self.envvars[var]
+
+        if environ.has_key('BOOST_SUFFIX') and environ['BOOST_SUFFIX']:
+            conf_args.append('--with-boost-suffix=%s' %
+                             environ['BOOST_SUFFIX'])
+
+        return (environ, conf_args + self.configure_args)
+
+    def need_to_run_configure(self):
+        Makefile = join(self.build_directory(), 'Makefile')
+        if self.force:
+            return 'because it was forced'
+        elif not exists(Makefile):
+            return 'because Makefile does not exist'
+        elif self.isnewer(join(self.source_dir, 'configure'), Makefile):
+            return 'because configure is newer than Makefile'
+        elif self.isnewer(join(self.source_dir, 'Makefile.in'), Makefile):
+            return 'because Makefile.in is newer than Makefile'
+        return False
+
+    def phase_configure(self, *args):
+        self.log.debug('Executing phase: configure')
+
+        self.configured = True
+
+        build_dir = self.ensure_build_directory()
+        try:
+            os.chdir(build_dir)
+
+            reason = self.need_to_run_configure()
+            if reason:
+                self.log.info('./configure must be run ' + reason)
+                self.log.debug('Source => ' + self.source_dir)
+                self.log.debug('Build  => ' + build_dir)
+
+                environ, conf_args = self.configure_environment()
+                for arg in args:
+                    if arg: conf_args.append(arg)
+
+                self.log.debug('configure env  => ' + str(environ))
+                self.log.debug('configure args => ' + str(conf_args))
+
+                configure = Popen(conf_args, shell=False, env=environ)
+                configure.wait()
+
+                if not self.options.no_patch:
+                    self.phase_patch()
+            else:
+                if not self.options.no_patch and \
+                   self.isnewer('Makefile', '.timestamp'):
+                    self.phase_patch()
+
+                self.log.debug('configure does not need to be run')
+
+        finally:
+            os.chdir(self.source_dir)
+
+    def phase_config(self, *args):
+        self.log.debug('Executing phase: config')
+        self.phase_autoconf()
+        self.phase_configure(*args)
+        if self.should_clean:
+            self.phase_clean()
+
+    #########################################################################
+    # Builds products from the sources                                      #
+    #########################################################################
+
+    def phase_make(self, *args):
+        self.log.debug('Executing phase: make')
+
+        config_args = []
+        make_args   = []
+
+        for arg in args:
+            if arg.startswith('--'):
+                config_args.append(arg)
+            else:
+                make_args.append(arg)
+
+        if self.options.jobs > 1:
+            make_args.append('-j%d' % self.options.jobs)
+
+        self.log.debug('Configure arguments => ' + str(config_args))
+        self.log.debug('Makefile arguments  => ' + str(make_args))
+
+        if not self.configured:
+            self.phase_config(*config_args)
+
+        build_dir = self.ensure_build_directory()
+        try:
+            self.log.debug('Changing directory to ' + build_dir)
+            os.chdir(build_dir)
+
+            self.log.debug('make args => ' + str(make_args))
+
+            configure = Popen(['make'] + make_args, shell=False)
+            configure.wait()
+        finally:
+            os.chdir(self.source_dir)
+
+    def phase_update(self, *args):
+        self.log.debug('Executing phase: update')
+        self.phase_pull()
+        self.phase_make(*args)
+
+    #########################################################################
+    # Build directory cleaning phases                                       #
+    #########################################################################
+
+    def phase_clean(self, *args):
+        self.log.debug('Executing phase: clean')
+        self.phase_make('clean')
+
+    def phase_distclean(self, *args):
+        self.log.debug('Executing phase: distclean')
+        self.phase_make('distclean')
+
+    def phase_gitclean(self, *args):
+        self.log.debug('Executing phase: gitclean')
+        self.execute('git', 'clean', '-dfx')
+
+    #########################################################################
+    # Other build phases                                                    #
+    #########################################################################
+
+    def configure_flavor(self, flavor, reset=True):
+        self.initialize()               # reset everything
+        self.build_dir      = None      # use the build/ tree
+        self.current_flavor = flavor
+
+        if reset and exists(self.build_directory()) and \
+           isdir(self.build_directory()):
+            self.option_release()
+
+            self.log.info('=== Wiping build directory %s ===' %
+                          self.build_directory())
+            shutil.rmtree(self.build_directory())
+
+    def phase_distcheck(self, *args):
+        self.log.debug('Executing phase: distcheck')
+        
+        self.configure_flavor('default', False)
+
+        environ, conf_args = self.configure_environment()
+
+        make_args = list(args)
+        make_args.append('CPPFLAGS=%s'  % string.join(self.CPPFLAGS,  ' '))
+        make_args.append('CXXFLAGS=%s'  % string.join(self.CXXFLAGS,  ' '))
+        make_args.append('ARCHFLAGS=%s' % string.join(self.ARCHFLAGS, ' '))
+        make_args.append('LDFLAGS=%s'   % string.join(self.LDFLAGS,   ' '))
+
+        configure_flags = []
+        skip_next = False
+        for arg in conf_args:
+            if arg == '--srcdir':
+                skip_next = True
+                continue
+            elif skip_next:
+                skip_next = False
+                continue
+
+            if arg.startswith('--'):
+                configure_flags.append(arg)
+
+        make_args.append('DISTCHECK_CONFIGURE_FLAGS=%s' %
+                         string.join(configure_flags, ' '))
+        make_args.append('distcheck')
+
+        self.phase_make(*make_args)
+
+    def phase_rsync(self, *args):
+        self.log.debug('Executing phase: rsync')
+
+        source_copy_dir = join(self.products_directory(), 'ledger-proof')
+
+        self.execute('rsync', '-a', '--delete',
+                     '--exclude=.git/', '--exclude=b/',
+                     '%s/' % self.source_dir, '%s/' % source_copy_dir)
+
+        self.source_dir = source_copy_dir
+        
+    def phase_proof(self, *args):
+        self.log.debug('Executing phase: proof')
+
+        self.log.info('=== Copying source tree ===')
+        self.phase_rsync()
+
+        self.configure_flavor('opt')
+        self.log.info('=== Building opt ===')
+        self.phase_make(*args)
+        self.log.info('=== Testing opt ===')
+        self.phase_make('fullcheck')
+        
+        self.configure_flavor('gcov')
+        self.log.info('=== Building gcov ===')
+        self.phase_make(*args)
+        self.log.info('=== Testing gcov ===')
+        self.phase_make('check')
+        
+        self.configure_flavor('debug')
+        self.log.info('=== Building debug ===')
+        self.phase_make(*args)
+        self.log.info('=== Testing debug ===')
+        self.phase_make('fullcheck')
+        
+        self.configure_flavor('default')
+        self.log.info('=== Building default ===')
+        self.phase_make(*args)
+        self.log.info('=== Testing default ===')
+        self.phase_make('fullcheck')
+
+        self.log.info('=== Building final distcheck ===')
+        self.phase_distcheck()
+
+    def phase_makeall(self, *args):
+        self.log.debug('Executing phase: makeall')
+
+        self.configure_flavor('opt', False)
+        
+        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
+        if exists(system_hh_gch):
+            os.remove(system_hh_gch)
+
+        self.log.info('=== Building opt ===')
+        self.phase_make(*args)
+        
+        self.configure_flavor('gcov', False)
+
+        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
+        if exists(system_hh_gch):
+            os.remove(system_hh_gch)
+
+        self.log.info('=== Building gcov ===')
+        self.phase_make(*args)
+        
+        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
+        if exists(system_hh_gch):
+            os.remove(system_hh_gch)
+
+        self.log.info('=== Building default ===')
+        self.phase_make(*args)
+
+        self.configure_flavor('debug', False)
+
+        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
+        if exists(system_hh_gch):
+            os.remove(system_hh_gch)
+
+        self.log.info('=== Building debug ===')
+        self.phase_make(*args)
+        
+        self.configure_flavor('default', False)
+
+    def phase_do_all(self, *args):
+        self.log.debug('Executing phase: do_all')
+        self.phase_makeall(*args)
+        self.phase_proof(*args)
+
+    #########################################################################
+    # Help                                                                  #
+    #########################################################################
+
+    def phase_help(self, *args):
+        self.option_parser.print_help()
+
+        print """ 
+Of the optional ARGS, the first is an optional build FLAVOR, with the default
+being 'debug':
+
+  default           Regular autoconf settings
+  debug             Debugging and --verify support (default)
+  opt               Full optimizations
+  gcov              Coverage analysis
+  gprof             Code profiling (for OS X, just use: 'shark -i ledger ...')
+
+Next is the optional build PHASE, with 'config' being the default:
+
+  clean             Runs 'make clean' in the build directory
+  config            Configure the environment for building
+  dependencies      Automatically install all necessary build dependencies
+  distcheck         Properly does 'make distcheck', carrying all flags
+  distclean         Runs 'make distclean' in the build directory
+  gitclean          Runs 'git clean -dfx', which *really* cleans things
+  help              Displays this help text
+  info              Show information about the build environment
+  make              Do a make in the build directory
+  proof             Proves Ledger by building and testing every flavor
+  pull              Pulls the latest, and updates local config if need be
+  update            Does it all, updates your environment and re-make's
+
+There are many other build phases, though most are not of interest to the
+typical user:
+
+  aclocal           Runs aclocal -I m4
+  autoconf          Prepare the autoconf subsystem
+  autogen           Runs autogen.sh
+  configure         Runs just ./configure
+  do_all            Runs makeall followed by proof
+  gettext           Initialize gettext support
+  makeall           Build every flavor there is
+  patch             Patches the automake Makefile to be less verbose
+  products          Report the products directory path
+  rsync             Rsync a copy of the source tree into Products
+  sloc              Report total Source Lines Of Code
+  submodule         Updates Git submodules (better to use 'pull')
+  version           Output current HEAD version to version.m4
+
+NOTE: If you wish to pass options to configure or make, add "--" followed by
+your options.  Here are some real-world examples:
+
+  ./acprep
+  ./acprep opt -- make -j3
+  ./acprep -- --enable-doxygen"""
+        sys.exit(0)
+
+PrepareBuild().run()

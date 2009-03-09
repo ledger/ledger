@@ -9,6 +9,7 @@ AC_INIT([ledger],[VERSION_NUMBER],[johnw@newartisans.com])
 
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADER([config.h])

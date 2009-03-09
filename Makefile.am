@@ -2,7 +2,8 @@ VERSION		= 3.0
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS         = po intl
-EXTRA_DIST	= autogen.sh config.rpath contrib
+EXTRA_DIST	= autogen.sh config.rpath contrib src/system.hh.in
+DISTCLEANFILES  = .timestamp
 
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
@@ -81,7 +82,7 @@ libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
 pkginclude_HEADERS =				\
 	$(top_builddir)/config.h		\
-	src/system.hh				\
+	$(top_builddir)/system.hh		\
 	src/utils.h				\
 	src/flags.h				\
 	src/hooks.h				\
@@ -144,18 +145,24 @@ pkginclude_HEADERS =				\
 	lib/utfcpp/source/utf8/core.h		\
 	lib/utfcpp/source/utf8/unchecked.h
 
-CLEANFILES =
+nodist_libledger_util_la_SOURCES = $(top_builddir)/system.hh
+
+BUILT_SOURCES = $(top_builddir)/system.hh
+CLEANFILES = system.hh
+
+system.hh: src/system.hh.in
+	cp -p $< $@
 
 if USE_PCH
-nodist_libledger_util_la_SOURCES = src/system.hh.gch
+nodist_libledger_util_la_SOURCES += $(top_builddir)/system.hh.gch
 
-BUILT_SOURCES = src/system.hh.gch
-CLEANFILES   += $(srcdir)/src/system.hh.gch
+BUILT_SOURCES += $(top_builddir)/system.hh.gch
+CLEANFILES += system.hh.gch
 
-$(srcdir)/src/system.hh.gch: $(srcdir)/src/system.hh $(top_builddir)/config.h
+system.hh.gch: $(top_builddir)/system.hh
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(lib_cppflags) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
-	    -g -o $@ $(srcdir)/src/system.hh
+	    -o $@ $(top_builddir)/system.hh
 endif
 
 ######################################################################
@@ -174,7 +181,7 @@ info_TEXINFOS	= doc/ledger.texi
 
 dist_lisp_LISP	= lisp/ledger.el lisp/timeclock.el
 ELCFILES	=
-DISTCLEANFILES	= ledger.elc timeclock.elc
+DISTCLEANFILES += ledger.elc timeclock.elc
 
 all_sources     = $(libledger_util_la_SOURCES)		\
 		  $(libledger_math_la_SOURCES)		\
@@ -320,11 +327,10 @@ all_py_tests_sources = \
 	$(patsubst test/unit/%.cc,$(top_builddir)/test/python/%.py, \
 		   $(filter test/unit/t_%.cc,$(all_tests_sources)))
 
-$(top_builddir)/test/python/%.py: $(srcdir)/test/unit/%.cc \
-				  $(srcdir)/test/convert.py
+test/python/%.py: test/unit/%.cc test/convert.py
 	$(PYTHON) $(srcdir)/test/convert.py $< $@
 
-$(top_builddir)/test/python/UnitTests.py: $(all_py_tests_sources)
+test/python/UnitTests.py: $(all_py_tests_sources)
 	@echo "from unittest import TextTestRunner, TestSuite" > $@
 	@for file in $$(ls $(srcdir)/test/unit/*.cc); do \
 	    base=$$(basename $$file); \
@@ -461,12 +467,11 @@ distclean-local: distclean-local-doxygen
 if USE_DOXYGEN
 ESC_top_builddir=`cd $(top_builddir); pwd | sed 's/\//\\\\\//g'`
 
-$(top_builddir)/Doxyfile.gen: $(srcdir)/doc/Doxyfile
-	cat $(srcdir)/doc/Doxyfile \
-	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
-	    | sed "s/%builddir%/$(ESC_top_builddir)/g" > $@
+Doxyfile.gen: doc/Doxyfile
+	cat $< | sed "s/%srcdir%/$(ESC_srcdir)/g" \
+	       | sed "s/%builddir%/$(ESC_top_builddir)/g" > $@
 
-$(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen $(all_files)
+doc/html/index.html: $(top_builddir)/Doxyfile.gen $(all_files)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); doxygen $$BUILD_DIR/Doxyfile.gen)
 
@@ -475,7 +480,7 @@ $(top_builddir)/doc/html/index.html: $(top_builddir)/Doxyfile.gen $(all_files)
 # run, since it's quite possible that the user will not have a complete
 # TeX + Doxygen + dot environment on their own system.
 
-$(top_builddir)/doc/refman.pdf: $(top_builddir)/doc/html/index.html
+doc/refman.pdf: $(top_builddir)/doc/html/index.html
 	(cd $(top_builddir)/doc/latex && make)
 	cp $(top_builddir)/doc/latex/refman.pdf $@
 
@@ -502,31 +507,5 @@ report: all
 	     -o doc/report/ledger_cov.info
 	genhtml -o doc/report doc/report/ledger_cov.info
 	@echo Coverage reported generated\; now open doc/report/index.html
-
-sloc:
-	sloccount $(srcdir)/src $(srcdir)/python $(srcdir)/lisp $(srcdir)/test
-
-######################################################################
-
-STAGING = /tmp/ledger
-
-copy-sources:
-	-mkdir -p $(STAGING)
-	rsync -av --delete --exclude=/.libs/ --exclude=/.deps/ \
-	    --exclude=/plan/ --exclude=/2.6*/ --exclude=/archive/ \
-	    $(srcdir)/ $(STAGING)/
-	-(cd $(STAGING); git clean -x -d -f)
-
-release: copy-sources
-	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --opt --build -j3)
-
-release-distcheck: copy-sources
-	(cd $(STAGING); \
-	 nice -n 20 ./acprep --release --build -j3 distcheck)
-
-benchmark: release
-	PATH=$(PATH):$(srcdir)/tools \
-	    $(srcdir)/tools/speedcmp 50 $(STAGING)/ledger
 
 # Makefile.am ends here

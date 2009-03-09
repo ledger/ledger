@@ -34,7 +34,7 @@ major bugs that you find.  Just e-mail me, or post to the mailing list,
 they'll become a part of my work list.
 
   | *CURRENT* | @git checkout master@ |
-  | *BETA* | @git checkout -b v2.6.2b origin/v2.6.2b@ |
+  | *BETA* | @git checkout -b maint origin/maint@ |
   | *RELEASE* | @git checkout v2.6.1@ |
 
 There are also several topic branches which contain experimental features,
@@ -60,7 +60,7 @@ h3. For building the current master branch
   | doxygen | 1.5.7.1 | _optional_, for @make docs@ |
   | graphviz | 2.20.3 | _optional_, for @make docs@ |
   | texinfo | 4.13 | _optional_, for @make docs@ |
-  | lcov | 1.6 | _optional_, for @make report@, used with @./acprep --gcov@|
+  | lcov | 1.6 | _optional_, for @make report@, used with @./acprep gcov@|
   | sloccount | 2.26 | _optional_, for @make sloc@ |
 
 h3. For building the beta or release branches
@@ -107,19 +107,20 @@ The next step is preparing your environment for building.  While you can use
 you:
 
 <pre>
-tools/myacprep
+./acprep
 </pre>
 
-Please read the contents of @config.log@ if the configure step fails.
+Please read the contents of @config.log@ if the configure step fails.  Also,
+see the @help@ command to @acprep@, which explains some of its many options.
+It's pretty much the only command I run for configuring, building and testing
+Ledger.
 
 h2. Building
 
 Once you have the dependencies installed and the source prepared for building,
-run @make@.  If you have CppUnit installed, I prefer you always run 
-@make fullcheck@, as this will verify Ledger against the unit tests, the 
-Python unit tests (if applicable), and the regression tests.
+run @make check@ to get things started and confirm the result.
 
-If you have extra CPU cycles to burn, try @tools/proof@, which provides the
+If you have extra CPU cycles to burn, try @./acprep proof@, which provides the
 most thorough shakedown of a healthy source tree.
 
 h2. Resources

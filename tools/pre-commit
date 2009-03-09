@@ -1,30 +1,18 @@
 #!/bin/sh
 
-"$(tg --hooks-path)"/pre-commit "$@" || exit $?
+# Exit with status 1 if any command below fails
+set -e
 
+# Exit if it's not a branch we're interested in being thorough about
 if echo $(git rev-parse --symbolic-full-name HEAD) | grep -q ^refs/heads/t/; then
-    exit 0
-fi
-if [ $(git rev-parse --symbolic-full-name HEAD) = refs/heads/test ]; then
     exit 0
 fi
 
 # These are the locations I keep my temporary source and build trees in
-OUTPUT=$(tools/outdir)		# generates a build directory name such as
+PRODUCTS=$(./acprep products)	# generates a build directory name such as
                                 # ~/Products/ledger
-PRODUCTS=$(dirname "$OUTPUT")
-BASE=$(basename "$OUTPUT")
-
-if [ -z "$BASE" ]; then
-    TMPDIR=$PWD/pre-commit
-    MIRROR=$PWD/pre-commit-mirror
-else
-    TMPDIR=$PRODUCTS/$BASE-pre-commit
-    MIRROR=$PRODUCTS/$BASE-pre-commit-mirror
-fi
-
-# Exit with status 1 if any command below fails
-set -e
+TMPDIR=$PRODUCTS/pre-commit
+MIRROR=$PRODUCTS/pre-commit-mirror
 
 # Checkout a copy of the current index into MIRROR
 git checkout-index --prefix=$MIRROR/ -af
@@ -50,12 +38,14 @@ cd $TMPDIR
 # regenerate everything manually.  If the user doesn't have acprep, look
 # for other common autoconf-related script files.
 if [ ! -f Makefile -o \
-     Makefile.am -nt Makefile -o \
-     configure.ac -nt Makefile -o \
+     Makefile.in -nt Makefile -o \
+     configure -nt Makefile -o \
+     Makefile.am -nt Makefile.in -o \
+     configure.ac -nt configure -o \
      \( -f acprep -a acprep -nt Makefile \) ]
 then
     if [ -f acprep ]; then
-	./acprep --local --warn --pch
+	./acprep default --local
     elif [ -f autogen.sh ]; then
 	sh autogen.sh && ./configure
     else
