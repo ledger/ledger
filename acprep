@@ -654,6 +654,37 @@ class PrepareBuild(CommandLineApp):
                 self.log.debug('Noticing library directory => ' + path)
                 self.sys_library_dirs.append(path)
 
+    def setup_for_johnw(self):
+        # jww (2009-03-09): Some peculiarities specific to my system
+        if exists('/usr/local/stow/cppunit/include'):
+	    self.sys_include_dirs.append('/usr/local/stow/cppunit/include')
+	    self.sys_library_dirs.append('/usr/local/stow/cppunit/lib')
+
+            self.option_pch()
+            self.option_warn()
+
+            if '-march=native' in self.configure_args:
+                self.CXXFLAGS.remove('-march=native')
+            self.CXXFLAGS.append('-march=nocona')
+            self.CXXFLAGS.append('-msse3')
+
+        # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
+        # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
+        if '--enable-pch' not in self.configure_args and \
+           exists('/opt/local/bin/g++-mp-4.4'):
+            self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.4'
+            self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.4'
+            self.envvars['LD']  = '/opt/local/bin/g++-mp-4.4'
+        elif '--enable-pch' not in self.configure_args and \
+             exists('/opt/local/bin/g++-mp-4.3'):
+            self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
+            self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
+            self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
+        elif exists('/usr/bin/g++-4.2'):
+            self.envvars['CC']  = '/usr/bin/gcc-4.2'
+            self.envvars['CXX'] = '/usr/bin/g++-4.2'
+            self.envvars['LD']  = '/usr/bin/g++-4.2'
+
     def setup_for_system(self):
         self.setup_system_directories()
 
@@ -664,7 +695,8 @@ class PrepareBuild(CommandLineApp):
         if system == 'Linux':
             arch = self.get_stdout('uname', '-m')
             if arch == 'x86_64':
-                self.configure_args.remove('--disable-shared')
+                if '--disable-shared' in self.configure_args:
+                    self.configure_args.remove('--disable-shared')
                 self.configure_args.append('--disable-static')
             self.CXXFLAGS.append('-pthread')
 
@@ -678,13 +710,7 @@ class PrepareBuild(CommandLineApp):
             ldflag = '-Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk'
             self.LDARCHFLAGS.append(ldflag)
 
-        # jww (2009-03-09): Some peculiarities specific to my system
-        if exists('/usr/local/stow/cppunit/include'):
-	    self.sys_include_dirs.append('/usr/local/stow/cppunit/include')
-	    self.sys_library_dirs.append('/usr/local/stow/cppunit/lib')
-
-            self.option_pch()
-            self.option_warn()
+            self.setup_for_johnw()
 
         if '--enable-pch' not in self.configure_args and \
            exists('/opt/local/bin/ccache') or exists('/usr/local/bin/ccache'):
@@ -759,28 +785,19 @@ class PrepareBuild(CommandLineApp):
 
         system = self.get_stdout('uname', '-s')
 
-        # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
-        # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
-        if system == "Darwin":
-            if False and exists('/opt/local/bin/g++-mp-4.3'):
-                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
-                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
-                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
-            elif exists('/usr/bin/g++-4.2'):
-                self.envvars['CC']  = '/usr/bin/gcc-4.2'
-                self.envvars['CXX'] = '/usr/bin/g++-4.2'
-                self.envvars['LD']  = '/usr/bin/g++-4.2'
-
     def option_no_pch(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --no-pch')
 
         self.no_pch            = True
         self.use_glibcxx_debug = True
 
-        self.configure_args.remove('--enable-pch')
+        if '--enable-pch' in self.configure_args:
+            self.configure_args.remove('--enable-pch')
 
-        self.CXXFLAGS.remove('-Wconversion')
-        #self.CXXFLAGS.remove('-Wold-style-cast')
+        if '-Wconversion' in self.configure_args:
+            self.CXXFLAGS.remove('-Wconversion')
+        #if '-Wold-style-cast' in self.configure_args:
+        #    self.CXXFLAGS.remove('-Wold-style-cast')
 
         system = self.get_stdout('uname', '-s')
 
@@ -838,7 +855,8 @@ class PrepareBuild(CommandLineApp):
 
     def option_release(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --release')
-        self.configure_args.remove('--disable-shared')
+        if '--disable-shared' in self.configure_args:
+            self.configure_args.remove('--disable-shared')
         self.configure_args.append('--disable-dependency-tracking')
 
     def option_help(self, option=None, opt_str=None, value=None, parser=None):
@@ -887,6 +905,7 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')
         self.CXXFLAGS.append('-fomit-frame-pointer')
+        self.CXXFLAGS.append('-march=native')
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
