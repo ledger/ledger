@@ -153,8 +153,11 @@ void python_interpreter_t::initialize()
 	break;
       }
     }
+#if defined(DEBUG_ON)
     if (! path_initialized)
-      warning_(_("Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH"));
+      DEBUG("python.init",
+	    "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
+#endif
   }
   catch (const error_already_set&) {
     PyErr_Print();
