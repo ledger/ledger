@@ -660,8 +660,6 @@ class PrepareBuild(CommandLineApp):
 	    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
 	    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
-            if '-march=native' in self.configure_args:
-                self.CXXFLAGS.remove('-march=native')
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
 
@@ -911,7 +909,6 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')
         self.CXXFLAGS.append('-fomit-frame-pointer')
-        self.CXXFLAGS.append('-march=native')
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
