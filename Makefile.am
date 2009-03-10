@@ -81,8 +81,6 @@ libledger_report_la_CPPFLAGS = $(lib_cppflags)
 libledger_report_la_LDFLAGS  = -release $(VERSION).0
 
 pkginclude_HEADERS =				\
-	$(top_builddir)/config.h		\
-	$(top_builddir)/system.hh		\
 	src/utils.h				\
 	src/flags.h				\
 	src/hooks.h				\
@@ -145,24 +143,24 @@ pkginclude_HEADERS =				\
 	lib/utfcpp/source/utf8/core.h		\
 	lib/utfcpp/source/utf8/unchecked.h
 
-nodist_libledger_util_la_SOURCES = $(top_builddir)/system.hh
+nodist_libledger_util_la_SOURCES = system.hh
 
-BUILT_SOURCES = $(top_builddir)/system.hh
-CLEANFILES = system.hh
+BUILT_SOURCES = system.hh
+CLEANFILES    = system.hh
 
 system.hh: src/system.hh.in
 	cp -p $< $@
 
 if USE_PCH
-nodist_libledger_util_la_SOURCES += $(top_builddir)/system.hh.gch
+nodist_libledger_util_la_SOURCES += system.hh.gch
 
-BUILT_SOURCES += $(top_builddir)/system.hh.gch
-CLEANFILES += system.hh.gch
+BUILT_SOURCES += system.hh.gch
+CLEANFILES    += system.hh.gch
 
-system.hh.gch: $(top_builddir)/system.hh
+system.hh.gch: system.hh
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(lib_cppflags) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
-	    -o $@ $(top_builddir)/system.hh
+	    -o $@ $<
 endif
 
 ######################################################################
