@@ -373,8 +373,10 @@ class PrepareBuild(CommandLineApp):
         if self.force:
             return 'because it was forced'
         elif self.isnewer('acprep', 'configure'):
+            self.should_clean = True
             return 'because acprep is newer than configure'
         elif self.isnewer('acprep', 'Makefile.in'):
+            self.should_clean = True
             return 'because acprep is newer than Makefile.in'
         elif self.isnewer('configure.ac', 'configure'):
             return 'because confgure.ac is newer than configure'
@@ -470,7 +472,6 @@ class PrepareBuild(CommandLineApp):
             self.phase_autogen()
             self.phase_gettext()
             self.phase_aclocal()
-            self.should_clean = True
         else:
             self.log.debug('autogen.sh does not need to be run')
 
