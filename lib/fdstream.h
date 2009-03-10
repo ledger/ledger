@@ -139,7 +139,7 @@ class fdinbuf : public std::streambuf {
 	 * - use number of characters read
 	 * - but at most size of putback area
 	 */
-	int numPutback;
+	std::streamsize numPutback;
 	numPutback = gptr() - eback();
 	if (numPutback > pbSize) {
 	    numPutback = pbSize;
@@ -152,7 +152,7 @@ class fdinbuf : public std::streambuf {
 		numPutback);
 
 	// read at most bufSize new characters
-	int num;
+        ssize_t num;
 	num = read (fd, buffer+pbSize, bufSize);
 	if (num <= 0) {
 	    // ERROR or EOF
