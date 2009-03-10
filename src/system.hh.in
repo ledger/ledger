@@ -107,7 +107,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <sys/stat.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <io.h>
 #else
 #include <unistd.h>
@@ -116,7 +116,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <pwd.h>
 #endif
 
-#ifdef HAVE_UNIX_PIPES
+#if defined(HAVE_UNIX_PIPES)
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "fdstream.h"
@@ -133,7 +133,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include "sha1.h"
 #include "utf8.h"
 
-#ifdef HAVE_LIBEDIT
+#if defined(HAVE_LIBEDIT)
 #include <editline/readline.h>
 #endif
 
