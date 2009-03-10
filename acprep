@@ -305,9 +305,11 @@ class PrepareBuild(CommandLineApp):
 
             retcode = call(args, shell=False)
             if retcode < 0:
-                print >>sys.stderr, "Child was terminated by signal", -retcode
+                self.log.error("Child was terminated by signal", -retcode)
+                sys.exit(1)
         except OSError, e:
-            print >>sys.stderr, "Execution failed:", e
+            self.log.error("Execution failed:", e)
+            sys.exit(1)
 
     def get_stdout(self, *args):
         try:
@@ -316,11 +318,13 @@ class PrepareBuild(CommandLineApp):
             proc = Popen(args, shell=False, stdout=PIPE)
             stdout = proc.stdout.read()
             if proc.wait() < 0:
-                print >>sys.stderr, "Child was terminated by signal", \
-                    -proc.returncode
+                self.log.error("Child was terminated by signal",
+                               -proc.returncode)
+                sys.exit(1)
             return stdout[:-1]
         except OSError, e:
-            print >>sys.stderr, "Execution failed:", e
+            self.log.error("Execution failed:", e)
+            sys.exit(1)
 
     def isnewer(self, file1, file2):
         "Check if file1 is newer than file2."
@@ -492,7 +496,7 @@ class PrepareBuild(CommandLineApp):
     def phase_pull(self, *args):
         self.log.debug('Executing phase: pull')
         if not exists('.git') and not isdir('.git'):
-            print >>sys.stderr, "This is not a Git clone."
+            self.log.error("This is not a Git clone.")
             sys.exit(1)
         self.execute('git', 'pull')
         self.phase_submodule()
@@ -622,7 +626,7 @@ class PrepareBuild(CommandLineApp):
                     self.log.debug('BOOST_SUFFIX  => ' + suffix)
                     break
             if suffix is None:
-                print >>sys.stderr, "Boost could not be found."
+                self.log.error("Boost could not be found.")
                 sys.exit(1)
             self.envvars['BOOST_SUFFIX'] = suffix
         return self.envvars['BOOST_SUFFIX']
