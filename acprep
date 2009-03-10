@@ -752,6 +752,7 @@ class PrepareBuild(CommandLineApp):
 
         self.configure_args.append('--enable-pch')
 
+        self.CXXFLAGS.append('-fpch-deps')
         self.CXXFLAGS.append('-Wconversion')
         #self.CXXFLAGS.append('-Wold-style-cast')
 
