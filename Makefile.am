@@ -353,8 +353,7 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: $(srcdir)/test/PyUnitTests.py \
-	     $(top_builddir)/test/python/UnitTests.py
+PyUnitTests: test/PyUnitTests.py test/python/UnitTests.py
 	@cat $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%python%/$(ESC_python)/" \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
@@ -469,7 +468,7 @@ Doxyfile.gen: doc/Doxyfile
 	cat $< | sed "s/%srcdir%/$(ESC_srcdir)/g" \
 	       | sed "s/%builddir%/$(ESC_top_builddir)/g" > $@
 
-doc/html/index.html: $(top_builddir)/Doxyfile.gen $(all_files)
+doc/html/index.html: Doxyfile.gen $(all_files)
 	BUILD_DIR=`cd $(top_builddir); pwd`; \
 	(cd $(srcdir); doxygen $$BUILD_DIR/Doxyfile.gen)
 
@@ -478,11 +477,11 @@ doc/html/index.html: $(top_builddir)/Doxyfile.gen $(all_files)
 # run, since it's quite possible that the user will not have a complete
 # TeX + Doxygen + dot environment on their own system.
 
-doc/refman.pdf: $(top_builddir)/doc/html/index.html
-	(cd $(top_builddir)/doc/latex && make)
-	cp $(top_builddir)/doc/latex/refman.pdf $@
+doc/refman.pdf: doc/html/index.html
+	(cd doc/latex && make)
+	cp doc/latex/refman.pdf $@
 
-docs: pdf $(top_builddir)/doc/refman.pdf
+docs: pdf doc/refman.pdf
 else
 docs: pdf
 endif
