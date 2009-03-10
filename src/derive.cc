@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <system.hh>
+
 #include "derive.h"
 #include "xact.h"
 #include "post.h"

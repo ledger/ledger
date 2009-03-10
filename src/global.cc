@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <system.hh>
+
 #include "global.h"
 #if defined(HAVE_BOOST_PYTHON)
 #include "pyinterp.h"

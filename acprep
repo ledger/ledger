@@ -657,33 +657,13 @@ class PrepareBuild(CommandLineApp):
     def setup_for_johnw(self):
         # jww (2009-03-09): Some peculiarities specific to my system
         if exists('/usr/local/stow/cppunit/include'):
-	    self.sys_include_dirs.append('/usr/local/stow/cppunit/include')
-	    self.sys_library_dirs.append('/usr/local/stow/cppunit/lib')
-
-            self.option_pch()
-            self.option_warn()
+	    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
+	    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
             if '-march=native' in self.configure_args:
                 self.CXXFLAGS.remove('-march=native')
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
-
-        # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
-        # newer version.  However, it also means I can't use GLIBCXX_DEBUG.
-        if '--enable-pch' not in self.configure_args and \
-           exists('/opt/local/bin/g++-mp-4.4'):
-            self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.4'
-            self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.4'
-            self.envvars['LD']  = '/opt/local/bin/g++-mp-4.4'
-        elif '--enable-pch' not in self.configure_args and \
-             exists('/opt/local/bin/g++-mp-4.3'):
-            self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
-            self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
-            self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
-        elif exists('/usr/bin/g++-4.2'):
-            self.envvars['CC']  = '/usr/bin/gcc-4.2'
-            self.envvars['CXX'] = '/usr/bin/g++-4.2'
-            self.envvars['LD']  = '/usr/bin/g++-4.2'
 
     def setup_for_system(self):
         self.setup_system_directories()
@@ -691,6 +671,11 @@ class PrepareBuild(CommandLineApp):
         system = self.get_stdout('uname', '-s')
 
         self.log.debug('System type is => ' + system)
+
+        # These options are global defaults at the moment
+        self.option_warn()
+        if not self.no_pch:
+            self.option_pch()
 
         if system == 'Linux':
             arch = self.get_stdout('uname', '-m')
@@ -712,8 +697,29 @@ class PrepareBuild(CommandLineApp):
 
             self.setup_for_johnw()
 
+            # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
+            # newer version.
+            if exists('/opt/local/bin/g++-mp-4.4'):
+                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.4'
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.4'
+                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.4'
+            elif exists('/opt/local/bin/g++-mp-4.3'):
+                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
+                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
+            elif exists('/usr/bin/g++-4.2'):
+                self.envvars['CC']  = '/usr/bin/gcc-4.2'
+                self.envvars['CXX'] = '/usr/bin/g++-4.2'
+                self.envvars['LD']  = '/usr/bin/g++-4.2'
+
+                if '--enable-pch' in self.configure_args:
+                    self.options.use_glibcxx_debug = False
+            else:
+                self.option_no_pch()
+
         if '--enable-pch' not in self.configure_args and \
-           exists('/opt/local/bin/ccache') or exists('/usr/local/bin/ccache'):
+           exists('/opt/local/bin/ccache') or \
+           exists('/usr/local/bin/ccache'):
             self.envvars['CC']  = 'ccache ' + self.envvars['CC']
             self.envvars['CXX'] = 'ccache ' + self.envvars['CXX']
             self.envvars['LD']  = 'ccache ' + self.envvars['LD']
@@ -887,8 +893,8 @@ class PrepareBuild(CommandLineApp):
                 self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
                 self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
 
-            self.sys_include_dirs.append('/usr/local/stow/cppunit-debug/include')
-            self.sys_library_dirs.append('/usr/local/stow/cppunit-debug/lib')
+            self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
+            self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
         if exists('/usr/local/lib/libboost_regex-xgcc40-d-1_38.a'):
             self.envvars['BOOST_HOME']   = '/usr/local'

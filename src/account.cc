@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <system.hh>
+
 #include "account.h"
 #include "post.h"
 #include "xact.h"

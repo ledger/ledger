@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <system.hh>
+
 #include "report.h"
 #include "session.h"
 #include "unistring.h"		// jww (2009-03-04): really??

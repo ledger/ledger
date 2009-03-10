@@ -1,3 +1,5 @@
+#include <system.hh>
+
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
@@ -8,6 +10,7 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 
 #include "UnitTests.h"
+
 #include "utils.h"
 
 // Create the CppUnit registry

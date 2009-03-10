@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <system.hh>
+
 #include "global.h"		// This is where the meat of main() is, which
 				// was moved there for the sake of clarity here
 #include "session.h"
