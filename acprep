@@ -168,8 +168,6 @@ class PrepareBuild(CommandLineApp):
     def initialize(self):
         self.log.debug('Initializing all state variables')
 
-        self.force             = False
-        self.no_pch            = False
         self.should_clean      = False
         self.configured        = False
         self.current_ver       = None
@@ -213,6 +211,7 @@ class PrepareBuild(CommandLineApp):
 
                 if varname.endswith('FLAGS'):
                     self.__dict__[varname] = string.split(os.environ[varname])
+                    self.envvars[varname]  = ''
 
         # If ~/Products/ or build/ exists, use them instead of the source tree
         # for building
@@ -273,7 +272,10 @@ class PrepareBuild(CommandLineApp):
                       callback=self.option_warn,
                       help='Enable full warning flags')
 
+        self.force      = False
+        self.no_pch     = False
         self.source_dir = os.getcwd()
+
         self.initialize()
 
     def main(self, *args):
@@ -757,7 +759,6 @@ class PrepareBuild(CommandLineApp):
                     'CXXFLAGS', 'LDFLAGS', 'LDARCHFLAGS'):
             value = self.__dict__[var]
             if value:
-                self.envvars[var] = ''
                 first = True
                 for member in value:
                     #escaped = self.escape_string(member)
@@ -959,7 +960,7 @@ class PrepareBuild(CommandLineApp):
     def configure_environment(self):
         self.finalize_config()
 
-        environ = os.environ
+        environ = dict(os.environ)
         for key, value in self.envvars.items():
             if value:
                 environ[key] = value
@@ -978,7 +979,6 @@ class PrepareBuild(CommandLineApp):
             if self.envvars.has_key(var) and self.envvars[var] and \
                (var.endswith('FLAGS') or exists(self.envvars[var])):
                 conf_args.append('%s=%s' % (var, self.envvars[var]))
-                del self.envvars[var]
 
         if environ.has_key('BOOST_SUFFIX') and environ['BOOST_SUFFIX']:
             conf_args.append('--with-boost-suffix=%s' %
