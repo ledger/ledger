@@ -179,7 +179,6 @@ class PrepareBuild(CommandLineApp):
         self.build_dir         = self.source_dir
         self.configure_args    = ['--disable-shared',
                                   '--with-included-gettext']
-        self.use_glibcxx_debug = False
         self.sys_include_dirs  = []
         self.sys_library_dirs  = []
 
@@ -237,6 +236,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--force', action="callback",
                       callback=self.option_force,
                       help="Perform every action, without checking")
+        op.add_option('', '--glibcxx-debug', action='store_true',
+                      dest='use_glibcxx_debug', default=False,
+                      help='Define _GLIBCXX_DEBUG=1 during compilation')
         op.add_option('', '--help', action="callback",
                       callback=self.option_help,
                       help='Show this help text')
@@ -403,7 +405,7 @@ class PrepareBuild(CommandLineApp):
         self.log.info("Need to run configure    => " +
                       str(self.need_to_run_configure()))
         self.log.info("Use _GLIBCXX_DEBUG       => " +
-                      str(self.use_glibcxx_debug))
+                      str(self.options.use_glibcxx_debug))
         self.log.info("Use pre-compiled headers => " +
                       str('--enable-pch' in conf_args))
 
@@ -663,6 +665,8 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
 
+            self.options.use_glibcxx_debug = True
+
     def setup_for_system(self):
         self.setup_system_directories()
 
@@ -705,13 +709,11 @@ class PrepareBuild(CommandLineApp):
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
                 self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
-            elif exists('/usr/bin/g++-4.2'):
+            elif not self.options.use_glibcxx_debug and \
+                 exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
                 self.envvars['LD']  = '/usr/bin/g++-4.2'
-
-                if '--enable-pch' in self.configure_args:
-                    self.options.use_glibcxx_debug = False
             else:
                 self.option_no_pch()
 
@@ -779,8 +781,6 @@ class PrepareBuild(CommandLineApp):
     def option_pch(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --pch')
 
-        self.use_glibcxx_debug = False
-
         self.configure_args.append('--enable-pch')
 
         self.CXXFLAGS.append('-fpch-deps')
@@ -792,8 +792,7 @@ class PrepareBuild(CommandLineApp):
     def option_no_pch(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --no-pch')
 
-        self.no_pch            = True
-        self.use_glibcxx_debug = True
+        self.no_pch = True
 
         if '--enable-pch' in self.configure_args:
             self.configure_args.remove('--enable-pch')
@@ -879,7 +878,7 @@ class PrepareBuild(CommandLineApp):
         self.CXXFLAGS.append('-g')
         self.LDFLAGS.append('-g')
 
-        if not self.use_glibcxx_debug:
+        if not self.options.use_glibcxx_debug:
             return
 
         self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
