@@ -128,42 +128,69 @@ inline std::string format_date(const date_t& when,
  *
  * Long.
  */
+struct range_t
+{
+  date_t begin;
+  date_t end;
+
+  date_range_t(const date_t& _begin = date_t(),
+	       const date_t& _end = date_t())
+    : begin(_begin), end(_end) {
+    TRACE_CTOR(date_range_t, "const date_t&, const date_t&");
+  }
+  date_range_t(const date_range_t& other)
+    : begin(other.begin), end(other.end) {
+    TRACE_CTOR(date_range_t, "copy");
+  }
+  date_range_t(const string& desc) : begin(), end() {
+    TRACE_CTOR(date_range_t, "const string&");
+    std::istringstream stream(desc);
+    parse(stream);
+  }
+  ~date_range_t() throw() {
+    TRACE_DTOR(date_range_t);
+  }
+
+  bool date_in_range(const date_t& date) {
+    return ((! is_valid(begin) || date >= begin) &&
+	    (! is_valid(end)   || date < end));
+  }
+
+  void parse(std::istream& in);
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
 struct interval_t
 {
   int	 years;
   int	 months;
   int	 days;
   bool	 weekly;
-  date_t begin;
-  date_t end;
 
   interval_t(int	   _days   = 0,
 	     int	   _months = 0,
 	     int	   _years  = 0,
-	     bool	   _weekly = false,
-	     const date_t& _begin  = date_t(),
-	     const date_t& _end	   = date_t())
-    : years(_years), months(_months), days(_days),
-      weekly(_weekly), begin(_begin), end(_end) {
-    TRACE_CTOR(interval_t,
-	       "int, int, int, bool, const date_t&, const date_t&");
+	     bool	   _weekly = false)
+    : years(_years), months(_months), days(_days), weekly(_weekly) {
+    TRACE_CTOR(interval_t, "int, int, int, bool");
   }
   interval_t(const interval_t& other)
     : years(other.years),
       months(other.months),
       days(other.days),
-      weekly(other.weekly),
-      begin(other.begin),
-      end(other.end) {
+      weekly(other.weekly) {
     TRACE_CTOR(interval_t, "copy");
   }
   interval_t(const string& desc)
-    : years(0), months(0), days(0), weekly(false), begin(), end() {
+    : years(0), months(0), days(0), weekly(false) {
     TRACE_CTOR(interval_t, "const string&");
     std::istringstream stream(desc);
     parse(stream);
   }
-
   ~interval_t() throw() {
     TRACE_DTOR(interval_t);
   }
@@ -172,9 +199,11 @@ struct interval_t
     return years != 0 || months != 0  || days != 0;
   }
 
+#if 0
   void   set_start(const date_t& moment) {
     begin = first(moment);
   }
+#endif
 
   date_t first(const optional<date_t>& moment = none);
   date_t increment(const date_t&) const;
