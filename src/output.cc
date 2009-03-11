@@ -190,9 +190,9 @@ void format_accounts::flush()
     disp_pred.predicate.parse(report.HANDLER(display_).str());
   }
 
-  std::size_t top_displayed = 0;
-
   mark_accounts(*report.session.master, report.HANDLED(flat));
+
+  std::size_t top_displayed = 0;
 
   foreach (account_t * account, posted_accounts) {
     post_account(*account);
