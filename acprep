@@ -18,6 +18,7 @@ import shutil
 import string
 import sys
 import time
+import md5
 
 from os.path import *
 from stat import *
@@ -399,7 +400,7 @@ class PrepareBuild(CommandLineApp):
     def phase_info(self, *args):
         self.log.debug('Executing phase: info')
 
-        (environ, conf_args) = self.configure_environment()
+        environ, conf_args = self.configure_environment()
 
         self.log.info("Current version          => " + self.current_version())
         self.log.info("Current flavor           => " + self.current_flavor)
@@ -575,6 +576,62 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
 
+    def phase_buildlibs(self, *args):
+        self.log.debug('Executing phase: buildlibs')
+
+        try:
+            os.chdir('lib')
+
+            environ, conf_args = self.configure_environment()
+
+            boost   = 'boost_1_38_0'
+            tarball = boost + '.tar.bz2'
+
+            if not exists(boost):
+                if not exists(tarball):
+                    self.log.info('Downloading Boost source tarball ...')
+                    self.execute('curl', '-L', '-o', tarball,
+                                 'http://downloads.sourceforge.net/boost/' +
+                                 boost + '.tar.bz2?use_mirror=ufpr')
+
+                if not exists(tarball):
+                    self.log.error('Failed to locate the Boost source tarball')
+                    sys.exit(1)
+
+                fd = open(tarball)
+                csum = md5.new()
+                csum.update(fd.read())
+                fd.close()
+                digest = csum.hexdigest()
+
+                if digest != '5eca2116d39d61382b8f8235915cb267':
+                    self.log.error('Boost source tarball fails to match checksum')
+                    sys.exit(1)
+
+                self.log.info('Extracting Boost source tarball ...')
+                self.execute('tar', 'xjf', tarball)
+
+            if not exists(boost):
+                self.log.error('Failed to locate the Boost sources')
+                sys.exit(1)
+
+            if not exists('cppunit'):
+                self.execute('git', 'clone', 'git://github.com/jwiegley/cppunit.git')
+
+            if not exists('cppunit'):
+                self.log.error('Failed to locate the CppUnit sources')
+                sys.exit(1)
+
+            self.execute('make',
+                         'BOOST_SOURCE=%s' % boost,
+                         'BOOST_VERSION=%s' % environ['BOOST_VERSION'],
+                         'CC=%s'  % environ['CC'],
+                         'CXX=%s' % environ['CXX'],
+                         'LD=%s'  % environ['LD'],
+                         'build-all')
+        finally:
+            os.chdir(self.source_dir)
+
     #########################################################################
     # Determine the system's basic configuration                            #
     #########################################################################
@@ -627,7 +684,6 @@ class PrepareBuild(CommandLineApp):
                     break
             if suffix is None:
                 self.log.error("Boost could not be found.")
-                sys.exit(1)
             self.envvars['BOOST_SUFFIX'] = suffix
         return self.envvars['BOOST_SUFFIX']
 
@@ -707,11 +763,7 @@ class PrepareBuild(CommandLineApp):
 
             # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
             # newer version.
-            if exists('/opt/local/bin/g++-mp-4.4'):
-                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.4'
-                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.4'
-                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.4'
-            elif exists('/opt/local/bin/g++-mp-4.3'):
+            if exists('/opt/local/bin/g++-mp-4.3'):
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
                 self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
@@ -898,9 +950,9 @@ class PrepareBuild(CommandLineApp):
             self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
             self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
-        if exists('/usr/local/lib/libboost_regex-xgcc40-d-1_38.a'):
+        if exists('/usr/local/lib/libboost_regex-xgcc43-sd-1_38.a'):
             self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc40-d-1_38'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc43-sd-1_38'
             self.envvars['BOOST_VERSION'] = '1_38'
 
             self.log.debug('Setting BOOST_SUFFIX  => %s' %

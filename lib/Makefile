@@ -7,22 +7,21 @@
 
 STOW_ROOT = /usr/local/stow
 
-HERE = $(shell pwd)
-
-BOOST_VER = 1_38_0
+BOOST_SOURCE  = boost
+BOOST_VERSION = 1_38_0
 
 # architecture=combined
 boost-release:
-	(cd boost && \
-	bjam release -j3 --prefix=$(STOW_ROOT)/boost_$(BOOST_VER) \
-	    --build-dir=$(HERE)/boost_$(BOOST_VER)/build --toolset=darwin \
-	    --build-type=complete install)
+	(cd $(BOOST_SOURCE) && \
+	bjam release -j3 --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
+	    --build-dir=$(HOME)/Products/boost_$(BOOST_VERSION) \
+	    --toolset=darwin --build-type=complete install)
 
 boost-debug:
-	(cd boost && \
-	bjam debug -j3 --prefix=$(STOW_ROOT)/boost_$(BOOST_VER) \
-	    --build-dir=$(HERE)/boost_$(BOOST_VER)/build --toolset=darwin \
-	    --build-type=complete \
+	(cd $(BOOST_SOURCE) && \
+	bjam debug -j3 --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
+	    --build-dir=$(HOME)/Products/boost_$(BOOST_VERSION) \
+	    --toolset=darwin --build-type=complete \
 	    define=_GLIBCXX_DEBUG=1 install)
 
 boost-build: boost-release boost-debug
@@ -47,3 +46,5 @@ cppunit-debug:
 	 make install)
 
 cppunit-build: cppunit-release cppunit-debug
+
+build-all: cppunit-build boost-build
