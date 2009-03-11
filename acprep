@@ -1182,28 +1182,21 @@ class PrepareBuild(CommandLineApp):
 
         environ, conf_args = self.configure_environment()
 
-        make_args = list(args)
-        make_args.append('CPPFLAGS=%s'  % string.join(self.CPPFLAGS,  ' '))
-        make_args.append('CXXFLAGS=%s'  % string.join(self.CXXFLAGS,  ' '))
-        make_args.append('ARCHFLAGS=%s' % string.join(self.ARCHFLAGS, ' '))
-        make_args.append('LDFLAGS=%s'   % string.join(self.LDFLAGS,   ' '))
+        configure_args = []
 
-        configure_flags = []
         skip_next = False
-        for arg in conf_args:
+        for arg in conf_args[2:]: # skip "sh configure"
             if arg == '--srcdir':
                 skip_next = True
-                continue
             elif skip_next:
                 skip_next = False
-                continue
+            else:
+                configure_args.append('"' + self.escape_string(arg) + '"')
 
-            if arg.startswith('--'):
-                configure_flags.append(arg)
+        make_args = ['DISTCHECK_CONFIGURE_FLAGS=%s' %
+                     string.join(configure_args, ' '), 'distcheck']
 
-        make_args.append('DISTCHECK_CONFIGURE_FLAGS=%s' %
-                         string.join(configure_flags, ' '))
-        make_args.append('distcheck')
+        self.log.debug('make_args for distcheck => ' + str(make_args))
 
         self.phase_make(*make_args)
 
