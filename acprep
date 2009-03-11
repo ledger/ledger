@@ -362,12 +362,14 @@ class PrepareBuild(CommandLineApp):
                                   self.current_flavor)
         return self.build_dir
 
-    def ensure_build_directory(self):
-        build_dir = self.build_directory()
-        if not exists(build_dir) and not isdir(build_dir):
-            self.log.debug('Making directory => ' + build_dir)
-            os.makedirs(build_dir)
-        return build_dir
+    def ensure(self, dirname):
+        if not exists(dirname):
+            self.log.debug('Making directory: ' + dirname)
+            os.makedirs(dirname)
+        elif not isdir(dirname):
+            self.log.error('Directory is not a directory: ' + dirname)
+            sys.exit(1)
+        return dirname
 
     def current_version(self):
         if not self.current_ver:
@@ -1059,7 +1061,7 @@ class PrepareBuild(CommandLineApp):
 
         self.configured = True
 
-        build_dir = self.ensure_build_directory()
+        build_dir = self.ensure(self.build_directory())
         try:
             os.chdir(build_dir)
 
@@ -1123,7 +1125,7 @@ class PrepareBuild(CommandLineApp):
         if not self.configured:
             self.phase_config(*config_args)
 
-        build_dir = self.ensure_build_directory()
+        build_dir = self.ensure(self.build_directory())
         try:
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
@@ -1208,7 +1210,8 @@ class PrepareBuild(CommandLineApp):
     def phase_rsync(self, *args):
         self.log.debug('Executing phase: rsync')
 
-        source_copy_dir = join(self.products_directory(), 'ledger-proof')
+        source_copy_dir = join(self.ensure(self.products_directory()),
+                               'ledger-proof')
 
         self.execute('rsync', '-a', '--delete',
                      '--exclude=.git/', '--exclude=b/',
