@@ -755,11 +755,11 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-pthread')
 
         elif system == 'Darwin':
-            self.ARCHFLAGS += ['-arch', 'i386', '-arch', 'ppc',
-                               '-isysroot', '/Developer/SDKs/MacOSX10.5.sdk']
-            self.LDARCHFLAGS += self.ARCHFLAGS
-            ldflag = '-Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk'
-            self.LDARCHFLAGS.append(ldflag)
+            #self.ARCHFLAGS += ['-arch', 'i386', '-arch', 'ppc',
+            #                   '-isysroot', '/Developer/SDKs/MacOSX10.5.sdk']
+            #self.LDARCHFLAGS += self.ARCHFLAGS
+            #ldflag = '-Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk'
+            #self.LDARCHFLAGS.append(ldflag)
 
             self.setup_for_johnw()
 
