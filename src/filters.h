@@ -597,7 +597,6 @@ public:
 
 class posts_as_equity : public subtotal_posts
 {
-  interval_t  interval;
   post_t *    last_post;
   account_t   equity_account;
   account_t * balance_account;
