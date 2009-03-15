@@ -186,8 +186,8 @@ struct auto_xact_finalizer_t : public xact_finalizer_t
 class period_xact_t : public xact_base_t
 {
  public:
-  interval_t period;
-  string     period_string;
+  date_interval_t period;
+  string	  period_string;
 
   period_xact_t() {
     TRACE_CTOR(period_xact_t, "");
@@ -206,7 +206,7 @@ class period_xact_t : public xact_base_t
   }
 
   virtual bool valid() const {
-    return period;
+    return period.is_valid();
   }
 };
 

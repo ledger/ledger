@@ -160,25 +160,54 @@ value_t period_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  interval_t interval(arg);
+  date_interval_t interval(arg);
 
-  if (! is_valid(interval.begin)) {
-    out << _("Time period has no beginning.") << std::endl;
-  } else {
-    out << _("begin: ") << format_date(interval.begin) << std::endl;
-    out << _("  end: ") << format_date(interval.end) << std::endl;
+  out << _("global details => ") << std::endl << std::endl;
+
+  if (interval.start)
+    out << _("   start: ") << format_date(*interval.start) << std::endl;
+  else
+    out << _("   start: TODAY: ") << format_date(CURRENT_DATE()) << std::endl;
+  if (interval.end)
+    out << _("     end: ") << format_date(*interval.end) << std::endl;
+
+  if (interval.skip_duration)
+    out << _("    skip: ") << *interval.skip_duration << std::endl;
+  if (interval.factor)
+    out << _("  factor: ") << interval.factor << std::endl;
+  if (interval.duration)
+    out << _("duration: ") << *interval.duration << std::endl;
+
+  if (interval.find_period(interval.start ?
+			   *interval.start : CURRENT_DATE())) {
+    out << std::endl
+	<< _("after finding first period => ") << std::endl
+	<< std::endl;
+
+    if (interval.start)
+      out << _("   start: ") << format_date(*interval.start) << std::endl;
+    if (interval.end)
+      out << _("     end: ") << format_date(*interval.end) << std::endl;
+
+    if (interval.skip_duration)
+      out << _("    skip: ") << *interval.skip_duration << std::endl;
+    if (interval.factor)
+      out << _("  factor: ") << interval.factor << std::endl;
+    if (interval.duration)
+      out << _("duration: ") << *interval.duration << std::endl;
+
     out << std::endl;
 
-    date_t date = interval.first();
-
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20 && interval; i++, ++interval) {
       out << std::right;
       out.width(2);
 
-      out << i << "): " << format_date(date) << std::endl;
+      out << i << "): " << format_date(*interval.start);
+      if (interval.end_of_duration)
+	out << " -- " << format_date(interval.inclusive_end());
+      out << std::endl;
 
-      date = interval.increment(date);
-      if (is_valid(interval.end) && date >= interval.end)
+      if (! interval.skip_duration)
 	break;
     }
   }

@@ -562,7 +562,7 @@ void interval_posts::report_subtotal(const date_t& finish)
     if (exact_periods)
       subtotal_posts::report_subtotal();
     else
-      subtotal_posts::report_subtotal(NULL, interval.begin, finish);
+      subtotal_posts::report_subtotal(NULL, *interval.start, finish);
   }
 
   last_post = NULL;
@@ -572,49 +572,37 @@ void interval_posts::operator()(post_t& post)
 {
   date_t date = post.date();
 
-  if ((is_valid(interval.begin) && date < interval.begin) ||
-      (is_valid(interval.end)   && date >= interval.end))
+  if (! interval.find_period(post.date(), &last_interval))
     return;
 
-  if (interval) {
-    if (! is_valid(interval.begin))
-      interval.set_start(date);
-    start = interval.begin;
-
-    date_t quant = interval.increment(interval.begin);
-    if (date >= quant) {
-      if (last_post)
-	report_subtotal(quant - gregorian::days(1));
-
-      date_t temp;
-      while (date >= (temp = interval.increment(quant))) {
-	if (quant == temp)
-	  break;
-	interval.begin = quant;
-	quant = temp;
+  if (interval.duration) {
+    if (last_interval) {
+      if (interval != last_interval) {
+	report_subtotal(last_interval.inclusive_end());
 
 	if (generate_empty_posts) {
-	  // Generate a null posting, so the intervening periods can be
-	  // seen when -E is used, or if the calculated amount ends up being
-	  // non-zero
-	  xact_temps.push_back(xact_t());
-	  xact_t& null_xact = xact_temps.back();
-	  null_xact.add_flags(ITEM_TEMP);
-	  null_xact._date = quant - gregorian::days(1);
+	  for (++last_interval; interval != last_interval; ++last_interval) {
+	    // Generate a null posting, so the intervening periods can be
+	    // seen when -E is used, or if the calculated amount ends up being
+	    // non-zero
+	    xact_temps.push_back(xact_t());
+	    xact_t& null_xact = xact_temps.back();
+	    null_xact.add_flags(ITEM_TEMP);
+	    null_xact._date = last_interval.inclusive_end();
 
-	  post_temps.push_back(post_t(&empty_account));
-	  post_t& null_post = post_temps.back();
-	  null_post.add_flags(ITEM_TEMP | POST_CALCULATED);
-	  null_post.amount = 0L;
-	  null_xact.add_post(&null_post);
+	    post_temps.push_back(post_t(&empty_account));
+	    post_t& null_post = post_temps.back();
+	    null_post.add_flags(ITEM_TEMP | POST_CALCULATED);
+	    null_post.amount = 0L;
+	    null_xact.add_post(&null_post);
 
-	  last_post = &null_post;
-	  subtotal_posts::operator()(null_post);
+	    last_post = &null_post;
+	    subtotal_posts::operator()(null_post);
 
-	  report_subtotal(quant - gregorian::days(1));
+	    report_subtotal(last_interval.inclusive_end());
+	  }
 	}
       }
-      start = interval.begin = quant;
     }
     subtotal_posts::operator()(post);
   } else {
@@ -745,7 +733,7 @@ void generate_posts::add_period_xacts(period_xacts_list& period_xacts)
       add_post(xact->period, *post);
 }
 
-void generate_posts::add_post(const interval_t& period, post_t& post)
+void generate_posts::add_post(const date_interval_t& period, post_t& post)
 {
   pending_posts.push_back(pending_posts_pair(period, &post));
 }
@@ -759,6 +747,7 @@ void budget_posts::report_budget_items(const date_t& date)
   do {
     reported = false;
     foreach (pending_posts_list::value_type& pair, pending_posts) {
+#if 0
       date_t& begin = pair.first.begin;
       if (! is_valid(begin)) {
 	pair.first.set_start(date);
@@ -790,6 +779,7 @@ void budget_posts::report_budget_items(const date_t& date)
 
 	reported = true;
       }
+#endif
     }
   } while (reported);
 }
@@ -823,11 +813,12 @@ void budget_posts::operator()(post_t& post)
   }
 }
 
-void forecast_posts::add_post(const interval_t& period, post_t& post)
+void forecast_posts::add_post(const date_interval_t& period, post_t& post)
 {
   generate_posts::add_post(period, post);
 
-  interval_t& i = pending_posts.back().first;
+  date_interval_t& i = pending_posts.back().first;
+#if 0
   if (! is_valid(i.begin)) {
     i.set_start(CURRENT_DATE());
     i.begin = i.increment(i.begin);
@@ -835,6 +826,7 @@ void forecast_posts::add_post(const interval_t& period, post_t& post)
     while (i.begin < CURRENT_DATE())
       i.begin = i.increment(i.begin);
   }
+#endif
 }
 
 void forecast_posts::flush()
@@ -842,6 +834,7 @@ void forecast_posts::flush()
   posts_list passed;
   date_t     last;
 
+#if 0
   while (pending_posts.size() > 0) {
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin();
@@ -900,6 +893,7 @@ void forecast_posts::flush()
       }
     }
   }
+#endif
 
   item_handler<post_t>::flush();
 }

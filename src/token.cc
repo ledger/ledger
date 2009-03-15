@@ -205,9 +205,12 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     in.get(c);
     length++;
 
-    interval_t timespan(buf);
+    date_interval_t timespan(buf);
+    if (! timespan)
+      throw_(parse_error,
+	     _("Date specifier does not refer to a starting date"));
     kind  = VALUE;
-    value = timespan.first();
+    value = *timespan.start;
     break;
   }
 

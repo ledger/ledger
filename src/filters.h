@@ -558,22 +558,22 @@ public:
  */
 class interval_posts : public subtotal_posts
 {
-  interval_t interval;
-  post_t *   last_post;
-  account_t  empty_account;
-  bool	     exact_periods;
-  bool	     generate_empty_posts;
-  date_t     start;
+  date_interval_t interval;
+  date_interval_t last_interval;
+  post_t *	  last_post;
+  account_t	  empty_account;
+  bool		  exact_periods;
+  bool		  generate_empty_posts;
 
   interval_posts();
 
 public:
 
-  interval_posts(post_handler_ptr  _handler,
-		 expr_t&	   amount_expr,
-		 const interval_t& _interval,
-		 bool		   _exact_periods	 = false,
-		 bool              _generate_empty_posts = false)
+  interval_posts(post_handler_ptr	_handler,
+		 expr_t&		amount_expr,
+		 const date_interval_t& _interval,
+		 bool			_exact_periods	      = false,
+		 bool                   _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), interval(_interval),
       last_post(NULL), empty_account(NULL, _("<None>")),
       exact_periods(_exact_periods),
@@ -588,9 +588,11 @@ public:
   void report_subtotal(const date_t& finish);
 
   virtual void flush() {
-    if (last_post && interval)
-      report_subtotal(interval.increment(interval.begin) - gregorian::days(1));
-    subtotal_posts::flush();
+    if (last_post && interval.duration) {
+      if (interval.is_valid())
+	report_subtotal(interval.inclusive_end());
+      subtotal_posts::flush();
+    }
   }
   virtual void operator()(post_t& post);
 };
@@ -725,11 +727,11 @@ class generate_posts : public item_handler<post_t>
   generate_posts();
 
 protected:
-  typedef std::pair<interval_t, post_t *> pending_posts_pair;
-  typedef std::list<pending_posts_pair>   pending_posts_list;
+  typedef std::pair<date_interval_t, post_t *> pending_posts_pair;
+  typedef std::list<pending_posts_pair>	       pending_posts_list;
 
   pending_posts_list pending_posts;
-  std::list<xact_t> xact_temps;
+  std::list<xact_t>  xact_temps;
   std::list<post_t>  post_temps;
 
 public:
@@ -745,7 +747,7 @@ public:
 
   void add_period_xacts(period_xacts_list& period_xacts);
 
-  virtual void add_post(const interval_t& period, post_t& post);
+  virtual void add_post(const date_interval_t& period, post_t& post);
 };
 
 /**
@@ -800,7 +802,7 @@ class forecast_posts : public generate_posts
     TRACE_DTOR(forecast_posts);
   }
 
-  virtual void add_post(const interval_t& period, post_t& post);
+  virtual void add_post(const date_interval_t& period, post_t& post);
   virtual void flush();
 };
 

@@ -60,6 +60,7 @@ inline bool is_valid(const datetime_t& moment) {
 
 typedef boost::gregorian::date          date_t;
 typedef boost::gregorian::date_duration date_duration_t;
+typedef boost::gregorian::date_iterator date_iterator_t;
 
 inline bool is_valid(const date_t& moment) {
   return ! moment.is_not_a_date();
@@ -75,7 +76,7 @@ inline bool is_valid(const date_t& moment) {
 extern int                   start_of_week;
 extern optional<std::string> input_date_format;
 
-int string_to_day_of_week(const std::string& str);
+date_time::weekdays string_to_day_of_week(const std::string& str);
 
 datetime_t parse_datetime(const char * str, int current_year = -1);
 
@@ -123,93 +124,82 @@ inline std::string format_date(const date_t& when,
   return buf;
 }
 
-/**
- * @brief Brief
- *
- * Long.
- */
-struct range_t
+class date_interval_t : public equality_comparable<date_interval_t>
 {
-  date_t begin;
-  date_t end;
+public:
+  typedef variant<gregorian::days,
+		  gregorian::weeks,
+		  gregorian::months,
+		  gregorian::years> duration_t;
 
-  date_range_t(const date_t& _begin = date_t(),
-	       const date_t& _end = date_t())
-    : begin(_begin), end(_end) {
-    TRACE_CTOR(date_range_t, "const date_t&, const date_t&");
+  static date_t add_duration(const date_t&     date,
+			     const duration_t& duration);
+  static date_t subtract_duration(const date_t&     date,
+				  const duration_t& duration);
+
+  optional<date_t>     start;
+  optional<duration_t> skip_duration;
+  std::size_t	       factor;
+  optional<date_t>     next;
+  optional<duration_t> duration;
+  optional<date_t>     end_of_duration;
+  optional<date_t>     end;
+
+  explicit date_interval_t() : factor(1) {
+    TRACE_CTOR(date_interval_t, "");
   }
-  date_range_t(const date_range_t& other)
-    : begin(other.begin), end(other.end) {
-    TRACE_CTOR(date_range_t, "copy");
+  date_interval_t(const string& str) : factor(1) {
+    TRACE_CTOR(date_interval_t, "const string&");
+    parse(str);
   }
-  date_range_t(const string& desc) : begin(), end() {
-    TRACE_CTOR(date_range_t, "const string&");
-    std::istringstream stream(desc);
-    parse(stream);
+  date_interval_t(const date_interval_t& other)
+    : start(other.start),
+      skip_duration(other.skip_duration),
+      factor(other.factor),
+      next(other.next),
+      duration(other.duration),
+      end_of_duration(other.end_of_duration),
+      end(other.end) {
+    TRACE_CTOR(date_interval_t, "copy");
   }
-  ~date_range_t() throw() {
-    TRACE_DTOR(date_range_t);
+  ~date_interval_t() throw() {
+    TRACE_DTOR(date_interval_t);
   }
 
-  bool date_in_range(const date_t& date) {
-    return ((! is_valid(begin) || date >= begin) &&
-	    (! is_valid(end)   || date < end));
-  }
-
-  void parse(std::istream& in);
-};
-
-/**
- * @brief Brief
- *
- * Long.
- */
-struct interval_t
-{
-  int	 years;
-  int	 months;
-  int	 days;
-  bool	 weekly;
-
-  interval_t(int	   _days   = 0,
-	     int	   _months = 0,
-	     int	   _years  = 0,
-	     bool	   _weekly = false)
-    : years(_years), months(_months), days(_days), weekly(_weekly) {
-    TRACE_CTOR(interval_t, "int, int, int, bool");
-  }
-  interval_t(const interval_t& other)
-    : years(other.years),
-      months(other.months),
-      days(other.days),
-      weekly(other.weekly) {
-    TRACE_CTOR(interval_t, "copy");
-  }
-  interval_t(const string& desc)
-    : years(0), months(0), days(0), weekly(false) {
-    TRACE_CTOR(interval_t, "const string&");
-    std::istringstream stream(desc);
-    parse(stream);
-  }
-  ~interval_t() throw() {
-    TRACE_DTOR(interval_t);
+  bool operator==(const date_interval_t& other) const {
+    return (start == other.start &&
+	    (! start || *start == *other.start));
   }
 
   operator bool() const {
-    return years != 0 || months != 0  || days != 0;
+    return is_valid();
   }
 
-#if 0
-  void   set_start(const date_t& moment) {
-    begin = first(moment);
+  void parse(std::istream& in);
+
+  void parse(const string& str) {
+    std::istringstream in(str);
+    parse(in);
   }
-#endif
 
-  date_t first(const optional<date_t>& moment = none);
-  date_t increment(const date_t&) const;
+  bool is_valid() const {
+    return start;
+  }
 
-  void   parse(std::istream& in);
+  /** Find the current or next period containing date.  Returns true if the
+      date_interval_t object has been altered to reflect the interval
+      containing date, or false if no such period can be found. */
+  bool find_period(const date_t& date, date_interval_t * last_interval = NULL);
+
+  date_t inclusive_end() const {
+    return *end_of_duration - gregorian::days(1);
+  }
+
+  date_interval_t& operator++();
 };
+
+std::ostream& operator<<(std::ostream& out,
+			 const date_interval_t::duration_t& duration);
 
 } // namespace ledger
 
