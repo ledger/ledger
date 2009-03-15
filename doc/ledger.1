@@ -1,4 +1,4 @@
-.Dd March  5, 2009
+.Dd March 15, 2009
 .Dt ledger 1
 .Sh NAME
 .Nm ledger
@@ -243,7 +243,7 @@ appeared in the original journal file.
 The syntax for reporting queries can get somewhat complex.  It is a series of
 query terms with an implicit OR operator between them.  The following terms
 are accepted:
-.Bl -tag foo -width "term and term"
+.Bl -tag -width "term and term"
 .It Ar regex
 A bare string is taken as a regular expression matching the full account name.
 Thus, to report the current balance for all assets and liabilities, you would
@@ -280,7 +280,7 @@ interpret parentheses, you should always escape them:
 .El
 .Pp
 .Sh EXPRESSIONS
-.Bl -tag foo -width "partial_account"
+.Bl -tag -width "partial_account"
 .It Nm account
 .It Nm account_base
 .It Nm account_amount
