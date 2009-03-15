@@ -197,17 +197,8 @@ void format_accounts::flush()
   foreach (account_t * account, posted_accounts) {
     post_account(*account);
 
-    if (report.HANDLED(flat) && account->has_flags(ACCOUNT_EXT_DISPLAYED))
+    if (account->has_flags(ACCOUNT_EXT_DISPLAYED))
       top_displayed++;
-  }
-
-  if (! report.HANDLED(flat)) {
-    foreach (accounts_map::value_type pair, report.session.master->accounts) {
-      if (pair.second->has_flags(ACCOUNT_EXT_DISPLAYED) ||
-	  pair.second->children_with_flags(ACCOUNT_EXT_DISPLAYED)) {
-	top_displayed++;
-      }
-    }
   }
 
   if (! report.HANDLED(no_total) && top_displayed > 1 &&
