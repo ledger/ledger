@@ -138,6 +138,7 @@ public:
 				  const duration_t& duration);
 
   optional<date_t>     start;
+  bool                 aligned;
   optional<duration_t> skip_duration;
   std::size_t	       factor;
   optional<date_t>     next;
@@ -145,10 +146,10 @@ public:
   optional<date_t>     end_of_duration;
   optional<date_t>     end;
 
-  explicit date_interval_t() : factor(1) {
+  explicit date_interval_t() : aligned(false), factor(1) {
     TRACE_CTOR(date_interval_t, "");
   }
-  date_interval_t(const string& str) : factor(1) {
+  date_interval_t(const string& str) : aligned(false), factor(1) {
     TRACE_CTOR(date_interval_t, "const string&");
     parse(str);
   }
@@ -181,6 +182,9 @@ public:
     std::istringstream in(str);
     parse(in);
   }
+
+  void resolve_end();
+  void stabilize(const optional<date_t>& date = none);
 
   bool is_valid() const {
     return start;

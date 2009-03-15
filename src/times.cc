@@ -178,29 +178,56 @@ std::ostream& operator<<(std::ostream& out,
 {
   if (duration.type() == typeid(gregorian::days))
     out << boost::get<gregorian::days>(duration).days()
-	<< " days";
+	<< " day(s)";
   else if (duration.type() == typeid(gregorian::weeks))
     out << (boost::get<gregorian::weeks>(duration).days() / 7)
-	<< " weeks";
+	<< " week(s)";
   else if (duration.type() == typeid(gregorian::months))
     out << boost::get<gregorian::months>(duration).number_of_months()
-	<< " months";
+	<< " month(s)";
   else {
     assert(duration.type() == typeid(gregorian::years));
     out << boost::get<gregorian::years>(duration).number_of_years()
-	<< " years";
+	<< " year(s)";
   }
   return out;
 }
 
-bool date_interval_t::find_period(const date_t&     date,
-				  date_interval_t * last_interval)
+void date_interval_t::resolve_end()
 {
-  if (end && date > *end)
-    return false;
+  if (! end_of_duration) {
+    end_of_duration = add_duration(*start, *duration);
+    DEBUG("times.interval",
+	  "stabilize: end_of_duration = " << *end_of_duration);
+  }
 
-  if (! start) {
+  if (end && *end_of_duration > *end) {
+    end_of_duration = end;
+    DEBUG("times.interval",
+	  "stabilize: end_of_duration reset to end: " << *end_of_duration);
+  }
+
+  if (! skip_duration) {
+    skip_duration = duration;
+    DEBUG("times.interval",
+	  "stabilize: skip_duration set to: " << *skip_duration);
+  }
+
+  if (start && ! next) {
+    next = add_duration(*start, *skip_duration);
+    DEBUG("times.interval",
+	  "stabilize: next set to: " << *next);
+  }
+}
+
+void date_interval_t::stabilize(const optional<date_t>& date)
+{
+  if (date && ! aligned) {
+    DEBUG("times.interval", "stabilize: date passed, but not aligned");
     if (duration) {
+      DEBUG("times.interval",
+	    "stabilize: aligning with a duration: " << *duration);
+
       // The interval object has not been seeded with a start date yet, so
       // find the nearest period before on on date which fits, if possible.
       //
@@ -208,11 +235,29 @@ bool date_interval_t::find_period(const date_t&     date,
       // want a date early enough that the range will be correct, but late
       // enough that we don't spend hundreds of thousands of loops skipping
       // through time.
+      optional<date_t> initial_start = start;
+      optional<date_t> initial_end   = end;
+
+#if defined(DEBUG_ON)
+      if (initial_start)
+	DEBUG("times.interval",
+	      "stabilize: initial_start = " << *initial_start);
+      if (initial_end)
+	DEBUG("times.interval",
+	      "stabilize: initial_end   = " << *initial_end);
+#endif
+
+      date_t when = start ? *start : *date;
+
       if (duration->type() == typeid(gregorian::months) ||
-	  duration->type() == typeid(gregorian::weeks)) {
-	start = date_t(date.year(), gregorian::Jan, 1);
+	  duration->type() == typeid(gregorian::years)) {
+	DEBUG("times.interval", "stabilize: monthly or yearly duration");
+
+	start = date_t(when.year(), gregorian::Jan, 1);
       } else {
-	start = date_t(date - gregorian::days(400));
+	DEBUG("times.interval", "stabilize: daily or weekly duration");
+
+	start = date_t(when - gregorian::days(400));
 
 	if (duration->type() == typeid(gregorian::weeks)) {
 	  // Move it to a Sunday
@@ -220,40 +265,87 @@ bool date_interval_t::find_period(const date_t&     date,
 	    *start += gregorian::days(1);
 	}
       }
-    }
-  }
 
-  if (date < *start)
-    return false;
+      DEBUG("times.interval",
+	    "stabilize: beginning start date = " << *start);
+
+      while (*start < *date) {
+	date_interval_t next_interval(*this);
+	++next_interval;
+
+	if (next_interval.start && *next_interval.start < *date) {
+	  *this = next_interval;
+	} else {
+	  end_of_duration = none;
+	  next		  = none;
+	  break;
+	}
+      }
+
+      DEBUG("times.interval", "stabilize: final start date = " << *start);
+
+      if (initial_start && (! start || *start < *initial_start)) {
+	resolve_end();
+
+	start = initial_start;
+	DEBUG("times.interval", "stabilize: start reset to initial start");
+      }
+      if (initial_end && (! end || *end > *initial_end)) {
+	end = initial_end;
+	DEBUG("times.interval", "stabilize: end reset to initial end");
+      }
+    }
+    aligned = true;
+  }
 
   // If there is no duration, then if we've reached here the date falls
   // between begin and end.
   if (! duration) {
+    DEBUG("times.interval", "stabilize: there was no duration given");
+
     if (! start && ! end)
       throw_(date_error,
 	     _("Invalid date interval: neither start, nor end, nor duration"));
-    return true;
+  } else {
+    resolve_end();
+  }
+}
+
+bool date_interval_t::find_period(const date_t&     date,
+				  date_interval_t * last_interval)
+{
+  stabilize(date);
+
+  if (end && date > *end) {
+    DEBUG("times.interval",
+	  "false: date [" << date << "] > end [" << *end << "]");
+    return false;
   }
 
-  if (! end_of_duration)
-    end_of_duration = add_duration(*start, *duration);
+  if (date < *start) {
+    DEBUG("times.interval",
+	  "false: date [" << date << "] < start [" << *start << "]");
+    return false;
+  }
 
-  if (! skip_duration)
-    skip_duration = duration;
-
-  if (! next)
-    next = add_duration(*start, *skip_duration);
-
-  if (date < *end_of_duration)
+  if (date < *end_of_duration) {
+    DEBUG("times.interval",
+	  "true: date [" << date << "] < end_of_duration ["
+	  << *end_of_duration << "]");
     return true;
+  }
 
   // If we've reached here, it means the date does not fall into the current
   // interval, so we must seek another interval that does match -- unless we
   // pass by date in so doing, which means we shouldn't alter the current
   // period of the interval at all.
 
-  date_t scan        = *next;
-  date_t end_of_scan = add_duration(scan, *duration);
+  date_t scan        = *start;
+  date_t end_of_scan = *end_of_duration;
+
+  DEBUG("times.interval", "date        = " << date);
+  DEBUG("times.interval", "scan        = " << scan);
+  DEBUG("times.interval", "end_of_scan = " << end_of_scan);
 
   while (date >= scan && (! end || scan < *end)) {
     if (date < end_of_scan) {
@@ -262,12 +354,18 @@ bool date_interval_t::find_period(const date_t&     date,
 	last_interval->next	     = next;
 	last_interval->end_of_duration = end_of_duration;
       }
+
       start	      = scan;
       end_of_duration = end_of_scan;
       next	      = none;
+
+      DEBUG("times.interval", "true: start	     = " << *start);
+      DEBUG("times.interval", "true: end_of_duration = " << *end_of_duration);
+
       return true;
     }
-    scan = add_duration(scan, *skip_duration);
+
+    scan	= add_duration(scan, *skip_duration);
     end_of_scan = add_duration(scan, *duration);
   }
 
@@ -279,20 +377,25 @@ date_interval_t& date_interval_t::operator++()
   if (! start)
     throw_(date_error, _("Cannot increment an unstarted date interval"));
 
-  if (! skip_duration) {
-    if (duration)
-      skip_duration = duration;
-    else
-      throw_(date_error,
-	     _("Cannot increment a date interval without a duration"));
+  stabilize();
+
+  if (! skip_duration || ! duration)
+    throw_(date_error,
+	   _("Cannot increment a date interval without a duration"));
+
+  assert(next);
+
+  if (end && *next >= *end) {
+    start = none;
+  } else {
+    start = *next;
+
+    end_of_duration = add_duration(*start, *duration);
   }
 
-  *start = add_duration(*start, *skip_duration);
+  next = none;
 
-  if (end && *start >= *end)
-    start = none;
-  else
-    end_of_duration = add_duration(*start, *duration);
+  resolve_end();
 
   return *this;
 }
