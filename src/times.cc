@@ -107,25 +107,25 @@ namespace {
   }
 }
 
-int string_to_day_of_week(const std::string& str)
+date_time::weekdays string_to_day_of_week(const std::string& str)
 {
   if (str == _("sun") || str == _("sunday") || str == "0")
-    return 0;
+    return gregorian::Sunday;
   else if (str == _("mon") || str == _("monday") || str == "1")
-    return 1;
+    return gregorian::Monday;
   else if (str == _("tue") || str == _("tuesday") || str == "2")
-    return 2;
+    return gregorian::Tuesday;
   else if (str == _("wed") || str == _("wednesday") || str == "3")
-    return 3;
+    return gregorian::Wednesday;
   else if (str == _("thu") || str == _("thursday") || str == "4")
-    return 4;
+    return gregorian::Thursday;
   else if (str == _("fri") || str == _("friday") || str == "5")
-    return 5;
+    return gregorian::Friday;
   else if (str == _("sat") || str == _("saturday") || str == "6")
-    return 6;
+    return gregorian::Saturday;
 
   assert(false);
-  return -1;
+  return gregorian::Sunday;
 }
   
 datetime_t parse_datetime(const char * str, int)
@@ -145,50 +145,260 @@ date_t parse_date(const char * str, int current_year)
   return gregorian::date_from_tm(when);
 }
 
-date_t interval_t::first(const optional<date_t>& moment)
+date_t date_interval_t::add_duration(const date_t&     date,
+				     const duration_t& duration)
 {
-  if (! is_valid(begin)) {
-    // Find an efficient starting point for the upcoming while loop.  We want
-    // a date early enough that the range will be correct, but late enough
-    // that we don't spend hundreds of thousands of loops skipping through
-    // time.
-    assert(moment);
-
-    if (months > 0 || years > 0) {
-      begin = date_t(moment->year(), gregorian::Jan, 1);
-    } else {
-      begin = date_t(*moment - gregorian::days(400));
-
-      // jww (2009-02-21): Add support for starting a week on any day
-      if (weekly) {		// move it to a Sunday
-	while (begin.day_of_week() != start_of_week)
-	  begin += gregorian::days(1);
-      }
-    }
-  }
-
-  date_t quant(begin);
-
-  if (moment && *moment >= quant) {
-    date_t temp;
-    while (*moment >= (temp = increment(quant))) {
-      if (quant == temp)
-	break;
-      quant = temp;
-    }
-  }
-  return quant;
+  if (duration.type() == typeid(gregorian::days))
+    return date + boost::get<gregorian::days>(duration);
+  else if (duration.type() == typeid(gregorian::weeks))
+    return date + boost::get<gregorian::weeks>(duration);
+  else if (duration.type() == typeid(gregorian::months))
+    return date + boost::get<gregorian::months>(duration);
+  else
+    assert(duration.type() == typeid(gregorian::years));
+  return date + boost::get<gregorian::years>(duration);
 }
 
-date_t interval_t::increment(const date_t& moment) const
+date_t date_interval_t::subtract_duration(const date_t&     date,
+					  const duration_t& duration)
 {
-  date_t future(moment);
+  if (duration.type() == typeid(gregorian::days))
+    return date - boost::get<gregorian::days>(duration);
+  else if (duration.type() == typeid(gregorian::weeks))
+    return date - boost::get<gregorian::weeks>(duration);
+  else if (duration.type() == typeid(gregorian::months))
+    return date - boost::get<gregorian::months>(duration);
+  else
+    assert(duration.type() == typeid(gregorian::years));
+  return date - boost::get<gregorian::years>(duration);
+}
 
-  if (years)  future += gregorian::years(years);
-  if (months) future += gregorian::months(months);
-  if (days)   future += gregorian::days(days);
+std::ostream& operator<<(std::ostream& out,
+			 const date_interval_t::duration_t& duration)
+{
+  if (duration.type() == typeid(gregorian::days))
+    out << boost::get<gregorian::days>(duration).days()
+	<< " day(s)";
+  else if (duration.type() == typeid(gregorian::weeks))
+    out << (boost::get<gregorian::weeks>(duration).days() / 7)
+	<< " week(s)";
+  else if (duration.type() == typeid(gregorian::months))
+    out << boost::get<gregorian::months>(duration).number_of_months()
+	<< " month(s)";
+  else {
+    assert(duration.type() == typeid(gregorian::years));
+    out << boost::get<gregorian::years>(duration).number_of_years()
+	<< " year(s)";
+  }
+  return out;
+}
 
-  return future;
+void date_interval_t::resolve_end()
+{
+  if (start && ! end_of_duration) {
+    end_of_duration = add_duration(*start, *duration);
+    DEBUG("times.interval",
+	  "stabilize: end_of_duration = " << *end_of_duration);
+  }
+
+  if (end && *end_of_duration > *end) {
+    end_of_duration = end;
+    DEBUG("times.interval",
+	  "stabilize: end_of_duration reset to end: " << *end_of_duration);
+  }
+
+  if (! skip_duration) {
+    skip_duration = duration;
+    DEBUG("times.interval",
+	  "stabilize: skip_duration set to: " << *skip_duration);
+  }
+
+  if (start && ! next) {
+    next = add_duration(*start, *skip_duration);
+    DEBUG("times.interval",
+	  "stabilize: next set to: " << *next);
+  }
+}
+
+void date_interval_t::stabilize(const optional<date_t>& date)
+{
+#if defined(DEBUG_ON)
+  if (date)
+    DEBUG("times.interval", "stabilize: with date = " << *date);
+#endif
+
+  if (date && ! aligned) {
+    DEBUG("times.interval", "stabilize: date passed, but not aligned");
+    if (duration) {
+      DEBUG("times.interval",
+	    "stabilize: aligning with a duration: " << *duration);
+
+      // The interval object has not been seeded with a start date yet, so
+      // find the nearest period before on on date which fits, if possible.
+      //
+      // Find an efficient starting point for the upcoming while loop.  We
+      // want a date early enough that the range will be correct, but late
+      // enough that we don't spend hundreds of thousands of loops skipping
+      // through time.
+      optional<date_t> initial_start = start;
+      optional<date_t> initial_end   = end;
+
+#if defined(DEBUG_ON)
+      if (initial_start)
+	DEBUG("times.interval",
+	      "stabilize: initial_start = " << *initial_start);
+      if (initial_end)
+	DEBUG("times.interval",
+	      "stabilize: initial_end   = " << *initial_end);
+#endif
+
+      date_t when = start ? *start : *date;
+
+      if (duration->type() == typeid(gregorian::months) ||
+	  duration->type() == typeid(gregorian::years)) {
+	DEBUG("times.interval", "stabilize: monthly or yearly duration");
+
+	start = date_t(when.year(), gregorian::Jan, 1);
+      } else {
+	DEBUG("times.interval", "stabilize: daily or weekly duration");
+
+	start = date_t(when - gregorian::days(400));
+
+	if (duration->type() == typeid(gregorian::weeks)) {
+	  // Move it to a Sunday
+	  while (start->day_of_week() != start_of_week)
+	    *start += gregorian::days(1);
+	}
+      }
+
+      DEBUG("times.interval",
+	    "stabilize: beginning start date = " << *start);
+
+      while (*start < *date) {
+	date_interval_t next_interval(*this);
+	++next_interval;
+
+	if (next_interval.start && *next_interval.start < *date) {
+	  *this = next_interval;
+	} else {
+	  end_of_duration = none;
+	  next		  = none;
+	  break;
+	}
+      }
+
+      DEBUG("times.interval", "stabilize: final start date = " << *start);
+
+      if (initial_start && (! start || *start < *initial_start)) {
+	resolve_end();
+
+	start = initial_start;
+	DEBUG("times.interval", "stabilize: start reset to initial start");
+      }
+      if (initial_end && (! end || *end > *initial_end)) {
+	end = initial_end;
+	DEBUG("times.interval", "stabilize: end reset to initial end");
+      }
+    }
+    aligned = true;
+  }
+
+  // If there is no duration, then if we've reached here the date falls
+  // between begin and end.
+  if (! duration) {
+    DEBUG("times.interval", "stabilize: there was no duration given");
+
+    if (! start && ! end)
+      throw_(date_error,
+	     _("Invalid date interval: neither start, nor end, nor duration"));
+  } else {
+    resolve_end();
+  }
+}
+
+bool date_interval_t::find_period(const date_t& date)
+{
+  stabilize(date);
+
+  if (end && date > *end) {
+    DEBUG("times.interval",
+	  "false: date [" << date << "] > end [" << *end << "]");
+    return false;
+  }
+
+  if (! start) {
+    throw_(std::runtime_error, _("Date interval is improperly initialized"));
+  }
+  else if (date < *start) {
+    DEBUG("times.interval",
+	  "false: date [" << date << "] < start [" << *start << "]");
+    return false;
+  }
+
+  if (end_of_duration && date < *end_of_duration) {
+    DEBUG("times.interval",
+	  "true: date [" << date << "] < end_of_duration ["
+	  << *end_of_duration << "]");
+    return true;
+  }
+
+  // If we've reached here, it means the date does not fall into the current
+  // interval, so we must seek another interval that does match -- unless we
+  // pass by date in so doing, which means we shouldn't alter the current
+  // period of the interval at all.
+
+  date_t scan        = *start;
+  date_t end_of_scan = *end_of_duration;
+
+  DEBUG("times.interval", "date        = " << date);
+  DEBUG("times.interval", "scan        = " << scan);
+  DEBUG("times.interval", "end_of_scan = " << end_of_scan);
+
+  while (date >= scan && (! end || scan < *end)) {
+    if (date < end_of_scan) {
+      start	      = scan;
+      end_of_duration = end_of_scan;
+      next	      = none;
+
+      DEBUG("times.interval", "true: start	     = " << *start);
+      DEBUG("times.interval", "true: end_of_duration = " << *end_of_duration);
+
+      return true;
+    }
+
+    scan	= add_duration(scan, *skip_duration);
+    end_of_scan = add_duration(scan, *duration);
+  }
+
+  return false;
+}
+
+date_interval_t& date_interval_t::operator++()
+{
+  if (! start)
+    throw_(date_error, _("Cannot increment an unstarted date interval"));
+
+  stabilize();
+
+  if (! skip_duration || ! duration)
+    throw_(date_error,
+	   _("Cannot increment a date interval without a duration"));
+
+  assert(next);
+
+  if (end && *next >= *end) {
+    start = none;
+  } else {
+    start = *next;
+
+    end_of_duration = add_duration(*start, *duration);
+  }
+
+  next = none;
+
+  resolve_end();
+
+  return *this;
 }
 
 namespace {
@@ -230,9 +440,15 @@ namespace {
 
     if (begin) {
       *begin = gregorian::date_from_tm(when);
-      if (end)
-	*end = interval_t(saw_day ? 1 : 0, saw_mon ? 1 : 0,
-			  saw_year ? 1 : 0).increment(*begin);
+
+      if (end) {
+	if (saw_year)
+	  *end = *begin + gregorian::years(1);
+	else if (saw_mon)
+	  *end = *begin + gregorian::months(1);
+	else if (saw_day)
+	  *end = *begin + gregorian::days(1);
+      }
     }
     else if (end) {
       *end = gregorian::date_from_tm(when);
@@ -245,13 +461,13 @@ namespace {
       word[i] = static_cast<char>(std::tolower(word[i]));
   }
 
-  void parse_date_words(std::istream& in, string& word,
-			date_t * begin, date_t * end)
+  void parse_date_words(std::istream&	 in,
+			string&		 word,
+			date_interval_t& interval,
+			bool             look_for_start = true,
+			bool             look_for_end   = true)
   {
     string type;
-
-    bool mon_spec = false;
-    char buf[32];
 
     if (word == _("this") || word == _("last") || word == _("next")) {
       type = word;
@@ -263,59 +479,48 @@ namespace {
       type = _("this");
     }
 
-    if (word == _("month")) {
-      time_t now = to_time_t(CURRENT_TIME());
-      std::strftime(buf, 31, "%B", localtime(&now));
-      word = buf;
-      mon_spec = true;
-    }
-    else if (word == _("year")) {
-      int year = CURRENT_DATE().year();
-      std::sprintf(buf, "%04d", year);
-      word = buf;
-    }
-    else if (word == _("today")) {
-      if (begin)
-	*begin = CURRENT_DATE();
-      if (end) {
-	*end  = CURRENT_DATE();
-	*end += gregorian::days(1);
-      }
-      return;
-    }
+    date_t start = CURRENT_DATE();
+    date_t end;
+    bool   parse_specifier = false;
 
-    parse_inclusion_specifier(word, begin, end);
+    date_interval_t::duration_t duration;
+
+    assert(look_for_start || look_for_end);
+
+    if (word == _("year")) {
+      duration = gregorian::years(1);
+      start    = gregorian::date(start.year(), 1, 1);
+    }
+    else if (word == _("month")) {
+      duration = gregorian::months(1);
+      start    = gregorian::date(start.year(), start.month(), 1);
+    }
+    else if (word == _("today") || word == _("day")) {
+      duration = gregorian::days(1);
+    }
+    else {
+      parse_specifier = true;
+    }
+    end = date_interval_t::add_duration(start, duration);
+
+    if (parse_specifier)
+      parse_inclusion_specifier(word, &start, &end);
 
     if (type == _("last")) {
-      if (mon_spec) {
-	if (begin)
-	  *begin = interval_t(0, -1, 0).increment(*begin);
-	if (end)
-	  *end   = interval_t(0, -1, 0).increment(*end);
-      } else {
-	if (begin)
-	  *begin = interval_t(0, 0, -1).increment(*begin);
-	if (end)
-	  *end   = interval_t(0, 0, -1).increment(*end);
-      }
+      start = date_interval_t::subtract_duration(start, duration);
+      end   = date_interval_t::subtract_duration(end, duration);
     }
     else if (type == _("next")) {
-      if (mon_spec) {
-	if (begin)
-	  *begin = interval_t(0, 1, 0).increment(*begin);
-	if (end)
-	  *end   = interval_t(0, 1, 0).increment(*end);
-      } else {
-	if (begin)
-	  *begin = interval_t(0, 0, 1).increment(*begin);
-	if (end)
-	  *end   = interval_t(0, 0, 1).increment(*end);
-      }
+      start = date_interval_t::add_duration(start, duration);
+      end   = date_interval_t::add_duration(end, duration);
     }
+
+    if (look_for_start) interval.start = start;
+    if (look_for_end)   interval.end = end;
   }
 }
 
-void interval_t::parse(std::istream& in)
+void date_interval_t::parse(std::istream& in)
 {
   string word;
 
@@ -327,65 +532,62 @@ void interval_t::parse(std::istream& in)
 	int quantity = lexical_cast<int>(word);
 	read_lower_word(in, word);
 	if (word == _("days"))
-	  days = quantity;
-	else if (word == _("weeks")) {
-	  days = 7 * quantity;
-	  weekly = true;
-	}
+	  duration = gregorian::days(quantity);
+	else if (word == _("weeks"))
+	  duration = gregorian::weeks(quantity);
 	else if (word == _("months"))
-	  months = quantity;
+	  duration = gregorian::months(quantity);
 	else if (word == _("quarters"))
-	  months = 3 * quantity;
+	  duration = gregorian::months(3 * quantity);
 	else if (word == _("years"))
-	  years = quantity;
+	  duration = gregorian::years(quantity);
       }
       else if (word == _("day"))
-	days = 1;
-      else if (word == _("week")) {
-	days = 7;
-	weekly = true;
-      }
+	duration = gregorian::days(1);
+      else if (word == _("week"))
+	duration = gregorian::weeks(1);
       else if (word == _("month"))
-	months = 1;
+	duration = gregorian::months(1);
       else if (word == _("quarter"))
-	months = 3;
+	duration = gregorian::months(3);
       else if (word == _("year"))
-	years = 1;
+	duration = gregorian::years(1);
     }
     else if (word == _("daily"))
-      days = 1;
-    else if (word == _("weekly")) {
-      days = 7;
-      weekly = true;
-    }
+      duration = gregorian::days(1);
+    else if (word == _("weekly"))
+      duration = gregorian::weeks(1);
     else if (word == _("biweekly"))
-      days = 14;
+      duration = gregorian::weeks(2);
     else if (word == _("monthly"))
-      months = 1;
+      duration = gregorian::months(1);
     else if (word == _("bimonthly"))
-      months = 2;
+      duration = gregorian::months(2);
     else if (word == _("quarterly"))
-      months = 3;
+      duration = gregorian::months(3);
     else if (word == _("yearly"))
-      years = 1;
+      duration = gregorian::years(1);
     else if (word == _("this") || word == _("last") || word == _("next") ||
 	     word == _("today")) {
-      parse_date_words(in, word, &begin, &end);
+      parse_date_words(in, word, *this);
     }
     else if (word == _("in")) {
       read_lower_word(in, word);
-      parse_date_words(in, word, &begin, &end);
+      parse_date_words(in, word, *this);
     }
     else if (word == _("from") || word == _("since")) {
       read_lower_word(in, word);
-      parse_date_words(in, word, &begin, NULL);
+      parse_date_words(in, word, *this, true, false);
     }
     else if (word == _("to") || word == _("until")) {
       read_lower_word(in, word);
-      parse_date_words(in, word, NULL, &end);
+      parse_date_words(in, word, *this, false, true);
     }
     else {
-      parse_inclusion_specifier(word, &begin, &end);
+      date_t b, e;
+      parse_inclusion_specifier(word, &b, &e);
+      start = b;
+      end   = e;
     }
   }
 }

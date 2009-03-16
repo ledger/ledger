@@ -240,14 +240,14 @@ public:
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
-      interval_t interval(args[0].to_string());
-      if (! is_valid(interval.begin))
+      date_interval_t interval(args[0].to_string());
+      if (! interval.start)
 	throw_(std::invalid_argument,
 	       _("Could not determine beginning of period '%1'")
 	       << args[0].to_string());
 
       string predicate =
-	"date>=[" + to_iso_extended_string(interval.begin) + "]";
+	"date>=[" + to_iso_extended_string(*interval.start) + "]";
       parent->HANDLER(limit_).on(predicate);
     });
 
@@ -355,14 +355,14 @@ public:
   OPTION(report_t, empty); // -E
 
   OPTION_(report_t, end_, DO_(args) { // -e
-      interval_t interval(args[0].to_string());
-      if (! is_valid(interval.begin))
+      date_interval_t interval(args[0].to_string());
+      if (! interval.start)
 	throw_(std::invalid_argument,
 	       _("Could not determine end of period '%1'")
 	       << args[0].to_string());
 
       string predicate =
-	"date<[" + to_iso_extended_string(interval.begin) + "]";
+	"date<[" + to_iso_extended_string(*interval.start) + "]";
       parent->HANDLER(limit_).on(predicate);
 #if 0
       terminus = interval.begin;

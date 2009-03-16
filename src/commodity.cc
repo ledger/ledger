@@ -936,7 +936,7 @@ namespace {
     details.print(name, comm.parent().keep_base);
 
     DEBUG("amounts.commodities", "make_qualified_name for "
-	  << comm.qualified_symbol << std::endl << details);
+	  << *comm.qualified_symbol << std::endl << details);
     DEBUG("amounts.commodities", "qualified_name is " << name.str());
 
     return name.str();

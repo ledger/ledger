@@ -60,6 +60,7 @@ inline bool is_valid(const datetime_t& moment) {
 
 typedef boost::gregorian::date          date_t;
 typedef boost::gregorian::date_duration date_duration_t;
+typedef boost::gregorian::date_iterator date_iterator_t;
 
 inline bool is_valid(const date_t& moment) {
   return ! moment.is_not_a_date();
@@ -75,7 +76,7 @@ inline bool is_valid(const date_t& moment) {
 extern int                   start_of_week;
 extern optional<std::string> input_date_format;
 
-int string_to_day_of_week(const std::string& str);
+date_time::weekdays string_to_day_of_week(const std::string& str);
 
 datetime_t parse_datetime(const char * str, int current_year = -1);
 
@@ -123,64 +124,90 @@ inline std::string format_date(const date_t& when,
   return buf;
 }
 
-/**
- * @brief Brief
- *
- * Long.
- */
-struct interval_t
+class date_interval_t : public equality_comparable<date_interval_t>
 {
-  int	 years;
-  int	 months;
-  int	 days;
-  bool	 weekly;
-  date_t begin;
-  date_t end;
+public:
+  typedef variant<gregorian::days,
+		  gregorian::weeks,
+		  gregorian::months,
+		  gregorian::years> duration_t;
 
-  interval_t(int	   _days   = 0,
-	     int	   _months = 0,
-	     int	   _years  = 0,
-	     bool	   _weekly = false,
-	     const date_t& _begin  = date_t(),
-	     const date_t& _end	   = date_t())
-    : years(_years), months(_months), days(_days),
-      weekly(_weekly), begin(_begin), end(_end) {
-    TRACE_CTOR(interval_t,
-	       "int, int, int, bool, const date_t&, const date_t&");
+  static date_t add_duration(const date_t&     date,
+			     const duration_t& duration);
+  static date_t subtract_duration(const date_t&     date,
+				  const duration_t& duration);
+
+  optional<date_t>     start;
+  bool                 aligned;
+  optional<duration_t> skip_duration;
+  std::size_t	       factor;
+  optional<date_t>     next;
+  optional<duration_t> duration;
+  optional<date_t>     end_of_duration;
+  optional<date_t>     end;
+
+  explicit date_interval_t() : aligned(false), factor(1) {
+    TRACE_CTOR(date_interval_t, "");
   }
-  interval_t(const interval_t& other)
-    : years(other.years),
-      months(other.months),
-      days(other.days),
-      weekly(other.weekly),
-      begin(other.begin),
+  date_interval_t(const string& str) : aligned(false), factor(1) {
+    TRACE_CTOR(date_interval_t, "const string&");
+    parse(str);
+  }
+  date_interval_t(const date_interval_t& other)
+    : start(other.start),
+      aligned(other.aligned),
+      skip_duration(other.skip_duration),
+      factor(other.factor),
+      next(other.next),
+      duration(other.duration),
+      end_of_duration(other.end_of_duration),
       end(other.end) {
-    TRACE_CTOR(interval_t, "copy");
+    TRACE_CTOR(date_interval_t, "copy");
   }
-  interval_t(const string& desc)
-    : years(0), months(0), days(0), weekly(false), begin(), end() {
-    TRACE_CTOR(interval_t, "const string&");
-    std::istringstream stream(desc);
-    parse(stream);
+  ~date_interval_t() throw() {
+    TRACE_DTOR(date_interval_t);
   }
 
-  ~interval_t() throw() {
-    TRACE_DTOR(interval_t);
+  bool operator==(const date_interval_t& other) const {
+    return (start == other.start &&
+	    (! start || *start == *other.start));
   }
 
   operator bool() const {
-    return years != 0 || months != 0  || days != 0;
+    return is_valid();
   }
 
-  void   set_start(const date_t& moment) {
-    begin = first(moment);
+  void parse(std::istream& in);
+
+  void parse(const string& str) {
+    std::istringstream in(str);
+    parse(in);
   }
 
-  date_t first(const optional<date_t>& moment = none);
-  date_t increment(const date_t&) const;
+  void resolve_end();
+  void stabilize(const optional<date_t>& date = none);
 
-  void   parse(std::istream& in);
+  bool is_valid() const {
+    return start;
+  }
+
+  /** Find the current or next period containing date.  Returns true if the
+      date_interval_t object has been altered to reflect the interval
+      containing date, or false if no such period can be found. */
+  bool find_period(const date_t& date);
+
+  optional<date_t> inclusive_end() const {
+    if (end_of_duration)
+      return *end_of_duration - gregorian::days(1);
+    else
+      return none;
+  }
+
+  date_interval_t& operator++();
 };
+
+std::ostream& operator<<(std::ostream& out,
+			 const date_interval_t::duration_t& duration);
 
 } // namespace ledger
 

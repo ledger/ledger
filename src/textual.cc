@@ -592,8 +592,6 @@ void instance_t::period_xact_directive(char * line)
   try {
 
   std::auto_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
-  if (! pe->period)
-    throw_(parse_error, _("Parsing time period '%1'") << line);
 
   reveal_context = false;
 
