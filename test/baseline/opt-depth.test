@@ -23,6 +23,8 @@ bal --depth 1
              $-10.00  Assets
               $40.00  Expenses
              $-30.00  Income
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 2
@@ -32,6 +34,8 @@ bal --depth 2
               $10.00    Books
               $30.00    One
              $-30.00  Income:One
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 3
@@ -45,6 +49,8 @@ bal --depth 3
              $-30.00  Income:One
              $-10.00    Books
              $-20.00    Two
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 4
@@ -62,6 +68,8 @@ bal --depth 4
              $-20.00    Two
              $-10.00      Books
              $-10.00      Three
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 5
@@ -79,5 +87,7 @@ bal --depth 5
              $-20.00    Two
              $-10.00      Books
              $-10.00      Three:Books
+--------------------
+                   0
 >>>2
 === 0

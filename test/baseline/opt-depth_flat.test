@@ -26,6 +26,8 @@ bal --depth 2 --flat
 >>>1
              $-10.00  Assets:Cash
               $10.00  Expenses:Books
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 3 --flat
@@ -34,6 +36,8 @@ bal --depth 3 --flat
               $10.00  Expenses:Books
               $10.00  Expenses:One:Books
              $-10.00  Income:One:Books
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 4 --flat
@@ -44,6 +48,8 @@ bal --depth 4 --flat
               $10.00  Expenses:One:Two:Books
              $-10.00  Income:One:Books
              $-10.00  Income:One:Two:Books
+--------------------
+                   0
 >>>2
 === 0
 bal --depth 5 --flat
@@ -56,5 +62,7 @@ bal --depth 5 --flat
              $-10.00  Income:One:Books
              $-10.00  Income:One:Two:Books
              $-10.00  Income:One:Two:Three:Books
+--------------------
+                   0
 >>>2
 === 0

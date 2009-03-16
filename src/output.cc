@@ -136,14 +136,22 @@ format_accounts::format_accounts(report_t&     _report,
   }
 }
 
-void format_accounts::post_account(account_t& account)
+std::size_t format_accounts::post_account(account_t& account)
 {
   if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY)) {
+    if (account.parent &&
+	account.parent->xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
+	! account.parent->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
+      post_account(*account.parent);
+
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
     bind_scope_t bound_scope(report, account);
     account_line_format.format(report.output_stream, bound_scope);
+
+    return 1;
   }
+  return 0;
 }
 
 std::pair<std::size_t, std::size_t>
@@ -167,9 +175,11 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
 	"  it has " << to_display << " children to display");
 #endif
 
-  if (account.has_flags(ACCOUNT_EXT_VISITED) || (! flat && visited > 0)) {
+  if (account.parent &&
+      (account.has_flags(ACCOUNT_EXT_VISITED) || (! flat && visited > 0))) {
     bind_scope_t bound_scope(report, account);
-    if (disp_pred(bound_scope) && (flat || to_display != 1)) {
+    if ((! flat && to_display > 1) ||
+	(disp_pred(bound_scope) && (flat || to_display != 1))) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
       DEBUG("account.display", "Marking account as TO_DISPLAY");
       to_display = 1;
@@ -192,17 +202,12 @@ void format_accounts::flush()
 
   mark_accounts(*report.session.master, report.HANDLED(flat));
 
-  std::size_t top_displayed = 0;
+  std::size_t displayed = 0;
 
-  foreach (account_t * account, posted_accounts) {
-    post_account(*account);
+  foreach (account_t * account, posted_accounts)
+    displayed += post_account(*account);
 
-    if (account->has_flags(ACCOUNT_EXT_DISPLAYED))
-      top_displayed++;
-  }
-
-  if (! report.HANDLED(no_total) && top_displayed > 1 &&
-      report.session.master->family_total()) {
+  if (! report.HANDLED(no_total) && displayed > 1) {
     bind_scope_t bound_scope(report, *report.session.master);
     separator_format.format(out, bound_scope);
     total_line_format.format(out, bound_scope);

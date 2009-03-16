@@ -109,8 +109,8 @@ public:
   std::pair<std::size_t, std::size_t>
   mark_accounts(account_t& account, const bool flat);
 
-  virtual void post_account(account_t& account);
-  virtual void flush();
+  virtual std::size_t post_account(account_t& account);
+  virtual void	      flush();
 
   virtual void operator()(account_t& account);
 };
