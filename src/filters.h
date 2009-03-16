@@ -539,9 +539,8 @@ public:
     clear_xacts_posts(xact_temps);
   }
 
-  void report_subtotal(const char * spec_fmt = NULL,
-		       const date_t& start   = date_t(),
-		       const date_t& finish  = date_t());
+  void report_subtotal(const char *			spec_fmt = NULL,
+		       const optional<date_interval_t>& interval = none);
 
   virtual void flush() {
     if (values.size() > 0)
@@ -585,12 +584,12 @@ public:
     TRACE_DTOR(interval_posts);
   }
 
-  void report_subtotal(const date_t& finish);
+  void report_subtotal(const date_interval_t& interval);
 
   virtual void flush() {
     if (last_post && interval.duration) {
       if (interval.is_valid())
-	report_subtotal(interval.inclusive_end());
+	report_subtotal(interval);
       subtotal_posts::flush();
     }
   }

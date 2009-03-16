@@ -195,7 +195,7 @@ std::ostream& operator<<(std::ostream& out,
 
 void date_interval_t::resolve_end()
 {
-  if (! end_of_duration) {
+  if (start && ! end_of_duration) {
     end_of_duration = add_duration(*start, *duration);
     DEBUG("times.interval",
 	  "stabilize: end_of_duration = " << *end_of_duration);
@@ -222,6 +222,11 @@ void date_interval_t::resolve_end()
 
 void date_interval_t::stabilize(const optional<date_t>& date)
 {
+#if defined(DEBUG_ON)
+  if (date)
+    DEBUG("times.interval", "stabilize: with date = " << *date);
+#endif
+
   if (date && ! aligned) {
     DEBUG("times.interval", "stabilize: date passed, but not aligned");
     if (duration) {
@@ -311,8 +316,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
   }
 }
 
-bool date_interval_t::find_period(const date_t&     date,
-				  date_interval_t * last_interval)
+bool date_interval_t::find_period(const date_t& date)
 {
   stabilize(date);
 
@@ -322,13 +326,16 @@ bool date_interval_t::find_period(const date_t&     date,
     return false;
   }
 
-  if (date < *start) {
+  if (! start) {
+    throw_(std::runtime_error, _("Date interval is improperly initialized"));
+  }
+  else if (date < *start) {
     DEBUG("times.interval",
 	  "false: date [" << date << "] < start [" << *start << "]");
     return false;
   }
 
-  if (date < *end_of_duration) {
+  if (end_of_duration && date < *end_of_duration) {
     DEBUG("times.interval",
 	  "true: date [" << date << "] < end_of_duration ["
 	  << *end_of_duration << "]");
@@ -349,12 +356,6 @@ bool date_interval_t::find_period(const date_t&     date,
 
   while (date >= scan && (! end || scan < *end)) {
     if (date < end_of_scan) {
-      if (last_interval) {
-	last_interval->start	     = start;
-	last_interval->next	     = next;
-	last_interval->end_of_duration = end_of_duration;
-      }
-
       start	      = scan;
       end_of_duration = end_of_scan;
       next	      = none;

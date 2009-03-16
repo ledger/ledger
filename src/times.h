@@ -155,6 +155,7 @@ public:
   }
   date_interval_t(const date_interval_t& other)
     : start(other.start),
+      aligned(other.aligned),
       skip_duration(other.skip_duration),
       factor(other.factor),
       next(other.next),
@@ -193,10 +194,13 @@ public:
   /** Find the current or next period containing date.  Returns true if the
       date_interval_t object has been altered to reflect the interval
       containing date, or false if no such period can be found. */
-  bool find_period(const date_t& date, date_interval_t * last_interval = NULL);
+  bool find_period(const date_t& date);
 
-  date_t inclusive_end() const {
-    return *end_of_duration - gregorian::days(1);
+  optional<date_t> inclusive_end() const {
+    if (end_of_duration)
+      return *end_of_duration - gregorian::days(1);
+    else
+      return none;
   }
 
   date_interval_t& operator++();

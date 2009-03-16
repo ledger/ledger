@@ -204,7 +204,7 @@ value_t period_command(call_scope_t& args)
 
       out << i << "): " << format_date(*interval.start);
       if (interval.end_of_duration)
-	out << " -- " << format_date(interval.inclusive_end());
+	out << " -- " << format_date(*interval.inclusive_end());
       out << std::endl;
 
       if (! interval.skip_duration)

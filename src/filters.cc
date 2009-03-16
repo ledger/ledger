@@ -483,41 +483,41 @@ void changed_value_posts::operator()(post_t& post)
   last_post = &post;
 }
 
-void subtotal_posts::report_subtotal(const char *  spec_fmt,
-				     const date_t& start,
-				     const date_t& finish)
+void subtotal_posts::report_subtotal(const char *		      spec_fmt,
+				     const optional<date_interval_t>& interval)
 {
   if (component_posts.empty())
     return;
 
-  date_t range_start  = start;
-  date_t range_finish = finish;
+  optional<date_t> range_start  = interval ? interval->start : none;
+  optional<date_t> range_finish = interval ? interval->inclusive_end() : none;
+
   foreach (post_t * post, component_posts) {
     date_t date = post->date();
-    if (! is_valid(range_start) || date < range_start)
+    if (! range_start || date < *range_start)
       range_start = date;
-    if (! is_valid(range_finish) || date > range_finish)
+    if (! range_finish || date > *range_finish)
       range_finish = date;
   }
   component_posts.clear();
 
   std::ostringstream out_date;
   if (spec_fmt) {
-    out_date << format_date(range_finish, string(spec_fmt));
+    out_date << format_date(*range_finish, string(spec_fmt));
   }
   else if (date_format) {
     string fmt = "- ";
     fmt += *date_format;
-    out_date << format_date(range_finish, string(fmt));
+    out_date << format_date(*range_finish, string(fmt));
   }
   else {
-    out_date << format_date(range_finish, std::string("- ") + output_date_format);
+    out_date << format_date(*range_finish, std::string("- ") + output_date_format);
   }
 
   xact_temps.push_back(xact_t());
   xact_t& xact = xact_temps.back();
   xact.payee = out_date.str();
-  xact._date = range_start;
+  xact._date = *range_start;
 
   foreach (values_map::value_type& pair, values)
     handle_value(pair.second.value, pair.second.account, &xact, post_temps,
@@ -556,13 +556,13 @@ void subtotal_posts::operator()(post_t& post)
     post.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS);
 }
 
-void interval_posts::report_subtotal(const date_t& finish)
+void interval_posts::report_subtotal(const date_interval_t& interval)
 {
   if (last_post && interval) {
     if (exact_periods)
       subtotal_posts::report_subtotal();
     else
-      subtotal_posts::report_subtotal(NULL, *interval.start, finish);
+      subtotal_posts::report_subtotal(NULL, interval);
   }
 
   last_post = NULL;
@@ -572,37 +572,40 @@ void interval_posts::operator()(post_t& post)
 {
   date_t date = post.date();
 
-  if (! interval.find_period(post.date(), &last_interval))
+  if (! interval.find_period(post.date()))
     return;
 
   if (interval.duration) {
-    if (last_interval) {
-      if (interval != last_interval) {
-	report_subtotal(last_interval.inclusive_end());
+    if (last_interval && interval != last_interval) {
+      report_subtotal(last_interval);
 
-	if (generate_empty_posts) {
-	  for (++last_interval; interval != last_interval; ++last_interval) {
-	    // Generate a null posting, so the intervening periods can be
-	    // seen when -E is used, or if the calculated amount ends up being
-	    // non-zero
-	    xact_temps.push_back(xact_t());
-	    xact_t& null_xact = xact_temps.back();
-	    null_xact.add_flags(ITEM_TEMP);
-	    null_xact._date = last_interval.inclusive_end();
+      if (generate_empty_posts) {
+	for (++last_interval; interval != last_interval; ++last_interval) {
+	  // Generate a null posting, so the intervening periods can be
+	  // seen when -E is used, or if the calculated amount ends up being
+	  // non-zero
+	  xact_temps.push_back(xact_t());
+	  xact_t& null_xact = xact_temps.back();
+	  null_xact.add_flags(ITEM_TEMP);
+	  null_xact._date = last_interval.inclusive_end();
 
-	    post_temps.push_back(post_t(&empty_account));
-	    post_t& null_post = post_temps.back();
-	    null_post.add_flags(ITEM_TEMP | POST_CALCULATED);
-	    null_post.amount = 0L;
-	    null_xact.add_post(&null_post);
+	  post_temps.push_back(post_t(&empty_account));
+	  post_t& null_post = post_temps.back();
+	  null_post.add_flags(ITEM_TEMP | POST_CALCULATED);
+	  null_post.amount = 0L;
+	  null_xact.add_post(&null_post);
 
-	    last_post = &null_post;
-	    subtotal_posts::operator()(null_post);
+	  last_post = &null_post;
+	  subtotal_posts::operator()(null_post);
 
-	    report_subtotal(last_interval.inclusive_end());
-	  }
+	  report_subtotal(last_interval);
 	}
+	assert(interval == last_interval);
+      } else {
+	last_interval = interval;
       }
+    } else {
+      last_interval = interval;
     }
     subtotal_posts::operator()(post);
   } else {
@@ -750,7 +753,7 @@ void budget_posts::report_budget_items(const date_t& date)
       optional<date_t> begin = pair.first.start;
       if (! begin) {
 	if (! pair.first.find_period(date))
-	  throw_(std::runtime_error, "Something odd has happened");
+	  throw_(std::runtime_error, _()"Something odd has happened");
 	begin = pair.first.start;
       }
       assert(begin);
@@ -821,7 +824,7 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post)
   date_interval_t& i = pending_posts.back().first;
   if (! i.start) {
     if (! i.find_period(CURRENT_DATE()))
-      throw_(std::runtime_error, "Something odd has happened");
+      throw_(std::runtime_error, _("Something odd has happened"));
     ++i;
   } else {
     while (*i.start < CURRENT_DATE())
