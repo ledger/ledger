@@ -747,15 +747,16 @@ void budget_posts::report_budget_items(const date_t& date)
   do {
     reported = false;
     foreach (pending_posts_list::value_type& pair, pending_posts) {
-#if 0
-      date_t& begin = pair.first.begin;
-      if (! is_valid(begin)) {
-	pair.first.set_start(date);
-	begin = pair.first.begin;
+      optional<date_t> begin = pair.first.start;
+      if (! begin) {
+	if (! pair.first.find_period(date))
+	  throw_(std::runtime_error, "Something odd has happened");
+	begin = pair.first.start;
       }
+      assert(begin);
 
-      if (begin < date &&
-	  (! is_valid(pair.first.end) || begin < pair.first.end)) {
+      if (*begin < date &&
+	  (! pair.first.end || *begin < *pair.first.end)) {
 	post_t& post = *pair.second;
 
 	DEBUG("ledger.walk.budget", "Reporting budget for "
@@ -773,13 +774,13 @@ void budget_posts::report_budget_items(const date_t& date)
 	temp.amount.in_place_negate();
 	xact.add_post(&temp);
 
-	begin = pair.first.increment(begin);
+	++pair.first;
+	begin = *pair.first.start;
 
 	item_handler<post_t>::operator()(temp);
 
 	reported = true;
       }
-#endif
     }
   } while (reported);
 }
@@ -818,15 +819,14 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post)
   generate_posts::add_post(period, post);
 
   date_interval_t& i = pending_posts.back().first;
-#if 0
-  if (! is_valid(i.begin)) {
-    i.set_start(CURRENT_DATE());
-    i.begin = i.increment(i.begin);
+  if (! i.start) {
+    if (! i.find_period(CURRENT_DATE()))
+      throw_(std::runtime_error, "Something odd has happened");
+    ++i;
   } else {
-    while (i.begin < CURRENT_DATE())
-      i.begin = i.increment(i.begin);
+    while (*i.start < CURRENT_DATE())
+      ++i;
   }
-#endif
 }
 
 void forecast_posts::flush()
@@ -834,18 +834,17 @@ void forecast_posts::flush()
   posts_list passed;
   date_t     last;
 
-#if 0
   while (pending_posts.size() > 0) {
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin();
 	 i != pending_posts.end();
 	 i++)
-      if ((*i).first.begin < (*least).first.begin)
+      if (*(*i).first.start < *(*least).first.start)
 	least = i;
 
-    date_t& begin = (*least).first.begin;
+    date_t& begin = *(*least).first.start;
 
-    if (is_valid((*least).first.end) && begin >= (*least).first.end) {
+    if ((*least).first.end && begin >= *(*least).first.end) {
       pending_posts.erase(least);
       passed.remove((*least).second);
       continue;
@@ -864,7 +863,9 @@ void forecast_posts::flush()
     temp.add_flags(ITEM_TEMP);
     xact.add_post(&temp);
 
-    date_t next = (*least).first.increment(begin);
+    date_t next = *(*least).first.next;
+    ++(*least).first;
+
     if (next < begin || (is_valid(last) && (next - last).days() > 365 * 5))
       break;
     begin = next;
@@ -893,7 +894,6 @@ void forecast_posts::flush()
       }
     }
   }
-#endif
 
   item_handler<post_t>::flush();
 }
