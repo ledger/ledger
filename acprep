@@ -560,20 +560,17 @@ class PrepareBuild(CommandLineApp):
                 if issue.readline().startswith('CentOS'):
                     self.log.info('Looks like you are using YUM on CentOS')
                     packages = [
-                        'sudo', 'apt-get', 'install',
-                         'build-essential',
+                        'sudo', 'yum', 'install', 'gcc', 'make',
                          'libtool', 'autoconf', 'automake',
-                         'zlib1g-dev', 'libbz2-dev', 'python-dev',
-                         'libboost-dev',
-                         'libboost-python-dev',
-                         'libboost-regex-dev',
-                         'libboost-date-time-dev',
-                         'libboost-filesystem-dev'
-                         'libgmp3-dev', 'libmpfr-dev', 'gettext',
-                         'libedit-dev', 'libcppunit-dev',
+                         'zlib-devel', 'bzip2-devel', 'python-devel',
+                         'bboost-devel',
+                         'gmp-devel', 'gettext-devel',
+                         #'mpfr-devel'
+                         #'libedit-dev',
+                         'cppunit-devel',
                          #'texlive-full',
                          #'doxygen', 'graphviz', 'texinfo',
-                         'lcov', 'sloccount'
+                         #'lcov', 'sloccount'
                     ]
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
