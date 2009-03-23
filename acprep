@@ -1219,6 +1219,7 @@ class PrepareBuild(CommandLineApp):
 
         self.execute('scp', dmg, 'jw:/srv/ftp/pub/ledger')
 
+        self.execute('ssh', 'jw', 'rm', '-f', '/srv/ftp/pub/ledger/ledger-*.dmg.zip')
         self.execute('ssh', 'jw',
                      '(cd /srv/ftp/pub/ledger; ln -sf %s ledger-current.dmg.zip)' %
                      basename(dmg))
