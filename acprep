@@ -19,6 +19,7 @@ import string
 import sys
 import time
 import md5
+import tempfile
 
 from os.path import *
 from stat import *
@@ -1154,6 +1155,62 @@ class PrepareBuild(CommandLineApp):
     def phase_gitclean(self, *args):
         self.log.debug('Executing phase: gitclean')
         self.execute('git', 'clean', '-dfx')
+
+    #########################################################################
+    # Packaging phases                                                      #
+    #########################################################################
+
+    def phase_bindmg(self, *args):
+        self.log.debug('Executing phase: bindmg')
+
+        self.phase_make()
+
+        binary  = join(self.build_directory(), 'ledger')
+        if not exists(binary):
+            self.log.error('Failed to build Ledger: ' + binary)
+            sys.exit(1)
+
+        cwd     = os.getcwd()
+        tempdir = tempfile.mkdtemp()
+        try:
+            name   = 'ledger-%s' % self.current_version()
+            dest   = join(tempdir, name)
+            ledger = join(dest, 'ledger')
+
+            os.makedirs(dest)
+
+            shutil.copyfile(binary, ledger)
+
+            for line in self.get_stdout('otool', '-L', ledger).split('\n'):
+                match = re.search('/opt/local/lib/(.+?)\.dylib', line)
+                if match:
+                    lib  = match.group(0)
+                    base = os.path.basename(lib)
+
+                    shutil.copyfile(lib, join(dest, base))
+
+                    self.execute('install_name_tool', '-change', lib,
+                                 '@loader_path/' + base, ledger)
+
+            self.execute('hdiutil', 'create', '-srcfolder', dest,
+                         '-ov', join(cwd, name + '.dmg'))
+        finally:
+            os.chdir(cwd)
+            shutil.rmtree(tempdir)
+
+    def phase_upload(self, *args):
+        self.log.debug('Executing phase: upload')
+
+        self.phase_bindmg()
+
+        dmg = 'ledger-%s.dmg' % self.current_version()
+        self.execute('zip', '%s.zip' % dmg, dmg)
+        dmg = '%s.zip' % dmg
+
+        self.execute('scp', dmg, 'jw:/srv/ftp/pub/ledger')
+
+        self.execute('ssh', 'jw', 'ln', '-sf', '/srv/ftp/pub/ledger/' + dmg,
+                     '/srv/ftp/pub/ledger/ledger-current.dmg.zip')
 
     #########################################################################
     # Other build phases                                                    #
