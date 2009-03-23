@@ -1167,6 +1167,7 @@ class PrepareBuild(CommandLineApp):
 
         if not exists(dest_file):
             shutil.copyfile(path, dest_file)
+            os.chmod(dest_file, 0755)
 
         for line in self.get_stdout('otool', '-L', dest_file).split('\n'):
             match = re.search('/opt/local/lib/(.+?)\.dylib', line)
@@ -1218,8 +1219,9 @@ class PrepareBuild(CommandLineApp):
 
         self.execute('scp', dmg, 'jw:/srv/ftp/pub/ledger')
 
-        self.execute('ssh', 'jw', 'ln', '-sf', '/srv/ftp/pub/ledger/' + dmg,
-                     '/srv/ftp/pub/ledger/ledger-current.dmg.zip')
+        self.execute('ssh', 'jw',
+                     '(cd /srv/ftp/pub/ledger; ln -sf %s ledger-current.dmg.zip)' %
+                     basename(dmg))
 
     #########################################################################
     # Other build phases                                                    #
