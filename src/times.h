@@ -73,14 +73,18 @@ inline bool is_valid(const date_t& moment) {
 #endif
 #define CURRENT_DATE() boost::gregorian::day_clock::universal_day()
 
-extern int                   start_of_week;
+extern date_time::weekdays   start_of_week;
 extern optional<std::string> input_date_format;
 
-date_time::weekdays string_to_day_of_week(const std::string& str);
+optional<date_time::weekdays>
+string_to_day_of_week(const std::string& str);
+optional<date_time::months_of_year>
+string_to_month_of_year(const std::string& str);
 
 datetime_t parse_datetime(const char * str, int current_year = -1);
 
-inline datetime_t parse_datetime(const std::string& str, int current_year = -1) {
+inline datetime_t parse_datetime(const std::string& str,
+				 int current_year = -1) {
   return parse_datetime(str.c_str(), current_year);
 }
 

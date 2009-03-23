@@ -35,7 +35,7 @@
 
 namespace ledger {
 
-int                   start_of_week          = 0;
+date_time::weekdays   start_of_week          = gregorian::Sunday;
 optional<std::string> input_date_format;
 std::string	      output_datetime_format = "%Y-%m-%d %H:%M:%S";
 std::string	      output_date_format     = "%Y-%m-%d";
@@ -54,11 +54,6 @@ namespace {
     "%Y-%m-%d",
     "%m-%d",
     "%Y-%m",
-    "%a",
-    "%A",
-    "%b",
-    "%B",
-    "%Y",
     NULL
   };
 
@@ -107,7 +102,7 @@ namespace {
   }
 }
 
-date_time::weekdays string_to_day_of_week(const std::string& str)
+optional<date_time::weekdays> string_to_day_of_week(const std::string& str)
 {
   if (str == _("sun") || str == _("sunday") || str == "0")
     return gregorian::Sunday;
@@ -123,11 +118,41 @@ date_time::weekdays string_to_day_of_week(const std::string& str)
     return gregorian::Friday;
   else if (str == _("sat") || str == _("saturday") || str == "6")
     return gregorian::Saturday;
-
-  assert(false);
-  return gregorian::Sunday;
+  else
+    return none;
 }
   
+optional<date_time::months_of_year>
+string_to_month_of_year(const std::string& str)
+{
+  if (str == _("jan") || str == _("january") || str == "0")
+    return gregorian::Jan;
+  else if (str == _("feb") || str == _("february") || str == "1")
+    return gregorian::Feb;
+  else if (str == _("mar") || str == _("march") || str == "2")
+    return gregorian::Mar;
+  else if (str == _("apr") || str == _("april") || str == "3")
+    return gregorian::Apr;
+  else if (str == _("may") || str == _("may") || str == "4")
+    return gregorian::May;
+  else if (str == _("jun") || str == _("june") || str == "5")
+    return gregorian::Jun;
+  else if (str == _("jul") || str == _("july") || str == "6")
+    return gregorian::Jul;
+  else if (str == _("aug") || str == _("august") || str == "7")
+    return gregorian::Aug;
+  else if (str == _("sep") || str == _("september") || str == "8")
+    return gregorian::Sep;
+  else if (str == _("oct") || str == _("october") || str == "9")
+    return gregorian::Oct;
+  else if (str == _("nov") || str == _("november") || str == "10")
+    return gregorian::Nov;
+  else if (str == _("dec") || str == _("december") || str == "11")
+    return gregorian::Dec;
+  else
+    return none;
+}
+
 datetime_t parse_datetime(const char * str, int)
 {
   std::tm when;
@@ -335,11 +360,16 @@ bool date_interval_t::find_period(const date_t& date)
     return false;
   }
 
-  if (end_of_duration && date < *end_of_duration) {
-    DEBUG("times.interval",
-	  "true: date [" << date << "] < end_of_duration ["
-	  << *end_of_duration << "]");
-    return true;
+  if (end_of_duration) {
+    if (date < *end_of_duration) {
+      DEBUG("times.interval",
+	    "true: date [" << date << "] < end_of_duration ["
+	    << *end_of_duration << "]");
+      return true;
+    }
+  } else {
+    DEBUG("times.interval", "false: there is no end_of_duration");
+    return false;
   }
 
   // If we've reached here, it means the date does not fall into the current
@@ -524,6 +554,10 @@ void date_interval_t::parse(std::istream& in)
 {
   string word;
 
+  optional<date_time::months_of_year> mon;
+  optional<date_time::weekdays>       wday;
+  optional<date_t::year_type>         year;
+
   while (! in.eof()) {
     read_lower_word(in, word);
     if (word == _("every")) {
@@ -583,11 +617,48 @@ void date_interval_t::parse(std::istream& in)
       read_lower_word(in, word);
       parse_date_words(in, word, *this, false, true);
     }
+    else if (optional<date_time::months_of_year>
+	     m = string_to_month_of_year(word)) {
+      mon = m;
+    }
+    else if (optional<date_time::weekdays>
+	     d = string_to_day_of_week(word)) {
+      wday = d;
+    }
+    else if (all(word, is_digit())) {
+      year = lexical_cast<unsigned short>(word);
+    }
     else {
+      // otherwise, it should be an explicit date
       date_t b, e;
       parse_inclusion_specifier(word, &b, &e);
       start = b;
       end   = e;
+    }
+  }
+
+  if (year || mon || wday) {
+    if (! start)
+      start = CURRENT_DATE();
+
+    if (wday) {
+      while (start->day_of_week() != *wday)
+	*start -= gregorian::days(1);
+
+      if (! end)
+	end = *start + gregorian::days(1);
+    } else {
+      if (year) {
+	start = date_t(*year, 1, 1);
+	if (! end)
+	  end = *start + gregorian::years(1);
+      }
+
+      if (mon) {
+	start = date_t(start->year(), *mon, 1);
+	if (! end)
+	  end = *start + gregorian::months(1);
+      }
     }
   }
 }

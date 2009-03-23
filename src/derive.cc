@@ -121,12 +121,12 @@ namespace {
 			 value_t::sequence_t::const_iterator end)
   {
     regex  date_mask(_("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?"));
-    regex  dow_mask(_("(sun|mon|tue|wed|thu|fri|sat)"));
     smatch what;
 
     xact_template_t tmpl;
-    bool	     check_for_date = true;
+    bool	    check_for_date = true;
 
+    optional<date_time::weekdays>      weekday;
     xact_template_t::post_template_t * post = NULL;
 
     for (; begin != end; begin++) {
@@ -136,8 +136,8 @@ namespace {
 	check_for_date = false;
       }
       else if (check_for_date &&
-	  regex_match((*begin).to_string(), what, dow_mask)) {
-	short  dow  = static_cast<short>(string_to_day_of_week(what[0]));
+	       bool(weekday = string_to_day_of_week(what[0]))) {
+	short  dow  = static_cast<short>(*weekday);
 	date_t date = CURRENT_DATE() - date_duration(1);
 	while (date.day_of_week() != dow)
 	  date -= date_duration(1);

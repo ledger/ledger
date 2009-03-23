@@ -28,12 +28,14 @@ void DateTimeTestCase::testConstructors()
   date_t d8;
   date_t d9;
 
+#if 0
   date_t d10;
   date_t d11;
   date_t d12;
   date_t d13;
   date_t d14;
   datetime_t d15;
+#endif
 #endif // NOT_FOR_PYTHON
 
   d1 = parse_date("1990/01/01");
@@ -47,13 +49,15 @@ void DateTimeTestCase::testConstructors()
   d8 = parse_date("2006-12-25");
   d9 = parse_date("12-25");
 
+#ifndef NOT_FOR_PYTHON
+#if 0
   d10 = parse_date("tue");
   d11 = parse_date("tuesday");
   d12 = parse_date("feb");
   d13 = parse_date("february");
   d14 = parse_date("2006");
-#ifndef NOT_FOR_PYTHON
   d15 = d3;
+#endif
 #endif // NOT_FOR_PYTHON
 
 #ifndef NOT_FOR_PYTHON
@@ -66,17 +70,19 @@ void DateTimeTestCase::testConstructors()
   assertTrue(CURRENT_DATE() > d4);
 
 #ifndef NOT_FOR_PYTHON
+#if 0
   assertEqual(d3, d15);
+#endif
 #endif // NOT_FOR_PYTHON
   assertEqual(d4, d6);
   assertEqual(d4, d8);
   assertEqual(d5, d7);
   assertEqual(d5, d9);
+#ifndef NOT_FOR_PYTHON
+#if 0
   assertEqual(d10, d11);
   assertEqual(d12, d13);
   
-#if 0
-#ifndef NOT_FOR_PYTHON
   assertThrow(parse_date("2007/02/29"), boost::gregorian::bad_day_of_month);
   //assertThrow(parse_date("2007/13/01"), datetime_error);
   //assertThrow(parse_date("2007/00/01"), datetime_error);
