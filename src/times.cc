@@ -513,7 +513,7 @@ namespace {
     date_t end;
     bool   parse_specifier = false;
 
-    date_interval_t::duration_t duration;
+    optional<date_interval_t::duration_t> duration;
 
     assert(look_for_start || look_for_end);
 
@@ -531,22 +531,23 @@ namespace {
     else {
       parse_specifier = true;
     }
-    end = date_interval_t::add_duration(start, duration);
 
     if (parse_specifier)
       parse_inclusion_specifier(word, &start, &end);
+    else
+      end = date_interval_t::add_duration(start, *duration);
 
-    if (type == _("last")) {
-      start = date_interval_t::subtract_duration(start, duration);
-      end   = date_interval_t::subtract_duration(end, duration);
+    if (type == _("last") && duration) {
+      start = date_interval_t::subtract_duration(start, *duration);
+      end   = date_interval_t::subtract_duration(end, *duration);
     }
-    else if (type == _("next")) {
-      start = date_interval_t::add_duration(start, duration);
-      end   = date_interval_t::add_duration(end, duration);
+    else if (type == _("next") && duration) {
+      start = date_interval_t::add_duration(start, *duration);
+      end   = date_interval_t::add_duration(end, *duration);
     }
 
-    if (look_for_start) interval.start = start;
-    if (look_for_end)   interval.end = end;
+    if (look_for_start && is_valid(start)) interval.start = start;
+    if (look_for_end   && is_valid(end))   interval.end   = end;
   }
 }
 
