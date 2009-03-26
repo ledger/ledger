@@ -1,12 +1,15 @@
 " Vim syntax file
 " filetype: ledger
-" Version: 0.0.4
+" Version: 0.0.5
+" by Johann Klähn; Use according to the terms of the GPL>=2.
 " by Stefan Karrmann; Use according to the terms of the GPL>=2.
 " by Wolfgang Oertl; Use according to the terms of the GPL>=2.
 " Revision history
+"  2009-03-25  J. Klähn: Allow Metadata in postings (Ledger 3.0)
+"              Also fixed alignment for multi-byte-characters
 "  2009-01-28  S.Karrmann: minor fixes
 "  2009-01-27  third version by S.Karrmann.
-"              better extraction of the amount of the transaction
+"              better extraction of the amount of the posting
 "              decimal separator can be one of '.' and ','.
 "  2005-02-05  first version (partly copied from ledger.vim 0.0.1)
 
@@ -22,7 +25,7 @@ syntax clear
 " region: a normal posting
 syn region postNorm start=/^\d/ skip=/^\s/ end=/^/ fold keepend transparent contains=postDate,Metadata
 syn match postDate /^\d\S\+/ contained
-syn match Metadata /^\s\+;.*$/ contained
+syn match Metadata /^\s\+;.*/ contained
 syn match Comment /^;.*$/
 
 highlight default link Comment SpecialKey
