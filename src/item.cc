@@ -116,8 +116,8 @@ void item_t::set_tag(const string&           tag,
 
 void item_t::parse_tags(const char * p, int current_year)
 {
-  if (char * b = std::strchr(p, '[')) {
-    if (char * e = std::strchr(p, ']')) {
+  if (const char * b = std::strchr(p, '[')) {
+    if (const char * e = std::strchr(p, ']')) {
       char buf[256];
       std::strncpy(buf, b + 1, e - b - 1);
       buf[e - b - 1] = '\0';
