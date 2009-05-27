@@ -278,6 +278,11 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     kind = STAR;
     break;
 
+  case '%':
+    in.get(c);
+    kind = PERCENT;
+    break;
+
   case '?':
     in.get(c);
     kind = QUERY;
