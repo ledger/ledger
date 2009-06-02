@@ -204,6 +204,13 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
 		optional<path>(path(report().HANDLER(pager_).str())) :
 		optional<path>());
 
+  // Now that the output stream is initialized, report the options that will
+  // participate in this report, if the user specified --options
+
+  if (HANDLED(options)) {
+    report_options(report(), report().output_stream);
+  }
+
   // Create an argument scope containing the report command's arguments, and
   // then invoke the command.  The bound scope causes lookups to happen
   // first in the global scope, and then in the report scope.
@@ -239,6 +246,29 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
   return status;
 }
 
+void global_scope_t::report_options(report_t& report, std::ostream& out)
+{
+  out << "<=============================================================================>"
+      << std::endl;
+  out << "[Global scope options]" << std::endl;
+
+  HANDLER(args_only).report(out);
+  HANDLER(debug_).report(out);
+  HANDLER(init_file_).report(out);
+  HANDLER(script_).report(out);
+  HANDLER(trace_).report(out);
+  HANDLER(verbose).report(out);
+  HANDLER(verify).report(out);
+
+  out << std::endl << "[Session scope options]" << std::endl;
+  report.session.report_options(out);
+
+  out << std::endl << "[Report scope options]" << std::endl;
+  report.report_options(out);
+  out << "<=============================================================================>"
+      << std::endl;
+}
+
 option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -259,6 +289,9 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
     break;
   case 'i':
     OPT(init_file_);
+    break;
+  case 'o':
+    OPT(options);
     break;
   case 's':
     OPT(script_);
@@ -287,13 +320,13 @@ expr_t::ptr_op_t global_scope_t::lookup(const string& name)
     break;
 
   case 'p':
-    if (WANT_PRECMD()) { p += PRECMD_PREFIX_LEN;
-      switch (*p) {
+    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
+      switch (*q) {
       case 'p':
-	if (is_eq(p, "push"))
-	  MAKE_FUNCTOR(global_scope_t::push_command);
-	else if (is_eq(p, "pop"))
-	  MAKE_FUNCTOR(global_scope_t::pop_command);
+	if (is_eq(q, "push"))
+	  return MAKE_FUNCTOR(global_scope_t::push_command);
+	else if (is_eq(q, "pop"))
+	  return MAKE_FUNCTOR(global_scope_t::pop_command);
 	break;
       }
     }
@@ -316,18 +349,18 @@ void global_scope_t::read_environment_settings(char * envp[])
 
   if (const char * p = std::getenv("LEDGER")) {
     if (! std::getenv("LEDGER_FILE"))
-      process_option("file", report(), p, "LEDGER");
+      process_option("environ", "file", report(), p, "LEDGER");
   }
   if (const char * p = std::getenv("LEDGER_INIT")) {
     if (! std::getenv("LEDGER_INIT_FILE"))
-      process_option("init-file", report(), p, "LEDGER_INIT");
+      process_option("environ", "init-file", report(), p, "LEDGER_INIT");
   }
   if (const char * p = std::getenv("PRICE_HIST")) {
     if (! std::getenv("LEDGER_PRICEDB"))
-      process_option("price-db", report(), p, "PRICE_HIST");
+      process_option("environ", "price-db", report(), p, "PRICE_HIST");
   }
   if (const char * p = std::getenv("PRICE_EXP"))
-    process_option("price-exp", report(), p, "PRICE_EXP");
+    process_option("environ", "price-exp", report(), p, "PRICE_EXP");
 #endif
 
   TRACE_FINISH(environment, 1);
@@ -397,29 +430,29 @@ void global_scope_t::normalize_report_options(const string& verb)
   // I might be able to do it with command objects, like register_t, which
   // each know how to adjust the report based on its current option settings.
   if (verb == "print" || verb == "xact" || verb == "dump") {
-    rep.HANDLER(related).on_only();
-    rep.HANDLER(related_all).on_only();
+    rep.HANDLER(related).on_only(string("?normalize"));
+    rep.HANDLER(related_all).on_only(string("?normalize"));
   }
   else if (verb == "equity") {
-    rep.HANDLER(equity).on_only();
+    rep.HANDLER(equity).on_only(string("?normalize"));
   }
   else if (rep.HANDLED(related)) {
     if (verb[0] == 'r') {
-      rep.HANDLER(invert).on_only();
+      rep.HANDLER(invert).on_only(string("?normalize"));
     } else {
-      rep.HANDLER(subtotal).on_only();
-      rep.HANDLER(related_all).on_only();
+      rep.HANDLER(subtotal).on_only(string("?normalize"));
+      rep.HANDLER(related_all).on_only(string("?normalize"));
     }
   }
 
   if (! rep.HANDLED(empty))
-    rep.HANDLER(display_).on("amount|(!post&total)");
+    rep.HANDLER(display_).on(string("?normalize"), "amount|(!post&total)");
 
   if (verb[0] != 'b' && verb[0] != 'r')
-    rep.HANDLER(base).on_only();
+    rep.HANDLER(base).on_only(string("?normalize"));
 
   if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
-    rep.HANDLER(sort_xacts_).on_only();
+    rep.HANDLER(sort_xacts_).on_only(string("?normalize"));
 
   long cols = 0;
   if (rep.HANDLED(columns_))
@@ -465,15 +498,15 @@ void global_scope_t::normalize_report_options(const string& verb)
     }
 
     if (! rep.HANDLER(date_width_).specified)
-      rep.HANDLER(date_width_).on_with(date_width);
+      rep.HANDLER(date_width_).on_with(string("?normalize"), date_width);
     if (! rep.HANDLER(payee_width_).specified)
-      rep.HANDLER(payee_width_).on_with(payee_width);
+      rep.HANDLER(payee_width_).on_with(string("?normalize"), payee_width);
     if (! rep.HANDLER(account_width_).specified)
-      rep.HANDLER(account_width_).on_with(account_width);
+      rep.HANDLER(account_width_).on_with(string("?normalize"), account_width);
     if (! rep.HANDLER(amount_width_).specified)
-      rep.HANDLER(amount_width_).on_with(amount_width);
+      rep.HANDLER(amount_width_).on_with(string("?normalize"), amount_width);
     if (! rep.HANDLER(total_width_).specified)
-      rep.HANDLER(total_width_).on_with(total_width);
+      rep.HANDLER(total_width_).on_with(string("?normalize"), total_width);
   }
 }
 

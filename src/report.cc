@@ -55,12 +55,15 @@ void report_t::posts_report(post_handler_ptr handler)
 
 void report_t::generate_report(post_handler_ptr handler)
 {
-  HANDLER(limit_).on("actual");	// jww (2009-02-27): make this more general
+  // jww (2009-02-27): make this more general
+  HANDLER(limit_).on(string("#generate"), "actual");
+
   generate_posts_iterator walker
     (session, HANDLED(seed_) ?
      static_cast<unsigned int>(HANDLER(seed_).value.to_long()) : 0,
      HANDLED(head_) ?
      static_cast<unsigned int>(HANDLER(head_).value.to_long()) : 50);
+
   pass_down_posts(chain_post_handlers(*this, handler), walker);
 }
 
@@ -349,10 +352,12 @@ namespace {
     shared_ptr<item_handler<Type> > handler;
 
     report_t& report;
+    string    whence;
 
   public:
-    reporter(item_handler<Type> * _handler, report_t& _report)
-      : handler(_handler), report(_report) {}
+    reporter(item_handler<Type> * _handler, report_t& _report,
+	     const string& _whence)
+      : handler(_handler), report(_report), whence(_whence) {}
 
     value_t operator()(call_scope_t& args)
     {
@@ -365,7 +370,7 @@ namespace {
 	string limit = args_to_predicate_expr(begin, end);
 
 	if (! limit.empty())
-	  report.HANDLER(limit_).on(limit);
+	  report.HANDLER(limit_).on(whence, limit);
 
 	DEBUG("report.predicate",
 	      "Predicate = " << report.HANDLER(limit_).str());
@@ -375,7 +380,7 @@ namespace {
 	  display = args_to_predicate_expr(begin, end);
 
 	if (! display.empty())
-	  report.HANDLER(display_).on(display);
+	  report.HANDLER(display_).on(whence, display);
 
 	DEBUG("report.predicate",
 	      "Display predicate = " << report.HANDLER(display_).str());
@@ -675,7 +680,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
-	      *this));
+	      *this, "#balance"));
 	break;
 
       case 'c':
@@ -683,7 +688,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(csv_format_))),
-	      *this));
+	      *this, "#csv"));
 	break;
 
       case 'e':
@@ -691,12 +696,12 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(print_format_))),
-	      *this));
+	      *this, "#equity"));
 	else if (is_eq(q, "xact") || is_eq(q, "entry"))
 	  return WRAP_FUNCTOR(xact_command);
 	else if (is_eq(q, "emacs"))
 	  return WRAP_FUNCTOR
-	    (reporter<>(new format_emacs_posts(output_stream), *this));
+	    (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
 	break;
 
       case 'p':
@@ -704,17 +709,17 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(print_format_)),
-			       HANDLED(raw)), *this));
+			       HANDLED(raw)), *this, "#print"));
 	else if (is_eq(q, "prices"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	     (new format_posts(*this, report_format(HANDLER(prices_format_))),
-	      *this));
+	      *this, "#prices"));
 	else if (is_eq(q, "pricesdb"))
 	  return expr_t::op_t::wrap_functor
 	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	     (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
-	      *this));
+	      *this, "#pricesdb"));
 	else if (is_eq(q, "python") && maybe_import("ledger.interp"))
 	  return session.lookup(string(CMD_PREFIX) + "python");
 	break;
@@ -724,7 +729,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(register_format_))),
-	      *this));
+	      *this, "#register"));
 	else if (is_eq(q, "reload"))
 	  return MAKE_FUNCTOR(report_t::reload_command);
 	break;
@@ -815,7 +820,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	  return expr_t::op_t::wrap_functor
 	    (reporter<post_t, post_handler_ptr, &report_t::generate_report>
 	     (new format_posts(*this, report_format(HANDLER(print_format_)),
-			       false), *this));
+			       false), *this, "#generate"));
       case 'h':
 	if (is_eq(q, "hello") && maybe_import("ledger.hello"))
 	  return session.lookup(string(PRECMD_PREFIX) + "hello");

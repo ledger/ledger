@@ -108,6 +108,17 @@ public:
     return CURRENT_DATE();
   }
 
+  void report_options(std::ostream& out)
+  {
+    HANDLER(account_).report(out);
+    HANDLER(download).report(out);
+    HANDLER(leeway_).report(out);
+    HANDLER(file_).report(out);
+    HANDLER(input_date_format_).report(out);
+    HANDLER(price_db_).report(out);
+    HANDLER(strict).report(out);
+  }
+
   option_t<session_t> * lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
@@ -123,7 +134,7 @@ public:
   (session_t, leeway_,
    CTOR(session_t, leeway_) { value = 24L * 3600L; }
    DO_(args) {
-     value = args[0].to_long() * 60L;
+     value = args[1].to_long() * 60L;
    });
 
   OPTION__
@@ -131,12 +142,12 @@ public:
    std::list<path> data_files;
    CTOR(session_t, file_) {}
    DO_(args) {
-     assert(args.size() == 1);
+     assert(args.size() == 2);
      if (parent->flush_on_next_data_file) {
        data_files.clear();
        parent->flush_on_next_data_file = false;
      }
-     data_files.push_back(args[0].as_string());
+     data_files.push_back(args[1].as_string());
    });
 
   OPTION(session_t, input_date_format_);

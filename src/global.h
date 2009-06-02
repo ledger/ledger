@@ -113,6 +113,8 @@ See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
   }
 
+  void report_options(report_t& report, std::ostream& out);
+
   option_t<global_scope_t> * lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
@@ -133,11 +135,12 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
    CTOR(global_scope_t, init_file_) {
      if (const char * home_var = std::getenv("HOME"))
-       on((path(home_var) / ".ledgerrc").string());
+       on(none, (path(home_var) / ".ledgerrc").string());
      else
-       on(path("./.ledgerrc").string());
+       on(none, path("./.ledgerrc").string());
    });
 
+  OPTION(global_scope_t, options);
   OPTION(global_scope_t, script_);
   OPTION(global_scope_t, trace_);
   OPTION(global_scope_t, verbose);

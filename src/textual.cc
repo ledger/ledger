@@ -535,7 +535,7 @@ void instance_t::option_directive(char * line)
     if (p)
       *p++ = '\0';
   }
-  process_option(line + 2, session_scope, p, line);
+  process_option(pathname.string(), line + 2, session_scope, p, line);
 }
 
 void instance_t::automated_xact_directive(char * line)

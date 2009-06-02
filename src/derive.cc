@@ -423,7 +423,8 @@ value_t xact_command(call_scope_t& args)
   xact_template_t	tmpl = args_to_xact_template(begin, end);
   std::auto_ptr<xact_t> new_xact(derive_xact_from_template(tmpl, report));
 
-  report.HANDLER(limit_).on("actual");	// jww (2009-02-27): make this more general
+  // jww (2009-02-27): make this more general
+  report.HANDLER(limit_).on(string("#xact"), "actual");
 
   report.xact_report(post_handler_ptr
 		      (new format_posts(report,

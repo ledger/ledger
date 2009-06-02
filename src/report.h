@@ -176,6 +176,113 @@ public:
 
   bool maybe_import(const string& module);
 
+  void report_options(std::ostream& out)
+  {
+    HANDLER(abbrev_len_).report(out);
+    HANDLER(account_).report(out);
+    HANDLER(actual).report(out);
+    HANDLER(add_budget).report(out);
+    HANDLER(amount_).report(out);
+    HANDLER(amount_data).report(out);
+    HANDLER(anon).report(out);
+    HANDLER(average).report(out);
+    HANDLER(balance_format_).report(out);
+    HANDLER(base).report(out);
+    HANDLER(basis).report(out);
+    HANDLER(begin_).report(out);
+    HANDLER(budget).report(out);
+    HANDLER(by_payee).report(out);
+    HANDLER(cleared).report(out);
+    HANDLER(code_as_payee).report(out);
+    HANDLER(comm_as_payee).report(out);
+    HANDLER(code_as_account).report(out);
+    HANDLER(comm_as_account).report(out);
+    HANDLER(color).report(out);
+    HANDLER(collapse).report(out);
+    HANDLER(collapse_if_zero).report(out);
+    HANDLER(columns_).report(out);
+    HANDLER(csv_format_).report(out);
+    HANDLER(current).report(out);
+    HANDLER(daily).report(out);
+    HANDLER(date_format_).report(out);
+    HANDLER(depth_).report(out);
+    HANDLER(deviation).report(out);
+    HANDLER(display_).report(out);
+    HANDLER(display_amount_).report(out);
+    HANDLER(display_total_).report(out);
+    HANDLER(dow).report(out);
+    HANDLER(effective).report(out);
+    HANDLER(empty).report(out);
+    HANDLER(end_).report(out);
+    HANDLER(equity).report(out);
+    HANDLER(exact).report(out);
+    HANDLER(exchange_).report(out);
+    HANDLER(flat).report(out);
+    HANDLER(forecast_while_).report(out);
+    HANDLER(format_).report(out);
+    HANDLER(gain).report(out);
+    HANDLER(head_).report(out);
+    HANDLER(invert).report(out);
+    HANDLER(limit_).report(out);
+    HANDLER(lot_dates).report(out);
+    HANDLER(lot_prices).report(out);
+    HANDLER(lot_tags).report(out);
+    HANDLER(lots).report(out);
+    HANDLER(lots_actual).report(out);
+    HANDLER(market).report(out);
+    HANDLER(monthly).report(out);
+    HANDLER(no_total).report(out);
+    HANDLER(only_).report(out);
+    HANDLER(output_).report(out);
+    HANDLER(pager_).report(out);
+    HANDLER(payee_as_account).report(out);
+    HANDLER(pending).report(out);
+    HANDLER(percentage).report(out);
+    HANDLER(period_).report(out);
+    HANDLER(period_sort_).report(out);
+    HANDLER(plot_amount_format_).report(out);
+    HANDLER(plot_total_format_).report(out);
+    HANDLER(price).report(out);
+    HANDLER(price_exp_).report(out);
+    HANDLER(prices_format_).report(out);
+    HANDLER(pricesdb_format_).report(out);
+    HANDLER(print_format_).report(out);
+    HANDLER(quantity).report(out);
+    HANDLER(quarterly).report(out);
+    HANDLER(raw).report(out);
+    HANDLER(real).report(out);
+    HANDLER(register_format_).report(out);
+    HANDLER(related).report(out);
+    HANDLER(related_all).report(out);
+    HANDLER(revalued).report(out);
+    HANDLER(revalued_only).report(out);
+    HANDLER(revalued_total_).report(out);
+    HANDLER(seed_).report(out);
+    HANDLER(set_account_).report(out);
+    HANDLER(set_payee_).report(out);
+    HANDLER(set_price_).report(out);
+    HANDLER(sort_).report(out);
+    HANDLER(sort_all_).report(out);
+    HANDLER(sort_xacts_).report(out);
+    HANDLER(start_of_week_).report(out);
+    HANDLER(subtotal).report(out);
+    HANDLER(tail_).report(out);
+    HANDLER(total_).report(out);
+    HANDLER(total_data).report(out);
+    HANDLER(truncate_).report(out);
+    HANDLER(unbudgeted).report(out);
+    HANDLER(uncleared).report(out);
+    HANDLER(unround).report(out);
+    HANDLER(weekly).report(out);
+    HANDLER(wide).report(out);
+    HANDLER(yearly).report(out);
+    HANDLER(date_width_).report(out);
+    HANDLER(payee_width_).report(out);
+    HANDLER(account_width_).report(out);
+    HANDLER(amount_width_).report(out);
+    HANDLER(total_width_).report(out);
+  }
+
   option_t<report_t> * lookup_option(const char * p);
 
   virtual void define(const string& name, expr_t::ptr_op_t def);
@@ -187,11 +294,11 @@ public:
    */
 
   OPTION__(report_t, abbrev_len_,
-	   CTOR(report_t, abbrev_len_) { on_with(2L); });
+	   CTOR(report_t, abbrev_len_) { on_with(none, 2L); });
   OPTION(report_t, account_);
 
   OPTION_(report_t, actual, DO() { // -L
-      parent->HANDLER(limit_).on("actual");
+      parent->HANDLER(limit_).on(string("--actual"), "actual");
     });
 
   OPTION_(report_t, add_budget, DO() {
@@ -202,28 +309,31 @@ public:
   (report_t, amount_, // -t
    expr_t expr;
    CTOR(report_t, amount_) {
-     set_expr("amount");
+     set_expr(none, "amount");
    }
-   void set_expr(const string& str) {
+   void set_expr(const optional<string>& whence, const string& str) {
      expr = str;
-     on(str);
+     on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string());
+     set_expr(args[0].to_string(), args[1].to_string());
    });
 
   OPTION_(report_t, amount_data, DO() { // -j
-      parent->HANDLER(format_).on_with(parent->HANDLER(plot_amount_format_).value);
+      parent->HANDLER(format_)
+	.on_with(none, parent->HANDLER(plot_amount_format_).value);
     });
 
   OPTION(report_t, anon);
 
   OPTION_(report_t, average, DO() { // -A
-      parent->HANDLER(display_total_).set_expr("total_expr/count");
+      parent->HANDLER(display_total_).set_expr(string("--average"),
+					       "total_expr/count");
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
-      on("%(ansify_if(justify(scrub(display_total), 20, -1, true), "
+      on(none,
+	 "%(ansify_if(justify(scrub(display_total), 20, -1, true), "
 	 "    red if color & scrub(display_total) < 0))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
@@ -235,20 +345,20 @@ public:
   OPTION(report_t, base);
 
   OPTION_(report_t, basis, DO() { // -B
-      parent->HANDLER(revalued).on_only();
-      parent->HANDLER(amount_).set_expr("rounded(cost)");
+      parent->HANDLER(revalued).on_only(string("--basis"));
+      parent->HANDLER(amount_).set_expr(string("--basis"), "rounded(cost)");
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
-      date_interval_t interval(args[0].to_string());
+      date_interval_t interval(args[1].to_string());
       if (! interval.start)
 	throw_(std::invalid_argument,
 	       _("Could not determine beginning of period '%1'")
-	       << args[0].to_string());
+	       << args[1].to_string());
 
       string predicate =
 	"date>=[" + to_iso_extended_string(*interval.start) + "]";
-      parent->HANDLER(limit_).on(predicate);
+      parent->HANDLER(limit_).on(string("--begin"), predicate);
     });
 
   OPTION_(report_t, budget, DO() {
@@ -258,7 +368,7 @@ public:
   OPTION(report_t, by_payee); // -P
 
   OPTION_(report_t, cleared, DO() { // -C
-      parent->HANDLER(limit_).on("cleared");
+      parent->HANDLER(limit_).on(string("--cleared"), "cleared");
     });
 
   OPTION(report_t, code_as_payee);
@@ -270,17 +380,18 @@ public:
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too, but only apply it
       // to account xacts
-      parent->HANDLER(display_).on("post|depth<=1");
+      parent->HANDLER(display_).on(string("--collapse"), "post|depth<=1");
     });
 
   OPTION_(report_t, collapse_if_zero, DO() {
-      parent->HANDLER(collapse).on_only();
+      parent->HANDLER(collapse).on_only(string("--collapse-if-zero"));
     });
 
   OPTION(report_t, columns_);
 
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
-      on("%(quoted(date)),"
+      on(none,
+	 "%(quoted(date)),"
 	 "%(quoted(payee)),"
 	 "%(quoted(account)),"
 	 "%(quoted(scrub(display_amount))),"
@@ -290,35 +401,38 @@ public:
     });
 
   OPTION_(report_t, current, DO() { // -c
-      parent->HANDLER(limit_).on("date<=today");
+      parent->HANDLER(limit_).on(string("--current"), "date<=today");
     });
 
   OPTION_(report_t, daily, DO() {
-      parent->HANDLER(period_).on("daily");
+      parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
   OPTION__(report_t, date_format_, // -y
 	   CTOR(report_t, date_format_) {
-	     on("%y-%b-%d");
+	     on(none, "%y-%b-%d");
 	   });
 
   OPTION_(report_t, depth_, DO_(scope) {
-      interactive_t args(scope, "l");
-      parent->HANDLER(display_).on(string("depth<=") + args.get<string>(0));
+      interactive_t args(scope, "sl");
+      parent->HANDLER(display_).on(string("--depth"),
+				   string("depth<=") + args.get<string>(1));
     });
 
   OPTION_(report_t, deviation, DO() { // -D
-      parent->HANDLER(display_total_).set_expr("amount_expr-total_expr/count");
+      parent->HANDLER(display_total_).set_expr(string("--deviation"),
+					       "amount_expr-total_expr/count");
     });
 
   OPTION__
   (report_t, display_, // -d
    CTOR(report_t, display_) {}
-   virtual void on_with(const value_t& text) {
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
      if (! handled)
-       option_t<report_t>::on_with(text);
+       option_t<report_t>::on_with(whence, text);
      else
-       option_t<report_t>::on_with(string_value(string("(") + str() + ")&(" +
+       option_t<report_t>::on_with(whence,
+				   string_value(string("(") + str() + ")&(" +
 						text.as_string() + ")"));
    });
 
@@ -326,28 +440,28 @@ public:
   (report_t, display_amount_,
    expr_t expr;
    CTOR(report_t, display_amount_) {
-     set_expr("amount_expr");
+     set_expr(none, "amount_expr");
    }
-   void set_expr(const string& str) {
+   void set_expr(const optional<string>& whence, const string& str) {
      expr = str;
-     on(str);
+     on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string());
+     set_expr(args[0].to_string(), args[1].to_string());
    });
 
   OPTION__
   (report_t, display_total_,
    expr_t expr;
    CTOR(report_t, display_total_) {
-     set_expr("total_expr");
+     set_expr(none, "total_expr");
    }
-   void set_expr(const string& str) {
+   void set_expr(const optional<string>& whence, const string& str) {
      expr = str;
-     on(str);
+     on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string());
+     set_expr(args[0].to_string(), args[1].to_string());
    });
 
   OPTION(report_t, dow);
@@ -355,15 +469,15 @@ public:
   OPTION(report_t, empty); // -E
 
   OPTION_(report_t, end_, DO_(args) { // -e
-      date_interval_t interval(args[0].to_string());
+      date_interval_t interval(args[1].to_string());
       if (! interval.start)
 	throw_(std::invalid_argument,
 	       _("Could not determine end of period '%1'")
-	       << args[0].to_string());
+	       << args[1].to_string());
 
       string predicate =
 	"date<[" + to_iso_extended_string(*interval.start) + "]";
-      parent->HANDLER(limit_).on(predicate);
+      parent->HANDLER(limit_).on(string("--end"), predicate);
 #if 0
       terminus = interval.begin;
 #endif
@@ -373,8 +487,9 @@ public:
   OPTION(report_t, exact);
 
   OPTION_(report_t, exchange_, DO_(args) { // -X
-      on_with(args[0]);
+      on_with(args[0].as_string(), args[1]);
       call_scope_t no_args(*parent);
+      no_args.push_back(args[0]);
       parent->HANDLER(market).parent = parent;
       parent->HANDLER(market).handler(no_args);
     });
@@ -384,21 +499,24 @@ public:
   OPTION(report_t, format_); // -F
 
   OPTION_(report_t, gain, DO() { // -G
-      parent->HANDLER(revalued).on_only();
-      parent->HANDLER(amount_).set_expr("(amount, cost)");
+      parent->HANDLER(revalued).on_only(string("--gain"));
+      parent->HANDLER(amount_).set_expr(string("--gain"), "(amount, cost)");
       // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.
       parent->HANDLER(display_amount_)
-	.set_expr("use_direct_amount ? amount :"
+	.set_expr(string("--gain"),
+		  "use_direct_amount ? amount :"
 		  " (is_seq(get_at(amount_expr, 0)) ?"
 		  "  get_at(get_at(amount_expr, 0), 0) :"
 		  "  market(get_at(amount_expr, 0), date, exchange)"
 		  "  - get_at(amount_expr, 1))");
       parent->HANDLER(revalued_total_)
-	.set_expr("(market(get_at(total_expr, 0), date, exchange), "
+	.set_expr(string("--gain"),
+		  "(market(get_at(total_expr, 0), date, exchange), "
 		  "get_at(total_expr, 1))");
       parent->HANDLER(display_total_)
-	.set_expr("use_direct_amount ? total_expr :"
+	.set_expr(string("--gain"),
+		  "use_direct_amount ? total_expr :"
 		  " market(get_at(total_expr, 0), date, exchange)"
 		  " - get_at(total_expr, 1)");
     });
@@ -406,17 +524,18 @@ public:
   OPTION(report_t, head_);
 
   OPTION_(report_t, invert, DO() {
-      parent->HANDLER(amount_).set_expr("-amount");
+      parent->HANDLER(amount_).set_expr(string("--invert"), "-amount");
     });
 
   OPTION__
   (report_t, limit_, // -l
    CTOR(report_t, limit_) {}
-   virtual void on_with(const value_t& text) {
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
      if (! handled)
-       option_t<report_t>::on_with(text);
+       option_t<report_t>::on_with(whence, text);
      else
-       option_t<report_t>::on_with(string_value(string("(") + str() + ")&(" +
+       option_t<report_t>::on_with(whence,
+				   string_value(string("(") + str() + ")&(" +
 						text.as_string() + ")"));
    });
 
@@ -427,15 +546,15 @@ public:
   OPTION(report_t, lots_actual);
 
   OPTION_(report_t, market, DO() { // -V
-      parent->HANDLER(revalued).on_only();
+      parent->HANDLER(revalued).on_only(string("--market"));
       parent->HANDLER(display_amount_)
-	.set_expr("market(amount_expr, date, exchange)");
+	.set_expr(string("--market"), "market(amount_expr, date, exchange)");
       parent->HANDLER(display_total_)
-	.set_expr("market(total_expr, date, exchange)");
+	.set_expr(string("--market"), "market(total_expr, date, exchange)");
     });
 
   OPTION_(report_t, monthly, DO() { // -M
-      parent->HANDLER(period_).on("monthly");
+      parent->HANDLER(period_).on(string("--monthly"), "monthly");
     });
 
   OPTION(report_t, no_total);
@@ -443,11 +562,12 @@ public:
   OPTION__
   (report_t, only_,
    CTOR(report_t, only_) {}
-   virtual void on_with(const value_t& text) {
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
      if (! handled)
-       option_t<report_t>::on_with(text);
+       option_t<report_t>::on_with(whence, text);
      else
-       option_t<report_t>::on_with(string_value(string("(") + str() + ")&(" +
+       option_t<report_t>::on_with(whence,
+				   string_value(string("(") + str() + ")&(" +
 						text.as_string() + ")"));
    });
 
@@ -456,7 +576,7 @@ public:
   OPTION(report_t, payee_as_account);
 
   OPTION_(report_t, pending, DO() { // -C
-      parent->HANDLER(limit_).on("pending");
+      parent->HANDLER(limit_).on(string("--pending"), "pending");
     });
 
   OPTION(report_t, percentage); // -%
@@ -464,40 +584,46 @@ public:
   OPTION__
   (report_t, period_, // -p
    CTOR(report_t, period_) {}
-   virtual void on_with(const value_t& text) {
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
      if (! handled)
-       option_t<report_t>::on_with(text);
+       option_t<report_t>::on_with(whence, text);
      else
-       option_t<report_t>::on_with(string_value(text.as_string() + " " + str()));
+       option_t<report_t>::on_with(whence,
+				   string_value(text.as_string() + " " + str()));
    });
 
   OPTION(report_t, period_sort_);
 
   OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
-      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
+      on(none,
+	 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
     });
 
   OPTION__(report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-      on("%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
+      on(none,
+	 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
     });
 
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).set_expr("price");
+      parent->HANDLER(amount_).set_expr(string("--price"), "price");
     });
 
   OPTION(report_t, price_exp_); // -Z
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
-      on("%-.9(date) %-8(account) %12(scrub(display_amount))\n");
+      on(none,
+	 "%-.9(date) %-8(account) %12(scrub(display_amount))\n");
     });
 
   OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
-      on("P %[%Y/%m/%d %H:%M:%S] %A %t\n");
+      on(none,
+	 "P %[%Y/%m/%d %H:%M:%S] %A %t\n");
     });
 
   OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
-      on("%(format_date(xact.date, \"%Y/%m/%d\"))"
+      on(none,
+	 "%(format_date(xact.date, \"%Y/%m/%d\"))"
 	 "%(!effective & xact.effective_date ?"
 	 " \"=\" + format_date(xact.effective_date, \"%Y/%m/%d\") : \"\")"
 	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
@@ -521,22 +647,23 @@ public:
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).set_expr("amount");
-      parent->HANDLER(total_).set_expr("total");
+      parent->HANDLER(amount_).set_expr(string("--quantity"), "amount");
+      parent->HANDLER(total_).set_expr(string("--quantity"), "total");
     });
 
   OPTION_(report_t, quarterly, DO() {
-      parent->HANDLER(period_).on("quarterly");
+      parent->HANDLER(period_).on(string("--quarterly"), "quarterly");
     });
 
   OPTION(report_t, raw);
 
   OPTION_(report_t, real, DO() { // -R
-      parent->HANDLER(limit_).on("real");
+      parent->HANDLER(limit_).on(string("--real"), "real");
     });
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
-      on("%(ansify_if(justify(date, date_width), green if color & date > today))"
+      on(none,
+	 "%(ansify_if(justify(date, date_width), green if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
 	 "    bold if color & !cleared))"
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
@@ -567,12 +694,12 @@ public:
   (report_t, revalued_total_,
    expr_t expr;
    CTOR(report_t, revalued_total_) {}
-   void set_expr(const string& str) {
+   void set_expr(const optional<string>& whence, const string& str) {
      expr = str;
-     on(str);
+     on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string());
+     set_expr(args[0].to_string(), args[1].to_string());
    });
 
   OPTION(report_t, seed_);
@@ -581,18 +708,18 @@ public:
   OPTION(report_t, set_price_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
-      on_with(args[0]);
+      on_with(args[0].as_string(), args[1]);
       parent->HANDLER(sort_xacts_).off();
       parent->HANDLER(sort_all_).off();
     });
 
   OPTION_(report_t, sort_all_, DO_(args) {
-      parent->HANDLER(sort_).on_with(args[0]);
+      parent->HANDLER(sort_).on_with(string("--sort-all"), args[1]);
       parent->HANDLER(sort_xacts_).off();
     });
 
   OPTION_(report_t, sort_xacts_, DO_(args) {
-      parent->HANDLER(sort_).on_with(args[0]);
+      parent->HANDLER(sort_).on_with(string("--sort-xacts"), args[1]);
       parent->HANDLER(sort_all_).off();
     });
 
@@ -604,23 +731,24 @@ public:
   (report_t, total_, // -T
    expr_t expr;
    CTOR(report_t, total_) {
-     set_expr("total");
+     set_expr(none, "total");
    }
-   void set_expr(const string& str) {
+   void set_expr(const optional<string>& whence, const string& str) {
      expr = str;
-     on(str);
+     on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string());
+     set_expr(args[0].to_string(), args[1].to_string());
    });
 
   OPTION_(report_t, total_data, DO() { // -J
-      parent->HANDLER(format_).on_with(parent->HANDLER(plot_total_format_).value);
+      parent->HANDLER(format_).on_with(string("--total-data"),
+				       parent->HANDLER(plot_total_format_).value);
     });
 
   OPTION_(report_t, truncate_, DO() {
 #if 0
-      string style(args[0].to_string());
+      string style(args[1].to_string());
       if (style == "leading")
 	format_t::elision_style = format_t::TRUNCATE_LEADING;
       else if (style == "middle")
@@ -637,54 +765,70 @@ public:
     });
 
   OPTION_(report_t, uncleared, DO() { // -U
-      parent->HANDLER(limit_).on("uncleared|pending");
+      parent->HANDLER(limit_).on(string("--uncleared"), "uncleared|pending");
     });
 
   OPTION_(report_t, unround, DO() {
-      parent->HANDLER(amount_).set_expr("unrounded(amount)");
+      parent->HANDLER(amount_).set_expr(string("--uncleared"),
+					"unrounded(amount)");
     });
 
   OPTION_(report_t, weekly, DO() { // -W
-      parent->HANDLER(period_).on("weekly");
+      parent->HANDLER(period_).on(string("--weekly"), "weekly");
     });
 
   OPTION_(report_t, wide, DO() { // -w
-      parent->HANDLER(date_width_).on_with(9L);
+      parent->HANDLER(date_width_).on_with(string("--wide"), 9L);
       parent->HANDLER(date_width_).specified = true;
-      parent->HANDLER(payee_width_).on_with(35L);
+      parent->HANDLER(payee_width_).on_with(string("--wide"), 35L);
       parent->HANDLER(payee_width_).specified = true;
-      parent->HANDLER(account_width_).on_with(39L);
+      parent->HANDLER(account_width_).on_with(string("--wide"), 39L);
       parent->HANDLER(account_width_).specified = true;
-      parent->HANDLER(amount_width_).on_with(22L);
+      parent->HANDLER(amount_width_).on_with(string("--wide"), 22L);
       parent->HANDLER(amount_width_).specified = true;
-      parent->HANDLER(total_width_).on_with(22L);
+      parent->HANDLER(total_width_).on_with(string("--wide"), 22L);
       parent->HANDLER(total_width_).specified = true;
     });
 
   OPTION_(report_t, yearly, DO() { // -Y
-      parent->HANDLER(period_).on("yearly");
+      parent->HANDLER(period_).on(string("--yearly"), "yearly");
     });
 
   OPTION__(report_t, date_width_,
 	   bool specified;
-	   CTOR(report_t, date_width_) { on_with(9L); specified = false; }
-	   DO_(args) { value = args[0].to_long(); specified = true; });
+	   CTOR(report_t, date_width_) {
+	     on_with(none, 9L);
+	     specified = false;
+	   }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, payee_width_,
 	   bool specified;
-	   CTOR(report_t, payee_width_) { on_with(20L); specified = false; }
-	   DO_(args) { value = args[0].to_long(); specified = true; });
+	   CTOR(report_t, payee_width_) {
+	     on_with(none, 20L);
+	     specified = false;
+	   }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, account_width_,
 	   bool specified;
-	   CTOR(report_t, account_width_) { on_with(23L); specified = false; }
-	   DO_(args) { value = args[0].to_long(); specified = true; });
+	   CTOR(report_t, account_width_) {
+	     on_with(none, 23L);
+	     specified = false;
+	   }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, amount_width_,
 	   bool specified;
-	   CTOR(report_t, amount_width_) { on_with(12L); specified = false; }
-	   DO_(args) { value = args[0].to_long(); specified = true; });
+	   CTOR(report_t, amount_width_) {
+	     on_with(none, 12L);
+	     specified = false;
+	   }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, total_width_,
 	   bool specified;
-	   CTOR(report_t, total_width_) { on_with(12L); specified = false; }
-	   DO_(args) { value = args[0].to_long(); specified = true; });
+	   CTOR(report_t, total_width_) {
+	     on_with(none, 12L);
+	     specified = false;
+	   }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
 };
 
 } // namespace ledger

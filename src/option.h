@@ -56,10 +56,11 @@ template <typename T>
 class option_t
 {
 protected:
-  const char * name;
-  std::size_t  name_len;
-  const char   ch;
-  bool	       handled;
+  const char *	   name;
+  std::size_t	   name_len;
+  const char	   ch;
+  bool		   handled;
+  optional<string> source;
 
   option_t& operator=(const option_t&);
 
@@ -90,6 +91,18 @@ public:
     TRACE_DTOR(option_t);
   }
 
+  void report(std::ostream& out) const {
+    if (handled && source) {
+      if (wants_arg) {
+	out << desc() << " => ";
+	value.dump(out);
+      } else {
+	out << desc();
+      }
+      out << " <" << *source << ">" << std::endl;
+    }
+  }
+
   string desc() const {
     std::ostringstream out;
     out << "--";
@@ -117,31 +130,42 @@ public:
     return value.as_string_lval();
   }
 
-  void on_only() {
+  string str() const {
+    assert(handled);
+    if (! value)
+      throw_(std::runtime_error, _("No argument provided for %1") << desc());
+    return value.as_string();
+  }
+
+  void on_only(const optional<string>& whence) {
     handled = true;
+    source  = whence;
   }
-  void on(const string& str) {
-    on_with(string_value(str));
+  void on(const optional<string>& whence, const string& str) {
+    on_with(whence, string_value(str));
   }
-  virtual void on_with(const value_t& val) {
+  virtual void on_with(const optional<string>& whence,
+		       const value_t& val) {
     handled = true;
     value   = val;
+    source  = whence;
   }
 
   void off() {
     handled = false;
     value   = value_t();
+    source  = none;
   }
 
   virtual void handler_thunk(call_scope_t&) {}
 
   virtual void handler(call_scope_t& args) {
     if (wants_arg) {
-      if (args.empty())
+      if (args.empty() || args.size() == 1)
 	throw_(std::runtime_error, _("No argument provided for %1") << desc());
-      on_with(args[0]);
+      on_with(args[0].as_string(), args[1]);
     } else {
-      on_only();
+      on_only(args[0].as_string());
     }
 
     handler_thunk(args);
@@ -270,7 +294,7 @@ inline bool is_eq(const char * p, const char * n) {
 #define WANT_DIR()					\
   (std::strncmp(p, DIR_PREFIX, DIR_PREFIX_LEN) == 0)
 
-void process_option(const string& name, scope_t& scope,
+void process_option(const string& whence, const string& name, scope_t& scope,
 		    const char * arg, const string& varname);
 
 void process_environment(const char ** envp, const string& tag,

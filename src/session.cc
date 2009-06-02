@@ -71,9 +71,9 @@ session_t::session_t()
   TRACE_CTOR(session_t, "");
 
   if (const char * home_var = std::getenv("HOME"))
-    HANDLER(price_db_).on((path(home_var) / ".pricedb").string());
+    HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
   else
-    HANDLER(price_db_).on(path("./.pricedb").string());
+    HANDLER(price_db_).on(none, path("./.pricedb").string());
 
   // Add time commodity conversions, so that timelog's may be parsed
   // in terms of seconds, but reported as minutes or hours.

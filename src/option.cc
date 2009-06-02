@@ -76,11 +76,13 @@ namespace {
     return op_bool_tuple(scope.lookup(buf), false);
   }
 
-  void process_option(const function_t& opt, scope_t& scope,
-		      const char * arg, const string& name)
+  void process_option(const string& whence, const function_t& opt,
+		      scope_t& scope, const char * arg, const string& name)
   {
     try {
       call_scope_t args(scope);
+
+      args.push_back(string_value(whence));
       if (arg)
 	args.push_back(string_value(arg));
 
@@ -97,12 +99,12 @@ namespace {
   }
 }
 
-void process_option(const string& name, scope_t& scope,
+void process_option(const string& whence, const string& name, scope_t& scope,
 		    const char * arg, const string& varname)
 {
   op_bool_tuple opt(find_option(scope, name));
   if (opt.first)
-    process_option(opt.first->as_function(), scope, arg, varname);
+    process_option(whence, opt.first->as_function(), scope, arg, varname);
 }
 
 void process_environment(const char ** envp, const string& tag,
@@ -129,7 +131,7 @@ void process_environment(const char ** envp, const string& tag,
 	try {
 	  string value = string(*p, q - *p);
 	  if (! value.empty())
-	    process_option(string(buf), scope, q + 1, value);
+	    process_option(string("$") + buf, string(buf), scope, q + 1, value);
 	}
 	catch (const std::exception& err) {
 	  add_error_context(_("While parsing environment variable option '%1':")
@@ -201,7 +203,8 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 	if (value == NULL)
 	  throw_(option_error, _("Missing option argument for --%1") << name);
       }
-      process_option(opt.first->as_function(), scope, value,
+      process_option(string("--") + name,
+		     opt.first->as_function(), scope, value,
 		     string("--") + name);
     }
     else if ((*i)[1] == '\0') {
@@ -230,7 +233,8 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 	    throw_(option_error,
 		   _("Missing option argument for -%1") << o.ch);
 	}
-	process_option(o.op->as_function(), scope, value, string("-") + o.ch);
+	process_option(string("-") + o.ch, o.op->as_function(), scope, value,
+		       string("-") + o.ch);
       }
     }
   }
