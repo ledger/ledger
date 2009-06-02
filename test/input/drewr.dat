@@ -57,3 +57,7 @@
 2004/01/27 Book Store
   Expenses:Books                       $20.00
   Liabilities:MasterCard
+
+2004/02/01 Sale
+  Assets:Checking:Business            $ 30.00
+  Income:Sales
