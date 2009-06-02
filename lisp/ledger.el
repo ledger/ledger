@@ -225,9 +225,7 @@ Return the difference in the format of a time value."
 		      (mapcar 'eval args)))
 	 (goto-char (point-min))
 	 (if (looking-at "Error: ")
-	     (progn
-	      (message (buffer-string))
-	      (error))
+	     (error (buffer-string))
 	   (buffer-string)))
        "\n"))))
 
