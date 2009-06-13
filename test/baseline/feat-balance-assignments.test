@@ -1,0 +1,37 @@
+bal
+<<<
+2009/01/01 Entry
+    Assets:Cash                $10,000.00
+    Equity:Opening Balances
+
+2009/02/01 Entry
+    Expenses:Cash                 $100.00
+    Assets:Cash
+
+2009/02/02 Entry
+    Expenses:Cash                 $100.00
+    Assets:Cash
+
+2009/02/03 Entry
+    Expenses:Cash                 $100.00
+    Assets:Cash                  $-100.00 = $9,700.00
+
+2009/02/04 Entry
+    Expenses:Cash                 $100.00
+    Assets:Cash                  $-100.00 = $9,600.00
+
+2009/02/05 Entry
+    Expenses:Cash                 $100.00
+    Assets:Cash
+
+2009/02/05 Entry
+    Expenses:Cash
+    Assets:Cash                         = ($4,000.00 + $100.00)
+>>>1
+           $4,100.00  Assets:Cash
+         $-10,000.00  Equity:Opening Balances
+           $5,900.00  Expenses:Cash
+--------------------
+                   0
+>>>2
+=== 0
