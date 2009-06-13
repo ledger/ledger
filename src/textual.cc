@@ -1014,7 +1014,8 @@ post_t * instance_t::parse_post(char *		line,
 	    << "POST assign: parsed amt = " << *post->assigned_amount);
 
       amount_t&	amt(*post->assigned_amount);
-      value_t   account_total(post->account->self_total(false));
+      value_t   account_total(post->account->self_total(false)
+			      .strip_annotations(keep_details_t()));
 
       DEBUG("post.assign", "line " << linenum << ": "
 	    "account balance = " << account_total);
