@@ -258,10 +258,12 @@ value_t get_comment(item_t& item)
   if (! item.note) {
     return string_value("");
   } else {
-    // jww (2009-03-01): If the comment is a short one-liner, put it at the
-    // end of the post/xact
     std::ostringstream buf;
-    buf << "\n    ;";
+    if (item.note->length() > 15)
+      buf << "\n    ;";
+    else
+      buf << "  ;";
+
     bool need_separator = false;
     for (const char * p = item.note->c_str(); *p; p++) {
       if (*p == '\n') {
