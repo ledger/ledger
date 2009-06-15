@@ -179,7 +179,9 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
       (account.has_flags(ACCOUNT_EXT_VISITED) || (! flat && visited > 0))) {
     bind_scope_t bound_scope(report, account);
     if ((! flat && to_display > 1) ||
-	(disp_pred(bound_scope) && (flat || to_display != 1))) {
+	((flat || to_display != 1 ||
+	  account.has_flags(ACCOUNT_EXT_VISITED)) &&
+	 disp_pred(bound_scope))) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
       DEBUG("account.display", "Marking account as TO_DISPLAY");
       to_display = 1;

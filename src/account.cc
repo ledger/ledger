@@ -140,7 +140,7 @@ string account_t::partial_name(bool flat) const
     if (! flat) {
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
-      if (count > 1)
+      if (count > 1 || acct->has_flags(ACCOUNT_EXT_TO_DISPLAY))
 	break;
     }
     pname = acct->name + ":" + pname;
@@ -202,7 +202,7 @@ namespace {
 	 acct = acct->parent) {
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
-      if (count > 1)
+      if (count > 1 || acct->has_flags(ACCOUNT_EXT_TO_DISPLAY))
 	depth++;
     }
 
