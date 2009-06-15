@@ -573,6 +573,7 @@ value_t& value_t::operator*=(const value_t& val)
       return *this;
     case AMOUNT:
       if (as_amount().commodity() == val.as_amount().commodity() ||
+	  ! as_amount().has_commodity() ||
 	  ! val.as_amount().has_commodity()) {
 	as_amount_lval() *= val.as_amount();
 	return *this;
