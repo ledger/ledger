@@ -866,7 +866,7 @@ void AmountTestCase::testIntegerDivision()
   x1 /= amount_t(456L);
   assertEqual(string("0.269737"), x1.to_string());
   x1 /= 456L;
-  assertEqual(string("0.000591528162511542"), x1.to_string());
+  assertEqual(string("0.000591528163"), x1.to_string());
 
   amount_t x4("123456789123456789123456789");
   amount_t y4("56");
@@ -889,32 +889,32 @@ void AmountTestCase::testFractionalDivision()
   amount_t y1("456.456");
 
   assertThrow(x1 / 0L, amount_error);
-  assertEqual(string("0.00812195934"), (amount_t("1.0") / x1).to_string());
-  assertEqual(string("0.00812195934"), (amount_t("1.0") / x1).to_string());
+  assertEqual(string("0.0081219593"), (amount_t("1.0") / x1).to_string());
+  assertEqual(string("0.0081219593"), (amount_t("1.0") / x1).to_string());
   assertEqual(x1, x1 / amount_t("1.0"));
-  assertEqual(string("0.00812195934"), (amount_t("1.0") / x1).to_string());
-  assertEqual(string("0.00812195934"), (amount_t("1.0") / x1).to_string());
+  assertEqual(string("0.0081219593"), (amount_t("1.0") / x1).to_string());
+  assertEqual(string("0.0081219593"), (amount_t("1.0") / x1).to_string());
   assertEqual(- x1, x1 / amount_t("-1.0"));
-  assertEqual(string("-0.00812195934"), (amount_t("-1.0") / x1).to_string());
-  assertEqual(string("-0.00812195934"), (amount_t("-1.0") / x1).to_string());
-  assertEqual(string("0.269736842105263"), (x1 / y1).to_string());
-  assertEqual(string("3.707317073170732"), (y1 / x1).to_string());
-  assertEqual(string("0.269736842105263"), (x1 / amount_t("456.456")).to_string());
-  assertEqual(string("3.707317073170732"), (amount_t("456.456") / x1).to_string());
-  assertEqual(string("3.707317073170732"), (amount_t("456.456") / x1).to_string());
+  assertEqual(string("-0.0081219593"), (amount_t("-1.0") / x1).to_string());
+  assertEqual(string("-0.0081219593"), (amount_t("-1.0") / x1).to_string());
+  assertEqual(string("0.269736842105"), (x1 / y1).to_string());
+  assertEqual(string("3.707317073171"), (y1 / x1).to_string());
+  assertEqual(string("0.269736842105"), (x1 / amount_t("456.456")).to_string());
+  assertEqual(string("3.707317073171"), (amount_t("456.456") / x1).to_string());
+  assertEqual(string("3.707317073171"), (amount_t("456.456") / x1).to_string());
 
   x1 /= amount_t("456.456");
-  assertEqual(string("0.269736842105263"), x1.to_string());
+  assertEqual(string("0.269736842105"), x1.to_string());
   x1 /= amount_t("456.456");
-  assertEqual(string("0.000590937225286255757169884601508201951"), x1.to_string());
+  assertEqual(string("0.000590937225286255757"), x1.to_string());
   x1 /= 456L;
-  assertEqual(string("0.00000129591496773301701133746621429767819329289006668733529828959526392431755859036"), x1.to_string());
+  assertEqual(string("0.000001295914967733017011337"), x1.to_string());
 
   amount_t x4("1234567891234567.89123456789");
   amount_t y4("56.789");
 
   assertEqual(amount_t("1.0"), x4 / x4);
-  assertEqual(string("21739560323910.7554497273748437197344556164046"), (x4 / y4).to_string());
+  assertEqual(string("21739560323910.75544972737484371973"), (x4 / y4).to_string());
 
   assertValid(x1);
   assertValid(y1);
@@ -946,9 +946,9 @@ void AmountTestCase::testCommodityDivision()
   // Internal amounts retain their precision, even when being
   // converted to strings
   assertEqual(string("$0.99727201"), (x1 / x2).to_fullstring());
-  assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_fullstring());
+  assertEqual(string("$1.00273545321637"), (x2 / x1).to_fullstring());
   assertEqual(string("$1.00"), (x1 / x2).to_string());
-  assertEqual(string("$1.00273545321637426901"), (x2 / x1).to_string());
+  assertEqual(string("$1.00273545321637"), (x2 / x1).to_string());
 
   assertThrow(x1 / x0, amount_error);
   assertThrow(x0 / x1, amount_error);
@@ -970,9 +970,9 @@ void AmountTestCase::testCommodityDivision()
   amount_t x7(internalAmount("$123456789123456789.123456789123456789"));
 
   assertEqual(amount_t("$1"), x7 / x7);
-  assertEqual(string("$0.0019216115121765559608381226612019501046413574469262"),
+  assertEqual(string("$0.0019216115121765559608381226612019501"),
 	      (x6 / x7).to_fullstring());
-  assertEqual(string("$520.39654928343335571379527154924040947271699678158689736256"),
+  assertEqual(string("$520.39654928343335571379527154924040947272"),
 	      (x7 / x6).to_fullstring());
 
   assertValid(x1);

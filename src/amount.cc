@@ -343,8 +343,8 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   _dup();
 
   mpq_mul(MP(quantity), MP(quantity), MP(amt.quantity));
-  quantity->prec = static_cast<precision_t>(quantity->prec +
-					    amt.quantity->prec);
+  quantity->prec =
+    static_cast<precision_t>(quantity->prec + amt.quantity->prec);
 
   if (! has_commodity())
     commodity_ = amt.commodity_;
@@ -382,7 +382,7 @@ amount_t& amount_t::operator/=(const amount_t& amt)
   mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
   quantity->prec =
     static_cast<precision_t>(quantity->prec + amt.quantity->prec +
-			     quantity->prec + extend_by_digits);
+			     extend_by_digits);
 
   if (! has_commodity())
     commodity_ = amt.commodity_;
