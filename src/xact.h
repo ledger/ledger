@@ -206,7 +206,13 @@ class period_xact_t : public xact_base_t
   }
 
   virtual bool valid() const {
-    return period.is_valid();
+#if 0
+    if (! period.is_valid()) {
+      DEBUG("ledger.validate", "period_xact_t: ! period.is_valid()");
+      return false;
+    }
+#endif
+    return true;
   }
 };
 

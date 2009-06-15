@@ -511,8 +511,10 @@ public:
 
   bool valid() const {
     foreach (const amounts_map::value_type& pair, amounts)
-      if (! pair.second.valid())
+      if (! pair.second.valid()) {
+	DEBUG("ledger.validate", "balance_t: ! pair.second.valid()");
 	return false;
+      }
     return true;
   }
 };

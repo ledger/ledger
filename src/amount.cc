@@ -1062,8 +1062,10 @@ void amount_t::print(std::ostream& _out) const
 bool amount_t::valid() const
 {
   if (quantity) {
-    if (! quantity->valid())
+    if (! quantity->valid()) {
+      DEBUG("ledger.validate", "amount_t: ! quantity->valid()");
       return false;
+    }
 
     if (quantity->ref == 0) {
       DEBUG("ledger.validate", "amount_t: quantity->ref == 0");
