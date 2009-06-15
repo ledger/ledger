@@ -128,7 +128,7 @@ text that should replace the format specifier."
 
 (defvar bold 'bold)
 (defvar ledger-font-lock-keywords
-  '(("^[0-9./=]+\\s-+\\(?:([^)]+)\\s-+\\)?\\([^*].+\\)" 1 bold)
+  '(("^[0-9./=]+\\s-+\\(?:([^)*]+)\\s-+\\)?\\(.+\\)" 1 bold)
     ("\s \\{5,\\}\\([$]-[0-9][0-9,.]*\\)" 1 font-lock-warning-face)
     ("\s \\{5,\\}\\(-?[0-9][0-9,.]*\\)" 1 font-lock-type-face)
     ("^\\s-+.+?\\(  \\|\t\\|\n\\|\\s-+$\\)" . font-lock-keyword-face)
