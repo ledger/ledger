@@ -740,7 +740,7 @@ void amount_t::annotate(const annotation_t& details)
   if (! quantity)
     throw_(amount_error, _("Cannot annotate the commodity of an uninitialized amount"));
   else if (! has_commodity())
-    throw_(amount_error, _("Cannot annotate an amount with no commodity"));
+    return;			// ignore attempt to annotate a "bare commodity
 
   if (commodity().annotated) {
     this_ann  = &as_annotated_commodity(commodity());
