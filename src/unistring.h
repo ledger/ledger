@@ -99,10 +99,14 @@ public:
 inline void justify(std::ostream&      out,
 		    const std::string& str,
 		    int		       width,
-		    bool               right = false)
+		    bool               right  = false,
+		    bool               redden = false)
 {
-  if (! right)
+  if (! right) {
+    if (redden) out << "\e[31m";
     out << str;
+    if (redden) out << "\e[0m";
+  }
 
   unistring temp(str);
 
@@ -110,8 +114,11 @@ inline void justify(std::ostream&      out,
   while (spacing-- > 0)
     out << ' ';
 
-  if (right)
+  if (right) {
+    if (redden) out << "\e[31m";
     out << str;
+    if (redden) out << "\e[0m";
+  }
 }
 
 } // namespace ledger

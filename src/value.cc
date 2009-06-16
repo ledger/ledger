@@ -1424,10 +1424,12 @@ void value_t::print(std::ostream&           out,
 		    const int	            first_width,
 		    const int               latter_width,
 		    const bool              right_justify,
+		    const bool              colorize,
 		    const optional<string>& date_format) const
 {
   if (first_width > 0 &&
-      ! is_amount() && ! is_balance() && ! is_string()) {
+      (! is_amount() || as_amount().is_zero()) &&
+      ! is_balance() && ! is_string()) {
     out.width(first_width);
 
     if (right_justify)
@@ -1460,17 +1462,20 @@ void value_t::print(std::ostream&           out,
     break;
 
   case INTEGER:
-    out << std::right << as_long();
+    if (colorize && as_long() < 0)
+      justify(out, to_string(), first_width, right_justify, true);
+    else
+      out << as_long();
     break;
 
   case AMOUNT: {
     if (as_amount().is_zero()) {
-      out.width(first_width);
-      out << (right_justify ? std::right : std::left) << 0;
+      out << 0;
     } else {
       std::ostringstream buf;
       buf << as_amount();
-      justify(out, buf.str(), first_width, right_justify);
+      justify(out, buf.str(), first_width, right_justify,
+	      colorize && as_amount().sign() < 0);
     }
     break;
   }
@@ -1493,14 +1498,15 @@ void value_t::print(std::ostream&           out,
 	out << ", ";
 
       value.print(out, first_width, latter_width, right_justify,
-		  date_format);
+		  colorize, date_format);
     }
     out << ')';
     break;
   }
 
   case BALANCE:
-    as_balance().print(out, first_width, latter_width, right_justify);
+    as_balance().print(out, first_width, latter_width, right_justify,
+		       colorize);
     break;
 
   case POINTER:

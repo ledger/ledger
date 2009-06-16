@@ -1,0 +1,81 @@
+reg --color
+<<<
+N $
+
+= account =~ /^Expenses:Books/
+    (Liabilities:Taxes)             -0.10
+
+~ Monthly
+    Assets:Bank:Checking          $500.00
+    Income:Salary
+
+2004/05/01 * Checking balance
+    Assets:Bank:Checking        $1,000.00
+    Equity:Opening Balances
+
+2004/05/03=2004/05/01 * Investment balance
+    Assets:Brokerage              50 AAPL @ $30.00
+    Equity:Opening Balances
+
+2004/05/14 * Páy dày
+    Assets:Bank:Checking          500.00€
+    Income:Salary
+
+2004/05/14 * Another dày in which there is Páying
+    Asséts:Bánk:Chécking:Asséts:Bánk:Chécking          $500.00
+    Income:Salary
+
+2004/05/14 * Another dày in which there is Páying
+    Русский язык:Русский язык:Русский язык:Русский язык  $1000.00
+    Income:Salary
+
+2004/05/27 Book Store
+    Expenses:Books                 $20.00
+    Expenses:Cards                 $40.00
+    Expenses:Docs                  $30.00
+    Liabilities:MasterCard
+
+2004/05/27 (100) Credit card company
+    ; This is an xact note!
+    ; Sample: Value
+    Liabilities:MasterCard         $20.00
+    ; This is a posting note!
+    ; Sample: Another Value
+    ; :MyTag:
+    Assets:Bank:Checking
+    ; :AnotherTag:
+>>>1
+04-May-01 Checking balance      [34mAssets:Bank:Checking  [0m    $1,000.00    $1,000.00
+                                [34mEq:Opening Balances   [0m   [31m$-1,000.00[0m            0
+04-May-03 Investment balance    [34mAssets:Brokerage      [0m      50 AAPL      50 AAPL
+                                [34mEq:Opening Balances   [0m   [31m$-1,500.00[0m   [31m$-1,500.00[0m
+                                                                         50 AAPL
+04-May-14 Páy dày               [34mAssets:Bank:Checking  [0m      500.00€   [31m$-1,500.00[0m
+                                                                         50 AAPL
+                                                                         500.00€
+                                [34mIncome:Salary         [0m     [31m-500.00€[0m   [31m$-1,500.00[0m
+                                                                         50 AAPL
+04-May-14 Another dày in whic.. [34m..Bá:Ch:As:Bá:Chécking[0m      $500.00   [31m$-1,000.00[0m
+                                                                         50 AAPL
+                                [34mIncome:Salary         [0m     [31m$-500.00[0m   [31m$-1,500.00[0m
+                                                                         50 AAPL
+04-May-14 Another dày in whic.. [34mРу:Ру:Ру:Русский язык [0m    $1,000.00     [31m$-500.00[0m
+                                                                         50 AAPL
+                                [34mIncome:Salary         [0m   [31m$-1,000.00[0m   [31m$-1,500.00[0m
+                                                                         50 AAPL
+04-May-27 [1mBook Store           [0m [34mExpenses:Books        [0m       $20.00   [31m$-1,480.00[0m
+                                                                         50 AAPL
+                                [34mExpenses:Cards        [0m       $40.00   [31m$-1,440.00[0m
+                                                                         50 AAPL
+                                [34mExpenses:Docs         [0m       $30.00   [31m$-1,410.00[0m
+                                                                         50 AAPL
+                                [34mLiabilities:MasterCard[0m      [31m$-90.00[0m   [31m$-1,500.00[0m
+                                                                         50 AAPL
+                                [34m(Liabilities:Taxes)   [0m       [31m$-2.00[0m   [31m$-1,502.00[0m
+                                                                         50 AAPL
+04-May-27 [1mCredit card company  [0m [34mLiabilities:MasterCard[0m       $20.00   [31m$-1,482.00[0m
+                                                                         50 AAPL
+                                [34mAssets:Bank:Checking  [0m      [31m$-20.00[0m   [31m$-1,502.00[0m
+                                                                         50 AAPL
+>>>2
+=== 0

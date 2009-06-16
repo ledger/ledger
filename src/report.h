@@ -333,12 +333,10 @@ public:
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
       on(none,
-	 "%(ansify_if(justify(scrub(display_total), 20, -1, true), "
-	 "    red if color & scrub(display_total) < 0))"
+	 "%(justify(scrub(display_total), 20, -1, true, color))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-	 "%(ansify_if(justify(scrub(display_total), 20, -1, true), "
-	 "    red if color & scrub(display_total) < 0))\n%/"
+	 "%(justify(scrub(display_total), 20, -1, true, color))\n%/"
 	 "--------------------\n");
     });
 
@@ -668,21 +666,21 @@ public:
 	 "    bold if color & !cleared))"
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
 	 "    account_width), blue if color))"
-	 " %(ansify_if(justify(scrub(display_amount), amount_width, "
-	 "    3 + date_width + payee_width + account_width + amount_width, true), "
-	 "    red if color & scrub(display_amount) < 0))"
-	 " %(ansify_if(justify(scrub(display_total), total_width, "
+	 " %(justify(scrub(display_amount), amount_width, "
+	 "    3 + date_width + payee_width + account_width + amount_width, "
+	 "    true, color))"
+	 " %(justify(scrub(display_total), total_width, "
 	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true), red if color & scrub(display_amount) < 0))\n%/"
+	 "    + total_width, true, color))\n%/"
 	 "%(justify(\" \", 2 + date_width + payee_width))"
 	 "%(ansify_if(justify(truncated(account, account_width, abbrev_len), "
 	 "    account_width), blue if color))"
-	 " %(ansify_if(justify(scrub(display_amount), amount_width, "
-	 "    3 + date_width + payee_width + account_width + amount_width, true), "
-	 "    red if color & scrub(display_amount) < 0))"
-	 " %(ansify_if(justify(scrub(display_total), total_width, "
+	 " %(justify(scrub(display_amount), amount_width, "
+	 "    3 + date_width + payee_width + account_width + amount_width, "
+	 "    true, color))"
+	 " %(justify(scrub(display_total), total_width, "
 	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true), red if color & scrub(display_amount) < 0))\n");
+	 "    + total_width, true, color))\n");
     });
 
   OPTION(report_t, related); // -r
