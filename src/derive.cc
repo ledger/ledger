@@ -98,7 +98,7 @@ namespace {
 	foreach (const post_template_t& post, posts) {
 	  straccstream accum;
 	  out << std::endl
-	      << ACCUM(accum << _("[Posting \"%1\"]_")
+	      << ACCUM(accum << _("[Posting \"%1\"]")
 		       << (post.from ? _("from") : _("to")))
 	      << std::endl;
 
