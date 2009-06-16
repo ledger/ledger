@@ -1,0 +1,10 @@
+reg -E
+<<<
+2009/01/01 Sample
+   assets  0 FOO @ $8.88
+   equity
+>>>1
+09-Jan-01 Sample                assets                            0            0
+                                equity                            0            0
+>>>2
+=== 0
