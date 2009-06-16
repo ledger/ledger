@@ -240,28 +240,30 @@ namespace {
 				     report_t&	      report)
   {
     if (tmpl.payee_mask.empty())
-      throw std::runtime_error(_("'xact' command requires at least a payee"));
+      throw std::runtime_error(_("xact' command requires at least a payee"));
 
-    xact_t *  matching = NULL;
-    journal_t& journal(*report.session.journal.get());
-
+    xact_t *		  matching = NULL;
+    journal_t&		  journal(*report.session.journal.get());
     std::auto_ptr<xact_t> added(new xact_t);
 
-    xacts_list::reverse_iterator j;
-
-    for (j = journal.xacts.rbegin();
+    for (xacts_list::reverse_iterator j = journal.xacts.rbegin();
 	 j != journal.xacts.rend();
 	 j++) {
       if (tmpl.payee_mask.match((*j)->payee)) {
 	matching = *j;
+	DEBUG("derive.xact",
+	      "Found payee match: transaction on line " << (*j)->beg_line);
 	break;
       }
     }
 
-    if (! tmpl.date)
+    if (! tmpl.date) {
       added->_date = CURRENT_DATE();
-    else
+      DEBUG("derive.xact", "Setting date to current date");
+    } else {
       added->_date = tmpl.date;
+      DEBUG("derive.xact", "Setting date to template date: " << *tmpl.date);
+    }
 
     added->set_state(item_t::UNCLEARED);
 
@@ -269,17 +271,30 @@ namespace {
       added->payee = matching->payee;
       added->code  = matching->code;
       added->note  = matching->note;
+
+      DEBUG("derive.xact", "Setting payee from match: " << added->payee);
+      if (added->code)
+	DEBUG("derive.xact", "Setting code  from match: " << *added->code);
+      if (added->note)
+	DEBUG("derive.xact", "Setting note  from match: " << *added->note);
     } else {
       added->payee = tmpl.payee_mask.expr.str();
+      DEBUG("derive.xact", "Setting payee from template: " << added->payee);
     }
 
-    if (tmpl.code)
+    if (tmpl.code) {
       added->code = tmpl.code;
-    if (tmpl.note)
+      DEBUG("derive.xact", "Now setting code from template: " << *added->code);
+    }
+    if (tmpl.note) {
       added->note = tmpl.note;
+      DEBUG("derive.xact", "Now setting note from template: " << *added->note);
+    }
 
     if (tmpl.posts.empty()) {
       if (matching) {
+	DEBUG("derive.xact", "Template had no postings, copying from match");
+
 	foreach (post_t * post, matching->posts) {
 	  added->add_post(new post_t(*post));
 	  added->posts.back()->set_state(item_t::UNCLEARED);
@@ -290,9 +305,12 @@ namespace {
 	       << tmpl.payee_mask);
       }
     } else {
+      DEBUG("derive.xact", "Template had postings");
+
       bool any_post_has_amount = false;
       foreach (xact_template_t::post_template_t& post, tmpl.posts) {
 	if (post.amount) {
+	  DEBUG("derive.xact", "  and at least one has an amount specified");
 	  any_post_has_amount = true;
 	  break;
 	}
@@ -305,90 +323,145 @@ namespace {
 
 	if (matching) {
 	  if (post.account_mask) {
+	    DEBUG("derive.xact",
+		  "Looking for matching posting based on account mask");
+
 	    foreach (post_t * x, matching->posts) {
 	      if (post.account_mask->match(x->account->fullname())) {
 		new_post.reset(new post_t(*x));
+		DEBUG("derive.xact",
+		      "Founding posting from line " << x->beg_line);
 		break;
 	      }
 	    }
 	  } else {
-	    if (post.from)
-	      new_post.reset(new post_t(*matching->posts.back()));
-	    else
-	      new_post.reset(new post_t(*matching->posts.front()));
+	    if (post.from) {
+	      for (posts_list::reverse_iterator j = matching->posts.rbegin();
+		   j != matching->posts.rend();
+		   j++) {
+		if ((*j)->must_balance()) {
+		  new_post.reset(new post_t(**j));
+		  DEBUG("derive.xact",
+			"Copied last real posting from matching");
+		  break;
+		}
+	      }
+	    } else {
+	      for (posts_list::iterator j = matching->posts.begin();
+		   j != matching->posts.end();
+		   j++) {
+		if ((*j)->must_balance()) {
+		  new_post.reset(new post_t(**j));
+		  DEBUG("derive.xact",
+			"Copied first real posting from matching");
+		  break;
+		}
+	      }
+	    }
 	  }
 	}
 
-	if (! new_post.get())
+	if (! new_post.get()) {
 	  new_post.reset(new post_t);
+	  DEBUG("derive.xact", "New posting was NULL, creating a blank one");
+	}
 
 	if (! new_post->account) {
+	  DEBUG("derive.xact", "New posting still needs an account");
+
 	  if (post.account_mask) {
+	    DEBUG("derive.xact", "The template has an account mask");
+
 	    account_t * acct = NULL;
-	    if (! acct)
+	    if (! acct) {
 	      acct = journal.find_account_re(post.account_mask->expr.str());
-	    if (! acct)
+	      if (acct)
+		DEBUG("derive.xact", "Found account as a regular expression");
+	    }
+	    if (! acct) {
 	      acct = journal.find_account(post.account_mask->expr.str());
+	      if (acct)
+		DEBUG("derive.xact", "Found (or created) account by name");
+	    }
 
 	    // Find out the default commodity to use by looking at the last
 	    // commodity used in that account
-	    xacts_list::reverse_iterator j;
-
-	    for (j = journal.xacts.rbegin();
+	    for (xacts_list::reverse_iterator j = journal.xacts.rbegin();
 		 j != journal.xacts.rend();
 		 j++) {
 	      foreach (post_t * x, (*j)->posts) {
 		if (x->account == acct && ! x->amount.is_null()) {
 		  new_post.reset(new post_t(*x));
+		  DEBUG("derive.xact",
+			"Found account in journal postings, setting new posting");
 		  break;
 		}
 	      }
 	    }
-	    if (! new_post.get())
-	      new_post.reset(new post_t);
 
 	    new_post->account = acct;
+	    DEBUG("derive.xact",
+		  "Set new posting's account to: " << acct->fullname());
 	  } else {
-
-	    if (post.from)
+	    if (post.from) {
 	      new_post->account = journal.find_account(_("Liabilities:Unknown"));
-	    else
+	      DEBUG("derive.xact",
+		    "Set new posting's account to: Liabilities:Unknown");
+	    } else {
 	      new_post->account = journal.find_account(_("Expenses:Unknown"));
+	      DEBUG("derive.xact",
+		    "Set new posting's account to: Expenses:Unknown");
+	    }
 	  }
 	}
 
 	if (new_post.get() && ! new_post->amount.is_null()) {
 	  found_commodity = &new_post->amount.commodity();
 
-	  if (any_post_has_amount)
+	  if (any_post_has_amount) {
 	    new_post->amount = amount_t();
-	  else
+	    DEBUG("derive.xact", "New posting has an amount, but we cleared it");
+	  } else {
 	    any_post_has_amount = true;
+	    DEBUG("derive.xact", "New posting has an amount, and we're using it");
+	  }
 	}
 
 	if (post.amount) {
 	  new_post->amount = *post.amount;
-	  if (post.from)
+	  DEBUG("derive.xact", "Copied over posting amount");
+
+	  if (post.from) {
 	    new_post->amount.in_place_negate();
+	    DEBUG("derive.xact", "Negated new posting amount");
+	  }
 	}
 
 	if (found_commodity &&
 	    ! new_post->amount.is_null() &&
 	    ! new_post->amount.has_commodity()) {
 	  new_post->amount.set_commodity(*found_commodity);
+	  DEBUG("derive.xact", "Set posting amount commodity to: "
+		<< new_post->amount.commodity());
+
 	  new_post->amount = new_post->amount.rounded();
+	  DEBUG("derive.xact",
+		"Rounded posting amount to: " << new_post->amount);
 	}
 
 	added->add_post(new_post.release());
 	added->posts.back()->set_state(item_t::UNCLEARED);
+
+	DEBUG("derive.xact", "Added new posting to derived entry");
       }
     }
 
     if (! journal.xact_finalize_hooks.run_hooks(*added.get(), false) ||
 	! added->finalize() ||
-	! journal.xact_finalize_hooks.run_hooks(*added.get(), true))
+	! journal.xact_finalize_hooks.run_hooks(*added.get(), true)) {
       throw_(std::runtime_error,
 	     _("Failed to finalize derived transaction (check commodities)"));
+    }
 
     return added.release();
   }
