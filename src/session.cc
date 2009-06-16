@@ -245,26 +245,11 @@ expr_t::ptr_op_t session_t::lookup(const string& name)
 {
   const char * p = name.c_str();
   switch (*p) {
-  case 'd':
-    if (is_eq(p, "date"))
-      return MAKE_FUNCTOR(session_t::fn_today);
-    break;
-
-  case 'n':
-    if (is_eq(p, "now"))
-      return MAKE_FUNCTOR(session_t::fn_now);
-    break;
-
   case 'o':
     if (WANT_OPT()) { p += OPT_PREFIX_LEN;
       if (option_t<session_t> * handler = lookup_option(p))
 	return MAKE_OPT_HANDLER(session_t, handler);
     }
-    break;
-
-  case 't':
-    if (is_eq(p, "today"))
-      return MAKE_FUNCTOR(session_t::fn_today);
     break;
   }
 

@@ -119,10 +119,12 @@ public:
 #define BUDGET_BUDGETED   0x01
 #define BUDGET_UNBUDGETED 0x02
 
+  date_t        terminus;
   uint_least8_t budget_flags;
 
   explicit report_t(session_t& _session)
-    : session(_session), budget_flags(BUDGET_NO_BUDGET) {}
+    : session(_session), terminus(CURRENT_DATE()),
+      budget_flags(BUDGET_NO_BUDGET) {}
 
   virtual ~report_t() {
     output_stream.close();
@@ -153,6 +155,15 @@ public:
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_ansify_if(call_scope_t& scope);
+
+#if 0
+  value_t fn_now(call_scope_t&) {
+    return CURRENT_TIME();
+  }
+#endif
+  value_t fn_today(call_scope_t&) {
+    return terminus;
+  }
 
   value_t fn_options(call_scope_t&) {
     return value_t(static_cast<scope_t *>(this));
@@ -476,9 +487,8 @@ public:
       string predicate =
 	"date<[" + to_iso_extended_string(*interval.start) + "]";
       parent->HANDLER(limit_).on(string("--end"), predicate);
-#if 0
-      terminus = interval.begin;
-#endif
+
+      parent->terminus = *interval.start;
     });
 
   OPTION(report_t, equity);

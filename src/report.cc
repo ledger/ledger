@@ -753,6 +753,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_display_amount);
     else if (is_eq(p, "display_total"))
       return MAKE_FUNCTOR(report_t::fn_display_total);
+    else if (is_eq(p, "date"))
+      return MAKE_FUNCTOR(report_t::fn_today);
     break;
 
   case 'f':
@@ -789,6 +791,10 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'n':
     if (is_eq(p, "null"))
       return WRAP_FUNCTOR(fn_null);
+#if 0
+    else if (is_eq(p, "now"))
+      return MAKE_FUNCTOR(report_t::fn_now);
+#endif
     break;
 
   case 'o':
@@ -868,6 +874,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_truncated);
     else if (is_eq(p, "total_expr"))
       return MAKE_FUNCTOR(report_t::fn_total_expr);
+    else if (is_eq(p, "today"))
+      return MAKE_FUNCTOR(report_t::fn_today);
     break;
 
   case 'u':
