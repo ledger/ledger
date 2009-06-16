@@ -863,6 +863,9 @@ post_t * instance_t::parse_post(char *		line,
   char * next = next_element(p, true);
   char * e = p + std::strlen(p);
 
+  while (e > p && std::isspace(*(e - 1)))
+    e--;
+
   if ((*p == '[' && *(e - 1) == ']') || (*p == '(' && *(e - 1) == ')')) {
     post->add_flags(POST_VIRTUAL);
     DEBUG("textual.parse", "line " << linenum << ": "
