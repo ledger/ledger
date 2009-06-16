@@ -413,8 +413,20 @@ dropped."
 
 (defun ledger-toggle-current (&optional style)
   (interactive)
-  (if ledger-clear-whole-entries
-      (ledger-toggle-current-entry style)
+  (if (or ledger-clear-whole-entries
+	  (eq 'entry (ledger-thing-at-point)))
+      (progn
+	(save-excursion
+	  (forward-line)
+	  (goto-char (line-beginning-position))
+	  (while (and (not (eolp))
+		      (save-excursion
+			(not (eq 'entry (ledger-thing-at-point)))))
+	    (if (looking-at "\\s-+[*!]")
+		(ledger-toggle-current-transaction nil))
+	    (forward-line)
+	    (goto-char (line-beginning-position))))
+	(ledger-toggle-current-entry style))
     (ledger-toggle-current-transaction style)))
 
 (defvar ledger-mode-abbrev-table)
