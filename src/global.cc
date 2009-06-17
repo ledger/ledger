@@ -138,7 +138,7 @@ void global_scope_t::report_error(const std::exception& err)
     string context = error_context();
     if (! context.empty())
       std::cerr << context << std::endl;
-    
+
     std::cerr << _("Error: ") << err.what() << std::endl;
   } else {
     caught_signal = NONE_CAUGHT;
@@ -451,8 +451,31 @@ void global_scope_t::normalize_report_options(const string& verb)
   if (verb[0] != 'b' && verb[0] != 'r')
     rep.HANDLER(base).on_only(string("?normalize"));
 
-  if (rep.HANDLED(period_) && ! rep.HANDLED(sort_all_))
-    rep.HANDLER(sort_xacts_).on_only(string("?normalize"));
+  // If a time period was specified with -p, check whether it also gave a
+  // begin and/or end to the report period (though these can be overridden
+  // using -b or -e).  Then, if no _duration_ was specified (such as monthly),
+  // then ignore the period since the begin/end are the only interesting
+  // details.
+  if (rep.HANDLED(period_)) {
+    if (! rep.HANDLED(sort_all_))
+      rep.HANDLER(sort_xacts_).on_only(string("?normalize"));
+
+    date_interval_t interval(rep.HANDLER(period_).str());
+
+    if (! rep.HANDLED(begin_) && interval.start) {
+      string predicate =
+	"date>=[" + to_iso_extended_string(*interval.start) + "]";
+      rep.HANDLER(limit_).on(string("--begin"), predicate);
+    }
+    if (! rep.HANDLED(end_) && interval.end) {
+      string predicate =
+	"date<[" + to_iso_extended_string(*interval.end) + "]";
+      rep.HANDLER(limit_).on(string("--end"), predicate);
+    }
+
+    if (! interval.duration)
+      rep.HANDLER(period_).off();
+  }
 
   long cols = 0;
   if (rep.HANDLED(columns_))
