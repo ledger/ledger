@@ -85,7 +85,7 @@ function! s:multibyte_strlen(text) "{{{2
    return strlen(substitute(a:text, ".", "x", "g"))
 endfunction "}}}
 
-function s:get_columns(win) "{{{2
+function! s:get_columns(win) "{{{2
   " As long as vim doesn't provide a command natively,
   " we have to compute the available columns.
   " see :help todo.txt -> /Add argument to winwidth()/

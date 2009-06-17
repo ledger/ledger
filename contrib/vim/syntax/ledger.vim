@@ -26,15 +26,21 @@ endif
 syntax clear
  
 " region: a transaction containing postings
-syn region transNorm start=/^\d/ skip=/^\s/ end=/^/
-    \ fold keepend transparent contains=transDate, Metadata
+syn region transNorm start=/^[[:digit:]~]/ skip=/^\s/ end=/^/
+    \ fold keepend transparent contains=transDate, Metadata, Posting
 syn match transDate /^\d\S\+/ contained
 syn match Metadata /^\s\+;.*/ contained
 syn match Comment /^;.*$/
+" every space in an account name shall be surrounded by two non-spaces
+" every account name ends with a tab, two spaces or the end of the line
+syn match Account /^\s\+\zs\%(\S\|\S \S\)\+\ze\%([ ]\{2,}\|\t\s*\|\s*$\)/ contained
+syn match Posting /^\s\+[^[:blank:];].*$/ contained transparent contains=Account
 
-highlight default link Comment SpecialKey
-highlight default link Metadata SpecialKey
+
 highlight default link transDate Question
+highlight default link Metadata PreProc
+highlight default link Comment Comment
+highlight default link Account Identifier
  
 " syncinc is easy: search for the first transaction.
 syn sync clear
