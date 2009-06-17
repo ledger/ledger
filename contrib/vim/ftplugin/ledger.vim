@@ -33,6 +33,10 @@ if !exists('g:ledger_maxwidth')
   let g:ledger_maxwidth = 0
 endif
 
+if !exists('g:ledger_fillstring')
+  let g:ledger_fillstring = ' '
+endif
+
 let s:rx_amount = '\('.
                 \   '\%([0-9]\+\)'.
                 \   '\%([,.][0-9]\+\)*'.
@@ -53,9 +57,7 @@ function! LedgerFoldText() "{{{1
     if line !~ '^\s\+;'
       " No comment, look for amount...
       let groups = matchlist(line, s:rx_amount)
-      echomsg string(groups)
       if ! empty(groups)
-        echomsg amount
         let amount = groups[1]
         break
       endif
@@ -77,7 +79,18 @@ function! LedgerFoldText() "{{{1
 
   " add spaces so the text is always long enough when we strip it
   " to a certain width (fake table)
-  let foldtext .= repeat(' ', s:get_columns(0))
+  if strlen(g:ledger_fillstring)
+    " add extra spaces so fillstring aligns
+    let filen = s:multibyte_strlen(g:ledger_fillstring)
+    let folen = s:multibyte_strlen(foldtext)
+    let foldtext .= repeat(' ', filen - (folen%filen))
+
+    let foldtext .= repeat(g:ledger_fillstring,
+                  \ s:get_columns(0)/filen)
+  else
+    let foldtext .= repeat(' ', s:get_columns(0))
+  endif
+
   " we don't use slices[:5], because that messes up multibyte characters
   let foldtext = substitute(foldtext, '.\{'.columns.'}\zs.*$', '', '')
 
