@@ -468,13 +468,7 @@ public:
     clear_xacts_posts(xact_temps);
   }
 
-  virtual void flush() {
-    if (last_post && last_post->date() <= CURRENT_DATE()) {
-      output_revaluation(last_post, CURRENT_DATE());
-      last_post = NULL;
-    }
-    item_handler<post_t>::flush();
-  }
+  virtual void flush();
 
   void output_revaluation(post_t * post, const date_t& current);
   void output_rounding(post_t * post);

@@ -388,6 +388,15 @@ void related_posts::flush()
   item_handler<post_t>::flush();
 }
 
+void changed_value_posts::flush()
+{
+  if (last_post && last_post->date() <= report.terminus) {
+    output_revaluation(last_post, report.terminus);
+    last_post = NULL;
+  }
+  item_handler<post_t>::flush();
+}
+
 void changed_value_posts::output_revaluation(post_t * post, const date_t& date)
 {
   if (is_valid(date))
