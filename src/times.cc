@@ -649,15 +649,19 @@ void date_interval_t::parse(std::istream& in)
       if (! end)
 	end = *start + gregorian::days(1);
     } else {
+      bool overwrite_end = false;
+
       if (year) {
 	start = date_t(*year, 1, 1);
-	if (! end)
+	if (! end) {
 	  end = *start + gregorian::years(1);
+	  overwrite_end = true;
+	}
       }
 
       if (mon) {
 	start = date_t(start->year(), *mon, 1);
-	if (! end)
+	if (! end || overwrite_end)
 	  end = *start + gregorian::months(1);
       }
     }
