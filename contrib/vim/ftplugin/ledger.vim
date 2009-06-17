@@ -1,4 +1,4 @@
-" Vimwiki filetype plugin file
+" Vim filetype plugin file
 " filetype: ledger
 " Version: 0.1.0
 " by Johann Klähn; Use according to the terms of the GPL>=2.
