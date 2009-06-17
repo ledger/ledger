@@ -493,7 +493,7 @@ dropped."
 	(account ledger-acct)
 	(inhibit-read-only t)
 	cleared)
-    (when (equal (car where) "<stdin>")
+    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
       (with-current-buffer ledger-buf
 	  (goto-char (cdr where))
 	(setq cleared (ledger-toggle-current 'pending)))
@@ -532,7 +532,7 @@ dropped."
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (equal (car where) "<stdin>")
+    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
       (with-current-buffer ledger-buf
 	(goto-char (cdr where))
 	(ledger-delete-current-entry))
@@ -544,7 +544,7 @@ dropped."
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (equal (car where) "<stdin>")
+    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
       (switch-to-buffer-other-window ledger-buf)
       (goto-char (cdr where)))))
 
@@ -567,7 +567,7 @@ dropped."
       (let ((where (get-text-property (point) 'where))
 	    (face  (get-text-property (point) 'face)))
 	(if (and (eq face 'bold)
-		 (equal (car where) "<stdin>"))
+		 (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin")))
 	    (with-current-buffer ledger-buf
 	      (goto-char (cdr where))
 	      (ledger-toggle-current 'cleared))))
