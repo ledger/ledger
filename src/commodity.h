@@ -567,7 +567,9 @@ public:
   commodity_t * find_or_create(commodity_t&	   comm,
 			       const annotation_t& details);
 
-  void parse_commodity_price(char * optarg);
+  commodity_t * parse_commodity_prices(const std::string&          str,
+				       const bool                  add_prices = true,
+				       const optional<datetime_t>& moment     = none);
 };
 
 } // namespace ledger

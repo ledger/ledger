@@ -449,6 +449,10 @@ public:
 		const optional<datetime_t>&   moment	   = none,
 		const optional<commodity_t&>& in_terms_of  = none) const;
 
+  value_t exchange_commodities(const std::string&	   commodities,
+			       const bool                  add_prices = false,
+			       const optional<datetime_t>& moment     = none);
+
   /**
    * Truth tests.
    */

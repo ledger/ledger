@@ -129,33 +129,21 @@ value_t report_t::fn_market(call_scope_t& scope)
 {
   interactive_t args(scope, "a&ts");
 
-  if (args.has(2)) {
-    scoped_array<char> buf(new char[args.get<string>(2).length() + 1]);
-    std::strcpy(buf.get(), args.get<string>(2).c_str());
-
-    for (char * p = std::strtok(buf.get(), ",");
-	 p;
-	 p = std::strtok(NULL, ",")) {
-      if (commodity_t * commodity = amount_t::current_pool->find(trim_ws(p))) {
-	DEBUG("report.market", "Searching for value of " << args.value_at(0)
-	      << " in terms of commodity " << commodity->symbol());
-	value_t result =
-	  args.value_at(0).value(false, args.has(1) ?
+  value_t              result;
+  optional<datetime_t> moment = (args.has(1) ?
 				 args.get<datetime_t>(1) :
-				 optional<datetime_t>(), *commodity);
-	if (! result.is_null()) {
-	  DEBUG("report.market", "Market value is = " << result);
-	  return result;
-	}
-      }
-    }
-  } else {
-    value_t result =
-      args.value_at(0).value(true, args.has(1) ?
-			     args.get<datetime_t>(1) : optional<datetime_t>());
-    if (! result.is_null())
-      return result;
-  }
+				 optional<datetime_t>());
+
+  if (args.has(2))
+    result = args.value_at(0).exchange_commodities(args.get<string>(2),
+						   /* add_prices= */ false,
+						   moment);
+  else
+    result = args.value_at(0).value(true, moment);
+
+  if (! result.is_null())
+    return result;
+
   return args.value_at(0);
 }
 
@@ -608,7 +596,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 's':
     OPT(set_account_);
     else OPT(set_payee_);
-    else OPT(set_price_);
     else OPT(sort_);
     else OPT(sort_all_);
     else OPT(sort_xacts_);

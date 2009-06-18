@@ -1026,21 +1026,30 @@ commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,
   return create(comm, details, name);
 }
 
-void commodity_pool_t::parse_commodity_price(char * optarg)
+commodity_t *
+commodity_pool_t::parse_commodity_prices(const std::string&          str,
+					 const bool                  add_prices,
+					 const optional<datetime_t>& moment)
 {
-  char * equals = std::strchr(optarg, '=');
-  if (! equals)
-    return;
+  scoped_array<char> buf(new char[str.length() + 1]);
 
-  optarg = skip_ws(optarg);
-  while (equals > optarg && std::isspace(*(equals - 1)))
-    equals--;
+  std::strcpy(buf.get(), str.c_str());
 
-  std::string symbol(optarg, 0, equals - optarg);
-  amount_t	price(equals + 1);
+  char * price = std::strchr(buf.get(), '=');
+  if (price)
+    *price++ = '\0';
 
-  if (commodity_t * commodity = find_or_create(symbol))
-    commodity->add_price(CURRENT_TIME(), price);
+  if (commodity_t * commodity = find_or_create(trim_ws(buf.get()))) {
+    if (price && add_prices) {
+      for (char * p = std::strtok(price, ";");
+	   p;
+	   p = std::strtok(NULL, ";")) {
+	commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
+      }
+    }
+    return commodity;
+  }
+  return NULL;
 }
 
 } // namespace ledger

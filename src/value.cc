@@ -1228,6 +1228,27 @@ value_t value_t::value(const bool		     primary_only,
   return NULL_VALUE;
 }
 
+value_t value_t::exchange_commodities(const std::string&	  commodities,
+				      const bool                  add_prices,
+				      const optional<datetime_t>& moment)
+{
+  scoped_array<char> buf(new char[commodities.length() + 1]);
+
+  std::strcpy(buf.get(), commodities.c_str());
+
+  for (char * p = std::strtok(buf.get(), ",");
+       p;
+       p = std::strtok(NULL, ",")) {
+    if (commodity_t * commodity =
+	amount_t::current_pool->parse_commodity_prices(p, add_prices, moment)) {
+      value_t result = value(false, moment, *commodity);
+      if (! result.is_null())
+	return result;
+    }
+  }
+  return *this;
+}
+
 void value_t::in_place_reduce()
 {
   switch (type()) {

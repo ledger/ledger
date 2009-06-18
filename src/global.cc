@@ -487,6 +487,14 @@ void global_scope_t::normalize_report_options(const string& verb)
       .on_with(string("?normalize"), rep.HANDLER(plot_total_format_).value);
   }
 
+  // If the --exchange (-X) option was used, parse out any final price
+  // settings that may be there.
+  if (rep.HANDLED(exchange_) &&
+      rep.HANDLER(exchange_).str().find('=') != string::npos) {
+    value_t(0L).exchange_commodities(rep.HANDLER(exchange_).str(),
+				     true, datetime_t(rep.terminus));
+  }
+
   long cols = 0;
   if (rep.HANDLED(columns_))
     cols = rep.HANDLER(columns_).value.to_long();
