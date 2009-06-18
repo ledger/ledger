@@ -626,7 +626,7 @@ public:
 
   OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
       on(none,
-	 "P %[%Y/%m/%d %H:%M:%S] %A %t\n");
+	 "P %(datetime) %(account) %(scrub(display_amount))\n");
     });
 
   OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {

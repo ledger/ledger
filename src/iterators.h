@@ -175,7 +175,7 @@ protected:
 
   std::list<post_t>	  post_temps;
   std::list<account_t>    acct_temps;
-  xacts_list            xact_temps;
+  xacts_list              xact_temps;
 
 public:
   posts_commodities_iterator() {

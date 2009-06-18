@@ -244,6 +244,10 @@ namespace {
     return long(post.reported_account()->depth);
   }
 
+  value_t get_datetime(post_t& post) {
+    return post.xdata().datetime;
+  }
+
   template <value_t (*Func)(post_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<post_t>(scope));
@@ -282,6 +286,8 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
   case 'd':
     if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
+    else if (name == "datetime")
+      return WRAP_FUNCTOR(get_wrapper<&get_datetime>);
     break;
 
   case 'h':

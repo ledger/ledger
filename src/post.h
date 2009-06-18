@@ -140,6 +140,7 @@ public:
     value_t	total;
     std::size_t	count;
     date_t	date;
+    datetime_t	datetime;
     account_t *	account;
     void *	ptr;
 

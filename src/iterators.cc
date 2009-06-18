@@ -101,7 +101,7 @@ void posts_commodities_iterator::reset(journal_t& journal)
       foreach (commodity_t::base_t::history_map::value_type hpair,
 	       pair.second.prices) {
 	xact_t * xact;
-	string    symbol = hpair.second.commodity().symbol();
+	string   symbol = hpair.second.commodity().symbol();
 
 	std::map<string, xact_t *>::iterator i =
 	  xacts_by_commodity.find(symbol);
@@ -122,6 +122,8 @@ void posts_commodities_iterator::reset(journal_t& journal)
 	temp.xact  = xact;
 	temp.amount = hpair.second;
 	temp.set_flags(ITEM_GENERATED | ITEM_TEMP);
+
+	temp.xdata().datetime = hpair.first;
 
 	xact->add_post(&temp);
       }
