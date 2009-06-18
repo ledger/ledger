@@ -1,0 +1,11 @@
+reg --input-date-format='%m%%%d%%%Y'
+<<<
+02%02%2007 RD VMMXX
+    Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
+    Income:Dividends:Vanguard:VMMXX        $-0.35
+>>>1
+07-Feb-02 RD VMMXX              As:In:Vanguard:VMMXX    0.350 VMMXX  0.350 VMMXX
+                                In:Di:Vanguard:VMMXX         $-0.35       $-0.35
+                                                                     0.350 VMMXX
+>>>2
+=== 0
