@@ -330,11 +330,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION_(report_t, amount_data, DO() { // -j
-      parent->HANDLER(format_)
-	.on_with(none, parent->HANDLER(plot_amount_format_).value);
-    });
-
+  OPTION(report_t, amount_data);
   OPTION(report_t, anon);
 
   OPTION_(report_t, average, DO() { // -A
@@ -750,10 +746,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION_(report_t, total_data, DO() { // -J
-      parent->HANDLER(format_).on_with(string("--total-data"),
-				       parent->HANDLER(plot_total_format_).value);
-    });
+  OPTION(report_t, total_data);
 
   OPTION_(report_t, truncate_, DO() {
 #if 0

@@ -179,8 +179,6 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
 
   if (bool(command = look_for_precommand(bound_scope, verb)))
     is_precommand = true;
-  else if (! bool(command = look_for_command(bound_scope, verb)))
-    throw_(std::logic_error, _("Unrecognized command '%1'") << verb);
 
   // If it is not a pre-command, then parse the user's ledger data at this
   // time if not done alreday (i.e., if not at a REPL).  Then patch up the
@@ -189,7 +187,11 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   if (! is_precommand) {
     if (! at_repl)
       session().read_journal_files();
+
     normalize_report_options(verb);
+
+    if (! bool(command = look_for_command(bound_scope, verb)))
+      throw_(std::logic_error, _("Unrecognized command '%1'") << verb);
   }
 
   // Create the output stream (it might be a file, the console or a PAGER
@@ -207,9 +209,8 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   // Now that the output stream is initialized, report the options that will
   // participate in this report, if the user specified --options
 
-  if (HANDLED(options)) {
+  if (HANDLED(options))
     report_options(report(), report().output_stream);
-  }
 
   // Create an argument scope containing the report command's arguments, and
   // then invoke the command.  The bound scope causes lookups to happen
@@ -465,16 +466,25 @@ void global_scope_t::normalize_report_options(const string& verb)
     if (! rep.HANDLED(begin_) && interval.start) {
       string predicate =
 	"date>=[" + to_iso_extended_string(*interval.start) + "]";
-      rep.HANDLER(limit_).on(string("--begin"), predicate);
+      rep.HANDLER(limit_).on(string("?normalize"), predicate);
     }
     if (! rep.HANDLED(end_) && interval.end) {
       string predicate =
 	"date<[" + to_iso_extended_string(*interval.end) + "]";
-      rep.HANDLER(limit_).on(string("--end"), predicate);
+      rep.HANDLER(limit_).on(string("?normalize"), predicate);
     }
 
     if (! interval.duration)
       rep.HANDLER(period_).off();
+  }
+
+  if (rep.HANDLED(amount_data)) {
+    rep.HANDLER(format_)
+      .on_with(string("?normalize"), rep.HANDLER(plot_amount_format_).value);
+  }
+  else if (rep.HANDLED(total_data)) {
+    rep.HANDLER(format_)
+      .on_with(string("?normalize"), rep.HANDLER(plot_total_format_).value);
   }
 
   long cols = 0;

@@ -1,0 +1,10 @@
+reg -j --plot-amount-format='X %(format_date(date, "%Y-%m-%d")) Y %(quantity(scrub(display_amount)))\n'
+<<<
+2007/02/02 RD VMMXX
+    Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
+    Income:Dividends:Vanguard:VMMXX        $-0.35
+>>>1
+X 2007-02-02 Y 0.35
+X 2007-02-02 Y -0.35
+>>>2
+=== 0
