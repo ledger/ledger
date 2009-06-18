@@ -478,6 +478,9 @@ void global_scope_t::normalize_report_options(const string& verb)
       rep.HANDLER(period_).off();
   }
 
+  // If -j or -J were specified, set the appropriate format string now so as
+  // to avoid option ordering issues were we to have done it during the
+  // initial parsing of the options.
   if (rep.HANDLED(amount_data)) {
     rep.HANDLER(format_)
       .on_with(string("?normalize"), rep.HANDLER(plot_amount_format_).value);
