@@ -689,7 +689,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(print_format_))),
 	      *this, "#equity"));
-	else if (is_eq(q, "xact") || is_eq(q, "entry"))
+	else if (is_eq(q, "entry"))
 	  return WRAP_FUNCTOR(xact_command);
 	else if (is_eq(q, "emacs"))
 	  return WRAP_FUNCTOR
@@ -732,6 +732,11 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	else
 	  if (is_eq(q, "server") && maybe_import("ledger.server"))
 	  return session.lookup(string(CMD_PREFIX) + "server");
+	break;
+
+      case 'x':
+	if (is_eq(q, "xact"))
+	  return WRAP_FUNCTOR(xact_command);
 	break;
       }
     }

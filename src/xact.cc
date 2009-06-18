@@ -387,10 +387,16 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
 
 bool xact_t::valid() const
 {
-  if (! _date || ! journal) {
-    DEBUG("ledger.validate", "xact_t: ! _date || ! journal");
+  if (! _date) {
+    DEBUG("ledger.validate", "xact_t: ! _date");
     return false;
   }
+#if 0
+  if (! journal) {
+    DEBUG("ledger.validate", "xact_t: ! journal");
+    return false;
+  }
+#endif
 
   foreach (post_t * post, posts)
     if (post->xact != this || ! post->valid()) {
