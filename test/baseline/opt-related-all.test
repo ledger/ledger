@@ -1,0 +1,14 @@
+reg --related-all credit
+<<<
+2009/06/18 This is a Test
+    Expenses:Food                $20.00
+    Expenses:Tips                 $2.00
+    Expenses:Tax                  $3.00
+    Liabilities:Credit
+>>>1
+09-Jun-18 This is a Test        Expenses:Food                $20.00       $20.00
+                                Expenses:Tips                 $2.00       $22.00
+                                Expenses:Tax                  $3.00       $25.00
+                                Liabilities:Credit          $-25.00            0
+>>>2
+=== 0

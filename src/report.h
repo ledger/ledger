@@ -691,7 +691,11 @@ public:
     });
 
   OPTION(report_t, related); // -r
-  OPTION(report_t, related_all);
+
+  OPTION_(report_t, related_all, DO() {
+      parent->HANDLER(related).on_only(string("--related-all"));
+    });
+
   OPTION(report_t, revalued);
   OPTION(report_t, revalued_only);
 
