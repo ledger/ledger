@@ -592,6 +592,10 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(related_all);
     else OPT(revalued);
     else OPT(revalued_only);
+#if 0
+    // This option is not available to users
+    else OPT(revalued_total_);
+#endif
     break;
   case 's':
     OPT(set_account_);
