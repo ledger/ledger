@@ -969,8 +969,14 @@ post_t * instance_t::parse_post(char *		line,
 
 	  post->cost->in_place_unround();
 
-	  if (per_unit)
+	  if (per_unit) {
+	    // For the sole case where the cost might be uncommoditized,
+	    // guarantee that the commodity of the cost after multiplication
+	    // is the same as it was before.
+	    commodity_t& cost_commodity(post->cost->commodity());
 	    *post->cost *= post->amount;
+	    post->cost->set_commodity(cost_commodity);
+	  }
 
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "Total cost is " << *post->cost);
