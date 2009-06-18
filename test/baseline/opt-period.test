@@ -1,0 +1,290 @@
+reg -p "january 2008"
+<<<
+2008/01/01 January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2008/02/01 February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2008/02/28 End of February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2008/03/01 March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2008/03/31 End of March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2008/04/01 April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2008/04/30 End of April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2008/05/01 May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2008/05/31 End of May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2008/06/01 June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2008/06/30 End of June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2008/07/01 July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2008/07/31 End of July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2008/08/01 August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2008/08/31 End of August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2008/09/01 September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2008/09/30 End of September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2008/10/01 October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2008/10/31 End of October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2008/11/01 November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2008/11/30 End of November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2008/12/01 December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+
+2008/12/31 End of December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+
+2009/01/01 January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2009/01/31 End of January
+    Expenses:Books          $10.00
+    Liabilities:Cards       $10.00
+    Assets:Cash
+
+2009/02/01 February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2009/02/28 End of February
+    Expenses:Books          $20.00
+    Liabilities:Cards       $20.00
+    Assets:Cash
+
+2009/03/01 March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2009/03/31 End of March
+    Expenses:Books          $30.00
+    Liabilities:Cards       $30.00
+    Assets:Cash
+
+2009/04/01 April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2009/04/30 End of April
+    Expenses:Books          $40.00
+    Liabilities:Cards       $40.00
+    Assets:Cash
+
+2009/05/01 May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2009/05/31 End of May
+    Expenses:Books          $50.00
+    Liabilities:Cards       $50.00
+    Assets:Cash
+
+2009/06/01 June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2009/06/30 End of June
+    Expenses:Books          $60.00
+    Liabilities:Cards       $60.00
+    Assets:Cash
+
+2009/07/01 July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2009/07/31 End of July
+    Expenses:Books          $70.00
+    Liabilities:Cards       $70.00
+    Assets:Cash
+
+2009/08/01 August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2009/08/31 End of August
+    Expenses:Books          $80.00
+    Liabilities:Cards       $80.00
+    Assets:Cash
+
+2009/09/01 September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2009/09/30 End of September
+    Expenses:Books          $90.00
+    Liabilities:Cards       $90.00
+    Assets:Cash
+
+2009/10/01 October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2009/10/31 End of October
+    Expenses:Books         $100.00
+    Liabilities:Cards      $100.00
+    Assets:Cash
+
+2009/11/01 November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2009/11/30 End of November
+    Expenses:Books         $110.00
+    Liabilities:Cards      $110.00
+    Assets:Cash
+
+2009/12/01 December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+
+2009/12/31 End of December
+    Expenses:Books         $120.00
+    Liabilities:Cards      $120.00
+    Assets:Cash
+>>>1
+08-Jan-01 January               Expenses:Books               $10.00       $10.00
+                                Liabilities:Cards            $10.00       $20.00
+                                Assets:Cash                 $-20.00            0
+08-Jan-31 End of January        Expenses:Books               $10.00       $10.00
+                                Liabilities:Cards            $10.00       $20.00
+                                Assets:Cash                 $-20.00            0
+>>>2
+=== 0
+reg -p "monthly january 2008"
+>>>1
+08-Jan-01 - 08-Jan-31           Assets:Cash                 $-40.00      $-40.00
+                                Expenses:Books               $20.00      $-20.00
+                                Liabilities:Cards            $20.00            0
+>>>2
+=== 0
+reg -p "weekly january 2008"
+>>>1
+08-Jan-01 - 08-Jan-05           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Books               $10.00      $-10.00
+                                Liabilities:Cards            $10.00            0
+08-Jan-29 - 08-Jan-31           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Books               $10.00      $-10.00
+                                Liabilities:Cards            $10.00            0
+>>>2
+=== 0
+reg -p "yearly 2008"
+>>>1
+08-Jan-01 - 08-Dec-31           Assets:Cash               $-3120.00    $-3120.00
+                                Expenses:Books             $1560.00    $-1560.00
+                                Liabilities:Cards          $1560.00            0
+>>>2
+=== 0
+reg -p "from 2009/11/01"
+>>>1
+09-Nov-01 November              Expenses:Books              $110.00      $110.00
+                                Liabilities:Cards           $110.00      $220.00
+                                Assets:Cash                $-220.00            0
+09-Nov-30 End of November       Expenses:Books              $110.00      $110.00
+                                Liabilities:Cards           $110.00      $220.00
+                                Assets:Cash                $-220.00            0
+09-Dec-01 December              Expenses:Books              $120.00      $120.00
+                                Liabilities:Cards           $120.00      $240.00
+                                Assets:Cash                $-240.00            0
+09-Dec-31 End of December       Expenses:Books              $120.00      $120.00
+                                Liabilities:Cards           $120.00      $240.00
+                                Assets:Cash                $-240.00            0
+>>>2
+=== 0
