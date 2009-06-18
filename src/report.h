@@ -621,7 +621,8 @@ public:
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,
-	 "%-.9(date) %-8(account) %12(scrub(display_amount))\n");
+	 "%-.9(date) %-8(account) %(justify(scrub(display_amount), 12, "
+	 "    2 + 9 + 8 + 12, true, color))\n");
     });
 
   OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
