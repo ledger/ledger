@@ -1,0 +1,12 @@
+bal --lot-tags tajer
+<<<
+D 1.00c
+
+2006/03/14 Opening Balances
+    Assets:Tajer                1339829c (TAG)
+    Assets:Gruulmorg             248720c
+    Equity:Gold
+>>>1
+   1339829.00c (TAG)  Assets:Tajer
+>>>2
+=== 0
