@@ -209,7 +209,8 @@ void format_accounts::flush()
   foreach (account_t * account, posted_accounts)
     displayed += post_account(*account);
 
-  if (! report.HANDLED(no_total) && displayed > 1) {
+  if (displayed > 1 &&
+      ! report.HANDLED(no_total) && ! report.HANDLED(percent)) {
     bind_scope_t bound_scope(report, *report.session.master);
     separator_format.format(out, bound_scope);
     total_line_format.format(out, bound_scope);

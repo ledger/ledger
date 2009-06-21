@@ -302,6 +302,8 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     else if (name == "primary")
       return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
+    else if (name == "parent")
+      return WRAP_FUNCTOR(get_wrapper<&get_xact>);
     break;
 
   case 'r':

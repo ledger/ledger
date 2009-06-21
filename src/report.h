@@ -155,6 +155,7 @@ public:
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_ansify_if(call_scope_t& scope);
+  value_t fn_percent(call_scope_t& scope);
 
 #if 0
   value_t fn_now(call_scope_t&) {
@@ -248,7 +249,7 @@ public:
     HANDLER(pager_).report(out);
     HANDLER(payee_as_account).report(out);
     HANDLER(pending).report(out);
-    HANDLER(percentage).report(out);
+    HANDLER(percent).report(out);
     HANDLER(period_).report(out);
     HANDLER(period_sort_).report(out);
     HANDLER(plot_amount_format_).report(out);
@@ -582,7 +583,11 @@ public:
       parent->HANDLER(limit_).on(string("--pending"), "pending");
     });
 
-  OPTION(report_t, percentage); // -%
+  OPTION_(report_t, percent, DO() { // -%
+      parent->HANDLER(total_)
+	.set_expr(string("--percent"),
+		  "is_account&parent&parent.total&percent(total, parent.total)");
+    });
 
   OPTION__
   (report_t, period_, // -p

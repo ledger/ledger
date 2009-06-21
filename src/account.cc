@@ -194,6 +194,10 @@ namespace {
     return false;
   }
 
+  value_t get_true(account_t&) {
+    return true;
+  }
+
   value_t get_depth_spacer(account_t& account)
   {
     std::size_t depth = 0;
@@ -216,6 +220,10 @@ namespace {
   template <value_t (*Func)(account_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<account_t>(scope));
+  }
+
+  value_t get_parent(account_t& account) {
+    return value_t(static_cast<scope_t *>(account.parent));
   }
 }
 
@@ -243,9 +251,16 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
     break;
 
+  case 'i':
+    if (name == "is_account")
+      return WRAP_FUNCTOR(get_wrapper<&get_true>);
+    break;
+
   case 'p':
     if (name == "partial_account")
       return WRAP_FUNCTOR(get_partial_name);
+    else if (name == "parent")
+      return WRAP_FUNCTOR(get_wrapper<&get_parent>);
     break;
 
   case 's':

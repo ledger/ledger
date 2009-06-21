@@ -291,6 +291,13 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
   }
 }
 
+value_t report_t::fn_percent(call_scope_t& scope)
+{
+  interactive_t args(scope, "aa");
+  return (amount_t("100.00%") *
+	  (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
+}
+
 namespace {
   value_t fn_black(call_scope_t&) {
     return string_value("black");
@@ -402,7 +409,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
 {
   switch (*p) {
   case '%':
-    OPT_CH(percentage);
+    OPT_CH(percent);
     break;
   case 'A':
     OPT_CH(average);
@@ -568,7 +575,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(pager_);
     else OPT(payee_as_account);
     else OPT(pending);
-    else OPT(percentage);
+    else OPT(percent);
     else OPT_(period_);
     else OPT(period_sort_);
     else OPT(plot_amount_format_);
@@ -842,6 +849,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     }
     else if (is_eq(p, "post"))
       return WRAP_FUNCTOR(fn_false);
+    else if (is_eq(p, "percent"))
+      return MAKE_FUNCTOR(report_t::fn_percent);
     break;
 
   case 'q':

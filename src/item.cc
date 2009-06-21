@@ -247,6 +247,10 @@ namespace {
     return 0L;
   }
 
+  value_t ignore(item_t&) {
+    return false;
+  }
+
   template <value_t (*Func)(item_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<item_t>(scope));
@@ -330,6 +334,11 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
       return WRAP_FUNCTOR(ledger::has_tag);
     break;
 
+  case 'i':
+    if (name == "is_account")
+      return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    break;
+
   case 'm':
     if (name == "meta")
       return WRAP_FUNCTOR(ledger::get_tag);
@@ -343,6 +352,8 @@ expr_t::ptr_op_t item_t::lookup(const string& name)
   case 'p':
     if (name == "pending")
       return WRAP_FUNCTOR(get_wrapper<&get_pending>);
+    else if (name == "parent")
+      return WRAP_FUNCTOR(get_wrapper<&ignore>);
     break;
 
   case 's':

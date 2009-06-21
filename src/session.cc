@@ -81,6 +81,12 @@ session_t::session_t()
     commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
   else
     assert(false);
+
+  // Add a "percentile" commodity
+  if (commodity_t * commodity = commodity_pool->create("%"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
 }
 
 std::size_t session_t::read_journal(std::istream& in,
