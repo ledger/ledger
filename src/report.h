@@ -778,8 +778,10 @@ public:
     });
 
   OPTION_(report_t, unround, DO() {
-      parent->HANDLER(amount_).set_expr(string("--uncleared"),
-					"unrounded(amount)");
+      parent->HANDLER(display_amount_)
+	.set_expr(string("--unround"), "unrounded(amount_expr)");
+      parent->HANDLER(display_total_)
+	.set_expr(string("--unround"), "unrounded(total_expr)");
     });
 
   OPTION_(report_t, weekly, DO() { // -W

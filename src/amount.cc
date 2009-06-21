@@ -488,7 +488,10 @@ void amount_t::in_place_unround()
     return;
 
   _dup();
+
+  DEBUG("amount.unround", "Unrounding " << *this);
   set_keep_precision(true);
+  DEBUG("amount.unround", "Unrounded = " << *this);
 }
 
 void amount_t::in_place_reduce()
