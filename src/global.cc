@@ -42,6 +42,8 @@
 
 namespace ledger {
 
+static bool args_only = false;
+
 global_scope_t::global_scope_t(char ** envp)
 {
   TRACE_CTOR(global_scope_t, "");
@@ -74,7 +76,7 @@ global_scope_t::global_scope_t(char ** envp)
   // Before processing command-line options, we must notify the session object
   // that such options are beginning, since options like -f cause a complete
   // override of files found anywhere else.
-  if (! HANDLED(args_only)) {
+  if (! args_only) {
     session().set_flush_on_next_data_file(true);
     read_environment_settings(envp);
     session().set_flush_on_next_data_file(true);
@@ -577,7 +579,10 @@ void handle_debug_options(int argc, char * argv[])
 {
   for (int i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
-      if (std::strcmp(argv[i], "--verify") == 0) {
+      if (std::strcmp(argv[i], "--args-only") == 0) {
+	args_only = true;
+      }
+      else if (std::strcmp(argv[i], "--verify") == 0) {
 #if defined(VERIFY_ON)
 	verify_enabled = true; // global in utils.h
 #endif
