@@ -561,6 +561,10 @@ public:
       parent->HANDLER(period_).on(string("--monthly"), "monthly");
     });
 
+  OPTION_(report_t, no_color, DO() {
+      parent->HANDLER(color).off();
+    });
+
   OPTION(report_t, no_total);
 
   OPTION__
