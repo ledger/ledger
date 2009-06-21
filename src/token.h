@@ -84,9 +84,9 @@ struct expr_t::token_t : public noncopyable
     KW_DIV,			// div
 
     EXCLAM,			// !, not
-    PERCENT,			// %
     KW_AND,			// &, &&, and
     KW_OR,			// |, ||, or
+    KW_MOD,			// %
 
     KW_IF,			// if
     KW_ELSE,			// else

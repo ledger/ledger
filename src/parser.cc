@@ -44,23 +44,10 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
   token_t& tok = next_token(in, tflags);
 
   switch (tok.kind) {
-  case token_t::VALUE: {
+  case token_t::VALUE:
     node = new op_t(op_t::VALUE);
     node->set_value(tok.value);
-
-    token_t& postfix_tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-    if (postfix_tok.kind == token_t::PERCENT) {
-      ptr_op_t prev(node);
-      node = new op_t(op_t::O_DIV);
-      node->set_left(prev);
-      ptr_op_t hundred = new op_t(op_t::VALUE);
-      hundred->set_value(100L);
-      node->set_right(hundred);
-    } else {
-      push_token(postfix_tok);
-    }
     break;
-  }
 
   case token_t::IDENT: {
     string ident = tok.value.as_string();
