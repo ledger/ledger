@@ -1358,10 +1358,10 @@ void value_t::in_place_unround()
   case INTEGER:
     return;
   case AMOUNT:
-    as_amount_lval().unrounded();
+    as_amount_lval().in_place_unround();
     return;
   case BALANCE:
-    as_balance_lval().unrounded();
+    as_balance_lval().in_place_unround();
     return;
   case SEQUENCE: {
     value_t temp;
