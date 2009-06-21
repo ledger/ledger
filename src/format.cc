@@ -38,6 +38,9 @@
 
 namespace ledger {
 
+format_t::elision_style_t format_t::default_style	  = TRUNCATE_TRAILING;
+bool			  format_t::default_style_changed = false;
+
 void format_t::element_t::dump(std::ostream& out) const
 {
   out << "Element: ";
@@ -386,22 +389,22 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 
   std::ostringstream buf;
 
-  elision_style_t style = TRUNCATE_TRAILING;
-  if (account_abbrev_length > 0)
+  elision_style_t style = default_style;
+  if (account_abbrev_length > 0 && ! default_style_changed)
     style = ABBREVIATE;
 
   switch (style) {
   case TRUNCATE_LEADING:
     // This method truncates at the beginning.
-    buf << ".." << ustr.extract(len - width, width);
+    buf << ".." << ustr.extract(len - (width - 2), width - 2);
     break;
 
   case TRUNCATE_MIDDLE:
     // This method truncates in the middle.
-    buf << ustr.extract(0, width / 2)
+    buf << ustr.extract(0, (width - 2) / 2)
 	<< ".."
-	<< ustr.extract(len - (width / 2 + width % 2),
-			width / 2 + width % 2);
+	<< ustr.extract(len - ((width - 2) / 2 + (width - 2) % 2),
+			(width - 2) / 2 + (width - 2) % 2);
     break;
 
   case ABBREVIATE:

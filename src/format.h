@@ -107,12 +107,14 @@ class format_t : public noncopyable
   scoped_ptr<element_t>	 elements;
 
 public:
-  enum elision_style_t {
+  static enum elision_style_t {
     TRUNCATE_TRAILING,
     TRUNCATE_MIDDLE,
     TRUNCATE_LEADING,
     ABBREVIATE
-  };
+  } default_style;
+
+  static bool default_style_changed;
 
 private:
   static element_t * parse_elements(const string& fmt);

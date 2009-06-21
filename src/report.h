@@ -52,6 +52,7 @@
 #include "stream.h"
 #include "option.h"
 #include "commodity.h"
+#include "format.h"
 
 namespace ledger {
 
@@ -755,18 +756,18 @@ public:
 
   OPTION(report_t, total_data);
 
-  OPTION_(report_t, truncate_, DO() {
-#if 0
+  OPTION_(report_t, truncate_, DO_(args) {
       string style(args[1].to_string());
       if (style == "leading")
-	format_t::elision_style = format_t::TRUNCATE_LEADING;
+	format_t::default_style = format_t::TRUNCATE_LEADING;
       else if (style == "middle")
-	format_t::elision_style = format_t::TRUNCATE_MIDDLE;
+	format_t::default_style = format_t::TRUNCATE_MIDDLE;
       else if (style == "trailing")
-	format_t::elision_style = format_t::TRUNCATE_TRAILING;
-      else if (style == "abbrev")
-	format_t::elision_style = format_t::ABBREVIATE;
-#endif
+	format_t::default_style = format_t::TRUNCATE_TRAILING;
+      else
+	throw_(std::invalid_argument,
+	       _("Unrecognized truncation style: '%1'") << style);
+      format_t::default_style_changed = true;
     });
 
   OPTION_(report_t, unbudgeted, DO() {
