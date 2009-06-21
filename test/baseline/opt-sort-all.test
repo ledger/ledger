@@ -1,0 +1,122 @@
+reg --monthly --sort=-amount
+<<<
+2008/01/11 LIAT
+    Expenses:Travel:Airfare                   $40.00
+    Liabilities:MasterCard                      
+
+2008/01/14 cheaptickets.com
+    Expenses:Travel:Airfare                  $182.19
+    Liabilities:MasterCard                      
+
+2008/02/05 CTX
+    Expenses:Travel:Auto                     $240.38
+    Liabilities:MasterCard                      
+
+2008/02/05 UNITED
+    Expenses:Travel:Airfare                  $238.80
+    Liabilities:MasterCard                      
+
+2008/02/05 UNITED
+    Expenses:Travel:Airfare                  $238.80
+    Liabilities:MasterCard                      
+
+2008/02/22 BUDGET RENT-A-CAR
+    Expenses:Travel:Auto                      $40.59
+    Liabilities:MasterCard                      
+
+2008/03/16 IBERIA
+    Expenses:Travel:Airfare                $1,231.60
+    Liabilities:MasterCard                      
+
+2008/03/16 IBERIA
+    Expenses:Travel:Airfare                $1,231.60
+    Liabilities:MasterCard                      
+
+2008/04/03 AMERICAN
+    Expenses:Travel:Airfare                  $155.86
+    Liabilities:MasterCard                      
+
+2008/04/03 AMERICAN
+    Expenses:Travel:Airfare                  $155.86
+    Liabilities:MasterCard                      
+
+2008/04/30 UNITED
+    Expenses:Travel:Airfare                  $437.21
+    Liabilities:MasterCard                      
+
+2008/04/30 UNITED
+    Expenses:Travel:Airfare                  $437.21
+    Liabilities:MasterCard                      
+
+2008/08/08 BCIS I-131 FILING FEE-
+    Expenses:Travel:Passport                 $170.00
+    Liabilities:MasterCard                      
+
+2008/09/06 AMERICAN
+    Expenses:Travel:Airfare                  $912.60
+    Liabilities:MasterCard                      
+
+2008/09/06 AMERICAN
+    Expenses:Travel:Airfare                  $912.60
+    Liabilities:MasterCard                      
+
+2008/09/22 AGNT FEE
+    Expenses:Travel:Airfare                   $70.00
+    Liabilities:MasterCard                      
+
+2008/09/22 DELTA
+    Expenses:Travel:Airfare                  $806.20
+    Liabilities:MasterCard                      
+
+2008/09/22 DELTA
+    Expenses:Travel:Airfare                  $806.20
+    Liabilities:MasterCard                      
+
+2008/09/22 LIAT 1974 LIMITED
+    Expenses:Travel:Airfare                  $418.34
+    Liabilities:MasterCard                      
+
+2008/12/26 U.S. Department of State
+    Expenses:Travel:Passport                 $127.00
+    Assets:Checking                             
+
+2008/12/26 U.S. Department of State
+    Expenses:Travel:Passport                 $127.00
+    Assets:Checking                             
+>>>1
+08-Jan-01 - 08-Jan-31           Ex:Travel:Airfare           $222.19      $222.19
+                                Liabilities:MasterCard     $-222.19            0
+08-Feb-01 - 08-Feb-29           Ex:Travel:Airfare           $477.60      $477.60
+                                Expenses:Travel:Auto        $280.97      $758.57
+                                Liabilities:MasterCard     $-758.57            0
+08-Mar-01 - 08-Mar-31           Ex:Travel:Airfare         $2,463.20    $2,463.20
+                                Liabilities:MasterCard   $-2,463.20            0
+08-Apr-01 - 08-Apr-30           Ex:Travel:Airfare         $1,186.14    $1,186.14
+                                Liabilities:MasterCard   $-1,186.14            0
+08-Aug-01 - 08-Aug-31           Ex:Travel:Passport          $170.00      $170.00
+                                Liabilities:MasterCard     $-170.00            0
+08-Sep-01 - 08-Sep-30           Ex:Travel:Airfare         $3,925.94    $3,925.94
+                                Liabilities:MasterCard   $-3,925.94            0
+08-Dec-01 - 08-Dec-31           Ex:Travel:Passport          $254.00      $254.00
+                                Assets:Checking            $-254.00            0
+>>>2
+=== 0
+reg --monthly --sort-all=-amount
+>>>1
+08-Sep-01 - 08-Sep-30           Ex:Travel:Airfare         $3,925.94    $3,925.94
+08-Mar-01 - 08-Mar-31           Ex:Travel:Airfare         $2,463.20    $6,389.14
+08-Apr-01 - 08-Apr-30           Ex:Travel:Airfare         $1,186.14    $7,575.28
+08-Feb-01 - 08-Feb-29           Ex:Travel:Airfare           $477.60    $8,052.88
+                                Expenses:Travel:Auto        $280.97    $8,333.85
+08-Dec-01 - 08-Dec-31           Ex:Travel:Passport          $254.00    $8,587.85
+08-Jan-01 - 08-Jan-31           Ex:Travel:Airfare           $222.19    $8,810.04
+08-Aug-01 - 08-Aug-31           Ex:Travel:Passport          $170.00    $8,980.04
+                                Liabilities:MasterCard     $-170.00    $8,810.04
+08-Jan-01 - 08-Jan-31           Liabilities:MasterCard     $-222.19    $8,587.85
+08-Dec-01 - 08-Dec-31           Assets:Checking            $-254.00    $8,333.85
+08-Feb-01 - 08-Feb-29           Liabilities:MasterCard     $-758.57    $7,575.28
+08-Apr-01 - 08-Apr-30           Liabilities:MasterCard   $-1,186.14    $6,389.14
+08-Mar-01 - 08-Mar-31           Liabilities:MasterCard   $-2,463.20    $3,925.94
+08-Sep-01 - 08-Sep-30           Liabilities:MasterCard   $-3,925.94            0
+>>>2
+=== 0
