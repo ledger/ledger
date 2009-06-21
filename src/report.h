@@ -334,8 +334,8 @@ public:
   OPTION(report_t, anon);
 
   OPTION_(report_t, average, DO() { // -A
-      parent->HANDLER(display_total_).set_expr(string("--average"),
-					       "total_expr/count");
+      parent->HANDLER(display_total_)
+	.set_expr(string("--average"), "total_expr/count");
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
@@ -425,8 +425,8 @@ public:
     });
 
   OPTION_(report_t, deviation, DO() { // -D
-      parent->HANDLER(display_total_).set_expr(string("--deviation"),
-					       "amount_expr-total_expr/count");
+      parent->HANDLER(display_total_)
+	.set_expr(string("--deviation"), "amount_expr-total_expr/count");
     });
 
   OPTION__
