@@ -584,7 +584,7 @@ class PrepareBuild(CommandLineApp):
 
             environ, conf_args = self.configure_environment()
 
-            boost   = 'boost_1_38_0'
+            boost   = 'boost_1_39_0'
             tarball = boost + '.tar.bz2'
 
             if not exists(boost):
@@ -604,7 +604,7 @@ class PrepareBuild(CommandLineApp):
                 fd.close()
                 digest = csum.hexdigest()
 
-                if digest != '5eca2116d39d61382b8f8235915cb267':
+                if digest != 'a17281fd88c48e0d866e1a12deecbcc0':
                     self.log.error('Boost source tarball fails to match checksum')
                     sys.exit(1)
 
@@ -950,17 +950,17 @@ class PrepareBuild(CommandLineApp):
             self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
             self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
-        if exists('/usr/local/lib/libboost_regex-xgcc43-sd-1_38.a'):
+        if exists('/usr/local/lib/libboost_regex-xgcc43-sd-1_39.a'):
             self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc43-sd-1_38'
-            self.envvars['BOOST_VERSION'] = '1_38'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc43-sd-1_39'
+            self.envvars['BOOST_VERSION'] = '1_39'
 
             self.log.debug('Setting BOOST_SUFFIX  => %s' %
                            self.envvars['BOOST_SUFFIX'])
             self.log.debug('Setting BOOST_VERSION => %s' %
                            self.envvars['BOOST_VERSION'])
 
-            self.sys_include_dirs.append('/usr/local/include/boost-1_38')
+            self.sys_include_dirs.append('/usr/local/include/boost-1_39')
 
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')

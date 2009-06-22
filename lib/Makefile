@@ -8,7 +8,7 @@
 STOW_ROOT = /usr/local/stow
 
 BOOST_SOURCE  = boost
-BOOST_VERSION = 1_38_0
+BOOST_VERSION = 1_39_0
 
 # architecture=combined
 boost-release:
