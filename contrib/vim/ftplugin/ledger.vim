@@ -12,7 +12,7 @@ let b:did_ftplugin = 1
 
 let b:undo_ftplugin = "setlocal ".
                     \ "foldmethod< foldtext< ".
-                    \ "include< comments< iskeyword< "
+                    \ "include< comments< iskeyword< omnifunc< "
 
 " don't fill fold lines --> cleaner look
 setl fillchars="fold: "
@@ -24,6 +24,7 @@ setl comments=b:;
 " FIXME: Does not work with something like:
 "          Assets:Accountname with Spaces
 setl iskeyword+=:
+setl omnifunc=LedgerComplete
 
 " You can set a maximal number of columns the fold text (excluding amount)
 " will use by overriding g:ledger_maxwidth in your .vimrc.
@@ -96,6 +97,77 @@ function! LedgerFoldText() "{{{1
 
   return printf(fmt, foldtext, amount)
 endfunction "}}}
+
+function! LedgerComplete(findstart, base)
+  if a:findstart
+    let lnum = line('.')
+    let line = getline('.')
+    let lastcol = col('.') - 2
+    if line =~ '^\d'
+      let b:compl_context = 'payee'
+      return -1
+    elseif line =~ '^\s\+;'
+      let b:compl_context = 'meta'
+      return -1
+    elseif line =~ '^\s\+'
+      let b:compl_context = 'account'
+      let firstcol = lastcol
+      while firstcol >= 0 && (matchend(line, '^\%(\S\|\S \S\)\+', (firstcol - 1))-1) == lastcol
+        let firstcol -= 1
+      endwhile
+      return firstcol
+    else
+      return -1
+    endif
+  else
+    if b:compl_context == 'account'
+      unlet! b:compl_context
+      let hierarchy = split(a:base, ':')
+      if a:base =~ ':$'
+        call add(hierarchy, '')
+      endif
+
+      let results = []
+      return reverse(LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy))
+    else
+      unlet! b:compl_context
+      return []
+    endif
+  endif
+endf
+
+function! LedgerFindInTree(tree, levels)
+  if empty(a:levels)
+    return []
+  endif
+  let results = []
+  let currentlvl = a:levels[0]
+  let nextlvls = a:levels[1:]
+  let branches = filter(keys(a:tree), 'v:val =~ ''^\V'.substitute(currentlvl, '\\', '\\\\', 'g').'''')
+  for branch in branches
+    call add(results, branch)
+    if !empty(nextlvls)
+      for result in LedgerFindInTree(a:tree[branch], nextlvls)
+        call add(results, branch.':'.result)
+      endfor
+    endif
+  endfor
+  return results
+endf
+
+function! LedgerGetAccountHierarchy()
+  let hierarchy = {}
+  let accounts = map(getline(1, '$'), 'matchstr(v:val, ''^\s\+\zs[^[:blank:];]\%(\S \S\|\S\)\+\ze'')')
+  let accounts = filter(accounts, 'v:val != ""')
+  for name in accounts
+    let last = hierarchy
+    for part in split(name, ':')
+      let last[part] = get(last, part, {})
+      let last = last[part]
+    endfor
+  endfor
+  return hierarchy
+endf
 
 " Helper functions {{{1
 function! s:multibyte_strlen(text) "{{{2
