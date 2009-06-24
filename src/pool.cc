@@ -208,102 +208,6 @@ commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,
   return create(comm, details, name);
 }
 
-optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
-{
-  char * date_field_ptr = line;
-  char * time_field_ptr = next_element(date_field_ptr);
-  if (! time_field_ptr) return none;
-  string date_field = date_field_ptr;
-
-  char *     symbol_and_price;
-  datetime_t datetime;
-
-  if (std::isdigit(time_field_ptr[0])) {
-    symbol_and_price = next_element(time_field_ptr);
-    if (! symbol_and_price) return none;
-    datetime = parse_datetime(date_field + " " + time_field_ptr);
-  } else {
-    symbol_and_price = time_field_ptr;
-    datetime = parse_datetime(date_field);
-  }
-
-  string symbol;
-  commodity_t::parse_symbol(symbol_and_price, symbol);
-
-  price_point_t point;
-  point.when = datetime;
-  point.price.parse(symbol_and_price);
-  VERIFY(point.price.valid());
-
-  if (commodity_t * commodity =
-      amount_t::current_pool->find_or_create(symbol)) {
-    commodity->add_price(point.when, point.price, true);
-    commodity->add_flags(COMMODITY_KNOWN);
-    return point;
-  }
-
-  return none;
-}
-
-
-#if 0
-optional<price_point_t>
-commodity_t::download_quote(const optional<commodity_t&>& commodity) const
-{
-  DEBUG("commodity.download", "downloading quote for symbol " << symbol());
-#if defined(DEBUG_ON)
-  if (commodity)
-    DEBUG("commodity.download",
-	  "  in terms of commodity " << commodity->symbol());
-#endif
-
-  char buf[256];
-  buf[0] = '\0';
-
-  string getquote_cmd("getquote \"");
-  getquote_cmd += symbol();
-  getquote_cmd += "\" \"";
-  if (commodity)
-    getquote_cmd += commodity->symbol();
-  getquote_cmd += "\"";
-
-  DEBUG("commodity.download", "invoking command: " << getquote_cmd);
-
-  bool success = true;
-  if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
-    if (std::feof(fp) || ! std::fgets(buf, 255, fp))
-      success = false;
-    if (pclose(fp) != 0)
-      success = false;
-  } else {
-    success = false;
-  }
-
-  if (success && buf[0]) {
-    if (char * p = std::strchr(buf, '\n')) *p = '\0';
-    DEBUG("commodity.download", "downloaded quote: " << buf);
-
-    if (optional<price_point_t> point = parse_commodity_price(buf)) {
-      if (price_db) {
-#if defined(__GNUG__) && __GNUG__ < 3
-	ofstream database(*price_db, ios::out | ios::app);
-#else
-	ofstream database(*price_db, std::ios_base::out | std::ios_base::app);
-#endif
-	database << "P " << format_datetime(point->when, string("%Y/%m/%d %H:%M:%S"))
-		 << " " << symbol() << " " << point->price << std::endl;
-      }
-      return point;
-    }
-  } else {
-    throw_(std::runtime_error,
-	   _("Failed to download price for '%1' (command: \"getquote %2 %3\")")
-	   << symbol() << symbol() << (commodity ? commodity->symbol() : "''"));
-  }
-  return none;
-}
-#endif
-
 void commodity_pool_t::exchange(commodity_t&	  commodity,
 				const amount_t&   per_unit_cost,
 				const datetime_t& moment)
@@ -378,6 +282,43 @@ commodity_pool_t::exchange(const amount_t&	       amount,
 	"exchange: amount        = " << breakdown.amount);
 
   return breakdown;
+}
+
+optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
+{
+  char * date_field_ptr = line;
+  char * time_field_ptr = next_element(date_field_ptr);
+  if (! time_field_ptr) return none;
+  string date_field = date_field_ptr;
+
+  char *     symbol_and_price;
+  datetime_t datetime;
+
+  if (std::isdigit(time_field_ptr[0])) {
+    symbol_and_price = next_element(time_field_ptr);
+    if (! symbol_and_price) return none;
+    datetime = parse_datetime(date_field + " " + time_field_ptr);
+  } else {
+    symbol_and_price = time_field_ptr;
+    datetime = parse_datetime(date_field);
+  }
+
+  string symbol;
+  commodity_t::parse_symbol(symbol_and_price, symbol);
+
+  price_point_t point;
+  point.when = datetime;
+  point.price.parse(symbol_and_price);
+  VERIFY(point.price.valid());
+
+  if (commodity_t * commodity =
+      amount_t::current_pool->find_or_create(symbol)) {
+    commodity->add_price(point.when, point.price, true);
+    commodity->add_flags(COMMODITY_KNOWN);
+    return point;
+  }
+
+  return none;
 }
 
 commodity_t *
