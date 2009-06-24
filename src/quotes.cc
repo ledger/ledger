@@ -31,46 +31,39 @@
 
 #include <system.hh>
 
+#include "amount.h"
+#include "commodity.h"
+#include "pool.h"
 #include "quotes.h"
 
 namespace ledger {
 
-#if 0
-void quotes_by_script::operator()(commodity_base_t& commodity,
-				  const datetime_t& moment,
-				  const datetime_t& date,
-				  const datetime_t& last,
-				  amount_t&	    price)
+optional<price_point_t>
+commodity_quote_from_script(commodity_t& commodity,
+			    const optional<commodity_t&>& exchange_commodity)
 {
-  DEBUG_CLASS("ledger.quotes.download");
-
-  DEBUG_("commodity: " << commodity.symbol);
-  DEBUG_TIME_(current_moment);
-  DEBUG_TIME_(moment);
-  DEBUG_TIME_(date);
-  DEBUG_TIME_(last);
-  if (commodity.history)
-    DEBUG_TIME_(commodity.history->last_lookup);
-  DEBUG_("pricing_leeway is " << pricing_leeway);
-
-  if ((commodity.history &&
-       (current_moment - commodity.history->last_lookup) < pricing_leeway) ||
-      (current_moment - last) < pricing_leeway ||
-      (price && moment > date && (moment - date) <= pricing_leeway))
-    return;
-
-  using namespace std;
-
-  DEBUG_("downloading quote for symbol " << commodity.symbol);
+  DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
+#if defined(DEBUG_ON)
+  if (exchange_commodity)
+    DEBUG("commodity.download",
+	  "  in terms of commodity " << exchange_commodity->symbol());
+#endif
 
   char buf[256];
   buf[0] = '\0';
 
-  bool success = true;
+  string getquote_cmd("getquote \"");
+  getquote_cmd += commodity.symbol();
+  getquote_cmd += "\" \"";
+  if (exchange_commodity)
+    getquote_cmd += exchange_commodity->symbol();
+  getquote_cmd += "\"";
 
-  if (FILE * fp = popen((string("getquote \"") +
-			 commodity.symbol + "\"").c_str(), "r")) {
-    if (feof(fp) || ! fgets(buf, 255, fp))
+  DEBUG("commodity.download", "invoking command: " << getquote_cmd);
+
+  bool success = true;
+  if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
+    if (std::feof(fp) || ! std::fgets(buf, 255, fp))
       success = false;
     if (pclose(fp) != 0)
       success = false;
@@ -79,31 +72,34 @@ void quotes_by_script::operator()(commodity_base_t& commodity,
   }
 
   if (success && buf[0]) {
-    char * p = strchr(buf, '\n');
-    if (p) *p = '\0';
+    if (char * p = std::strchr(buf, '\n')) *p = '\0';
+    DEBUG("commodity.download", "downloaded quote: " << buf);
 
-    DEBUG_("downloaded quote: " << buf);
-
-    price.parse(buf);
-    commodity.add_price(current_moment, price);
-
-    commodity.history->last_lookup = current_moment;
-
-    if (price && ! price_db.empty()) {
+    if (optional<price_point_t> point =
+	amount_t::current_pool->parse_price_directive(buf)) {
+      if (amount_t::current_pool->price_db) {
 #if defined(__GNUG__) && __GNUG__ < 3
-      ofstream database(price_db.c_str(), ios::out | ios::app);
+	ofstream database(*amount_t::current_pool->price_db,
+			  ios::out | ios::app);
 #else
-      ofstream database(price_db.c_str(), ios_base::out | ios_base::app);
+	ofstream database(*amount_t::current_pool->price_db,
+			  std::ios_base::out | std::ios_base::app);
 #endif
-      database << "P " << current_moment.to_string("%Y/%m/%d %H:%M:%S")
-	       << " " << commodity.symbol << " " << price << endl;
+	database << "P "
+		 << format_datetime(point->when, string("%Y/%m/%d %H:%M:%S"))
+		 << " " << commodity.symbol()
+		 << " " << point->price
+		 << std::endl;
+      }
+      return point;
     }
   } else {
     throw_(std::runtime_error,
-	   _("Failed to download price for '%1' (command: \"getquote %1\")")
-	   << commodity.symbol);
+	   _("Failed to download price for '%1' (command: \"getquote %2 %3\")")
+	   << commodity.symbol() << commodity.symbol()
+	   << (exchange_commodity ? exchange_commodity->symbol() : "''"));
   }
+  return none;
 }
-#endif
 
 } // namespace ledger

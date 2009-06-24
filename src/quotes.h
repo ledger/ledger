@@ -46,39 +46,10 @@
 #ifndef _QUOTES_H
 #define _QUOTES_H
 
-
 namespace ledger {
 
-#if 0
-/**
- * @brief Brief
- *
- * Long.
- */
-class quotes_by_script : public noncopyable, public commodity_t::base_t::updater_t
-{
-  string      price_db;
-  std::size_t pricing_leeway;
-
-  quotes_by_script();
-
-public:
-  quotes_by_script(path	       _price_db,
-		   std::size_t _pricing_leeway)
-    : price_db(_price_db), pricing_leeway(_pricing_leeway) {
-    TRACE_CTOR(quotes_by_script, "path, std::size_t, bool&");
-  }
-  ~quotes_by_script() throw() {
-    TRACE_DTOR(quotes_by_script);
-  }
-
-  virtual void operator()(commodity_base_t& commodity,
-			  const datetime_t& moment,
-			  const datetime_t& date,
-			  const datetime_t& last,
-			  amount_t&	    price);
-};
-#endif
+optional<price_point_t>
+commodity_quote_from_script(const optional<commodity_t&>& exchange_commodity);
 
 } // namespace ledger
 
