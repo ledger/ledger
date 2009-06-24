@@ -455,67 +455,18 @@ void instance_t::price_conversion_directive(char * line)
   }
 }
 
-namespace {
-  void parse_symbol(char *& p, string& symbol)
-  {
-    if (*p == '"') {
-      char * q = std::strchr(p + 1, '"');
-      if (! q)
-	throw parse_error(_("Quoted commodity symbol lacks closing quote"));
-      symbol = string(p + 1, 0, q - p - 1);
-      p = q + 2;
-    } else {
-      char * q = next_element(p);
-      symbol = p;
-      if (q)
-	p = q;
-      else
-	p += symbol.length();
-    }
-    if (symbol.empty())
-      throw parse_error(_("Failed to parse commodity"));
-  }
-}
-
 void instance_t::price_xact_directive(char * line)
 {
-  char * date_field_ptr = skip_ws(line + 1);
-  char * time_field_ptr = next_element(date_field_ptr);
-  if (! time_field_ptr) return;
-  string date_field = date_field_ptr;
-
-  char *     symbol_and_price;
-  datetime_t datetime;
-
-  if (std::isdigit(time_field_ptr[0])) {
-    symbol_and_price = next_element(time_field_ptr);
-    if (! symbol_and_price) return;
-    datetime = parse_datetime(date_field + " " + time_field_ptr,
-			      current_year);
-  } else {
-    symbol_and_price = time_field_ptr;
-    datetime = parse_datetime(date_field, current_year);
-  }
-
-  string symbol;
-  parse_symbol(symbol_and_price, symbol);
-  amount_t price(symbol_and_price);
-  VERIFY(price.valid());
-
-  if (commodity_t * commodity =
-      amount_t::current_pool->find_or_create(symbol)) {
-    commodity->add_price(datetime, price, true);
-    commodity->add_flags(COMMODITY_KNOWN);
-  } else {
-    assert(false);
-  }
+  optional<price_point_t> point =
+    commodity_t::parse_commodity_price(skip_ws(line + 1));
+  assert(point);
 }
 
 void instance_t::nomarket_directive(char * line)
 {
   char * p = skip_ws(line + 1);
   string symbol;
-  parse_symbol(p, symbol);
+  commodity_t::parse_symbol(p, symbol);
 
   if (commodity_t * commodity =
       amount_t::current_pool->find_or_create(symbol))

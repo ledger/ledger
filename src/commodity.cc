@@ -36,6 +36,10 @@
 
 namespace ledger {
 
+optional<path> commodity_t::price_db;
+long           commodity_t::download_leeway = 86400;
+bool           commodity_t::download_quotes;
+
 void commodity_t::base_t::history_t::add_price(commodity_t&      source,
 					       const datetime_t& date,
 					       const amount_t&	 price,
@@ -105,10 +109,108 @@ bool commodity_t::base_t::varied_history_t::remove_price(const datetime_t&  date
   return false;
 }
 
+optional<price_point_t> commodity_t::parse_commodity_price(char * line)
+{
+  char * date_field_ptr = line;
+  char * time_field_ptr = next_element(date_field_ptr);
+  if (! time_field_ptr) return none;
+  string date_field = date_field_ptr;
+
+  char *     symbol_and_price;
+  datetime_t datetime;
+
+  if (std::isdigit(time_field_ptr[0])) {
+    symbol_and_price = next_element(time_field_ptr);
+    if (! symbol_and_price) return none;
+    datetime = parse_datetime(date_field + " " + time_field_ptr);
+  } else {
+    symbol_and_price = time_field_ptr;
+    datetime = parse_datetime(date_field);
+  }
+
+  string symbol;
+  parse_symbol(symbol_and_price, symbol);
+
+  price_point_t point;
+  point.when = datetime;
+  point.price.parse(symbol_and_price);
+  VERIFY(point.price.valid());
+
+  if (commodity_t * commodity =
+      amount_t::current_pool->find_or_create(symbol)) {
+    commodity->add_price(point.when, point.price, true);
+    commodity->add_flags(COMMODITY_KNOWN);
+    return point;
+  }
+
+  return none;
+}
+
+
+optional<price_point_t>
+commodity_t::download_quote(const optional<commodity_t&>& commodity) const
+{
+  DEBUG("commodity.download", "downloading quote for symbol " << symbol());
+#if defined(DEBUG_ON)
+  if (commodity)
+    DEBUG("commodity.download",
+	  "  in terms of commodity " << commodity->symbol());
+#endif
+
+  char buf[256];
+  buf[0] = '\0';
+
+  string getquote_cmd("getquote \"");
+  getquote_cmd += symbol();
+  getquote_cmd += "\" \"";
+  if (commodity)
+    getquote_cmd += commodity->symbol();
+  getquote_cmd += "\"";
+
+  DEBUG("commodity.download", "invoking command: " << getquote_cmd);
+
+  bool success = true;
+  if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
+    if (std::feof(fp) || ! std::fgets(buf, 255, fp))
+      success = false;
+    if (pclose(fp) != 0)
+      success = false;
+  } else {
+    success = false;
+  }
+
+  if (success && buf[0]) {
+    char * p = std::strchr(buf, '\n');
+    if (p) *p = '\0';
+
+    DEBUG("commodity.download", "downloaded quote: " << buf);
+
+    optional<price_point_t> point = parse_commodity_price(buf);
+
+    if (point) {
+      if (price_db) {
+#if defined(__GNUG__) && __GNUG__ < 3
+	ofstream database(*price_db, ios::out | ios::app);
+#else
+	ofstream database(*price_db, std::ios_base::out | std::ios_base::app);
+#endif
+	database << "P " << format_datetime(point->when, string("%Y/%m/%d %H:%M:%S"))
+		 << " " << symbol() << " " << point->price << std::endl;
+      }
+      return point;
+    }
+  } else {
+    throw_(std::runtime_error,
+	   _("Failed to download price for '%1' (command: \"getquote %2\")")
+	   << symbol() << symbol());
+  }
+  return none;
+}
+
 optional<price_point_t>
   commodity_t::base_t::history_t::
-    find_price(const optional<datetime_t>&   moment,
-	       const optional<datetime_t>&   oldest
+    find_price(const optional<datetime_t>& moment,
+	       const optional<datetime_t>& oldest
 #if defined(DEBUG_ON)
 	       , const int indent
 #endif
@@ -184,16 +286,6 @@ optional<price_point_t>
 #endif
     }
   }
-
-#if 0
-  if (! has_flags(COMMODITY_NOMARKET) && parent().get_quote) {
-    if (optional<amount_t> quote = parent().get_quote
-	(*this, age, moment,
-	 (hist && hist->prices.size() > 0 ?
-	  (*hist->prices.rbegin()).first : optional<datetime_t>())))
-      return *quote;
-  }
-#endif
 
   if (! found) {
 #if defined(DEBUG_ON)
@@ -351,7 +443,29 @@ optional<price_point_t>
     DEBUG_INDENT("commodity.prices.find", indent);
     DEBUG("commodity.prices.find",
 	  "  found price " << best.price << " from " << best.when);
+    DEBUG("commodity.download",
+	  "found price " << best.price << " from " << best.when);
+    if (moment)
+      DEBUG("commodity.download", "moment = " << *moment);
+    DEBUG("commodity.download", "leeway = " << download_leeway);
+    if (moment)
+      DEBUG("commodity.download",
+	    "slip.moment = " << (*moment - best.when).total_seconds());
+    else
+      DEBUG("commodity.download",
+	    "slip.now = " << (CURRENT_TIME() - best.when).total_seconds());
 #endif
+    if (download_quotes &&
+	! source.has_flags(COMMODITY_NOMARKET) &&
+	((! moment &&
+	  (CURRENT_TIME() - best.when).total_seconds() > download_leeway) ||
+	 (moment &&
+	  (*moment - best.when).total_seconds() > download_leeway))) {
+      DEBUG("commodity.download",
+	    "attempting to download a more current quote...");
+      if (optional<price_point_t> quote = source.download_quote(commodity))
+	return quote;
+    }
     return best;
   }
   return none;
@@ -368,7 +482,8 @@ optional<commodity_t::base_t::history_t&>
 #if 0
       // jww (2008-09-20): Document which option switch to use here
       throw_(commodity_error,
-	     _("Cannot determine price history: prices known for multiple commodities (use -x)"));
+	     _("Cannot determine price history: "
+	       "prices known for multiple commodities (use -x)"));
 #endif
     comm = (*histories.begin()).first;
   } else {

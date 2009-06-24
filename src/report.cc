@@ -474,9 +474,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'Y':
     OPT_CH(yearly);
     break;
-  case 'Z':
-    OPT_CH(price_exp_);
-    break;
   case 'a':
     OPT(abbrev_len_);
     else OPT(account_);
@@ -557,7 +554,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(lots);
     else OPT(lots_actual);
     else OPT_ALT(tail_, last_);
-    else OPT_ALT(price_exp_, leeway_);
     break;
   case 'm':
     OPT(market);
@@ -582,7 +578,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(plot_amount_format_);
     else OPT(plot_total_format_);
     else OPT(price);
-    else OPT(price_exp_);
     else OPT(prices_format_);
     else OPT(pricesdb_format_);
     else OPT(print_format_);

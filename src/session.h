@@ -105,10 +105,10 @@ public:
   {
     HANDLER(account_).report(out);
     HANDLER(download).report(out);
-    HANDLER(leeway_).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(price_db_).report(out);
+    HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
   }
 
@@ -124,8 +124,8 @@ public:
   OPTION(session_t, download); // -Q
 
   OPTION__
-  (session_t, leeway_,
-   CTOR(session_t, leeway_) { value = 24L * 3600L; }
+  (session_t, price_exp_, // -Z
+   CTOR(session_t, price_exp_) { value = 24L * 3600L; }
    DO_(args) {
      value = args[1].to_long() * 60L;
    });

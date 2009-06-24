@@ -219,6 +219,12 @@ void session_t::clean_accounts()
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {
+  case 'Q':
+    OPT_CH(download); // -Q
+    break;
+  case 'Z':
+    OPT_CH(price_exp_);
+    break;
   case 'a':
     OPT_(account_); // -a
     break;
@@ -232,16 +238,14 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     OPT(input_date_format_);
     break;
   case 'l':
-    OPT(leeway_);
+    OPT_ALT(price_exp_, leeway_);
     break;
   case 'p':
     OPT(price_db_);
+    else OPT(price_exp_);
     break;
   case 's':
     OPT(strict);
-    break;
-  case 'Q':
-    OPT_CH(download); // -Q
     break;
   }
   return NULL;

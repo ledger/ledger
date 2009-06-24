@@ -255,7 +255,6 @@ public:
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(price).report(out);
-    HANDLER(price_exp_).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricesdb_format_).report(out);
     HANDLER(print_format_).report(out);
@@ -618,8 +617,6 @@ public:
       parent->HANDLER(revalued).off();
       parent->HANDLER(amount_).set_expr(string("--price"), "price");
     });
-
-  OPTION(report_t, price_exp_); // -Z
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,

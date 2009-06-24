@@ -86,7 +86,6 @@ public:
     struct history_t
     {
       history_map prices;
-      ptime	  last_lookup;
 
       void add_price(commodity_t&	source,
 		     const datetime_t&	date,
@@ -331,6 +330,15 @@ public:
 
   // Methods related to parsing, reading, writing, etc., the commodity
   // itself.
+
+  static optional<path> price_db;
+  static long           download_leeway;
+  static bool           download_quotes;
+
+  static optional<price_point_t> parse_commodity_price(char * line);
+
+  optional<price_point_t>
+  download_quote(const optional<commodity_t&>& commodity = none) const;
 
   static void parse_symbol(std::istream& in, string& symbol);
   static void parse_symbol(char *& p, string& symbol);
