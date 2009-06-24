@@ -33,6 +33,8 @@
 
 #include "value.h"
 #include "commodity.h"
+#include "annotate.h"
+#include "pool.h"
 #include "unistring.h"
 
 namespace ledger {
@@ -1240,7 +1242,7 @@ value_t value_t::exchange_commodities(const std::string&	  commodities,
        p;
        p = std::strtok(NULL, ",")) {
     if (commodity_t * commodity =
-	amount_t::current_pool->parse_commodity_prices(p, add_prices, moment)) {
+	amount_t::current_pool->parse_price_expression(p, add_prices, moment)) {
       value_t result = value(false, moment, *commodity);
       if (! result.is_null())
 	return result;

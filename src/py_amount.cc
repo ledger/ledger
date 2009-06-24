@@ -35,6 +35,8 @@
 #include "pyutils.h"
 #include "pyfstream.h"
 #include "commodity.h"
+#include "annotate.h"
+#include "pool.h"
 
 namespace ledger {
 

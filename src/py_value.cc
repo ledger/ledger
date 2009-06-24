@@ -34,6 +34,7 @@
 #include "pyinterp.h"
 #include "pyutils.h"
 #include "commodity.h"
+#include "annotate.h"
 
 namespace ledger {
 

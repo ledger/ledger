@@ -48,6 +48,7 @@
 
 #include "expr.h"
 #include "commodity.h"
+#include "annotate.h"
 
 namespace ledger {
 

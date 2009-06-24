@@ -34,6 +34,7 @@
 #include "op.h"
 #include "scope.h"
 #include "commodity.h"
+#include "pool.h"
 
 namespace ledger {
 

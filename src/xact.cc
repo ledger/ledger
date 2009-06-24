@@ -35,6 +35,7 @@
 #include "post.h"
 #include "account.h"
 #include "journal.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -269,9 +270,9 @@ bool xact_base_t::finalize()
       throw_(balance_error,
 	     _("A posting's cost must be of a different commodity than its amount"));
 
-    commodity_t::cost_breakdown_t breakdown =
-      commodity_t::exchange(post->amount, *post->cost, false,
-			    datetime_t(date(), time_duration(0, 0, 0, 0)));
+    cost_breakdown_t breakdown =
+      amount_t::current_pool->exchange(post->amount, *post->cost, false,
+				       datetime_t(date(), time_duration(0, 0, 0, 0)));
 
     if (post->amount.is_annotated() &&
 	breakdown.basis_cost.commodity() ==

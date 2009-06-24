@@ -33,6 +33,7 @@
 
 #include "balance.h"
 #include "commodity.h"
+#include "pool.h"
 #include "unistring.h"		// for justify()
 
 namespace ledger {

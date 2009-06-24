@@ -37,6 +37,7 @@
 #include "account.h"
 #include "option.h"
 #include "pstream.h"
+#include "pool.h"
 
 #define TIMELOG_SUPPORT 1
 #if defined(TIMELOG_SUPPORT)
@@ -458,7 +459,7 @@ void instance_t::price_conversion_directive(char * line)
 void instance_t::price_xact_directive(char * line)
 {
   optional<price_point_t> point =
-    commodity_t::parse_commodity_price(skip_ws(line + 1));
+    amount_t::current_pool->parse_price_directive(skip_ws(line + 1));
   assert(point);
 }
 

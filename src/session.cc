@@ -33,6 +33,7 @@
 
 #include "session.h"
 #include "commodity.h"
+#include "pool.h"
 #include "xact.h"
 #include "account.h"
 #include "journal.h"

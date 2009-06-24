@@ -39,6 +39,7 @@
 #endif
 #include "item.h"
 #include "journal.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -416,19 +417,18 @@ void global_scope_t::normalize_report_options(const string& verb)
   report_t& rep(report());
 
   // jww (2009-02-09): These globals are a hack, but hard to avoid.
-  item_t::use_effective_date		= rep.HANDLED(effective);
-  rep.session.commodity_pool->keep_base = rep.HANDLED(base);
-
-  commodity_t::download_quotes = rep.session.HANDLED(download);
+  item_t::use_effective_date		      = rep.HANDLED(effective);
+  rep.session.commodity_pool->keep_base	      = rep.HANDLED(base);
+  rep.session.commodity_pool->download_quotes = rep.session.HANDLED(download);
 
   if (rep.session.HANDLED(price_exp_))
-    commodity_t::download_leeway =
+    rep.session.commodity_pool->download_leeway =
       rep.session.HANDLER(price_exp_).value.as_long();
 
   if (rep.session.HANDLED(price_db_))
-    commodity_t::price_db = rep.session.HANDLER(price_db_).str();
+    rep.session.commodity_pool->price_db = rep.session.HANDLER(price_db_).str();
   else
-    commodity_t::price_db = none;
+    rep.session.commodity_pool->price_db = none;
 
   if (rep.HANDLED(date_format_)) {
     output_datetime_format = rep.HANDLER(date_format_).str() + " %H:%M:%S";

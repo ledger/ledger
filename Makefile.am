@@ -30,6 +30,8 @@ libledger_util_la_LDFLAGS  = -release $(VERSION).0
 libledger_math_la_SOURCES =			\
 	src/value.cc				\
 	src/balance.cc				\
+	src/pool.cc				\
+	src/annotate.cc				\
 	src/commodity.cc			\
 	src/amount.cc
 
@@ -94,6 +96,8 @@ pkginclude_HEADERS =				\
 						\
 	src/amount.h				\
 	src/commodity.h				\
+	src/annotate.h				\
+	src/pool.h				\
 	src/balance.h				\
 	src/value.h				\
 						\

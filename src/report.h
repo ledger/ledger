@@ -52,6 +52,7 @@
 #include "stream.h"
 #include "option.h"
 #include "commodity.h"
+#include "annotate.h"
 #include "format.h"
 
 namespace ledger {

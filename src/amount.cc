@@ -33,6 +33,8 @@
 
 #include "amount.h"
 #include "commodity.h"
+#include "annotate.h"
+#include "pool.h"
 
 namespace ledger {
 
