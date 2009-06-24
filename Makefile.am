@@ -129,9 +129,7 @@ pkginclude_HEADERS =				\
 	src/quotes.h				\
 						\
 	src/global.h				\
-	src/ledger.h				\
 						\
-	src/pyledger.h				\
 	src/pyinterp.h				\
 						\
 	lib/fdstream.h				\
