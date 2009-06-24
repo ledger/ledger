@@ -417,12 +417,12 @@ void global_scope_t::normalize_report_options(const string& verb)
   report_t& rep(report());
 
   // jww (2009-02-09): These globals are a hack, but hard to avoid.
-  item_t::use_effective_date		      = rep.HANDLED(effective);
-  rep.session.commodity_pool->keep_base	      = rep.HANDLED(base);
-  rep.session.commodity_pool->download_quotes = rep.session.HANDLED(download);
+  item_t::use_effective_date		 = rep.HANDLED(effective);
+  rep.session.commodity_pool->keep_base	 = rep.HANDLED(base);
+  rep.session.commodity_pool->get_quotes = rep.session.HANDLED(download);
 
   if (rep.session.HANDLED(price_exp_))
-    rep.session.commodity_pool->download_leeway =
+    rep.session.commodity_pool->quote_leeway =
       rep.session.HANDLER(price_exp_).value.as_long();
 
   if (rep.session.HANDLED(price_db_))

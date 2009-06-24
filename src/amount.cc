@@ -556,13 +556,22 @@ amount_t::value(const bool		      primary_only,
 	       annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
 	return (*annotation().price * number()).rounded();
       }
-      else if (optional<price_point_t> point =
-	       commodity().find_price(in_terms_of, moment)) {
-	return (point->price * number()).rounded();
+      else {
+	optional<price_point_t> point =
+	  commodity().find_price(in_terms_of, moment);
+
+	// Whether a price was found or not, check whether we should attempt
+	// to download a price from the Internet.  This is done if (a) no
+	// price was found, or (b) the price is "stale" according to the
+	// setting of --price-exp.
+	point = commodity().check_for_updated_price(point, moment, in_terms_of);
+	if (point)
+	  return (point->price * number()).rounded();
       }
     }
   } else {
-    throw_(amount_error, _("Cannot determine value of an uninitialized amount"));
+    throw_(amount_error,
+	   _("Cannot determine value of an uninitialized amount"));
   }
   return none;
 }

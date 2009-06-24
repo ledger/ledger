@@ -133,7 +133,6 @@ value_t report_t::fn_market(call_scope_t& scope)
   optional<datetime_t> moment = (args.has(1) ?
 				 args.get<datetime_t>(1) :
 				 optional<datetime_t>());
-
   if (args.has(2))
     result = args.value_at(0).exchange_commodities(args.get<string>(2),
 						   /* add_prices= */ false,

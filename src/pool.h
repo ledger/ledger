@@ -83,12 +83,13 @@ public:
   bool		  keep_base;	    // --base
 
   optional<path>  price_db;         // --price-db=
-  long		  download_leeway;  // --leeway=
-  bool		  download_quotes;  // --download
+  long		  quote_leeway;     // --leeway=
+  bool		  get_quotes;       // --download
 
 public:
   function<optional<price_point_t>
-	   (const optional<commodity_t&>& commodity)> get_commodity_quote;
+	   (const commodity_t&            commodity,
+	    const optional<commodity_t&>& in_terms_of)> get_commodity_quote;
 
   explicit commodity_pool_t();
 

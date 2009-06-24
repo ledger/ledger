@@ -40,7 +40,7 @@ namespace ledger {
 
 commodity_pool_t::commodity_pool_t()
   : default_commodity(NULL), keep_base(false),
-    download_leeway(86400), download_quotes(false)
+    quote_leeway(86400), get_quotes(false)
 {
   TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");

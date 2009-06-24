@@ -309,6 +309,11 @@ public:
     return none;
   }    
 
+  optional<price_point_t>
+  check_for_updated_price(const optional<price_point_t>& point,
+			  const optional<datetime_t>&	 moment,
+			  const optional<commodity_t&>&  in_terms_of);
+
   // Methods related to parsing, reading, writing, etc., the commodity
   // itself.
 

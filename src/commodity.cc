@@ -347,26 +347,6 @@ optional<price_point_t>
     DEBUG("commodity.download",
 	  "found price " << best.price << " from " << best.when);
 #endif
-#if 0
-    DEBUG("commodity.download", "leeway = " << download_leeway);
-    datetime_t::sec_type seconds_diff;
-    if (moment) {
-      seconds_diff = (*moment - best.when).total_seconds();
-      DEBUG("commodity.download", "moment = " << *moment);
-      DEBUG("commodity.download", "slip.moment = " << seconds_diff);
-    } else {
-      seconds_diff = (CURRENT_TIME() - best.when).total_seconds();
-      DEBUG("commodity.download", "slip.now = " << seconds_diff);
-    }
-
-    if (download_quotes && ! source.has_flags(COMMODITY_NOMARKET) &&
-	seconds_diff > download_leeway) {
-      DEBUG("commodity.download",
-	    "attempting to download a more current quote...");
-      if (optional<price_point_t> quote = source.download_quote(commodity))
-	return quote;
-    }
-#endif
     return best;
   }
   return none;
@@ -396,6 +376,42 @@ optional<commodity_t::base_t::history_t&>
     return (*i).second;
 
   return none;
+}
+
+optional<price_point_t>
+commodity_t::check_for_updated_price(const optional<price_point_t>& point,
+				     const optional<datetime_t>&    moment,
+				     const optional<commodity_t&>&  in_terms_of)
+{
+  if (parent().get_quotes && ! has_flags(COMMODITY_NOMARKET)) {
+    bool exceeds_leeway = true;
+
+    if (point) {
+      time_duration_t::sec_type seconds_diff;
+      if (moment) {
+	seconds_diff = (*moment - point->when).total_seconds();
+	DEBUG("commodity.download", "moment = " << *moment);
+	DEBUG("commodity.download", "slip.moment = " << seconds_diff);
+      } else {
+	seconds_diff = (CURRENT_TIME() - point->when).total_seconds();
+	DEBUG("commodity.download", "slip.now = " << seconds_diff);
+      }
+
+      DEBUG("commodity.download", "leeway = " << parent().quote_leeway);
+      if (seconds_diff < parent().quote_leeway)
+	exceeds_leeway = false;
+    }
+
+    if (exceeds_leeway) {
+      DEBUG("commodity.download",
+	    "attempting to download a more current quote...");
+      if (optional<price_point_t> quote =
+	  parent().get_commodity_quote(*this, in_terms_of)) {
+	return quote;
+      }
+    }
+  }
+  return point;
 }
 
 commodity_t::operator bool() const
