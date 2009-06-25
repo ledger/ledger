@@ -98,29 +98,53 @@ function! LedgerFoldText() "{{{1
   return printf(fmt, foldtext, amount)
 endfunction "}}}
 
-function! LedgerComplete(findstart, base)
+function! LedgerComplete(findstart, base) "{{{1
   if a:findstart
     let lnum = line('.')
     let line = getline('.')
     let lastcol = col('.') - 2
-    if line =~ '^\d'
+    if line =~ '^\d' "{{{2 (date / payee / description)
       let b:compl_context = 'payee'
       return -1
-    elseif line =~ '^\s\+;'
-      let b:compl_context = 'meta'
-      return -1
-    elseif line =~ '^\s\+'
+    elseif line =~ '^\s\+;' "{{{2 (metadata / tags)
+      let b:compl_context = 'meta-tag'
+      let first_possible = matchend(line, '^\s\+;')
+
+      " find first column of text to be replaced
+      let firstcol = lastcol
+      while firstcol >= 0
+        if firstcol <= first_possible
+          " Stop before the ';' don't ever include it
+          let firstcol = first_possible
+          break
+        elseif line[firstcol] =~ ':'
+          " Stop before first ':'
+          let firstcol += 1
+          break
+        endif
+
+        let firstcol -= 1
+      endwhile
+
+      " strip whitespace starting from firstcol
+      let end_of_whitespace = matchend(line, '^\s\+', firstcol)
+      if end_of_whitespace != -1
+        let firstcol = end_of_whitespace
+      endif
+
+      return firstcol
+    elseif line =~ '^\s\+' "{{{2 (account)
       let b:compl_context = 'account'
       if matchend(line, '^\s\+\%(\S \S\|\S\)\+') <= lastcol
         " only allow completion when in or at end of account name
         return -1
       endif
       return matchend(line, '^\s\+')
-    else
+    else "}}}
       return -1
     endif
   else
-    if b:compl_context == 'account'
+    if b:compl_context == 'account' "{{{2 (account)
       unlet! b:compl_context
       let hierarchy = split(a:base, ':')
       if a:base =~ ':$'
@@ -130,12 +154,17 @@ function! LedgerComplete(findstart, base)
       let results = LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy)
       call add(results, a:base)
       return reverse(results)
-    else
+    elseif b:compl_context == 'meta-tag' "{{{2
+      unlet! b:compl_context
+      let results = [a:base]
+      call extend(results, sort(s:filter_items(keys(LedgerGetTags()), a:base)))
+      return results
+    else "}}}
       unlet! b:compl_context
       return []
     endif
   endif
-endf
+endf "}}}
 
 function! LedgerFindInTree(tree, levels)
   if empty(a:levels)
@@ -144,7 +173,7 @@ function! LedgerFindInTree(tree, levels)
   let results = []
   let currentlvl = a:levels[0]
   let nextlvls = a:levels[1:]
-  let branches = filter(keys(a:tree), 'v:val =~ ''^\V'.substitute(currentlvl, '\\', '\\\\', 'g').'''')
+  let branches = s:filter_items(keys(a:tree), currentlvl)
   for branch in branches
     call add(results, branch)
     if !empty(nextlvls)
@@ -218,3 +247,7 @@ endfunction "}}}
 function! s:strip_spaces(text) "{{{2
   return matchstr(a:text, '^\s*\zs\S\%(.*\S\)\?\ze\s*$')
 endf "}}}
+
+function! s:filter_items(list, keyword)
+  return filter(a:list, 'v:val =~ ''^\V'.substitute(a:keyword, '\\', '\\\\', 'g').'''')
+endf
