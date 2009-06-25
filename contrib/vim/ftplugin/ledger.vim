@@ -127,8 +127,9 @@ function! LedgerComplete(findstart, base)
         call add(hierarchy, '')
       endif
 
-      let results = []
-      return reverse(LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy))
+      let results = LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy)
+      call add(results, a:base)
+      return reverse(results)
     else
       unlet! b:compl_context
       return []
