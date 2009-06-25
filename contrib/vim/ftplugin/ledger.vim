@@ -166,7 +166,7 @@ function! LedgerComplete(findstart, base) "{{{1
   endif
 endf "}}}
 
-function! LedgerFindInTree(tree, levels)
+function! LedgerFindInTree(tree, levels) "{{{1
   if empty(a:levels)
     return []
   endif
@@ -183,12 +183,11 @@ function! LedgerFindInTree(tree, levels)
     endif
   endfor
   return results
-endf
+endf "}}}
 
-function! LedgerGetAccountHierarchy()
+function! LedgerGetAccountHierarchy() "{{{1
   let hierarchy = {}
-  let accounts = map(getline(1, '$'), 'matchstr(v:val, ''^\s\+\zs[^[:blank:];]\%(\S \S\|\S\)\+\ze'')')
-  let accounts = filter(accounts, 'v:val != ""')
+  let accounts = s:grep_buffer('^\s\+\zs[^[:blank:];]\%(\S \S\|\S\)\+\ze')
   for name in accounts
     let last = hierarchy
     for part in split(name, ':')
@@ -197,12 +196,11 @@ function! LedgerGetAccountHierarchy()
     endfor
   endfor
   return hierarchy
-endf
+endf "}}}
 
-function! LedgerGetTags() "{{{2
+function! LedgerGetTags() "{{{1
   let alltags = {}
-  let metalines = map(getline(1, '$'), 'matchstr(v:val, ''^\s\+;\s*\zs.*$'')')
-  let metalines = filter(metalines, 'v:val != ""')
+  let metalines = s:grep_buffer('^\s\+;\s*\zs.*$')
   for line in metalines
     " (spaces at beginning are stripped by matchstr!)
     if line[0] == ':'
@@ -226,10 +224,13 @@ function! LedgerGetTags() "{{{2
 endf "}}}
 
 " Helper functions {{{1
+
+" return length of string with fix for multibyte characters
 function! s:multibyte_strlen(text) "{{{2
    return strlen(substitute(a:text, ".", "x", "g"))
 endfunction "}}}
 
+" get # of visible/usable columns in current window
 function! s:get_columns(win) "{{{2
   " As long as vim doesn't provide a command natively,
   " we have to compute the available columns.
@@ -244,10 +245,18 @@ function! s:get_columns(win) "{{{2
   return columns
 endfunction "}}}
 
+" remove spaces at start and end of string
 function! s:strip_spaces(text) "{{{2
   return matchstr(a:text, '^\s*\zs\S\%(.*\S\)\?\ze\s*$')
 endf "}}}
 
-function! s:filter_items(list, keyword)
+" return only those items that start with a specified keyword
+function! s:filter_items(list, keyword) "{{{2
   return filter(a:list, 'v:val =~ ''^\V'.substitute(a:keyword, '\\', '\\\\', 'g').'''')
-endf
+endf "}}}
+
+" return all lines matching an expression, returning only the matched part
+function! s:grep_buffer(expression) "{{{2
+  let lines = map(getline(1, '$'), 'matchstr(v:val, '''.a:expression.''')')
+  return filter(lines, 'v:val != ""')
+endf "}}}
