@@ -55,7 +55,7 @@ function! LedgerFoldText() "{{{1
     let line = getline(lnum)
 
     " Skip metadata/leading comment
-    if line !~ '^\s\+;'
+    if line !~ '^\%(\s\+;\|\d\)'
       " No comment, look for amount...
       let groups = matchlist(line, s:rx_amount)
       if ! empty(groups)
@@ -111,11 +111,11 @@ function! LedgerComplete(findstart, base)
       return -1
     elseif line =~ '^\s\+'
       let b:compl_context = 'account'
-      let firstcol = lastcol
-      while firstcol >= 0 && (matchend(line, '^\%(\S\|\S \S\)\+', (firstcol - 1))-1) == lastcol
-        let firstcol -= 1
-      endwhile
-      return firstcol
+      if matchend(line, '^\s\+\%(\S \S\|\S\)\+') <= lastcol
+        " only allow completion when in or at end of account name
+        return -1
+      endif
+      return matchend(line, '^\s\+')
     else
       return -1
     endif
