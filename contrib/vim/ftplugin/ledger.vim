@@ -170,6 +170,32 @@ function! LedgerGetAccountHierarchy()
   return hierarchy
 endf
 
+function! LedgerGetTags() "{{{2
+  let alltags = {}
+  let metalines = map(getline(1, '$'), 'matchstr(v:val, ''^\s\+;\s*\zs.*$'')')
+  let metalines = filter(metalines, 'v:val != ""')
+  for line in metalines
+    " (spaces at beginning are stripped by matchstr!)
+    if line[0] == ':'
+      " multiple tags
+      for val in split(line, ':')
+        if val !~ '^\s*$'
+          let name = s:strip_spaces(val)
+          let alltags[name] = get(alltags, name, [])
+        endif
+      endfor
+    elseif line =~ '^.*:.*$'
+      " line with tag=value
+      let name = s:strip_spaces(split(line, ':')[0])
+      let val = s:strip_spaces(join(split(line, ':')[1:], ':'))
+      let values = get(alltags, name, [])
+      call add(values, val)
+      let alltags[name] = values
+    endif
+  endfor
+  return alltags
+endf "}}}
+
 " Helper functions {{{1
 function! s:multibyte_strlen(text) "{{{2
    return strlen(substitute(a:text, ".", "x", "g"))
@@ -189,3 +215,6 @@ function! s:get_columns(win) "{{{2
   return columns
 endfunction "}}}
 
+function! s:strip_spaces(text) "{{{2
+  return matchstr(a:text, '^\s*\zs\S\%(.*\S\)\?\ze\s*$')
+endf "}}}
