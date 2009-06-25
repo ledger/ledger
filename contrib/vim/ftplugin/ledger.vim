@@ -38,6 +38,30 @@ if !exists('g:ledger_fillstring')
   let g:ledger_fillstring = ' '
 endif
 
+" If enabled this will list the most detailed matches at the top {{{
+" of the completion list.
+" For example when you have some accounts like this:
+"   A:Ba:Bu
+"   A:Bu:Bu
+" and you complete on A:B:B normal behaviour may be the following
+"   A:B:B
+"   A:Bu:Bu
+"   A:Bu
+"   A:Ba:Bu
+"   A:Ba
+"   A
+" with this option turned on it will be
+"   A:B:B
+"   A:Bu:Bu
+"   A:Ba:Bu
+"   A:Bu
+"   A:Ba
+"   A
+" }}}
+if !exists('g:ledger_detailed_first')
+  let g:ledger_detailed_first = 0
+endif
+
 let s:rx_amount = '\('.
                 \   '\%([0-9]\+\)'.
                 \   '\%([,.][0-9]\+\)*'.
@@ -152,6 +176,11 @@ function! LedgerComplete(findstart, base) "{{{1
       endif
 
       let results = LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy)
+      " sort by alphabet and reverse because it will get reversed one more time
+      let results = reverse(sort(results))
+      if g:ledger_detailed_first
+        let results = sort(results, 's:sort_accounts_by_depth')
+      endif
       call add(results, a:base)
       return reverse(results)
     elseif b:compl_context == 'meta-tag' "{{{2
@@ -259,4 +288,14 @@ endf "}}}
 function! s:grep_buffer(expression) "{{{2
   let lines = map(getline(1, '$'), 'matchstr(v:val, '''.a:expression.''')')
   return filter(lines, 'v:val != ""')
+endf "}}}
+
+function! s:sort_accounts_by_depth(name1, name2) "{{{2
+  let depth1 = s:count_expression(a:name1, ':')
+  let depth2 = s:count_expression(a:name2, ':')
+  return depth1 == depth2 ? 0 : depth1 > depth2 ? 1 : -1
+endf "}}}
+
+function! s:count_expression(text, expression) "{{{2
+  return len(split(a:text, a:expression, 1))-1
 endf "}}}
