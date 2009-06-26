@@ -246,16 +246,18 @@ value_t report_t::fn_quoted(call_scope_t& args)
   return string_value(out.str());
 }
 
-value_t report_t::fn_join(call_scope_t& args)
+value_t report_t::fn_join(call_scope_t& scope)
 {
+  interactive_t args(scope, "s");
+
   std::ostringstream out;
 
-  foreach (const char ch, args[0].to_string())
+  foreach (const char ch, args.get<string>(0)) {
     if (ch != '\n')
       out << ch;
     else
       out << "\\n";
-
+  }
   return string_value(out.str());
 }
 
@@ -297,6 +299,12 @@ value_t report_t::fn_percent(call_scope_t& scope)
   interactive_t args(scope, "aa");
   return (amount_t("100.00%") *
 	  (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
+}
+
+value_t report_t::fn_price(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  return args.value_at(0).price();
 }
 
 namespace {
@@ -846,6 +854,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return WRAP_FUNCTOR(fn_false);
     else if (is_eq(p, "percent"))
       return MAKE_FUNCTOR(report_t::fn_percent);
+    else if (is_eq(p, "price"))
+      return MAKE_FUNCTOR(report_t::fn_price);
     break;
 
   case 'q':

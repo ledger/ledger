@@ -576,6 +576,17 @@ amount_t::value(const bool		      primary_only,
   return none;
 }
 
+amount_t amount_t::price() const
+{
+  if (is_annotated() && annotation().price) {
+    amount_t temp(*annotation().price);
+    temp *= *this;
+    DEBUG("amount.price", "Returning price of " << *this << " = " << temp);
+    return temp;
+  }
+  return *this;
+}
+
 
 int amount_t::sign() const
 {
@@ -784,8 +795,9 @@ bool amount_t::is_annotated() const
     throw_(amount_error,
 	   _("Cannot determine if an uninitialized amount's commodity is annotated"));
 
-  assert(! commodity().annotated || as_annotated_commodity(commodity()).details);
-  return commodity().annotated;
+  assert(! has_commodity() || ! commodity().annotated ||
+	 as_annotated_commodity(commodity()).details);
+  return has_commodity() && commodity().annotated;
 }
 
 annotation_t& amount_t::annotation()

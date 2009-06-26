@@ -158,6 +158,7 @@ public:
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_percent(call_scope_t& scope);
+  value_t fn_price(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) {
     return terminus;
@@ -613,8 +614,10 @@ public:
     });
 
   OPTION_(report_t, price, DO() { // -I
-      parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).set_expr(string("--price"), "price");
+      parent->HANDLER(display_amount_)
+	.set_expr(string("--price"), "price(amount_expr)");
+      parent->HANDLER(display_total_)
+	.set_expr(string("--price"), "price(total_expr)");
     });
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {

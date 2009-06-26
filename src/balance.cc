@@ -203,6 +203,16 @@ balance_t::value(const bool		       primary_only,
   return resolved ? temp : optional<balance_t>();
 }
 
+balance_t balance_t::price() const
+{
+  balance_t temp;
+
+  foreach (const amounts_map::value_type& pair, amounts)
+    temp += pair.second.price();
+
+  return temp;
+}
+
 optional<amount_t>
 balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 {

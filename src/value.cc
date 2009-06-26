@@ -1230,6 +1230,18 @@ value_t value_t::value(const bool		     primary_only,
   return NULL_VALUE;
 }
 
+value_t value_t::price() const
+{
+  switch (type()) {
+  case AMOUNT:
+    return as_amount().price();
+  case BALANCE:
+    return as_balance().price();
+  default:
+    return *this;
+  }
+}
+
 value_t value_t::exchange_commodities(const std::string&	  commodities,
 				      const bool                  add_prices,
 				      const optional<datetime_t>& moment)
