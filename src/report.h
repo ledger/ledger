@@ -121,11 +121,11 @@ public:
 #define BUDGET_BUDGETED   0x01
 #define BUDGET_UNBUDGETED 0x02
 
-  date_t        terminus;
+  datetime_t    terminus;
   uint_least8_t budget_flags;
 
   explicit report_t(session_t& _session)
-    : session(_session), terminus(CURRENT_DATE()),
+    : session(_session), terminus(CURRENT_TIME()),
       budget_flags(BUDGET_NO_BUDGET) {}
 
   virtual ~report_t() {
@@ -159,13 +159,11 @@ public:
   value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_percent(call_scope_t& scope);
 
-#if 0
   value_t fn_now(call_scope_t&) {
-    return CURRENT_TIME();
-  }
-#endif
-  value_t fn_today(call_scope_t&) {
     return terminus;
+  }
+  value_t fn_today(call_scope_t&) {
+    return terminus.date();
   }
 
   value_t fn_options(call_scope_t&) {
@@ -484,7 +482,7 @@ public:
 	"date<[" + to_iso_extended_string(*interval.start) + "]";
       parent->HANDLER(limit_).on(string("--end"), predicate);
 
-      parent->terminus = *interval.start;
+      parent->terminus = datetime_t(*interval.start);
     });
 
   OPTION(report_t, equity);

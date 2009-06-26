@@ -259,9 +259,11 @@ value_t report_t::fn_join(call_scope_t& args)
   return string_value(out.str());
 }
 
-value_t report_t::fn_format_date(call_scope_t& args)
+value_t report_t::fn_format_date(call_scope_t& scope)
 {
-  return string_value(format_date(args[0].to_date(), args[1].to_string()));
+  interactive_t args(scope, "ds");
+  return string_value(format_date(args.get<date_t>(0),
+				  args.get<string>(1)));
 }
 
 value_t report_t::fn_ansify_if(call_scope_t& scope)
@@ -752,7 +754,7 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     else if (is_eq(p, "display_total"))
       return MAKE_FUNCTOR(report_t::fn_display_total);
     else if (is_eq(p, "date"))
-      return MAKE_FUNCTOR(report_t::fn_today);
+      return MAKE_FUNCTOR(report_t::fn_now);
     break;
 
   case 'f':
@@ -789,10 +791,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
   case 'n':
     if (is_eq(p, "null"))
       return WRAP_FUNCTOR(fn_null);
-#if 0
     else if (is_eq(p, "now"))
       return MAKE_FUNCTOR(report_t::fn_now);
-#endif
     break;
 
   case 'o':

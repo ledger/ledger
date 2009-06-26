@@ -86,10 +86,9 @@ public:
   long		  quote_leeway;     // --leeway=
   bool		  get_quotes;       // --download
 
-public:
   function<optional<price_point_t>
-	   (const commodity_t&            commodity,
-	    const optional<commodity_t&>& in_terms_of)> get_commodity_quote;
+	   (commodity_t& commodity, const optional<commodity_t&>& in_terms_of)>
+      get_commodity_quote;
 
   explicit commodity_pool_t();
 

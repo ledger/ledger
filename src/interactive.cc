@@ -75,7 +75,13 @@ void interactive_t::verify_arguments() const
       break;
     case 'd':
       label = _("a date");
-      wrong_arg = ! next_arg->is_date();
+      wrong_arg = (! next_arg->is_date() &&
+		   ! next_arg->is_datetime());
+      break;
+    case 't':
+      label = _("a date/time");
+      wrong_arg = (! next_arg->is_date() &&
+		   ! next_arg->is_datetime());
       break;
     case 'i':
     case 'l':
@@ -105,11 +111,6 @@ void interactive_t::verify_arguments() const
     case 's':
       label = _("a string");
       wrong_arg = ! next_arg->is_string();
-      break;
-    case 't':
-      label = _("a date or time");
-      wrong_arg = (! next_arg->is_date() &&
-		   ! next_arg->is_datetime());
       break;
     case 'v':
       label = _("any value");

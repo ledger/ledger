@@ -507,8 +507,8 @@ void global_scope_t::normalize_report_options(const string& verb)
   // settings that may be there.
   if (rep.HANDLED(exchange_) &&
       rep.HANDLER(exchange_).str().find('=') != string::npos) {
-    value_t(0L).exchange_commodities(rep.HANDLER(exchange_).str(),
-				     true, datetime_t(rep.terminus));
+    value_t(0L).exchange_commodities(rep.HANDLER(exchange_).str(), true,
+				     rep.terminus);
   }
 
   long cols = 0;

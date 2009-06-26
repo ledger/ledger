@@ -390,8 +390,8 @@ void related_posts::flush()
 
 void changed_value_posts::flush()
 {
-  if (last_post && last_post->date() <= report.terminus) {
-    output_revaluation(last_post, report.terminus);
+  if (last_post && last_post->date() <= report.terminus.date()) {
+    output_revaluation(last_post, report.terminus.date());
     last_post = NULL;
   }
   item_handler<post_t>::flush();

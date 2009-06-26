@@ -35,12 +35,14 @@
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
+#include "quotes.h"
 
 namespace ledger {
 
 commodity_pool_t::commodity_pool_t()
   : default_commodity(NULL), keep_base(false),
-    quote_leeway(86400), get_quotes(false)
+    quote_leeway(86400), get_quotes(false),
+    get_commodity_quote(commodity_quote_from_script)
 {
   TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");
@@ -311,8 +313,11 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
   point.price.parse(symbol_and_price);
   VERIFY(point.price.valid());
 
+  DEBUG("commodity.download", "Looking up symbol: " << symbol);
   if (commodity_t * commodity =
       amount_t::current_pool->find_or_create(symbol)) {
+    DEBUG("commodity.download", "Adding price for " << symbol << ": "
+	  << point.when << " " << point.price);
     commodity->add_price(point.when, point.price, true);
     commodity->add_flags(COMMODITY_KNOWN);
     return point;

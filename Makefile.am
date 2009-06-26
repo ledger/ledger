@@ -30,6 +30,7 @@ libledger_util_la_LDFLAGS  = -release $(VERSION).0
 libledger_math_la_SOURCES =			\
 	src/value.cc				\
 	src/balance.cc				\
+	src/quotes.cc				\
 	src/pool.cc				\
 	src/annotate.cc				\
 	src/commodity.cc			\
@@ -67,7 +68,6 @@ libledger_data_la_CPPFLAGS = $(lib_cppflags)
 libledger_data_la_LDFLAGS  = -release $(VERSION).0
 
 libledger_report_la_SOURCES  =			\
-	src/quotes.cc				\
 	src/stats.cc				\
 	src/generate.cc				\
 	src/derive.cc				\
@@ -98,6 +98,7 @@ pkginclude_HEADERS =				\
 	src/commodity.h				\
 	src/annotate.h				\
 	src/pool.h				\
+	src/quotes.h				\
 	src/balance.h				\
 	src/value.h				\
 						\
@@ -130,7 +131,6 @@ pkginclude_HEADERS =				\
 	src/stats.h				\
 	src/output.h				\
 	src/emacs.h				\
-	src/quotes.h				\
 						\
 	src/global.h				\
 						\

@@ -94,10 +94,17 @@ commodity_quote_from_script(commodity_t& commodity,
       return point;
     }
   } else {
-    throw_(std::runtime_error,
-	   _("Failed to download price for '%1' (command: \"getquote %2 %3\")")
-	   << commodity.symbol() << commodity.symbol()
-	   << (exchange_commodity ? exchange_commodity->symbol() : "''"));
+    DEBUG("commodity.download",
+	  "Failed to download price for '" << commodity.symbol() <<
+	  "' (command: \"getquote " << commodity.symbol() <<
+	  " " << (exchange_commodity ?
+		  exchange_commodity->symbol() : "''") << "\")");
+
+    // Don't try to download this commodity again.
+
+    // jww (2009-06-24): This flag should be removed in order to try again
+    // when using a GUI.
+    commodity.add_flags(COMMODITY_NOMARKET);
   }
   return none;
 }

@@ -1,4 +1,4 @@
-bal --end 2008/12/31 -JV bal Equities
+bal --end 2008/12/31 -JV Equities
 <<<
 2008/01/01 * Purchase Apple shares
        Equities        1000 AAPL @ $2
