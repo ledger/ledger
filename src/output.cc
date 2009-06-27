@@ -46,7 +46,7 @@ format_posts::format_posts(report_t&	 _report,
   : report(_report), last_xact(NULL), last_post(NULL),
     print_raw(_print_raw)
 {
-  TRACE_CTOR(format_posts, "report&, const string&");
+  TRACE_CTOR(format_posts, "report&, const string&, bool");
 
   const char * f = format.c_str();
 

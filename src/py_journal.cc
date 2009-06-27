@@ -171,16 +171,6 @@ account_t& accounts_getitem(account_t& account, int i)
   return *(*elem).second;
 }
 
-PyObject * py_account_get_data(account_t& account)
-{
-  return (PyObject *) account.data;
-}
-
-void py_account_set_data(account_t& account, PyObject * obj)
-{
-  account.data = obj;
-}
-
 account_t * py_find_account_1(journal_t& journal, const string& name)
 {
   return journal.find_account(name);
@@ -342,7 +332,6 @@ void export_journal()
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
-    .add_property("data", py_account_get_data, py_account_set_data)
     .def_readonly("ident", &account_t::ident)
 
     .def("fullname", &account_t::fullname)

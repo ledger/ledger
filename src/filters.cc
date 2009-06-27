@@ -884,8 +884,7 @@ void forecast_posts::flush()
 
     item_handler<post_t>::operator()(temp);
 
-    if (temp.has_xdata() &&
-	temp.xdata().has_flags(POST_EXT_MATCHES)) {
+    if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES)) {
       bind_scope_t bound_scope(context, temp);
       if (! pred(bound_scope))
 	break;

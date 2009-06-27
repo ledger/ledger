@@ -74,7 +74,6 @@ class account_t : public scope_t
   posts_deque	   posts;
   bool		   known;
 
-  mutable void *   data;
   mutable string   _fullname;
 
   account_t(account_t *             _parent = NULL,
@@ -82,7 +81,7 @@ class account_t : public scope_t
 	    const optional<string>& _note   = none)
     : scope_t(), parent(_parent), name(_name), note(_note),
       depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)),
-      known(false), data(NULL) {
+      known(false) {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
@@ -92,10 +91,8 @@ class account_t : public scope_t
       note(other.note),
       depth(other.depth),
       accounts(other.accounts),
-      known(other.known),
-      data(NULL) {
+      known(other.known) {
     TRACE_CTOR(account_t, "copy");
-    assert(other.data == NULL);
   }
   ~account_t();
 
