@@ -74,6 +74,7 @@ public:
       handled(false), parent(NULL), value(),
       wants_arg(name[name_len - 1] == '_') {
     TRACE_CTOR(option_t, "const char *, const char");
+    DEBUG("option.names", "Option: " << name);
   }
   option_t(const option_t& other)
     : name(other.name),
