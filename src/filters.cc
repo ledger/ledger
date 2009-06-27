@@ -142,6 +142,7 @@ namespace {
       buf.width(8);
       buf.fill('0');
       buf << std::hex << message_digest[i];
+      break;			// only output the first dword
     }
     return buf.str();
   }
@@ -175,13 +176,31 @@ void anonymize_posts::operator()(post_t& post)
   post_t& temp = post_temps.back();
   temp.xact = &xact;
 
-  sha.Reset();
-  sha << post.account->fullname().c_str();
-  sha.Result(message_digest);
+  std::list<string> account_names;
+  account_t * new_account = NULL;
+
+  for (account_t * acct = post.account;
+       acct;
+       acct = acct->parent) {
+    if (! acct->parent) {
+      new_account = acct;
+      break;
+    }
+    
+    sha.Reset();
+    sha << acct->name.c_str();
+    sha.Result(message_digest);
+
+    account_names.push_front(to_hex(message_digest));
+  }
+  assert(new_account);
+
+  foreach (const string& name, account_names)
+    new_account = new_account->find_account(name);
 
   temp.copy_details(post);
 
-  temp.account = post.xact->journal->find_account(to_hex(message_digest));
+  temp.account = new_account;
   temp.note    = none;
   temp.add_flags(ITEM_TEMP);
 
