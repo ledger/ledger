@@ -461,6 +461,9 @@ void global_scope_t::normalize_report_options(const string& verb)
     }
   }
 
+  if (verb == "print")
+    rep.HANDLER(limit_).on(string("?normalize"), "actual");
+
   if (! rep.HANDLED(empty))
     rep.HANDLER(display_).on(string("?normalize"), "amount|(!post&total)");
 
