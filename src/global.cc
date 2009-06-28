@@ -82,6 +82,8 @@ global_scope_t::global_scope_t(char ** envp)
     read_environment_settings(envp);
     session().set_flush_on_next_data_file(true);
     read_init();
+  } else {
+    session().HANDLER(price_db_).off();
   }
 }
 
