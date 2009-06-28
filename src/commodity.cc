@@ -407,7 +407,10 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
 	    "attempting to download a more current quote...");
       if (optional<price_point_t> quote =
 	  parent().get_commodity_quote(*this, in_terms_of)) {
-	return quote;
+	if (! in_terms_of ||
+	    (quote->price.has_commodity() &&
+	     quote->price.commodity() == *in_terms_of))
+	  return quote;
       }
     }
   }
