@@ -1591,7 +1591,21 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
     break;
 
   case STRING:
-    out << '"' << as_string() << '"';
+    out << '"';
+    foreach (const char& ch, as_string()) {
+      switch (ch) {
+      case '"':
+	out << "\\\"";
+	break;
+      case '\\':
+	out << "\\\\";
+	break;
+      default:
+	out << ch;
+	break;
+      }
+    }
+    out << '"';
     break;
 
   case MASK:
