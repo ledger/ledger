@@ -345,7 +345,8 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	}
 	DEBUG("format.expr", "value = (" << value << ")");
 
-	value.print(out, elem->min_width);
+	value.print(out, elem->min_width, -1,
+		    ! elem->has_flags(ELEMENT_ALIGN_LEFT));
       }
       catch (const calc_error&) {
 	add_error_context(_("While calculating format expression:"));

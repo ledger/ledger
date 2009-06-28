@@ -1,0 +1,35 @@
+format "%-12(scrub(amount))"
+<<<
+>>>1
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    Expenses:Books                 20 BOOK @ $10
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%-12(scrub(amount))
+
+--- Format elements ---
+Element:    EXPR  flags: 0x1  min: 12  max:  0  expr: scrub(amount)
+
+--- Formatted string ---
+"20 BOOK     "
+>>>2
+=== 0
+format "%12(scrub(amount))"
+>>>1
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    Expenses:Books                 20 BOOK @ $10
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%12(scrub(amount))
+
+--- Format elements ---
+Element:    EXPR  flags: 0x0  min: 12  max:  0  expr: scrub(amount)
+
+--- Formatted string ---
+"     20 BOOK"
+>>>2
+=== 0
