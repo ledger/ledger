@@ -1,0 +1,57 @@
+
+This is the ledger filetype for vim.
+Copy each file to the corresponding directory in your ~/.vim directory.
+Then include the following line in your .vimrc  or in ~/.vim/filetype.vim
+  au BufNewFile,BufRead *.ldg,*.ledger setf ledger
+You can also use a modeline like this in every ledger file
+  vim:filetype=ledger
+
+Configuration
+======================================================================
+Include the following let-statements somewhere in your .vimrc
+to modify the behaviour of the ledger filetype.
+
+Number of colums that will be used to display the foldtext.
+Set this when you think that the amount is too far off to the right.
+let g:ledger_maxwidth = 80
+
+String that will be used to fill the space between account name
+and amount in the foldtext. Set this to get some kind of lines
+or visual aid.
+let g:ledger_fillstring = '    -'
+
+Revision history
+======================================================================
+ 2009-06-17  J. Klähn: Highlight account text
+             Updated documentation and added fillstring option.
+ 2009-06-15  J. Klähn: Split into multiple files
+ 2009-06-12  J. Klähn: Use all available columns for foldtext
+             Also rewrote foldtext generation.
+ 2009-03-25  J. Klähn: Allow Metadata
+             in transactions and postings (Ledger 3.0)
+             Also fixed alignment for multi-byte-characters
+ 2009-01-28  S.Karrmann: minor fixes
+ 2009-01-27  third version by S.Karrmann.
+             better extraction of the amount of the posting
+             decimal separator can be one of '.' and ','.
+ 2005-02-05  first version (partly copied from ledger.vim 0.0.1)
+
+License
+=======
+Copyright 2009 by Johann Klähn
+Copyright 2009 by Stefan Karrmann
+Copyright 2005 by Wolfgang Oertl
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+

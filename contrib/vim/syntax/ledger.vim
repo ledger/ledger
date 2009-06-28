@@ -33,7 +33,7 @@ syn match Metadata /^\s\+;.*/ contained
 syn match Comment /^;.*$/
 " every space in an account name shall be surrounded by two non-spaces
 " every account name ends with a tab, two spaces or the end of the line
-syn match Account /^\s\+\zs\%(\S\|\S \S\)\+\ze\%([ ]\{2,}\|\t\s*\|\s*$\)/ contained
+syn match Account /^\s\+\zs\%(\S \S\|\S\)\+\ze\%([ ]\{2,}\|\t\s*\|\s*$\)/ contained
 syn match Posting /^\s\+[^[:blank:];].*$/ contained transparent contains=Account
 
 

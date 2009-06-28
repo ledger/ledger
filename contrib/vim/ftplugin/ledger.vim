@@ -1,4 +1,4 @@
-" Vimwiki filetype plugin file
+" Vim filetype plugin file
 " filetype: ledger
 " Version: 0.1.0
 " by Johann Klähn; Use according to the terms of the GPL>=2.
@@ -12,7 +12,7 @@ let b:did_ftplugin = 1
 
 let b:undo_ftplugin = "setlocal ".
                     \ "foldmethod< foldtext< ".
-                    \ "include< comments< "
+                    \ "include< comments< iskeyword< "
 
 " don't fill fold lines --> cleaner look
 setl fillchars="fold: "
@@ -20,6 +20,10 @@ setl foldtext=LedgerFoldText()
 setl foldmethod=syntax
 setl include=^!include
 setl comments=b:;
+" so you can use C-X C-N completion on accounts
+" FIXME: Does not work with something like:
+"          Assets:Accountname with Spaces
+setl iskeyword+=:
 
 " You can set a maximal number of columns the fold text (excluding amount)
 " will use by overriding g:ledger_maxwidth in your .vimrc.
@@ -27,6 +31,10 @@ setl comments=b:;
 " of the screen.
 if !exists('g:ledger_maxwidth')
   let g:ledger_maxwidth = 0
+endif
+
+if !exists('g:ledger_fillstring')
+  let g:ledger_fillstring = ' '
 endif
 
 let s:rx_amount = '\('.
@@ -49,9 +57,7 @@ function! LedgerFoldText() "{{{1
     if line !~ '^\s\+;'
       " No comment, look for amount...
       let groups = matchlist(line, s:rx_amount)
-      echomsg string(groups)
       if ! empty(groups)
-        echomsg amount
         let amount = groups[1]
         break
       endif
@@ -73,7 +79,18 @@ function! LedgerFoldText() "{{{1
 
   " add spaces so the text is always long enough when we strip it
   " to a certain width (fake table)
-  let foldtext .= repeat(' ', s:get_columns(0))
+  if strlen(g:ledger_fillstring)
+    " add extra spaces so fillstring aligns
+    let filen = s:multibyte_strlen(g:ledger_fillstring)
+    let folen = s:multibyte_strlen(foldtext)
+    let foldtext .= repeat(' ', filen - (folen%filen))
+
+    let foldtext .= repeat(g:ledger_fillstring,
+                  \ s:get_columns(0)/filen)
+  else
+    let foldtext .= repeat(' ', s:get_columns(0))
+  endif
+
   " we don't use slices[:5], because that messes up multibyte characters
   let foldtext = substitute(foldtext, '.\{'.columns.'}\zs.*$', '', '')
 
