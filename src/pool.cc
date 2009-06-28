@@ -299,10 +299,16 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
   if (std::isdigit(time_field_ptr[0])) {
     symbol_and_price = next_element(time_field_ptr);
     if (! symbol_and_price) return none;
+
     datetime = parse_datetime(date_field + " " + time_field_ptr);
-  } else {
+  }
+  else if (std::isdigit(date_field_ptr[0])) {
     symbol_and_price = time_field_ptr;
-    datetime = parse_datetime(date_field);
+    datetime = datetime_t(parse_date(date_field));
+  }
+  else {
+    symbol_and_price = date_field_ptr;
+    datetime = CURRENT_TIME();
   }
 
   string symbol;
