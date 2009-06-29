@@ -12,7 +12,7 @@ let b:did_ftplugin = 1
 
 let b:undo_ftplugin = "setlocal ".
                     \ "foldmethod< foldtext< ".
-                    \ "include< comments< iskeyword< omnifunc< "
+                    \ "include< comments< omnifunc< "
 
 " don't fill fold lines --> cleaner look
 setl fillchars="fold: "
@@ -20,10 +20,6 @@ setl foldtext=LedgerFoldText()
 setl foldmethod=syntax
 setl include=^!include
 setl comments=b:;
-" so you can use C-X C-N completion on accounts
-" FIXME: Does not work with something like:
-"          Assets:Accountname with Spaces
-setl iskeyword+=:
 setl omnifunc=LedgerComplete
 
 " You can set a maximal number of columns the fold text (excluding amount)
