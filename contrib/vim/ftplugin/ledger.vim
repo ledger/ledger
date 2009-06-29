@@ -163,7 +163,10 @@ function! LedgerComplete(findstart, base) "{{{1
         " only allow completion when in or at end of account name
         return -1
       endif
-      return matchend(line, '^\s\+')
+      " the start of the first non-blank character
+      " (excluding virtual-transaction-marks)
+      " is the beginning of the account name
+      return matchend(line, '^\s\+[\[(]\?')
     else "}}}
       return -1
     endif
@@ -218,6 +221,8 @@ function! LedgerGetAccountHierarchy() "{{{1
   let hierarchy = {}
   let accounts = s:grep_buffer('^\s\+\zs[^[:blank:];]\%(\S \S\|\S\)\+\ze')
   for name in accounts
+    " remove virtual-transaction-marks
+    let name = substitute(name, '\%(^\s*[\[(]\?\|[\])]\?\s*$\)', '', 'g')
     let last = hierarchy
     for part in split(name, ':')
       let last[part] = get(last, part, {})
