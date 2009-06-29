@@ -11,17 +11,60 @@ Configuration
 Include the following let-statements somewhere in your .vimrc
 to modify the behaviour of the ledger filetype.
 
-Number of colums that will be used to display the foldtext.
-Set this when you think that the amount is too far off to the right.
-let g:ledger_maxwidth = 80
+* Number of colums that will be used to display the foldtext.
+  Set this when you think that the amount is too far off to the right.
+    let g:ledger_maxwidth = 80
 
-String that will be used to fill the space between account name
-and amount in the foldtext. Set this to get some kind of lines
-or visual aid.
-let g:ledger_fillstring = '    -'
+* String that will be used to fill the space between account name
+  and amount in the foldtext. Set this to get some kind of lines
+  or visual aid.
+    let g:ledger_fillstring = '    -'
+  My special tip is to use so-called digraphs:
+  Press <C-K> followed by the two-characters key sequence below.
+  (in insert-mode)
+    '. = ˙ or ': = ¨ --> ˙˙˙˙˙˙ or ¨¨¨¨¨¨
+    ', = ¸           --> ¸¸¸¸¸¸
+    .M = ·           --> ······
+    >> = »           --> »»»»»»
+  All those look rather unobstrusive
+  and provide a good visual aid to find the correct amount.
 
-Revision history
+* If you want the account completion to be sorted by level of detail/depth
+  instead of alphabetical, include the following line:
+    let g:ledger_detailed_first = 1
+
+Completion
 ======================================================================
+Omni completion is implemented for account names and tags.
+
+Accounts
+----------------------------------------------------------------------
+Account names are matched by the start of every sub-level.
+When you insert an account name like this:
+  Asse<C-X><C-O>
+You will get a list of top-level accounts that start like this.
+
+Go ahead and try something like:
+  As:Ban:Che<C-X><C-O>
+When you have an account like this, 'Assets:Bank:Checking' should show up.
+
+When you want to complete on a virtual transaction,
+it's currently best to keep the cursor in front of the closing bracket.
+Of course you can insert the closing bracket after calling the completion, too.
+
+Tags
+----------------------------------------------------------------------
+The support for completing tags is pretty basic right now
+but it's useful to keep the spelling of your tags consistent.
+You can call the completion after the ';' to get a list of all tags.
+When you have a list of tags (:like: :this:) you can call
+the completion too and everything up to the last ':' (excluding whitespace)
+will be considered the beginning of the tag to search for.
+
+Revision history (major changes)
+======================================================================
+ 2009-06-23 & 2009-06-25
+             J. Klähn: Omni-Completion for account names and tags
  2009-06-17  J. Klähn: Highlight account text
              Updated documentation and added fillstring option.
  2009-06-15  J. Klähn: Split into multiple files
@@ -37,7 +80,7 @@ Revision history
  2005-02-05  first version (partly copied from ledger.vim 0.0.1)
 
 License
-=======
+======================================================================
 Copyright 2009 by Johann Klähn
 Copyright 2009 by Stefan Karrmann
 Copyright 2005 by Wolfgang Oertl
