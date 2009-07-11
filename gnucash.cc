@@ -201,7 +201,7 @@ static amount_t convert_number(const std::string& number,
 {
   const char * num = number.c_str();
 
-  if (char * p = std::strchr(num, '/')) {
+  if (const char * p = std::strchr(num, '/')) {
     std::string numer_str(num, p - num);
     std::string denom_str(p + 1);
 

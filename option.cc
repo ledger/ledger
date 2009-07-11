@@ -892,7 +892,7 @@ OPT_BEGIN(market, "V") {
 namespace {
   void parse_price_setting(const char * optarg)
   {
-    char * equals = std::strchr(optarg, '=');
+    const char * equals = std::strchr(optarg, '=');
     if (! equals)
       return;
 

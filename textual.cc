@@ -298,8 +298,8 @@ transaction_t * parse_transaction(char * line, account_t * account,
       DEBUG_PRINT("ledger.textual.parse", "line " << linenum << ": " <<
 		  "Parsed a note '" << xact->note << "'");
 
-      if (char * b = std::strchr(xact->note.c_str(), '['))
-	if (char * e = std::strchr(xact->note.c_str(), ']')) {
+      if (const char * b = std::strchr(xact->note.c_str(), '['))
+	if (const char * e = std::strchr(xact->note.c_str(), ']')) {
 	  char buf[256];
 	  std::strncpy(buf, b + 1, e - b - 1);
 	  buf[e - b - 1] = '\0';
