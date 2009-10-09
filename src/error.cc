@@ -98,7 +98,8 @@ string source_context(const path&      file,
       
   scoped_array<char> buf(new char[len + 1]);
   in.read(buf.get(), static_cast<int>(len));
-  assert(static_cast<std::size_t>(in.gcount()) == len);
+  assert(static_cast<std::size_t>(in.gcount()) ==
+	 static_cast<std::size_t>(len));
   buf[static_cast<int>(len)] = '\0';
 
   bool first = true;

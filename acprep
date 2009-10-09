@@ -18,7 +18,7 @@ import shutil
 import string
 import sys
 import time
-import md5
+import hashlib
 import tempfile
 
 from os.path import *
@@ -584,7 +584,7 @@ class PrepareBuild(CommandLineApp):
 
             environ, conf_args = self.configure_environment()
 
-            boost   = 'boost_1_39_0'
+            boost   = 'boost_1_40_0'
             tarball = boost + '.tar.bz2'
 
             if not exists(boost):
@@ -599,7 +599,7 @@ class PrepareBuild(CommandLineApp):
                     sys.exit(1)
 
                 fd = open(tarball)
-                csum = md5.new()
+                csum = hashlib.md5()
                 csum.update(fd.read())
                 fd.close()
                 digest = csum.hexdigest()
@@ -763,7 +763,11 @@ class PrepareBuild(CommandLineApp):
 
             # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
             # newer version.
-            if exists('/opt/local/bin/g++-mp-4.3'):
+            if exists('/opt/local/bin/g++-mp-4.4'):
+                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.4'
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.4'
+                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.4'
+            elif exists('/opt/local/bin/g++-mp-4.3'):
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
                 self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
@@ -950,17 +954,41 @@ class PrepareBuild(CommandLineApp):
             self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
             self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
-        if exists('/usr/local/lib/libboost_regex-xgcc43-sd-1_39.a'):
+        if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
             self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc43-sd-1_39'
-            self.envvars['BOOST_VERSION'] = '1_39'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
+            self.envvars['BOOST_VERSION'] = '1_40'
 
             self.log.debug('Setting BOOST_SUFFIX  => %s' %
                            self.envvars['BOOST_SUFFIX'])
             self.log.debug('Setting BOOST_VERSION => %s' %
                            self.envvars['BOOST_VERSION'])
 
-            self.sys_include_dirs.append('/usr/local/include/boost-1_39')
+            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+
+        elif exists('/usr/local/lib/libboost_regex-xgcc43-sd-1_40.a'):
+            self.envvars['BOOST_HOME']   = '/usr/local'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc43-sd-1_40'
+            self.envvars['BOOST_VERSION'] = '1_40'
+
+            self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                           self.envvars['BOOST_SUFFIX'])
+            self.log.debug('Setting BOOST_VERSION => %s' %
+                           self.envvars['BOOST_VERSION'])
+
+            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+
+        elif exists('/usr/local/lib/libboost_regex-xgcc42-sd-1_40.a'):
+            self.envvars['BOOST_HOME']   = '/usr/local'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc42-sd-1_40'
+            self.envvars['BOOST_VERSION'] = '1_40'
+
+            self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                           self.envvars['BOOST_SUFFIX'])
+            self.log.debug('Setting BOOST_VERSION => %s' %
+                           self.envvars['BOOST_VERSION'])
+
+            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
 
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')

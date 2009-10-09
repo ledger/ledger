@@ -110,7 +110,7 @@ inline std::string format_datetime(const datetime_t& when,
 				   const optional<std::string>& format = none)
 {
   char buf[256];
-  time_t moment = to_time_t(when);
+  std::time_t moment = to_time_t(when);
   std::strftime(buf, 255, format ? format->c_str() :
 		output_datetime_format.c_str(), std::localtime(&moment));
   return buf;
