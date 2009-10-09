@@ -33,9 +33,9 @@ The *BETA* is what I prefer people use, since I still have a chance to fix
 major bugs that you find.  Just e-mail me, or post to the mailing list,
 they'll become a part of my work list.
 
-  | *CURRENT* | @git checkout master@ |
-  | *BETA* | @git checkout -b maint origin/maint@ |
-  | *RELEASE* | @git checkout v2.6.1@ |
+| *CURRENT* | @git checkout master@ |
+| *BETA* | @git checkout -b maint origin/maint@ |
+| *RELEASE* | @git checkout v2.6.1@ |
 
 There are also several topic branches which contain experimental features,
 though none of these are guaranteed to compile.  Best to chat with me on
@@ -49,28 +49,28 @@ If you wish to proceed in this venture, you'll need a few dependencies:
 
 h3. For building the current master branch
 
-  |_. Library |_. Min.Ver. |_. When needed |
-  | Boost | 1.35 or higher | |
-  | GMP | 4.2.2 | |
-  | MPFR | 2.4.0 | |
-  | gettext | 0.17 | _optional_ |
-  | libedit | 20090111-3.0 | _optional_ |
-  | Python | 2.4 or higher | _optional_ |
-  | cppunit | 1.12.1 | _optional_, for @make check@ |
-  | doxygen | 1.5.7.1 | _optional_, for @make docs@ |
-  | graphviz | 2.20.3 | _optional_, for @make docs@ |
-  | texinfo | 4.13 | _optional_, for @make docs@ |
-  | lcov | 1.6 | _optional_, for @make report@, used with @./acprep gcov@|
-  | sloccount | 2.26 | _optional_, for @make sloc@ |
+|_. Library |_. Min.Ver. |_. When needed |
+| Boost | 1.35 or higher | |
+| GMP | 4.2.2 | |
+| MPFR | 2.4.0 | |
+| gettext | 0.17 | _optional_ |
+| libedit | 20090111-3.0 | _optional_ |
+| Python | 2.4 or higher | _optional_ |
+| cppunit | 1.12.1 | _optional_, for @make check@ |
+| doxygen | 1.5.7.1 | _optional_, for @make docs@ |
+| graphviz | 2.20.3 | _optional_, for @make docs@ |
+| texinfo | 4.13 | _optional_, for @make docs@ |
+| lcov | 1.6 | _optional_, for @make report@, used with @./acprep gcov@|
+| sloccount | 2.26 | _optional_, for @make sloc@ |
 
 h3. For building the beta or release branches
 
-  |_. Library |_. Min.Ver. |_. When needed |
-  | GMP | 4.2.2 | |
-  | pcre | 7.7 | |
-  | libofx | 0.8.3 | _optional_ |
-  | expat | 2.0.1 | _optional_ |
-  | libxml2 | 2.7.2 | _optional_ |
+|_. Library |_. Min.Ver. |_. When needed |
+| GMP | 4.2.2 | |
+| pcre | 7.7 | |
+| libofx | 0.8.3 | _optional_ |
+| expat | 2.0.1 | _optional_ |
+| libxml2 | 2.7.2 | _optional_ |
 
 h3. MacPorts
 
@@ -127,12 +127,12 @@ h2. Resources
 
 Now that you're up and running, here are a few resources to keep in mind:
 
-  | Home page | "http://www.newartisans.com/software/ledger.html":http://www.newartisans.com/software/ledger.html |
-  | IRC channel | "#ledger on irc.freenode.net":irc://irc.freenode.net/ledger |
-  | Mailing List / Forum | "http://groups.google.com/group/ledger-cli":http://groups.google.com/group/ledger-cli |
-  | GitHub project page | "http://github.com/jwiegley/ledger":http://github.com/jwiegley/ledger |
-  | Buildbot status | "http://www.newartisans.com:9090":http://www.newartisans.com:9090 |
-  | Ohloh code analysis | "http://www.ohloh.net/projects/ledger":http://www.ohloh.net/projects/ledger |
+| Home page | "http://www.newartisans.com/software/ledger.html":http://www.newartisans.com/software/ledger.html |
+| IRC channel | "#ledger on irc.freenode.net":irc://irc.freenode.net/ledger |
+| Mailing List / Forum | "http://groups.google.com/group/ledger-cli":http://groups.google.com/group/ledger-cli |
+| GitHub project page | "http://github.com/jwiegley/ledger":http://github.com/jwiegley/ledger |
+| Buildbot status | "http://www.newartisans.com:9090":http://www.newartisans.com:9090 |
+| Ohloh code analysis | "http://www.ohloh.net/projects/ledger":http://www.ohloh.net/projects/ledger |
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
 patch (I prefer attachments over pasted text), or to get an account on GitHub.
