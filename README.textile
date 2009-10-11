@@ -12,7 +12,7 @@ installed (see below), then simply do this:
 
 <pre>
 git clone git://github.com/jwiegley/ledger.git
-cd ledger && ./acprep && make check
+cd ledger && ./acprep update  # Update to the latest, configure, make
 </pre>
 
 Now try your first ledger command:
@@ -107,6 +107,7 @@ The next step is preparing your environment for building.  While you can use
 you:
 
 <pre>
+./acprep pull       # Make sure everything is pulled that needs to be
 ./acprep
 </pre>
 
