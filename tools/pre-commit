@@ -55,6 +55,6 @@ fi
 
 # Finally, (re)build this proposed source tree and see if it passes
 # muster.
-nice -n 20 make -j3 check
+nice -n 20 make check
 
 exit 0
