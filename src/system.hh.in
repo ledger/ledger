@@ -53,6 +53,7 @@
 #include <algorithm>
 #include <exception>
 #include <typeinfo>
+#include <locale>
 #include <stdexcept>
 #include <iostream>
 #include <streambuf>
@@ -98,7 +99,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <csignal>
 
 #if defined __FreeBSD__ && __FreeBSD__ <= 4
@@ -144,6 +144,8 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/date_time/gregorian/gregorian_io.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/fstream.hpp>

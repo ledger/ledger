@@ -41,64 +41,83 @@ std::string	      output_datetime_format = "%Y-%m-%d %H:%M:%S";
 std::string	      output_date_format     = "%Y-%m-%d";
 
 namespace {
-  const char * formats[] = {
-    "%y/%m/%d",
-    "%Y/%m/%d",
-    "%m/%d",
-    "%Y/%m",
-    "%y.%m.%d",
-    "%Y.%m.%d",
-    "%m.%d",
-    "%Y.%m",
-    "%y-%m-%d",
-    "%Y-%m-%d",
-    "%m-%d",
-    "%Y-%m",
-    NULL
+  struct date_format_t {
+    const char * format;
+    bool	 has_year;
+    date_format_t(const char * _format, bool _has_year)
+      : format(_format), has_year(_has_year) {}
   };
 
-  bool parse_date_mask(const char * date_str, std::tm& result)
+  const date_format_t formats[] = {
+    date_format_t("%m/%d",    false),
+    date_format_t("%Y/%m/%d", true),
+    date_format_t("%Y/%m",    true),
+    date_format_t("%y/%m/%d", true),
+    date_format_t("%m.%d",    false),
+    date_format_t("%Y.%m.%d", true),
+    date_format_t("%Y.%m",    true),
+    date_format_t("%y.%m.%d", true),
+    date_format_t("%m-%d",    false),
+    date_format_t("%Y-%m-%d", true),
+    date_format_t("%Y-%m",    true),
+    date_format_t("%y-%m-%d", true)
+  };
+
+  date_t parse_date_mask_routine(const char * date_str, const date_format_t& df,
+				 optional<date_t::year_type> year, bool& saw_year)
   {
-    if (input_date_format) {
-      std::memset(&result, -1, sizeof(std::tm));
-      if (strptime(date_str, input_date_format->c_str(), &result))
-	return true;
+    std::string str(date_str);
+
+    gregorian::date_input_facet * facet(new gregorian::date_input_facet(df.format));
+    std::istringstream sstr(str);
+    sstr.imbue(std::locale(sstr.getloc(), facet));
+
+    date_t when;
+    sstr >> when;
+
+    if (! when.is_not_a_date()) {
+      if (sstr.good() && ! sstr.eof() && sstr.peek() != EOF)
+	return date_t();
+
+      DEBUG("times.parse", "Parsed date string: " << date_str);
+      DEBUG("times.parse", "Parsed result is: " << when);
+      DEBUG("times.parse", "Format used was: " << df.format);
+
+      if (! df.has_year) {
+	saw_year = false;
+
+	when = date_t(year ? *year : CURRENT_DATE().year(),
+		      when.month(), when.day());
+
+	if (when.month() > CURRENT_DATE().month())
+	  when -= gregorian::years(1);
+      } else {
+	saw_year = true;
+      }
     }
-    for (const char ** f = formats; *f; f++) {
-      std::memset(&result, -1, sizeof(std::tm));
-      if (strptime(date_str, *f, &result))
-	return true;
-    }
-    return false;
+    return when;
   }
 
-  bool quick_parse_date(const char * date_str, std::tm& result, const int year)
+  date_t parse_date_mask(const char * date_str, optional<date_t::year_type> year,
+			 bool& saw_year)
   {
-    if (! parse_date_mask(date_str, result))
-      return false;
-
-    result.tm_hour = 0;
-    result.tm_min  = 0;
-    result.tm_sec  = 0;
-
-    if (result.tm_mday == -1)
-      result.tm_mday = 1;
-
-    if (result.tm_mon == -1) {
-      result.tm_mon = 0;
-
-      if (result.tm_mday > (CURRENT_DATE().day() - 1))
-	result.tm_mon = 11;
+    if (input_date_format) {
+      date_format_t df(input_date_format->c_str(), true);
+      if (! icontains(*input_date_format, "%y"))
+	df.has_year = false;
+      date_t when = parse_date_mask_routine(date_str, df, year, saw_year);
+      if (! when.is_not_a_date())
+	return when;
     }
 
-    if (result.tm_year == -1) {
-      result.tm_year = (year == -1 ? int(CURRENT_DATE().year()) : year) - 1900;
-
-      if (year == -1 && result.tm_mon > (CURRENT_DATE().month() - 1))
-	result.tm_year--;
+    for (uint8_t i = 0; i < (sizeof(formats) / sizeof(date_format_t)); i++) {
+      date_t when = parse_date_mask_routine(date_str, formats[i], year,
+					    saw_year);
+      if (! when.is_not_a_date())
+	return when;
     }
 
-    return true;
+    return date_t();
   }
 }
 
@@ -153,21 +172,24 @@ string_to_month_of_year(const std::string& str)
     return none;
 }
 
-datetime_t parse_datetime(const char * str, int)
+datetime_t parse_datetime(const char * str, optional<date_t::year_type>)
 {
-  std::tm when;
-  std::memset(&when, -1, sizeof(std::tm));
-  if (strptime(str, "%Y/%m/%d %H:%M:%S", &when))
-    return posix_time::ptime_from_tm(when);
-  else
-    return datetime_t();
+  posix_time::time_input_facet * facet
+    (new posix_time::time_input_facet("%Y/%m/%d %H:%M:%S"));
+
+  std::string temp(str);
+  std::istringstream sstr(temp);
+  sstr.imbue(std::locale(sstr.getloc(), facet));
+
+  datetime_t when;
+  sstr >> when;
+  return when;
 }
 
-date_t parse_date(const char * str, int current_year)
+date_t parse_date(const char * str, optional<date_t::year_type> current_year)
 {
-  std::tm when;
-  quick_parse_date(str, when, current_year);
-  return gregorian::date_from_tm(when);
+  bool saw_year;
+  return parse_date_mask(str, current_year, saw_year);
 }
 
 date_t date_interval_t::add_duration(const date_t&     date,
@@ -436,52 +458,24 @@ namespace {
 				 date_t *      begin,
 				 date_t *      end)
   {
-    struct std::tm when;
+    bool   saw_year = true;
+    date_t when	    = parse_date_mask(word.c_str(), none, saw_year);
 
-    if (! parse_date_mask(word.c_str(), when))
+    if (when.is_not_a_date())
       throw_(date_error, _("Could not parse date mask: %1") << word);
 
-    when.tm_hour   = 0;
-    when.tm_min	   = 0;
-    when.tm_sec	   = 0;
-    when.tm_isdst  = -1;
-
-    bool saw_year = true;
-    bool saw_mon  = true;
-    bool saw_day  = true;
-
-    if (when.tm_year == -1) {
-      when.tm_year = CURRENT_DATE().year() - 1900;
-      saw_year = false;
-    }
-    if (when.tm_mon == -1) {
-      when.tm_mon = 0;
-      saw_mon = false;
-    } else {
-      saw_year = false;		// don't increment by year if month used
-    }
-    if (when.tm_mday == -1) {
-      when.tm_mday = 1;
-      saw_day = false;
-    } else {
-      saw_mon  = false;		// don't increment by month if day used
-      saw_year = false;		// don't increment by year if day used
-    }
-
     if (begin) {
-      *begin = gregorian::date_from_tm(when);
+      *begin = when;
 
       if (end) {
 	if (saw_year)
 	  *end = *begin + gregorian::years(1);
-	else if (saw_mon)
+	else
 	  *end = *begin + gregorian::months(1);
-	else if (saw_day)
-	  *end = *begin + gregorian::days(1);
       }
     }
     else if (end) {
-      *end = gregorian::date_from_tm(when);
+      *end = when;
     }
   }
 

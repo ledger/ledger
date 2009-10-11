@@ -65,7 +65,6 @@ namespace {
     account_t *	      master;
     const path *      original_file;
     accounts_map      account_aliases;
-    int               current_year;
     bool              strict;
 
     path	      pathname;
@@ -75,6 +74,8 @@ namespace {
     istream_pos_type  curr_pos;
     std::size_t       count;
     std::size_t       errors;
+
+    optional<date_t::year_type> current_year;
 
     scoped_ptr<auto_xact_finalizer_t> auto_xact_finalizer;
 
@@ -476,7 +477,7 @@ void instance_t::nomarket_directive(char * line)
 
 void instance_t::year_directive(char * line)
 {
-  current_year = lexical_cast<int>(skip_ws(line + 1));
+  current_year = lexical_cast<unsigned short>(skip_ws(line + 1));
 }
 
 void instance_t::option_directive(char * line)

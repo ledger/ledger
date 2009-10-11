@@ -67,7 +67,7 @@ class session_t : public symbol_scope_t
 
 public:
   bool flush_on_next_data_file;
-  int  current_year;
+  date_t::year_type current_year;
 
   shared_ptr<commodity_pool_t> commodity_pool;
   scoped_ptr<account_t>	       master;

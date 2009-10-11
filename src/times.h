@@ -81,27 +81,20 @@ string_to_day_of_week(const std::string& str);
 optional<date_time::months_of_year>
 string_to_month_of_year(const std::string& str);
 
-datetime_t parse_datetime(const char * str, int current_year = -1);
+datetime_t parse_datetime(const char * str,
+			  optional<date_t::year_type> current_year = none);
 
 inline datetime_t parse_datetime(const std::string& str,
-				 int current_year = -1) {
+				 optional<date_t::year_type> current_year = none) {
   return parse_datetime(str.c_str(), current_year);
 }
 
-date_t parse_date(const char * str, int current_year = -1);
+date_t parse_date(const char * str,
+		  optional<date_t::year_type> current_year = none);
 
-inline date_t parse_date(const std::string& str, int current_year = -1) {
+inline date_t parse_date(const std::string& str,
+			 optional<date_t::year_type> current_year = none) {
   return parse_date(str.c_str(), current_year);
-}
-
-inline std::time_t to_time_t(const ptime& t) 
-{ 
-  if( t == posix_time::neg_infin ) 
-    return 0; 
-  else if( t == posix_time::pos_infin ) 
-    return LONG_MAX; 
-  ptime start(date(1970,1,1)); 
-  return (t-start).total_seconds(); 
 }
 
 extern std::string output_datetime_format;
@@ -109,11 +102,13 @@ extern std::string output_datetime_format;
 inline std::string format_datetime(const datetime_t& when,
 				   const optional<std::string>& format = none)
 {
-  char buf[256];
-  std::time_t moment = to_time_t(when);
-  std::strftime(buf, 255, format ? format->c_str() :
-		output_datetime_format.c_str(), std::localtime(&moment));
-  return buf;
+  posix_time::time_facet * facet
+    (new posix_time::time_facet(format ? format->c_str() :
+				output_datetime_format.c_str()));
+  std::ostringstream buf;
+  buf.imbue(std::locale(std::locale::classic(), facet));
+  buf << when;
+  return buf.str();
 }
 
 extern std::string output_date_format;
@@ -121,11 +116,13 @@ extern std::string output_date_format;
 inline std::string format_date(const date_t& when,
 			       const optional<std::string>& format = none)
 {
-  char buf[256];
-  std::tm moment = gregorian::to_tm(when);
-  std::strftime(buf, 255, format ? format->c_str() :
-		output_date_format.c_str(), &moment);
-  return buf;
+  gregorian::date_facet * facet
+    (new gregorian::date_facet(format ? format->c_str() :
+			       output_date_format.c_str()));
+  std::ostringstream buf;
+  buf.imbue(std::locale(std::locale::classic(), facet));
+  buf << when;
+  return buf.str();
 }
 
 class date_interval_t : public equality_comparable<date_interval_t>

@@ -129,8 +129,10 @@ public:
   virtual void set_tag(const string& tag,
 		       const optional<string>& value = none);
 
-  virtual void parse_tags(const char * p, int current_year = -1);
-  virtual void append_note(const char * p, int current_year = -1);
+  virtual void parse_tags(const char * p,
+			  optional<date_t::year_type> current_year = none);
+  virtual void append_note(const char * p,
+			   optional<date_t::year_type> current_year = none);
 
   static bool use_effective_date;
 

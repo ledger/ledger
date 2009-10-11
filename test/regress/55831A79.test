@@ -13,7 +13,7 @@ bal discover
     liabilities:credit cards:discover 4462:interest    $-28.17
     assets:bank:wells fargo:checking
 
-2008/3/1 * discover card payment
+2008/03/01 * discover card payment
     liabilities:credit cards:discover 4462        $1198.14
     assets:bank:wells fargo:checking
 >>>1
