@@ -192,7 +192,6 @@ class PrepareBuild(CommandLineApp):
         self.envvars = {
             'PYTHON_HOME':     '/usr',
             'PYTHON_VERSION':  '2.5',
-            'BOOST_VERSION':   None,
             'BOOST_SUFFIX':    None,
             'BOOST_HOME':      '/usr',
             'LEDGER_PRODUCTS': None,
@@ -624,7 +623,6 @@ class PrepareBuild(CommandLineApp):
 
             self.execute('make',
                          'BOOST_SOURCE=%s' % boost,
-                         'BOOST_VERSION=%s' % environ['BOOST_VERSION'],
                          'CC=%s'  % environ['CC'],
                          'CXX=%s' % environ['CXX'],
                          'LD=%s'  % environ['LD'],
@@ -649,14 +647,6 @@ class PrepareBuild(CommandLineApp):
                     suffix = match.group(1)
                     self.log.debug('Found Boost suffix => ' + suffix)
                     self.envvars['BOOST_HOME'] = dirname(path)
-
-                    match = re.search('[0-9]+_[0-9]+', suffix)
-                    if match:
-                        version = match.group(0)
-                        self.log.debug('Found Boost version in suffix => ' +
-                                       version)
-                        if not self.envvars['BOOST_VERSION']:
-                            self.envvars['BOOST_VERSION'] = version
                     return suffix
         else:
             self.log.debug('The directory "%s" is not valid, skipping' %
@@ -678,8 +668,6 @@ class PrepareBuild(CommandLineApp):
                     self.log.debug('Boost is located here:')
                     self.log.debug('BOOST_HOME    => ' +
                                    self.envvars['BOOST_HOME'])
-                    self.log.debug('BOOST_VERSION => ' +
-                                   str(self.envvars['BOOST_VERSION']))
                     self.log.debug('BOOST_SUFFIX  => ' + suffix)
                     break
             if suffix is None:
@@ -692,9 +680,8 @@ class PrepareBuild(CommandLineApp):
 
         # Each of these becomes '-isystem <name>'
         for path in ['/usr/local/include',
-                        '%s/include/boost-%s' %
-                        (self.envvars['BOOST_HOME'],
-                         self.envvars['BOOST_VERSION']),
+                        '%s/include/boost' %
+                        self.envvars['BOOST_HOME'],
                         '%s/include' % self.envvars['BOOST_HOME'],
                         '%s/include/python%s' %
                         (self.envvars['PYTHON_HOME'],
@@ -939,56 +926,52 @@ class PrepareBuild(CommandLineApp):
         self.CXXFLAGS.append('-g')
         self.LDFLAGS.append('-g')
 
-        if not self.options.use_glibcxx_debug:
-            return
+        if self.options.use_glibcxx_debug:
+            self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
 
-        self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
+            self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-        self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
+            if exists('/usr/local/stow/cppunit-debug/include'):
+                if '/usr/local/stow/cppunit/include' in self.sys_include_dirs:
+                    self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
+                    self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
 
-        if exists('/usr/local/stow/cppunit-debug/include'):
-            if '/usr/local/stow/cppunit/include' in self.sys_include_dirs:
-                self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
-                self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
+                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
-            self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
-            self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
+            if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
+                self.envvars['BOOST_HOME']   = '/usr/local'
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
+                self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                               self.envvars['BOOST_SUFFIX'])
 
-        if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
-            self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
-            self.envvars['BOOST_VERSION'] = '1_40'
+                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
 
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                           self.envvars['BOOST_SUFFIX'])
-            self.log.debug('Setting BOOST_VERSION => %s' %
-                           self.envvars['BOOST_VERSION'])
+            elif exists('/opt/local/lib/libboost_regex-d.a'):
+                self.envvars['BOOST_HOME']   = '/opt/local'
+                self.envvars['BOOST_SUFFIX'] = '-d'
 
-            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                               self.envvars['BOOST_SUFFIX'])
 
-        elif exists('/usr/local/lib/libboost_regex-xgcc43-sd-1_40.a'):
-            self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc43-sd-1_40'
-            self.envvars['BOOST_VERSION'] = '1_40'
+                self.sys_include_dirs.append('/opt/local/include/boost')
+        else:
+            if exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+                self.envvars['BOOST_HOME']   = '/usr/local'
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+                self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                               self.envvars['BOOST_SUFFIX'])
 
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                           self.envvars['BOOST_SUFFIX'])
-            self.log.debug('Setting BOOST_VERSION => %s' %
-                           self.envvars['BOOST_VERSION'])
+                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
 
-            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+            elif exists('/opt/local/lib/libboost_regex.a'):
+                self.envvars['BOOST_HOME']   = '/opt/local'
+                self.envvars['BOOST_SUFFIX'] = ''
 
-        elif exists('/usr/local/lib/libboost_regex-xgcc42-sd-1_40.a'):
-            self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc42-sd-1_40'
-            self.envvars['BOOST_VERSION'] = '1_40'
+                self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                               self.envvars['BOOST_SUFFIX'])
 
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                           self.envvars['BOOST_SUFFIX'])
-            self.log.debug('Setting BOOST_VERSION => %s' %
-                           self.envvars['BOOST_VERSION'])
-
-            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.sys_include_dirs.append('/opt/local/include/boost')
 
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')
