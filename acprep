@@ -1113,6 +1113,7 @@ class PrepareBuild(CommandLineApp):
 
     def phase_config(self, *args):
         self.log.debug('Executing phase: config')
+        self.phase_submodule()
         self.phase_autoconf()
         self.phase_configure(*args)
         if self.should_clean:
