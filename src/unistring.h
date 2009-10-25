@@ -70,7 +70,7 @@ public:
     std::size_t	 len = input.length();
 
     VERIFY(utf8::is_valid(p, p + len));
-    utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
+    utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
   }
   ~unistring() {
     TRACE_DTOR(unistring);
@@ -80,18 +80,22 @@ public:
     return utf32chars.size();
   }
 
-  std::string extract(const std::size_t begin = 0,
-		      const std::size_t len   = 0) const
+  std::string extract(const std::string::size_type begin = 0,
+		      const std::string::size_type len   = 0) const
   {
-    std::string utf8result;
-    std::size_t this_len = length();
+    std::string		   utf8result;
+    std::string::size_type this_len = length();
+
     assert(begin <= this_len);
     assert(begin + len <= this_len);
+
     if (this_len)
-      utf8::utf32to8(utf32chars.begin() + begin,
-		     utf32chars.begin() + begin +
-		     (len ? (len > this_len ? this_len : len) : this_len),
-		     std::back_inserter(utf8result));
+      utf8::unchecked::utf32to8
+	(utf32chars.begin() + begin,
+	 utf32chars.begin() + begin +
+	 (len ? (len > this_len ? this_len : len) : this_len),
+	 std::back_inserter(utf8result));
+
     return utf8result;
   }
 };
