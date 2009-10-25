@@ -418,6 +418,8 @@ struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;
 };
 
+void to_xml(std::ostream& out, const commodity_t& comm);
+
 } // namespace ledger
 
 #endif // _COMMODITY_H

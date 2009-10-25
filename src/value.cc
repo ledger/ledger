@@ -1746,4 +1746,58 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
   return false;
 }
 
+void to_xml(std::ostream& out, const value_t& value)
+{
+  push_xml x(out, "value");
+
+  switch (value.type()) {
+  case value_t::VOID:
+    out << "<void />";
+    break;
+  case value_t::BOOLEAN: {
+    push_xml y(out, "boolean");
+    out << (value.as_boolean() ? "true" : "false");
+    break;
+  }
+  case value_t::INTEGER: {
+    push_xml y(out, "integer");
+    out << value.as_long();
+    break;
+  }
+  case value_t::DATETIME:
+    to_xml(out, value.as_datetime());
+    break;
+  case value_t::DATE:
+    to_xml(out, value.as_date());
+    break;
+  case value_t::STRING: {
+    push_xml y(out, "string");
+    out << y.guard(value.as_string());
+    break;
+  }
+  case value_t::MASK:
+    to_xml(out, value.as_mask());
+    break;
+
+  case value_t::SEQUENCE: {
+    push_xml y(out, "sequence");
+    foreach (const value_t& member, value.as_sequence())
+      to_xml(out, member);
+    break;
+  }
+
+  case value_t::AMOUNT:
+    to_xml(out, value.as_amount());
+    break;
+  case value_t::BALANCE:
+    to_xml(out, value.as_balance());
+    break;
+
+  case value_t::SCOPE:
+  default:
+    assert(false);
+    break;
+  }
+}
+
 } // namespace ledger

@@ -1125,6 +1125,19 @@ bool amount_t::valid() const
   return true;
 }
 
+void to_xml(std::ostream& out, const amount_t& amt)
+{
+  push_xml x(out, "amount");
+
+  if (amt.has_commodity())
+    to_xml(out, amt.commodity());
+
+  {
+    push_xml y(out, "number");
+    out << amt.number();
+  }
+}
+
 #if defined(HAVE_BOOST_SERIALIZATION)
 
 template<class Archive>

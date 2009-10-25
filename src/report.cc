@@ -43,6 +43,7 @@
 #include "stats.h"
 #include "generate.h"
 #include "draft.h"
+#include "xml.h"
 #include "emacs.h"
 
 namespace ledger {

@@ -654,4 +654,15 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   }
 }
 
+void to_xml(std::ostream& out, const commodity_t& comm)
+{
+  push_xml x(out, "commodity");
+  {
+    push_xml y(out, "symbol");
+    out << y.guard(comm.symbol());
+  }
+  if (comm.is_annotated())
+    to_xml(out, as_annotated_commodity(comm).details);
+}
+
 } // namespace ledger

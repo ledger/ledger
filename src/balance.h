@@ -574,6 +574,8 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
   return out;
 }
 
+void to_xml(std::ostream& out, const balance_t& amt);
+
 } // namespace ledger
 
 #endif // _BALANCE_H

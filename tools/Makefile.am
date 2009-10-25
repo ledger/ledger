@@ -73,6 +73,7 @@ libledger_report_la_SOURCES  =			\
 	src/generate.cc				\
 	src/draft.cc				\
 	src/emacs.cc                            \
+	src/xml.cc                              \
 	src/output.cc				\
 	src/precmd.cc				\
 	src/chain.cc				\
@@ -136,6 +137,7 @@ pkginclude_HEADERS =				\
 	src/generate.h				\
 	src/stats.h				\
 	src/output.h				\
+	src/xml.h				\
 	src/emacs.h				\
 						\
 	src/global.h				\
