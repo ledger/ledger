@@ -47,4 +47,4 @@ cppunit-debug:
 
 cppunit-build: cppunit-release cppunit-debug
 
-build-all: cppunit-build boost-build
+build-all: boost-build cppunit-build
