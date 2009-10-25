@@ -255,6 +255,31 @@ else
   AC_MSG_FAILURE("Could not find boost_filesystem library (set CPPFLAGS and LDFLAGS?)")
 fi
 
+# check for boost_iostreams
+AC_CACHE_CHECK(
+  [if boost_iostreams is available],
+  [boost_iostreams_cpplib_avail_cv_],
+  [boost_iostreams_save_libs=$LIBS
+   LIBS="-lboost_iostreams$BOOST_SUFFIX -lboost_system$BOOST_SUFFIX $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_LINK_IFELSE(
+     [AC_LANG_PROGRAM(
+	[[#include <boost/iostreams/device/file_descriptor.hpp> 
+	  #include <boost/iostreams/stream.hpp>]],
+	[[namespace io = boost::iostreams; 
+	  typedef io::stream<io::file_descriptor_sink> ofdstream; 
+	  ofdstream outstream(1);]])],
+     [boost_iostreams_cpplib_avail_cv_=true],
+     [boost_iostreams_cpplib_avail_cv_=false])
+   AC_LANG_POP
+   LIBS=$boost_iostreams_save_libs])
+
+if [test x$boost_iostreams_cpplib_avail_cv_ = xtrue ]; then
+  LIBS="-lboost_iostreams$BOOST_SUFFIX -lboost_system$BOOST_SUFFIX $LIBS"
+else
+  AC_MSG_FAILURE("Could not find boost_iostreams library (set CPPFLAGS and LDFLAGS?)")
+fi
+
 # check for Python
 AM_PATH_PYTHON(2.4,, :)
 if [test "$PYTHON" != :]; then

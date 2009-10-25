@@ -136,7 +136,6 @@ pkginclude_HEADERS =				\
 						\
 	src/pyinterp.h				\
 						\
-	lib/fdstream.h				\
 	lib/sha1.h				\
 	lib/gettext.h				\
 						\
