@@ -519,12 +519,17 @@ class PrepareBuild(CommandLineApp):
             if exists('/opt/local/bin/port'):
                 self.log.info('Looks like you are using MacPorts on OS X')
                 packages = [
-                    'sudo', 'port', 'install',
-                     'boost', '+python25+debug+st',
-                     'gmp', 'mpfr', 'gettext',
-                     'libedit', 'cppunit',
-                     #'texlive', 'doxygen', 'graphviz', 'texinfo',
-                     'lcov', 'sloccount'
+                    'sudo', 'port', 'install', '-f',
+                    'automake', 'autoconf', 'libtool',
+                    'python26', 'boost-jam',
+                    'libiconv', '+universal', 'zlib', '+universal',
+                    'gmp' ,'+universal', 'mpfr', '+universal',
+                    'ncurses', '+universal', 'ncursesw', '+universal',
+                    'gettext' ,'+universal', 'libedit' ,'+universal',
+                    'boost', '+universal+st+debug+python26+doc',
+                    'cppunit' ,'+universal',
+                    'texlive', 'doxygen', 'graphviz', 'texinfo',
+                    'lcov', 'sloccount'
                 ]
                 self.log.info('Executing: ' + string.join(packages, ' '))
                 self.execute(*packages)
