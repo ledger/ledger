@@ -88,7 +88,7 @@ AC_CACHE_CHECK(
 	  if (status < 0) {
 	    ;
 	  } else if (status == 0) {
-	    char *arg0;
+	    char *arg0 = NULL;
 
 	    status = dup2(pfd[0], STDIN_FILENO);
 
@@ -160,8 +160,8 @@ AC_CACHE_CHECK(
     [[#include <stdlib.h>
       #include <stdio.h>
       #include <editline/readline.h>]],
-    [[rl_readline_name = "foo";
-      char * line = readline("foo: ");
+    [[rl_readline_name = const_cast<char *>("foo");
+      char * line = readline(const_cast<char *>("foo: "));
       free(line);]])],[libedit_avail_cv_=true],[libedit_avail_cv_=false])
    AC_LANG_POP
    LIBS=$libedit_save_libs])

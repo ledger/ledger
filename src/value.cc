@@ -173,6 +173,17 @@ date_t value_t::to_date() const
   }
 }
 
+int value_t::to_int() const
+{
+  if (is_long()) {
+    return static_cast<int>(as_long());
+  } else {
+    value_t temp(*this);
+    temp.in_place_cast(INTEGER);
+    return static_cast<int>(temp.as_long());
+  }
+}
+
 long value_t::to_long() const
 {
   if (is_long()) {

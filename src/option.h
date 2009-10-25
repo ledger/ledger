@@ -56,11 +56,11 @@ template <typename T>
 class option_t
 {
 protected:
-  const char *	   name;
-  std::size_t	   name_len;
-  const char	   ch;
-  bool		   handled;
-  optional<string> source;
+  const char *	    name;
+  string::size_type name_len;
+  const char	    ch;
+  bool		    handled;
+  optional<string>  source;
 
   option_t& operator=(const option_t&);
 

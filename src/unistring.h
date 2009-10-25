@@ -103,9 +103,9 @@ inline void justify(std::ostream&      out,
 		    bool               redden = false)
 {
   if (! right) {
-    if (redden) out << "\e[31m";
+    if (redden) out << "\033[31m";
     out << str;
-    if (redden) out << "\e[0m";
+    if (redden) out << "\033[0m";
   }
 
   unistring temp(str);
@@ -115,9 +115,9 @@ inline void justify(std::ostream&      out,
     out << ' ';
 
   if (right) {
-    if (redden) out << "\e[31m";
+    if (redden) out << "\033[31m";
     out << str;
-    if (redden) out << "\e[0m";
+    if (redden) out << "\033[0m";
   }
 }
 

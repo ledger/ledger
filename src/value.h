@@ -733,6 +733,7 @@ public:
    * exception is thrown.
    */
   bool	     to_boolean() const;
+  int	     to_int() const;
   long	     to_long() const;
   datetime_t to_datetime() const;
   date_t     to_date() const;
@@ -788,7 +789,7 @@ public:
   /**
    * Collection-style access methods for SEQUENCE values.
    */
-  value_t& operator[](const int index) {
+  value_t& operator[](const std::size_t index) {
     VERIFY(! is_null());
     if (is_sequence())
       return as_sequence_lval()[index];
@@ -799,7 +800,7 @@ public:
     static value_t null;
     return null;
   }
-  const value_t& operator[](const int index) const {
+  const value_t& operator[](const std::size_t index) const {
     VERIFY(! is_null());
     if (is_sequence())
       return as_sequence()[index];

@@ -402,17 +402,19 @@ string::string(const char * str) : std::string(str) {
 string::string(const char * str, const char * end) : std::string(str, end) {
   TRACE_CTOR(string, "const char *, const char *");
 }
-string::string(const string& str, int x) : std::string(str, x) {
-  TRACE_CTOR(string, "const string&, int");
+string::string(const string& str, size_type x) : std::string(str, x) {
+  TRACE_CTOR(string, "const string&, size_type");
 }
-string::string(const string& str, int x, int y) : std::string(str, x, y) {
-  TRACE_CTOR(string, "const string&, int, int");
+string::string(const string& str, size_type x, size_type y)
+  : std::string(str, x, y) {
+  TRACE_CTOR(string, "const string&, size_type, size_type");
 }
-string::string(const char * str, int x) : std::string(str, x) {
-  TRACE_CTOR(string, "const char *, int");
+string::string(const char * str, size_type x) : std::string(str, x) {
+  TRACE_CTOR(string, "const char *, size_type");
 }
-string::string(const char * str, int x, int y) : std::string(str, x, y) {
-  TRACE_CTOR(string, "const char *, int, int");
+string::string(const char * str, size_type x, size_type y)
+  : std::string(str, x, y) {
+  TRACE_CTOR(string, "const char *, size_type, size_type");
 }
 string::~string() throw() {
   TRACE_DTOR(string);

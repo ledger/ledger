@@ -87,14 +87,14 @@ extern std::ostringstream _ctxt_buffer;
 string error_context();
 
 string file_context(const path& file, std::size_t line);
-string line_context(const string& line,
-		    std::size_t	  pos     = 0,
-		    std::size_t	  end_pos = 0);
+string line_context(const string&	    line,
+		    const string::size_type pos     = 0,
+		    const string::size_type end_pos = 0);
 
-string source_context(const path&      file,
-		      istream_pos_type pos,
-		      istream_pos_type end_pos,
-		      const string&    prefix = "");
+string source_context(const path&	     file,
+		      const istream_pos_type pos,
+		      const istream_pos_type end_pos,
+		      const string&	     prefix = "");
 
 #define DECLARE_EXCEPTION(name, kind)				\
   class name : public kind {					\

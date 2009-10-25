@@ -623,9 +623,9 @@ namespace {
 	    "mpfr_print = " << buf << " (precision " << prec << ")");
 
       if (zeros_prec >= 0) {
-	int index = std::strlen(buf);
-	int point = 0;
-	for (int i = 0; i < index; i++) {
+	string::size_type index = std::strlen(buf);
+	string::size_type point = 0;
+	for (string::size_type i = 0; i < index; i++) {
 	  if (buf[i] == '.') {
 	    point = i;
 	    break;
@@ -837,7 +837,7 @@ namespace {
     READ_INTO(in, buf, 255, c,
 	      std::isdigit(c) || c == '-' || c == '.' || c == ',');
 
-    int len = std::strlen(buf);
+    string::size_type len = std::strlen(buf);
     while (len > 0 && ! std::isdigit(buf[len - 1])) {
       buf[--len] = '\0';
       in.unget();
@@ -989,7 +989,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   // necessary.
 
   if (last_comma != string::npos || last_period != string::npos) {
-    int		       len = quant.length();
+    string::size_type  len = quant.length();
     scoped_array<char> buf(new char[len + 1]);
     const char *       p   = quant.c_str();
     char *	       t   = buf.get();

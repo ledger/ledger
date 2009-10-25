@@ -173,10 +173,10 @@ public:
   string(size_type len, char x);
   string(const char * str);
   string(const char * str, const char * end);
-  string(const string& str, int x);
-  string(const string& str, int x, int y);
-  string(const char * str, int x);
-  string(const char * str, int x, int y);
+  string(const string& str, size_type x);
+  string(const string& str, size_type x, size_type y);
+  string(const char * str, size_type x);
+  string(const char * str, size_type x, size_type y);
   ~string() throw();
 };
 

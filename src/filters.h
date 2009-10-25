@@ -142,7 +142,8 @@ class truncate_xacts : public item_handler<post_t>
   truncate_xacts();
 
 public:
-  truncate_xacts(post_handler_ptr handler, int _head_count, int _tail_count)
+  truncate_xacts(post_handler_ptr handler,
+		 int _head_count, int _tail_count)
     : item_handler<post_t>(handler),
       head_count(_head_count), tail_count(_tail_count),
       xacts_seen(0), last_xact(NULL) {
