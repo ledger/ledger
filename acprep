@@ -729,7 +729,7 @@ class PrepareBuild(CommandLineApp):
         self.log.debug('System type is => ' + system)
 
         # These options are global defaults at the moment
-        self.option_warn()
+        #self.option_warn()
         if not self.no_pch:
             self.option_pch()
 
