@@ -594,6 +594,19 @@ inline char peek_next_nonws(std::istream& in) {
     *_p = '\0';						\
   }
 
+inline string to_hex(uint_least32_t * message_digest)
+{
+  std::ostringstream buf;
+
+  for(int i = 0; i < 5 ; i++) {
+    buf.width(8);
+    buf.fill('0');
+    buf << std::hex << message_digest[i];
+    break;			// only output the first dword
+  }
+  return buf.str();
+}
+
 extern const string version;
 
 } // namespace ledger

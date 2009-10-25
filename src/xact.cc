@@ -352,6 +352,33 @@ void xact_t::add_post(post_t * post)
 }
 
 namespace {
+  value_t get_magnitude(xact_t& xact) {
+    balance_t halfbal;
+    foreach (post_t * post, xact.posts)
+      if (post->amount.sign() > 0)
+	halfbal += post->amount.number();
+    return halfbal;
+  }
+
+  value_t get_idstring(xact_t& xact) {
+    std::ostringstream buf;
+    buf << *xact._date;
+    buf << xact.payee;
+
+    get_magnitude(xact).print(buf);
+
+    return string_value(buf.str());
+  }
+  value_t get_id(xact_t& xact) {
+    SHA1 sha;
+    sha.Reset();
+    sha << get_idstring(xact).as_string().c_str();
+
+    uint_least32_t message_digest[5];
+    sha.Result(message_digest);
+    return string_value(to_hex(message_digest));
+  }
+
   value_t get_code(xact_t& xact) {
     if (xact.code)
       return string_value(*xact.code);
@@ -375,6 +402,18 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
+    break;
+
+  case 'i':
+    if (name == "id")
+      return WRAP_FUNCTOR(get_wrapper<&get_id>);
+    else if (name == "idstring")
+      return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
+    break;
+
+  case 'm':
+    if (name == "magnitude")
+      return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
     break;
 
   case 'p':
