@@ -35,7 +35,7 @@
 
 namespace ledger {
 
-date_time::weekdays start_of_week	    = gregorian::Sunday;
+date_time::weekdays start_of_week = gregorian::Sunday;
 
 //#define USE_BOOST_FACETS 1
 
@@ -50,7 +50,7 @@ namespace {
     InputFacetType *   input_facet;
     OutputFacetType *  output_facet;
     std::string        temp_string;
-#endif
+#endif // USE_BOOST_FACETS
 
   public:
     bool	       has_year;
@@ -67,7 +67,7 @@ namespace {
 	output_facet = new OutputFacetType(fmt_str);
 	output_stream.imbue(std::locale(std::locale::classic(), output_facet));
       }
-#endif
+#endif // USE_BOOST_FACETS
     }
 
     void set_format(const char * fmt) {
@@ -79,7 +79,7 @@ namespace {
 	input_facet->format(fmt_str);
       else
 	output_facet->format(fmt_str);
-#endif
+#endif // USE_BOOST_FACETS
     }
 
     T parse(const char * str) {
@@ -92,12 +92,12 @@ namespace {
       output_stream.clear();
       output_stream << when;
       return output_stream.str();
-#else
+#else // USE_BOOST_FACETS
       std::tm data(to_tm(when));
       char buf[128];
       std::strftime(buf, 127, fmt_str, &data);
       return buf;
-#endif
+#endif // USE_BOOST_FACETS
     }
   };
 
@@ -124,14 +124,14 @@ namespace {
 	  input_stream.peek() != EOF)
 	return datetime_t();
       return when;
-#else
+#else // USE_BOOST_FACETS
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
     if (strptime(str, fmt_str, &data))
       return posix_time::ptime_from_tm(data);
     else
       return datetime_t();
-#endif
+#endif // USE_BOOST_FACETS
   }
 
   template <>
@@ -157,7 +157,7 @@ namespace {
 	  input_stream.peek() != EOF)
 	return date_t();
       return when;
-#else
+#else // USE_BOOST_FACETS
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
     data.tm_mday = 1;		// some formats have no day
@@ -165,7 +165,7 @@ namespace {
       return gregorian::date_from_tm(data);
     else
       return date_t();
-#endif
+#endif // USE_BOOST_FACETS
   }
 
   typedef temporal_io_t<datetime_t, posix_time::time_input_facet,
