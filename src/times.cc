@@ -115,14 +115,16 @@ namespace {
       input_stream >> when;
 #if defined(DEBUG_ON)
       if (when.is_not_a_date_time())
-	DEBUG("times.parse", "Failed to parse '" << str
+	DEBUG("times.parse", "Failed to parse date/time '" << str
 	      << "' using pattern '" << fmt_str << "'");
 #endif
 
       if (! when.is_not_a_date_time() &&
 	  input_stream.good() && ! input_stream.eof() &&
-	  input_stream.peek() != EOF)
+	  input_stream.peek() != EOF) {
+	DEBUG("times.parse", "This string has leftovers: '" << str << "'");
 	return datetime_t();
+      }
       return when;
 #else // USE_BOOST_FACETS
     std::tm data;
@@ -148,14 +150,16 @@ namespace {
       input_stream >> when;
 #if defined(DEBUG_ON)
       if (when.is_not_a_date())
-	DEBUG("times.parse", "Failed to parse '" << str
+	DEBUG("times.parse", "Failed to parse date '" << str
 	      << "' using pattern '" << fmt_str << "'");
 #endif
 
       if (! when.is_not_a_date() &&
 	  input_stream.good() && ! input_stream.eof() &&
-	  input_stream.peek() != EOF)
+	  input_stream.peek() != EOF) {
+	DEBUG("times.parse", "This string has leftovers: '" << str << "'");
 	return date_t();
+      }
       return when;
 #else // USE_BOOST_FACETS
     std::tm data;
@@ -173,11 +177,12 @@ namespace {
   typedef temporal_io_t<date_t, gregorian::date_input_facet,
 			gregorian::date_facet> date_io_t;
 
-  std::auto_ptr<datetime_io_t> written_datetime_io;
-  std::auto_ptr<datetime_io_t> printed_datetime_io;
-  std::auto_ptr<date_io_t>     input_date_io;
-  std::auto_ptr<date_io_t>     written_date_io;
-  std::auto_ptr<date_io_t>     printed_date_io;
+  shared_ptr<datetime_io_t> input_datetime_io;
+  shared_ptr<date_io_t>     input_date_io;
+  shared_ptr<datetime_io_t> written_datetime_io;
+  shared_ptr<date_io_t>     written_date_io;
+  shared_ptr<datetime_io_t> printed_datetime_io;
+  shared_ptr<date_io_t>     printed_date_io;
 
   std::vector<shared_ptr<date_io_t> > readers;
 
@@ -295,7 +300,10 @@ string_to_month_of_year(const std::string& str)
 
 datetime_t parse_datetime(const char * str, optional<date_t::year_type>)
 {
-  return written_datetime_io->parse(str);
+  datetime_t when = input_datetime_io->parse(str);
+  if (when.is_not_a_date_time())
+    throw_(date_error, _("Invalid date/time: %1") << str);
+  return when;
 }
 
 date_t parse_date(const char * str, optional<date_t::year_type> current_year)
@@ -856,6 +864,8 @@ void set_input_date_format(const char * format)
 void times_initialize()
 {
   if (! is_initialized) {
+    input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", true));
+
     written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", false));
     written_date_io.reset(new date_io_t("%Y/%m/%d", false));
 
@@ -874,11 +884,12 @@ void times_initialize()
 void times_shutdown()
 {
   if (is_initialized) {
-    printed_datetime_io.reset();
-    written_datetime_io.reset();
+    input_datetime_io.reset();
     input_date_io.reset();
-    printed_date_io.reset();
+    written_datetime_io.reset();
     written_date_io.reset();
+    printed_datetime_io.reset();
+    printed_date_io.reset();
 
     readers.clear();
 
