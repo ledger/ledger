@@ -934,7 +934,7 @@ public:
 
 #define NULL_VALUE (value_t())
 
-inline value_t string_value(const string& str) {
+inline value_t string_value(const string& str = "") {
   return value_t(str, true);
 }
 

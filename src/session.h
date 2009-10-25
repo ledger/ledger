@@ -144,9 +144,9 @@ public:
    });
 
   OPTION_(session_t, input_date_format_, DO_(args) {
-      // This changes the global variable inside times.h, which affects the
-      // basic date parser
-      input_date_format = args[1].as_string();
+      // This changes static variables inside times.h, which affects the basic
+      // date parser.
+      set_input_date_format(args[1].as_string().c_str());
     });
 
   OPTION(session_t, price_db_);

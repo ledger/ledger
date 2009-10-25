@@ -263,9 +263,12 @@ value_t report_t::fn_join(call_scope_t& scope)
 
 value_t report_t::fn_format_date(call_scope_t& scope)
 {
-  interactive_t args(scope, "ds");
-  return string_value(format_date(args.get<date_t>(0),
-				  args.get<string>(1)));
+  interactive_t args(scope, "d&s");
+  if (args.has(1))
+    return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM,
+				    args.get<string>(1).c_str()));
+  else
+    return string_value(format_date(args.get<date_t>(0), FMT_PRINTED));
 }
 
 value_t report_t::fn_ansify_if(call_scope_t& scope)
@@ -521,6 +524,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'd':
     OPT(daily);
     else OPT(date_format_);
+    else OPT(datetime_format_);
     else OPT(depth_);
     else OPT(deviation);
     else OPT_(display_);

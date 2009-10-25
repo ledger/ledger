@@ -45,6 +45,7 @@ namespace ledger {
 void set_session_context(session_t * session)
 {
   if (session) {
+    times_initialize();
     amount_t::initialize(session->commodity_pool);
 
     // jww (2009-02-04): Is amount_t the right place for parse_conversion to
@@ -57,6 +58,7 @@ void set_session_context(session_t * session)
   else if (! session) {
     value_t::shutdown();
     amount_t::shutdown();
+    times_shutdown();
   }
 }
 

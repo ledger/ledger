@@ -86,7 +86,7 @@ commodity_quote_from_script(commodity_t& commodity,
 			  std::ios_base::out | std::ios_base::app);
 #endif
 	database << "P "
-		 << format_datetime(point->when, string("%Y/%m/%d %H:%M:%S"))
+		 << format_datetime(point->when, FMT_WRITTEN)
 		 << " " << commodity.symbol()
 		 << " " << point->price
 		 << std::endl;

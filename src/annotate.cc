@@ -127,7 +127,7 @@ void annotation_t::print(std::ostream& out, bool keep_base) const
 	<< '}';
 
   if (date)
-    out << " [" << format_date(*date, string("%Y/%m/%d")) << ']';
+    out << " [" << format_date(*date, FMT_WRITTEN) << ']';
 
   if (tag)
     out << " (" << *tag << ')';

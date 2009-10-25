@@ -35,55 +35,177 @@
 
 namespace ledger {
 
-date_time::weekdays   start_of_week          = gregorian::Sunday;
-optional<std::string> input_date_format;
-std::string	      output_datetime_format = "%Y-%m-%d %H:%M:%S";
-std::string	      output_date_format     = "%Y-%m-%d";
+date_time::weekdays start_of_week	    = gregorian::Sunday;
+
+//#define USE_BOOST_FACETS 1
 
 namespace {
-  struct date_format_t {
-    const char * format;
-    bool	 has_year;
-    date_format_t(const char * _format, bool _has_year)
-      : format(_format), has_year(_has_year) {}
-  };
-
-  const date_format_t formats[] = {
-    date_format_t("%m/%d",    false),
-    date_format_t("%Y/%m/%d", true),
-    date_format_t("%Y/%m",    true),
-    date_format_t("%y/%m/%d", true),
-    date_format_t("%m.%d",    false),
-    date_format_t("%Y.%m.%d", true),
-    date_format_t("%Y.%m",    true),
-    date_format_t("%y.%m.%d", true),
-    date_format_t("%m-%d",    false),
-    date_format_t("%Y-%m-%d", true),
-    date_format_t("%Y-%m",    true),
-    date_format_t("%y-%m-%d", true)
-  };
-
-  date_t parse_date_mask_routine(const char * date_str, const date_format_t& df,
-				 optional<date_t::year_type> year, bool& saw_year)
+  template <typename T, typename InputFacetType, typename OutputFacetType>
+  class temporal_io_t : public noncopyable
   {
-    std::string str(date_str);
+    const char *       fmt_str;
+#if defined(USE_BOOST_FACETS)
+    std::istringstream input_stream;
+    std::ostringstream output_stream;
+    InputFacetType *   input_facet;
+    OutputFacetType *  output_facet;
+    std::string        temp_string;
+#endif
 
-    gregorian::date_input_facet * facet(new gregorian::date_input_facet(df.format));
-    std::istringstream sstr(str);
-    sstr.imbue(std::locale(sstr.getloc(), facet));
+  public:
+    bool	       has_year;
+    bool	       input;
 
+    temporal_io_t(const char * _fmt_str, bool _input)
+      : fmt_str(_fmt_str), has_year(icontains(fmt_str, "%y")),
+	input(_input) {
+#if defined(USE_BOOST_FACETS)
+      if (input) {
+	input_facet  = new InputFacetType(fmt_str);
+	input_stream.imbue(std::locale(std::locale::classic(), input_facet));
+      } else {
+	output_facet = new OutputFacetType(fmt_str);
+	output_stream.imbue(std::locale(std::locale::classic(), output_facet));
+      }
+#endif
+    }
+
+    void set_format(const char * fmt) {
+      fmt_str  = fmt;
+      has_year = icontains(fmt_str, "%y");
+
+#if defined(USE_BOOST_FACETS)
+      if (input)
+	input_facet->format(fmt_str);
+      else
+	output_facet->format(fmt_str);
+#endif
+    }
+
+    T parse(const char * str) {
+    }
+
+    std::string format(const T& when) {
+#if defined(USE_BOOST_FACETS)
+      output_stream.str(temp_string);
+      output_stream.seekp(std::ios_base::beg);
+      output_stream.clear();
+      output_stream << when;
+      return output_stream.str();
+#else
+      std::tm data(to_tm(when));
+      char buf[128];
+      std::strftime(buf, 127, fmt_str, &data);
+      return buf;
+#endif
+    }
+  };
+
+  template <>
+  datetime_t temporal_io_t<datetime_t, posix_time::time_input_facet,
+			   posix_time::time_facet>
+    ::parse(const char * str)
+  {
+#if defined(USE_BOOST_FACETS)
+      input_stream.seekg(std::ios_base::beg);
+      input_stream.clear();
+      input_stream.str(str);
+
+      datetime_t when;
+      input_stream >> when;
+#if defined(DEBUG_ON)
+      if (when.is_not_a_date_time())
+	DEBUG("times.parse", "Failed to parse '" << str
+	      << "' using pattern '" << fmt_str << "'");
+#endif
+
+      if (! when.is_not_a_date_time() &&
+	  input_stream.good() && ! input_stream.eof() &&
+	  input_stream.peek() != EOF)
+	return datetime_t();
+      return when;
+#else
+    std::tm data;
+    std::memset(&data, 0, sizeof(std::tm));
+    if (strptime(str, fmt_str, &data))
+      return posix_time::ptime_from_tm(data);
+    else
+      return datetime_t();
+#endif
+  }
+
+  template <>
+  date_t temporal_io_t<date_t, gregorian::date_input_facet,
+		       gregorian::date_facet>
+    ::parse(const char * str)
+  {
+#if defined(USE_BOOST_FACETS)
+      input_stream.seekg(std::ios_base::beg);
+      input_stream.clear();
+      input_stream.str(str);
+
+      date_t when;
+      input_stream >> when;
+#if defined(DEBUG_ON)
+      if (when.is_not_a_date())
+	DEBUG("times.parse", "Failed to parse '" << str
+	      << "' using pattern '" << fmt_str << "'");
+#endif
+
+      if (! when.is_not_a_date() &&
+	  input_stream.good() && ! input_stream.eof() &&
+	  input_stream.peek() != EOF)
+	return date_t();
+      return when;
+#else
+    std::tm data;
+    std::memset(&data, 0, sizeof(std::tm));
+    data.tm_mday = 1;		// some formats have no day
+    if (strptime(str, fmt_str, &data))
+      return gregorian::date_from_tm(data);
+    else
+      return date_t();
+#endif
+  }
+
+  typedef temporal_io_t<datetime_t, posix_time::time_input_facet,
+			posix_time::time_facet> datetime_io_t;
+  typedef temporal_io_t<date_t, gregorian::date_input_facet,
+			gregorian::date_facet> date_io_t;
+
+  std::auto_ptr<datetime_io_t> written_datetime_io;
+  std::auto_ptr<datetime_io_t> printed_datetime_io;
+  std::auto_ptr<date_io_t>     input_date_io;
+  std::auto_ptr<date_io_t>     written_date_io;
+  std::auto_ptr<date_io_t>     printed_date_io;
+
+  std::vector<shared_ptr<date_io_t> > readers;
+
+  date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
+				 optional<date_t::year_type> year,
+				 bool& saw_year)
+  {
     date_t when;
-    sstr >> when;
+
+    if (std::strchr(date_str, '/')) {
+      when = io.parse(date_str);
+    } else {
+      char buf[128];
+      VERIFY(std::strlen(date_str) < 127);
+      std::strcpy(buf, date_str);
+
+      for (char * p = buf; *p; p++)
+	if (*p == '.' || *p == '-')
+	  *p = '/';
+
+      when = io.parse(buf);
+    }
 
     if (! when.is_not_a_date()) {
-      if (sstr.good() && ! sstr.eof() && sstr.peek() != EOF)
-	return date_t();
-
       DEBUG("times.parse", "Parsed date string: " << date_str);
-      DEBUG("times.parse", "Parsed result is: " << when);
-      DEBUG("times.parse", "Format used was: " << df.format);
+      DEBUG("times.parse", "Parsed result is:   " << when);
 
-      if (! df.has_year) {
+      if (! io.has_year) {
 	saw_year = false;
 
 	when = date_t(year ? *year : CURRENT_DATE().year(),
@@ -98,25 +220,24 @@ namespace {
     return when;
   }
 
-  date_t parse_date_mask(const char * date_str, optional<date_t::year_type> year,
-			 bool& saw_year)
+  date_t parse_date_mask(const char * date_str,
+			 optional<date_t::year_type> year, bool& saw_year)
   {
-    if (input_date_format) {
-      date_format_t df(input_date_format->c_str(), true);
-      if (! icontains(*input_date_format, "%y"))
-	df.has_year = false;
-      date_t when = parse_date_mask_routine(date_str, df, year, saw_year);
+    if (input_date_io.get()) {
+      date_t when = parse_date_mask_routine(date_str, *input_date_io.get(),
+					    year, saw_year);
       if (! when.is_not_a_date())
 	return when;
     }
 
-    for (uint8_t i = 0; i < (sizeof(formats) / sizeof(date_format_t)); i++) {
-      date_t when = parse_date_mask_routine(date_str, formats[i], year,
-					    saw_year);
+    foreach (shared_ptr<date_io_t>& reader, readers) {
+      date_t when = parse_date_mask_routine(date_str, *reader.get(),
+					    year, saw_year);
       if (! when.is_not_a_date())
 	return when;
     }
 
+    throw_(date_error, _("Invalid date: %1") << date_str);
     return date_t();
   }
 }
@@ -174,16 +295,7 @@ string_to_month_of_year(const std::string& str)
 
 datetime_t parse_datetime(const char * str, optional<date_t::year_type>)
 {
-  posix_time::time_input_facet * facet
-    (new posix_time::time_input_facet("%Y/%m/%d %H:%M:%S"));
-
-  std::string temp(str);
-  std::istringstream sstr(temp);
-  sstr.imbue(std::locale(sstr.getloc(), facet));
-
-  datetime_t when;
-  sstr >> when;
-  return when;
+  return written_datetime_io->parse(str);
 }
 
 date_t parse_date(const char * str, optional<date_t::year_type> current_year)
@@ -481,7 +593,7 @@ namespace {
 
   inline void read_lower_word(std::istream& in, string& word) {
     in >> word;
-    for (int i = 0, l = word.length(); i < l; i++)
+    for (string::size_type i = 0, l = word.length(); i < l; i++)
       word[i] = static_cast<char>(std::tolower(word[i]));
   }
 
@@ -662,4 +774,123 @@ void date_interval_t::parse(std::istream& in)
   }
 }
 
+namespace {
+  typedef std::map<std::string, datetime_io_t *> datetime_io_map;
+  typedef std::map<std::string, date_io_t *>     date_io_map;
+
+  datetime_io_map temp_datetime_io;
+  date_io_map	  temp_date_io;
+}
+
+std::string format_datetime(const datetime_t&		  when,
+			    const format_type_t		  format_type,
+			    const optional<const char *>& format)
+{
+  if (format_type == FMT_WRITTEN) {
+    return written_datetime_io->format(when);
+  }
+  else if (format_type == FMT_CUSTOM || format) {
+    datetime_io_map::iterator i = temp_datetime_io.find(*format);
+    if (i != temp_datetime_io.end()) {
+      return (*i).second->format(when);
+    } else {
+      datetime_io_t * formatter = new datetime_io_t(*format, false);
+      temp_datetime_io.insert(datetime_io_map::value_type(*format, formatter));
+      return formatter->format(when);
+    }
+  }
+  else if (format_type == FMT_PRINTED) {
+    return printed_datetime_io->format(when);
+  }
+  else {
+    assert(0);
+    return "";
+  }
+}
+
+std::string format_date(const date_t&		      when,
+			const format_type_t	      format_type,
+			const optional<const char *>& format)
+{
+  if (format_type == FMT_WRITTEN) {
+    return written_date_io->format(when);
+  }
+  else if (format_type == FMT_CUSTOM || format) {
+    date_io_map::iterator i = temp_date_io.find(*format);
+    if (i != temp_date_io.end()) {
+      return (*i).second->format(when);
+    } else {
+      date_io_t * formatter = new date_io_t(*format, false);
+      temp_date_io.insert(date_io_map::value_type(*format, formatter));
+      return formatter->format(when);
+    }
+  }
+  else if (format_type == FMT_PRINTED) {
+    return printed_date_io->format(when);
+  }
+  else {
+    assert(0);
+    return "";
+  }
+}
+
+namespace {
+  bool is_initialized = false;
+}
+
+void set_datetime_format(const char * format)
+{
+  printed_datetime_io->set_format(format);
+}
+
+void set_date_format(const char * format)
+{
+  printed_date_io->set_format(format);
+}
+
+void set_input_date_format(const char * format)
+{
+  input_date_io.reset(new date_io_t(format, true));
+}
+
+void times_initialize()
+{
+  if (! is_initialized) {
+    written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", false));
+    written_date_io.reset(new date_io_t("%Y/%m/%d", false));
+
+    printed_datetime_io.reset(new datetime_io_t("%y-%b-%d %H:%M:%S", false));
+    printed_date_io.reset(new date_io_t("%y-%b-%d", false));
+
+    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%m/%d", true)));
+    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d", true)));
+    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
+    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
+
+    is_initialized = true;
+  }
+}
+
+void times_shutdown()
+{
+  if (is_initialized) {
+    printed_datetime_io.reset();
+    written_datetime_io.reset();
+    input_date_io.reset();
+    printed_date_io.reset();
+    written_date_io.reset();
+
+    readers.clear();
+
+    foreach (datetime_io_map::value_type& pair, temp_datetime_io)
+      checked_delete(pair.second);
+    temp_datetime_io.clear();
+
+    foreach (date_io_map::value_type& pair, temp_date_io)
+      checked_delete(pair.second);
+    temp_date_io.clear();
+
+    is_initialized = false;
+  }
+}
 } // namespace ledger
