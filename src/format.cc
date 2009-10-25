@@ -368,8 +368,9 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	result = truncate(temp, elem->max_width);
       } else {
 	result = temp.extract();
-	for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
-	  result += " ";
+	if (elem->min_width > temp.length())
+	  for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
+	    result += " ";
       }
       out_str << result;
     } else {
