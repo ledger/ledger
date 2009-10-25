@@ -869,6 +869,8 @@ class PrepareBuild(CommandLineApp):
     def option_warn(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --warn')
 	self.CXXFLAGS.append('-ansi')
+	self.CXXFLAGS.append('-pedantic')
+	self.CXXFLAGS.append('-pedantic-errors')
 	self.CXXFLAGS.append('-Wall')
 	self.CXXFLAGS.append('-Winvalid-pch')
 	self.CXXFLAGS.append('-Wextra')
@@ -884,6 +886,7 @@ class PrepareBuild(CommandLineApp):
 	self.CXXFLAGS.append('-Wwrite-strings')
 	self.CXXFLAGS.append('-Wno-old-style-cast')
 	self.CXXFLAGS.append('-Wno-deprecated')
+	self.CXXFLAGS.append('-Werror')
 
     def option_boost(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --boost')
