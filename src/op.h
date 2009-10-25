@@ -262,8 +262,9 @@ private:
   }
 
 public:
-  ptr_op_t compile(scope_t& scope);
-  value_t  calc(scope_t& scope, ptr_op_t * locus = NULL);
+  ptr_op_t compile(scope_t& scope, const int depth = 0);
+  value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
+		const int depth = 0);
 
   struct context_t
   {
