@@ -772,8 +772,8 @@ class PrepareBuild(CommandLineApp):
                 self.option_no_pch()
 
         if '--enable-pch' not in self.configure_args and \
-           exists('/opt/local/bin/ccache') or \
-           exists('/usr/local/bin/ccache'):
+           (exists('/opt/local/bin/ccache') or \
+            exists('/usr/local/bin/ccache')):
             self.envvars['CC']  = 'ccache ' + self.envvars['CC']
             self.envvars['CXX'] = 'ccache ' + self.envvars['CXX']
             self.envvars['LD']  = 'ccache ' + self.envvars['LD']
