@@ -211,6 +211,8 @@ private:
     void destroy() {
       DEBUG("value.storage.refcount", "Destroying " << this);
       switch (type) {
+      case VOID:
+	return;
       case BALANCE:
 	checked_delete(boost::get<balance_t *>(data));
 	break;
@@ -220,6 +222,7 @@ private:
       default:
 	break;
       }
+      data = false;
       type = VOID;
     }
   };
@@ -635,10 +638,12 @@ public:
   void set_string(const string& val = "") {
     set_type(STRING);
     storage->data = val;
+    VERIFY(boost::get<string>(storage->data) == val);
   }
   void set_string(const char * val = "") {
     set_type(STRING);
     storage->data = string(val);
+    VERIFY(boost::get<string>(storage->data) == val);
   }
 
   bool is_mask() const {
