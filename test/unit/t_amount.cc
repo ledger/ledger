@@ -11,6 +11,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AmountTestCase, "math");
 
 void AmountTestCase::setUp()
 {
+  times_initialize();
   amount_t::initialize();
 
   // Cause the display precision for dollars to be initialized to 2.
@@ -24,6 +25,7 @@ void AmountTestCase::tearDown()
 {
   amount_t::stream_fullstrings = false;
   amount_t::shutdown();
+  times_shutdown();
 }
 
 void AmountTestCase::testParser()
