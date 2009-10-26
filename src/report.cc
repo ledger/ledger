@@ -81,11 +81,14 @@ void report_t::accounts_report(acct_handler_ptr handler)
 				      true), walker);
 
   scoped_ptr<accounts_iterator> iter;
-  if (! HANDLED(sort_))
+  if (! HANDLED(sort_)) {
     iter.reset(new basic_accounts_iterator(*session.master));
-  else
-    iter.reset(new sorted_accounts_iterator(HANDLER(sort_).str(),
-					    HANDLED(flat), *session.master.get()));
+  } else {
+    expr_t sort_expr(HANDLER(sort_).str());
+    sort_expr.set_context(this);
+    iter.reset(new sorted_accounts_iterator(*session.master.get(),
+					    sort_expr, HANDLED(flat)));
+  }
 
   if (HANDLED(display_))
     pass_down_accounts(handler, *iter.get(),
@@ -408,6 +411,14 @@ value_t report_t::reload_command(call_scope_t&)
   return true;
 }
 
+value_t report_t::echo_command(call_scope_t& scope)
+{
+  interactive_t args(scope, "s");
+  std::ostream& out(output_stream);
+  out << args.get<string>(0) << std::endl;
+  return true;
+}
+
 bool report_t::maybe_import(const string& module)
 {
   if (lookup(string(OPT_PREFIX) + "import_")) {
@@ -710,6 +721,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	else if (is_eq(q, "emacs"))
 	  return WRAP_FUNCTOR
 	    (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
+	else if (is_eq(q, "echo"))
+	  return MAKE_FUNCTOR(report_t::echo_command);
 	break;
 
       case 'p':
@@ -890,6 +903,13 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_total_expr);
     else if (is_eq(p, "today"))
       return MAKE_FUNCTOR(report_t::fn_today);
+    else if (is_eq(p, "t"))
+      return MAKE_FUNCTOR(report_t::fn_display_amount);
+    break;
+
+  case 'T':
+    if (is_eq(p, "T"))
+      return MAKE_FUNCTOR(report_t::fn_display_total);
     break;
 
   case 'u':

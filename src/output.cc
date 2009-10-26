@@ -136,13 +136,14 @@ format_accounts::format_accounts(report_t&     _report,
   }
 }
 
-std::size_t format_accounts::post_account(account_t& account)
+std::size_t format_accounts::post_account(account_t& account, const bool flat)
 {
-  if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY)) {
-    if (account.parent &&
+  if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
+      ! account.xdata().has_flags(ACCOUNT_EXT_DISPLAYED)) {
+    if (! flat && account.parent &&
 	account.parent->xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
 	! account.parent->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
-      post_account(*account.parent);
+      post_account(*account.parent, flat);
 
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
@@ -207,7 +208,7 @@ void format_accounts::flush()
   std::size_t displayed = 0;
 
   foreach (account_t * account, posted_accounts)
-    displayed += post_account(*account);
+    displayed += post_account(*account, report.HANDLED(flat));
 
   if (displayed > 1 &&
       ! report.HANDLED(no_total) && ! report.HANDLED(percent)) {
@@ -221,6 +222,7 @@ void format_accounts::flush()
 
 void format_accounts::operator()(account_t& account)
 {
+  DEBUG("account.display", "Posting account: " << account.fullname());
   posted_accounts.push_back(&account);
 }
 

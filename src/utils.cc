@@ -442,6 +442,59 @@ string::~string() throw() {
 
 ledger::string empty_string("");
 
+ledger::strings_list split_arguments(const char * line)
+{
+  using namespace ledger;
+
+  strings_list args;
+
+  char buf[4096];
+  char * q = buf;
+  char in_quoted_string = '\0';
+
+  for (const char * p = line; *p; p++) {
+    if (! in_quoted_string && std::isspace(*p)) {
+      if (q != buf) {
+	*q = '\0';
+	args.push_back(buf);
+	q = buf;
+      }
+    }
+    else if (in_quoted_string != '\'' && *p == '\\') {
+      p++;
+      if (! *p)
+	throw_(std::logic_error, _("Invalid use of backslash"));
+      *q++ = *p;
+    }
+    else if (in_quoted_string != '"' && *p == '\'') {
+      if (in_quoted_string == '\'')
+	in_quoted_string = '\0';
+      else
+	in_quoted_string = '\'';
+    }
+    else if (in_quoted_string != '\'' && *p == '"') {
+      if (in_quoted_string == '"')
+	in_quoted_string = '\0';
+      else
+	in_quoted_string = '"';
+    }
+    else {
+      *q++ = *p;
+    }
+  }
+
+  if (in_quoted_string)
+    throw_(std::logic_error,
+	   _("Unterminated string, expected '%1'") << in_quoted_string);
+
+  if (q != buf) {
+    *q = '\0';
+    args.push_back(buf);
+  }
+
+  return args;
+}
+
 /**********************************************************************
  *
  * Logging

@@ -53,6 +53,9 @@ namespace ledger {
 class post_t;
 class account_t;
 
+void push_sort_value(std::list<sort_value_t>& sort_values,
+		     expr_t::ptr_op_t node, scope_t& scope);
+
 /**
  * @brief Brief
  *
@@ -76,7 +79,9 @@ public:
     TRACE_DTOR(compare_items);
   }
 
-  void find_sort_values(std::list<sort_value_t>& sort_values, T * scope);
+  void find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope) {
+    push_sort_value(sort_values, sort_order.get_op(), scope);
+  }
 
   bool operator()(T * left, T * right);
 };

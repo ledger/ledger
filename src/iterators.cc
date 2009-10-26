@@ -173,6 +173,41 @@ account_t * basic_accounts_iterator::operator()()
   return account;
 }
 
+void sorted_accounts_iterator::push_back(account_t& account)
+{
+  accounts_list.push_back(accounts_deque_t());
+
+  if (flatten_all) {
+    push_all(account, accounts_list.back());
+
+    std::stable_sort(accounts_list.back().begin(),
+		     accounts_list.back().end(),
+		     compare_items<account_t>(sort_cmp));
+
+#if defined(DEBUG_ON)
+    if (SHOW_DEBUG("accounts.sorted")) {
+      foreach (account_t * account, accounts_list.back())
+	DEBUG("accounts.sorted",
+	      "Account (flat): " << account->fullname());
+    }
+#endif
+  } else {
+    sort_accounts(account, accounts_list.back());
+  }
+
+  sorted_accounts_i.push_back(accounts_list.back().begin());
+  sorted_accounts_end.push_back(accounts_list.back().end());
+}
+
+void sorted_accounts_iterator::push_all(account_t& account,
+					accounts_deque_t& deque)
+{
+  foreach (accounts_map::value_type& pair, account.accounts) {
+    deque.push_back(pair.second);
+    push_all(*pair.second, deque);
+  }
+}
+
 void sorted_accounts_iterator::sort_accounts(account_t& account,
 					     accounts_deque_t& deque)
 {
@@ -188,39 +223,6 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
       DEBUG("accounts.sorted", "Account: " << account->fullname());
   }
 #endif
-}
-
-void sorted_accounts_iterator::push_all(account_t& account)
-{
-  accounts_deque_t& deque(accounts_list.back());
-
-  foreach (accounts_map::value_type& pair, account.accounts) {
-    deque.push_back(pair.second);
-    push_all(*pair.second);
-  }
-}
-
-void sorted_accounts_iterator::push_back(account_t& account)
-{
-  accounts_list.push_back(accounts_deque_t());
-
-  if (flatten_all) {
-    push_all(account);
-    std::stable_sort(accounts_list.back().begin(),
-		     accounts_list.back().end(),
-		     compare_items<account_t>(sort_cmp));
-#if defined(DEBUG_ON)
-    if (SHOW_DEBUG("accounts.sorted")) {
-      foreach (account_t * account, accounts_list.back())
-	DEBUG("accounts.sorted", "Account: " << account->fullname());
-    }
-#endif
-  } else {
-    sort_accounts(account, accounts_list.back());
-  }
-
-  sorted_accounts_i.push_back(accounts_list.back().begin());
-  sorted_accounts_end.push_back(accounts_list.back().end());
 }
 
 account_t * sorted_accounts_iterator::operator()()

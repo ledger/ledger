@@ -461,7 +461,8 @@ void instance_t::price_xact_directive(char * line)
 {
   optional<price_point_t> point =
     amount_t::current_pool->parse_price_directive(skip_ws(line + 1));
-  assert(point);
+  if (! point)
+    throw parse_error(_("Pricing entry failed to parse"));
 }
 
 void instance_t::nomarket_directive(char * line)
@@ -969,8 +970,12 @@ post_t * instance_t::parse_post(char *		line,
 			  static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
-      if (post->assigned_amount->is_null())
-	throw parse_error(_("An assigned balance must evaluate to a constant value"));
+      if (post->assigned_amount->is_null()) {
+	if (post->amount.is_null())
+	  throw parse_error(_("Balance assignment must evaluate to a constant"));
+	else
+	  throw parse_error(_("Balance assertion must evaluate to a constant"));
+      }
 
       DEBUG("textual.parse", "line " << linenum << ": "
 	    << "POST assign: parsed amt = " << *post->assigned_amount);
@@ -979,46 +984,50 @@ post_t * instance_t::parse_post(char *		line,
       value_t   account_total(post->account->self_total(false)
 			      .strip_annotations(keep_details_t()));
 
-      DEBUG("post.assign", "line " << linenum << ": "
-	    "account balance = " << account_total);
-      DEBUG("post.assign", "line " << linenum << ": "
-	    "post amount = " << amt);
+      DEBUG("post.assign",
+	    "line " << linenum << ": " "account balance = " << account_total);
+      DEBUG("post.assign",
+	    "line " << linenum << ": " "post amount = " << amt);
 
-      amount_t diff;
+      amount_t diff = amt;
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-	diff = amt - account_total.as_amount();
+	diff -= account_total.as_amount();
 	break;
 
       case value_t::BALANCE:
 	if (optional<amount_t> comm_bal =
 	    account_total.as_balance().commodity_amount(amt.commodity()))
-	  diff = amt - *comm_bal;
-	else
-	  diff = amt;
+	  diff -= *comm_bal;
 	break;
 
       default:
-	diff = amt;
 	break;
       }
 
-      DEBUG("post.assign",  "line " << linenum << ": "
-	    << "diff = " << diff);
-      DEBUG("textual.parse", "line " << linenum << ": "
-	    << "POST assign: diff = " << diff);
+      DEBUG("post.assign",
+	    "line " << linenum << ": " << "diff = " << diff);
+      DEBUG("textual.parse",
+	    "line " << linenum << ": " << "POST assign: diff = " << diff);
 
       if (! diff.is_zero()) {
 	if (! post->amount.is_null()) {
 	  diff -= post->amount;
 	  if (! diff.is_zero()) {
+#if 1
+	    throw_(parse_error, _("Balance assertion off by %1") << diff);
+#else
+	    // This code, rather than issuing an error if a balance assignment
+	    // fails, creates a balancing transaction that causes the
+	    // assertion to be true.
 	    post_t * temp = new post_t(post->account, diff,
 				       ITEM_GENERATED | POST_CALCULATED);
 	    xact->add_post(temp);
 
 	    DEBUG("textual.parse", "line " << linenum << ": "
 		  << "Created balancing posting");
+#endif
 	  }
 	} else {
 	  post->amount = diff;
@@ -1032,7 +1041,7 @@ post_t * instance_t::parse_post(char *		line,
       else
 	next = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
     } else {
-      throw parse_error(_("Expected an assigned balance amount"));
+      throw parse_error(_("Expected an balance assignment/assertion amount"));
     }
   }
 
