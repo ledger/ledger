@@ -461,7 +461,8 @@ void instance_t::price_xact_directive(char * line)
 {
   optional<price_point_t> point =
     amount_t::current_pool->parse_price_directive(skip_ws(line + 1));
-  assert(point);
+  if (! point)
+    throw parse_error(_("Pricing entry failed to parse"));
 }
 
 void instance_t::nomarket_directive(char * line)
