@@ -138,7 +138,8 @@ format_accounts::format_accounts(report_t&     _report,
 
 std::size_t format_accounts::post_account(account_t& account)
 {
-  if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY)) {
+  if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
+      ! account.xdata().has_flags(ACCOUNT_EXT_DISPLAYED)) {
     if (account.parent &&
 	account.parent->xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
 	! account.parent->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
