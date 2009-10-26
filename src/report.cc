@@ -408,6 +408,14 @@ value_t report_t::reload_command(call_scope_t&)
   return true;
 }
 
+value_t report_t::echo_command(call_scope_t& scope)
+{
+  interactive_t args(scope, "s");
+  std::ostream& out(output_stream);
+  out << args.get<string>(0) << std::endl;
+  return true;
+}
+
 bool report_t::maybe_import(const string& module)
 {
   if (lookup(string(OPT_PREFIX) + "import_")) {
@@ -710,6 +718,8 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	else if (is_eq(q, "emacs"))
 	  return WRAP_FUNCTOR
 	    (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
+	else if (is_eq(q, "echo"))
+	  return MAKE_FUNCTOR(report_t::echo_command);
 	break;
 
       case 'p':
