@@ -985,6 +985,23 @@ class PrepareBuild(CommandLineApp):
         self.CXXFLAGS.append('-O3')
         self.CXXFLAGS.append('-fomit-frame-pointer')
 
+        if exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+            self.envvars['BOOST_HOME']   = '/usr/local'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+            self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                           self.envvars['BOOST_SUFFIX'])
+
+            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+
+        elif exists('/opt/local/lib/libboost_regex.a'):
+            self.envvars['BOOST_HOME']   = '/opt/local'
+            self.envvars['BOOST_SUFFIX'] = ''
+
+            self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                           self.envvars['BOOST_SUFFIX'])
+
+            self.sys_include_dirs.append('/opt/local/include/boost')
+
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
         self.CXXFLAGS.append('-fprofile-arcs')
