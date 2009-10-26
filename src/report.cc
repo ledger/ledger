@@ -81,11 +81,14 @@ void report_t::accounts_report(acct_handler_ptr handler)
 				      true), walker);
 
   scoped_ptr<accounts_iterator> iter;
-  if (! HANDLED(sort_))
+  if (! HANDLED(sort_)) {
     iter.reset(new basic_accounts_iterator(*session.master));
-  else
-    iter.reset(new sorted_accounts_iterator(HANDLER(sort_).str(),
-					    HANDLED(flat), *session.master.get()));
+  } else {
+    expr_t sort_expr(HANDLER(sort_).str());
+    sort_expr.set_context(this);
+    iter.reset(new sorted_accounts_iterator(*session.master.get(),
+					    sort_expr, HANDLED(flat)));
+  }
 
   if (HANDLED(display_))
     pass_down_accounts(handler, *iter.get(),

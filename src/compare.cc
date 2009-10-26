@@ -38,39 +38,29 @@
 
 namespace ledger {
 
-namespace {
-  template <typename T>
-  void push_sort_value(std::list<sort_value_t>& sort_values,
-		       expr_t::ptr_op_t node, T * scope)
-  {
-    if (node->kind == expr_t::op_t::O_CONS) {
-      push_sort_value(sort_values, node->left(), scope);
-      push_sort_value(sort_values, node->right(), scope);
-    }
-    else {
-      bool inverted = false;
-
-      if (node->kind == expr_t::op_t::O_NEG) {
-	inverted = true;
-	node = node->left();
-      }
-
-      sort_values.push_back(sort_value_t());
-      sort_values.back().inverted = inverted;
-      sort_values.back().value	  = expr_t(node).calc(*scope).simplified();
-
-      if (sort_values.back().value.is_null())
-	throw_(calc_error,
-	       _("Could not determine sorting value based an expression"));
-    }
-  }
-}
-
-template <typename T>
-void compare_items<T>::find_sort_values(std::list<sort_value_t>& sort_values,
-					T * scope)
+void push_sort_value(std::list<sort_value_t>& sort_values,
+		     expr_t::ptr_op_t node, scope_t& scope)
 {
-  push_sort_value(sort_values, sort_order.get_op(), scope);
+  if (node->kind == expr_t::op_t::O_CONS) {
+    push_sort_value(sort_values, node->left(), scope);
+    push_sort_value(sort_values, node->right(), scope);
+  }
+  else {
+    bool inverted = false;
+
+    if (node->kind == expr_t::op_t::O_NEG) {
+      inverted = true;
+      node = node->left();
+    }
+
+    sort_values.push_back(sort_value_t());
+    sort_values.back().inverted = inverted;
+    sort_values.back().value	= expr_t(node).calc(scope).simplified();
+
+    if (sort_values.back().value.is_null())
+      throw_(calc_error,
+	     _("Could not determine sorting value based an expression"));
+  }
 }
 
 template <>
@@ -81,13 +71,15 @@ bool compare_items<post_t>::operator()(post_t * left, post_t * right)
 
   post_t::xdata_t& lxdata(left->xdata());
   if (! lxdata.has_flags(POST_EXT_SORT_CALC)) {
-    find_sort_values(lxdata.sort_values, left);
+    bind_scope_t bound_scope(*sort_order.get_context(), *left);
+    find_sort_values(lxdata.sort_values, bound_scope);
     lxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
   post_t::xdata_t& rxdata(right->xdata());
   if (! rxdata.has_flags(POST_EXT_SORT_CALC)) {
-    find_sort_values(rxdata.sort_values, right);
+    bind_scope_t bound_scope(*sort_order.get_context(), *right);
+    find_sort_values(rxdata.sort_values, bound_scope);
     rxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
@@ -102,13 +94,15 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
 
   account_t::xdata_t& lxdata(left->xdata());
   if (! lxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    find_sort_values(lxdata.sort_values, left);
+    bind_scope_t bound_scope(*sort_order.get_context(), *left);
+    find_sort_values(lxdata.sort_values, bound_scope);
     lxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
   account_t::xdata_t& rxdata(right->xdata());
   if (! rxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    find_sort_values(rxdata.sort_values, right);
+    bind_scope_t bound_scope(*sort_order.get_context(), *right);
+    find_sort_values(rxdata.sort_values, bound_scope);
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 

@@ -255,12 +255,8 @@ class sorted_accounts_iterator : public accounts_iterator
   std::list<accounts_deque_t::const_iterator> sorted_accounts_end;
 
 public:
-  sorted_accounts_iterator(const expr_t& _sort_cmp, bool _flatten_all)
-    : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
-    TRACE_CTOR(sorted_accounts_iterator, "const expr_t&, bool");
-  }
-  sorted_accounts_iterator(const expr_t& _sort_cmp, bool _flatten_all,
-			   account_t& account)
+  sorted_accounts_iterator(account_t& account,
+			   const expr_t& _sort_cmp, bool _flatten_all)
     : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
     TRACE_CTOR(sorted_accounts_iterator, "const expr_t&, bool, account_t&");
     push_back(account);
@@ -269,9 +265,9 @@ public:
     TRACE_DTOR(sorted_accounts_iterator);
   }
 
-  void sort_accounts(account_t& account, accounts_deque_t& deque);
-  void push_all(account_t& account);
   void push_back(account_t& account);
+  void push_all(account_t& account, accounts_deque_t& deque);
+  void sort_accounts(account_t& account, accounts_deque_t& deque);
 
   virtual account_t * operator()();
 };
