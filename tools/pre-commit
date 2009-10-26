@@ -4,7 +4,8 @@
 set -e
 
 # Exit if it's not a branch we're interested in being thorough about
-if echo $(git rev-parse --symbolic-full-name HEAD) | grep -q ^refs/heads/t/; then
+if echo $(git rev-parse --symbolic-full-name HEAD) | \
+    egrep -q '^refs/heads/(next|t/)'; then
     exit 0
 fi
 
