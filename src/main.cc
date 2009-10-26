@@ -37,21 +37,6 @@
 
 using namespace ledger;
 
-namespace {
-  strings_list split_arguments(char * line)
-  {
-    strings_list args;
-
-    // jww (2009-02-04): This is too naive
-    for (char * p = std::strtok(line, " \t");
-	 p;
-	 p = std::strtok(NULL, " \t"))
-      args.push_back(p);
-
-    return args;
-  }
-}
-
 #ifdef HAVE_BOOST_PYTHON
 namespace ledger {
   extern char * argv0;

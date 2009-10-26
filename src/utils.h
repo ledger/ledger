@@ -237,6 +237,8 @@ inline bool operator!=(const string& __lhs, const char* __rhs)
 
 extern ledger::string empty_string;
 
+ledger::strings_list split_arguments(const char * line);
+
 #define IF_VERIFY() if (DO_VERIFY())
 
 /*@}*/
