@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$archiver</key>
+	<string>NSKeyedArchiver</string>
+	<key>$objects</key>
+	<array>
+		<string>$null</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>37</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>2</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>3</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>4</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>5</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>6</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>7</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>35</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>Title</string>
+		<string>Text</string>
+		<string>Date</string>
+		<string>Untitled Snapshot</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>34</integer>
+			</dict>
+			<key>NSAttributes</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>10</integer>
+			</dict>
+			<key>NSDelegate</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>0</integer>
+			</dict>
+			<key>NSString</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>8</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>9</integer>
+			</dict>
+			<key>NS.string</key>
+			<string>As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
+It is similar to tithing for Jews and Christians, or to Zakát for
+Muslims.  The epost details of computing Huqúqu'lláh are somewhat
+complex, but if you have further interest, please consult the Web.
+
+Ledger makes this otherwise difficult law very easy.  Just set up an
+automated posting at the top of your ledger file:
+
+@smallexample
+; This automated transaction will compute Huqúqu'lláh based on this
+; journal's postings.  Any that match will affect the
+; Liabilities:Huququ'llah account by 19% of the value of that
+; posting.
+
+= /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
+  (Liabilities:Huququ'llah)               0.19
+@end smallexample
+
+This automated posting works by looking at each posting in the
+ledger file.  If any match the given value expression, 19% of the
+posting's value is applied to the @samp{Liabilities:Huququ'llah}
+account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
+added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
+$190 is subtracted.  The ultimate balance of Huqúqu'lláh reflects how
+much is owed in order to fulfill one's obligation to Huqúqu'lláh.
+When ready to pay, just write a check to cover the amount shown in
+@samp{Liabilities:Huququ'llah}.  That transaction would look like:
+
+@smallexample
+2003/01/01 (101) Baha'i Huqúqu'lláh Trust
+    Liabilities:Huququ'llah          $1,000.00
+    Assets:Checking
+@end smallexample
+
+That's it.  To see how much Huqúq is currently owed based on your
+ledger transactions, use:
+
+@example
+ledger balance Liabilities:Huquq
+@end example
+
+This works fine, but omits one aspect of the law: that Huquq is only
+due once the liability exceeds the value of 19 mithqáls of gold (which
+is roughly 2.22 ounces).  So what we want is for the liability to
+appear in the balance report only when it exceeds the present day
+value of 2.22 ounces of gold.  This can be accomplished using the
+command:
+
+@smallexample
+ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}&lt;=@{-1.0@}&amp;a):a" -s bal liab
+@end smallexample
+
+With this command, the current price for gold is downloaded, and the
+Huqúqu'lláh is reported only if its value exceeds that of 2.22 ounces
+of gold.  If you wish the liability to be reflected in the parent
+subtotal either way, use this instead:
+
+@smallexample
+ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}&lt;=@{-1.0@}&amp;O):O" -s bal liab
+@end smallexample
+
+In some cases, you may wish to refer to the account of whichever
+posting matched your automated transaction's value expression.  To do
+this, use the special account name @samp{$account}:
+
+@smallexample
+= /^Some:Long:Account:Name/
+  [$account]  -0.10
+  [Savings]    0.10
+@end smallexample
+
+This example causes 10% of the matching account's total to be deferred
+to the @samp{Savings} account---as a balanced virtual posting,
+which may be excluded from reports by using @option{--real}.</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableString</string>
+				<string>NSString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableString</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>11</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>12</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>13</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>30</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>NSParagraphStyle</string>
+		<string>NSFont</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>29</integer>
+			</dict>
+			<key>NSAlignment</key>
+			<integer>4</integer>
+			<key>NSLineHeightMultiple</key>
+			<real>1.1000000238418579</real>
+			<key>NSTabStops</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>14</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>28</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>15</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>17</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>18</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>19</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>20</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>21</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>22</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>23</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>24</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>25</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>26</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>27</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>28</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSTextTab</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSTextTab</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>56</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>84</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>112</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>140</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>168</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>196</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>224</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>252</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>280</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>308</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>336</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSArray</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSParagraphStyle</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSParagraphStyle</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>32</integer>
+			</dict>
+			<key>NSName</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>31</integer>
+			</dict>
+			<key>NSSize</key>
+			<real>14</real>
+			<key>NSfFlags</key>
+			<integer>16</integer>
+		</dict>
+		<string>Courier</string>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSFont</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSFont</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDictionary</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDictionary</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>KBWordCountingTextStorage</string>
+				<string>NSTextStorage</string>
+				<string>NSMutableAttributedString</string>
+				<string>NSAttributedString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>KBWordCountingTextStorage</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>36</integer>
+			</dict>
+			<key>NS.time</key>
+			<real>267380389.35992801</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDate</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDate</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableArray</string>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableArray</string>
+		</dict>
+	</array>
+	<key>$top</key>
+	<dict>
+		<key>Snapshots</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>$version</key>
+	<integer>100000</integer>
+</dict>
+</plist>

@@ -1,0 +1,59 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 @c  -S, --sort EXPR        sort report according to the value expression EXPR\
+\
+The postings displayed in a report are shown in the same order as\
+they appear in the ledger file.  To change the order and sort a\
+report, use the @option\{--sort\} option.  @option\{--sort\} takes a value\
+expression to determine the value to sort against, making it possible\
+to sort according to complex criteria.  Here are some simple and\
+useful examples:\
+\
+@example\
+ledger --sort d reg ^exp    # sort by date\
+ledger --sort t reg ^exp    # sort by amount total\
+ledger --sort -t reg ^exp   # reverse sort by amount total\
+ledger --sort Ut reg ^exp   # sort by abs amount total\
+@end example\
+\
+For the balance report, you will want to use @samp\{T\} instead of\
+@samp\{t\}:\
+\
+@example\
+ledger --sort T reg ^exp    # sort by amount total\
+ledger --sort -T reg ^exp   # reverse sort by amount total\
+ledger --sort UT reg ^exp   # sort by abs amount total\
+@end example\
+\
+The @option\{--sort\} options sorts all postings in a report.  If\
+periods are used (such as @option\{--monthly\}), this can get somewhat\
+confusing.  In that case, you'll probably want to sort within periods\
+using @option\{--period-sort\} instead of @option\{--sort\}.\
+\
+@c  -w, --wide             for the default register report, use 132 columns\
+\
+And if the register seems too cramped, and you have a lot of screen\
+real estate, you can use @option\{-w\} to format the report within 132\
+acolumns, instead of 80.  You are more likely then to see full payee\
+and account names, as well as properly formatted totals when\
+long-named commodities are used.\
+\
+If you want only the first or last N transactions to be printed---which can\
+be very useful for viewing the last 10 transactions in your checking\
+account, while also showing the cumulative balance from all\
+transactions---use the @option\{--head\} and/or @option\{--tail\} options.  The\
+two options may be used simultaneously, for example:\
+\
+@example\
+ledger --tail 20 reg checking\
+@end example\
+\
+If the output from your command is very long, Ledger can output the\
+data to a pager utility, such as @command\{more\} or @command\{less\}:\
+\
+@example\
+ledger --pager /usr/bin/less reg checking\
+@end example}

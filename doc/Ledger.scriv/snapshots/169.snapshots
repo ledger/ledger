@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$archiver</key>
+	<string>NSKeyedArchiver</string>
+	<key>$objects</key>
+	<array>
+		<string>$null</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>37</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>2</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>3</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>4</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>5</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>6</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>7</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>35</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>Title</string>
+		<string>Text</string>
+		<string>Date</string>
+		<string>Untitled Snapshot</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>34</integer>
+			</dict>
+			<key>NSAttributes</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>10</integer>
+			</dict>
+			<key>NSDelegate</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>0</integer>
+			</dict>
+			<key>NSString</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>8</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>9</integer>
+			</dict>
+			<key>NS.string</key>
+			<string>@c  -n, --collapse         register: collapse transactions with multiple postings
+
+When multiple postings relate to a single transaction, they are reported
+as part of that transaction.  For example, in the case of @file{sample.dat}:
+
+@example
+ledger reg -- book
+@end example
+
+Reports:
+
+@smallexample
+2004/05/29 Book Store           Expenses:Books               $20.00       $20.00
+                                Liabilities:MasterCard      $-20.00            0
+                                (Liabilities:Taxes)          $-2.00       $-2.00
+@end smallexample
+
+All three postings are part of one transaction, and as such the transaction
+details are printed only once.  To report every transaction on a single
+line, use @option{-n} to collapse transactions with multiple postings:
+
+@example
+ledger -n reg -- book
+@end example
+
+Reports:
+
+@smallexample
+2004/05/29 Book Store           &lt;Total&gt;                      $-2.00       $-2.00
+@end smallexample
+
+In the balance report, @option{-n} causes the grand total not to be
+displayed at the bottom of the report.
+
+@c  -s, --subtotal         balance: show sub-accounts; other: show subtotals
+
+If an account occurs more than once in a report, it is possible to
+combine them all and report the total per-account, using @option{-s}.
+For example, this command:
+
+@example
+ledger -B reg ^assets
+@end example
+
+Reports:
+
+@smallexample
+2004/05/01 Checking balance     Assets:Bank:Checking      $1,000.00    $1,000.00
+2004/05/01 Investment balance   Assets:Brokerage          $1,500.00    $2,500.00
+2004/05/14 Pay day              Assets:Bank:Checking        $500.00    $3,000.00
+2004/05/27 Credit card company  Assets:Bank:Checking        $-20.00    $2,980.00
+@end smallexample
+
+But if the @option{-s} option is added, the result becomes:
+
+@smallexample
+2004/05/01 - 2004/05/29         Assets:Bank:Checking      $1,480.00    $1,480.00
+                                Assets:Brokerage          $1,500.00    $2,980.00
+@end smallexample
+
+When account subtotaling is used, only one transaction is printed, and the
+date and name reflect the range of the combined postings.
+
+@c  -P, --by-payee         show summarized totals by payee
+
+With @option{-P}, postings relating to the same payee are
+combined.  In this case, the date of the combined transaction is that of the
+latest posting.
+
+@c  -x, --comm-as-payee    set commodity name as the payee, for reporting
+
+@option{-x} changes the payee name for each posting to be the same
+as the commodity it uses.  This can be especially useful combined with
+other options, like @option{-P}.  For example:
+
+@example
+ledger -Px reg ^assets
+@end example
+
+Reports:
+
+@smallexample
+2004/05/29 $                    Assets:Bank:Checking      $1,480.00    $1,480.00
+2004/05/01 AAPL                 Assets:Brokerage            50 AAPL    $1,480.00
+                                                                         50 AAPL
+@end smallexample
+
+This reports shows the subtotal for each commodity held, and where it
+is located.  To see the basis cost, or initial investment, add
+@option{-B}.  Applied to the example above:
+
+@smallexample
+2004/05/29 $                    Assets:Bank:Checking      $1,480.00    $1,480.00
+2004/05/01 AAPL                 Assets:Brokerage          $1,500.00    $2,980.00
+@end smallexample
+
+@c  -E, --empty            balance: show accounts with zero balance
+
+The only other options which affect summarized totals is @option{-E},
+which works only in the balance report.  In this case, it shows
+matching accounts with a zero a balance, which are ordinarily
+excluded.  This can be useful to see all the accounts involved in a
+report, even if some have no total.</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableString</string>
+				<string>NSString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableString</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>11</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>12</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>13</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>30</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>NSParagraphStyle</string>
+		<string>NSFont</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>29</integer>
+			</dict>
+			<key>NSAlignment</key>
+			<integer>4</integer>
+			<key>NSLineHeightMultiple</key>
+			<real>1.1000000238418579</real>
+			<key>NSTabStops</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>14</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>28</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>15</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>17</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>18</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>19</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>20</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>21</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>22</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>23</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>24</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>25</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>26</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>27</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>28</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSTextTab</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSTextTab</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>56</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>84</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>112</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>140</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>168</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>196</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>224</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>252</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>280</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>308</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>336</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSArray</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSParagraphStyle</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSParagraphStyle</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>32</integer>
+			</dict>
+			<key>NSName</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>31</integer>
+			</dict>
+			<key>NSSize</key>
+			<real>14</real>
+			<key>NSfFlags</key>
+			<integer>16</integer>
+		</dict>
+		<string>Courier</string>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSFont</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSFont</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDictionary</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDictionary</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>KBWordCountingTextStorage</string>
+				<string>NSTextStorage</string>
+				<string>NSMutableAttributedString</string>
+				<string>NSAttributedString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>KBWordCountingTextStorage</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>36</integer>
+			</dict>
+			<key>NS.time</key>
+			<real>267380389.08146301</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDate</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDate</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableArray</string>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableArray</string>
+		</dict>
+	</array>
+	<key>$top</key>
+	<dict>
+		<key>Snapshots</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>$version</key>
+	<integer>100000</integer>
+</dict>
+</plist>

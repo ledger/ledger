@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$archiver</key>
+	<string>NSKeyedArchiver</string>
+	<key>$objects</key>
+	<array>
+		<string>$null</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>37</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>2</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>3</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>4</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>5</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>6</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>7</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>35</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>Title</string>
+		<string>Text</string>
+		<string>Date</string>
+		<string>Untitled Snapshot</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>34</integer>
+			</dict>
+			<key>NSAttributes</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>10</integer>
+			</dict>
+			<key>NSDelegate</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>0</integer>
+			</dict>
+			<key>NSString</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>8</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>9</integer>
+			</dict>
+			<key>NS.string</key>
+			<string>Ledger makes no assumptions about the commodities you use; it only
+requires that you specify a commodity.  The commodity may be any
+non-numeric string that does not contain a period, comma, forward
+slash or at-sign.  It may appear before or after the amount, although
+it is assumed that symbols appearing before the amount refer to
+currencies, while non-joined symbols appearing after the amount refer
+to commodities.  Here are some valid currency and commodity
+specifiers:
+
+@example
+$20.00         ; currency: twenty US dollars
+40 AAPL        ; commodity: 40 shares of Apple stock
+60 DM          ; currency: 60 Deutsch Mark
+£50            ; currency: 50 British pounds
+50 EUR         ; currency: 50 Euros (or use appropriate symbol)
+@end example
+
+Ledger will examine the first use of any commodity to determine how
+that commodity should be printed on reports.  It pays attention to
+whether the name of commodity was separated from the amount, whether
+it came before or after, the precision used in specifying the amount,
+whether thousand marks were used, etc.  This is done so that printing
+the commodity looks the same as the way you use it.
+
+An account may contain multiple commodities, in which case it will
+have separate totals for each.  For example, if your brokerage account
+contains both cash, gold, and several stock quantities, the balance
+might look like:
+
+@smallexample
+  $200.00
+100.00 AU
+  AAPL 40
+ BORL 100
+ FEQTX 50  Assets:Brokerage
+@end smallexample
+
+This balance report shows how much of each commodity is in your
+brokerage account.
+
+Sometimes, you will want to know the current street value of your
+balance, and not the commodity totals.  For this to happen, you must
+specify what the current price is for each commodity.  The price can
+be any commodity, in which case the balance will be computed in terms
+of that commodity.  The usual way to specify prices is with a price
+history file, which might look like this:
+
+@smallexample
+P 2004/06/21 02:18:01 FEQTX $22.49
+P 2004/06/21 02:18:01 BORL $6.20
+P 2004/06/21 02:18:02 AAPL $32.91
+P 2004/06/21 02:18:02 AU $400.00
+@end smallexample
+
+Specify the price history to use with the @option{--price-db} option,
+with the @option{-V} option to report in terms of current market
+value:
+
+@example
+ledger --price-db prices.db -V balance brokerage
+@end example
+
+The balance for your brokerage account will be reported in US dollars,
+since the prices database uses that currency.
+
+@smallexample
+$40880.00  Assets:Brokerage
+@end smallexample
+
+You can convert from any commodity to any other commodity.  Let's say
+you had $5000 in your checking account, and for whatever reason you
+wanted to know many ounces of gold that would buy, in terms of the
+current price of gold:
+
+@example
+ledger -T "@{1 AU@}*(O/P@{1 AU@})" balance checking
+@end example
+
+Although the total expression appears complex, it is simply saying
+that the reported total should be in multiples of AU units, where the
+quantity is the account total divided by the price of one AU.  Without
+the initial multiplication, the reported total would still use the
+dollars commodity, since multiplying or dividing amounts always keeps
+the left value's commodity.  The result of this command might be:
+
+@smallexample
+14.01 AU  Assets:Checking
+@end smallexample</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableString</string>
+				<string>NSString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableString</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>11</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>12</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>13</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>30</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>NSParagraphStyle</string>
+		<string>NSFont</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>29</integer>
+			</dict>
+			<key>NSAlignment</key>
+			<integer>4</integer>
+			<key>NSLineHeightMultiple</key>
+			<real>1.1000000238418579</real>
+			<key>NSTabStops</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>14</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>28</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>15</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>17</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>18</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>19</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>20</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>21</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>22</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>23</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>24</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>25</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>26</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>27</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>28</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSTextTab</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSTextTab</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>56</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>84</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>112</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>140</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>168</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>196</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>224</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>252</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>280</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>308</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>336</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSArray</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSParagraphStyle</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSParagraphStyle</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>32</integer>
+			</dict>
+			<key>NSName</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>31</integer>
+			</dict>
+			<key>NSSize</key>
+			<real>14</real>
+			<key>NSfFlags</key>
+			<integer>16</integer>
+		</dict>
+		<string>Courier</string>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSFont</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSFont</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDictionary</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDictionary</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>KBWordCountingTextStorage</string>
+				<string>NSTextStorage</string>
+				<string>NSMutableAttributedString</string>
+				<string>NSAttributedString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>KBWordCountingTextStorage</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>36</integer>
+			</dict>
+			<key>NS.time</key>
+			<real>267380389.27479199</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDate</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDate</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableArray</string>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableArray</string>
+		</dict>
+	</array>
+	<key>$top</key>
+	<dict>
+		<key>Snapshots</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>$version</key>
+	<integer>100000</integer>
+</dict>
+</plist>

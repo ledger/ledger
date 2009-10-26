@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$archiver</key>
+	<string>NSKeyedArchiver</string>
+	<key>$objects</key>
+	<array>
+		<string>$null</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>37</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>2</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>3</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>4</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>5</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>6</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>7</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>35</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>Title</string>
+		<string>Text</string>
+		<string>Date</string>
+		<string>Untitled Snapshot</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>34</integer>
+			</dict>
+			<key>NSAttributes</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>10</integer>
+			</dict>
+			<key>NSDelegate</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>0</integer>
+			</dict>
+			<key>NSString</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>8</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>9</integer>
+			</dict>
+			<key>NS.string</key>
+			<string>While the @command{balance} command can be very handy for checking
+account totals, by far the most powerful of Ledger's reporting tools
+is the @command{register} command.  In fact, internally both commands
+use the same logic, but report the results differently:
+@command{balance} shows the summary totals, while @command{register}
+reports each posting and how it contributes to that total.
+
+Paradoxically, the most basic form of @command{register} is almost
+never used, since it displays every posting:
+
+@example
+ledger reg
+@end example
+
+@command{reg} is a short-hand for @command{register}.  This command
+reports:
+
+@smallexample
+2004/05/01 Checking balance     Assets:Bank:Checking      $1,000.00    $1,000.00
+                                Equity:Opening Balan..   $-1,000.00            0
+2004/05/01 Investment balance   Assets:Brokerage            50 AAPL      50 AAPL
+                                Equity:Opening Balan..   $-1,500.00   $-1,500.00
+                                                                         50 AAPL
+2004/05/14 Pay day              Assets:Bank:Checking        $500.00   $-1,000.00
+                                                                         50 AAPL
+                                Income:Salary              $-500.00   $-1,500.00
+                                                                         50 AAPL
+2004/05/27 Book Store           Expenses:Books               $20.00   $-1,480.00
+                                                                         50 AAPL
+                                Liabilities:MasterCard      $-20.00   $-1,500.00
+                                                                         50 AAPL
+                                (Liabilities:Taxes)          $-2.00   $-1,502.00
+                                                                         50 AAPL
+2004/05/27 Credit card company  Liabilities:MasterCard       $20.00   $-1,482.00
+                                                                         50 AAPL
+                                Assets:Bank:Checking        $-20.00   $-1,502.00
+                                                                         50 AAPL
+@end smallexample
+
+This rather verbose output shows every account posting in
+@file{sample.dat}, and how it affects the running total.  The final
+total is identical to what we saw with the plain @command{balance}
+command.  To see how things really balance, we can use @samp{--real
+-B}, just as we did with @command{balance}:
+
+@example
+ledger --real -B reg
+@end example
+
+Reports:
+
+@smallexample
+2004/05/01 Checking balance     Assets:Bank:Checking      $1,000.00    $1,000.00
+                                Equity:Opening Balan..   $-1,000.00            0
+2004/05/01 Investment balance   Assets:Brokerage          $1,500.00    $1,500.00
+                                Equity:Opening Balan..   $-1,500.00            0
+2004/05/14 Pay day              Assets:Bank:Checking        $500.00      $500.00
+                                Income:Salary              $-500.00            0
+2004/05/27 Book Store           Expenses:Books               $20.00       $20.00
+                                Liabilities:MasterCard      $-20.00            0
+2004/05/27 Credit card company  Liabilities:MasterCard       $20.00       $20.00
+                                Assets:Bank:Checking        $-20.00            0
+@end smallexample
+
+Here we see that everything balances to zero in the end, as it must.</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableString</string>
+				<string>NSString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableString</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>33</integer>
+			</dict>
+			<key>NS.keys</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>11</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>12</integer>
+				</dict>
+			</array>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>13</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>30</integer>
+				</dict>
+			</array>
+		</dict>
+		<string>NSParagraphStyle</string>
+		<string>NSFont</string>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>29</integer>
+			</dict>
+			<key>NSAlignment</key>
+			<integer>4</integer>
+			<key>NSLineHeightMultiple</key>
+			<real>1.1000000238418579</real>
+			<key>NSTabStops</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>14</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>28</integer>
+			</dict>
+			<key>NS.objects</key>
+			<array>
+				<dict>
+					<key>CF$UID</key>
+					<integer>15</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>17</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>18</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>19</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>20</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>21</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>22</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>23</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>24</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>25</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>26</integer>
+				</dict>
+				<dict>
+					<key>CF$UID</key>
+					<integer>27</integer>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>28</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSTextTab</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSTextTab</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>56</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>84</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>112</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>140</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>168</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>196</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>224</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>252</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>280</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>308</real>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>16</integer>
+			</dict>
+			<key>NSLocation</key>
+			<real>336</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSArray</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSParagraphStyle</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSParagraphStyle</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>32</integer>
+			</dict>
+			<key>NSName</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>31</integer>
+			</dict>
+			<key>NSSize</key>
+			<real>14</real>
+			<key>NSfFlags</key>
+			<integer>16</integer>
+		</dict>
+		<string>Courier</string>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSFont</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSFont</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDictionary</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDictionary</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>KBWordCountingTextStorage</string>
+				<string>NSTextStorage</string>
+				<string>NSMutableAttributedString</string>
+				<string>NSAttributedString</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>KBWordCountingTextStorage</string>
+		</dict>
+		<dict>
+			<key>$class</key>
+			<dict>
+				<key>CF$UID</key>
+				<integer>36</integer>
+			</dict>
+			<key>NS.time</key>
+			<real>267380388.99077201</real>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSDate</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSDate</string>
+		</dict>
+		<dict>
+			<key>$classes</key>
+			<array>
+				<string>NSMutableArray</string>
+				<string>NSArray</string>
+				<string>NSObject</string>
+			</array>
+			<key>$classname</key>
+			<string>NSMutableArray</string>
+		</dict>
+	</array>
+	<key>$top</key>
+	<dict>
+		<key>Snapshots</key>
+		<dict>
+			<key>CF$UID</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>$version</key>
+	<integer>100000</integer>
+</dict>
+</plist>

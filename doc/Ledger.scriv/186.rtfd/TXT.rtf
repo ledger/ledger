@@ -1,0 +1,23 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 If you have @command\{Gnuplot\} installed, you can graph any of the\
+above register reports.  The script to do this is included in the\
+ledger distribution, and is named @file\{scripts/report\}.  Install\
+@file\{report\} anywhere along your @env\{PATH\}, and then use\
+@command\{report\} instead of @command\{ledger\} when doing a register\
+report.  The only thing to keep in mind is that you must specify\
+@option\{-j\} or @option\{-J\} to indicate whether Gnuplot should plot the\
+amount, or the running total.  For example, this command plots total\
+monthly expenses made on your MasterCard.\
+\
+@example\
+report -j -M -r -d /mastercard/ reg ^expenses\
+@end example\
+\
+The @command\{report\} script is a very simple Bourne shell script, that\
+passes a set of scripted commands to Gnuplot.  Feel free to modify the\
+script to your liking, since you may prefer histograms to line plots,\
+for example.}

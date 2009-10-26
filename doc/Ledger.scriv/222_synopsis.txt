@@ -1,0 +1,1 @@
+Example of creating a session, reading some journal data, and generating a simplistic report.

@@ -1,0 +1,22 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 The @command\{register\} command displays all the postings occurring\
+in a single account, line by line.  The account regexp must be\
+specified as the only argument to this command.  If any regexps occur\
+after the required account name, the register will contain only those\
+postings that match.  Very useful for hunting down a particular\
+posting.\
+\
+The output from @command\{register\} is very close to what a typical\
+checkbook, or single-account ledger, would look like.  It also shows a\
+running balance.  The final running balance of any register should\
+always be the same as the current balance of that account.\
+\
+If you have Gnuplot installed, you may plot the amount or running\
+total of any register by using the script @file\{report\}, which is\
+included in the Ledger distribution.  The only requirement is that you\
+add either @option\{-j\} or @option\{-J\} to your register command, in\
+order to plot either the amount or total column, respectively.}

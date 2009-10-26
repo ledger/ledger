@@ -1,0 +1,93 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 Ledger makes no assumptions about the commodities you use; it only\
+requires that you specify a commodity.  The commodity may be any\
+non-numeric string that does not contain a period, comma, forward\
+slash or at-sign.  It may appear before or after the amount, although\
+it is assumed that symbols appearing before the amount refer to\
+currencies, while non-joined symbols appearing after the amount refer\
+to commodities.  Here are some valid currency and commodity\
+specifiers:\
+\
+@example\
+$20.00         ; currency: twenty US dollars\
+40 AAPL        ; commodity: 40 shares of Apple stock\
+60 DM          ; currency: 60 Deutsch Mark\
+\'a350            ; currency: 50 British pounds\
+50 EUR         ; currency: 50 Euros (or use appropriate symbol)\
+@end example\
+\
+Ledger will examine the first use of any commodity to determine how\
+that commodity should be printed on reports.  It pays attention to\
+whether the name of commodity was separated from the amount, whether\
+it came before or after, the precision used in specifying the amount,\
+whether thousand marks were used, etc.  This is done so that printing\
+the commodity looks the same as the way you use it.\
+\
+An account may contain multiple commodities, in which case it will\
+have separate totals for each.  For example, if your brokerage account\
+contains both cash, gold, and several stock quantities, the balance\
+might look like:\
+\
+@smallexample\
+  $200.00\
+100.00 AU\
+  AAPL 40\
+ BORL 100\
+ FEQTX 50  Assets:Brokerage\
+@end smallexample\
+\
+This balance report shows how much of each commodity is in your\
+brokerage account.\
+\
+Sometimes, you will want to know the current street value of your\
+balance, and not the commodity totals.  For this to happen, you must\
+specify what the current price is for each commodity.  The price can\
+be any commodity, in which case the balance will be computed in terms\
+of that commodity.  The usual way to specify prices is with a price\
+history file, which might look like this:\
+\
+@smallexample\
+P 2004/06/21 02:18:01 FEQTX $22.49\
+P 2004/06/21 02:18:01 BORL $6.20\
+P 2004/06/21 02:18:02 AAPL $32.91\
+P 2004/06/21 02:18:02 AU $400.00\
+@end smallexample\
+\
+Specify the price history to use with the @option\{--price-db\} option,\
+with the @option\{-V\} option to report in terms of current market\
+value:\
+\
+@example\
+ledger --price-db prices.db -V balance brokerage\
+@end example\
+\
+The balance for your brokerage account will be reported in US dollars,\
+since the prices database uses that currency.\
+\
+@smallexample\
+$40880.00  Assets:Brokerage\
+@end smallexample\
+\
+You can convert from any commodity to any other commodity.  Let's say\
+you had $5000 in your checking account, and for whatever reason you\
+wanted to know many ounces of gold that would buy, in terms of the\
+current price of gold:\
+\
+@example\
+ledger -T "@\{1 AU@\}*(O/P@\{1 AU@\})" balance checking\
+@end example\
+\
+Although the total expression appears complex, it is simply saying\
+that the reported total should be in multiples of AU units, where the\
+quantity is the account total divided by the price of one AU.  Without\
+the initial multiplication, the reported total would still use the\
+dollars commodity, since multiplying or dividing amounts always keeps\
+the left value's commodity.  The result of this command might be:\
+\
+@smallexample\
+14.01 AU  Assets:Checking\
+@end smallexample}

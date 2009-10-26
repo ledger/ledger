@@ -1,0 +1,108 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 @c  -n, --collapse         register: collapse transactions with multiple postings\
+\
+When multiple postings relate to a single transaction, they are reported\
+as part of that transaction.  For example, in the case of @file\{sample.dat\}:\
+\
+@example\
+ledger reg -- book\
+@end example\
+\
+Reports:\
+\
+@smallexample\
+2004/05/29 Book Store           Expenses:Books               $20.00       $20.00\
+                                Liabilities:MasterCard      $-20.00            0\
+                                (Liabilities:Taxes)          $-2.00       $-2.00\
+@end smallexample\
+\
+All three postings are part of one transaction, and as such the transaction\
+details are printed only once.  To report every transaction on a single\
+line, use @option\{-n\} to collapse transactions with multiple postings:\
+\
+@example\
+ledger -n reg -- book\
+@end example\
+\
+Reports:\
+\
+@smallexample\
+2004/05/29 Book Store           <Total>                      $-2.00       $-2.00\
+@end smallexample\
+\
+In the balance report, @option\{-n\} causes the grand total not to be\
+displayed at the bottom of the report.\
+\
+@c  -s, --subtotal         balance: show sub-accounts; other: show subtotals\
+\
+If an account occurs more than once in a report, it is possible to\
+combine them all and report the total per-account, using @option\{-s\}.\
+For example, this command:\
+\
+@example\
+ledger -B reg ^assets\
+@end example\
+\
+Reports:\
+\
+@smallexample\
+2004/05/01 Checking balance     Assets:Bank:Checking      $1,000.00    $1,000.00\
+2004/05/01 Investment balance   Assets:Brokerage          $1,500.00    $2,500.00\
+2004/05/14 Pay day              Assets:Bank:Checking        $500.00    $3,000.00\
+2004/05/27 Credit card company  Assets:Bank:Checking        $-20.00    $2,980.00\
+@end smallexample\
+\
+But if the @option\{-s\} option is added, the result becomes:\
+\
+@smallexample\
+2004/05/01 - 2004/05/29         Assets:Bank:Checking      $1,480.00    $1,480.00\
+                                Assets:Brokerage          $1,500.00    $2,980.00\
+@end smallexample\
+\
+When account subtotaling is used, only one transaction is printed, and the\
+date and name reflect the range of the combined postings.\
+\
+@c  -P, --by-payee         show summarized totals by payee\
+\
+With @option\{-P\}, postings relating to the same payee are\
+combined.  In this case, the date of the combined transaction is that of the\
+latest posting.\
+\
+@c  -x, --comm-as-payee    set commodity name as the payee, for reporting\
+\
+@option\{-x\} changes the payee name for each posting to be the same\
+as the commodity it uses.  This can be especially useful combined with\
+other options, like @option\{-P\}.  For example:\
+\
+@example\
+ledger -Px reg ^assets\
+@end example\
+\
+Reports:\
+\
+@smallexample\
+2004/05/29 $                    Assets:Bank:Checking      $1,480.00    $1,480.00\
+2004/05/01 AAPL                 Assets:Brokerage            50 AAPL    $1,480.00\
+                                                                         50 AAPL\
+@end smallexample\
+\
+This reports shows the subtotal for each commodity held, and where it\
+is located.  To see the basis cost, or initial investment, add\
+@option\{-B\}.  Applied to the example above:\
+\
+@smallexample\
+2004/05/29 $                    Assets:Bank:Checking      $1,480.00    $1,480.00\
+2004/05/01 AAPL                 Assets:Brokerage          $1,500.00    $2,980.00\
+@end smallexample\
+\
+@c  -E, --empty            balance: show accounts with zero balance\
+\
+The only other options which affect summarized totals is @option\{-E\},\
+which works only in the balance report.  In this case, it shows\
+matching accounts with a zero a balance, which are ordinarily\
+excluded.  This can be useful to see all the accounts involved in a\
+report, even if some have no total.}

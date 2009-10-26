@@ -1,0 +1,67 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 Assets are money that you have, and Liabilities are money that you\
+owe.  ``Liabilities'' is just a more inclusive name for Debts.\
+\
+An Asset is typically increased by transferring money from an Income\
+account, such as when you get paid.  Here is a typical transaction:\
+\
+@smallexample\
+2004/09/29  My Employer\
+    Assets:Checking               $500.00\
+    Income:Salary\
+@end smallexample\
+\
+Money, here, comes from an Income account belonging to ``My\
+Employer'', and is transferred to your checking account.  The money is\
+now yours, which makes it an Asset.\
+\
+Liabilities track money owed to others.  This can happen when you\
+borrow money to buy something, or if you owe someone money.  Here is\
+an example of increasing a MasterCard liability by spending money with\
+it:\
+\
+@smallexample\
+2004/09/30  Restaurant\
+    Expenses:Dining                $25.00\
+    Liabilities:MasterCard\
+@end smallexample\
+\
+The Dining account balance now shows $25 spent on Dining, and a\
+corresponding $25 owed on the MasterCard---and therefore shown as\
+$-25.00.  The MasterCard liability shows up as negative because it\
+offsets the value of your assets.\
+\
+The combined total of your Assets and Liabilities is your net worth.\
+So to see your current net worth, use this command:\
+\
+@example\
+ledger balance ^assets ^liabilities\
+@end example\
+\
+Relatedly, your Income accounts show up negative, because they\
+transfer money @emph\{from\} an account in order to increase your\
+assets.  Your Expenses show up positive because that is where the\
+money went to.  The combined total of Income and Expenses is your cash\
+flow.  A positive cash flow means you are spending more than you make,\
+since income is always a negative figure.  To see your current cash\
+flow, use this command:\
+\
+@example\
+ledger balance ^income ^expenses\
+@end example\
+\
+Another common question to ask of your expenses is: How much do I\
+spend each month on X?  Ledger provides a simple way of displaying\
+monthly totals for any account.  Here is an example that summarizes\
+your monthly automobile expenses:\
+\
+@example\
+ledger -M register expenses:auto\
+@end example\
+\
+This assumes, of course, that you use account names like\
+@samp\{Expenses:Auto:Gas\} and @samp\{Expenses:Auto:Repair\}.}

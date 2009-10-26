@@ -1,0 +1,55 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 The most important part of accounting is keeping a good ledger.  If\
+you have a good ledger, tools can be written to work whatever\
+mathematically tricks you need to better understand your spending\
+patterns.  Without a good ledger, no tool, however smart, can help\
+you.\
+\
+The Ledger program aims at making ledger transaction as simple as possible.\
+Since it is a command-line tool, it does not provide a user interface\
+for keeping a ledger.  If you like, you may use GnuCash to maintain\
+your ledger, in which case the Ledger program will read GnuCash's data\
+files directly.  In that case, read the GnuCash manual now, and skip\
+to the next chapter.\
+\
+If you are not using GnuCash, but a text editor to maintain your\
+ledger, read on.  Ledger has been designed to make data transaction as\
+simple as possible, by keeping the ledger format easy, and also by\
+automagically determining as much information as possible based on the\
+nature of your transactions.\
+\
+For example, you do not need to tell Ledger about the accounts you\
+use.  Any time Ledger sees a posting involving an account it knows\
+nothing about, it will create it.  If you use a commodity that is new\
+to Ledger, it will create that commodity, and determine its display\
+characteristics (placement of the symbol before or after the amount,\
+display precision, etc) based on how you used the commodity in the\
+posting.\
+\
+Here is the Pacific Bell example from above, given as a Ledger\
+posting:\
+\
+@smallexample\
+9/29 (100) Pacific Bell\
+    Expenses:Utilities:Phone                   $23.00\
+    Assets:Checking                           $-23.00\
+@end smallexample\
+\
+As you can see, it is very similar to what would be written on paper,\
+minus the computed balance totals, and adding in account names that\
+work better with Ledger's scheme of things.  In fact, since Ledger is\
+smart about many things, you don't need to specify the balanced\
+amount, if it is the same as the first line:\
+\
+@smallexample\
+9/29 (100) Pacific Bell\
+    Expenses:Utilities:Phone                   $23.00\
+    Assets:Checking\
+@end smallexample\
+\
+For this transaction, Ledger will figure out that $-23.00 must come from\
+@samp\{Assets:Checking\} in order to balance the transaction.}

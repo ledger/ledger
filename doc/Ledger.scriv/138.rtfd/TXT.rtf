@@ -1,0 +1,53 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 These are the most basic command options.  Most likely, the user will\
+want to set them using environment variables (see @ref\{Options\}),\
+instead of using actual command-line options:\
+\
+@option\{--help\} (@option\{-h\}) prints a summary of all the options, and\
+what they are used for.  This can be a handy way to remember which\
+options do what.  This help screen is also printed if ledger is run\
+without a command.\
+\
+@option\{--version\} (@option\{-v\}) prints the current version of ledger\
+and exits.  This is useful for sending bug reports, to let the author\
+know which version of ledger you are using.\
+\
+@option\{--file FILE\} (@option\{-f FILE\}) reads FILE as a ledger file.\
+This command may be used multiple times.  FILE may also be a list of\
+file names separated by colons.  Typically, the environment variable\
+@env\{LEDGER_FILE\} is set, rather than using this command-line option.\
+\
+@option\{--output FILE\} (@option\{-o FILE\}) redirects output from any\
+command to @var\{FILE\}.  By default, all output goes to standard\
+output.\
+\
+@option\{--init-file FILE\} (@option\{-i FILE\}) causes FILE to be read by\
+ledger before any other ledger file.  This file may not contain any\
+postings, but it may contain option settings.  To specify options\
+in the init file, use the same syntax as the command-line.  Here's an\
+example init file:\
+\
+@smallexample\
+--price-db ~/finance/.pricedb\
+\
+; ~/.ledgerrc ends here\
+@end smallexample\
+\
+Option settings on the command-line or in the environment always take\
+precedence over settings in the init file.\
+\
+@option\{--cache FILE\} identifies FILE as the default binary cache\
+file.  That is, if the ledger files to be read are specified using the\
+environment variable @env\{LEDGER_FILE\}, then whenever a command is\
+finished a binary copy will be written to the specified cache, to\
+speed up the loading time of subsequent queries.  This filename can\
+also be given using the environment variable @env\{LEDGER_CACHE\}, or by\
+putting the option into your init file.  The @option\{--no-cache\}\
+option causes Ledger to always ignore the binary cache.\
+\
+@option\{--account NAME\} (@option\{-a NAME\}) specifies the default\
+account which QIF file postings are assumed to relate to.}

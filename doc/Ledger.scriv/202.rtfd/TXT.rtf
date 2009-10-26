@@ -1,0 +1,92 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 The timeclock tool makes it easy to track time events, like clocking\
+into and out of a particular job.  These events accumulate in a\
+timelog file.\
+\
+Each in/out event may have an optional description.  If the ``in''\
+description is a ledger account name, these in/out pairs may be viewed\
+as virtual postings, adding time commodities (hours) to that\
+account.\
+\
+For example, the command-line version of the timeclock tool could be\
+used to begin a timelog file like:\
+\
+@example\
+export TIMELOG=$HOME/.timelog\
+ti ClientOne category\
+sleep 10\
+to waited for ten seconds\
+@end example\
+\
+The @file\{.timelog\} file now contains:\
+\
+@smallexample\
+i 2004/10/06 15:21:00 ClientOne  category\
+o 2004/10/06 15:21:10 waited for ten seconds\
+@end smallexample\
+\
+Ledger parses this directly, as if it had seen the following transaction:\
+\
+@smallexample\
+2004/10/06 category\
+    (ClientOne)      10s\
+@end smallexample\
+\
+In other words, the timelog event pair is seen as adding 0.00277h (ten\
+seconds) worth of time to the @samp\{ClientOne\} account.  This would be\
+considered billable time, which later could be invoiced and credited\
+to accounts receivable:\
+\
+@smallexample\
+2004/11/01 (INV#1) ClientOne, Inc.\
+    Receivable:ClientOne       $0.10\
+    ClientOne              -0.00277h @@ $35.00\
+@end smallexample\
+\
+The above posting converts the clocked time into an invoice for\
+the time spent, at an hourly rate of $35.  Once the invoice is paid,\
+the money is deposited from the receivable account into a checking\
+account:\
+\
+@smallexample\
+2004/12/01 ClientOne, Inc.\
+    Assets:Checking            $0.10\
+    Receivable:ClientOne\
+@end smallexample\
+\
+And now the time spent has been turned into hard cash in the checking\
+account.\
+\
+The advantage to using timeclock and invoicing to bill time is that\
+you will always know, by looking at the balance report, epostly how\
+much unbilled and unpaid time you've spent working for any particular\
+client.\
+\
+I like to @samp\{!include\} my timelog at the top of my company's\
+accounting ledger, with the attached prefix @samp\{Billable\}:\
+\
+@smallexample\
+; -*-ledger-*-\
+\
+; This is the ledger file for my company.  But first, include the\
+; timelog data, entering all of the time events within the umbrella\
+; account "Billable".\
+\
+!account Billable\
+!include /home/johnw/.timelog\
+!end\
+\
+; Here follows this fiscal year's postings for the company.\
+\
+2004/11/01 (INV#1) ClientOne, Inc.\
+    Receivable:ClientOne           $0.10\
+    Billable:ClientOne         -0.00277h @@ $35.00\
+\
+2004/12/01 ClientOne, Inc.\
+    Assets:Checking                $0.10\
+    Receivable:ClientOne\
+@end smallexample}

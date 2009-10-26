@@ -1,0 +1,152 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 By default, Ledger uses a human-readable data format, and displays its\
+reports in a manner meant to be read on screen.  For the purpose of\
+writing tools which use Ledger, however, it is possible to read and\
+display data using XML.  This section documents that format.\
+\
+The general format used for Ledger data is:\
+\
+@smallexample\
+<?xml version="1.0"?>\
+<ledger>\
+  <xact>...</xact>\
+  <xact>...</xact>\
+  <xact>...</xact>...\
+</ledger>\
+@end smallexample\
+\
+The data stream is enclosed in a @samp\{ledger\} tag, which contains a\
+series of one or more transactions.  Each @samp\{xact\} describes the transaction\
+and contains a series of one or more postings:\
+\
+@smallexample\
+<xact>\
+  <en:date>2004/03/01</en:date>\
+  <en:cleared/>\
+  <en:code>100</en:code>\
+  <en:payee>John Wiegley</en:payee>\
+  <en:postings>\
+    <posting>...</posting>\
+    <posting>...</posting>\
+    <posting>...</posting>...\
+  </en:postings>\
+</xact>\
+@end smallexample\
+\
+The date format for @samp\{en:date\} is always @samp\{YYYY/MM/DD\}.  The\
+@samp\{en:cleared\} tag is optional, and indicates whether the\
+posting has been cleared or not.  There is also an\
+@samp\{en:pending\} tag, for marking pending postings.  The\
+@samp\{en:code\} and @samp\{en:payee\} tags both contain whatever text the\
+user wishes.\
+\
+After the initial transaction data, there must follow a set of postings\
+marked with @samp\{en:postings\}.  Typically these postings will\
+all balance each other, but if not they will be automatically balanced\
+into an account named @samp\{<Unknown>\}.\
+\
+Within the @samp\{en:postings\} tag is a series of one or more\
+@samp\{posting\}'s, which have the following form:\
+\
+@smallexample\
+<posting>\
+  <tr:account>Expenses:Computer:Hardware</tr:account>\
+  <tr:amount>\
+    <value type="amount">\
+      <amount>\
+        <commodity flags="PT">$</commodity>\
+        <quantity>90.00</quantity>\
+      </amount>\
+    </value>\
+  </tr:amount>\
+</posting>\
+@end smallexample\
+\
+This is a basic posting.  It may also be begin with\
+@samp\{tr:virtual\} and/or @samp\{tr:generated\} tags, to indicate virtual\
+and auto-generated postings.  Then follows the @samp\{tr:account\}\
+tag, which contains the full name of the account the posting is\
+related to.  Colons separate parent from child in an account name.\
+\
+Lastly follows the amount of the posting, indicated by\
+@samp\{tr:amount\}.  Within this tag is a @samp\{value\} tag, of which\
+there are four different kinds, each with its own format:\
+\
+@enumerate\
+@item boolean\
+@item integer\
+@item amount\
+@item balance\
+@end enumerate\
+\
+The format of a boolean value is @samp\{true\} or @samp\{false\}\
+surrounded by a @samp\{boolean\} tag, for example:\
+\
+@smallexample\
+<boolean>true</boolean>\
+@end smallexample\
+\
+The format of an integer value is the numerical value surrounded by an\
+@samp\{integer\} tag, for example:\
+\
+@smallexample\
+<integer>12036</integer>\
+@end smallexample\
+\
+The format of an amount contains two members, the commodity and the\
+quantity.  The commodity can have a set of flags that indicate how to\
+display it.  The meaning of the flags (all of which are optional) are:\
+\
+@table @strong\
+@item P\
+The commodity is prefixed to the value.\
+@item S\
+The commodity is separated from the value by a space.\
+@item T\
+Thousands markers are used to display the amount.\
+@item E\
+The format of the amount is European, with period used as a thousands\
+marker, and comma used as the decimal point.\
+@end table\
+\
+The actual quantity for an amount is an integer of arbitrary size.\
+Ledger uses the GNU multi-precision math library to handle such\
+values.  The XML format assumes the reader to be equally capable.\
+Here is an example amount:\
+\
+@smallexample\
+<value type="amount">\
+  <amount>\
+    <commodity flags="PT">$</commodity>\
+    <quantity>90.00</quantity>\
+  </amount>\
+</value>\
+@end smallexample\
+\
+Lastly, a balance value contains a series of amounts, each with a\
+different commodity.  Unlike the name, such a value does need to\
+balance.  It is called a balance because it sums several amounts.  For\
+example:\
+\
+@smallexample\
+<value type="balance">\
+  <balance>\
+    <amount>\
+      <commodity flags="PT">$</commodity>\
+      <quantity>90.00</quantity>\
+    </amount>\
+    <amount>\
+      <commodity flags="TE">DM</commodity>\
+      <quantity>200.00</quantity>\
+    </amount>\
+  </balance>\
+</value>\
+@end smallexample\
+\
+That is the extent of the XML data format used by Ledger.  It will\
+output such data if the @command\{xml\} command is used, and can read\
+the same data.}

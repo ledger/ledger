@@ -1,0 +1,88 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 A period expression indicates a span of time, or a reporting interval,\
+or both.  The full syntax is:\
+\
+@example\
+[INTERVAL] [BEGIN] [END]\
+@end example\
+\
+The optional @var\{INTERVAL\} part may be any one of:\
+\
+@example\
+every day\
+every week\
+every monthly\
+every quarter\
+every year\
+every N days     # N is any integer\
+every N weeks\
+every N months\
+every N quarters\
+every N years\
+daily\
+weekly\
+biweekly\
+monthly\
+bimonthly\
+quarterly\
+yearly\
+@end example\
+\
+After the interval, a begin time, end time, both or neither may be\
+specified.  As for the begin time, it can be either of:\
+\
+@example\
+from <SPEC>\
+since <SPEC>\
+@end example\
+\
+The end time can be either of:\
+\
+@example\
+to <SPEC>\
+until <SPEC>\
+@end example\
+\
+Where @var\{SPEC\} can be any of:\
+\
+@example\
+2004\
+2004/10\
+2004/10/1\
+10/1\
+october\
+oct\
+this week  # or day, month, quarter, year\
+next week\
+last week\
+@end example\
+\
+The beginning and ending can be given at the same time, if it spans a\
+single period.  In that case, just use @var\{SPEC\} by itself.  In that\
+case, the period @samp\{oct\}, for example, will cover all the days in\
+october.  The possible forms are:\
+\
+@example\
+<SPEC>\
+in <SPEC>\
+@end example\
+\
+Here are a few examples of period expressions:\
+\
+@example\
+monthly\
+monthly in 2004\
+weekly from oct\
+weekly from last month\
+from sep to oct\
+from 10/1 to 10/5\
+monthly until 2005\
+from apr\
+until nov\
+last oct\
+weekly last august\
+@end example}

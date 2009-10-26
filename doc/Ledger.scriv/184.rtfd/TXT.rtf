@@ -1,0 +1,44 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 The following query makes it easy to see monthly expenses, with each\
+month's expenses sorted by the amount:\
+\
+@example\
+ledger -M --period-sort t reg ^expenses\
+@end example\
+\
+Now, you might wonder where the money came from to pay for these\
+things.  To see that report, add @option\{-r\}, which shows the\
+``related account'' postings:\
+\
+@example\
+ledger -M --period-sort t -r reg ^expenses\
+@end example\
+\
+But maybe this prints too much information.  You might just want to\
+see how much you're spending with your MasterCard.  That kind of query\
+requires the use of a display predicate, since the postings\
+calculated must match @samp\{^expenses\}, while the postings\
+displayed must match @samp\{mastercard\}.  The command would be:\
+\
+@example\
+ledger -M -r -d /mastercard/ reg ^expenses\
+@end example\
+\
+This query says: Report monthly subtotals; report the ``related\
+account'' postings; display only related postings whose\
+account matches @samp\{mastercard\}, and base the calculation on\
+postings matching @samp\{^expenses\}.\
+\
+This works just as well for report the overall total, too:\
+\
+@example\
+ledger -s -r -d /mastercard/ reg ^expenses\
+@end example\
+\
+The @option\{-s\} option subtotals all postings, just as @option\{-M\}\
+subtotaled by the month.  The running total in both cases is off,\
+however, since a display expression is being used.}

@@ -1,0 +1,45 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl264\slmult1\ql\qnatural\pardirnatural
+
+\f0\fs28 \cf0 This chapter presents a series of recipes, gradually introducing all of\
+the command-line features of Ledger.\
+\
+For the purpose of these examples, assume the environment variable\
+@var\{LEDGER\} is set to the file @file\{sample.dat\} (which is included\
+in the distribution), and that the contents of that file are:\
+\
+@smallexample\
+= /^Expenses:Books/\
+  (Liabilities:Taxes)             -0.10\
+\
+~ Monthly\
+  Assets:Bank:Checking          $500.00\
+  Income:Salary\
+\
+2004/05/01 * Checking balance\
+  Assets:Bank:Checking        $1,000.00\
+  Equity:Opening Balances\
+\
+2004/05/01 * Investment balance\
+  Assets:Brokerage              50 AAPL @@ $30.00\
+  Equity:Opening Balances\
+\
+2004/05/14 * Pay day\
+  Assets:Bank:Checking          $500.00\
+  Income:Salary\
+\
+2004/05/27 Book Store\
+  Expenses:Books                 $20.00\
+  Liabilities:MasterCard\
+\
+2004/05/27 (100) Credit card company\
+  Liabilities:MasterCard         $20.00\
+  Assets:Bank:Checking\
+@end smallexample\
+\
+This sample file demonstrates a basic principle of accounting which it\
+is recommended you follow: Keep all of your accounts under five parent\
+Assets, Liabilities, Income, Expenses and Equity.  It is important to\
+do so in order to make sense out of the following examples.}
