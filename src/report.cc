@@ -903,6 +903,13 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
       return MAKE_FUNCTOR(report_t::fn_total_expr);
     else if (is_eq(p, "today"))
       return MAKE_FUNCTOR(report_t::fn_today);
+    else if (is_eq(p, "t"))
+      return MAKE_FUNCTOR(report_t::fn_display_amount);
+    break;
+
+  case 'T':
+    if (is_eq(p, "T"))
+      return MAKE_FUNCTOR(report_t::fn_display_total);
     break;
 
   case 'u':
