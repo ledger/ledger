@@ -345,7 +345,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 	}
 	DEBUG("format.expr", "value = (" << value << ")");
 
-	value.print(out, elem->min_width, -1,
+	value.print(out, static_cast<int>(elem->min_width), -1,
 		    ! elem->has_flags(ELEMENT_ALIGN_LEFT));
       }
       catch (const calc_error&) {
@@ -362,15 +362,15 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
 
     if (elem->max_width > 0 || elem->min_width > 0) {
       unistring temp(out.str());
+      string	result;
 
-      string result;
       if (elem->max_width > 0 && elem->max_width < temp.length()) {
 	result = truncate(temp, elem->max_width);
       } else {
 	result = temp.extract();
-	for (int i = 0; i < (static_cast<int>(elem->min_width) -
-	                     static_cast<int>(temp.length())); i++)
-	  result += " ";
+	if (elem->min_width > temp.length())
+	  for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
+	    result += " ";
       }
       out_str << result;
     } else {
@@ -379,8 +379,9 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
   }
 }
 
-string format_t::truncate(const unistring& ustr, std::size_t width,
-			  const int account_abbrev_length)
+string format_t::truncate(const unistring&  ustr,
+			  const std::size_t width,
+			  const std::size_t account_abbrev_length)
 {
   assert(width < 4095);
 
@@ -434,7 +435,7 @@ string format_t::truncate(const unistring& ustr, std::size_t width,
 
 	if (newlen > width) {
 	  unistring temp(*i);
-	  if (temp.length() > static_cast<std::size_t>(account_abbrev_length)) {
+	  if (temp.length() > account_abbrev_length) {
 	    result << temp.extract(0, account_abbrev_length) << ":";
 	    newlen -= temp.length() - account_abbrev_length;
 	  } else {

@@ -41,7 +41,7 @@ namespace ledger {
 void format_emacs_posts::write_xact(xact_t& xact)
 {
   out << "\"" << xact.pathname << "\" "
-      << (static_cast<std::size_t>(xact.beg_line) + 1) << " ";
+      << (xact.beg_line + 1) << " ";
 
   tm	      when = gregorian::to_tm(xact.date());
   std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?
@@ -77,7 +77,7 @@ void format_emacs_posts::operator()(post_t& post)
       out << "\n";
     }
 
-    out << "  (" << (static_cast<std::size_t>(post.beg_line) + 1) << " ";
+    out << "  (" << (post.beg_line + 1) << " ";
     out << "\"" << post.reported_account()->fullname() << "\" \""
 	<< post.amount << "\"";
 

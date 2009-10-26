@@ -105,6 +105,7 @@ public:
 
   virtual expr_t::ptr_op_t lookup(const string& name);
 
+#if BOOST_VERSION >= 103700
   OPTION_(python_interpreter_t, import_, DO_(scope) {
       interactive_t args(scope, "s");
 
@@ -114,23 +115,31 @@ public:
       python::object sys_dict	= module_sys.attr("__dict__");
 
       python::list paths(sys_dict["path"]);
-#if BOOST_VERSION >= 103700
       paths.insert(0, file.parent_path().string());
-#else
-      paths.insert(0, file.branch_path().string());
-#endif
       sys_dict["path"] = paths;
 
-#if BOOST_VERSION >= 103700
       string name = file.filename();
       if (contains(name, ".py"))
 	parent->import(file.stem());
       else
 	parent->import(name);
-#else
-      parent->import(file.leaf());
-#endif
     });
+#else // BOOST_VERSION >= 103700
+  OPTION_(python_interpreter_t, import_, DO_(scope) {
+      interactive_t args(scope, "s");
+
+      path file(args.get<string>(0));
+
+      python::object module_sys = parent->import("sys"); 
+      python::object sys_dict	= module_sys.attr("__dict__");
+
+      python::list paths(sys_dict["path"]);
+      paths.insert(0, file.branch_path().string());
+      sys_dict["path"] = paths;
+
+      parent->import(file.leaf());
+    });
+#endif // BOOST_VERSION >= 103700
 };
 
 extern shared_ptr<python_interpreter_t> python_session;

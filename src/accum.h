@@ -56,8 +56,8 @@ namespace ledger {
 class straccbuf : public std::streambuf
 {
 protected:
-  std::string str;		// accumulator
-  std::size_t index;
+  std::string		 str;	// accumulator
+  std::string::size_type index;
 
 public:
   straccbuf() : index(0) {}

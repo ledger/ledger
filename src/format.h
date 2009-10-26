@@ -65,10 +65,7 @@ class format_t : public noncopyable
   {
 #define ELEMENT_ALIGN_LEFT 0x01
 
-    enum kind_t {
-      STRING,
-      EXPR,
-    };
+    enum kind_t { STRING, EXPR };
 
     kind_t	type;
     std::size_t min_width;
@@ -89,7 +86,7 @@ class format_t : public noncopyable
     friend inline void mark_red(std::ostream& out, const element_t * elem) {
       out.setf(std::ios::left);
       out.width(0);
-      out << "\e[31m";
+      out << "\033[31m";
 
       if (elem->has_flags(ELEMENT_ALIGN_LEFT))
 	out << std::left;
@@ -145,8 +142,9 @@ public:
       elem->dump(out);
   }
 
-  static string truncate(const unistring& str, std::size_t width,
-			 const int account_abbrev_length = -1);
+  static string truncate(const unistring&  str,
+			 const std::size_t width,
+			 const std::size_t account_abbrev_length = 0);
 };
 
 #define FMT_PREFIX "fmt_"

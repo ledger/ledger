@@ -92,6 +92,10 @@ inline bool interactive_t::get<bool>(std::size_t index) {
   return value_at(index).to_boolean();
 }
 template <>
+inline int interactive_t::get<int>(std::size_t index) {
+  return value_at(index).to_int();
+}
+template <>
 inline long interactive_t::get<long>(std::size_t index) {
   return value_at(index).to_long();
 }

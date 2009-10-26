@@ -74,7 +74,6 @@ inline bool is_valid(const date_t& moment) {
 #define CURRENT_DATE() boost::gregorian::day_clock::universal_day()
 
 extern date_time::weekdays   start_of_week;
-extern optional<std::string> input_date_format;
 
 optional<date_time::weekdays>
 string_to_day_of_week(const std::string& str);
@@ -97,33 +96,20 @@ inline date_t parse_date(const std::string& str,
   return parse_date(str.c_str(), current_year);
 }
 
-extern std::string output_datetime_format;
+enum format_type_t {
+  FMT_WRITTEN, FMT_PRINTED, FMT_CUSTOM
+};
 
-inline std::string format_datetime(const datetime_t& when,
-				   const optional<std::string>& format = none)
-{
-  posix_time::time_facet * facet
-    (new posix_time::time_facet(format ? format->c_str() :
-				output_datetime_format.c_str()));
-  std::ostringstream buf;
-  buf.imbue(std::locale(std::locale::classic(), facet));
-  buf << when;
-  return buf.str();
-}
+std::string format_datetime(const datetime_t& when,
+			    const format_type_t format_type = FMT_PRINTED,
+			    const optional<const char *>& format = none);
+void set_datetime_format(const char * format);
 
-extern std::string output_date_format;
-
-inline std::string format_date(const date_t& when,
-			       const optional<std::string>& format = none)
-{
-  gregorian::date_facet * facet
-    (new gregorian::date_facet(format ? format->c_str() :
-			       output_date_format.c_str()));
-  std::ostringstream buf;
-  buf.imbue(std::locale(std::locale::classic(), facet));
-  buf << when;
-  return buf.str();
-}
+std::string format_date(const date_t& when,
+			const format_type_t format_type = FMT_PRINTED,
+			const optional<const char *>& format = none);
+void set_date_format(const char * format);
+void set_input_date_format(const char * format);
 
 class date_interval_t : public equality_comparable<date_interval_t>
 {
@@ -206,6 +192,9 @@ public:
 
   date_interval_t& operator++();
 };
+
+void times_initialize();
+void times_shutdown();
 
 std::ostream& operator<<(std::ostream& out,
 			 const date_interval_t::duration_t& duration);

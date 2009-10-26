@@ -71,32 +71,34 @@ namespace ledger {
 bool verify_enabled = false;
 
 typedef std::pair<std::string, std::size_t>     allocation_pair;
-typedef std::map<void *, allocation_pair>       live_memory_map;
-typedef std::multimap<void *, allocation_pair>  live_objects_map;
+typedef std::map<void *, allocation_pair>       memory_map;
+typedef std::multimap<void *, allocation_pair>  objects_map;
 
 typedef std::pair<std::size_t, std::size_t>     count_size_pair;
 typedef std::map<std::string, count_size_pair>  object_count_map;
 
-static live_memory_map  * live_memory	     = NULL;
-static object_count_map * live_memory_count  = NULL;
-static object_count_map * total_memory_count = NULL;
+namespace {
+  bool memory_tracing_active = false;
 
-static bool memory_tracing_active = false;
-
-static live_objects_map * live_objects	     = NULL;
-static object_count_map * live_object_count  = NULL;
-static object_count_map * total_object_count = NULL;
-static object_count_map * total_ctor_count   = NULL;
+  memory_map  *	     live_memory	= NULL;
+  memory_map *	     freed_memory	= NULL;
+  object_count_map * live_memory_count  = NULL;
+  object_count_map * total_memory_count = NULL;
+  objects_map *	     live_objects	= NULL;
+  object_count_map * live_object_count  = NULL;
+  object_count_map * total_object_count = NULL;
+  object_count_map * total_ctor_count   = NULL;
+}
 
 void initialize_memory_tracing()
 {
   memory_tracing_active = false;
 
-  live_memory	     = new live_memory_map;
+  live_memory	     = new memory_map;
+  freed_memory	     = new memory_map;
   live_memory_count  = new object_count_map;
   total_memory_count = new object_count_map;
-
-  live_objects	     = new live_objects_map;
+  live_objects	     = new objects_map;
   live_object_count  = new object_count_map;
   total_object_count = new object_count_map;
   total_ctor_count   = new object_count_map;
@@ -118,9 +120,9 @@ void shutdown_memory_tracing()
   }
 
   checked_delete(live_memory);        live_memory	 = NULL;
+  checked_delete(freed_memory);       freed_memory	 = NULL;
   checked_delete(live_memory_count);  live_memory_count	 = NULL;
   checked_delete(total_memory_count); total_memory_count = NULL;
-
   checked_delete(live_objects);       live_objects	 = NULL;
   checked_delete(live_object_count);  live_object_count	 = NULL;
   checked_delete(total_object_count); total_object_count = NULL;
@@ -153,12 +155,16 @@ std::size_t current_memory_size()
 
 static void trace_new_func(void * ptr, const char * which, std::size_t size)
 {
+  if (! live_memory || ! memory_tracing_active) return;
+
   memory_tracing_active = false;
 
-  if (! live_memory) return;
+  memory_map::iterator i = freed_memory->find(ptr);
+  if (i != freed_memory->end())
+    freed_memory->erase(i);
 
   live_memory->insert
-    (live_memory_map::value_type(ptr, allocation_pair(which, size)));
+    (memory_map::value_type(ptr, allocation_pair(which, size)));
 
   add_to_count_map(*live_memory_count, which, size);
   add_to_count_map(*total_memory_count, which, size);
@@ -169,9 +175,9 @@ static void trace_new_func(void * ptr, const char * which, std::size_t size)
 
 static void trace_delete_func(void * ptr, const char * which)
 {
-  memory_tracing_active = false;
+  if (! live_memory || ! memory_tracing_active) return;
 
-  if (! live_memory) return;
+  memory_tracing_active = false;
 
   // Ignore deletions of memory not tracked, since it's possible that
   // a user (like boost) allocated a block of memory before memory
@@ -179,14 +185,24 @@ static void trace_delete_func(void * ptr, const char * which)
   // If it really is a double-delete, the malloc library on OS/X will
   // notify me.
 
-  live_memory_map::iterator i = live_memory->find(ptr);
-  if (i == live_memory->end())
+  memory_map::iterator i = live_memory->find(ptr);
+  if (i == live_memory->end()) {
+    i = freed_memory->find(ptr);
+    if (i != freed_memory->end())
+      VERIFY(! "Freeing a block of memory twice");
+    else
+      VERIFY(! "Freeing an unknown block of memory");
+    memory_tracing_active = true;
     return;
+  }
 
   std::size_t size = (*i).second.second;
   VERIFY((*i).second.first == which);
 
   live_memory->erase(i);
+
+  freed_memory->insert
+    (memory_map::value_type(ptr, allocation_pair(which, size)));
 
   object_count_map::iterator j = live_memory_count->find(which);
   VERIFY(j != live_memory_count->end());
@@ -269,9 +285,9 @@ std::size_t current_objects_size()
 void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 		     std::size_t cls_size)
 {
-  memory_tracing_active = false;
+  if (! live_objects || ! memory_tracing_active) return;
 
-  if (! live_objects) return;
+  memory_tracing_active = false;
 
   static char name[1024];
   std::strcpy(name, cls_name);
@@ -282,7 +298,7 @@ void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
   DEBUG("memory.debug", "TRACE_CTOR " << ptr << " " << name);
 
   live_objects->insert
-    (live_objects_map::value_type(ptr, allocation_pair(cls_name, cls_size)));
+    (objects_map::value_type(ptr, allocation_pair(cls_name, cls_size)));
 
   add_to_count_map(*live_object_count, cls_name, cls_size);
   add_to_count_map(*total_object_count, cls_name, cls_size);
@@ -294,13 +310,13 @@ void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
 
 void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 {
-  if (! live_objects) return;
+  if (! live_objects || ! memory_tracing_active) return;
 
   memory_tracing_active = false;
 
   DEBUG("memory.debug", "TRACE_DTOR " << ptr << " " << cls_name);
 
-  live_objects_map::iterator i = live_objects->find(ptr);
+  objects_map::iterator i = live_objects->find(ptr);
   if (i == live_objects->end()) {
     warning_(_("Attempting to delete %1 a non-living %2") << ptr << cls_name);
     memory_tracing_active = true;
@@ -331,7 +347,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
 void report_memory(std::ostream& out, bool report_all)
 {
-  if (! live_memory) return;
+  if (! live_memory || ! memory_tracing_active) return;
 
   if (live_memory_count->size() > 0) {
     out << "NOTE: There may be memory held by Boost "
@@ -343,7 +359,7 @@ void report_memory(std::ostream& out, bool report_all)
   if (live_memory->size() > 0) {
     out << "Live memory:" << std::endl;
 
-    foreach (const live_memory_map::value_type& pair, *live_memory)
+    foreach (const memory_map::value_type& pair, *live_memory)
       out << "  " << std::right << std::setw(12) << pair.first
 	  << "  " << std::right << std::setw(7) << pair.second.second
 	  << "  " << std::left  << pair.second.first
@@ -363,7 +379,7 @@ void report_memory(std::ostream& out, bool report_all)
   if (live_objects->size() > 0) {
     out << "Live objects:" << std::endl;
 
-    foreach (const live_objects_map::value_type& pair, *live_objects)
+    foreach (const objects_map::value_type& pair, *live_objects)
       out << "  " << std::right << std::setw(12) << pair.first
 	  << "  " << std::right << std::setw(7) << pair.second.second
 	  << "  " << std::left  << pair.second.first
@@ -402,17 +418,19 @@ string::string(const char * str) : std::string(str) {
 string::string(const char * str, const char * end) : std::string(str, end) {
   TRACE_CTOR(string, "const char *, const char *");
 }
-string::string(const string& str, int x) : std::string(str, x) {
-  TRACE_CTOR(string, "const string&, int");
+string::string(const string& str, size_type x) : std::string(str, x) {
+  TRACE_CTOR(string, "const string&, size_type");
 }
-string::string(const string& str, int x, int y) : std::string(str, x, y) {
-  TRACE_CTOR(string, "const string&, int, int");
+string::string(const string& str, size_type x, size_type y)
+  : std::string(str, x, y) {
+  TRACE_CTOR(string, "const string&, size_type, size_type");
 }
-string::string(const char * str, int x) : std::string(str, x) {
-  TRACE_CTOR(string, "const char *, int");
+string::string(const char * str, size_type x) : std::string(str, x) {
+  TRACE_CTOR(string, "const char *, size_type");
 }
-string::string(const char * str, int x, int y) : std::string(str, x, y) {
-  TRACE_CTOR(string, "const char *, int, int");
+string::string(const char * str, size_type x, size_type y)
+  : std::string(str, x, y) {
+  TRACE_CTOR(string, "const char *, size_type, size_type");
 }
 string::~string() throw() {
   TRACE_DTOR(string);
@@ -557,6 +575,7 @@ static timer_map timers;
 void start_timer(const char * name, log_level_t lvl)
 {
 #if defined(VERIFY_ON)
+  bool tracing_active = memory_tracing_active;
   memory_tracing_active = false;
 #endif
 
@@ -571,13 +590,14 @@ void start_timer(const char * name, log_level_t lvl)
   _log_buffer.str("");
 
 #if defined(VERIFY_ON)
-  memory_tracing_active = true;
+  memory_tracing_active = tracing_active;
 #endif
 }
 
 void stop_timer(const char * name)
 {
 #if defined(VERIFY_ON)
+  bool tracing_active = memory_tracing_active;
   memory_tracing_active = false;
 #endif
 
@@ -588,19 +608,24 @@ void stop_timer(const char * name)
   (*i).second.active = false;
 
 #if defined(VERIFY_ON)
-  memory_tracing_active = true;
+  memory_tracing_active = tracing_active;
 #endif
 }
 
 void finish_timer(const char * name)
 {
 #if defined(VERIFY_ON)
+  bool tracing_active = memory_tracing_active;
   memory_tracing_active = false;
 #endif
 
   timer_map::iterator i = timers.find(name);
-  if (i == timers.end())
+  if (i == timers.end()) {
+#if defined(VERIFY_ON)
+    memory_tracing_active = tracing_active;
+#endif
     return;
+  }
 
   time_duration spent = (*i).second.spent;
   if ((*i).second.active) {
@@ -626,7 +651,7 @@ void finish_timer(const char * name)
   timers.erase(i);
 
 #if defined(VERIFY_ON)
-  memory_tracing_active = true;
+  memory_tracing_active = tracing_active;
 #endif
 }
 

@@ -11,6 +11,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(BalanceTestCase, "math");
 
 void BalanceTestCase::setUp()
 {
+  times_initialize();
   amount_t::initialize();
 
   // Cause the display precision for dollars to be initialized to 2.
@@ -24,4 +25,5 @@ void BalanceTestCase::tearDown()
 {
   amount_t::stream_fullstrings = false;
   amount_t::shutdown();
+  times_shutdown();
 }

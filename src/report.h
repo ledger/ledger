@@ -218,6 +218,7 @@ public:
     HANDLER(current).report(out);
     HANDLER(daily).report(out);
     HANDLER(date_format_).report(out);
+    HANDLER(datetime_format_).report(out);
     HANDLER(depth_).report(out);
     HANDLER(deviation).report(out);
     HANDLER(display_).report(out);
@@ -412,10 +413,8 @@ public:
       parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
-  OPTION__(report_t, date_format_, // -y
-	   CTOR(report_t, date_format_) {
-	     on(none, "%y-%b-%d");
-	   });
+  OPTION(report_t, date_format_);
+  OPTION(report_t, datetime_format_);
 
   OPTION_(report_t, depth_, DO_(scope) {
       interactive_t args(scope, "sl");
@@ -633,9 +632,9 @@ public:
 
   OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
       on(none,
-	 "%(format_date(xact.date, \"%Y/%m/%d\"))"
+	 "%(xact.date)"
 	 "%(!effective & xact.effective_date ?"
-	 " \"=\" + format_date(xact.effective_date, \"%Y/%m/%d\") : \"\")"
+	 " \"=\" + xact.effective_date : \"\")"
 	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
 	 "%(code ? \" (\" + code + \")\" :"
 	 " \"\") %(payee)%(xact.comment)\n"
@@ -673,7 +672,8 @@ public:
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
       on(none,
-	 "%(ansify_if(justify(date, date_width), green if color & date > today))"
+	 "%(ansify_if(justify(format_date(date), date_width), green "
+	 "    if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
 	 "    bold if color & !cleared))"
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "

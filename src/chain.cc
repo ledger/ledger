@@ -65,10 +65,10 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     if (report.HANDLED(head_) || report.HANDLED(tail_))
       handler.reset
 	(new truncate_xacts(handler,
-			      report.HANDLED(head_) ?
-			      report.HANDLER(head_).value.to_long() : 0,
-			      report.HANDLED(tail_) ?
-			      report.HANDLER(tail_).value.to_long() : 0));
+			    report.HANDLED(head_) ?
+			    report.HANDLER(head_).value.to_int() : 0,
+			    report.HANDLED(tail_) ?
+			    report.HANDLER(tail_).value.to_int() : 0));
 
     // filter_posts will only pass through posts matching the
     // `display_predicate'.

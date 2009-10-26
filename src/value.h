@@ -211,6 +211,8 @@ private:
     void destroy() {
       DEBUG("value.storage.refcount", "Destroying " << this);
       switch (type) {
+      case VOID:
+	return;
       case BALANCE:
 	checked_delete(boost::get<balance_t *>(data));
 	break;
@@ -220,6 +222,7 @@ private:
       default:
 	break;
       }
+      data = false;
       type = VOID;
     }
   };
@@ -635,10 +638,12 @@ public:
   void set_string(const string& val = "") {
     set_type(STRING);
     storage->data = val;
+    VERIFY(boost::get<string>(storage->data) == val);
   }
   void set_string(const char * val = "") {
     set_type(STRING);
     storage->data = string(val);
+    VERIFY(boost::get<string>(storage->data) == val);
   }
 
   bool is_mask() const {
@@ -733,6 +738,7 @@ public:
    * exception is thrown.
    */
   bool	     to_boolean() const;
+  int	     to_int() const;
   long	     to_long() const;
   datetime_t to_datetime() const;
   date_t     to_date() const;
@@ -788,7 +794,7 @@ public:
   /**
    * Collection-style access methods for SEQUENCE values.
    */
-  value_t& operator[](const int index) {
+  value_t& operator[](const std::size_t index) {
     VERIFY(! is_null());
     if (is_sequence())
       return as_sequence_lval()[index];
@@ -799,7 +805,7 @@ public:
     static value_t null;
     return null;
   }
-  const value_t& operator[](const int index) const {
+  const value_t& operator[](const std::size_t index) const {
     VERIFY(! is_null());
     if (is_sequence())
       return as_sequence()[index];
@@ -933,7 +939,7 @@ public:
 
 #define NULL_VALUE (value_t())
 
-inline value_t string_value(const string& str) {
+inline value_t string_value(const string& str = "") {
   return value_t(str, true);
 }
 

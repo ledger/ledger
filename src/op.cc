@@ -38,10 +38,10 @@
 
 namespace ledger {
 
-expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
+expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 {
   if (is_ident()) {
-    DEBUG("expr.compile", "Looking up identifier '" << as_ident() << "'");
+    DEBUG("expr.compile", "lookup: " << as_ident());
 
     if (ptr_op_t def = scope.lookup(as_ident())) {
       // Identifier references are first looked up at the point of
@@ -79,9 +79,10 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
     return wrap_value(value_t());
   }
 
-  ptr_op_t lhs(left()->compile(scope));
+  ptr_op_t lhs(left()->compile(scope, depth));
   ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
-	       (kind == O_LOOKUP ? right() : right()->compile(scope)) : NULL);
+	       (kind == O_LOOKUP ? right() :
+		right()->compile(scope, depth)) : NULL);
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
@@ -90,18 +91,19 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope)
 
   // Reduce constants immediately if possible
   if ((! lhs || lhs->is_value()) && (! rhs || rhs->is_value()))
-    return wrap_value(intermediate->calc(scope));
+    return wrap_value(intermediate->calc(scope, NULL, depth));
 
   return intermediate;
 }
 
-value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
+value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 {
+#if defined(DEBUG_ON)
+  bool skip_debug = false;
+#endif
   try {
 
   value_t result;
-
-  DEBUG("expr.calc", "calculating '" << op_context(this) << "'");
 
   switch (kind) {
   case VALUE:
@@ -116,7 +118,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
     call_scope_t call_args(scope);
-    result = left()->calc(call_args, locus);
+    result = left()->calc(call_args, locus, depth + 1);
     break;
   }
 
@@ -126,6 +128,9 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     // resolved.
     call_scope_t call_args(scope);
     result = as_function()(call_args);
+#if defined(DEBUG_ON)
+    skip_debug = true;
+#endif
     break;
   }
 
@@ -157,7 +162,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
       throw_(calc_error,
 	     _("Too many arguments in function call (saw %1)") << args_count);
 
-    result = right()->compile(local_scope)->calc(local_scope, locus);
+    result = right()->compile(local_scope, depth + 1)
+                    ->calc(local_scope, locus, depth + 1);
     break;
   }
 
@@ -173,7 +179,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 	  } else {
 	    scope_t& objscope(obj.as_ref_lval<scope_t>());
 	    if (ptr_op_t member = objscope.lookup(right()->as_ident())) {
-	      result = member->calc(objscope);
+	      result = member->calc(objscope, NULL, depth + 1);
 	      break;
 	    }
 	  }
@@ -192,7 +198,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     call_scope_t call_args(scope);
 
     if (has_right())
-      call_args.set_args(right()->calc(scope, locus));
+      call_args.set_args(right()->calc(scope, locus, depth + 1));
 
     ptr_op_t func = left();
     const string& name(func->as_ident());
@@ -204,74 +210,83 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     if (func->is_function())
       result = func->as_function()(call_args);
     else
-      result = func->calc(call_args, locus);
+      result = func->calc(call_args, locus, depth + 1);
     break;
   }
 
   case O_MATCH:
-    result = (right()->calc(scope, locus).as_mask()
-	      .match(left()->calc(scope, locus).to_string()));
+    result = (right()->calc(scope, locus, depth + 1).as_mask()
+	      .match(left()->calc(scope, locus, depth + 1).to_string()));
     break;
 
   case O_EQ:
-    result = left()->calc(scope, locus) == right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) ==
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_LT:
-    result = left()->calc(scope, locus) <  right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) <
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_LTE:
-    result = left()->calc(scope, locus) <= right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) <=
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_GT:
-    result = left()->calc(scope, locus) >  right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) >
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_GTE:
-    result = left()->calc(scope, locus) >= right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) >=
+	      right()->calc(scope, locus, depth + 1));
     break;
 
   case O_ADD:
-    result = left()->calc(scope, locus) + right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) +
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_SUB:
-    result = left()->calc(scope, locus) - right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) -
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_MUL:
-    result = left()->calc(scope, locus) * right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) *
+	      right()->calc(scope, locus, depth + 1));
     break;
   case O_DIV:
-    result = left()->calc(scope, locus) / right()->calc(scope, locus);
+    result = (left()->calc(scope, locus, depth + 1) /
+	      right()->calc(scope, locus, depth + 1));
     break;
 
   case O_NEG:
-    result = left()->calc(scope, locus).negated();
+    result = left()->calc(scope, locus, depth + 1).negated();
     break;
 
   case O_NOT:
-    result = ! left()->calc(scope, locus);
+    result = ! left()->calc(scope, locus, depth + 1);
     break;
 
   case O_AND:
-    if (left()->calc(scope, locus))
-      result = right()->calc(scope, locus);
+    if (left()->calc(scope, locus, depth + 1))
+      result = right()->calc(scope, locus, depth + 1);
     else
       result = false;
     break;
 
   case O_OR:
-    if (value_t temp = left()->calc(scope, locus))
+    if (value_t temp = left()->calc(scope, locus, depth + 1))
       result = temp;
     else
-      result = right()->calc(scope, locus);
+      result = right()->calc(scope, locus, depth + 1);
     break;
 
   case O_QUERY:
     assert(right());
     assert(right()->kind == O_COLON);
 
-    if (value_t temp = left()->calc(scope, locus))
-      result = right()->left()->calc(scope, locus);
+    if (value_t temp = left()->calc(scope, locus, depth + 1))
+      result = right()->left()->calc(scope, locus, depth + 1);
     else
-      result = right()->right()->calc(scope, locus);
+      result = right()->right()->calc(scope, locus, depth + 1);
     break;
 
   case O_COLON:
@@ -279,7 +294,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     break;
 
   case O_CONS:
-    result = left()->calc(scope, locus);
+    result = left()->calc(scope, locus, depth + 1);
     DEBUG("op.cons", "car = " << result);
 
     if (has_right()) {
@@ -296,7 +311,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 	  value_op = next;
 	  next     = NULL;
 	}
-	temp.push_back(value_op->calc(scope, locus));
+	temp.push_back(value_op->calc(scope, locus, depth + 1));
 	DEBUG("op.cons", "temp now = " << temp);
       }
       result = temp;
@@ -304,7 +319,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     break;
 
   case O_SEQ: {
-    left()->calc(scope, locus);
+    left()->calc(scope, locus, depth + 1);
     assert(has_right());
 
     ptr_op_t next = right();
@@ -317,7 +332,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
 	value_op = next;
 	next     = NULL;
       }
-      result = value_op->calc(scope, locus);
+      result = value_op->calc(scope, locus, depth + 1);
     }
     break;
   }
@@ -328,7 +343,15 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus)
     break;
   }
 
-  DEBUG("expr.calc", "result is '" << result << "'");
+#if defined(DEBUG_ON)
+  if (! skip_debug && SHOW_DEBUG("expr.calc")) {
+    for (int i = 0; i < depth; i++)
+      ledger::_log_buffer << '.';
+    ledger::_log_buffer << op_context(this) <<  " => ";
+    result.dump(ledger::_log_buffer, true);
+    DEBUG("expr.calc", "");
+  }
+#endif
 
   return result;
 

@@ -173,6 +173,17 @@ date_t value_t::to_date() const
   }
 }
 
+int value_t::to_int() const
+{
+  if (is_long()) {
+    return static_cast<int>(as_long());
+  } else {
+    value_t temp(*this);
+    temp.in_place_cast(INTEGER);
+    return static_cast<int>(temp.as_long());
+  }
+}
+
 long value_t::to_long() const
 {
   if (is_long()) {
@@ -973,7 +984,7 @@ void value_t::in_place_cast(type_t cast_type)
       set_datetime(datetime_t(as_date(), time_duration(0, 0, 0, 0)));
       return;
     case STRING:
-      set_string(format_date(as_date(), string("%Y-%m-%d")));
+      set_string(format_date(as_date(), FMT_WRITTEN));
       return;
     default:
       break;
@@ -985,7 +996,7 @@ void value_t::in_place_cast(type_t cast_type)
       set_date(as_datetime().date());
       return;
     case STRING:
-      set_string(format_datetime(as_datetime(), string("%Y-%m-%d %H:%M:%S")));
+      set_string(format_datetime(as_datetime(), FMT_WRITTEN));
       return;
     default:
       break;
@@ -1484,16 +1495,17 @@ void value_t::print(std::ostream&           out,
 
   case DATETIME:
     if (date_format)
-      out << format_datetime(as_datetime(), *date_format);
+      out << format_datetime(as_datetime(), FMT_CUSTOM,
+			     date_format->c_str());
     else
-      out << format_datetime(as_datetime());
+      out << format_datetime(as_datetime(), FMT_WRITTEN);
     break;
 
   case DATE:
     if (date_format)
-      out << format_date(as_date(), *date_format);
+      out << format_date(as_date(), FMT_CUSTOM, date_format->c_str());
     else
-      out << format_date(as_date());
+      out << format_date(as_date(), FMT_WRITTEN);
     break;
 
   case INTEGER:
@@ -1568,10 +1580,10 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
     break;
 
   case DATETIME:
-    out << '[' << format_datetime(as_datetime()) << ']';
+    out << '[' << format_datetime(as_datetime(), FMT_WRITTEN) << ']';
     break;
   case DATE:
-    out << '[' << format_date(as_date()) << ']';
+    out << '[' << format_date(as_date(), FMT_WRITTEN) << ']';
     break;
 
   case INTEGER:

@@ -109,9 +109,9 @@ protected:
    * - at most, pbSize characters in putback area plus
    * - at most, bufSize characters in ordinary read buffer
    */
-  static const int pbSize  = 4;	   // size of putback area
-  static const int bufSize = 1024; // size of the data buffer
-  char buffer[bufSize + pbSize];   // data buffer
+  static const size_t pbSize  = 4;    // size of putback area
+  static const size_t bufSize = 1024; // size of the data buffer
+  char buffer[bufSize + pbSize];      // data buffer
 
 public:
   /* constructor
@@ -147,7 +147,7 @@ protected:
      * - use number of characters read
      * - but at most size of putback area
      */
-    int numPutback;
+    size_t numPutback;
     numPutback = gptr() - eback();
     if (numPutback > pbSize) {
       numPutback = pbSize;
@@ -160,14 +160,13 @@ protected:
 	     numPutback);
 
     // read at most bufSize new characters
-    int num;
     PyObject *line = PyFile_GetLine(reinterpret_cast<PyObject *>(fo), bufSize);
     if (! line || ! PyString_Check(line)) {
       // ERROR or EOF
       return EOF;
     }
 
-    num = PyString_Size(line);
+    Py_ssize_t num = PyString_Size(line);
     if (num == 0)
       return EOF;
 

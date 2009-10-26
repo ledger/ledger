@@ -133,21 +133,6 @@ void sort_posts::post_accumulated_posts()
   posts.clear();
 }
 
-namespace {
-  string to_hex(uint_least32_t * message_digest)
-  {
-    std::ostringstream buf;
-
-    for(int i = 0; i < 5 ; i++) {
-      buf.width(8);
-      buf.fill('0');
-      buf << std::hex << message_digest[i];
-      break;			// only output the first dword
-    }
-    return buf.str();
-  }
-}
-
 void anonymize_posts::operator()(post_t& post)
 {
   SHA1		 sha;
@@ -531,15 +516,14 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
 
   std::ostringstream out_date;
   if (spec_fmt) {
-    out_date << format_date(*range_finish, string(spec_fmt));
+    out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
   }
   else if (date_format) {
-    string fmt = "- ";
-    fmt += *date_format;
-    out_date << format_date(*range_finish, string(fmt));
+    out_date << "- " << format_date(*range_finish, FMT_CUSTOM,
+				    date_format->c_str());
   }
   else {
-    out_date << format_date(*range_finish, std::string("- ") + output_date_format);
+    out_date << "- " << format_date(*range_finish);
   }
 
   xact_temps.push_back(xact_t());

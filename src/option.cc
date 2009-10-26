@@ -110,8 +110,8 @@ void process_option(const string& whence, const string& name, scope_t& scope,
 void process_environment(const char ** envp, const string& tag,
 			 scope_t& scope)
 {
-  const char * tag_p   = tag.c_str();
-  std::size_t  tag_len = tag.length();
+  const char *	    tag_p   = tag.c_str();
+  string::size_type tag_len = tag.length();
 
   for (const char ** p = envp; *p; p++) {
     if (! tag_p || std::strncmp(*p, tag_p, tag_len) == 0) {

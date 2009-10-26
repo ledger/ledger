@@ -10,12 +10,14 @@ using namespace ledger;
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "math");
 
 void CommodityTestCase::setUp() {
+  times_initialize();
   amount_t::initialize();
   amount_t::stream_fullstrings = true;
 }
 
 void CommodityTestCase::tearDown() {
   amount_t::shutdown();
+  times_shutdown();
 }
 
 void CommodityTestCase::testPriceHistory()

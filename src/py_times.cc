@@ -165,8 +165,10 @@ void export_times()
   register_optional_to_python<datetime_t>();
   register_optional_to_python<date_t>();
 
-  scope().attr("parse_datetime") = &py_parse_datetime;
-  scope().attr("parse_date")	 = &py_parse_date;
+  scope().attr("parse_datetime")   = &py_parse_datetime;
+  scope().attr("parse_date")	   = &py_parse_date;
+  scope().attr("times_initialize") = &times_initialize;
+  scope().attr("times_shutdown")   = &times_shutdown;
 
 #if 0
   class_< interval_t > ("Interval")

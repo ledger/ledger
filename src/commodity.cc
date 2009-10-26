@@ -498,10 +498,9 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     char * _p = buf;
     c = static_cast<char>(in.peek());
     while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
-      int bytes = 0;
-      int size  = _p - buf;
-
-      unsigned char d = c;
+      std::size_t    bytes = 0;
+      std::ptrdiff_t size  = _p - buf;
+      unsigned char  d	   = c;
 
       // Check for the start of a UTF-8 multi-byte encoded string
       if (d >= 192 && d <= 223 && size < 254)
@@ -518,7 +517,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 	break;
 
       if (bytes > 0) {		// we're looking at a UTF-8 encoding
-	for (int i = 0; i < bytes; i++) {
+	for (std::size_t i = 0; i < bytes; i++) {
 	  in.get(c);
 	  if (in.bad() || in.eof())
 	    break;

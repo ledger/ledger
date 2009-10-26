@@ -173,10 +173,10 @@ public:
   string(size_type len, char x);
   string(const char * str);
   string(const char * str, const char * end);
-  string(const string& str, int x);
-  string(const string& str, int x, int y);
-  string(const char * str, int x);
-  string(const char * str, int x, int y);
+  string(const string& str, size_type x);
+  string(const string& str, size_type x, size_type y);
+  string(const char * str, size_type x);
+  string(const char * str, size_type x, size_type y);
   ~string() throw();
 };
 
@@ -593,6 +593,19 @@ inline char peek_next_nonws(std::istream& in) {
     }							\
     *_p = '\0';						\
   }
+
+inline string to_hex(uint_least32_t * message_digest)
+{
+  std::ostringstream buf;
+
+  for(int i = 0; i < 5 ; i++) {
+    buf.width(8);
+    buf.fill('0');
+    buf << std::hex << message_digest[i];
+    break;			// only output the first dword
+  }
+  return buf.str();
+}
 
 extern const string version;
 

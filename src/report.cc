@@ -211,8 +211,8 @@ value_t report_t::fn_truncated(call_scope_t& scope)
   interactive_t args(scope, "v&ll");
   return string_value(format_t::truncate
 		      (args.get<string>(0),
-		       args.has(1) && args.get<long>(1) > 0 ? args.get<long>(1) : 0,
-		       args.has(2) ? args.get<long>(2) : -1));
+		       args.has(1) && args.get<int>(1) > 0 ? args.get<int>(1) : 0,
+		       args.has(2) ? args.get<int>(2) : 0));
 }
 
 value_t report_t::fn_justify(call_scope_t& scope)
@@ -220,8 +220,8 @@ value_t report_t::fn_justify(call_scope_t& scope)
   interactive_t args(scope, "vl&lbbs");
   std::ostringstream out;
   args.value_at(0)
-    .print(out, args.get<long>(1),
-	   args.has(2) ? args.get<long>(2) : -1,
+    .print(out, args.get<int>(1),
+	   args.has(2) ? args.get<int>(2) : -1,
 	   args.has(3) ? args.get<bool>(3) : false,
 	   args.has(4) ? args.get<bool>(4) : false,
 	   args.has(5) ? args.get<string>(5) :
@@ -263,9 +263,12 @@ value_t report_t::fn_join(call_scope_t& scope)
 
 value_t report_t::fn_format_date(call_scope_t& scope)
 {
-  interactive_t args(scope, "ds");
-  return string_value(format_date(args.get<date_t>(0),
-				  args.get<string>(1)));
+  interactive_t args(scope, "d&s");
+  if (args.has(1))
+    return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM,
+				    args.get<string>(1).c_str()));
+  else
+    return string_value(format_date(args.get<date_t>(0), FMT_PRINTED));
 }
 
 value_t report_t::fn_ansify_if(call_scope_t& scope)
@@ -275,19 +278,19 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
   if (args.has(1)) {
     string color = args.get<string>(1);
     std::ostringstream buf;
-    if (color == "black")	   buf << "\e[30m";
-    else if (color == "red")	   buf << "\e[31m";
-    else if (color == "green")	   buf << "\e[32m";
-    else if (color == "yellow")	   buf << "\e[33m";
-    else if (color == "blue")	   buf << "\e[34m";
-    else if (color == "magenta")   buf << "\e[35m";
-    else if (color == "cyan")	   buf << "\e[36m";
-    else if (color == "white")	   buf << "\e[37m";
-    else if (color == "bold")	   buf << "\e[1m";
-    else if (color == "underline") buf << "\e[4m";
-    else if (color == "blink")	   buf << "\e[5m";
+    if (color == "black")	   buf << "\033[30m";
+    else if (color == "red")	   buf << "\033[31m";
+    else if (color == "green")	   buf << "\033[32m";
+    else if (color == "yellow")	   buf << "\033[33m";
+    else if (color == "blue")	   buf << "\033[34m";
+    else if (color == "magenta")   buf << "\033[35m";
+    else if (color == "cyan")	   buf << "\033[36m";
+    else if (color == "white")	   buf << "\033[37m";
+    else if (color == "bold")	   buf << "\033[1m";
+    else if (color == "underline") buf << "\033[4m";
+    else if (color == "blink")	   buf << "\033[5m";
     buf << args.value_at(0);
-    buf << "\e[0m";
+    buf << "\033[0m";
     return string_value(buf.str());
   } else {
     return args.value_at(0);
@@ -521,6 +524,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'd':
     OPT(daily);
     else OPT(date_format_);
+    else OPT(datetime_format_);
     else OPT(depth_);
     else OPT(deviation);
     else OPT_(display_);

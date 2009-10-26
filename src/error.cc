@@ -47,16 +47,16 @@ string error_context()
   return context;
 }
 
-string file_context(const path& file, std::size_t line)
+string file_context(const path& file, const std::size_t line)
 {
   std::ostringstream buf;
   buf << "\"" << file << "\", line " << line << ": ";
   return buf.str();
 }
 
-string line_context(const string& line,
-		    std::size_t	  pos,
-		    std::size_t	  end_pos)
+string line_context(const string&	    line,
+		    const string::size_type pos,
+		    const string::size_type end_pos)
 {
   std::ostringstream buf;
   buf << "  " << line << "\n";
@@ -64,11 +64,11 @@ string line_context(const string& line,
   if (pos != 0) {
     buf << "  ";
     if (end_pos == 0) {
-      for (std::size_t i = 0; i < pos; i += 1)
+      for (string::size_type i = 0; i < pos; i += 1)
 	buf << " ";
       buf << "^";
     } else {
-      for (std::size_t i = 0; i < end_pos; i += 1) {
+      for (string::size_type i = 0; i < end_pos; i += 1) {
 	if (i >= pos)
 	  buf << "^";
 	else
@@ -79,12 +79,12 @@ string line_context(const string& line,
   return buf.str();
 }
 
-string source_context(const path&      file,
-		      istream_pos_type pos,
-		      istream_pos_type end_pos,
-		      const string&    prefix)
+string source_context(const path&	     file,
+		      const istream_pos_type pos,
+		      const istream_pos_type end_pos,
+		      const string&	     prefix)
 {
-  std::streamoff len = end_pos - pos;
+  const std::streamoff len = end_pos - pos;
   if (! len || file == path("/dev/stdin"))
     return _("<no source context>");
 
@@ -97,10 +97,9 @@ string source_context(const path&      file,
   in.seekg(pos, std::ios::beg);
       
   scoped_array<char> buf(new char[len + 1]);
-  in.read(buf.get(), static_cast<int>(len));
-  assert(static_cast<std::size_t>(in.gcount()) ==
-	 static_cast<std::size_t>(len));
-  buf[static_cast<int>(len)] = '\0';
+  in.read(buf.get(), len);
+  assert(in.gcount() == len);
+  buf[len] = '\0';
 
   bool first = true;
   for (char * p = std::strtok(buf.get(), "\n");

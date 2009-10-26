@@ -321,11 +321,11 @@ void generate_posts_iterator::generate_note(std::ostream& out)
 
 void generate_posts_iterator::generate_xact(std::ostream& out)
 {
-  out << format_date(next_date, string("%Y/%m/%d"));
+  out << format_date(next_date, FMT_WRITTEN);
   next_date += gregorian::days(six_gen());
   if (truth_gen()) {
     out << '=';
-    out << format_date(next_eff_date, string("%Y/%m/%d"));
+    out << format_date(next_eff_date, FMT_WRITTEN);
     next_eff_date += gregorian::days(six_gen());
   }
   out << ' ';

@@ -433,8 +433,10 @@ void global_scope_t::normalize_report_options(const string& verb)
     rep.session.commodity_pool->price_db = none;
 
   if (rep.HANDLED(date_format_)) {
-    output_datetime_format = rep.HANDLER(date_format_).str() + " %H:%M:%S";
-    output_date_format     = rep.HANDLER(date_format_).str();
+    set_date_format(rep.HANDLER(date_format_).str().c_str());
+  }
+  if (rep.HANDLED(datetime_format_)) {
+    set_datetime_format(rep.HANDLER(datetime_format_).str().c_str());
   }
   if (rep.HANDLED(start_of_week_)) {
     if (optional<date_time::weekdays> weekday =

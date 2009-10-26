@@ -195,7 +195,8 @@ namespace {
     string name = env->reported_account()->fullname();
 
     if (env.has(0) && env.get<long>(0) > 2)
-      name = format_t::truncate(name, env.get<long>(0) - 2, true);
+      name = format_t::truncate(name, env.get<long>(0) - 2,
+				2 /* account_abbrev_length */);
 
     if (env->has_flags(POST_VIRTUAL)) {
       if (env->must_balance())

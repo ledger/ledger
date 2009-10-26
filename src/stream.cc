@@ -100,7 +100,8 @@ namespace {
     }
     else {			// parent
       close(pfd[0]);
-      *os = new boost::fdostream(pfd[1]);
+      typedef iostreams::stream<iostreams::file_descriptor_sink> fdstream;
+      *os = new fdstream(pfd[1]);
     }
     return pfd[1];
   }
