@@ -733,9 +733,10 @@ public:
  */
 class budget_posts : public generate_posts
 {
-#define BUDGET_NO_BUDGET  0x00
-#define BUDGET_BUDGETED   0x01
-#define BUDGET_UNBUDGETED 0x02
+#define BUDGET_NO_BUDGET   0x00
+#define BUDGET_BUDGETED	   0x01
+#define BUDGET_UNBUDGETED  0x02
+#define BUDGET_WRAP_VALUES 0x04
 
   uint_least8_t flags;
 

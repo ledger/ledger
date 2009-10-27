@@ -752,6 +752,15 @@ void budget_posts::report_budget_items(const date_t& date)
 	post_t& temp = temps.copy_post(post, xact);
 	temp.amount.in_place_negate();
 
+	if (flags & BUDGET_WRAP_VALUES) {
+	  value_t seq;
+	  seq.push_back(0L);
+	  seq.push_back(temp.amount);
+
+	  temp.xdata().compound_value = seq;
+	  temp.xdata().add_flags(POST_EXT_COMPOUND);
+	}
+
 	++pair.first;
 	begin = *pair.first.start;
 

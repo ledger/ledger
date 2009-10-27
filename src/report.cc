@@ -700,11 +700,24 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     if (WANT_CMD()) { const char * q = p + CMD_PREFIX_LEN;
       switch (*q) {
       case 'b':
-	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance"))
+	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance")) {
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
 	      *this, "#balance"));
+	}
+	else if (is_eq(q, "budget")) {
+	  HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
+
+	  budget_flags |= BUDGET_WRAP_VALUES;
+	  if (! (budget_flags & ~BUDGET_WRAP_VALUES))
+	    budget_flags |= BUDGET_BUDGETED;
+
+	  return expr_t::op_t::wrap_functor
+	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	     (new format_accounts(*this, report_format(HANDLER(budget_format_))),
+	      *this, "#budget"));
+	}
 	break;
 
       case 'c':
