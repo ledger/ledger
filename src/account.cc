@@ -110,6 +110,14 @@ account_t * account_t::find_account_re(const string& regexp)
   return find_account_re_(this, mask_t(regexp));
 }
 
+bool account_t::remove_post(post_t * post)
+{
+  assert(! posts.empty());
+  posts.remove(post);
+  post->account = NULL;
+  return true;
+}
+
 string account_t::fullname() const
 {
   if (! _fullname.empty()) {
@@ -140,7 +148,7 @@ string account_t::partial_name(bool flat) const
     if (! flat) {
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
-      if (count > 1 || acct->has_flags(ACCOUNT_EXT_TO_DISPLAY))
+      if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
 	break;
     }
     pname = acct->name + ":" + pname;
@@ -206,7 +214,7 @@ namespace {
 	 acct = acct->parent) {
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
-      if (count > 1 || acct->has_flags(ACCOUNT_EXT_TO_DISPLAY))
+      if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
 	depth++;
     }
 
@@ -310,7 +318,7 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
   bool        grandchildren_visited = false;
 
   foreach (const accounts_map::value_type& pair, accounts) {
-    if (pair.second->has_flags(flags) ||
+    if (pair.second->has_xflags(flags) ||
 	pair.second->children_with_flags(flags))
       count++;
   }
@@ -362,20 +370,21 @@ account_t::xdata_t::details_t::operator+=(const details_t& other)
 value_t account_t::self_total(const optional<expr_t&>& expr) const
 {
   if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
-    if (! xdata_) xdata_ = xdata_t();
-
-    posts_deque::const_iterator i =
-      posts.begin() + xdata_->self_details.last_size;
+    posts_list::const_iterator i;
+    if (xdata_->self_details.last_post)
+      i = *xdata_->self_details.last_post;
+    else
+      i = posts.begin();
 
     for (; i != posts.end(); i++) {
-      if ((*i)->xdata().has_flags(POST_EXT_VISITED) &&
-	  ! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-	(*i)->add_to_value(xdata_->self_details.total, expr);
-	(*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
+	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+	  (*i)->add_to_value(xdata_->self_details.total, expr);
+	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+	}
       }
+      xdata_->self_details.last_post = i;
     }
-
-    xdata_->self_details.last_size = posts.size();
 
     return xdata_->self_details.total;
   } else {

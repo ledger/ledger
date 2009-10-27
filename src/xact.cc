@@ -65,7 +65,7 @@ void xact_base_t::add_post(post_t * post)
 bool xact_base_t::remove_post(post_t * post)
 {
   posts.remove(post);
-  post->xact   = NULL;
+  post->xact = NULL;
   return true;
 }
 

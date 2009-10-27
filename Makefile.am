@@ -76,6 +76,7 @@ libledger_report_la_SOURCES  =			\
 	src/precmd.cc				\
 	src/chain.cc				\
 	src/filters.cc				\
+	src/temps.cc				\
 	src/report.cc				\
 	src/session.cc
 
@@ -124,6 +125,7 @@ pkginclude_HEADERS =				\
 	src/session.h				\
 	src/report.h				\
 	src/filters.h				\
+	src/temps.h				\
 	src/chain.h				\
 	src/precmd.h				\
 	src/derive.h				\
