@@ -225,6 +225,11 @@ namespace {
     return string_value(out.str());
   }
 
+  value_t get_latest_cleared(account_t& account)
+  {
+    return account.self_details().latest_cleared_post;
+  }
+
   template <value_t (*Func)(account_t&)>
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<account_t>(scope));
@@ -262,6 +267,11 @@ expr_t::ptr_op_t account_t::lookup(const string& name)
   case 'i':
     if (name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&get_true>);
+    break;
+
+  case 'l':
+    if (name == "latest_cleared")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
     break;
 
   case 'p':

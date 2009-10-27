@@ -721,11 +721,21 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
 	break;
 
       case 'c':
-	if (is_eq(q, "csv"))
+	if (is_eq(q, "csv")) {
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(csv_format_))),
 	      *this, "#csv"));
+	}
+	else if (is_eq(q, "cleared")) {
+	  HANDLER(amount_).set_expr(string("#cleared"),
+				    "(amount, cleared ? amount : 0)");
+
+	  return expr_t::op_t::wrap_functor
+	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	     (new format_accounts(*this, report_format(HANDLER(cleared_format_))),
+	      *this, "#cleared"));
+	}
 	break;
 
       case 'e':

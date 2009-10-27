@@ -209,6 +209,7 @@ public:
     HANDLER(budget_format_).report(out);
     HANDLER(by_payee).report(out);
     HANDLER(cleared).report(out);
+    HANDLER(cleared_format_).report(out);
     HANDLER(code_as_payee).report(out);
     HANDLER(comm_as_payee).report(out);
     HANDLER(code_as_account).report(out);
@@ -393,6 +394,19 @@ public:
 
   OPTION_(report_t, cleared, DO() { // -C
       parent->HANDLER(limit_).on(string("--cleared"), "cleared");
+    });
+
+  OPTION__(report_t, cleared_format_, CTOR(report_t, cleared_format_) {
+      on(none,
+	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
+	 "  %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
+	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+	 "    %(!options.flat ? depth_spacer : \"\")"
+	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
+	 "    %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
+	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")\n%/"
+	 "----------------  ----------------    ---------\n");
     });
 
   OPTION(report_t, code_as_payee);
