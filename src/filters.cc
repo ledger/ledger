@@ -189,6 +189,7 @@ void anonymize_posts::operator()(post_t& post)
   temp.note    = none;
   temp.add_flags(ITEM_TEMP);
 
+  temp.account->add_post(&temp);
   xact.add_post(&temp);
 
   (*handler)(temp);
@@ -238,6 +239,7 @@ namespace {
     post_t& post(temps.back());
     post.xact = xact;
     post.add_flags(ITEM_TEMP);
+    post.account->add_post(&post);
     xact->add_post(&post);
 
     // If the account for this post is all virtual, then report the post as
@@ -657,6 +659,7 @@ void posts_as_equity::report_subtotal()
       post_t& balance_post = post_temps.back();
       balance_post.add_flags(ITEM_TEMP);
       balance_post.amount = - pair.second;
+      balance_post.account->add_post(&balance_post);
       xact.add_post(&balance_post);
       (*handler)(balance_post);
     }
@@ -665,6 +668,7 @@ void posts_as_equity::report_subtotal()
     post_t& balance_post = post_temps.back();
     balance_post.add_flags(ITEM_TEMP);
     balance_post.amount = - total.to_amount();
+    balance_post.account->add_post(&balance_post);
     xact.add_post(&balance_post);
     (*handler)(balance_post);
   }
@@ -710,6 +714,7 @@ void transfer_details::operator()(post_t& post)
   temp.xact = &xact;
   temp.set_state(post.state());
   temp.add_flags(ITEM_TEMP);
+  temp.account->add_post(&temp);
   xact.add_post(&temp);
 
   bind_scope_t bound_scope(scope, temp);
@@ -787,6 +792,7 @@ void budget_posts::report_budget_items(const date_t& date)
 	temp.xact = &xact;
 	temp.add_flags(ITEM_TEMP);
 	temp.amount.in_place_negate();
+	temp.account->add_post(&temp);
 	xact.add_post(&temp);
 
 	++pair.first;
@@ -876,6 +882,7 @@ void forecast_posts::flush()
     post_t& temp = post_temps.back();
     temp.xact = &xact;
     temp.add_flags(ITEM_TEMP);
+    temp.account->add_post(&temp);
     xact.add_post(&temp);
 
     date_t next = *(*least).first.next;
