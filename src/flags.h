@@ -75,6 +75,11 @@ public:
     TRACE_DTOR(supports_flags);
   }
 
+  supports_flags& operator=(const supports_flags& other) {
+    _flags = other._flags;
+    return *this;
+  }
+
   flags_t flags() const {
     return _flags;
   }

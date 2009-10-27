@@ -92,7 +92,8 @@ namespace {
   }
 }
 
-format_t::element_t * format_t::parse_elements(const string& fmt)
+format_t::element_t * format_t::parse_elements(const string& fmt,
+					       const optional<format_t&>& tmpl)
 {
   std::auto_ptr<element_t> result;
 
@@ -100,34 +101,6 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
 
   char   buf[1024];
   char * q = buf;
-
-  // The following format codes need to be implemented as functions:
-  //
-  //   d: COMPLETE_DATE_STRING
-  //   D: DATE_STRING
-  //   S: SOURCE; break
-  //   B: XACT_BEG_POS
-  //   b: XACT_BEG_LINE
-  //   E: XACT_END_POS
-  //   e: XACT_END_LINE
-  //   X: CLEARED
-  //   Y: XACT_CLEARED
-  //   C: CODE
-  //   P: PAYEE
-  //   W: OPT_ACCOUNT
-  //   a: ACCOUNT_NAME
-  //   A: ACCOUNT_FULLNAME
-  //   t: AMOUNT
-  //   o: OPT_AMOUNT
-  //   T: TOTAL
-  //   N: NOTE
-  //   n: OPT_NOTE
-  //   _: DEPTH_SPACER
-  //   
-  //   xB: POST_BEG_POS
-  //   xb: POST_BEG_LINE
-  //   xE: POST_END_POS
-  //   xe: POST_END_LINE
 
   for (const char * p = fmt.c_str(); *p; p++) {
     if (*p != '%' && *p != '\\') {
@@ -202,6 +175,32 @@ format_t::element_t * format_t::parse_elements(const string& fmt)
       current->type  = element_t::STRING;
       current->chars = "%";
       break;
+
+    case '$': {
+      if (! tmpl)
+	throw_(format_error, _("Prior field reference, but no template"));
+
+      p++;
+      if (*p == '0' || (! std::isdigit(*p) &&
+			*p != 'A' && *p != 'B' && *p != 'C' &&
+			*p != 'D' && *p != 'E' && *p != 'F'))
+	throw_(format_error, _("%$ field reference must be a digit from 1-9"));
+
+      unsigned int index     = std::isdigit(*p) ? *p - '0' : (*p - 'A' + 10);
+      element_t *  tmpl_elem = tmpl->elements.get();
+
+      for (unsigned int i = 1; i < index && tmpl_elem; i++) {
+	tmpl_elem = tmpl_elem->next.get();
+	while (tmpl_elem && tmpl_elem->type != element_t::EXPR)
+	  tmpl_elem = tmpl_elem->next.get();
+      }
+
+      if (! tmpl_elem)
+	throw_(format_error, _("%$ reference to a non-existent prior field"));
+
+      *current = *tmpl_elem;
+      break;
+    }
 
     case '(':
     case '{': {

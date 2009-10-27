@@ -54,10 +54,10 @@ format_posts::format_posts(report_t&	 _report,
     first_line_format.parse(string(f, 0, p - f));
     const char * n = p + 2;
     if (const char * p = std::strstr(n, "%/")) {
-      next_lines_format.parse(string(n, 0, p - n));
-      between_format.parse(string(p + 2));
+      next_lines_format.parse(string(n, 0, p - n), first_line_format);
+      between_format.parse(string(p + 2), first_line_format);
     } else {
-      next_lines_format.parse(n);
+      next_lines_format.parse(n, first_line_format);
     }
   } else {
     first_line_format.parse(format);
@@ -125,14 +125,14 @@ format_accounts::format_accounts(report_t&     _report,
     account_line_format.parse(string(f, 0, p - f));
     const char * n = p + 2;
     if (const char * p = std::strstr(n, "%/")) {
-      total_line_format.parse(string(n, 0, p - n));
-      separator_format.parse(string(p + 2));
+      total_line_format.parse(string(n, 0, p - n), account_line_format);
+      separator_format.parse(string(p + 2), account_line_format);
     } else {
-      total_line_format.parse(n);
+      total_line_format.parse(n, account_line_format);
     }
   } else {
     account_line_format.parse(format);
-    total_line_format.parse(format);
+    total_line_format.parse(format, account_line_format);
   }
 }
 

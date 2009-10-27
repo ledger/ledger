@@ -290,7 +290,11 @@ void balance_t::print(std::ostream& out,
 
   if (first) {
     out.width(first_width);
-    out << (right_justify ? std::right : std::left) << 0;
+    if (right_justify)
+      out << std::right;
+    else
+      out << std::left;
+    out << 0;
   }
 }
 

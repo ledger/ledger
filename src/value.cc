@@ -1558,6 +1558,11 @@ void value_t::print(std::ostream&           out,
     break;
   }
 
+  case BALANCE:
+    as_balance().print(out, first_width, latter_width, right_justify,
+		       colorize);
+    break;
+
   case STRING:
     justify(out, as_string(), first_width, right_justify);
     break;
@@ -1581,11 +1586,6 @@ void value_t::print(std::ostream&           out,
     out << ')';
     break;
   }
-
-  case BALANCE:
-    as_balance().print(out, first_width, latter_width, right_justify,
-		       colorize);
-    break;
 
   case POINTER:
     out << "<POINTER>";

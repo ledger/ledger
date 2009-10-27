@@ -347,7 +347,7 @@ public:
 	 "%(justify(scrub(display_total), 20, -1, true, color))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-	 "%(justify(scrub(display_total), 20, -1, true, color))\n%/"
+	 "%$1\n%/"
 	 "--------------------\n");
     });
 
@@ -377,9 +377,11 @@ public:
   OPTION__(report_t, budget_format_, CTOR(report_t, budget_format_) {
       on(none,
 	 "%(justify(scrub(get_at(total_expr, 0)), 12, -1, true, color))"
-	 " %(justify(scrub(- get_at(total_expr, 1)), 12, -1, true, color))"
+	 " %(justify(scrub(- get_at(total_expr, 1)), 12, "
+	 "           12 + 1 + 12, true, color))"
 	 " %(justify(scrub(get_at(total_expr, 1) + "
-	 "                 get_at(total_expr, 0)), 12, -1, true, color))"
+	 "                 get_at(total_expr, 0)), 12, "
+	 "           12 + 1 + 12 + 1 + 12, true, color))"
 	 " %(ansify_if("
 	 "   justify((get_at(total_expr, 1) ? "
 	 "            scrub((100% * get_at(total_expr, 0)) / "
@@ -390,19 +392,7 @@ public:
 	 "                    quantity(get_at(total_expr, 1))) >= 1))))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n"
-	 "%/"
-	 "%(justify(scrub(get_at(total_expr, 0)), 12, -1, true, color))"
-	 " %(justify(scrub(- get_at(total_expr, 1)), 12, -1, true, color))"
-	 " %(justify(scrub(get_at(total_expr, 1) + "
-	 "                 get_at(total_expr, 0)), 12, -1, true, color))"
-	 " %(ansify_if("
-	 "   justify((get_at(total_expr, 1) ? "
-	 "            scrub((100% * get_at(total_expr, 0)) / "
-	 "                  - get_at(total_expr, 1)) : 0), "
-	 "           5, -1, true, false),"
-	 "   magenta if (color and get_at(total_expr, 1) and "
-	 "               (abs(quantity(get_at(total_expr, 0)) / "
-	 "                    quantity(get_at(total_expr, 1))) >= 1))))\n%/"
+	 "%/%$1 %$2 %$3 %$4\n%/"
 	 "------------ ------------ ------------ -----\n");
     });
 
@@ -419,9 +409,7 @@ public:
 	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
 	 "    %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
-	 "    %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
-	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")\n%/"
+	 "%$1  %$2    %$3\n%/"
 	 "----------------  ----------------    ---------\n");
     });
 
@@ -694,13 +682,7 @@ public:
 	 "%(has_cost & !cost_calculated ?"
 	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
 	 "%(comment)\n%/"
-	 "    %(xact.uncleared ?"
-	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-	 "%-34(account)"
-	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
-	 "%(has_cost & !cost_calculated ?"
-	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
-	 "%(comment)\n%/\n");
+	 "    %$7%$8  %$9%$A%$B\n%/\n");
     });
 
   OPTION_(report_t, quantity, DO() { // -O
@@ -733,15 +715,7 @@ public:
 	 " %(justify(scrub(display_total), total_width, "
 	 "    4 + date_width + payee_width + account_width + amount_width "
 	 "    + total_width, true, color))\n%/"
-	 "%(justify(\" \", 2 + date_width + payee_width))"
-	 "%(ansify_if(justify(truncated(account, account_width, abbrev_len), "
-	 "    account_width), blue if color))"
-	 " %(justify(scrub(display_amount), amount_width, "
-	 "    3 + date_width + payee_width + account_width + amount_width, "
-	 "    true, color))"
-	 " %(justify(scrub(display_total), total_width, "
-	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true, color))\n");
+	 "%(justify(\" \", 2 + date_width + payee_width))%$3 %$4 %$5\n");
     });
 
   OPTION(report_t, related); // -r
