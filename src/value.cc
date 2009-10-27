@@ -658,7 +658,18 @@ value_t& value_t::operator/=(const value_t& val)
       return *this;
     case BALANCE:
       if (val.as_balance().single_amount()) {
-	as_amount_lval() /= val.simplified().as_amount();
+	value_t simpler(val.simplified());
+	switch (simpler.type()) {
+	case INTEGER:
+	  as_amount_lval() /= simpler.as_long();
+	  break;
+	case AMOUNT:
+	  as_amount_lval() /= simpler.as_amount();
+	  break;
+	default:
+	  assert(0);
+	  break;
+	}
 	return *this;
       }
       break;
