@@ -368,7 +368,7 @@ value_t xact_t::magnitude() const
 string xact_t::idstring() const
 {
   std::ostringstream buf;
-  buf << *_date;
+  buf << format_date(*_date, FMT_WRITTEN);
   buf << payee;
   magnitude().print(buf);
   return buf.str();
