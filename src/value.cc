@@ -617,6 +617,9 @@ value_t& value_t::operator*=(const value_t& val)
     break;
   }
 
+  DEBUG("value.multiply.error", "Left:  " << *this);
+  DEBUG("value.multiply.error", "Right: " << val);
+
   throw_(value_error, _("Cannot multiply %1 with %2") << label() << val.label());
 
   return *this;
