@@ -140,11 +140,11 @@ void anonymize_posts::operator()(post_t& post)
   bool		 copy_xact_details = false;
 
   if (last_xact != post.xact) {
-    xact_temps.push_back(*post.xact);
+    temps.copy_xact(*post.xact);
     last_xact = post.xact;
     copy_xact_details = true;
   }
-  xact_t& xact = xact_temps.back();
+  xact_t& xact = temps.last_xact();
 
   if (copy_xact_details) {
     xact.copy_details(*post.xact);
@@ -156,10 +156,6 @@ void anonymize_posts::operator()(post_t& post)
     xact.payee = to_hex(message_digest);
     xact.note  = none;
   }
-
-  post_temps.push_back(post);
-  post_t& temp = post_temps.back();
-  temp.xact = &xact;
 
   std::list<string> account_names;
   account_t * new_account = NULL;
@@ -183,13 +179,8 @@ void anonymize_posts::operator()(post_t& post)
   foreach (const string& name, account_names)
     new_account = new_account->find_account(name);
 
-  temp.copy_details(post);
-
-  temp.account = new_account;
-  temp.note    = none;
-  temp.add_flags(ITEM_TEMP);
-
-  xact.add_post(&temp);
+  post_t& temp = temps.copy_post(post, xact, new_account);
+  temp.note = none;
 
   (*handler)(temp);
 }
@@ -227,18 +218,14 @@ namespace {
   void handle_value(const value_t&	            value,
 		    account_t *		            account,
 		    xact_t *		            xact,
-		    std::list<post_t>&              temps,
+		    temporaries_t&                  temps,
 		    item_handler<post_t>&           handler,
 		    const date_t&                   date          = date_t(),
 		    const value_t&                  total         = value_t(),
 		    const bool                      direct_amount = false,
 		    const optional<post_functor_t>& functor       = none)
   {
-    temps.push_back(post_t(account));
-    post_t& post(temps.back());
-    post.xact = xact;
-    post.add_flags(ITEM_TEMP);
-    xact->add_post(&post);
+    post_t& post = temps.create_post(*xact, account);
 
     // If the account for this post is all virtual, then report the post as
     // such.  This allows subtotal reports to show "(Account)" for accounts
@@ -325,14 +312,13 @@ void collapse_posts::report_subtotal()
 	earliest_date = reported;
     }
 
-    xact_temps.push_back(xact_t());
-    xact_t& xact = xact_temps.back();
+    xact_t& xact = temps.create_xact();
     xact.payee	   = last_xact->payee;
     xact._date	   = (is_valid(earliest_date) ?
 		      earliest_date : last_xact->_date);
     DEBUG("filter.collapse", "Pseudo-xact date = " << *xact._date);
 
-    handle_value(subtotal, &totals_account, &xact, post_temps, *handler);
+    handle_value(subtotal, &totals_account, &xact, temps, *handler);
   }
 
   component_posts.clear();
@@ -427,12 +413,11 @@ void changed_value_posts::output_revaluation(post_t * post, const date_t& date)
       DEBUG("filter.changed_value", "output_revaluation(strip(diff)) = "
 	    << diff.strip_annotations(report.what_to_keep()));
 
-      xact_temps.push_back(xact_t());
-      xact_t& xact = xact_temps.back();
+      xact_t& xact = temps.create_xact();
       xact.payee = _("Commodities revalued");
       xact._date = is_valid(date) ? date : post->date();
 
-      handle_value(diff, &revalued_account, &xact, post_temps, *handler,
+      handle_value(diff, &revalued_account, &xact, temps, *handler,
 		   *xact._date, repriced_total, false,
 		   optional<post_functor_t>
 		   (bind(&changed_value_posts::output_rounding, this, _1)));
@@ -465,13 +450,12 @@ void changed_value_posts::output_rounding(post_t * post)
 	DEBUG("filter.changed_value.rounding",
 	      "rounding.diff                  = " << diff);
 
-	xact_temps.push_back(xact_t());
-	xact_t& xact = xact_temps.back();
+	xact_t& xact = temps.create_xact();
 	xact.payee = _("Commodity rounding");
 	xact._date = post->date();
 
-	handle_value(diff, &rounding_account, &xact, post_temps,
-		     *handler, *xact._date, precise_display_total, true);
+	handle_value(diff, &rounding_account, &xact, temps, *handler,
+		     *xact._date, precise_display_total, true);
       }
     }    
   }
@@ -526,13 +510,12 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
     out_date << "- " << format_date(*range_finish);
   }
 
-  xact_temps.push_back(xact_t());
-  xact_t& xact = xact_temps.back();
+  xact_t& xact = temps.create_xact();
   xact.payee = out_date.str();
   xact._date = *range_start;
 
   foreach (values_map::value_type& pair, values)
-    handle_value(pair.second.value, pair.second.account, &xact, post_temps,
+    handle_value(pair.second.value, pair.second.account, &xact, temps,
 		 *handler);
 
   values.clear();
@@ -596,16 +579,12 @@ void interval_posts::operator()(post_t& post)
 	  // Generate a null posting, so the intervening periods can be
 	  // seen when -E is used, or if the calculated amount ends up being
 	  // non-zero
-	  xact_temps.push_back(xact_t());
-	  xact_t& null_xact = xact_temps.back();
-	  null_xact.add_flags(ITEM_TEMP);
+	  xact_t& null_xact = temps.create_xact();
 	  null_xact._date = last_interval.inclusive_end();
 
-	  post_temps.push_back(post_t(&empty_account));
-	  post_t& null_post = post_temps.back();
-	  null_post.add_flags(ITEM_TEMP | POST_CALCULATED);
+	  post_t& null_post = temps.create_post(null_xact, &empty_account);
+	  null_post.add_flags(POST_CALCULATED);
 	  null_post.amount = 0L;
-	  null_xact.add_post(&null_post);
 
 	  last_post = &null_post;
 	  subtotal_posts::operator()(null_post);
@@ -637,14 +616,13 @@ void posts_as_equity::report_subtotal()
   }
   component_posts.clear();
 
-  xact_temps.push_back(xact_t());
-  xact_t& xact = xact_temps.back();
+  xact_t& xact = temps.create_xact();
   xact.payee = _("Opening Balances");
   xact._date = finish;
 
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
-    handle_value(pair.second.value, pair.second.account, &xact, post_temps,
+    handle_value(pair.second.value, pair.second.account, &xact, temps,
 		 *handler);
     total += pair.second.value;
   }
@@ -653,19 +631,13 @@ void posts_as_equity::report_subtotal()
   if (total.is_balance()) {
     foreach (balance_t::amounts_map::value_type pair,
 	     total.as_balance().amounts) {
-      post_temps.push_back(post_t(balance_account));
-      post_t& balance_post = post_temps.back();
-      balance_post.add_flags(ITEM_TEMP);
+      post_t& balance_post = temps.create_post(xact, balance_account);
       balance_post.amount = - pair.second;
-      xact.add_post(&balance_post);
       (*handler)(balance_post);
     }
   } else {
-    post_temps.push_back(post_t(balance_account));
-    post_t& balance_post = post_temps.back();
-    balance_post.add_flags(ITEM_TEMP);
+    post_t& balance_post = temps.create_post(xact, balance_account);
     balance_post.amount = - total.to_amount();
-    xact.add_post(&balance_post);
     (*handler)(balance_post);
   }
 }
@@ -701,16 +673,11 @@ void by_payee_posts::operator()(post_t& post)
 
 void transfer_details::operator()(post_t& post)
 {
-  xact_temps.push_back(*post.xact);
-  xact_t& xact = xact_temps.back();
+  xact_t& xact = temps.copy_xact(*post.xact);
   xact._date = post.date();
 
-  post_temps.push_back(post);
-  post_t& temp = post_temps.back();
-  temp.xact = &xact;
+  post_t& temp = temps.copy_post(post, xact);
   temp.set_state(post.state());
-  temp.add_flags(ITEM_TEMP);
-  xact.add_post(&temp);
 
   bind_scope_t bound_scope(scope, temp);
 
@@ -720,6 +687,7 @@ void transfer_details::operator()(post_t& post)
     break;
   case SET_ACCOUNT:
     temp.account = master->find_account(expr.calc(bound_scope).to_string());
+    temp.account->add_post(&temp);
     break;
   default:
     assert(false);
@@ -777,17 +745,21 @@ void budget_posts::report_budget_items(const date_t& date)
 	DEBUG("ledger.walk.budget", "Reporting budget for "
 	      << post.reported_account()->fullname());
 
-	xact_temps.push_back(xact_t());
-	xact_t& xact = xact_temps.back();
+	xact_t& xact = temps.create_xact();
 	xact.payee = _("Budget transaction");
 	xact._date = begin;
 
-	post_temps.push_back(post);
-	post_t& temp = post_temps.back();
-	temp.xact = &xact;
-	temp.add_flags(ITEM_TEMP);
+	post_t& temp = temps.copy_post(post, xact);
 	temp.amount.in_place_negate();
-	xact.add_post(&temp);
+
+	if (flags & BUDGET_WRAP_VALUES) {
+	  value_t seq;
+	  seq.push_back(0L);
+	  seq.push_back(temp.amount);
+
+	  temp.xdata().compound_value = seq;
+	  temp.xdata().add_flags(POST_EXT_COMPOUND);
+	}
 
 	++pair.first;
 	begin = *pair.first.start;
@@ -810,8 +782,8 @@ void budget_posts::operator()(post_t& post)
 	 acct = acct->parent) {
       if (acct == (*pair.second).reported_account()) {
 	post_in_budget = true;
-	// Report the post as if it had occurred in the parent
-	// account.
+	// Report the post as if it had occurred in the parent account.
+	// jww (2009-10-27): What about calling add_post here?
 	if (post.reported_account() != acct)
 	  post.xdata().account = acct;
 	goto handle;
@@ -867,16 +839,11 @@ void forecast_posts::flush()
 
     post_t& post = *(*least).second;
 
-    xact_temps.push_back(xact_t());
-    xact_t& xact = xact_temps.back();
+    xact_t& xact = temps.create_xact();
     xact.payee = _("Forecast transaction");
     xact._date = begin;
 
-    post_temps.push_back(post);
-    post_t& temp = post_temps.back();
-    temp.xact = &xact;
-    temp.add_flags(ITEM_TEMP);
-    xact.add_post(&temp);
+    post_t& temp = temps.copy_post(post, xact);
 
     date_t next = *(*least).first.next;
     ++(*least).first;

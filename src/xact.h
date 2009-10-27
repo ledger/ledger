@@ -104,6 +104,10 @@ public:
 
   virtual void add_post(post_t * post);
 
+  value_t magnitude() const;
+  string idstring() const;
+  string id() const;
+
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   virtual bool valid() const;

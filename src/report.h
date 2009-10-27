@@ -117,9 +117,10 @@ public:
   session_t&	  session;
   output_stream_t output_stream;
 
-#define BUDGET_NO_BUDGET  0x00
-#define BUDGET_BUDGETED   0x01
-#define BUDGET_UNBUDGETED 0x02
+#define BUDGET_NO_BUDGET   0x00
+#define BUDGET_BUDGETED	   0x01
+#define BUDGET_UNBUDGETED  0x02
+#define BUDGET_WRAP_VALUES 0x04
 
   datetime_t    terminus;
   uint_least8_t budget_flags;
@@ -205,8 +206,10 @@ public:
     HANDLER(basis).report(out);
     HANDLER(begin_).report(out);
     HANDLER(budget).report(out);
+    HANDLER(budget_format_).report(out);
     HANDLER(by_payee).report(out);
     HANDLER(cleared).report(out);
+    HANDLER(cleared_format_).report(out);
     HANDLER(code_as_payee).report(out);
     HANDLER(comm_as_payee).report(out);
     HANDLER(code_as_account).report(out);
@@ -314,7 +317,7 @@ public:
     });
 
   OPTION_(report_t, add_budget, DO() {
-      parent->budget_flags = BUDGET_BUDGETED | BUDGET_UNBUDGETED;
+      parent->budget_flags |= BUDGET_BUDGETED | BUDGET_UNBUDGETED;
     });
 
   OPTION__
@@ -368,13 +371,42 @@ public:
     });
 
   OPTION_(report_t, budget, DO() {
-      parent->budget_flags = BUDGET_BUDGETED;
+      parent->budget_flags |= BUDGET_BUDGETED;
+    });
+
+  OPTION__(report_t, budget_format_, CTOR(report_t, budget_format_) {
+      on(none,
+	 "%(justify(scrub(get_at(total_expr, 0)), 12, -1, true, color))"
+	 " %(justify(scrub(- get_at(total_expr, 1)), 12, -1, true, color))"
+	 " %(justify(scrub(get_at(total_expr, 1) + get_at(total_expr, 0)), 12, -1, true, color))"
+	 " %(justify(scrub((100% * get_at(total_expr, 0)) / - get_at(total_expr, 1)), 5, -1, true, color))"
+	 "  %(!options.flat ? depth_spacer : \"\")"
+	 "%-(ansify_if(partial_account(options.flat), blue if color))\n"
+	 "%/"
+	 "%(justify(scrub(get_at(total_expr, 0)), 12, -1, true, color))"
+	 " %(justify(scrub(- get_at(total_expr, 1)), 12, -1, true, color))"
+	 " %(justify(scrub(get_at(total_expr, 1) + get_at(total_expr, 0)), 12, -1, true, color))"
+	 " %(justify(scrub((100% * get_at(total_expr, 0)) / - get_at(total_expr, 1)), 5, -1, true, color))\n%/"
+	 "------------ ------------ ------------ -----\n");
     });
 
   OPTION(report_t, by_payee); // -P
 
   OPTION_(report_t, cleared, DO() { // -C
       parent->HANDLER(limit_).on(string("--cleared"), "cleared");
+    });
+
+  OPTION__(report_t, cleared_format_, CTOR(report_t, cleared_format_) {
+      on(none,
+	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
+	 "  %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
+	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+	 "    %(!options.flat ? depth_spacer : \"\")"
+	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
+	 "    %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
+	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")\n%/"
+	 "----------------  ----------------    ---------\n");
     });
 
   OPTION(report_t, code_as_payee);
@@ -772,7 +804,7 @@ public:
     });
 
   OPTION_(report_t, unbudgeted, DO() {
-      parent->budget_flags = BUDGET_UNBUDGETED;
+      parent->budget_flags |= BUDGET_UNBUDGETED;
     });
 
   OPTION_(report_t, uncleared, DO() { // -U

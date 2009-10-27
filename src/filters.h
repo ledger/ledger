@@ -50,6 +50,7 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "temps.h"
 
 namespace ledger {
 
@@ -279,11 +280,6 @@ public:
   }
 };
 
-inline void clear_xacts_posts(std::list<xact_t>& xacts_list) {
-  foreach (xact_t& xact, xacts_list)
-    xact.posts.clear();
-}
-
 /**
  * @brief Brief
  *
@@ -291,8 +287,7 @@ inline void clear_xacts_posts(std::list<xact_t>& xacts_list) {
  */
 class anonymize_posts : public item_handler<post_t>
 {
-  std::list<xact_t> xact_temps;
-  std::list<post_t>  post_temps;
+  temporaries_t temps;
 
   xact_t * last_xact;
 
@@ -305,7 +300,6 @@ public:
   }
   virtual ~anonymize_posts() {
     TRACE_DTOR(anonymize_posts);
-    clear_xacts_posts(xact_temps);
   }
 
   virtual void operator()(post_t& post);
@@ -346,18 +340,16 @@ public:
  */
 class collapse_posts : public item_handler<post_t>
 {
-  expr_t&	 amount_expr;
-  item_predicate display_predicate;
-  item_predicate only_predicate;
-  value_t	 subtotal;
-  std::size_t	 count;
-  xact_t *	 last_xact;
-  post_t *	 last_post;
-  account_t	 totals_account;
-  bool		 only_collapse_if_zero;
-
-  std::list<xact_t>  xact_temps;
-  std::list<post_t>   post_temps;
+  expr_t&	      amount_expr;
+  item_predicate      display_predicate;
+  item_predicate      only_predicate;
+  value_t	      subtotal;
+  std::size_t	      count;
+  xact_t *	      last_xact;
+  post_t *	      last_post;
+  temporaries_t       temps;
+  account_t&	      totals_account;
+  bool		      only_collapse_if_zero;
   std::list<post_t *> component_posts;
 
   collapse_posts();
@@ -372,13 +364,12 @@ public:
       display_predicate(_display_predicate),
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
-      totals_account(NULL, _("<Total>")),
+      totals_account(temps.create_account(_("<Total>"))),
       only_collapse_if_zero(_only_collapse_if_zero) {
     TRACE_CTOR(collapse_posts, "post_handler_ptr");
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
-    clear_xacts_posts(xact_temps);
   }
 
   virtual void flush() {
@@ -432,19 +423,17 @@ class changed_value_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
-  expr_t    display_amount_expr;
-  expr_t    total_expr;
-  expr_t    display_total_expr;
-  report_t& report;
-  bool	    changed_values_only;
-  post_t *  last_post;
-  value_t   last_total;
-  value_t   last_display_total;
-  account_t revalued_account;
-  account_t rounding_account;
-
-  std::list<xact_t> xact_temps;
-  std::list<post_t>  post_temps;
+  expr_t	display_amount_expr;
+  expr_t	total_expr;
+  expr_t	display_total_expr;
+  report_t&	report;
+  bool		changed_values_only;
+  post_t *	last_post;
+  value_t	last_total;
+  value_t	last_display_total;
+  temporaries_t temps;
+  account_t&	revalued_account;
+  account_t&	rounding_account;
 
   changed_value_posts();
 
@@ -459,14 +448,13 @@ public:
       display_amount_expr(_display_amount_expr), total_expr(_total_expr),
       display_total_expr(_display_total_expr), report(_report),
       changed_values_only(_changed_values_only), last_post(NULL),
-      revalued_account(NULL, _("<Revalued>")),
-      rounding_account(NULL, _("<Rounding>")){
+      revalued_account(temps.create_account(_("<Revalued>"))),
+      rounding_account(temps.create_account(_("<Rounding>"))) {
     TRACE_CTOR(changed_value_posts,
 	       "post_handler_ptr, const expr_t&, const expr_t&, report_t&, bool");
   }
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
-    clear_xacts_posts(xact_temps);
   }
 
   virtual void flush();
@@ -517,8 +505,7 @@ protected:
   expr_t&	      amount_expr;
   values_map	      values;
   optional<string>    date_format;
-  std::list<xact_t>  xact_temps;
-  std::list<post_t>   post_temps;
+  temporaries_t       temps;
   std::list<post_t *> component_posts;
 
 public:
@@ -531,7 +518,6 @@ public:
   }
   virtual ~subtotal_posts() {
     TRACE_DTOR(subtotal_posts);
-    clear_xacts_posts(xact_temps);
   }
 
   void report_subtotal(const char *			spec_fmt = NULL,
@@ -555,7 +541,7 @@ class interval_posts : public subtotal_posts
   date_interval_t interval;
   date_interval_t last_interval;
   post_t *	  last_post;
-  account_t	  empty_account;
+  account_t&	  empty_account;
   bool		  exact_periods;
   bool		  generate_empty_posts;
 
@@ -569,11 +555,11 @@ public:
 		 bool			_exact_periods	      = false,
 		 bool                   _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), interval(_interval),
-      last_post(NULL), empty_account(NULL, _("<None>")),
+      last_post(NULL), empty_account(temps.create_account(_("<None>"))),
       exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
     TRACE_CTOR(interval_posts,
-	       "post_handler_ptr, expr_t&, interval_t, account_t *, bool, bool");
+	       "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
   }
   virtual ~interval_posts() throw() {
     TRACE_DTOR(interval_posts);
@@ -594,7 +580,7 @@ public:
 class posts_as_equity : public subtotal_posts
 {
   post_t *    last_post;
-  account_t   equity_account;
+  account_t&  equity_account;
   account_t * balance_account;
 
   posts_as_equity();
@@ -602,7 +588,7 @@ class posts_as_equity : public subtotal_posts
 public:
   posts_as_equity(post_handler_ptr _handler, expr_t& amount_expr)
     : subtotal_posts(_handler, amount_expr),
-      equity_account(NULL, _("Equity")) {
+      equity_account(temps.create_account(_("Equity"))) {
     TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
     balance_account = equity_account.find_account(_("Opening Balances"));
   }
@@ -653,11 +639,10 @@ class by_payee_posts : public item_handler<post_t>
  */
 class transfer_details : public item_handler<post_t>
 {
-  std::list<xact_t> xact_temps;
-  std::list<post_t>  post_temps;
-  account_t *        master;
-  expr_t             expr;
-  scope_t&           scope;
+  account_t *	master;
+  expr_t	expr;
+  scope_t&	scope;
+  temporaries_t temps;
 
   transfer_details();
 
@@ -679,7 +664,6 @@ public:
   }
   virtual ~transfer_details() {
     TRACE_DTOR(transfer_details);
-    clear_xacts_posts(xact_temps);
   }
 
   virtual void operator()(post_t& post);
@@ -725,8 +709,7 @@ protected:
   typedef std::list<pending_posts_pair>	       pending_posts_list;
 
   pending_posts_list pending_posts;
-  std::list<xact_t>  xact_temps;
-  std::list<post_t>  post_temps;
+  temporaries_t      temps;
 
 public:
   generate_posts(post_handler_ptr handler)
@@ -736,7 +719,6 @@ public:
 
   virtual ~generate_posts() {
     TRACE_DTOR(generate_posts);
-    clear_xacts_posts(xact_temps);
   }
 
   void add_period_xacts(period_xacts_list& period_xacts);
@@ -751,9 +733,10 @@ public:
  */
 class budget_posts : public generate_posts
 {
-#define BUDGET_NO_BUDGET  0x00
-#define BUDGET_BUDGETED   0x01
-#define BUDGET_UNBUDGETED 0x02
+#define BUDGET_NO_BUDGET   0x00
+#define BUDGET_BUDGETED	   0x01
+#define BUDGET_UNBUDGETED  0x02
+#define BUDGET_WRAP_VALUES 0x04
 
   uint_least8_t flags;
 

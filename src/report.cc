@@ -77,8 +77,13 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 void report_t::accounts_report(acct_handler_ptr handler)
 {
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts(chain_post_handlers(*this, post_handler_ptr(new ignore_posts),
-				      true), walker);
+
+  // The lifetime of the chain object controls the lifetime of all temporary
+  // objects created within it during the call to pass_down_posts, which will
+  // be needed later by the pass_down_accounts.
+  post_handler_ptr chain =
+    chain_post_handlers(*this, post_handler_ptr(new ignore_posts), true);
+  pass_down_posts(chain, walker);
 
   scoped_ptr<accounts_iterator> iter;
   if (! HANDLED(sort_)) {
@@ -695,19 +700,42 @@ expr_t::ptr_op_t report_t::lookup(const string& name)
     if (WANT_CMD()) { const char * q = p + CMD_PREFIX_LEN;
       switch (*q) {
       case 'b':
-	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance"))
+	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance")) {
 	  return expr_t::op_t::wrap_functor
 	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
 	      *this, "#balance"));
+	}
+	else if (is_eq(q, "budget")) {
+	  HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
+
+	  budget_flags |= BUDGET_WRAP_VALUES;
+	  if (! (budget_flags & ~BUDGET_WRAP_VALUES))
+	    budget_flags |= BUDGET_BUDGETED;
+
+	  return expr_t::op_t::wrap_functor
+	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	     (new format_accounts(*this, report_format(HANDLER(budget_format_))),
+	      *this, "#budget"));
+	}
 	break;
 
       case 'c':
-	if (is_eq(q, "csv"))
+	if (is_eq(q, "csv")) {
 	  return WRAP_FUNCTOR
 	    (reporter<>
 	     (new format_posts(*this, report_format(HANDLER(csv_format_))),
 	      *this, "#csv"));
+	}
+	else if (is_eq(q, "cleared")) {
+	  HANDLER(amount_).set_expr(string("#cleared"),
+				    "(amount, cleared ? amount : 0)");
+
+	  return expr_t::op_t::wrap_functor
+	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	     (new format_accounts(*this, report_format(HANDLER(cleared_format_))),
+	      *this, "#cleared"));
+	}
 	break;
 
       case 'e':

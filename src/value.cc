@@ -254,7 +254,7 @@ value_t::sequence_t value_t::to_sequence() const
 void value_t::in_place_simplify()
 {
 #if defined(DEBUG_ON)
-  LOGGER("amounts.values.simplify");
+  LOGGER("value.simplify");
 #endif
 
   if (is_realzero()) {
@@ -263,11 +263,11 @@ void value_t::in_place_simplify()
     return;
   }
 
-  if (is_balance() && as_balance().amounts.size() == 1) {
+  if (is_balance() && as_balance().single_amount()) {
     DEBUG_("Reducing balance to amount");
-    DEBUG("ledger.value.reduce", "as a balance it looks like: " << *this);
+    DEBUG_("as a balance it looks like: " << *this);
     in_place_cast(AMOUNT);
-    DEBUG("ledger.value.reduce", "as an amount it looks like: " << *this);
+    DEBUG_("as an amount it looks like: " << *this);
   }
 
 #ifdef REDUCE_TO_INTEGER	// this is off by default
@@ -585,10 +585,11 @@ value_t& value_t::operator*=(const value_t& val)
       as_amount_lval() *= val.as_long();
       return *this;
     case AMOUNT:
-      if (as_amount().commodity() == val.as_amount().commodity() ||
-	  ! as_amount().has_commodity() ||
-	  ! val.as_amount().has_commodity()) {
-	as_amount_lval() *= val.as_amount();
+      as_amount_lval() *= val.as_amount();
+      return *this;
+    case BALANCE:
+      if (val.as_balance().single_amount()) {
+	as_amount_lval() *= val.simplified().as_amount();
 	return *this;
       }
       break;
@@ -603,7 +604,12 @@ value_t& value_t::operator*=(const value_t& val)
       as_balance_lval() *= val.as_long();
       return *this;
     case AMOUNT:
-      if (! val.as_amount().has_commodity()) {
+      if (as_balance().single_amount()) {
+	in_place_simplify();
+	as_amount_lval() *= val.as_amount();
+	return *this;
+      }
+      else if (! val.as_amount().has_commodity()) {
 	as_balance_lval() *= val.as_amount();
 	return *this;
       }
@@ -616,6 +622,9 @@ value_t& value_t::operator*=(const value_t& val)
   default:
     break;
   }
+
+  DEBUG("value.multiply.error", "Left:  " << *this);
+  DEBUG("value.multiply.error", "Right: " << val);
 
   throw_(value_error, _("Cannot multiply %1 with %2") << label() << val.label());
 
@@ -647,6 +656,12 @@ value_t& value_t::operator/=(const value_t& val)
     case AMOUNT:
       as_amount_lval() /= val.as_amount();
       return *this;
+    case BALANCE:
+      if (val.as_balance().single_amount()) {
+	as_amount_lval() /= val.simplified().as_amount();
+	return *this;
+      }
+      break;
     default:
       break;
     }
@@ -658,7 +673,12 @@ value_t& value_t::operator/=(const value_t& val)
       as_balance_lval() /= val.as_long();
       return *this;
     case AMOUNT:
-      if (! val.as_amount().has_commodity()) {
+      if (as_balance().single_amount()) {
+	in_place_simplify();
+	as_amount_lval() /= val.as_amount();
+	return *this;
+      }
+      else if (! val.as_amount().has_commodity()) {
 	as_balance_lval() /= val.as_amount();
 	return *this;
       }

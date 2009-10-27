@@ -446,7 +446,7 @@ void instance_t::default_commodity_directive(char * line)
 void instance_t::default_account_directive(char * line)
 {
   journal.basket = account_stack.front()->find_account(skip_ws(line + 1));
-  journal.basket->known = true;
+  journal.basket->add_flags(ACCOUNT_KNOWN);
 }
 
 void instance_t::price_conversion_directive(char * line)
@@ -845,11 +845,11 @@ post_t * instance_t::parse_post(char *		line,
   if (! post->account)
     post->account = account->find_account(name);
 
-  if (honor_strict && strict && ! post->account->known) {
+  if (honor_strict && strict && ! post->account->has_flags(ACCOUNT_KNOWN)) {
     if (post->_state == item_t::UNCLEARED)
       warning_(_("\"%1\", line %2: Unknown account '%3'")
 	       << pathname << linenum << post->account->fullname());
-    post->account->known = true;
+    post->account->add_flags(ACCOUNT_KNOWN);
   }
 
   // Parse the optional amount

@@ -59,6 +59,7 @@ class item_t : public supports_flags<>, public scope_t
 {
 public:
 #define ITEM_NORMAL     0x00	// no flags at all, a basic posting
+// jww (2009-10-27): I'm not consistent on the difference between these two.
 #define ITEM_GENERATED  0x01	// posting was not found in a journal
 #define ITEM_TEMP       0x02	// posting is a temporary object
 

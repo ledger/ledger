@@ -169,7 +169,7 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
 
 #if defined(DEBUG_ON)
   DEBUG("account.display", "Considering account: " << account.fullname());
-  if (account.has_flags(ACCOUNT_EXT_VISITED))
+  if (account.has_xflags(ACCOUNT_EXT_VISITED))
     DEBUG("account.display", "  it was visited itself");
   DEBUG("account.display", "  it has " << visited << " visited children");
   DEBUG("account.display",
@@ -177,11 +177,11 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
 #endif
 
   if (account.parent &&
-      (account.has_flags(ACCOUNT_EXT_VISITED) || (! flat && visited > 0))) {
+      (account.has_xflags(ACCOUNT_EXT_VISITED) || (! flat && visited > 0))) {
     bind_scope_t bound_scope(report, account);
     if ((! flat && to_display > 1) ||
 	((flat || to_display != 1 ||
-	  account.has_flags(ACCOUNT_EXT_VISITED)) &&
+	  account.has_xflags(ACCOUNT_EXT_VISITED)) &&
 	 disp_pred(bound_scope))) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
       DEBUG("account.display", "Marking account as TO_DISPLAY");
