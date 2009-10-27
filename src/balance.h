@@ -417,6 +417,9 @@ public:
   bool is_empty() const {
     return amounts.size() == 0;
   }
+  bool single_amount() const {
+    return amounts.size() == 1;
+  }
 
   /**
    * Conversion methods.  A balance can be converted to an amount, but

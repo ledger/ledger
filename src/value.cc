@@ -263,7 +263,7 @@ void value_t::in_place_simplify()
     return;
   }
 
-  if (is_balance() && as_balance().amounts.size() == 1) {
+  if (is_balance() && as_balance().single_amount()) {
     DEBUG_("Reducing balance to amount");
     DEBUG_("as a balance it looks like: " << *this);
     in_place_cast(AMOUNT);
@@ -587,6 +587,12 @@ value_t& value_t::operator*=(const value_t& val)
     case AMOUNT:
       as_amount_lval() *= val.as_amount();
       return *this;
+    case BALANCE:
+      if (val.as_balance().single_amount()) {
+	as_amount_lval() *= val.simplified().as_amount();
+	return *this;
+      }
+      break;
     default:
       break;
     }
@@ -598,7 +604,12 @@ value_t& value_t::operator*=(const value_t& val)
       as_balance_lval() *= val.as_long();
       return *this;
     case AMOUNT:
-      if (! val.as_amount().has_commodity()) {
+      if (as_balance().single_amount()) {
+	in_place_simplify();
+	as_amount_lval() *= val.as_amount();
+	return *this;
+      }
+      else if (! val.as_amount().has_commodity()) {
 	as_balance_lval() *= val.as_amount();
 	return *this;
       }
@@ -645,6 +656,12 @@ value_t& value_t::operator/=(const value_t& val)
     case AMOUNT:
       as_amount_lval() /= val.as_amount();
       return *this;
+    case BALANCE:
+      if (val.as_balance().single_amount()) {
+	as_amount_lval() /= val.simplified().as_amount();
+	return *this;
+      }
+      break;
     default:
       break;
     }
@@ -656,7 +673,12 @@ value_t& value_t::operator/=(const value_t& val)
       as_balance_lval() /= val.as_long();
       return *this;
     case AMOUNT:
-      if (! val.as_amount().has_commodity()) {
+      if (as_balance().single_amount()) {
+	in_place_simplify();
+	as_amount_lval() /= val.as_amount();
+	return *this;
+      }
+      else if (! val.as_amount().has_commodity()) {
 	as_balance_lval() /= val.as_amount();
 	return *this;
       }
