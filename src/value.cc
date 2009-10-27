@@ -254,7 +254,7 @@ value_t::sequence_t value_t::to_sequence() const
 void value_t::in_place_simplify()
 {
 #if defined(DEBUG_ON)
-  LOGGER("amounts.values.simplify");
+  LOGGER("value.simplify");
 #endif
 
   if (is_realzero()) {
@@ -265,9 +265,9 @@ void value_t::in_place_simplify()
 
   if (is_balance() && as_balance().amounts.size() == 1) {
     DEBUG_("Reducing balance to amount");
-    DEBUG("ledger.value.reduce", "as a balance it looks like: " << *this);
+    DEBUG_("as a balance it looks like: " << *this);
     in_place_cast(AMOUNT);
-    DEBUG("ledger.value.reduce", "as an amount it looks like: " << *this);
+    DEBUG_("as an amount it looks like: " << *this);
   }
 
 #ifdef REDUCE_TO_INTEGER	// this is off by default
