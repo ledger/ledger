@@ -637,7 +637,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 void expr_t::op_t::dump(std::ostream& out, const int depth) const
 {
   out.setf(std::ios::left);
-  out.width(10);
+  out.width((sizeof(void *) * 2) + 2);
   out << this;
 
   for (int i = 0; i < depth; i++)
