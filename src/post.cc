@@ -141,6 +141,16 @@ namespace {
     return string_value(post.xact->payee);
   }
 
+  value_t get_magnitude(post_t& post) {
+    return post.xact->magnitude();
+  }
+  value_t get_idstring(post_t& post) {
+    return string_value(post.xact->idstring());
+  }
+  value_t get_id(post_t& post) {
+    return string_value(post.xact->id());
+  }
+
   value_t get_amount(post_t& post) {
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
@@ -294,6 +304,18 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
   case 'h':
     if (name == "has_cost")
       return WRAP_FUNCTOR(get_wrapper<&get_has_cost>);
+    break;
+
+  case 'i':
+    if (name == "id")
+      return WRAP_FUNCTOR(get_wrapper<&get_id>);
+    else if (name == "idstring")
+      return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
+    break;
+
+  case 'm':
+    if (name == "magnitude")
+      return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
     break;
 
   case 'p':

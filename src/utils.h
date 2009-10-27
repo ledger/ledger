@@ -596,7 +596,7 @@ inline char peek_next_nonws(std::istream& in) {
     *_p = '\0';						\
   }
 
-inline string to_hex(uint_least32_t * message_digest)
+inline string to_hex(uint_least32_t * message_digest, const int len = 1)
 {
   std::ostringstream buf;
 
@@ -604,7 +604,8 @@ inline string to_hex(uint_least32_t * message_digest)
     buf.width(8);
     buf.fill('0');
     buf << std::hex << message_digest[i];
-    break;			// only output the first dword
+    if (i + 1 >= len)
+      break;			// only output the first LEN dwords
   }
   return buf.str();
 }

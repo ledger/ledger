@@ -351,32 +351,48 @@ void xact_t::add_post(post_t * post)
   xact_base_t::add_post(post);
 }
 
+value_t xact_t::magnitude() const
+{
+  value_t halfbal = 0L;
+  foreach (const post_t * post, posts) {
+    if (post->amount.sign() > 0) {
+      if (post->cost)
+	halfbal += post->cost->number();
+      else
+	halfbal += post->amount.number();
+    }
+  }
+  return halfbal;
+}
+
+string xact_t::idstring() const
+{
+  std::ostringstream buf;
+  buf << *_date;
+  buf << payee;
+  magnitude().print(buf);
+  return buf.str();
+}
+
+string xact_t::id() const
+{
+  SHA1 sha;
+  sha.Reset();
+  sha << idstring().c_str();
+  uint_least32_t message_digest[5];
+  sha.Result(message_digest);
+  return to_hex(message_digest, 5);
+}
+
 namespace {
   value_t get_magnitude(xact_t& xact) {
-    balance_t halfbal;
-    foreach (post_t * post, xact.posts)
-      if (post->amount.sign() > 0)
-	halfbal += post->amount.number();
-    return halfbal;
+    return xact.magnitude();
   }
-
   value_t get_idstring(xact_t& xact) {
-    std::ostringstream buf;
-    buf << *xact._date;
-    buf << xact.payee;
-
-    get_magnitude(xact).print(buf);
-
-    return string_value(buf.str());
+    return string_value(xact.idstring());
   }
   value_t get_id(xact_t& xact) {
-    SHA1 sha;
-    sha.Reset();
-    sha << get_idstring(xact).as_string().c_str();
-
-    uint_least32_t message_digest[5];
-    sha.Result(message_digest);
-    return string_value(to_hex(message_digest));
+    return string_value(xact.id());
   }
 
   value_t get_code(xact_t& xact) {
