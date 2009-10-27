@@ -140,7 +140,6 @@ class account_t : public scope_t
       bool		 calculated;
       bool		 gathered;
 
-      // The following are only calculated if --totals is enabled
       std::size_t	 posts_count;
       std::size_t	 posts_virtuals_count;
       std::size_t	 posts_cleared_count;
@@ -155,7 +154,6 @@ class account_t : public scope_t
 
       std::size_t	 last_size;
 
-      // The following are only calculated if --gather is enabled
       std::set<path>	 filenames;
       std::set<string>	 accounts_referenced;
       std::set<string>	 payees_referenced;
