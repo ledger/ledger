@@ -163,11 +163,14 @@ bool xact_base_t::finalize()
       null_post->amount = balance.as_amount().negated();
       null_post->add_flags(POST_CALCULATED);
     }
+    else if (balance.is_long()) {
+      null_post->amount = amount_t(- balance.as_long());
+      null_post->add_flags(POST_CALCULATED);
+    }
     else if (! balance.is_null() && ! balance.is_realzero()) {
       throw_(balance_error, _("Transaction does not balance"));
     }
     balance = NULL_VALUE;
-
   }
   else if (balance.is_balance() &&
 	   balance.as_balance().amounts.size() == 2) {
@@ -314,6 +317,7 @@ bool xact_base_t::finalize()
   if (dynamic_cast<xact_t *>(this)) {
     bool all_null  = true;
     bool some_null = false;
+
     foreach (post_t * post, posts) {
       if (! post->amount.is_null()) {
 	all_null = false;
@@ -327,6 +331,7 @@ bool xact_base_t::finalize()
       post->xdata().add_flags(POST_EXT_VISITED);
       post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
     }
+
     if (all_null)
       return false;		// ignore this xact completely
     else if (some_null)
