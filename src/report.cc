@@ -77,8 +77,13 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 void report_t::accounts_report(acct_handler_ptr handler)
 {
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts(chain_post_handlers(*this, post_handler_ptr(new ignore_posts),
-				      true), walker);
+
+  // The lifetime of the chain object controls the lifetime of all temporary
+  // objects created within it during the call to pass_down_posts, which will
+  // be needed later by the pass_down_accounts.
+  post_handler_ptr chain =
+    chain_post_handlers(*this, post_handler_ptr(new ignore_posts), true);
+  pass_down_posts(chain, walker);
 
   scoped_ptr<accounts_iterator> iter;
   if (! HANDLED(sort_)) {
