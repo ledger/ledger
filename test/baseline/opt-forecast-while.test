@@ -1,4 +1,4 @@
-reg --forecast-while='total < $3500' books
+reg --now=2009/03/21 --forecast-while='total < $3500' books
 <<<
 ~ monthly
     Expenses:Books          $10.00

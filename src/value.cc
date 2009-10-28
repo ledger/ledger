@@ -658,7 +658,18 @@ value_t& value_t::operator/=(const value_t& val)
       return *this;
     case BALANCE:
       if (val.as_balance().single_amount()) {
-	as_amount_lval() /= val.simplified().as_amount();
+	value_t simpler(val.simplified());
+	switch (simpler.type()) {
+	case INTEGER:
+	  as_amount_lval() /= simpler.as_long();
+	  break;
+	case AMOUNT:
+	  as_amount_lval() /= simpler.as_amount();
+	  break;
+	default:
+	  assert(0);
+	  break;
+	}
 	return *this;
       }
       break;
@@ -1486,12 +1497,11 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   return NULL_VALUE;
 }
 
-void value_t::print(std::ostream&           out,
-		    const int	            first_width,
-		    const int               latter_width,
-		    const bool              right_justify,
-		    const bool              colorize,
-		    const optional<string>& date_format) const
+void value_t::print(std::ostream& out,
+		    const int	  first_width,
+		    const int     latter_width,
+		    const bool    right_justify,
+		    const bool    colorize) const
 {
   if (first_width > 0 &&
       (! is_amount() || as_amount().is_zero()) &&
@@ -1514,18 +1524,11 @@ void value_t::print(std::ostream&           out,
     break;
 
   case DATETIME:
-    if (date_format)
-      out << format_datetime(as_datetime(), FMT_CUSTOM,
-			     date_format->c_str());
-    else
-      out << format_datetime(as_datetime(), FMT_WRITTEN);
+    out << format_datetime(as_datetime(), FMT_WRITTEN);
     break;
 
   case DATE:
-    if (date_format)
-      out << format_date(as_date(), FMT_CUSTOM, date_format->c_str());
-    else
-      out << format_date(as_date(), FMT_WRITTEN);
+    out << format_date(as_date(), FMT_WRITTEN);
     break;
 
   case INTEGER:
@@ -1547,6 +1550,11 @@ void value_t::print(std::ostream&           out,
     break;
   }
 
+  case BALANCE:
+    as_balance().print(out, first_width, latter_width, right_justify,
+		       colorize);
+    break;
+
   case STRING:
     justify(out, as_string(), first_width, right_justify);
     break;
@@ -1565,16 +1573,11 @@ void value_t::print(std::ostream&           out,
 	out << ", ";
 
       value.print(out, first_width, latter_width, right_justify,
-		  colorize, date_format);
+		  colorize);
     }
     out << ')';
     break;
   }
-
-  case BALANCE:
-    as_balance().print(out, first_width, latter_width, right_justify,
-		       colorize);
-    break;
 
   case POINTER:
     out << "<POINTER>";

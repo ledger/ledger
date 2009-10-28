@@ -179,11 +179,11 @@ namespace {
   }
 
   value_t get_amount(account_t& account) {
-    return VALUE_OR_ZERO(account.self_total());
+    return VALUE_OR_ZERO(account.amount());
   }
 
   value_t get_total(account_t& account) {
-    return VALUE_OR_ZERO(account.family_total());
+    return VALUE_OR_ZERO(account.total());
   }
 
   value_t get_subcount(account_t& account) {
@@ -377,7 +377,7 @@ account_t::xdata_t::details_t::operator+=(const details_t& other)
   return *this;
 }
 
-value_t account_t::self_total(const optional<expr_t&>& expr) const
+value_t account_t::amount(const optional<expr_t&>& expr) const
 {
   if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
     posts_list::const_iterator i;
@@ -402,19 +402,19 @@ value_t account_t::self_total(const optional<expr_t&>& expr) const
   }
 }
 
-value_t account_t::family_total(const optional<expr_t&>& expr) const
+value_t account_t::total(const optional<expr_t&>& expr) const
 {
   if (! (xdata_ && xdata_->family_details.calculated)) {
     const_cast<account_t&>(*this).xdata().family_details.calculated = true;
 
     value_t temp;
     foreach (const accounts_map::value_type& pair, accounts) {
-      temp = pair.second->family_total(expr);
+      temp = pair.second->total(expr);
       if (! temp.is_null())
 	add_or_set_value(xdata_->family_details.total, temp);
     }
 
-    temp = self_total(expr);
+    temp = amount(expr);
     if (! temp.is_null())
       add_or_set_value(xdata_->family_details.total, temp);
   }

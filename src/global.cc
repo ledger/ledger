@@ -419,7 +419,9 @@ void global_scope_t::normalize_report_options(const string& verb)
   report_t& rep(report());
 
   // jww (2009-02-09): These globals are a hack, but hard to avoid.
-  item_t::use_effective_date		 = rep.HANDLED(effective);
+  item_t::use_effective_date = (rep.HANDLED(effective) &&
+				! rep.HANDLED(actual_dates));
+
   rep.session.commodity_pool->keep_base	 = rep.HANDLED(base);
   rep.session.commodity_pool->get_quotes = rep.session.HANDLED(download);
 
@@ -432,12 +434,10 @@ void global_scope_t::normalize_report_options(const string& verb)
   else
     rep.session.commodity_pool->price_db = none;
 
-  if (rep.HANDLED(date_format_)) {
+  if (rep.HANDLED(date_format_))
     set_date_format(rep.HANDLER(date_format_).str().c_str());
-  }
-  if (rep.HANDLED(datetime_format_)) {
+  if (rep.HANDLED(datetime_format_))
     set_datetime_format(rep.HANDLER(datetime_format_).str().c_str());
-  }
   if (rep.HANDLED(start_of_week_)) {
     if (optional<date_time::weekdays> weekday =
 	string_to_day_of_week(rep.HANDLER(start_of_week_).str()))

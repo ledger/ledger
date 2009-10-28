@@ -34589,18 +34589,17 @@
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1960</integer>
+					<integer>1971</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1959</integer>
+					<integer>1971</integer>
 				</dict>
 			</array>
 		</dict>
-		<string>ParseFootnotes</string>
 		<string>MetaData</string>
 		<string>ParseAnnotations</string>
-		<true/>
+		<string>ParseFootnotes</string>
 		<dict>
 			<key>$class</key>
 			<dict>
@@ -34611,15 +34610,15 @@
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1961</integer>
+					<integer>1960</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1966</integer>
+					<integer>1965</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1969</integer>
+					<integer>1968</integer>
 				</dict>
 			</array>
 		</dict>
@@ -34633,22 +34632,22 @@
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1962</integer>
+					<integer>1961</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1963</integer>
+					<integer>1962</integer>
 				</dict>
 			</array>
 			<key>NS.objects</key>
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1964</integer>
+					<integer>1963</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1965</integer>
+					<integer>1964</integer>
 				</dict>
 			</array>
 		</dict>
@@ -34666,22 +34665,22 @@
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1962</integer>
+					<integer>1961</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1963</integer>
+					<integer>1962</integer>
 				</dict>
 			</array>
 			<key>NS.objects</key>
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1967</integer>
+					<integer>1966</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1968</integer>
+					<integer>1967</integer>
 				</dict>
 			</array>
 		</dict>
@@ -34697,27 +34696,28 @@
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1962</integer>
+					<integer>1961</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1963</integer>
+					<integer>1962</integer>
 				</dict>
 			</array>
 			<key>NS.objects</key>
 			<array>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1970</integer>
+					<integer>1969</integer>
 				</dict>
 				<dict>
 					<key>CF$UID</key>
-					<integer>1971</integer>
+					<integer>1970</integer>
 				</dict>
 			</array>
 		</dict>
 		<string>Base Header Level</string>
 		<string>1</string>
+		<true/>
 	</array>
 	<key>$top</key>
 	<dict>

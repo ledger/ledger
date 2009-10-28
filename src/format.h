@@ -61,7 +61,7 @@ DECLARE_EXCEPTION(format_error, std::runtime_error);
  */
 class format_t : public noncopyable
 {
-  struct element_t : public supports_flags<>, public noncopyable
+  struct element_t : public supports_flags<>
   {
 #define ELEMENT_ALIGN_LEFT 0x01
 
@@ -81,6 +81,21 @@ class format_t : public noncopyable
     }
     ~element_t() throw() {
       TRACE_DTOR(element_t);
+    }
+    element_t(const element_t& elem) : supports_flags<>() {
+      *this = elem;
+    }
+
+    element_t& operator=(const element_t& elem) {
+      if (this != &elem) {
+	supports_flags<>::operator=(elem);
+	type	  = elem.type;
+	min_width = elem.min_width;
+	max_width = elem.max_width;
+	chars	  = elem.chars;
+	expr	  = elem.expr;
+      }
+      return *this;
     }
 
     friend inline void mark_red(std::ostream& out, const element_t * elem) {
@@ -114,7 +129,8 @@ public:
   static bool default_style_changed;
 
 private:
-  static element_t * parse_elements(const string& fmt);
+  static element_t * parse_elements(const string& fmt,
+				    const optional<format_t&>& tmpl);
 
 public:
   format_t() {
@@ -128,8 +144,8 @@ public:
     TRACE_DTOR(format_t);
   }
 
-  void parse(const string& _format) {
-    elements.reset(parse_elements(_format));
+  void parse(const string& _format, const optional<format_t&>& tmpl = none) {
+    elements.reset(parse_elements(_format, tmpl));
     format_string = _format;
   }
 
