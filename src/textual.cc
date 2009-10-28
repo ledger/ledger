@@ -1014,21 +1014,8 @@ post_t * instance_t::parse_post(char *		line,
       if (! diff.is_zero()) {
 	if (! post->amount.is_null()) {
 	  diff -= post->amount;
-	  if (! diff.is_zero()) {
-#if 1
+	  if (! diff.is_zero())
 	    throw_(parse_error, _("Balance assertion off by %1") << diff);
-#else
-	    // This code, rather than issuing an error if a balance assignment
-	    // fails, creates a balancing transaction that causes the
-	    // assertion to be true.
-	    post_t * temp = new post_t(post->account, diff,
-				       ITEM_GENERATED | POST_CALCULATED);
-	    xact->add_post(temp);
-
-	    DEBUG("textual.parse", "line " << linenum << ": "
-		  << "Created balancing posting");
-#endif
-	  }
 	} else {
 	  post->amount = diff;
 	  DEBUG("textual.parse", "line " << linenum << ": "

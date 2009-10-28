@@ -686,6 +686,7 @@ void transfer_details::operator()(post_t& post)
     xact.payee = expr.calc(bound_scope).to_string();
     break;
   case SET_ACCOUNT:
+    temp.account->remove_post(&temp);
     temp.account = master->find_account(expr.calc(bound_scope).to_string());
     temp.account->add_post(&temp);
     break;

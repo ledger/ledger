@@ -46,10 +46,6 @@
 #ifndef _TEMPS_H
 #define _TEMPS_H
 
-#include "xact.h"
-#include "post.h"
-#include "account.h"
-
 namespace ledger {
 
 class temporaries_t
