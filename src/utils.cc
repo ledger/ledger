@@ -190,8 +190,15 @@ static void trace_delete_func(void * ptr, const char * which)
     i = freed_memory->find(ptr);
     if (i != freed_memory->end())
       VERIFY(! "Freeing a block of memory twice");
+#if 0
+    // There can be memory allocated by Boost or the standard library, which
+    // was allocated before memory tracing got turned on, that the system
+    // might free for some coincidental reason.  As such, we can't rely on
+    // this check being valid.  I've seen cases where processes ran to
+    // completion with it on, and then others where valid processes failed.
     else
       VERIFY(! "Freeing an unknown block of memory");
+#endif
     memory_tracing_active = true;
     return;
   }
