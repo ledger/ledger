@@ -451,7 +451,7 @@ public:
       parent->HANDLER(limit_).on(string("--current"), "date<=today");
     });
 
-  OPTION_(report_t, daily, DO() {
+  OPTION_(report_t, daily, DO() { // -D
       parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
@@ -464,7 +464,7 @@ public:
 				   string("depth<=") + args.get<string>(1));
     });
 
-  OPTION_(report_t, deviation, DO() { // -D
+  OPTION_(report_t, deviation, DO() {
       parent->HANDLER(display_total_)
 	.set_expr(string("--deviation"), "amount_expr-total_expr/count");
     });

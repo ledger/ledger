@@ -446,7 +446,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT_CH(cleared);
     break;
   case 'D':
-    OPT_CH(deviation);
+    OPT_CH(daily);
     break;
   case 'E':
     OPT_CH(empty);
