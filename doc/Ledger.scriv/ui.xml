@@ -141,6 +141,8 @@
 	<true/>
 	<key>inspectorIsCollapsed</key>
 	<false/>
+	<key>inspectorNotesMode</key>
+	<integer>1</integer>
 	<key>inspectorReferencesColumns</key>
 	<dict>
 		<key>order</key>
@@ -160,7 +162,7 @@
 		</dict>
 	</dict>
 	<key>inspectorSelectedDataTab</key>
-	<integer>0</integer>
+	<integer>2</integer>
 	<key>inspectorSplitFrames</key>
 	<array>
 		<string>{{0, 0}, {785, 852}}</string>
