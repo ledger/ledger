@@ -650,6 +650,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(unbudgeted);
     else OPT(uncleared);
     else OPT(unround);
+    else OPT(unsorted);
     break;
   case 'w':
     OPT(weekly);

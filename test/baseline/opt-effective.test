@@ -14,8 +14,8 @@ reg --effective
 >>>1
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
-08-Feb-01 End of January        Expenses:Books               $10.00       $10.00
-08-Jan-01 End of January        Assets:Cash                 $-10.00            0
+08-Jan-01 End of January        Assets:Cash                 $-10.00      $-10.00
+08-Feb-01 End of January        Expenses:Books               $10.00            0
 08-Feb-01 February              Expenses:Books               $20.00       $20.00
                                 Assets:Cash                 $-20.00            0
 >>>2

@@ -871,12 +871,6 @@ D 1.00G
                                 Expenses:Fees:Mail              30c        1.50G
                                 Expenses:Fees:Mail              30c        1.51G
                                 Assets:Tajer                 -1.51G            0
-06-Mar-27 Player                Assets:Tajer                160.00G      160.00G
-                                Assets:Tajer:Items         -160.00G            0
-                                Expenses:Capital Loss        40.00G       40.00G
-                                Equity:Capital Losses       -40.00G            0
-06-Mar-27 Player                Expenses:Fees:Mail              30c          30c
-                                Assets:Tajer                   -30c            0
 06-Mar-26 Player                Expenses:Items               54.00G       54.00G
                                 Expenses:Items               10.00G       64.00G
                                 Expenses:Fees:Bank           10.00G       74.00G
@@ -884,6 +878,12 @@ D 1.00G
                                 Expenses:Fees:Mail            3.30s       74.10G
                                 Expenses:Fees:Mail              30c       74.10G
                                 Assets:Tajer                -74.10G            0
+06-Mar-27 Player                Assets:Tajer                160.00G      160.00G
+                                Assets:Tajer:Items         -160.00G            0
+                                Expenses:Capital Loss        40.00G       40.00G
+                                Equity:Capital Losses       -40.00G            0
+06-Mar-27 Player                Expenses:Fees:Mail              30c          30c
+                                Assets:Tajer                   -30c            0
 06-Apr-01 Auction House         Assets:Tajer:Items          155.00G      155.00G
                                 Assets:Tajer               -155.00G            0
 >>>2
