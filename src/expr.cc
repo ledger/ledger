@@ -78,6 +78,16 @@ expr_t::ptr_op_t expr_t::get_op() throw()
   return ptr;
 }
 
+string expr_t::text()
+{
+  if (str.empty()) {
+    std::ostringstream out;
+    ptr->print(out);
+    set_text(out.str());
+  }
+  return str;
+}
+
 expr_t& expr_t::operator=(const expr_t& _expr)
 {
   if (this != &_expr) {

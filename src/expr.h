@@ -116,10 +116,7 @@ public:
   }
 
   ptr_op_t get_op() throw();
-
-  string text() const throw() {
-    return str;
-  }
+  string   text();
 
   // This has special use in the textual parser
   void set_text(const string& txt) {
