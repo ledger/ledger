@@ -380,7 +380,7 @@ namespace {
 	value_t::sequence_t::const_iterator end   =
 	  args.value().as_sequence().end();
 
-	string limit = args_to_predicate_expr(begin, end);
+	string limit = args_to_predicate(begin, end).text();
 
 	if (! limit.empty())
 	  report.HANDLER(limit_).on(whence, limit);
@@ -390,7 +390,7 @@ namespace {
 
 	string display;
 	if (begin != end)
-	  display = args_to_predicate_expr(begin, end);
+	  display = args_to_predicate(begin, end).text();
 
 	if (! display.empty())
 	  report.HANDLER(display_).on(whence, display);

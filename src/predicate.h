@@ -96,8 +96,160 @@ public:
   }
 };
 
-string args_to_predicate_expr(value_t::sequence_t::const_iterator& begin,
-			      value_t::sequence_t::const_iterator end);
+class query_lexer_t
+{
+  value_t::sequence_t::const_iterator begin;
+  value_t::sequence_t::const_iterator end;
+
+  string::const_iterator arg_i;
+  string::const_iterator arg_end;
+
+  bool consume_whitespace;
+
+public:
+  struct token_t
+  {
+    enum kind_t {
+      UNKNOWN,
+
+      LPAREN,
+      RPAREN,
+
+      TOK_NOT,
+      TOK_AND,
+      TOK_OR,
+      TOK_EQ,
+
+      TOK_ACCOUNT,
+      TOK_PAYEE,
+      TOK_CODE,
+      TOK_NOTE,
+      TOK_META,
+      TOK_EXPR,
+
+      TERM,
+
+      END_REACHED
+
+    } kind;
+
+    optional<string> value;
+
+    explicit token_t(kind_t _kind = UNKNOWN,
+		     const optional<string>& _value = none)
+      : kind(_kind), value(_value) {
+      TRACE_CTOR(query_lexer_t::token_t, "");
+    }
+    token_t(const token_t& tok)
+      : kind(tok.kind), value(tok.value) {
+      TRACE_CTOR(query_lexer_t::token_t, "copy");
+    }
+    ~token_t() throw() {
+      TRACE_DTOR(query_lexer_t::token_t);
+    }
+
+    token_t& operator=(const token_t& tok) {
+      if (this != &tok) {
+	kind  = tok.kind;
+	value = tok.value;
+      }
+      return *this;
+    }
+
+    operator bool() const {
+      return kind != END_REACHED;
+    }
+
+    string to_string() const {
+      switch (kind) {
+      case UNKNOWN:	return "UNKNOWN";
+      case LPAREN:	return "LPAREN";
+      case RPAREN:	return "RPAREN";
+      case TOK_NOT:	return "TOK_NOT";
+      case TOK_AND:	return "TOK_AND";
+      case TOK_OR:	return "TOK_OR";
+      case TOK_EQ:	return "TOK_EQ";
+      case TOK_ACCOUNT: return "TOK_ACCOUNT";
+      case TOK_PAYEE:	return "TOK_PAYEE";
+      case TOK_CODE:	return "TOK_CODE";
+      case TOK_NOTE:	return "TOK_NOTE";
+      case TOK_META:	return "TOK_META";
+      case TOK_EXPR:	return "TOK_EXPR";
+      case TERM:	return string("TERM(") + *value + ")";
+      case END_REACHED: return "END_REACHED";
+      }
+    }
+
+    string symbol() const {
+      switch (kind) {
+      case LPAREN:	return "(";
+      case RPAREN:	return ")";
+      case TOK_NOT:	return "not";
+      case TOK_AND:	return "and";
+      case TOK_OR:	return "or";
+      case TOK_EQ:	return "=";
+      case TOK_ACCOUNT: return "account";
+      case TOK_PAYEE:	return "payee";
+      case TOK_CODE:	return "code";
+      case TOK_NOTE:	return "note";
+      case TOK_META:	return "meta";
+      case TOK_EXPR:	return "expr";
+
+      case END_REACHED: return "<EOF>";
+
+      case TERM:
+	assert(0);
+	return "<TERM>";
+
+      case UNKNOWN:
+      default:
+	assert(0);
+	return "<UNKNOWN>";
+      }
+    }
+
+    void unexpected();
+    void expected(char wanted, char c = '\0');
+  };
+
+  token_t token_cache;
+
+  query_lexer_t(value_t::sequence_t::const_iterator _begin,
+		value_t::sequence_t::const_iterator _end)
+    : begin(_begin), end(_end), consume_whitespace(false)
+  {
+    assert(begin != end);
+    arg_i   = (*begin).as_string().begin();
+    arg_end = (*begin).as_string().end();
+  }
+
+  token_t next_token();
+  void    push_token(token_t tok) {
+    assert(token_cache.kind == token_t::UNKNOWN);
+    token_cache = tok;
+  }
+};
+
+class query_parser_t
+{
+  query_lexer_t lexer;
+
+  expr_t::ptr_op_t parse_query_term(query_lexer_t::token_t::kind_t tok_context);
+  expr_t::ptr_op_t parse_unary_expr(query_lexer_t::token_t::kind_t tok_context);
+  expr_t::ptr_op_t parse_and_expr(query_lexer_t::token_t::kind_t tok_context);
+  expr_t::ptr_op_t parse_or_expr(query_lexer_t::token_t::kind_t tok_context);
+  expr_t::ptr_op_t parse_query_expr(query_lexer_t::token_t::kind_t tok_context);
+
+public:
+  query_parser_t(value_t::sequence_t::const_iterator begin,
+		 value_t::sequence_t::const_iterator end)
+    : lexer(begin, end) {}
+
+  expr_t::ptr_op_t parse();
+};
+
+expr_t args_to_predicate(value_t::sequence_t::const_iterator& begin,
+			 value_t::sequence_t::const_iterator end);
 
 } // namespace ledger
 
