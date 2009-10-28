@@ -1049,7 +1049,7 @@ class PrepareBuild(CommandLineApp):
                 line = re.sub('^\tmv -f', '\t@mv -f', line)
                 line = re.sub('^\t\$\(am__mv\)', '\t@$(am__mv)', line)
                 line = re.sub('^\t(\$\((.*?)LINK\).*)',
-                              '\t@echo "   " LD \$@;\\1 > /dev/null', line)
+                              '\t@echo "    LD " \$@;\\1 > /dev/null', line)
                 Makefile_new.write(line)
             Makefile_new.close()
             Makefile.close()
