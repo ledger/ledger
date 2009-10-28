@@ -121,8 +121,16 @@ std::size_t session_t::read_journal(const path& pathname,
 
 std::size_t session_t::read_data(const string& master_account)
 {
-  if (HANDLER(file_).data_files.empty())
-    throw_(parse_error, "No journal file was specified (please use -f)");
+  if (HANDLER(file_).data_files.empty()) {
+    path file;
+    if (const char * home_var = std::getenv("HOME"))
+      file = path(home_var) / ".ledger";
+
+    if (! file.empty() && exists(file))
+      HANDLER(file_).data_files.push_back(file);
+    else
+      throw_(parse_error, "No journal file was specified (please use -f)");
+  }
 
   std::size_t xact_count = 0;
 
