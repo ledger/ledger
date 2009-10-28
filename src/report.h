@@ -691,12 +691,12 @@ public:
 	 " \"\") %(payee)%(xact.comment)\n"
 	 "    %(xact.uncleared ?"
 	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-	 "%-34(account)"
-	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
+	 "%(calculated ? account : justify(account, 34, -1, false))"
+	 "%(calculated ? \"\" : \"  \" + justify(scrub(amount), 12, -1, true))"
 	 "%(has_cost & !cost_calculated ?"
 	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
 	 "%(comment)\n%/"
-	 "    %$7%$8  %$9%$A%$B\n%/\n");
+	 "    %$7%$8%$9%$A%$B\n%/\n");
     });
 
   OPTION_(report_t, quantity, DO() { // -O
