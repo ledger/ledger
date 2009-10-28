@@ -31,6 +31,9 @@
 
 #include <system.hh>
 
+#include "xact.h"
+#include "post.h"
+#include "account.h"
 #include "temps.h"
 
 namespace ledger {

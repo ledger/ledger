@@ -686,6 +686,7 @@ void transfer_details::operator()(post_t& post)
     xact.payee = expr.calc(bound_scope).to_string();
     break;
   case SET_ACCOUNT:
+    temp.account->remove_post(&temp);
     temp.account = master->find_account(expr.calc(bound_scope).to_string());
     temp.account->add_post(&temp);
     break;
@@ -805,6 +806,7 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post)
 {
   generate_posts::add_post(period, post);
 
+  // Advance the period's interval until it is at or beyond the current date.
   date_interval_t& i = pending_posts.back().first;
   if (! i.start) {
     if (! i.find_period(CURRENT_DATE()))
@@ -819,59 +821,92 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post)
 void forecast_posts::flush()
 {
   posts_list passed;
-  date_t     last;
+  date_t     last = CURRENT_DATE();
+
+  // If there are period transactions to apply in a continuing series until
+  // the forecast condition is met, generate those transactions now.  Note
+  // that no matter what, we abandon forecasting beyond the next 5 years.
+  //
+  // It works like this:
+  //
+  // Earlier, in forecast_posts::add_period_xacts, we cut up all the periodic
+  // transactions into their components postings, so that we have N "periodic
+  // postings".  For example, if the user had this:
+  //
+  // ~ daily
+  //   Expenses:Food       $10
+  //   Expenses:Auto:Gas   $20
+  // ~ monthly
+  //   Expenses:Food       $100
+  //   Expenses:Auto:Gas   $200
+  //
+  // We now have 4 periodic postings in `pending_posts'.
+  //
+  // Each periodic postings gets its own copy of its parent transaction's
+  // period, which is modified as we go.  This is found in the second member
+  // of the pending_posts_list for each posting.
+  //
+  // The algorithm below works by iterating through the N periodic postings
+  // over and over, until each of them mets the termination critera for the
+  // forecast and is removed from the set.
 
   while (pending_posts.size() > 0) {
+    // At each step through the loop, we find the first periodic posting whose
+    // period contains the earliest starting date.
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin();
 	 i != pending_posts.end();
-	 i++)
+	 i++) {
       if (*(*i).first.start < *(*least).first.start)
 	least = i;
+    }
 
     date_t& begin = *(*least).first.start;
+    if ((*least).first.end)
+      assert(begin < *(*least).first.end);
 
-    if ((*least).first.end && begin >= *(*least).first.end) {
+    // If the next date in the series for this periodic posting is more than 5
+    // years beyond the last valid post we generated, drop it from further
+    // consideration.
+    date_t next = *(*least).first.next;
+    assert(next > begin);
+
+    if ((next - last).days() > 365 * 5) {
+      DEBUG("filters.forecast",
+	    "Forecast transaction exceeds 5 years beyond today");
       pending_posts.erase(least);
-      passed.remove((*least).second);
       continue;
     }
 
-    post_t& post = *(*least).second;
-
-    xact_t& xact = temps.create_xact();
-    xact.payee = _("Forecast transaction");
-    xact._date = begin;
-
-    post_t& temp = temps.copy_post(post, xact);
-
-    date_t next = *(*least).first.next;
+    begin = next;
     ++(*least).first;
 
-    if (next < begin || (is_valid(last) && (next - last).days() > 365 * 5))
-      break;
-    begin = next;
+    // `post' refers to the posting defined in the period transaction.  We
+    // make a copy of it within a temporary transaction with the payee
+    // "Forecast transaction".
+    post_t& post = *(*least).second;
+    xact_t& xact = temps.create_xact();
+    xact.payee	 = _("Forecast transaction");
+    xact._date	 = begin;
+    post_t& temp = temps.copy_post(post, xact);
 
+    // Submit the generated posting
+    DEBUG("filters.forecast",
+	  "Forecast transaction: " << temp.date()
+	  << " " << temp.account->fullname()
+	  << " " << temp.amount);
     item_handler<post_t>::operator()(temp);
 
+    // If the generated posting matches the user's report query, check whether
+    // it also fails to match the continuation condition for the forecast.  If
+    // it does, drop this periodic posting from consideration.
     if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES)) {
+      DEBUG("filters.forecast", "  matches report query");
       bind_scope_t bound_scope(context, temp);
-      if (! pred(bound_scope))
-	break;
-      last = temp.date();
-      passed.clear();
-    } else {
-      bool found = false;
-      foreach (post_t * x, passed)
-	if (x == &post) {
-	  found = true;
-	  break;
-	}
-
-      if (! found) {
-	passed.push_back(&post);
-	if (passed.size() >= pending_posts.size())
-	  break;
+      if (! pred(bound_scope)) {
+	DEBUG("filters.forecast", "  fails to match continuation criteria");
+	pending_posts.erase(least);
+	continue;
       }
     }
   }

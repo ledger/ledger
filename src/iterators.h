@@ -49,6 +49,7 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "temps.h"
 
 namespace ledger {
 
@@ -172,9 +173,7 @@ protected:
   journal_posts_iterator  journal_posts;
   xacts_iterator	  xacts;
   xact_posts_iterator	  posts;
-
-  std::list<post_t>	  post_temps;
-  std::list<account_t>    acct_temps;
+  temporaries_t           temps;
   xacts_list              xact_temps;
 
 public:
@@ -187,8 +186,6 @@ public:
   }
   virtual ~posts_commodities_iterator() throw() {
     TRACE_DTOR(posts_commodities_iterator);
-    foreach (xact_t * xact, xact_temps)
-      checked_delete(xact);
   }
 
   void reset(journal_t& journal);

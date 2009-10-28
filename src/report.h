@@ -290,6 +290,7 @@ public:
     HANDLER(unbudgeted).report(out);
     HANDLER(uncleared).report(out);
     HANDLER(unround).report(out);
+    HANDLER(unsorted).report(out);
     HANDLER(weekly).report(out);
     HANDLER(wide).report(out);
     HANDLER(yearly).report(out);
@@ -450,7 +451,7 @@ public:
       parent->HANDLER(limit_).on(string("--current"), "date<=today");
     });
 
-  OPTION_(report_t, daily, DO() {
+  OPTION_(report_t, daily, DO() { // -D
       parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
@@ -463,7 +464,7 @@ public:
 				   string("depth<=") + args.get<string>(1));
     });
 
-  OPTION_(report_t, deviation, DO() { // -D
+  OPTION_(report_t, deviation, DO() {
       parent->HANDLER(display_total_)
 	.set_expr(string("--deviation"), "amount_expr-total_expr/count");
     });
@@ -628,7 +629,32 @@ public:
    });
 
   OPTION(report_t, output_); // -o
-  OPTION(report_t, pager_);
+
+  OPTION__
+  (report_t, pager_,
+   CTOR(report_t, pager_) {
+     if (! std::getenv("PAGER")) {
+       bool have_less = false;
+       if (exists(path("/opt/local/bin/less")) ||
+	   exists(path("/usr/local/bin/less")) ||
+	   exists(path("/usr/bin/less")))
+	 have_less = true;
+
+       if (have_less) {
+	 on(none, "less");
+	 setenv("LESS", "--quit-if-one-screen -R", 0);
+       }
+     }
+   }
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
+     string cmd(text.to_string());
+     if (cmd == "" || cmd == "false" || cmd == "off" ||
+	 cmd == "none" || cmd == "no" || cmd == "disable")
+       option_t<report_t>::off();
+     else
+       option_t<report_t>::on_with(whence, text);
+   });
+
   OPTION(report_t, payee_as_account);
 
   OPTION_(report_t, pending, DO() { // -C
@@ -690,12 +716,12 @@ public:
 	 " \"\") %(payee)%(xact.comment)\n"
 	 "    %(xact.uncleared ?"
 	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-	 "%-34(account)"
-	 "  %12(calculated ? \"\" : justify(scrub(amount), 12, -1, true))"
+	 "%(calculated ? account : justify(account, 34, -1, false))"
+	 "%(calculated ? \"\" : \"  \" + justify(scrub(amount), 12, -1, true))"
 	 "%(has_cost & !cost_calculated ?"
 	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
 	 "%(comment)\n%/"
-	 "    %$7%$8  %$9%$A%$B\n%/\n");
+	 "    %$7%$8%$9%$A%$B\n%/\n");
     });
 
   OPTION_(report_t, quantity, DO() { // -O
@@ -820,6 +846,8 @@ public:
       parent->HANDLER(display_total_)
 	.set_expr(string("--unround"), "unrounded(total_expr)");
     });
+
+  OPTION(report_t, unsorted);
 
   OPTION_(report_t, weekly, DO() { // -W
       parent->HANDLER(period_).on(string("--weekly"), "weekly");

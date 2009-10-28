@@ -393,7 +393,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
 	DEBUG("commodity.download", "moment = " << *moment);
 	DEBUG("commodity.download", "slip.moment = " << seconds_diff);
       } else {
-	seconds_diff = (CURRENT_TIME() - point->when).total_seconds();
+	seconds_diff = (TRUE_CURRENT_TIME() - point->when).total_seconds();
 	DEBUG("commodity.download", "slip.now = " << seconds_diff);
       }
 

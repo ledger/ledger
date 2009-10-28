@@ -108,24 +108,19 @@ void posts_commodities_iterator::reset(journal_t& journal)
 	if (i != xacts_by_commodity.end()) {
 	  xact = (*i).second;
 	} else {
-	  xact_temps.push_back(new xact_t);
-	  xact = xact_temps.back();
+	  xact = &temps.create_xact();
+	  xact_temps.push_back(xact);
 	  xact->payee = symbol;
 	  xact->_date = hpair.first.date();
 	  xacts_by_commodity.insert
 	    (std::pair<string, xact_t *>(symbol, xact));
 	}
 
-	post_temps.push_back(post_t(account));
-	post_t& temp = post_temps.back();
+	post_t& temp = temps.create_post(*xact, account);
 	temp._date  = hpair.first.date();
-	temp.xact  = xact;
 	temp.amount = hpair.second;
-	temp.set_flags(ITEM_GENERATED | ITEM_TEMP);
 
 	temp.xdata().datetime = hpair.first;
-
-	xact->add_post(&temp);
       }
     }
   }

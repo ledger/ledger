@@ -107,6 +107,7 @@ void amount_t::initialize(shared_ptr<commodity_pool_t> pool)
     mpq_init(tempq);
     mpfr_init(tempf);
     mpfr_init(tempfb);
+
     is_initialized = true;
   }
   current_pool = pool;
@@ -126,6 +127,7 @@ void amount_t::shutdown()
     mpq_clear(tempq);
     mpfr_clear(tempf);
     mpfr_clear(tempfb);
+
     is_initialized = false;
   }
 }
