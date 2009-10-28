@@ -506,6 +506,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(abbrev_len_);
     else OPT(account_);
     else OPT(actual);
+    else OPT(actual_dates);
     else OPT(add_budget);
     else OPT(amount_);
     else OPT(amount_data);

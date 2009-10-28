@@ -196,6 +196,7 @@ public:
     HANDLER(abbrev_len_).report(out);
     HANDLER(account_).report(out);
     HANDLER(actual).report(out);
+    HANDLER(actual_dates).report(out);
     HANDLER(add_budget).report(out);
     HANDLER(amount_).report(out);
     HANDLER(amount_data).report(out);
@@ -316,6 +317,8 @@ public:
   OPTION_(report_t, actual, DO() { // -L
       parent->HANDLER(limit_).on(string("--actual"), "actual");
     });
+
+  OPTION(report_t, actual_dates);
 
   OPTION_(report_t, add_budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED | BUDGET_UNBUDGETED;
