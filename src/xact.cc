@@ -49,16 +49,23 @@ xact_base_t::~xact_base_t()
 {
   TRACE_DTOR(xact_base_t);
 
-  foreach (post_t * post, posts) {
-    // If the posting is a temporary, it will be destructed when the
-    // temporary is.
-    if (! post->has_flags(ITEM_TEMP))
+  if (! has_flags(ITEM_TEMP)) {
+    foreach (post_t * post, posts) {
+      // If the posting is a temporary, it will be destructed when the
+      // temporary is.
+      assert(! post->has_flags(ITEM_TEMP));
       checked_delete(post);
+    }
   }
 }
 
 void xact_base_t::add_post(post_t * post)
 {
+  // You can add temporary postings to transactions, but not real postings to
+  // temporary transactions.
+  if (! post->has_flags(ITEM_TEMP))
+    assert(! has_flags(ITEM_TEMP));
+
   posts.push_back(post);
 }
 
