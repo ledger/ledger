@@ -244,7 +244,7 @@ namespace {
 
     DEBUG("post.account_amount", "Found account: " << account->fullname());
 
-    value_t total = account->self_total();
+    value_t total = account->amount();
     if (total.is_null())
       return 0L;
     else
