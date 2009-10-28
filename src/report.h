@@ -629,7 +629,34 @@ public:
    });
 
   OPTION(report_t, output_); // -o
-  OPTION(report_t, pager_);
+
+  OPTION__
+  (report_t, pager_,
+   CTOR(report_t, pager_) {
+#if 1
+     if (! std::getenv("PAGER")) {
+       bool have_less = false;
+       if (exists(path("/opt/local/bin/less")) ||
+	   exists(path("/usr/local/bin/less")) ||
+	   exists(path("/usr/bin/less")))
+	 have_less = true;
+
+       if (have_less) {
+	 on(none, "less");
+	 setenv("LESS", "--quit-if-one-screen -R", 0);
+       }
+     }
+#endif
+   }
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
+     string cmd(text.to_string());
+     if (cmd == "" || cmd == "false" || cmd == "off" ||
+	 cmd == "none" || cmd == "no" || cmd == "disable")
+       option_t<report_t>::off();
+     else
+       option_t<report_t>::on_with(whence, text);
+   });
+
   OPTION(report_t, payee_as_account);
 
   OPTION_(report_t, pending, DO() { // -C
