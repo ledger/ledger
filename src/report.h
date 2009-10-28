@@ -633,7 +633,6 @@ public:
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {
-#if 1
      if (! std::getenv("PAGER")) {
        bool have_less = false;
        if (exists(path("/opt/local/bin/less")) ||
@@ -646,7 +645,6 @@ public:
 	 setenv("LESS", "--quit-if-one-screen -R", 0);
        }
      }
-#endif
    }
    virtual void on_with(const optional<string>& whence, const value_t& text) {
      string cmd(text.to_string());
