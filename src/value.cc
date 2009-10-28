@@ -1497,12 +1497,11 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   return NULL_VALUE;
 }
 
-void value_t::print(std::ostream&           out,
-		    const int	            first_width,
-		    const int               latter_width,
-		    const bool              right_justify,
-		    const bool              colorize,
-		    const optional<string>& date_format) const
+void value_t::print(std::ostream& out,
+		    const int	  first_width,
+		    const int     latter_width,
+		    const bool    right_justify,
+		    const bool    colorize) const
 {
   if (first_width > 0 &&
       (! is_amount() || as_amount().is_zero()) &&
@@ -1525,18 +1524,11 @@ void value_t::print(std::ostream&           out,
     break;
 
   case DATETIME:
-    if (date_format)
-      out << format_datetime(as_datetime(), FMT_CUSTOM,
-			     date_format->c_str());
-    else
-      out << format_datetime(as_datetime(), FMT_WRITTEN);
+    out << format_datetime(as_datetime(), FMT_WRITTEN);
     break;
 
   case DATE:
-    if (date_format)
-      out << format_date(as_date(), FMT_CUSTOM, date_format->c_str());
-    else
-      out << format_date(as_date(), FMT_WRITTEN);
+    out << format_date(as_date(), FMT_WRITTEN);
     break;
 
   case INTEGER:
@@ -1581,7 +1573,7 @@ void value_t::print(std::ostream&           out,
 	out << ", ";
 
       value.print(out, first_width, latter_width, right_justify,
-		  colorize, date_format);
+		  colorize);
     }
     out << ')';
     break;
