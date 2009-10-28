@@ -250,6 +250,7 @@ public:
     HANDLER(market).report(out);
     HANDLER(monthly).report(out);
     HANDLER(no_total).report(out);
+    HANDLER(now_).report(out);
     HANDLER(only_).report(out);
     HANDLER(output_).report(out);
     HANDLER(pager_).report(out);
@@ -601,6 +602,15 @@ public:
     });
 
   OPTION(report_t, no_total);
+
+  OPTION_(report_t, now_, DO_(args) {
+      date_interval_t interval(args[1].to_string());
+      if (! interval.start)
+	throw_(std::invalid_argument,
+	       _("Could not determine beginning of period '%1'")
+	       << args[1].to_string());
+      ledger::epoch = datetime_t(*interval.start);
+    });
 
   OPTION__
   (report_t, only_,

@@ -35,6 +35,8 @@
 
 namespace ledger {
 
+optional<datetime_t> epoch;
+
 date_time::weekdays start_of_week = gregorian::Sunday;
 
 //#define USE_BOOST_FACETS 1

@@ -66,12 +66,17 @@ inline bool is_valid(const date_t& moment) {
   return ! moment.is_not_a_date();
 }
 
+extern optional<datetime_t> epoch;
+
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
-#define CURRENT_TIME() boost::posix_time::microsec_clock::universal_time()
+#define CURRENT_TIME() \
+  (epoch ? *epoch : boost::posix_time::microsec_clock::universal_time())
 #else
-#define CURRENT_TIME() boost::posix_time::second_clock::universal_time()
+#define CURRENT_TIME() \
+  (epoch ? *epoch : boost::posix_time::second_clock::universal_time())
 #endif
-#define CURRENT_DATE() boost::gregorian::day_clock::universal_day()
+#define CURRENT_DATE() \
+  (epoch ? epoch->date() : boost::gregorian::day_clock::universal_day())
 
 extern date_time::weekdays   start_of_week;
 
