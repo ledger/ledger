@@ -811,7 +811,7 @@ class PrepareBuild(CommandLineApp):
                     'CXXFLAGS', 'LDFLAGS', 'LDARCHFLAGS'):
             value = self.__dict__[var]
             if value:
-                first = True
+                first = not self.envvars[var]
                 for member in value:
                     #escaped = self.escape_string(member)
                     #if member != escaped:
