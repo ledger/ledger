@@ -69,11 +69,11 @@ inline bool is_valid(const date_t& moment) {
 extern optional<datetime_t> epoch;
 
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
-#define CURRENT_TIME() \
-  (epoch ? *epoch : boost::posix_time::microsec_clock::universal_time())
+#define TRUE_CURRENT_TIME() (boost::posix_time::microsec_clock::universal_time())
+#define CURRENT_TIME()      (epoch ? *epoch : TRUE_CURRENT_TIME())
 #else
-#define CURRENT_TIME() \
-  (epoch ? *epoch : boost::posix_time::second_clock::universal_time())
+#define TRUE_CURRENT_TIME() (boost::posix_time::second_clock::universal_time())
+#define CURRENT_TIME()      (epoch ? *epoch : TRUE_CURRENT_TIME())
 #endif
 #define CURRENT_DATE() \
   (epoch ? epoch->date() : boost::gregorian::day_clock::universal_day())

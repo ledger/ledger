@@ -531,14 +531,15 @@ bool logger_func(log_level_t level)
 {
   if (! logger_has_run) {
     logger_has_run = true;
-    logger_start   = CURRENT_TIME();
+    logger_start   = TRUE_CURRENT_TIME();
 
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
   }
 
   *_log_stream << std::right << std::setw(5)
-	       << (CURRENT_TIME() - logger_start).total_milliseconds() << "ms";
+	       << (TRUE_CURRENT_TIME() -
+		   logger_start).total_milliseconds() << "ms";
 
 #if defined(VERIFY_ON)
   IF_VERIFY() {
@@ -616,7 +617,7 @@ struct timer_t
   bool		active;
 
   timer_t(log_level_t _level, std::string _description)
-    : level(_level), begin(CURRENT_TIME()),
+    : level(_level), begin(TRUE_CURRENT_TIME()),
       spent(time_duration(0, 0, 0, 0)),
       description(_description), active(true) {}
 };
@@ -637,7 +638,7 @@ void start_timer(const char * name, log_level_t lvl)
     timers.insert(timer_map::value_type(name, timer_t(lvl, _log_buffer.str())));
   } else {
     assert((*i).second.description == _log_buffer.str());
-    (*i).second.begin  = CURRENT_TIME();
+    (*i).second.begin  = TRUE_CURRENT_TIME();
     (*i).second.active = true;
   }
   _log_buffer.str("");
@@ -657,7 +658,7 @@ void stop_timer(const char * name)
   timer_map::iterator i = timers.find(name);
   assert(i != timers.end());
 
-  (*i).second.spent += CURRENT_TIME() - (*i).second.begin;
+  (*i).second.spent += TRUE_CURRENT_TIME() - (*i).second.begin;
   (*i).second.active = false;
 
 #if defined(VERIFY_ON)
@@ -682,7 +683,7 @@ void finish_timer(const char * name)
 
   time_duration spent = (*i).second.spent;
   if ((*i).second.active) {
-    spent = CURRENT_TIME() - (*i).second.begin;
+    spent = TRUE_CURRENT_TIME() - (*i).second.begin;
     (*i).second.active = false;
   }
 
