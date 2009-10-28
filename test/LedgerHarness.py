@@ -48,9 +48,8 @@ class LedgerHarness:
         if columns:
             insert += ' --columns=80'
 
-        command = re.sub('\$ledger',
-                         '%s%s --args-only' % (self.ledger, insert),
-                         command)
+        command = re.sub('\$ledger', '%s%s --args-only --no-color' % \
+                         (self.ledger, insert), command)
 
         return Popen(command, shell=True, close_fds=True, env=env,
                      stdin=PIPE, stdout=PIPE, stderr=PIPE)

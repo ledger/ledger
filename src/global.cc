@@ -418,6 +418,9 @@ void global_scope_t::normalize_report_options(const string& verb)
 
   report_t& rep(report());
 
+  if (! rep.HANDLED(no_color))
+    rep.HANDLER(color).on_only(string("?normalize"));
+
   // jww (2009-02-09): These globals are a hack, but hard to avoid.
   item_t::use_effective_date = (rep.HANDLED(effective) &&
 				! rep.HANDLED(actual_dates));
