@@ -380,23 +380,24 @@ namespace {
 	value_t::sequence_t::const_iterator end   =
 	  args.value().as_sequence().end();
 
-	string limit = args_to_predicate_expr(begin, end);
+	std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
 
+	string limit = info.first.text();
 	if (! limit.empty())
 	  report.HANDLER(limit_).on(whence, limit);
 
 	DEBUG("report.predicate",
 	      "Predicate = " << report.HANDLER(limit_).str());
 
-	string display;
-	if (begin != end)
-	  display = args_to_predicate_expr(begin, end);
+	if (info.second.tokens_remaining()) {
+	  string display = args_to_predicate(info.second).first.text();
 
-	if (! display.empty())
-	  report.HANDLER(display_).on(whence, display);
+	  if (! display.empty())
+	    report.HANDLER(display_).on(whence, display);
 
-	DEBUG("report.predicate",
-	      "Display predicate = " << report.HANDLER(display_).str());
+	  DEBUG("report.predicate",
+		"Display predicate = " << report.HANDLER(display_).str());
+	}
       }
 
       (report.*report_method)(handler_ptr(handler));

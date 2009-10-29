@@ -108,10 +108,10 @@ struct expr_t::token_t : public noncopyable
   std::size_t length;
 
   explicit token_t() : kind(UNKNOWN), length(0) {
-    TRACE_CTOR(token_t, "");
+    TRACE_CTOR(expr_t::token_t, "");
   }
   ~token_t() throw() {
-    TRACE_DTOR(token_t);
+    TRACE_DTOR(expr_t::token_t);
   }
 
   token_t& operator=(const token_t& other) {

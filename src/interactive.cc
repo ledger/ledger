@@ -62,6 +62,8 @@ void interactive_t::verify_arguments() const
   for (; ! wrong_arg && ! exit_loop && *p && next_arg; p++) {
     DEBUG("interactive.verify",
 	  "Want " << *p << " got: " << next_arg->label());
+
+    wrong_arg = false;
     switch (*p) {
     case 'a':
       label = _("an amount");
@@ -86,24 +88,24 @@ void interactive_t::verify_arguments() const
     case 'i':
     case 'l':
       label = _("an integer");
-      if (next_arg->is_long() ||
-	  (next_arg->is_amount() &&
-	   ! next_arg->as_amount().has_commodity())) {
-	wrong_arg = false;
-      }
-      else if (next_arg->is_string()) {
-	wrong_arg = false;
-	for (const char * q = next_arg->as_string().c_str(); *q; q++) {
-	  if (! std::isdigit(*q) && *q != '-') {
-	    wrong_arg = true;
-	    break;
-	  }
+    if (next_arg->is_long() ||
+	(next_arg->is_amount() &&
+	 ! next_arg->as_amount().has_commodity())) {
+      wrong_arg = false;
+    }
+    else if (next_arg->is_string()) {
+      wrong_arg = false;
+      for (const char * q = next_arg->as_string().c_str(); *q; q++) {
+	if (! std::isdigit(*q) && *q != '-') {
+	  wrong_arg = true;
+	  break;
 	}
       }
-      else {
-	wrong_arg = true;
-      }
-      break;
+    }
+    else {
+      wrong_arg = true;
+    }
+    break;
     case 'm':
       label = _("a regex");
       wrong_arg = ! next_arg->is_mask();
@@ -134,6 +136,8 @@ void interactive_t::verify_arguments() const
       dont_skip = true;
       break;
     }
+    if (wrong_arg && optional && next_arg->is_null())
+      wrong_arg = false;
 
     if (wrong_arg)
       vlabel = next_arg->label();

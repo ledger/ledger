@@ -32,175 +32,367 @@
 #include <system.hh>
 
 #include "predicate.h"
+#include "op.h"
 
 namespace ledger {
 
-string args_to_predicate_expr(value_t::sequence_t::const_iterator& begin,
-			      value_t::sequence_t::const_iterator end)
+query_lexer_t::token_t query_lexer_t::next_token()
 {
-  std::ostringstream expr;
-
-  bool append_or	= false;
-  bool only_parenthesis = false;
-
-  while (begin != end) {
-    string arg = (*begin).as_string();
-    string prefix;
-
-    if (arg == "show") {
-      ++begin;
-      break;
-    }
-
-    bool parse_argument		 = true;
-    bool only_closed_parenthesis = false;;
-
-    if (arg == "not" || arg == "NOT") {
-      if (append_or)
-	prefix = " | ! ";
-      else
-	prefix = " ! ";
-      parse_argument = false;
-      append_or = false;
-    }
-    else if (arg == "and" || arg == "AND") {
-      prefix = " & ";
-      parse_argument = false;
-      append_or = false;
-    }
-    else if (arg == "or" || arg == "OR") {
-      prefix = " | ";
-      parse_argument = false;
-      append_or = false;
-    }
-    else if (append_or) {
-      if (! only_parenthesis)
-	prefix = " | ";
-    }
-    else {
-      append_or = true;
-    }
-
-    value_t::sequence_t::const_iterator next = begin;
-    if (++next != end) {
-      if (arg == "desc" || arg == "DESC" ||
-	  arg == "payee" || arg == "PAYEE") {
-	arg = string("@") + (*++begin).as_string();
-      }
-      else if (arg == "code" || arg == "CODE") {
-	arg = string("#") + (*++begin).as_string();
-      }
-      else if (arg == "note" || arg == "NOTE") {
-	arg = string("&") + (*++begin).as_string();
-      }
-      else if (arg == "tag" || arg == "TAG" ||
-	       arg == "meta" || arg == "META" ||
-	       arg == "data" || arg == "DATA") {
-	arg = string("%") + (*++begin).as_string();
-      }
-      else if (arg == "expr" || arg == "EXPR") {
-	arg = string("=") + (*++begin).as_string();
-      }
-    }
-
-    if (parse_argument) {
-      bool in_prefix	   = true;
-      bool found_specifier = false;
-      bool no_final_slash  = false;
-
-      only_parenthesis = true;
-
-      std::ostringstream buf;
-      string parens;
-
-      for (const char * c = arg.c_str(); *c != '\0'; c++) {
-	bool consumed = false;
-
-	if (*c != '(' && *c != ')')
-	  only_parenthesis = false;
-
-	if (in_prefix) {
-	  switch (*c) {
-	  case ')':
-	    if (only_parenthesis)
-	      only_closed_parenthesis = true;
-	    // fall through...
-	  case '(':
-	    parens += c;
-	    consumed = true;
-	    break;
-	  case '@':
-	    buf << "(payee =~ /";
-	    found_specifier = true;
-	    consumed = true;
-	    break;
-	  case '#':
-	    buf << "(code =~ /";
-	    found_specifier = true;
-	    consumed = true;
-	    break;
-	  case '=':
-	    buf << "(";
-	    found_specifier = true;
-	    no_final_slash = true;
-	    consumed = true;
-	    break;
-	  case '&':
-	    buf << "(note =~ /";
-	    found_specifier = true;
-	    consumed = true;
-	    break;
-	  case '%': {
-	    bool found_metadata = false;
-	    for (const char *q = c; *q != '\0'; q++)
-	      if (*q == '=') {
-		buf << "has_tag(/"
-		     << string(c + 1, q - c - 1) << "/, /";
-		found_metadata = true;
-		c = q;
-		break;
-	      }
-	    if (! found_metadata) {
-	      buf << "has_tag(/";
-	    }
-	    found_specifier = true;
-	    consumed = true;
-	    break;
-	  }
-	  default:
-	    if (! found_specifier) {
-	      buf << parens << "(account =~ /";
-	      parens.clear();
-	      found_specifier = true;
-	    }
-	    in_prefix = false;
-	    break;
-	  }
-	}
-
-	if (! consumed)
-	  buf << *c;
-      }
-
-      if (! prefix.empty() &&
-	  ! (only_parenthesis && only_closed_parenthesis))
-	expr << prefix;
-
-      expr << parens << buf.str();
-
-      if (found_specifier) {
-	if (! no_final_slash)
-	  expr << "/";
-	expr << ")";
-      }
-    } else {
-      expr << prefix;
-    }
-
-    begin++;
+  if (token_cache.kind != token_t::UNKNOWN) {
+    token_t tok = token_cache;
+    token_cache = token_t();
+    return tok;
   }
 
-  return std::string("(") + expr.str() + ")";
+  if (arg_i == arg_end) {
+    if (begin == end || ++begin == end) {
+      return token_t(token_t::END_REACHED);
+    } else {
+      arg_i   = (*begin).as_string().begin();
+      arg_end = (*begin).as_string().end();
+    }
+  }
+
+ resume:
+  bool consume_next = false;
+  switch (*arg_i) {
+  case ' ':
+  case '\t':
+  case '\r':
+  case '\n':
+    if (++arg_i == arg_end)
+      return next_token();
+  goto resume;
+
+  case '/': {
+    string pat;
+    bool found_end_slash = false;
+    for (++arg_i; arg_i != arg_end; ++arg_i) {
+      if (*arg_i == '\\') {
+	if (++arg_i == arg_end)
+	  throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+      }
+      else if (*arg_i == '/') {
+	++arg_i;
+	found_end_slash = true;
+	break;
+      }
+      pat.push_back(*arg_i);
+    }
+    if (! found_end_slash)
+      throw_(parse_error, _("Expected '/' at end of pattern"));
+    if (pat.empty())
+      throw_(parse_error, _("Match pattern is empty"));
+
+    return token_t(token_t::TERM, pat);
+  }
+
+  case '(': ++arg_i; return token_t(token_t::LPAREN);
+  case ')': ++arg_i; return token_t(token_t::RPAREN);
+  case '&': ++arg_i; return token_t(token_t::TOK_AND);
+  case '|': ++arg_i; return token_t(token_t::TOK_OR);
+  case '!': ++arg_i; return token_t(token_t::TOK_NOT);
+  case '@': ++arg_i; return token_t(token_t::TOK_PAYEE);
+  case '#': ++arg_i; return token_t(token_t::TOK_CODE);
+  case '%': ++arg_i; return token_t(token_t::TOK_META);
+  case '=':
+    // The '=' keyword at the beginning of a string causes the entire string
+    // to be taken as an expression.
+    if (arg_i == (*begin).as_string().begin())
+      consume_whitespace = true;
+    ++arg_i;
+    return token_t(token_t::TOK_EQ);
+
+  case '\\':
+    consume_next = true;
+    ++arg_i;
+    // fall through...
+  default: {
+    string ident;
+    string::const_iterator beg = arg_i;
+    for (; arg_i != arg_end; ++arg_i) {
+      switch (*arg_i) {
+      case ' ':
+      case '\t':
+      case '\n':
+      case '\r':
+	if (! consume_whitespace)
+	  goto test_ident;
+	else
+	  ident.push_back(*arg_i);
+	break;
+      case '(':
+      case ')':
+      case '&':
+      case '|':
+      case '!':
+      case '@':
+      case '#':
+      case '%':
+      case '=':
+	if (! consume_next)
+	  goto test_ident;
+      // fall through...
+      default:
+	ident.push_back(*arg_i);
+	break;
+      }
+    }
+    consume_whitespace = false;
+
+    test_ident:
+    if (ident == "and")
+      return token_t(token_t::TOK_AND);
+    else if (ident == "or")
+      return token_t(token_t::TOK_OR);
+    else if (ident == "not")
+      return token_t(token_t::TOK_NOT);
+    else if (ident == "account")
+      return token_t(token_t::TOK_ACCOUNT);
+    else if (ident == "desc")
+      return token_t(token_t::TOK_PAYEE);
+    else if (ident == "payee")
+      return token_t(token_t::TOK_PAYEE);
+    else if (ident == "code")
+      return token_t(token_t::TOK_CODE);
+    else if (ident == "note")
+      return token_t(token_t::TOK_NOT);
+    else if (ident == "tag")
+      return token_t(token_t::TOK_META);
+    else if (ident == "meta")
+      return token_t(token_t::TOK_META);
+    else if (ident == "data")
+      return token_t(token_t::TOK_META);
+    else if (ident == "show") {
+      // The "show" keyword is special, and separates a limiting predicate
+      // from a display predicate.
+      DEBUG("pred.show", "string = " << (*begin).as_string());
+      return token_t(token_t::END_REACHED);
+    }
+    else if (ident == "expr") {
+      // The expr keyword takes the whole of the next string as its
+      // argument.
+      consume_whitespace = true;
+      return token_t(token_t::TOK_EXPR);
+    }
+    else
+      return token_t(token_t::TERM, ident);
+    break;
+  }
+  }
+
+  return token_t(token_t::UNKNOWN);
+}
+
+void query_lexer_t::token_t::unexpected()
+{
+  kind_t prev_kind = kind;
+
+  kind = UNKNOWN;
+
+  switch (prev_kind) {
+  case END_REACHED:
+    throw_(parse_error, _("Unexpected end of expression"));
+  case TERM:
+    throw_(parse_error, _("Unexpected string '%1'") << *value);
+  default:
+    throw_(parse_error, _("Unexpected token '%1'") << symbol());
+  }
+}
+
+void query_lexer_t::token_t::expected(char wanted, char c)
+{
+  kind = UNKNOWN;
+
+  if (c == '\0' || c == -1) {
+    if (wanted == '\0' || wanted == -1)
+      throw_(parse_error, _("Unexpected end"));
+    else
+      throw_(parse_error, _("Missing '%1'") << wanted);
+  } else {
+    if (wanted == '\0' || wanted == -1)
+      throw_(parse_error, _("Invalid char '%1'") << c);
+    else
+      throw_(parse_error, _("Invalid char '%1' (wanted '%2')") << c << wanted);
+  }
+}
+
+expr_t::ptr_op_t
+query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
+{
+  expr_t::ptr_op_t node;
+
+  query_lexer_t::token_t tok = lexer.next_token();
+  switch (tok.kind) {
+  case query_lexer_t::token_t::END_REACHED:
+    break;
+
+  case query_lexer_t::token_t::TOK_ACCOUNT:
+  case query_lexer_t::token_t::TOK_PAYEE:
+  case query_lexer_t::token_t::TOK_CODE:
+  case query_lexer_t::token_t::TOK_NOTE:
+  case query_lexer_t::token_t::TOK_META:
+  case query_lexer_t::token_t::TOK_EXPR:
+    node = parse_query_term(tok.kind);
+    if (! node)
+      throw_(parse_error,
+	     _("%1 operator not followed by argument") << tok.symbol());
+    break;
+
+  case query_lexer_t::token_t::TERM:
+    assert(tok.value);
+    if (tok_context == query_lexer_t::token_t::TOK_META) {
+      assert(0);
+    } else {
+      node = new expr_t::op_t(expr_t::op_t::O_MATCH);
+
+      expr_t::ptr_op_t ident;
+      ident = new expr_t::op_t(expr_t::op_t::IDENT);
+      switch (tok_context) {
+      case query_lexer_t::token_t::TOK_ACCOUNT:
+	ident->set_ident("account"); break;
+      case query_lexer_t::token_t::TOK_PAYEE:
+	ident->set_ident("payee"); break;
+      case query_lexer_t::token_t::TOK_CODE:
+	ident->set_ident("code"); break;
+      case query_lexer_t::token_t::TOK_NOTE:
+	ident->set_ident("note"); break;
+      default:
+	assert(0); break;
+      }
+
+      expr_t::ptr_op_t mask;
+      mask = new expr_t::op_t(expr_t::op_t::VALUE);
+      mask->set_value(mask_t(*tok.value));
+
+      node->set_left(ident);
+      node->set_right(mask);
+    }
+    break;
+
+  case query_lexer_t::token_t::LPAREN:
+    node = parse_query_expr(tok_context);
+    tok = lexer.next_token();
+    if (tok.kind != query_lexer_t::token_t::RPAREN)
+      tok.expected(')');
+    break;
+
+  default:
+    lexer.push_token(tok);
+    break;
+  }
+
+  return node;
+}
+
+expr_t::ptr_op_t
+query_parser_t::parse_unary_expr(query_lexer_t::token_t::kind_t tok_context)
+{
+  expr_t::ptr_op_t node;
+
+  query_lexer_t::token_t tok = lexer.next_token();
+  switch (tok.kind) {
+  case query_lexer_t::token_t::TOK_NOT: {
+    expr_t::ptr_op_t term(parse_query_term(tok_context));
+    if (! term)
+      throw_(parse_error,
+	     _("%1 operator not followed by argument") << tok.symbol());
+
+    node = new expr_t::op_t(expr_t::op_t::O_NOT);
+    node->set_left(term);
+    break;
+  }
+
+  default:
+    lexer.push_token(tok);
+    node = parse_query_term(tok_context);
+    break;
+  }
+
+  return node;
+}
+
+expr_t::ptr_op_t
+query_parser_t::parse_and_expr(query_lexer_t::token_t::kind_t tok_context)
+{
+  if (expr_t::ptr_op_t node = parse_unary_expr(tok_context)) {
+    while (true) {
+      query_lexer_t::token_t tok = lexer.next_token();
+      if (tok.kind == query_lexer_t::token_t::TOK_AND) {
+	expr_t::ptr_op_t prev(node);
+	node = new expr_t::op_t(expr_t::op_t::O_AND);
+	node->set_left(prev);
+	node->set_right(parse_unary_expr(tok_context));
+	if (! node->right())
+	  throw_(parse_error,
+		 _("%1 operator not followed by argument") << tok.symbol());
+      } else {
+	lexer.push_token(tok);
+	break;
+      }
+    }
+    return node;
+  }
+  return expr_t::ptr_op_t();
+}
+
+expr_t::ptr_op_t
+query_parser_t::parse_or_expr(query_lexer_t::token_t::kind_t tok_context)
+{
+  if (expr_t::ptr_op_t node = parse_and_expr(tok_context)) {
+    while (true) {
+      query_lexer_t::token_t tok = lexer.next_token();
+      if (tok.kind == query_lexer_t::token_t::TOK_OR) {
+	expr_t::ptr_op_t prev(node);
+	node = new expr_t::op_t(expr_t::op_t::O_OR);
+	node->set_left(prev);
+	node->set_right(parse_and_expr(tok_context));
+	if (! node->right())
+	  throw_(parse_error,
+		 _("%1 operator not followed by argument") << tok.symbol());
+      } else {
+	lexer.push_token(tok);
+	break;
+      }
+    }
+    return node;
+  }
+  return expr_t::ptr_op_t();
+}
+
+expr_t::ptr_op_t
+query_parser_t::parse_query_expr(query_lexer_t::token_t::kind_t tok_context)
+{
+  if (expr_t::ptr_op_t node = parse_or_expr(tok_context)) {
+    if (expr_t::ptr_op_t next = parse_query_expr(tok_context)) {
+      expr_t::ptr_op_t prev(node);
+      node = new expr_t::op_t(expr_t::op_t::O_OR);
+      node->set_left(prev);
+      node->set_right(next);
+    }
+    return node;
+  }
+  return expr_t::ptr_op_t();
+}
+
+expr_t::ptr_op_t query_parser_t::parse()
+{
+  return parse_query_expr(query_lexer_t::token_t::TOK_ACCOUNT);
+}
+
+std::pair<expr_t, query_parser_t>
+args_to_predicate(value_t::sequence_t::const_iterator begin,
+		  value_t::sequence_t::const_iterator end)
+{
+  query_parser_t parser(begin, end);
+  expr_t expr(parser.parse());
+  return std::pair<expr_t, query_parser_t>(expr, parser);
+}
+
+std::pair<expr_t, query_parser_t> args_to_predicate(query_parser_t parser)
+{
+  expr_t expr(parser.parse());
+  return std::pair<expr_t, query_parser_t>(expr, parser);
 }
 
 } // namespace ledger

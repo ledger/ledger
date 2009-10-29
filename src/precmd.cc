@@ -226,21 +226,20 @@ value_t args_command(call_scope_t& args)
   args.value().dump(out);
   out << std::endl << std::endl;
 
-  string predicate = args_to_predicate_expr(begin, end);
+  std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
 
   call_scope_t sub_args(static_cast<scope_t&>(args));
-  sub_args.push_back(string_value(predicate));
+  sub_args.push_back(string_value(info.first.text()));
 
   parse_command(sub_args);
 
-  if (begin != end) {
+  if (info.second.tokens_remaining()) {
     out << std::endl << _("====== Display predicate ======")
 	<< std::endl << std::endl;
 
-    predicate = args_to_predicate_expr(begin, end);
-
     call_scope_t disp_sub_args(static_cast<scope_t&>(args));
-    disp_sub_args.push_back(string_value(predicate));
+    disp_sub_args.push_back
+      (string_value(args_to_predicate(info.second).first.text()));
 
     parse_command(disp_sub_args);
   }

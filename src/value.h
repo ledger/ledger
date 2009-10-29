@@ -818,13 +818,11 @@ public:
   }
 
   void push_back(const value_t& val) {
-    if (! val.is_null()) {
-      if (is_null())
-	*this = sequence_t();
-      if (! is_sequence())
-	in_place_cast(SEQUENCE);
-      as_sequence_lval().push_back(val);
-    }
+    if (is_null())
+      *this = sequence_t();
+    if (! is_sequence())
+      in_place_cast(SEQUENCE);
+    as_sequence_lval().push_back(val);
   }
 
   void pop_back() {
@@ -855,24 +853,18 @@ public:
   }
 
   sequence_t::iterator begin() {
-    VERIFY(is_sequence());
     return as_sequence_lval().begin();
   }
 
   sequence_t::iterator end() {
-    VERIFY(is_sequence());
-    // This special hack is because we never used end() in a context which
-    // needs us to call _dup().
-    return boost::get<sequence_t *>(storage->data)->end();
+    return as_sequence_lval().end();
   }
 
   sequence_t::const_iterator begin() const {
-    VERIFY(is_sequence());
     return as_sequence().begin();
   }
 
   sequence_t::const_iterator end() const {
-    VERIFY(is_sequence());
     return as_sequence().end();
   }
 
