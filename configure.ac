@@ -352,7 +352,7 @@ AC_STRUCT_TM
 #AC_FUNC_MKTIME
 #AC_FUNC_STAT
 #AC_FUNC_STRFTIME
-AC_CHECK_FUNCS([access realpath getpwuid getpwnam])
+AC_CHECK_FUNCS([access realpath getpwuid getpwnam isatty])
 
 # Pepare the Makefiles
 AC_CONFIG_FILES([Makefile po/Makefile.in intl/Makefile])

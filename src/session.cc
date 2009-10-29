@@ -94,13 +94,14 @@ session_t::session_t()
 
 std::size_t session_t::read_journal(std::istream& in,
 				    const path&	  pathname,
-				    account_t *   master)
+				    account_t *   master,
+				    scope_t *     scope)
 {
   if (! master)
     master = journal->master;
 
-  std::size_t count = journal->parse(in, *this, master, &pathname,
-				     HANDLED(strict));
+  std::size_t count = journal->parse(in, scope ? *scope : *this,
+				     master, &pathname, HANDLED(strict));
 
   // remove calculated totals and flags
   clean_posts();
@@ -110,13 +111,14 @@ std::size_t session_t::read_journal(std::istream& in,
 }
 
 std::size_t session_t::read_journal(const path& pathname,
-				    account_t * master)
+				    account_t * master,
+				    scope_t *   scope)
 {
   if (! exists(pathname))
     throw_(std::logic_error, _("Cannot read file '%1'") << pathname);
 
   ifstream stream(pathname);
-  return read_journal(stream, pathname, master);
+  return read_journal(stream, pathname, master, scope);
 }
 
 std::size_t session_t::read_data(const string& master_account)

@@ -38,6 +38,7 @@
 #include "option.h"
 #include "pstream.h"
 #include "pool.h"
+#include "session.h"
 
 #define TIMELOG_SUPPORT 1
 #if defined(TIMELOG_SUPPORT)
@@ -60,7 +61,7 @@ namespace {
 
     instance_t *      parent;
     std::istream&     in;
-    scope_t&	      session_scope;
+    scope_t&	      scope;
     journal_t&	      journal;
     account_t *	      master;
     const path *      original_file;
@@ -85,7 +86,7 @@ namespace {
 	       time_log_t&             _timelog,
 #endif
 	       std::istream&	       _in,
-	       scope_t&	               _session_scope,
+	       scope_t&	               _scope,
 	       journal_t&	       _journal,
 	       account_t *	       _master        = NULL,
 	       const path *	       _original_file = NULL,
@@ -142,7 +143,7 @@ namespace {
     virtual expr_t::ptr_op_t lookup(const string& name);
   };
 
-  void parse_amount_expr(scope_t&      session_scope,
+  void parse_amount_expr(scope_t&      scope,
 			 std::istream& in,
 			 amount_t&     amount,
 			 post_t *      post,
@@ -162,7 +163,7 @@ namespace {
 #endif
 
     if (expr) {
-      bind_scope_t bound_scope(session_scope, *post);
+      bind_scope_t bound_scope(scope, *post);
 
       value_t result(expr.calc(bound_scope));
       if (result.is_long()) {
@@ -184,7 +185,7 @@ instance_t::instance_t(std::list<account_t *>& _account_stack,
 		       time_log_t&             _timelog,
 #endif
 		       std::istream&	       _in,
-		       scope_t&	               _session_scope,
+		       scope_t&	               _scope,
 		       journal_t&	       _journal,
 		       account_t *	       _master,
 		       const path *	       _original_file,
@@ -194,7 +195,7 @@ instance_t::instance_t(std::list<account_t *>& _account_stack,
 #if defined(TIMELOG_SUPPORT)
     timelog(_timelog),
 #endif
-    parent(_parent), in(_in), session_scope(_session_scope),
+    parent(_parent), in(_in), scope(_scope),
     journal(_journal), master(_master),
     original_file(_original_file), strict(_strict)
 {
@@ -489,7 +490,14 @@ void instance_t::option_directive(char * line)
     if (p)
       *p++ = '\0';
   }
-  process_option(pathname.string(), line + 2, session_scope, p, line);
+
+  if (! process_option(pathname.string(), line + 2, scope, p, line) &&
+      ! dynamic_cast<session_t *>(&scope)) {
+    if (std::strlen(line + 2) == 1)
+      throw_(option_error, _("Illegal option -%1") << line + 2);
+    else
+      throw_(option_error, _("Illegal option --%1") << line + 2);
+  }
 }
 
 void instance_t::automated_xact_directive(char * line)
@@ -624,7 +632,7 @@ void instance_t::include_directive(char * line)
 #if defined(TIMELOG_SUPPORT)
 		      timelog,
 #endif
-		      stream, session_scope, journal, master,
+		      stream, scope, journal, master,
 		      &filename, strict, this);
   instance.parse();
 
@@ -689,7 +697,7 @@ void instance_t::pop_directive(char *)
 void instance_t::define_directive(char * line)
 {
   expr_t def(skip_ws(line));
-  def.compile(session_scope);	// causes definitions to be established
+  def.compile(scope);	// causes definitions to be established
 }
 
 void instance_t::general_directive(char * line)
@@ -865,7 +873,7 @@ post_t * instance_t::parse_post(char *		line,
     if (*next != '(')		// indicates a value expression
       post->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
     else
-      parse_amount_expr(session_scope, stream, post->amount, post.get(),
+      parse_amount_expr(scope, stream, post->amount, post.get(),
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
@@ -913,7 +921,7 @@ post_t * instance_t::parse_post(char *		line,
 	  if (*p != '(')		// indicates a value expression
 	    post->cost->parse(cstream, amount_t::PARSE_NO_MIGRATE);
 	  else
-	    parse_amount_expr(session_scope, cstream, *post->cost, post.get(),
+	    parse_amount_expr(scope, cstream, *post->cost, post.get(),
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
@@ -966,7 +974,7 @@ post_t * instance_t::parse_post(char *		line,
       if (*p != '(')		// indicates a value expression
 	post->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
       else
-	parse_amount_expr(session_scope, stream, *post->assigned_amount, post.get(),
+	parse_amount_expr(scope, stream, *post->assigned_amount, post.get(),
 			  static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
 			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
 
@@ -1233,11 +1241,11 @@ xact_t * instance_t::parse_xact(char *		line,
 
 expr_t::ptr_op_t instance_t::lookup(const string& name)
 {
-  return session_scope.lookup(name);
+  return scope.lookup(name);
 }
 
 std::size_t journal_t::parse(std::istream& in,
-			     scope_t&      session_scope,
+			     scope_t&      scope,
 			     account_t *   master,
 			     const path *  original_file,
 			     bool          strict)
@@ -1254,7 +1262,7 @@ std::size_t journal_t::parse(std::istream& in,
 #if defined(TIMELOG_SUPPORT)
 			      timelog,
 #endif
-			      in, session_scope, *this, master,
+			      in, scope, *this, master,
 			      original_file, strict);
   parsing_instance.parse();
 
