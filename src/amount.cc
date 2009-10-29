@@ -56,25 +56,25 @@ struct amount_t::bigint_t : public supports_flags<>
 
   mpq_t		 val;
   precision_t	 prec;
-  uint_least16_t ref;
+  uint_least16_t refc;
 
 #define MP(bigint) ((bigint)->val)
 
-  bigint_t() : prec(0), ref(1) {
+  bigint_t() : prec(0), refc(1) {
     TRACE_CTOR(bigint_t, "");
     mpq_init(val);
   }
   bigint_t(const bigint_t& other)
     : supports_flags<>(static_cast<uint_least8_t>
 		       (other.flags() & ~BIGINT_BULK_ALLOC)),
-      prec(other.prec), ref(1) {
+      prec(other.prec), refc(1) {
     TRACE_CTOR(bigint_t, "copy");
     mpq_init(val);
     mpq_set(val, other.val);
   }
   ~bigint_t() {
     TRACE_DTOR(bigint_t);
-    assert(ref == 0);
+    assert(refc == 0);
     mpq_clear(val);
   }
 
@@ -83,8 +83,8 @@ struct amount_t::bigint_t : public supports_flags<>
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 128");
       return false;
     }
-    if (ref > 16535) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: ref > 16535");
+    if (refc > 16535) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: refc > 16535");
       return false;
     }
     if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC)) {
@@ -147,8 +147,8 @@ void amount_t::_copy(const amount_t& amt)
     } else {
       quantity = amt.quantity;
       DEBUG("amounts.refs",
-	     quantity << " ref++, now " << (quantity->ref + 1));
-      quantity->ref++;
+	     quantity << " refc++, now " << (quantity->refc + 1));
+      quantity->refc++;
     }
   }
   commodity_ = amt.commodity_;
@@ -160,7 +160,7 @@ void amount_t::_dup()
 {
   VERIFY(valid());
 
-  if (quantity->ref > 1) {
+  if (quantity->refc > 1) {
     bigint_t * q = new bigint_t(*quantity);
     _release();
     quantity = q;
@@ -184,9 +184,9 @@ void amount_t::_release()
 {
   VERIFY(valid());
 
-  DEBUG("amounts.refs", quantity << " ref--, now " << (quantity->ref - 1));
+  DEBUG("amounts.refs", quantity << " refc--, now " << (quantity->refc - 1));
 
-  if (--quantity->ref == 0) {
+  if (--quantity->refc == 0) {
     if (quantity->has_flags(BIGINT_BULK_ALLOC))
       quantity->~bigint_t();
     else
@@ -920,7 +920,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     quantity = new bigint_t;
     safe_holder.reset(quantity);
   }
-  else if (quantity->ref > 1) {
+  else if (quantity->refc > 1) {
     _release();
     quantity = new bigint_t;
     safe_holder.reset(quantity);
@@ -1095,8 +1095,8 @@ bool amount_t::valid() const
       return false;
     }
 
-    if (quantity->ref == 0) {
-      DEBUG("ledger.validate", "amount_t: quantity->ref == 0");
+    if (quantity->refc == 0) {
+      DEBUG("ledger.validate", "amount_t: quantity->refc == 0");
       return false;
     }
   }
