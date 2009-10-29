@@ -140,6 +140,12 @@ query_lexer_t::token_t query_lexer_t::next_token()
       return token_t(token_t::TOK_META);
     else if (ident == "data")
       return token_t(token_t::TOK_META);
+    else if (ident == "show") {
+      // The "show" keyword is special, and separates a limiting predicate
+      // from a display predicate.
+      ++begin;
+      return token_t(token_t::END_REACHED);
+    }
     else if (ident == "expr") {
       // The expr keyword takes the whole of the next string as its
       // argument.
@@ -351,11 +357,14 @@ expr_t::ptr_op_t query_parser_t::parse()
   return parse_query_expr(query_lexer_t::token_t::TOK_ACCOUNT);
 }
 
-expr_t args_to_predicate(value_t::sequence_t::const_iterator& begin,
-			 value_t::sequence_t::const_iterator end)
+std::pair<value_t::sequence_t::const_iterator, expr_t>
+args_to_predicate(value_t::sequence_t::const_iterator begin,
+		  value_t::sequence_t::const_iterator end)
 {
   query_parser_t parser(begin, end);
-  return expr_t(parser.parse());
+  expr_t expr(parser.parse());
+  return std::pair<value_t::sequence_t::const_iterator, expr_t>
+    (parser.begin(), expr);
 }
 
 } // namespace ledger

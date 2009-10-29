@@ -380,8 +380,11 @@ namespace {
 	value_t::sequence_t::const_iterator end   =
 	  args.value().as_sequence().end();
 
-	string limit = args_to_predicate(begin, end).text();
+	std::pair<value_t::sequence_t::const_iterator, expr_t>
+	  info = args_to_predicate(begin, end);
+	begin = info.first;
 
+	string limit = info.second.text();
 	if (! limit.empty())
 	  report.HANDLER(limit_).on(whence, limit);
 
@@ -390,7 +393,7 @@ namespace {
 
 	string display;
 	if (begin != end)
-	  display = args_to_predicate(begin, end).text();
+	  display = args_to_predicate(begin, end).second.text();
 
 	if (! display.empty())
 	  report.HANDLER(display_).on(whence, display);

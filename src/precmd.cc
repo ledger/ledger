@@ -226,7 +226,10 @@ value_t args_command(call_scope_t& args)
   args.value().dump(out);
   out << std::endl << std::endl;
 
-  string predicate = args_to_predicate(begin, end).text();
+  std::pair<value_t::sequence_t::const_iterator, expr_t>
+    info = args_to_predicate(begin, end);
+  begin = info.first;
+  string predicate = info.second.text();
 
   call_scope_t sub_args(static_cast<scope_t&>(args));
   sub_args.push_back(string_value(predicate));
@@ -237,7 +240,7 @@ value_t args_command(call_scope_t& args)
     out << std::endl << _("====== Display predicate ======")
 	<< std::endl << std::endl;
 
-    predicate = args_to_predicate(begin, end).text();
+    predicate = args_to_predicate(begin, end).second.text();
 
     call_scope_t disp_sub_args(static_cast<scope_t&>(args));
     disp_sub_args.push_back(string_value(predicate));

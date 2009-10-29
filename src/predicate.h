@@ -98,6 +98,8 @@ public:
 
 class query_lexer_t
 {
+  friend class query_parser_t;
+
   value_t::sequence_t::const_iterator begin;
   value_t::sequence_t::const_iterator end;
 
@@ -246,10 +248,18 @@ public:
     : lexer(begin, end) {}
 
   expr_t::ptr_op_t parse();
+
+  value_t::sequence_t::const_iterator begin() const {
+    return lexer.begin;
+  }
+  value_t::sequence_t::const_iterator end() const {
+    return lexer.end;
+  }
 };
 
-expr_t args_to_predicate(value_t::sequence_t::const_iterator& begin,
-			 value_t::sequence_t::const_iterator end);
+std::pair<value_t::sequence_t::const_iterator, expr_t>
+args_to_predicate(value_t::sequence_t::const_iterator begin,
+		  value_t::sequence_t::const_iterator end);
 
 } // namespace ledger
 
