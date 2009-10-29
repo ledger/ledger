@@ -111,7 +111,7 @@ void global_scope_t::read_init()
 
       ifstream init(init_file);
 
-      if (session().read_journal(init_file) > 0 ||
+      if (session().read_journal(init_file, NULL, &report()) > 0 ||
 	  session().journal->auto_xacts.size() > 0 ||
 	  session().journal->period_xacts.size() > 0) {
 	throw_(parse_error, _("Transactions found in initialization file '%1'")
@@ -419,12 +419,16 @@ void global_scope_t::normalize_report_options(const string& verb)
   report_t& rep(report());
 
 #ifdef HAVE_ISATTY
-  if (! rep.HANDLED(no_color) && isatty(STDOUT_FILENO))
-    rep.HANDLER(color).on_only(string("?normalize"));
-  if (rep.HANDLED(color) && ! isatty(STDOUT_FILENO))
-    rep.HANDLER(color).off();
-  if (rep.HANDLED(pager_) && ! isatty(STDOUT_FILENO))
-    rep.HANDLER(pager_).off();
+  if (! rep.HANDLED(force_color)) {
+    if (! rep.HANDLED(no_color) && isatty(STDOUT_FILENO))
+      rep.HANDLER(color).on_only(string("?normalize"));
+    if (rep.HANDLED(color) && ! isatty(STDOUT_FILENO))
+      rep.HANDLER(color).off();
+  }
+  if (! rep.HANDLED(force_pager)) {
+    if (rep.HANDLED(pager_) && ! isatty(STDOUT_FILENO))
+      rep.HANDLER(pager_).off();
+  }
 #endif
 
   // jww (2009-02-09): These globals are a hack, but hard to avoid.
@@ -535,6 +539,10 @@ void global_scope_t::normalize_report_options(const string& verb)
 
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);
+
+    if (! rep.HANDLER(date_width_).specified)
+      rep.HANDLER(date_width_)
+	.on_with(none, format_date(CURRENT_DATE(), FMT_PRINTED).length());
 
     long date_width    = rep.HANDLER(date_width_).value.to_long();
     long payee_width   = (rep.HANDLER(payee_width_).specified ?

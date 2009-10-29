@@ -295,7 +295,7 @@ inline bool is_eq(const char * p, const char * n) {
 #define WANT_DIR()					\
   (std::strncmp(p, DIR_PREFIX, DIR_PREFIX_LEN) == 0)
 
-void process_option(const string& whence, const string& name, scope_t& scope,
+bool process_option(const string& whence, const string& name, scope_t& scope,
 		    const char * arg, const string& varname);
 
 void process_environment(const char ** envp, const string& tag,

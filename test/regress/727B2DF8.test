@@ -1,4 +1,4 @@
-reg --color
+reg --color --force-color
 <<<
 N $
 

@@ -237,6 +237,8 @@ public:
     HANDLER(exact).report(out);
     HANDLER(exchange_).report(out);
     HANDLER(flat).report(out);
+    HANDLER(force_color).report(out);
+    HANDLER(force_pager).report(out);
     HANDLER(forecast_while_).report(out);
     HANDLER(format_).report(out);
     HANDLER(gain).report(out);
@@ -539,6 +541,8 @@ public:
     });
 
   OPTION(report_t, flat);
+  OPTION(report_t, force_color);
+  OPTION(report_t, force_pager);
   OPTION(report_t, forecast_while_);
   OPTION(report_t, format_); // -F
 

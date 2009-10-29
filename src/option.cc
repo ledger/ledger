@@ -99,12 +99,15 @@ namespace {
   }
 }
 
-void process_option(const string& whence, const string& name, scope_t& scope,
+bool process_option(const string& whence, const string& name, scope_t& scope,
 		    const char * arg, const string& varname)
 {
   op_bool_tuple opt(find_option(scope, name));
-  if (opt.first)
+  if (opt.first) {
     process_option(whence, opt.first->as_function(), scope, arg, varname);
+    return true;
+  }
+  return false;
 }
 
 void process_environment(const char ** envp, const string& tag,
