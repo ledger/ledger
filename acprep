@@ -1334,6 +1334,8 @@ class PrepareBuild(CommandLineApp):
     def phase_proof(self, *args):
         self.log.debug('Executing phase: proof')
 
+        self.phase_makeall(*args)
+
         self.log.info('=== Copying source tree ===')
         self.phase_rsync()
 
@@ -1402,11 +1404,6 @@ class PrepareBuild(CommandLineApp):
         self.phase_make(*args)
         
         self.configure_flavor('default', False)
-
-    def phase_do_all(self, *args):
-        self.log.debug('Executing phase: do_all')
-        self.phase_makeall(*args)
-        self.phase_proof(*args)
 
     #########################################################################
     # Help                                                                  #
