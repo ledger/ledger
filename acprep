@@ -886,6 +886,7 @@ class PrepareBuild(CommandLineApp):
 	self.CXXFLAGS.append('-Wwrite-strings')
 	self.CXXFLAGS.append('-Wno-old-style-cast')
 	self.CXXFLAGS.append('-Wno-deprecated')
+	self.CXXFLAGS.append('-Wno-strict-aliasing')
 	self.CXXFLAGS.append('-Werror')
 
     def option_boost(self, option=None, opt_str=None, value=None, parser=None):
