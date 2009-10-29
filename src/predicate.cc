@@ -64,6 +64,29 @@ query_lexer_t::token_t query_lexer_t::next_token()
       return next_token();
   goto resume;
 
+  case '/': {
+    string pat;
+    bool found_end_slash = false;
+    for (++arg_i; arg_i != arg_end; ++arg_i) {
+      if (*arg_i == '\\') {
+	if (++arg_i == arg_end)
+	  throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+      }
+      else if (*arg_i == '/') {
+	++arg_i;
+	found_end_slash = true;
+	break;
+      }
+      pat.push_back(*arg_i);
+    }
+    if (! found_end_slash)
+      throw_(parse_error, _("Expected '/' at end of pattern"));
+    if (pat.empty())
+      throw_(parse_error, _("Match pattern is empty"));
+
+    return token_t(token_t::TERM, pat);
+  }
+
   case '(': ++arg_i; return token_t(token_t::LPAREN);
   case ')': ++arg_i; return token_t(token_t::RPAREN);
   case '&': ++arg_i; return token_t(token_t::TOK_AND);
@@ -143,7 +166,7 @@ query_lexer_t::token_t query_lexer_t::next_token()
     else if (ident == "show") {
       // The "show" keyword is special, and separates a limiting predicate
       // from a display predicate.
-      ++begin;
+      DEBUG("pred.show", "string = " << (*begin).as_string());
       return token_t(token_t::END_REACHED);
     }
     else if (ident == "expr") {
@@ -357,14 +380,19 @@ expr_t::ptr_op_t query_parser_t::parse()
   return parse_query_expr(query_lexer_t::token_t::TOK_ACCOUNT);
 }
 
-std::pair<value_t::sequence_t::const_iterator, expr_t>
+std::pair<expr_t, query_parser_t>
 args_to_predicate(value_t::sequence_t::const_iterator begin,
 		  value_t::sequence_t::const_iterator end)
 {
   query_parser_t parser(begin, end);
   expr_t expr(parser.parse());
-  return std::pair<value_t::sequence_t::const_iterator, expr_t>
-    (parser.begin(), expr);
+  return std::pair<expr_t, query_parser_t>(expr, parser);
+}
+
+std::pair<expr_t, query_parser_t> args_to_predicate(query_parser_t parser)
+{
+  expr_t expr(parser.parse());
+  return std::pair<expr_t, query_parser_t>(expr, parser);
 }
 
 } // namespace ledger

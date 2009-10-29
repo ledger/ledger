@@ -106,7 +106,7 @@ class query_lexer_t
   string::const_iterator arg_i;
   string::const_iterator arg_end;
 
-  bool consume_whitespace;
+  bool	  consume_whitespace;
 
 public:
   struct token_t
@@ -220,15 +220,32 @@ public:
 		value_t::sequence_t::const_iterator _end)
     : begin(_begin), end(_end), consume_whitespace(false)
   {
+    TRACE_CTOR(query_lexer_t, "");
     assert(begin != end);
     arg_i   = (*begin).as_string().begin();
     arg_end = (*begin).as_string().end();
+  }
+  query_lexer_t(const query_lexer_t& lexer)
+    : begin(lexer.begin), end(lexer.end),
+      arg_i(lexer.arg_i), arg_end(lexer.arg_end),
+      consume_whitespace(lexer.consume_whitespace),
+      token_cache(lexer.token_cache)
+  {
+    TRACE_CTOR(query_lexer_t, "copy");
+  }
+  ~query_lexer_t() throw() {
+    TRACE_DTOR(query_lexer_t);
   }
 
   token_t next_token();
   void    push_token(token_t tok) {
     assert(token_cache.kind == token_t::UNKNOWN);
     token_cache = tok;
+  }
+  token_t peek_token() {
+    if (token_cache.kind == token_t::UNKNOWN)
+      token_cache = next_token();
+    return token_cache;
   }
 };
 
@@ -245,21 +262,32 @@ class query_parser_t
 public:
   query_parser_t(value_t::sequence_t::const_iterator begin,
 		 value_t::sequence_t::const_iterator end)
-    : lexer(begin, end) {}
+    : lexer(begin, end) {
+    TRACE_CTOR(query_parser_t, "");
+  }
+  query_parser_t(const query_parser_t& parser)
+    : lexer(parser.lexer) {
+    TRACE_CTOR(query_parser_t, "copy");
+  }
+  ~query_parser_t() throw() {
+    TRACE_DTOR(query_parser_t);
+  }
 
   expr_t::ptr_op_t parse();
 
-  value_t::sequence_t::const_iterator begin() const {
-    return lexer.begin;
-  }
-  value_t::sequence_t::const_iterator end() const {
-    return lexer.end;
+  bool tokens_remaining() {
+    query_lexer_t::token_t tok = lexer.peek_token();
+    assert(tok.kind != query_lexer_t::token_t::UNKNOWN);
+    return tok.kind != query_lexer_t::token_t::END_REACHED;
   }
 };
 
-std::pair<value_t::sequence_t::const_iterator, expr_t>
+std::pair<expr_t, query_parser_t>
 args_to_predicate(value_t::sequence_t::const_iterator begin,
 		  value_t::sequence_t::const_iterator end);
+
+std::pair<expr_t, query_parser_t>
+args_to_predicate(query_parser_t parser);
 
 } // namespace ledger
 
