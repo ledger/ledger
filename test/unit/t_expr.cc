@@ -40,12 +40,12 @@ void ValueExprTestCase::tearDown()
 
 void ValueExprTestCase::testPredicateTokenizer1()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -57,10 +57,10 @@ void ValueExprTestCase::testPredicateTokenizer1()
 
 void ValueExprTestCase::testPredicateTokenizer2()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo and bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -72,12 +72,12 @@ void ValueExprTestCase::testPredicateTokenizer2()
 
 void ValueExprTestCase::testPredicateTokenizer3()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("(foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar)"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -91,7 +91,6 @@ void ValueExprTestCase::testPredicateTokenizer3()
 
 void ValueExprTestCase::testPredicateTokenizer4()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("("));
   args.push_back(string_value("foo"));
@@ -99,6 +98,7 @@ void ValueExprTestCase::testPredicateTokenizer4()
   args.push_back(string_value("bar"));
   args.push_back(string_value(")"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -112,11 +112,11 @@ void ValueExprTestCase::testPredicateTokenizer4()
 
 void ValueExprTestCase::testPredicateTokenizer5()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("( foo and"));
   args.push_back(string_value("bar)"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -130,12 +130,12 @@ void ValueExprTestCase::testPredicateTokenizer5()
 
 void ValueExprTestCase::testPredicateTokenizer6()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("=foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
@@ -148,10 +148,10 @@ void ValueExprTestCase::testPredicateTokenizer6()
 
 void ValueExprTestCase::testPredicateTokenizer7()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("=foo and bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
@@ -162,10 +162,10 @@ void ValueExprTestCase::testPredicateTokenizer7()
 
 void ValueExprTestCase::testPredicateTokenizer8()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("expr foo and bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
@@ -176,11 +176,11 @@ void ValueExprTestCase::testPredicateTokenizer8()
 
 void ValueExprTestCase::testPredicateTokenizer9()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("expr"));
   args.push_back(string_value("foo and bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
@@ -191,13 +191,13 @@ void ValueExprTestCase::testPredicateTokenizer9()
 
 void ValueExprTestCase::testPredicateTokenizer10()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("expr"));
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
@@ -210,7 +210,6 @@ void ValueExprTestCase::testPredicateTokenizer10()
 
 void ValueExprTestCase::testPredicateTokenizer11()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
@@ -218,6 +217,7 @@ void ValueExprTestCase::testPredicateTokenizer11()
   args.push_back(string_value("or"));
   args.push_back(string_value("baz"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -231,7 +231,6 @@ void ValueExprTestCase::testPredicateTokenizer11()
 
 void ValueExprTestCase::testPredicateTokenizer12()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
@@ -239,6 +238,7 @@ void ValueExprTestCase::testPredicateTokenizer12()
   args.push_back(string_value("|"));
   args.push_back(string_value("baz"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -252,13 +252,13 @@ void ValueExprTestCase::testPredicateTokenizer12()
 
 void ValueExprTestCase::testPredicateTokenizer13()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
   args.push_back(string_value("|baz"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -272,13 +272,13 @@ void ValueExprTestCase::testPredicateTokenizer13()
 
 void ValueExprTestCase::testPredicateTokenizer14()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar|"));
   args.push_back(string_value("baz"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -292,12 +292,12 @@ void ValueExprTestCase::testPredicateTokenizer14()
 
 void ValueExprTestCase::testPredicateTokenizer15()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and"));
   args.push_back(string_value("bar|baz"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -311,11 +311,11 @@ void ValueExprTestCase::testPredicateTokenizer15()
 
 void ValueExprTestCase::testPredicateTokenizer16()
 {
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("foo"));
   args.push_back(string_value("and bar|baz"));
 
+#ifndef NOT_FOR_PYTHON
   query_lexer_t tokens(args.begin(), args.end());
 
   assertEqual(query_lexer_t::token_t::TERM, tokens.next_token().kind);
