@@ -630,10 +630,11 @@ public:
 
   OPTION(report_t, output_); // -o
 
+#ifdef HAVE_ISATTY
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {
-     if (! std::getenv("PAGER")) {
+     if (! std::getenv("PAGER") && isatty(STDOUT_FILENO)) {
        bool have_less = false;
        if (exists(path("/opt/local/bin/less")) ||
 	   exists(path("/usr/local/bin/less")) ||
@@ -654,6 +655,20 @@ public:
      else
        option_t<report_t>::on_with(whence, text);
    });
+#else // HAVE_ISATTY
+  OPTION__
+  (report_t, pager_,
+   CTOR(report_t, pager_) {
+   }
+   virtual void on_with(const optional<string>& whence, const value_t& text) {
+     string cmd(text.to_string());
+     if (cmd == "" || cmd == "false" || cmd == "off" ||
+	 cmd == "none" || cmd == "no" || cmd == "disable")
+       option_t<report_t>::off();
+     else
+       option_t<report_t>::on_with(whence, text);
+   });
+#endif // HAVE_ISATTY
 
   OPTION(report_t, payee_as_account);
 
