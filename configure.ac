@@ -280,6 +280,38 @@ else
   AC_MSG_FAILURE("Could not find boost_iostreams library (set CPPFLAGS and LDFLAGS?)")
 fi
 
+# check for boost_serialization
+AC_CACHE_CHECK(
+  [if boost_serialization is available],
+  [boost_serialization_cpplib_avail_cv_],
+  [boost_serialization_save_libs=$LIBS
+   LIBS="-lboost_serialization$BOOST_SUFFIX -lboost_system$BOOST_SUFFIX $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_LINK_IFELSE(
+     [AC_LANG_PROGRAM(
+	[[#include <boost/archive/binary_oarchive.hpp>
+          #include <iostream>
+          struct foo {
+            int a;
+            template<class Archive>
+            void serialize(Archive & ar, const unsigned int) {
+              ar & a;
+            }
+          };]],
+	[[boost::archive::binary_oarchive oa(std::cout);
+          foo x;
+          oa << x;]])],
+     [boost_serialization_cpplib_avail_cv_=true],
+     [boost_serialization_cpplib_avail_cv_=false])
+   AC_LANG_POP
+   LIBS=$boost_serialization_save_libs])
+
+if [test x$boost_serialization_cpplib_avail_cv_ = xtrue ]; then
+  AC_DEFINE([HAVE_BOOST_SERIALIZATION], [1], [Whether Boost.Serialization is available])
+  LIBS="-lboost_serialization$BOOST_SUFFIX $LIBS"
+fi
+AM_CONDITIONAL(HAVE_BOOST_SERIALIZATION, test x$boost_serialization_cpplib_avail_cv_ = xtrue)
+
 # check for Python
 AM_PATH_PYTHON(2.4,, :)
 if [test "$PYTHON" != :]; then
