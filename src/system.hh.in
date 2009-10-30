@@ -138,7 +138,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/any.hpp>
 #include <boost/bind.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>

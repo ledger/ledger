@@ -45,8 +45,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 namespace {
   expr_t py_value_getattr(const value_t& value, const string& name)
   {
-    if (value.is_pointer()) {
-      if (scope_t * scope = value.as_pointer<scope_t>())
+    if (value.is_scope()) {
+      if (scope_t * scope = value.as_scope())
 	return expr_t(scope->lookup(name), scope);
     }
     throw_(value_error, _("Cannot lookup attributes in %1") << value.label());
@@ -283,7 +283,7 @@ void export_value()
     .value("BALANCE",	   value_t::BALANCE)
     .value("STRING",	   value_t::STRING)
     .value("SEQUENCE",	   value_t::SEQUENCE)
-    .value("POINTER",	   value_t::POINTER)
+    .value("SCOPE",	   value_t::SCOPE)
     ;
 
   scope().attr("NULL_VALUE")    = NULL_VALUE;

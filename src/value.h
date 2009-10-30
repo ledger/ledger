@@ -56,6 +56,8 @@ namespace ledger {
 
 DECLARE_EXCEPTION(value_error, std::runtime_error);
 
+class scope_t;
+
 /**
  * @class value_t
  *
@@ -107,7 +109,7 @@ public:
     STRING,			// a string object
     MASK,			// a regular expression mask
     SEQUENCE,			// a vector of value_t objects
-    POINTER			// an opaque pointer of any type
+    SCOPE			// a pointer to a scope
   };
 
 private:
@@ -134,7 +136,7 @@ private:
 	    string,	  // STRING
 	    mask_t,	  // MASK
 	    sequence_t *, // SEQUENCE
-	    boost::any	  // POINTER
+	    scope_t *	  // SCOPE
 	    > data;
     
     type_t type;
@@ -332,10 +334,9 @@ public:
     set_sequence(val);
   }
 
-  template <typename T>
-  explicit value_t(T * item) {
-    TRACE_CTOR(value_t, "T *");
-    set_pointer(item);
+  explicit value_t(scope_t * item) {
+    TRACE_CTOR(value_t, "scope_t *");
+    set_scope(item);
   }
 
   /**
@@ -687,49 +688,18 @@ public:
   }
 
   /**
-   * Dealing with pointers is bit involved because we actually deal
-   * with typed pointers.  For example, if you call as_pointer it
-   * returns a boost::any object, but if you use as_pointer<void>,
-   * then it returns a void *.  The latter form only succeeds if the
-   * stored pointers was assigned to the value as a void*, otherwise
-   * it throws an exception.
+   * Dealing with scope pointers.
    */
-  bool is_pointer() const {
-    return is_type(POINTER);
+  bool is_scope() const {
+    return is_type(SCOPE);
   }
-  boost::any& as_any_pointer_lval() {
-    VERIFY(is_pointer());
-    _dup();
-    return boost::get<boost::any>(storage->data);
+  scope_t * as_scope() const {
+    VERIFY(is_scope());
+    return boost::get<scope_t *>(storage->data);
   }
-  template <typename T>
-  T * as_pointer_lval() {
-    return any_cast<T *>(as_any_pointer_lval());
-  }
-  template <typename T>
-  T& as_ref_lval() {
-    return *as_pointer_lval<T>();
-  }
-  const boost::any& as_any_pointer() const {
-    VERIFY(is_pointer());
-    return boost::get<boost::any>(storage->data);
-  }
-  template <typename T>
-  T * as_pointer() const {
-    return any_cast<T *>(as_any_pointer());
-  }
-  template <typename T>
-  T& as_ref() const {
-    return *as_pointer<T>();
-  }
-  void set_any_pointer(const boost::any& val) {
-    set_type(POINTER);
+  void set_scope(scope_t * val) {
+    set_type(SCOPE);
     storage->data = val;
-  }
-  template <typename T>
-  void set_pointer(T * val) {
-    set_type(POINTER);
-    storage->data = boost::any(val);
   }
 
   /**
@@ -902,8 +872,8 @@ public:
       return _("a regexp");
     case SEQUENCE:
       return _("a sequence");
-    case POINTER:
-      return _("a pointer");
+    case SCOPE:
+      return _("a scope");
     default:
       assert(false);
       break;
