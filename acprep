@@ -712,12 +712,14 @@ class PrepareBuild(CommandLineApp):
 
     def setup_for_johnw(self):
         # jww (2009-03-09): Some peculiarities specific to my system
-        if exists('/usr/local/stow/cppunit/include'):
-	    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
-	    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
+        if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
+            if exists('/usr/local/stow/cppunit/include'):
+                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
+            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
             self.options.use_glibcxx_debug = True
 
