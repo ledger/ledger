@@ -468,7 +468,12 @@ class PrepareBuild(CommandLineApp):
 
     def phase_autogen(self, *args):
         self.log.info('Executing phase: autogen')
-        self.execute('sh', 'autogen.sh')
+
+        if not exists('autogen.sh') or \
+           self.isnewer('tools/autogen.sh', 'autogen.sh'):
+            shutil.copyfile('tools/autogen.sh', 'autogen.sh')
+
+        self.execute('sh', 'tools/autogen.sh')
 
     def phase_aclocal(self, *args):
         self.log.info('Executing phase: aclocal')
@@ -476,6 +481,15 @@ class PrepareBuild(CommandLineApp):
 
     def phase_autoconf(self, *args):
         self.log.info('Executing phase: autoconf')
+
+        if not exists('configure.ac') or \
+           self.isnewer('tools/configure.ac', 'configure.ac'):
+            shutil.copyfile('tools/configure.ac', 'configure.ac')
+
+        if not exists('Makefile.am') or \
+           self.isnewer('tools/Makefile.am', 'Makefile.am'):
+            shutil.copyfile('tools/Makefile.am', 'Makefile.am')
+
         reason = self.need_to_prepare_autotools()
         if reason:
             self.log.info('autogen.sh must be run ' + reason)
