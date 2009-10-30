@@ -119,10 +119,58 @@ void set_input_date_format(const char * format);
 class date_interval_t : public equality_comparable<date_interval_t>
 {
 public:
-  typedef variant<gregorian::days,
-		  gregorian::weeks,
-		  gregorian::months,
-		  gregorian::years> duration_t;
+  struct duration_t
+  {
+    enum skip_quantum_t {
+      DAYS, WEEKS, MONTHS, YEARS
+    } quantum;
+    int length;
+
+    duration_t() : quantum(DAYS), length(0) {
+      TRACE_CTOR(date_interval_t::duration_t, "");
+    }
+    duration_t(skip_quantum_t _quantum, int _length)
+      : quantum(_quantum), length(_length) {
+      TRACE_CTOR(date_interval_t::duration_t, "skip_quantum_t, int");
+    }
+    duration_t(const duration_t& dur)
+      : quantum(dur.quantum), length(dur.length) {
+      TRACE_CTOR(date_interval_t::duration_t, "copy");
+    }
+    ~duration_t() throw() {
+      TRACE_DTOR(date_interval_t::duration_t);
+    }      
+
+    date_t add(const date_t& date) const {
+      switch (quantum) {
+      case DAYS:
+	return date + gregorian::days(length);
+      case WEEKS:
+	return date + gregorian::weeks(length);
+      case MONTHS:
+	return date + gregorian::months(length);
+      case YEARS:
+	return date + gregorian::years(length);
+      default:
+	assert(0); return date_t();
+      }
+    }
+
+    date_t subtract(const date_t& date) const {
+      switch (quantum) {
+      case DAYS:
+	return date - gregorian::days(length);
+      case WEEKS:
+	return date - gregorian::weeks(length);
+      case MONTHS:
+	return date - gregorian::months(length);
+      case YEARS:
+	return date - gregorian::years(length);
+      default:
+	assert(0); return date_t();
+      }
+    }
+  };
 
   static date_t add_duration(const date_t&     date,
 			     const duration_t& duration);
