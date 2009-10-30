@@ -66,12 +66,9 @@ class session_t : public symbol_scope_t
   friend void set_session_context(session_t * session);
 
 public:
-  bool flush_on_next_data_file;
-  date_t::year_type current_year;
-
-  shared_ptr<commodity_pool_t> commodity_pool;
-  scoped_ptr<account_t>	       master;
-  scoped_ptr<journal_t>	       journal;
+  bool			flush_on_next_data_file;
+  date_t::year_type	current_year;
+  shared_ptr<journal_t>	journal;
 
   explicit session_t();
   virtual ~session_t() {

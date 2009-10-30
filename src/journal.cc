@@ -32,10 +32,33 @@
 #include <system.hh>
 
 #include "journal.h"
+#include "amount.h"
+#include "commodity.h"
+#include "pool.h"
 #include "xact.h"
 #include "account.h"
 
 namespace ledger {
+
+journal_t::journal_t()
+  : master(new account_t),
+    commodity_pool(new commodity_pool_t)
+{
+  TRACE_CTOR(journal_t, "");
+
+  // Add time commodity conversions, so that timelog's may be parsed
+  // in terms of seconds, but reported as minutes or hours.
+  if (commodity_t * commodity = commodity_pool->create("s"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
+
+  // Add a "percentile" commodity
+  if (commodity_t * commodity = commodity_pool->create("%"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
+}
 
 journal_t::~journal_t()
 {
@@ -52,6 +75,9 @@ journal_t::~journal_t()
 
   foreach (period_xact_t * xact, period_xacts)
     checked_delete(xact);
+  
+  checked_delete(master);
+  commodity_pool.reset();
 }
 
 void journal_t::add_account(account_t * acct)

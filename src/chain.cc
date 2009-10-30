@@ -223,33 +223,33 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 
   if (report.HANDLED(set_account_))
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       report.HANDLER(set_account_).str(),
 				       report));
   else if (report.HANDLED(set_payee_))
     handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       report.HANDLER(set_payee_).str(),
 				       report));
   else if (report.HANDLED(comm_as_payee))
     handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       expr_t("commodity"), report));
   else if (report.HANDLED(code_as_payee))
     handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       expr_t("code"), report));
   else if (report.HANDLED(payee_as_account))
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       expr_t("payee"), report));
   else if (report.HANDLED(comm_as_account))
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       expr_t("commodity"), report));
   else if (report.HANDLED(code_as_account))
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.master.get(),
+				       report.session.journal->master,
 				       expr_t("code"), report));
 
   return handler;

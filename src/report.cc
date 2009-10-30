@@ -87,11 +87,11 @@ void report_t::accounts_report(acct_handler_ptr handler)
 
   scoped_ptr<accounts_iterator> iter;
   if (! HANDLED(sort_)) {
-    iter.reset(new basic_accounts_iterator(*session.master));
+    iter.reset(new basic_accounts_iterator(*session.journal->master));
   } else {
     expr_t sort_expr(HANDLER(sort_).str());
     sort_expr.set_context(this);
-    iter.reset(new sorted_accounts_iterator(*session.master.get(),
+    iter.reset(new sorted_accounts_iterator(*session.journal->master,
 					    sort_expr, HANDLED(flat)));
   }
 

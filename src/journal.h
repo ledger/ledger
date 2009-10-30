@@ -53,6 +53,7 @@ namespace ledger {
 
 typedef std::list<path>	paths_list;
 
+class commodity_pool_t;
 class xact_t;
 class auto_xact_t;
 class xact_finalizer_t;
@@ -72,18 +73,16 @@ typedef std::list<period_xact_t *> period_xacts_list;
 class journal_t : public noncopyable
 {
 public:
-  account_t * master;
-  account_t * basket;
-  xacts_list  xacts;
+  account_t *	     master;
+  account_t *	     basket;
+  xacts_list	     xacts;
+  auto_xacts_list    auto_xacts;
+  period_xacts_list  period_xacts;
 
-  auto_xacts_list   auto_xacts;
-  period_xacts_list period_xacts;
-
+  shared_ptr<commodity_pool_t> commodity_pool;
   hooks_t<xact_finalizer_t, xact_t> xact_finalize_hooks;
 
-  journal_t(account_t * _master = NULL) : master(_master) {
-    TRACE_CTOR(journal_t, "");
-  }
+  journal_t();
   ~journal_t();
 
   // These four methods are delegated to the current session, since all

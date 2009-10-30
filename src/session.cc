@@ -32,33 +32,12 @@
 #include <system.hh>
 
 #include "session.h"
-#include "commodity.h"
-#include "pool.h"
 #include "xact.h"
 #include "account.h"
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-//BOOST_IS_ABSTRACT(ledger::scope_t)
-BOOST_CLASS_EXPORT(ledger::scope_t)
-BOOST_CLASS_EXPORT(ledger::child_scope_t)
-BOOST_CLASS_EXPORT(ledger::symbol_scope_t)
-BOOST_CLASS_EXPORT(ledger::call_scope_t)
-BOOST_CLASS_EXPORT(ledger::account_t)
-BOOST_CLASS_EXPORT(ledger::item_t)
-BOOST_CLASS_EXPORT(ledger::post_t)
-BOOST_CLASS_EXPORT(ledger::xact_base_t)
-BOOST_CLASS_EXPORT(ledger::xact_t)
-BOOST_CLASS_EXPORT(ledger::auto_xact_t)
-BOOST_CLASS_EXPORT(ledger::period_xact_t)
-
-template void ledger::journal_t::serialize(boost::archive::binary_oarchive&,
-					   const unsigned int);
-template void ledger::journal_t::serialize(boost::archive::binary_iarchive&,
-					   const unsigned int);
-#endif // HAVE_BOOST_SERIALIZATION
+#include "pstream.h"
 
 namespace ledger {
 
@@ -66,7 +45,7 @@ void set_session_context(session_t * session)
 {
   if (session) {
     times_initialize();
-    amount_t::initialize(session->commodity_pool);
+    amount_t::initialize(session->journal->commodity_pool);
 
     // jww (2009-02-04): Is amount_t the right place for parse_conversion to
     // happen?
@@ -84,12 +63,8 @@ void set_session_context(session_t * session)
 
 session_t::session_t()
   : flush_on_next_data_file(false),
-
     current_year(CURRENT_DATE().year()),
-
-    commodity_pool(new commodity_pool_t),
-    master(new account_t),
-    journal(new journal_t(master.get()))
+    journal(new journal_t)
 {
   TRACE_CTOR(session_t, "");
 
@@ -97,19 +72,6 @@ session_t::session_t()
     HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
   else
     HANDLER(price_db_).on(none, path("./.pricedb").string());
-
-  // Add time commodity conversions, so that timelog's may be parsed
-  // in terms of seconds, but reported as minutes or hours.
-  if (commodity_t * commodity = commodity_pool->create("s"))
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  else
-    assert(false);
-
-  // Add a "percentile" commodity
-  if (commodity_t * commodity = commodity_pool->create("%"))
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  else
-    assert(false);
 }
 
 std::size_t session_t::read_journal(std::istream& in,
@@ -220,14 +182,10 @@ void session_t::read_journal_files()
 void session_t::close_journal_files()
 {
   journal.reset();
-  master.reset();
-  commodity_pool.reset();
   amount_t::shutdown();
   
-  commodity_pool.reset(new commodity_pool_t);
-  amount_t::initialize(commodity_pool);
-  master.reset(new account_t);
-  journal.reset(new journal_t(master.get()));
+  journal.reset(new journal_t);
+  amount_t::initialize(journal->commodity_pool);
 }
 
 void session_t::clean_posts()
@@ -244,9 +202,9 @@ void session_t::clean_posts(xact_t& xact)
 
 void session_t::clean_accounts()
 {
-  basic_accounts_iterator acct_walker(*master);
+  basic_accounts_iterator acct_walker(*journal->master);
   pass_down_accounts(acct_handler_ptr(new clear_account_xdata), acct_walker);
-  master->clear_xdata();
+  journal->master->clear_xdata();
 }
 
 option_t<session_t> * session_t::lookup_option(const char * p)

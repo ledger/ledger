@@ -46,7 +46,7 @@ value_t report_statistics(call_scope_t& args)
   std::ostream& out(report.output_stream);
 
   const account_t::xdata_t::details_t&
-    statistics(report.session.master->family_details(true));
+    statistics(report.session.journal->master->family_details(true));
 
   if (! is_valid(statistics.earliest_post) &&
       ! is_valid(statistics.latest_post))

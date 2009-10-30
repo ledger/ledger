@@ -203,7 +203,7 @@ void format_accounts::flush()
     disp_pred.predicate.parse(report.HANDLER(display_).str());
   }
 
-  mark_accounts(*report.session.master, report.HANDLED(flat));
+  mark_accounts(*report.session.journal->master, report.HANDLED(flat));
 
   std::size_t displayed = 0;
 
@@ -212,7 +212,7 @@ void format_accounts::flush()
 
   if (displayed > 1 &&
       ! report.HANDLED(no_total) && ! report.HANDLED(percent)) {
-    bind_scope_t bound_scope(report, *report.session.master);
+    bind_scope_t bound_scope(report, *report.session.journal->master);
     separator_format.format(out, bound_scope);
     total_line_format.format(out, bound_scope);
   }
