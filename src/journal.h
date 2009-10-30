@@ -110,6 +110,22 @@ public:
 		    bool          strict	= false);
 
   bool valid() const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & master;
+    ar & basket;
+    ar & xacts;
+    ar & auto_xacts;
+    ar & period_xacts;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 } // namespace ledger

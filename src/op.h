@@ -290,6 +290,33 @@ public:
 
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(const function_t& fobj);
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & refc;
+    ar & kind;
+    if (Archive::is_loading::value || ! left_ || left_->kind != FUNCTION) {
+      ar & left_;
+    } else {
+      ptr_op_t temp_op;
+      ar & temp_op;
+    }
+    if (Archive::is_loading::value || kind == VALUE || kind == IDENT ||
+	(kind > UNARY_OPERATORS &&
+	 (! has_right() || ! right()->is_function()))) {
+      ar & data;
+    } else {
+      variant<ptr_op_t, value_t, string, function_t> temp_data;
+      ar & temp_data;
+    }
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline expr_t::ptr_op_t

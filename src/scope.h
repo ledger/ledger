@@ -67,6 +67,16 @@ public:
 
   virtual void define(const string&, expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const string& name) = 0;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive &, const unsigned int /* version */) {}
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -100,6 +110,19 @@ public:
       return parent->lookup(name);
     return NULL;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<scope_t>(*this);
+    ar & parent;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -127,6 +150,19 @@ public:
   virtual void define(const string& name, expr_t::ptr_op_t def);
 
   virtual expr_t::ptr_op_t lookup(const string& name);
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<child_scope_t>(*this);
+    ar & symbols;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -137,8 +173,6 @@ public:
 class call_scope_t : public child_scope_t
 {
   value_t args;
-
-  call_scope_t();
 
 public:
   explicit call_scope_t(scope_t& _parent) : child_scope_t(_parent) {
@@ -182,6 +216,21 @@ public:
   bool empty() const {
     return args.size() == 0;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  explicit call_scope_t() {}
+
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<child_scope_t>(*this);
+    ar & args;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -215,6 +264,19 @@ public:
       return def;
     return child_scope_t::lookup(name);
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<child_scope_t>(*this);
+    ar & grandchild;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**

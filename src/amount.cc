@@ -94,6 +94,20 @@ struct amount_t::bigint_t : public supports_flags<>
     }
     return true;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int /* version */)
+  {
+    ar & boost::serialization::base_object<supports_flags<> >(*this);
+    ar & val;
+    ar & prec;
+    ar & refc;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 shared_ptr<commodity_pool_t> amount_t::current_pool;
@@ -1107,4 +1121,63 @@ bool amount_t::valid() const
   return true;
 }
 
+#if defined(HAVE_BOOST_SERIALIZATION)
+
+template<class Archive>
+void amount_t::serialize(Archive& ar, const unsigned int /* version */)
+{
+  ar & current_pool;
+  ar & is_initialized;
+  ar & quantity;
+  ar & commodity_;
+}
+
+#endif // HAVE_BOOST_SERIALIZATION
+
 } // namespace ledger
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+namespace boost {
+namespace serialization {
+
+template <class Archive>
+void serialize(Archive& ar, MP_INT& mpz, const unsigned int /* version */)
+{
+  ar & mpz._mp_alloc;
+  ar & mpz._mp_size;
+  ar & mpz._mp_d;
+}
+
+template <class Archive>
+void serialize(Archive& ar, MP_RAT& mpq, const unsigned int /* version */)
+{
+  ar & mpq._mp_num;
+  ar & mpq._mp_den;
+}
+
+template <class Archive>
+void serialize(Archive& ar, long unsigned int& integer,
+	       const unsigned int /* version */)
+{
+  ar & make_binary_object(&integer, sizeof(long unsigned int));
+}
+
+} // namespace serialization
+} // namespace boost
+
+BOOST_CLASS_EXPORT(ledger::annotated_commodity_t)
+
+template void boost::serialization::serialize(boost::archive::binary_oarchive&,
+					      MP_INT&, const unsigned int);
+template void boost::serialization::serialize(boost::archive::binary_iarchive&,
+					      MP_RAT&, const unsigned int);
+template void boost::serialization::serialize(boost::archive::binary_iarchive&,
+					      long unsigned int&,
+					      const unsigned int);
+
+template void ledger::amount_t::serialize(boost::archive::binary_oarchive&,
+					  const unsigned int);
+template void ledger::amount_t::serialize(boost::archive::binary_iarchive&,
+					  const unsigned int);
+
+#endif // HAVE_BOOST_SERIALIZATION

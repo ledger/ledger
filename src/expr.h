@@ -163,6 +163,22 @@ public:
   void dump(std::ostream& out) const;
 
   static value_t eval(const string& _expr, scope_t& scope);
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & ptr;
+    ar & context;
+    ar & str;
+    if (Archive::is_loading::value)
+      compiled = false;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 std::ostream& operator<<(std::ostream& out, const expr_t& expr);

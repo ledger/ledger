@@ -40,6 +40,26 @@
 #include "iterators.h"
 #include "filters.h"
 
+#if defined(HAVE_BOOST_SERIALIZATION)
+//BOOST_IS_ABSTRACT(ledger::scope_t)
+BOOST_CLASS_EXPORT(ledger::scope_t)
+BOOST_CLASS_EXPORT(ledger::child_scope_t)
+BOOST_CLASS_EXPORT(ledger::symbol_scope_t)
+BOOST_CLASS_EXPORT(ledger::call_scope_t)
+BOOST_CLASS_EXPORT(ledger::account_t)
+BOOST_CLASS_EXPORT(ledger::item_t)
+BOOST_CLASS_EXPORT(ledger::post_t)
+BOOST_CLASS_EXPORT(ledger::xact_base_t)
+BOOST_CLASS_EXPORT(ledger::xact_t)
+BOOST_CLASS_EXPORT(ledger::auto_xact_t)
+BOOST_CLASS_EXPORT(ledger::period_xact_t)
+
+template void ledger::journal_t::serialize(boost::archive::binary_oarchive&,
+					   const unsigned int);
+template void ledger::journal_t::serialize(boost::archive::binary_iarchive&,
+					   const unsigned int);
+#endif // HAVE_BOOST_SERIALIZATION
+
 namespace ledger {
 
 void set_session_context(session_t * session)

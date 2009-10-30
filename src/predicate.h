@@ -94,6 +94,19 @@ public:
       throw;
     }
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & predicate;
+    ar & what_to_keep;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class query_lexer_t

@@ -170,6 +170,19 @@ public:
 	assert(0); return date_t();
       }
     }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+  private:
+    /** Serialization. */
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* version */) {
+      ar & quantum;
+      ar & length;
+    }
+#endif // HAVE_BOOST_SERIALIZATION
   };
 
   static date_t add_duration(const date_t&     date,
@@ -244,6 +257,25 @@ public:
   }
 
   date_interval_t& operator++();
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & start;
+    ar & aligned;
+    ar & skip_duration;
+    ar & factor;
+    ar & next;
+    ar & duration;
+    ar & end_of_duration;
+    ar & end;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 void times_initialize();

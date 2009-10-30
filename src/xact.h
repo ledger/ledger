@@ -80,6 +80,20 @@ public:
 
   virtual bool finalize();
   virtual bool valid() const = 0;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<item_t>(*this);
+    ar & journal;
+    ar & posts;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -111,6 +125,20 @@ public:
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   virtual bool valid() const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<xact_base_t>(*this);
+    ar & code;
+    ar & payee;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -154,6 +182,19 @@ public:
   virtual bool valid() const {
     return true;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<xact_base_t>(*this);
+    ar & predicate;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -180,6 +221,18 @@ struct auto_xact_finalizer_t : public xact_finalizer_t
   }
 
   virtual bool operator()(xact_t& xact, bool post);
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & journal;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -218,6 +271,20 @@ class period_xact_t : public xact_base_t
 #endif
     return true;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<xact_base_t>(*this);
+    ar & period;
+    ar & period_string;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**

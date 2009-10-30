@@ -227,6 +227,20 @@ private:
       data = false;
       type = VOID;
     }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+  private:
+    /** Serialization. */
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* version */) {
+      ar & data;
+      ar & type;
+      ar & refc;
+    }
+#endif // HAVE_BOOST_SERIALIZATION
   };
 
   /**
@@ -896,6 +910,20 @@ public:
    * Debugging methods.
    */
   bool valid() const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & true_value;
+    ar & false_value;
+    ar & storage;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 #define NULL_VALUE (value_t())

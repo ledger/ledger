@@ -62,6 +62,19 @@ struct price_point_t
 {
   datetime_t when;
   amount_t   price;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & when;
+    ar & price;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -78,7 +91,7 @@ class commodity_t
 public:
   class base_t : public noncopyable, public supports_flags<uint_least16_t>
   {
-    base_t();
+    base_t() {}
 
   public:
     typedef std::map<const datetime_t, amount_t> history_map;
@@ -100,6 +113,18 @@ public:
 		 , const int indent = 0
 #endif
 		 ) const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+    private:
+      /** Serialization. */
+
+      friend class boost::serialization::access;
+
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int /* version */) {
+	ar & prices;
+      }
+#endif // HAVE_BOOST_SERIALIZATION
     };
 
     typedef std::map<commodity_t *, history_t> history_by_commodity_map;
@@ -126,6 +151,18 @@ public:
 
       optional<history_t&>
       history(const optional<commodity_t&>& commodity = none);
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+    private:
+      /** Serialization. */
+
+      friend class boost::serialization::access;
+
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int /* version */) {
+	ar & histories;
+      }
+#endif // HAVE_BOOST_SERIALIZATION
     };
 
 #define COMMODITY_STYLE_DEFAULTS  0x000
@@ -158,6 +195,25 @@ public:
     ~base_t() {
       TRACE_DTOR(base_t);
     }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+    private:
+      /** Serialization. */
+
+      friend class boost::serialization::access;
+
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int /* version */) {
+	ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
+	ar & symbol;
+	ar & precision;
+	ar & name;
+	ar & note;
+	ar & varied_history;
+	ar & smaller;
+	ar & larger;
+      }
+#endif // HAVE_BOOST_SERIALIZATION
   };
 
 public:
@@ -330,6 +386,31 @@ public:
   }
 
   bool valid() const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  supports_flags<uint_least16_t> temp_flags;
+
+protected:
+  explicit commodity_t()
+    : delegates_flags<uint_least16_t>(temp_flags), parent_(NULL),
+      annotated(false) {}
+
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<delegates_flags<uint_least16_t> >(*this);
+    ar & base;
+    ar & parent_;
+    ar & qualified_symbol;
+    ar & mapping_key_;
+    ar & annotated;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {

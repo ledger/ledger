@@ -691,6 +691,16 @@ public:
 
   bool valid() const;
 
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */);
+#endif // HAVE_BOOST_SERIALIZATION
+
   /*@}*/
 };
 

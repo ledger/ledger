@@ -94,6 +94,25 @@ public:
     }
     return true;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    string temp;
+    if (Archive::is_loading::value) {
+      ar & temp;
+      *this = temp;
+    } else {
+      temp = expr.str();
+      ar & temp;
+    }
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {

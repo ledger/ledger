@@ -79,6 +79,22 @@ struct position_t
     }
     return *this;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & pathname;
+    ar & beg_pos;
+    ar & beg_line;
+    ar & end_pos;
+    ar & end_line;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**
@@ -176,6 +192,25 @@ public:
   virtual expr_t::ptr_op_t lookup(const string& name);
 
   bool valid() const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<supports_flags<> >(*this);
+    ar & boost::serialization::base_object<scope_t>(*this);
+    ar & _state;
+    ar & _date;
+    ar & _date_eff;
+    ar & note;
+    ar & metadata;
+    ar & pos;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 value_t get_comment(item_t& item);

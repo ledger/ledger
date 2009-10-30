@@ -178,6 +178,18 @@ public:
   string(const char * str, size_type x);
   string(const char * str, size_type x, size_type y);
   ~string() throw();
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<std::string>(*this);
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline string operator+(const string& __lhs, const string& __rhs)

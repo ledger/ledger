@@ -205,6 +205,23 @@ public:
   }
 
   friend class xact_t;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<item_t>(*this);
+    ar & xact;
+    ar & account;
+    ar & amount;
+    ar & cost;
+    ar & assigned_amount;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 } // namespace ledger
