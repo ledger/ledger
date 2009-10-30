@@ -192,6 +192,7 @@ public:
   }
 
   ptr_op_t& left() {
+    assert(kind > TERMINALS || kind == IDENT);
     return left_;
   }
   const ptr_op_t& left() const {
