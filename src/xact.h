@@ -205,7 +205,7 @@ class period_xact_t : public xact_base_t
     TRACE_CTOR(period_xact_t, "const string&");
   }
 
-  virtual ~period_xact_t() throw() {
+  virtual ~period_xact_t() {
     TRACE_DTOR(period_xact_t);
   }
 
