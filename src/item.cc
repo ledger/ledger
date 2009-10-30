@@ -187,7 +187,7 @@ namespace {
   }
 
   value_t get_actual(item_t& item) {
-    return ! item.has_flags(ITEM_GENERATED);
+    return ! item.has_flags(ITEM_GENERATED | ITEM_TEMP);
   }
 
   value_t get_date(item_t& item) {
