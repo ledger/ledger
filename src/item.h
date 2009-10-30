@@ -61,7 +61,7 @@ public:
 #define ITEM_NORMAL     0x00	// no flags at all, a basic posting
 // jww (2009-10-27): I'm not consistent on the difference between these two.
 #define ITEM_GENERATED  0x01	// posting was not found in a journal
-#define ITEM_TEMP       0x02	// posting is a temporary object
+#define ITEM_TEMP       0x02	// posting is a managed temporary
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
@@ -102,7 +102,6 @@ public:
 
     _date     = item._date;
     _date_eff = item._date_eff;
-
     note      = item.note;
 
     pathname  = item.pathname;
