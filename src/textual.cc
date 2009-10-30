@@ -525,11 +525,12 @@ void instance_t::automated_xact_directive(char * line)
 
     journal.auto_xacts.push_back(ae.get());
 
-    ae->pathname = pathname;
-    ae->beg_pos  = pos;
-    ae->beg_line = lnum;
-    ae->end_pos  = curr_pos;
-    ae->end_line = linenum;
+    ae->pos	      = position_t();
+    ae->pos->pathname = pathname;
+    ae->pos->beg_pos  = pos;
+    ae->pos->beg_line = lnum;
+    ae->pos->end_pos  = curr_pos;
+    ae->pos->end_line = linenum;
 
     ae.release();
   }
@@ -565,11 +566,12 @@ void instance_t::period_xact_directive(char * line)
 
       journal.period_xacts.push_back(pe.get());
 
-      pe->pathname = pathname;
-      pe->beg_pos  = pos;
-      pe->beg_line = lnum;
-      pe->end_pos  = curr_pos;
-      pe->end_line = linenum;
+      pe->pos           = position_t();
+      pe->pos->pathname = pathname;
+      pe->pos->beg_pos  = pos;
+      pe->pos->beg_line = lnum;
+      pe->pos->end_pos  = curr_pos;
+      pe->pos->end_line = linenum;
 
       pe.release();
     } else {
@@ -778,10 +780,11 @@ post_t * instance_t::parse_post(char *		line,
 
   std::auto_ptr<post_t> post(new post_t);
 
-  post->xact    = xact;	// this could be NULL
-  post->pathname = pathname;
-  post->beg_pos  = line_beg_pos;
-  post->beg_line = linenum;
+  post->xact	      = xact;	// this could be NULL
+  post->pos	      = position_t();
+  post->pos->pathname = pathname;
+  post->pos->beg_pos  = line_beg_pos;
+  post->pos->beg_line = linenum;
 
   char buf[MAX_LINE + 1];
   std::strcpy(buf, line);
@@ -1056,8 +1059,8 @@ post_t * instance_t::parse_post(char *		line,
 	   _("Unexpected char '%1' (Note: inline math requires parentheses)")
 	   << *next);
 
-  post->end_pos  = curr_pos;
-  post->end_line = linenum;
+  post->pos->end_pos  = curr_pos;
+  post->pos->end_line = linenum;
 
   if (! tag_stack.empty()) {
     foreach (const string& tag, tag_stack)
@@ -1107,9 +1110,10 @@ xact_t * instance_t::parse_xact(char *		line,
 
   std::auto_ptr<xact_t> xact(new xact_t);
 
-  xact->pathname = pathname;
-  xact->beg_pos  = line_beg_pos;
-  xact->beg_line = linenum;
+  xact->pos	      = position_t();
+  xact->pos->pathname = pathname;
+  xact->pos->beg_pos  = line_beg_pos;
+  xact->pos->beg_line = linenum;
 
   bool reveal_context = true;
 
@@ -1189,8 +1193,8 @@ xact_t * instance_t::parse_xact(char *		line,
 
       // This is a trailing note, and possibly a metadata info tag
       item->append_note(p + 1, current_year);
-      item->end_pos = curr_pos;
-      item->end_line++;
+      item->pos->end_pos = curr_pos;
+      item->pos->end_line++;
     } else {
       reveal_context = false;
 
@@ -1216,8 +1220,8 @@ xact_t * instance_t::parse_xact(char *		line,
     }
   }
 
-  xact->end_pos  = curr_pos;
-  xact->end_line = linenum;
+  xact->pos->end_pos  = curr_pos;
+  xact->pos->end_line = linenum;
 
   if (! tag_stack.empty()) {
     foreach (const string& tag, tag_stack)
@@ -1232,8 +1236,8 @@ xact_t * instance_t::parse_xact(char *		line,
   catch (const std::exception& err) {
     if (reveal_context) {
       add_error_context(_("While parsing transaction:"));
-      add_error_context(source_context(xact->pathname,
-				       xact->beg_pos, curr_pos, "> "));
+      add_error_context(source_context(xact->pos->pathname,
+				       xact->pos->beg_pos, curr_pos, "> "));
     }
     throw;
   }

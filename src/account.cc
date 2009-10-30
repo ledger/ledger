@@ -458,7 +458,7 @@ void account_t::xdata_t::details_t::update(post_t& post,
     posts_virtuals_count++;
 
   if (gather_all)
-    filenames.insert(post.pathname);
+    filenames.insert(post.pos->pathname);
 
   date_t date = post.date();
 

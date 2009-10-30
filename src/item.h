@@ -50,6 +50,37 @@
 
 namespace ledger {
 
+struct position_t
+{
+  path             pathname;
+  istream_pos_type beg_pos;
+  std::size_t	   beg_line;
+  istream_pos_type end_pos;
+  std::size_t	   end_line;
+
+  position_t() : beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
+    TRACE_CTOR(position_t, "");
+  }
+  position_t(const position_t& pos) {
+    TRACE_CTOR(position_t, "copy");
+    *this = pos;
+  }
+  ~position_t() throw() {
+    TRACE_DTOR(position_t);
+  }
+
+  position_t& operator=(const position_t& pos) {
+    if (this != &pos) {
+      pathname  = pos.pathname;
+      beg_pos   = pos.beg_pos;
+      beg_line  = pos.beg_line;
+      end_pos   = pos.end_pos;
+      end_line  = pos.end_line;
+    }
+    return *this;
+  }
+};
+
 /**
  * @brief Brief
  *
@@ -65,24 +96,17 @@ public:
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
-  state_t	     _state;
-
-  optional<date_t>   _date;
-  optional<date_t>   _date_eff;
-  optional<string>   note;
-
   typedef std::map<string, optional<string> > string_map;
+
+  state_t	       _state;
+  optional<date_t>     _date;
+  optional<date_t>     _date_eff;
+  optional<string>     note;
+  optional<position_t> pos;
   optional<string_map> metadata;
 
-  path               pathname;
-  istream_pos_type   beg_pos;
-  std::size_t	     beg_line;
-  istream_pos_type   end_pos;
-  std::size_t	     end_line;
-
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<>(_flags), _state(UNCLEARED), note(_note),
-      beg_pos(0), beg_line(0), end_pos(0), end_line(0)
+    : supports_flags<>(_flags), _state(UNCLEARED), note(_note)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
@@ -103,12 +127,7 @@ public:
     _date     = item._date;
     _date_eff = item._date_eff;
     note      = item.note;
-
-    pathname  = item.pathname;
-    beg_pos   = item.beg_pos;
-    beg_line  = item.beg_line;
-    end_pos   = item.end_pos;
-    end_line  = item.end_line;
+    pos       = item.pos;
   }
 
   virtual bool operator==(const item_t& xact) {

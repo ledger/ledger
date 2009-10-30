@@ -224,23 +224,26 @@ namespace {
   }
 
   value_t get_pathname(item_t& item) {
-    return string_value(item.pathname.string());
+    if (item.pos)
+      return string_value(item.pos->pathname.string());
+    else
+      return string_value(empty_string);
   }
 
   value_t get_beg_pos(item_t& item) {
-    return long(item.beg_pos);
+    return item.pos ? long(item.pos->beg_pos) : 0L;
   }
 
   value_t get_beg_line(item_t& item) {
-    return long(item.beg_line);
+    return item.pos ? long(item.pos->beg_line) : 0L;
   }
 
   value_t get_end_pos(item_t& item) {
-    return long(item.end_pos);
+    return item.pos ? long(item.pos->end_pos) : 0L;
   }
 
   value_t get_end_line(item_t& item) {
-    return long(item.end_line);
+    return item.pos ? long(item.pos->end_line) : 0L;
   }
 
   value_t get_depth(item_t&) {
@@ -397,12 +400,13 @@ bool item_t::valid() const
 
 void print_item(std::ostream& out, const item_t& item, const string& prefix)
 {
-  out << source_context(item.pathname, item.beg_pos, item.end_pos, prefix);
+  out << source_context(item.pos->pathname, item.pos->beg_pos,
+			item.pos->end_pos, prefix);
 }
 
 string item_context(const item_t& item, const string& desc)
 {
-  std::streamoff len = item.end_pos - item.beg_pos;
+  std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
   if (! len)
     return _("<no item context>");
 
@@ -411,18 +415,18 @@ string item_context(const item_t& item, const string& desc)
 
   std::ostringstream out;
       
-  if (item.pathname == path("/dev/stdin")) {
+  if (item.pos->pathname == path("/dev/stdin")) {
     out << desc << _(" from standard input:");
     return out.str();
   }
 
-  out << desc << _(" from \"") << item.pathname.string() << "\"";
+  out << desc << _(" from \"") << item.pos->pathname.string() << "\"";
 
-  if (item.beg_line != item.end_line)
-    out << _(", lines ") << item.beg_line << "-"
-	<< item.end_line << ":\n";
+  if (item.pos->beg_line != item.pos->end_line)
+    out << _(", lines ") << item.pos->beg_line << "-"
+	<< item.pos->end_line << ":\n";
   else
-    out << _(", line ") << item.beg_line << ":\n";
+    out << _(", line ") << item.pos->beg_line << ":\n";
 
   print_item(out, item, "> ");
 

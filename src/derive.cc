@@ -252,7 +252,7 @@ namespace {
       if (tmpl.payee_mask.match((*j)->payee)) {
 	matching = *j;
 	DEBUG("derive.xact",
-	      "Found payee match: transaction on line " << (*j)->beg_line);
+	      "Found payee match: transaction on line " << (*j)->pos->beg_line);
 	break;
       }
     }
@@ -332,7 +332,7 @@ namespace {
 	      if (post.account_mask->match(x->account->fullname())) {
 		new_post.reset(new post_t(*x));
 		DEBUG("derive.xact",
-		      "Founding posting from line " << x->beg_line);
+		      "Founding posting from line " << x->pos->beg_line);
 		break;
 	      }
 	    }

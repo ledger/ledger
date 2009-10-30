@@ -499,7 +499,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 
 	IF_DEBUG("xact.extend") {
 	  DEBUG("xact.extend",
-		"Initial post on line " << initial_post->beg_line << ": "
+		"Initial post on line " << initial_post->pos->beg_line << ": "
 		<< "amount " << initial_post->amount << " (precision "
 		<< initial_post->amount.precision() << ")");
 
@@ -509,7 +509,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 #endif
 
 	  DEBUG("xact.extend",
-		"Posting on line " << post->beg_line << ": "
+		"Posting on line " << post->pos->beg_line << ": "
 		<< "amount " << post->amount << ", amt " << amt
 		<< " (precision " << post->amount.precision()
 		<< " != " << amt.precision() << ")");
