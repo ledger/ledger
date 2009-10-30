@@ -1,0 +1,47 @@
+
+
+                                 README FIRST!!!
+
+
+To build this code after doing a Git clone, run:
+
+    $ acprep update
+
+If you try to configure/build on your own, you are almost certainly going to
+run into problems.
+
+
+                                    F.A.Q.
+
+
+ - Q: The build fails saying it can't find utf8.h
+
+   A: You didn't run acprep update.
+
+
+ - Q: The build fails saying it can't find boost_regex
+
+   A: Look in config.log and search for "boost_regex", then scroll down a bit
+      until you see the exact compile error.  Usually it's failing because
+      your include directory is different from anything acprep is expecting to
+      see.  It could also be failing because your Boost library have a custom
+      "suffix" on them.
+
+      Let's say your Boost was installed in ~/boost, and every library has the
+      suffix '-xgcc42'.  This is what you would run:
+
+        CPPFLAGS=-I$HOME/boost acprep --boost=xgcc42 update
+
+
+ - Q: Something else fails, or Ledger crashes on startup
+
+   A: This, I am most interested in hearing about.  Please e-mail me a copy of
+      config.log and your build log to <johnw@newartisans.com>.  Also, if
+      Ledger is crashing, try running it under gdb like so:
+
+        $ gdb ledger
+        (gdb) run <ARGS TO LEDGER>
+        ... runs till crash ...
+        (gdb) bt
+
+      Send me that backtrace output, and the output from "ledger --version".
