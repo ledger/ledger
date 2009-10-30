@@ -103,7 +103,7 @@ public:
   expr_t(const string& _str, const uint_least8_t flags = 0);
   expr_t(std::istream& in, const uint_least8_t flags = 0);
 
-  virtual ~expr_t() throw();
+  ~expr_t() throw();
 
   expr_t& operator=(const expr_t& _expr);
   expr_t& operator=(const string& _expr) {
