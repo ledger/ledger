@@ -1,5 +1,9 @@
 #!/bin/sh
 
+set -e
+
+(cd plan/data; git push)
+(cd plan; git commit -a -m "Update TODO files" && git push)
 git checkout master
 git merge --no-ff next
 git checkout next
