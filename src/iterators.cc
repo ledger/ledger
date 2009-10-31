@@ -90,37 +90,48 @@ void posts_commodities_iterator::reset(journal_t& journal)
   std::map<string, xact_t *> xacts_by_commodity;
 
   foreach (commodity_t * comm, commodities) {
-    optional<commodity_t::varied_history_t&> history = comm->varied_history();
-    if (! history)
-      continue;
+    if (optional<commodity_t::varied_history_t&> history =
+	comm->varied_history()) {
+      account_t * account = journal.master->find_account(comm->symbol());
 
-    account_t * account = journal.master->find_account(comm->symbol());
+      foreach (commodity_t::base_t::history_by_commodity_map::value_type pair,
+	       history->histories) {
+	foreach (commodity_t::base_t::history_map::value_type hpair,
+		 pair.second.prices) {
+	  xact_t * xact;
+	  string   symbol = hpair.second.commodity().symbol();
 
-    foreach (commodity_t::base_t::history_by_commodity_map::value_type pair,
-	     history->histories) {
-      foreach (commodity_t::base_t::history_map::value_type hpair,
-	       pair.second.prices) {
-	xact_t * xact;
-	string   symbol = hpair.second.commodity().symbol();
+	  std::map<string, xact_t *>::iterator i =
+	    xacts_by_commodity.find(symbol);
+	  if (i != xacts_by_commodity.end()) {
+	    xact = (*i).second;
+	  } else {
+	    xact = &temps.create_xact();
+	    xact_temps.push_back(xact);
+	    xact->payee = symbol;
+	    xact->_date = hpair.first.date();
+	    xacts_by_commodity.insert
+	      (std::pair<string, xact_t *>(symbol, xact));
+	  }
 
-	std::map<string, xact_t *>::iterator i =
-	  xacts_by_commodity.find(symbol);
-	if (i != xacts_by_commodity.end()) {
-	  xact = (*i).second;
-	} else {
-	  xact = &temps.create_xact();
-	  xact_temps.push_back(xact);
-	  xact->payee = symbol;
-	  xact->_date = hpair.first.date();
-	  xacts_by_commodity.insert
-	    (std::pair<string, xact_t *>(symbol, xact));
+	  bool post_already_exists = false;
+
+	  foreach (post_t * post, xact->posts) {
+	    if (post->_date  == hpair.first.date() &&
+		post->amount == hpair.second) {
+	      post_already_exists = true;
+	      break;
+	    }
+	  }
+
+	  if (! post_already_exists) {
+	    post_t& temp = temps.create_post(*xact, account);
+	    temp._date  = hpair.first.date();
+	    temp.amount = hpair.second;
+
+	    temp.xdata().datetime = hpair.first;
+	  }
 	}
-
-	post_t& temp = temps.create_post(*xact, account);
-	temp._date  = hpair.first.date();
-	temp.amount = hpair.second;
-
-	temp.xdata().datetime = hpair.first;
       }
     }
   }
