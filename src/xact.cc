@@ -136,8 +136,6 @@ bool xact_base_t::finalize()
   // been set.
 
   if (journal && journal->basket && posts.size() == 1 && ! balance.is_null()) {
-    // jww (2008-07-24): Need to make the rest of the code aware of what to do
-    // when it sees a generated post.
     null_post = new post_t(journal->basket, ITEM_GENERATED);
     null_post->_state = (*posts.begin())->_state;
     add_post(null_post);
@@ -459,12 +457,10 @@ bool xact_t::valid() const
     DEBUG("ledger.validate", "xact_t: ! _date");
     return false;
   }
-#if 0
   if (! journal) {
     DEBUG("ledger.validate", "xact_t: ! journal");
     return false;
   }
-#endif
 
   foreach (post_t * post, posts)
     if (post->xact != this || ! post->valid()) {

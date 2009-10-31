@@ -82,12 +82,6 @@ value_t report_statistics(call_scope_t& args)
 
   out << std::endl;
 
-#if 0
-  out << _("  Number of transactions: ") ;
-  out.width(6);
-  out << statistics.xacts_count << std::endl;
-#endif
-
   out << _("  Number of postings:     ");
   out.width(6);
   out << statistics.posts_count;

@@ -47,8 +47,6 @@ void set_session_context(session_t * session)
     times_initialize();
     amount_t::initialize(session->journal->commodity_pool);
 
-    // jww (2009-02-04): Is amount_t the right place for parse_conversion to
-    // happen?
     amount_t::parse_conversion("1.0m", "60s");
     amount_t::parse_conversion("1.0h", "60m");
 

@@ -119,9 +119,6 @@ void export_amount()
 			 make_getter(&amount_t::stream_fullstrings),
 			 make_setter(&amount_t::stream_fullstrings))
 
-#if 0
-    .def(init<double>())
-#endif
     .def(init<long>())
     .def(init<std::string>())
 
@@ -137,108 +134,56 @@ internal precision."))
     .def(self == self)
     .def(self == long())
     .def(long() == self)
-#if 0
-    .def(self == double())
-    .def(double() == self)
-#endif
 
     .def(self != self)
     .def(self != long())
     .def(long() != self)
-#if 0
-    .def(self != double())
-    .def(double() != self)
-#endif
 
     .def(! self)
 
     .def(self <  self)
     .def(self <  long())
     .def(long() < self)
-#if 0
-    .def(self <  double())
-    .def(double() < self)
-#endif
 
     .def(self <= self)
     .def(self <= long())
     .def(long() <= self)
-#if 0
-    .def(self <= double())
-    .def(double() <= self)
-#endif
 
     .def(self >  self)
     .def(self >  long())
     .def(long() > self)
-#if 0
-    .def(self >  double())
-    .def(double() > self)
-#endif
 
     .def(self >= self)
     .def(self >= long())
     .def(long() >= self)
-#if 0
-    .def(self >= double())
-    .def(double() >= self)
-#endif
 
     .def(self += self)
     .def(self += long())
-#if 0
-    .def(self += double())
-#endif
 
     .def(self	  + self)
     .def(self	  + long())
     .def(long()	  + self)
-#if 0
-    .def(self	  + double())
-    .def(double() + self)
-#endif
 
     .def(self -= self)
     .def(self -= long())
-#if 0
-    .def(self -= double())
-#endif
 
     .def(self	  - self)
     .def(self	  - long())
     .def(long()	  - self)
-#if 0
-    .def(self	  - double())
-    .def(double() - self)
-#endif
 
     .def(self *= self)
     .def(self *= long())
-#if 0
-    .def(self *= double())
-#endif
 
     .def(self	  * self)
     .def(self	  * long())
     .def(long()	  * self)
-#if 0
-    .def(self	  * double())
-    .def(double() * self)
-#endif
 
     .def(self /= self)
     .def(self /= long())
-#if 0
-    .def(self /= double())
-#endif
 
     .def(self	  /  self)
     .def(self	  /  long())
     .def(long()	  / self)
-#if 0
-    .def(self	  /  double())
-    .def(double() / self)
-#endif
 
     .def("precision", &amount_t::precision)
 
@@ -326,9 +271,6 @@ internal precision."))
 
   register_optional_to_python<amount_t>();
 
-#if 0
-  implicitly_convertible<double, amount_t>();
-#endif
   implicitly_convertible<long, amount_t>();
   implicitly_convertible<string, amount_t>();
 

@@ -33,6 +33,7 @@
 
 #include "balance.h"
 #include "commodity.h"
+#include "annotate.h"
 #include "pool.h"
 #include "unistring.h"		// for justify()
 
@@ -220,10 +221,9 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
     if (amounts.size() == 1) {
       return amounts.begin()->second;
     }
-#if 0
     else if (amounts.size() > 1) {
       // Try stripping annotations before giving an error.
-      balance_t temp(strip_annotations());
+      balance_t temp(strip_annotations(keep_details_t()));
       if (temp.amounts.size() == 1)
 	return temp.commodity_amount(commodity);
 
@@ -231,7 +231,6 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 	     _("Requested amount of a balance with multiple commodities: %1")
 	     << temp);
     }
-#endif
   }
   else if (amounts.size() > 0) {
     amounts_map::const_iterator i =

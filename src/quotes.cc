@@ -101,9 +101,6 @@ commodity_quote_from_script(commodity_t& commodity,
 		  exchange_commodity->symbol() : "''") << "\")");
 
     // Don't try to download this commodity again.
-
-    // jww (2009-06-24): This flag should be removed in order to try again
-    // when using a GUI.
     commodity.add_flags(COMMODITY_NOMARKET);
   }
   return none;

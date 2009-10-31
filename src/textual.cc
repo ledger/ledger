@@ -323,11 +323,6 @@ void instance_t::read_next_directive()
 
   case ' ':
   case '\t': {
-#if 0
-    char * p = skip_ws(line);
-    if (*p)
-      throw parse_error(_("Line begins with whitespace"));
-#endif
     break;
   }
 
@@ -614,15 +609,6 @@ void instance_t::include_directive(char * line)
 {
   path filename(line);
 
-#if 0
-  if (filename[0] != '/' && filename[0] != '\\' && filename[0] != '~') {
-    string::size_type pos = pathname.prev.rfind('/');
-    if (pos == string::npos)
-      pos = pathname.prev.rfind('\\');
-    if (pos != string::npos)
-      filename = string(pathname.prev, 0, pos + 1) + filename;
-  }
-#endif
   filename = resolve_path(filename);
 
   DEBUG("textual.include", "Line " << linenum << ": " <<
@@ -652,8 +638,6 @@ void instance_t::account_directive(char * line)
 
 void instance_t::end_directive(char *)
 {
-  // jww (2009-02-26): Allow end to be "end account" or "end tag".  End by
-  // itself is assumed to be "end account".
   if (account_stack.empty())
     throw_(std::runtime_error,
 	   _("'end' directive found, but no account currently active"));
@@ -758,9 +742,8 @@ void instance_t::general_directive(char * line)
     break;
   }
 
-  // jww (2009-02-10): This needs some serious work.
   scoped_array<char> directive(new char[std::strlen(p) + DIR_PREFIX_LEN + 1]);
-  std::strcpy(directive.get(),DIR_PREFIX);
+  std::strcpy(directive.get(), DIR_PREFIX);
   std::strcpy(directive.get() + DIR_PREFIX_LEN, p);
 
   if (expr_t::ptr_op_t op = lookup(directive.get())) {

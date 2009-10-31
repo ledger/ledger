@@ -80,12 +80,10 @@ namespace {
 void export_value()
 {
   class_< value_t > ("Value")
-#if 0
     .def("initialize", &value_t::initialize)
     .staticmethod("initialize")
     .def("shutdown", &value_t::shutdown)
     .staticmethod("shutdown")
-#endif
 
     .def(init<double>())
     .def(init<long>())

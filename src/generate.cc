@@ -210,13 +210,11 @@ string generate_posts_iterator::generate_amount(std::ostream& out,
       generate_amount(buf, value_t(), true);
       buf << '}';
     }
-#if 0
     if (six_gen() == 1) {
       buf << " [";
       generate_date(buf);
       buf << ']';
     }
-#endif
     if (six_gen() == 1) {
       buf << " (";
       generate_string(buf, six_gen());
