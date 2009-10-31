@@ -2,10 +2,10 @@
 
 set -e
 
-git stash
-git checkout master
-
 rm -fr ~/Products/ledger*
 
-(./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log) \
-    || notify "Ledger proof build failed"
+if ./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log; then
+    echo "Ledger proof build succeeded"
+else
+    notify "Ledger proof build failed"
+fi
