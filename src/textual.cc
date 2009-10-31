@@ -486,6 +486,7 @@ void instance_t::option_directive(char * line)
       *p++ = '\0';
   }
 
+#if 0
   if (! process_option(pathname.string(), line + 2, scope, p, line) &&
       ! dynamic_cast<session_t *>(&scope)) {
     if (std::strlen(line + 2) == 1)
@@ -493,6 +494,9 @@ void instance_t::option_directive(char * line)
     else
       throw_(option_error, _("Illegal option --%1") << line + 2);
   }
+#else
+  process_option(pathname.string(), line + 2, scope, p, line);
+#endif
 }
 
 void instance_t::automated_xact_directive(char * line)
