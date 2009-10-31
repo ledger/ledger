@@ -559,6 +559,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'f':
     OPT(flat);
     else OPT_ALT(forecast_while_, forecast_);
+    else OPT(forecast_years_);
     else OPT(format_);
     else OPT(force_color);
     else OPT(force_pager);

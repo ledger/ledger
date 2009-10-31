@@ -764,16 +764,19 @@ public:
  */
 class forecast_posts : public generate_posts
 {
-  item_predicate pred;
-  scope_t&       context;
+  item_predicate    pred;
+  scope_t&	    context;
+  const std::size_t forecast_years;
 
  public:
   forecast_posts(post_handler_ptr      handler,
 		 const item_predicate& predicate,
-		 scope_t&              _context)
-    : generate_posts(handler), pred(predicate), context(_context) {
+		 scope_t&              _context,
+		 const std::size_t     _forecast_years)
+    : generate_posts(handler), pred(predicate), context(_context),
+      forecast_years(_forecast_years) {
     TRACE_CTOR(forecast_posts,
-	       "post_handler_ptr, const item_predicate&, scope_t&");
+	       "post_handler_ptr, item_predicate, scope_t&, std::size_t");
   }
   virtual ~forecast_posts() throw() {
     TRACE_DTOR(forecast_posts);
