@@ -59,6 +59,7 @@ libledger_data_la_SOURCES  =			\
 	src/timelog.cc				\
 	src/textual.cc				\
 	src/journal.cc				\
+	src/archive.cc				\
 	src/account.cc				\
 	src/xact.cc				\
 	src/post.cc				\
@@ -118,6 +119,7 @@ pkginclude_HEADERS =				\
 	src/xact.h				\
 	src/account.h				\
 	src/journal.h				\
+	src/archive.h				\
 	src/timelog.h				\
 	src/iterators.h				\
 	src/compare.h				\

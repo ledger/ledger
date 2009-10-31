@@ -189,20 +189,14 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 
-BOOST_CLASS_IMPLEMENTATION(boost::filesystem::path, boost::serialization::primitive_type)
-#ifndef BOOST_NO_STD_WSTRING
-BOOST_CLASS_IMPLEMENTATION(boost::filesystem::wpath, boost::serialization::primitive_type)
-#endif
-
 namespace boost {
 namespace serialization {
 
-template <class Archive, class String, class Traits>
-void serialize(Archive& ar, boost::filesystem::basic_path<String, Traits>& p,
-	       const unsigned int)
+template <class Archive>
+void serialize(Archive& ar, boost::filesystem::path& p, const unsigned int)
 {
-  String s; 
- if (Archive::is_saving::value)
+  std::string s; 
+  if (Archive::is_saving::value)
     s = p.string();
 
   ar & s;

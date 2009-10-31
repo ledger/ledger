@@ -103,6 +103,7 @@ public:
   void report_options(std::ostream& out)
   {
     HANDLER(account_).report(out);
+    HANDLER(cache_).report(out);
     HANDLER(download).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
@@ -120,6 +121,7 @@ public:
    */
 
   OPTION(session_t, account_); // -a
+  OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
 
   OPTION__

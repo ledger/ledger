@@ -37,7 +37,7 @@
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
-#include "pstream.h"
+#include "archive.h"
 
 namespace ledger {
 
@@ -105,6 +105,9 @@ std::size_t session_t::read_journal(const path& pathname,
 
 std::size_t session_t::read_data(const string& master_account)
 {
+  bool populated_data_files = false;
+  bool populated_price_db   = false;
+
   if (HANDLER(file_).data_files.empty()) {
     path file;
     if (const char * home_var = std::getenv("HOME"))
@@ -114,6 +117,8 @@ std::size_t session_t::read_data(const string& master_account)
       HANDLER(file_).data_files.push_back(file);
     else
       throw_(parse_error, "No journal file was specified (please use -f)");
+
+    populated_data_files = true;
   }
 
   std::size_t xact_count = 0;
@@ -122,43 +127,75 @@ std::size_t session_t::read_data(const string& master_account)
   if (! master_account.empty())
     acct = journal->find_account(master_account);
 
-  if (HANDLED(price_db_)) {
-    path price_db_path = resolve_path(HANDLER(price_db_).str());
-    if (exists(price_db_path) && read_journal(price_db_path) > 0)
+  optional<path> price_db_path;
+  if (HANDLED(price_db_))
+    price_db_path = resolve_path(HANDLER(price_db_).str());
+
+  optional<archive_t> cache;
+  if (HANDLED(cache_) && master_account.empty()) {
+    cache = archive_t(HANDLED(cache_).str());
+    cache->read_header();
+
+    if (price_db_path) {
+      HANDLER(file_).data_files.push_back(*price_db_path);
+      populated_price_db = true;
+    }
+  }
+
+  if (! (cache &&
+	 cache->should_load(HANDLER(file_).data_files) &&
+	 cache->load(journal))) {
+    if (price_db_path) {
+      if (exists(*price_db_path) && read_journal(*price_db_path) > 0)
 	throw_(parse_error, _("Transactions not allowed in price history file"));
-  }
+      journal->sources.push_back(journal_t::fileinfo_t(*price_db_path));
+      HANDLER(file_).data_files.remove(*price_db_path);
+    }
 
-  foreach (const path& pathname, HANDLER(file_).data_files) {
-    path filename = resolve_path(pathname);
-    if (filename == "-") {
-      // To avoid problems with stdin and pipes, etc., we read the entire
-      // file in beforehand into a memory buffer, and then parcel it out
-      // from there.
-      std::ostringstream buffer;
+    foreach (const path& pathname, HANDLER(file_).data_files) {
+      path filename = resolve_path(pathname);
+      if (filename == "-") {
+	// To avoid problems with stdin and pipes, etc., we read the entire
+	// file in beforehand into a memory buffer, and then parcel it out
+	// from there.
+	std::ostringstream buffer;
 
-      while (std::cin.good() && ! std::cin.eof()) {
-	char line[8192];
-	std::cin.read(line, 8192);
-	std::streamsize count = std::cin.gcount();
-	buffer.write(line, count);
+	while (std::cin.good() && ! std::cin.eof()) {
+	  char line[8192];
+	  std::cin.read(line, 8192);
+	  std::streamsize count = std::cin.gcount();
+	  buffer.write(line, count);
+	}
+	buffer.flush();
+
+	std::istringstream buf_in(buffer.str());
+
+	xact_count += read_journal(buf_in, "/dev/stdin", acct);
+	journal->sources.push_back(journal_t::fileinfo_t());
       }
-      buffer.flush();
+      else if (exists(filename)) {
+	xact_count += read_journal(filename, acct);
+	journal->sources.push_back(journal_t::fileinfo_t(filename));
+      }
+      else {
+	throw_(parse_error, _("Could not read journal file '%1'") << filename);
+      }
+    }
 
-      std::istringstream buf_in(buffer.str());
+    assert(xact_count == journal->xacts.size());
 
-      xact_count += read_journal(buf_in, "/dev/stdin", acct);
-    }
-    else if (exists(filename)) {
-      xact_count += read_journal(filename, acct);
-    }
-    else {
-      throw_(parse_error, _("Could not read journal file '%1'") << filename);
-    }
+    if (cache && cache->should_save(journal))
+      cache->save(journal);
   }
+
+  if (populated_data_files)
+    HANDLER(file_).data_files.clear();
+  else if (populated_price_db)
+    HANDLER(file_).data_files.remove(*price_db_path);
 
   VERIFY(journal->valid());
 
-  return xact_count;
+  return journal->xacts.size();
 }
 
 void session_t::read_journal_files()
@@ -218,6 +255,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'a':
     OPT_(account_); // -a
+    break;
+  case 'c':
+    OPT(cache_);
     break;
   case 'd':
     OPT(download); // -Q
