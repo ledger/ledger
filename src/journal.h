@@ -75,7 +75,7 @@ public:
   struct fileinfo_t
   {
     optional<path> filename;
-    std::size_t	   size;
+    uintmax_t	   size;
     datetime_t	   modtime;
     bool	   from_stream;
 
