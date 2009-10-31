@@ -871,9 +871,11 @@ void forecast_posts::flush()
     date_t next = *(*least).first.next;
     assert(next > begin);
 
-    if ((next - last).days() > 365 * 5) {
+    if (static_cast<std::size_t>((next - last).days()) >
+	static_cast<std::size_t>(365U) * forecast_years) {
       DEBUG("filters.forecast",
-	    "Forecast transaction exceeds 5 years beyond today");
+	    "Forecast transaction exceeds " << forecast_years
+	    << " years beyond today");
       pending_posts.erase(least);
       continue;
     }

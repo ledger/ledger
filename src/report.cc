@@ -235,12 +235,13 @@ value_t report_t::fn_justify(call_scope_t& scope)
   return string_value(out.str());
 }
 
-value_t report_t::fn_quoted(call_scope_t& args)
+value_t report_t::fn_quoted(call_scope_t& scope)
 {
+  interactive_t	     args(scope, "s");
   std::ostringstream out;
 
   out << '"';
-  foreach (const char ch, args[0].to_string()) {
+  foreach (const char ch, args.get<string>(0)) {
     if (ch == '"')
       out << "\\\"";
     else
@@ -253,8 +254,7 @@ value_t report_t::fn_quoted(call_scope_t& args)
 
 value_t report_t::fn_join(call_scope_t& scope)
 {
-  interactive_t args(scope, "s");
-
+  interactive_t	     args(scope, "s");
   std::ostringstream out;
 
   foreach (const char ch, args.get<string>(0)) {
@@ -313,6 +313,39 @@ value_t report_t::fn_price(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
   return args.value_at(0).price();
+}
+
+value_t report_t::fn_lot_date(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (args.value_at(0).is_annotated()) {
+    const annotation_t& details(args.value_at(0).annotation());
+    if (details.date)
+      return *details.date;
+  }
+  return NULL_VALUE;
+}
+
+value_t report_t::fn_lot_price(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (args.value_at(0).is_annotated()) {
+    const annotation_t& details(args.value_at(0).annotation());
+    if (details.price)
+      return *details.price;
+  }
+  return NULL_VALUE;
+}
+
+value_t report_t::fn_lot_tag(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (args.value_at(0).is_annotated()) {
+    const annotation_t& details(args.value_at(0).annotation());
+    if (details.tag)
+      return string_value(*details.tag);
+  }
+  return NULL_VALUE;
 }
 
 namespace {
@@ -559,6 +592,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'f':
     OPT(flat);
     else OPT_ALT(forecast_while_, forecast_);
+    else OPT(forecast_years_);
     else OPT(format_);
     else OPT(force_color);
     else OPT(force_pager);

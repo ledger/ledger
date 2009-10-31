@@ -209,7 +209,11 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
       = new forecast_posts(handler,
 			   item_predicate(report.HANDLER(forecast_while_).str(),
 					  report.what_to_keep()),
-			   report);
+			   report,
+			   report.HANDLED(forecast_years_) ?
+			     static_cast<std::size_t>
+			       (report.HANDLER(forecast_years_).value.to_long()) :
+			     5UL);
     forecast_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(forecast_handler);
 

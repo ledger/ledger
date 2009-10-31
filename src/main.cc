@@ -76,11 +76,13 @@ int main(int argc, char * argv[], char * envp[])
   ::textdomain("ledger");
 #endif
 
-  // Create the session object, which maintains nearly all state relating to
-  // this invocation of Ledger; and register all known journal parsers.
-  std::auto_ptr<global_scope_t> global_scope(new global_scope_t(envp));
+  std::auto_ptr<global_scope_t> global_scope;
 
   try {
+    // Create the session object, which maintains nearly all state relating to
+    // this invocation of Ledger; and register all known journal parsers.
+    global_scope.reset(new global_scope_t(envp));
+
     global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
@@ -181,7 +183,11 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
   catch (const std::exception& err) {
-    global_scope->report_error(err);
+    if (global_scope.get())
+      global_scope->report_error(err);
+    else
+      std::cerr << "Exception during initialization: " << err.what()
+		<< std::endl;
   }
   catch (int _status) {
     status = _status;		// used for a "quick" exit, and is used only

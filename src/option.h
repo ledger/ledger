@@ -162,10 +162,21 @@ public:
 
   virtual void handler(call_scope_t& args) {
     if (wants_arg) {
-      if (args.empty() || args.size() == 1)
+      if (args.size() < 2)
 	throw_(std::runtime_error, _("No argument provided for %1") << desc());
+      else if (args.size() > 2)
+	throw_(std::runtime_error, _("To many arguments provided for %1") << desc());
+      else if (! args[0].is_string())
+	throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
       on_with(args[0].as_string(), args[1]);
-    } else {
+    }
+    else if (args.size() < 1) {
+      throw_(std::runtime_error, _("No argument provided for %1") << desc());
+    }
+    else if (! args[0].is_string()) {
+      throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
+    }
+    else {
       on_only(args[0].as_string());
     }
 

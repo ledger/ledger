@@ -160,6 +160,9 @@ public:
   value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_percent(call_scope_t& scope);
   value_t fn_price(call_scope_t& scope);
+  value_t fn_lot_date(call_scope_t& scope);
+  value_t fn_lot_price(call_scope_t& scope);
+  value_t fn_lot_tag(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) {
     return terminus;
@@ -240,6 +243,7 @@ public:
     HANDLER(force_color).report(out);
     HANDLER(force_pager).report(out);
     HANDLER(forecast_while_).report(out);
+    HANDLER(forecast_years_).report(out);
     HANDLER(format_).report(out);
     HANDLER(gain).report(out);
     HANDLER(head_).report(out);
@@ -544,6 +548,7 @@ public:
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);
   OPTION(report_t, forecast_while_);
+  OPTION(report_t, forecast_years_);
   OPTION(report_t, format_); // -F
 
   OPTION_(report_t, gain, DO() { // -G

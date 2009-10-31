@@ -116,13 +116,16 @@ void process_environment(const char ** envp, const string& tag,
   const char *	    tag_p   = tag.c_str();
   string::size_type tag_len = tag.length();
 
+  assert(tag_p);
+  assert(tag_len > 0);
+
   for (const char ** p = envp; *p; p++) {
-    if (! tag_p || std::strncmp(*p, tag_p, tag_len) == 0) {
-      char   buf[128];
+    if (std::strlen(*p) >= tag_len && std::strncmp(*p, tag_p, tag_len) == 0) {
+      char   buf[8192];
       char * r = buf;
       const char * q;
       for (q = *p + tag_len;
-	   *q && *q != '=' && r - buf < 128;
+	   *q && *q != '=' && r - buf < 8191;
 	   q++)
 	if (*q == '_')
 	  *r++ = '-';
