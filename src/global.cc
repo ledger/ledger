@@ -431,7 +431,6 @@ void global_scope_t::normalize_report_options(const string& verb)
   }
 #endif
 
-  // jww (2009-02-09): These globals are a hack, but hard to avoid.
   item_t::use_effective_date = (rep.HANDLED(effective) &&
 				! rep.HANDLED(actual_dates));
 
@@ -458,9 +457,6 @@ void global_scope_t::normalize_report_options(const string& verb)
       start_of_week = *weekday;
   }
 
-  // jww (2008-08-14): This code really needs to be rationalized away for 3.0.
-  // I might be able to do it with command objects, like register_t, which
-  // each know how to adjust the report based on its current option settings.
   if (verb == "print" || verb == "xact" || verb == "dump") {
     rep.HANDLER(related).on_only(string("?normalize"));
     rep.HANDLER(related_all).on_only(string("?normalize"));

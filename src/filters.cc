@@ -784,7 +784,6 @@ void budget_posts::operator()(post_t& post)
       if (acct == (*pair.second).reported_account()) {
 	post_in_budget = true;
 	// Report the post as if it had occurred in the parent account.
-	// jww (2009-10-27): What about calling add_post here?
 	if (post.reported_account() != acct)
 	  post.xdata().account = acct;
 	goto handle;

@@ -360,12 +360,6 @@ optional<commodity_t::base_t::history_t&>
   if (! commodity) {
     if (histories.size() > 1)
       return none;
-#if 0
-      // jww (2008-09-20): Document which option switch to use here
-      throw_(commodity_error,
-	     _("Cannot determine price history: "
-	       "prices known for multiple commodities (use -x)"));
-#endif
     comm = (*histories.begin()).first;
   } else {
     comm = &(*commodity);

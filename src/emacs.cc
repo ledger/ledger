@@ -44,7 +44,7 @@ void format_emacs_posts::write_xact(xact_t& xact)
       << xact.pos->beg_line << " ";
 
   tm	      when = gregorian::to_tm(xact.date());
-  std::time_t date = std::mktime(&when); // jww (2008-04-20): Is this GMT or local?
+  std::time_t date = std::mktime(&when);
 
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 

@@ -33,8 +33,8 @@
 
 #include "report.h"
 #include "session.h"
-#include "unistring.h"		// jww (2009-03-04): really??
-#include "format.h"		// jww (2009-03-04): really??
+#include "unistring.h"
+#include "format.h"
 #include "output.h"
 #include "iterators.h"
 #include "filters.h"
@@ -55,7 +55,6 @@ void report_t::posts_report(post_handler_ptr handler)
 
 void report_t::generate_report(post_handler_ptr handler)
 {
-  // jww (2009-02-27): make this more general
   HANDLER(limit_).on(string("#generate"), "actual");
 
   generate_posts_iterator walker
@@ -660,10 +659,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(related_all);
     else OPT(revalued);
     else OPT(revalued_only);
-#if 0
-    // This option is not available to users
     else OPT(revalued_total_);
-#endif
     break;
   case 's':
     OPT(set_account_);
