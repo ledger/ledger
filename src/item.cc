@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "item.h"
+#include "interactive.h"
 
 namespace ledger {
 
@@ -210,15 +211,31 @@ namespace {
 	return item.has_tag(args[0].as_string());
       else if (args[0].is_mask())
 	return item.has_tag(args[0].as_mask());
-    } else {
-      return item.has_tag(args[0].to_mask(), args[1].to_mask());
+      else
+	throw_(std::logic_error,
+	       _("Expected string for argument 1, but received %1")
+	       << args[0].label());
+    }
+    else if (args.size() == 2) {
+      if (args[0].is_mask() && args[1].is_mask())
+	return item.has_tag(args[0].to_mask(), args[1].to_mask());
+      else
+	throw_(std::logic_error,
+	       _("Expected masks for arguments 1 and 2, but received %1 and %2")
+	       << args[0].label() << args[1].label());
+    }
+    else if (args.size() == 0) {
+      throw_(std::logic_error, _("Too few arguments to function"));
+    }
+    else {
+      throw_(std::logic_error, _("Too many arguments to function"));
     }
     return false;
   }
 
-  value_t get_tag(call_scope_t& args) {
-    item_t& item(find_scope<item_t>(args));
-    if (optional<string> value = item.get_tag(args[0].as_string()))
+  value_t get_tag(call_scope_t& scope) {
+    in_context_t<item_t> env(scope, "s");
+    if (optional<string> value = env->get_tag(env.get<string>(0)))
       return string_value(*value);
     return false;
   }

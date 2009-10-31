@@ -235,12 +235,13 @@ value_t report_t::fn_justify(call_scope_t& scope)
   return string_value(out.str());
 }
 
-value_t report_t::fn_quoted(call_scope_t& args)
+value_t report_t::fn_quoted(call_scope_t& scope)
 {
+  interactive_t	     args(scope, "s");
   std::ostringstream out;
 
   out << '"';
-  foreach (const char ch, args[0].to_string()) {
+  foreach (const char ch, args.get<string>(0)) {
     if (ch == '"')
       out << "\\\"";
     else
@@ -253,8 +254,7 @@ value_t report_t::fn_quoted(call_scope_t& args)
 
 value_t report_t::fn_join(call_scope_t& scope)
 {
-  interactive_t args(scope, "s");
-
+  interactive_t	     args(scope, "s");
   std::ostringstream out;
 
   foreach (const char ch, args.get<string>(0)) {
