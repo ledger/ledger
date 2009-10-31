@@ -543,7 +543,8 @@ void global_scope_t::normalize_report_options(const string& verb)
 
     if (! rep.HANDLER(date_width_).specified)
       rep.HANDLER(date_width_)
-	.on_with(none, format_date(CURRENT_DATE(), FMT_PRINTED).length());
+	.on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
+						     FMT_PRINTED).length()));
 
     long date_width    = rep.HANDLER(date_width_).value.to_long();
     long payee_width   = (rep.HANDLER(payee_width_).specified ?

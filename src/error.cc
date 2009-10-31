@@ -97,7 +97,7 @@ string source_context(const path&	     file,
   in.seekg(pos, std::ios::beg);
       
   scoped_array<char> buf(new char[len + 1]);
-  in.read(buf.get(), len);
+  in.read(buf.get(), static_cast<std::streamsize>(len));
   assert(in.gcount() == len);
   buf[len] = '\0';
 
