@@ -77,8 +77,10 @@ void archive_t::read_header()
 	  "Version number:    " << std::hex << version << std::dec);
     DEBUG("archive.journal", "Number of sources: " << sources.size());
 
+#if defined(DEBUG_ON)
     foreach (const journal_t::fileinfo_t& i, sources)
       DEBUG("archive.journal", "Loaded source: " << *i.filename);
+#endif
   }
 }
 
@@ -209,8 +211,10 @@ void archive_t::save(shared_ptr<journal_t> journal)
   version = ARCHIVE_VERSION;
   sources = journal->sources;
 
+#if defined(DEBUG_ON)
   foreach (const journal_t::fileinfo_t& i, sources)
     DEBUG("archive.journal", "Saving source: " << *i.filename);
+#endif
 
   DEBUG("archive.journal",
 	"Creating archive with version " << std::hex << version << std::dec);
