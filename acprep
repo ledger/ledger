@@ -976,9 +976,8 @@ class PrepareBuild(CommandLineApp):
                     self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
                     self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
 
-                if exists('/usr/local/stow/cppunit-debug/include'):
-                    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
-                    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
+                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
             if exists('/opt/local/lib/libboost_regex-d.a'):
                 self.envvars['BOOST_HOME']   = '/opt/local'
