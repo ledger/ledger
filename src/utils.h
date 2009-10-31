@@ -580,6 +580,15 @@ inline char peek_next_nonws(std::istream& in) {
 	str.get(var);					\
 	if (in.eof())					\
 	  break;					\
+        switch (var) {					\
+        case 'b': var = '\b'; break;			\
+        case 'f': var = '\f'; break;			\
+        case 'n': var = '\n'; break;			\
+        case 'r': var = '\r'; break;			\
+        case 't': var = '\t'; break;			\
+        case 'v': var = '\v'; break;			\
+        default: break;					\
+        }						\
       }							\
       *_p++ = var;					\
       var = static_cast<char>(str.peek());		\
@@ -600,6 +609,15 @@ inline char peek_next_nonws(std::istream& in) {
 	str.get(var);					\
 	if (in.eof())					\
 	  break;					\
+        switch (var) {					\
+        case 'b': var = '\b'; break;			\
+        case 'f': var = '\f'; break;			\
+        case 'n': var = '\n'; break;			\
+        case 'r': var = '\r'; break;			\
+        case 't': var = '\t'; break;			\
+        case 'v': var = '\v'; break;			\
+        default: break;					\
+        }						\
 	idx++;						\
       }							\
       *_p++ = var;					\
