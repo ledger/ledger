@@ -1329,10 +1329,11 @@ class PrepareBuild(CommandLineApp):
     def phase_proof(self, *args):
         self.log.info('Executing phase: proof')
 
+        self.phase_makeall(reset=False, *args)
+
         self.log.info('=== Copying source tree ===')
         self.phase_rsync()
-
-        self.phase_makeall(*args)
+        self.phase_makeall(reset=True, *args)
 
         self.configure_flavor('opt')
         self.log.info('=== Testing opt ===')
@@ -1353,10 +1354,10 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Building final distcheck ===')
         self.phase_distcheck()
 
-    def phase_makeall(self, *args):
+    def phase_makeall(self, reset=False, *args):
         self.log.info('Executing phase: makeall')
 
-        self.configure_flavor('opt', False)
+        self.configure_flavor('opt', reset)
         
         system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
         if exists(system_hh_gch):
@@ -1365,7 +1366,7 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Building opt ===')
         self.phase_make(*args)
         
-        self.configure_flavor('gcov', False)
+        self.configure_flavor('gcov', reset)
 
         system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
         if exists(system_hh_gch):
@@ -1381,7 +1382,7 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Building default ===')
         self.phase_make(*args)
 
-        self.configure_flavor('debug', False)
+        self.configure_flavor('debug', reset)
 
         system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
         if exists(system_hh_gch):
@@ -1390,7 +1391,7 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Building debug ===')
         self.phase_make(*args)
         
-        self.configure_flavor('default', False)
+        self.configure_flavor('default', reset)
 
     #########################################################################
     # Help                                                                  #
