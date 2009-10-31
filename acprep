@@ -308,6 +308,9 @@ class PrepareBuild(CommandLineApp):
             if retcode < 0:
                 self.log.error("Child was terminated by signal", -retcode)
                 sys.exit(1)
+            elif retcode != 0:
+                self.log.error("Execution failed: " + string.join(args, ' '))
+                sys.exit(1)
         except OSError, e:
             self.log.error("Execution failed:", e)
             sys.exit(1)
@@ -316,11 +319,15 @@ class PrepareBuild(CommandLineApp):
         try:
             self.log.debug('Executing command: ' + string.join(args, ' '))
 
-            proc = Popen(args, shell=False, stdout=PIPE)
-            stdout = proc.stdout.read()
-            if proc.wait() < 0:
+            proc    = Popen(args, shell=False, stdout=PIPE)
+            stdout  = proc.stdout.read()
+            retcode = proc.wait()
+            if retcode < 0:
                 self.log.error("Child was terminated by signal",
-                               -proc.returncode)
+                               -retcode)
+                sys.exit(1)
+            elif retcode != 0:
+                self.log.error("Execution failed: " + string.join(args, ' '))
                 sys.exit(1)
             return stdout[:-1]
         except OSError, e:
@@ -1149,6 +1156,9 @@ class PrepareBuild(CommandLineApp):
                 retcode = configure.wait()
                 if retcode < 0:
                     self.log.error("Child was terminated by signal", -retcode)
+                    sys.exit(1)
+                elif retcode != 0:
+                    self.log.error("Execution failed: " + string.join(conf_args, ' '))
                     sys.exit(1)
 
                 if not self.options.no_patch:
