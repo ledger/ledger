@@ -1,0 +1,7 @@
+#!/bin/sh
+
+git checkout master
+git merge --no-ff next
+git checkout next
+git rebase master
+git push
