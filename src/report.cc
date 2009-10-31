@@ -315,6 +315,39 @@ value_t report_t::fn_price(call_scope_t& scope)
   return args.value_at(0).price();
 }
 
+value_t report_t::fn_lot_date(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (args.value_at(0).is_annotated()) {
+    const annotation_t& details(args.value_at(0).annotation());
+    if (details.date)
+      return *details.date;
+  }
+  return NULL_VALUE;
+}
+
+value_t report_t::fn_lot_price(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (args.value_at(0).is_annotated()) {
+    const annotation_t& details(args.value_at(0).annotation());
+    if (details.price)
+      return *details.price;
+  }
+  return NULL_VALUE;
+}
+
+value_t report_t::fn_lot_tag(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (args.value_at(0).is_annotated()) {
+    const annotation_t& details(args.value_at(0).annotation());
+    if (details.tag)
+      return string_value(*details.tag);
+  }
+  return NULL_VALUE;
+}
+
 namespace {
   value_t fn_black(call_scope_t&) {
     return string_value("black");
