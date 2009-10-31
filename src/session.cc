@@ -146,9 +146,11 @@ std::size_t session_t::read_data(const string& master_account)
 	 cache->should_load(HANDLER(file_).data_files) &&
 	 cache->load(journal))) {
     if (price_db_path) {
-      if (exists(*price_db_path) && read_journal(*price_db_path) > 0)
-	throw_(parse_error, _("Transactions not allowed in price history file"));
-      journal->sources.push_back(journal_t::fileinfo_t(*price_db_path));
+      if (exists(*price_db_path)) {
+	if (read_journal(*price_db_path) > 0)
+	  throw_(parse_error, _("Transactions not allowed in price history file"));
+	journal->sources.push_back(journal_t::fileinfo_t(*price_db_path));
+      }
       HANDLER(file_).data_files.remove(*price_db_path);
     }
 
