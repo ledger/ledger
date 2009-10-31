@@ -54,6 +54,8 @@ namespace {
       bool               from;
       optional<mask_t>   account_mask;
       optional<amount_t> amount;
+      optional<string>   cost_operator;
+      optional<amount_t> cost;
 
       post_template_t() : from(false) {}
     };
@@ -111,6 +113,10 @@ namespace {
 
 	  if (post.amount)
 	    out << _("  Amount:       ") << *post.amount << std::endl;
+
+	  if (post.cost)
+	    out << _("  Cost:         ") << *post.cost_operator
+		<< " " << *post.cost << std::endl;
 	}
       }
     }
@@ -148,6 +154,8 @@ namespace {
 	string arg = (*begin).to_string();
 
 	if (arg == "at") {
+	  if (begin == end)
+	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  tmpl.payee_mask = (*++begin).to_string();
 	}
 	else if (arg == "to" || arg == "from") {
@@ -155,21 +163,40 @@ namespace {
 	    tmpl.posts.push_back(xact_template_t::post_template_t());
 	    post = &tmpl.posts.back();
 	  }
+	  if (begin == end)
+	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  post->account_mask = mask_t((*++begin).to_string());
 	  post->from = arg == "from";
 	}
 	else if (arg == "on") {
+	  if (begin == end)
+	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  tmpl.date = parse_date((*++begin).to_string());
 	  check_for_date = false;
 	}
 	else if (arg == "code") {
+	  if (begin == end)
+	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  tmpl.code = (*++begin).to_string();
 	}
 	else if (arg == "note") {
+	  if (begin == end)
+	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  tmpl.note = (*++begin).to_string();
 	}
 	else if (arg == "rest") {
 	  ;			// just ignore this argument
+	}
+	else if (arg == "@" || arg == "@@") {
+	  amount_t cost;
+	  post->cost_operator = arg;
+	  if (begin == end)
+	    throw std::runtime_error(_("Invalid xact command arguments"));
+	  arg = (*++begin).to_string();
+	  if (! cost.parse(arg, amount_t::PARSE_SOFT_FAIL |
+			   amount_t::PARSE_NO_MIGRATE))
+	    throw std::runtime_error(_("Invalid xact command arguments"));
+	  post->cost = cost;
 	}
 	else {
 	  // Without a preposition, it is either:
@@ -441,6 +468,25 @@ namespace {
 	    new_post->amount.in_place_negate();
 	    DEBUG("derive.xact", "Negated new posting amount");
 	  }
+	}
+
+	if (post.cost) {
+	  if (post.cost->sign() < 0)
+	    throw parse_error(_("A posting's cost may not be negative"));
+
+	  post.cost->in_place_unround();
+
+	  if (*post.cost_operator == "@") {
+	    // For the sole case where the cost might be uncommoditized,
+	    // guarantee that the commodity of the cost after multiplication
+	    // is the same as it was before.
+	    commodity_t& cost_commodity(post.cost->commodity());
+	    *post.cost *= new_post->amount;
+	    post.cost->set_commodity(cost_commodity);
+	  }
+
+	  new_post->cost = *post.cost;
+	  DEBUG("derive.xact", "Copied over posting cost");
 	}
 
 	if (found_commodity &&
