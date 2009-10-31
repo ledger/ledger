@@ -98,6 +98,21 @@ struct annotation_t : public supports_flags<>,
     assert(*this);
     return true;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<supports_flags<> >(*this);
+    ar & price;
+    ar & date;
+    ar & tag;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 struct keep_details_t
@@ -136,6 +151,21 @@ struct keep_details_t
     return keep_price || keep_date || keep_tag;
   }
   bool keep_any(const commodity_t& comm) const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & keep_price;
+    ar & keep_date;
+    ar & keep_tag;
+    ar & only_actuals;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline std::ostream& operator<<(std::ostream&       out,
@@ -183,6 +213,22 @@ public:
 
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
   virtual void         write_annotations(std::ostream& out) const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  explicit annotated_commodity_t() : ptr(NULL) {}
+
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<commodity_t>(*this);
+    ar & ptr;
+    ar & details;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline annotated_commodity_t&

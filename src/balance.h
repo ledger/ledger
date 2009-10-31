@@ -80,7 +80,7 @@ class balance_t
 	   multiplicative<balance_t, long> > > > > > > > > > > > > >
 {
 public:
-  typedef std::map<const commodity_t *, amount_t> amounts_map;
+  typedef std::map<commodity_t *, amount_t> amounts_map;
 
   amounts_map amounts;
 
@@ -523,6 +523,18 @@ public:
       }
     return true;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int /* version */) {
+    ar & amounts;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {

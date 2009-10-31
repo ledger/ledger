@@ -30,21 +30,23 @@
  */
 
 /**
- * @addtogroup util
+ * @defgroup report Reporting
  */
 
 /**
- * @file   mask.h
+ * @file   archive.h
  * @author John Wiegley
  *
- * @ingroup util
+ * @ingroup report
  *
- * @brief Regular expression masking.
+ * @brief Brief
+ *
+ * Long.
  */
-#ifndef _MASK_H
-#define _MASK_H
+#ifndef _ARCHIVE_H
+#define _ARCHIVE_H
 
-#include "utils.h"
+#include "journal.h"
 
 namespace ledger {
 
@@ -53,47 +55,36 @@ namespace ledger {
  *
  * Long.
  */
-class mask_t
+class archive_t
 {
+  path	   file;
+  uint32_t version;
+
+  std::list<journal_t::fileinfo_t> sources;
+
 public:
-  boost::regex expr;
-
-  explicit mask_t(const string& pattern);
-
-  mask_t() : expr() {
-    TRACE_CTOR(mask_t, "");
+  archive_t() {
+    TRACE_CTOR(archive_t, "");
   }
-  mask_t(const mask_t& m) : expr(m.expr) {
-    TRACE_CTOR(mask_t, "copy");
+  archive_t(const path& _file)
+    : file(_file), version(0) {
+    TRACE_CTOR(archive_t, "const path&");
   }
-  ~mask_t() throw() {
-    TRACE_DTOR(mask_t);
+  archive_t(const archive_t& ar)
+    : file(ar.file), version(0) {
+    TRACE_CTOR(archive_t, "copy");
   }
-
-  mask_t& operator=(const string& other);
-
-  bool operator==(const mask_t& other) const {
-    return expr == other.expr;
+  ~archive_t() {
+    TRACE_DTOR(archive_t);
   }
 
-  bool match(const string& str) const {
-    DEBUG("mask.match",
-	  "Matching: \"" << str << "\" =~ /" << expr.str() << "/ = "
-	  << (boost::regex_search(str, expr) ? "true" : "false"));
-    return boost::regex_search(str, expr);
-  }
+  void read_header();
 
-  bool empty() const {
-    return expr.empty();
-  }
+  bool should_load(const std::list<path>& data_files);
+  bool should_save(shared_ptr<journal_t> journal);
 
-  bool valid() const {
-    if (expr.status() != 0) {
-      DEBUG("ledger.validate", "mask_t: expr.status() != 0");
-      return false;
-    }
-    return true;
-  }
+  void save(shared_ptr<journal_t> journal);
+  bool load(shared_ptr<journal_t> journal);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -103,23 +94,12 @@ private:
 
   template<class Archive>
   void serialize(Archive & ar, const unsigned int /* version */) {
-    string temp;
-    if (Archive::is_loading::value) {
-      ar & temp;
-      *this = temp;
-    } else {
-      temp = expr.str();
-      ar & temp;
-    }
+    ar & version;
+    ar & sources;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
-  out << mask.expr.str();
-  return out;
-}
-
 } // namespace ledger
 
-#endif // _MASK_H
+#endif // _ARCHIVE_H

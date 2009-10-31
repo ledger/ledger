@@ -228,12 +228,14 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 	return temp.commodity_amount(commodity);
 
       throw_(amount_error,
-	     _("Requested amount of a balance with multiple commodities: %1") << temp);
+	     _("Requested amount of a balance with multiple commodities: %1")
+	     << temp);
     }
 #endif
   }
   else if (amounts.size() > 0) {
-    amounts_map::const_iterator i = amounts.find(&*commodity);
+    amounts_map::const_iterator i =
+      amounts.find(const_cast<commodity_t *>(&*commodity));
     if (i != amounts.end())
       return i->second;
   }

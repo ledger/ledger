@@ -118,9 +118,9 @@ void interactive_t::verify_arguments() const
       label = _("any value");
       wrong_arg = false;
       break;
-    case 'P':
-      label = _("a pointer");
-      wrong_arg = ! next_arg->is_pointer();
+    case '^':
+      label = _("a scope");
+      wrong_arg = ! next_arg->is_scope();
       break;
     case 'S':
       label = _("a sequence");

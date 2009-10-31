@@ -113,8 +113,8 @@ value_t::operator bool() const
       }
     }
     return false;
-  case POINTER:
-    return ! as_any_pointer().empty();
+  case SCOPE:
+    return as_scope() != NULL;
   default:
     break;
   }
@@ -1206,8 +1206,8 @@ bool value_t::is_realzero() const
   case SEQUENCE:
     return as_sequence().empty();
 
-  case POINTER:
-    return as_any_pointer().empty();
+  case SCOPE:
+    return as_scope() == NULL;
 
   default:
     throw_(value_error, _("Cannot determine if %1 is really zero") << label());
@@ -1235,8 +1235,8 @@ bool value_t::is_zero() const
   case SEQUENCE:
     return as_sequence().empty();
 
-  case POINTER:
-    return as_any_pointer().empty();
+  case SCOPE:
+    return as_scope() == NULL;
 
   default:
     throw_(value_error, _("Cannot determine if %1 is zero") << label());
@@ -1474,7 +1474,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   case DATE:
   case STRING:
   case MASK:
-  case POINTER:
+  case SCOPE:
     return *this;
 
   case SEQUENCE: {
@@ -1579,8 +1579,8 @@ void value_t::print(std::ostream& out,
     break;
   }
 
-  case POINTER:
-    out << "<POINTER>";
+  case SCOPE:
+    out << "<SCOPE>";
     break;
 
   default:
@@ -1647,8 +1647,8 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
     out << '/' << as_mask() << '/';
     break;
 
-  case POINTER:
-    out << boost::unsafe_any_cast<const void *>(&as_any_pointer());
+  case SCOPE:
+    out << as_scope();
     break;
 
   case SEQUENCE: {

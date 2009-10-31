@@ -293,7 +293,7 @@ class PrepareBuild(CommandLineApp):
         else:
             cmd = 'config'
 
-        self.log.debug('Invoking primary phase: ' + cmd)
+        self.log.info('Invoking primary phase: ' + cmd)
         PrepareBuild.__dict__['phase_' + cmd](self, *args)
 
     #########################################################################
@@ -364,7 +364,7 @@ class PrepareBuild(CommandLineApp):
 
     def ensure(self, dirname):
         if not exists(dirname):
-            self.log.debug('Making directory: ' + dirname)
+            self.log.info('Making directory: ' + dirname)
             os.makedirs(dirname)
         elif not isdir(dirname):
             self.log.error('Directory is not a directory: ' + dirname)
@@ -396,11 +396,11 @@ class PrepareBuild(CommandLineApp):
         return False
 
     def phase_products(self, *args):
-        self.log.debug('Executing phase: products')
+        self.log.info('Executing phase: products')
         print self.products_directory()
 
     def phase_info(self, *args):
-        self.log.debug('Executing phase: info')
+        self.log.info('Executing phase: info')
 
         environ, conf_args = self.configure_environment()
 
@@ -433,7 +433,7 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('  %s' % arg)
 
     def phase_sloc(self, *args):
-        self.log.debug('Executing phase: sloc')
+        self.log.info('Executing phase: sloc')
 	self.execute('sloccount', 'src', 'python', 'lisp', 'test')
 
     #########################################################################
@@ -441,13 +441,13 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def phase_gettext(self, *args):
-        self.log.debug('Executing phase: gettext')
+        self.log.info('Executing phase: gettext')
 
         # configure the template files
         assert exists('po') and isdir('po')
         if not exists(join('po', 'Makevars')):
             assert exists(join('po', 'Makevars.template'))
-            self.log.debug('Moving po/Makevars.template -> po/Makevars')
+            self.log.info('Moving po/Makevars.template -> po/Makevars')
             os.rename(join('po', 'Makevars.template'),
                       join('po', 'Makevars'))
 
@@ -460,22 +460,36 @@ class PrepareBuild(CommandLineApp):
         POTFILES_in.close()
 
     def phase_version(self, *args):
-        self.log.debug('Executing phase: version')
+        self.log.info('Executing phase: version')
         version_m4 = open('version.m4', 'w')
         version_m4.write("m4_define([VERSION_NUMBER], [%s])" %
                          self.current_version())
         version_m4.close()
 
     def phase_autogen(self, *args):
-        self.log.debug('Executing phase: autogen')
-        self.execute('sh', 'autogen.sh')
+        self.log.info('Executing phase: autogen')
+
+        if not exists('autogen.sh') or \
+           self.isnewer('tools/autogen.sh', 'autogen.sh'):
+            shutil.copyfile('tools/autogen.sh', 'autogen.sh')
+
+        self.execute('sh', 'tools/autogen.sh')
 
     def phase_aclocal(self, *args):
-        self.log.debug('Executing phase: aclocal')
+        self.log.info('Executing phase: aclocal')
         self.execute('aclocal', '-I', 'm4')
 
     def phase_autoconf(self, *args):
-        self.log.debug('Executing phase: autoconf')
+        self.log.info('Executing phase: autoconf')
+
+        if not exists('configure.ac') or \
+           self.isnewer('tools/configure.ac', 'configure.ac'):
+            shutil.copyfile('tools/configure.ac', 'configure.ac')
+
+        if not exists('Makefile.am') or \
+           self.isnewer('tools/Makefile.am', 'Makefile.am'):
+            shutil.copyfile('tools/Makefile.am', 'Makefile.am')
+
         reason = self.need_to_prepare_autotools()
         if reason:
             self.log.info('autogen.sh must be run ' + reason)
@@ -491,13 +505,13 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def phase_submodule(self, *args):
-        self.log.debug('Executing phase: submodule')
+        self.log.info('Executing phase: submodule')
         if exists('.git') and isdir('.git'):
             self.execute('git', 'submodule', 'init')
             self.execute('git', 'submodule', 'update')
 
     def phase_pull(self, *args):
-        self.log.debug('Executing phase: pull')
+        self.log.info('Executing phase: pull')
         if not exists('.git') and not isdir('.git'):
             self.log.error("This is not a Git clone.")
             sys.exit(1)
@@ -509,7 +523,7 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def phase_dependencies(self, *args):
-        self.log.debug('Executing phase: dependencies')
+        self.log.info('Executing phase: dependencies')
 
         self.log.info("Installing Ledger's build dependencies ...")
 
@@ -581,7 +595,7 @@ class PrepareBuild(CommandLineApp):
                     self.execute(*packages)
 
     def phase_buildlibs(self, *args):
-        self.log.debug('Executing phase: buildlibs')
+        self.log.info('Executing phase: buildlibs')
 
         try:
             os.chdir('lib')
@@ -645,12 +659,12 @@ class PrepareBuild(CommandLineApp):
             entries.sort()
             for entry in entries:
                 if re.search('boost_regex', entry):
-                    self.log.debug('Found a Boost library: ' + entry)
+                    self.log.info('Found a Boost library: ' + entry)
 
                 match = re.match('libboost_regex([^.]*)\.(a|so|dylib)', entry)
                 if match:
                     suffix = match.group(1)
-                    self.log.debug('Found Boost suffix => ' + suffix)
+                    self.log.info('Found Boost suffix => ' + suffix)
                     self.envvars['BOOST_HOME'] = dirname(path)
                     return suffix
         else:
@@ -660,20 +674,20 @@ class PrepareBuild(CommandLineApp):
 
     def locate_boost(self):
         if self.envvars['BOOST_SUFFIX']:
-            self.log.debug(("Not looking for Boost, since " +
+            self.log.info(("Not looking for Boost, since " +
                             "a suffix of '%s' was given") %
                            self.envvars['BOOST_SUFFIX'])
         else:
             suffix = None
             for path in ['/usr/local/lib', '/opt/local/lib',
                          '/sw/lib', '/usr/lib']:
-                self.log.debug('Looking for Boost in %s...' % path)
+                self.log.info('Looking for Boost in %s...' % path)
                 suffix = self.locate_boost_in_dir(path)
                 if suffix is not None:
-                    self.log.debug('Boost is located here:')
-                    self.log.debug('BOOST_HOME    => ' +
+                    self.log.info('Boost is located here:')
+                    self.log.info('BOOST_HOME    => ' +
                                    self.envvars['BOOST_HOME'])
-                    self.log.debug('BOOST_SUFFIX  => ' + suffix)
+                    self.log.info('BOOST_SUFFIX  => ' + suffix)
                     break
             if suffix is None:
                 self.log.error("Boost could not be found.")
@@ -695,7 +709,7 @@ class PrepareBuild(CommandLineApp):
                         '/sw/include']:
             if exists(path) and isdir(path) and \
                path != '/usr/include':
-                self.log.debug('Noticing include directory => ' + path)
+                self.log.info('Noticing include directory => ' + path)
                 self.sys_include_dirs.append(path)
 
         # Each of these becomes '-L<name>'
@@ -707,17 +721,19 @@ class PrepareBuild(CommandLineApp):
                      '/opt/local/lib',
                      '/sw/lib']:
             if exists(path) and isdir(path):
-                self.log.debug('Noticing library directory => ' + path)
+                self.log.info('Noticing library directory => ' + path)
                 self.sys_library_dirs.append(path)
 
     def setup_for_johnw(self):
         # jww (2009-03-09): Some peculiarities specific to my system
-        if exists('/usr/local/stow/cppunit/include'):
-	    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
-	    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
+        if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
+            if exists('/usr/local/stow/cppunit/include'):
+                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
+            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
             self.options.use_glibcxx_debug = True
 
@@ -726,7 +742,7 @@ class PrepareBuild(CommandLineApp):
 
         system = self.get_stdout('uname', '-s')
 
-        self.log.debug('System type is => ' + system)
+        self.log.info('System type is => ' + system)
 
         # These options are global defaults at the moment
         #self.option_warn()
@@ -796,7 +812,7 @@ class PrepareBuild(CommandLineApp):
             self.log.error('Unknown build flavor "%s"' % self.current_flavor)
             sys.exit(1)
 
-        self.log.debug('Setting up build flavor => ' + self.current_flavor)
+        self.log.info('Setting up build flavor => ' + self.current_flavor)
         PrepareBuild.__dict__['setup_flavor_' + self.current_flavor](self)
 
         self.setup_flags()
@@ -927,22 +943,22 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def setup_flavor_default(self):
-        if exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
-            self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                           self.envvars['BOOST_SUFFIX'])
-
-            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
-
-        elif exists('/opt/local/lib/libboost_regex.a'):
+        if exists('/opt/local/lib/libboost_regex.a'):
             self.envvars['BOOST_HOME']   = '/opt/local'
             self.envvars['BOOST_SUFFIX'] = ''
 
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
+            self.log.info('Setting BOOST_SUFFIX  => %s' %
                            self.envvars['BOOST_SUFFIX'])
 
             self.sys_include_dirs.append('/opt/local/include/boost')
+
+        elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+            self.envvars['BOOST_HOME']   = '/usr/local'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+            self.log.info('Setting BOOST_SUFFIX  => %s' %
+                          self.envvars['BOOST_SUFFIX'])
+
+            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
 
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
@@ -960,63 +976,64 @@ class PrepareBuild(CommandLineApp):
                     self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
                     self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
 
-                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
-                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
+                if exists('/usr/local/stow/cppunit-debug/include'):
+                    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
+                    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
-            if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
-                self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
-                self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                               self.envvars['BOOST_SUFFIX'])
-
-                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
-
-            elif exists('/opt/local/lib/libboost_regex-d.a'):
+            if exists('/opt/local/lib/libboost_regex-d.a'):
                 self.envvars['BOOST_HOME']   = '/opt/local'
                 self.envvars['BOOST_SUFFIX'] = '-d'
 
-                self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                               self.envvars['BOOST_SUFFIX'])
+                self.log.info('Setting BOOST_SUFFIX  => %s' %
+                              self.envvars['BOOST_SUFFIX'])
 
                 self.sys_include_dirs.append('/opt/local/include/boost')
-        else:
-            if exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
-                self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                               self.envvars['BOOST_SUFFIX'])
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
+                self.log.info('Setting BOOST_SUFFIX  => %s' %
+                              self.envvars['BOOST_SUFFIX'])
 
                 self.sys_include_dirs.append('/usr/local/include/boost-1_40')
-
-            elif exists('/opt/local/lib/libboost_regex.a'):
+        else:
+            if exists('/opt/local/lib/libboost_regex.a'):
                 self.envvars['BOOST_HOME']   = '/opt/local'
                 self.envvars['BOOST_SUFFIX'] = ''
 
-                self.log.debug('Setting BOOST_SUFFIX  => %s' %
+                self.log.info('Setting BOOST_SUFFIX  => %s' %
                                self.envvars['BOOST_SUFFIX'])
 
                 self.sys_include_dirs.append('/opt/local/include/boost')
+
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+                self.envvars['BOOST_HOME']   = '/usr/local'
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+                self.log.info('Setting BOOST_SUFFIX  => %s' %
+                              self.envvars['BOOST_SUFFIX'])
+
+                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
 
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')
         self.CXXFLAGS.append('-fomit-frame-pointer')
 
-        if exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
-            self.envvars['BOOST_HOME']   = '/usr/local'
-            self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                           self.envvars['BOOST_SUFFIX'])
-
-            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
-
-        elif exists('/opt/local/lib/libboost_regex.a'):
+        if exists('/opt/local/lib/libboost_regex.a'):
             self.envvars['BOOST_HOME']   = '/opt/local'
             self.envvars['BOOST_SUFFIX'] = ''
 
-            self.log.debug('Setting BOOST_SUFFIX  => %s' %
-                           self.envvars['BOOST_SUFFIX'])
+            self.log.info('Setting BOOST_SUFFIX  => %s' %
+                          self.envvars['BOOST_SUFFIX'])
 
             self.sys_include_dirs.append('/opt/local/include/boost')
+
+        elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+            self.envvars['BOOST_HOME']   = '/usr/local'
+            self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+            self.log.info('Setting BOOST_SUFFIX  => %s' %
+                          self.envvars['BOOST_SUFFIX'])
+
+            self.sys_include_dirs.append('/usr/local/include/boost-1_40')
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
@@ -1038,7 +1055,7 @@ class PrepareBuild(CommandLineApp):
         """Alter the Makefile so that it's not nearly so verbose.
 
         This makes errors and warnings much easier to spot."""
-        self.log.debug('Executing phase: patch')
+        self.log.info('Executing phase: patch')
 
         if exists('Makefile'):
             self.log.debug('Patching generated Makefile')
@@ -1108,7 +1125,7 @@ class PrepareBuild(CommandLineApp):
         return False
 
     def phase_configure(self, *args):
-        self.log.debug('Executing phase: configure')
+        self.log.info('Executing phase: configure')
 
         self.configured = True
 
@@ -1130,7 +1147,10 @@ class PrepareBuild(CommandLineApp):
                 self.log.debug('configure args => ' + str(conf_args))
 
                 configure = Popen(conf_args, shell=False, env=environ)
-                configure.wait()
+                retcode = configure.wait()
+                if retcode < 0:
+                    self.log.error("Child was terminated by signal", -retcode)
+                    sys.exit(1)
 
                 if not self.options.no_patch:
                     self.phase_patch()
@@ -1145,7 +1165,7 @@ class PrepareBuild(CommandLineApp):
             os.chdir(self.source_dir)
 
     def phase_config(self, *args):
-        self.log.debug('Executing phase: config')
+        self.log.info('Executing phase: config')
         self.phase_submodule()
         self.phase_autoconf()
         self.phase_configure(*args)
@@ -1157,7 +1177,7 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def phase_make(self, *args):
-        self.log.debug('Executing phase: make')
+        self.log.info('Executing phase: make')
 
         config_args = []
         make_args   = []
@@ -1182,15 +1202,12 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.log.debug('make args => ' + str(make_args))
-
-            configure = Popen(['make'] + make_args, shell=False)
-            configure.wait()
+            self.execute(*(['make'] + make_args))
         finally:
             os.chdir(self.source_dir)
 
     def phase_update(self, *args):
-        self.log.debug('Executing phase: update')
+        self.log.info('Executing phase: update')
         self.phase_pull()
         self.phase_make(*args)
 
@@ -1199,15 +1216,15 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def phase_clean(self, *args):
-        self.log.debug('Executing phase: clean')
+        self.log.info('Executing phase: clean')
         self.phase_make('clean')
 
     def phase_distclean(self, *args):
-        self.log.debug('Executing phase: distclean')
+        self.log.info('Executing phase: distclean')
         self.phase_make('distclean')
 
     def phase_gitclean(self, *args):
-        self.log.debug('Executing phase: gitclean')
+        self.log.info('Executing phase: gitclean')
         self.execute('git', 'clean', '-dfx')
 
     #########################################################################
@@ -1238,7 +1255,7 @@ class PrepareBuild(CommandLineApp):
                          '@loader_path/' + base, dest_file)
 
     def phase_bindmg(self, *args):
-        self.log.debug('Executing phase: bindmg')
+        self.log.info('Executing phase: bindmg')
 
         self.phase_make()
 
@@ -1263,7 +1280,7 @@ class PrepareBuild(CommandLineApp):
             shutil.rmtree(tempdir)
 
     def phase_upload(self, *args):
-        self.log.debug('Executing phase: upload')
+        self.log.info('Executing phase: upload')
 
         self.phase_bindmg()
 
@@ -1295,7 +1312,7 @@ class PrepareBuild(CommandLineApp):
             shutil.rmtree(self.build_directory())
 
     def phase_distcheck(self, *args):
-        self.log.debug('Executing phase: distcheck')
+        self.log.info('Executing phase: distcheck')
         
         self.configure_flavor('default', False)
 
@@ -1320,7 +1337,7 @@ class PrepareBuild(CommandLineApp):
         self.phase_make(*make_args)
 
     def phase_rsync(self, *args):
-        self.log.debug('Executing phase: rsync')
+        self.log.info('Executing phase: rsync')
 
         source_copy_dir = join(self.ensure(self.products_directory()),
                                'ledger-proof')
@@ -1332,32 +1349,28 @@ class PrepareBuild(CommandLineApp):
         self.source_dir = source_copy_dir
         
     def phase_proof(self, *args):
-        self.log.debug('Executing phase: proof')
+        self.log.info('Executing phase: proof')
+
+        self.phase_makeall(*args)
 
         self.log.info('=== Copying source tree ===')
         self.phase_rsync()
 
+        self.phase_makeall(*args)
+
         self.configure_flavor('opt')
-        self.log.info('=== Building opt ===')
-        self.phase_make(*args)
         self.log.info('=== Testing opt ===')
         self.phase_make('fullcheck')
         
         self.configure_flavor('gcov')
-        self.log.info('=== Building gcov ===')
-        self.phase_make(*args)
         self.log.info('=== Testing gcov ===')
         self.phase_make('check')
         
         self.configure_flavor('debug')
-        self.log.info('=== Building debug ===')
-        self.phase_make(*args)
         self.log.info('=== Testing debug ===')
         self.phase_make('fullcheck')
         
         self.configure_flavor('default')
-        self.log.info('=== Building default ===')
-        self.phase_make(*args)
         self.log.info('=== Testing default ===')
         self.phase_make('fullcheck')
 
@@ -1365,7 +1378,7 @@ class PrepareBuild(CommandLineApp):
         self.phase_distcheck()
 
     def phase_makeall(self, *args):
-        self.log.debug('Executing phase: makeall')
+        self.log.info('Executing phase: makeall')
 
         self.configure_flavor('opt', False)
         
@@ -1402,11 +1415,6 @@ class PrepareBuild(CommandLineApp):
         self.phase_make(*args)
         
         self.configure_flavor('default', False)
-
-    def phase_do_all(self, *args):
-        self.log.debug('Executing phase: do_all')
-        self.phase_makeall(*args)
-        self.phase_proof(*args)
 
     #########################################################################
     # Help                                                                  #

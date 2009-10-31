@@ -172,12 +172,12 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 	left()->left() && left()->left()->is_function()) {
       call_scope_t call_args(scope);
       if (value_t obj = left()->left()->as_function()(call_args)) {
-	if (obj.is_pointer()) {
-	  if (obj.as_pointer_lval<scope_t>() == NULL) {
+	if (obj.is_scope()) {
+	  if (obj.as_scope() == NULL) {
 	    throw_(calc_error,
 		   _("Left operand of . operator is NULL"));
 	  } else {
-	    scope_t& objscope(obj.as_ref_lval<scope_t>());
+	    scope_t& objscope(*obj.as_scope());
 	    if (ptr_op_t member = objscope.lookup(right()->as_ident())) {
 	      result = member->calc(objscope, NULL, depth + 1);
 	      break;

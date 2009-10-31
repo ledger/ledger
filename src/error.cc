@@ -96,10 +96,10 @@ string source_context(const path&	     file,
   ifstream in(file);
   in.seekg(pos, std::ios::beg);
       
-  scoped_array<char> buf(new char[len + 1]);
-  in.read(buf.get(), len);
-  assert(in.gcount() == len);
-  buf[len] = '\0';
+  scoped_array<char> buf(new char[static_cast<std::size_t>(len) + 1]);
+  in.read(buf.get(), static_cast<std::streamsize>(len));
+  assert(in.gcount() == static_cast<std::streamsize>(len));
+  buf[static_cast<std::size_t>(len)] = '\0';
 
   bool first = true;
   for (char * p = std::strtok(buf.get(), "\n");
