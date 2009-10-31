@@ -459,11 +459,10 @@ class PrepareBuild(CommandLineApp):
                       join('po', 'Makevars'))
 
         POTFILES_in = open('po/POTFILES.in', 'w')
-        for filename in self.get_stdout('git', 'ls-files', '-z',
-                                        '*.cc', '*.h').split('\0'):
-            if not re.match('(src|python)/', filename):
-                POTFILES_in.write(filename)
-                POTFILES_in.write('\n')
+        for filename in (f for f in os.listdir(join(self.source_dir, 'src'))
+                             if re.search('\.(cc|h)', f)):
+            POTFILES_in.write(join('src', filename))
+            POTFILES_in.write('\n')
         POTFILES_in.close()
 
     def phase_version(self, *args):
