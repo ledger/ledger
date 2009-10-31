@@ -13,13 +13,13 @@ BOOST_VERSION = 1_40_0
 # architecture=combined
 boost-release:
 	(cd $(BOOST_SOURCE) && \
-	bjam release -j16 --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
+	bjam release --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
 	    --build-dir=$(HOME)/Products/boost_$(BOOST_VERSION) \
 	    --toolset=darwin --build-type=complete --layout=versioned install)
 
 boost-debug:
 	(cd $(BOOST_SOURCE) && \
-	bjam debug -j16 --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
+	bjam debug --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
 	    --build-dir=$(HOME)/Products/boost_$(BOOST_VERSION) \
 	    --toolset=darwin --build-type=complete --layout=versioned \
 	    define=_GLIBCXX_DEBUG=1 install)
