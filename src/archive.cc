@@ -42,7 +42,8 @@
 #include "post.h"
 #include "xact.h"
 
-#define ARCHIVE_VERSION 0x03000001
+#define LEDGER_MAGIC    0x4c454447
+#define ARCHIVE_VERSION 0x03000002
 
 //BOOST_IS_ABSTRACT(ledger::scope_t)
 BOOST_CLASS_EXPORT(ledger::scope_t)
@@ -63,25 +64,64 @@ template void ledger::journal_t::serialize(boost::archive::binary_iarchive&,
 					   const unsigned int);
 namespace ledger {
 
-void archive_t::read_header()
+namespace {
+  bool read_header_bits(std::istream& in) {
+    uint32_t bytes;
+
+    assert(sizeof(uint32_t) == 4);
+    in.read(reinterpret_cast<char *>(&bytes), sizeof(uint32_t));
+    if (bytes != LEDGER_MAGIC) {
+      DEBUG("archive.journal", "Magic bytes not present");
+      return false;
+    }
+
+    in.read(reinterpret_cast<char *>(&bytes), sizeof(uint32_t));
+    if (bytes != ARCHIVE_VERSION) {
+      DEBUG("archive.journal", "Archive version mismatch");
+      return false;
+    }
+
+    return true;
+  }
+
+  void write_header_bits(std::ostream& out) {
+    uint32_t bytes;
+
+    assert(sizeof(uint32_t) == 4);
+    bytes = LEDGER_MAGIC;
+    out.write(reinterpret_cast<char *>(&bytes), sizeof(uint32_t));
+
+    bytes = ARCHIVE_VERSION;
+    out.write(reinterpret_cast<char *>(&bytes), sizeof(uint32_t));
+  }
+}
+
+bool archive_t::read_header()
 {
-  if (exists(file)) {
-    // Open the stream, read the version number and the list of sources
-    ifstream stream(file, std::ios::binary);
-    boost::archive::binary_iarchive iarchive(stream);
+  uintmax_t size = file_size(file);
+  if (size < 8)
+    return false;
 
-    DEBUG("archive.journal", "Reading header from archive");
-    iarchive >> *this;
+  // Open the stream, read the version number and the list of sources
+  ifstream stream(file, std::ios::binary);
+  if (! read_header_bits(stream))
+    return false;
 
-    DEBUG("archive.journal",
-	  "Version number:    " << std::hex << version << std::dec);
-    DEBUG("archive.journal", "Number of sources: " << sources.size());
+  boost::archive::binary_iarchive iarchive(stream);
+
+  DEBUG("archive.journal", "Reading header from archive");
+  iarchive >> *this;
+
+  DEBUG("archive.journal",
+	"Version number:    " << std::hex << ARCHIVE_VERSION << std::dec);
+  DEBUG("archive.journal", "Number of sources: " << sources.size());
 
 #if defined(DEBUG_ON)
-    foreach (const journal_t::fileinfo_t& i, sources)
-      DEBUG("archive.journal", "Loaded source: " << *i.filename);
+  foreach (const journal_t::fileinfo_t& i, sources)
+    DEBUG("archive.journal", "Loaded source: " << *i.filename);
 #endif
-  }
+
+  return true;
 }
 
 bool archive_t::should_load(const std::list<path>& data_files)
@@ -95,8 +135,8 @@ bool archive_t::should_load(const std::list<path>& data_files)
     return false;
   }
 
-  if (version != ARCHIVE_VERSION) {
-    DEBUG("archive.journal", "No, it fails the version check");
+  if (! read_header()) {
+    DEBUG("archive.journal", "No, header failed to read");
     return false;
   }
 
@@ -205,10 +245,9 @@ void archive_t::save(shared_ptr<journal_t> journal)
 {
   INFO_START(archive, "Saved journal file cache");
 
-  ofstream archive(file, std::ios::binary);
-  boost::archive::binary_oarchive oa(archive);
+  ofstream stream(file, std::ios::binary);
 
-  version = ARCHIVE_VERSION;
+  write_header_bits(stream);
   sources = journal->sources;
 
 #if defined(DEBUG_ON)
@@ -216,8 +255,10 @@ void archive_t::save(shared_ptr<journal_t> journal)
     DEBUG("archive.journal", "Saving source: " << *i.filename);
 #endif
 
-  DEBUG("archive.journal",
-	"Creating archive with version " << std::hex << version << std::dec);
+  boost::archive::binary_oarchive oa(stream);
+
+  DEBUG("archive.journal", "Creating archive with version "
+	<< std::hex << ARCHIVE_VERSION << std::dec);
   oa << *this;
 
   DEBUG("archive.journal",
@@ -232,6 +273,9 @@ bool archive_t::load(shared_ptr<journal_t> journal)
   INFO_START(archive, "Read cached journal file");
 
   ifstream stream(file, std::ios::binary);
+  if (! read_header_bits(stream))
+    return false;
+
   boost::archive::binary_iarchive iarchive(stream);
 
   // Skip past the archive header, it was already read in before
