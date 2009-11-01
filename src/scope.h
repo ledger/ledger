@@ -219,7 +219,9 @@ public:
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
-  explicit call_scope_t() {}
+  explicit call_scope_t() {
+    TRACE_CTOR(call_scope_t, "");
+  }
 
   /** Serialization. */
 

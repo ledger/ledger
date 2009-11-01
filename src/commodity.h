@@ -91,7 +91,9 @@ class commodity_t
 public:
   class base_t : public noncopyable, public supports_flags<uint_least16_t>
   {
-    base_t() {}
+    base_t() {
+      TRACE_CTOR(base_t, "");
+    }
 
   public:
     typedef std::map<const datetime_t, amount_t> history_map;
@@ -236,7 +238,7 @@ public:
 		       const shared_ptr<base_t>& _base)
     : delegates_flags<uint_least16_t>(*_base.get()), base(_base),
       parent_(_parent), annotated(false) {
-    TRACE_CTOR(commodity_t, "");
+    TRACE_CTOR(commodity_t, "commodity_pool_t *, shared_ptr<base_t>");
   }
   virtual ~commodity_t() {
     TRACE_DTOR(commodity_t);
@@ -394,7 +396,9 @@ private:
 protected:
   explicit commodity_t()
     : delegates_flags<uint_least16_t>(temp_flags), parent_(NULL),
-      annotated(false) {}
+      annotated(false) {
+    TRACE_CTOR(commodity_t, "");
+  }
 
 private:
   /** Serialization. */
