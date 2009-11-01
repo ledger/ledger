@@ -7,7 +7,14 @@ rm -fr ~/Products/ledger*
 ./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log
 
 if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
-    notify "Ledger proof build failed"
+    if [ "$1" = "--alert" ]; then
+	notify "Ledger proof build FAILED"
+    else
+	echo "Ledger proof build FAILED"
+	exit 1
+    fi
 else
     echo "Ledger proof build succeeded"
 fi
+
+exit 0
