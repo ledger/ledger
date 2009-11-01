@@ -1,13 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
+
+cd ~/src/ledger
+
+VERSION=$(git describe --all --long)
+
+if [[ -f ~/Products/last-proofed && \
+      $(< ~/Products/last-proofed) = $VERSION ]]; then
+    echo "No need to run tools/proof again"
+    exit 0
+fi
 
 rm -fr ~/Products/ledger*
 
 ./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log
 
 if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
-    if [ "$1" = "--alert" ]; then
+    if [[ "$1" = "--alert" ]]; then
 	notify "Ledger proof build FAILED"
     else
 	echo "Ledger proof build FAILED"
@@ -15,6 +25,7 @@ if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
     fi
 else
     echo "Ledger proof build succeeded"
+    echo $VERSION > ~/Products/last-proofed
 fi
 
 exit 0
