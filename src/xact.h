@@ -79,7 +79,9 @@ public:
   virtual bool remove_post(post_t * post);
 
   virtual bool finalize();
-  virtual bool valid() const = 0;
+  virtual bool valid() const {
+    return true;
+  }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -179,9 +181,6 @@ public:
   }
 
   virtual void extend_xact(xact_base_t& xact, bool post);
-  virtual bool valid() const {
-    return true;
-  }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -260,14 +259,6 @@ class period_xact_t : public xact_base_t
 
   virtual ~period_xact_t() {
     TRACE_DTOR(period_xact_t);
-  }
-
-  virtual bool valid() const {
-    if (! period.is_valid()) {
-      DEBUG("ledger.validate", "period_xact_t: ! period.is_valid()");
-      return false;
-    }
-    return true;
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)

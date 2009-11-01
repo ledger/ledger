@@ -524,6 +524,7 @@ void instance_t::automated_xact_directive(char * line)
 
     journal.auto_xacts.push_back(ae.get());
 
+    ae->journal	      = &journal;
     ae->pos	      = position_t();
     ae->pos->pathname = pathname;
     ae->pos->beg_pos  = pos;
@@ -559,6 +560,7 @@ void instance_t::period_xact_directive(char * line)
 
   if (parse_posts(account_stack.front(), *pe.get())) {
     reveal_context = true;
+    pe->journal = &journal;
 
     if (pe->finalize()) {
       extend_xact_base(&journal, *pe.get(), true);
@@ -574,6 +576,7 @@ void instance_t::period_xact_directive(char * line)
 
       pe.release();
     } else {
+      pe->journal = NULL;
       throw parse_error(_("Period transaction failed to balance"));
     }
   }
