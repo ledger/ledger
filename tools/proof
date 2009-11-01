@@ -2,6 +2,8 @@
 
 set -e
 
+cd ~/src/ledger
+
 VERSION=$(git describe --all --long)
 
 if [[ -f ~/Products/last-proofed && \
