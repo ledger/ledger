@@ -18,8 +18,12 @@ import shutil
 import string
 import sys
 import time
-import hashlib
 import tempfile
+
+try:
+    import hashlib
+except:
+    import md5
 
 from os.path import *
 from stat import *
@@ -623,7 +627,10 @@ class PrepareBuild(CommandLineApp):
                     sys.exit(1)
 
                 fd = open(tarball)
-                csum = hashlib.md5()
+                try:
+                    csum = hashlib.md5()
+                except:
+                    csum = md5.md5()
                 csum.update(fd.read())
                 fd.close()
                 digest = csum.hexdigest()
