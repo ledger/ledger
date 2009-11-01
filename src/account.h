@@ -50,7 +50,6 @@
 
 namespace ledger {
 
-class session_t;
 class account_t;
 class xact_t;
 class post_t;

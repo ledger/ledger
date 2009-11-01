@@ -192,7 +192,7 @@ public:
   explicit annotated_commodity_t(commodity_t * _ptr,
 				 const annotation_t& _details)
     : commodity_t(_ptr->parent_, _ptr->base), ptr(_ptr), details(_details) {
-    TRACE_CTOR(annotated_commodity_t, "");
+    TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
     annotated = true;
   }
   virtual ~annotated_commodity_t() {
@@ -216,7 +216,9 @@ public:
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
-  explicit annotated_commodity_t() : ptr(NULL) {}
+  explicit annotated_commodity_t() : ptr(NULL) {
+    TRACE_CTOR(annotated_commodity_t, "");
+  }
 
   /** Serialization. */
 

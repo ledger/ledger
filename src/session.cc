@@ -130,15 +130,17 @@ std::size_t session_t::read_data(const string& master_account)
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
   optional<archive_t> cache;
+#if 1
+  // jww (2009-11-01): The binary caching feature is disabled for now.
   if (HANDLED(cache_) && master_account.empty()) {
     cache = archive_t(HANDLED(cache_).str());
-    cache->read_header();
 
     if (price_db_path) {
       HANDLER(file_).data_files.push_back(*price_db_path);
       populated_price_db = true;
     }
   }
+#endif
 
   if (! (cache &&
 	 cache->should_load(HANDLER(file_).data_files) &&

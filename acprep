@@ -18,8 +18,12 @@ import shutil
 import string
 import sys
 import time
-import hashlib
 import tempfile
+
+try:
+    import hashlib
+except:
+    import md5
 
 from os.path import *
 from stat import *
@@ -580,18 +584,19 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
-            elif exists('/etc/redhat-release'):
+
+            if exists('/etc/redhat-release'):
                 release = open('/etc/redhat-release')
-                if issue.readline().startswith('CentOS'):
+                if release.readline().startswith('CentOS'):
                     self.log.info('Looks like you are using YUM on CentOS')
                     packages = [
-                        'sudo', 'yum', 'install', 'gcc', 'make',
-                         'libtool', 'autoconf', 'automake',
-                         'zlib-devel', 'bzip2-devel', 'python-devel',
-                         'bboost-devel',
+                        'sudo', 'yum', 'install', 'gcc', 'gcc-c++',
+                        'compat-gcc-*', 'make', 'libtool', 'autoconf',
+                        'automake', 'zlib-devel', 'bzip2-devel',
+                        'python-devel', 'bboost-devel',
                          'gmp-devel', 'gettext-devel',
                          #'mpfr-devel'
-                         #'libedit-dev',
+                         'libedit-devel',
                          'cppunit-devel',
                          #'texlive-full',
                          #'doxygen', 'graphviz', 'texinfo',
@@ -623,7 +628,10 @@ class PrepareBuild(CommandLineApp):
                     sys.exit(1)
 
                 fd = open(tarball)
-                csum = hashlib.md5()
+                try:
+                    csum = hashlib.md5()
+                except:
+                    csum = md5.md5()
                 csum.update(fd.read())
                 fd.close()
                 digest = csum.hexdigest()

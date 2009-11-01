@@ -457,7 +457,7 @@ bool xact_t::valid() const
     DEBUG("ledger.validate", "xact_t: ! _date");
     return false;
   }
-  if (! journal) {
+  if (! has_flags(ITEM_GENERATED | ITEM_TEMP) && ! journal) {
     DEBUG("ledger.validate", "xact_t: ! journal");
     return false;
   }
