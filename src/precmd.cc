@@ -42,7 +42,7 @@
 namespace ledger {
 
 namespace {
-  post_t * get_sample_post(report_t& report)
+  post_t * get_sample_xact(report_t& report)
   {
     {
       string str;
@@ -50,7 +50,11 @@ namespace {
 	std::ostringstream buf;
 
 	buf << "2004/05/27 Book Store\n"
+	    << "    ; This note applies to all postings. :SecondTag:\n"
 	    << "    Expenses:Books                 20 BOOK @ $10\n"
+	    << "    ; Metadata: Some Value\n"
+	    << "    ; :ExampleTag:\n"
+	    << "    ; Here follows a note describing the posting.\n"
 	    << "    Liabilities:MasterCard        $-200.00\n";
 
 	str = buf.str();
@@ -82,7 +86,7 @@ value_t parse_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  post_t * post = get_sample_post(report);
+  post_t * post = get_sample_xact(report);
 
   out << _("--- Input expression ---") << std::endl;
   out << arg << std::endl;
@@ -131,7 +135,7 @@ value_t format_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  post_t * post = get_sample_post(report);
+  post_t * post = get_sample_xact(report);
 
   out << _("--- Input format string ---") << std::endl;
   out << arg << std::endl << std::endl;
