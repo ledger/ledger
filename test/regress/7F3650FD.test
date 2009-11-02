@@ -1,0 +1,50 @@
+period --now=2010/11/01 12/01
+<<<
+>>>1
+global details => 
+
+   start: 09-Dec-01
+     end: 09-Dec-02
+  factor: 1
+>>>2
+=== 0
+period --now=2010/11/01 10/01
+<<<
+>>>1
+global details => 
+
+   start: 10-Oct-01
+     end: 10-Oct-02
+  factor: 1
+>>>2
+=== 0
+period --now=2010/11/01 2009/10
+<<<
+>>>1
+global details => 
+
+   start: 09-Oct-01
+     end: 09-Nov-01
+  factor: 1
+>>>2
+=== 0
+period --now=2010/11/01 2009/10/01
+<<<
+>>>1
+global details => 
+
+   start: 09-Oct-01
+     end: 09-Oct-02
+  factor: 1
+>>>2
+=== 0
+period --now=2010/11/01 2009
+<<<
+>>>1
+global details => 
+
+   start: 09-Jan-01
+     end: 10-Jan-01
+  factor: 1
+>>>2
+=== 0
