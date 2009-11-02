@@ -55,7 +55,7 @@ account_t * account_t::find_account(const string& name,
   if (i != accounts.end())
     return (*i).second;
 
-  char buf[256];
+  char buf[8192];
 
   string::size_type sep = name.find(':');
   assert(sep < 256|| sep == string::npos);
