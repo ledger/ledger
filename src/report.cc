@@ -664,6 +664,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 's':
     OPT(set_account_);
     else OPT(set_payee_);
+    else OPT(set_reported_account_);
+    else OPT(set_reported_payee_);
     else OPT(sort_);
     else OPT(sort_all_);
     else OPT(sort_xacts_);
