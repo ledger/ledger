@@ -50,6 +50,7 @@
 #include "account.h"
 #include "journal.h"
 #include "option.h"
+#include "commodity.h"
 
 namespace ledger {
 
@@ -124,7 +125,10 @@ public:
   OPTION(session_t, account_); // -a
   OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
-  OPTION(session_t, european);
+
+  OPTION_(session_t, european, DO() {
+      commodity_t::base_t::european_by_default = true;
+    });
 
   OPTION__
   (session_t, price_exp_, // -Z
