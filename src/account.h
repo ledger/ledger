@@ -195,7 +195,6 @@ public:
     {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
-
     ~xdata_t() throw() {
       TRACE_DTOR(account_t::xdata_t);
     }
