@@ -42,59 +42,66 @@ namespace ledger {
 
 using namespace boost::python;
 
-boost::optional<amount_t> py_value_0(const amount_t& amount) {
-  return amount.value();
-}
-boost::optional<amount_t> py_value_1(const amount_t& amount,
-				     const bool primary_only) {
-  return amount.value(primary_only);
-}
-boost::optional<amount_t> py_value_2(const amount_t& amount,
-				     const bool primary_only,
-				     const boost::optional<datetime_t>& moment) {
-  return amount.value(primary_only, moment);
-}
-boost::optional<amount_t> py_value_3(const amount_t& amount,
-				     const bool primary_only,
-				     const boost::optional<datetime_t>& moment,
-				     const boost::optional<commodity_t&>& in_terms_of) {
-  return amount.value(primary_only, moment, in_terms_of);
-}
+namespace {
 
-void py_parse_2(amount_t& amount, object in, unsigned char flags) {
-  if (PyFile_Check(in.ptr())) {
-    pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
-    amount.parse(instr, flags);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    _("Argument to amount.parse(file) is not a file object"));
+  boost::optional<amount_t> py_value_0(const amount_t& amount) {
+    return amount.value();
   }
-}
-void py_parse_1(amount_t& amount, object in) {
-  py_parse_2(amount, in, 0);
-}
-
-void py_parse_str_1(amount_t& amount, const string& str) {
-  amount.parse(str);
-}
-void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
-  amount.parse(str, flags);
-}
-
-void py_print(amount_t& amount, object out)
-{
-  if (PyFile_Check(out.ptr())) {
-    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-    amount.print(outstr);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    _("Argument to amount.print_(file) is not a file object"));
+  boost::optional<amount_t> py_value_1(const amount_t& amount,
+				       const bool primary_only) {
+    return amount.value(primary_only);
   }
-}
 
-void py_amount_initialize() {
-  amount_t::initialize();
-}
+  boost::optional<amount_t>
+  py_value_2(const amount_t& amount,
+	     const bool primary_only,
+	     const boost::optional<datetime_t>& moment) {
+    return amount.value(primary_only, moment);
+  }
+
+  boost::optional<amount_t>
+  py_value_3(const amount_t& amount,
+	     const bool primary_only,
+	     const boost::optional<datetime_t>& moment,
+	     const boost::optional<commodity_t&>& in_terms_of) {
+    return amount.value(primary_only, moment, in_terms_of);
+  }
+
+  void py_parse_2(amount_t& amount, object in, unsigned char flags) {
+    if (PyFile_Check(in.ptr())) {
+      pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
+      amount.parse(instr, flags);
+    } else {
+      PyErr_SetString(PyExc_IOError,
+		      _("Argument to amount.parse(file) is not a file object"));
+    }
+  }
+  void py_parse_1(amount_t& amount, object in) {
+    py_parse_2(amount, in, 0);
+  }
+
+  void py_parse_str_1(amount_t& amount, const string& str) {
+    amount.parse(str);
+  }
+  void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
+    amount.parse(str, flags);
+  }
+
+  void py_print(amount_t& amount, object out) {
+    if (PyFile_Check(out.ptr())) {
+      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
+      amount.print(outstr);
+    } else {
+      PyErr_SetString(PyExc_IOError,
+		      _("Argument to amount.print_(file) is not a file object"));
+    }
+  }
+
+  void py_amount_initialize() {
+    amount_t::initialize();
+  }
+
+} // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
@@ -276,7 +283,6 @@ internal precision."))
     .staticmethod("parse_conversion")
 
     .def("print_", py_print)
-
     .def("dump", &amount_t::dump)
 
     .def("valid", &amount_t::valid)
