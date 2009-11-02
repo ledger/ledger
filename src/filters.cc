@@ -769,11 +769,11 @@ void budget_posts::report_budget_items(const date_t& date)
       }
       assert(begin);
 
-      if (*begin < date &&
+      if (*begin <= date &&
 	  (! pair.first.end || *begin < *pair.first.end)) {
 	post_t& post = *pair.second;
 
-	DEBUG("ledger.walk.budget", "Reporting budget for "
+	DEBUG("budget.generate", "Reporting budget for "
 	      << post.reported_account()->fullname());
 
 	xact_t& xact = temps.create_xact();
