@@ -156,7 +156,7 @@ query_lexer_t::token_t query_lexer_t::next_token()
     else if (ident == "code")
       return token_t(token_t::TOK_CODE);
     else if (ident == "note")
-      return token_t(token_t::TOK_NOT);
+      return token_t(token_t::TOK_NOTE);
     else if (ident == "tag")
       return token_t(token_t::TOK_META);
     else if (ident == "meta")
