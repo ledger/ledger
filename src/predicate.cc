@@ -242,7 +242,39 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
   case query_lexer_t::token_t::TERM:
     assert(tok.value);
     if (tok_context == query_lexer_t::token_t::TOK_META) {
-      assert(0);
+      node = new expr_t::op_t(expr_t::op_t::O_CALL);
+
+      expr_t::ptr_op_t ident;
+      ident = new expr_t::op_t(expr_t::op_t::IDENT);
+      ident->set_ident("has_tag");
+      node->set_left(ident);
+
+      expr_t::ptr_op_t arg1;
+      arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
+      arg1->set_value(mask_t(*tok.value));
+
+      tok = lexer.peek_token();
+      if (tok.kind == query_lexer_t::token_t::TOK_EQ) {
+	tok = lexer.next_token();
+	tok = lexer.next_token();
+	if (tok.kind != query_lexer_t::token_t::TERM)
+	  throw_(parse_error,
+		 _("Metadata equality operator not followed by term"));
+	
+	expr_t::ptr_op_t cons;
+	cons = new expr_t::op_t(expr_t::op_t::O_CONS);
+
+	expr_t::ptr_op_t arg2;
+	arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
+	assert(tok.value);
+	arg2->set_value(mask_t(*tok.value));
+
+	cons->set_left(arg1);
+	cons->set_right(arg2);
+	node->set_right(cons);
+      } else {
+	node->set_right(arg1);
+      }
     } else {
       node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
