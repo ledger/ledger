@@ -38,6 +38,8 @@
 
 namespace ledger {
 
+bool commodity_t::base_t::european_by_default = false;
+
 void commodity_t::base_t::history_t::add_price(commodity_t&      source,
 					       const datetime_t& date,
 					       const amount_t&	 price,

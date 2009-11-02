@@ -105,6 +105,7 @@ public:
     HANDLER(account_).report(out);
     HANDLER(cache_).report(out);
     HANDLER(download).report(out);
+    HANDLER(european).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(price_db_).report(out);
@@ -123,6 +124,7 @@ public:
   OPTION(session_t, account_); // -a
   OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
+  OPTION(session_t, european);
 
   OPTION__
   (session_t, price_exp_, // -Z
