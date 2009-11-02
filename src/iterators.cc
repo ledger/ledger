@@ -94,9 +94,9 @@ void posts_commodities_iterator::reset(journal_t& journal)
 	comm->varied_history()) {
       account_t * account = journal.master->find_account(comm->symbol());
 
-      foreach (commodity_t::base_t::history_by_commodity_map::value_type pair,
+      foreach (commodity_t::history_by_commodity_map::value_type pair,
 	       history->histories) {
-	foreach (commodity_t::base_t::history_map::value_type hpair,
+	foreach (commodity_t::history_map::value_type hpair,
 		 pair.second.prices) {
 	  xact_t * xact;
 	  string   symbol = hpair.second.commodity().symbol();

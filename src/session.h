@@ -127,7 +127,7 @@ public:
   OPTION(session_t, download); // -Q
 
   OPTION_(session_t, european, DO() {
-      commodity_t::base_t::european_by_default = true;
+      commodity_t::european_by_default = true;
     });
 
   OPTION__
