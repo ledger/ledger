@@ -141,6 +141,12 @@ namespace {
     return string_value(post.xact->payee);
   }
 
+  value_t get_note(post_t& post) {
+    string note = post.note ? *post.note : empty_string;
+    note += post.xact->note ? *post.xact->note : empty_string;
+    return string_value(note);
+  }
+
   value_t get_magnitude(post_t& post) {
     return post.xact->magnitude();
   }
@@ -316,6 +322,11 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
   case 'm':
     if (name == "magnitude")
       return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
+    break;
+
+  case 'n':
+    if (name == "note")
+      return WRAP_FUNCTOR(get_wrapper<&get_note>);
     break;
 
   case 'p':
