@@ -52,8 +52,8 @@ temporaries_t::~temporaries_t()
 
   if (acct_temps) {
     foreach (account_t& acct, *acct_temps) {
-      if (! acct.has_flags(ACCOUNT_TEMP))
-	acct.remove_account(&acct);
+      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
+	acct.parent->remove_account(&acct);
     }
   }
 }
