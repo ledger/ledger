@@ -108,25 +108,23 @@ commodity_pool_t::create(const string& symbol, const annotation_t& details)
     return new_comm;
 }
 
-namespace {
-  string make_qualified_name(const commodity_t&  comm,
-			     const annotation_t& details)
-  {
-    assert(details);
+string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
+					     const annotation_t& details)
+{
+  assert(details);
 
-    if (details.price && details.price->sign() < 0)
-      throw_(amount_error, _("A commodity's price may not be negative"));
+  if (details.price && details.price->sign() < 0)
+    throw_(amount_error, _("A commodity's price may not be negative"));
 
-    std::ostringstream name;
-    comm.print(name);
-    details.print(name, comm.parent().keep_base);
+  std::ostringstream name;
+  comm.print(name);
+  details.print(name, comm.parent().keep_base);
 
-    DEBUG("amounts.commodities", "make_qualified_name for "
-	  << *comm.qualified_symbol << std::endl << details);
-    DEBUG("amounts.commodities", "qualified_name is " << name.str());
+  DEBUG("amounts.commodities", "make_qualified_name for "
+	<< *comm.qualified_symbol << std::endl << details);
+  DEBUG("amounts.commodities", "qualified_name is " << name.str());
 
-    return name.str();
-  }
+  return name.str();
 }
 
 commodity_t *
