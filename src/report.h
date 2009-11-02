@@ -654,7 +654,7 @@ public:
 
        if (have_less) {
 	 on(none, "less");
-	 setenv("LESS", "--quit-if-one-screen -R", 0);
+	 setenv("LESS", "-FRSX", 0); // don't overwrite
        }
      }
    }
