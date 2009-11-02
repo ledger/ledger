@@ -1,0 +1,18 @@
+reg --columns=60 food --uncleared
+<<<
+2009/10/31 * Panera Bread
+    Expenses:Food               $4.50
+    Assets
+
+2009/11/01 ! Panera Bread
+    Expenses:Food               $4.50
+    Assets
+
+2009/11/02 Panera Bread
+    Expenses:Food               $4.50
+    Assets
+>>>1
+09-Nov-01 Panera Bread    Expenses:Food      $4.50     $4.50
+09-Nov-02 Panera Bread    Expenses:Food      $4.50     $9.00
+>>>2
+=== 0
