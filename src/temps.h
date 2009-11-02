@@ -68,7 +68,7 @@ public:
   post_t&    last_post() {
     return post_temps->back();
   }
-  account_t& create_account(const string& name,
+  account_t& create_account(const string& name   = "",
 			    account_t *   parent = NULL);
   account_t& last_account() {
     return acct_temps->back();

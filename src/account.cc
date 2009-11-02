@@ -42,10 +42,9 @@ account_t::~account_t()
 {
   TRACE_DTOR(account_t);
 
-  foreach (accounts_map::value_type& pair, accounts) {
-    assert(! pair.second->has_flags(ACCOUNT_TEMP));
-    checked_delete(pair.second);
-  }
+  foreach (accounts_map::value_type& pair, accounts)
+    if (! pair.second->has_flags(ACCOUNT_TEMP))
+      checked_delete(pair.second);
 }
 
 account_t * account_t::find_account(const string& name,
