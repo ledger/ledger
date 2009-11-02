@@ -185,9 +185,10 @@ class annotated_commodity_t
 	   equality_comparable2<annotated_commodity_t, commodity_t,
 				noncopyable> >
 {
-public:
+protected:
+  friend class commodity_pool_t;
+
   commodity_t * ptr;
-  annotation_t  details;
 
   explicit annotated_commodity_t(commodity_t * _ptr,
 				 const annotation_t& _details)
@@ -195,6 +196,10 @@ public:
     TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
     annotated = true;
   }
+
+public:
+  annotation_t  details;
+
   virtual ~annotated_commodity_t() {
     TRACE_DTOR(annotated_commodity_t);
   }

@@ -604,11 +604,11 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   if (cmp != 0)
     return cmp < 0;
 
-  if (! leftcomm.annotated) {
-    return rightcomm.annotated;
+  if (! leftcomm.is_annotated()) {
+    return rightcomm.is_annotated();
   }
-  else if (! rightcomm.annotated) {
-    return ! leftcomm.annotated;
+  else if (! rightcomm.is_annotated()) {
+    return ! leftcomm.is_annotated();
   }
   else {
     annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));

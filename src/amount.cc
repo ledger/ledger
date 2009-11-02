@@ -783,7 +783,7 @@ void amount_t::annotate(const annotation_t& details)
   else if (! has_commodity())
     return;			// ignore attempt to annotate a "bare commodity
 
-  if (commodity().annotated) {
+  if (commodity().is_annotated()) {
     this_ann  = &as_annotated_commodity(commodity());
     this_base = &this_ann->referent();
   } else {
@@ -811,9 +811,9 @@ bool amount_t::is_annotated() const
     throw_(amount_error,
 	   _("Cannot determine if an uninitialized amount's commodity is annotated"));
 
-  assert(! has_commodity() || ! commodity().annotated ||
+  assert(! has_commodity() || ! commodity().is_annotated() ||
 	 as_annotated_commodity(commodity()).details);
-  return has_commodity() && commodity().annotated;
+  return has_commodity() && commodity().is_annotated();
 }
 
 annotation_t& amount_t::annotation()
