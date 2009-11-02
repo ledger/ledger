@@ -65,7 +65,6 @@ class xact_base_t : public item_t
 {
 public:
   journal_t * journal;
-
   posts_list  posts;
 
   xact_base_t() : item_t(), journal(NULL) {
