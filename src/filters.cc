@@ -815,7 +815,7 @@ void budget_posts::operator()(post_t& post)
 	post_in_budget = true;
 	// Report the post as if it had occurred in the parent account.
 	if (post.reported_account() != acct)
-	  post.xdata().account = acct;
+	  post.set_reported_account(acct);
 	goto handle;
       }
     }

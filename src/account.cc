@@ -397,6 +397,21 @@ value_t account_t::amount(const optional<expr_t&>& expr) const
       xdata_->self_details.last_post = i;
     }
 
+    if (xdata_->self_details.last_reported_post)
+      i = *xdata_->self_details.last_reported_post;
+    else
+      i = xdata_->reported_posts.begin();
+
+    for (; i != xdata_->reported_posts.end(); i++) {
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
+	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+	  (*i)->add_to_value(xdata_->self_details.total, expr);
+	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+	}
+      }
+      xdata_->self_details.last_reported_post = i;
+    }
+
     return xdata_->self_details.total;
   } else {
     return NULL_VALUE;

@@ -436,4 +436,10 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
   }
 }
 
+void post_t::set_reported_account(account_t * account)
+{
+  xdata().account = account;
+  account->xdata().reported_posts.push_back(this);
+}
+
 } // namespace ledger
