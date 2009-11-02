@@ -370,7 +370,7 @@ RegressTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
 RegressTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/regress \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
 	chmod 755 $@
 
 BaselineTests_SOURCES = test/RegressTests.py
@@ -378,7 +378,7 @@ BaselineTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/baseline
 
 BaselineTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/baseline \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
 	chmod 755 $@
 
 DocTests_SOURCES = test/RegressTests.py
@@ -386,7 +386,7 @@ DocTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/doc
 
 DocTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/doc \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/doc \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -401,13 +401,13 @@ test/input/mondo.dat: test/input/standard.dat
 	done
 
 ConfirmTests: $(srcdir)/test/ConfirmTests.py
-	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir)/test/input \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/input \"\$$@\"" > $@
 	chmod 755 $@
 
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) 1 20 \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 20 \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
