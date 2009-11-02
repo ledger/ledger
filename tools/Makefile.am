@@ -247,7 +247,7 @@ endif
 TESTS =
 
 if HAVE_PYTHON
-TESTS += RegressTests BaselineTests DocTests ConfirmTests GenerateTests
+TESTS += RegressTests BaselineTests ManualTests ConfirmTests GenerateTests
 endif
 
 if HAVE_CPPUNIT
@@ -381,12 +381,12 @@ BaselineTests: $(srcdir)/test/RegressTests.py
 	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
 	chmod 755 $@
 
-DocTests_SOURCES = test/RegressTests.py
+ManualTests_SOURCES = test/RegressTests.py
 
-EXTRA_DIST += test/doc
+EXTRA_DIST += test/manual
 
-DocTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/doc \"\$$@\"" > $@
+ManualTests: $(srcdir)/test/RegressTests.py
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -432,12 +432,12 @@ endif
 fullcheck: cppunittests
 	@$(top_builddir)/RegressTests  --verify
 	@$(top_builddir)/BaselineTests --verify
-	@$(top_builddir)/DocTests --verify
+	@$(top_builddir)/ManualTests --verify
 	@$(top_builddir)/ConfirmTests  --verify
 	@$(top_builddir)/GenerateTests --verify
 	@$(top_builddir)/RegressTests  --gmalloc
 	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/DocTests --gmalloc
+	@$(top_builddir)/ManualTests --gmalloc
 #	@$(top_builddir)/ConfirmTests  --gmalloc
 #	@$(top_builddir)/GenerateTests --gmalloc
 
