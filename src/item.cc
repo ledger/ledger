@@ -237,7 +237,7 @@ namespace {
     in_context_t<item_t> env(scope, "s");
     if (optional<string> value = env->get_tag(env.get<string>(0)))
       return string_value(*value);
-    return false;
+    return string_value(empty_string);
   }
 
   value_t get_pathname(item_t& item) {
