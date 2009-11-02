@@ -43,7 +43,7 @@
 #include "xact.h"
 
 #define LEDGER_MAGIC    0x4c454447
-#define ARCHIVE_VERSION 0x03000002
+#define ARCHIVE_VERSION 0x03000003
 
 //BOOST_IS_ABSTRACT(ledger::scope_t)
 BOOST_CLASS_EXPORT(ledger::scope_t)

@@ -207,8 +207,8 @@ private:
     ar & _date;
     ar & _date_eff;
     ar & note;
-    ar & metadata;
     ar & pos;
+    ar & metadata;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
