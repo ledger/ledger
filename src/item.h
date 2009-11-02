@@ -143,6 +143,7 @@ public:
     _date_eff = item._date_eff;
     note      = item.note;
     pos       = item.pos;
+    metadata  = item.metadata;
   }
 
   virtual bool operator==(const item_t& xact) {
