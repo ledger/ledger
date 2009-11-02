@@ -106,15 +106,18 @@ EXC_TRANSLATOR(amount_error)
 void export_amount()
 {
   class_< amount_t > ("Amount")
+    .add_static_property("current_pool",
+			 make_getter(&amount_t::current_pool,
+				     return_value_policy<reference_existing_object>()))
+
     .def("initialize", py_amount_initialize) // only for the PyUnitTests
     .staticmethod("initialize")
     .def("shutdown", &amount_t::shutdown)
     .staticmethod("shutdown")
 
-    .add_static_property("current_pool",
-			 make_getter(&amount_t::current_pool,
-				     return_value_policy<reference_existing_object>()))
-
+    .add_static_property("is_initialized",
+			 make_getter(&amount_t::is_initialized),
+			 make_setter(&amount_t::is_initialized))
     .add_static_property("stream_fullstrings",
 			 make_getter(&amount_t::stream_fullstrings),
 			 make_setter(&amount_t::stream_fullstrings))
@@ -129,7 +132,8 @@ internal precision."))
 
     .def(init<amount_t>())
 
-    .def("compare", &amount_t::compare)
+    .def("compare", &amount_t::compare, args("amount"),
+	 _("Compare two amounts for equality, returning <0, 0 or >0."))
 
     .def(self == self)
     .def(self == long())
@@ -186,6 +190,10 @@ internal precision."))
     .def(long()	  / self)
 
     .def("precision", &amount_t::precision)
+    .def("keep_precision", &amount_t::keep_precision)
+    .def("set_keep_precision", &amount_t::set_keep_precision, args("keep"),
+	 _("Set whether an amount should always display at full precision."))
+    .def("display_precision", &amount_t::display_precision)
 
     .def("negated", &amount_t::negated)
     .def("in_place_negate", &amount_t::in_place_negate,
@@ -195,8 +203,19 @@ internal precision."))
     .def("abs", &amount_t::abs)
     .def("__abs__", &amount_t::abs)
 
+    .def("inverted", &amount_t::inverted)
+
     .def("rounded", &amount_t::rounded)
+    .def("in_place_round", &amount_t::in_place_round,
+	 return_value_policy<reference_existing_object>())
+
+    .def("truncated", &amount_t::truncated)
+    .def("in_place_truncate", &amount_t::in_place_truncate,
+	 return_value_policy<reference_existing_object>())
+
     .def("unrounded", &amount_t::unrounded)
+    .def("in_place_unround", &amount_t::in_place_unround,
+	 return_value_policy<reference_existing_object>())
 
     .def("reduced", &amount_t::reduced)
     .def("in_place_reduce", &amount_t::in_place_reduce,
@@ -207,9 +226,11 @@ internal precision."))
 	 return_value_policy<reference_existing_object>())
 
     .def("value", py_value_0)
-    .def("value", py_value_1)
-    .def("value", py_value_2)
-    .def("value", py_value_3)
+    .def("value", py_value_1, args("primary_only"))
+    .def("value", py_value_2, args("primary_only", "moment"))
+    .def("value", py_value_3, args("primary_only", "moment", "in_terms_of"))
+
+    .def("price", &amount_t::price)
 
     .def("sign", &amount_t::sign)
     .def("__nonzero__", &amount_t::is_nonzero)
@@ -222,22 +243,21 @@ internal precision."))
     .def("__float__", &amount_t::to_double)
     .def("to_long", &amount_t::to_long)
     .def("__int__", &amount_t::to_long)
+    .def("fits_in_long", &amount_t::fits_in_long)
+
     .def("to_string", &amount_t::to_string)
     .def("__str__", &amount_t::to_string)
     .def("to_fullstring", &amount_t::to_fullstring)
     .def("__repr__", &amount_t::to_fullstring)
-
-    .def("fits_in_long", &amount_t::fits_in_long)
-
     .def("quantity_string", &amount_t::quantity_string)
 
     .def("commodity", &amount_t::commodity,
 	 return_value_policy<reference_existing_object>())
+    .def("has_commodity", &amount_t::has_commodity)
     .def("set_commodity", &amount_t::set_commodity,
 	 with_custodian_and_ward<1, 2>())
-
-    .def("has_commodity", &amount_t::has_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
+
     .def("number", &amount_t::number)
 
     .def("annotate", &amount_t::annotate)
