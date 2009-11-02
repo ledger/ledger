@@ -48,7 +48,9 @@ temporaries_t::~temporaries_t()
       if (! post.account->has_flags(ACCOUNT_TEMP))
 	post.account->remove_post(&post);
     }
+  }
 
+  if (acct_temps) {
     foreach (account_t& acct, *acct_temps) {
       if (! acct.has_flags(ACCOUNT_TEMP))
 	acct.remove_account(&acct);
