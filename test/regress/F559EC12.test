@@ -3,7 +3,11 @@ format "%-12(scrub(amount))"
 >>>1
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
     Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
     Liabilities:MasterCard        $-200.00
 
 --- Input format string ---
@@ -20,7 +24,11 @@ format "%12(scrub(amount))"
 >>>1
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
     Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
     Liabilities:MasterCard        $-200.00
 
 --- Input format string ---

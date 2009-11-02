@@ -4,8 +4,8 @@ reg --anon
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 >>>1
-07-Feb-02 6a93dcb3              20:5d:27:988a9c3a       0.350 VMMXX  0.350 VMMXX
-                                1c:b6:27:988a9c3a            $-0.35       $-0.35
+07-Feb-02 6a93dcb3              da:20:5d:27:988a9c3a    0.350 VMMXX  0.350 VMMXX
+                                da:1c:b6:27:988a9c3a         $-0.35       $-0.35
                                                                      0.350 VMMXX
 >>>2
 === 0
