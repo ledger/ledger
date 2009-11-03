@@ -375,7 +375,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
 				     const optional<datetime_t>&    moment,
 				     const optional<commodity_t&>&  in_terms_of)
 {
-  if (parent().get_quotes && ! has_flags(COMMODITY_NOMARKET)) {
+  if (pool().get_quotes && ! has_flags(COMMODITY_NOMARKET)) {
     bool exceeds_leeway = true;
 
     if (point) {
@@ -389,8 +389,8 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
 	DEBUG("commodity.download", "slip.now = " << seconds_diff);
       }
 
-      DEBUG("commodity.download", "leeway = " << parent().quote_leeway);
-      if (seconds_diff < parent().quote_leeway)
+      DEBUG("commodity.download", "leeway = " << pool().quote_leeway);
+      if (seconds_diff < pool().quote_leeway)
 	exceeds_leeway = false;
     }
 
@@ -398,7 +398,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
       DEBUG("commodity.download",
 	    "attempting to download a more current quote...");
       if (optional<price_point_t> quote =
-	  parent().get_commodity_quote(*this, in_terms_of)) {
+	  pool().get_commodity_quote(*this, in_terms_of)) {
 	if (! in_terms_of ||
 	    (quote->price.has_commodity() &&
 	     quote->price.commodity() == *in_terms_of))
@@ -411,7 +411,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
 
 commodity_t::operator bool() const
 {
-  return this != parent().null_commodity;
+  return this != pool().null_commodity;
 }
 
 bool commodity_t::symbol_needs_quotes(const string& symbol)
@@ -568,7 +568,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
 
 bool commodity_t::valid() const
 {
-  if (symbol().empty() && this != parent().null_commodity) {
+  if (symbol().empty() && this != pool().null_commodity) {
     DEBUG("ledger.validate",
 	   "commodity_t: symbol().empty() && this != null_commodity");
     return false;

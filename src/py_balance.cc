@@ -211,9 +211,6 @@ void export_balance()
 
     .def("strip_annotations", &balance_t::strip_annotations)
 
-    .def("print_", py_print)
-    .def("dump", &balance_t::dump)
-
     .def("valid",  &balance_t::valid)
     ;
 

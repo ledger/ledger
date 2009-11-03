@@ -245,17 +245,13 @@ public:
 
   operator bool() const;
 
-  static bool symbol_needs_quotes(const string& symbol);
-
-  bool is_annotated() const {
-    return annotated;
-  }
-
   virtual bool operator==(const commodity_t& comm) const {
     if (comm.annotated)
       return comm == *this;
     return base.get() == comm.base.get();
   }
+
+  static bool symbol_needs_quotes(const string& symbol);
 
   virtual commodity_t& referent() {
     return *this;
@@ -263,12 +259,17 @@ public:
   virtual const commodity_t& referent() const {
     return *this;
   }
+
+  bool is_annotated() const {
+    return annotated;
+  }
+
   virtual commodity_t& strip_annotations(const keep_details_t&) {
     return *this;
   }
   virtual void write_annotations(std::ostream&) const {}
 
-  commodity_pool_t& parent() const {
+  commodity_pool_t& pool() const {
     return *parent_;
   }
 
@@ -329,7 +330,6 @@ public:
 
   optional<history_t&> history(const optional<commodity_t&>& commodity);
 
-public:
   // These methods provide a transparent pass-through to the underlying
   // base->varied_history object.
 

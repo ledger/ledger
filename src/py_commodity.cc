@@ -40,13 +40,6 @@ namespace ledger {
 
 using namespace boost::python;
 
-void py_add_price(commodity_t&	    commodity,
-		  const datetime_t& date,
-		  const amount_t&   price)
-{
-  commodity.add_price(date, price);
-}
-
 namespace {
 
   commodity_t * py_create_1(commodity_pool_t& pool,
@@ -104,6 +97,16 @@ namespace {
 				 const boost::optional<string>&     tag)
   {
     return pool.exchange(amount, cost, is_per_unit, moment, tag);
+  }
+
+  void py_add_price_2(commodity_t& commodity,
+		      const datetime_t& date, const amount_t& price) {
+    commodity.add_price(date, price);
+  }
+    
+  void py_add_price_3(commodity_t& commodity, const datetime_t& date,
+		      const amount_t& price, const bool reflexive) {
+    commodity.add_price(date, price, reflexive);
   }
 
 } // unnamed namespace
@@ -170,18 +173,61 @@ void export_commodity()
   scope().attr("COMMODITY_KNOWN")           = COMMODITY_KNOWN;
   scope().attr("COMMODITY_PRIMARY")         = COMMODITY_PRIMARY;
 
-  class_< commodity_t, bases<>,
-	  commodity_t, boost::noncopyable > ("Commodity", no_init)
-    .def("symbol_needs_quotes", &commodity_t::symbol_needs_quotes)
-    .staticmethod("symbol_needs_quotes")
+  class_< commodity_t, boost::noncopyable > ("Commodity", no_init)
+#if 1
+    .def("flags", &delegates_flags<uint_least16_t>::flags)
+    .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
+    .def("set_flags", &delegates_flags<uint_least16_t>::set_flags)
+    .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
+    .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
+    .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
+#endif
+
+    .add_static_property("european_by_default",
+			 make_getter(&commodity_t::european_by_default),
+			 make_setter(&commodity_t::european_by_default))
+
+    .def("__nonzero__", &commodity_t::operator bool)
 
     .def(self == self)
 
-    .def("drop_flags", &commodity_t::drop_flags)
+    .def("symbol_needs_quotes", &commodity_t::symbol_needs_quotes)
+    .staticmethod("symbol_needs_quotes")
 
-    .def("add_price", py_add_price)
+#if 0
+    .def("referent", &commodity_t::referent,
+	 return_value_policy<reference_existing_object>())
+#endif
 
+    .def("is_annotated", &commodity_t::is_annotated)
+    .def("strip_annotations", &commodity_t::strip_annotations,
+	 return_value_policy<reference_existing_object>())
+    .def("write_annotations", &commodity_t::write_annotations)
+
+    .def("pool", &commodity_t::pool,
+	 return_value_policy<reference_existing_object>())
+
+    .def("base_symbol", &commodity_t::base_symbol)
+    .def("symbol", &commodity_t::symbol)
+    .def("mapping_key", &commodity_t::mapping_key)
+
+    .def("name", &commodity_t::name)
+    .def("set_name", &commodity_t::set_name)
+    .def("note", &commodity_t::note)
+    .def("set_note", &commodity_t::set_note)
     .def("precision", &commodity_t::precision)
+    .def("set_precision", &commodity_t::set_precision)
+    .def("smaller", &commodity_t::smaller)
+    .def("set_smaller", &commodity_t::set_smaller)
+    .def("larger", &commodity_t::larger)
+    .def("set_larger", &commodity_t::set_larger)
+
+    .def("add_price", py_add_price_2)
+    .def("add_price", py_add_price_3)
+    .def("remove_price", &commodity_t::remove_price,
+	 with_custodian_and_ward<1, 3>())
+    .def("find_price", &commodity_t::find_price)
+    .def("check_for_updated_price", &commodity_t::check_for_updated_price)
     ;
 
 #if 0

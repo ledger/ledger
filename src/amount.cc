@@ -770,7 +770,7 @@ commodity_t& amount_t::commodity() const
 
 bool amount_t::has_commodity() const
 {
-  return commodity_ && commodity_ != commodity_->parent().null_commodity;
+  return commodity_ && commodity_ != commodity_->pool().null_commodity;
 }
 
 void amount_t::annotate(const annotation_t& details)
@@ -795,7 +795,7 @@ void amount_t::annotate(const annotation_t& details)
 	<< *this << std::endl << details);
 
   if (commodity_t * ann_comm =
-      this_base->parent().find_or_create(*this_base, details))
+      this_base->pool().find_or_create(*this_base, details))
     set_commodity(*ann_comm);
 #ifdef ASSERTS_ON
   else

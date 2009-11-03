@@ -282,9 +282,6 @@ internal precision."))
     .def("parse_conversion", &amount_t::parse_conversion)
     .staticmethod("parse_conversion")
 
-    .def("print_", py_print)
-    .def("dump", &amount_t::dump)
-
     .def("valid", &amount_t::valid)
     ;
 

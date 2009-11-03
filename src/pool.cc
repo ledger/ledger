@@ -118,7 +118,7 @@ string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
 
   std::ostringstream name;
   comm.print(name);
-  details.print(name, comm.parent().keep_base);
+  details.print(name, comm.pool().keep_base);
 
   DEBUG("amounts.commodities", "make_qualified_name for "
 	<< *comm.qualified_symbol << std::endl << details);
