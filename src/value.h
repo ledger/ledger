@@ -87,8 +87,7 @@ public:
    * The sequence_t member type abstracts the type used to represent a
    * resizable "array" of value_t objects.
    */
-  typedef std::vector<value_t> sequence_t;
-
+  typedef std::vector<value_t>	      sequence_t;
   typedef sequence_t::iterator	      iterator;
   typedef sequence_t::const_iterator  const_iterator;
   typedef sequence_t::difference_type difference_type;
