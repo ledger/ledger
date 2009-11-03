@@ -112,7 +112,7 @@ void export_value()
     .def(init<balance_t>())
     .def(init<mask_t>())
     .def(init<std::string>())
-    // jww (2009-11-02): Need to support conversion of sequences
+    // jww (2009-11-02): Need to support conversion eof value_t::sequence_t
     //.def(init<value_t::sequence_t>())
     .def(init<value_t>())
 
@@ -314,7 +314,7 @@ void export_value()
 
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
-  // jww (2009-11-02): ask mask objects here
+  // jww (2009-11-02): Add implicit conversion of mask objects
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
 

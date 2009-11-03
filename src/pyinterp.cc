@@ -338,7 +338,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       if (val.check())
 	return val();
 #if 1
-      // jww (2009-02-24): Distinguish between "no return" and a value with an
+      // jww (2009-02-24): Distinguish between "no return" and values with
       // unconvertable type
       return NULL_VALUE;
 #else
