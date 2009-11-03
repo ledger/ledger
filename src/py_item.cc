@@ -32,10 +32,39 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "scope.h"
+#include "mask.h"
+#include "item.h"
 
 namespace ledger {
 
 using namespace boost::python;
+
+namespace {
+
+  bool py_has_tag_1s(item_t& item, const string& tag) {
+    return item.has_tag(tag);
+  }
+  bool py_has_tag_1m(item_t& item, const mask_t& tag_mask) {
+    return item.has_tag(tag_mask);
+  }
+  bool py_has_tag_2m(item_t& item, const mask_t& tag_mask,
+		     const boost::optional<mask_t>& value_mask) {
+    return item.has_tag(tag_mask, value_mask);
+  }
+
+  boost::optional<string> py_get_tag_1s(item_t& item, const string& tag) {
+    return item.get_tag(tag);
+  }
+  boost::optional<string> py_get_tag_1m(item_t& item, const mask_t& tag_mask) {
+    return item.get_tag(tag_mask);
+  }
+  boost::optional<string> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
+					const boost::optional<mask_t>& value_mask) {
+    return item.get_tag(tag_mask, value_mask);
+  }
+
+} // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
@@ -46,19 +75,89 @@ using namespace boost::python;
 
 void export_item()
 {
-#if 0
-  class_< item_t > ("Item")
+  class_< position_t > ("Position")
+    .add_property("pathname",
+		  make_getter(&position_t::pathname),
+		  make_setter(&position_t::pathname))
+    .add_property("beg_pos",
+		  make_getter(&position_t::beg_pos),
+		  make_setter(&position_t::beg_pos))
+    .add_property("beg_line",
+		  make_getter(&position_t::beg_line),
+		  make_setter(&position_t::beg_line))
+    .add_property("end_pos",
+		  make_getter(&position_t::end_pos),
+		  make_setter(&position_t::end_pos))
+    .add_property("end_line",
+		  make_getter(&position_t::end_line),
+		  make_setter(&position_t::end_line))
     ;
+
+  scope().attr("ITEM_NORMAL")	 = ITEM_NORMAL;
+  scope().attr("ITEM_GENERATED") = ITEM_GENERATED;
+  scope().attr("ITEM_TEMP")	 = ITEM_TEMP;
+
+  enum_< item_t::state_t > ("State")
+    .value("Uncleared", item_t::UNCLEARED)
+    .value("Cleared",   item_t::CLEARED)
+    .value("Pending",   item_t::PENDING)
+    ;
+
+#if 0
+  class_< item_t, bases<scope_t> > ("JournalItem", init<uint_least8_t>())
+#else
+  class_< item_t > ("JournalItem", init<uint_least8_t>())
+#endif
+#if 1
+    .def("flags", &supports_flags<>::flags)
+    .def("has_flags", &supports_flags<>::has_flags)
+    .def("set_flags", &supports_flags<>::set_flags)
+    .def("clear_flags", &supports_flags<>::clear_flags)
+    .def("add_flags", &supports_flags<>::add_flags)
+    .def("drop_flags", &supports_flags<>::drop_flags)
 #endif
 
-  //register_optional_to_python<amount_t>();
+    .add_property("note",
+		  make_getter(&item_t::note),
+		  make_setter(&item_t::note))
+    .add_property("pos",
+		  make_getter(&item_t::pos),
+		  make_setter(&item_t::pos))
+    .add_property("metadata",
+		  make_getter(&item_t::metadata),
+		  make_setter(&item_t::metadata))
 
-  //implicitly_convertible<string, amount_t>();
+    .def("copy_details", &item_t::copy_details)
 
-#define EXC_TRANSLATE(type) \
-  register_exception_translator<type>(&exc_translate_ ## type);
+    .def(self == self)
+    .def(self != self)
 
-  //EXC_TRANSLATE(item_error);
+    .def("has_tag", py_has_tag_1s)
+    .def("has_tag", py_has_tag_1m)
+    .def("has_tag", py_has_tag_2m)
+    .def("get_tag", py_get_tag_1s)
+    .def("get_tag", py_get_tag_1m)
+    .def("get_tag", py_get_tag_2m)
+
+    .def("set_tag", &item_t::set_tag)
+
+    .def("parse_tags", &item_t::parse_tags)
+    .def("append_note", &item_t::append_note)
+
+    .add_static_property("use_effective_date",
+			 make_getter(&item_t::use_effective_date),
+			 make_setter(&item_t::use_effective_date))
+
+    .def("date", &item_t::date)
+    .def("effective_date", &item_t::effective_date)
+
+    .def("set_state", &item_t::set_state)
+    .def("state", &item_t::state)
+
+    .def("lookup", &item_t::lookup)
+
+    .def("valid", &item_t::valid)
+    ;
 }
 
 } // namespace ledger

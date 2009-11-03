@@ -41,8 +41,12 @@ namespace ledger {
 using namespace boost::python;
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(exchange_commodities_overloads,
+				       exchange_commodities, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
+
   expr_t py_value_getattr(const value_t& value, const string& name)
   {
     if (value.is_scope()) {
@@ -69,28 +73,47 @@ namespace {
     return amount.set_string(str);
   }
 
+} // unnamed namespace
+
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
     PyErr_SetString(PyExc_ArithmeticError, err.what());	\
   }
 
-  EXC_TRANSLATOR(value_error)
-}
+EXC_TRANSLATOR(value_error)
 
 void export_value()
 {
+  enum_< value_t::type_t >("ValueType")
+    .value("VOID",	   value_t::VOID)
+    .value("BOOLEAN",	   value_t::BOOLEAN)
+    .value("DATETIME",	   value_t::DATETIME)
+    .value("DATE",	   value_t::DATE)
+    .value("INTEGER",	   value_t::INTEGER)
+    .value("AMOUNT",	   value_t::AMOUNT)
+    .value("BALANCE",	   value_t::BALANCE)
+    .value("STRING",	   value_t::STRING)
+    .value("SEQUENCE",	   value_t::SEQUENCE)
+    .value("SCOPE",	   value_t::SCOPE)
+    ;
+
   class_< value_t > ("Value")
     .def("initialize", &value_t::initialize)
     .staticmethod("initialize")
     .def("shutdown", &value_t::shutdown)
     .staticmethod("shutdown")
 
-    .def(init<double>())
-    .def(init<long>())
-    .def(init<std::string>())
-    .def(init<date_t>())
+    .def(init<bool>())
     .def(init<datetime_t>())
-
+    .def(init<date_t>())
+    .def(init<long>())
+    .def(init<double>())
+    .def(init<amount_t>())
+    .def(init<balance_t>())
+    .def(init<mask_t>())
+    .def(init<std::string>())
+    // jww (2009-11-02): Need to support conversion of sequences
+    //.def(init<value_t::sequence_t>())
     .def(init<value_t>())
 
     .def("is_equal_to", &value_t::is_equal_to)
@@ -100,80 +123,88 @@ void export_value()
     .def(self == self)
     .def(self == long())
     .def(long() == self)
-    .def(self == double())
-    .def(double() == self)
+    .def(self == other<amount_t>())
+    .def(other<amount_t>() == self)
+    .def(self == other<balance_t>())
+    .def(other<balance_t>() == self)
 
     .def(self != self)
     .def(self != long())
     .def(long() != self)
-    .def(self != double())
-    .def(double() != self)
+    .def(self != other<amount_t>())
+    .def(other<amount_t>() != self)
+    .def(self != other<balance_t>())
+    .def(other<balance_t>() != self)
 
     .def(! self)
 
     .def(self <  self)
     .def(self <  long())
     .def(long() < self)
-    .def(self <  double())
-    .def(double() < self)
+    .def(self < other<amount_t>())
+    .def(other<amount_t>() < self)
 
     .def(self <= self)
     .def(self <= long())
     .def(long() <= self)
-    .def(self <= double())
-    .def(double() <= self)
+    .def(self <= other<amount_t>())
+    .def(other<amount_t>() <= self)
 
     .def(self >  self)
     .def(self >  long())
     .def(long() > self)
-    .def(self >  double())
-    .def(double() > self)
+    .def(self > other<amount_t>())
+    .def(other<amount_t>() > self)
 
     .def(self >= self)
     .def(self >= long())
     .def(long() >= self)
-    .def(self >= double())
-    .def(double() >= self)
+    .def(self >= other<amount_t>())
+    .def(other<amount_t>() >= self)
 
     .def(self += self)
     .def(self += long())
-    .def(self += double())
+    .def(self += other<amount_t>())
+    .def(self += other<balance_t>())
 
-    .def(self	  + self)
-    .def(self	  + long())
-    .def(long()	  + self)
-    .def(self	  + double())
-    .def(double() + self)
+    .def(self   + self)
+    .def(self   + long())
+    .def(long() + self)
+    .def(self + other<amount_t>())
+    .def(other<amount_t>() + self)
+    .def(self + other<balance_t>())
 
     .def(self -= self)
     .def(self -= long())
-    .def(self -= double())
+    .def(self -= other<amount_t>())
+    .def(self -= other<balance_t>())
 
-    .def(self	  - self)
-    .def(self	  - long())
-    .def(long()	  - self)
-    .def(self	  - double())
-    .def(double() - self)
+    .def(self	- self)
+    .def(self	- long())
+    .def(long()	- self)
+    .def(self - other<amount_t>())
+    .def(other<amount_t>() - self)
+    .def(self - other<balance_t>())
 
     .def(self *= self)
     .def(self *= long())
-    .def(self *= double())
+    .def(self *= other<amount_t>())
 
-    .def(self	  * self)
-    .def(self	  * long())
-    .def(long()	  * self)
-    .def(self	  * double())
-    .def(double() * self)
+    .def(self	* self)
+    .def(self	* long())
+    .def(long() * self)
+    .def(self * other<amount_t>())
+    .def(other<amount_t>() * self)
 
     .def(self /= self)
     .def(self /= long())
-    .def(self /= double())
+    .def(self /= other<amount_t>())
 
-    .def(self	  /  self)
-    .def(self	  /  long())
-    .def(long()	  / self)
-    .def(self	  /  double())
-    .def(double() / self)
+    .def(self	/  self)
+    .def(self	/  long())
+    .def(long()	/ self)
+    .def(self / other<amount_t>())
+    .def(other<amount_t>() / self)
 
     .def("negated", &value_t::negated)
     .def("in_place_negate", &value_t::in_place_negate)
@@ -184,15 +215,20 @@ void export_value()
     .def("__abs__", &value_t::abs)
 
     .def("rounded", &value_t::rounded)
+    .def("in_place_round", &value_t::in_place_round)
+    .def("truncated", &value_t::truncated)
+    .def("in_place_truncate", &value_t::in_place_truncate)
     .def("unrounded", &value_t::unrounded)
-
+    .def("in_place_unround", &value_t::in_place_unround)
     .def("reduced", &value_t::reduced)
     .def("in_place_reduce", &value_t::in_place_reduce)
-
     .def("unreduced", &value_t::unreduced)
     .def("in_place_unreduce", &value_t::in_place_unreduce)
 
     .def("value", &value_t::value, value_overloads())
+    .def("price", &value_t::price)
+    .def("exchange_commodities", &value_t::exchange_commodities,
+	 exchange_commodities_overloads())
 
     .def("__nonzero__", &value_t::is_nonzero)
     .def("is_nonzero", &value_t::is_nonzero)
@@ -202,9 +238,6 @@ void export_value()
 
     .def("type", &value_t::type)
     .def("is_type", &value_t::is_type)
-
-    .def("is_boolean", &value_t::is_boolean)
-    .def("set_boolean", &value_t::set_boolean)
 
     .def("is_boolean", &value_t::is_boolean)
     .def("set_boolean", &value_t::set_boolean)
@@ -219,10 +252,16 @@ void export_value()
     .def("set_long", &value_t::set_long)
 
     .def("is_amount", &value_t::is_amount)
+    .def("is_amount", &value_t::is_amount)
+
+    .def("is_balance", &value_t::is_balance)
     .def("is_balance", &value_t::is_balance)
 
     .def("is_string", &value_t::is_string)
     .def("set_string", py_set_string)
+
+    .def("is_mask", &value_t::is_mask)
+    .def("is_mask", &value_t::is_mask)
 
     .def("is_sequence", &value_t::is_sequence)
     .def("set_sequence", &value_t::set_sequence)
@@ -232,7 +271,10 @@ void export_value()
     .def("__int__", &value_t::to_long)
     .def("to_datetime", &value_t::to_datetime)
     .def("to_date", &value_t::to_date)
+    .def("to_amount", &value_t::to_amount)
+    .def("to_balance", &value_t::to_balance)
     .def("to_string", &value_t::to_string)
+    .def("to_mask", &value_t::to_mask)
     .def("to_sequence", &value_t::to_sequence)
 
     .def("__str__", py_dump_relaxed)
@@ -240,59 +282,39 @@ void export_value()
 
     .def("casted", &value_t::casted)
     .def("in_place_cast", &value_t::in_place_cast)
-
     .def("simplified", &value_t::simplified)
     .def("in_place_simplify", &value_t::in_place_simplify)
 
-    // jww (2009-02-07): Allow annotating, and retrieving annotations
+    .def("annotate", &value_t::annotate)
+    .def("is_annotated", &value_t::is_annotated)
+#if 0
+    .def("annotation", &value_t::annotation)
+#endif
     .def("strip_annotations", &value_t::strip_annotations)
 
-    // jww (2009-01-28): Allow for transparent exchanging with sequence
-    // protocol objects in Python too; and conversion to a list.
 #if 0
-    // jww (2009-02-07): Methods to implement:
-    // Allow accepting and returning tuples as sequences
-    // count_commodities
-    // has_commodity(COMM)
-    // decompose
     .def("__getitem__", &value_t::operator[])
 #endif
+    .def("__getattr__", py_value_getattr)
     .def("push_back", &value_t::push_back)
     .def("pop_back", &value_t::pop_back)
     .def("size", &value_t::size)
 
     .def("label", &value_t::label)
 
-    .def("dump", &value_t::dump)
-    .def("print", &value_t::print)
-
     .def("valid", &value_t::valid)
-
-    .def("__getattr__", py_value_getattr)
-    ;
-
-  enum_< value_t::type_t >("ValueType")
-    .value("VOID",	   value_t::VOID)
-    .value("BOOLEAN",	   value_t::BOOLEAN)
-    .value("DATETIME",	   value_t::DATETIME)
-    .value("DATE",	   value_t::DATE)
-    .value("INTEGER",	   value_t::INTEGER)
-    .value("AMOUNT",	   value_t::AMOUNT)
-    .value("BALANCE",	   value_t::BALANCE)
-    .value("STRING",	   value_t::STRING)
-    .value("SEQUENCE",	   value_t::SEQUENCE)
-    .value("SCOPE",	   value_t::SCOPE)
     ;
 
   scope().attr("NULL_VALUE")    = NULL_VALUE;
   scope().attr("string_value")  = &string_value;
+  scope().attr("mask_value")	= &mask_value;
   scope().attr("value_context") = &value_context;
 
   register_optional_to_python<value_t>();
 
-  implicitly_convertible<double, value_t>();
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
+  // jww (2009-11-02): ask mask objects here
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
 

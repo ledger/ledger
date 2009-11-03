@@ -164,6 +164,50 @@ typedef register_python_conversion<std::ostream, ostream_to_python, ostream_from
 
 void export_utils()
 {
+  class_< supports_flags<uint_least8_t> > ("SupportFlags8")
+    .def(init<supports_flags<uint_least8_t> >())
+    .def(init<uint_least8_t>())
+
+    .def("flags", &supports_flags<uint_least8_t>::flags)
+    .def("has_flags", &supports_flags<uint_least8_t>::has_flags)
+    .def("set_flags", &supports_flags<uint_least8_t>::set_flags)
+    .def("clear_flags", &supports_flags<uint_least8_t>::clear_flags)
+    .def("add_flags", &supports_flags<uint_least8_t>::add_flags)
+    .def("drop_flags", &supports_flags<uint_least8_t>::drop_flags)
+    ;
+
+  class_< supports_flags<uint_least16_t> > ("SupportFlags16")
+    .def(init<supports_flags<uint_least16_t> >())
+    .def(init<uint_least16_t>())
+
+    .def("flags", &supports_flags<uint_least16_t>::flags)
+    .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
+    .def("set_flags", &supports_flags<uint_least16_t>::set_flags)
+    .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
+    .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
+    .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
+    ;
+
+#if 0
+  class_< basic_flags_t<uint_least8_t>,
+          bases<supports_flags<uint_least8_t> > > ("BasicFlags8")
+    .def(init<uint_least8_t>())
+
+    .def("plus_flags", &basic_flags_t<uint_least8_t>::plus_flags)
+    .def("minus_flags", &basic_flags_t<uint_least8_t>::minus_flags)
+    ;
+#endif
+
+  class_< delegates_flags<uint_least16_t>,
+	  boost::noncopyable > ("DelegatesFlags16", no_init)
+    .def("flags", &delegates_flags<uint_least16_t>::flags)
+    .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
+    .def("set_flags", &delegates_flags<uint_least16_t>::set_flags)
+    .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
+    .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
+    .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
+    ;
+
   bool_python_conversion();
   string_python_conversion();
   istream_python_conversion();

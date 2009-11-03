@@ -41,6 +41,7 @@ shared_ptr<python_interpreter_t> python_session;
 
 char * argv0;
 
+void export_account();
 void export_amount();
 void export_balance();
 void export_chain();
@@ -63,6 +64,7 @@ void export_xact();
 
 void initialize_for_python()
 {
+  export_account();
   export_amount();
   export_balance();
   export_chain();
