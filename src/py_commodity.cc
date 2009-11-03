@@ -109,6 +109,20 @@ namespace {
     commodity.add_price(date, price, reflexive);
   }
 
+  bool py_keep_all_0(keep_details_t& details) {
+    return details.keep_all();
+  }
+  bool py_keep_all_1(keep_details_t& details, const commodity_t& comm) {
+    return details.keep_all(comm);
+  }
+
+  bool py_keep_any_0(keep_details_t& details) {
+    return details.keep_any();
+  }
+  bool py_keep_any_1(keep_details_t& details, const commodity_t& comm) {
+    return details.keep_any(comm);
+  }
+
 } // unnamed namespace
 
 void export_commodity()
@@ -228,19 +242,78 @@ void export_commodity()
 	 with_custodian_and_ward<1, 3>())
     .def("find_price", &commodity_t::find_price)
     .def("check_for_updated_price", &commodity_t::check_for_updated_price)
+
+    .def("valid", &commodity_t::valid)
     ;
 
-#if 0
-  class_< annotation_t, bases<>,
-    commodity_t, boost::noncopyable > ("Annotation", no_init)
-    ;
-  class_< keep_details_t, bases<>,
-    commodity_t, boost::noncopyable > ("KeepDetails", no_init)
-    ;
-  class_< annotated_commodity_t, bases<>,
-    commodity_t, boost::noncopyable > ("AnnotatedCommodity", no_init)
-    ;
+  class_< annotation_t > ("Annotation", no_init)
+#if 1
+    .def("flags", &supports_flags<>::flags)
+    .def("has_flags", &supports_flags<>::has_flags)
+    .def("set_flags", &supports_flags<>::set_flags)
+    .def("clear_flags", &supports_flags<>::clear_flags)
+    .def("add_flags", &supports_flags<>::add_flags)
+    .def("drop_flags", &supports_flags<>::drop_flags)
 #endif
+
+    .add_property("price",
+		  make_getter(&annotation_t::price),
+		  make_setter(&annotation_t::price))
+    .add_property("date",
+		  make_getter(&annotation_t::date),
+		  make_setter(&annotation_t::date))
+    .add_property("tag",
+		  make_getter(&annotation_t::tag),
+		  make_setter(&annotation_t::tag))
+
+    .def("__nonzero__", &annotation_t::operator bool)
+
+    .def(self == self)
+
+    .def("valid", &annotation_t::valid)
+    ;
+
+  class_< keep_details_t > ("KeepDetails")
+    .def(init<bool, bool, bool, bool>())
+
+    .add_property("keep_price",
+		  make_getter(&keep_details_t::keep_price),
+		  make_setter(&keep_details_t::keep_price))
+    .add_property("keep_date",
+		  make_getter(&keep_details_t::keep_date),
+		  make_setter(&keep_details_t::keep_date))
+    .add_property("keep_tag",
+		  make_getter(&keep_details_t::keep_tag),
+		  make_setter(&keep_details_t::keep_tag))
+    .add_property("only_actuals",
+		  make_getter(&keep_details_t::only_actuals),
+		  make_setter(&keep_details_t::only_actuals))
+
+    .def("keep_all", py_keep_all_0)
+    .def("keep_all", py_keep_all_1)
+    .def("keep_any", py_keep_any_0)
+    .def("keep_any", py_keep_any_1)
+    ;
+
+  class_< annotated_commodity_t, bases<commodity_t>,
+          annotated_commodity_t, boost::noncopyable >
+    ("AnnotatedCommodity", no_init)
+    .add_property("details",
+		  make_getter(&annotated_commodity_t::details),
+		  make_setter(&annotated_commodity_t::details))
+
+    .def(self == self)
+    .def(self == other<commodity_t>())
+
+#if 0
+    .def("referent", &annotated_commodity_t::referent,
+	 return_value_policy<reference_existing_object>())
+#endif
+
+    .def("strip_annotations", &annotated_commodity_t::strip_annotations,
+	 return_value_policy<reference_existing_object>())
+    .def("write_annotations", &annotated_commodity_t::write_annotations)
+    ;
 }
 
 } // namespace ledger
