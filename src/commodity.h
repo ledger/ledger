@@ -188,9 +188,10 @@ protected:
 
   public:
     explicit base_t(const string& _symbol)
-      : supports_flags<uint_least16_t>(commodity_t::european_by_default ?
-				       COMMODITY_STYLE_EUROPEAN :
-				       COMMODITY_STYLE_DEFAULTS),
+      : supports_flags<uint_least16_t>
+	(commodity_t::european_by_default ?
+	 static_cast<uint_least16_t>(COMMODITY_STYLE_EUROPEAN) :
+	 static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
 	symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
     }
