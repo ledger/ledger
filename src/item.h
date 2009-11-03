@@ -143,6 +143,7 @@ public:
     _date_eff = item._date_eff;
     note      = item.note;
     pos       = item.pos;
+    metadata  = item.metadata;
   }
 
   virtual bool operator==(const item_t& xact) {
@@ -206,8 +207,8 @@ private:
     ar & _date;
     ar & _date_eff;
     ar & note;
-    ar & metadata;
     ar & pos;
+    ar & metadata;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };

@@ -141,6 +141,12 @@ namespace {
     return string_value(post.xact->payee);
   }
 
+  value_t get_note(post_t& post) {
+    string note = post.note ? *post.note : empty_string;
+    note += post.xact->note ? *post.xact->note : empty_string;
+    return string_value(note);
+  }
+
   value_t get_magnitude(post_t& post) {
     return post.xact->magnitude();
   }
@@ -318,6 +324,11 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
     break;
 
+  case 'n':
+    if (name == "note")
+      return WRAP_FUNCTOR(get_wrapper<&get_note>);
+    break;
+
   case 'p':
     if (name == "post")
       return WRAP_FUNCTOR(get_wrapper<&get_this>);
@@ -423,6 +434,12 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
   else {
     add_or_set_value(value, amount);
   }
+}
+
+void post_t::set_reported_account(account_t * account)
+{
+  xdata().account = account;
+  account->xdata().reported_posts.push_back(this);
 }
 
 } // namespace ledger

@@ -135,13 +135,13 @@ void annotation_t::print(std::ostream& out, bool keep_base) const
 
 bool keep_details_t::keep_all(const commodity_t& comm) const
 {
-  return (! comm.annotated ||
+  return (! comm.is_annotated() ||
 	  (keep_price && keep_date && keep_tag && ! only_actuals));
 }
 
 bool keep_details_t::keep_any(const commodity_t& comm) const
 {
-  return comm.annotated && (keep_price || keep_date || keep_tag);
+  return comm.is_annotated() && (keep_price || keep_date || keep_tag);
 }
 
 bool annotated_commodity_t::operator==(const commodity_t& comm) const

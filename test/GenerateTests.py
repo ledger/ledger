@@ -104,9 +104,9 @@ def generation_test(seed):
 
 beg_range = 1
 end_range = 20
-if len(sys.argv) > 3:
-    beg_range = int(sys.argv[2])
-    end_range = int(sys.argv[3])
+if len(sys.argv) > 4:
+    beg_range = int(sys.argv[3])
+    end_range = int(sys.argv[4])
 
 for i in range(beg_range, end_range):
     if generation_test(i):

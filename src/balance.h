@@ -207,7 +207,7 @@ public:
 
   template <typename T>
   bool operator==(const T& val) const {
-    return *this == balance_t(val);
+    return *this == amount_t(val);
   }
 
   /**
@@ -217,11 +217,29 @@ public:
    */
   balance_t& operator+=(const balance_t& bal);
   balance_t& operator+=(const amount_t& amt);
+  balance_t& operator+=(const double val) {
+    return *this += amount_t(val);
+  }
+  balance_t& operator+=(const unsigned long val) {
+    return *this += amount_t(val);
+  }
+  balance_t& operator+=(const long val) {
+    return *this += amount_t(val);
+  }
+
   balance_t& operator-=(const balance_t& bal);
   balance_t& operator-=(const amount_t& amt);
+  balance_t& operator-=(const double val) {
+    return *this -= amount_t(val);
+  }
+  balance_t& operator-=(const unsigned long val) {
+    return *this -= amount_t(val);
+  }
+  balance_t& operator-=(const long val) {
+    return *this -= amount_t(val);
+  }
 
   balance_t& operator*=(const amount_t& amt);
-
   balance_t& operator*=(const double val) {
     return *this *= amount_t(val);
   }
@@ -233,7 +251,6 @@ public:
   }
 
   balance_t& operator/=(const amount_t& amt);
-
   balance_t& operator/=(const double val) {
     return *this /= amount_t(val);
   }
@@ -278,7 +295,7 @@ public:
    * in_place_reduce()
    * in_place_unreduce()
    */
-  balance_t negate() const {
+  balance_t negated() const {
     balance_t temp(*this);
     temp.in_place_negate();
     return temp;
@@ -288,7 +305,7 @@ public:
       pair.second.in_place_negate();
   }
   balance_t operator-() const {
-    return negate();
+    return negated();
   }
 
   balance_t abs() const {
@@ -388,6 +405,13 @@ public:
    * it.
    */
   operator bool() const {
+    return is_nonzero();
+  }
+
+  bool is_nonzero() const {
+    if (is_empty())
+      return false;
+
     foreach (const amounts_map::value_type& pair, amounts)
       if (pair.second.is_nonzero())
 	return true;
@@ -433,6 +457,7 @@ public:
     else
       throw_(balance_error,
 	     _("Cannot convert a balance with multiple commodities to an amount"));
+    return amount_t();
   }
 
   /**

@@ -193,6 +193,8 @@ public:
   void add_to_value(value_t& value,
 		    const optional<expr_t&>& expr = none) const;
 
+  void set_reported_account(account_t * account);
+
   account_t * reported_account() {
     if (xdata_)
       if (account_t * acct = xdata_->account)

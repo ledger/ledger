@@ -11,7 +11,7 @@ from difflib import unified_diff
 from LedgerHarness import LedgerHarness
 
 harness = LedgerHarness(sys.argv)
-tests   = sys.argv[2]
+tests   = sys.argv[3]
 
 if not os.path.isdir(tests) and not os.path.isfile(tests):
     sys.exit(1)
@@ -27,11 +27,15 @@ class RegressFile:
                line == ">>>2\n" or \
                line.startswith("===")
 
+    def transform_line(self, line):
+        line = re.sub('\$sourcepath', harness.sourcepath, line)
+        return line
+
     def read_section(self):
         lines = []
         line = self.fd.readline()
         while not self.is_directive(line):
-            lines.append(line)
+            lines.append(self.transform_line(line))
             line = self.fd.readline()
         return (lines, line)
 
@@ -60,7 +64,7 @@ class RegressFile:
                 test['exitcode'] = int(match.group(1))
                 return test
             else:
-                test['command'] = line
+                test['command'] = self.transform_line(line)
                 line = self.fd.readline()
 
         return None

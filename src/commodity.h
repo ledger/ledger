@@ -86,87 +86,85 @@ class commodity_t
   : public delegates_flags<uint_least16_t>,
     public equality_comparable1<commodity_t, noncopyable>
 {
-  friend class commodity_pool_t;
-
 public:
+  typedef std::map<const datetime_t, amount_t> history_map;
+
+  struct history_t
+  {
+    history_map prices;
+
+    void add_price(commodity_t&	     source,
+		   const datetime_t& date,
+		   const amount_t&   price,
+		   const bool	     reflexive = true);
+    bool remove_price(const datetime_t& date);
+
+    optional<price_point_t>
+    find_price(const optional<datetime_t>&   moment = none,
+	       const optional<datetime_t>&   oldest = none
+#if defined(DEBUG_ON)
+	       , const int indent = 0
+#endif
+	       ) const;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+  private:
+    /** Serialization. */
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* version */) {
+      ar & prices;
+    }
+#endif // HAVE_BOOST_SERIALIZATION
+  };
+
+  typedef std::map<commodity_t *, history_t> history_by_commodity_map;
+
+  struct varied_history_t
+  {
+    history_by_commodity_map histories;
+
+    void add_price(commodity_t&	     source,
+		   const datetime_t& date,
+		   const amount_t&   price,
+		   const bool	     reflexive = true);
+    bool remove_price(const datetime_t& date, commodity_t& commodity);
+
+    optional<price_point_t>
+    find_price(const commodity_t&	     source,
+	       const optional<commodity_t&>& commodity = none,
+	       const optional<datetime_t>&   moment    = none,
+	       const optional<datetime_t>&   oldest    = none
+#if defined(DEBUG_ON)
+	       , const int indent = 0
+#endif
+	       ) const;
+
+    optional<history_t&>
+    history(const optional<commodity_t&>& commodity = none);
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+  private:
+    /** Serialization. */
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* version */) {
+      ar & histories;
+    }
+#endif // HAVE_BOOST_SERIALIZATION
+  };
+
+protected:
+  friend class commodity_pool_t;
+  friend class annotated_commodity_t;
+
   class base_t : public noncopyable, public supports_flags<uint_least16_t>
   {
-    base_t() {
-      TRACE_CTOR(base_t, "");
-    }
-
   public:
-    typedef std::map<const datetime_t, amount_t> history_map;
-
-    struct history_t
-    {
-      history_map prices;
-
-      void add_price(commodity_t&	source,
-		     const datetime_t&	date,
-		     const amount_t&	price,
-		     const bool		reflexive = true);
-      bool remove_price(const datetime_t& date);
-
-      optional<price_point_t>
-      find_price(const optional<datetime_t>&   moment = none,
-		 const optional<datetime_t>&   oldest = none
-#if defined(DEBUG_ON)
-		 , const int indent = 0
-#endif
-		 ) const;
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-    private:
-      /** Serialization. */
-
-      friend class boost::serialization::access;
-
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int /* version */) {
-	ar & prices;
-      }
-#endif // HAVE_BOOST_SERIALIZATION
-    };
-
-    typedef std::map<commodity_t *, history_t> history_by_commodity_map;
-
-    struct varied_history_t
-    {
-      history_by_commodity_map histories;
-
-      void add_price(commodity_t&	source,
-		     const datetime_t&	date,
-		     const amount_t&	price,
-		     const bool		reflexive = true);
-      bool remove_price(const datetime_t& date, commodity_t& commodity);
-
-      optional<price_point_t>
-      find_price(const commodity_t&	       source,
-		 const optional<commodity_t&>& commodity = none,
-		 const optional<datetime_t>&   moment    = none,
-		 const optional<datetime_t>&   oldest    = none
-#if defined(DEBUG_ON)
-		 , const int indent = 0
-#endif
-		 ) const;
-
-      optional<history_t&>
-      history(const optional<commodity_t&>& commodity = none);
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-    private:
-      /** Serialization. */
-
-      friend class boost::serialization::access;
-
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int /* version */) {
-	ar & histories;
-      }
-#endif // HAVE_BOOST_SERIALIZATION
-    };
-
 #define COMMODITY_STYLE_DEFAULTS  0x000
 #define COMMODITY_STYLE_SUFFIXED  0x001
 #define COMMODITY_STYLE_SEPARATED 0x002
@@ -190,7 +188,9 @@ public:
 
   public:
     explicit base_t(const string& _symbol)
-      : supports_flags<uint_least16_t>(COMMODITY_STYLE_DEFAULTS),
+      : supports_flags<uint_least16_t>(commodity_t::european_by_default ?
+				       COMMODITY_STYLE_EUROPEAN :
+				       COMMODITY_STYLE_DEFAULTS),
 	symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
     }
@@ -199,32 +199,30 @@ public:
     }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
-    private:
-      /** Serialization. */
+  private:
+    base_t() {
+      TRACE_CTOR(base_t, "");
+    }
 
-      friend class boost::serialization::access;
+    /** Serialization. */
 
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int /* version */) {
-	ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
-	ar & symbol;
-	ar & precision;
-	ar & name;
-	ar & note;
-	ar & varied_history;
-	ar & smaller;
-	ar & larger;
-      }
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* version */) {
+      ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
+      ar & symbol;
+      ar & precision;
+      ar & name;
+      ar & note;
+      ar & varied_history;
+      ar & smaller;
+      ar & larger;
+    }
 #endif // HAVE_BOOST_SERIALIZATION
   };
 
-public:
   static bool symbol_needs_quotes(const string& symbol);
-
-  typedef base_t::history_t		   history_t;
-  typedef base_t::history_map		   history_map;
-  typedef base_t::varied_history_t	   varied_history_t;
-  typedef base_t::history_by_commodity_map history_by_commodity_map;
 
   shared_ptr<base_t> base;
 
@@ -233,13 +231,16 @@ public:
   optional<string>   mapping_key_;
   bool		     annotated;
 
-public:
   explicit commodity_t(commodity_pool_t *	 _parent,
 		       const shared_ptr<base_t>& _base)
     : delegates_flags<uint_least16_t>(*_base.get()), base(_base),
       parent_(_parent), annotated(false) {
     TRACE_CTOR(commodity_t, "commodity_pool_t *, shared_ptr<base_t>");
   }
+
+public:
+  static bool european_by_default;
+
   virtual ~commodity_t() {
     TRACE_DTOR(commodity_t);
   }

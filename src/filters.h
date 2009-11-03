@@ -288,8 +288,7 @@ public:
 class anonymize_posts : public item_handler<post_t>
 {
   temporaries_t temps;
-
-  xact_t * last_xact;
+  xact_t *	last_xact;
 
   anonymize_posts();
 

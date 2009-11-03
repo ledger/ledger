@@ -49,6 +49,13 @@ temporaries_t::~temporaries_t()
 	post.account->remove_post(&post);
     }
   }
+
+  if (acct_temps) {
+    foreach (account_t& acct, *acct_temps) {
+      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
+	acct.parent->remove_account(&acct);
+    }
+  }
 }
 
 xact_t& temporaries_t::copy_xact(xact_t& origin)
@@ -119,6 +126,9 @@ account_t& temporaries_t::create_account(const string& name,
 
   acct_temps->push_back(account_t(parent, name));
   account_t& temp(acct_temps->back());
+
+  if (parent)
+    parent->add_account(&temp);
 
   temp.add_flags(ACCOUNT_TEMP);
   return temp;

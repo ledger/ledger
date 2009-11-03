@@ -133,6 +133,40 @@ void sort_posts::post_accumulated_posts()
   posts.clear();
 }
 
+namespace {
+  void split_string(const string& str, const char ch,
+		    std::list<string>& strings)
+  {
+    const char * b = str.c_str();
+    for (const char * p = b; *p; p++) {
+      if (*p == ch) {
+	strings.push_back(string(b, p - b));
+	b = p + 1;
+      }
+    }
+    strings.push_back(string(b));
+  }
+
+  account_t * create_temp_account_from_path(std::list<string>& account_names,
+					    temporaries_t&     temps,
+					    account_t *        master)
+  {
+    account_t * new_account = NULL;
+    foreach (const string& name, account_names) {
+      if (new_account) {
+	new_account = new_account->find_account(name);
+      } else {
+	new_account = master->find_account(name, false);
+	if (! new_account)
+	  new_account = &temps.create_account(name, master);
+      }
+    }
+
+    assert(new_account != NULL);
+    return new_account;
+  }
+}
+
 void anonymize_posts::operator()(post_t& post)
 {
   SHA1		 sha;
@@ -158,27 +192,19 @@ void anonymize_posts::operator()(post_t& post)
   }
 
   std::list<string> account_names;
-  account_t * new_account = NULL;
 
   for (account_t * acct = post.account;
        acct;
        acct = acct->parent) {
-    if (! acct->parent) {
-      new_account = acct;
-      break;
-    }
-    
     sha.Reset();
     sha << acct->name.c_str();
     sha.Result(message_digest);
 
     account_names.push_front(to_hex(message_digest));
   }
-  assert(new_account);
 
-  foreach (const string& name, account_names)
-    new_account = new_account->find_account(name);
-
+  account_t * new_account =
+    create_temp_account_from_path(account_names, temps, xact.journal->master);
   post_t& temp = temps.copy_post(post, xact, new_account);
   temp.note = none;
 
@@ -685,11 +711,15 @@ void transfer_details::operator()(post_t& post)
   case SET_PAYEE:
     xact.payee = expr.calc(bound_scope).to_string();
     break;
-  case SET_ACCOUNT:
+  case SET_ACCOUNT: {
+    std::list<string> account_names;
     temp.account->remove_post(&temp);
-    temp.account = master->find_account(expr.calc(bound_scope).to_string());
+    split_string(expr.calc(bound_scope).to_string(), ':', account_names);
+    temp.account = create_temp_account_from_path(account_names, temps,
+						 xact.journal->master);
     temp.account->add_post(&temp);
     break;
+  }
   default:
     assert(false);
     break;
@@ -739,11 +769,11 @@ void budget_posts::report_budget_items(const date_t& date)
       }
       assert(begin);
 
-      if (*begin < date &&
+      if (*begin <= date &&
 	  (! pair.first.end || *begin < *pair.first.end)) {
 	post_t& post = *pair.second;
 
-	DEBUG("ledger.walk.budget", "Reporting budget for "
+	DEBUG("budget.generate", "Reporting budget for "
 	      << post.reported_account()->fullname());
 
 	xact_t& xact = temps.create_xact();
@@ -785,7 +815,7 @@ void budget_posts::operator()(post_t& post)
 	post_in_budget = true;
 	// Report the post as if it had occurred in the parent account.
 	if (post.reported_account() != acct)
-	  post.xdata().account = acct;
+	  post.set_reported_account(acct);
 	goto handle;
       }
     }

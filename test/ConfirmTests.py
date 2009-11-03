@@ -10,7 +10,7 @@ import re
 from LedgerHarness import LedgerHarness
 
 harness = LedgerHarness(sys.argv)
-tests   = sys.argv[2]
+tests   = sys.argv[3]
 
 if not os.path.isdir(tests) and not os.path.isfile(tests):
     sys.exit(1)

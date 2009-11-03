@@ -159,6 +159,17 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     handler.reset(new sort_posts(handler, "date"));
   }
 
+  if (report.HANDLED(set_reported_account_))
+    handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
+				       report.session.journal->master,
+				       report.HANDLER(set_reported_account_).str(),
+				       report));
+  else if (report.HANDLED(set_reported_payee_))
+    handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
+				       report.session.journal->master,
+				       report.HANDLER(set_reported_payee_).str(),
+				       report));
+
   // related_posts will pass along all posts related to the post received.  If
   // the `related_all' handler is on, then all the xact's posts are passed;
   // meaning that if one post of an xact is to be printed, all the post for

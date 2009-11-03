@@ -284,6 +284,8 @@ public:
     HANDLER(seed_).report(out);
     HANDLER(set_account_).report(out);
     HANDLER(set_payee_).report(out);
+    HANDLER(set_reported_account_).report(out);
+    HANDLER(set_reported_payee_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
     HANDLER(sort_xacts_).report(out);
@@ -652,7 +654,7 @@ public:
 
        if (have_less) {
 	 on(none, "less");
-	 setenv("LESS", "--quit-if-one-screen -R", 0);
+	 setenv("LESS", "-FRSX", 0); // don't overwrite
        }
      }
    }
@@ -805,6 +807,8 @@ public:
   OPTION(report_t, seed_);
   OPTION(report_t, set_account_);
   OPTION(report_t, set_payee_);
+  OPTION(report_t, set_reported_account_);
+  OPTION(report_t, set_reported_payee_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
       on_with(args[0].as_string(), args[1]);

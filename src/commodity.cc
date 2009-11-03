@@ -38,10 +38,12 @@
 
 namespace ledger {
 
-void commodity_t::base_t::history_t::add_price(commodity_t&      source,
-					       const datetime_t& date,
-					       const amount_t&	 price,
-					       const bool	 reflexive)
+bool commodity_t::european_by_default = false;
+
+void commodity_t::history_t::add_price(commodity_t&      source,
+				       const datetime_t& date,
+				       const amount_t&	 price,
+				       const bool	 reflexive)
 {
   DEBUG("commodity.prices.add", "add_price to " << source
 	<< (reflexive ? " (secondary)" : " (primary)")
@@ -67,7 +69,7 @@ void commodity_t::base_t::history_t::add_price(commodity_t&      source,
   }
 }
 
-bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
+bool commodity_t::history_t::remove_price(const datetime_t& date)
 {
   DEBUG("commodity.prices.add", "remove_price: " << date);
 
@@ -77,7 +79,7 @@ bool commodity_t::base_t::history_t::remove_price(const datetime_t& date)
   return false;
 }
 
-void commodity_t::base_t::varied_history_t::
+void commodity_t::varied_history_t::
   add_price(commodity_t&      source,
 	    const datetime_t& date,
 	    const amount_t&   price,
@@ -97,9 +99,8 @@ void commodity_t::base_t::varied_history_t::
   hist->add_price(source, date, price, reflexive);
 }
 
-bool commodity_t::base_t::varied_history_t::
-  remove_price(const datetime_t& date,
-	       commodity_t&      comm)
+bool commodity_t::varied_history_t::remove_price(const datetime_t& date,
+						 commodity_t&      comm)
 {
   DEBUG("commodity.prices.add", "varied_remove_price: " << date << ", " << comm);
 
@@ -109,13 +110,12 @@ bool commodity_t::base_t::varied_history_t::
 }
 
 optional<price_point_t>
-  commodity_t::base_t::history_t::
-    find_price(const optional<datetime_t>& moment,
-	       const optional<datetime_t>& oldest
+commodity_t::history_t::find_price(const optional<datetime_t>& moment,
+				   const optional<datetime_t>& oldest
 #if defined(DEBUG_ON)
-	       , const int indent
+				   , const int indent
 #endif
-	       ) const
+				   ) const
 {
   price_point_t point;
   bool          found = false;
@@ -220,15 +220,14 @@ optional<price_point_t>
 }
 
 optional<price_point_t>
-  commodity_t::base_t::varied_history_t::
-    find_price(const commodity_t&            source,
-	       const optional<commodity_t&>& commodity,
-	       const optional<datetime_t>&   moment,
-	       const optional<datetime_t>&   oldest
+commodity_t::varied_history_t::find_price(const commodity_t&            source,
+					  const optional<commodity_t&>& commodity,
+					  const optional<datetime_t>&   moment,
+					  const optional<datetime_t>&   oldest
 #if defined(DEBUG_ON)
-	       , const int indent
+					  , const int indent
 #endif
-	       ) const
+					  ) const
 {
   optional<price_point_t> point;
   optional<datetime_t>	  limit = oldest;
@@ -352,9 +351,8 @@ optional<price_point_t>
   return none;
 }
 
-optional<commodity_t::base_t::history_t&>
-  commodity_t::base_t::varied_history_t::
-    history(const optional<commodity_t&>& commodity)
+optional<commodity_t::history_t&>
+commodity_t::varied_history_t::history(const optional<commodity_t&>& commodity)
 {
   commodity_t * comm = NULL;
   if (! commodity) {
@@ -602,11 +600,11 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   if (cmp != 0)
     return cmp < 0;
 
-  if (! leftcomm.annotated) {
-    return rightcomm.annotated;
+  if (! leftcomm.is_annotated()) {
+    return rightcomm.is_annotated();
   }
-  else if (! rightcomm.annotated) {
-    return ! leftcomm.annotated;
+  else if (! rightcomm.is_annotated()) {
+    return ! leftcomm.is_annotated();
   }
   else {
     annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));

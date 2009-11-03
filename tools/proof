@@ -14,7 +14,7 @@ fi
 
 rm -fr ~/Products/ledger*
 
-./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log
+time ./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log
 
 if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
     if [[ "$1" = "--alert" ]]; then

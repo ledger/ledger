@@ -55,12 +55,13 @@ namespace {
 #endif // USE_BOOST_FACETS
 
   public:
-    bool	       has_year;
-    bool	       input;
+    bool has_year;
+    bool has_day;
+    bool input;
 
     temporal_io_t(const char * _fmt_str, bool _input)
       : fmt_str(_fmt_str), has_year(icontains(fmt_str, "%y")),
-	input(_input) {
+	has_day(icontains(fmt_str, "%d")), input(_input) {
 #if defined(USE_BOOST_FACETS)
       if (input) {
 	input_facet  = new InputFacetType(fmt_str);
@@ -75,6 +76,7 @@ namespace {
     void set_format(const char * fmt) {
       fmt_str  = fmt;
       has_year = icontains(fmt_str, "%y");
+      has_day  = icontains(fmt_str, "%d");
 
 #if defined(USE_BOOST_FACETS)
       if (input)
@@ -190,7 +192,7 @@ namespace {
 
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
 				 optional<date_t::year_type> year,
-				 bool& saw_year)
+				 bool& saw_year, bool& saw_day)
   {
     date_t when;
 
@@ -220,26 +222,30 @@ namespace {
 
 	if (when.month() > CURRENT_DATE().month())
 	  when -= gregorian::years(1);
-      } else {
+      }
+      else {
 	saw_year = true;
       }
+
+      saw_day = io.has_day;
     }
     return when;
   }
 
   date_t parse_date_mask(const char * date_str,
-			 optional<date_t::year_type> year, bool& saw_year)
+			 optional<date_t::year_type> year,
+			 bool& saw_year, bool& saw_day)
   {
     if (input_date_io.get()) {
       date_t when = parse_date_mask_routine(date_str, *input_date_io.get(),
-					    year, saw_year);
+					    year, saw_year, saw_day);
       if (! when.is_not_a_date())
 	return when;
     }
 
     foreach (shared_ptr<date_io_t>& reader, readers) {
       date_t when = parse_date_mask_routine(date_str, *reader.get(),
-					    year, saw_year);
+					    year, saw_year, saw_day);
       if (! when.is_not_a_date())
 	return when;
     }
@@ -311,7 +317,8 @@ datetime_t parse_datetime(const char * str, optional<date_t::year_type>)
 date_t parse_date(const char * str, optional<date_t::year_type> current_year)
 {
   bool saw_year;
-  return parse_date_mask(str, current_year, saw_year);
+  bool saw_day;
+  return parse_date_mask(str, current_year, saw_year, saw_day);
 }
 
 std::ostream& operator<<(std::ostream& out,
@@ -549,7 +556,8 @@ namespace {
 				 date_t *      end)
   {
     bool   saw_year = true;
-    date_t when	    = parse_date_mask(word.c_str(), none, saw_year);
+    bool   saw_day  = true;
+    date_t when	    = parse_date_mask(word.c_str(), none, saw_year, saw_day);
 
     if (when.is_not_a_date())
       throw_(date_error, _("Could not parse date mask: %1") << word);
@@ -558,8 +566,8 @@ namespace {
       *begin = when;
 
       if (end) {
-	if (saw_year)
-	  *end = *begin + gregorian::years(1);
+	if (saw_day)
+	  *end = *begin + gregorian::days(1);
 	else
 	  *end = *begin + gregorian::months(1);
       }
@@ -728,17 +736,17 @@ void date_interval_t::parse(std::istream& in)
 
     if (wday) {
       while (start->day_of_week() != *wday)
-	*start = duration_t(duration_t::DAYS, 1).subtract(*start);
+	*start -= gregorian::days(1);
 
       if (! end)
-	end = duration_t(duration_t::DAYS, 1).add(*start);
+	end = *start + gregorian::days(1);
     } else {
       bool overwrite_end = false;
 
       if (year) {
 	start = date_t(*year, 1, 1);
 	if (! end) {
-	  end = duration_t(duration_t::YEARS, 1).add(*start);
+	  end = *start + gregorian::years(1);
 	  overwrite_end = true;
 	}
       }
@@ -746,7 +754,7 @@ void date_interval_t::parse(std::istream& in)
       if (mon) {
 	start = date_t(start->year(), *mon, 1);
 	if (! end || overwrite_end)
-	  end = duration_t(duration_t::MONTHS, 1).add(*start);
+	  end = *start + gregorian::months(1);
       }
     }
   }

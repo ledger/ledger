@@ -1,0 +1,16 @@
+budget --now=2009/11/01 --end=2009/11/30
+<<<
+~ Monthly
+  Expenses:Food                $500.00
+  Assets
+
+2009/11/01 Sample
+  Expenses:Food:Dining          $20.00
+  Assets
+>>>1
+     $-20.00     $-500.00      $480.00    4%  Assets
+      $20.00      $500.00     $-480.00    4%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+>>>2
+=== 0

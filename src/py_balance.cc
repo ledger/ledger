@@ -32,10 +32,83 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
+#include "pyfstream.h"
+#include "commodity.h"
+#include "annotate.h"
+#include "balance.h"
 
 namespace ledger {
 
 using namespace boost::python;
+
+namespace {
+
+  boost::optional<balance_t> py_value_0(const balance_t& balance) {
+    return balance.value();
+  }
+  boost::optional<balance_t> py_value_1(const balance_t& balance,
+				       const bool primary_only) {
+    return balance.value(primary_only);
+  }
+
+  boost::optional<balance_t>
+  py_value_2(const balance_t& balance,
+	     const bool primary_only,
+	     const boost::optional<datetime_t>& moment) {
+    return balance.value(primary_only, moment);
+  }
+
+  boost::optional<balance_t>
+  py_value_3(const balance_t& balance,
+	     const bool primary_only,
+	     const boost::optional<datetime_t>& moment,
+	     const boost::optional<commodity_t&>& in_terms_of) {
+    return balance.value(primary_only, moment, in_terms_of);
+  }
+
+  boost::optional<amount_t>
+  py_commodity_amount_0(const balance_t& balance) {
+    return balance.commodity_amount();
+  }
+
+  boost::optional<amount_t>
+  py_commodity_amount_1(const balance_t& balance,
+			const boost::optional<const commodity_t&>& commodity) {
+    return balance.commodity_amount(commodity);
+  }
+
+  void py_print(balance_t& balance, object out) {
+    if (PyFile_Check(out.ptr())) {
+      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
+      balance.print(outstr);
+    } else {
+      PyErr_SetString(PyExc_IOError,
+		      _("Argument to balance.print_(file) is not a file object"));
+    }
+  }
+
+  long balance_len(balance_t& bal) {
+    return bal.amounts.size();
+  }
+
+  amount_t balance_getitem(balance_t& bal, long i) {
+    long len = bal.amounts.size();
+
+    if (labs(i) >= len) {
+      PyErr_SetString(PyExc_IndexError, _("Index out of range"));
+      throw_error_already_set();
+    }
+
+    long x = i < 0 ? len + i : i;
+    balance_t::amounts_map::iterator elem = bal.amounts.begin();
+    while (--x >= 0)
+      elem++;
+
+    return (*elem).second;
+  }
+
+} // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
@@ -46,221 +119,108 @@ EXC_TRANSLATOR(balance_error)
 
 void export_balance()
 {
-#if 0
   class_< balance_t > ("Balance")
+    .def(init<balance_t>())
+    .def(init<amount_t>())
+    .def(init<long>())
+    .def(init<string>())
+
+    .def(self += self)
+    .def(self += other<amount_t>())
+    .def(self += long())
+    .def(self +  self)
+    .def(self +  other<amount_t>())
+    .def(self +  long())
+    .def(self -= self)
+    .def(self -= other<amount_t>())
+    .def(self -= long())
+    .def(self -  self)
+    .def(self -  other<amount_t>())
+    .def(self -  long())
+    .def(self *= other<amount_t>())
+    .def(self *= long())
+    .def(self *  other<amount_t>())
+    .def(self *  long())
+    .def(self /= other<amount_t>())
+    .def(self /= long())
+    .def(self /  other<amount_t>())
+    .def(self /  long())
+    .def(- self)
+
+    .def(self == self)
+    .def(self == other<amount_t>())
+    .def(self == long())
+    .def(self != self)
+    .def(self != other<amount_t>())
+    .def(self != long())
+    .def(! self)
+
+    .def(self_ns::str(self))
+
+    .def("negated", &balance_t::negated)
+    .def("in_place_negate", &balance_t::in_place_negate,
+	 return_value_policy<reference_existing_object>())
+    .def(- self)
+
+    .def("abs", &balance_t::abs)
+    .def("__abs__", &balance_t::abs)
+
+    .def("__len__", balance_len)
+    .def("__getitem__", balance_getitem)
+
+    .def("rounded", &balance_t::rounded)
+    .def("in_place_round", &balance_t::in_place_round,
+	 return_value_policy<reference_existing_object>())
+
+    .def("truncated", &balance_t::truncated)
+    .def("in_place_truncate", &balance_t::in_place_truncate,
+	 return_value_policy<reference_existing_object>())
+
+    .def("unrounded", &balance_t::unrounded)
+    .def("in_place_unround", &balance_t::in_place_unround,
+	 return_value_policy<reference_existing_object>())
+
+    .def("reduced", &balance_t::reduced)
+    .def("in_place_reduce", &balance_t::in_place_reduce,
+	 return_value_policy<reference_existing_object>())
+
+    .def("unreduced", &balance_t::unreduced)
+    .def("in_place_unreduce", &balance_t::in_place_unreduce,
+	 return_value_policy<reference_existing_object>())
+
+    .def("value", py_value_0)
+    .def("value", py_value_1, args("primary_only"))
+    .def("value", py_value_2, args("primary_only", "moment"))
+    .def("value", py_value_3, args("primary_only", "moment", "in_terms_of"))
+
+    .def("price", &balance_t::price)
+
+    .def("__nonzero__", &balance_t::is_nonzero)
+    .def("is_nonzero", &balance_t::is_nonzero)
+    .def("is_zero", &balance_t::is_zero)
+    .def("is_realzero", &balance_t::is_realzero)
+
+    .def("is_empty", &balance_t::is_empty)
+    .def("single_amount", &balance_t::single_amount)
+
+    .def("to_amount", &balance_t::to_amount)
+
+    .def("commodity_count", &balance_t::commodity_count)
+    .def("commodity_amount", py_commodity_amount_0)
+    .def("commodity_amount", py_commodity_amount_1)
+
+    .def("strip_annotations", &balance_t::strip_annotations)
+
+    .def("print_", py_print)
+    .def("dump", &balance_t::dump)
+
+    .def("valid",  &balance_t::valid)
     ;
-#endif
-
-  //register_optional_to_python<amount_t>();
-
-  //implicitly_convertible<string, amount_t>();
 
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);
 
-  //EXC_TRANSLATE(balance_error);
+  EXC_TRANSLATE(balance_error);
 }
 
 } // namespace ledger
-
-#if 0
-unsigned int balance_len(balance_t& bal)
-{
-  return bal.amounts.size();
-}
-
-amount_t balance_getitem(balance_t& bal, int i)
-{
-  std::size_t len = bal.amounts.size();
-
-  if (abs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-    throw_error_already_set();
-  }
-
-  int x = i < 0 ? len + i : i;
-  balance_t::amounts_map::iterator elem = bal.amounts.begin();
-  while (--x >= 0)
-    elem++;
-
-  return (*elem).second;
-}
-
-unsigned int balance_pair_len(balance_pair_t& bal_pair)
-{
-  return balance_len(bal_pair.quantity);
-}
-
-amount_t balance_pair_getitem(balance_pair_t& bal_pair, int i)
-{
-  return balance_getitem(bal_pair.quantity, i);
-}
-
-void export_balance()
-{
-  class_< balance_t > ("Balance")
-    .def(init<balance_t>())
-    .def(init<amount_t>())
-    .def(init<long>())
-    .def(init<unsigned long>())
-    .def(init<double>())
-
-    .def(self += self)
-    .def(self += other<amount_t>())
-    .def(self += long())
-    .def(self +  self)
-    .def(self +  other<amount_t>())
-    .def(self +  long())
-    .def(self -= self)
-    .def(self -= other<amount_t>())
-    .def(self -= long())
-    .def(self -  self)
-    .def(self -  other<amount_t>())
-    .def(self -  long())
-    .def(self *= self)
-    .def(self *= other<amount_t>())
-    .def(self *= long())
-    .def(self *  self)
-    .def(self *  other<amount_t>())
-    .def(self *  long())
-    .def(self /= self)
-    .def(self /= other<amount_t>())
-    .def(self /= long())
-    .def(self /  self)
-    .def(self /  other<amount_t>())
-    .def(self /  long())
-    .def(- self)
-
-    .def(self <  self)
-    .def(self <  other<amount_t>())
-    .def(self <  long())
-    .def(self <= self)
-    .def(self <= other<amount_t>())
-    .def(self <= long())
-    .def(self >  self)
-    .def(self >  other<amount_t>())
-    .def(self >  long())
-    .def(self >= self)
-    .def(self >= other<amount_t>())
-    .def(self >= long())
-    .def(self == self)
-    .def(self == other<amount_t>())
-    .def(self == long())
-    .def(self != self)
-    .def(self != other<amount_t>())
-    .def(self != long())
-    .def(! self)
-
-    .def(self_ns::str(self))
-
-    .def("__abs__", &balance_t::abs)
-    .def("__len__", balance_len)
-    .def("__getitem__", balance_getitem)
-
-    .def("valid",  &balance_t::valid)
-
-    .def("realzero", &balance_t::realzero)
-    .def("amount", &balance_t::amount)
-    .def("value",  &balance_t::value)
-    .def("price",  &balance_t::price)
-    .def("date",  &balance_t::date)
-    .def("strip_annotations", &balance_t::strip_annotations)
-    .def("write",  &balance_t::write)
-    .def("round",  &balance_t::round)
-    .def("negate", &balance_t::negate)
-    .def("negated", &balance_t::negated)
-    ;
-
-  class_< balance_pair_t > ("BalancePair")
-    .def(init<balance_pair_t>())
-    .def(init<balance_t>())
-    .def(init<amount_t>())
-    .def(init<long>())
-    .def(init<unsigned long>())
-    .def(init<double>())
-
-    .def(self += self)
-    .def(self += other<balance_t>())
-    .def(self += other<amount_t>())
-    .def(self += long())
-    .def(self +  self)
-    .def(self +  other<balance_t>())
-    .def(self +  other<amount_t>())
-    .def(self +  long())
-    .def(self -= self)
-    .def(self -= other<balance_t>())
-    .def(self -= other<amount_t>())
-    .def(self -= long())
-    .def(self -  self)
-    .def(self -  other<balance_t>())
-    .def(self -  other<amount_t>())
-    .def(self -  long())
-    .def(self *= self)
-    .def(self *= other<balance_t>())
-    .def(self *= other<amount_t>())
-    .def(self *= long())
-    .def(self *  self)
-    .def(self *  other<balance_t>())
-    .def(self *  other<amount_t>())
-    .def(self *  long())
-    .def(self /= self)
-    .def(self /= other<balance_t>())
-    .def(self /= other<amount_t>())
-    .def(self /= long())
-    .def(self /  self)
-    .def(self /  other<balance_t>())
-    .def(self /  other<amount_t>())
-    .def(self /  long())
-    .def(- self)
-
-    .def(self <  self)
-    .def(self <  other<balance_t>())
-    .def(self <  other<amount_t>())
-    .def(self <  long())
-    .def(self <= self)
-    .def(self <= other<balance_t>())
-    .def(self <= other<amount_t>())
-    .def(self <= long())
-    .def(self >  self)
-    .def(self >  other<balance_t>())
-    .def(self >  other<amount_t>())
-    .def(self >  long())
-    .def(self >= self)
-    .def(self >= other<balance_t>())
-    .def(self >= other<amount_t>())
-    .def(self >= long())
-    .def(self == self)
-    .def(self == other<balance_t>())
-    .def(self == other<amount_t>())
-    .def(self == long())
-    .def(self != self)
-    .def(self != other<balance_t>())
-    .def(self != other<amount_t>())
-    .def(self != long())
-    .def(! self)
-
-    .def(self_ns::str(self))
-
-    .def("__abs__", &balance_pair_t::abs)
-    .def("__len__", balance_pair_len)
-    .def("__getitem__", balance_pair_getitem)
-
-    .def("valid",  &balance_pair_t::valid)
-
-    .def("realzero", &balance_pair_t::realzero)
-    .def("amount", &balance_pair_t::amount)
-    .def("value",  &balance_pair_t::value)
-    .def("price",  &balance_pair_t::price)
-    .def("date",  &balance_pair_t::date)
-    .def("strip_annotations", &balance_pair_t::strip_annotations)
-    .def("write",  &balance_pair_t::write)
-    .def("round",  &balance_pair_t::round)
-    .def("negate", &balance_pair_t::negate)
-    .def("negated", &balance_pair_t::negated)
-
-    .add_property("cost",
-		  make_getter(&balance_pair_t::cost,
-			      return_value_policy<reference_existing_object>()))
-    ;
-}
-#endif

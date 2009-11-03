@@ -7,22 +7,27 @@ import re
 from subprocess import Popen, PIPE
 
 class LedgerHarness:
-    ledger    = None
-    succeeded = 0
-    failed    = 0
-    verify    = False
-    gmalloc   = False
+    ledger     = None
+    sourcepath = None
+    succeeded  = 0
+    failed     = 0
+    verify     = False
+    gmalloc    = False
 
     def __init__(self, argv):
         if not os.path.isfile(argv[1]):
             print "Cannot find ledger at '%s'" % argv[1]
             sys.exit(1)
+        if not os.path.isdir(argv[2]):
+            print "Cannot find source path at '%s'" % argv[2]
+            sys.exit(1)
 
-        self.ledger    = argv[1]
-        self.succeeded = 0
-        self.failed    = 0
-        self.verify    = '--verify' in argv
-        self.gmalloc   = '--gmalloc' in argv
+        self.ledger     = argv[1]
+        self.sourcepath = argv[2]
+        self.succeeded  = 0
+        self.failed     = 0
+        self.verify     = '--verify' in argv
+        self.gmalloc    = '--gmalloc' in argv
 
     def run(self, command, verify=None, gmalloc=None, columns=True):
         env = os.environ.copy()
@@ -48,10 +53,8 @@ class LedgerHarness:
         if columns:
             insert += ' --columns=80'
 
-        command = re.sub('\$ledger', '%s%s %s %s %s %s' % \
-                         (self.ledger, insert, '--args-only',
-                          '--no-color', '--pager=none',
-                          '--date-format=%y-%b-%d'), command)
+        command = re.sub('\$ledger', '%s%s %s' % \
+                         (self.ledger, insert, '--args-only'), command)
 
         return Popen(command, shell=True, close_fds=True, env=env,
                      stdin=PIPE, stdout=PIPE, stderr=PIPE)

@@ -232,13 +232,13 @@ public:
 
 private:
   void acquire() const {
-    DEBUG("ledger.xpath.memory",
+    DEBUG("op.memory",
 	  "Acquiring " << this << ", refc now " << refc + 1);
     assert(refc >= 0);
     refc++;
   }
   void release() const {
-    DEBUG("ledger.xpath.memory",
+    DEBUG("op.memory",
 	  "Releasing " << this << ", refc now " << refc - 1);
     assert(refc > 0);
     if (--refc == 0)

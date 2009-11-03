@@ -98,6 +98,9 @@ public:
       checked_delete(pair.second);
   }
 
+  string make_qualified_name(const commodity_t&  comm,
+			     const annotation_t& details);
+
   commodity_t * create(const string& symbol);
   commodity_t * find(const string& name);
   commodity_t * find_or_create(const string& symbol);

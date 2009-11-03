@@ -42,10 +42,9 @@ account_t::~account_t()
 {
   TRACE_DTOR(account_t);
 
-  foreach (accounts_map::value_type& pair, accounts) {
-    assert(! pair.second->has_flags(ACCOUNT_TEMP));
-    checked_delete(pair.second);
-  }
+  foreach (accounts_map::value_type& pair, accounts)
+    if (! pair.second->has_flags(ACCOUNT_TEMP))
+      checked_delete(pair.second);
 }
 
 account_t * account_t::find_account(const string& name,
@@ -55,7 +54,7 @@ account_t * account_t::find_account(const string& name,
   if (i != accounts.end())
     return (*i).second;
 
-  char buf[256];
+  char buf[8192];
 
   string::size_type sep = name.find(':');
   assert(sep < 256|| sep == string::npos);
@@ -396,6 +395,21 @@ value_t account_t::amount(const optional<expr_t&>& expr) const
 	}
       }
       xdata_->self_details.last_post = i;
+    }
+
+    if (xdata_->self_details.last_reported_post)
+      i = *xdata_->self_details.last_reported_post;
+    else
+      i = xdata_->reported_posts.begin();
+
+    for (; i != xdata_->reported_posts.end(); i++) {
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
+	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+	  (*i)->add_to_value(xdata_->self_details.total, expr);
+	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+	}
+      }
+      xdata_->self_details.last_reported_post = i;
     }
 
     return xdata_->self_details.total;

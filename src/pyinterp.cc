@@ -83,7 +83,7 @@ void initialize_for_python()
   export_value();
   export_xact();
 
-  scope().attr("session") = python_session;
+  scope().attr("current_session") = python_session;
 }
 
 struct python_run

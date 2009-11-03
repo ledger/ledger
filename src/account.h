@@ -159,6 +159,7 @@ public:
       std::set<string>	 payees_referenced;
 
       optional<posts_list::const_iterator> last_post;
+      optional<posts_list::const_iterator> last_reported_post;
 
       details_t()
 	: calculated(false),
@@ -176,8 +177,9 @@ public:
       void update(post_t& post, bool gather_all = false);
     };
 
-    details_t self_details;
-    details_t family_details;
+    details_t  self_details;
+    details_t  family_details;
+    posts_list reported_posts;
 
     std::list<sort_value_t> sort_values;
 
@@ -193,7 +195,6 @@ public:
     {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
-
     ~xdata_t() throw() {
       TRACE_DTOR(account_t::xdata_t);
     }

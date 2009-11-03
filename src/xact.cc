@@ -39,8 +39,8 @@
 
 namespace ledger {
 
-xact_base_t::xact_base_t(const xact_base_t&)
-  : item_t(), journal(NULL)
+xact_base_t::xact_base_t(const xact_base_t& xact_base)
+  : item_t(xact_base), journal(xact_base.journal)
 {
   TRACE_CTOR(xact_base_t, "copy");
 }

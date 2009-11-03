@@ -42,59 +42,66 @@ namespace ledger {
 
 using namespace boost::python;
 
-boost::optional<amount_t> py_value_0(const amount_t& amount) {
-  return amount.value();
-}
-boost::optional<amount_t> py_value_1(const amount_t& amount,
-				     const bool primary_only) {
-  return amount.value(primary_only);
-}
-boost::optional<amount_t> py_value_2(const amount_t& amount,
-				     const bool primary_only,
-				     const boost::optional<datetime_t>& moment) {
-  return amount.value(primary_only, moment);
-}
-boost::optional<amount_t> py_value_3(const amount_t& amount,
-				     const bool primary_only,
-				     const boost::optional<datetime_t>& moment,
-				     const boost::optional<commodity_t&>& in_terms_of) {
-  return amount.value(primary_only, moment, in_terms_of);
-}
+namespace {
 
-void py_parse_2(amount_t& amount, object in, unsigned char flags) {
-  if (PyFile_Check(in.ptr())) {
-    pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
-    amount.parse(instr, flags);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    _("Argument to amount.parse(file) is not a file object"));
+  boost::optional<amount_t> py_value_0(const amount_t& amount) {
+    return amount.value();
   }
-}
-void py_parse_1(amount_t& amount, object in) {
-  py_parse_2(amount, in, 0);
-}
-
-void py_parse_str_1(amount_t& amount, const string& str) {
-  amount.parse(str);
-}
-void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
-  amount.parse(str, flags);
-}
-
-void py_print(amount_t& amount, object out)
-{
-  if (PyFile_Check(out.ptr())) {
-    pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-    amount.print(outstr);
-  } else {
-    PyErr_SetString(PyExc_IOError,
-		    _("Argument to amount.print_(file) is not a file object"));
+  boost::optional<amount_t> py_value_1(const amount_t& amount,
+				       const bool primary_only) {
+    return amount.value(primary_only);
   }
-}
 
-void py_amount_initialize() {
-  amount_t::initialize();
-}
+  boost::optional<amount_t>
+  py_value_2(const amount_t& amount,
+	     const bool primary_only,
+	     const boost::optional<datetime_t>& moment) {
+    return amount.value(primary_only, moment);
+  }
+
+  boost::optional<amount_t>
+  py_value_3(const amount_t& amount,
+	     const bool primary_only,
+	     const boost::optional<datetime_t>& moment,
+	     const boost::optional<commodity_t&>& in_terms_of) {
+    return amount.value(primary_only, moment, in_terms_of);
+  }
+
+  void py_parse_2(amount_t& amount, object in, unsigned char flags) {
+    if (PyFile_Check(in.ptr())) {
+      pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
+      amount.parse(instr, flags);
+    } else {
+      PyErr_SetString(PyExc_IOError,
+		      _("Argument to amount.parse(file) is not a file object"));
+    }
+  }
+  void py_parse_1(amount_t& amount, object in) {
+    py_parse_2(amount, in, 0);
+  }
+
+  void py_parse_str_1(amount_t& amount, const string& str) {
+    amount.parse(str);
+  }
+  void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
+    amount.parse(str, flags);
+  }
+
+  void py_print(amount_t& amount, object out) {
+    if (PyFile_Check(out.ptr())) {
+      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
+      amount.print(outstr);
+    } else {
+      PyErr_SetString(PyExc_IOError,
+		      _("Argument to amount.print_(file) is not a file object"));
+    }
+  }
+
+  void py_amount_initialize() {
+    amount_t::initialize();
+  }
+
+} // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
   void exc_translate_ ## type(const type& err) {	\
@@ -106,15 +113,18 @@ EXC_TRANSLATOR(amount_error)
 void export_amount()
 {
   class_< amount_t > ("Amount")
+    .add_static_property("current_pool",
+			 make_getter(&amount_t::current_pool,
+				     return_value_policy<reference_existing_object>()))
+
     .def("initialize", py_amount_initialize) // only for the PyUnitTests
     .staticmethod("initialize")
     .def("shutdown", &amount_t::shutdown)
     .staticmethod("shutdown")
 
-    .add_static_property("current_pool",
-			 make_getter(&amount_t::current_pool,
-				     return_value_policy<reference_existing_object>()))
-
+    .add_static_property("is_initialized",
+			 make_getter(&amount_t::is_initialized),
+			 make_setter(&amount_t::is_initialized))
     .add_static_property("stream_fullstrings",
 			 make_getter(&amount_t::stream_fullstrings),
 			 make_setter(&amount_t::stream_fullstrings))
@@ -129,7 +139,8 @@ internal precision."))
 
     .def(init<amount_t>())
 
-    .def("compare", &amount_t::compare)
+    .def("compare", &amount_t::compare, args("amount"),
+	 _("Compare two amounts for equality, returning <0, 0 or >0."))
 
     .def(self == self)
     .def(self == long())
@@ -186,6 +197,10 @@ internal precision."))
     .def(long()	  / self)
 
     .def("precision", &amount_t::precision)
+    .def("keep_precision", &amount_t::keep_precision)
+    .def("set_keep_precision", &amount_t::set_keep_precision, args("keep"),
+	 _("Set whether an amount should always display at full precision."))
+    .def("display_precision", &amount_t::display_precision)
 
     .def("negated", &amount_t::negated)
     .def("in_place_negate", &amount_t::in_place_negate,
@@ -195,8 +210,19 @@ internal precision."))
     .def("abs", &amount_t::abs)
     .def("__abs__", &amount_t::abs)
 
+    .def("inverted", &amount_t::inverted)
+
     .def("rounded", &amount_t::rounded)
+    .def("in_place_round", &amount_t::in_place_round,
+	 return_value_policy<reference_existing_object>())
+
+    .def("truncated", &amount_t::truncated)
+    .def("in_place_truncate", &amount_t::in_place_truncate,
+	 return_value_policy<reference_existing_object>())
+
     .def("unrounded", &amount_t::unrounded)
+    .def("in_place_unround", &amount_t::in_place_unround,
+	 return_value_policy<reference_existing_object>())
 
     .def("reduced", &amount_t::reduced)
     .def("in_place_reduce", &amount_t::in_place_reduce,
@@ -207,9 +233,11 @@ internal precision."))
 	 return_value_policy<reference_existing_object>())
 
     .def("value", py_value_0)
-    .def("value", py_value_1)
-    .def("value", py_value_2)
-    .def("value", py_value_3)
+    .def("value", py_value_1, args("primary_only"))
+    .def("value", py_value_2, args("primary_only", "moment"))
+    .def("value", py_value_3, args("primary_only", "moment", "in_terms_of"))
+
+    .def("price", &amount_t::price)
 
     .def("sign", &amount_t::sign)
     .def("__nonzero__", &amount_t::is_nonzero)
@@ -222,22 +250,21 @@ internal precision."))
     .def("__float__", &amount_t::to_double)
     .def("to_long", &amount_t::to_long)
     .def("__int__", &amount_t::to_long)
+    .def("fits_in_long", &amount_t::fits_in_long)
+
     .def("to_string", &amount_t::to_string)
     .def("__str__", &amount_t::to_string)
     .def("to_fullstring", &amount_t::to_fullstring)
     .def("__repr__", &amount_t::to_fullstring)
-
-    .def("fits_in_long", &amount_t::fits_in_long)
-
     .def("quantity_string", &amount_t::quantity_string)
 
     .def("commodity", &amount_t::commodity,
 	 return_value_policy<reference_existing_object>())
+    .def("has_commodity", &amount_t::has_commodity)
     .def("set_commodity", &amount_t::set_commodity,
 	 with_custodian_and_ward<1, 2>())
-
-    .def("has_commodity", &amount_t::has_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
+
     .def("number", &amount_t::number)
 
     .def("annotate", &amount_t::annotate)
@@ -256,7 +283,6 @@ internal precision."))
     .staticmethod("parse_conversion")
 
     .def("print_", py_print)
-
     .def("dump", &amount_t::dump)
 
     .def("valid", &amount_t::valid)
