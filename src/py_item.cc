@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "scope.h"
 #include "mask.h"
 #include "item.h"
 
@@ -96,7 +97,17 @@ void export_item()
   scope().attr("ITEM_GENERATED") = ITEM_GENERATED;
   scope().attr("ITEM_TEMP")	 = ITEM_TEMP;
 
+  enum_< item_t::state_t > ("State")
+    .value("Uncleared", item_t::UNCLEARED)
+    .value("Cleared",   item_t::CLEARED)
+    .value("Pending",   item_t::PENDING)
+    ;
+
+#if 0
+  class_< item_t, bases<scope_t> > ("JournalItem", init<uint_least8_t>())
+#else
   class_< item_t > ("JournalItem", init<uint_least8_t>())
+#endif
 #if 1
     .def("flags", &supports_flags<>::flags)
     .def("has_flags", &supports_flags<>::has_flags)
