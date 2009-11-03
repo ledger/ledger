@@ -41,7 +41,7 @@
 namespace ledger {
 
 journal_t::journal_t()
-  : master(new account_t), was_loaded(false),
+  : master(new account_t), basket(NULL), was_loaded(false),
     commodity_pool(new commodity_pool_t)
 {
   TRACE_CTOR(journal_t, "");
