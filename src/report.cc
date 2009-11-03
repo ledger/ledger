@@ -413,6 +413,9 @@ namespace {
 	  args.value().as_sequence().end();
 
 	std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
+	if (! info.first)
+	  throw_(std::runtime_error,
+		 _("Invalid query predicate: %1") << join_args(args));
 
 	string limit = info.first.text();
 	if (! limit.empty())
@@ -422,7 +425,12 @@ namespace {
 	      "Predicate = " << report.HANDLER(limit_).str());
 
 	if (info.second.tokens_remaining()) {
-	  string display = args_to_predicate(info.second).first.text();
+	  info = args_to_predicate(info.second);
+	  if (! info.first)
+	    throw_(std::runtime_error,
+		   _("Invalid display predicate: %1") << join_args(args));
+
+	  string display = info.first.text();
 
 	  if (! display.empty())
 	    report.HANDLER(display_).on(whence, display);

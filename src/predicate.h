@@ -299,8 +299,7 @@ std::pair<expr_t, query_parser_t>
 args_to_predicate(value_t::sequence_t::const_iterator begin,
 		  value_t::sequence_t::const_iterator end);
 
-std::pair<expr_t, query_parser_t>
-args_to_predicate(query_parser_t parser);
+std::pair<expr_t, query_parser_t> args_to_predicate(query_parser_t parser);
 
 } // namespace ledger
 

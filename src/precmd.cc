@@ -231,6 +231,9 @@ value_t args_command(call_scope_t& args)
   out << std::endl << std::endl;
 
   std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
+  if (! info.first)
+    throw_(std::runtime_error,
+	   _("Invalid query predicate: %1") << join_args(args));
 
   call_scope_t sub_args(static_cast<scope_t&>(args));
   sub_args.push_back(string_value(info.first.text()));
@@ -242,8 +245,12 @@ value_t args_command(call_scope_t& args)
 	<< std::endl << std::endl;
 
     call_scope_t disp_sub_args(static_cast<scope_t&>(args));
-    disp_sub_args.push_back
-      (string_value(args_to_predicate(info.second).first.text()));
+    info = args_to_predicate(info.second);
+    if (! info.first)
+      throw_(std::runtime_error,
+	     _("Invalid display predicate: %1") << join_args(args));
+
+    disp_sub_args.push_back(string_value(info.first.text()));
 
     parse_command(disp_sub_args);
   }
