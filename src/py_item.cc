@@ -96,7 +96,7 @@ void export_item()
   scope().attr("ITEM_GENERATED") = ITEM_GENERATED;
   scope().attr("ITEM_TEMP")	 = ITEM_TEMP;
 
-  class_< item_t > ("Item", init<uint_least8_t>())
+  class_< item_t > ("JournalItem", init<uint_least8_t>())
 #if 1
     .def("flags", &supports_flags<>::flags)
     .def("has_flags", &supports_flags<>::has_flags)
