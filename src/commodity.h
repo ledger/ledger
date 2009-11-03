@@ -222,8 +222,6 @@ protected:
 #endif // HAVE_BOOST_SERIALIZATION
   };
 
-  static bool symbol_needs_quotes(const string& symbol);
-
   shared_ptr<base_t> base;
 
   commodity_pool_t * parent_;
@@ -246,6 +244,8 @@ public:
   }
 
   operator bool() const;
+
+  static bool symbol_needs_quotes(const string& symbol);
 
   bool is_annotated() const {
     return annotated;
