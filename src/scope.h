@@ -113,6 +113,8 @@ private:
 class scope_t
 {
 public:
+  static scope_t * default_scope;
+
   explicit scope_t() {
     TRACE_CTOR(scope_t, "");
   }

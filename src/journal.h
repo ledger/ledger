@@ -126,7 +126,11 @@ public:
   hooks_t<xact_finalizer_t, xact_t> xact_finalize_hooks;
 
   journal_t();
+  journal_t(const path& pathname);
+  journal_t(const string& str);
   ~journal_t();
+
+  void initialize();
 
   std::list<fileinfo_t>::iterator sources_begin() {
     return sources.begin();
@@ -170,6 +174,14 @@ public:
   void remove_xact_finalizer(xact_finalizer_t * finalizer) {
     xact_finalize_hooks.remove_hook(finalizer);
   }
+
+  std::size_t read(std::istream& in,
+		   const path&	 pathname,
+		   account_t *   master = NULL,
+		   scope_t *     scope  = NULL);
+  std::size_t read(const path&	 pathname,
+		   account_t *   master = NULL,
+		   scope_t *     scope  = NULL);
 
   std::size_t parse(std::istream& in,
 		    scope_t&      session_scope,

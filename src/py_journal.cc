@@ -171,6 +171,8 @@ namespace {
 void export_journal()
 {
   class_< journal_t::fileinfo_t > ("FileInfo")
+    .def(init<path>())
+
     .add_property("filename",
 		  make_getter(&journal_t::fileinfo_t::filename),
 		  make_setter(&journal_t::fileinfo_t::filename))
@@ -186,6 +188,9 @@ void export_journal()
     ;
 
   class_< journal_t, boost::noncopyable > ("Journal")
+    .def(init<path>())
+    .def(init<string>())
+
     .add_property("master", make_getter(&journal_t::master,
 					return_internal_reference<1>()))
     .add_property("basket",

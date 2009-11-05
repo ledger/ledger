@@ -35,6 +35,8 @@
 
 namespace ledger {
 
+scope_t * scope_t::default_scope = NULL;
+
 void symbol_scope_t::define(const symbol_t::kind_t kind,
 			    const string& name, expr_t::ptr_op_t def)
 {

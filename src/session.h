@@ -80,14 +80,6 @@ public:
     flush_on_next_data_file = truth;
   }
 
-  std::size_t read_journal(std::istream& in,
-			   const path&	 pathname,
-			   account_t *   master = NULL,
-			   scope_t *     scope  = NULL);
-  std::size_t read_journal(const path&	 pathname,
-			   account_t *   master = NULL,
-			   scope_t *     scope  = NULL);
-
   std::size_t read_data(const string& master_account = "");
 
   void read_journal_files();

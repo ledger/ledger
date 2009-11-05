@@ -67,6 +67,7 @@ global_scope_t::global_scope_t(char ** envp)
   // open document, with a separate report_t object for each report it
   // generated.
   report_stack.push_front(new report_t(session()));
+  scope_t::default_scope = &report();
 
   // Read the user's options, in the following order:
   //
@@ -111,7 +112,7 @@ void global_scope_t::read_init()
 
       ifstream init(init_file);
 
-      if (session().read_journal(init_file, NULL, &report()) > 0 ||
+      if (session().journal->read(init_file, NULL, &report()) > 0 ||
 	  session().journal->auto_xacts.size() > 0 ||
 	  session().journal->period_xacts.size() > 0) {
 	throw_(parse_error, _("Transactions found in initialization file '%1'")
