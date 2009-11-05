@@ -14,5 +14,7 @@ While balancing transaction from "$FILE", lines 3-5:
 >   Account2   -1000 EUR @ 1.5 USD
 Unbalanced remainder is:
           100.00 USD
+Amount to balance against:
+         1,600.0 USD
 Error: Transaction does not balance
 === 1

@@ -209,6 +209,8 @@ void export_balance()
     .def("commodity_amount", py_commodity_amount_0)
     .def("commodity_amount", py_commodity_amount_1)
 
+    .def("number", &balance_t::number)
+
     .def("strip_annotations", &balance_t::strip_annotations)
 
     .def("valid",  &balance_t::valid)

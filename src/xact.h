@@ -84,6 +84,8 @@ public:
     return posts.end();
   }
 
+  value_t magnitude() const;
+
   virtual bool finalize();
 
   void clear_xdata();
@@ -129,7 +131,6 @@ public:
 
   virtual void add_post(post_t * post);
 
-  value_t magnitude() const;
   string idstring() const;
   string id() const;
 
