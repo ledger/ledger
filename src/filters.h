@@ -70,19 +70,6 @@ public:
   virtual void operator()(post_t&) {}
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
-class clear_post_xdata : public item_handler<post_t>
-{
-public:
-  virtual void operator()(post_t& post) {
-    post.clear_xdata();
-  }
-};
-
 class posts_iterator;
 
 /**
@@ -789,19 +776,6 @@ class forecast_posts : public generate_posts
 //
 // Account filters
 //
-
-/**
- * @brief Brief
- *
- * Long.
- */
-class clear_account_xdata : public item_handler<account_t>
-{
-public:
-  virtual void operator()(account_t& acct) {
-    acct.clear_xdata();
-  }
-};
 
 class accounts_iterator;
 

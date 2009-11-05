@@ -67,7 +67,7 @@ namespace {
       {
 	std::istringstream in(str);
 	report.session.journal->parse(in, report.session);
-	report.session.clean_accounts();
+	report.session.journal->clear_xdata();
       }
     }
     xact_t * first = report.session.journal->xacts.front();

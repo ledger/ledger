@@ -134,6 +134,23 @@ bool journal_t::remove_xact(xact_t * xact)
   return true;
 }
 
+void journal_t::clear_xdata()
+{
+  foreach (xact_t * xact, xacts)
+    if (! xact->has_flags(ITEM_TEMP))
+      xact->clear_xdata();
+
+  foreach (auto_xact_t * xact, auto_xacts)
+    if (! xact->has_flags(ITEM_TEMP))
+      xact->clear_xdata();
+
+  foreach (period_xact_t * xact, period_xacts)
+    if (! xact->has_flags(ITEM_TEMP))
+      xact->clear_xdata();
+
+  master->clear_xdata();
+}
+
 bool journal_t::valid() const
 {
   if (! master->valid()) {

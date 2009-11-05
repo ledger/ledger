@@ -230,9 +230,7 @@ public:
   bool has_xdata() const {
     return xdata_;
   }
-  void clear_xdata() {
-    xdata_ = none;
-  }
+  void clear_xdata();
   xdata_t& xdata() {
     if (! xdata_)
       xdata_ = xdata_t();

@@ -50,7 +50,7 @@ void report_t::posts_report(post_handler_ptr handler)
 {
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts(chain_post_handlers(*this, handler), walker);
-  session.clean_posts();
+  session.journal->clear_xdata();
 }
 
 void report_t::generate_report(post_handler_ptr handler)
@@ -70,7 +70,7 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 {
   xact_posts_iterator walker(xact);
   pass_down_posts(chain_post_handlers(*this, handler), walker);
-  session.clean_posts(xact);
+  xact.clear_xdata();
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)
@@ -101,15 +101,14 @@ void report_t::accounts_report(acct_handler_ptr handler)
   else
     pass_down_accounts(handler, *iter.get());
 
-  session.clean_posts();
-  session.clean_accounts();
+  session.journal->clear_xdata();
 }
 
 void report_t::commodities_report(post_handler_ptr handler)
 {
   posts_commodities_iterator walker(*session.journal.get());
   pass_down_posts(chain_post_handlers(*this, handler), walker);
-  session.clean_posts();
+  session.journal->clear_xdata();
 }
 
 value_t report_t::fn_amount_expr(call_scope_t& scope)

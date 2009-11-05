@@ -177,6 +177,8 @@ public:
 		    const path *  original_file = NULL,
 		    bool          strict	= false);
 
+  void clear_xdata();
+
   bool valid() const;
 
 #if defined(HAVE_BOOST_SERIALIZATION)

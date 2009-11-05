@@ -231,6 +231,8 @@ void export_journal()
     .def("sources", range<return_internal_reference<> >
 	 (&journal_t::sources_begin, &journal_t::sources_end))
 
+    .def("clear_xdata", &journal_t::clear_xdata)
+
     .def("valid", &journal_t::valid)
     ;
 }

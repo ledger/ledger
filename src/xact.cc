@@ -76,6 +76,13 @@ bool xact_base_t::remove_post(post_t * post)
   return true;
 }
 
+void xact_base_t::clear_xdata()
+{
+  foreach (post_t * post, posts)
+    if (! post->has_flags(ITEM_TEMP))
+      post->clear_xdata();
+}
+
 bool xact_base_t::finalize()
 {
   // Scan through and compute the total balance for the xact.  This is used

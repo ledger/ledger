@@ -85,6 +85,9 @@ public:
   }
 
   virtual bool finalize();
+
+  void clear_xdata();
+
   virtual bool valid() const {
     return true;
   }

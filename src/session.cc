@@ -224,25 +224,6 @@ void session_t::close_journal_files()
   amount_t::initialize(journal->commodity_pool);
 }
 
-void session_t::clean_posts()
-{
-  journal_posts_iterator walker(*journal.get());
-  pass_down_posts(post_handler_ptr(new clear_post_xdata), walker);
-}
-
-void session_t::clean_posts(xact_t& xact)
-{
-  xact_posts_iterator walker(xact);
-  pass_down_posts(post_handler_ptr(new clear_post_xdata), walker);
-}
-
-void session_t::clean_accounts()
-{
-  basic_accounts_iterator acct_walker(*journal->master);
-  pass_down_accounts(acct_handler_ptr(new clear_account_xdata), acct_walker);
-  journal->master->clear_xdata();
-}
-
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {

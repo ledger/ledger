@@ -382,6 +382,15 @@ account_t::xdata_t::details_t::operator+=(const details_t& other)
   return *this;
 }
 
+void account_t::clear_xdata()
+{
+  xdata_ = none;
+
+  foreach (accounts_map::value_type& pair, accounts)
+    if (! pair.second->has_flags(ACCOUNT_TEMP))
+      pair.second->clear_xdata();
+}
+
 value_t account_t::amount(const optional<expr_t&>& expr) const
 {
   if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
