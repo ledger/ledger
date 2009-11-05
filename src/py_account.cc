@@ -142,9 +142,10 @@ void export_account()
 
   class_< account_t::xdata_t > ("AccountXData")
 #if 1
-    .def("flags", &supports_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least16_t>::flags,
+		  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &supports_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
@@ -162,9 +163,10 @@ void export_account()
 
   class_< account_t > ("Account")
 #if 1
-    .def("flags", &supports_flags<>::flags)
+    .add_property("flags",
+		  &supports_flags<>::flags,
+		  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
-    .def("set_flags", &supports_flags<>::set_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
     .def("drop_flags", &supports_flags<>::drop_flags)

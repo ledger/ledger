@@ -189,9 +189,10 @@ void export_commodity()
 
   class_< commodity_t, boost::noncopyable > ("Commodity", no_init)
 #if 1
-    .def("flags", &delegates_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least16_t>::flags,
+		  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &delegates_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
@@ -248,9 +249,9 @@ void export_commodity()
 
   class_< annotation_t > ("Annotation", no_init)
 #if 1
-    .def("flags", &supports_flags<>::flags)
+    .add_property("flags", &supports_flags<>::flags,
+		  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
-    .def("set_flags", &supports_flags<>::set_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
     .def("drop_flags", &supports_flags<>::drop_flags)
