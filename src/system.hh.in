@@ -243,12 +243,6 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 #include <boost/python/detail/wrap_python.hpp>
 #include <datetime.h>
 
-#include <boost/python/exception_translator.hpp>
-#include <boost/python/implicit.hpp>
-#include <boost/python/args.hpp>
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
-#include <boost/python/to_python_converter.hpp>
 #include <boost/python/module_init.hpp>
 
 #endif // HAVE_BOOST_PYTHON

@@ -172,7 +172,7 @@ void export_account()
 
     .add_property("parent",
 		  make_getter(&account_t::parent,
-			      return_value_policy<reference_existing_object>()))
+			      return_internal_reference<>()))
 
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
@@ -197,7 +197,7 @@ void export_account()
     .def("valid", &account_t::valid)
 
     .def("__len__", accounts_len)
-    .def("__getitem__", accounts_getitem, return_internal_reference<1>())
+    .def("__getitem__", accounts_getitem, return_internal_reference<>())
 
     .def("__iter__", range<return_internal_reference<> >
 	 (&account_t::accounts_begin, &account_t::accounts_end))

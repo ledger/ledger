@@ -314,7 +314,9 @@ void export_value()
 
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
-  // jww (2009-11-02): Add implicit conversion of mask objects
+  implicitly_convertible<amount_t, value_t>();
+  implicitly_convertible<balance_t, value_t>();
+  implicitly_convertible<mask_t, value_t>();
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
 

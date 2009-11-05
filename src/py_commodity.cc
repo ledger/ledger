@@ -130,12 +130,12 @@ void export_commodity()
   class_< commodity_pool_t, boost::noncopyable > ("CommodityPool", no_init)
     .add_property("null_commodity",
 		  make_getter(&commodity_pool_t::null_commodity,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&commodity_pool_t::null_commodity,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("default_commodity",
 		  make_getter(&commodity_pool_t::default_commodity,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&commodity_pool_t::default_commodity,
 			      with_custodian_and_ward<1, 2>()))
 

@@ -131,12 +131,12 @@ void export_post()
 
     .add_property("xact",
 		  make_getter(&post_t::xact,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&post_t::xact,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("account",
 		  make_getter(&post_t::account,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&post_t::account,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("amount",

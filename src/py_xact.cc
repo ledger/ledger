@@ -85,7 +85,7 @@ void export_xact()
   class_< xact_base_t, bases<item_t> > ("TransactionBase")
     .add_property("journal",
 		  make_getter(&xact_base_t::journal,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&xact_base_t::journal,
 			      with_custodian_and_ward<1, 2>()))
 
@@ -146,7 +146,7 @@ void export_xact()
     ("AutomatedTransactionFinalizer")
     .add_property("journal",
 		  make_getter(&auto_xact_finalizer_t::journal,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&auto_xact_finalizer_t::journal,
 			      with_custodian_and_ward<1, 2>()))
     .def("__call__", &auto_xact_finalizer_t::operator())
