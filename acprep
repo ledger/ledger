@@ -182,8 +182,7 @@ class PrepareBuild(CommandLineApp):
         self.current_flavor    = 'debug'
         self.products_dir      = None
         self.build_dir         = self.source_dir
-        self.configure_args    = ['--disable-shared',
-                                  '--with-included-gettext']
+        self.configure_args    = ['--with-included-gettext']
         self.sys_include_dirs  = []
         self.sys_library_dirs  = []
 
@@ -755,6 +754,8 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
             self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
+
+            self.configure_args.append('--disable-shared')
 
             self.options.use_glibcxx_debug = True
             self.locate_my_libraries()
