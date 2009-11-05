@@ -51,7 +51,7 @@ namespace {
   {
     if (value.is_scope()) {
       if (scope_t * scope = value.as_scope())
-	return expr_t(scope->lookup(name), scope);
+	return expr_t(scope->lookup(symbol_t::FUNCTION, name), scope);
     }
     throw_(value_error, _("Cannot lookup attributes in %1") << value.label());
     return expr_t();

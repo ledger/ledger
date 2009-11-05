@@ -283,30 +283,6 @@ inline bool is_eq(const char * p, const char * n) {
   }							\
   END(name)
 
-#define OPT_PREFIX "opt_"
-#define OPT_PREFIX_LEN 4
-
-#define WANT_OPT()					\
-  (std::strncmp(p, OPT_PREFIX, OPT_PREFIX_LEN) == 0)
-
-#define PRECMD_PREFIX "precmd_"
-#define PRECMD_PREFIX_LEN 7
-
-#define WANT_PRECMD()					\
-  (std::strncmp(p, PRECMD_PREFIX, PRECMD_PREFIX_LEN) == 0)
-
-#define CMD_PREFIX "cmd_"
-#define CMD_PREFIX_LEN 4
-
-#define WANT_CMD()					\
-  (std::strncmp(p, CMD_PREFIX, CMD_PREFIX_LEN) == 0)
-
-#define DIR_PREFIX "dir_"
-#define DIR_PREFIX_LEN 4
-
-#define WANT_DIR()					\
-  (std::strncmp(p, DIR_PREFIX, DIR_PREFIX_LEN) == 0)
-
 bool process_option(const string& whence, const string& name, scope_t& scope,
 		    const char * arg, const string& varname);
 

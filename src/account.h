@@ -119,7 +119,8 @@ public:
   }
   bool remove_post(post_t * post);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   bool valid() const;
 

@@ -35,31 +35,34 @@
 
 namespace ledger {
 
-void symbol_scope_t::define(const string& name, expr_t::ptr_op_t def)
+void symbol_scope_t::define(const symbol_t::kind_t kind,
+			    const string& name, expr_t::ptr_op_t def)
 {
   DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
 
   std::pair<symbol_map::iterator, bool> result
-    = symbols.insert(symbol_map::value_type(name, def));
+    = symbols.insert(symbol_map::value_type(symbol_t(kind, name, def), def));
   if (! result.second) {
-    symbol_map::iterator i = symbols.find(name);
+    symbol_map::iterator i = symbols.find(symbol_t(kind, name));
     assert(i != symbols.end());
     symbols.erase(i);
 
-    std::pair<symbol_map::iterator, bool> result2
-      = symbols.insert(symbol_map::value_type(name, def));
-    if (! result2.second)
-      throw_(compile_error, _("Redefinition of '%1' in same scope") << name);
+    result = symbols.insert(symbol_map::value_type(symbol_t(kind, name, def),
+						   def));
+    if (! result.second)
+      throw_(compile_error,
+	     _("Redefinition of '%1' in the same scope") << name);
   }
 }
 
-expr_t::ptr_op_t symbol_scope_t::lookup(const string& name)
+expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
+					const string& name)
 {
-  symbol_map::const_iterator i = symbols.find(name);
+  symbol_map::const_iterator i = symbols.find(symbol_t(kind, name));
   if (i != symbols.end())
     return (*i).second;
 
-  return child_scope_t::lookup(name);
+  return child_scope_t::lookup(kind, name);
 }
 
 } // namespace ledger

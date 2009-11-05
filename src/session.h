@@ -116,7 +116,8 @@ public:
 
   option_t<session_t> * lookup_option(const char * p);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   /**
    * Option handlers

@@ -285,38 +285,40 @@ python_interpreter_t::lookup_option(const char * p)
   return NULL;
 }
 
-expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
+expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
+					      const string& name)
 {
   // Give our superclass first dibs on symbol definitions
-  if (expr_t::ptr_op_t op = session_t::lookup(name))
+  if (expr_t::ptr_op_t op = session_t::lookup(kind, name))
     return op;
 
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'o':
-    if (WANT_OPT()) { const char * q = p + OPT_PREFIX_LEN;
-      if (option_t<python_interpreter_t> * handler = lookup_option(q))
-	return MAKE_OPT_HANDLER(python_interpreter_t, handler);
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    if (is_initialized && main_nspace.has_key(name.c_str())) {
+      DEBUG("python.interp", "Python lookup: " << name);
+
+      if (python::object obj = main_nspace.get(name.c_str()))
+	return WRAP_FUNCTOR(functor_t(name, obj));
     }
     break;
 
-  case 'p':
-    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
-      switch (*q) {
-      case 'p':
-	if (is_eq(q, "python"))
-	  return MAKE_FUNCTOR(python_interpreter_t::python_command);
-	break;
-      }
-    }
+  case symbol_t::OPTION:
+    if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_HANDLER(python_interpreter_t, handler);
     break;
+
+  case symbol_t::PRECOMMAND: {
+    const char * p = name.c_str();
+    switch (*p) {
+    case 'p':
+      if (is_eq(p, "python"))
+	return MAKE_FUNCTOR(python_interpreter_t::python_command);
+      break;
+    }
   }
 
-  if (is_initialized && main_nspace.has_key(name.c_str())) {
-    DEBUG("python.interp", "Python lookup: " << name);
-
-    if (python::object obj = main_nspace.get(name.c_str()))
-      return WRAP_FUNCTOR(functor_t(name, obj));
+  default:
+    break;
   }
 
   return NULL;

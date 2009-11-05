@@ -304,8 +304,12 @@ value_t get_comment(item_t& item)
   }
 }
 
-expr_t::ptr_op_t item_t::lookup(const string& name)
+expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
+				const string& name)
 {
+  if (kind != symbol_t::FUNCTION)
+    return NULL;
+
   switch (name[0]) {
   case 'a':
     if (name == "actual")

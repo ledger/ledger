@@ -284,23 +284,26 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   return NULL;
 }
 
-expr_t::ptr_op_t session_t::lookup(const string& name)
+expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
+				   const string& name)
 {
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'o':
-    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      if (option_t<session_t> * handler = lookup_option(p))
-	return MAKE_OPT_HANDLER(session_t, handler);
-    }
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    // Check if they are trying to access an option's setting or value.
+    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_FUNCTOR(session_t, handler);
+    break;
+
+  case symbol_t::OPTION:
+    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_HANDLER(session_t, handler);
+    break;
+
+  default:
     break;
   }
 
-  // Check if they are trying to access an option's setting or value.
-  if (option_t<session_t> * handler = lookup_option(p))
-    return MAKE_OPT_FUNCTOR(session_t, handler);
-
-  return symbol_scope_t::lookup(name);
+  return symbol_scope_t::lookup(kind, name);
 }
 
 } // namespace ledger
