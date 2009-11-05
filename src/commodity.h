@@ -70,7 +70,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & when;
     ar & price;
   }
@@ -114,7 +114,7 @@ public:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & prices;
     }
 #endif // HAVE_BOOST_SERIALIZATION
@@ -152,7 +152,7 @@ public:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & histories;
     }
 #endif // HAVE_BOOST_SERIALIZATION
@@ -210,7 +210,7 @@ protected:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
       ar & symbol;
       ar & precision;
@@ -408,7 +408,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<delegates_flags<uint_least16_t> >(*this);
     ar & base;
     ar & parent_;

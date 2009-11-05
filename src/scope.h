@@ -75,7 +75,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive &, const unsigned int /* version */) {}
+  void serialize(Archive&, const unsigned int /* version */) {}
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
@@ -118,7 +118,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & parent;
   }
@@ -158,7 +158,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<child_scope_t>(*this);
     ar & symbols;
   }
@@ -228,7 +228,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<child_scope_t>(*this);
     ar & args;
   }
@@ -274,7 +274,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<child_scope_t>(*this);
     ar & grandchild;
   }

@@ -106,7 +106,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<supports_flags<> >(*this);
     ar & price;
     ar & date;
@@ -159,7 +159,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & keep_price;
     ar & keep_date;
     ar & keep_tag;
@@ -230,7 +230,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<commodity_t>(*this);
     ar & ptr;
     ar & details;

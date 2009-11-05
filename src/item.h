@@ -87,7 +87,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & pathname;
     ar & beg_pos;
     ar & beg_line;
@@ -200,7 +200,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<supports_flags<> >(*this);
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & _state;

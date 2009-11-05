@@ -234,7 +234,7 @@ private:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & data;
       ar & type;
       ar & refc;
@@ -917,7 +917,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & true_value;
     ar & false_value;
     ar & storage;

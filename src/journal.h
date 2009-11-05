@@ -105,7 +105,7 @@ public:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & filename;
       ar & size;
       ar & modtime;
@@ -160,7 +160,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & master;
     ar & basket;
     ar & xacts;
