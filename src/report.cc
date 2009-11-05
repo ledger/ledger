@@ -313,6 +313,31 @@ value_t report_t::fn_price(call_scope_t& scope)
   return args.value_at(0).price();
 }
 
+value_t report_t::fn_account_total(call_scope_t& args)
+{
+  account_t * acct = NULL;
+  string name;
+  if (args[0].is_string()) {
+    name = args[0].as_string();
+    acct = session.journal->find_account(name, false);
+  }
+  else if (args[0].is_mask()) {
+    name = args[0].as_mask().expr.str();
+    acct = session.journal->find_account_re(name);
+  }
+  else {
+    throw_(std::runtime_error,
+	   _("Expected string or mask for argument 1, but received %1")
+	   << args[0].label());
+  }
+
+  if (! acct)
+    throw_(std::runtime_error,
+	   _("Could not find an account matching ") << name);
+
+  return acct->amount();
+}
+
 value_t report_t::fn_lot_date(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
@@ -730,6 +755,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_ansify_if);
       else if (is_eq(p, "abs"))
 	return MAKE_FUNCTOR(report_t::fn_abs);
+      else if (is_eq(p, "account_total"))
+	return MAKE_FUNCTOR(report_t::fn_account_total);
       break;
 
     case 'b':
