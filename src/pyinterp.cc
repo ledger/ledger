@@ -44,19 +44,14 @@ char * argv0;
 void export_account();
 void export_amount();
 void export_balance();
-void export_chain();
 void export_commodity();
 void export_expr();
 void export_flags();
 void export_format();
-void export_global();
 void export_item();
 void export_journal();
 void export_post();
-void export_report();
 void export_scope();
-void export_session();
-void export_timelog();
 void export_times();
 void export_utils();
 void export_value();
@@ -67,25 +62,24 @@ void initialize_for_python()
   export_account();
   export_amount();
   export_balance();
-  export_chain();
   export_commodity();
   export_expr();
   export_flags();
   export_format();
-  export_global();
   export_item();
   export_journal();
   export_post();
-  export_report();
   export_scope();
-  export_session();
-  export_timelog();
   export_times();
   export_utils();
   export_value();
   export_xact();
 
+#if 0
+  // jww (2009-11-04): This is not valid unless I export the session object.
+  // But I think Python scripters will interace with a journal instead.
   scope().attr("current_session") = python_session;
+#endif
 }
 
 struct python_run

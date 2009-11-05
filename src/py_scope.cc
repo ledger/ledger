@@ -38,59 +38,17 @@ namespace ledger {
 using namespace boost::python;
 
 namespace {
-  void py_scope_define(scope_t& scope, const string& name, expr_t& def)
-  {
-    return scope.define(name, def.get_op());
-  }
-
-  expr_t py_scope_lookup(scope_t& scope, const string& name)
-  {
-    return scope.lookup(name);
-  }
-
-  value_t py_scope_getattr(scope_t& scope, const string& name)
-  {
-    return expr_t(scope.lookup(name)).calc(scope);
-  }
-
-  struct scope_wrapper : public scope_t
-  {
-    PyObject * self;
-
-    scope_wrapper(PyObject * self_) : self(self_) {}
-
-    virtual expr_t::ptr_op_t lookup(const string&) {
-      return NULL;
-    }    
-  };
 }
 
 void export_scope()
 {
-  class_< scope_t, scope_wrapper, boost::noncopyable > ("Scope", no_init)
-    .def("define", py_scope_define)
-    .def("lookup", py_scope_lookup)
-    .def("__getattr__", py_scope_getattr)
-    ;
-
-  class_< child_scope_t, bases<scope_t>,
-          boost::noncopyable > ("ChildScope")
-    .def(init<>())
-    .def(init<scope_t&>())
-    ;
-
-  class_< symbol_scope_t, bases<child_scope_t>,
-          boost::noncopyable > ("SymbolScope")
-    .def(init<>())
-    .def(init<scope_t&>())
-    ;
-
-  class_< call_scope_t, bases<child_scope_t>,
-          boost::noncopyable > ("CallScope", init<scope_t&>())
-    ;
-
-  class_< bind_scope_t, bases<child_scope_t>,
-          boost::noncopyable > ("BindScope", init<scope_t&, scope_t&>())
+  class_< scope_t, boost::noncopyable > ("Scope", no_init)
+#if 0
+    .def("is_posting", )
+    .def("is_transaction", )
+    .def("is_account", )
+    .def("is_journal", )
+#endif
     ;
 }
 
