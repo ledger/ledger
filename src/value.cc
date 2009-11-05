@@ -983,6 +983,8 @@ void value_t::in_place_cast(type_t cast_type)
   if (type() == cast_type)
     return;
 
+  _dup();
+
   if (cast_type == BOOLEAN) {
     set_boolean(bool(*this));
     return;

@@ -160,6 +160,8 @@ namespace {
   value_t get_amount(post_t& post) {
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
+    else if (post.amount.is_null())
+      return 0L;
     else
       return post.amount;
   }
@@ -186,6 +188,8 @@ namespace {
     else if (post.has_xdata() &&
 	     post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
+    else if (post.amount.is_null())
+      return 0L;
     else
       return post.amount;
   }
@@ -193,6 +197,8 @@ namespace {
   value_t get_total(post_t& post) {
     if (post.xdata_ && ! post.xdata_->total.is_null())
       return post.xdata_->total;
+    else if (post.amount.is_null())
+      return 0L;
     else
       return post.amount;
   }
