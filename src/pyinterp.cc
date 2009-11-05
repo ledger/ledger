@@ -44,19 +44,14 @@ char * argv0;
 void export_account();
 void export_amount();
 void export_balance();
-void export_chain();
 void export_commodity();
 void export_expr();
 void export_flags();
 void export_format();
-void export_global();
 void export_item();
 void export_journal();
 void export_post();
-void export_report();
 void export_scope();
-void export_session();
-void export_timelog();
 void export_times();
 void export_utils();
 void export_value();
@@ -67,25 +62,24 @@ void initialize_for_python()
   export_account();
   export_amount();
   export_balance();
-  export_chain();
   export_commodity();
   export_expr();
   export_flags();
   export_format();
-  export_global();
   export_item();
   export_journal();
   export_post();
-  export_report();
   export_scope();
-  export_session();
-  export_timelog();
   export_times();
   export_utils();
   export_value();
   export_xact();
 
+#if 0
+  // jww (2009-11-04): This is not valid unless I export the session object.
+  // But I think Python scripters will interace with a journal instead.
   scope().attr("current_session") = python_session;
+#endif
 }
 
 struct python_run
@@ -291,38 +285,40 @@ python_interpreter_t::lookup_option(const char * p)
   return NULL;
 }
 
-expr_t::ptr_op_t python_interpreter_t::lookup(const string& name)
+expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
+					      const string& name)
 {
   // Give our superclass first dibs on symbol definitions
-  if (expr_t::ptr_op_t op = session_t::lookup(name))
+  if (expr_t::ptr_op_t op = session_t::lookup(kind, name))
     return op;
 
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'o':
-    if (WANT_OPT()) { const char * q = p + OPT_PREFIX_LEN;
-      if (option_t<python_interpreter_t> * handler = lookup_option(q))
-	return MAKE_OPT_HANDLER(python_interpreter_t, handler);
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    if (is_initialized && main_nspace.has_key(name.c_str())) {
+      DEBUG("python.interp", "Python lookup: " << name);
+
+      if (python::object obj = main_nspace.get(name.c_str()))
+	return WRAP_FUNCTOR(functor_t(name, obj));
     }
     break;
 
-  case 'p':
-    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
-      switch (*q) {
-      case 'p':
-	if (is_eq(q, "python"))
-	  return MAKE_FUNCTOR(python_interpreter_t::python_command);
-	break;
-      }
-    }
+  case symbol_t::OPTION:
+    if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_HANDLER(python_interpreter_t, handler);
     break;
+
+  case symbol_t::PRECOMMAND: {
+    const char * p = name.c_str();
+    switch (*p) {
+    case 'p':
+      if (is_eq(p, "python"))
+	return MAKE_FUNCTOR(python_interpreter_t::python_command);
+      break;
+    }
   }
 
-  if (is_initialized && main_nspace.has_key(name.c_str())) {
-    DEBUG("python.interp", "Python lookup: " << name);
-
-    if (python::object obj = main_nspace.get(name.c_str()))
-      return WRAP_FUNCTOR(functor_t(name, obj));
+  default:
+    break;
   }
 
   return NULL;
@@ -338,7 +334,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       if (val.check())
 	return val();
 #if 1
-      // jww (2009-02-24): Distinguish between "no return" and a value with an
+      // jww (2009-02-24): Distinguish between "no return" and values with
       // unconvertable type
       return NULL_VALUE;
 #else

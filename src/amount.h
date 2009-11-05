@@ -698,7 +698,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const unsigned int /* version */);
 #endif // HAVE_BOOST_SERIALIZATION
 
   /*@}*/

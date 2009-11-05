@@ -72,35 +72,6 @@ session_t::session_t()
     HANDLER(price_db_).on(none, path("./.pricedb").string());
 }
 
-std::size_t session_t::read_journal(std::istream& in,
-				    const path&	  pathname,
-				    account_t *   master,
-				    scope_t *     scope)
-{
-  if (! master)
-    master = journal->master;
-
-  std::size_t count = journal->parse(in, scope ? *scope : *this,
-				     master, &pathname, HANDLED(strict));
-
-  // remove calculated totals and flags
-  clean_posts();
-  clean_accounts();
-
-  return count;
-}
-
-std::size_t session_t::read_journal(const path& pathname,
-				    account_t * master,
-				    scope_t *   scope)
-{
-  if (! exists(pathname))
-    throw_(std::logic_error, _("Cannot read file '%1'") << pathname);
-
-  ifstream stream(pathname);
-  return read_journal(stream, pathname, master, scope);
-}
-
 std::size_t session_t::read_data(const string& master_account)
 {
   bool populated_data_files = false;
@@ -130,8 +101,6 @@ std::size_t session_t::read_data(const string& master_account)
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
   optional<archive_t> cache;
-#if 1
-  // jww (2009-11-01): The binary caching feature is disabled for now.
   if (HANDLED(cache_) && master_account.empty()) {
     cache = archive_t(HANDLED(cache_).str());
 
@@ -140,23 +109,20 @@ std::size_t session_t::read_data(const string& master_account)
       populated_price_db = true;
     }
   }
-#endif
 
   if (! (cache &&
 	 cache->should_load(HANDLER(file_).data_files) &&
 	 cache->load(journal))) {
     if (price_db_path) {
       if (exists(*price_db_path)) {
-	if (read_journal(*price_db_path) > 0)
+	if (journal->read(*price_db_path) > 0)
 	  throw_(parse_error, _("Transactions not allowed in price history file"));
-	journal->sources.push_back(journal_t::fileinfo_t(*price_db_path));
       }
       HANDLER(file_).data_files.remove(*price_db_path);
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
-      path filename = resolve_path(pathname);
-      if (filename == "-") {
+      if (pathname == "-") {
 	// To avoid problems with stdin and pipes, etc., we read the entire
 	// file in beforehand into a memory buffer, and then parcel it out
 	// from there.
@@ -172,15 +138,10 @@ std::size_t session_t::read_data(const string& master_account)
 
 	std::istringstream buf_in(buffer.str());
 
-	xact_count += read_journal(buf_in, "/dev/stdin", acct);
+	xact_count += journal->read(buf_in, "/dev/stdin", acct);
 	journal->sources.push_back(journal_t::fileinfo_t());
-      }
-      else if (exists(filename)) {
-	xact_count += read_journal(filename, acct);
-	journal->sources.push_back(journal_t::fileinfo_t(filename));
-      }
-      else {
-	throw_(parse_error, _("Could not read journal file '%1'") << filename);
+      } else {
+	xact_count += journal->read(pathname, acct);
       }
     }
 
@@ -227,25 +188,6 @@ void session_t::close_journal_files()
   amount_t::initialize(journal->commodity_pool);
 }
 
-void session_t::clean_posts()
-{
-  journal_posts_iterator walker(*journal.get());
-  pass_down_posts(post_handler_ptr(new clear_post_xdata), walker);
-}
-
-void session_t::clean_posts(xact_t& xact)
-{
-  xact_posts_iterator walker(xact);
-  pass_down_posts(post_handler_ptr(new clear_post_xdata), walker);
-}
-
-void session_t::clean_accounts()
-{
-  basic_accounts_iterator acct_walker(*journal->master);
-  pass_down_accounts(acct_handler_ptr(new clear_account_xdata), acct_walker);
-  journal->master->clear_xdata();
-}
-
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -287,23 +229,26 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   return NULL;
 }
 
-expr_t::ptr_op_t session_t::lookup(const string& name)
+expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
+				   const string& name)
 {
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'o':
-    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      if (option_t<session_t> * handler = lookup_option(p))
-	return MAKE_OPT_HANDLER(session_t, handler);
-    }
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    // Check if they are trying to access an option's setting or value.
+    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_FUNCTOR(session_t, handler);
+    break;
+
+  case symbol_t::OPTION:
+    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_HANDLER(session_t, handler);
+    break;
+
+  default:
     break;
   }
 
-  // Check if they are trying to access an option's setting or value.
-  if (option_t<session_t> * handler = lookup_option(p))
-    return MAKE_OPT_FUNCTOR(session_t, handler);
-
-  return symbol_scope_t::lookup(name);
+  return symbol_scope_t::lookup(kind, name);
 }
 
 } // namespace ledger

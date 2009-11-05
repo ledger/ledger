@@ -171,6 +171,8 @@ namespace {
 void export_journal()
 {
   class_< journal_t::fileinfo_t > ("FileInfo")
+    .def(init<path>())
+
     .add_property("filename",
 		  make_getter(&journal_t::fileinfo_t::filename),
 		  make_setter(&journal_t::fileinfo_t::filename))
@@ -186,17 +188,19 @@ void export_journal()
     ;
 
   class_< journal_t, boost::noncopyable > ("Journal")
+    .def(init<path>())
+    .def(init<string>())
+
     .add_property("master", make_getter(&journal_t::master,
-					return_internal_reference<1>()))
+					return_internal_reference<>()))
     .add_property("basket",
 		  make_getter(&journal_t::basket,
-			      return_internal_reference<1>()),
+			      return_internal_reference<>()),
 		  make_setter(&journal_t::basket))
-    .add_property("sources", make_getter(&journal_t::sources))
     .add_property("was_loaded", make_getter(&journal_t::was_loaded))
     .add_property("commodity_pool",
 		  make_getter(&journal_t::commodity_pool,
-			      return_internal_reference<1>()))
+			      return_internal_reference<>()))
 #if 0
     .add_property("xact_finalize_hooks",
 		  make_getter(&journal_t::xact_finalize_hooks),
@@ -206,10 +210,10 @@ void export_journal()
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
 
-    .def("find_account", py_find_account_1, return_internal_reference<1>())
-    .def("find_account", py_find_account_2, return_internal_reference<1>())
+    .def("find_account", py_find_account_1, return_internal_reference<>())
+    .def("find_account", py_find_account_2, return_internal_reference<>())
     .def("find_account_re", &journal_t::find_account_re,
-	 return_internal_reference<1>())
+	 return_internal_reference<>())
 
     .def("add_xact", &journal_t::add_xact)
     .def("remove_xact", &journal_t::remove_xact)
@@ -220,6 +224,19 @@ void export_journal()
 
     .def("__len__", xacts_len)
     .def("__getitem__", xacts_getitem, return_internal_reference<1>())
+
+    .def("__iter__", range<return_internal_reference<> >
+	 (&journal_t::xacts_begin, &journal_t::xacts_end))
+    .def("xacts", range<return_internal_reference<> >
+	 (&journal_t::xacts_begin, &journal_t::xacts_end))
+    .def("auto_xacts", range<return_internal_reference<> >
+	 (&journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
+    .def("period_xacts", range<return_internal_reference<> >
+	 (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
+    .def("sources", range<return_internal_reference<> >
+	 (&journal_t::sources_begin, &journal_t::sources_end))
+
+    .def("clear_xdata", &journal_t::clear_xdata)
 
     .def("valid", &journal_t::valid)
     ;

@@ -87,9 +87,10 @@ void export_post()
 
   class_< post_t::xdata_t > ("PostingXData")
 #if 1
-    .def("flags", &supports_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least16_t>::flags,
+		  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &supports_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
@@ -131,12 +132,12 @@ void export_post()
 
     .add_property("xact",
 		  make_getter(&post_t::xact,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&post_t::xact,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("account",
 		  make_getter(&post_t::account,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&post_t::account,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("amount",

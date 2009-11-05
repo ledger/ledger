@@ -105,7 +105,7 @@ public:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & filename;
       ar & size;
       ar & modtime;
@@ -126,7 +126,18 @@ public:
   hooks_t<xact_finalizer_t, xact_t> xact_finalize_hooks;
 
   journal_t();
+  journal_t(const path& pathname);
+  journal_t(const string& str);
   ~journal_t();
+
+  void initialize();
+
+  std::list<fileinfo_t>::iterator sources_begin() {
+    return sources.begin();
+  }
+  std::list<fileinfo_t>::iterator sources_end() {
+    return sources.end();
+  }
 
   // These four methods are delegated to the current session, since all
   // accounts processed are gathered together at the session level.
@@ -138,6 +149,25 @@ public:
   bool add_xact(xact_t * xact);
   bool remove_xact(xact_t * xact);
 
+  xacts_list::iterator xacts_begin() {
+    return xacts.begin();
+  }
+  xacts_list::iterator xacts_end() {
+    return xacts.end();
+  }
+  auto_xacts_list::iterator auto_xacts_begin() {
+    return auto_xacts.begin();
+  }
+  auto_xacts_list::iterator auto_xacts_end() {
+    return auto_xacts.end();
+  }
+  period_xacts_list::iterator period_xacts_begin() {
+    return period_xacts.begin();
+  }
+  period_xacts_list::iterator period_xacts_end() {
+    return period_xacts.end();
+  }
+
   void add_xact_finalizer(xact_finalizer_t * finalizer) {
     xact_finalize_hooks.add_hook(finalizer);
   }
@@ -145,11 +175,21 @@ public:
     xact_finalize_hooks.remove_hook(finalizer);
   }
 
+  std::size_t read(std::istream& in,
+		   const path&	 pathname,
+		   account_t *   master = NULL,
+		   scope_t *     scope  = NULL);
+  std::size_t read(const path&	 pathname,
+		   account_t *   master = NULL,
+		   scope_t *     scope  = NULL);
+
   std::size_t parse(std::istream& in,
 		    scope_t&      session_scope,
 		    account_t *   master	= NULL,
 		    const path *  original_file = NULL,
 		    bool          strict	= false);
+
+  void clear_xdata();
 
   bool valid() const;
 
@@ -160,7 +200,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & master;
     ar & basket;
     ar & xacts;

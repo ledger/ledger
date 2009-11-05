@@ -214,6 +214,12 @@ void export_balance()
     .def("valid",  &balance_t::valid)
     ;
 
+  register_optional_to_python<balance_t>();
+
+  implicitly_convertible<long, balance_t>();
+  implicitly_convertible<string, balance_t>();
+  implicitly_convertible<amount_t, balance_t>();
+
 #define EXC_TRANSLATE(type) \
   register_exception_translator<type>(&exc_translate_ ## type);
 

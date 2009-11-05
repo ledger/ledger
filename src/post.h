@@ -119,7 +119,8 @@ public:
     return ! has_flags(POST_VIRTUAL) || has_flags(POST_MUST_BALANCE);
   }
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   bool valid() const;
 
@@ -215,7 +216,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<item_t>(*this);
     ar & xact;
     ar & account;

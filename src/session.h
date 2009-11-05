@@ -80,26 +80,10 @@ public:
     flush_on_next_data_file = truth;
   }
 
-  std::size_t read_journal(std::istream& in,
-			   const path&	 pathname,
-			   account_t *   master = NULL,
-			   scope_t *     scope  = NULL);
-  std::size_t read_journal(const path&	 pathname,
-			   account_t *   master = NULL,
-			   scope_t *     scope  = NULL);
-
   std::size_t read_data(const string& master_account = "");
 
   void read_journal_files();
   void close_journal_files();
-
-  void clean_posts();
-  void clean_posts(xact_t& xact);
-  void clean_accounts();
-  void clean_all() {
-    clean_posts();
-    clean_accounts();
-  }
 
   void report_options(std::ostream& out)
   {
@@ -116,7 +100,8 @@ public:
 
   option_t<session_t> * lookup_option(const char * p);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   /**
    * Option handlers

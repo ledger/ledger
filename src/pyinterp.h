@@ -103,7 +103,8 @@ public:
 
   option_t<python_interpreter_t> * lookup_option(const char * p);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
 #if BOOST_VERSION >= 103700
   OPTION_(python_interpreter_t, import_, DO_(scope) {

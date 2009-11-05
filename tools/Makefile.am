@@ -208,19 +208,14 @@ libledger_python_la_SOURCES =			\
 	src/py_account.cc			\
 	src/py_amount.cc			\
 	src/py_balance.cc			\
-	src/py_chain.cc				\
 	src/py_commodity.cc			\
 	src/py_expr.cc				\
 	src/py_flags.cc				\
 	src/py_format.cc			\
-	src/py_global.cc			\
 	src/py_item.cc				\
 	src/py_journal.cc			\
 	src/py_post.cc				\
-	src/py_report.cc			\
 	src/py_scope.cc				\
-	src/py_session.cc			\
-	src/py_timelog.cc			\
 	src/py_times.cc				\
 	src/py_utils.cc				\
 	src/py_value.cc				\

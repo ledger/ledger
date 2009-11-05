@@ -155,6 +155,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/write.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
@@ -242,12 +243,6 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 #include <boost/python/detail/wrap_python.hpp>
 #include <datetime.h>
 
-#include <boost/python/exception_translator.hpp>
-#include <boost/python/implicit.hpp>
-#include <boost/python/args.hpp>
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
-#include <boost/python/to_python_converter.hpp>
 #include <boost/python/module_init.hpp>
 
 #endif // HAVE_BOOST_PYTHON

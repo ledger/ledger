@@ -76,6 +76,13 @@ bool xact_base_t::remove_post(post_t * post)
   return true;
 }
 
+void xact_base_t::clear_xdata()
+{
+  foreach (post_t * post, posts)
+    if (! post->has_flags(ITEM_TEMP))
+      post->clear_xdata();
+}
+
 bool xact_base_t::finalize()
 {
   // Scan through and compute the total balance for the xact.  This is used
@@ -422,8 +429,12 @@ namespace {
   }
 }
 
-expr_t::ptr_op_t xact_t::lookup(const string& name)
+expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
+				const string& name)
 {
+  if (kind != symbol_t::FUNCTION)
+    return item_t::lookup(kind, name);
+
   switch (name[0]) {
   case 'c':
     if (name == "code")
@@ -448,7 +459,7 @@ expr_t::ptr_op_t xact_t::lookup(const string& name)
     break;
   }
 
-  return item_t::lookup(name);
+  return item_t::lookup(kind, name);
 }
 
 bool xact_t::valid() const

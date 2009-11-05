@@ -311,9 +311,11 @@ public:
 
   option_t<report_t> * lookup_option(const char * p);
 
-  virtual void define(const string& name, expr_t::ptr_op_t def);
+  virtual void define(const symbol_t::kind_t kind, const string& name,
+		      expr_t::ptr_op_t def);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   /**
    * Option handlers

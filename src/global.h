@@ -75,10 +75,14 @@ public:
 
   void push_report() {
     report_stack.push_front(new report_t(report_stack.front()));
+    scope_t::default_scope = &report();
   }
   void pop_report() {
-    if (! report_stack.empty())
-      report_stack.pop_front();
+    assert(! report_stack.empty());
+    report_stack.pop_front();
+    // There should always be the "default report" waiting on the stack.
+    assert(! report_stack.empty());
+    scope_t::default_scope = &report();
   }
 
   void report_error(const std::exception& err);
@@ -117,7 +121,8 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   option_t<global_scope_t> * lookup_option(const char * p);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);

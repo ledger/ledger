@@ -271,8 +271,12 @@ namespace {
   }
 }
 
-expr_t::ptr_op_t post_t::lookup(const string& name)
+expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
+				const string& name)
 {
+  if (kind != symbol_t::FUNCTION)
+    return item_t::lookup(kind, name);
+
   switch (name[0]) {
   case 'a':
     if (name[1] == '\0' || name == "amount")
@@ -366,7 +370,7 @@ expr_t::ptr_op_t post_t::lookup(const string& name)
     break;
   }
 
-  return item_t::lookup(name);
+  return item_t::lookup(kind, name);
 }
 
 bool post_t::valid() const
