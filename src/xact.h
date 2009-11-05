@@ -77,6 +77,13 @@ public:
   virtual void add_post(post_t * post);
   virtual bool remove_post(post_t * post);
 
+  posts_list::iterator posts_begin() {
+    return posts.begin();
+  }
+  posts_list::iterator posts_end() {
+    return posts.end();
+  }
+
   virtual bool finalize();
   virtual bool valid() const {
     return true;

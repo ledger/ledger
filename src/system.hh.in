@@ -155,6 +155,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/write.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>

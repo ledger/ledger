@@ -88,9 +88,6 @@ void export_xact()
 			      return_value_policy<reference_existing_object>()),
 		  make_setter(&xact_base_t::journal,
 			      with_custodian_and_ward<1, 2>()))
-    .add_property("posts",
-		  make_getter(&xact_base_t::posts),
-		  make_setter(&xact_base_t::posts))
 
     .def("__len__", posts_len)
     .def("__getitem__", posts_getitem,
@@ -100,6 +97,12 @@ void export_xact()
     .def("remove_post", &xact_base_t::add_post)
 
     .def("finalize", &xact_base_t::finalize)
+
+    .def("__iter__", range<return_internal_reference<> >
+	 (&xact_t::posts_begin, &xact_t::posts_end))
+    .def("posts", range<return_internal_reference<> >
+	 (&xact_t::posts_begin, &xact_t::posts_end))
+
     .def("valid", &xact_base_t::valid)
     ;
 

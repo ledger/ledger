@@ -177,8 +177,6 @@ void export_account()
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
-    .def_readonly("accounts", &account_t::accounts)
-    .def_readonly("posts", &account_t::posts)
 
     .def(self_ns::str(self))
 
@@ -200,6 +198,13 @@ void export_account()
 
     .def("__len__", accounts_len)
     .def("__getitem__", accounts_getitem, return_internal_reference<1>())
+
+    .def("__iter__", range<return_internal_reference<> >
+	 (&account_t::accounts_begin, &account_t::accounts_end))
+    .def("accounts", range<return_internal_reference<> >
+	 (&account_t::accounts_begin, &account_t::accounts_end))
+    .def("posts", range<return_internal_reference<> >
+	 (&account_t::posts_begin, &account_t::posts_end))
 
     .def("has_xdata", &account_t::has_xdata)
     .def("clear_xdata", &account_t::clear_xdata)

@@ -128,6 +128,13 @@ public:
   journal_t();
   ~journal_t();
 
+  std::list<fileinfo_t>::iterator sources_begin() {
+    return sources.begin();
+  }
+  std::list<fileinfo_t>::iterator sources_end() {
+    return sources.end();
+  }
+
   // These four methods are delegated to the current session, since all
   // accounts processed are gathered together at the session level.
   void	      add_account(account_t * acct);
@@ -137,6 +144,25 @@ public:
 
   bool add_xact(xact_t * xact);
   bool remove_xact(xact_t * xact);
+
+  xacts_list::iterator xacts_begin() {
+    return xacts.begin();
+  }
+  xacts_list::iterator xacts_end() {
+    return xacts.end();
+  }
+  auto_xacts_list::iterator auto_xacts_begin() {
+    return auto_xacts.begin();
+  }
+  auto_xacts_list::iterator auto_xacts_end() {
+    return auto_xacts.end();
+  }
+  period_xacts_list::iterator period_xacts_begin() {
+    return period_xacts.begin();
+  }
+  period_xacts_list::iterator period_xacts_end() {
+    return period_xacts.end();
+  }
 
   void add_xact_finalizer(xact_finalizer_t * finalizer) {
     xact_finalize_hooks.add_hook(finalizer);

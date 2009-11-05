@@ -192,7 +192,6 @@ void export_journal()
 		  make_getter(&journal_t::basket,
 			      return_internal_reference<1>()),
 		  make_setter(&journal_t::basket))
-    .add_property("sources", make_getter(&journal_t::sources))
     .add_property("was_loaded", make_getter(&journal_t::was_loaded))
     .add_property("commodity_pool",
 		  make_getter(&journal_t::commodity_pool,
@@ -220,6 +219,17 @@ void export_journal()
 
     .def("__len__", xacts_len)
     .def("__getitem__", xacts_getitem, return_internal_reference<1>())
+
+    .def("__iter__", range<return_internal_reference<> >
+	 (&journal_t::xacts_begin, &journal_t::xacts_end))
+    .def("xacts", range<return_internal_reference<> >
+	 (&journal_t::xacts_begin, &journal_t::xacts_end))
+    .def("auto_xacts", range<return_internal_reference<> >
+	 (&journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
+    .def("period_xacts", range<return_internal_reference<> >
+	 (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
+    .def("sources", range<return_internal_reference<> >
+	 (&journal_t::sources_begin, &journal_t::sources_end))
 
     .def("valid", &journal_t::valid)
     ;
