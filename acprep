@@ -19,6 +19,7 @@ import string
 import sys
 import time
 import tempfile
+import datetime
 
 try:
     import hashlib
@@ -385,8 +386,14 @@ class PrepareBuild(CommandLineApp):
     def current_version(self):
         if not self.current_ver:
             if exists('.git') and isdir('.git'):
-                tag = self.get_stdout('git', 'describe', '--all', '--long')
-                self.current_ver = re.sub('heads/', '', tag)
+                date = self.get_stdout('git', 'log', '--format=%ci', 'HEAD^..HEAD')
+                date = re.sub(" [-+][0-9][0-9][0-9][0-9]$", "", date)
+                when = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+                self.current_ver = when.strftime("%Y%m%d_%H%M%S")
+                commit = self.get_stdout('git', 'log', '--format=%h', 'HEAD^..HEAD')
+                self.current_ver += "_" + commit
+                #tag = self.get_stdout('git', 'describe', '--all', '--long')
+                #self.current_ver = re.sub('heads/', '', tag)
             else:
                 self.current_ver = "3.0a"
         return self.current_ver
@@ -472,7 +479,7 @@ class PrepareBuild(CommandLineApp):
     def phase_version(self, *args):
         self.log.info('Executing phase: version')
         version_m4 = open('version.m4', 'w')
-        version_m4.write("m4_define([VERSION_NUMBER], [%s])" %
+        version_m4.write("m4_define([VERSION_NUMBER], [%s])\n" %
                          self.current_version())
         version_m4.close()
 
