@@ -196,6 +196,9 @@ public:
     return args[index];
   }
 
+  void push_front(const value_t& val) {
+    args.push_front(val);
+  }
   void push_back(const value_t& val) {
     args.push_back(val);
   }

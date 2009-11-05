@@ -190,6 +190,7 @@ public:
 
   virtual value_t operator()(call_scope_t& args) {
     if (! args.empty()) {
+      args.push_front(string_value("?expr"));
       return handler_wrapper(args);
     }
     else if (wants_arg) {
