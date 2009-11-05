@@ -169,13 +169,13 @@ void export_post()
     .def("has_xdata", &post_t::has_xdata)
     .def("clear_xdata", &post_t::clear_xdata)
     .def("xdata", py_xdata,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("add_to_value", &post_t::add_to_value)
     .def("set_reported_account", &post_t::set_reported_account)
 
     .def("reported_account", py_reported_account,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     ;
 }
 

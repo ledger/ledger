@@ -159,7 +159,7 @@ void export_balance()
 
     .def("negated", &balance_t::negated)
     .def("in_place_negate", &balance_t::in_place_negate,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def(- self)
 
     .def("abs", &balance_t::abs)
@@ -170,23 +170,23 @@ void export_balance()
 
     .def("rounded", &balance_t::rounded)
     .def("in_place_round", &balance_t::in_place_round,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("truncated", &balance_t::truncated)
     .def("in_place_truncate", &balance_t::in_place_truncate,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("unrounded", &balance_t::unrounded)
     .def("in_place_unround", &balance_t::in_place_unround,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("reduced", &balance_t::reduced)
     .def("in_place_reduce", &balance_t::in_place_reduce,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("unreduced", &balance_t::unreduced)
     .def("in_place_unreduce", &balance_t::in_place_unreduce,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("value", py_value_0)
     .def("value", py_value_1, args("primary_only"))
