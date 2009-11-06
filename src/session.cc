@@ -156,8 +156,8 @@ void session_t::read_journal_files()
   INFO_START(journal, "Read journal file");
 
   string master_account;
-  if (HANDLED(account_))
-    master_account = HANDLER(account_).str();
+  if (HANDLED(master_account_))
+    master_account = HANDLER(master_account_).str();
 
   std::size_t count = read_data(master_account);
   if (count == 0)
@@ -187,9 +187,6 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'Z':
     OPT_CH(price_exp_);
     break;
-  case 'a':
-    OPT_(account_); // -a
-    break;
   case 'c':
     OPT(cache_);
     break;
@@ -207,6 +204,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_ALT(price_exp_, leeway_);
+    break;
+  case 'm':
+    OPT(master_account_);
     break;
   case 'p':
     OPT(price_db_);

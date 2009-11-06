@@ -566,7 +566,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'a':
     OPT(abbrev_len_);
-    else OPT(account_);
+    else OPT_(account_);
     else OPT(actual);
     else OPT(actual_dates);
     else OPT(add_budget);
@@ -589,10 +589,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'c':
     OPT(csv_format_);
     else OPT(cleared);
-    else OPT(code_as_payee);
-    else OPT_ALT(comm_as_payee, commodity_as_payee);
-    else OPT(code_as_account);
-    else OPT_ALT(comm_as_account, commodity_as_account);
     else OPT(collapse);
     else OPT(collapse_if_zero);
     else OPT(color);
@@ -666,7 +662,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'p':
     OPT(pager_);
-    else OPT(payee_as_account);
+    else OPT(payee_);
     else OPT(pending);
     else OPT(percent);
     else OPT_(period_);
@@ -694,11 +690,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(revalued_total_);
     break;
   case 's':
-    OPT(set_account_);
-    else OPT(set_payee_);
-    else OPT(set_reported_account_);
-    else OPT(set_reported_payee_);
-    else OPT(sort_);
+    OPT(sort_);
     else OPT(sort_all_);
     else OPT(sort_xacts_);
     else OPT_(subtotal);
