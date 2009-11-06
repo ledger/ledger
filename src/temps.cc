@@ -45,7 +45,7 @@ temporaries_t::~temporaries_t()
       if (! post.xact->has_flags(ITEM_TEMP))
 	post.xact->remove_post(&post);
 
-      if (! post.account->has_flags(ACCOUNT_TEMP))
+      if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
 	post.account->remove_post(&post);
     }
   }
