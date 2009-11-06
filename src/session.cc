@@ -99,6 +99,7 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLED(price_db_))
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
+#if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;
   if (HANDLED(cache_) && master_account.empty())
     cache = archive_t(HANDLED(cache_).str());
@@ -106,6 +107,7 @@ std::size_t session_t::read_data(const string& master_account)
   if (! (cache &&
 	 cache->should_load(HANDLER(file_).data_files) &&
 	 cache->load(journal))) {
+#endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
 	if (journal->read(*price_db_path) > 0)
@@ -139,9 +141,11 @@ std::size_t session_t::read_data(const string& master_account)
 
     assert(xact_count == journal->xacts.size());
 
+#if defined(HAVE_BOOST_SERIALIZATION)
     if (cache && cache->should_save(journal))
       cache->save(journal);
   }
+#endif // HAVE_BOOST_SERIALIZATION
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
