@@ -75,7 +75,6 @@ session_t::session_t()
 std::size_t session_t::read_data(const string& master_account)
 {
   bool populated_data_files = false;
-  bool populated_price_db   = false;
 
   if (HANDLER(file_).data_files.empty()) {
     path file;
@@ -101,14 +100,8 @@ std::size_t session_t::read_data(const string& master_account)
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
   optional<archive_t> cache;
-  if (HANDLED(cache_) && master_account.empty()) {
+  if (HANDLED(cache_) && master_account.empty())
     cache = archive_t(HANDLED(cache_).str());
-
-    if (price_db_path) {
-      HANDLER(file_).data_files.push_back(*price_db_path);
-      populated_price_db = true;
-    }
-  }
 
   if (! (cache &&
 	 cache->should_load(HANDLER(file_).data_files) &&
@@ -118,7 +111,6 @@ std::size_t session_t::read_data(const string& master_account)
 	if (journal->read(*price_db_path) > 0)
 	  throw_(parse_error, _("Transactions not allowed in price history file"));
       }
-      HANDLER(file_).data_files.remove(*price_db_path);
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
@@ -153,8 +145,6 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
-  else if (populated_price_db)
-    HANDLER(file_).data_files.remove(*price_db_path);
 
   VERIFY(journal->valid());
 

@@ -201,7 +201,8 @@ std::size_t journal_t::read(const path& pathname,
 
   ifstream stream(filename);
   std::size_t count = read(stream, filename, master, scope);
-  sources.push_back(fileinfo_t(filename));
+  if (count > 0)
+    sources.push_back(fileinfo_t(filename));
   return count;
 }
 
