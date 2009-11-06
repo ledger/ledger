@@ -1,4 +1,4 @@
-reg --code-as-account
+reg --account=code
 <<<
 2008/01/01 * (100) January
     Expenses:Books          $10.00

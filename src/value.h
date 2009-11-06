@@ -761,6 +761,8 @@ public:
   }
   void    in_place_simplify();
 
+  value_t number() const;
+
   /**
    * Annotated commodity methods.
    */

@@ -285,6 +285,8 @@ void export_value()
     .def("simplified", &value_t::simplified)
     .def("in_place_simplify", &value_t::in_place_simplify)
 
+    .def("number", &value_t::number)
+
     .def("annotate", &value_t::annotate)
     .def("is_annotated", &value_t::is_annotated)
 #if 0

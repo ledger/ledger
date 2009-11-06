@@ -32,6 +32,9 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "account.h"
+#include "xact.h"
+#include "post.h"
 
 namespace ledger {
 
@@ -46,12 +49,10 @@ void export_amount();
 void export_balance();
 void export_commodity();
 void export_expr();
-void export_flags();
 void export_format();
 void export_item();
 void export_journal();
 void export_post();
-void export_scope();
 void export_times();
 void export_utils();
 void export_value();
@@ -64,22 +65,14 @@ void initialize_for_python()
   export_balance();
   export_commodity();
   export_expr();
-  export_flags();
   export_format();
   export_item();
   export_journal();
   export_post();
-  export_scope();
   export_times();
   export_utils();
   export_value();
   export_xact();
-
-#if 0
-  // jww (2009-11-04): This is not valid unless I export the session object.
-  // But I think Python scripters will interace with a journal instead.
-  scope().attr("current_session") = python_session;
-#endif
 }
 
 struct python_run
@@ -323,11 +316,39 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 
   return NULL;
 }
+
+namespace {
+  void append_value(list& lst, const value_t& value)
+  {
+    if (value.is_scope()) {
+      const scope_t * scope = value.as_scope();
+      if (const post_t * post = dynamic_cast<const post_t *>(scope))
+	lst.append(ptr(post));
+      else if (const xact_t * xact = dynamic_cast<const xact_t *>(scope))
+	lst.append(ptr(xact));
+      else if (const account_t * account =
+	       dynamic_cast<const account_t *>(scope))
+	lst.append(ptr(account));
+      else if (const period_xact_t * period_xact =
+	       dynamic_cast<const period_xact_t *>(scope))
+	lst.append(ptr(period_xact));
+      else if (const auto_xact_t * auto_xact =
+	       dynamic_cast<const auto_xact_t *>(scope))
+	lst.append(ptr(auto_xact));
+      else
+	throw_(std::runtime_error,
+	       _("Cannot downcast scoped object to specific type"));
+    } else {
+      lst.append(value);
+    }
+  }
+}
   
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 {
   try {
     std::signal(SIGINT, SIG_DFL);
+
     if (! PyCallable_Check(func.ptr())) {
       extract<value_t> val(func);
       std::signal(SIGINT, sigint_handler);
@@ -341,40 +362,42 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       throw_(calc_error,
 	     _("Could not evaluate Python variable '%1'") << name);
 #endif
-    } else {
-      if (args.size() > 0) {
-	list arglist;
-	if (args.value().is_sequence())
-	  foreach (const value_t& value, args.value().as_sequence())
-	    arglist.append(value);
-	else
-	  arglist.append(args.value());
+    }
+    else if (args.size() > 0) {
+      list arglist;
+      // jww (2009-11-05): What about a single argument which is a sequence,
+      // rather than a sequence of arguments?
+      if (args.value().is_sequence())
+	foreach (const value_t& value, args.value().as_sequence())
+	  append_value(arglist, value);
+      else
+	append_value(arglist, args.value());
 
-	if (PyObject * val =
-	    PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {
-	  extract<value_t> xval(val);
-	  value_t result;
-	  if (xval.check()) {
-	    result = xval();
-	    Py_DECREF(val);
-	  } else {
-	    Py_DECREF(val);
-	    throw_(calc_error,
-		   _("Could not evaluate Python variable '%1'") << name);
-	  }
-	  std::signal(SIGINT, sigint_handler);
-	  return result;
-	}
-	else if (PyErr_Occurred()) {
-	  PyErr_Print();
-	  throw_(calc_error, _("Failed call to Python function '%1'") << name);
+      if (PyObject * val =
+	  PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {
+	extract<value_t> xval(val);
+	value_t result;
+	if (xval.check()) {
+	  result = xval();
+	  Py_DECREF(val);
 	} else {
-	  assert(false);
+	  Py_DECREF(val);
+	  throw_(calc_error,
+		 _("Could not evaluate Python variable '%1'") << name);
 	}
-      } else {
 	std::signal(SIGINT, sigint_handler);
-	return call<value_t>(func.ptr());
+	return result;
       }
+      else if (PyErr_Occurred()) {
+	PyErr_Print();
+	throw_(calc_error, _("Failed call to Python function '%1'") << name);
+      } else {
+	assert(false);
+      }
+    }
+    else {
+      std::signal(SIGINT, sigint_handler);
+      return call<value_t>(func.ptr());
     }
   }
   catch (const error_already_set&) {

@@ -83,6 +83,20 @@ void xact_base_t::clear_xdata()
       post->clear_xdata();
 }
 
+value_t xact_base_t::magnitude() const
+{
+  value_t halfbal = 0L;
+  foreach (const post_t * post, posts) {
+    if (post->amount.sign() > 0) {
+      if (post->cost)
+	halfbal += *post->cost;
+      else
+	halfbal += post->amount;
+    }
+  }
+  return halfbal;
+}
+
 bool xact_base_t::finalize()
 {
   // Scan through and compute the total balance for the xact.  This is used
@@ -321,6 +335,8 @@ bool xact_base_t::finalize()
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
+    add_error_context(_("Amount to balance against:"));
+    add_error_context(value_context(magnitude()));
     throw_(balance_error, _("Transaction does not balance"));
   }
 
@@ -368,26 +384,12 @@ void xact_t::add_post(post_t * post)
   xact_base_t::add_post(post);
 }
 
-value_t xact_t::magnitude() const
-{
-  value_t halfbal = 0L;
-  foreach (const post_t * post, posts) {
-    if (post->amount.sign() > 0) {
-      if (post->cost)
-	halfbal += post->cost->number();
-      else
-	halfbal += post->amount.number();
-    }
-  }
-  return halfbal;
-}
-
 string xact_t::idstring() const
 {
   std::ostringstream buf;
   buf << format_date(*_date, FMT_WRITTEN);
   buf << payee;
-  magnitude().print(buf);
+  magnitude().number().print(buf);
   return buf.str();
 }
 

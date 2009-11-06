@@ -91,7 +91,7 @@ void export_xact()
 
     .def("__len__", posts_len)
     .def("__getitem__", posts_getitem,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("add_post", &xact_base_t::add_post, with_custodian_and_ward<1, 2>())
     .def("remove_post", &xact_base_t::add_post)

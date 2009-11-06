@@ -75,7 +75,6 @@ session_t::session_t()
 std::size_t session_t::read_data(const string& master_account)
 {
   bool populated_data_files = false;
-  bool populated_price_db   = false;
 
   if (HANDLER(file_).data_files.empty()) {
     path file;
@@ -101,14 +100,8 @@ std::size_t session_t::read_data(const string& master_account)
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
   optional<archive_t> cache;
-  if (HANDLED(cache_) && master_account.empty()) {
+  if (HANDLED(cache_) && master_account.empty())
     cache = archive_t(HANDLED(cache_).str());
-
-    if (price_db_path) {
-      HANDLER(file_).data_files.push_back(*price_db_path);
-      populated_price_db = true;
-    }
-  }
 
   if (! (cache &&
 	 cache->should_load(HANDLER(file_).data_files) &&
@@ -118,7 +111,6 @@ std::size_t session_t::read_data(const string& master_account)
 	if (journal->read(*price_db_path) > 0)
 	  throw_(parse_error, _("Transactions not allowed in price history file"));
       }
-      HANDLER(file_).data_files.remove(*price_db_path);
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
@@ -153,8 +145,6 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
-  else if (populated_price_db)
-    HANDLER(file_).data_files.remove(*price_db_path);
 
   VERIFY(journal->valid());
 
@@ -166,8 +156,8 @@ void session_t::read_journal_files()
   INFO_START(journal, "Read journal file");
 
   string master_account;
-  if (HANDLED(account_))
-    master_account = HANDLER(account_).str();
+  if (HANDLED(master_account_))
+    master_account = HANDLER(master_account_).str();
 
   std::size_t count = read_data(master_account);
   if (count == 0)
@@ -197,9 +187,6 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'Z':
     OPT_CH(price_exp_);
     break;
-  case 'a':
-    OPT_(account_); // -a
-    break;
   case 'c':
     OPT(cache_);
     break;
@@ -217,6 +204,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_ALT(price_exp_, leeway_);
+    break;
+  case 'm':
+    OPT(master_account_);
     break;
   case 'p':
     OPT(price_db_);

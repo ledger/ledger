@@ -215,10 +215,6 @@ public:
     HANDLER(by_payee).report(out);
     HANDLER(cleared).report(out);
     HANDLER(cleared_format_).report(out);
-    HANDLER(code_as_payee).report(out);
-    HANDLER(comm_as_payee).report(out);
-    HANDLER(code_as_account).report(out);
-    HANDLER(comm_as_account).report(out);
     HANDLER(color).report(out);
     HANDLER(collapse).report(out);
     HANDLER(collapse_if_zero).report(out);
@@ -262,7 +258,7 @@ public:
     HANDLER(only_).report(out);
     HANDLER(output_).report(out);
     HANDLER(pager_).report(out);
-    HANDLER(payee_as_account).report(out);
+    HANDLER(payee_).report(out);
     HANDLER(pending).report(out);
     HANDLER(percent).report(out);
     HANDLER(period_).report(out);
@@ -283,10 +279,6 @@ public:
     HANDLER(revalued_only).report(out);
     HANDLER(revalued_total_).report(out);
     HANDLER(seed_).report(out);
-    HANDLER(set_account_).report(out);
-    HANDLER(set_payee_).report(out);
-    HANDLER(set_reported_account_).report(out);
-    HANDLER(set_reported_payee_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
     HANDLER(sort_xacts_).report(out);
@@ -429,10 +421,6 @@ public:
 	 "----------------  ----------------    ---------\n");
     });
 
-  OPTION(report_t, code_as_payee);
-  OPTION(report_t, comm_as_payee);
-  OPTION(report_t, code_as_account);
-  OPTION(report_t, comm_as_account);
   OPTION(report_t, color);
 
   OPTION_(report_t, collapse, DO() { // -n
@@ -684,7 +672,7 @@ public:
    });
 #endif // HAVE_ISATTY
 
-  OPTION(report_t, payee_as_account);
+  OPTION(report_t, payee_);
 
   OPTION_(report_t, pending, DO() { // -C
       parent->HANDLER(limit_).on(string("--pending"), "pending");
@@ -808,10 +796,6 @@ public:
    });
 
   OPTION(report_t, seed_);
-  OPTION(report_t, set_account_);
-  OPTION(report_t, set_payee_);
-  OPTION(report_t, set_reported_account_);
-  OPTION(report_t, set_reported_payee_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
       on_with(args[0].as_string(), args[1]);

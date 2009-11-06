@@ -279,6 +279,35 @@ void value_t::in_place_simplify()
 #endif
 }
 
+value_t value_t::number() const
+{
+  switch (type()) {
+  case VOID:
+    return 0L;
+  case BOOLEAN:
+    return as_boolean() ? 1L : 0L;
+  case INTEGER:
+    return as_long();
+  case AMOUNT:
+    return as_amount().number();
+  case BALANCE:
+    return as_balance().number();
+  case SEQUENCE:
+    if (! as_sequence().empty()) {
+      value_t temp;
+      foreach (const value_t& value, as_sequence())
+	temp += value.number();
+      return temp;
+    }
+    break;
+  default:
+    break;
+  }
+
+  throw_(value_error, _("Cannot determine numeric value of %1") << label());
+  return false;
+}
+
 value_t& value_t::operator+=(const value_t& val)
 {
   if (is_string()) {

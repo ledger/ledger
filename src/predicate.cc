@@ -147,16 +147,16 @@ query_lexer_t::token_t query_lexer_t::next_token()
       return token_t(token_t::TOK_OR);
     else if (ident == "not")
       return token_t(token_t::TOK_NOT);
-    else if (ident == "account")
-      return token_t(token_t::TOK_ACCOUNT);
+    else if (ident == "code")
+      return token_t(token_t::TOK_CODE);
     else if (ident == "desc")
       return token_t(token_t::TOK_PAYEE);
     else if (ident == "payee")
       return token_t(token_t::TOK_PAYEE);
-    else if (ident == "code")
-      return token_t(token_t::TOK_CODE);
     else if (ident == "note")
       return token_t(token_t::TOK_NOTE);
+    else if (ident == "account")
+      return token_t(token_t::TOK_ACCOUNT);
     else if (ident == "tag")
       return token_t(token_t::TOK_META);
     else if (ident == "meta")
@@ -169,9 +169,16 @@ query_lexer_t::token_t query_lexer_t::next_token()
       DEBUG("pred.show", "string = " << (*begin).as_string());
       return token_t(token_t::END_REACHED);
     }
+#if 0
+    // jww (2009-11-06): This is disabled for the time being.
+    else if (ident == "date") {
+      // The date keyword takes the whole of the next string as its argument.
+      consume_whitespace = true;
+      return token_t(token_t::TOK_DATE);
+    }
+#endif
     else if (ident == "expr") {
-      // The expr keyword takes the whole of the next string as its
-      // argument.
+      // The expr keyword takes the whole of the next string as its argument.
       consume_whitespace = true;
       return token_t(token_t::TOK_EXPR);
     }
@@ -227,10 +234,11 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
   case query_lexer_t::token_t::END_REACHED:
     break;
 
-  case query_lexer_t::token_t::TOK_ACCOUNT:
-  case query_lexer_t::token_t::TOK_PAYEE:
+  case query_lexer_t::token_t::TOK_DATE:
   case query_lexer_t::token_t::TOK_CODE:
+  case query_lexer_t::token_t::TOK_PAYEE:
   case query_lexer_t::token_t::TOK_NOTE:
+  case query_lexer_t::token_t::TOK_ACCOUNT:
   case query_lexer_t::token_t::TOK_META:
   case query_lexer_t::token_t::TOK_EXPR:
     node = parse_query_term(tok.kind);
@@ -241,16 +249,54 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
 
   case query_lexer_t::token_t::TERM:
     assert(tok.value);
-    if (tok_context == query_lexer_t::token_t::TOK_META) {
+    switch (tok_context) {
+    case query_lexer_t::token_t::TOK_DATE: {
+      expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
+      ident->set_ident("date");
+
+      date_interval_t interval(*tok.value);
+
+      if (interval.start) {
+	node = new expr_t::op_t(expr_t::op_t::O_GTE);
+	node->set_left(ident);
+
+	expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
+	arg1->set_value(*interval.start);
+	node->set_right(arg1);
+      }
+
+      if (interval.end) {
+	expr_t::ptr_op_t lt = new expr_t::op_t(expr_t::op_t::O_LT);
+	lt->set_left(ident);
+
+	expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
+	arg1->set_value(*interval.end);
+	lt->set_right(arg1);
+
+	if (node) {
+	  expr_t::ptr_op_t prev(node);
+	  node = new expr_t::op_t(expr_t::op_t::O_AND);
+	  node->set_left(prev);
+	  node->set_right(lt);
+	} else {
+	  node = lt;
+	}
+      }
+      break;
+    }
+
+    case query_lexer_t::token_t::TOK_EXPR:
+      node = expr_t(*tok.value).get_op();
+      break;
+
+    case query_lexer_t::token_t::TOK_META: {
       node = new expr_t::op_t(expr_t::op_t::O_CALL);
 
-      expr_t::ptr_op_t ident;
-      ident = new expr_t::op_t(expr_t::op_t::IDENT);
+      expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
       ident->set_ident("has_tag");
       node->set_left(ident);
 
-      expr_t::ptr_op_t arg1;
-      arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
+      expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
       arg1->set_value(mask_t(*tok.value));
 
       tok = lexer.peek_token();
@@ -261,11 +307,9 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
 	  throw_(parse_error,
 		 _("Metadata equality operator not followed by term"));
 	
-	expr_t::ptr_op_t cons;
-	cons = new expr_t::op_t(expr_t::op_t::O_CONS);
+	expr_t::ptr_op_t cons = new expr_t::op_t(expr_t::op_t::O_CONS);
 
-	expr_t::ptr_op_t arg2;
-	arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
+	expr_t::ptr_op_t arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
 	assert(tok.value);
 	arg2->set_value(mask_t(*tok.value));
 
@@ -275,11 +319,13 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
       } else {
 	node->set_right(arg1);
       }
-    } else {
+      break;
+    }
+      
+    default: {
       node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
-      expr_t::ptr_op_t ident;
-      ident = new expr_t::op_t(expr_t::op_t::IDENT);
+      expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
       switch (tok_context) {
       case query_lexer_t::token_t::TOK_ACCOUNT:
 	ident->set_ident("account"); break;
@@ -293,12 +339,12 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
 	assert(0); break;
       }
 
-      expr_t::ptr_op_t mask;
-      mask = new expr_t::op_t(expr_t::op_t::VALUE);
+      expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
       mask->set_value(mask_t(*tok.value));
 
       node->set_left(ident);
       node->set_right(mask);
+    }
     }
     break;
 

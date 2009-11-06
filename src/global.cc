@@ -255,7 +255,7 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
 
 void global_scope_t::report_options(report_t& report, std::ostream& out)
 {
-  out << "<=============================================================================>"
+  out << "==============================================================================="
       << std::endl;
   out << "[Global scope options]" << std::endl;
 
@@ -272,7 +272,7 @@ void global_scope_t::report_options(report_t& report, std::ostream& out)
 
   out << std::endl << "[Report scope options]" << std::endl;
   report.report_options(out);
-  out << "<=============================================================================>"
+  out << "==============================================================================="
       << std::endl;
 }
 

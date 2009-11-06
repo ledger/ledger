@@ -115,7 +115,7 @@ void export_amount()
   class_< amount_t > ("Amount")
     .add_static_property("current_pool",
 			 make_getter(&amount_t::current_pool,
-				     return_value_policy<reference_existing_object>()))
+				     return_internal_reference<>()))
 
     .def("initialize", py_amount_initialize) // only for the PyUnitTests
     .staticmethod("initialize")
@@ -204,7 +204,7 @@ internal precision."))
 
     .def("negated", &amount_t::negated)
     .def("in_place_negate", &amount_t::in_place_negate,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def(- self)
 
     .def("abs", &amount_t::abs)
@@ -214,23 +214,23 @@ internal precision."))
 
     .def("rounded", &amount_t::rounded)
     .def("in_place_round", &amount_t::in_place_round,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("truncated", &amount_t::truncated)
     .def("in_place_truncate", &amount_t::in_place_truncate,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("unrounded", &amount_t::unrounded)
     .def("in_place_unround", &amount_t::in_place_unround,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("reduced", &amount_t::reduced)
     .def("in_place_reduce", &amount_t::in_place_reduce,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("unreduced", &amount_t::unreduced)
     .def("in_place_unreduce", &amount_t::in_place_unreduce,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("value", py_value_0)
     .def("value", py_value_1, args("primary_only"))
@@ -259,7 +259,7 @@ internal precision."))
     .def("quantity_string", &amount_t::quantity_string)
 
     .def("commodity", &amount_t::commodity,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("has_commodity", &amount_t::has_commodity)
     .def("set_commodity", &amount_t::set_commodity,
 	 with_custodian_and_ward<1, 2>())

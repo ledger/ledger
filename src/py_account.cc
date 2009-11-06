@@ -189,9 +189,9 @@ void export_account()
     .def("remove_account", &account_t::remove_account)
 
     .def("find_account", &account_t::find_account,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("find_account_re", &account_t::find_account,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("add_post", &account_t::add_post)
     .def("remove_post", &account_t::remove_post)
@@ -211,15 +211,15 @@ void export_account()
     .def("has_xdata", &account_t::has_xdata)
     .def("clear_xdata", &account_t::clear_xdata)
     .def("xdata", py_xdata,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("amount", &account_t::amount)
     .def("total", &account_t::total)
 
     .def("self_details", &account_t::self_details,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("family_details", &account_t::family_details,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("has_xflags", &account_t::has_xflags)
     .def("children_with_flags", &account_t::children_with_flags)

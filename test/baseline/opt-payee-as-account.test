@@ -1,4 +1,4 @@
-reg --payee-as-account
+reg --account=payee
 <<<
 2008/01/01 * (100) January
     Expenses:Books          $10.00

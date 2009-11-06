@@ -1,4 +1,4 @@
-bal food and tag type --set-reported-account='"Tags:" + tag("Type")'
+bal food and tag type --account='"Tags:" + tag("Type")'
 <<<
 2009/11/01 Panera Bread  ; Got something to eat
     Expenses:Food               $4.50

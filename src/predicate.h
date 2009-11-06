@@ -135,10 +135,11 @@ public:
       TOK_OR,
       TOK_EQ,
 
-      TOK_ACCOUNT,
-      TOK_PAYEE,
+      TOK_DATE,
       TOK_CODE,
+      TOK_PAYEE,
       TOK_NOTE,
+      TOK_ACCOUNT,
       TOK_META,
       TOK_EXPR,
 
@@ -184,10 +185,11 @@ public:
       case TOK_AND:	return "TOK_AND";
       case TOK_OR:	return "TOK_OR";
       case TOK_EQ:	return "TOK_EQ";
-      case TOK_ACCOUNT: return "TOK_ACCOUNT";
-      case TOK_PAYEE:	return "TOK_PAYEE";
+      case TOK_DATE:	return "TOK_DATE";
       case TOK_CODE:	return "TOK_CODE";
+      case TOK_PAYEE:	return "TOK_PAYEE";
       case TOK_NOTE:	return "TOK_NOTE";
+      case TOK_ACCOUNT: return "TOK_ACCOUNT";
       case TOK_META:	return "TOK_META";
       case TOK_EXPR:	return "TOK_EXPR";
       case TERM:	return string("TERM(") + *value + ")";
@@ -203,10 +205,11 @@ public:
       case TOK_AND:	return "and";
       case TOK_OR:	return "or";
       case TOK_EQ:	return "=";
-      case TOK_ACCOUNT: return "account";
-      case TOK_PAYEE:	return "payee";
+      case TOK_DATE:	return "date";
       case TOK_CODE:	return "code";
+      case TOK_PAYEE:	return "payee";
       case TOK_NOTE:	return "note";
+      case TOK_ACCOUNT: return "account";
       case TOK_META:	return "meta";
       case TOK_EXPR:	return "expr";
 

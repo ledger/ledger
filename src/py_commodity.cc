@@ -157,23 +157,23 @@ void export_commodity()
 
     .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
 
-    .def("create", py_create_1, return_value_policy<reference_existing_object>())
-    .def("create", py_create_2, return_value_policy<reference_existing_object>())
+    .def("create", py_create_1, return_internal_reference<>())
+    .def("create", py_create_2, return_internal_reference<>())
 
     .def("find_or_create", py_find_or_create_1,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("find_or_create", py_find_or_create_2,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
-    .def("find", py_find_1, return_value_policy<reference_existing_object>())
-    .def("find", py_find_2, return_value_policy<reference_existing_object>())
+    .def("find", py_find_1, return_internal_reference<>())
+    .def("find", py_find_2, return_internal_reference<>())
 
     .def("exchange", py_exchange_3, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_5)
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     ;
 
   scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
@@ -211,16 +211,16 @@ void export_commodity()
 
 #if 0
     .def("referent", &commodity_t::referent,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 #endif
 
     .def("is_annotated", &commodity_t::is_annotated)
     .def("strip_annotations", &commodity_t::strip_annotations,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("write_annotations", &commodity_t::write_annotations)
 
     .def("pool", &commodity_t::pool,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("base_symbol", &commodity_t::base_symbol)
     .def("symbol", &commodity_t::symbol)
@@ -308,11 +308,11 @@ void export_commodity()
 
 #if 0
     .def("referent", &annotated_commodity_t::referent,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 #endif
 
     .def("strip_annotations", &annotated_commodity_t::strip_annotations,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("write_annotations", &annotated_commodity_t::write_annotations)
     ;
 }

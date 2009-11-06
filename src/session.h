@@ -87,12 +87,12 @@ public:
 
   void report_options(std::ostream& out)
   {
-    HANDLER(account_).report(out);
     HANDLER(cache_).report(out);
     HANDLER(download).report(out);
     HANDLER(european).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
+    HANDLER(master_account_).report(out);
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
@@ -107,7 +107,6 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, account_); // -a
   OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
 
@@ -141,6 +140,7 @@ public:
       set_input_date_format(args[1].as_string().c_str());
     });
 
+  OPTION(session_t, master_account_);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
 };
