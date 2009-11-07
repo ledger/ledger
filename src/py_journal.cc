@@ -166,6 +166,11 @@ namespace {
     journal.xact_finalize_hooks.run_hooks(xact, post);
   }
 
+  std::size_t py_read(journal_t& journal, const string& pathname)
+  {
+    return journal.read(pathname);
+  }
+
 } // unnamed namespace
 
 void export_journal()
@@ -235,6 +240,8 @@ void export_journal()
 	 (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
     .def("sources", range<return_internal_reference<> >
 	 (&journal_t::sources_begin, &journal_t::sources_end))
+
+    .def("read", py_read)
 
     .def("clear_xdata", &journal_t::clear_xdata)
 
