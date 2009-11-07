@@ -869,16 +869,7 @@ public:
     });
 
   OPTION_(report_t, wide, DO() { // -w
-      parent->HANDLER(date_width_).on_with(string("--wide"), 9L);
-      parent->HANDLER(date_width_).specified = true;
-      parent->HANDLER(payee_width_).on_with(string("--wide"), 35L);
-      parent->HANDLER(payee_width_).specified = true;
-      parent->HANDLER(account_width_).on_with(string("--wide"), 39L);
-      parent->HANDLER(account_width_).specified = true;
-      parent->HANDLER(amount_width_).on_with(string("--wide"), 22L);
-      parent->HANDLER(amount_width_).specified = true;
-      parent->HANDLER(total_width_).on_with(string("--wide"), 22L);
-      parent->HANDLER(total_width_).specified = true;
+      parent->HANDLER(columns_).on_with(string("--wide"), 132L);
     });
 
   OPTION_(report_t, yearly, DO() { // -Y
@@ -887,38 +878,23 @@ public:
 
   OPTION__(report_t, date_width_,
 	   bool specified;
-	   CTOR(report_t, date_width_) {
-	     on_with(none, 9L);
-	     specified = false;
-	   }
+	   CTOR(report_t, date_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, payee_width_,
 	   bool specified;
-	   CTOR(report_t, payee_width_) {
-	     on_with(none, 20L);
-	     specified = false;
-	   }
+	   CTOR(report_t, payee_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, account_width_,
 	   bool specified;
-	   CTOR(report_t, account_width_) {
-	     on_with(none, 23L);
-	     specified = false;
-	   }
+	   CTOR(report_t, account_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, amount_width_,
 	   bool specified;
-	   CTOR(report_t, amount_width_) {
-	     on_with(none, 12L);
-	     specified = false;
-	   }
+	   CTOR(report_t, amount_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, total_width_,
 	   bool specified;
-	   CTOR(report_t, total_width_) {
-	     on_with(none, 12L);
-	     specified = false;
-	   }
+	   CTOR(report_t, total_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
 };
 
