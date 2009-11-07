@@ -140,7 +140,8 @@ namespace {
 			  std::streamsize len,
 			  account_t *	  account);
 
-    virtual expr_t::ptr_op_t lookup(const string& name);
+    virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				    const string& name);
   };
 
   void parse_amount_expr(scope_t&      scope,
@@ -749,11 +750,7 @@ void instance_t::general_directive(char * line)
     break;
   }
 
-  scoped_array<char> directive(new char[std::strlen(p) + DIR_PREFIX_LEN + 1]);
-  std::strcpy(directive.get(), DIR_PREFIX);
-  std::strcpy(directive.get() + DIR_PREFIX_LEN, p);
-
-  if (expr_t::ptr_op_t op = lookup(directive.get())) {
+  if (expr_t::ptr_op_t op = lookup(symbol_t::DIRECTIVE, p)) {
     call_scope_t args(*this);
     args.push_back(string_value(p));
     op->as_function()(args);
@@ -1233,9 +1230,10 @@ xact_t * instance_t::parse_xact(char *		line,
   }
 }
 
-expr_t::ptr_op_t instance_t::lookup(const string& name)
+expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind,
+				    const string& name)
 {
-  return scope.lookup(name);
+  return scope.lookup(kind, name);
 }
 
 std::size_t journal_t::parse(std::istream& in,

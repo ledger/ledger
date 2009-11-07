@@ -74,11 +74,13 @@ typedef register_python_conversion<bool, bool_to_python, bool_from_python>
   bool_python_conversion;
 
 
+#if defined(STRING_VERIFY_ON)
+
 struct string_to_python
 {
-  static PyObject* convert(const string& str)
+  static PyObject* convert(const ledger::string& str)
   {
-    return incref(object(*boost::polymorphic_downcast<const std::string *>(&str)).ptr());
+    return incref(object(static_cast<const std::string&>(str)).ptr());
   }
 };
 
@@ -95,14 +97,16 @@ struct string_from_python
     const char* value = PyString_AsString(obj_ptr);
     if (value == 0) throw_error_already_set();
     void* storage =
-      reinterpret_cast<converter::rvalue_from_python_storage<string> *>(data)->storage.bytes;
-    new (storage) string(value);
+      reinterpret_cast<converter::rvalue_from_python_storage<ledger::string> *>(data)->storage.bytes;
+    new (storage) ledger::string(value);
     data->convertible = storage;
   }
 };
 
-typedef register_python_conversion<string, string_to_python, string_from_python>
+typedef register_python_conversion<ledger::string, string_to_python, string_from_python>
   string_python_conversion;
+
+#endif // STRING_VERIFY_ON
 
 
 struct istream_to_python
@@ -168,9 +172,10 @@ void export_utils()
     .def(init<supports_flags<uint_least8_t> >())
     .def(init<uint_least8_t>())
 
-    .def("flags", &supports_flags<uint_least8_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least8_t>::flags,
+		  &supports_flags<uint_least8_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least8_t>::has_flags)
-    .def("set_flags", &supports_flags<uint_least8_t>::set_flags)
     .def("clear_flags", &supports_flags<uint_least8_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least8_t>::add_flags)
     .def("drop_flags", &supports_flags<uint_least8_t>::drop_flags)
@@ -180,9 +185,10 @@ void export_utils()
     .def(init<supports_flags<uint_least16_t> >())
     .def(init<uint_least16_t>())
 
-    .def("flags", &supports_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least16_t>::flags,
+		  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &supports_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
@@ -200,16 +206,19 @@ void export_utils()
 
   class_< delegates_flags<uint_least16_t>,
 	  boost::noncopyable > ("DelegatesFlags16", no_init)
-    .def("flags", &delegates_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &delegates_flags<uint_least16_t>::flags,
+		  &delegates_flags<uint_least16_t>::set_flags)
     .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &delegates_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
     ;
 
   bool_python_conversion();
+#if defined(STRING_VERIFY_ON)
   string_python_conversion();
+#endif
   istream_python_conversion();
   ostream_python_conversion();
 }

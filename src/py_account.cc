@@ -142,9 +142,10 @@ void export_account()
 
   class_< account_t::xdata_t > ("AccountXData")
 #if 1
-    .def("flags", &supports_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least16_t>::flags,
+		  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &supports_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
@@ -162,9 +163,10 @@ void export_account()
 
   class_< account_t > ("Account")
 #if 1
-    .def("flags", &supports_flags<>::flags)
+    .add_property("flags",
+		  &supports_flags<>::flags,
+		  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
-    .def("set_flags", &supports_flags<>::set_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
     .def("drop_flags", &supports_flags<>::drop_flags)
@@ -172,13 +174,11 @@ void export_account()
 
     .add_property("parent",
 		  make_getter(&account_t::parent,
-			      return_value_policy<reference_existing_object>()))
+			      return_internal_reference<>()))
 
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
-    .def_readonly("accounts", &account_t::accounts)
-    .def_readonly("posts", &account_t::posts)
 
     .def(self_ns::str(self))
 
@@ -189,9 +189,9 @@ void export_account()
     .def("remove_account", &account_t::remove_account)
 
     .def("find_account", &account_t::find_account,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("find_account_re", &account_t::find_account,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("add_post", &account_t::add_post)
     .def("remove_post", &account_t::remove_post)
@@ -199,20 +199,27 @@ void export_account()
     .def("valid", &account_t::valid)
 
     .def("__len__", accounts_len)
-    .def("__getitem__", accounts_getitem, return_internal_reference<1>())
+    .def("__getitem__", accounts_getitem, return_internal_reference<>())
+
+    .def("__iter__", range<return_internal_reference<> >
+	 (&account_t::accounts_begin, &account_t::accounts_end))
+    .def("accounts", range<return_internal_reference<> >
+	 (&account_t::accounts_begin, &account_t::accounts_end))
+    .def("posts", range<return_internal_reference<> >
+	 (&account_t::posts_begin, &account_t::posts_end))
 
     .def("has_xdata", &account_t::has_xdata)
     .def("clear_xdata", &account_t::clear_xdata)
     .def("xdata", py_xdata,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("amount", &account_t::amount)
     .def("total", &account_t::total)
 
     .def("self_details", &account_t::self_details,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("family_details", &account_t::family_details,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("has_xflags", &account_t::has_xflags)
     .def("children_with_flags", &account_t::children_with_flags)

@@ -87,7 +87,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & pathname;
     ar & beg_pos;
     ar & beg_line;
@@ -189,7 +189,8 @@ public:
     return _state;
   }
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   bool valid() const;
 
@@ -200,7 +201,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<supports_flags<> >(*this);
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & _state;

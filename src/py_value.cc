@@ -51,7 +51,7 @@ namespace {
   {
     if (value.is_scope()) {
       if (scope_t * scope = value.as_scope())
-	return expr_t(scope->lookup(name), scope);
+	return expr_t(scope->lookup(symbol_t::FUNCTION, name), scope);
     }
     throw_(value_error, _("Cannot lookup attributes in %1") << value.label());
     return expr_t();
@@ -112,7 +112,7 @@ void export_value()
     .def(init<balance_t>())
     .def(init<mask_t>())
     .def(init<std::string>())
-    // jww (2009-11-02): Need to support conversion of sequences
+    // jww (2009-11-02): Need to support conversion eof value_t::sequence_t
     //.def(init<value_t::sequence_t>())
     .def(init<value_t>())
 
@@ -285,6 +285,8 @@ void export_value()
     .def("simplified", &value_t::simplified)
     .def("in_place_simplify", &value_t::in_place_simplify)
 
+    .def("number", &value_t::number)
+
     .def("annotate", &value_t::annotate)
     .def("is_annotated", &value_t::is_annotated)
 #if 0
@@ -314,7 +316,9 @@ void export_value()
 
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
-  // jww (2009-11-02): ask mask objects here
+  implicitly_convertible<amount_t, value_t>();
+  implicitly_convertible<balance_t, value_t>();
+  implicitly_convertible<mask_t, value_t>();
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
 

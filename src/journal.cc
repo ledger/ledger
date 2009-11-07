@@ -41,23 +41,23 @@
 namespace ledger {
 
 journal_t::journal_t()
-  : master(new account_t), was_loaded(false),
-    commodity_pool(new commodity_pool_t)
 {
   TRACE_CTOR(journal_t, "");
+  initialize();
+}
 
-  // Add time commodity conversions, so that timelog's may be parsed
-  // in terms of seconds, but reported as minutes or hours.
-  if (commodity_t * commodity = commodity_pool->create("s"))
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  else
-    assert(false);
+journal_t::journal_t(const path& pathname)
+{
+  TRACE_CTOR(journal_t, "path");
+  initialize();
+  read(pathname);
+}
 
-  // Add a "percentile" commodity
-  if (commodity_t * commodity = commodity_pool->create("%"))
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  else
-    assert(false);
+journal_t::journal_t(const string& str)
+{
+  TRACE_CTOR(journal_t, "string");
+  initialize();
+  read(str);
 }
 
 journal_t::~journal_t()
@@ -78,6 +78,28 @@ journal_t::~journal_t()
   
   checked_delete(master);
   commodity_pool.reset();
+}
+
+void journal_t::initialize()
+{
+  master     = new account_t;
+  basket     = NULL;
+  was_loaded = false;
+
+  commodity_pool.reset(new commodity_pool_t);
+
+  // Add time commodity conversions, so that timelog's may be parsed
+  // in terms of seconds, but reported as minutes or hours.
+  if (commodity_t * commodity = commodity_pool->create("s"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
+
+  // Add a "percentile" commodity
+  if (commodity_t * commodity = commodity_pool->create("%"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
 }
 
 void journal_t::add_account(account_t * acct)
@@ -132,6 +154,73 @@ bool journal_t::remove_xact(xact_t * xact)
   xact->journal = NULL;
 
   return true;
+}
+
+std::size_t journal_t::read(std::istream& in,
+			    const path&	  pathname,
+			    account_t *   master_alt,
+			    scope_t *     scope)
+{
+  std::size_t count = 0;
+  try {
+    if (! scope)
+      scope = scope_t::default_scope;
+
+    if (! scope)
+      throw_(std::runtime_error,
+	     _("No default scope in which to read journal file '%1'")
+	     << pathname);
+
+    value_t strict = expr_t("strict").calc(*scope);
+
+    count = parse(in, *scope, master_alt ? master_alt : master,
+		  &pathname, strict.to_boolean());
+  }
+  catch (...) {
+    clear_xdata();
+    throw;
+  }
+
+  // xdata may have been set for some accounts and transaction due to the use
+  // of balance assertions or other calculations performed in valexpr-based
+  // posting amounts.
+  clear_xdata();
+
+  return count;
+}
+
+std::size_t journal_t::read(const path& pathname,
+			    account_t * master,
+			    scope_t *   scope)
+{
+  path filename = resolve_path(pathname);
+
+  if (! exists(filename))
+    throw_(std::runtime_error,
+	   _("Cannot read journal file '%1'") << filename);
+
+  ifstream stream(filename);
+  std::size_t count = read(stream, filename, master, scope);
+  if (count > 0)
+    sources.push_back(fileinfo_t(filename));
+  return count;
+}
+
+void journal_t::clear_xdata()
+{
+  foreach (xact_t * xact, xacts)
+    if (! xact->has_flags(ITEM_TEMP))
+      xact->clear_xdata();
+
+  foreach (auto_xact_t * xact, auto_xacts)
+    if (! xact->has_flags(ITEM_TEMP))
+      xact->clear_xdata();
+
+  foreach (period_xact_t * xact, period_xacts)
+    if (! xact->has_flags(ITEM_TEMP))
+      xact->clear_xdata();
+
+  master->clear_xdata();
 }
 
 bool journal_t::valid() const

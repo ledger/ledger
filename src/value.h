@@ -87,7 +87,7 @@ public:
    * The sequence_t member type abstracts the type used to represent a
    * resizable "array" of value_t objects.
    */
-  typedef std::vector<value_t>	      sequence_t;
+  typedef std::deque<value_t>	      sequence_t;
   typedef sequence_t::iterator	      iterator;
   typedef sequence_t::const_iterator  const_iterator;
   typedef sequence_t::difference_type difference_type;
@@ -234,7 +234,7 @@ private:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* version */) {
+    void serialize(Archive& ar, const unsigned int /* version */) {
       ar & data;
       ar & type;
       ar & refc;
@@ -761,6 +761,8 @@ public:
   }
   void    in_place_simplify();
 
+  value_t number() const;
+
   /**
    * Annotated commodity methods.
    */
@@ -798,6 +800,14 @@ public:
     assert(false);
     static value_t null;
     return null;
+  }
+
+  void push_front(const value_t& val) {
+    if (is_null())
+      *this = sequence_t();
+    if (! is_sequence())
+      in_place_cast(SEQUENCE);
+    as_sequence_lval().push_front(val);
   }
 
   void push_back(const value_t& val) {
@@ -917,7 +927,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & true_value;
     ar & false_value;
     ar & storage;

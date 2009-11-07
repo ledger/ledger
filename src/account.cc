@@ -241,8 +241,12 @@ namespace {
   }
 }
 
-expr_t::ptr_op_t account_t::lookup(const string& name)
+expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
+				   const string& name)
 {
+  if (kind != symbol_t::FUNCTION)
+    return NULL;
+
   switch (name[0]) {
   case 'a':
     if (name == "amount")
@@ -376,6 +380,15 @@ account_t::xdata_t::details_t::operator+=(const details_t& other)
   payees_referenced.insert(other.payees_referenced.begin(),
 			   other.payees_referenced.end());
   return *this;
+}
+
+void account_t::clear_xdata()
+{
+  xdata_ = none;
+
+  foreach (accounts_map::value_type& pair, accounts)
+    if (! pair.second->has_flags(ACCOUNT_TEMP))
+      pair.second->clear_xdata();
 }
 
 value_t account_t::amount(const optional<expr_t&>& expr) const

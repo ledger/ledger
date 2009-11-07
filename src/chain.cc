@@ -159,15 +159,15 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     handler.reset(new sort_posts(handler, "date"));
   }
 
-  if (report.HANDLED(set_reported_account_))
+  if (report.HANDLED(account_))
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
 				       report.session.journal->master,
-				       report.HANDLER(set_reported_account_).str(),
+				       report.HANDLER(account_).str(),
 				       report));
-  else if (report.HANDLED(set_reported_payee_))
+  if (report.HANDLED(payee_))
     handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
 				       report.session.journal->master,
-				       report.HANDLER(set_reported_payee_).str(),
+				       report.HANDLER(payee_).str(),
 				       report));
 
   // related_posts will pass along all posts related to the post received.  If
@@ -235,37 +235,6 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 					     report.what_to_keep()),
 		     report));
   }
-
-  if (report.HANDLED(set_account_))
-    handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.journal->master,
-				       report.HANDLER(set_account_).str(),
-				       report));
-  else if (report.HANDLED(set_payee_))
-    handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-				       report.session.journal->master,
-				       report.HANDLER(set_payee_).str(),
-				       report));
-  else if (report.HANDLED(comm_as_payee))
-    handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-				       report.session.journal->master,
-				       expr_t("commodity"), report));
-  else if (report.HANDLED(code_as_payee))
-    handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-				       report.session.journal->master,
-				       expr_t("code"), report));
-  else if (report.HANDLED(payee_as_account))
-    handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.journal->master,
-				       expr_t("payee"), report));
-  else if (report.HANDLED(comm_as_account))
-    handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.journal->master,
-				       expr_t("commodity"), report));
-  else if (report.HANDLED(code_as_account))
-    handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-				       report.session.journal->master,
-				       expr_t("code"), report));
 
   return handler;
 }

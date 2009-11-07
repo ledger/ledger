@@ -67,6 +67,7 @@ global_scope_t::global_scope_t(char ** envp)
   // open document, with a separate report_t object for each report it
   // generated.
   report_stack.push_front(new report_t(session()));
+  scope_t::default_scope = &report();
 
   // Read the user's options, in the following order:
   //
@@ -111,7 +112,7 @@ void global_scope_t::read_init()
 
       ifstream init(init_file);
 
-      if (session().read_journal(init_file, NULL, &report()) > 0 ||
+      if (session().journal->read(init_file, NULL, &report()) > 0 ||
 	  session().journal->auto_xacts.size() > 0 ||
 	  session().journal->period_xacts.size() > 0) {
 	throw_(parse_error, _("Transactions found in initialization file '%1'")
@@ -254,7 +255,7 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl)
 
 void global_scope_t::report_options(report_t& report, std::ostream& out)
 {
-  out << "<=============================================================================>"
+  out << "==============================================================================="
       << std::endl;
   out << "[Global scope options]" << std::endl;
 
@@ -271,7 +272,7 @@ void global_scope_t::report_options(report_t& report, std::ostream& out)
 
   out << std::endl << "[Report scope options]" << std::endl;
   report.report_options(out);
-  out << "<=============================================================================>"
+  out << "==============================================================================="
       << std::endl;
 }
 
@@ -314,28 +315,32 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   return NULL;
 }
 
-expr_t::ptr_op_t global_scope_t::lookup(const string& name)
+expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind,
+					const string& name)
 {
-  const char * p = name.c_str();
-  switch (*p) {
-  case 'o':
-    if (WANT_OPT()) { p += OPT_PREFIX_LEN;
-      if (option_t<global_scope_t> * handler = lookup_option(p))
-	return MAKE_OPT_HANDLER(global_scope_t, handler);
-    }
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    if (option_t<global_scope_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_FUNCTOR(global_scope_t, handler);
     break;
 
-  case 'p':
-    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
-      switch (*q) {
-      case 'p':
-	if (is_eq(q, "push"))
-	  return MAKE_FUNCTOR(global_scope_t::push_command);
-	else if (is_eq(q, "pop"))
-	  return MAKE_FUNCTOR(global_scope_t::pop_command);
-	break;
-      }
+  case symbol_t::OPTION:
+    if (option_t<global_scope_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_HANDLER(global_scope_t, handler);
+    break;
+
+  case symbol_t::PRECOMMAND: {
+    const char * p = name.c_str();
+    switch (*p) {
+    case 'p':
+      if (is_eq(p, "push"))
+	return MAKE_FUNCTOR(global_scope_t::push_command);
+      else if (is_eq(p, "pop"))
+	return MAKE_FUNCTOR(global_scope_t::pop_command);
+      break;
     }
+  }
+  default:
     break;
   }
 
@@ -396,7 +401,7 @@ void global_scope_t::normalize_session_options()
 function_t global_scope_t::look_for_precommand(scope_t&	     scope,
 					       const string& verb)
 {
-  if (expr_t::ptr_op_t def = scope.lookup(string(PRECMD_PREFIX) + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(symbol_t::PRECOMMAND, verb))
     return def->as_function();
   else
     return function_t();
@@ -405,7 +410,7 @@ function_t global_scope_t::look_for_precommand(scope_t&	     scope,
 function_t global_scope_t::look_for_command(scope_t&	  scope,
 					    const string& verb)
 {
-  if (expr_t::ptr_op_t def = scope.lookup(string(CMD_PREFIX) + verb))
+  if (expr_t::ptr_op_t def = scope.lookup(symbol_t::COMMAND, verb))
     return def->as_function();
   else
     return function_t();

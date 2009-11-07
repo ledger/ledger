@@ -130,12 +130,12 @@ void export_commodity()
   class_< commodity_pool_t, boost::noncopyable > ("CommodityPool", no_init)
     .add_property("null_commodity",
 		  make_getter(&commodity_pool_t::null_commodity,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&commodity_pool_t::null_commodity,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("default_commodity",
 		  make_getter(&commodity_pool_t::default_commodity,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&commodity_pool_t::default_commodity,
 			      with_custodian_and_ward<1, 2>()))
 
@@ -157,23 +157,23 @@ void export_commodity()
 
     .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
 
-    .def("create", py_create_1, return_value_policy<reference_existing_object>())
-    .def("create", py_create_2, return_value_policy<reference_existing_object>())
+    .def("create", py_create_1, return_internal_reference<>())
+    .def("create", py_create_2, return_internal_reference<>())
 
     .def("find_or_create", py_find_or_create_1,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("find_or_create", py_find_or_create_2,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
-    .def("find", py_find_1, return_value_policy<reference_existing_object>())
-    .def("find", py_find_2, return_value_policy<reference_existing_object>())
+    .def("find", py_find_1, return_internal_reference<>())
+    .def("find", py_find_2, return_internal_reference<>())
 
     .def("exchange", py_exchange_3, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_5)
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     ;
 
   scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
@@ -189,9 +189,10 @@ void export_commodity()
 
   class_< commodity_t, boost::noncopyable > ("Commodity", no_init)
 #if 1
-    .def("flags", &delegates_flags<uint_least16_t>::flags)
+    .add_property("flags",
+		  &supports_flags<uint_least16_t>::flags,
+		  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-    .def("set_flags", &delegates_flags<uint_least16_t>::set_flags)
     .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
@@ -210,16 +211,16 @@ void export_commodity()
 
 #if 0
     .def("referent", &commodity_t::referent,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 #endif
 
     .def("is_annotated", &commodity_t::is_annotated)
     .def("strip_annotations", &commodity_t::strip_annotations,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("write_annotations", &commodity_t::write_annotations)
 
     .def("pool", &commodity_t::pool,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("base_symbol", &commodity_t::base_symbol)
     .def("symbol", &commodity_t::symbol)
@@ -248,9 +249,9 @@ void export_commodity()
 
   class_< annotation_t > ("Annotation", no_init)
 #if 1
-    .def("flags", &supports_flags<>::flags)
+    .add_property("flags", &supports_flags<>::flags,
+		  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
-    .def("set_flags", &supports_flags<>::set_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
     .def("drop_flags", &supports_flags<>::drop_flags)
@@ -307,11 +308,11 @@ void export_commodity()
 
 #if 0
     .def("referent", &annotated_commodity_t::referent,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 #endif
 
     .def("strip_annotations", &annotated_commodity_t::strip_annotations,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
     .def("write_annotations", &annotated_commodity_t::write_annotations)
     ;
 }

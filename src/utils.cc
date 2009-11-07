@@ -407,6 +407,8 @@ void report_memory(std::ostream& out, bool report_all)
 }
 
 
+#if defined(STRING_VERIFY_ON)
+
 string::string() : std::string() {
   TRACE_CTOR(string, "");
 }
@@ -442,6 +444,8 @@ string::string(const char * str, size_type x, size_type y)
 string::~string() throw() {
   TRACE_DTOR(string);
 }
+
+#endif // STRING_VERIFY_ON
 
 } // namespace ledger
 

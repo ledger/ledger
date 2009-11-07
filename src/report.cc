@@ -50,7 +50,7 @@ void report_t::posts_report(post_handler_ptr handler)
 {
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts(chain_post_handlers(*this, handler), walker);
-  session.clean_posts();
+  session.journal->clear_xdata();
 }
 
 void report_t::generate_report(post_handler_ptr handler)
@@ -70,7 +70,7 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 {
   xact_posts_iterator walker(xact);
   pass_down_posts(chain_post_handlers(*this, handler), walker);
-  session.clean_posts(xact);
+  xact.clear_xdata();
 }
 
 void report_t::accounts_report(acct_handler_ptr handler)
@@ -101,15 +101,14 @@ void report_t::accounts_report(acct_handler_ptr handler)
   else
     pass_down_accounts(handler, *iter.get());
 
-  session.clean_posts();
-  session.clean_accounts();
+  session.journal->clear_xdata();
 }
 
 void report_t::commodities_report(post_handler_ptr handler)
 {
   posts_commodities_iterator walker(*session.journal.get());
   pass_down_posts(chain_post_handlers(*this, handler), walker);
-  session.clean_posts();
+  session.journal->clear_xdata();
 }
 
 value_t report_t::fn_amount_expr(call_scope_t& scope)
@@ -314,6 +313,31 @@ value_t report_t::fn_price(call_scope_t& scope)
   return args.value_at(0).price();
 }
 
+value_t report_t::fn_account_total(call_scope_t& args)
+{
+  account_t * acct = NULL;
+  string name;
+  if (args[0].is_string()) {
+    name = args[0].as_string();
+    acct = session.journal->find_account(name, false);
+  }
+  else if (args[0].is_mask()) {
+    name = args[0].as_mask().expr.str();
+    acct = session.journal->find_account_re(name);
+  }
+  else {
+    throw_(std::runtime_error,
+	   _("Expected string or mask for argument 1, but received %1")
+	   << args[0].label());
+  }
+
+  if (! acct)
+    throw_(std::runtime_error,
+	   _("Could not find an account matching ") << name);
+
+  return acct->amount();
+}
+
 value_t report_t::fn_lot_date(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
@@ -413,6 +437,9 @@ namespace {
 	  args.value().as_sequence().end();
 
 	std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
+	if (! info.first)
+	  throw_(std::runtime_error,
+		 _("Invalid query predicate: %1") << join_args(args));
 
 	string limit = info.first.text();
 	if (! limit.empty())
@@ -422,7 +449,12 @@ namespace {
 	      "Predicate = " << report.HANDLER(limit_).str());
 
 	if (info.second.tokens_remaining()) {
-	  string display = args_to_predicate(info.second).first.text();
+	  info = args_to_predicate(info.second);
+	  if (! info.first)
+	    throw_(std::runtime_error,
+		   _("Invalid display predicate: %1") << join_args(args));
+
+	  string display = info.first.text();
 
 	  if (! display.empty())
 	    report.HANDLER(display_).on(whence, display);
@@ -456,8 +488,8 @@ value_t report_t::echo_command(call_scope_t& scope)
 
 bool report_t::maybe_import(const string& module)
 {
-  if (lookup(string(OPT_PREFIX) + "import_")) {
-    expr_t(string(OPT_PREFIX) + "import_(\"" + module + "\")").calc(*this);
+  if (lookup(symbol_t::OPTION, "import_")) {
+    expr_t(string("import_(\"") + module + "\")").calc(*this);
     return true;
   }
   return false;
@@ -534,7 +566,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'a':
     OPT(abbrev_len_);
-    else OPT(account_);
+    else OPT_(account_);
     else OPT(actual);
     else OPT(actual_dates);
     else OPT(add_budget);
@@ -557,10 +589,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'c':
     OPT(csv_format_);
     else OPT(cleared);
-    else OPT(code_as_payee);
-    else OPT_ALT(comm_as_payee, commodity_as_payee);
-    else OPT(code_as_account);
-    else OPT_ALT(comm_as_account, commodity_as_account);
     else OPT(collapse);
     else OPT(collapse_if_zero);
     else OPT(color);
@@ -634,7 +662,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'p':
     OPT(pager_);
-    else OPT(payee_as_account);
+    else OPT(payee_);
     else OPT(pending);
     else OPT(percent);
     else OPT_(period_);
@@ -662,11 +690,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(revalued_total_);
     break;
   case 's':
-    OPT(set_account_);
-    else OPT(set_payee_);
-    else OPT(set_reported_account_);
-    else OPT(set_reported_payee_);
-    else OPT(sort_);
+    OPT(sort_);
     else OPT(sort_all_);
     else OPT(sort_xacts_);
     else OPT_(subtotal);
@@ -699,303 +723,317 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   return NULL;
 }
 
-void report_t::define(const string& name, expr_t::ptr_op_t def)
+void report_t::define(const symbol_t::kind_t kind, const string& name,
+		      expr_t::ptr_op_t def)
 {
-  session.define(name, def);
+  session.define(kind, name, def);
 }
 
-expr_t::ptr_op_t report_t::lookup(const string& name)
+expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
+				  const string& name)
 {
-  if (expr_t::ptr_op_t def = session.lookup(name))
+  if (expr_t::ptr_op_t def = session.lookup(kind, name))
     return def;
 
   const char * p = name.c_str();
-  switch (*p) {
-  case 'a':
-    if (is_eq(p, "amount_expr"))
-      return MAKE_FUNCTOR(report_t::fn_amount_expr);
-    else if (is_eq(p, "ansify_if"))
-      return MAKE_FUNCTOR(report_t::fn_ansify_if);
-    else if (is_eq(p, "abs"))
-      return MAKE_FUNCTOR(report_t::fn_abs);
+
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    switch (*p) {
+    case 'a':
+      if (is_eq(p, "amount_expr"))
+	return MAKE_FUNCTOR(report_t::fn_amount_expr);
+      else if (is_eq(p, "ansify_if"))
+	return MAKE_FUNCTOR(report_t::fn_ansify_if);
+      else if (is_eq(p, "abs"))
+	return MAKE_FUNCTOR(report_t::fn_abs);
+      else if (is_eq(p, "account_total"))
+	return MAKE_FUNCTOR(report_t::fn_account_total);
+      break;
+
+    case 'b':
+      if (is_eq(p, "black"))
+	return WRAP_FUNCTOR(fn_black);
+      else if (is_eq(p, "blink"))
+	return WRAP_FUNCTOR(fn_blink);
+      else if (is_eq(p, "blue"))
+	return WRAP_FUNCTOR(fn_blue);
+      else if (is_eq(p, "bold"))
+	return WRAP_FUNCTOR(fn_bold);
+      break;
+
+    case 'c':
+      if (is_eq(p, "cyan"))
+	return WRAP_FUNCTOR(fn_cyan);
+      break;
+
+    case 'd':
+      if (is_eq(p, "display_amount"))
+	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      else if (is_eq(p, "display_total"))
+	return MAKE_FUNCTOR(report_t::fn_display_total);
+      else if (is_eq(p, "date"))
+	return MAKE_FUNCTOR(report_t::fn_now);
+      break;
+
+    case 'f':
+      if (is_eq(p, "format_date"))
+	return MAKE_FUNCTOR(report_t::fn_format_date);
+      break;
+
+    case 'g':
+      if (is_eq(p, "get_at"))
+	return MAKE_FUNCTOR(report_t::fn_get_at);
+      else if (is_eq(p, "green"))
+	return WRAP_FUNCTOR(fn_green);
+      break;
+
+    case 'i':
+      if (is_eq(p, "is_seq"))
+	return MAKE_FUNCTOR(report_t::fn_is_seq);
+      break;
+
+    case 'j':
+      if (is_eq(p, "justify"))
+	return MAKE_FUNCTOR(report_t::fn_justify);
+      else if (is_eq(p, "join"))
+	return MAKE_FUNCTOR(report_t::fn_join);
+      break;
+
+    case 'm':
+      if (is_eq(p, "market"))
+	return MAKE_FUNCTOR(report_t::fn_market);
+      else if (is_eq(p, "magenta"))
+	return WRAP_FUNCTOR(fn_magenta);
+      break;
+
+    case 'n':
+      if (is_eq(p, "null"))
+	return WRAP_FUNCTOR(fn_null);
+      else if (is_eq(p, "now"))
+	return MAKE_FUNCTOR(report_t::fn_now);
+      break;
+
+    case 'o':
+      if (is_eq(p, "options"))
+	return MAKE_FUNCTOR(report_t::fn_options);
+      break;
+
+    case 'p':
+      if (is_eq(p, "post"))
+	return WRAP_FUNCTOR(fn_false);
+      else if (is_eq(p, "percent"))
+	return MAKE_FUNCTOR(report_t::fn_percent);
+      else if (is_eq(p, "price"))
+	return MAKE_FUNCTOR(report_t::fn_price);
+      break;
+
+    case 'q':
+      if (is_eq(p, "quoted"))
+	return MAKE_FUNCTOR(report_t::fn_quoted);
+      else if (is_eq(p, "quantity"))
+	return MAKE_FUNCTOR(report_t::fn_quantity);
+      break;
+
+    case 'r':
+      if (is_eq(p, "rounded"))
+	return MAKE_FUNCTOR(report_t::fn_rounded);
+      else if (is_eq(p, "red"))
+	return WRAP_FUNCTOR(fn_red);
+      break;
+
+    case 's':
+      if (is_eq(p, "scrub"))
+	return MAKE_FUNCTOR(report_t::fn_scrub);
+      else if (is_eq(p, "strip"))
+	return MAKE_FUNCTOR(report_t::fn_strip);
+      break;
+
+    case 't':
+      if (is_eq(p, "truncated"))
+	return MAKE_FUNCTOR(report_t::fn_truncated);
+      else if (is_eq(p, "total_expr"))
+	return MAKE_FUNCTOR(report_t::fn_total_expr);
+      else if (is_eq(p, "today"))
+	return MAKE_FUNCTOR(report_t::fn_today);
+      else if (is_eq(p, "t"))
+	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      break;
+
+    case 'T':
+      if (is_eq(p, "T"))
+	return MAKE_FUNCTOR(report_t::fn_display_total);
+      break;
+
+    case 'u':
+      if (is_eq(p, "underline"))
+	return WRAP_FUNCTOR(fn_underline);
+      else if (is_eq(p, "unrounded"))
+	return MAKE_FUNCTOR(report_t::fn_unrounded);
+      break;
+
+    case 'w':
+      if (is_eq(p, "white"))
+	return WRAP_FUNCTOR(fn_white);
+      break;
+
+    case 'y':
+      if (is_eq(p, "yellow"))
+	return WRAP_FUNCTOR(fn_yellow);
+      break;
+    }
+
+    // Check if they are trying to access an option's setting or value.
+    if (option_t<report_t> * handler = lookup_option(p))
+      return MAKE_OPT_FUNCTOR(report_t, handler);
     break;
 
-  case 'b':
-    if (is_eq(p, "black"))
-      return WRAP_FUNCTOR(fn_black);
-    else if (is_eq(p, "blink"))
-      return WRAP_FUNCTOR(fn_blink);
-    else if (is_eq(p, "blue"))
-      return WRAP_FUNCTOR(fn_blue);
-    else if (is_eq(p, "bold"))
-      return WRAP_FUNCTOR(fn_bold);
+  case symbol_t::OPTION:
+    if (option_t<report_t> * handler = lookup_option(p))
+      return MAKE_OPT_HANDLER(report_t, handler);
     break;
 
-  case 'c':
-    if (WANT_CMD()) { const char * q = p + CMD_PREFIX_LEN;
-      switch (*q) {
-      case 'b':
-	if (*(q + 1) == '\0' || is_eq(q, "bal") || is_eq(q, "balance")) {
-	  return expr_t::op_t::wrap_functor
-	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, report_format(HANDLER(balance_format_))),
-	      *this, "#balance"));
-	}
-	else if (is_eq(q, "budget")) {
-	  HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
-
-	  budget_flags |= BUDGET_WRAP_VALUES;
-	  if (! (budget_flags & ~BUDGET_WRAP_VALUES))
-	    budget_flags |= BUDGET_BUDGETED;
-
-	  return expr_t::op_t::wrap_functor
-	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, report_format(HANDLER(budget_format_))),
-	      *this, "#budget"));
-	}
-	break;
-
-      case 'c':
-	if (is_eq(q, "csv")) {
-	  return WRAP_FUNCTOR
-	    (reporter<>
-	     (new format_posts(*this, report_format(HANDLER(csv_format_))),
-	      *this, "#csv"));
-	}
-	else if (is_eq(q, "cleared")) {
-	  HANDLER(amount_).set_expr(string("#cleared"),
-				    "(amount, cleared ? amount : 0)");
-
-	  return expr_t::op_t::wrap_functor
-	    (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	     (new format_accounts(*this, report_format(HANDLER(cleared_format_))),
-	      *this, "#cleared"));
-	}
-	break;
-
-      case 'e':
-	if (is_eq(q, "equity"))
-	  return WRAP_FUNCTOR
-	    (reporter<>
-	     (new format_posts(*this, report_format(HANDLER(print_format_))),
-	      *this, "#equity"));
-	else if (is_eq(q, "entry"))
-	  return WRAP_FUNCTOR(xact_command);
-	else if (is_eq(q, "emacs"))
-	  return WRAP_FUNCTOR
-	    (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
-	else if (is_eq(q, "echo"))
-	  return MAKE_FUNCTOR(report_t::echo_command);
-	break;
-
-      case 'p':
-	if (*(q + 1) == '\0' || is_eq(q, "print"))
-	  return WRAP_FUNCTOR
-	    (reporter<>
-	     (new format_posts(*this, report_format(HANDLER(print_format_)),
-			       HANDLED(raw)), *this, "#print"));
-	else if (is_eq(q, "prices"))
-	  return expr_t::op_t::wrap_functor
-	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	     (new format_posts(*this, report_format(HANDLER(prices_format_))),
-	      *this, "#prices"));
-	else if (is_eq(q, "pricesdb"))
-	  return expr_t::op_t::wrap_functor
-	    (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	     (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
-	      *this, "#pricesdb"));
-	else if (is_eq(q, "python") && maybe_import("ledger.interp"))
-	  return session.lookup(string(CMD_PREFIX) + "python");
-	break;
-
-      case 'r':
-	if (*(q + 1) == '\0' || is_eq(q, "reg") || is_eq(q, "register"))
-	  return WRAP_FUNCTOR
-	    (reporter<>
-	     (new format_posts(*this, report_format(HANDLER(register_format_))),
-	      *this, "#register"));
-	else if (is_eq(q, "reload"))
-	  return MAKE_FUNCTOR(report_t::reload_command);
-	break;
-
-      case 's':
-	if (is_eq(q, "stats") || is_eq(q, "stat"))
-	  return WRAP_FUNCTOR(report_statistics);
-	else
-	  if (is_eq(q, "server") && maybe_import("ledger.server"))
-	  return session.lookup(string(CMD_PREFIX) + "server");
-	break;
-
-      case 'x':
-	if (is_eq(q, "xact"))
-	  return WRAP_FUNCTOR(xact_command);
-	break;
+  case symbol_t::COMMAND:
+    switch (*p) {
+    case 'b':
+      if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
+	return expr_t::op_t::wrap_functor
+	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	   (new format_accounts(*this, report_format(HANDLER(balance_format_))),
+	    *this, "#balance"));
       }
-    }
-    else if (is_eq(p, "cyan"))
-      return WRAP_FUNCTOR(fn_cyan);
-    break;
+      else if (is_eq(p, "budget")) {
+	HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
 
-  case 'd':
-    if (is_eq(p, "display_amount"))
-      return MAKE_FUNCTOR(report_t::fn_display_amount);
-    else if (is_eq(p, "display_total"))
-      return MAKE_FUNCTOR(report_t::fn_display_total);
-    else if (is_eq(p, "date"))
-      return MAKE_FUNCTOR(report_t::fn_now);
-    break;
+	budget_flags |= BUDGET_WRAP_VALUES;
+	if (! (budget_flags & ~BUDGET_WRAP_VALUES))
+	  budget_flags |= BUDGET_BUDGETED;
 
-  case 'f':
-    if (is_eq(p, "format_date"))
-      return MAKE_FUNCTOR(report_t::fn_format_date);
-    break;
-
-  case 'g':
-    if (is_eq(p, "get_at"))
-      return MAKE_FUNCTOR(report_t::fn_get_at);
-    else if (is_eq(p, "green"))
-      return WRAP_FUNCTOR(fn_green);
-    break;
-
-  case 'i':
-    if (is_eq(p, "is_seq"))
-      return MAKE_FUNCTOR(report_t::fn_is_seq);
-    break;
-
-  case 'j':
-    if (is_eq(p, "justify"))
-      return MAKE_FUNCTOR(report_t::fn_justify);
-    else if (is_eq(p, "join"))
-      return MAKE_FUNCTOR(report_t::fn_join);
-    break;
-
-  case 'm':
-    if (is_eq(p, "market"))
-      return MAKE_FUNCTOR(report_t::fn_market);
-    else if (is_eq(p, "magenta"))
-      return WRAP_FUNCTOR(fn_magenta);
-    break;
-
-  case 'n':
-    if (is_eq(p, "null"))
-      return WRAP_FUNCTOR(fn_null);
-    else if (is_eq(p, "now"))
-      return MAKE_FUNCTOR(report_t::fn_now);
-    break;
-
-  case 'o':
-    if (WANT_OPT()) { const char * q = p + OPT_PREFIX_LEN;
-      if (option_t<report_t> * handler = lookup_option(q))
-	return MAKE_OPT_HANDLER(report_t, handler);
-    }
-    else if (is_eq(p, "options")) {
-      return MAKE_FUNCTOR(report_t::fn_options);
-    }
-    break;
-
-  case 'p':
-    if (WANT_PRECMD()) { const char * q = p + PRECMD_PREFIX_LEN;
-      switch (*q) {
-      case 'a':
-	if (is_eq(q, "args"))
-	  return WRAP_FUNCTOR(args_command);
-	break;
-      case 'e':
-	if (is_eq(q, "eval"))
-	  return WRAP_FUNCTOR(eval_command);
-	break;
-      case 'f':
-	if (is_eq(q, "format"))
-	  return WRAP_FUNCTOR(format_command);
-	break;
-      case 'g':
-	if (is_eq(q, "generate"))
-	  return expr_t::op_t::wrap_functor
-	    (reporter<post_t, post_handler_ptr, &report_t::generate_report>
-	     (new format_posts(*this, report_format(HANDLER(print_format_)),
-			       false), *this, "#generate"));
-      case 'h':
-	if (is_eq(q, "hello") && maybe_import("ledger.hello"))
-	  return session.lookup(string(PRECMD_PREFIX) + "hello");
-	break;
-      case 'p':
-	if (is_eq(q, "parse"))
-	  return WRAP_FUNCTOR(parse_command);
-	else if (is_eq(q, "period"))
-	  return WRAP_FUNCTOR(period_command);
-	break;
-      case 't':
-	if (is_eq(q, "template"))
-	  return WRAP_FUNCTOR(template_command);
-	break;
+	return expr_t::op_t::wrap_functor
+	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	   (new format_accounts(*this, report_format(HANDLER(budget_format_))),
+	    *this, "#budget"));
       }
+      break;
+
+    case 'c':
+      if (is_eq(p, "csv")) {
+	return WRAP_FUNCTOR
+	  (reporter<>
+	   (new format_posts(*this, report_format(HANDLER(csv_format_))),
+	    *this, "#csv"));
+      }
+      else if (is_eq(p, "cleared")) {
+	HANDLER(amount_).set_expr(string("#cleared"),
+				  "(amount, cleared ? amount : 0)");
+
+	return expr_t::op_t::wrap_functor
+	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+	   (new format_accounts(*this, report_format(HANDLER(cleared_format_))),
+	    *this, "#cleared"));
+      }
+      break;
+
+    case 'e':
+      if (is_eq(p, "equity"))
+	return WRAP_FUNCTOR
+	  (reporter<>
+	   (new format_posts(*this, report_format(HANDLER(print_format_))),
+	    *this, "#equity"));
+      else if (is_eq(p, "entry"))
+	return WRAP_FUNCTOR(xact_command);
+      else if (is_eq(p, "emacs"))
+	return WRAP_FUNCTOR
+	  (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
+      else if (is_eq(p, "echo"))
+	return MAKE_FUNCTOR(report_t::echo_command);
+      break;
+
+    case 'p':
+      if (*(p + 1) == '\0' || is_eq(p, "print"))
+	return WRAP_FUNCTOR
+	  (reporter<>
+	   (new format_posts(*this, report_format(HANDLER(print_format_)),
+			     HANDLED(raw)), *this, "#print"));
+      else if (is_eq(p, "prices"))
+	return expr_t::op_t::wrap_functor
+	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
+	   (new format_posts(*this, report_format(HANDLER(prices_format_))),
+	    *this, "#prices"));
+      else if (is_eq(p, "pricesdb"))
+	return expr_t::op_t::wrap_functor
+	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
+	   (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
+	    *this, "#pricesdb"));
+      else if (is_eq(p, "python") && maybe_import("ledger.interp"))
+	return session.lookup(symbol_t::COMMAND, "python");
+      break;
+
+    case 'r':
+      if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
+	return WRAP_FUNCTOR
+	  (reporter<>
+	   (new format_posts(*this, report_format(HANDLER(register_format_))),
+	    *this, "#register"));
+      else if (is_eq(p, "reload"))
+	return MAKE_FUNCTOR(report_t::reload_command);
+      break;
+
+    case 's':
+      if (is_eq(p, "stats") || is_eq(p, "stat"))
+	return WRAP_FUNCTOR(report_statistics);
+      else
+	if (is_eq(p, "server") && maybe_import("ledger.server"))
+	  return session.lookup(symbol_t::COMMAND, "server");
+      break;
+
+    case 'x':
+      if (is_eq(p, "xact"))
+	return WRAP_FUNCTOR(xact_command);
+      break;
     }
-    else if (is_eq(p, "post"))
-      return WRAP_FUNCTOR(fn_false);
-    else if (is_eq(p, "percent"))
-      return MAKE_FUNCTOR(report_t::fn_percent);
-    else if (is_eq(p, "price"))
-      return MAKE_FUNCTOR(report_t::fn_price);
     break;
 
-  case 'q':
-    if (is_eq(p, "quoted"))
-      return MAKE_FUNCTOR(report_t::fn_quoted);
-    else if (is_eq(p, "quantity"))
-      return MAKE_FUNCTOR(report_t::fn_quantity);
+  case symbol_t::PRECOMMAND:
+    switch (*p) {
+    case 'a':
+      if (is_eq(p, "args"))
+	return WRAP_FUNCTOR(args_command);
+      break;
+    case 'e':
+      if (is_eq(p, "eval"))
+	return WRAP_FUNCTOR(eval_command);
+      break;
+    case 'f':
+      if (is_eq(p, "format"))
+	return WRAP_FUNCTOR(format_command);
+      break;
+    case 'g':
+      if (is_eq(p, "generate"))
+	return expr_t::op_t::wrap_functor
+	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
+	   (new format_posts(*this, report_format(HANDLER(print_format_)),
+			     false), *this, "#generate"));
+    case 'h':
+      if (is_eq(p, "hello") && maybe_import("ledger.hello"))
+	return session.lookup(symbol_t::PRECOMMAND, "hello");
+      break;
+    case 'p':
+      if (is_eq(p, "parse"))
+	return WRAP_FUNCTOR(parse_command);
+      else if (is_eq(p, "period"))
+	return WRAP_FUNCTOR(period_command);
+      break;
+    case 't':
+      if (is_eq(p, "template"))
+	return WRAP_FUNCTOR(template_command);
+      break;
+    }
     break;
 
-  case 'r':
-    if (is_eq(p, "rounded"))
-      return MAKE_FUNCTOR(report_t::fn_rounded);
-    else if (is_eq(p, "red"))
-      return WRAP_FUNCTOR(fn_red);
-    break;
-
-  case 's':
-    if (is_eq(p, "scrub"))
-      return MAKE_FUNCTOR(report_t::fn_scrub);
-    else if (is_eq(p, "strip"))
-      return MAKE_FUNCTOR(report_t::fn_strip);
-    break;
-
-  case 't':
-    if (is_eq(p, "truncated"))
-      return MAKE_FUNCTOR(report_t::fn_truncated);
-    else if (is_eq(p, "total_expr"))
-      return MAKE_FUNCTOR(report_t::fn_total_expr);
-    else if (is_eq(p, "today"))
-      return MAKE_FUNCTOR(report_t::fn_today);
-    else if (is_eq(p, "t"))
-      return MAKE_FUNCTOR(report_t::fn_display_amount);
-    break;
-
-  case 'T':
-    if (is_eq(p, "T"))
-      return MAKE_FUNCTOR(report_t::fn_display_total);
-    break;
-
-  case 'u':
-    if (is_eq(p, "underline"))
-      return WRAP_FUNCTOR(fn_underline);
-    else if (is_eq(p, "unrounded"))
-      return MAKE_FUNCTOR(report_t::fn_unrounded);
-    break;
-
-  case 'w':
-    if (is_eq(p, "white"))
-      return WRAP_FUNCTOR(fn_white);
-    break;
-
-  case 'y':
-    if (is_eq(p, "yellow"))
-      return WRAP_FUNCTOR(fn_yellow);
+  default:
     break;
   }
-
-  // Check if they are trying to access an option's setting or value.
-  if (option_t<report_t> * handler = lookup_option(p))
-    return MAKE_OPT_FUNCTOR(report_t, handler);
 
   return NULL;
 }

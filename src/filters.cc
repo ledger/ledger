@@ -711,6 +711,7 @@ void transfer_details::operator()(post_t& post)
   case SET_PAYEE:
     xact.payee = expr.calc(bound_scope).to_string();
     break;
+
   case SET_ACCOUNT: {
     std::list<string> account_names;
     temp.account->remove_post(&temp);
@@ -720,6 +721,7 @@ void transfer_details::operator()(post_t& post)
     temp.account->add_post(&temp);
     break;
   }
+
   default:
     assert(false);
     break;

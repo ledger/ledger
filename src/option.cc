@@ -41,8 +41,7 @@ namespace {
   op_bool_tuple find_option(scope_t& scope, const string& name)
   {
     char buf[128];
-    std::strcpy(buf, "opt_");
-    char * p = &buf[4];
+    char * p = buf;
     foreach (char ch, name) {
       if (ch == '-')
 	*p++ = '_';
@@ -52,28 +51,27 @@ namespace {
     *p++ = '_';
     *p = '\0';
 
-    if (expr_t::ptr_op_t op = scope.lookup(buf))
+    if (expr_t::ptr_op_t op = scope.lookup(symbol_t::OPTION, buf))
       return op_bool_tuple(op, true);
 
     *--p = '\0';
 
-    return op_bool_tuple(scope.lookup(buf), false);
+    return op_bool_tuple(scope.lookup(symbol_t::OPTION, buf), false);
   }
 
   op_bool_tuple find_option(scope_t& scope, const char letter)
   {
-    char buf[10];
-    std::strcpy(buf, "opt_");
-    buf[4] = letter;
-    buf[5] = '_';
-    buf[6] = '\0';
+    char buf[4];
+    buf[0] = letter;
+    buf[1] = '_';
+    buf[2] = '\0';
 
-    if (expr_t::ptr_op_t op = scope.lookup(buf))
+    if (expr_t::ptr_op_t op = scope.lookup(symbol_t::OPTION, buf))
       return op_bool_tuple(op, true);
 
-    buf[5] = '\0';
+    buf[1] = '\0';
 
-    return op_bool_tuple(scope.lookup(buf), false);
+    return op_bool_tuple(scope.lookup(symbol_t::OPTION, buf), false);
   }
 
   void process_option(const string& whence, const function_t& opt,

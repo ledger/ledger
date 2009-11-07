@@ -85,21 +85,24 @@ void export_xact()
   class_< xact_base_t, bases<item_t> > ("TransactionBase")
     .add_property("journal",
 		  make_getter(&xact_base_t::journal,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&xact_base_t::journal,
 			      with_custodian_and_ward<1, 2>()))
-    .add_property("posts",
-		  make_getter(&xact_base_t::posts),
-		  make_setter(&xact_base_t::posts))
 
     .def("__len__", posts_len)
     .def("__getitem__", posts_getitem,
-	 return_value_policy<reference_existing_object>())
+	 return_internal_reference<>())
 
     .def("add_post", &xact_base_t::add_post, with_custodian_and_ward<1, 2>())
     .def("remove_post", &xact_base_t::add_post)
 
     .def("finalize", &xact_base_t::finalize)
+
+    .def("__iter__", range<return_internal_reference<> >
+	 (&xact_t::posts_begin, &xact_t::posts_end))
+    .def("posts", range<return_internal_reference<> >
+	 (&xact_t::posts_begin, &xact_t::posts_end))
+
     .def("valid", &xact_base_t::valid)
     ;
 
@@ -118,6 +121,8 @@ void export_xact()
     .def("id", &xact_t::id)
 
     .def("lookup", &xact_t::lookup)
+
+    .def("clear_xdata", &xact_t::clear_xdata)
 
     .def("valid", &xact_t::valid)
     ;
@@ -141,7 +146,7 @@ void export_xact()
     ("AutomatedTransactionFinalizer")
     .add_property("journal",
 		  make_getter(&auto_xact_finalizer_t::journal,
-			      return_value_policy<reference_existing_object>()),
+			      return_internal_reference<>()),
 		  make_setter(&auto_xact_finalizer_t::journal,
 			      with_custodian_and_ward<1, 2>()))
     .def("__call__", &auto_xact_finalizer_t::operator())

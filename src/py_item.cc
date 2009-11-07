@@ -109,9 +109,9 @@ void export_item()
   class_< item_t > ("JournalItem", init<uint_least8_t>())
 #endif
 #if 1
-    .def("flags", &supports_flags<>::flags)
+    .add_property("flags", &supports_flags<>::flags,
+		  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
-    .def("set_flags", &supports_flags<>::set_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
     .def("drop_flags", &supports_flags<>::drop_flags)
@@ -138,6 +138,9 @@ void export_item()
     .def("get_tag", py_get_tag_1s)
     .def("get_tag", py_get_tag_1m)
     .def("get_tag", py_get_tag_2m)
+    .def("tag", py_get_tag_1s)
+    .def("tag", py_get_tag_1m)
+    .def("tag", py_get_tag_2m)
 
     .def("set_tag", &item_t::set_tag)
 
@@ -148,11 +151,11 @@ void export_item()
 			 make_getter(&item_t::use_effective_date),
 			 make_setter(&item_t::use_effective_date))
 
-    .def("date", &item_t::date)
-    .def("effective_date", &item_t::effective_date)
+    .add_property("date", &item_t::date, make_setter(&item_t::_date))
+    .add_property("effective_date", &item_t::effective_date,
+		  make_setter(&item_t::_date_eff))
 
-    .def("set_state", &item_t::set_state)
-    .def("state", &item_t::state)
+    .add_property("state", &item_t::state, &item_t::set_state)
 
     .def("lookup", &item_t::lookup)
 

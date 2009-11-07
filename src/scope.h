@@ -55,18 +55,40 @@ namespace ledger {
  *
  * Long.
  */
-class scope_t
+struct symbol_t
 {
-public:
-  explicit scope_t() {
-    TRACE_CTOR(scope_t, "");
+  enum kind_t {
+    UNKNOWN,
+    FUNCTION,
+    OPTION,
+    PRECOMMAND,
+    COMMAND,
+    DIRECTIVE
+  };
+
+  kind_t	   kind;
+  string	   name;
+  expr_t::ptr_op_t definition;
+
+  symbol_t() : kind(UNKNOWN), name(""), definition(NULL) {
+    TRACE_CTOR(symbol_t, "");
   }
-  virtual ~scope_t() {
-    TRACE_DTOR(scope_t);
+  symbol_t(kind_t _kind, string _name, expr_t::ptr_op_t _definition = NULL)
+    : kind(_kind), name(_name), definition(_definition) {
+    TRACE_CTOR(symbol_t, "symbol_t::kind_t, string");
+  }
+  symbol_t(const symbol_t& sym)
+    : kind(sym.kind), name(sym.name),
+      definition(sym.definition) {
+    TRACE_CTOR(symbol_t, "copy");
+  }
+  ~symbol_t() throw() {
+    TRACE_DTOR(symbol_t);
   }
 
-  virtual void define(const string&, expr_t::ptr_op_t) {}
-  virtual expr_t::ptr_op_t lookup(const string& name) = 0;
+  bool operator<(const symbol_t& sym) const {
+    return kind < sym.kind || name < sym.name;
+  }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -75,7 +97,44 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive &, const unsigned int /* version */) {}
+  void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & kind;
+    ar & name;
+    ar & definition;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
+};
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class scope_t
+{
+public:
+  static scope_t * default_scope;
+
+  explicit scope_t() {
+    TRACE_CTOR(scope_t, "");
+  }
+  virtual ~scope_t() {
+    TRACE_DTOR(scope_t);
+  }
+
+  virtual void define(const symbol_t::kind_t, const string&,
+		      expr_t::ptr_op_t) {}
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name) = 0;
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive&, const unsigned int /* version */) {}
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
@@ -100,14 +159,16 @@ public:
     TRACE_DTOR(child_scope_t);
   }
 
-  virtual void define(const string& name, expr_t::ptr_op_t def) {
+  virtual void define(const symbol_t::kind_t kind,
+		      const string& name, expr_t::ptr_op_t def) {
     if (parent)
-      parent->define(name, def);
+      parent->define(kind, name, def);
   }
 
-  virtual expr_t::ptr_op_t lookup(const string& name) {
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name) {
     if (parent)
-      return parent->lookup(name);
+      return parent->lookup(kind, name);
     return NULL;
   }
 
@@ -118,7 +179,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & parent;
   }
@@ -132,7 +193,7 @@ private:
  */
 class symbol_scope_t : public child_scope_t
 {
-  typedef std::map<const string, expr_t::ptr_op_t> symbol_map;
+  typedef std::map<symbol_t, expr_t::ptr_op_t> symbol_map;
 
   symbol_map symbols;
 
@@ -147,9 +208,11 @@ public:
     TRACE_DTOR(symbol_scope_t);
   }
 
-  virtual void define(const string& name, expr_t::ptr_op_t def);
+  virtual void define(const symbol_t::kind_t kind, const string& name,
+		      expr_t::ptr_op_t def);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -158,7 +221,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<child_scope_t>(*this);
     ar & symbols;
   }
@@ -196,6 +259,9 @@ public:
     return args[index];
   }
 
+  void push_front(const value_t& val) {
+    args.push_front(val);
+  }
   void push_back(const value_t& val) {
     args.push_back(val);
   }
@@ -228,7 +294,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<child_scope_t>(*this);
     ar & args;
   }
@@ -256,15 +322,17 @@ public:
     TRACE_DTOR(bind_scope_t);
   }
 
-  virtual void define(const string& name, expr_t::ptr_op_t def) {
-    parent->define(name, def);
-    grandchild.define(name, def);
+  virtual void define(const symbol_t::kind_t kind, const string& name,
+		      expr_t::ptr_op_t def) {
+    parent->define(kind, name, def);
+    grandchild.define(kind, name, def);
   }
 
-  virtual expr_t::ptr_op_t lookup(const string& name) {
-    if (expr_t::ptr_op_t def = grandchild.lookup(name))
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name) {
+    if (expr_t::ptr_op_t def = grandchild.lookup(kind, name))
       return def;
-    return child_scope_t::lookup(name);
+    return child_scope_t::lookup(kind, name);
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
@@ -274,7 +342,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<child_scope_t>(*this);
     ar & grandchild;
   }

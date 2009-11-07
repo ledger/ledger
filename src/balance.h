@@ -480,6 +480,13 @@ public:
   optional<amount_t>
   commodity_amount(const optional<const commodity_t&>& commodity = none) const;
 
+  balance_t number() const {
+    balance_t temp;
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.number();
+    return temp;
+  }
+
   /**
    * Annotated commodity methods.  The amounts contained by a balance
    * may use annotated commodities.  The `strip_annotations' method
@@ -556,7 +563,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & amounts;
   }
 #endif // HAVE_BOOST_SERIALIZATION

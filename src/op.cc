@@ -43,7 +43,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
   if (is_ident()) {
     DEBUG("expr.compile", "lookup: " << as_ident());
 
-    if (ptr_op_t def = scope.lookup(as_ident())) {
+    if (ptr_op_t def = scope.lookup(symbol_t::FUNCTION, as_ident())) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
@@ -65,11 +65,11 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
   if (kind == O_DEFINE) {
     switch (left()->kind) {
     case IDENT:
-      scope.define(left()->as_ident(), right());
+      scope.define(symbol_t::FUNCTION, left()->as_ident(), right());
       break;
     case O_CALL:
       if (left()->left()->is_ident())
-	scope.define(left()->left()->as_ident(), this);
+	scope.define(symbol_t::FUNCTION, left()->left()->as_ident(), this);
       else
 	throw_(compile_error, _("Invalid function definition"));
       break;
@@ -152,9 +152,10 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       if (! varname->is_ident())
 	throw_(calc_error, _("Invalid function definition"));
       else if (args_index == args_count)
-	local_scope.define(varname->as_ident(), wrap_value(false));
+	local_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+			   wrap_value(false));
       else
-	local_scope.define(varname->as_ident(),
+	local_scope.define(symbol_t::FUNCTION, varname->as_ident(),
 			   wrap_value(call_args[args_index++]));
     }
 
@@ -178,7 +179,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 		   _("Left operand of . operator is NULL"));
 	  } else {
 	    scope_t& objscope(*obj.as_scope());
-	    if (ptr_op_t member = objscope.lookup(right()->as_ident())) {
+	    if (ptr_op_t member =
+		objscope.lookup(symbol_t::FUNCTION, right()->as_ident())) {
 	      result = member->calc(objscope, NULL, depth + 1);
 	      break;
 	    }

@@ -77,7 +77,19 @@ public:
   virtual void add_post(post_t * post);
   virtual bool remove_post(post_t * post);
 
+  posts_list::iterator posts_begin() {
+    return posts.begin();
+  }
+  posts_list::iterator posts_end() {
+    return posts.end();
+  }
+
+  value_t magnitude() const;
+
   virtual bool finalize();
+
+  void clear_xdata();
+
   virtual bool valid() const {
     return true;
   }
@@ -89,7 +101,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<item_t>(*this);
     ar & journal;
     ar & posts;
@@ -119,11 +131,11 @@ public:
 
   virtual void add_post(post_t * post);
 
-  value_t magnitude() const;
   string idstring() const;
   string id() const;
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   virtual bool valid() const;
 
@@ -134,7 +146,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<xact_base_t>(*this);
     ar & code;
     ar & payee;
@@ -188,7 +200,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<xact_base_t>(*this);
     ar & predicate;
   }
@@ -227,7 +239,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & journal;
   }
 #endif // HAVE_BOOST_SERIALIZATION
@@ -267,7 +279,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<xact_base_t>(*this);
     ar & period;
     ar & period_string;

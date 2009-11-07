@@ -114,12 +114,33 @@ public:
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
+  typedef transform_iterator<function<account_t *(accounts_map::value_type&)>,
+			     accounts_map::iterator>
+    accounts_map_seconds_iterator;
+
+  accounts_map_seconds_iterator accounts_begin() {
+    return make_transform_iterator
+      (accounts.begin(), bind(&accounts_map::value_type::second, _1));
+  }
+  accounts_map_seconds_iterator accounts_end() {
+    return make_transform_iterator
+      (accounts.end(), bind(&accounts_map::value_type::second, _1));
+  }
+
   void add_post(post_t * post) {
     posts.push_back(post);
   }
   bool remove_post(post_t * post);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  posts_list::iterator posts_begin() {
+    return posts.begin();
+  }
+  posts_list::iterator posts_end() {
+    return posts.end();
+  }
+
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   bool valid() const;
 
@@ -209,9 +230,7 @@ public:
   bool has_xdata() const {
     return xdata_;
   }
-  void clear_xdata() {
-    xdata_ = none;
-  }
+  void clear_xdata();
   xdata_t& xdata() {
     if (! xdata_)
       xdata_ = xdata_t();
@@ -240,7 +259,7 @@ private:
   friend class boost::serialization::access;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int /* version */) {
+  void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<supports_flags<> >(*this);
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & parent;

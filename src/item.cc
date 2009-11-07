@@ -212,23 +212,23 @@ namespace {
       else if (args[0].is_mask())
 	return item.has_tag(args[0].as_mask());
       else
-	throw_(std::logic_error,
-	       _("Expected string for argument 1, but received %1")
+	throw_(std::runtime_error,
+	       _("Expected string or mask for argument 1, but received %1")
 	       << args[0].label());
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
 	return item.has_tag(args[0].to_mask(), args[1].to_mask());
       else
-	throw_(std::logic_error,
+	throw_(std::runtime_error,
 	       _("Expected masks for arguments 1 and 2, but received %1 and %2")
 	       << args[0].label() << args[1].label());
     }
     else if (args.size() == 0) {
-      throw_(std::logic_error, _("Too few arguments to function"));
+      throw_(std::runtime_error, _("Too few arguments to function"));
     }
     else {
-      throw_(std::logic_error, _("Too many arguments to function"));
+      throw_(std::runtime_error, _("Too many arguments to function"));
     }
     return false;
   }
@@ -304,8 +304,12 @@ value_t get_comment(item_t& item)
   }
 }
 
-expr_t::ptr_op_t item_t::lookup(const string& name)
+expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
+				const string& name)
 {
+  if (kind != symbol_t::FUNCTION)
+    return NULL;
+
   switch (name[0]) {
   case 'a':
     if (name == "actual")

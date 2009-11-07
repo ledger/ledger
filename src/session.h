@@ -80,35 +80,19 @@ public:
     flush_on_next_data_file = truth;
   }
 
-  std::size_t read_journal(std::istream& in,
-			   const path&	 pathname,
-			   account_t *   master = NULL,
-			   scope_t *     scope  = NULL);
-  std::size_t read_journal(const path&	 pathname,
-			   account_t *   master = NULL,
-			   scope_t *     scope  = NULL);
-
   std::size_t read_data(const string& master_account = "");
 
   void read_journal_files();
   void close_journal_files();
 
-  void clean_posts();
-  void clean_posts(xact_t& xact);
-  void clean_accounts();
-  void clean_all() {
-    clean_posts();
-    clean_accounts();
-  }
-
   void report_options(std::ostream& out)
   {
-    HANDLER(account_).report(out);
     HANDLER(cache_).report(out);
     HANDLER(download).report(out);
     HANDLER(european).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
+    HANDLER(master_account_).report(out);
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
@@ -116,13 +100,13 @@ public:
 
   option_t<session_t> * lookup_option(const char * p);
 
-  virtual expr_t::ptr_op_t lookup(const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name);
 
   /**
    * Option handlers
    */
 
-  OPTION(session_t, account_); // -a
   OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
 
@@ -156,6 +140,7 @@ public:
       set_input_date_format(args[1].as_string().c_str());
     });
 
+  OPTION(session_t, master_account_);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
 };
