@@ -156,8 +156,8 @@ bool xact_base_t::finalize()
   // If there is only one post, balance against the default account if one has
   // been set.
 
-  if (journal && journal->basket && posts.size() == 1 && ! balance.is_null()) {
-    null_post = new post_t(journal->basket, ITEM_GENERATED);
+  if (journal && journal->bucket && posts.size() == 1 && ! balance.is_null()) {
+    null_post = new post_t(journal->bucket, ITEM_GENERATED);
     null_post->_state = (*posts.begin())->_state;
     add_post(null_post);
   }

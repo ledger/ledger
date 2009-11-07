@@ -115,7 +115,7 @@ public:
   };
 
   account_t *		master;
-  account_t *		basket;
+  account_t *		bucket;
   xacts_list		xacts;
   auto_xacts_list	auto_xacts;
   period_xacts_list	period_xacts;
@@ -202,7 +202,7 @@ private:
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & master;
-    ar & basket;
+    ar & bucket;
     ar & xacts;
     ar & auto_xacts;
     ar & period_xacts;

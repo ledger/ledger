@@ -193,10 +193,10 @@ void export_journal()
 
     .add_property("master", make_getter(&journal_t::master,
 					return_internal_reference<>()))
-    .add_property("basket",
-		  make_getter(&journal_t::basket,
+    .add_property("bucket",
+		  make_getter(&journal_t::bucket,
 			      return_internal_reference<>()),
-		  make_setter(&journal_t::basket))
+		  make_setter(&journal_t::bucket))
     .add_property("was_loaded", make_getter(&journal_t::was_loaded))
     .add_property("commodity_pool",
 		  make_getter(&journal_t::commodity_pool,

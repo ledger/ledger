@@ -442,8 +442,8 @@ void instance_t::default_commodity_directive(char * line)
 
 void instance_t::default_account_directive(char * line)
 {
-  journal.basket = account_stack.front()->find_account(skip_ws(line + 1));
-  journal.basket->add_flags(ACCOUNT_KNOWN);
+  journal.bucket = account_stack.front()->find_account(skip_ws(line + 1));
+  journal.bucket->add_flags(ACCOUNT_KNOWN);
 }
 
 void instance_t::price_conversion_directive(char * line)
