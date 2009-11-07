@@ -512,7 +512,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 	for (std::size_t i = 0; i < bytes; i++) {
 	  in.get(c);
 	  if (in.bad() || in.eof())
-	    break;
+	    throw_(amount_error, _("Invalid UTF-8 encoding for commodity name"));
 	  *_p++ = c;
 	}
       }
@@ -526,7 +526,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 	if (c == '\\') {
 	  in.get(c);
 	  if (in.eof())
-	    break;
+	    throw_(amount_error, _("Backslash at end of commodity name"));
 	}
 	*_p++ = c;
       }
