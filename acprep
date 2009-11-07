@@ -234,7 +234,7 @@ class PrepareBuild(CommandLineApp):
                       type='int', action='store', dest='jobs',
                       default=1, help='Allow N make jobs at once')
         op.add_option('', '--boost', metavar='SUFFIX',
-                      action="callback",
+                      action="callback", type="string",
                       callback=self.option_boost,
                       help='Set Boost library suffix (ex: "--boost=-mt")')
         op.add_option('', '--force', action="callback",
