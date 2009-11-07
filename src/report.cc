@@ -322,7 +322,7 @@ value_t report_t::fn_account_total(call_scope_t& args)
     acct = session.journal->find_account(name, false);
   }
   else if (args[0].is_mask()) {
-    name = args[0].as_mask().expr.str();
+    name = args[0].as_mask().str();
     acct = session.journal->find_account_re(name);
   }
   else {

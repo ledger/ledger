@@ -43,7 +43,11 @@ mask_t::mask_t(const string& pat) : expr()
 
 mask_t& mask_t::operator=(const string& pat)
 {
-  expr.assign(pat.c_str(), regex::perl | regex::icase);
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+  expr = boost::make_u32regex(pat.c_str(), boost::regex::perl | boost::regex::icase);
+#else
+  expr.assign(pat.c_str(), boost::regex::perl | boost::regex::icase);
+#endif
   VERIFY(valid());
   return *this;
 }

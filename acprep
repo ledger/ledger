@@ -751,6 +751,10 @@ class PrepareBuild(CommandLineApp):
                 self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
                 self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
+            if exists('/usr/local/stow/icu/include'):
+                self.sys_include_dirs.insert(0, '/usr/local/stow/icu/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/icu/lib')
+
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
             self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
@@ -979,6 +983,14 @@ class PrepareBuild(CommandLineApp):
                 self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
                 self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
+            if exists('/usr/local/stow/icu-debug/include'):
+                if '/usr/local/stow/icu/include' in self.sys_include_dirs:
+                    self.sys_include_dirs.remove('/usr/local/stow/icu/include')
+                    self.sys_library_dirs.remove('/usr/local/stow/icu/lib')
+
+                self.sys_include_dirs.insert(0, '/usr/local/stow/icu-debug/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/icu-debug/lib')
+
             if exists('/opt/local/lib/libboost_regex-d.a'):
                 self.envvars['BOOST_HOME']   = '/opt/local'
                 self.envvars['BOOST_SUFFIX'] = '-d'
@@ -988,9 +1000,9 @@ class PrepareBuild(CommandLineApp):
 
                 self.sys_include_dirs.append('/opt/local/include/boost')
 
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-d-1_40.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-d-1_40'
                 self.log.info('Setting BOOST_SUFFIX  => %s' %
                               self.envvars['BOOST_SUFFIX'])
 
@@ -1005,9 +1017,9 @@ class PrepareBuild(CommandLineApp):
 
                 self.sys_include_dirs.append('/opt/local/include/boost')
 
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-1_40.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-1_40'
                 self.log.info('Setting BOOST_SUFFIX  => %s' %
                               self.envvars['BOOST_SUFFIX'])
 

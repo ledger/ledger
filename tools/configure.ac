@@ -193,6 +193,29 @@ else
   AC_MSG_FAILURE("Could not find boost_regex library (set CPPFLAGS and LDFLAGS?)")
 fi
 
+AC_CACHE_CHECK(
+  [if boost_regex w/ICU is available],
+  [boost_regex_icu_avail_cv_],
+  [boost_regex_icu_save_libs=$LIBS
+   LIBS="-licuuc $LIBS"
+   AC_LANG_PUSH(C++)
+   AC_LINK_IFELSE(
+     [AC_LANG_PROGRAM(
+       [[#include <boost/regex/icu.hpp>
+         using namespace boost;]],
+       [[std::string text = "Активы";
+         u32regex r = make_u32regex("активы", regex::perl | regex::icase);
+	 return u32regex_search(text, r) ? 0 : 1;]])],
+     [boost_regex_icu_avail_cv_=true],
+     [boost_regex_icu_avail_cv_=false])
+   AC_LANG_POP
+   LIBS=$boost_regex_icu_save_libs])
+
+if [test x$boost_regex_icu_avail_cv_ = xtrue ]; then
+  AC_DEFINE([HAVE_BOOST_REGEX_UNICODE], [1], [If the boost_regex library w/ICU is available])
+  LIBS="-licuuc $LIBS"
+fi
+
 # check for boost_date_time
 AC_CACHE_CHECK(
   [if boost_date_time is available],

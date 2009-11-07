@@ -2,34 +2,57 @@
 # This is only important if you intend to produce a Ledger binary for
 # installation.
 
-#ARCH_CFLAGS = -g -arch i386 -arch ppc -isysroot /Developer/SDKs/MacOSX10.5.sdk
-#ARCH_LDFLAGS = -g -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk
-
 STOW_ROOT = /usr/local/stow
 
 BOOST_SOURCE  = boost
 BOOST_VERSION = 1_40_0
 
-# architecture=combined
+icu-release:
+	-(cd icu/source; make distclean)
+	(cd icu/source; sh autogen.sh; \
+	 ./configure CPPFLAGS="" \
+		     CFLAGS="$(ARCH_CFLAGS)" \
+		     LDFLAGS="$(ARCH_LDFLAGS)" \
+		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
+		     --enable-static \
+		     --prefix=$(STOW_ROOT)/icu && \
+	 make install)
+
+icu-debug:
+	-(cd icu/source; make distclean)
+	(cd icu/source; sh autogen.sh; \
+	 ./configure CPPFLAGS="-D_GLIBCXX_DEBUG=1" \
+		     CFLAGS="-g $(ARCH_CFLAGS)" \
+		     LDFLAGS="-g $(ARCH_LDFLAGS)" \
+		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
+		     --enable-static --enable-debug \
+		     --prefix=$(STOW_ROOT)/icu-debug && \
+	 make install)
+
+icu-build: icu-release icu-debug
+
 boost-release:
 	(cd $(BOOST_SOURCE) && \
 	bjam release --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
 	    --build-dir=$(HOME)/Products/boost_$(BOOST_VERSION) \
-	    --toolset=darwin --build-type=complete --layout=versioned install)
+	    --toolset=darwin --build-type=complete --layout=versioned \
+	    -sHAVE_ICU=1 -sICU_PATH=/usr/local/stow/icu install)
 
 boost-debug:
 	(cd $(BOOST_SOURCE) && \
 	bjam debug --prefix=$(STOW_ROOT)/boost_$(BOOST_VERSION) \
 	    --build-dir=$(HOME)/Products/boost_$(BOOST_VERSION) \
 	    --toolset=darwin --build-type=complete --layout=versioned \
-	    define=_GLIBCXX_DEBUG=1 install)
+	    define=_GLIBCXX_DEBUG=1 \
+	    -sHAVE_ICU=1 -sICU_PATH=/usr/local/stow/icu-debug install)
 
 boost-build: boost-release boost-debug
 
 cppunit-release:
 	-(cd cppunit; make distclean)
 	(cd cppunit; sh autogen.sh; \
-	 ./configure CFLAGS="$(ARCH_CFLAGS)" \
+	 ./configure CPPFLAGS="" \
+		     CFLAGS="$(ARCH_CFLAGS)" \
 		     LDFLAGS="$(ARCH_LDFLAGS)" \
 		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
 		     --prefix=$(STOW_ROOT)/cppunit && \
@@ -47,4 +70,4 @@ cppunit-debug:
 
 cppunit-build: cppunit-release cppunit-debug
 
-build-all: boost-build cppunit-build
+all: boost-build cppunit-build

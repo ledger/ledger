@@ -45,6 +45,9 @@
 #define _MASK_H
 
 #include "utils.h"
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+#include "unistring.h"
+#endif
 
 namespace ledger {
 
@@ -56,7 +59,11 @@ namespace ledger {
 class mask_t
 {
 public:
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+  boost::u32regex expr;
+#else
   boost::regex expr;
+#endif
 
   explicit mask_t(const string& pattern);
 
@@ -76,15 +83,39 @@ public:
     return expr == other.expr;
   }
 
-  bool match(const string& str) const {
+  bool match(const string& text) const {
+#if defined(HAVE_BOOST_REGEX_UNICODE)
     DEBUG("mask.match",
-	  "Matching: \"" << str << "\" =~ /" << expr.str() << "/ = "
-	  << (boost::regex_search(str, expr) ? "true" : "false"));
-    return boost::regex_search(str, expr);
+	  "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+	  << (boost::u32regex_search(text, expr) ? "true" : "false"));
+    return boost::u32regex_search(text, expr);
+#else
+    DEBUG("mask.match",
+	  "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+	  << (boost::regex_search(text, expr) ? "true" : "false"));
+    return boost::regex_search(text, expr);
+#endif
   }
 
   bool empty() const {
     return expr.empty();
+  }
+
+  string str() const {
+    if (! empty()) {
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+      assert(sizeof(boost::uint32_t) == sizeof(UChar32));
+      unistring ustr;
+      std::basic_string<UChar32> expr_str = expr.str();
+      std::copy(expr_str.begin(), expr_str.end(),
+		std::back_inserter(ustr.utf32chars));
+      return ustr.extract();
+#else
+      return expr.str();
+#endif
+    } else {
+      return empty_string;
+    }
   }
 
   bool valid() const {
@@ -108,7 +139,7 @@ private:
       ar & temp;
       *this = temp;
     } else {
-      temp = expr.str();
+      temp = str();
       ar & temp;
     }
   }
@@ -116,7 +147,7 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
-  out << mask.expr.str();
+  out << mask.str();
   return out;
 }
 
