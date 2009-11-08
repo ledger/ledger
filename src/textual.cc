@@ -442,8 +442,8 @@ void instance_t::default_commodity_directive(char * line)
 
 void instance_t::default_account_directive(char * line)
 {
-  journal.basket = account_stack.front()->find_account(skip_ws(line + 1));
-  journal.basket->add_flags(ACCOUNT_KNOWN);
+  journal.bucket = account_stack.front()->find_account(skip_ws(line + 1));
+  journal.bucket->add_flags(ACCOUNT_KNOWN);
 }
 
 void instance_t::price_conversion_directive(char * line)
@@ -487,17 +487,8 @@ void instance_t::option_directive(char * line)
       *p++ = '\0';
   }
 
-#if 0
-  if (! process_option(pathname.string(), line + 2, scope, p, line) &&
-      ! dynamic_cast<session_t *>(&scope)) {
-    if (std::strlen(line + 2) == 1)
-      throw_(option_error, _("Illegal option -%1") << line + 2);
-    else
-      throw_(option_error, _("Illegal option --%1") << line + 2);
-  }
-#else
-  process_option(pathname.string(), line + 2, scope, p, line);
-#endif
+  if (! process_option(pathname.string(), line + 2, scope, p, line))
+    throw_(option_error, _("Illegal option --%1") << line + 2);
 }
 
 void instance_t::automated_xact_directive(char * line)

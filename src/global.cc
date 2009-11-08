@@ -469,14 +469,6 @@ void global_scope_t::normalize_report_options(const string& verb)
   else if (verb == "equity") {
     rep.HANDLER(equity).on_only(string("?normalize"));
   }
-  else if (rep.HANDLED(related)) {
-    if (verb[0] == 'r') {
-      rep.HANDLER(invert).on_only(string("?normalize"));
-    } else {
-      rep.HANDLER(subtotal).on_only(string("?normalize"));
-      rep.HANDLER(related_all).on_only(string("?normalize"));
-    }
-  }
 
   if (verb == "print")
     rep.HANDLER(limit_).on(string("?normalize"), "actual");
@@ -538,6 +530,8 @@ void global_scope_t::normalize_report_options(const string& verb)
     cols = rep.HANDLER(columns_).value.to_long();
   else if (const char * columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
+  else
+    cols = 80L;
 
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);

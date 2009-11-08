@@ -255,12 +255,22 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     std::strcpy(argv[i + 1], arg.c_str());
   }
 
-  int status = Py_Main(static_cast<int>(args.size()) + 1, argv);
+  int status;
 
+  try {
+    status = Py_Main(static_cast<int>(args.size()) + 1, argv);
+  }
+  catch (...) {
+    for (std::size_t i = 0; i < args.size() + 1; i++)
+      delete[] argv[i];
+    delete[] argv;
+    throw;
+  }
+  
   for (std::size_t i = 0; i < args.size() + 1; i++)
     delete[] argv[i];
   delete[] argv;
-  
+
   if (status != 0)
     throw status;
 
@@ -287,6 +297,9 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 
   switch (kind) {
   case symbol_t::FUNCTION:
+    if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_FUNCTOR(python_interpreter_t, handler);
+
     if (is_initialized && main_nspace.has_key(name.c_str())) {
       DEBUG("python.interp", "Python lookup: " << name);
 
@@ -354,14 +367,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       std::signal(SIGINT, sigint_handler);
       if (val.check())
 	return val();
-#if 1
-      // jww (2009-02-24): Distinguish between "no return" and values with
-      // unconvertable type
       return NULL_VALUE;
-#else
-      throw_(calc_error,
-	     _("Could not evaluate Python variable '%1'") << name);
-#endif
     }
     else if (args.size() > 0) {
       list arglist;

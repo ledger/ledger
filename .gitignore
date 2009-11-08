@@ -61,5 +61,7 @@
 /shave-libtool
 /stamp-h1
 /test/python/
+/tmpcvs*/
+/tmpwrk*/
 /util_tests
 /mkinstalldirs

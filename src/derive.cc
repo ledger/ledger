@@ -307,7 +307,7 @@ namespace {
 	DEBUG("derive.xact", "Setting note  from match: " << *added->note);
 #endif
     } else {
-      added->payee = tmpl.payee_mask.expr.str();
+      added->payee = tmpl.payee_mask.str();
       DEBUG("derive.xact", "Setting payee from template: " << added->payee);
     }
 
@@ -403,14 +403,14 @@ namespace {
 
 	    account_t * acct = NULL;
 	    if (! acct) {
-	      acct = journal.find_account_re(post.account_mask->expr.str());
+	      acct = journal.find_account_re(post.account_mask->str());
 #if defined(DEBUG_ON)
 	      if (acct)
 		DEBUG("derive.xact", "Found account as a regular expression");
 #endif
 	    }
 	    if (! acct) {
-	      acct = journal.find_account(post.account_mask->expr.str());
+	      acct = journal.find_account(post.account_mask->str());
 #if defined(DEBUG_ON)
 	      if (acct)
 		DEBUG("derive.xact", "Found (or created) account by name");

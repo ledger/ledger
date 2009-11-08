@@ -83,7 +83,7 @@ journal_t::~journal_t()
 void journal_t::initialize()
 {
   master     = new account_t;
-  basket     = NULL;
+  bucket     = NULL;
   was_loaded = false;
 
   commodity_pool.reset(new commodity_pool_t);

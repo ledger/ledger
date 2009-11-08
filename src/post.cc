@@ -246,7 +246,7 @@ namespace {
       if (env.value_at(0).is_string())
 	account = master->find_account(env.get<string>(0), false);
       else if (env.value_at(0).is_mask())
-	account = master->find_account_re(env.get<mask_t>(0).expr.str());
+	account = master->find_account_re(env.get<mask_t>(0).str());
     } else {
       account = env->reported_account();
     }
