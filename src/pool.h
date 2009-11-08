@@ -48,11 +48,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct cost_breakdown_t
 {
   amount_t amount;
@@ -60,11 +55,6 @@ struct cost_breakdown_t
   amount_t basis_cost;
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class commodity_pool_t : public noncopyable
 {
   /**

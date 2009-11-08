@@ -38,21 +38,12 @@
  * @author John Wiegley
  *
  * @ingroup util
- *
- * @brief Brief
- *
- * Full.
  */
 #ifndef _ACCUM_H
 #define _ACCUM_H
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Full.
- */
 class straccbuf : public std::streambuf
 {
 protected:
@@ -68,11 +59,6 @@ protected:
   friend class straccstream;
 };
 
-/**
- * @brief Brief
- *
- * Full.
- */
 class straccstream : public std::ostream
 {
 protected:

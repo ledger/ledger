@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _FORMAT_H
 #define _FORMAT_H
@@ -54,11 +50,6 @@ class unistring;
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class format_t : public noncopyable
 {
   struct element_t : public supports_flags<>

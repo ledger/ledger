@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _JOURNAL_H
 #define _JOURNAL_H
@@ -64,11 +60,6 @@ typedef std::list<xact_t *>	   xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class journal_t : public noncopyable
 {
 public:

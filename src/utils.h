@@ -165,8 +165,6 @@ void report_memory(std::ostream& out, bool report_all = false);
 #if defined(STRING_VERIFY_ON)
 
 /**
- * @brief Brief
- *
  * This string type is a wrapper around std::string that allows us to
  * trace constructor and destructor calls.
  */

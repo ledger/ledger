@@ -51,11 +51,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class mask_t
 {
 public:

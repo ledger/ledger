@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _XACT_H
 #define _XACT_H
@@ -56,11 +52,6 @@ class journal_t;
 
 typedef std::list<post_t *> posts_list;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class xact_base_t : public item_t
 {
 public:
@@ -109,11 +100,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class xact_t : public xact_base_t
 {
 public:
@@ -154,21 +140,11 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct xact_finalizer_t {
   virtual ~xact_finalizer_t() {}
   virtual bool operator()(xact_t& xact, bool post) = 0;
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class auto_xact_t : public xact_base_t
 {
 public:
@@ -207,11 +183,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct auto_xact_finalizer_t : public xact_finalizer_t
 {
   journal_t * journal;
@@ -245,11 +216,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class period_xact_t : public xact_base_t
 {
  public:
@@ -287,11 +253,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class func_finalizer_t : public xact_finalizer_t
 {
   func_finalizer_t();

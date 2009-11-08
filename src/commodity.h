@@ -53,11 +53,6 @@ class keep_details_t;
 
 DECLARE_EXCEPTION(commodity_error, std::runtime_error);
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct price_point_t
 {
   datetime_t when;
@@ -77,11 +72,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class commodity_t
   : public delegates_flags<uint_least16_t>,
     public equality_comparable1<commodity_t, noncopyable>
@@ -424,11 +414,6 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   return out;
 }
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;
 };

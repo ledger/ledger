@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _EXPR_H
 #define _EXPR_H
@@ -60,11 +56,6 @@ class call_scope_t;
 
 typedef function<value_t (call_scope_t&)> function_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class expr_t
 {
   struct token_t;

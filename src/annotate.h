@@ -48,11 +48,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct annotation_t : public supports_flags<>,
 		      public equality_comparable<annotation_t>
 {
@@ -174,11 +169,6 @@ inline std::ostream& operator<<(std::ostream&       out,
   return out;
 }
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class annotated_commodity_t
   : public commodity_t,
     public equality_comparable<annotated_commodity_t,

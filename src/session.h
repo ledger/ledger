@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _SESSION_H
 #define _SESSION_H
@@ -57,11 +53,6 @@ namespace ledger {
 class commodity_pool_t;
 class xact_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class session_t : public symbol_scope_t
 {
   friend void set_session_context(session_t * session);

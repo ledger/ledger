@@ -38,14 +38,9 @@
  * @author John Wiegley
  *
  * @ingroup utils
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _UNISTRING_H
 #define _UNISTRING_H
-
 
 namespace ledger {
 

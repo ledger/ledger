@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _FILTERS_H
 #define _FILTERS_H
@@ -59,11 +55,6 @@ namespace ledger {
 // Posting filters
 //
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class ignore_posts : public item_handler<post_t>
 {
 public:
@@ -72,11 +63,6 @@ public:
 
 class posts_iterator;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class pass_down_posts : public item_handler<post_t>
 {
   pass_down_posts();
@@ -89,11 +75,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class push_to_posts_list : public item_handler<post_t>
 {
   push_to_posts_list();
@@ -113,11 +94,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class truncate_xacts : public item_handler<post_t>
 {
   int head_count;
@@ -145,11 +121,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_posts : public item_handler<post_t>
 {
   typedef std::deque<post_t *> posts_deque;
@@ -190,11 +161,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_xacts : public item_handler<post_t>
 {
   sort_posts sorter;
@@ -234,11 +200,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class filter_posts : public item_handler<post_t>
 {
   item_predicate pred;
@@ -267,11 +228,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class anonymize_posts : public item_handler<post_t>
 {
   temporaries_t temps;
@@ -291,11 +247,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class calc_posts : public item_handler<post_t>
 {
   post_t * last_post;
@@ -319,11 +270,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class collapse_posts : public item_handler<post_t>
 {
   expr_t&	      amount_expr;
@@ -368,11 +314,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class related_posts : public item_handler<post_t>
 {
   posts_list posts;
@@ -399,11 +340,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class changed_value_posts : public item_handler<post_t>
 {
   // This filter requires that calc_posts be used at some point
@@ -451,11 +387,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class subtotal_posts : public item_handler<post_t>
 {
   subtotal_posts();
@@ -517,11 +448,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class interval_posts : public subtotal_posts
 {
   date_interval_t interval;
@@ -590,11 +516,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class by_payee_posts : public item_handler<post_t>
 {
   typedef std::map<string, shared_ptr<subtotal_posts> >  payee_subtotals_map;
@@ -618,11 +539,6 @@ class by_payee_posts : public item_handler<post_t>
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class transfer_details : public item_handler<post_t>
 {
   account_t *	master;
@@ -655,11 +571,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class dow_posts : public subtotal_posts
 {
   posts_list days_of_the_week[7];
@@ -681,11 +592,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class generate_posts : public item_handler<post_t>
 {
   generate_posts();
@@ -712,11 +618,6 @@ public:
   virtual void add_post(const date_interval_t& period, post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class budget_posts : public generate_posts
 {
 #define BUDGET_NO_BUDGET   0x00
@@ -743,11 +644,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class forecast_posts : public generate_posts
 {
   item_predicate    pred;
@@ -779,11 +675,6 @@ class forecast_posts : public generate_posts
 
 class accounts_iterator;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();

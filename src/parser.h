@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _PARSER_H
 #define _PARSER_H
@@ -51,11 +47,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class expr_t::parser_t : public noncopyable
 {
 public:
