@@ -255,12 +255,22 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     std::strcpy(argv[i + 1], arg.c_str());
   }
 
-  int status = Py_Main(static_cast<int>(args.size()) + 1, argv);
+  int status;
 
+  try {
+    status = Py_Main(static_cast<int>(args.size()) + 1, argv);
+  }
+  catch (...) {
+    for (std::size_t i = 0; i < args.size() + 1; i++)
+      delete[] argv[i];
+    delete[] argv;
+    throw;
+  }
+  
   for (std::size_t i = 0; i < args.size() + 1; i++)
     delete[] argv[i];
   delete[] argv;
-  
+
   if (status != 0)
     throw status;
 
