@@ -297,6 +297,9 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 
   switch (kind) {
   case symbol_t::FUNCTION:
+    if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
+      return MAKE_OPT_FUNCTOR(python_interpreter_t, handler);
+
     if (is_initialized && main_nspace.has_key(name.c_str())) {
       DEBUG("python.interp", "Python lookup: " << name);
 
