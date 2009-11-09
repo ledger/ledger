@@ -148,7 +148,7 @@ struct xact_finalizer_t {
 class auto_xact_t : public xact_base_t
 {
 public:
-  item_predicate predicate;
+  predicate_t predicate;
 
   auto_xact_t() {
     TRACE_CTOR(auto_xact_t, "");
@@ -157,10 +157,10 @@ public:
     : xact_base_t(), predicate(other.predicate) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
-  auto_xact_t(const item_predicate& _predicate)
+  auto_xact_t(const predicate_t& _predicate)
     : predicate(_predicate)
   {
-    TRACE_CTOR(auto_xact_t, "const item_predicate<post_t>&");
+    TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
 
   virtual ~auto_xact_t() {

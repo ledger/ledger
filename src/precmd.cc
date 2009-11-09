@@ -35,6 +35,7 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "query.h"
 #include "session.h"
 #include "report.h"
 #include "format.h"
@@ -223,37 +224,36 @@ value_t args_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  value_t::sequence_t::const_iterator begin = args.value().begin();
-  value_t::sequence_t::const_iterator end   = args.value().end();
-
   out << _("--- Input arguments ---") << std::endl;
   args.value().dump(out);
   out << std::endl << std::endl;
 
-  std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
-  if (! info.first)
+  query_t query(args.value(), report.what_to_keep());
+  if (! query)
     throw_(std::runtime_error,
 	   _("Invalid query predicate: %1") << join_args(args));
 
   call_scope_t sub_args(static_cast<scope_t&>(args));
-  sub_args.push_back(string_value(info.first.text()));
+  sub_args.push_back(string_value(query.text()));
 
   parse_command(sub_args);
 
-  if (info.second.tokens_remaining()) {
+  if (query.tokens_remaining()) {
     out << std::endl << _("====== Display predicate ======")
 	<< std::endl << std::endl;
 
-    call_scope_t disp_sub_args(static_cast<scope_t&>(args));
-    info = args_to_predicate(info.second);
-    if (! info.first)
+    query.parse_again();
+
+    if (! query)
       throw_(std::runtime_error,
 	     _("Invalid display predicate: %1") << join_args(args));
 
-    disp_sub_args.push_back(string_value(info.first.text()));
+    call_scope_t disp_sub_args(static_cast<scope_t&>(args));
+    disp_sub_args.push_back(string_value(query.text()));
 
     parse_command(disp_sub_args);
   }
+
   return NULL_VALUE;
 }
 

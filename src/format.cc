@@ -72,8 +72,7 @@ namespace {
     string temp(p);
     ptristream str(const_cast<char *&>(p));
     expr_t expr;
-    expr.parse(str, single_expr ? expr_t::PARSE_SINGLE : expr_t::PARSE_PARTIAL,
-	       &temp);
+    expr.parse(str, single_expr ? PARSE_SINGLE : PARSE_PARTIAL, temp);
     if (str.eof()) {
       expr.set_text(p);
       p += std::strlen(p);
@@ -349,7 +348,7 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
       }
       catch (const calc_error&) {
 	add_error_context(_("While calculating format expression:"));
-	add_error_context(expr_context(elem->expr));
+	add_error_context(elem->expr.context_to_str());
 	throw;
       }
       break;

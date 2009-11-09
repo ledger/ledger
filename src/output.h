@@ -78,11 +78,11 @@ public:
 class format_accounts : public item_handler<account_t>
 {
 protected:
-  report_t&	 report;
-  format_t	 account_line_format;
-  format_t	 total_line_format;
-  format_t	 separator_format;
-  item_predicate disp_pred;
+  report_t&   report;
+  format_t    account_line_format;
+  format_t    total_line_format;
+  format_t    separator_format;
+  predicate_t disp_pred;
 
   std::list<account_t *> posted_accounts;
 

@@ -870,6 +870,10 @@ public:
       return 1;
   }
 
+  bool empty() const {
+    return size() == 0;
+  }
+
   /**
    * Informational methods.
    */

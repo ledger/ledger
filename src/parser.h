@@ -49,10 +49,6 @@ namespace ledger {
 
 class expr_t::parser_t : public noncopyable
 {
-public:
-  typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
-
-private:
   mutable token_t lookahead;
   mutable bool	  use_lookahead;
 
@@ -101,14 +97,9 @@ public:
     TRACE_DTOR(parser_t);
   }
 
-  ptr_op_t parse(std::istream&	      in,
-		 const parse_flags_t& flags	      = PARSE_NORMAL,
-		 const string *	      original_string = NULL);
-  ptr_op_t parse(const string&        str,
-		 const parse_flags_t& flags = PARSE_NORMAL) {
-    std::istringstream stream(str);
-    return parse(stream, flags, &str);
-  }
+  ptr_op_t parse(std::istream&		 in,
+		 const parse_flags_t&	 flags		 = PARSE_DEFAULT,
+		 const optional<string>& original_string = NULL);
 };
 
 } // namespace ledger

@@ -193,8 +193,7 @@ namespace {
 	  if (begin == end)
 	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  arg = (*++begin).to_string();
-	  if (! cost.parse(arg, amount_t::PARSE_SOFT_FAIL |
-			   amount_t::PARSE_NO_MIGRATE))
+	  if (! cost.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
 	    throw std::runtime_error(_("Invalid xact command arguments"));
 	  post->cost = cost;
 	}
@@ -213,8 +212,7 @@ namespace {
 	    amount_t	     amt;
 	    optional<mask_t> account;
 
-	    if (! amt.parse(arg, amount_t::PARSE_SOFT_FAIL |
-			    amount_t::PARSE_NO_MIGRATE))
+	    if (! amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
 	      account = mask_t(arg);
 
 	    if (! post ||

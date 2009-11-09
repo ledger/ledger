@@ -42,7 +42,7 @@ libledger_math_la_LDFLAGS  = -release $(VERSION).0
 libledger_expr_la_SOURCES =			\
 	src/option.cc				\
 	src/format.cc				\
-	src/predicate.cc			\
+	src/query.cc				\
 	src/scope.cc				\
 	src/interactive.cc			\
 	src/expr.cc				\
@@ -107,10 +107,12 @@ pkginclude_HEADERS =				\
 	src/token.h				\
 	src/parser.h				\
 	src/op.h				\
+	src/exprbase.h				\
 	src/expr.h				\
 	src/scope.h				\
 	src/interactive.h			\
 	src/predicate.h				\
+	src/query.h				\
 	src/format.h				\
 	src/option.h				\
 						\

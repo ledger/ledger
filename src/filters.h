@@ -202,18 +202,18 @@ public:
 
 class filter_posts : public item_handler<post_t>
 {
-  item_predicate pred;
-  scope_t&       context;
+  predicate_t pred;
+  scope_t&    context;
 
   filter_posts();
 
 public:
-  filter_posts(post_handler_ptr	     handler,
-	       const item_predicate& predicate,
-	       scope_t&              _context)
+  filter_posts(post_handler_ptr	  handler,
+	       const predicate_t& predicate,
+	       scope_t&           _context)
     : item_handler<post_t>(handler), pred(predicate), context(_context) {
     TRACE_CTOR(filter_posts,
-	       "post_handler_ptr, const item_predicate&, scope_t&");
+	       "post_handler_ptr, const predicate_t&, scope_t&");
   }
   virtual ~filter_posts() {
     TRACE_DTOR(filter_posts);
@@ -273,8 +273,8 @@ public:
 class collapse_posts : public item_handler<post_t>
 {
   expr_t&	      amount_expr;
-  item_predicate      display_predicate;
-  item_predicate      only_predicate;
+  predicate_t	      display_predicate;
+  predicate_t	      only_predicate;
   value_t	      subtotal;
   std::size_t	      count;
   xact_t *	      last_xact;
@@ -289,8 +289,8 @@ class collapse_posts : public item_handler<post_t>
 public:
   collapse_posts(post_handler_ptr handler,
 		 expr_t&	  _amount_expr,
-		 item_predicate   _display_predicate,
-		 item_predicate   _only_predicate,
+		 predicate_t	  _display_predicate,
+		 predicate_t	  _only_predicate,
 		 bool             _only_collapse_if_zero = false)
     : item_handler<post_t>(handler), amount_expr(_amount_expr),
       display_predicate(_display_predicate),
@@ -646,19 +646,19 @@ public:
 
 class forecast_posts : public generate_posts
 {
-  item_predicate    pred;
+  predicate_t	    pred;
   scope_t&	    context;
   const std::size_t forecast_years;
 
  public:
-  forecast_posts(post_handler_ptr      handler,
-		 const item_predicate& predicate,
-		 scope_t&              _context,
-		 const std::size_t     _forecast_years)
+  forecast_posts(post_handler_ptr   handler,
+		 const predicate_t& predicate,
+		 scope_t&           _context,
+		 const std::size_t  _forecast_years)
     : generate_posts(handler), pred(predicate), context(_context),
       forecast_years(_forecast_years) {
     TRACE_CTOR(forecast_posts,
-	       "post_handler_ptr, item_predicate, scope_t&, std::size_t");
+	       "post_handler_ptr, predicate_t, scope_t&, std::size_t");
   }
   virtual ~forecast_posts() throw() {
     TRACE_DTOR(forecast_posts);
@@ -679,14 +679,14 @@ class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
-  optional<item_predicate> pred;
-  optional<scope_t&>       context;
+  optional<predicate_t> pred;
+  optional<scope_t&>    context;
 
 public:
-  pass_down_accounts(acct_handler_ptr		     handler,
-		     accounts_iterator&		     iter,
-		     const optional<item_predicate>& _pred    = none,
-		     const optional<scope_t&>&	     _context = none);
+  pass_down_accounts(acct_handler_ptr		  handler,
+		     accounts_iterator&		  iter,
+		     const optional<predicate_t>& _pred    = none,
+		     const optional<scope_t&>&	  _context = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

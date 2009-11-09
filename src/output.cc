@@ -200,7 +200,7 @@ void format_accounts::flush()
   if (report.HANDLED(display_)) {
     DEBUG("account.display",
 	  "Account display predicate: " << report.HANDLER(display_).str());
-    disp_pred.predicate.parse(report.HANDLER(display_).str());
+    disp_pred.parse(report.HANDLER(display_).str());
   }
 
   mark_accounts(*report.session.journal->master, report.HANDLED(flat));

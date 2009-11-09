@@ -42,118 +42,91 @@
 #ifndef _EXPR_H
 #define _EXPR_H
 
+#include "exprbase.h"
 #include "value.h"
 
 namespace ledger {
 
-DECLARE_EXCEPTION(parse_error, std::runtime_error);
-DECLARE_EXCEPTION(compile_error, std::runtime_error);
-DECLARE_EXCEPTION(calc_error, std::runtime_error);
-DECLARE_EXCEPTION(usage_error, std::runtime_error);
-
-class scope_t;
-class call_scope_t;
-
-typedef function<value_t (call_scope_t&)> function_t;
-
-class expr_t
+class expr_t : public expr_base_t<value_t>
 {
   struct token_t;
   class  parser_t;
 
-  friend string expr_context(const expr_t& expr);
+  typedef expr_base_t<value_t> base_type;
 
 public:
   class op_t;
   typedef intrusive_ptr<op_t>	    ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
-  enum parse_flags_enum_t {
-    PARSE_NORMAL     = 0x00,
-    PARSE_PARTIAL    = 0x01,
-    PARSE_SINGLE     = 0x02,
-    PARSE_NO_MIGRATE = 0x04,
-    PARSE_NO_REDUCE  = 0x08,
-    PARSE_NO_ASSIGN  = 0x10,
-    PARSE_NO_DATES   = 0x20,
-    PARSE_OP_CONTEXT = 0x40
-  };
-
-private:
-  ptr_op_t  ptr;
-  scope_t * context;
-  string    str;
-  bool	    compiled;
+protected:
+  ptr_op_t ptr;
 
 public:
-  expr_t();
-  expr_t(const expr_t& other);
-  expr_t(const ptr_op_t& _ptr, scope_t * context = NULL,
-	 const string& _str = "");
+  expr_t() : base_type() {
+    TRACE_CTOR(expr_t, "");
+  }
+  expr_t(const expr_t& other)
+    : base_type(other), ptr(other.ptr) {
+    TRACE_CTOR(expr_t, "copy");
+  }
+  expr_t(ptr_op_t _ptr, scope_t * _context = NULL)
+    : base_type(_context), ptr(_ptr) {
+    TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *");
+  }
 
-  expr_t(const string& _str, const uint_least8_t flags = 0);
-  expr_t(std::istream& in, const uint_least8_t flags = 0);
+  expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT)
+    : base_type() {
+    TRACE_CTOR(expr_t, "string, parse_flags_t");
+    if (! _str.empty())
+      parse(_str, flags);
+  }
+  expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT)
+    : base_type() {
+    TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
+    parse(in, flags);
+  }
 
-  ~expr_t() throw();
+  ~expr_t() throw() {
+    TRACE_DTOR(expr_t);
+  }
 
-  expr_t& operator=(const expr_t& _expr);
-  expr_t& operator=(const string& _expr) {
-    parse(_expr);
+  expr_t& operator=(const expr_t& _expr) {
+    if (this != &_expr) {
+      base_type::operator=(_expr);
+      ptr = _expr.ptr;
+    }
     return *this;
   }
 
-  operator bool() const throw() {
+  virtual operator bool() const throw() {
     return ptr.get() != NULL;
   }
 
-  ptr_op_t get_op() throw();
-  string   text();
-
-  // This has special use in the textual parser
-  void set_text(const string& txt) {
-    str = txt;
+  ptr_op_t get_op() throw() {
+    return ptr;
   }
 
-  void     parse(const string& _str, const uint32_t flags = 0);
-  void     parse(std::istream& in, const uint32_t flags = 0,
-		 const string * original_string = NULL);
-	   
-  void     mark_uncompiled() {
-    compiled = false;
-  }
-  void     recompile(scope_t& scope);
-  void     compile(scope_t& scope);
-  value_t  calc(scope_t& scope);
-  value_t  calc(scope_t& scope) const;
-
-  value_t  calc() {
-    assert(context);
-    return calc(*context);
-  }
-  value_t  calc() const {
-    assert(context);
-    return calc(*context);
+  void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
+    std::istringstream stream(str);
+    return parse(stream, flags, str);
   }
 
-  scope_t * get_context() {
-    return context;
-  }
-  void set_context(scope_t * scope) {
-    context = scope;
-  }
+  virtual void    parse(std::istream&		in,
+			const parse_flags_t&	flags		= PARSE_DEFAULT,
+			const optional<string>& original_string = none);
+  virtual void    compile(scope_t& scope);
+  virtual value_t real_calc(scope_t& scope);
 
-  bool	   is_constant() const;
-  bool     is_function() const;
+  bool	          is_constant() const;
+  value_t&        constant_value();
+  const value_t&  constant_value() const;
+  bool            is_function() const;
+  func_t&         get_function();
 
-  value_t&       constant_value();
-  const value_t& constant_value() const;
-
-  function_t& get_function();
-
-  void print(std::ostream& out) const;
-  void dump(std::ostream& out) const;
-
-  static value_t eval(const string& _expr, scope_t& scope);
+  virtual string  context_to_str() const;
+  virtual void    print(std::ostream& out) const;
+  virtual void    dump(std::ostream& out) const;
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -163,18 +136,11 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<base_type>(*this);
     ar & ptr;
-    ar & context;
-    ar & str;
-    if (Archive::is_loading::value)
-      compiled = false;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
-
-std::ostream& operator<<(std::ostream& out, const expr_t& expr);
-
-string expr_context(const expr_t& expr);
 
 } // namespace ledger
 

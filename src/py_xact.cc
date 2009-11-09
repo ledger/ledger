@@ -133,7 +133,7 @@ void export_xact()
     ;
 
   class_< auto_xact_t, bases<xact_base_t> > ("AutomatedTransaction")
-    .def(init<item_predicate>())
+    .def(init<predicate_t>())
 
     .add_property("predicate",
 		  make_getter(&auto_xact_t::predicate),
