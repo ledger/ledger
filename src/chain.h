@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _CHAIN_H
 #define _CHAIN_H
@@ -53,11 +49,6 @@ namespace ledger {
 class post_t;
 class account_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T>
 struct item_handler : public noncopyable
 {

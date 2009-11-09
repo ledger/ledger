@@ -1,4 +1,4 @@
-VERSION		= 3.0
+VERSION		= 3.0.0
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS         = po intl
@@ -25,9 +25,9 @@ libledger_util_la_SOURCES =			\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
-libledger_util_la_LDFLAGS  = -release $(VERSION).0
+libledger_util_la_LDFLAGS  = -release $(VERSION)
 
-libledger_math_la_SOURCES =			\
+libledger_math_la_SOURCES  =			\
 	src/value.cc				\
 	src/balance.cc				\
 	src/quotes.cc				\
@@ -37,12 +37,12 @@ libledger_math_la_SOURCES =			\
 	src/amount.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
-libledger_math_la_LDFLAGS  = -release $(VERSION).0
+libledger_math_la_LDFLAGS  = -release $(VERSION)
 
-libledger_expr_la_SOURCES =			\
+libledger_expr_la_SOURCES  =			\
 	src/option.cc				\
 	src/format.cc				\
-	src/predicate.cc			\
+	src/query.cc				\
 	src/scope.cc				\
 	src/interactive.cc			\
 	src/expr.cc				\
@@ -51,9 +51,9 @@ libledger_expr_la_SOURCES =			\
 	src/token.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS    = -release $(VERSION).0
+libledger_expr_la_LDFLAGS   = -release $(VERSION)
 
-libledger_data_la_SOURCES  =			\
+libledger_data_la_SOURCES   =			\
 	src/compare.cc				\
 	src/iterators.cc			\
 	src/timelog.cc				\
@@ -65,14 +65,15 @@ libledger_data_la_SOURCES  =			\
 	src/post.cc				\
 	src/item.cc
 
-libledger_data_la_CPPFLAGS = $(lib_cppflags)
-libledger_data_la_LDFLAGS  = -release $(VERSION).0
+libledger_data_la_CPPFLAGS   = $(lib_cppflags)
+libledger_data_la_LDFLAGS    = -release $(VERSION)
 
 libledger_report_la_SOURCES  =			\
 	src/stats.cc				\
 	src/generate.cc				\
-	src/derive.cc				\
+	src/draft.cc				\
 	src/emacs.cc                            \
+	src/xml.cc                              \
 	src/output.cc				\
 	src/precmd.cc				\
 	src/chain.cc				\
@@ -82,7 +83,7 @@ libledger_report_la_SOURCES  =			\
 	src/session.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
-libledger_report_la_LDFLAGS  = -release $(VERSION).0
+libledger_report_la_LDFLAGS  = -release $(VERSION)
 
 pkginclude_HEADERS =				\
 	src/utils.h				\
@@ -107,10 +108,12 @@ pkginclude_HEADERS =				\
 	src/token.h				\
 	src/parser.h				\
 	src/op.h				\
+	src/exprbase.h				\
 	src/expr.h				\
 	src/scope.h				\
 	src/interactive.h			\
 	src/predicate.h				\
+	src/query.h				\
 	src/format.h				\
 	src/option.h				\
 						\
@@ -130,10 +133,11 @@ pkginclude_HEADERS =				\
 	src/temps.h				\
 	src/chain.h				\
 	src/precmd.h				\
-	src/derive.h				\
+	src/draft.h				\
 	src/generate.h				\
 	src/stats.h				\
 	src/output.h				\
+	src/xml.h				\
 	src/emacs.h				\
 						\
 	src/global.h				\

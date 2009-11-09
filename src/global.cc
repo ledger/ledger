@@ -179,9 +179,9 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   // If such a command is found, create the output stream for the result and
   // then invoke the command.
 
-  function_t   command;
-  bool	       is_precommand = false;
-  bind_scope_t bound_scope(*this, report());
+  expr_t::func_t command;
+  bool		 is_precommand = false;
+  bind_scope_t	 bound_scope(*this, report());
 
   if (bool(command = look_for_precommand(bound_scope, verb)))
     is_precommand = true;
@@ -398,22 +398,22 @@ void global_scope_t::normalize_session_options()
     INFO("Journal file is " << pathname.string());
 }
 
-function_t global_scope_t::look_for_precommand(scope_t&	     scope,
-					       const string& verb)
+expr_t::func_t global_scope_t::look_for_precommand(scope_t&	 scope,
+						   const string& verb)
 {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::PRECOMMAND, verb))
     return def->as_function();
   else
-    return function_t();
+    return expr_t::func_t();
 }
 
-function_t global_scope_t::look_for_command(scope_t&	  scope,
-					    const string& verb)
+expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
+						const string& verb)
 {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::COMMAND, verb))
     return def->as_function();
   else
-    return function_t();
+    return expr_t::func_t();
 }
 
 void global_scope_t::normalize_report_options(const string& verb)

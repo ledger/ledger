@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _ACCOUNT_H
 #define _ACCOUNT_H
@@ -57,11 +53,6 @@ class post_t;
 typedef std::list<post_t *> posts_list;
 typedef std::map<const string, account_t *> accounts_map;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class account_t : public supports_flags<>, public scope_t
 {
 #define ACCOUNT_NORMAL 0x00	// no flags at all, a basic account

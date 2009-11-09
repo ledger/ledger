@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _POST_H
 #define _POST_H
@@ -53,11 +49,6 @@ namespace ledger {
 class xact_t;
 class account_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class post_t : public item_t
 {
 public:
@@ -226,6 +217,8 @@ private:
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
+
+void to_xml(std::ostream& out, const post_t& post);
 
 } // namespace ledger
 

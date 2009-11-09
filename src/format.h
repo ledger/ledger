@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _FORMAT_H
 #define _FORMAT_H
@@ -54,25 +50,20 @@ class unistring;
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
-/**
- * @brief Brief
- *
- * Long.
- */
-class format_t : public noncopyable
+class format_t : public expr_base_t<string>
 {
+  typedef expr_base_t<string> base_type;
+
   struct element_t : public supports_flags<>
   {
 #define ELEMENT_ALIGN_LEFT 0x01
 
     enum kind_t { STRING, EXPR };
 
-    kind_t	type;
-    std::size_t min_width;
-    std::size_t max_width;
-    string	chars;
-    expr_t	expr;
-
+    kind_t			 type;
+    std::size_t			 min_width;
+    std::size_t			 max_width;
+    variant<string, expr_t>	 data;
     scoped_ptr<struct element_t> next;
 
     element_t() throw()
@@ -92,8 +83,7 @@ class format_t : public noncopyable
 	type	  = elem.type;
 	min_width = elem.min_width;
 	max_width = elem.max_width;
-	chars	  = elem.chars;
-	expr	  = elem.expr;
+	data	  = elem.data;
       }
       return *this;
     }
@@ -115,8 +105,7 @@ class format_t : public noncopyable
     void dump(std::ostream& out) const;
   };
 
-  string		 format_string;
-  scoped_ptr<element_t>	 elements;
+  scoped_ptr<element_t> elements;
 
 public:
   static enum elision_style_t {
@@ -133,25 +122,28 @@ private:
 				    const optional<format_t&>& tmpl);
 
 public:
-  format_t() {
+  format_t() : base_type() {
     TRACE_CTOR(format_t, "");
   }
-  format_t(const string& _format) {
+  format_t(const string& _str, scope_t * context = NULL)
+    : base_type(context) {
     TRACE_CTOR(format_t, "const string&");
-    parse(_format);
+    if (! _str.empty())
+      parse_format(_str);
   }
   ~format_t() {
     TRACE_DTOR(format_t);
   }
 
-  void parse(const string& _format, const optional<format_t&>& tmpl = none) {
+  void parse_format(const string& _format,
+		    const optional<format_t&>& tmpl = none) {
     elements.reset(parse_elements(_format, tmpl));
-    format_string = _format;
+    set_text(_format);
   }
 
-  void format(std::ostream& out, scope_t& scope);
+  virtual result_type real_calc(scope_t& scope);
 
-  void dump(std::ostream& out) const {
+  virtual void dump(std::ostream& out) const {
     for (const element_t * elem = elements.get();
 	 elem;
 	 elem = elem->next.get())
@@ -162,12 +154,6 @@ public:
 			 const std::size_t width,
 			 const std::size_t account_abbrev_length = 0);
 };
-
-#define FMT_PREFIX "fmt_"
-#define FMT_PREFIX_LEN 4
-
-#define WANT_FMT()					\
-  (std::strncmp(p, FMT_PREFIX, FMT_PREFIX_LEN) == 0)
 
 } // namespace ledger
 

@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _OUTPUT_H
 #define _OUTPUT_H
@@ -57,11 +53,6 @@ class xact_t;
 class post_t;
 class report_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class format_posts : public item_handler<post_t>
 {
 protected:
@@ -84,19 +75,14 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class format_accounts : public item_handler<account_t>
 {
 protected:
-  report_t&	 report;
-  format_t	 account_line_format;
-  format_t	 total_line_format;
-  format_t	 separator_format;
-  item_predicate disp_pred;
+  report_t&   report;
+  format_t    account_line_format;
+  format_t    total_line_format;
+  format_t    separator_format;
+  predicate_t disp_pred;
 
   std::list<account_t *> posted_accounts;
 

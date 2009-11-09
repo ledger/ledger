@@ -669,7 +669,8 @@ namespace {
 
 	for (const char * p = buf; *p; p++) {
 	  if (*p == '.') {
-	    if (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN))
+	    if (commodity_t::european_by_default ||
+		(comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
 	      out << ',';
 	    else
 	      out << *p;
@@ -682,7 +683,8 @@ namespace {
 	    out << *p;
 
 	    if (integer_digits > 3 && --integer_digits % 3 == 0) {
-	      if (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN))
+	      if (commodity_t::european_by_default ||
+		  (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
 		out << '.';
 	      else
 		out << ',';
@@ -977,12 +979,14 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     }
   }
   else if (last_comma != string::npos &&
-	   commodity().has_flags(COMMODITY_STYLE_EUROPEAN)) {
+	   (commodity_t::european_by_default ||
+	    commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
     comm_flags |= COMMODITY_STYLE_EUROPEAN;
     quantity->prec = static_cast<precision_t>(quant.length() - last_comma - 1);
   }
   else if (last_period != string::npos &&
-	   ! (commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
+	   ! (commodity_t::european_by_default ||
+	      commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
     quantity->prec = static_cast<precision_t>(quant.length() - last_period - 1);
   }
   else {
@@ -1119,6 +1123,19 @@ bool amount_t::valid() const
     return false;
   }
   return true;
+}
+
+void to_xml(std::ostream& out, const amount_t& amt, bool commodity_details)
+{
+  push_xml x(out, "amount");
+
+  if (amt.has_commodity())
+    to_xml(out, amt.commodity(), commodity_details);
+
+  {
+    push_xml y(out, "quantity");
+    out << y.guard(amt.quantity_string());
+  }
 }
 
 #if defined(HAVE_BOOST_SERIALIZATION)

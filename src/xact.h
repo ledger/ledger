@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _XACT_H
 #define _XACT_H
@@ -56,11 +52,6 @@ class journal_t;
 
 typedef std::list<post_t *> posts_list;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class xact_base_t : public item_t
 {
 public:
@@ -109,11 +100,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class xact_t : public xact_base_t
 {
 public:
@@ -154,25 +140,15 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct xact_finalizer_t {
   virtual ~xact_finalizer_t() {}
   virtual bool operator()(xact_t& xact, bool post) = 0;
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class auto_xact_t : public xact_base_t
 {
 public:
-  item_predicate predicate;
+  predicate_t predicate;
 
   auto_xact_t() {
     TRACE_CTOR(auto_xact_t, "");
@@ -181,10 +157,10 @@ public:
     : xact_base_t(), predicate(other.predicate) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
-  auto_xact_t(const item_predicate& _predicate)
+  auto_xact_t(const predicate_t& _predicate)
     : predicate(_predicate)
   {
-    TRACE_CTOR(auto_xact_t, "const item_predicate<post_t>&");
+    TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
 
   virtual ~auto_xact_t() {
@@ -207,11 +183,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct auto_xact_finalizer_t : public xact_finalizer_t
 {
   journal_t * journal;
@@ -245,11 +216,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class period_xact_t : public xact_base_t
 {
  public:
@@ -287,11 +253,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class func_finalizer_t : public xact_finalizer_t
 {
   func_finalizer_t();
@@ -327,6 +288,8 @@ inline bool auto_xact_finalizer_t::operator()(xact_t& xact, bool post) {
 typedef std::list<xact_t *>	   xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
+
+void to_xml(std::ostream& out, const xact_t& xact);
 
 } // namespace ledger
 

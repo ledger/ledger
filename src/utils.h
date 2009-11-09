@@ -165,8 +165,6 @@ void report_memory(std::ostream& out, bool report_all = false);
 #if defined(STRING_VERIFY_ON)
 
 /**
- * @brief Brief
- *
  * This string type is a wrapper around std::string that allows us to
  * trace constructor and destructor calls.
  */
@@ -647,6 +645,51 @@ inline string to_hex(uint_least32_t * message_digest, const int len = 1)
   }
   return buf.str();
 }
+
+class push_xml
+{
+  std::ostream& out;
+  string	tag;
+  bool  	leave_open;
+
+public:
+  push_xml(std::ostream& _out, const string& _tag, bool has_attrs = false,
+	   bool _leave_open = false)
+    : out(_out), tag(_tag), leave_open(_leave_open) {
+    out << '<' << tag;
+    if (! has_attrs)
+      out << '>';
+  }
+  ~push_xml() {
+    if (! leave_open)
+      out << "</" << tag << '>';
+  }
+
+  void close_attrs() {
+    out << '>';
+  }
+
+  static string guard(const string& str) {
+    std::ostringstream buf;
+    foreach (const char& ch, str) {
+      switch (ch) {
+      case '<':
+	buf << "&lt;";
+	break;
+      case '>':
+	buf << "&gt;";
+	break;
+      case '&':
+	buf << "&amp;";
+	break;
+      default:
+	buf << ch;
+	break;
+      }
+    }
+    return buf.str();
+  }
+};
 
 extern const string version;
 

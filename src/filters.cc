@@ -947,10 +947,10 @@ void forecast_posts::flush()
   item_handler<post_t>::flush();
 }
 
-pass_down_accounts::pass_down_accounts(acct_handler_ptr		       handler,
-				       accounts_iterator&	       iter,
-				       const optional<item_predicate>& _pred,
-				       const optional<scope_t&>&       _context)
+pass_down_accounts::pass_down_accounts(acct_handler_ptr		    handler,
+				       accounts_iterator&	    iter,
+				       const optional<predicate_t>& _pred,
+				       const optional<scope_t&>&    _context)
   : item_handler<account_t>(handler), pred(_pred), context(_context)
 {
   TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");

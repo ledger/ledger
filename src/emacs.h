@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _EMACS_H
 #define _EMACS_H
@@ -52,11 +48,6 @@ namespace ledger {
 
 class xact_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class format_emacs_posts : public item_handler<post_t>
 {
   format_emacs_posts();

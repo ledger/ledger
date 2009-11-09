@@ -48,11 +48,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct annotation_t : public supports_flags<>,
 		      public equality_comparable<annotation_t>
 {
@@ -115,6 +110,29 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+inline void to_xml(std::ostream& out, const annotation_t& details)
+{
+  push_xml x(out, "annotation");
+
+  if (details.price)
+  {
+    push_xml y(out, "price");
+    to_xml(out, *details.price);
+  }
+
+  if (details.date)
+  {
+    push_xml y(out, "date");
+    to_xml(out, *details.date, false);
+  }
+
+  if (details.tag)
+  {
+    push_xml y(out, "tag");
+    out << y.guard(*details.tag);
+  }
+}
+
 struct keep_details_t
 {
   bool keep_price;
@@ -174,11 +192,6 @@ inline std::ostream& operator<<(std::ostream&       out,
   return out;
 }
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class annotated_commodity_t
   : public commodity_t,
     public equality_comparable<annotated_commodity_t,

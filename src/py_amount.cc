@@ -285,11 +285,16 @@ internal precision."))
     .def("valid", &amount_t::valid)
     ;
 
-  enum_< amount_t::parse_flags_enum_t >("AmountParse")
-    .value("DEFAULT",    amount_t::PARSE_DEFAULT)
-    .value("NO_MIGRATE", amount_t::PARSE_NO_MIGRATE)
-    .value("NO_REDUCE",  amount_t::PARSE_NO_REDUCE)
-    .value("SOFT_FAIL",  amount_t::PARSE_SOFT_FAIL)
+  enum_< parse_flags_enum_t >("ParseFlags")
+    .value("Default",   PARSE_DEFAULT)
+    .value("Partial",   PARSE_PARTIAL)
+    .value("Single",    PARSE_SINGLE)
+    .value("NoMigrate", PARSE_NO_MIGRATE)
+    .value("NoReduce",  PARSE_NO_REDUCE)
+    .value("NoAssign",  PARSE_NO_ASSIGN)
+    .value("NoDates",   PARSE_NO_DATES)
+    .value("OpContext", PARSE_OP_CONTEXT)
+    .value("SoftFail",  PARSE_SOFT_FAIL)
     ;
 
   register_optional_to_python<amount_t>();

@@ -31,12 +31,12 @@
 
 #include <system.hh>
 
-#include "predicate.h"
+#include "query.h"
 #include "op.h"
 
 namespace ledger {
 
-query_lexer_t::token_t query_lexer_t::next_token()
+query_t::lexer_t::token_t query_t::lexer_t::next_token()
 {
   if (token_cache.kind != token_t::UNKNOWN) {
     token_t tok = token_cache;
@@ -191,7 +191,7 @@ query_lexer_t::token_t query_lexer_t::next_token()
   return token_t(token_t::UNKNOWN);
 }
 
-void query_lexer_t::token_t::unexpected()
+void query_t::lexer_t::token_t::unexpected()
 {
   kind_t prev_kind = kind;
 
@@ -207,7 +207,7 @@ void query_lexer_t::token_t::unexpected()
   }
 }
 
-void query_lexer_t::token_t::expected(char wanted, char c)
+void query_t::lexer_t::token_t::expected(char wanted, char c)
 {
   kind = UNKNOWN;
 
@@ -225,32 +225,32 @@ void query_lexer_t::token_t::expected(char wanted, char c)
 }
 
 expr_t::ptr_op_t
-query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
+query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_context)
 {
   expr_t::ptr_op_t node;
 
-  query_lexer_t::token_t tok = lexer.next_token();
+  lexer_t::token_t tok = lexer.next_token();
   switch (tok.kind) {
-  case query_lexer_t::token_t::END_REACHED:
+  case lexer_t::token_t::END_REACHED:
     break;
 
-  case query_lexer_t::token_t::TOK_DATE:
-  case query_lexer_t::token_t::TOK_CODE:
-  case query_lexer_t::token_t::TOK_PAYEE:
-  case query_lexer_t::token_t::TOK_NOTE:
-  case query_lexer_t::token_t::TOK_ACCOUNT:
-  case query_lexer_t::token_t::TOK_META:
-  case query_lexer_t::token_t::TOK_EXPR:
+  case lexer_t::token_t::TOK_DATE:
+  case lexer_t::token_t::TOK_CODE:
+  case lexer_t::token_t::TOK_PAYEE:
+  case lexer_t::token_t::TOK_NOTE:
+  case lexer_t::token_t::TOK_ACCOUNT:
+  case lexer_t::token_t::TOK_META:
+  case lexer_t::token_t::TOK_EXPR:
     node = parse_query_term(tok.kind);
     if (! node)
       throw_(parse_error,
 	     _("%1 operator not followed by argument") << tok.symbol());
     break;
 
-  case query_lexer_t::token_t::TERM:
+  case lexer_t::token_t::TERM:
     assert(tok.value);
     switch (tok_context) {
-    case query_lexer_t::token_t::TOK_DATE: {
+    case lexer_t::token_t::TOK_DATE: {
       expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
       ident->set_ident("date");
 
@@ -285,11 +285,11 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
       break;
     }
 
-    case query_lexer_t::token_t::TOK_EXPR:
+    case lexer_t::token_t::TOK_EXPR:
       node = expr_t(*tok.value).get_op();
       break;
 
-    case query_lexer_t::token_t::TOK_META: {
+    case lexer_t::token_t::TOK_META: {
       node = new expr_t::op_t(expr_t::op_t::O_CALL);
 
       expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
@@ -300,10 +300,10 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
       arg1->set_value(mask_t(*tok.value));
 
       tok = lexer.peek_token();
-      if (tok.kind == query_lexer_t::token_t::TOK_EQ) {
+      if (tok.kind == lexer_t::token_t::TOK_EQ) {
 	tok = lexer.next_token();
 	tok = lexer.next_token();
-	if (tok.kind != query_lexer_t::token_t::TERM)
+	if (tok.kind != lexer_t::token_t::TERM)
 	  throw_(parse_error,
 		 _("Metadata equality operator not followed by term"));
 	
@@ -327,13 +327,13 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
 
       expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
       switch (tok_context) {
-      case query_lexer_t::token_t::TOK_ACCOUNT:
+      case lexer_t::token_t::TOK_ACCOUNT:
 	ident->set_ident("account"); break;
-      case query_lexer_t::token_t::TOK_PAYEE:
+      case lexer_t::token_t::TOK_PAYEE:
 	ident->set_ident("payee"); break;
-      case query_lexer_t::token_t::TOK_CODE:
+      case lexer_t::token_t::TOK_CODE:
 	ident->set_ident("code"); break;
-      case query_lexer_t::token_t::TOK_NOTE:
+      case lexer_t::token_t::TOK_NOTE:
 	ident->set_ident("note"); break;
       default:
 	assert(0); break;
@@ -348,10 +348,10 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
     }
     break;
 
-  case query_lexer_t::token_t::LPAREN:
+  case lexer_t::token_t::LPAREN:
     node = parse_query_expr(tok_context);
     tok = lexer.next_token();
-    if (tok.kind != query_lexer_t::token_t::RPAREN)
+    if (tok.kind != lexer_t::token_t::RPAREN)
       tok.expected(')');
     break;
 
@@ -364,13 +364,13 @@ query_parser_t::parse_query_term(query_lexer_t::token_t::kind_t tok_context)
 }
 
 expr_t::ptr_op_t
-query_parser_t::parse_unary_expr(query_lexer_t::token_t::kind_t tok_context)
+query_t::parser_t::parse_unary_expr(lexer_t::token_t::kind_t tok_context)
 {
   expr_t::ptr_op_t node;
 
-  query_lexer_t::token_t tok = lexer.next_token();
+  lexer_t::token_t tok = lexer.next_token();
   switch (tok.kind) {
-  case query_lexer_t::token_t::TOK_NOT: {
+  case lexer_t::token_t::TOK_NOT: {
     expr_t::ptr_op_t term(parse_query_term(tok_context));
     if (! term)
       throw_(parse_error,
@@ -391,12 +391,12 @@ query_parser_t::parse_unary_expr(query_lexer_t::token_t::kind_t tok_context)
 }
 
 expr_t::ptr_op_t
-query_parser_t::parse_and_expr(query_lexer_t::token_t::kind_t tok_context)
+query_t::parser_t::parse_and_expr(lexer_t::token_t::kind_t tok_context)
 {
   if (expr_t::ptr_op_t node = parse_unary_expr(tok_context)) {
     while (true) {
-      query_lexer_t::token_t tok = lexer.next_token();
-      if (tok.kind == query_lexer_t::token_t::TOK_AND) {
+      lexer_t::token_t tok = lexer.next_token();
+      if (tok.kind == lexer_t::token_t::TOK_AND) {
 	expr_t::ptr_op_t prev(node);
 	node = new expr_t::op_t(expr_t::op_t::O_AND);
 	node->set_left(prev);
@@ -415,12 +415,12 @@ query_parser_t::parse_and_expr(query_lexer_t::token_t::kind_t tok_context)
 }
 
 expr_t::ptr_op_t
-query_parser_t::parse_or_expr(query_lexer_t::token_t::kind_t tok_context)
+query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_context)
 {
   if (expr_t::ptr_op_t node = parse_and_expr(tok_context)) {
     while (true) {
-      query_lexer_t::token_t tok = lexer.next_token();
-      if (tok.kind == query_lexer_t::token_t::TOK_OR) {
+      lexer_t::token_t tok = lexer.next_token();
+      if (tok.kind == lexer_t::token_t::TOK_OR) {
 	expr_t::ptr_op_t prev(node);
 	node = new expr_t::op_t(expr_t::op_t::O_OR);
 	node->set_left(prev);
@@ -439,7 +439,7 @@ query_parser_t::parse_or_expr(query_lexer_t::token_t::kind_t tok_context)
 }
 
 expr_t::ptr_op_t
-query_parser_t::parse_query_expr(query_lexer_t::token_t::kind_t tok_context)
+query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context)
 {
   if (expr_t::ptr_op_t node = parse_or_expr(tok_context)) {
     if (expr_t::ptr_op_t next = parse_query_expr(tok_context)) {
@@ -451,26 +451,6 @@ query_parser_t::parse_query_expr(query_lexer_t::token_t::kind_t tok_context)
     return node;
   }
   return expr_t::ptr_op_t();
-}
-
-expr_t::ptr_op_t query_parser_t::parse()
-{
-  return parse_query_expr(query_lexer_t::token_t::TOK_ACCOUNT);
-}
-
-std::pair<expr_t, query_parser_t>
-args_to_predicate(value_t::sequence_t::const_iterator begin,
-		  value_t::sequence_t::const_iterator end)
-{
-  query_parser_t parser(begin, end);
-  expr_t expr(parser.parse());
-  return std::pair<expr_t, query_parser_t>(expr, parser);
-}
-
-std::pair<expr_t, query_parser_t> args_to_predicate(query_parser_t parser)
-{
-  expr_t expr(parser.parse());
-  return std::pair<expr_t, query_parser_t>(expr, parser);
 }
 
 } // namespace ledger

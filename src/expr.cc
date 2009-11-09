@@ -36,122 +36,26 @@
 
 namespace ledger {
 
-expr_t::expr_t() : context(NULL), compiled(false)
+void expr_t::parse(std::istream& in, const parse_flags_t& flags,
+		   const optional<string>& original_string)
 {
-  TRACE_CTOR(expr_t, "");
-}
+  base_type::parse(in, flags, original_string);
 
-expr_t::expr_t(const expr_t& other)
-  : ptr(other.ptr), context(other.context), str(other.str), compiled(false)
-{
-  TRACE_CTOR(expr_t, "copy");
-}
-
-expr_t::expr_t(const string& _str, const uint_least8_t flags)
-  : context(NULL), str(_str), compiled(false)
-{
-  TRACE_CTOR(expr_t, "const string&");
-  if (! _str.empty())
-    parse(str, flags);
-}
-
-expr_t::expr_t(std::istream& in, const uint_least8_t flags)
-  : context(NULL), compiled(false)
-{
-  TRACE_CTOR(expr_t, "std::istream&");
-  parse(in, flags);
-}
-
-expr_t::expr_t(const ptr_op_t& _ptr, scope_t * _context, const string& _str)
-  : ptr(_ptr), context(_context), str(_str), compiled(false)
-{
-  TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *, const string&");
-}
-
-expr_t::~expr_t() throw()
-{
-  TRACE_DTOR(expr_t);
-}
-
-expr_t::ptr_op_t expr_t::get_op() throw()
-{
-  return ptr;
-}
-
-string expr_t::text()
-{
-  if (str.empty()) {
-    std::ostringstream out;
-    ptr->print(out);
-    set_text(out.str());
-  }
-  return str;
-}
-
-expr_t& expr_t::operator=(const expr_t& _expr)
-{
-  if (this != &_expr) {
-    str	     = _expr.str;
-    ptr	     = _expr.ptr;
-    context  = _expr.context;
-    compiled = _expr.compiled;
-  }
-  return *this;
-}
-
-void expr_t::parse(const string& _str, const uint32_t flags)
-{
   parser_t parser;
-  str	   = _str;
-  ptr	   = parser.parse(str, parser_t::parse_flags_t
-			  (static_cast<uint_least8_t>(flags)));
-  context  = NULL;
-  compiled = false;
-}
-
-void expr_t::parse(std::istream& in, const uint32_t flags,
-		   const string * original_string)
-{
-  parser_t parser;
-  str	   = "<stream>";
-  ptr	   = parser.parse(in, parser_t::parse_flags_t
-			  (static_cast<uint_least8_t>(flags)), original_string);
-  context  = NULL;
-  compiled = false;
-}
-
-void expr_t::recompile(scope_t& scope)
-{
-  if (ptr.get()) {
-    ptr	     = ptr->compile(scope);
-    context  = &scope;
-    compiled = true;
-  }
+  ptr = parser.parse(in, flags, original_string);
 }
 
 void expr_t::compile(scope_t& scope)
 {
-  if (! compiled)
-    recompile(scope);
+  if (! compiled && ptr) {
+    ptr = ptr->compile(scope);
+    base_type::compile(scope);
+  }
 }
 
-value_t expr_t::calc(scope_t& scope)
+value_t expr_t::real_calc(scope_t& scope)
 {
-  if (ptr.get()) {
-    if (! compiled) {
-      if (SHOW_DEBUG("expr.compile")) {
-	DEBUG("expr.compile", "Before compilation:");
-	dump(*_log_stream);
-      }
-
-      compile(scope);
-
-      if (SHOW_DEBUG("expr.compile")) {
-	DEBUG("expr.compile", "After compilation:");
-	dump(*_log_stream);
-      }
-    }
-
+  if (ptr) {
     ptr_op_t locus;
     try {
       return ptr->calc(scope, &locus);
@@ -170,13 +74,13 @@ value_t expr_t::calc(scope_t& scope)
 bool expr_t::is_constant() const
 {
   assert(compiled);
-  return ptr.get() && ptr->is_value();
+  return ptr && ptr->is_value();
 }
 
 bool expr_t::is_function() const
 {
   assert(compiled);
-  return ptr.get() && ptr->is_function();
+  return ptr && ptr->is_function();
 }
 
 value_t& expr_t::constant_value()
@@ -191,15 +95,15 @@ const value_t& expr_t::constant_value() const
   return ptr->as_value();
 }
 
-function_t& expr_t::get_function()
+expr_t::func_t& expr_t::get_function()
 {
   assert(is_function());
   return ptr->as_function_lval();
 }
 
-value_t expr_t::eval(const string& _expr, scope_t& scope)
+string expr_t::context_to_str() const
 {
-  return expr_t(_expr).calc(scope);
+  return ptr ? op_context(ptr) : _("<empty expression>");
 }
 
 void expr_t::print(std::ostream& out) const
@@ -211,16 +115,6 @@ void expr_t::print(std::ostream& out) const
 void expr_t::dump(std::ostream& out) const
 {
   if (ptr) ptr->dump(out, 0);
-}
-
-std::ostream& operator<<(std::ostream& out, const expr_t& expr) {
-  expr.print(out);
-  return out;
-}
-
-string expr_context(const expr_t& expr)
-{
-  return expr ? op_context(expr.ptr) : _("<empty expression>");
 }
 
 } // namespace ledger

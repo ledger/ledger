@@ -51,11 +51,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class mask_t
 {
 public:
@@ -149,6 +144,12 @@ private:
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
   out << mask.str();
   return out;
+}
+
+inline void to_xml(std::ostream& out, const mask_t& mask)
+{
+  push_xml x(out, "mask");
+  out << x.guard(mask.expr.str());
 }
 
 } // namespace ledger

@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _INTERACTIVE_H
 #define _INTERACTIVE_H
@@ -50,11 +46,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class interactive_t : public noncopyable
 {
   call_scope_t& args;

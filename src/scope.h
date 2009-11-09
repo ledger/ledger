@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _SCOPE_H
 #define _SCOPE_H
@@ -50,11 +46,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct symbol_t
 {
   enum kind_t {
@@ -63,7 +54,8 @@ struct symbol_t
     OPTION,
     PRECOMMAND,
     COMMAND,
-    DIRECTIVE
+    DIRECTIVE,
+    FORMAT
   };
 
   kind_t	   kind;
@@ -105,11 +97,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class scope_t
 {
 public:
@@ -138,11 +125,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class child_scope_t : public noncopyable, public scope_t
 {
 public:
@@ -186,11 +168,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class symbol_scope_t : public child_scope_t
 {
   typedef std::map<symbol_t, expr_t::ptr_op_t> symbol_map;
@@ -228,11 +205,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class call_scope_t : public child_scope_t
 {
   value_t args;
@@ -301,11 +273,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class bind_scope_t : public child_scope_t
 {
   bind_scope_t();
@@ -349,11 +316,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T>
 T * search_scope(scope_t * ptr)
 {

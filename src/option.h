@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _OPTION_H
 #define _OPTION_H

@@ -299,4 +299,12 @@ void balance_t::print(std::ostream& out,
   }
 }
 
+void to_xml(std::ostream& out, const balance_t& bal)
+{
+  push_xml x(out, "balance");
+
+  foreach (const balance_t::amounts_map::value_type& pair, bal.amounts)
+    to_xml(out, pair.second);
+}
+
 } // namespace ledger

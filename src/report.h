@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _REPORT_H
 #define _REPORT_H
@@ -104,11 +100,6 @@ class xact_t;
 //    says that the formatter should be "flushed" after the entities are
 //    iterated.  This does not happen for the commodities iteration, however.
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class report_t : public scope_t
 {
   report_t();

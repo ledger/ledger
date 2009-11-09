@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _COMPARE_H
 #define _COMPARE_H
@@ -56,11 +52,6 @@ class account_t;
 void push_sort_value(std::list<sort_value_t>& sort_values,
 		     expr_t::ptr_op_t node, scope_t& scope);
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T>
 class compare_items
 {

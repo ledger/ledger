@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup extra
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _QUOTES_H
 #define _QUOTES_H

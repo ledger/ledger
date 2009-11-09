@@ -144,13 +144,13 @@ namespace {
 				    const string& name);
   };
 
-  void parse_amount_expr(scope_t&      scope,
-			 std::istream& in,
-			 amount_t&     amount,
-			 post_t *      post,
-			 uint_least8_t flags = 0)
+  void parse_amount_expr(scope_t&             scope,
+			 std::istream&        in,
+			 amount_t&            amount,
+			 post_t *             post,
+			 const parse_flags_t& flags = PARSE_DEFAULT)
   {
-    expr_t expr(in, flags | static_cast<uint_least8_t>(expr_t::PARSE_PARTIAL));
+    expr_t expr(in, flags.plus_flags(PARSE_PARTIAL));
 
     DEBUG("textual.parse", "Parsed an amount expression");
 
@@ -506,8 +506,8 @@ void instance_t::automated_xact_directive(char * line)
   }
 
   std::auto_ptr<auto_xact_t> ae
-    (new auto_xact_t(item_predicate(skip_ws(line + 1),
-				     keep_details_t(true, true, true))));
+    (new auto_xact_t(predicate_t(skip_ws(line + 1),
+				 keep_details_t(true, true, true))));
 
   reveal_context = false;
 
@@ -852,12 +852,10 @@ post_t * instance_t::parse_post(char *		line,
     ptristream stream(next, len - beg);
 
     if (*next != '(')		// indicates a value expression
-      post->amount.parse(stream, amount_t::PARSE_NO_REDUCE);
+      post->amount.parse(stream, PARSE_NO_REDUCE);
     else
       parse_amount_expr(scope, stream, post->amount, post.get(),
-			static_cast<uint_least8_t>(expr_t::PARSE_NO_REDUCE) |
-			static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
-			static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
+			PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN);
 
     if (! post->amount.is_null() && honor_strict && strict &&
 	post->amount.has_commodity() &&
@@ -900,12 +898,11 @@ post_t * instance_t::parse_post(char *		line,
 	  ptristream cstream(p, len - beg);
 
 	  if (*p != '(')		// indicates a value expression
-	    post->cost->parse(cstream, amount_t::PARSE_NO_MIGRATE);
+	    post->cost->parse(cstream, PARSE_NO_MIGRATE);
 	  else
 	    parse_amount_expr(scope, cstream, *post->cost, post.get(),
-			      static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE) |
-			      static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
-			      static_cast<uint_least8_t>(expr_t::PARSE_NO_ASSIGN));
+			      PARSE_NO_MIGRATE | PARSE_SINGLE |
+			      PARSE_NO_ASSIGN);
 
 	  if (post->cost->sign() < 0)
 	    throw parse_error(_("A posting's cost may not be negative"));
@@ -953,11 +950,10 @@ post_t * instance_t::parse_post(char *		line,
       ptristream stream(p, len - beg);
 
       if (*p != '(')		// indicates a value expression
-	post->assigned_amount->parse(stream, amount_t::PARSE_NO_MIGRATE);
+	post->assigned_amount->parse(stream, PARSE_NO_MIGRATE);
       else
 	parse_amount_expr(scope, stream, *post->assigned_amount, post.get(),
-			  static_cast<uint_least8_t>(expr_t::PARSE_SINGLE) |
-			  static_cast<uint_least8_t>(expr_t::PARSE_NO_MIGRATE));
+			  PARSE_SINGLE | PARSE_NO_MIGRATE);
 
       if (post->assigned_amount->is_null()) {
 	if (post->amount.is_null())

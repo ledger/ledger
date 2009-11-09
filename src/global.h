@@ -56,13 +56,13 @@ public:
   global_scope_t(char ** envp);
   ~global_scope_t();
 
-  void	       read_init();
-  void         read_environment_settings(char * envp[]);
-  strings_list read_command_arguments(scope_t& scope, strings_list args);
-  void         normalize_session_options();
-  function_t   look_for_precommand(scope_t& scope, const string& verb);
-  function_t   look_for_command(scope_t& scope, const string& verb);
-  void         normalize_report_options(const string& verb);
+  void		 read_init();
+  void		 read_environment_settings(char * envp[]);
+  strings_list	 read_command_arguments(scope_t& scope, strings_list args);
+  void		 normalize_session_options();
+  expr_t::func_t look_for_precommand(scope_t& scope, const string& verb);
+  expr_t::func_t look_for_command(scope_t& scope, const string& verb);
+  void		 normalize_report_options(const string& verb);
 
   char * prompt_string();
 

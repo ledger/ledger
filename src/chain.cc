@@ -44,8 +44,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 				     bool             only_preliminaries)
 {
   post_handler_ptr handler(base_handler);
-  item_predicate   display_predicate;
-  item_predicate   only_predicate;
+  predicate_t	   display_predicate;
+  predicate_t	   only_predicate;
 
   assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
@@ -55,8 +55,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     // Make sure only forecast postings which match are allowed through
     if (report.HANDLED(forecast_while_)) {
       handler.reset(new filter_posts
-		    (handler, item_predicate(report.HANDLER(forecast_while_).str(),
-					     report.what_to_keep()),
+		    (handler, predicate_t(report.HANDLER(forecast_while_).str(),
+					  report.what_to_keep()),
 		     report));
     }
 
@@ -73,8 +73,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     // filter_posts will only pass through posts matching the
     // `display_predicate'.
     if (report.HANDLED(display_)) {
-      display_predicate = item_predicate(report.HANDLER(display_).str(),
-					 report.what_to_keep());
+      display_predicate = predicate_t(report.HANDLER(display_).str(),
+				      report.what_to_keep());
       handler.reset(new filter_posts(handler, display_predicate, report));
     }
 
@@ -100,8 +100,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
   if (report.HANDLED(only_)) {
-    only_predicate = item_predicate(report.HANDLER(only_).str(),
-				    report.what_to_keep());
+    only_predicate = predicate_t(report.HANDLER(only_).str(),
+				 report.what_to_keep());
     handler.reset(new filter_posts(handler, only_predicate, report));
   }
 
@@ -187,8 +187,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     DEBUG("report.predicate",
 	  "Report predicate expression = " << report.HANDLER(limit_).str());
     handler.reset(new filter_posts
-		  (handler, item_predicate(report.HANDLER(limit_).str(),
-					   report.what_to_keep()),
+		  (handler, predicate_t(report.HANDLER(limit_).str(),
+					report.what_to_keep()),
 		   report));
   }
 
@@ -211,15 +211,15 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     // the filter get reported.
     if (report.HANDLED(limit_))
       handler.reset(new filter_posts
-		    (handler, item_predicate(report.HANDLER(limit_).str(),
-					     report.what_to_keep()),
+		    (handler, predicate_t(report.HANDLER(limit_).str(),
+					  report.what_to_keep()),
 		     report));
   }
   else if (report.HANDLED(forecast_while_)) {
     forecast_posts * forecast_handler
       = new forecast_posts(handler,
-			   item_predicate(report.HANDLER(forecast_while_).str(),
-					  report.what_to_keep()),
+			   predicate_t(report.HANDLER(forecast_while_).str(),
+				       report.what_to_keep()),
 			   report,
 			   report.HANDLED(forecast_years_) ?
 			     static_cast<std::size_t>
@@ -231,8 +231,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     // See above, under budget_posts.
     if (report.HANDLED(limit_))
       handler.reset(new filter_posts
-		    (handler, item_predicate(report.HANDLER(limit_).str(),
-					     report.what_to_keep()),
+		    (handler, predicate_t(report.HANDLER(limit_).str(),
+					  report.what_to_keep()),
 		     report));
   }
 

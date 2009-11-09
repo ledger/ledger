@@ -74,7 +74,7 @@ namespace {
     return op_bool_tuple(scope.lookup(symbol_t::OPTION, buf), false);
   }
 
-  void process_option(const string& whence, const function_t& opt,
+  void process_option(const string& whence, const expr_t::func_t& opt,
 		      scope_t& scope, const char * arg, const string& name)
   {
     try {

@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _TIMELOG_H
 #define _TIMELOG_H
@@ -54,11 +50,6 @@ namespace ledger {
 class account_t;
 class journal_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class time_xact_t
 {
 public:
@@ -85,11 +76,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class time_log_t
 {
   std::list<time_xact_t> time_xacts;

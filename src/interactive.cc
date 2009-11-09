@@ -181,12 +181,11 @@ string join_args(call_scope_t& args)
   bool first = true;
 
   for (std::size_t i = 0; i < args.size(); i++) {
-    if (first) {
-      buf << args[i];
+    if (first)
       first = false;
-    } else {
-      buf << ' ' << args[i];
-    }
+    else
+      buf << ' ';
+    buf << args[i];
   }
 
   return buf.str();

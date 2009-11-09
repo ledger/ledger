@@ -560,4 +560,63 @@ void extend_xact_base(journal_t *  journal,
     xact->extend_xact(base, post_handler);
 }
 
+void to_xml(std::ostream& out, const xact_t& xact)
+{
+  push_xml x(out, "transaction", true, true);
+
+  if (xact.state() == item_t::CLEARED)
+    out << " state=\"cleared\"";
+  else if (xact.state() == item_t::PENDING)
+    out << " state=\"pending\"";
+
+  if (xact.has_flags(ITEM_GENERATED))
+    out << " generated=\"true\"";
+
+  x.close_attrs();
+
+  if (xact._date) {
+    push_xml y(out, "date");
+    to_xml(out, *xact._date, false);
+  }
+  if (xact._date_eff) {
+    push_xml y(out, "effective-date");
+    to_xml(out, *xact._date_eff, false);
+  }
+
+  if (xact.code) {
+    push_xml y(out, "code");
+    out << y.guard(*xact.code);
+  }
+
+  {
+    push_xml y(out, "payee");
+    out << y.guard(xact.payee);
+  }
+
+  if (xact.note) {
+    push_xml y(out, "note");
+    out << y.guard(*xact.note);
+  }
+
+  if (xact.metadata) {
+    push_xml y(out, "metadata");
+    foreach (const item_t::string_map::value_type& pair, *xact.metadata) {
+      if (pair.second) {
+	push_xml z(out, "variable");
+	{
+	  push_xml w(out, "key");
+	  out << y.guard(pair.first);
+	}
+	{
+	  push_xml w(out, "value");
+	  out << y.guard(*pair.second);
+	}
+      } else {
+	push_xml z(out, "tag");
+	out << y.guard(pair.first);
+      }
+    }
+  }
+}
+
 } // namespace ledger

@@ -132,6 +132,16 @@ for line in fd.readlines():
     line = re.sub('balance_pair_t', 'BalancePair', line)
     line = re.sub('value_t', 'Value', line)
 
+    line = re.sub("PARSE_DEFAULT",    "ParseFlags.Default", line)
+    line = re.sub("PARSE_PARTIAL",    "ParseFlags.Partial", line)
+    line = re.sub("PARSE_SINGLE",     "ParseFlags.Single", line)
+    line = re.sub("PARSE_NO_MIGRATE", "ParseFlags.NoMigrate", line)
+    line = re.sub("PARSE_NO_REDUCE",  "ParseFlags.NoReduce", line)
+    line = re.sub("PARSE_NO_ASSIGN",  "ParseFlags.NoAssign", line)
+    line = re.sub("PARSE_NO_DATES",   "ParseFlags.NoDates", line)
+    line = re.sub("PARSE_OP_CONTEXT", "ParseFlags.OpContext", line)
+    line = re.sub("PARSE_SOFT_FAIL",  "ParseFlags.SoftFail", line)
+
     line = re.sub('ledger::', '', line)
     line = re.sub('std::istringstream', 'StringIO', line)
     line = re.sub('std::ostringstream', 'StringIO', line)

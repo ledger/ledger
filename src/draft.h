@@ -2,8 +2,8 @@
  * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ * modification, are permitted provided that the following conditions are
+ * met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -30,80 +30,84 @@
  */
 
 /**
- * @addtogroup util
+ * @addtogroup derive
  */
 
 /**
- * @file   pstream.h
+ * @file   derive.h
  * @author John Wiegley
  *
- * @ingroup util
+ * @ingroup report
  */
-#ifndef _PSTREAM_H
-#define _PSTREAM_H
+#ifndef _DERIVE_H
+#define _DERIVE_H
 
-//#include <istream>
-//#include <streambuf>
+#include "exprbase.h"
+#include "value.h"
 
-class ptristream : public std::istream
+namespace ledger {
+
+class journal_t;
+class xact_t;
+
+class draft_t : public expr_base_t<value_t>
 {
-  class ptrinbuf : public std::streambuf
+  typedef expr_base_t<value_t> base_type;
+
+  struct xact_template_t
   {
-    ptrinbuf(const ptrinbuf&);
-    ptrinbuf& operator=(const ptrinbuf&);
+    optional<date_t> date;
+    optional<string> code;
+    optional<string> note;
+    mask_t           payee_mask;
 
-  protected:
-    char *	ptr;
-    std::size_t len;
+    struct post_template_t {
+      bool               from;
+      optional<mask_t>   account_mask;
+      optional<amount_t> amount;
+      optional<string>   cost_operator;
+      optional<amount_t> cost;
 
-  public:
-    ptrinbuf(char * _ptr, std::size_t _len) : ptr(_ptr), len(_len) {
-      if (*ptr && len == 0)
-	len = std::strlen(ptr);
+      post_template_t() : from(false) {}
+    };
 
-      setg(ptr,		// beginning of putback area
-	   ptr,		// read position
-	   ptr+len);		// end position
-    }
+    std::list<post_template_t> posts;
 
-  protected:
-    virtual int_type underflow() {
-      // is read position before end of buffer?
-      if (gptr() < egptr())
-	return traits_type::to_int_type(*gptr());
-      else
-	return EOF;
-    }
+    xact_template_t() {}
 
-    virtual pos_type seekoff(off_type off, ios_base::seekdir way,
-			     ios_base::openmode)
-    {
-      switch (way) {
-      case std::ios::cur:
-	setg(ptr, gptr()+off, ptr+len);
-	break;
-      case std::ios::beg:
-	setg(ptr, ptr+off, ptr+len);
-	break;
-      case std::ios::end:
-	setg(ptr, egptr()+off, ptr+len);
-	break;
-
-      default:
-	return pos_type(off_type(-1));
-      }
-      return pos_type(gptr() - ptr);
-    }
+    void dump(std::ostream& out) const;
   };
 
-protected:
-  ptrinbuf buf;
+  optional<xact_template_t> tmpl;
 
-public: 
-  ptristream(char * ptr, std::size_t len = 0)
-    : std::istream(0), buf(ptr, len) {
-    rdbuf(&buf);
+public:
+  draft_t(const value_t& args) : base_type() {
+    TRACE_CTOR(draft_t, "value_t");
+    if (! args.empty())
+      parse_args(args);
+  }
+  ~draft_t() {
+    TRACE_DTOR(draft_t);
+  }
+
+  void parse_args(const value_t& args);
+
+  virtual result_type real_calc(scope_t&) {
+    assert(0);
+    return true;
+  }
+
+  xact_t * insert(journal_t& journal);
+
+  virtual void dump(std::ostream& out) const {
+    if (tmpl)
+      tmpl->dump(out);
   }
 };
 
-#endif // _PSTREAM_H
+value_t xact_command(call_scope_t& args);
+value_t template_command(call_scope_t& args);
+
+} // namespace ledger
+
+#endif // _DERIVE_H

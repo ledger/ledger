@@ -870,6 +870,10 @@ public:
       return 1;
   }
 
+  bool empty() const {
+    return size() == 0;
+  }
+
   /**
    * Informational methods.
    */
@@ -977,6 +981,8 @@ struct sort_value_t
 
 bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
 			     const std::list<sort_value_t>& right_values);
+
+void to_xml(std::ostream& out, const value_t& value);
 
 } // namespace ledger
 

@@ -38,20 +38,10 @@
  * @author John Wiegley
  *
  * @ingroup util
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _HOOKS_H
 #define _HOOKS_H
 
-
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T, typename Data>
 class hooks_t : public boost::noncopyable
 {

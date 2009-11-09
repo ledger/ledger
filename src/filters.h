@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _FILTERS_H
 #define _FILTERS_H
@@ -59,11 +55,6 @@ namespace ledger {
 // Posting filters
 //
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class ignore_posts : public item_handler<post_t>
 {
 public:
@@ -72,11 +63,6 @@ public:
 
 class posts_iterator;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class pass_down_posts : public item_handler<post_t>
 {
   pass_down_posts();
@@ -89,11 +75,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class push_to_posts_list : public item_handler<post_t>
 {
   push_to_posts_list();
@@ -113,11 +94,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class truncate_xacts : public item_handler<post_t>
 {
   int head_count;
@@ -145,11 +121,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_posts : public item_handler<post_t>
 {
   typedef std::deque<post_t *> posts_deque;
@@ -190,11 +161,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_xacts : public item_handler<post_t>
 {
   sort_posts sorter;
@@ -234,25 +200,20 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class filter_posts : public item_handler<post_t>
 {
-  item_predicate pred;
-  scope_t&       context;
+  predicate_t pred;
+  scope_t&    context;
 
   filter_posts();
 
 public:
-  filter_posts(post_handler_ptr	     handler,
-	       const item_predicate& predicate,
-	       scope_t&              _context)
+  filter_posts(post_handler_ptr	  handler,
+	       const predicate_t& predicate,
+	       scope_t&           _context)
     : item_handler<post_t>(handler), pred(predicate), context(_context) {
     TRACE_CTOR(filter_posts,
-	       "post_handler_ptr, const item_predicate&, scope_t&");
+	       "post_handler_ptr, const predicate_t&, scope_t&");
   }
   virtual ~filter_posts() {
     TRACE_DTOR(filter_posts);
@@ -267,11 +228,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class anonymize_posts : public item_handler<post_t>
 {
   temporaries_t temps;
@@ -291,11 +247,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class calc_posts : public item_handler<post_t>
 {
   post_t * last_post;
@@ -319,16 +270,11 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class collapse_posts : public item_handler<post_t>
 {
   expr_t&	      amount_expr;
-  item_predicate      display_predicate;
-  item_predicate      only_predicate;
+  predicate_t	      display_predicate;
+  predicate_t	      only_predicate;
   value_t	      subtotal;
   std::size_t	      count;
   xact_t *	      last_xact;
@@ -343,8 +289,8 @@ class collapse_posts : public item_handler<post_t>
 public:
   collapse_posts(post_handler_ptr handler,
 		 expr_t&	  _amount_expr,
-		 item_predicate   _display_predicate,
-		 item_predicate   _only_predicate,
+		 predicate_t	  _display_predicate,
+		 predicate_t	  _only_predicate,
 		 bool             _only_collapse_if_zero = false)
     : item_handler<post_t>(handler), amount_expr(_amount_expr),
       display_predicate(_display_predicate),
@@ -368,11 +314,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class related_posts : public item_handler<post_t>
 {
   posts_list posts;
@@ -399,11 +340,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class changed_value_posts : public item_handler<post_t>
 {
   // This filter requires that calc_posts be used at some point
@@ -451,11 +387,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class subtotal_posts : public item_handler<post_t>
 {
   subtotal_posts();
@@ -517,11 +448,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class interval_posts : public subtotal_posts
 {
   date_interval_t interval;
@@ -590,11 +516,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class by_payee_posts : public item_handler<post_t>
 {
   typedef std::map<string, shared_ptr<subtotal_posts> >  payee_subtotals_map;
@@ -618,11 +539,6 @@ class by_payee_posts : public item_handler<post_t>
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class transfer_details : public item_handler<post_t>
 {
   account_t *	master;
@@ -655,11 +571,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class dow_posts : public subtotal_posts
 {
   posts_list days_of_the_week[7];
@@ -681,11 +592,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class generate_posts : public item_handler<post_t>
 {
   generate_posts();
@@ -712,11 +618,6 @@ public:
   virtual void add_post(const date_interval_t& period, post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class budget_posts : public generate_posts
 {
 #define BUDGET_NO_BUDGET   0x00
@@ -743,26 +644,21 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class forecast_posts : public generate_posts
 {
-  item_predicate    pred;
+  predicate_t	    pred;
   scope_t&	    context;
   const std::size_t forecast_years;
 
  public:
-  forecast_posts(post_handler_ptr      handler,
-		 const item_predicate& predicate,
-		 scope_t&              _context,
-		 const std::size_t     _forecast_years)
+  forecast_posts(post_handler_ptr   handler,
+		 const predicate_t& predicate,
+		 scope_t&           _context,
+		 const std::size_t  _forecast_years)
     : generate_posts(handler), pred(predicate), context(_context),
       forecast_years(_forecast_years) {
     TRACE_CTOR(forecast_posts,
-	       "post_handler_ptr, item_predicate, scope_t&, std::size_t");
+	       "post_handler_ptr, predicate_t, scope_t&, std::size_t");
   }
   virtual ~forecast_posts() throw() {
     TRACE_DTOR(forecast_posts);
@@ -779,23 +675,18 @@ class forecast_posts : public generate_posts
 
 class accounts_iterator;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
-  optional<item_predicate> pred;
-  optional<scope_t&>       context;
+  optional<predicate_t> pred;
+  optional<scope_t&>    context;
 
 public:
-  pass_down_accounts(acct_handler_ptr		     handler,
-		     accounts_iterator&		     iter,
-		     const optional<item_predicate>& _pred    = none,
-		     const optional<scope_t&>&	     _context = none);
+  pass_down_accounts(acct_handler_ptr		  handler,
+		     accounts_iterator&		  iter,
+		     const optional<predicate_t>& _pred    = none,
+		     const optional<scope_t&>&	  _context = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

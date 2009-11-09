@@ -35,13 +35,15 @@
 #include "session.h"
 #include "unistring.h"
 #include "format.h"
+#include "query.h"
 #include "output.h"
 #include "iterators.h"
 #include "filters.h"
 #include "precmd.h"
 #include "stats.h"
 #include "generate.h"
-#include "derive.h"
+#include "draft.h"
+#include "xml.h"
 #include "emacs.h"
 
 namespace ledger {
@@ -96,7 +98,7 @@ void report_t::accounts_report(acct_handler_ptr handler)
 
   if (HANDLED(display_))
     pass_down_accounts(handler, *iter.get(),
-		       item_predicate(HANDLER(display_).str(), what_to_keep()),
+		       predicate_t(HANDLER(display_).str(), what_to_keep()),
 		       *this);
   else
     pass_down_accounts(handler, *iter.get());
@@ -431,33 +433,23 @@ namespace {
     value_t operator()(call_scope_t& args)
     {
       if (args.size() > 0) {
-	value_t::sequence_t::const_iterator begin =
-	  args.value().as_sequence().begin();
-	value_t::sequence_t::const_iterator end   =
-	  args.value().as_sequence().end();
-
-	std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
-	if (! info.first)
+	query_t query(args.value(), report.what_to_keep());
+	if (! query)
 	  throw_(std::runtime_error,
-		 _("Invalid query predicate: %1") << join_args(args));
+		 _("Invalid query predicate: %1") << query.text());
 
-	string limit = info.first.text();
-	if (! limit.empty())
-	  report.HANDLER(limit_).on(whence, limit);
+	report.HANDLER(limit_).on(whence, query.text());
 
 	DEBUG("report.predicate",
 	      "Predicate = " << report.HANDLER(limit_).str());
 
-	if (info.second.tokens_remaining()) {
-	  info = args_to_predicate(info.second);
-	  if (! info.first)
+	if (query.tokens_remaining()) {
+	  query.parse_again();
+	  if (! query)
 	    throw_(std::runtime_error,
-		   _("Invalid display predicate: %1") << join_args(args));
+		   _("Invalid display predicate: %1") << query.text());
 
-	  string display = info.first.text();
-
-	  if (! display.empty())
-	    report.HANDLER(display_).on(whence, display);
+	  report.HANDLER(display_).on(whence, query.text());
 
 	  DEBUG("report.predicate",
 		"Display predicate = " << report.HANDLER(display_).str());
@@ -990,6 +982,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'x':
       if (is_eq(p, "xact"))
 	return WRAP_FUNCTOR(xact_command);
+      else if (is_eq(p, "xml"))
+	return WRAP_FUNCTOR(reporter<>(new format_xml(*this), *this, "#xml"));
       break;
     }
     break;
