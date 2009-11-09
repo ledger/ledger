@@ -1125,16 +1125,16 @@ bool amount_t::valid() const
   return true;
 }
 
-void to_xml(std::ostream& out, const amount_t& amt)
+void to_xml(std::ostream& out, const amount_t& amt, bool commodity_details)
 {
   push_xml x(out, "amount");
 
   if (amt.has_commodity())
-    to_xml(out, amt.commodity());
+    to_xml(out, amt.commodity(), commodity_details);
 
   {
-    push_xml y(out, "number");
-    out << amt.number();
+    push_xml y(out, "quantity");
+    out << y.guard(amt.quantity_string());
   }
 }
 

@@ -654,15 +654,51 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   }
 }
 
-void to_xml(std::ostream& out, const commodity_t& comm)
+void to_xml(std::ostream& out, const commodity_t& comm,
+	    bool commodity_details)
 {
-  push_xml x(out, "commodity");
+  push_xml x(out, "commodity", true);
+
+  out << " flags=\"";
+  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED))) out << 'P';
+  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))    out << 'S';
+  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))    out << 'T';
+  if (comm.has_flags(COMMODITY_STYLE_EUROPEAN))     out << 'E';
+  out << '"';
+
+  x.close_attrs();
+  
   {
     push_xml y(out, "symbol");
     out << y.guard(comm.symbol());
   }
-  if (comm.is_annotated())
-    to_xml(out, as_annotated_commodity(comm).details);
+
+  if (commodity_details) {
+    if (comm.is_annotated())
+      to_xml(out, as_annotated_commodity(comm).details);
+
+    if (comm.varied_history()) {
+      push_xml y(out, "varied-history");
+
+      foreach (const commodity_t::history_by_commodity_map::value_type& pair,
+	       comm.varied_history()->histories) {
+	{
+	  push_xml z(out, "symbol");
+	  out << y.guard(pair.first->symbol());
+	}
+	{
+	  push_xml z(out, "history");
+
+	  foreach (const commodity_t::history_map::value_type& inner_pair,
+		   pair.second.prices) {
+	    push_xml w(out, "price-point");
+	    to_xml(out, inner_pair.first);
+	    to_xml(out, inner_pair.second);
+	  }
+	}
+      }
+    }
+  }
 }
 
 } // namespace ledger

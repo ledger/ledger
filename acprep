@@ -195,7 +195,7 @@ class PrepareBuild(CommandLineApp):
 
         self.envvars = {
             'PYTHON_HOME':     '/usr',
-            'PYTHON_VERSION':  '2.5',
+            'PYTHON_VERSION':  '2.6',
             'BOOST_SUFFIX':    None,
             'BOOST_HOME':      '/usr',
             'LEDGER_PRODUCTS': None,
@@ -394,7 +394,7 @@ class PrepareBuild(CommandLineApp):
                 tag = self.get_stdout('git', 'describe', '--all', '--long')
                 self.current_ver = re.sub('heads/', '', tag)
             else:
-                self.current_ver = "3.0a"
+                self.current_ver = "unknown"
         return self.current_ver
 
     def need_to_prepare_autotools(self):

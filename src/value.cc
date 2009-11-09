@@ -1748,8 +1748,6 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
 
 void to_xml(std::ostream& out, const value_t& value)
 {
-  push_xml x(out, "value");
-
   switch (value.type()) {
   case value_t::VOID:
     out << "<void />";
@@ -1764,6 +1762,14 @@ void to_xml(std::ostream& out, const value_t& value)
     out << value.as_long();
     break;
   }
+
+  case value_t::AMOUNT:
+    to_xml(out, value.as_amount());
+    break;
+  case value_t::BALANCE:
+    to_xml(out, value.as_balance());
+    break;
+
   case value_t::DATETIME:
     to_xml(out, value.as_datetime());
     break;
@@ -1785,13 +1791,6 @@ void to_xml(std::ostream& out, const value_t& value)
       to_xml(out, member);
     break;
   }
-
-  case value_t::AMOUNT:
-    to_xml(out, value.as_amount());
-    break;
-  case value_t::BALANCE:
-    to_xml(out, value.as_balance());
-    break;
 
   case value_t::SCOPE:
   default:

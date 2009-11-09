@@ -649,16 +649,27 @@ inline string to_hex(uint_least32_t * message_digest, const int len = 1)
 class push_xml
 {
   std::ostream& out;
-  string tag;
+  string	tag;
+  bool  	leave_open;
+
 public:
-  push_xml(std::ostream& _out, const string& _tag) : out(_out), tag(_tag) {
-    out << '<' << tag << '>';
+  push_xml(std::ostream& _out, const string& _tag, bool has_attrs = false,
+	   bool _leave_open = false)
+    : out(_out), tag(_tag), leave_open(_leave_open) {
+    out << '<' << tag;
+    if (! has_attrs)
+      out << '>';
   }
   ~push_xml() {
-    out << "</" << tag << '>';
+    if (! leave_open)
+      out << "</" << tag << '>';
   }
 
-  string guard(const string& str) {
+  void close_attrs() {
+    out << '>';
+  }
+
+  static string guard(const string& str) {
     std::ostringstream buf;
     foreach (const char& ch, str) {
       switch (ch) {

@@ -982,6 +982,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'x':
       if (is_eq(p, "xact"))
 	return WRAP_FUNCTOR(xact_command);
+      else if (is_eq(p, "xml"))
+	return WRAP_FUNCTOR(reporter<>(new format_xml(*this), *this, "#xml"));
       break;
     }
     break;

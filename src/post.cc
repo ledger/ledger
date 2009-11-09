@@ -452,4 +452,99 @@ void post_t::set_reported_account(account_t * account)
   account->xdata().reported_posts.push_back(this);
 }
 
+void to_xml(std::ostream& out, const post_t& post)
+{
+  push_xml x(out, "posting", true);
+
+  if (post.state() == item_t::CLEARED)
+    out << " state=\"cleared\"";
+  else if (post.state() == item_t::PENDING)
+    out << " state=\"pending\"";
+
+  if (post.has_flags(POST_VIRTUAL))
+    out << " virtual=\"true\"";
+  if (post.has_flags(ITEM_GENERATED))
+    out << " generated=\"true\"";
+
+  x.close_attrs();
+
+  if (post._date) {
+    push_xml y(out, "date");
+    to_xml(out, *post._date, false);
+  }
+  if (post._date_eff) {
+    push_xml y(out, "effective-date");
+    to_xml(out, *post._date_eff, false);
+  }
+
+  if (post.account) {
+    push_xml y(out, "account", true);
+
+    out << " ref=\"";
+    out.width(sizeof(unsigned long) * 2);
+    out.fill('0');
+    out << std::hex << reinterpret_cast<unsigned long>(post.account);
+    out << '"';
+    y.close_attrs();
+
+    {
+      push_xml z(out, "name");
+      out << z.guard(post.account->fullname());
+    }
+  }
+
+  {
+    push_xml y(out, "post-amount");
+    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+      to_xml(out, post.xdata().compound_value);
+    else
+      to_xml(out, post.amount);
+  }
+
+  if (post.cost) {
+    push_xml y(out, "cost");
+    to_xml(out, *post.cost);
+  }
+
+  if (post.assigned_amount) {
+    if (post.has_flags(POST_CALCULATED)) {
+      push_xml y(out, "balance-assertion");
+      to_xml(out, *post.assigned_amount);
+    } else {
+      push_xml y(out, "balance-assignment");
+      to_xml(out, *post.assigned_amount);
+    }
+  }
+
+  if (post.note) {
+    push_xml y(out, "note");
+    out << y.guard(*post.note);
+  }
+
+  if (post.metadata) {
+    push_xml y(out, "metadata");
+    foreach (const item_t::string_map::value_type& pair, *post.metadata) {
+      if (pair.second) {
+	push_xml z(out, "variable");
+	{
+	  push_xml z(out, "key");
+	  out << y.guard(pair.first);
+	}
+	{
+	  push_xml z(out, "value");
+	  out << y.guard(*pair.second);
+	}
+      } else {
+	push_xml z(out, "tag");
+	out << y.guard(pair.first);
+      }
+    }
+  }
+
+  if (post.xdata_ && ! post.xdata_->total.is_null()) {
+    push_xml y(out, "total");
+    to_xml(out, post.xdata_->total);
+  }
+}
+
 } // namespace ledger

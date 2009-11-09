@@ -72,39 +72,12 @@ namespace {
   }
 
   void xml_transaction(std::ostream& out, const xact_t * xact) {
-    out << "<transaction>\n";
-    out << "<payee>" << xact->payee << "</payee>\n";
+    to_xml(out, *xact);
 
-    foreach (const post_t * post, xact->posts) {
+    foreach (const post_t * post, xact->posts)
       if (post->has_xdata() &&
-	  post->xdata().has_flags(POST_EXT_VISITED)) {
-	out << "<posting>\n";
-	out << "<account ref=\"";
-	out.width(sizeof(unsigned long) * 2);
-	out.fill('0');
-	out << std::hex << reinterpret_cast<unsigned long>(post->account);
-	out << "\">" << post->account->fullname() << "</account>\n";
-
-	out << "<quantity>\n";
-	to_xml(out, post->amount);
-	out << "</quantity>\n";
-
-	out << "<cost>\n";
-	if (post->cost)
-	  to_xml(out, *post->cost);
-	else
-	  to_xml(out, post->amount);
-	out << "</cost>\n";
-
-	if (post->assigned_amount) {
-	  out << "<balance-assert>\n";
-	  to_xml(out, *post->assigned_amount);
-	  out << "</balance-assert>\n";
-	}
-
-	out << "</posting>\n";
-      }
-    }
+	  post->xdata().has_flags(POST_EXT_VISITED))
+	to_xml(out, *post);
 
     out << "</transaction>\n";
   }
@@ -114,11 +87,12 @@ void format_xml::flush()
 {
   std::ostream& out(report.output_stream);
 
-  out << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ledger>\n<journal>\n";
+  out << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+  out << "<ledger version=\"" << VERSION << "\">\n";
 
   out << "<commodities>\n";
   foreach (const commodities_pair& pair, commodities) {
-    to_xml(out, *pair.second);
+    to_xml(out, *pair.second, true);
     out << '\n';
   }
   out << "</commodities>\n";
@@ -132,7 +106,7 @@ void format_xml::flush()
     xml_transaction(out, xact);
   out << "</transactions>\n";
 
-  out << "</journal>\n</ledger>\n";
+  out << "</ledger>\n";
   out.flush();
 }
 

@@ -116,16 +116,26 @@ std::string format_date(const date_t& when,
 void set_date_format(const char * format);
 void set_input_date_format(const char * format);
 
-inline void to_xml(std::ostream& out, const datetime_t& when)
+inline void to_xml(std::ostream& out, const datetime_t& when,
+		   bool wrap = true)
 {
-  push_xml x(out, "datetime");
-  out << format_datetime(when, FMT_WRITTEN);
+  if (wrap) {
+    push_xml x(out, "datetime");
+    out << format_datetime(when, FMT_WRITTEN);
+  } else {
+    out << format_datetime(when, FMT_WRITTEN);
+  }
 }
 
-inline void to_xml(std::ostream& out, const date_t& when)
+inline void to_xml(std::ostream& out, const date_t& when,
+		   bool wrap = true)
 {
-  push_xml x(out, "date");
-  out << format_date(when, FMT_WRITTEN);
+  if (wrap) {
+    push_xml x(out, "date");
+    out << format_date(when, FMT_WRITTEN);
+  } else {
+    out << format_date(when, FMT_WRITTEN);
+  }
 }
 
 class date_interval_t : public equality_comparable<date_interval_t>

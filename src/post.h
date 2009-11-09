@@ -218,6 +218,8 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+void to_xml(std::ostream& out, const post_t& post);
+
 } // namespace ledger
 
 #endif // _POST_H

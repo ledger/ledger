@@ -116,19 +116,19 @@ inline void to_xml(std::ostream& out, const annotation_t& details)
 
   if (details.price)
   {
-    push_xml y(out, "ann-price");
+    push_xml y(out, "price");
     to_xml(out, *details.price);
   }
 
   if (details.date)
   {
-    push_xml y(out, "ann-date");
-    to_xml(out, *details.date);
+    push_xml y(out, "date");
+    to_xml(out, *details.date, false);
   }
 
   if (details.tag)
   {
-    push_xml y(out, "ann-tag");
+    push_xml y(out, "tag");
     out << y.guard(*details.tag);
   }
 }

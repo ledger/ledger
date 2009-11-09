@@ -318,6 +318,11 @@ public:
       return *base->varied_history;
     return none;
   }
+  optional<const varied_history_t&> varied_history() const {
+    if (base->varied_history)
+      return *base->varied_history;
+    return none;
+  }
 
   optional<history_t&> history(const optional<commodity_t&>& commodity);
 
@@ -418,7 +423,8 @@ struct compare_amount_commodities {
   bool operator()(const amount_t * left, const amount_t * right) const;
 };
 
-void to_xml(std::ostream& out, const commodity_t& comm);
+void to_xml(std::ostream& out, const commodity_t& comm,
+	    bool commodity_details = false);
 
 } // namespace ledger
 
