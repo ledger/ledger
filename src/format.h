@@ -105,8 +105,7 @@ class format_t : public expr_base_t<string>
     void dump(std::ostream& out) const;
   };
 
-  string		 format_string;
-  scoped_ptr<element_t>	 elements;
+  scoped_ptr<element_t> elements;
 
 public:
   static enum elision_style_t {

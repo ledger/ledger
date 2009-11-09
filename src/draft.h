@@ -42,20 +42,71 @@
 #ifndef _DERIVE_H
 #define _DERIVE_H
 
+#include "exprbase.h"
 #include "value.h"
 
 namespace ledger {
 
-class call_scope_t;
+class journal_t;
+class xact_t;
+
+class draft_t : public expr_base_t<value_t>
+{
+  typedef expr_base_t<value_t> base_type;
+
+  struct xact_template_t
+  {
+    optional<date_t> date;
+    optional<string> code;
+    optional<string> note;
+    mask_t           payee_mask;
+
+    struct post_template_t {
+      bool               from;
+      optional<mask_t>   account_mask;
+      optional<amount_t> amount;
+      optional<string>   cost_operator;
+      optional<amount_t> cost;
+
+      post_template_t() : from(false) {}
+    };
+
+    std::list<post_template_t> posts;
+
+    xact_template_t() {}
+
+    void dump(std::ostream& out) const;
+  };
+
+  optional<xact_template_t> tmpl;
+
+public:
+  draft_t(const value_t& args) : base_type() {
+    TRACE_CTOR(draft_t, "value_t");
+    if (! args.empty())
+      parse_args(args);
+  }
+  ~draft_t() {
+    TRACE_DTOR(draft_t);
+  }
+
+  void parse_args(const value_t& args);
+
+  virtual result_type real_calc(scope_t&) {
+    assert(0);
+    return true;
+  }
+
+  xact_t * insert(journal_t& journal);
+
+  virtual void dump(std::ostream& out) const {
+    if (tmpl)
+      tmpl->dump(out);
+  }
+};
 
 value_t xact_command(call_scope_t& args);
 value_t template_command(call_scope_t& args);
-
-class xact_t;
-class report_t;
-xact_t * derive_new_xact(report_t& report,
-			 value_t::sequence_t::const_iterator i,
-			 value_t::sequence_t::const_iterator end);
 
 } // namespace ledger
 

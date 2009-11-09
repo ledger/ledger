@@ -31,7 +31,7 @@
 
 #include <system.hh>
 
-#include "derive.h"
+#include "draft.h"
 #include "xact.h"
 #include "post.h"
 #include "account.h"

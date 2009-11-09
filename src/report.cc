@@ -42,7 +42,7 @@
 #include "precmd.h"
 #include "stats.h"
 #include "generate.h"
-#include "derive.h"
+#include "draft.h"
 #include "emacs.h"
 
 namespace ledger {
