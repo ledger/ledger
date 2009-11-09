@@ -149,7 +149,7 @@ inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
 inline void to_xml(std::ostream& out, const mask_t& mask)
 {
   push_xml x(out, "mask");
-  out << x.guard(mask.expr.str());
+  out << x.guard(mask.str());
 }
 
 } // namespace ledger
