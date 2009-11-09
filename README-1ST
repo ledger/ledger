@@ -59,3 +59,24 @@ you updated with the very latest version.
       Send me that backtrace output, and the output from "ledger --version".
 
    ----------------------------------------------------------------------
+
+ - Q: Whenever I try to use the Python support, I get a segfault
+
+   A: Make sure that the boost_python library you linked against is using the
+      exact same Python as the Ledger executable.  In particular I see this
+      bug on OS X systems where boost_python is linked against the default
+      Python, while Ledger is linked against the version provided by MacPorts.
+
+      Solution: Use one or the other.  If you prefer the system Python, run
+      "port deactivate -f python26", to get MacPorts' version out of the way.
+      You'll then need to delete the Ledger binary and run "make" to relink
+      it.
+
+   ----------------------------------------------------------------------
+
+ - Q: When I run "make check", the Python unit tests always crash
+
+   A: This can happen for the same reason as above.  It can also happen if you
+      have ICU support enabled.  This is a bug I'm still trying to track down.
+
+   ----------------------------------------------------------------------
