@@ -54,7 +54,8 @@ struct symbol_t
     OPTION,
     PRECOMMAND,
     COMMAND,
-    DIRECTIVE
+    DIRECTIVE,
+    FORMAT
   };
 
   kind_t	   kind;

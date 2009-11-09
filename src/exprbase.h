@@ -118,7 +118,8 @@ public:
     return str;
   }
   void set_text(const string& txt) {
-    str = txt;
+    str	     = txt;
+    compiled = false;
   }
 
   void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
@@ -128,9 +129,7 @@ public:
   virtual void parse(std::istream&,
 		     const parse_flags_t& = PARSE_DEFAULT,
 		     const optional<string>& original_string = none) {
-    str	     = original_string ? *original_string : "<stream>";
-    context  = NULL;
-    compiled = false;
+    set_text(original_string ? *original_string : "<stream>");
   }
 	   
   void     mark_uncompiled() {
@@ -185,7 +184,9 @@ public:
     context = scope;
   }
 
-  virtual string context_to_str() const = 0;
+  virtual string context_to_str() const {
+    return empty_string;
+  }
 
   string print_to_str() const {
     std::ostringstream out;
@@ -203,8 +204,8 @@ public:
     return out.str();
   }
 
-  virtual void print(std::ostream& out) const = 0;
-  virtual void dump(std::ostream& out) const = 0;
+  virtual void print(std::ostream&) const {}
+  virtual void dump(std::ostream&) const {}
 
   result_type preview(std::ostream& out, scope_t& scope) const {
     out << _("--- Input expression ---") << std::endl;

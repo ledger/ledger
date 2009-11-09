@@ -148,7 +148,7 @@ value_t format_command(call_scope_t& args)
   out << std::endl << _("--- Formatted string ---") << std::endl;
   bind_scope_t bound_scope(args, *post);
   out << '"';
-  fmt.format(out, bound_scope);
+  out << fmt(bound_scope);
   out << "\"\n";
 
   return NULL_VALUE;
