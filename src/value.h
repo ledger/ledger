@@ -946,6 +946,8 @@ inline value_t string_value(const string& str = "") {
 }
 
 #define VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val))
+#define SIMPLIFIED_VALUE_OR_ZERO(val) \
+  ((val).is_null() ? value_t(0L) : (val).simplified())
 
 inline value_t mask_value(const string& str) {
   return value_t(mask_t(str));
