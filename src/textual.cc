@@ -613,6 +613,10 @@ void instance_t::include_directive(char * line)
   DEBUG("textual.include", "Line " << linenum << ": " <<
 	"Including path '" << filename << "'");
 
+  if (! exists(filename))
+    throw_(std::runtime_error,
+	   _("File to include was not found: '%1'" << filename));
+
   ifstream stream(filename);
 
   instance_t instance(account_stack, tag_stack,
