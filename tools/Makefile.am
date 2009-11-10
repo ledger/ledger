@@ -43,6 +43,7 @@ libledger_expr_la_SOURCES  =			\
 	src/option.cc				\
 	src/format.cc				\
 	src/query.cc				\
+	src/predicate.cc			\
 	src/scope.cc				\
 	src/interactive.cc			\
 	src/expr.cc				\

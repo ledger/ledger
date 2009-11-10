@@ -263,12 +263,15 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 	args3_node->set_left(call1_node);
 	args3_node->set_right(args2_node);
 
+	expr_t::ptr_op_t seq1_node(new expr_t::op_t(expr_t::op_t::O_SEQ));
+	seq1_node->set_left(args3_node);
+
 	expr_t::ptr_op_t justify_node(new expr_t::op_t(expr_t::op_t::IDENT));
 	justify_node->set_ident("justify");
 
 	expr_t::ptr_op_t call2_node(new expr_t::op_t(expr_t::op_t::O_CALL));
 	call2_node->set_left(justify_node);
-	call2_node->set_right(args3_node);
+	call2_node->set_right(seq1_node);
 
 	string prev_expr = boost::get<expr_t>(current->data).text();
 
@@ -280,9 +283,12 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 	  args4_node->set_left(call2_node);
 	  args4_node->set_right(colorize_op);
 
+	  expr_t::ptr_op_t seq2_node(new expr_t::op_t(expr_t::op_t::O_SEQ));
+	  seq2_node->set_left(args4_node);
+
 	  expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
 	  call3_node->set_left(ansify_if_node);
-	  call3_node->set_right(args4_node);
+	  call3_node->set_right(seq2_node);
 
 	  current->data = expr_t(call3_node);
 	} else {

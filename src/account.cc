@@ -180,11 +180,11 @@ namespace {
   }
 
   value_t get_amount(account_t& account) {
-    return VALUE_OR_ZERO(account.amount());
+    return SIMPLIFIED_VALUE_OR_ZERO(account.amount());
   }
 
   value_t get_total(account_t& account) {
-    return VALUE_OR_ZERO(account.total());
+    return SIMPLIFIED_VALUE_OR_ZERO(account.total());
   }
 
   value_t get_subcount(account_t& account) {

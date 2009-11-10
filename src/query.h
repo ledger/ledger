@@ -254,11 +254,19 @@ public:
     : predicate_t(other) {
     TRACE_CTOR(query_t, "copy");
   }
-
-  query_t(const value_t& args,
+  query_t(const string& arg,
 	  const keep_details_t& _what_to_keep = keep_details_t())
     : predicate_t(_what_to_keep) {
     TRACE_CTOR(query_t, "string, keep_details_t");
+    if (! arg.empty()) {
+      value_t temp(string_value(arg));
+      parse_args(temp.to_sequence());
+    }
+  }
+  query_t(const value_t& args,
+	  const keep_details_t& _what_to_keep = keep_details_t())
+    : predicate_t(_what_to_keep) {
+    TRACE_CTOR(query_t, "value_t, keep_details_t");
     if (! args.empty())
       parse_args(args);
   }

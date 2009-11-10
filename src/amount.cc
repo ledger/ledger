@@ -930,17 +930,21 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   // exeception thrown by any of the function calls after this point,
   // the destructor will never be called and the memory never freed.
 
-  std::auto_ptr<bigint_t> safe_holder;
+  std::auto_ptr<bigint_t> new_quantity;
 
-  if (! quantity) {
-    quantity = new bigint_t;
-    safe_holder.reset(quantity);
+  if (quantity) {
+    if (quantity->refc > 1)
+      _release();
+    else
+      new_quantity.reset(quantity);
+    quantity = NULL;
   }
-  else if (quantity->refc > 1) {
-    _release();
-    quantity = new bigint_t;
-    safe_holder.reset(quantity);
-  }
+
+  if (! new_quantity.get())
+    new_quantity.reset(new bigint_t);
+
+  // No one is holding a reference to this now.
+  new_quantity->refc--;
 
   // Create the commodity if has not already been seen, and update the
   // precision if something greater was used for the quantity.
@@ -961,52 +965,101 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
       commodity_ = current_pool->find_or_create(*commodity_, details);
   }
 
-  // Determine the precision of the amount, based on the usage of
-  // comma or period.
+  // Quickly scan through and verify the correctness of the amount's use of
+  // punctuation.
 
-  string::size_type last_comma  = quant.rfind(',');
-  string::size_type last_period = quant.rfind('.');
+  precision_t       decimal_offset  = 0;
+  string::size_type string_index    = quant.length();
+  string::size_type last_comma      = string::npos;
+  string::size_type last_period     = string::npos;
 
-  if (last_comma != string::npos && last_period != string::npos) {
-    comm_flags |= COMMODITY_STYLE_THOUSANDS;
-    if (last_comma > last_period) {
-      comm_flags |= COMMODITY_STYLE_EUROPEAN;
-      quantity->prec = static_cast<precision_t>(quant.length() -
-						last_comma - 1);
-    } else {
-      quantity->prec = static_cast<precision_t>(quant.length() -
-						last_period - 1);
+  bool no_more_commas  = false;
+  bool no_more_periods = false;
+  bool european_style  = (commodity_t::european_by_default ||
+			  commodity().has_flags(COMMODITY_STYLE_EUROPEAN));
+
+  new_quantity->prec = 0;
+
+  BOOST_REVERSE_FOREACH (const char& ch, quant) {
+    string_index--;
+
+    if (ch == '.') {
+      if (no_more_periods)
+	throw_(amount_error, _("Too many periods in amount"));
+
+      if (european_style) {
+	if (decimal_offset % 3 != 0)
+	  throw_(amount_error, _("Incorrect use of european-style period"));
+	comm_flags |= COMMODITY_STYLE_THOUSANDS;
+	no_more_commas = true;
+      } else {
+	if (last_comma != string::npos) {
+	  european_style = true;
+	  if (decimal_offset % 3 != 0)
+	    throw_(amount_error, _("Incorrect use of european-style period"));
+	} else {
+	  no_more_periods    = true;
+	  new_quantity->prec = decimal_offset;
+	  decimal_offset     = 0;
+	}
+      }
+
+      if (last_period == string::npos)
+	last_period = string_index;
+    }
+    else if (ch == ',') {
+      if (no_more_commas)
+	throw_(amount_error, _("Too many commas in amount"));
+
+      if (european_style) {
+	if (last_period != string::npos) {
+	  throw_(amount_error, _("Incorrect use of european-style comma"));
+	} else {
+	  no_more_commas     = true;
+	  new_quantity->prec = decimal_offset;
+	  decimal_offset     = 0;
+	}
+      } else {
+	if (decimal_offset % 3 != 0) {
+	  if (last_comma != string::npos ||
+	      last_period != string::npos) {
+	    throw_(amount_error, _("Incorrect use of American-style comma"));
+	  } else {
+	    european_style     = true;
+	    no_more_commas     = true;
+	    new_quantity->prec = decimal_offset;
+	    decimal_offset     = 0;
+	  }
+	} else {
+	  comm_flags |= COMMODITY_STYLE_THOUSANDS;
+	  no_more_periods = true;
+	}
+      }
+
+      if (last_comma == string::npos)
+	last_comma = string_index;
+    }
+    else {
+      decimal_offset++;
     }
   }
-  else if (last_comma != string::npos &&
-	   (commodity_t::european_by_default ||
-	    commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
-    comm_flags |= COMMODITY_STYLE_EUROPEAN;
-    quantity->prec = static_cast<precision_t>(quant.length() - last_comma - 1);
-  }
-  else if (last_period != string::npos &&
-	   ! (commodity_t::european_by_default ||
-	      commodity().has_flags(COMMODITY_STYLE_EUROPEAN))) {
-    quantity->prec = static_cast<precision_t>(quant.length() - last_period - 1);
-  }
-  else {
-    quantity->prec = 0;
-  }
 
-  // Set the commodity's flags and precision accordingly
+  if (european_style)
+    comm_flags |= COMMODITY_STYLE_EUROPEAN;
 
   if (flags.has_flags(PARSE_NO_MIGRATE)) {
-    set_keep_precision(true);
+    // Can't call set_keep_precision here, because it assumes that `quantity'
+    // is non-NULL.
+    new_quantity->add_flags(BIGINT_KEEP_PREC);
   }
   else if (commodity_) {
     commodity().add_flags(comm_flags);
 
-    if (quantity->prec > commodity().precision())
-      commodity().set_precision(quantity->prec);
+    if (new_quantity->prec > commodity().precision())
+      commodity().set_precision(new_quantity->prec);
   }
 
-  // Now we have the final number.  Remove commas and periods, if
-  // necessary.
+  // Now we have the final number.  Remove commas and periods, if necessary.
 
   if (last_comma != string::npos || last_period != string::npos) {
     string::size_type  len = quant.length();
@@ -1021,27 +1074,28 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     }
     *t = '\0';
 
-    mpq_set_str(MP(quantity), buf.get(), 10);
-    mpz_ui_pow_ui(temp, 10, quantity->prec);
+    mpq_set_str(MP(new_quantity.get()), buf.get(), 10);
+    mpz_ui_pow_ui(temp, 10, new_quantity->prec);
     mpq_set_z(tempq, temp);
-    mpq_div(MP(quantity), MP(quantity), tempq);
+    mpq_div(MP(new_quantity.get()), MP(new_quantity.get()), tempq);
 
     IF_DEBUG("amount.parse") {
-      char * buf = mpq_get_str(NULL, 10, MP(quantity));
+      char * buf = mpq_get_str(NULL, 10, MP(new_quantity.get()));
       DEBUG("amount.parse", "Rational parsed = " << buf);
       std::free(buf);
     }
   } else {
-    mpq_set_str(MP(quantity), quant.c_str(), 10);
+    mpq_set_str(MP(new_quantity.get()), quant.c_str(), 10);
   }
 
   if (negative)
-    in_place_negate();
+    mpq_neg(MP(new_quantity.get()), MP(new_quantity.get()));
+
+  new_quantity->refc++;
+  quantity = new_quantity.release();
 
   if (! flags.has_flags(PARSE_NO_REDUCE))
-    in_place_reduce();
-
-  safe_holder.release();	// `this->quantity' owns the pointer
+    in_place_reduce();		// will not throw an exception
 
   VERIFY(valid());
 

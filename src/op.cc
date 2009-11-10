@@ -118,7 +118,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
     call_scope_t call_args(scope);
-    result = left()->calc(call_args, locus, depth + 1);
+    result = left()->compile(call_args, depth + 1)
+                   ->calc(call_args, locus, depth + 1);
     break;
   }
 
@@ -135,7 +136,6 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   }
 
   case O_DEFINE: {
-    symbol_scope_t local_scope;
     call_scope_t&  call_args(downcast<call_scope_t>(scope));
     std::size_t	   args_count = call_args.size();
     std::size_t	   args_index = 0;
@@ -152,38 +152,32 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       if (! varname->is_ident())
 	throw_(calc_error, _("Invalid function definition"));
       else if (args_index == args_count)
-	local_scope.define(symbol_t::FUNCTION, varname->as_ident(),
-			   wrap_value(false));
+	scope.define(symbol_t::FUNCTION, varname->as_ident(),
+		     wrap_value(false));
       else
-	local_scope.define(symbol_t::FUNCTION, varname->as_ident(),
-			   wrap_value(call_args[args_index++]));
+	scope.define(symbol_t::FUNCTION, varname->as_ident(),
+		     wrap_value(call_args[args_index++]));
     }
 
     if (args_index < args_count)
       throw_(calc_error,
 	     _("Too many arguments in function call (saw %1)") << args_count);
 
-    result = right()->compile(local_scope, depth + 1)
-                    ->calc(local_scope, locus, depth + 1);
+    result = right()->calc(scope, locus, depth + 1);
     break;
   }
 
   case O_LOOKUP:
-    if (left()->is_ident() &&
-	left()->left() && left()->left()->is_function()) {
-      call_scope_t call_args(scope);
-      if (value_t obj = left()->left()->as_function()(call_args)) {
-	if (obj.is_scope()) {
-	  if (obj.as_scope() == NULL) {
-	    throw_(calc_error,
-		   _("Left operand of . operator is NULL"));
-	  } else {
-	    scope_t& objscope(*obj.as_scope());
-	    if (ptr_op_t member =
-		objscope.lookup(symbol_t::FUNCTION, right()->as_ident())) {
-	      result = member->calc(objscope, NULL, depth + 1);
-	      break;
-	    }
+    if (value_t obj = left()->calc(scope, locus, depth + 1)) {
+      if (obj.is_scope()) {
+	if (obj.as_scope() == NULL) {
+	  throw_(calc_error, _("Left operand of . operator is NULL"));
+	} else {
+	  scope_t& objscope(*obj.as_scope());
+	  if (ptr_op_t member =
+	      objscope.lookup(symbol_t::FUNCTION, right()->as_ident())) {
+	    result = member->calc(objscope, NULL, depth + 1);
+	    break;
 	  }
 	}
       }
@@ -321,20 +315,28 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
 
   case O_SEQ: {
-    left()->calc(scope, locus, depth + 1);
-    assert(has_right());
+    symbol_scope_t seq_scope(scope);
 
-    ptr_op_t next = right();
-    while (next) {
-      ptr_op_t value_op;
-      if (next->kind == O_SEQ) {
-	value_op = next->left();
-	next     = next->right();
-      } else {
-	value_op = next;
-	next     = NULL;
+    // An O_SEQ is very similar to an O_CONS except that only the last result
+    // value in the series is kept.  O_CONS builds up a list.
+    //
+    // Another feature of O_SEQ is that it pushes a new symbol scope onto the
+    // stack.
+    result = left()->calc(seq_scope, locus, depth + 1);
+
+    if (has_right()) {
+      ptr_op_t next = right();
+      while (next) {
+	ptr_op_t value_op;
+	if (next->kind == O_SEQ) {
+	  value_op = next->left();
+	  next     = next->right();
+	} else {
+	  value_op = next;
+	  next     = NULL;
+	}
+	result = value_op->calc(seq_scope, locus, depth + 1);
       }
-      result = value_op->calc(scope, locus, depth + 1);
     }
     break;
   }
@@ -394,13 +396,14 @@ namespace {
     if (op->left()->print(out, context))
       found = true;
 
-    assert(op->has_right());
-    out << "; ";
+    if (op->has_right()) {
+      out << "; ";
 
-    if (op->right()->kind == expr_t::op_t::O_CONS)
-      found = print_cons(out, op->right(), context);
-    else if (op->right()->print(out, context))
-      found = true;
+      if (op->right()->kind == expr_t::op_t::O_CONS)
+	found = print_cons(out, op->right(), context);
+      else if (op->right()->print(out, context))
+	found = true;
+    }
 
     return found;
   }
@@ -563,9 +566,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_CONS:
-    out << "(";
     found = print_cons(out, this, context);
-    out << ")";
     break;
 
   case O_SEQ:
@@ -594,7 +595,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     if (has_right()) {
-      if (right()->kind == O_CONS) {
+      if (right()->kind == O_SEQ) {
 	if (right()->print(out, context))
 	  found = true;
       } else {

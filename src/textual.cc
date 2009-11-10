@@ -36,6 +36,7 @@
 #include "post.h"
 #include "account.h"
 #include "option.h"
+#include "query.h"
 #include "pstream.h"
 #include "pool.h"
 #include "session.h"
@@ -119,13 +120,13 @@ namespace {
     void period_xact_directive(char * line);
     void xact_directive(char * line, std::streamsize len);
     void include_directive(char * line);
-    void account_directive(char * line);
+    void master_account_directive(char * line);
     void end_directive(char * line);
     void alias_directive(char * line);
     void tag_directive(char * line);
     void pop_directive(char * line);
     void define_directive(char * line);
-    void general_directive(char * line);
+    bool general_directive(char * line);
 
     post_t * parse_post(char *		line,
 			std::streamsize len,
@@ -354,51 +355,53 @@ void instance_t::read_next_directive()
     period_xact_directive(line);
     break;
 
-#if defined(TIMELOG_SUPPORT)
-  case 'i':
-    clock_in_directive(line, false);
-    break;
-  case 'I':
-    clock_in_directive(line, true);
-    break;
-
-  case 'o':
-    clock_out_directive(line, false);
-    break;
-  case 'O':
-    clock_out_directive(line, true);
-    break;
-
-  case 'h':
-  case 'b':
-    break;
-#endif // TIMELOG_SUPPORT
-
-  case 'A':		        // a default account for unbalanced posts
-    default_account_directive(line);
-    break;
-  case 'C':			// a set of conversions
-    price_conversion_directive(line);
-    break;
-  case 'D':			// a default commodity for "xact"
-    default_commodity_directive(line);
-    break;
-  case 'N':			// don't download prices
-    nomarket_directive(line);
-    break;
-  case 'P':			// a pricing xact
-    price_xact_directive(line);
-    break;
-  case 'Y':			// set the current year
-    year_directive(line);
-    break;
-
   case '@':
   case '!':
     line++;
     // fall through...
   default:			// some other directive
-    general_directive(line);
+    if (! general_directive(line)) {
+      switch (line[0]) {
+#if defined(TIMELOG_SUPPORT)
+      case 'i':
+	clock_in_directive(line, false);
+	break;
+      case 'I':
+	clock_in_directive(line, true);
+	break;
+
+      case 'o':
+	clock_out_directive(line, false);
+	break;
+      case 'O':
+	clock_out_directive(line, true);
+	break;
+
+      case 'h':
+      case 'b':
+	break;
+#endif // TIMELOG_SUPPORT
+
+      case 'A':		        // a default account for unbalanced posts
+	default_account_directive(line);
+	break;
+      case 'C':			// a set of conversions
+	price_conversion_directive(line);
+	break;
+      case 'D':			// a default commodity for "xact"
+	default_commodity_directive(line);
+	break;
+      case 'N':			// don't download prices
+	nomarket_directive(line);
+	break;
+      case 'P':			// a pricing xact
+	price_xact_directive(line);
+	break;
+      case 'Y':			// set the current year
+	year_directive(line);
+	break;
+      }
+    }
     break;
   }
 }
@@ -506,8 +509,8 @@ void instance_t::automated_xact_directive(char * line)
   }
 
   std::auto_ptr<auto_xact_t> ae
-    (new auto_xact_t(predicate_t(skip_ws(line + 1),
-				 keep_details_t(true, true, true))));
+    (new auto_xact_t(query_t(string(skip_ws(line + 1)),
+			     keep_details_t(true, true, true))));
 
   reveal_context = false;
 
@@ -606,12 +609,26 @@ void instance_t::xact_directive(char * line, std::streamsize len)
 
 void instance_t::include_directive(char * line)
 {
-  path filename(line);
+  path filename;
+
+  if (line[0] != '/' && line[0] != '\\' && line[0] != '~') {
+    string::size_type pos = pathname.string().rfind('/');
+    if (pos == string::npos)
+      pos = pathname.string().rfind('\\');
+    if (pos != string::npos)
+      filename = path(string(pathname.string(), 0, pos + 1)) / line;
+  } else {
+    filename = line;
+  }
 
   filename = resolve_path(filename);
 
   DEBUG("textual.include", "Line " << linenum << ": " <<
 	"Including path '" << filename << "'");
+
+  if (! exists(filename))
+    throw_(std::runtime_error,
+	   _("File to include was not found: '%1'" << filename));
 
   ifstream stream(filename);
 
@@ -627,7 +644,7 @@ void instance_t::include_directive(char * line)
   count  += instance.count;
 }
 
-void instance_t::account_directive(char * line)
+void instance_t::master_account_directive(char * line)
 {
   if (account_t * acct = account_stack.front()->find_account(line))
     account_stack.push_front(acct);
@@ -637,9 +654,9 @@ void instance_t::account_directive(char * line)
 
 void instance_t::end_directive(char *)
 {
-  if (account_stack.empty())
+  if (account_stack.size() <= 1)
     throw_(std::runtime_error,
-	   _("'end' directive found, but no account currently active"));
+	   _("'end' directive found, but no master account currently active"));
   else
     account_stack.pop_back();
 }
@@ -685,10 +702,14 @@ void instance_t::define_directive(char * line)
   def.compile(scope);	// causes definitions to be established
 }
 
-void instance_t::general_directive(char * line)
+bool instance_t::general_directive(char * line)
 {
-  char * p   = line;
-  char * arg = next_element(line);
+  char buf[8192];
+
+  std::strcpy(buf, line);
+
+  char * p   = buf;
+  char * arg = next_element(buf);
 
   if (*p == '@' || *p == '!')
     p++;
@@ -696,47 +717,54 @@ void instance_t::general_directive(char * line)
   switch (*p) {
   case 'a':
     if (std::strcmp(p, "account") == 0) {
-      account_directive(arg);
-      return;
+      master_account_directive(arg);
+      return true;
     }
     else if (std::strcmp(p, "alias") == 0) {
       alias_directive(arg);
-      return;
+      return true;
+    }
+    break;
+
+  case 'b':
+    if (std::strcmp(p, "bucket") == 0) {
+      default_account_directive(arg);
+      return true;
     }
     break;
 
   case 'd':
-    if (std::strcmp(p, "def") == 0) {
+    if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
       define_directive(arg);
-      return;
+      return true;
     }
     break;
 
   case 'e':
     if (std::strcmp(p, "end") == 0) {
       end_directive(arg);
-      return;
+      return true;
     }
     break;
 
   case 'i':
     if (std::strcmp(p, "include") == 0) {
       include_directive(arg);
-      return;
+      return true;
     }
     break;
 
   case 'p':
     if (std::strcmp(p, "pop") == 0) {
       pop_directive(arg);
-      return;
+      return true;
     }
     break;
 
   case 't':
     if (std::strcmp(p, "tag") == 0) {
       tag_directive(arg);
-      return;
+      return true;
     }
     break;
   }
@@ -745,7 +773,10 @@ void instance_t::general_directive(char * line)
     call_scope_t args(*this);
     args.push_back(string_value(p));
     op->as_function()(args);
+    return true;
   }
+
+  return false;
 }
 
 post_t * instance_t::parse_post(char *		line,
@@ -966,8 +997,8 @@ post_t * instance_t::parse_post(char *		line,
 	    << "POST assign: parsed amt = " << *post->assigned_amount);
 
       amount_t&	amt(*post->assigned_amount);
-      value_t   account_total(post->account->amount(false)
-			      .strip_annotations(keep_details_t()));
+      value_t account_total
+	(post->account->amount(false).strip_annotations(keep_details_t()));
 
       DEBUG("post.assign",
 	    "line " << linenum << ": " "account balance = " << account_total);

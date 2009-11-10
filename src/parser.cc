@@ -82,7 +82,7 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
 
     if (node->kind == op_t::O_CONS) {
       ptr_op_t prev(node);
-      node = new op_t(op_t::O_CONS);
+      node = new op_t(op_t::O_SEQ);
       node->set_left(prev);
     }
     break;
