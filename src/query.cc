@@ -307,15 +307,14 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
 	  throw_(parse_error,
 		 _("Metadata equality operator not followed by term"));
 	
-	expr_t::ptr_op_t cons = new expr_t::op_t(expr_t::op_t::O_CONS);
-
 	expr_t::ptr_op_t arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
 	assert(tok.value);
 	arg2->set_value(mask_t(*tok.value));
 
-	cons->set_left(arg1);
-	cons->set_right(arg2);
-	node->set_right(cons);
+	node->set_right(expr_t::op_t::new_node
+			(expr_t::op_t::O_SEQ,
+			 expr_t::op_t::new_node
+			 (expr_t::op_t::O_CONS, arg1, arg2)));
       } else {
 	node->set_right(arg1);
       }

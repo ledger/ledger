@@ -226,29 +226,30 @@ namespace {
 				    2 /* account_abbrev_length */);
 	else
 	  name = env->reported_account()->fullname();
-      }
-      else if (env.value_at(0).is_string()) {
-	name    = env.get<string>(0);
-	account = env->xact->journal->find_account(name, false);
-	seeking_account = true;
-      }
-      else if (env.value_at(0).is_mask()) {
-	name    = env.get<mask_t>(0).str();
-	account = env->xact->journal->find_account_re(name);
-	seeking_account = true;
-      }
-      else {
-	throw_(std::runtime_error,
-	       _("Expected string or mask for argument 1, but received %1")
-	       << env.value_at(0).label());
-      }
+      } else {
+	account_t * master = env->account;
+	while (master->parent)
+	  master = master->parent;
 
-      if (seeking_account) {
+	if (env.value_at(0).is_string()) {
+	  name    = env.get<string>(0);
+	  account = master->find_account(name, false);
+	}
+	else if (env.value_at(0).is_mask()) {
+	  name    = env.get<mask_t>(0).str();
+	  account = master->find_account_re(name);
+	}
+	else {
+	  throw_(std::runtime_error,
+		 _("Expected string or mask for argument 1, but received %1")
+		 << env.value_at(0).label());
+	}
+
 	if (! account)
 	  throw_(std::runtime_error,
 		 _("Could not find an account matching ") << env.value_at(0));
 	else
-	  return account;	// return a scope object
+	  return value_t(static_cast<scope_t *>(account));
       }
     } else {
       name = env->reported_account()->fullname();
