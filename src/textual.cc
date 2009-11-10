@@ -36,6 +36,7 @@
 #include "post.h"
 #include "account.h"
 #include "option.h"
+#include "query.h"
 #include "pstream.h"
 #include "pool.h"
 #include "session.h"
@@ -508,8 +509,8 @@ void instance_t::automated_xact_directive(char * line)
   }
 
   std::auto_ptr<auto_xact_t> ae
-    (new auto_xact_t(predicate_t(skip_ws(line + 1),
-				 keep_details_t(true, true, true))));
+    (new auto_xact_t(query_t(string(skip_ws(line + 1)),
+			     keep_details_t(true, true, true))));
 
   reveal_context = false;
 

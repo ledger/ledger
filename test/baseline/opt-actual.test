@@ -1,6 +1,6 @@
 print --actual
 <<<
-= account =~ /Books/
+= Books
     Expenses:Taxes            0.05
     Assets:Checking          -0.05
 

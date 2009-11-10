@@ -1,6 +1,6 @@
 bal assets
 <<<
-= account =~ /^Income/
+= /^Income/
   (Liabilities:Tithe)                    0.12
 
 ~ Monthly
