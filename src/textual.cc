@@ -643,9 +643,9 @@ void instance_t::account_directive(char * line)
 
 void instance_t::end_directive(char *)
 {
-  if (account_stack.empty())
+  if (account_stack.size() <= 1)
     throw_(std::runtime_error,
-	   _("'end' directive found, but no account currently active"));
+	   _("'end' directive found, but no master account currently active"));
   else
     account_stack.pop_back();
 }
