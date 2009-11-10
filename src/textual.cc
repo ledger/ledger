@@ -608,7 +608,17 @@ void instance_t::xact_directive(char * line, std::streamsize len)
 
 void instance_t::include_directive(char * line)
 {
-  path filename(line);
+  path filename;
+
+  if (line[0] != '/' && line[0] != '\\' && line[0] != '~') {
+    string::size_type pos = pathname.string().rfind('/');
+    if (pos == string::npos)
+      pos = pathname.string().rfind('\\');
+    if (pos != string::npos)
+      filename = path(string(pathname.string(), 0, pos + 1)) / line;
+  } else {
+    filename = line;
+  }
 
   filename = resolve_path(filename);
 
