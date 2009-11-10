@@ -119,7 +119,7 @@ namespace {
     void period_xact_directive(char * line);
     void xact_directive(char * line, std::streamsize len);
     void include_directive(char * line);
-    void account_directive(char * line);
+    void master_account_directive(char * line);
     void end_directive(char * line);
     void alias_directive(char * line);
     void tag_directive(char * line);
@@ -643,7 +643,7 @@ void instance_t::include_directive(char * line)
   count  += instance.count;
 }
 
-void instance_t::account_directive(char * line)
+void instance_t::master_account_directive(char * line)
 {
   if (account_t * acct = account_stack.front()->find_account(line))
     account_stack.push_front(acct);
@@ -710,7 +710,7 @@ bool instance_t::general_directive(char * line)
   switch (*p) {
   case 'a':
     if (std::strcmp(p, "account") == 0) {
-      account_directive(next_element(line));
+      master_account_directive(next_element(line));
       return true;
     }
     else if (std::strcmp(p, "alias") == 0) {
@@ -719,8 +719,15 @@ bool instance_t::general_directive(char * line)
     }
     break;
 
+  case 'b':
+    if (std::strcmp(p, "bucket") == 0) {
+      default_account_directive(next_element(line));
+      return true;
+    }
+    break;
+
   case 'd':
-    if (std::strcmp(p, "def") == 0) {
+    if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
       define_directive(next_element(line));
       return true;
     }
@@ -983,8 +990,8 @@ post_t * instance_t::parse_post(char *		line,
 	    << "POST assign: parsed amt = " << *post->assigned_amount);
 
       amount_t&	amt(*post->assigned_amount);
-      value_t   account_total(post->account->amount(false)
-			      .strip_annotations(keep_details_t()));
+      value_t account_total
+	(post->account->amount(false).strip_annotations(keep_details_t()));
 
       DEBUG("post.assign",
 	    "line " << linenum << ": " "account balance = " << account_total);
