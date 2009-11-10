@@ -64,6 +64,29 @@ value_t expr_t::real_calc(scope_t& scope)
       if (locus) {
 	add_error_context(_("While evaluating value expression:"));
 	add_error_context(op_context(ptr, locus));
+
+	if (SHOW_INFO()) {
+	  add_error_context(_("The value expression tree was:"));
+	  std::ostringstream buf;
+	  ptr->dump(buf, 0);
+
+	  std::istringstream in(buf.str());
+	  std::ostringstream out;
+	  char linebuf[1024];
+	  bool first = true;
+	  while (in.good() && ! in.eof()) {
+	    in.getline(linebuf, 1023);
+	    std::streamsize len = in.gcount();
+	    if (len > 0) {
+	      if (first)
+		first = false;
+	      else
+		out << '\n';
+	      out << "  " << linebuf;
+	    }
+	  }
+	  add_error_context(out.str());
+	}
       }
       throw;
     }
