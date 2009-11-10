@@ -35,7 +35,7 @@
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
-#include "unistring.h"
+#include "unistring.h"		// for justify()
 
 namespace ledger {
 

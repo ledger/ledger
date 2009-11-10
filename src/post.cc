@@ -36,7 +36,6 @@
 #include "account.h"
 #include "journal.h"
 #include "interactive.h"
-#include "unistring.h"
 #include "format.h"
 
 namespace ledger {

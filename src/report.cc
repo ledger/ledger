@@ -33,7 +33,6 @@
 
 #include "report.h"
 #include "session.h"
-#include "unistring.h"
 #include "format.h"
 #include "query.h"
 #include "output.h"

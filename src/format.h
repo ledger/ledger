@@ -43,6 +43,7 @@
 #define _FORMAT_H
 
 #include "expr.h"
+#include "unistring.h"
 
 namespace ledger {
 
