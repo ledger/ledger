@@ -235,9 +235,7 @@ ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
 ledger_la_LDFLAGS      = -avoid-version -module
 ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)
 
-pkgpython_PYTHON = python/__init__.py		\
-	python/hello.py				\
-	python/server.py
+pkgpython_PYTHON = python/__init__.py python/server.py
 
 endif
 

@@ -453,15 +453,6 @@ value_t report_t::echo_command(call_scope_t& scope)
   return true;
 }
 
-bool report_t::maybe_import(const string& module)
-{
-  if (lookup(symbol_t::OPTION, "import_")) {
-    expr_t(string("import_(\"") + module + "\")").calc(*this);
-    return true;
-  }
-  return false;
-}
-
 option_t<report_t> * report_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -930,8 +921,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	   (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
 	    *this, "#pricesdb"));
-      else if (is_eq(p, "python") && maybe_import("ledger.interp"))
-	return session.lookup(symbol_t::COMMAND, "python");
       break;
 
     case 'r':
@@ -947,9 +936,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
 	return WRAP_FUNCTOR(report_statistics);
-      else
-	if (is_eq(p, "server") && maybe_import("ledger.server"))
-	  return session.lookup(symbol_t::COMMAND, "server");
+      else if (is_eq(p, "server"))
+	return session.lookup(symbol_t::COMMAND, "server");
       break;
 
     case 'x':
@@ -981,10 +969,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
 	   (new format_posts(*this, report_format(HANDLER(print_format_)),
 			     false), *this, "#generate"));
-    case 'h':
-      if (is_eq(p, "hello") && maybe_import("ledger.hello"))
-	return session.lookup(symbol_t::PRECOMMAND, "hello");
-      break;
     case 'p':
       if (is_eq(p, "parse"))
 	return WRAP_FUNCTOR(parse_command);

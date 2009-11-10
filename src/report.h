@@ -183,8 +183,6 @@ public:
 			  HANDLED(lots_actual));
   }
 
-  bool maybe_import(const string& module);
-
   void report_options(std::ostream& out)
   {
     HANDLER(abbrev_len_).report(out);

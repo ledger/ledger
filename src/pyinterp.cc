@@ -99,66 +99,75 @@ void python_interpreter_t::initialize()
     Py_Initialize();
     assert(Py_IsInitialized());
 
+    hack_system_paths();
+
     object main_module = python::import("__main__");
     if (! main_module)
-      throw_(std::logic_error,
+      throw_(std::runtime_error,
 	     _("Python failed to initialize (couldn't find __main__)"));
 
     main_nspace = extract<dict>(main_module.attr("__dict__"));
     if (! main_nspace)
-      throw_(std::logic_error,
+      throw_(std::runtime_error,
 	     _("Python failed to initialize (couldn't find __dict__)"));
 
     python::detail::init_module("ledger", &initialize_for_python);
 
     is_initialized = true;
-
-    // Hack ledger.__path__ so it points to a real location
-    python::object module_sys = import("sys"); 
-    python::object sys_dict   = module_sys.attr("__dict__");
-
-    python::list paths(sys_dict["path"]);
-
-    bool path_initialized = false;
-    int n = python::extract<int>(paths.attr("__len__")());
-    for (int i = 0; i < n; i++) {
-      python::extract<std::string> str(paths[i]);
-      path pathname(str);
-      DEBUG("python.interp", "sys.path = " << pathname);
-
-      if (exists(pathname / "ledger" / "__init__.py")) {
-	if (python::object module_ledger = import("ledger")) {
-	  DEBUG("python.interp",
-		"Setting ledger.__path__ = " << (pathname / "ledger"));
-
-	  python::object ledger_dict = module_ledger.attr("__dict__");
-	  python::list temp_list;
-	  temp_list.append((pathname / "ledger").string());
-
-	  ledger_dict["__path__"] = temp_list;
-	} else {
-	  throw_(std::logic_error,
-		 _("Python failed to initialize (couldn't find ledger)"));
-	}
-	path_initialized = true;
-	break;
-      }
-    }
-#if defined(DEBUG_ON)
-    if (! path_initialized)
-      DEBUG("python.init",
-	    "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
-#endif
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, _("Python failed to initialize"));
+    throw_(std::runtime_error, _("Python failed to initialize"));
   }
 
   TRACE_FINISH(python_init, 1);
 }
 
-object python_interpreter_t::import(const string& str)
+void python_interpreter_t::hack_system_paths()
+{
+  // Hack ledger.__path__ so it points to a real location
+  python::object sys_module = python::import("sys"); 
+  python::object sys_dict   = sys_module.attr("__dict__");
+
+  python::list paths(sys_dict["path"]);
+
+#if defined(DEBUG_ON)
+  bool path_initialized = false;
+#endif
+  int n = python::extract<int>(paths.attr("__len__")());
+  for (int i = 0; i < n; i++) {
+    python::extract<std::string> str(paths[i]);
+    path pathname(str);
+    DEBUG("python.interp", "sys.path = " << pathname);
+
+    if (exists(pathname / "ledger" / "__init__.py")) {
+      if (python::object module_ledger = python::import("ledger")) {
+	DEBUG("python.interp",
+	      "Setting ledger.__path__ = " << (pathname / "ledger"));
+
+	python::object ledger_dict = module_ledger.attr("__dict__");
+	python::list temp_list;
+	temp_list.append((pathname / "ledger").string());
+
+	ledger_dict["__path__"] = temp_list;
+      } else {
+	throw_(std::runtime_error,
+	       _("Python failed to initialize (couldn't find ledger)"));
+      }
+#if defined(DEBUG_ON)
+      path_initialized = true;
+#endif
+      break;
+    }
+  }
+#if defined(DEBUG_ON)
+  if (! path_initialized)
+    DEBUG("python.init",
+	  "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
+#endif
+}
+
+object python_interpreter_t::import_into_main(const string& str)
 {
   if (! is_initialized)
     initialize();
@@ -166,7 +175,8 @@ object python_interpreter_t::import(const string& str)
   try {
     object mod = python::import(str.c_str());
     if (! mod)
-      throw_(std::logic_error, _("Failed to import Python module %1") << str);
+      throw_(std::runtime_error,
+	     _("Failed to import Python module %1") << str);
  
     // Import all top-level entries directly into the main namespace
     main_nspace.update(mod.attr("__dict__"));
@@ -177,6 +187,32 @@ object python_interpreter_t::import(const string& str)
     PyErr_Print();
   }
   return object();
+}
+
+object python_interpreter_t::import_option(const string& str)
+{
+  path file(str);
+
+  python::object sys_module = python::import("sys"); 
+  python::object sys_dict   = sys_module.attr("__dict__");
+
+  python::list paths(sys_dict["path"]);
+
+#if BOOST_VERSION >= 103700
+  paths.insert(0, file.parent_path().string());
+  sys_dict["path"] = paths;
+
+  string name = file.filename();
+  if (contains(name, ".py"))
+    name = file.stem();
+#else // BOOST_VERSION >= 103700
+  paths.insert(0, file.branch_path().string());
+  sys_dict["path"] = paths;
+
+  string name = file.leaf();
+#endif // BOOST_VERSION >= 103700
+
+  return python::import(python::str(name.c_str()));
 }
 
 object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
@@ -212,7 +248,7 @@ object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, _("Failed to evaluate Python code"));
+    throw_(std::runtime_error, _("Failed to evaluate Python code"));
   }
   return object();
 }
@@ -234,7 +270,7 @@ object python_interpreter_t::eval(const string& str, py_eval_mode_t mode)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::logic_error, _("Failed to evaluate Python code"));
+    throw_(std::runtime_error, _("Failed to evaluate Python code"));
   }
   return object();
 }
@@ -255,7 +291,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     std::strcpy(argv[i + 1], arg.c_str());
   }
 
-  int status;
+  int status = 1;
 
   try {
     status = Py_Main(static_cast<int>(args.size()) + 1, argv);
@@ -275,6 +311,44 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     throw status;
 
   return NULL_VALUE;
+}
+
+value_t python_interpreter_t::server_command(call_scope_t& args)
+{
+  if (! is_initialized)
+    initialize();
+
+  python::object server_module;
+
+  try {
+    server_module = python::import("ledger.server");
+    if (! server_module)
+      throw_(std::runtime_error,
+	     _("Could not import ledger.server; please check your PYTHONPATH"));
+  }
+  catch (const error_already_set&) {
+    PyErr_Print();
+    throw_(std::runtime_error,
+	   _("Could not import ledger.server; please check your PYTHONPATH"));
+  }
+
+  if (python::object main_function = server_module.attr("main")) {
+    functor_t func(main_function, "main");
+    try {
+      func(args);
+    }
+    catch (const error_already_set&) {
+      PyErr_Print();
+      throw_(std::runtime_error,
+	     _("Error while invoking ledger.server's main() function"));
+    }
+    return true;
+  } else {
+      throw_(std::runtime_error,
+	     _("The ledger.server module is missing its main() function!"));
+  }
+
+  return false;
 }
 
 option_t<python_interpreter_t> *
@@ -304,7 +378,7 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
       DEBUG("python.interp", "Python lookup: " << name);
 
       if (python::object obj = main_nspace.get(name.c_str()))
-	return WRAP_FUNCTOR(functor_t(name, obj));
+	return WRAP_FUNCTOR(functor_t(obj, name));
     }
     break;
 
@@ -319,6 +393,11 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
     case 'p':
       if (is_eq(p, "python"))
 	return MAKE_FUNCTOR(python_interpreter_t::python_command);
+      break;
+
+    case 's':
+      if (is_eq(p, "server"))
+	return MAKE_FUNCTOR(python_interpreter_t::server_command);
       break;
     }
   }
@@ -349,7 +428,7 @@ namespace {
 	       dynamic_cast<const auto_xact_t *>(scope))
 	lst.append(ptr(auto_xact));
       else
-	throw_(std::runtime_error,
+	throw_(std::logic_error,
 	       _("Cannot downcast scoped object to specific type"));
     } else {
       lst.append(value);
