@@ -406,8 +406,16 @@ void report_memory(std::ostream& out, bool report_all)
   }
 }
 
+} // namespace ledger
 
-#if defined(STRING_VERIFY_ON)
+#endif // VERIFY_ON
+
+/**********************************************************************
+ *
+ * String wrapper
+ */
+
+namespace ledger {
 
 string::string() : std::string() {
   TRACE_CTOR(string, "");
@@ -445,18 +453,10 @@ string::~string() throw() {
   TRACE_DTOR(string);
 }
 
-#endif // STRING_VERIFY_ON
+string empty_string("");
 
-} // namespace ledger
-
-#endif // VERIFY_ON
-
-ledger::string empty_string("");
-
-ledger::strings_list split_arguments(const char * line)
+strings_list split_arguments(const char * line)
 {
-  using namespace ledger;
-
   strings_list args;
 
   char buf[4096];
@@ -505,6 +505,8 @@ ledger::strings_list split_arguments(const char * line)
 
   return args;
 }
+
+} // namespace ledger
 
 /**********************************************************************
  *

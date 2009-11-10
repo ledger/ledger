@@ -75,13 +75,19 @@ typedef register_python_conversion<bool, bool_to_python, bool_from_python>
   bool_python_conversion;
 
 
-#if defined(STRING_VERIFY_ON)
-
 struct string_to_python
 {
-  static PyObject* convert(const ledger::string& str)
+  static PyObject* convert(const string& str)
   {
+#if 1
+    // Return a Unicode object
+    PyObject * pstr = PyString_FromString(str.c_str());
+    PyObject * uni  = PyUnicode_FromEncodedObject(pstr, "UTF-8", NULL);
+    return object(handle<>(borrowed(uni))).ptr();
+#else
+    // Return a 7-bit ASCII string
     return incref(object(static_cast<const std::string&>(str)).ptr());
+#endif
   }
 };
 
@@ -89,74 +95,48 @@ struct string_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    if (!PyString_Check(obj_ptr)) return 0;
+    if (!PyUnicode_Check(obj_ptr) &&
+	!PyString_Check(obj_ptr)) return 0;
     return obj_ptr;
   }
 
   static void construct(PyObject* obj_ptr,
 			converter::rvalue_from_python_stage1_data* data)
   {
-    const char* value = PyString_AsString(obj_ptr);
-    if (value == 0) throw_error_already_set();
-    void* storage =
-      reinterpret_cast<converter::rvalue_from_python_storage<ledger::string> *>
-                      (data)->storage.bytes;
-    new (storage) ledger::string(value);
-    data->convertible = storage;
+    if (PyString_Check(obj_ptr)) {
+      const char* value = PyString_AsString(obj_ptr);
+      if (value == 0) throw_error_already_set();
+      void* storage =
+	reinterpret_cast<converter::rvalue_from_python_storage<string> *>
+	                (data)->storage.bytes;
+      new (storage) string(value);
+      data->convertible = storage;
+    } else {
+      VERIFY(PyUnicode_Check(obj_ptr));
+
+      Py_ssize_t size = PyUnicode_GET_SIZE(obj_ptr);
+      const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
+
+      string str;
+      if (sizeof(Py_UNICODE) == 2) // UTF-16
+	utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+      else if (sizeof(Py_UNICODE) == 4) // UTF-32
+	utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+      else
+	assert(! "Py_UNICODE has an unexpected size");
+
+      if (value == 0) throw_error_already_set();
+      void* storage =
+	reinterpret_cast<converter::rvalue_from_python_storage<string> *>
+	                (data)->storage.bytes;
+      new (storage) string(str);
+      data->convertible = storage;
+    }
   }
 };
 
-typedef register_python_conversion<ledger::string,
-				   string_to_python, string_from_python>
+typedef register_python_conversion<string, string_to_python, string_from_python>
   string_python_conversion;
-
-#endif // STRING_VERIFY_ON
-
-
-struct unicode_to_python
-{
-  static PyObject* convert(const std::string& utf8str)
-  {
-    PyObject * pstr = PyString_FromString(utf8str.c_str());
-    PyObject * uni  = PyUnicode_FromEncodedObject(pstr, "UTF-8", NULL);
-    return object(handle<>(borrowed(uni))).ptr();
-  }
-};
-
-struct unicode_from_python
-{
-  static void* convertible(PyObject* obj_ptr)
-  {
-    if (!PyUnicode_Check(obj_ptr)) return 0;
-    return obj_ptr;
-  }
-
-  static void construct(PyObject* obj_ptr,
-			converter::rvalue_from_python_stage1_data* data)
-  {
-    Py_ssize_t size = PyUnicode_GET_SIZE(obj_ptr);
-    const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
-
-    std::string str;
-    if (sizeof(Py_UNICODE) == 2) // UTF-16
-      utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
-    else if (sizeof(Py_UNICODE) == 4) // UTF-32
-      utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
-    else
-      assert(! "Py_UNICODE has an unexpected size");
-
-    if (value == 0) throw_error_already_set();
-    void* storage =
-      reinterpret_cast<converter::rvalue_from_python_storage<std::string> *>
-                      (data)->storage.bytes;
-    new (storage) std::string(str);
-    data->convertible = storage;
-  }
-};
-
-typedef register_python_conversion<std::string,
-				   unicode_to_python, unicode_from_python>
-  unicode_python_conversion;
 
 
 struct istream_to_python
@@ -273,10 +253,7 @@ void export_utils()
     ;
 
   bool_python_conversion();
-#if defined(STRING_VERIFY_ON)
   string_python_conversion();
-#endif
-  unicode_python_conversion();
   istream_python_conversion();
   ostream_python_conversion();
 }
