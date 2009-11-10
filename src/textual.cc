@@ -703,60 +703,66 @@ void instance_t::define_directive(char * line)
 
 bool instance_t::general_directive(char * line)
 {
-  char * p = line;
+  char buf[8192];
+
+  std::strcpy(buf, line);
+
+  char * p   = buf;
+  char * arg = next_element(buf);
+
   if (*p == '@' || *p == '!')
     p++;
 
   switch (*p) {
   case 'a':
     if (std::strcmp(p, "account") == 0) {
-      master_account_directive(next_element(line));
+      master_account_directive(arg);
       return true;
     }
     else if (std::strcmp(p, "alias") == 0) {
-      alias_directive(next_element(line));
+      alias_directive(arg);
       return true;
     }
     break;
 
   case 'b':
     if (std::strcmp(p, "bucket") == 0) {
-      default_account_directive(next_element(line));
+      default_account_directive(arg);
       return true;
     }
     break;
 
   case 'd':
     if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
-      define_directive(next_element(line));
+      define_directive(arg);
       return true;
     }
     break;
 
   case 'e':
     if (std::strcmp(p, "end") == 0) {
-      end_directive(next_element(line));
+      end_directive(arg);
       return true;
     }
     break;
 
   case 'i':
     if (std::strcmp(p, "include") == 0) {
-      include_directive(next_element(line));
+      include_directive(arg);
       return true;
     }
     break;
 
   case 'p':
     if (std::strcmp(p, "pop") == 0) {
-      pop_directive(next_element(line));
+      pop_directive(arg);
       return true;
     }
     break;
 
   case 't':
     if (std::strcmp(p, "tag") == 0) {
-      tag_directive(next_element(line));
+      tag_directive(arg);
       return true;
     }
     break;
