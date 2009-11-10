@@ -26,8 +26,6 @@ if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
 else
     echo "Ledger proof build succeeded"
     echo $VERSION > ~/Products/last-proofed
-
-    time ./acprep upload 2>&1 | tee ~/Desktop/upload.log
 fi
 
 exit 0
