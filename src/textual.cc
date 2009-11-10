@@ -628,7 +628,7 @@ void instance_t::include_directive(char * line)
 
   if (! exists(filename))
     throw_(std::runtime_error,
-	   _("File to include was not found: '%1'" << filename));
+	   _("File to include was not found: '%1'") << filename);
 
   ifstream stream(filename);
 
