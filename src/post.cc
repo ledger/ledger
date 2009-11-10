@@ -214,9 +214,8 @@ namespace {
   value_t get_account(call_scope_t& scope)
   {
     in_context_t<post_t> env(scope, "&v");
-    string		 name;
-    account_t *		 account = NULL;
-    bool                 seeking_account = false;
+
+    string name;
 
     if (env.has(0)) {
       if (env.value_at(0).is_long()) {
@@ -227,7 +226,8 @@ namespace {
 	else
 	  name = env->reported_account()->fullname();
       } else {
-	account_t * master = env->account;
+	account_t * account = NULL;
+	account_t * master  = env->account;
 	while (master->parent)
 	  master = master->parent;
 
