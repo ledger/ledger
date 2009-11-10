@@ -34,6 +34,7 @@
 #include "post.h"
 #include "xact.h"
 #include "account.h"
+#include "journal.h"
 #include "interactive.h"
 #include "unistring.h"
 #include "format.h"
@@ -212,13 +213,46 @@ namespace {
 
   value_t get_account(call_scope_t& scope)
   {
-    in_context_t<post_t> env(scope, "&l");
+    in_context_t<post_t> env(scope, "&v");
+    string		 name;
+    account_t *		 account = NULL;
+    bool                 seeking_account = false;
 
-    string name = env->reported_account()->fullname();
+    if (env.has(0)) {
+      if (env.value_at(0).is_long()) {
+	if (env.get<long>(0) > 2)
+	  name = format_t::truncate(env->reported_account()->fullname(),
+				    env.get<long>(0) - 2,
+				    2 /* account_abbrev_length */);
+	else
+	  name = env->reported_account()->fullname();
+      }
+      else if (env.value_at(0).is_string()) {
+	name    = env.get<string>(0);
+	account = env->xact->journal->find_account(name, false);
+	seeking_account = true;
+      }
+      else if (env.value_at(0).is_mask()) {
+	name    = env.get<mask_t>(0).str();
+	account = env->xact->journal->find_account_re(name);
+	seeking_account = true;
+      }
+      else {
+	throw_(std::runtime_error,
+	       _("Expected string or mask for argument 1, but received %1")
+	       << env.value_at(0).label());
+      }
 
-    if (env.has(0) && env.get<long>(0) > 2)
-      name = format_t::truncate(name, env.get<long>(0) - 2,
-				2 /* account_abbrev_length */);
+      if (seeking_account) {
+	if (! account)
+	  throw_(std::runtime_error,
+		 _("Could not find an account matching ") << env.value_at(0));
+	else
+	  return account;	// return a scope object
+      }
+    } else {
+      name = env->reported_account()->fullname();
+    }
 
     if (env->has_flags(POST_VIRTUAL)) {
       if (env->must_balance())
@@ -231,36 +265,6 @@ namespace {
 
   value_t get_account_base(post_t& post) {
     return string_value(post.reported_account()->name);
-  }
-
-  value_t get_account_amount(call_scope_t& scope)
-  {
-    in_context_t<post_t> env(scope, "&v");
-
-    account_t * account = NULL;
-    if (env.has(0)) {
-      account_t * master = env->account;
-      while (master->parent)
-	master = master->parent;
-
-      if (env.value_at(0).is_string())
-	account = master->find_account(env.get<string>(0), false);
-      else if (env.value_at(0).is_mask())
-	account = master->find_account_re(env.get<mask_t>(0).str());
-    } else {
-      account = env->reported_account();
-    }
-
-    if (! account)
-      throw_(std::runtime_error, _("Cannot locate referenced account"));
-
-    DEBUG("post.account_amount", "Found account: " << account->fullname());
-
-    value_t total = account->amount();
-    if (total.is_null())
-      return 0L;
-    else
-      return total.simplified();
   }
 
   value_t get_account_depth(post_t& post) {
@@ -289,8 +293,6 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
       return WRAP_FUNCTOR(get_account);
-    else if (name == "account_amount")
-      return WRAP_FUNCTOR(get_account_amount);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     break;
