@@ -1238,17 +1238,24 @@ void serialize(Archive& ar, long unsigned int& integer,
 
 BOOST_CLASS_EXPORT(ledger::annotated_commodity_t)
 
+template void boost::serialization::serialize(boost::archive::binary_iarchive&,
+					      MP_INT&, const unsigned int);
 template void boost::serialization::serialize(boost::archive::binary_oarchive&,
 					      MP_INT&, const unsigned int);
 template void boost::serialization::serialize(boost::archive::binary_iarchive&,
 					      MP_RAT&, const unsigned int);
+template void boost::serialization::serialize(boost::archive::binary_oarchive&,
+					      MP_RAT&, const unsigned int);
 template void boost::serialization::serialize(boost::archive::binary_iarchive&,
 					      long unsigned int&,
 					      const unsigned int);
+template void boost::serialization::serialize(boost::archive::binary_oarchive&,
+					      long unsigned int&,
+					      const unsigned int);
 
-template void ledger::amount_t::serialize(boost::archive::binary_oarchive&,
-					  const unsigned int);
 template void ledger::amount_t::serialize(boost::archive::binary_iarchive&,
+					  const unsigned int);
+template void ledger::amount_t::serialize(boost::archive::binary_oarchive&,
 					  const unsigned int);
 
 #endif // HAVE_BOOST_SERIALIZATION
