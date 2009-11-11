@@ -44,6 +44,7 @@
 
 #include "utils.h"
 #include "times.h"
+#include "item.h"
 
 namespace ledger {
 
@@ -57,20 +58,24 @@ public:
   account_t * account;
   string      desc;
   string      note;
+  position_t  position;
 
   time_xact_t() : account(NULL) {
     TRACE_CTOR(time_xact_t, "");
   }
-  time_xact_t(const datetime_t& _checkin,
-	      account_t *	_account = NULL,
-	      const string&     _desc	 = "",
-	      const string&     _note	 = "")
-    : checkin(_checkin), account(_account), desc(_desc), note(_note) {
-    TRACE_CTOR(time_xact_t, "const datetime_t&, account_t *, string, string");
+  time_xact_t(const optional<position_t>& _position,
+	      const datetime_t&		  _checkin,
+	      account_t *		  _account = NULL,
+	      const string&		  _desc	   = "",
+	      const string&               _note    = "")
+    : checkin(_checkin), account(_account), desc(_desc), note(_note),
+      position(_position ? *_position : position_t()) {
+    TRACE_CTOR(time_xact_t,
+	       "position_t, datetime_t, account_t *, string, string");
   }
   time_xact_t(const time_xact_t& xact)
     : checkin(xact.checkin), account(xact.account),
-      desc(xact.desc), note(xact.note) {
+      desc(xact.desc), note(xact.note), position(xact.position) {
     TRACE_CTOR(time_xact_t, "copy");
   }
   ~time_xact_t() throw() {
@@ -89,15 +94,8 @@ public:
   }
   ~time_log_t();
 
-  void clock_in(const datetime_t& checkin,
-		account_t *	  account = NULL,
-		const string&     desc	  = "",
-		const string&     note	  = "");
-
-  void clock_out(const datetime_t& checkin,
-		 account_t *	   account = NULL,
-		 const string&     desc	  = "",
-		 const string&     note	  = "");
+  void clock_in(time_xact_t event);
+  void clock_out(time_xact_t event);
 };
 
 } // namespace ledger
