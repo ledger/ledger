@@ -30,17 +30,17 @@
  */
 
 /**
- * @addtogroup derive
+ * @addtogroup expr
  */
 
 /**
- * @file   derive.h
+ * @file   draft.h
  * @author John Wiegley
  *
  * @ingroup report
  */
-#ifndef _DERIVE_H
-#define _DERIVE_H
+#ifndef _DRAFT_H
+#define _DRAFT_H
 
 #include "exprbase.h"
 #include "value.h"
@@ -110,4 +110,4 @@ value_t template_command(call_scope_t& args);
 
 } // namespace ledger
 
-#endif // _DERIVE_H
+#endif // _DRAFT_H

@@ -440,7 +440,8 @@ fullcheck: cppunittests
 
 ######################################################################
 
-EXTRA_DIST += doc/README doc/LICENSE doc/NEWS doc/ledger.pdf
+EXTRA_DIST += doc/README doc/NEWS doc/ledger.pdf
+EXTRA_DIST += doc/LICENSE doc/LICENSE-sha1 doc/LICENSE-utfcpp
 if USE_DOXYGEN
 EXTRA_DIST += doc/Doxyfile doc/refman.pdf
 endif
