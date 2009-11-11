@@ -207,6 +207,12 @@ value_t report_t::fn_quantity(call_scope_t& scope)
   return args.get<amount_t>(0).number();
 }
 
+value_t report_t::fn_floor(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  return args.value_at(0).floored();
+}
+
 value_t report_t::fn_abs(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
@@ -735,6 +741,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'f':
       if (is_eq(p, "format_date"))
 	return MAKE_FUNCTOR(report_t::fn_format_date);
+      else if (is_eq(p, "floor"))
+	return MAKE_FUNCTOR(report_t::fn_floor);
       break;
 
     case 'g':
