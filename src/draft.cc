@@ -420,6 +420,7 @@ xact_t * draft_t::insert(journal_t& journal)
 	  }
 	}
       }
+      assert(new_post->account);
 
       if (new_post.get() && ! new_post->amount.is_null()) {
 	found_commodity = &new_post->amount.commodity();
@@ -475,6 +476,7 @@ xact_t * draft_t::insert(journal_t& journal)
       }
 
       added->add_post(new_post.release());
+      added->posts.back()->account->add_post(added->posts.back());
       added->posts.back()->set_state(item_t::UNCLEARED);
 
       DEBUG("derive.xact", "Added new posting to derived entry");

@@ -107,6 +107,7 @@ namespace {
     post->set_state(item_t::CLEARED);
     post->pos = event.position;
     curr->add_post(post);
+    event.account->add_post(post);
 
     if (! journal.add_xact(curr.get()))
       throw parse_error(_("Failed to record 'out' timelog transaction"));
