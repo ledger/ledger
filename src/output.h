@@ -60,13 +60,15 @@ protected:
   format_t  first_line_format;
   format_t  next_lines_format;
   format_t  between_format;
+  format_t  prepend_format;
   xact_t *  last_xact;
   post_t *  last_post;
   bool      print_raw;
 
 public:
   format_posts(report_t& _report, const string& format,
-	       bool _print_raw = false);
+	       bool _print_raw = false,
+	       const optional<string>& _prepend_format = none);
   virtual ~format_posts() {
     TRACE_DTOR(format_posts);
   }
@@ -82,12 +84,14 @@ protected:
   format_t    account_line_format;
   format_t    total_line_format;
   format_t    separator_format;
+  format_t    prepend_format;
   predicate_t disp_pred;
 
   std::list<account_t *> posted_accounts;
 
 public:
-  format_accounts(report_t& _report, const string& _format);
+  format_accounts(report_t& _report, const string& _format,
+		  const optional<string>& _prepend_format = none);
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }

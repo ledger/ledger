@@ -40,9 +40,10 @@
 
 namespace ledger {
 
-format_posts::format_posts(report_t&	 _report,
-			   const string& format,
-			   bool		 _print_raw)
+format_posts::format_posts(report_t&		   _report,
+			   const string&	   format,
+			   bool			   _print_raw,
+			   const optional<string>& _prepend_format)
   : report(_report), last_xact(NULL), last_post(NULL),
     print_raw(_print_raw)
 {
@@ -65,6 +66,9 @@ format_posts::format_posts(report_t&	 _report,
     first_line_format.parse_format(format);
     next_lines_format.parse_format(format);
   }
+
+  if (_prepend_format)
+    prepend_format.parse_format(*_prepend_format);
 }
 
 void format_posts::flush()
@@ -95,6 +99,10 @@ void format_posts::operator()(post_t& post)
   else if (! post.has_xdata() ||
 	   ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     bind_scope_t bound_scope(report, post);
+
+    if (prepend_format)
+      out << prepend_format(bound_scope);
+
     if (last_xact != post.xact) {
       if (last_xact) {
 	bind_scope_t xact_scope(report, *last_xact);
@@ -115,8 +123,9 @@ void format_posts::operator()(post_t& post)
   }
 }
 
-format_accounts::format_accounts(report_t&     _report,
-				 const string& format)
+format_accounts::format_accounts(report_t&		 _report,
+				 const string&		 format,
+				 const optional<string>& _prepend_format)
   : report(_report), disp_pred()
 {
   TRACE_CTOR(format_accounts, "report&, const string&");
@@ -136,6 +145,9 @@ format_accounts::format_accounts(report_t&     _report,
     account_line_format.parse_format(format);
     total_line_format.parse_format(format, account_line_format);
   }
+
+  if (_prepend_format)
+    prepend_format.parse_format(*_prepend_format);
 }
 
 std::size_t format_accounts::post_account(account_t& account, const bool flat)
@@ -150,6 +162,11 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
     bind_scope_t bound_scope(report, account);
+
+    if (prepend_format)
+      static_cast<std::ostream&>(report.output_stream)
+	<< prepend_format(bound_scope);
+
     static_cast<std::ostream&>(report.output_stream)
       << account_line_format(bound_scope);
 
@@ -217,6 +234,11 @@ void format_accounts::flush()
       ! report.HANDLED(no_total) && ! report.HANDLED(percent)) {
     bind_scope_t bound_scope(report, *report.session.journal->master);
     out << separator_format(bound_scope);
+
+    if (prepend_format)
+      static_cast<std::ostream&>(report.output_stream)
+	<< prepend_format(bound_scope);
+
     out << total_line_format(bound_scope);
   }
 
