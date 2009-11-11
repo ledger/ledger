@@ -33,7 +33,6 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#include "hooks.h"
 #include "journal.h"
 #include "xact.h"
 
@@ -130,42 +129,6 @@ namespace {
     return journal.find_account(name, auto_create);
   }
 
-  struct py_xact_finalizer_t : public xact_finalizer_t {
-    object pyobj;
-    py_xact_finalizer_t() {}
-    py_xact_finalizer_t(object obj) : pyobj(obj) {}
-    py_xact_finalizer_t(const py_xact_finalizer_t& other)
-      : pyobj(other.pyobj) {}
-    virtual bool operator()(xact_t& xact) {
-      return call<bool>(pyobj.ptr(), xact);
-    }
-  };
-
-  std::list<py_xact_finalizer_t> py_finalizers;
-
-  void py_add_xact_finalizer(journal_t& journal, object x)
-  {
-    py_finalizers.push_back(py_xact_finalizer_t(x));
-    journal.add_xact_finalizer(&py_finalizers.back());
-  }
-
-  void py_remove_xact_finalizer(journal_t& journal, object x)
-  {
-    for (std::list<py_xact_finalizer_t>::iterator i = py_finalizers.begin();
-	 i != py_finalizers.end();
-	 i++)
-      if ((*i).pyobj == x) {
-	journal.remove_xact_finalizer(&(*i));
-	py_finalizers.erase(i);
-	return;
-      }
-  }
-
-  void py_run_xact_finalizers(journal_t& journal, xact_t& xact)
-  {
-    journal.xact_finalize_hooks.run_hooks(xact);
-  }
-
   std::size_t py_read(journal_t& journal, const string& pathname)
   {
     return journal.read(pathname);
@@ -206,11 +169,6 @@ void export_journal()
     .add_property("commodity_pool",
 		  make_getter(&journal_t::commodity_pool,
 			      return_internal_reference<>()))
-#if 0
-    .add_property("xact_finalize_hooks",
-		  make_getter(&journal_t::xact_finalize_hooks),
-		  make_setter(&journal_t::xact_finalize_hooks))
-#endif
 
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
@@ -222,10 +180,6 @@ void export_journal()
 
     .def("add_xact", &journal_t::add_xact)
     .def("remove_xact", &journal_t::remove_xact)
-
-    .def("add_xact_finalizer", py_add_xact_finalizer)
-    .def("remove_xact_finalizer", py_remove_xact_finalizer)
-    .def("run_xact_finalizers", py_run_xact_finalizers)
 
     .def("__len__", xacts_len)
     .def("__getitem__", xacts_getitem, return_internal_reference<1>())

@@ -43,15 +43,14 @@
 #define _JOURNAL_H
 
 #include "utils.h"
-#include "hooks.h"
 #include "times.h"
 
 namespace ledger {
 
 class commodity_pool_t;
+class xact_base_t;
 class xact_t;
 class auto_xact_t;
-class xact_finalizer_t;
 class period_xact_t;
 class account_t;
 class scope_t;
@@ -114,7 +113,6 @@ public:
   bool                  was_loaded;
 
   shared_ptr<commodity_pool_t> commodity_pool;
-  hooks_t<xact_finalizer_t, xact_t> xact_finalize_hooks;
 
   journal_t();
   journal_t(const path& pathname);
@@ -138,6 +136,7 @@ public:
   account_t * find_account_re(const string& regexp);
 
   bool add_xact(xact_t * xact);
+  void extend_xact(xact_base_t * xact);
   bool remove_xact(xact_t * xact);
 
   xacts_list::iterator xacts_begin() {
@@ -157,13 +156,6 @@ public:
   }
   period_xacts_list::iterator period_xacts_end() {
     return period_xacts.end();
-  }
-
-  void add_xact_finalizer(xact_finalizer_t * finalizer) {
-    xact_finalize_hooks.add_hook(finalizer);
-  }
-  void remove_xact_finalizer(xact_finalizer_t * finalizer) {
-    xact_finalize_hooks.remove_hook(finalizer);
   }
 
   std::size_t read(std::istream& in,

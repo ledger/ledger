@@ -126,14 +126,21 @@ bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
 
-  if (! xact->finalize() || ! xact_finalize_hooks.run_hooks(*xact)) {
+  if (! xact->finalize()) {
     xact->journal = NULL;
     return false;
   }
 
+  extend_xact(xact);
   xacts.push_back(xact);
 
   return true;
+}
+
+void journal_t::extend_xact(xact_base_t * xact)
+{
+  foreach (auto_xact_t * auto_xact, auto_xacts)
+    auto_xact->extend_xact(*xact);
 }
 
 bool journal_t::remove_xact(xact_t * xact)

@@ -127,11 +127,6 @@ void export_xact()
     .def("valid", &xact_t::valid)
     ;
 
-  class_< xact_finalizer_t, boost::noncopyable >
-    ("TransactionFinalizer", no_init)
-    .def("__call__", &xact_finalizer_t::operator())
-    ;
-
   class_< auto_xact_t, bases<xact_base_t> > ("AutomatedTransaction")
     .def(init<predicate_t>())
 
@@ -140,16 +135,6 @@ void export_xact()
 		  make_setter(&auto_xact_t::predicate))
 
     .def("extend_xact", &auto_xact_t::extend_xact)
-    ;
-
-  class_< auto_xact_finalizer_t, bases<xact_finalizer_t> >
-    ("AutomatedTransactionFinalizer")
-    .add_property("journal",
-		  make_getter(&auto_xact_finalizer_t::journal,
-			      return_internal_reference<>()),
-		  make_setter(&auto_xact_finalizer_t::journal,
-			      with_custodian_and_ward<1, 2>()))
-    .def("__call__", &auto_xact_finalizer_t::operator())
     ;
 
   class_< period_xact_t, bases<xact_base_t> > ("PeriodicTransaction")
@@ -162,16 +147,6 @@ void export_xact()
 		  make_getter(&period_xact_t::period_string),
 		  make_setter(&period_xact_t::period_string))
     ;
-
-  class_< func_finalizer_t, bases<xact_finalizer_t> >
-    ("FunctionalFinalizer", init<func_finalizer_t::func_t>())
-    .add_property("func",
-		  make_getter(&func_finalizer_t::func),
-		  make_setter(&func_finalizer_t::func))
-    .def("__call__", &func_finalizer_t::operator())
-    ;
-
-  scope().attr("extend_xact_base") = &extend_xact_base;
 }
 
 } // namespace ledger

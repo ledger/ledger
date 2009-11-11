@@ -89,7 +89,6 @@ libledger_report_la_LDFLAGS  = -release $(VERSION)
 pkginclude_HEADERS =				\
 	src/utils.h				\
 	src/flags.h				\
-	src/hooks.h				\
 	src/error.h				\
 	src/times.h				\
 	src/mask.h				\

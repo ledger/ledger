@@ -140,11 +140,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-struct xact_finalizer_t {
-  virtual ~xact_finalizer_t() {}
-  virtual bool operator()(xact_t& xact) = 0;
-};
-
 class auto_xact_t : public xact_base_t
 {
 public:
@@ -179,39 +174,6 @@ private:
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<xact_base_t>(*this);
     ar & predicate;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
-};
-
-struct auto_xact_finalizer_t : public xact_finalizer_t
-{
-  journal_t * journal;
-
-  auto_xact_finalizer_t() : journal(NULL) {
-    TRACE_CTOR(auto_xact_finalizer_t, "");
-  }
-  auto_xact_finalizer_t(const auto_xact_finalizer_t& other)
-    : xact_finalizer_t(), journal(other.journal) {
-    TRACE_CTOR(auto_xact_finalizer_t, "copy");
-  }
-  auto_xact_finalizer_t(journal_t * _journal) : journal(_journal) {
-    TRACE_CTOR(auto_xact_finalizer_t, "journal_t *");
-  }
-  ~auto_xact_finalizer_t() throw() {
-    TRACE_DTOR(auto_xact_finalizer_t);
-  }
-
-  virtual bool operator()(xact_t& xact);
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & journal;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
@@ -252,38 +214,6 @@ private:
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
-
-class func_finalizer_t : public xact_finalizer_t
-{
-  func_finalizer_t();
-
-public:
-  typedef function<bool (xact_t& xact)> func_t;
-
-  func_t func;
-
-  func_finalizer_t(func_t _func) : func(_func) {
-    TRACE_CTOR(func_finalizer_t, "func_t");
-  }
-  func_finalizer_t(const func_finalizer_t& other) :
-    xact_finalizer_t(), func(other.func) {
-    TRACE_CTOR(func_finalizer_t, "copy");
-  }
-  ~func_finalizer_t() throw() {
-    TRACE_DTOR(func_finalizer_t);
-  }
-
-  virtual bool operator()(xact_t& xact) {
-    return func(xact);
-  }
-};
-
-void extend_xact_base(journal_t * journal, xact_base_t& xact);
-
-inline bool auto_xact_finalizer_t::operator()(xact_t& xact) {
-  extend_xact_base(journal, xact);
-  return true;
-}
 
 typedef std::list<xact_t *>	   xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
