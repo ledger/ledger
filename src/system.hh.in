@@ -249,6 +249,7 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 #include <unicodeobject.h>
 
 #include <boost/python/module_init.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #endif // HAVE_BOOST_PYTHON
 

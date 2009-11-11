@@ -327,6 +327,10 @@ void export_value()
     .def("basetype", py_base_type)
     ;
 
+  class_< value_t::sequence_t > ("ValueSequence")
+    .def(vector_indexing_suite< value_t::sequence_t >());
+    ;
+
   scope().attr("NULL_VALUE")    = NULL_VALUE;
   scope().attr("string_value")  = &string_value;
   scope().attr("mask_value")	= &mask_value;
