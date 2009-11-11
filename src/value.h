@@ -440,6 +440,13 @@ public:
   }
   void in_place_truncate();
 
+  value_t floored() const {
+    value_t temp(*this);
+    temp.in_place_floor();
+    return temp;
+  }
+  void in_place_floor();
+
   value_t unrounded() const {
     value_t temp(*this);
     temp.in_place_unround();

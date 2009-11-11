@@ -339,6 +339,18 @@ public:
     *this = temp;
   }
 
+  balance_t floored() const {
+    balance_t temp(*this);
+    temp.in_place_floor();
+    return temp;
+  }
+  void in_place_floor() {
+    balance_t temp;
+    foreach (const amounts_map::value_type& pair, amounts)
+      temp += pair.second.floored();
+    *this = temp;
+  }
+
   balance_t unrounded() const {
     balance_t temp(*this);
     temp.in_place_unround();

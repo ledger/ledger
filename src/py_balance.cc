@@ -176,6 +176,10 @@ void export_balance()
     .def("in_place_truncate", &balance_t::in_place_truncate,
 	 return_internal_reference<>())
 
+    .def("floored", &balance_t::floored)
+    .def("in_place_floor", &balance_t::in_place_floor,
+	 return_internal_reference<>())
+
     .def("unrounded", &balance_t::unrounded)
     .def("in_place_unround", &balance_t::in_place_unround,
 	 return_internal_reference<>())
