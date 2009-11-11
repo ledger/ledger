@@ -132,10 +132,12 @@ namespace {
 			std::streamsize len,
 			account_t *	account,
 			xact_t *	xact,
-			bool            honor_strict = true);
+			bool            honor_strict = true,
+			bool            defer_expr   = false);
 
-    bool parse_posts(account_t *   account,
-		     xact_base_t& xact);
+    bool parse_posts(account_t *  account,
+		     xact_base_t& xact,
+		     const bool   defer_expr = false);
 
     xact_t * parse_xact(char *	  line,
 			  std::streamsize len,
@@ -145,11 +147,13 @@ namespace {
 				    const string& name);
   };
 
-  void parse_amount_expr(scope_t&             scope,
-			 std::istream&        in,
-			 amount_t&            amount,
-			 post_t *             post,
-			 const parse_flags_t& flags = PARSE_DEFAULT)
+  void parse_amount_expr(scope_t&	      scope,
+			 std::istream&	      in,
+			 amount_t&	      amount,
+			 optional<expr_t> *   amount_expr,
+			 post_t *	      post,
+			 const parse_flags_t& flags	 = PARSE_DEFAULT,
+			 const bool           defer_expr = false)
   {
     expr_t expr(in, flags.plus_flags(PARSE_PARTIAL));
 
@@ -166,17 +170,22 @@ namespace {
 
     if (expr) {
       bind_scope_t bound_scope(scope, *post);
-
-      value_t result(expr.calc(bound_scope));
-      if (result.is_long()) {
-	amount = result.to_amount();
+      if (defer_expr) {
+	assert(amount_expr);
+	*amount_expr = expr;
+	(*amount_expr)->compile(bound_scope);
       } else {
-	if (! result.is_amount())
-	  throw_(parse_error, _("Postings may only specify simple amounts"));
-
-	amount = result.as_amount();
+	value_t result(expr.calc(bound_scope));
+	if (result.is_long()) {
+	  amount = result.to_amount();
+	} else {
+	  if (! result.is_amount())
+	    throw_(amount_error,
+		   _("Amount expressions must result in a simple amount"));
+	  amount = result.as_amount();
+	}
+	DEBUG("textual.parse", "The posting amount is " << amount);
       }
-      DEBUG("textual.parse", "The posting amount is " << amount);
     }
   }
 }
@@ -548,7 +557,7 @@ void instance_t::automated_xact_directive(char * line)
 
   reveal_context = false;
 
-  if (parse_posts(account_stack.front(), *ae.get())) {
+  if (parse_posts(account_stack.front(), *ae.get(), true)) {
     reveal_context = true;
 
     journal.auto_xacts.push_back(ae.get());
@@ -592,7 +601,7 @@ void instance_t::period_xact_directive(char * line)
     pe->journal = &journal;
 
     if (pe->finalize()) {
-      extend_xact_base(&journal, *pe.get(), true);
+      extend_xact_base(&journal, *pe.get());
 
       journal.period_xacts.push_back(pe.get());
 
@@ -817,7 +826,8 @@ post_t * instance_t::parse_post(char *		line,
 				std::streamsize len,
 				account_t *	account,
 				xact_t *	xact,
-				bool            honor_strict)
+				bool            honor_strict,
+				bool            defer_expr)
 {
   TRACE_START(post_details, 1, "Time spent parsing postings:");
 
@@ -919,8 +929,9 @@ post_t * instance_t::parse_post(char *		line,
     if (*next != '(')		// indicates a value expression
       post->amount.parse(stream, PARSE_NO_REDUCE);
     else
-      parse_amount_expr(scope, stream, post->amount, post.get(),
-			PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN);
+      parse_amount_expr(scope, stream, post->amount, &post->amount_expr,
+			post.get(), PARSE_NO_REDUCE | PARSE_SINGLE |
+			PARSE_NO_ASSIGN, defer_expr);
 
     if (! post->amount.is_null() && honor_strict && strict &&
 	post->amount.has_commodity() &&
@@ -965,9 +976,9 @@ post_t * instance_t::parse_post(char *		line,
 	  if (*p != '(')		// indicates a value expression
 	    post->cost->parse(cstream, PARSE_NO_MIGRATE);
 	  else
-	    parse_amount_expr(scope, cstream, *post->cost, post.get(),
-			      PARSE_NO_MIGRATE | PARSE_SINGLE |
-			      PARSE_NO_ASSIGN);
+	    parse_amount_expr(scope, cstream, *post->cost, NULL, post.get(),
+			      PARSE_NO_MIGRATE | PARSE_SINGLE | PARSE_NO_ASSIGN,
+			      defer_expr);
 
 	  if (post->cost->sign() < 0)
 	    throw parse_error(_("A posting's cost may not be negative"));
@@ -1017,8 +1028,9 @@ post_t * instance_t::parse_post(char *		line,
       if (*p != '(')		// indicates a value expression
 	post->assigned_amount->parse(stream, PARSE_NO_MIGRATE);
       else
-	parse_amount_expr(scope, stream, *post->assigned_amount, post.get(),
-			  PARSE_SINGLE | PARSE_NO_MIGRATE);
+	parse_amount_expr(scope, stream, *post->assigned_amount, NULL,
+			  post.get(), PARSE_SINGLE | PARSE_NO_MIGRATE,
+			  defer_expr);
 
       if (post->assigned_amount->is_null()) {
 	if (post->amount.is_null())
@@ -1118,8 +1130,9 @@ post_t * instance_t::parse_post(char *		line,
   }
 }
 
-bool instance_t::parse_posts(account_t *   account,
-			     xact_base_t& xact)
+bool instance_t::parse_posts(account_t *  account,
+			     xact_base_t& xact,
+			     const bool   defer_expr)
 {
   TRACE_START(xact_posts, 1, "Time spent parsing postings:");
 
@@ -1130,7 +1143,9 @@ bool instance_t::parse_posts(account_t *   account,
     std::streamsize len = read_line(line);
     assert(len > 0);
 
-    if (post_t * post = parse_post(line, len, account, NULL, false)) {
+    if (post_t * post =
+	parse_post(line, len, account, NULL, /* honor_strict= */ false,
+		   defer_expr)) {
       xact.add_post(post);
       added = true;
     }

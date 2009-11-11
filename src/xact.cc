@@ -480,7 +480,7 @@ bool xact_t::valid() const
   return true;
 }
 
-void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
+void auto_xact_t::extend_xact(xact_base_t& xact)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -490,19 +490,31 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
     if (! initial_post->has_flags(ITEM_GENERATED) &&
 	predicate(*initial_post)) {
       foreach (post_t * post, posts) {
-	amount_t amt;
-	assert(post->amount);
-	if (! post->amount.commodity()) {
-	  if ((post_handler &&
-	       ! initial_post->has_flags(POST_CALCULATED)) ||
-	      initial_post->amount.is_null())
-	    continue;
-	  amt = initial_post->amount * post->amount;
+	amount_t post_amount;
+	if (post->amount.is_null()) {
+	  if (! post->amount_expr)
+	    throw_(amount_error,
+		   _("Automated transaction's posting has no amount"));
+
+	  bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
+	  value_t result(post->amount_expr->calc(bound_scope));
+	  if (result.is_long()) {
+	    post_amount = result.to_amount();
+	  } else {
+	    if (! result.is_amount())
+	      throw_(amount_error,
+		     _("Amount expressions must result in a simple amount"));
+	    post_amount = result.as_amount();
+	  }
 	} else {
-	  if (post_handler)
-	    continue;
-	  amt = post->amount;
+	  post_amount = post->amount;
 	}
+
+	amount_t amt;
+	if (! post_amount.commodity())
+	  amt = initial_post->amount * post_amount;
+	else
+	  amt = post_amount;
 
 	IF_DEBUG("xact.extend") {
 	  DEBUG("xact.extend",
@@ -517,12 +529,12 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 
 	  DEBUG("xact.extend",
 		"Posting on line " << post->pos->beg_line << ": "
-		<< "amount " << post->amount << ", amt " << amt
-		<< " (precision " << post->amount.precision()
+		<< "amount " << post_amount << ", amt " << amt
+		<< " (precision " << post_amount.precision()
 		<< " != " << amt.precision() << ")");
 
 #if defined(DEBUG_ON)
-	  if (post->amount.keep_precision())
+	  if (post_amount.keep_precision())
 	    DEBUG("xact.extend", "  precision is kept");
 	  if (amt.keep_precision())
 	    DEBUG("xact.extend", "  amt precision is kept");
@@ -556,11 +568,10 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 }
 
 void extend_xact_base(journal_t *  journal,
-		      xact_base_t& base,
-		      bool	   post_handler)
+		      xact_base_t& base)
 {
   foreach (auto_xact_t * xact, journal->auto_xacts)
-    xact->extend_xact(base, post_handler);
+    xact->extend_xact(base);
 }
 
 void to_xml(std::ostream& out, const xact_t& xact)
