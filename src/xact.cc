@@ -542,6 +542,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, bool post_handler)
 	new_post->add_flags(ITEM_GENERATED);
 
 	xact.add_post(new_post);
+	new_post->account->add_post(new_post);
       }
     }
   }
