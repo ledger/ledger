@@ -181,6 +181,8 @@ void report_memory(std::ostream& out, bool report_all = false);
 
 namespace ledger {
 
+#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+
 class string : public std::string
 {
 public:
@@ -252,6 +254,12 @@ inline bool operator!=(const char* __lhs, const string& __rhs)
 
 inline bool operator!=(const string& __lhs, const char* __rhs)
 { return __lhs.compare(__rhs) != 0; }
+
+#else // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+
+typedef std::string string;
+
+#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
 
 extern string empty_string;
 
