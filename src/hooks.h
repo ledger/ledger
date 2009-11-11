@@ -70,9 +70,9 @@ public:
     list.remove(func);
   }
 
-  bool run_hooks(Data& item, bool post) {
+  bool run_hooks(Data& item) {
     foreach (T * func, list)
-      if (! (*func)(item, post))
+      if (! (*func)(item))
 	return false;
     return true;
   }

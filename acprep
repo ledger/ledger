@@ -255,6 +255,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-patch', action='store_true', dest='no_patch',
                       default=False,
                       help='Do not patch the Makefile for prettier output')
+        op.add_option('', '--no-git', action='store_true', dest='no_git',
+                      default=False,
+                      help='Do not call out to Git; useful for offline builds')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -382,9 +385,12 @@ class PrepareBuild(CommandLineApp):
             sys.exit(1)
         return dirname
 
+    def git_working_tree(self):
+        return exists('.git') and isdir('.git') and not self.options.no_git
+
     def current_version(self):
         if not self.current_ver:
-            if exists('.git') and isdir('.git'):
+            if self.git_working_tree():
                 #date = self.get_stdout('git', 'log', '--format=%ci', '-1', 'HEAD')
                 #date = re.sub(" [-+][0-9][0-9][0-9][0-9]$", "", date)
                 #when = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
@@ -394,7 +400,7 @@ class PrepareBuild(CommandLineApp):
                 tag = self.get_stdout('git', 'describe', '--all', '--long')
                 self.current_ver = re.sub('heads/', '', tag)
             else:
-                self.current_ver = "unknown"
+                self.current_ver = "no-git"
         return self.current_ver
 
     def need_to_prepare_autotools(self):
@@ -522,17 +528,15 @@ class PrepareBuild(CommandLineApp):
 
     def phase_submodule(self, *args):
         self.log.info('Executing phase: submodule')
-        if exists('.git') and isdir('.git'):
+        if self.git_working_tree():
             self.execute('git', 'submodule', 'init')
             self.execute('git', 'submodule', 'update')
 
     def phase_pull(self, *args):
         self.log.info('Executing phase: pull')
-        if not exists('.git') and not isdir('.git'):
-            self.log.error("This is not a Git clone.")
-            sys.exit(1)
-        self.execute('git', 'pull')
-        self.phase_submodule()
+        if self.git_working_tree():
+            self.execute('git', 'pull')
+            self.phase_submodule()
 
     #########################################################################
     # Automatic installation of build dependencies                          #
@@ -653,7 +657,7 @@ class PrepareBuild(CommandLineApp):
                 self.log.error('Failed to locate the Boost sources')
                 sys.exit(1)
 
-            if not exists('cppunit'):
+            if not exists('cppunit') and self.git_working_tree():
                 self.execute('git', 'clone', 'git://github.com/jwiegley/cppunit.git')
 
             if not exists('cppunit'):
@@ -1239,7 +1243,8 @@ class PrepareBuild(CommandLineApp):
 
     def phase_gitclean(self, *args):
         self.log.info('Executing phase: gitclean')
-        self.execute('git', 'clean', '-dfx')
+        if self.git_working_tree():
+            self.execute('git', 'clean', '-dfx')
 
     #########################################################################
     # Packaging phases                                                      #

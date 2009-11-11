@@ -35,7 +35,7 @@
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
-#include "unistring.h"
+#include "unistring.h"		// for justify()
 
 namespace ledger {
 
@@ -1437,6 +1437,31 @@ void value_t::in_place_truncate()
   }
 
   throw_(value_error, _("Cannot truncate %1") << label());
+}
+
+void value_t::in_place_floor()
+{
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_floor();
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_floor();
+    return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.floored());
+    *this = temp;
+    return;
+  }
+  default:
+    break;
+  }
+
+  throw_(value_error, _("Cannot floor %1") << label());
 }
 
 void value_t::in_place_unround()

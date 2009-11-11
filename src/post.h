@@ -61,6 +61,7 @@ public:
   account_t *	     account;
 
   amount_t	     amount;	// can be null until finalization
+  optional<expr_t>   amount_expr;
   optional<amount_t> cost;
   optional<amount_t> assigned_amount;
 
@@ -212,6 +213,7 @@ private:
     ar & xact;
     ar & account;
     ar & amount;
+    ar & amount_expr;
     ar & cost;
     ar & assigned_amount;
   }

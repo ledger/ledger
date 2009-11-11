@@ -150,6 +150,7 @@ for line in fd.readlines():
     line = re.sub('set_session_context\(\)',
                   'set_session_context()\n        self.testSession = None', line)
     line = re.sub('([a-z_]+?)_t\b', '\\1', line)
+    line = re.sub('("[^"]+")', 'u\\1', line)
     line = re.sub('std::string\(([^)]+?)\)', '\\1', line)
     line = re.sub('string\(([^)]+?)\)', '\\1', line)
     line = re.sub('\.print\(([^)]+?)\)', '.print_(\\1)', line)

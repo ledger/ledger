@@ -20,7 +20,7 @@ class LedgerHandler(BaseHTTPRequestHandler):
         except Exception:
             print "Saw exception in POST handler"
 
-def cmd_server():
+def main(*args):
     try:
         port   = 9000
         server = HTTPServer(('', port), LedgerHandler)
@@ -31,3 +31,6 @@ def cmd_server():
         print "Shutting down server"
         server.socket.close()
 
+print __name__
+if __name__ == '__main__':
+    main()

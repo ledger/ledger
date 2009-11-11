@@ -220,6 +220,10 @@ internal precision."))
     .def("in_place_truncate", &amount_t::in_place_truncate,
 	 return_internal_reference<>())
 
+    .def("floored", &amount_t::floored)
+    .def("in_place_floor", &amount_t::in_place_floor,
+	 return_internal_reference<>())
+
     .def("unrounded", &amount_t::unrounded)
     .def("in_place_unround", &amount_t::in_place_unround,
 	 return_internal_reference<>())

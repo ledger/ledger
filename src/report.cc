@@ -33,7 +33,6 @@
 
 #include "report.h"
 #include "session.h"
-#include "unistring.h"
 #include "format.h"
 #include "query.h"
 #include "output.h"
@@ -206,6 +205,12 @@ value_t report_t::fn_quantity(call_scope_t& scope)
 {
   interactive_t args(scope, "a");
   return args.get<amount_t>(0).number();
+}
+
+value_t report_t::fn_floor(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  return args.value_at(0).floored();
 }
 
 value_t report_t::fn_abs(call_scope_t& scope)
@@ -453,15 +458,6 @@ value_t report_t::echo_command(call_scope_t& scope)
   return true;
 }
 
-bool report_t::maybe_import(const string& module)
-{
-  if (lookup(symbol_t::OPTION, "import_")) {
-    expr_t(string("import_(\"") + module + "\")").calc(*this);
-    return true;
-  }
-  return false;
-}
-
 option_t<report_t> * report_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -641,6 +637,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(pricesdb_format_);
     else OPT(print_format_);
     else OPT(payee_width_);
+    else OPT(prepend_format_);
     break;
   case 'q':
     OPT(quantity);
@@ -744,6 +741,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'f':
       if (is_eq(p, "format_date"))
 	return MAKE_FUNCTOR(report_t::fn_format_date);
+      else if (is_eq(p, "floor"))
+	return MAKE_FUNCTOR(report_t::fn_floor);
       break;
 
     case 'g':
@@ -864,7 +863,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(balance_format_))),
+	   (new format_accounts(*this, report_format(HANDLER(balance_format_)),
+				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#balance"));
       }
       else if (is_eq(p, "budget")) {
@@ -876,7 +876,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(budget_format_))),
+	   (new format_accounts(*this, report_format(HANDLER(budget_format_)),
+				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#budget"));
       }
       break;
@@ -885,7 +886,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "csv")) {
 	return WRAP_FUNCTOR
 	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(csv_format_))),
+	   (new format_posts(*this, report_format(HANDLER(csv_format_)),
+			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#csv"));
       }
       else if (is_eq(p, "cleared")) {
@@ -894,7 +896,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(cleared_format_))),
+	   (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
+				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#cleared"));
       }
       break;
@@ -923,22 +926,23 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "prices"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(prices_format_))),
+	   (new format_posts(*this, report_format(HANDLER(prices_format_)),
+			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#prices"));
       else if (is_eq(p, "pricesdb"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
+	   (new format_posts(*this, report_format(HANDLER(pricesdb_format_)),
+			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#pricesdb"));
-      else if (is_eq(p, "python") && maybe_import("ledger.interp"))
-	return session.lookup(symbol_t::COMMAND, "python");
       break;
 
     case 'r':
       if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
 	return WRAP_FUNCTOR
 	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(register_format_))),
+	   (new format_posts(*this, report_format(HANDLER(register_format_)),
+			     false, maybe_format(HANDLER(prepend_format_))),
 	    *this, "#register"));
       else if (is_eq(p, "reload"))
 	return MAKE_FUNCTOR(report_t::reload_command);
@@ -947,9 +951,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
 	return WRAP_FUNCTOR(report_statistics);
-      else
-	if (is_eq(p, "server") && maybe_import("ledger.server"))
-	  return session.lookup(symbol_t::COMMAND, "server");
+      else if (is_eq(p, "server"))
+	return session.lookup(symbol_t::COMMAND, "server");
       break;
 
     case 'x':
@@ -981,10 +984,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
 	   (new format_posts(*this, report_format(HANDLER(print_format_)),
 			     false), *this, "#generate"));
-    case 'h':
-      if (is_eq(p, "hello") && maybe_import("ledger.hello"))
-	return session.lookup(symbol_t::PRECOMMAND, "hello");
-      break;
     case 'p':
       if (is_eq(p, "parse"))
 	return WRAP_FUNCTOR(parse_command);

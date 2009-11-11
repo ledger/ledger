@@ -62,10 +62,6 @@
 #define TIMERS_ON   1
 #endif
 
-#if defined(VERIFY_ON)
-//#define STRING_VERIFY_ON 1
-#endif
-
 /*@}*/
 
 /**
@@ -76,11 +72,7 @@
 namespace ledger {
   using namespace boost;
 
-#if defined(STRING_VERIFY_ON)
   class string;
-#else
-  typedef std::string string;
-#endif
 
   typedef std::list<string> strings_list;
 
@@ -162,12 +154,33 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 void report_memory(std::ostream& out, bool report_all = false);
 
-#if defined(STRING_VERIFY_ON)
+} // namespace ledger
+
+#else // ! VERIFY_ON
+
+#define VERIFY(x)
+#define DO_VERIFY() true
+#define TRACE_CTOR(cls, args)
+#define TRACE_DTOR(cls)
+
+#endif // VERIFY_ON
+
+#define IF_VERIFY() if (DO_VERIFY())
+
+/*@}*/
 
 /**
- * This string type is a wrapper around std::string that allows us to
- * trace constructor and destructor calls.
+ * @name String wrapper
+ *
+ * This string type is a wrapper around std::string that allows us to trace
+ * constructor and destructor calls.  It also makes ledger's use of strings a
+ * unique type, that the Boost.Python code can use as the basis for
+ * transparent Unicode conversions.
  */
+/*@{*/
+
+namespace ledger {
+
 class string : public std::string
 {
 public:
@@ -240,24 +253,11 @@ inline bool operator!=(const char* __lhs, const string& __rhs)
 inline bool operator!=(const string& __lhs, const char* __rhs)
 { return __lhs.compare(__rhs) != 0; }
 
-#endif // STRING_VERIFY_ON
+extern string empty_string;
+
+strings_list split_arguments(const char * line);
 
 } // namespace ledger
-
-#else // ! VERIFY_ON
-
-#define VERIFY(x)
-#define DO_VERIFY() true
-#define TRACE_CTOR(cls, args)
-#define TRACE_DTOR(cls)
-
-#endif // VERIFY_ON
-
-extern ledger::string empty_string;
-
-ledger::strings_list split_arguments(const char * line);
-
-#define IF_VERIFY() if (DO_VERIFY())
 
 /*@}*/
 

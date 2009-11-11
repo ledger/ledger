@@ -36,7 +36,7 @@ template <typename T, typename TfromPy>
 struct object_from_python
 {
   object_from_python() {
-    boost::python::converter::registry::push_back
+    boost::python::converter::registry::insert
       (&TfromPy::convertible, &TfromPy::construct,
        boost::python::type_id<T>());
   }
@@ -105,6 +105,55 @@ struct register_optional_to_python : public boost::noncopyable
                                optional_to_python, optional_from_python>();
   }
 };
+
+namespace boost { namespace python {
+
+// Use expr to create the PyObject corresponding to x
+# define BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)\
+    template <> struct to_python_value<T&>                      \
+        : detail::builtin_to_python                             \
+    {                                                           \
+        inline PyObject* operator()(T const& x) const           \
+        {                                                       \
+            return (expr);                                      \
+        }                                                       \
+        inline PyTypeObject const* get_pytype() const           \
+        {                                                       \
+            return (pytype);                                    \
+        }                                                       \
+    };                                                          \
+    template <> struct to_python_value<T const&>                \
+        : detail::builtin_to_python                             \
+    {                                                           \
+        inline PyObject* operator()(T const& x) const           \
+        {                                                       \
+            return (expr);                                      \
+        }                                                       \
+        inline PyTypeObject const* get_pytype() const           \
+        {                                                       \
+            return (pytype);                                    \
+        }                                                       \
+    };
+
+# define BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T, expr)   \
+    namespace converter                                 \
+    {                                                   \
+      template <> struct arg_to_python< T >             \
+        : handle<>                                      \
+      {                                                 \
+          arg_to_python(T const& x)                     \
+            : python::handle<>(expr) {}                 \
+      };                                                \
+    } 
+
+// Specialize argument and return value converters for T using expr
+# define BOOST_PYTHON_TO_PYTHON_BY_VALUE(T, expr, pytype)  \
+        BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T,expr, pytype)  \
+        BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T,expr)
+
+BOOST_PYTHON_TO_PYTHON_BY_VALUE(ledger::string, ::PyUnicode_FromEncodedObject(::PyString_FromString(x.c_str()), "UTF-8", NULL), &PyUnicode_Type)
+
+} } // namespace boost::python
 
 //boost::python::register_ptr_to_python< boost::shared_ptr<Base> >();
 

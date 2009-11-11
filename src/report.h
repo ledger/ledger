@@ -143,6 +143,7 @@ public:
   value_t fn_rounded(call_scope_t& scope);
   value_t fn_unrounded(call_scope_t& scope);
   value_t fn_truncated(call_scope_t& scope);
+  value_t fn_floor(call_scope_t& scope);
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
@@ -172,6 +173,12 @@ public:
     return option.str();
   }
 
+  optional<string> maybe_format(option_t<report_t>& option) {
+    if (option)
+      return option.str();
+    return none;
+  }
+
   value_t reload_command(call_scope_t&);
   value_t echo_command(call_scope_t& scope);
 
@@ -182,8 +189,6 @@ public:
 			  lots || HANDLED(lot_tags),
 			  HANDLED(lots_actual));
   }
-
-  bool maybe_import(const string& module);
 
   void report_options(std::ostream& out)
   {
@@ -254,6 +259,7 @@ public:
     HANDLER(period_).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
+    HANDLER(prepend_format_).report(out);
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricesdb_format_).report(out);
@@ -694,6 +700,8 @@ public:
       on(none,
 	 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
     });
+
+  OPTION(report_t, prepend_format_);
 
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(display_amount_)

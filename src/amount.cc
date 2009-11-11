@@ -114,6 +114,99 @@ shared_ptr<commodity_pool_t> amount_t::current_pool;
 
 bool amount_t::is_initialized = false;
 
+namespace {
+  void stream_out_mpq(std::ostream&	            out,
+		      mpq_t		            quant,
+		      amount_t::precision_t         prec,
+		      int                           zeros_prec = -1,
+		      const optional<commodity_t&>& comm       = none)
+  {
+    char * buf = NULL;
+    try {
+      IF_DEBUG("amount.convert") {
+	char * tbuf = mpq_get_str(NULL, 10, quant);
+	DEBUG("amount.convert", "Rational to convert = " << tbuf);
+	std::free(tbuf);
+      }
+
+      // Convert the rational number to a floating-point, extending the
+      // floating-point to a large enough size to get a precise answer.
+      const std::size_t bits = (mpz_sizeinbase(mpq_numref(quant), 2) +
+				mpz_sizeinbase(mpq_denref(quant), 2));
+      mpfr_set_prec(tempfb, bits + amount_t::extend_by_digits*8);
+      mpfr_set_q(tempfb, quant, GMP_RNDN);
+
+      mpfr_asprintf(&buf, "%.*Rf", prec, tempfb);
+      DEBUG("amount.convert",
+	    "mpfr_print = " << buf << " (precision " << prec << ")");
+
+      if (zeros_prec >= 0) {
+	string::size_type index = std::strlen(buf);
+	string::size_type point = 0;
+	for (string::size_type i = 0; i < index; i++) {
+	  if (buf[i] == '.') {
+	    point = i;
+	    break;
+	  }
+	}
+	if (point > 0) {
+	  while (--index >= (point + 1 + zeros_prec) && buf[index] == '0')
+	    buf[index] = '\0';
+	  if (index >= (point + zeros_prec) && buf[index] == '.')
+	    buf[index] = '\0';
+	}
+      }
+
+      if (comm) {
+	int integer_digits = 0;
+	if (comm && comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
+	  // Count the number of integer digits
+	  for (const char * p = buf; *p; p++) {
+	    if (*p == '.')
+	      break;
+	    else if (*p != '-')
+	      integer_digits++;
+	  }
+	}
+
+	for (const char * p = buf; *p; p++) {
+	  if (*p == '.') {
+	    if (commodity_t::european_by_default ||
+		(comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
+	      out << ',';
+	    else
+	      out << *p;
+	    assert(integer_digits <= 3);
+	  }
+	  else if (*p == '-') {
+	    out << *p;
+	  }
+	  else {
+	    out << *p;
+
+	    if (integer_digits > 3 && --integer_digits % 3 == 0) {
+	      if (commodity_t::european_by_default ||
+		  (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
+		out << '.';
+	      else
+		out << ',';
+	    }
+	  }
+	}
+      } else {
+	out << buf;
+      }
+    }
+    catch (...) {
+      if (buf != NULL)
+	mpfr_free_str(buf);
+      throw;
+    }
+    if (buf != NULL)
+      mpfr_free_str(buf);
+  }
+}
+
 void amount_t::initialize(shared_ptr<commodity_pool_t> pool)
 {
   if (! is_initialized) {
@@ -498,6 +591,19 @@ void amount_t::in_place_round()
   set_keep_precision(false);
 }
 
+void amount_t::in_place_floor()
+{
+  if (! quantity)
+    throw_(amount_error, _("Cannot floor an uninitialized amount"));
+
+  _dup();
+
+  std::ostringstream out;
+  stream_out_mpq(out, MP(quantity), 0);
+
+  mpq_set_str(MP(quantity), out.str().c_str(), 10);
+}
+
 void amount_t::in_place_unround()
 {
   if (! quantity)
@@ -610,99 +716,6 @@ int amount_t::sign() const
     throw_(amount_error, _("Cannot determine sign of an uninitialized amount"));
 
   return mpq_sgn(MP(quantity));
-}
-
-namespace {
-  void stream_out_mpq(std::ostream&	            out,
-		      mpq_t		            quant,
-		      amount_t::precision_t         prec,
-		      int                           zeros_prec = -1,
-		      const optional<commodity_t&>& comm       = none)
-  {
-    char * buf = NULL;
-    try {
-      IF_DEBUG("amount.convert") {
-	char * tbuf = mpq_get_str(NULL, 10, quant);
-	DEBUG("amount.convert", "Rational to convert = " << tbuf);
-	std::free(tbuf);
-      }
-
-      // Convert the rational number to a floating-point, extending the
-      // floating-point to a large enough size to get a precise answer.
-      const std::size_t bits = (mpz_sizeinbase(mpq_numref(quant), 2) +
-				mpz_sizeinbase(mpq_denref(quant), 2));
-      mpfr_set_prec(tempfb, bits + amount_t::extend_by_digits*8);
-      mpfr_set_q(tempfb, quant, GMP_RNDN);
-
-      mpfr_asprintf(&buf, "%.*Rf", prec, tempfb);
-      DEBUG("amount.convert",
-	    "mpfr_print = " << buf << " (precision " << prec << ")");
-
-      if (zeros_prec >= 0) {
-	string::size_type index = std::strlen(buf);
-	string::size_type point = 0;
-	for (string::size_type i = 0; i < index; i++) {
-	  if (buf[i] == '.') {
-	    point = i;
-	    break;
-	  }
-	}
-	if (point > 0) {
-	  while (--index >= (point + 1 + zeros_prec) && buf[index] == '0')
-	    buf[index] = '\0';
-	  if (index >= (point + zeros_prec) && buf[index] == '.')
-	    buf[index] = '\0';
-	}
-      }
-
-      if (comm) {
-	int integer_digits = 0;
-	if (comm && comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
-	  // Count the number of integer digits
-	  for (const char * p = buf; *p; p++) {
-	    if (*p == '.')
-	      break;
-	    else if (*p != '-')
-	      integer_digits++;
-	  }
-	}
-
-	for (const char * p = buf; *p; p++) {
-	  if (*p == '.') {
-	    if (commodity_t::european_by_default ||
-		(comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
-	      out << ',';
-	    else
-	      out << *p;
-	    assert(integer_digits <= 3);
-	  }
-	  else if (*p == '-') {
-	    out << *p;
-	  }
-	  else {
-	    out << *p;
-
-	    if (integer_digits > 3 && --integer_digits % 3 == 0) {
-	      if (commodity_t::european_by_default ||
-		  (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
-		out << '.';
-	      else
-		out << ',';
-	    }
-	  }
-	}
-      } else {
-	out << buf;
-      }
-    }
-    catch (...) {
-      if (buf != NULL)
-	mpfr_free_str(buf);
-      throw;
-    }
-    if (buf != NULL)
-      mpfr_free_str(buf);
-  }
 }
 
 bool amount_t::is_zero() const
@@ -1238,17 +1251,24 @@ void serialize(Archive& ar, long unsigned int& integer,
 
 BOOST_CLASS_EXPORT(ledger::annotated_commodity_t)
 
+template void boost::serialization::serialize(boost::archive::binary_iarchive&,
+					      MP_INT&, const unsigned int);
 template void boost::serialization::serialize(boost::archive::binary_oarchive&,
 					      MP_INT&, const unsigned int);
 template void boost::serialization::serialize(boost::archive::binary_iarchive&,
 					      MP_RAT&, const unsigned int);
+template void boost::serialization::serialize(boost::archive::binary_oarchive&,
+					      MP_RAT&, const unsigned int);
 template void boost::serialization::serialize(boost::archive::binary_iarchive&,
 					      long unsigned int&,
 					      const unsigned int);
+template void boost::serialization::serialize(boost::archive::binary_oarchive&,
+					      long unsigned int&,
+					      const unsigned int);
 
-template void ledger::amount_t::serialize(boost::archive::binary_oarchive&,
-					  const unsigned int);
 template void ledger::amount_t::serialize(boost::archive::binary_iarchive&,
+					  const unsigned int);
+template void ledger::amount_t::serialize(boost::archive::binary_oarchive&,
 					  const unsigned int);
 
 #endif // HAVE_BOOST_SERIALIZATION

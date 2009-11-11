@@ -33,7 +33,6 @@
 
 #include "format.h"
 #include "scope.h"
-#include "unistring.h"
 #include "pstream.h"
 
 namespace ledger {

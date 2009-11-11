@@ -142,7 +142,7 @@ private:
 
 struct xact_finalizer_t {
   virtual ~xact_finalizer_t() {}
-  virtual bool operator()(xact_t& xact, bool post) = 0;
+  virtual bool operator()(xact_t& xact) = 0;
 };
 
 class auto_xact_t : public xact_base_t
@@ -167,7 +167,7 @@ public:
     TRACE_DTOR(auto_xact_t);
   }
 
-  virtual void extend_xact(xact_base_t& xact, bool post);
+  virtual void extend_xact(xact_base_t& xact);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -201,7 +201,7 @@ struct auto_xact_finalizer_t : public xact_finalizer_t
     TRACE_DTOR(auto_xact_finalizer_t);
   }
 
-  virtual bool operator()(xact_t& xact, bool post);
+  virtual bool operator()(xact_t& xact);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -258,7 +258,7 @@ class func_finalizer_t : public xact_finalizer_t
   func_finalizer_t();
 
 public:
-  typedef function<bool (xact_t& xact, bool post)> func_t;
+  typedef function<bool (xact_t& xact)> func_t;
 
   func_t func;
 
@@ -273,15 +273,15 @@ public:
     TRACE_DTOR(func_finalizer_t);
   }
 
-  virtual bool operator()(xact_t& xact, bool post) {
-    return func(xact, post);
+  virtual bool operator()(xact_t& xact) {
+    return func(xact);
   }
 };
 
-void extend_xact_base(journal_t * journal, xact_base_t& xact, bool post);
+void extend_xact_base(journal_t * journal, xact_base_t& xact);
 
-inline bool auto_xact_finalizer_t::operator()(xact_t& xact, bool post) {
-  extend_xact_base(journal, xact, post);
+inline bool auto_xact_finalizer_t::operator()(xact_t& xact) {
+  extend_xact_base(journal, xact);
   return true;
 }
 

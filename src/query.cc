@@ -155,8 +155,6 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
       return token_t(token_t::TOK_PAYEE);
     else if (ident == "note")
       return token_t(token_t::TOK_NOTE);
-    else if (ident == "account")
-      return token_t(token_t::TOK_ACCOUNT);
     else if (ident == "tag")
       return token_t(token_t::TOK_META);
     else if (ident == "meta")

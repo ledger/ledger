@@ -126,9 +126,7 @@ bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
 
-  if (! xact_finalize_hooks.run_hooks(*xact, false) ||
-      ! xact->finalize() ||
-      ! xact_finalize_hooks.run_hooks(*xact, true)) {
+  if (! xact->finalize() || ! xact_finalize_hooks.run_hooks(*xact)) {
     xact->journal = NULL;
     return false;
   }

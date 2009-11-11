@@ -136,8 +136,8 @@ namespace {
     py_xact_finalizer_t(object obj) : pyobj(obj) {}
     py_xact_finalizer_t(const py_xact_finalizer_t& other)
       : pyobj(other.pyobj) {}
-    virtual bool operator()(xact_t& xact, bool post) {
-      return call<bool>(pyobj.ptr(), xact, post);
+    virtual bool operator()(xact_t& xact) {
+      return call<bool>(pyobj.ptr(), xact);
     }
   };
 
@@ -161,9 +161,9 @@ namespace {
       }
   }
 
-  void py_run_xact_finalizers(journal_t& journal, xact_t& xact, bool post)
+  void py_run_xact_finalizers(journal_t& journal, xact_t& xact)
   {
-    journal.xact_finalize_hooks.run_hooks(xact, post);
+    journal.xact_finalize_hooks.run_hooks(xact);
   }
 
   std::size_t py_read(journal_t& journal, const string& pathname)
