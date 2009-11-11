@@ -44,6 +44,7 @@ namespace {
 			      const datetime_t&	       when,
 			      account_t *	       account,
 			      const char *	       desc,
+			      const char *	       note,
 			      journal_t&	       journal)
   {
     time_xact_t event;
@@ -82,10 +83,18 @@ namespace {
       desc = NULL;
     }
 
+    if (note && event.note.empty()) {
+      event.note = note;
+      note = NULL;
+    }
+
     std::auto_ptr<xact_t> curr(new xact_t);
     curr->_date = when.date();
     curr->code  = desc ? desc : "";
     curr->payee = event.desc;
+
+    if (! event.note.empty())
+      curr->append_note(event.note.c_str());
 
     if (when < event.checkin)
       throw parse_error
@@ -119,8 +128,8 @@ time_log_t::~time_log_t()
       accounts.push_back(time_xact.account);
 
     foreach (account_t * account, accounts)
-      clock_out_from_timelog(time_xacts, CURRENT_TIME(), account, NULL,
-			     journal);
+      clock_out_from_timelog(time_xacts, CURRENT_TIME(), account,
+			     NULL, NULL, journal);
 
     assert(time_xacts.empty());
   }
@@ -128,9 +137,10 @@ time_log_t::~time_log_t()
 
 void time_log_t::clock_in(const datetime_t& checkin,
 			  account_t *	    account,
-			  const string&     desc)
+			  const string&     desc,
+			  const string&     note)
 {
-  time_xact_t event(checkin, account, desc);
+  time_xact_t event(checkin, account, desc, note);
 
   if (! time_xacts.empty()) {
     foreach (time_xact_t& time_xact, time_xacts) {
@@ -144,13 +154,14 @@ void time_log_t::clock_in(const datetime_t& checkin,
 
 void time_log_t::clock_out(const datetime_t& checkin,
 			   account_t *	     account,
-			   const string&     desc)
+			   const string&     desc,
+			   const string&     note)
 {
   if (time_xacts.empty())
     throw std::logic_error(_("Timelog check-out event without a check-in"));
 
   clock_out_from_timelog(time_xacts, checkin, account, desc.c_str(),
-			 journal);
+			 note.c_str(), journal);
 }
 
 } // namespace ledger

@@ -413,11 +413,18 @@ void instance_t::clock_in_directive(char * line,
 {
   string datetime(line, 2, 19);
 
-  char * p = skip_ws(line + 22);
-  char * n = next_element(p, true);
+  char * p   = skip_ws(line + 22);
+  char * n   = next_element(p, true);
+  char * end = n ? next_element(n, true) : NULL;
+
+  if (end && *end == ';')
+    end = skip_ws(end + 1);
+  else
+    end = NULL;
 
   timelog.clock_in(parse_datetime(datetime, current_year),
-		   account_stack.front()->find_account(p), n ? n : "");
+		   account_stack.front()->find_account(p),
+		   n ? n : "", end ? end : "");
 }
 
 void instance_t::clock_out_directive(char * line,
@@ -427,9 +434,16 @@ void instance_t::clock_out_directive(char * line,
 
   char * p = skip_ws(line + 22);
   char * n = next_element(p, true);
+  char * end = n ? next_element(n, true) : NULL;
+
+  if (end && *end == ';')
+    end = skip_ws(end + 1);
+  else
+    end = NULL;
 
   timelog.clock_out(parse_datetime(datetime, current_year),
-		    p ? account_stack.front()->find_account(p) : NULL, n ? n : "");
+		    p ? account_stack.front()->find_account(p) : NULL,
+		    n ? n : "", end ? end : "");
   count++;
 }
 

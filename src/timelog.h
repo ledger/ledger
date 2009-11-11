@@ -56,19 +56,21 @@ public:
   datetime_t  checkin;
   account_t * account;
   string      desc;
+  string      note;
 
   time_xact_t() : account(NULL) {
     TRACE_CTOR(time_xact_t, "");
   }
   time_xact_t(const datetime_t& _checkin,
-	       account_t *	 _account = NULL,
-	       const string&     _desc	  = "")
-    : checkin(_checkin), account(_account), desc(_desc) {
-    TRACE_CTOR(time_xact_t, "const datetime_t&, account_t *, const string&");
+	      account_t *	_account = NULL,
+	      const string&     _desc	 = "",
+	      const string&     _note	 = "")
+    : checkin(_checkin), account(_account), desc(_desc), note(_note) {
+    TRACE_CTOR(time_xact_t, "const datetime_t&, account_t *, string, string");
   }
   time_xact_t(const time_xact_t& xact)
     : checkin(xact.checkin), account(xact.account),
-      desc(xact.desc) {
+      desc(xact.desc), note(xact.note) {
     TRACE_CTOR(time_xact_t, "copy");
   }
   ~time_xact_t() throw() {
@@ -79,7 +81,7 @@ public:
 class time_log_t
 {
   std::list<time_xact_t> time_xacts;
-  journal_t&		  journal;
+  journal_t&		 journal;
 
 public:
   time_log_t(journal_t& _journal) : journal(_journal) {
@@ -89,11 +91,13 @@ public:
 
   void clock_in(const datetime_t& checkin,
 		account_t *	  account = NULL,
-		const string&     desc	  = "");
+		const string&     desc	  = "",
+		const string&     note	  = "");
 
   void clock_out(const datetime_t& checkin,
 		 account_t *	   account = NULL,
-		 const string&     desc	  = "");
+		 const string&     desc	  = "",
+		 const string&     note	  = "");
 };
 
 } // namespace ledger
