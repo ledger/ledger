@@ -1,4 +1,4 @@
-.Dd March 15, 2009
+.Dd November 12, 2009
 .Dt ledger 1
 .Sh NAME
 .Nm ledger
@@ -9,45 +9,52 @@ ledger
 .Op Ar options
 .Op Ar arguments
 .Sh DESCRIPTION
-Ledger is a command-line accounting tool providing the user access to the
-power of double-entry accounting.  It is only a reporting tool, which means it
-never modifies your data files, nor can it be used to create or remove data.
+Ledger is a command-line accounting tool based on the power and completeness
+of double-entry accounting.  It is only a reporting tool, which means it never
+modifies your data files, but it does offers a large selection of reports, and
+different ways to customize them to your liking.
 .Pp
 .Sh COMMANDS
-Ledger accepts several top-level commands, each of which is used to generate a
-different report.  Most of them accept a
+Ledger accepts several top-level commands, each of which generates a different
+kind of basic report.  Most of them accept a
 .Ar report-query
-argument, in order to determine what to report.  To understand what is
-accepted by
+argument, in order to determine what should be reported.  To understand the
+syntax of a
 .Ar report-query ,
 see the section on
 .Sx QUERIES .
-In its most basic form, simply specifying one or more strings will produce a
+In its most basic form, simply specifying one or more strings produces a
 report for all accounts containing those strings.
 .Pp
-If no command at all is given, Ledger enters a
+If no command is given, Ledger enters a
 .Tn REPL ,
 or command loop, allowing several commands to be executed against the same
 dataset without reparsing.
 .Pp
-The following is a summary of all the reporting commands accepted by Ledger:
+The following is a complete list of reporting commands accepted by Ledger:
 .Pp
-.Bl -tag -width foo
-.It Nm balance Oo Ar query Oc
-Produce a balance report showing subtotals for matching leaf accounts, and
-aggregate totals for all the parents of those accounts.  The most common
-options with this command are:
+.Bl -tag -width balance
+.It Nm balance Oo Ar report-query Oc
+Produces a balance report showing totals for all matching accounts, and
+aggregate totals for parents of those accounts.  Options most commonly used
+with this command are:
 .Pp
 .Bl -tag -compact -width "--collapse (-n)"
+.It Fl \-basis Pq Fl B
+Report in terms of cost basis, not amount or value.  This is the only form of
+report which is guaranteed to always balance to zero, when no
+.Ar report-query
+is specified.
 .It Fl \-collapse Pq Fl n
-Only show totals in the top-most accounts.
+Only show totals for the top-most accounts.
 .It Fl \-empty Pq Fl E
-Show matching accounts whose total happens to be zero.
+Also show accounts whose total is zero.
 .It Fl \-flat
-Rather than displaying a hierarchical tree, flatten it to show only subtotals
-for accounts directly matching the query.
+Rather than display a hierarchical tree, flatten the report to show subtotals
+for only accounts matching
+.Ar report-query .
 .It Fl \-no\-total
-Suppress the final total usually shown at the bottom of the report.
+Suppress the summary total shown at the bottom of the report (when not zero).
 .El
 .Pp
 The synonyms
@@ -55,31 +62,198 @@ The synonyms
 and
 .Nm b
 are also accepted.
-.It Nm csv Oo Ar query Oc
+.It Nm budget Oo Ar report-query Oc
+A special balance report which includes three extra columns: the amount
+budgeted during the reporting period, how spending differed from the budget,
+and the percentage of budget spent (exceeds 100% if you go over budget).
+Note that budgeting requires one or more
+.Do
+periodic transactions
+.Dc
+to be defined in your data file(s).  See the manual for more information.
+.It Nm cleared Oo Ar report-query Oc
+A special balance report which adds two extra columns: the cleared balance for
+each account, and the date of the most recent cleared posting in that account.
+For this accounting to be meaningful, the cleared flag must be set on at least
+one posting.  See the manual for more information.
+.It Nm csv Oo Ar report-query Oc
+Report of postings matching the
+.Ar report-query
+in CSV format (comma-separated values).  Useful for exporting data to a
+spreadsheet for further analysis or charting.
+.It Nm draft Oo Ar draft-template Oc
+Generate and display a new, properly formatted Ledger transaction by comparing
+the
+.Ar draft-template
+to the transactions in your data file(s).  For more information on draft
+templates and using this command to quickly create new transactions, see the
+section
+.Sx DRAFTS .
+.Pp
+The synonyms
+.Nm entry
+and
+.Nm xact
+are also accepted.
 .It Nm emacs Oo Ar query Oc
+Outputs posting and transaction data in a format readily consumed by the Emacs
+editor, in a series of Lisp forms.  This is used by the
+.Li ledger.el
+Emacs mode to process reporting data from Ledger.
+.Pp
 The synonym
 .Nm lisp
 is also accepted.
-.It Nm equity Oo Ar query Oc
-.It Nm generate
-.It Nm prices Oo Ar query Oc
-.It Nm pricesdb Oo Ar query Oc
-.It Nm print Oo Ar query Oc
-.It Nm register Oo Ar query Oc
+.It Nm equity Oo Ar report-query Oc
+Prints a series of transactions that balance current totals for
+accounts matching the
+.Ar report-query
+in a special account called
+.Li Equity:Opening Balances .
+The purpose of this report is to close the books for a prior year, while using
+these equity transactions to carry forward those balances.
+.It Nm prices Oo Ar report-query Oc
+Reports prices for all commodities in postings matching the
+.Ar report-query .
+The prices are reported with the granularity of a single day.
+.It Nm pricesdb Oo Ar report-query Oc
+Reports prices for all commodities in postings matching the
+.Ar report-query .
+Prices are reported down to the second, using the same format as the
+.Li ~/.pricedb
+file.
+.It Nm print Oo Ar report-query Oc
+Prints out the full transactions of any matching postings using the same
+format as they would appear in a data file.  This can be used to extract
+subsets from a Ledger file to transfer to other files.
+.It Nm push Oo Ar options Oc
+In the
+.Tn REPL ,
+this command pushes a set of command-line options, so that they will apply to
+all subsequent reports.
+.It Nm pop
+In the
+.Tn REPL ,
+pops any option settings that have been pushed.
+.It Nm register Oo Ar report-query Oc
+List all postings matching the
+.Ar report-query .
+This is one of the most common commands, and can be used to provide a variety
+of useful reports.  Options most commonly used
+with this command are:
+.Pp
+.Bl -tag -compact -width "--collapse (-n)"
+.It Fl \-average Pq Fl A
+Show the running average, rather than a running total.
+.It Fl \-current Pq Fl c
+Don't show postings beyond the present day.
+.It Fl \-exchange Ar commodity Pq Fl X
+Render all values in the given
+.Ar commodity ,
+if a price conversion rate can be determined.  Rates are always displayed
+relative to the date of the posting they are calculated for.  This means a
+.Nm register
+report is a historical value report.  For current values, it may be preferable
+to use the
+.Nm balance
+report.
+.It Fl \-gain Pq Fl G
+Show any gains (or losses) in commodity values over time.
+.It Fl \-head Ar number
+Only show the top
+.Ar number
+postings.
+.It Fl \-invert
+Invert the value of amounts shown.
+.It Fl \-market Pq Fl V
+Show current market values for all amounts.  This is determined in a somewhat
+magical fashion.  It is probably more straightforward to use
+.Fl \-exchange Pq Fl X .
+.It Fl \-period Ar time-period Pq Fl p
+Show postings only for the given
+.Ar time-period .
+.It Fl \-related Pq Fl r
+Show postings that are related to those that would have been shown.  It has
+the effect of displaying the
+.Do
+other side
+.Dc
+of the values.
+.It Fl \-sort Ar value-expression Pq Fl S
+Sort postings by evaluating the given
+.Ar value-expression .
+Note that a comma-separated list of expressions is allowed, in which case each
+sorting term is used in order to determine the final ordering.  For example,
+to search by date and then amount, one would use:
+.Li -S 'date, amount' .
+.It Fl \-tail Ar number
+Only show the last
+.Ar number
+postings.
+.It Fl \-uncleared Pq Fl U
+Only show uncleared (i.e., recent) postings.
+.El
+.Pp
+There are also several grouping options that can be useful:
+.Pp
+.Bl -tag -compact -width "--collapse (-n)"
+.It Fl \-by-payee Pq Fl P
+Group postings by common payee names.
+.It Fl \-daily Pq Fl D
+Group postings by day.
+.It Fl \-weekly Pq Fl W
+Group postings by week (starting on Sundays).
+.It Fl \-start-of-week Ar day-name
+Set the start of each grouped way to the given
+.Ar day-name .
+.It Fl \-monthly Pq Fl M
+Group postings by month.
+.It Fl \-quarterly
+Group postings by fiscal quarter.
+.It Fl \-yearly Pq Fl Y
+Group postings by year.
+.It Fl \-dow
+Group postings by the day of the week on which they took place.
+.It Fl \-subtotal Pq Fl s
+Group all postings together.  This is very similar to the totals shown by the
+.Nm balance
+report.
+.El
+.Pp
 The synonyms
 .Nm reg
 and
 .Nm r
 are also accepted.
-.It Nm reload
-Used solely by the
-.It Nm xact Oo Ar date Oc
-The synonym
-.Nm entry
-is also accepted.
-.Tn REPL ,
-and causes an immediate reloading of all journal files in the session.
-.It Nm stats Oo Ar query Oc
+.It Nm server
+This command requires that Python support be active.  If so, it starts up an
+HTTP server listening for requests on port 9000.  This provides an alternate
+interface to creating and viewing reports.  Note that this is very much a
+work-in-progress, and will not be fully functional until a later version.
+.It Nm stats Oo Ar report-query Oc
+Provides summary information about all the postings matching
+.Ar report-query .
+It provides information such as:
+.Bl -bullet -offset indent -compact
+.It
+Time range of all matching postings
+.It
+Unique payees
+.It
+Unique accounts
+.It
+Postings total
+.It
+Uncleared postings
+.It
+Days since last posting
+.It
+More...
+.El
+.It Nm xml Oo Ar report-query Oc
+Outputs data relating to the current report in XML format.  It includes all
+accounts and commodities involved in the report, plus the postings and the
+transactions they are contained in.  See the manual for more information.
 .El
 .Pp
 .Sh OPTIONS
@@ -347,6 +521,56 @@ for example:
 .It Nm uncleared
 .It Nm virtual
 .It Nm xact
+.El
+.Pp
+.Sh DRAFTS
+.Pp
+.Sh FORMATS
+.Pp
+.Sh DEBUG COMMANDS
+In addition to the regular reporting commands, Ledger also accepts several
+debug commands:
+.Bl -tag -width balance
+.It Nm args Oo Ar report-query Oc
+Accepts a
+.Ar report-query
+as its argument and displays it back to the user along with a complete
+analysis of how Ledger interpreted it.  Useful if you want to understand how
+report queries are translated into value expressions.
+.It Nm eval Oo Ar value-expression Oc
+Evaluates the given
+.Ar value-expression
+and prints the result.  For more on value expressions, see the section
+.Sx EXPRESSIONS .
+.It Nm format Oo Ar format-string Oc
+Accepts a
+.Ar format-string
+and displays an analysis of how it was parsed, and what it would look like
+applied to a sample transaction.  For more on format strings, see the section
+.Sx FORMATS .
+.It Nm generate
+Generates 50 randomly composed yet valid Ledger transactions.
+.It Nm parse Oo Ar value-expression Oc
+Parses the given
+.Ar value-expression
+and display an analysis of the expression tree and its evaluated value.  For
+more on value expressions, see the section
+.Sx EXPRESSIONS .
+.It Nm python Oo Ar file Oc
+Invokes a Python interpreter to read the given
+.Ar file .
+What is special about this is that the ledger module is builtin, not read from
+disk, so it doesn't require Ledger to be installed anywhere, or the shared
+library variants to be built.
+.It Nm reload
+Used only in the
+.Tn REPL ,
+it causes an immediate reloading of all data files for the current session.
+.It Nm template Oo Ar draft-template Oc
+Accepts a
+.Ar draft-template
+and displays information about how it was parsed.  See the section on
+.Sx DRAFTS .
 .El
 .Pp
 .Sh SEE ALSO
