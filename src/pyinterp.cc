@@ -60,19 +60,19 @@ void export_xact();
 
 void initialize_for_python()
 {
-  export_account();
-  export_amount();
-  export_balance();
+  export_times();
+  export_utils();
   export_commodity();
+  export_amount();
+  export_value();
+  export_account();
+  export_balance();
   export_expr();
   export_format();
   export_item();
-  export_journal();
   export_post();
-  export_times();
-  export_utils();
-  export_value();
   export_xact();
+  export_journal();
 }
 
 struct python_run
