@@ -77,7 +77,8 @@ public:
 
   value_t magnitude() const;
 
-  virtual bool finalize();
+  bool finalize();
+  bool verify();
 
   void clear_xdata();
 
