@@ -353,6 +353,69 @@ value_t report_t::fn_lot_tag(call_scope_t& scope)
   return NULL_VALUE;
 }
 
+value_t report_t::fn_to_boolean(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::BOOLEAN);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_int(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::INTEGER);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_datetime(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::DATETIME);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_date(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::DATE);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_amount(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::AMOUNT);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_balance(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::BALANCE);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_string(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::STRING);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_mask(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::MASK);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_sequence(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::SEQUENCE);
+  return args.value_at(0);
+}
+
 namespace {
   value_t fn_black(call_scope_t&) {
     return string_value("black");
@@ -823,6 +886,24 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_today);
       else if (is_eq(p, "t"))
 	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      else if (is_eq(p, "to_boolean"))
+	return MAKE_FUNCTOR(report_t::fn_to_boolean);
+      else if (is_eq(p, "to_int"))
+	return MAKE_FUNCTOR(report_t::fn_to_int);
+      else if (is_eq(p, "to_datetime"))
+	return MAKE_FUNCTOR(report_t::fn_to_datetime);
+      else if (is_eq(p, "to_date"))
+	return MAKE_FUNCTOR(report_t::fn_to_date);
+      else if (is_eq(p, "to_amount"))
+	return MAKE_FUNCTOR(report_t::fn_to_amount);
+      else if (is_eq(p, "to_balance"))
+	return MAKE_FUNCTOR(report_t::fn_to_balance);
+      else if (is_eq(p, "to_string"))
+	return MAKE_FUNCTOR(report_t::fn_to_string);
+      else if (is_eq(p, "to_mask"))
+	return MAKE_FUNCTOR(report_t::fn_to_mask);
+      else if (is_eq(p, "to_sequence"))
+	return MAKE_FUNCTOR(report_t::fn_to_sequence);
       break;
 
     case 'T':

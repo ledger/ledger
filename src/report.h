@@ -155,6 +155,15 @@ public:
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_price(call_scope_t& scope);
   value_t fn_lot_tag(call_scope_t& scope);
+  value_t fn_to_boolean(call_scope_t& scope);
+  value_t fn_to_int(call_scope_t& scope);
+  value_t fn_to_datetime(call_scope_t& scope);
+  value_t fn_to_date(call_scope_t& scope);
+  value_t fn_to_amount(call_scope_t& scope);
+  value_t fn_to_balance(call_scope_t& scope);
+  value_t fn_to_string(call_scope_t& scope);
+  value_t fn_to_mask(call_scope_t& scope);
+  value_t fn_to_sequence(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) {
     return terminus;
