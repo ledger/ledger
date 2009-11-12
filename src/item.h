@@ -172,6 +172,12 @@ public:
   virtual optional<date_t> effective_date() const {
     return _date_eff;
   }
+  virtual void set_date(const date_t& date) {
+    if (use_effective_date)
+      _date_eff = date;
+    else
+      _date = date;
+  }
 
   void set_state(state_t new_state) {
     _state = new_state;

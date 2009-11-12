@@ -159,6 +159,11 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     handler.reset(new sort_posts(handler, "date"));
   }
 
+  if (report.HANDLED(date_))
+    handler.reset(new transfer_details(handler, transfer_details::SET_DATE,
+				       report.session.journal->master,
+				       report.HANDLER(date_).str(),
+				       report));
   if (report.HANDLED(account_))
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
 				       report.session.journal->master,

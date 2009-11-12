@@ -92,7 +92,7 @@ public:
   {
     TRACE_CTOR(post_t, "copy");
   }
-  ~post_t() {
+  virtual ~post_t() {
     TRACE_DTOR(post_t);
   }
 

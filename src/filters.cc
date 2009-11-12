@@ -706,21 +706,26 @@ void transfer_details::operator()(post_t& post)
   temp.set_state(post.state());
 
   bind_scope_t bound_scope(scope, temp);
+  value_t      substitute(expr.calc(bound_scope));
 
   switch (which_element) {
-  case SET_PAYEE:
-    xact.payee = expr.calc(bound_scope).to_string();
+  case SET_DATE:
+    xact.set_date(substitute.to_date());
     break;
 
   case SET_ACCOUNT: {
     std::list<string> account_names;
     temp.account->remove_post(&temp);
-    split_string(expr.calc(bound_scope).to_string(), ':', account_names);
+    split_string(substitute.to_string(), ':', account_names);
     temp.account = create_temp_account_from_path(account_names, temps,
 						 xact.journal->master);
     temp.account->add_post(&temp);
     break;
   }
+
+  case SET_PAYEE:
+    xact.payee = substitute.to_string();
+    break;
 
   default:
     assert(false);

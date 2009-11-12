@@ -61,6 +61,35 @@ public:
   virtual void operator()(post_t&) {}
 };
 
+class collect_posts : public item_handler<post_t>
+{
+public:
+  std::vector<post_t *> posts;
+
+  collect_posts() : item_handler<post_t>() {
+    TRACE_CTOR(collect_posts, "");
+  }
+  virtual ~collect_posts() {
+    TRACE_DTOR(collect_posts);
+  }
+
+  std::size_t length() const {
+    return posts.size();
+  }
+
+  std::vector<post_t *>::iterator begin() {
+    return posts.begin();
+  }
+  std::vector<post_t *>::iterator end() {
+    return posts.end();
+  }
+
+  virtual void flush() {}
+  virtual void operator()(post_t& post) {
+    posts.push_back(&post);
+  }
+};
+
 class posts_iterator;
 
 class pass_down_posts : public item_handler<post_t>
@@ -550,8 +579,9 @@ class transfer_details : public item_handler<post_t>
 
 public:
   enum element_t {
-    SET_PAYEE,
-    SET_ACCOUNT
+    SET_DATE,
+    SET_ACCOUNT,
+    SET_PAYEE
   } which_element;
 
   transfer_details(post_handler_ptr handler,

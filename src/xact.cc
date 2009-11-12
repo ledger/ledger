@@ -76,6 +76,15 @@ bool xact_base_t::remove_post(post_t * post)
   return true;
 }
 
+bool xact_base_t::has_xdata()
+{
+  foreach (post_t * post, posts)
+    if (post->has_xdata())
+      return true;
+
+  return false;
+}
+
 void xact_base_t::clear_xdata()
 {
   foreach (post_t * post, posts)
@@ -372,6 +381,55 @@ bool xact_base_t::finalize()
   return true;
 }
 
+bool xact_base_t::verify()
+{
+  // Scan through and compute the total balance for the xact.
+
+  value_t  balance;
+
+  foreach (post_t * post, posts) {
+    if (! post->must_balance())
+      continue;
+
+    amount_t& p(post->cost ? *post->cost : post->amount);
+    assert(! p.is_null());
+      
+    // If the amount was a cost, it very likely has the "keep_precision" flag
+    // set, meaning commodity display precision is ignored when displaying the
+    // amount.  We never want this set for the balance, so we must clear the
+    // flag in a temporary to avoid it propagating into the balance.
+    add_or_set_value(balance, p.keep_precision() ?
+		     p.rounded().reduced() : p.reduced());
+  }
+  VERIFY(balance.valid());
+
+  // Now that the post list has its final form, calculate the balance once
+  // more in terms of total cost, accounting for any possible gain/loss
+  // amounts.
+
+  foreach (post_t * post, posts) {
+    if (! post->cost)
+      continue;
+
+    if (post->amount.commodity() == post->cost->commodity())
+      throw_(balance_error,
+	     _("A posting's cost must be of a different commodity than its amount"));
+  }
+
+  if (! balance.is_null() && ! balance.is_zero()) {
+    add_error_context(item_context(*this, _("While balancing transaction")));
+    add_error_context(_("Unbalanced remainder is:"));
+    add_error_context(value_context(balance));
+    add_error_context(_("Amount to balance against:"));
+    add_error_context(value_context(magnitude()));
+    throw_(balance_error, _("Transaction does not balance"));
+  }
+
+  VERIFY(valid());
+
+  return true;
+}
+
 xact_t::xact_t(const xact_t& e)
   : xact_base_t(e), code(e.code), payee(e.payee)
 {
@@ -486,6 +544,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 
   try {
 
+  bool needs_further_verification = false;
+
   foreach (post_t * initial_post, initial_posts) {
     if (! initial_post->has_flags(ITEM_GENERATED) &&
 	predicate(*initial_post)) {
@@ -555,9 +615,15 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 
 	xact.add_post(new_post);
 	new_post->account->add_post(new_post);
+
+	if (new_post->must_balance())
+	  needs_further_verification = true;
       }
     }
   }
+
+  if (needs_further_verification)
+    xact.verify();
 
   }
   catch (const std::exception& err) {

@@ -241,6 +241,7 @@ public:
   bool has_xflags(xdata_t::flags_t flags) const {
     return xdata_ && xdata_->has_flags(flags);
   }
+  bool children_with_xdata() const;
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
 
 #if defined(HAVE_BOOST_SERIALIZATION)

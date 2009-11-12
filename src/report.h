@@ -44,6 +44,7 @@
 
 #include "interactive.h"
 #include "expr.h"
+#include "query.h"
 #include "chain.h"
 #include "stream.h"
 #include "option.h"
@@ -124,6 +125,9 @@ public:
     output_stream.close();
   }
 
+  void normalize_options(const string& verb);
+  void parse_query_args(const value_t& args, const string& whence);
+
   void posts_report(post_handler_ptr handler);
   void generate_report(post_handler_ptr handler);
   void xact_report(post_handler_ptr handler, xact_t& xact);
@@ -155,6 +159,15 @@ public:
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_price(call_scope_t& scope);
   value_t fn_lot_tag(call_scope_t& scope);
+  value_t fn_to_boolean(call_scope_t& scope);
+  value_t fn_to_int(call_scope_t& scope);
+  value_t fn_to_datetime(call_scope_t& scope);
+  value_t fn_to_date(call_scope_t& scope);
+  value_t fn_to_amount(call_scope_t& scope);
+  value_t fn_to_balance(call_scope_t& scope);
+  value_t fn_to_string(call_scope_t& scope);
+  value_t fn_to_mask(call_scope_t& scope);
+  value_t fn_to_sequence(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) {
     return terminus;
@@ -217,6 +230,7 @@ public:
     HANDLER(csv_format_).report(out);
     HANDLER(current).report(out);
     HANDLER(daily).report(out);
+    HANDLER(date_).report(out);
     HANDLER(date_format_).report(out);
     HANDLER(datetime_format_).report(out);
     HANDLER(depth_).report(out);
@@ -262,7 +276,7 @@ public:
     HANDLER(prepend_format_).report(out);
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
-    HANDLER(pricesdb_format_).report(out);
+    HANDLER(pricedb_format_).report(out);
     HANDLER(print_format_).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
@@ -450,6 +464,7 @@ public:
       parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
+  OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
@@ -712,11 +727,11 @@ public:
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,
-	 "%-.9(date) %-8(account) %(justify(scrub(display_amount), 12, "
+	 "%(date) %-8(account) %(justify(scrub(display_amount), 12, "
 	 "    2 + 9 + 8 + 12, true, color))\n");
     });
 
-  OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
+  OPTION__(report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
       on(none,
 	 "P %(datetime) %(account) %(scrub(display_amount))\n");
     });
@@ -894,6 +909,34 @@ public:
 	   bool specified;
 	   CTOR(report_t, total_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
+};
+
+
+template <class Type        = post_t,
+	  class handler_ptr = post_handler_ptr,
+	  void (report_t::*report_method)(handler_ptr) =
+	    &report_t::posts_report>
+class reporter
+{
+  shared_ptr<item_handler<Type> > handler;
+
+  report_t& report;
+  string    whence;
+
+public:
+  reporter(item_handler<Type> * _handler,
+	   report_t& _report, const string& _whence)
+    : handler(_handler), report(_report), whence(_whence) {}
+
+  value_t operator()(call_scope_t& args)
+  {
+    if (args.size() > 0)
+      report.parse_query_args(args.value(), whence);
+
+    (report.*report_method)(handler_ptr(handler));
+
+    return true;
+  }
 };
 
 } // namespace ledger

@@ -1146,6 +1146,12 @@ void value_t::in_place_cast(type_t cast_type)
     case AMOUNT:
       set_amount(amount_t(as_string()));
       return;
+    case DATE:
+      set_date(parse_date(as_string()));
+      return;
+    case DATETIME:
+      set_datetime(parse_datetime(as_string()));
+      return;
     case MASK:
       set_mask(as_string());
       return;

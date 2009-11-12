@@ -89,7 +89,6 @@ libledger_report_la_LDFLAGS  = -release $(VERSION)
 pkginclude_HEADERS =				\
 	src/utils.h				\
 	src/flags.h				\
-	src/hooks.h				\
 	src/error.h				\
 	src/times.h				\
 	src/mask.h				\
@@ -440,7 +439,8 @@ fullcheck: cppunittests
 
 ######################################################################
 
-EXTRA_DIST += doc/README doc/LICENSE doc/NEWS doc/ledger.pdf
+EXTRA_DIST += doc/README doc/NEWS doc/ledger.pdf
+EXTRA_DIST += doc/LICENSE doc/LICENSE-sha1 doc/LICENSE-utfcpp
 if USE_DOXYGEN
 EXTRA_DIST += doc/Doxyfile doc/refman.pdf
 endif

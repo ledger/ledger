@@ -79,8 +79,6 @@ namespace {
 
     optional<date_t::year_type> current_year;
 
-    scoped_ptr<auto_xact_finalizer_t> auto_xact_finalizer;
-
     instance_t(std::list<account_t *>& _account_stack,
 	       std::list<string>&      _tag_stack,
 #if defined(TIMELOG_SUPPORT)
@@ -227,9 +225,6 @@ instance_t::~instance_t()
   TRACE_DTOR(instance_t);
 
   account_stack.pop_front();
-
-  if (auto_xact_finalizer.get())
-    journal.remove_xact_finalizer(auto_xact_finalizer.get());
 }
 
 void instance_t::parse()
@@ -546,11 +541,6 @@ void instance_t::automated_xact_directive(char * line)
 
   try {
 
-  if (! auto_xact_finalizer.get()) {
-    auto_xact_finalizer.reset(new auto_xact_finalizer_t(&journal));
-    journal.add_xact_finalizer(auto_xact_finalizer.get());
-  }
-
   std::auto_ptr<auto_xact_t> ae
     (new auto_xact_t(query_t(string(skip_ws(line + 1)),
 			     keep_details_t(true, true, true))));
@@ -601,8 +591,7 @@ void instance_t::period_xact_directive(char * line)
     pe->journal = &journal;
 
     if (pe->finalize()) {
-      extend_xact_base(&journal, *pe.get());
-
+      journal.extend_xact(pe.get());
       journal.period_xacts.push_back(pe.get());
 
       pe->pos           = position_t();

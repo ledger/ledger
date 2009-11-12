@@ -764,6 +764,7 @@ class PrepareBuild(CommandLineApp):
             self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
             self.configure_args.append('--disable-shared')
+            self.configure_args.append('--enable-doxygen')
 
             self.options.use_glibcxx_debug = True
             self.locate_my_libraries()
