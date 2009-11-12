@@ -44,6 +44,7 @@
 
 #include "interactive.h"
 #include "expr.h"
+#include "query.h"
 #include "chain.h"
 #include "stream.h"
 #include "option.h"
@@ -125,6 +126,7 @@ public:
   }
 
   void normalize_options(const string& verb);
+  void parse_query_args(const value_t& args, const string& whence);
 
   void posts_report(post_handler_ptr handler);
   void generate_report(post_handler_ptr handler);
@@ -907,6 +909,34 @@ public:
 	   bool specified;
 	   CTOR(report_t, total_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
+};
+
+
+template <class Type        = post_t,
+	  class handler_ptr = post_handler_ptr,
+	  void (report_t::*report_method)(handler_ptr) =
+	    &report_t::posts_report>
+class reporter
+{
+  shared_ptr<item_handler<Type> > handler;
+
+  report_t& report;
+  string    whence;
+
+public:
+  reporter(item_handler<Type> * _handler,
+	   report_t& _report, const string& _whence)
+    : handler(_handler), report(_report), whence(_whence) {}
+
+  value_t operator()(call_scope_t& args)
+  {
+    if (args.size() > 0)
+      report.parse_query_args(args.value(), whence);
+
+    (report.*report_method)(handler_ptr(handler));
+
+    return true;
+  }
 };
 
 } // namespace ledger

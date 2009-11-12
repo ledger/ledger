@@ -218,6 +218,31 @@ void report_t::normalize_options(const string& verb)
   }
 }
 
+void report_t::parse_query_args(const value_t& args, const string& whence)
+{
+  query_t query(args, what_to_keep());
+  if (! query)
+    throw_(std::runtime_error,
+	   _("Invalid query predicate: %1") << query.text());
+
+  HANDLER(limit_).on(whence, query.text());
+
+  DEBUG("report.predicate",
+	"Predicate = " << HANDLER(limit_).str());
+
+  if (query.tokens_remaining()) {
+    query.parse_again();
+    if (! query)
+      throw_(std::runtime_error,
+	     _("Invalid display predicate: %1") << query.text());
+
+    HANDLER(display_).on(whence, query.text());
+
+    DEBUG("report.predicate",
+	  "Display predicate = " << HANDLER(display_).str());
+  }
+}  
+
 void report_t::posts_report(post_handler_ptr handler)
 {
   journal_posts_iterator walker(*session.journal.get());
@@ -627,54 +652,6 @@ namespace {
   value_t fn_null(call_scope_t&) {
     return NULL_VALUE;
   }
-
-  template <class Type        = post_t,
-	    class handler_ptr = post_handler_ptr,
-	    void (report_t::*report_method)(handler_ptr) =
-	      &report_t::posts_report>
-  class reporter
-  {
-    shared_ptr<item_handler<Type> > handler;
-
-    report_t& report;
-    string    whence;
-
-  public:
-    reporter(item_handler<Type> * _handler, report_t& _report,
-	     const string& _whence)
-      : handler(_handler), report(_report), whence(_whence) {}
-
-    value_t operator()(call_scope_t& args)
-    {
-      if (args.size() > 0) {
-	query_t query(args.value(), report.what_to_keep());
-	if (! query)
-	  throw_(std::runtime_error,
-		 _("Invalid query predicate: %1") << query.text());
-
-	report.HANDLER(limit_).on(whence, query.text());
-
-	DEBUG("report.predicate",
-	      "Predicate = " << report.HANDLER(limit_).str());
-
-	if (query.tokens_remaining()) {
-	  query.parse_again();
-	  if (! query)
-	    throw_(std::runtime_error,
-		   _("Invalid display predicate: %1") << query.text());
-
-	  report.HANDLER(display_).on(whence, query.text());
-
-	  DEBUG("report.predicate",
-		"Display predicate = " << report.HANDLER(display_).str());
-	}
-      }
-
-      (report.*report_method)(handler_ptr(handler));
-
-      return true;
-    }
-  };
 }
 
 value_t report_t::reload_command(call_scope_t&)
