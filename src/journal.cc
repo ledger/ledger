@@ -211,6 +211,26 @@ std::size_t journal_t::read(const path& pathname,
   return count;
 }
 
+bool journal_t::has_xdata()
+{
+  foreach (xact_t * xact, xacts)
+    if (xact->has_xdata())
+      return true;
+
+  foreach (auto_xact_t * xact, auto_xacts)
+    if (xact->has_xdata())
+      return true;
+
+  foreach (period_xact_t * xact, period_xacts)
+    if (xact->has_xdata())
+      return true;
+
+  if (master->has_xdata() || master->children_with_xdata())
+    return true;
+
+  return false;
+}
+
 void journal_t::clear_xdata()
 {
   foreach (xact_t * xact, xacts)

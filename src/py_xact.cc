@@ -122,6 +122,7 @@ void export_xact()
 
     .def("lookup", &xact_t::lookup)
 
+    .def("has_xdata", &xact_t::has_xdata)
     .def("clear_xdata", &xact_t::clear_xdata)
 
     .def("valid", &xact_t::valid)

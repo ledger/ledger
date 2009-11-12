@@ -76,6 +76,15 @@ bool xact_base_t::remove_post(post_t * post)
   return true;
 }
 
+bool xact_base_t::has_xdata()
+{
+  foreach (post_t * post, posts)
+    if (post->has_xdata())
+      return true;
+
+  return false;
+}
+
 void xact_base_t::clear_xdata()
 {
   foreach (post_t * post, posts)

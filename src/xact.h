@@ -80,6 +80,7 @@ public:
   bool finalize();
   bool verify();
 
+  bool has_xdata();
   void clear_xdata();
 
   virtual bool valid() const {

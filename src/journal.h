@@ -172,6 +172,7 @@ public:
 		    const path *  original_file = NULL,
 		    bool          strict	= false);
 
+  bool has_xdata();
   void clear_xdata();
 
   bool valid() const;

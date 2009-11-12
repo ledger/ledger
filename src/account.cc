@@ -327,16 +327,25 @@ bool account_t::valid() const
   return true;
 }
 
+bool account_t::children_with_xdata() const
+{
+  foreach (const accounts_map::value_type& pair, accounts)
+    if (pair.second->has_xdata() ||
+	pair.second->children_with_xdata())
+      return true;
+
+  return false;
+}
+
 std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 {
   std::size_t count = 0;
   bool        grandchildren_visited = false;
 
-  foreach (const accounts_map::value_type& pair, accounts) {
+  foreach (const accounts_map::value_type& pair, accounts)
     if (pair.second->has_xflags(flags) ||
 	pair.second->children_with_flags(flags))
       count++;
-  }
 
   // Although no immediately children were visited, if any progeny at all were
   // visited, it counts as one.

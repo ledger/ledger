@@ -197,6 +197,7 @@ void export_journal()
 
     .def("read", py_read)
 
+    .def("has_xdata", &journal_t::has_xdata)
     .def("clear_xdata", &journal_t::clear_xdata)
 
     .def("valid", &journal_t::valid)
