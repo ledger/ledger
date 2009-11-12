@@ -1033,8 +1033,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
 	return WRAP_FUNCTOR(report_statistics);
-      else if (is_eq(p, "server"))
-	return session.lookup(symbol_t::COMMAND, "server");
       break;
 
     case 'x':
