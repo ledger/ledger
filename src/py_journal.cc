@@ -35,6 +35,12 @@
 #include "pyutils.h"
 #include "journal.h"
 #include "xact.h"
+#include "post.h"
+#include "chain.h"
+#include "filters.h"
+#include "iterators.h"
+#include "scope.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -134,10 +140,108 @@ namespace {
     return journal.read(pathname);
   }
 
+  struct collector_wrapper
+  {
+    journal_t&	     journal;
+    report_t         report;
+    collect_posts *  posts_collector;
+    post_handler_ptr chain;
+
+    collector_wrapper(journal_t& _journal, report_t& base)
+      : journal(_journal), report(base),
+	posts_collector(new collect_posts) {}
+    ~collector_wrapper() {
+      journal.clear_xdata();
+    }
+
+    std::size_t length() const {
+      return posts_collector->length();
+    }
+
+    std::vector<post_t *>::iterator begin() {
+      return posts_collector->begin();
+    }
+    std::vector<post_t *>::iterator end() {
+      return posts_collector->end();
+    }
+  };
+
+  shared_ptr<collector_wrapper>
+  py_collect(journal_t& journal, const string& query)
+  {
+    if (journal.has_xdata()) {
+      PyErr_SetString(PyExc_RuntimeError,
+		      _("Cannot have multiple journal collections open at once"));
+      throw_error_already_set();
+    }
+
+    report_t& current_report(downcast<report_t>(*scope_t::default_scope));
+    shared_ptr<collector_wrapper> coll(new collector_wrapper(journal,
+							     current_report));
+    std::auto_ptr<journal_t> save_journal
+      (current_report.session.journal.release());
+    current_report.session.journal.reset(&journal);
+
+    try {
+      strings_list remaining =
+	process_arguments(split_arguments(query.c_str()), coll->report);
+      coll->report.normalize_options("register");
+
+      value_t args;
+      foreach (const string& arg, remaining)
+	args.push_back(string_value(arg));
+      coll->report.parse_query_args(args, "@Journal.collect");
+
+      journal_posts_iterator walker(coll->journal);
+      coll->chain =
+	chain_post_handlers(coll->report,
+			    post_handler_ptr(coll->posts_collector));
+      pass_down_posts(coll->chain, walker);
+    }
+    catch (...) {
+      current_report.session.journal.release();
+      current_report.session.journal.reset(save_journal.release());
+      throw;
+    }
+    current_report.session.journal.release();
+    current_report.session.journal.reset(save_journal.release());
+
+    return coll;
+  }
+
+  post_t * posts_getitem(collector_wrapper& collector, long i)
+  {
+    post_t * post = collector.posts_collector->posts[i];
+    std::cerr << typeid(post).name() << std::endl;
+    std::cerr << typeid(*post).name() << std::endl;
+    std::cerr << typeid(post->account).name() << std::endl;
+    std::cerr << typeid(*post->account).name() << std::endl;
+    return post;
+  }
+
 } // unnamed namespace
 
 void export_journal()
 {
+  class_< item_handler<post_t>, shared_ptr<item_handler<post_t> >,
+          boost::noncopyable >("PostHandler")
+    ;
+
+  class_< collect_posts, bases<item_handler<post_t> >,
+          shared_ptr<collect_posts>, boost::noncopyable >("PostCollector")
+    .def("__len__", &collect_posts::length)
+    .def("__iter__", range<return_internal_reference<> >
+	 (&collect_posts::begin, &collect_posts::end))
+    ;
+
+  class_< collector_wrapper, shared_ptr<collector_wrapper>,
+          boost::noncopyable >("PostCollectorWrapper", no_init)
+    .def("__len__", &collector_wrapper::length)
+    .def("__getitem__", posts_getitem, return_internal_reference<>())
+    .def("__iter__", range<return_internal_reference<> >
+	 (&collector_wrapper::begin, &collector_wrapper::end))
+    ;
+
   class_< journal_t::fileinfo_t > ("FileInfo")
     .def(init<path>())
 
@@ -199,6 +303,8 @@ void export_journal()
 
     .def("has_xdata", &journal_t::has_xdata)
     .def("clear_xdata", &journal_t::clear_xdata)
+
+    .def("collect", py_collect)
 
     .def("valid", &journal_t::valid)
     ;
