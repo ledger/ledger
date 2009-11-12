@@ -62,7 +62,6 @@ public:
   void		 normalize_session_options();
   expr_t::func_t look_for_precommand(scope_t& scope, const string& verb);
   expr_t::func_t look_for_command(scope_t& scope, const string& verb);
-  void		 normalize_report_options(const string& verb);
 
   char * prompt_string();
 

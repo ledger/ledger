@@ -124,6 +124,8 @@ public:
     output_stream.close();
   }
 
+  void normalize_options(const string& verb);
+
   void posts_report(post_handler_ptr handler);
   void generate_report(post_handler_ptr handler);
   void xact_report(post_handler_ptr handler, xact_t& xact);

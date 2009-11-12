@@ -33,6 +33,7 @@
 
 #include "report.h"
 #include "session.h"
+#include "pool.h"
 #include "format.h"
 #include "query.h"
 #include "output.h"
@@ -46,6 +47,176 @@
 #include "emacs.h"
 
 namespace ledger {
+
+void report_t::normalize_options(const string& verb)
+{
+  // Patch up some of the reporting options based on what kind of
+  // command it was.
+
+#ifdef HAVE_ISATTY
+  if (! HANDLED(force_color)) {
+    if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
+      HANDLER(color).on_only(string("?normalize"));
+    if (HANDLED(color) && ! isatty(STDOUT_FILENO))
+      HANDLER(color).off();
+  }
+  if (! HANDLED(force_pager)) {
+    if (HANDLED(pager_) && ! isatty(STDOUT_FILENO))
+      HANDLER(pager_).off();
+  }
+#endif
+
+  item_t::use_effective_date = (HANDLED(effective) &&
+				! HANDLED(actual_dates));
+
+  session.journal->commodity_pool->keep_base  = HANDLED(base);
+  session.journal->commodity_pool->get_quotes = session.HANDLED(download);
+
+  if (session.HANDLED(price_exp_))
+    session.journal->commodity_pool->quote_leeway =
+      session.HANDLER(price_exp_).value.as_long();
+
+  if (session.HANDLED(price_db_))
+    session.journal->commodity_pool->price_db =
+      session.HANDLER(price_db_).str();
+  else
+    session.journal->commodity_pool->price_db = none;
+
+  if (HANDLED(date_format_))
+    set_date_format(HANDLER(date_format_).str().c_str());
+  if (HANDLED(datetime_format_))
+    set_datetime_format(HANDLER(datetime_format_).str().c_str());
+  if (HANDLED(start_of_week_)) {
+    if (optional<date_time::weekdays> weekday =
+	string_to_day_of_week(HANDLER(start_of_week_).str()))
+      start_of_week = *weekday;
+  }
+
+  if (verb == "print" || verb == "xact" || verb == "dump") {
+    HANDLER(related).on_only(string("?normalize"));
+    HANDLER(related_all).on_only(string("?normalize"));
+  }
+  else if (verb == "equity") {
+    HANDLER(equity).on_only(string("?normalize"));
+  }
+
+  if (verb == "print")
+    HANDLER(limit_).on(string("?normalize"), "actual");
+
+  if (! HANDLED(empty))
+    HANDLER(display_).on(string("?normalize"), "amount|(!post&total)");
+
+  if (verb[0] != 'b' && verb[0] != 'r')
+    HANDLER(base).on_only(string("?normalize"));
+
+  // If a time period was specified with -p, check whether it also gave a
+  // begin and/or end to the report period (though these can be overridden
+  // using -b or -e).  Then, if no _duration_ was specified (such as monthly),
+  // then ignore the period since the begin/end are the only interesting
+  // details.
+  if (HANDLED(period_)) {
+    if (! HANDLED(sort_all_))
+      HANDLER(sort_xacts_).on_only(string("?normalize"));
+
+    date_interval_t interval(HANDLER(period_).str());
+
+    if (! HANDLED(begin_) && interval.start) {
+      string predicate =
+	"date>=[" + to_iso_extended_string(*interval.start) + "]";
+      HANDLER(limit_).on(string("?normalize"), predicate);
+    }
+    if (! HANDLED(end_) && interval.end) {
+      string predicate =
+	"date<[" + to_iso_extended_string(*interval.end) + "]";
+      HANDLER(limit_).on(string("?normalize"), predicate);
+    }
+
+    if (! interval.duration)
+      HANDLER(period_).off();
+  }
+
+  // If -j or -J were specified, set the appropriate format string now so as
+  // to avoid option ordering issues were we to have done it during the
+  // initial parsing of the options.
+  if (HANDLED(amount_data)) {
+    HANDLER(format_)
+      .on_with(string("?normalize"), HANDLER(plot_amount_format_).value);
+  }
+  else if (HANDLED(total_data)) {
+    HANDLER(format_)
+      .on_with(string("?normalize"), HANDLER(plot_total_format_).value);
+  }
+
+  // If the --exchange (-X) option was used, parse out any final price
+  // settings that may be there.
+  if (HANDLED(exchange_) &&
+      HANDLER(exchange_).str().find('=') != string::npos) {
+    value_t(0L).exchange_commodities(HANDLER(exchange_).str(), true,
+				     terminus);
+  }
+
+  long cols = 0;
+  if (HANDLED(columns_))
+    cols = HANDLER(columns_).value.to_long();
+  else if (const char * columns = std::getenv("COLUMNS"))
+    cols = lexical_cast<long>(columns);
+  else
+    cols = 80L;
+
+  if (cols > 0) {
+    DEBUG("auto.columns", "cols = " << cols);
+
+    if (! HANDLER(date_width_).specified)
+      HANDLER(date_width_)
+	.on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
+						     FMT_PRINTED).length()));
+
+    long date_width    = HANDLER(date_width_).value.to_long();
+    long payee_width   = (HANDLER(payee_width_).specified ?
+			  HANDLER(payee_width_).value.to_long() :
+			  int(double(cols) * 0.263157));
+    long account_width = (HANDLER(account_width_).specified ?
+			  HANDLER(account_width_).value.to_long() :
+			  int(double(cols) * 0.302631));
+    long amount_width  = (HANDLER(amount_width_).specified ?
+			  HANDLER(amount_width_).value.to_long() :
+			  int(double(cols) * 0.157894));
+    long total_width   = (HANDLER(total_width_).specified ?
+			  HANDLER(total_width_).value.to_long() :
+			  amount_width);
+
+    DEBUG("auto.columns", "date_width	 = " << date_width);
+    DEBUG("auto.columns", "payee_width	 = " << payee_width);
+    DEBUG("auto.columns", "account_width = " << account_width);
+    DEBUG("auto.columns", "amount_width	 = " << amount_width);
+    DEBUG("auto.columns", "total_width	 = " << total_width);
+
+    if (! HANDLER(date_width_).specified &&
+	! HANDLER(payee_width_).specified &&
+	! HANDLER(account_width_).specified &&
+	! HANDLER(amount_width_).specified &&
+	! HANDLER(total_width_).specified) {
+      long total = (4 /* the spaces between */ + date_width + payee_width +
+		    account_width + amount_width + total_width);
+      if (total > cols) {
+	DEBUG("auto.columns", "adjusting account down");
+	account_width -= total - cols;
+	DEBUG("auto.columns", "account_width now = " << account_width);
+      }
+    }
+
+    if (! HANDLER(date_width_).specified)
+      HANDLER(date_width_).on_with(string("?normalize"), date_width);
+    if (! HANDLER(payee_width_).specified)
+      HANDLER(payee_width_).on_with(string("?normalize"), payee_width);
+    if (! HANDLER(account_width_).specified)
+      HANDLER(account_width_).on_with(string("?normalize"), account_width);
+    if (! HANDLER(amount_width_).specified)
+      HANDLER(amount_width_).on_with(string("?normalize"), amount_width);
+    if (! HANDLER(total_width_).specified)
+      HANDLER(total_width_).on_with(string("?normalize"), total_width);
+  }
+}
 
 void report_t::posts_report(post_handler_ptr handler)
 {
