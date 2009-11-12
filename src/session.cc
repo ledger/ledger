@@ -106,7 +106,7 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (! (cache &&
 	 cache->should_load(HANDLER(file_).data_files) &&
-	 cache->load(journal))) {
+	 cache->load(*journal.get()))) {
 #endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
@@ -142,8 +142,8 @@ std::size_t session_t::read_data(const string& master_account)
     assert(xact_count == journal->xacts.size());
 
 #if defined(HAVE_BOOST_SERIALIZATION)
-    if (cache && cache->should_save(journal))
-      cache->save(journal);
+    if (cache && cache->should_save(*journal.get()))
+      cache->save(*journal.get());
   }
 #endif // HAVE_BOOST_SERIALIZATION
 
