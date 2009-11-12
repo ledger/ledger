@@ -550,8 +550,9 @@ class transfer_details : public item_handler<post_t>
 
 public:
   enum element_t {
-    SET_PAYEE,
-    SET_ACCOUNT
+    SET_DATE,
+    SET_ACCOUNT,
+    SET_PAYEE
   } which_element;
 
   transfer_details(post_handler_ptr handler,

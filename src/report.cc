@@ -561,6 +561,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'd':
     OPT(daily);
+    else OPT(date_);
     else OPT(date_format_);
     else OPT(datetime_format_);
     else OPT(depth_);

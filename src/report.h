@@ -217,6 +217,7 @@ public:
     HANDLER(csv_format_).report(out);
     HANDLER(current).report(out);
     HANDLER(daily).report(out);
+    HANDLER(date_).report(out);
     HANDLER(date_format_).report(out);
     HANDLER(datetime_format_).report(out);
     HANDLER(depth_).report(out);
@@ -450,6 +451,7 @@ public:
       parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
+  OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
