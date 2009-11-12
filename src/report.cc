@@ -698,7 +698,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(plot_total_format_);
     else OPT(price);
     else OPT(prices_format_);
-    else OPT(pricesdb_format_);
+    else OPT(pricedb_format_);
     else OPT(print_format_);
     else OPT(payee_width_);
     else OPT(prepend_format_);
@@ -1011,12 +1011,12 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	   (new format_posts(*this, report_format(HANDLER(prices_format_)),
 			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#prices"));
-      else if (is_eq(p, "pricesdb"))
+      else if (is_eq(p, "pricedb"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(pricesdb_format_)),
+	   (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
 			     maybe_format(HANDLER(prepend_format_))),
-	    *this, "#pricesdb"));
+	    *this, "#pricedb"));
       break;
 
     case 'r':

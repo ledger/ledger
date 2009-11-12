@@ -272,7 +272,7 @@ public:
     HANDLER(prepend_format_).report(out);
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
-    HANDLER(pricesdb_format_).report(out);
+    HANDLER(pricedb_format_).report(out);
     HANDLER(print_format_).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
@@ -723,11 +723,11 @@ public:
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,
-	 "%-.9(date) %-8(account) %(justify(scrub(display_amount), 12, "
+	 "%(date) %-8(account) %(justify(scrub(display_amount), 12, "
 	 "    2 + 9 + 8 + 12, true, color))\n");
     });
 
-  OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
+  OPTION__(report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
       on(none,
 	 "P %(datetime) %(account) %(scrub(display_amount))\n");
     });
