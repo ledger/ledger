@@ -182,7 +182,7 @@ void export_journal()
     .def("remove_xact", &journal_t::remove_xact)
 
     .def("__len__", xacts_len)
-    .def("__getitem__", xacts_getitem, return_internal_reference<1>())
+    .def("__getitem__", xacts_getitem, return_internal_reference<>())
 
     .def("__iter__", range<return_internal_reference<> >
 	 (&journal_t::xacts_begin, &journal_t::xacts_end))
