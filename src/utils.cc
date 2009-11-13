@@ -550,8 +550,13 @@ bool logger_func(log_level_t level)
     logger_has_run = true;
     logger_start   = TRUE_CURRENT_TIME();
 
+#if defined(VERIFY_ON)
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
+#else
+    IF_VERIFY()
+      *_log_stream << "   TIME" << std::endl;
+#endif
   }
 
   *_log_stream << std::right << std::setw(5)
