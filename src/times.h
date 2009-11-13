@@ -174,7 +174,7 @@ public:
       case YEARS:
 	return date + gregorian::years(length);
       default:
-	assert(0); return date_t();
+	assert(false); return date_t();
       }
     }
 
@@ -189,7 +189,7 @@ public:
       case YEARS:
 	return date - gregorian::years(length);
       default:
-	assert(0); return date_t();
+	assert(false); return date_t();
       }
     }
 

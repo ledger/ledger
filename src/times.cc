@@ -789,8 +789,8 @@ std::string format_datetime(const datetime_t&		  when,
     return printed_datetime_io->format(when);
   }
   else {
-    assert(0);
-    return "";
+    assert(false);
+    return empty_string;
   }
 }
 
@@ -815,8 +815,8 @@ std::string format_date(const date_t&		      when,
     return printed_date_io->format(when);
   }
   else {
-    assert(0);
-    return "";
+    assert(false);
+    return empty_string;
   }
 }
 

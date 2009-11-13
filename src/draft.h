@@ -93,7 +93,7 @@ public:
   void parse_args(const value_t& args);
 
   virtual result_type real_calc(scope_t&) {
-    assert(0);
+    assert(false);
     return true;
   }
 

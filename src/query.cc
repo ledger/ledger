@@ -333,7 +333,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       case lexer_t::token_t::TOK_NOTE:
 	ident->set_ident("note"); break;
       default:
-	assert(0); break;
+	assert(false); break;
       }
 
       expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
