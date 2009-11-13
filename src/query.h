@@ -157,12 +157,12 @@ public:
 	case END_REACHED: return "<EOF>";
 
 	case TERM:
-	  assert(0);
+	  assert(false);
 	  return "<TERM>";
 
 	case UNKNOWN:
 	default:
-	  assert(0);
+	  assert(false);
 	  return "<UNKNOWN>";
 	}
       }

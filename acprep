@@ -751,22 +751,26 @@ class PrepareBuild(CommandLineApp):
     def setup_for_johnw(self):
         # jww (2009-03-09): Some peculiarities specific to my system
         if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
-            if exists('/usr/local/stow/cppunit/include'):
-                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
-                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
+            if self.current_flavor == 'debug':
+                if exists('/usr/local/stow/cppunit/include'):
+                    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
+                    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
-            if exists('/usr/local/stow/icu/include'):
-                self.sys_include_dirs.insert(0, '/usr/local/stow/icu/include')
-                self.sys_library_dirs.insert(0, '/usr/local/stow/icu/lib')
+                if exists('/usr/local/stow/icu/include'):
+                    self.sys_include_dirs.insert(0, '/usr/local/stow/icu/include')
+                    self.sys_library_dirs.insert(0, '/usr/local/stow/icu/lib')
+
+                self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
+
+                self.options.use_glibcxx_debug = True
 
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
-            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
             self.configure_args.append('--disable-shared')
             self.configure_args.append('--enable-doxygen')
+            self.configure_args.append('--enable-python')
 
-            self.options.use_glibcxx_debug = True
             self.locate_my_libraries()
 
     def setup_for_system(self):
@@ -1049,7 +1053,9 @@ class PrepareBuild(CommandLineApp):
 
     def setup_flavor_opt(self):
         self.CXXFLAGS.append('-O3')
+        self.LDFLAGS.append('-O3')
         self.CXXFLAGS.append('-fomit-frame-pointer')
+        self.LDFLAGS.append('-fomit-frame-pointer')
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')

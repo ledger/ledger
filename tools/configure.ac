@@ -62,6 +62,14 @@ AC_ARG_ENABLE(doxygen,
 
 AM_CONDITIONAL(USE_DOXYGEN, test x$doxygen = xtrue)
 
+AC_ARG_ENABLE(python,
+  [  --enable-python          Turn on Python support (experimental)],
+  [case "${enableval}" in
+    yes) python=true ;;
+    no)  python=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-python) ;;
+  esac],[python=false])
+
 AC_ARG_WITH(boost-suffix,
   [  --with-boost-suffix=X   Append X to the Boost library names],
   [BOOST_SUFFIX="${withval}"],
@@ -336,37 +344,42 @@ fi
 AM_CONDITIONAL(HAVE_BOOST_SERIALIZATION, test x$boost_serialization_cpplib_avail_cv_ = xtrue)
 
 # check for Python
-AM_PATH_PYTHON(2.4,, :)
-if [test "$PYTHON" != :]; then
-  AM_CONDITIONAL(HAVE_PYTHON, true)
-  AC_CACHE_CHECK(
-    [if boost_python is available],
-    [boost_python_cpplib_avail_cv_],
-    [boost_python_save_libs=$LIBS
-     LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
-     AC_LANG_PUSH(C++)
-     AC_LINK_IFELSE(
-	 [AC_LANG_PROGRAM(
-	    [[#include <boost/python.hpp>
-	      using namespace boost::python;
-	      class foo {};
-	      BOOST_PYTHON_MODULE(samp) {
-		class_< foo > ("foo") ;
-	      }]],
-	    [[return 0]])],
-	 [boost_python_cpplib_avail_cv_=true],
-	 [boost_python_cpplib_avail_cv_=false])
-     AC_LANG_POP
-     LIBS=$boost_python_save_libs])
-
-  if [ test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
-    AC_DEFINE([HAVE_BOOST_PYTHON], [1], [Whether Boost.Python is available])
-    LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
+if [ test x$python = xtrue ]; then
+  AM_PATH_PYTHON(2.4,, :)
+  if [test "$PYTHON" != :]; then
+    AM_CONDITIONAL(HAVE_PYTHON, true)
+    AC_CACHE_CHECK(
+      [if boost_python is available],
+      [boost_python_cpplib_avail_cv_],
+      [boost_python_save_libs=$LIBS
+       LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
+       AC_LANG_PUSH(C++)
+       AC_LINK_IFELSE(
+  	 [AC_LANG_PROGRAM(
+  	    [[#include <boost/python.hpp>
+  	      using namespace boost::python;
+  	      class foo {};
+  	      BOOST_PYTHON_MODULE(samp) {
+  		class_< foo > ("foo") ;
+  	      }]],
+  	    [[return 0]])],
+  	 [boost_python_cpplib_avail_cv_=true],
+  	 [boost_python_cpplib_avail_cv_=false])
+       AC_LANG_POP
+       LIBS=$boost_python_save_libs])
+  
+    if [ test x$boost_python_cpplib_avail_cv_ = xtrue ]; then
+      AC_DEFINE([HAVE_BOOST_PYTHON], [1], [Whether Boost.Python is available])
+      LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
+    fi
+  else
+    AM_CONDITIONAL(HAVE_PYTHON, false)
   fi
+  AM_CONDITIONAL(HAVE_BOOST_PYTHON, test x$boost_python_cpplib_avail_cv_ = xtrue)
 else
   AM_CONDITIONAL(HAVE_PYTHON, false)
+  AM_CONDITIONAL(HAVE_BOOST_PYTHON, false)
 fi
-AM_CONDITIONAL(HAVE_BOOST_PYTHON, test x$boost_python_cpplib_avail_cv_ = xtrue)
 
 # check for CppUnit
 AC_CACHE_CHECK(

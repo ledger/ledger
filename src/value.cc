@@ -696,7 +696,7 @@ value_t& value_t::operator/=(const value_t& val)
 	  as_amount_lval() /= simpler.as_amount();
 	  break;
 	default:
-	  assert(0);
+	  assert(false);
 	  break;
 	}
 	return *this;
