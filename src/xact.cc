@@ -597,10 +597,25 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     bool matches_predicate = false;
     if (try_quick_match) {
       try {
+	bool found_memoized_result = false;
+	if (! memoized_results.empty()) {
+	  std::map<string, bool>::iterator i =
+	    memoized_results.find(initial_post->account->fullname());
+	  if (i != memoized_results.end()) {
+	    found_memoized_result = true;
+	    matches_predicate = (*i).second;
+	  }
+	}
+
 	// Since the majority of people who use automated transactions simply
 	// match against account names, try using a *much* faster version of
 	// the predicate evaluator.
-	matches_predicate = post_pred(predicate.get_op(), *initial_post);
+	if (! found_memoized_result) {
+	  matches_predicate = post_pred(predicate.get_op(), *initial_post);
+	  memoized_results.insert
+	    (std::pair<string, bool>(initial_post->account->fullname(),
+				     matches_predicate));
+	}
       }
       catch (...) {
 	DEBUG("xact.extend.fail",

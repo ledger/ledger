@@ -148,6 +148,8 @@ public:
   predicate_t predicate;
   bool        try_quick_match;
 
+  std::map<string, bool> memoized_results;
+
   auto_xact_t() : try_quick_match(true) {
     TRACE_CTOR(auto_xact_t, "");
   }
