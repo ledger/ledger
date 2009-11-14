@@ -84,31 +84,31 @@ AC_CACHE_CHECK(
   [AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-	[[#include <sys/types.h>
-	  #include <sys/wait.h>
-	  #include <unistd.h>
-	  #include <stdlib.h>
-	  #include <string.h>
-	  #include <stdio.h>]],
-	[[int status, pfd[2];
-	  status = pipe(pfd);
-	  status = fork();
-	  if (status < 0) {
-	    ;
-	  } else if (status == 0) {
-	    char *arg0 = NULL;
+        [[#include <sys/types.h>
+          #include <sys/wait.h>
+          #include <unistd.h>
+          #include <stdlib.h>
+          #include <string.h>
+          #include <stdio.h>]],
+        [[int status, pfd[2];
+          status = pipe(pfd);
+          status = fork();
+          if (status < 0) {
+            ;
+          } else if (status == 0) {
+            char *arg0 = NULL;
 
-	    status = dup2(pfd[0], STDIN_FILENO);
+            status = dup2(pfd[0], STDIN_FILENO);
 
-	    close(pfd[1]);
-	    close(pfd[0]);
+            close(pfd[1]);
+            close(pfd[0]);
 
-	    execlp("", arg0, (char *)0);
-	    perror("execl");
-	    exit(1);
-	  } else {
-	    close(pfd[0]);
-	  }]])],
+            execlp("", arg0, (char *)0);
+            perror("execl");
+            exit(1);
+          } else {
+            close(pfd[0]);
+          }]])],
      [pipes_avail_cv_=true],
      [pipes_avail_cv_=false])
    AC_LANG_POP])
@@ -213,7 +213,7 @@ AC_CACHE_CHECK(
          using namespace boost;]],
        [[std::string text = "Активы";
          u32regex r = make_u32regex("активы", regex::perl | regex::icase);
-	 return u32regex_search(text, r) ? 0 : 1;]])],
+         return u32regex_search(text, r) ? 0 : 1;]])],
      [boost_regex_icu_avail_cv_=true],
      [boost_regex_icu_avail_cv_=false])
    AC_LANG_POP
@@ -233,26 +233,26 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-	[[#include <boost/date_time/posix_time/posix_time.hpp>
-	  #include <boost/date_time/gregorian/gregorian.hpp>
-	  #include <boost/date_time/local_time_adjustor.hpp>
-	  #include <boost/date_time/time_duration.hpp>
+        [[#include <boost/date_time/posix_time/posix_time.hpp>
+          #include <boost/date_time/gregorian/gregorian.hpp>
+          #include <boost/date_time/local_time_adjustor.hpp>
+          #include <boost/date_time/time_duration.hpp>
 
-	  using namespace boost::posix_time;
-	  using namespace boost::date_time;
+          using namespace boost::posix_time;
+          using namespace boost::date_time;
 
-	  #include <ctime>
+          #include <ctime>
 
-	  inline ptime time_to_system_local(const ptime& when) {
-	    struct std::tm tm_gmt = to_tm(when);
-	    return from_time_t(mktime(&tm_gmt));
-	  }]],
-	[[ptime t10 = ptime(boost::gregorian::from_string("2007-01-15"),
-			    ptime::time_duration_type());
+          inline ptime time_to_system_local(const ptime& when) {
+            struct std::tm tm_gmt = to_tm(when);
+            return from_time_t(mktime(&tm_gmt));
+          }]],
+        [[ptime t10 = ptime(boost::gregorian::from_string("2007-01-15"),
+                            ptime::time_duration_type());
 
-	  ptime t12 = time_to_system_local(t10);
+          ptime t12 = time_to_system_local(t10);
 
-	  return t10 != t12;]])],
+          return t10 != t12;]])],
      [boost_date_time_cpplib_avail_cv_=true],
      [boost_date_time_cpplib_avail_cv_=false])
    AC_LANG_POP
@@ -273,8 +273,8 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-	[[#include <boost/filesystem/path.hpp>]],
-	[[boost::filesystem::path this_path("Hello");]])],
+        [[#include <boost/filesystem/path.hpp>]],
+        [[boost::filesystem::path this_path("Hello");]])],
      [boost_filesystem_cpplib_avail_cv_=true],
      [boost_filesystem_cpplib_avail_cv_=false])
    AC_LANG_POP
@@ -295,11 +295,11 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-	[[#include <boost/iostreams/device/file_descriptor.hpp> 
-	  #include <boost/iostreams/stream.hpp>]],
-	[[namespace io = boost::iostreams; 
-	  typedef io::stream<io::file_descriptor_sink> ofdstream; 
-	  ofdstream outstream(1);]])],
+        [[#include <boost/iostreams/device/file_descriptor.hpp> 
+          #include <boost/iostreams/stream.hpp>]],
+        [[namespace io = boost::iostreams; 
+          typedef io::stream<io::file_descriptor_sink> ofdstream; 
+          ofdstream outstream(1);]])],
      [boost_iostreams_cpplib_avail_cv_=true],
      [boost_iostreams_cpplib_avail_cv_=false])
    AC_LANG_POP
@@ -320,7 +320,7 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-	[[#include <boost/archive/binary_oarchive.hpp>
+        [[#include <boost/archive/binary_oarchive.hpp>
           #include <iostream>
           struct foo {
             int a;
@@ -329,7 +329,7 @@ AC_CACHE_CHECK(
               ar & a;
             }
           };]],
-	[[boost::archive::binary_oarchive oa(std::cout);
+        [[boost::archive::binary_oarchive oa(std::cout);
           foo x;
           oa << x;]])],
      [boost_serialization_cpplib_avail_cv_=true],
@@ -355,16 +355,16 @@ if [ test x$python = xtrue ]; then
        LIBS="-lboost_python$BOOST_SUFFIX -lpython$PYTHON_VERSION $LIBS"
        AC_LANG_PUSH(C++)
        AC_LINK_IFELSE(
-  	 [AC_LANG_PROGRAM(
-  	    [[#include <boost/python.hpp>
-  	      using namespace boost::python;
-  	      class foo {};
-  	      BOOST_PYTHON_MODULE(samp) {
-  		class_< foo > ("foo") ;
-  	      }]],
-  	    [[return 0]])],
-  	 [boost_python_cpplib_avail_cv_=true],
-  	 [boost_python_cpplib_avail_cv_=false])
+         [AC_LANG_PROGRAM(
+            [[#include <boost/python.hpp>
+              using namespace boost::python;
+              class foo {};
+              BOOST_PYTHON_MODULE(samp) {
+                class_< foo > ("foo") ;
+              }]],
+            [[return 0]])],
+         [boost_python_cpplib_avail_cv_=true],
+         [boost_python_cpplib_avail_cv_=false])
        AC_LANG_POP
        LIBS=$boost_python_save_libs])
   
@@ -390,16 +390,16 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-	[[#include <cppunit/CompilerOutputter.h>
-	  #include <cppunit/TestResult.h>
-	  #include <cppunit/TestResultCollector.h>
-	  #include <cppunit/TestRunner.h>
-	  #include <cppunit/TextTestProgressListener.h>
-	  #include <cppunit/BriefTestProgressListener.h>
-	  #include <cppunit/XmlOutputter.h>
-	  #include <cppunit/extensions/TestFactoryRegistry.h>]],
-	[[CPPUNIT_NS::TestResult controller;
-	  CPPUNIT_NS::TestResultCollector result;]])],
+        [[#include <cppunit/CompilerOutputter.h>
+          #include <cppunit/TestResult.h>
+          #include <cppunit/TestResultCollector.h>
+          #include <cppunit/TestRunner.h>
+          #include <cppunit/TextTestProgressListener.h>
+          #include <cppunit/BriefTestProgressListener.h>
+          #include <cppunit/XmlOutputter.h>
+          #include <cppunit/extensions/TestFactoryRegistry.h>]],
+        [[CPPUNIT_NS::TestResult controller;
+          CPPUNIT_NS::TestResultCollector result;]])],
      [cppunit_avail_cv_=true],
      [cppunit_avail_cv_=false])
    AC_LANG_POP
