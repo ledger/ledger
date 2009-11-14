@@ -1047,10 +1047,14 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-g')
 
     def setup_flavor_opt(self):
-        self.CXXFLAGS.append('-O3')
-        self.LDFLAGS.append('-O3')
-        self.CXXFLAGS.append('-fomit-frame-pointer')
-        self.LDFLAGS.append('-fomit-frame-pointer')
+        if self.darwin_gcc:
+            self.CXXFLAGS.append('-fast')
+            self.LDFLAGS.append('-fast')
+        else:
+            self.CXXFLAGS.append('-O3')
+            self.LDFLAGS.append('-O3')
+            self.CXXFLAGS.append('-fomit-frame-pointer')
+            self.LDFLAGS.append('-fomit-frame-pointer')
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
