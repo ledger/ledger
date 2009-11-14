@@ -230,15 +230,18 @@ void export_journal()
   class_< collect_posts, bases<item_handler<post_t> >,
           shared_ptr<collect_posts>, boost::noncopyable >("PostCollector")
     .def("__len__", &collect_posts::length)
-    .def("__iter__", range<return_internal_reference<> >
+    .def("__iter__", range<return_internal_reference<1,
+	                     with_custodian_and_ward_postcall<1, 0> > >
 	 (&collect_posts::begin, &collect_posts::end))
     ;
 
   class_< collector_wrapper, shared_ptr<collector_wrapper>,
           boost::noncopyable >("PostCollectorWrapper", no_init)
     .def("__len__", &collector_wrapper::length)
-    .def("__getitem__", posts_getitem, return_internal_reference<>())
-    .def("__iter__", range<return_internal_reference<> >
+    .def("__getitem__", posts_getitem, return_internal_reference<1,
+	                     with_custodian_and_ward_postcall<0, 1> >())
+    .def("__iter__", range<return_value_policy<reference_existing_object,
+	                     with_custodian_and_ward_postcall<0, 1> > >
 	 (&collector_wrapper::begin, &collector_wrapper::end))
     ;
 
@@ -263,30 +266,43 @@ void export_journal()
     .def(init<path>())
     .def(init<string>())
 
-    .add_property("master", make_getter(&journal_t::master,
-					return_internal_reference<>()))
+    .add_property("master",
+		  make_getter(&journal_t::master,
+			      return_internal_reference<1,
+			          with_custodian_and_ward_postcall<1, 0> >()))
     .add_property("bucket",
 		  make_getter(&journal_t::bucket,
-			      return_internal_reference<>()),
+			      return_internal_reference<1,
+			          with_custodian_and_ward_postcall<1, 0> >()),
 		  make_setter(&journal_t::bucket))
     .add_property("was_loaded", make_getter(&journal_t::was_loaded))
     .add_property("commodity_pool",
 		  make_getter(&journal_t::commodity_pool,
-			      return_internal_reference<>()))
+			      return_internal_reference<1,
+			          with_custodian_and_ward_postcall<1, 0> >()))
 
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)
 
-    .def("find_account", py_find_account_1, return_internal_reference<>())
-    .def("find_account", py_find_account_2, return_internal_reference<>())
+    .def("find_account", py_find_account_1,
+	 return_internal_reference<1,
+	     with_custodian_and_ward_postcall<0, 1> >())
+    .def("find_account", py_find_account_2,
+	 return_internal_reference<1,
+	     with_custodian_and_ward_postcall<0, 1> >())
     .def("find_account_re", &journal_t::find_account_re,
-	 return_internal_reference<>())
+	 return_internal_reference<1,
+	     with_custodian_and_ward_postcall<0, 1> >())
 
     .def("add_xact", &journal_t::add_xact)
     .def("remove_xact", &journal_t::remove_xact)
 
     .def("__len__", xacts_len)
-    .def("__getitem__", xacts_getitem, return_internal_reference<>())
+#if 0
+    .def("__getitem__", xacts_getitem,
+	 return_internal_reference<1,
+	     with_custodian_and_ward_postcall<0, 1> >())
+#endif
 
     .def("__iter__", range<return_internal_reference<> >
 	 (&journal_t::xacts_begin, &journal_t::xacts_end))
@@ -304,7 +320,7 @@ void export_journal()
     .def("has_xdata", &journal_t::has_xdata)
     .def("clear_xdata", &journal_t::clear_xdata)
 
-    .def("collect", py_collect)
+    .def("collect", py_collect, with_custodian_and_ward_postcall<0, 1>())
 
     .def("valid", &journal_t::valid)
     ;

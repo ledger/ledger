@@ -116,7 +116,7 @@ void export_post()
 		  make_setter(&post_t::xdata_t::datetime))
     .add_property("account",
 		  make_getter(&post_t::xdata_t::account,
-			      return_internal_reference<>()),
+			      return_value_policy<reference_existing_object>()),
 		  make_setter(&post_t::xdata_t::account,
 			      with_custodian_and_ward<1, 2>()))
     .add_property("sort_values",
