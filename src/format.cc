@@ -355,8 +355,11 @@ string format_t::real_calc(scope_t& scope)
 	}
 	DEBUG("format.expr", "value = (" << value << ")");
 
-	value.print(out, static_cast<int>(elem->min_width), -1,
-		    ! elem->has_flags(ELEMENT_ALIGN_LEFT));
+	if (elem->min_width > 0)
+	  value.print(out, static_cast<int>(elem->min_width), -1,
+		      ! elem->has_flags(ELEMENT_ALIGN_LEFT));
+	else
+	  out << value.to_string();
       }
       catch (const calc_error&) {
 	add_error_context(_("While calculating format expression:"));
