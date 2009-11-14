@@ -466,8 +466,8 @@ public:
     TRACE_DTOR(subtotal_posts);
   }
 
-  virtual void report_subtotal(const char * spec_fmt = NULL,
-			       const optional<date_interval_t>& interval = none);
+  void report_subtotal(const char * spec_fmt = NULL,
+		       const optional<date_interval_t>& interval = none);
 
   virtual void flush() {
     if (values.size() > 0)
@@ -506,7 +506,7 @@ public:
     TRACE_DTOR(interval_posts);
   }
 
-  virtual void report_subtotal(const date_interval_t& interval);
+  void report_subtotal(const date_interval_t& interval);
 
   virtual void flush() {
     if (last_post && interval.duration) {
@@ -537,7 +537,7 @@ public:
     TRACE_DTOR(posts_as_equity);
   }
 
-  virtual void report_subtotal();
+  void report_subtotal();
 
   virtual void flush() {
     report_subtotal();
