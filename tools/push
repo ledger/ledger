@@ -11,4 +11,5 @@ git rebase master
 git push
 git checkout master
 ./acprep upload
+mv *.dmg* build
 git checkout next
