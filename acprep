@@ -550,14 +550,12 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looks like you are using MacPorts on OS X')
                 packages = [
                     'sudo', 'port', 'install', '-f',
-                    'automake', 'autoconf', 'libtool',
-                    'python26', 'boost-jam',
+                    'automake', 'autoconf', 'libtool', 'python26',
                     'libiconv', '+universal', 'zlib', '+universal',
                     'gmp' ,'+universal', 'mpfr', '+universal',
                     'ncurses', '+universal', 'ncursesw', '+universal',
                     'gettext' ,'+universal', 'libedit' ,'+universal',
-                    'boost', '+universal+st+debug+python26+doc',
-                    'cppunit' ,'+universal',
+                     'boost-jam', 'boost', '+st+python26+icu', 'cppunit',
                     'texlive', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
                 ]
@@ -602,8 +600,7 @@ class PrepareBuild(CommandLineApp):
                         'python-devel', 'bboost-devel',
                          'gmp-devel', 'gettext-devel',
                          #'mpfr-devel'
-                         'libedit-devel',
-                         'cppunit-devel',
+                         'libedit-devel', 'cppunit-devel',
                          #'texlive-full',
                          #'doxygen', 'graphviz', 'texinfo',
                          #'lcov', 'sloccount'
