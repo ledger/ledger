@@ -188,10 +188,8 @@ class PrepareBuild(CommandLineApp):
 
         self.CPPFLAGS          = []
         self.CCFLAGS           = []
-        self.ARCHFLAGS         = []
         self.CXXFLAGS          = []
         self.LDFLAGS           = []
-        self.LDARCHFLAGS       = []
 
         self.envvars = {
             'PYTHON_HOME':     '/usr',
@@ -204,10 +202,8 @@ class PrepareBuild(CommandLineApp):
             'CCFLAGS':         '',
             'CXX':             'g++',
             'CXXFLAGS':        '',
-            'ARCHFLAGS':       '',
             'LD':              'g++',
-            'LDFLAGS':         '',
-            'LDARCHFLAGS':     '',
+            'LDFLAGS':         ''
         }
 
         for varname in self.envvars.keys():
@@ -797,12 +793,6 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-pthread')
 
         elif system == 'Darwin':
-            #self.ARCHFLAGS += ['-arch', 'i386', '-arch', 'ppc',
-            #                   '-isysroot', '/Developer/SDKs/MacOSX10.5.sdk']
-            #self.LDARCHFLAGS += self.ARCHFLAGS
-            #ldflag = '-Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk'
-            #self.LDARCHFLAGS.append(ldflag)
-
             self.setup_for_johnw()
 
             # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
@@ -859,8 +849,7 @@ class PrepareBuild(CommandLineApp):
     def finalize_config(self):
         self.setup_flavor()
 
-        for var in ('CPPFLAGS', 'CCFLAGS', 'ARCHFLAGS',
-                    'CXXFLAGS', 'LDFLAGS', 'LDARCHFLAGS'):
+        for var in ('CPPFLAGS', 'CCFLAGS', 'CXXFLAGS', 'LDFLAGS'):
             value = self.__dict__[var]
             if value:
                 first = not self.envvars[var]
@@ -1130,8 +1119,8 @@ class PrepareBuild(CommandLineApp):
             conf_args = ['sh', join(self.source_dir, 'configure'),
                          '--srcdir', self.source_dir]
 
-        for var in ('CC', 'CPPFLAGS', 'CCFLAGS', 'ARCHFLAGS',
-                    'CXX', 'CXXFLAGS', 'LD', 'LDFLAGS', 'LDARCHFLAGS'):
+        for var in ('CC', 'CPPFLAGS', 'CCFLAGS', 'CXX', 'CXXFLAGS',
+                    'LD', 'LDFLAGS'):
             if self.envvars.has_key(var) and self.envvars[var] and \
                (var.endswith('FLAGS') or exists(self.envvars[var])):
                 conf_args.append('%s=%s' % (var, self.envvars[var]))
