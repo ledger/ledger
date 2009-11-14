@@ -350,9 +350,9 @@ void collapse_posts::report_subtotal()
   component_posts.clear();
 
   last_xact = NULL;
-  last_post  = NULL;
-  subtotal   = 0L;
-  count      = 0;
+  last_post = NULL;
+  subtotal  = 0L;
+  count     = 0;
 }
 
 void collapse_posts::operator()(post_t& post)
@@ -364,12 +364,12 @@ void collapse_posts::operator()(post_t& post)
     report_subtotal();
 
   post.add_to_value(subtotal, amount_expr);
-  count++;
 
   component_posts.push_back(&post);
 
   last_xact = post.xact;
-  last_post  = &post;
+  last_post = &post;
+  count++;
 }
 
 void related_posts::flush()
@@ -648,8 +648,15 @@ void posts_as_equity::report_subtotal()
 
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
-    handle_value(pair.second.value, pair.second.account, &xact, temps,
-		 *handler);
+    if (pair.second.value.is_balance()) {
+      foreach (balance_t::amounts_map::value_type amount_pair,
+	       pair.second.value.as_balance().amounts)
+	handle_value(amount_pair.second, pair.second.account, &xact, temps,
+		     *handler);
+    } else {
+      handle_value(pair.second.value, pair.second.account, &xact, temps,
+		   *handler);
+    }
     total += pair.second.value;
   }
   values.clear();
