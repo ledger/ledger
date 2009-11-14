@@ -412,7 +412,7 @@ bool xact_base_t::verify()
       continue;
 
     if (post->amount.commodity() == post->cost->commodity())
-      throw_(balance_error,
+      throw_(amount_error,
 	     _("A posting's cost must be of a different commodity than its amount"));
   }
 
