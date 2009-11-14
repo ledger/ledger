@@ -1,15 +1,34 @@
 
-                                 README FIRST!!!
-
 ===============================================================================
+
+                                 README FIRST!!!
 
 To build this code after doing a Git clone, run:
 
     $ ./acprep update
 
-If you try to configure/build on your own, you are almost certainly going to
-run into problems.  In future, you can run this command again and it will keep
-you updated with the very latest version.
+If you try to configure and build on your own, you are almost certainly going
+to run into problems.  In future, you can run this command again and again,
+and it will keep you updated to the very latest version.
+
+===============================================================================
+
+			   NOTE FOR MAC OS X USERS
+
+To build and install Ledger on the Mac requires several dependencies.  If you
+are a MacPorts user, you can install these dependencies very simply using:
+
+    $ ./acprep dependencies
+
+Once this is done, I recommend building both debug and optimized versions of
+Ledger, in a subdirectory of your source tree named 'build':
+
+    $ mkdir build
+    $ ./acprep opt make
+    $ ./acprep debug make
+
+Now install the optimized version, but know that you have 'build/debug/ledger'
+available for testing and more useful bug reports.
 
 ===============================================================================
 
