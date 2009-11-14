@@ -21,7 +21,8 @@ are a MacPorts user, you can install these dependencies very simply using:
     $ ./acprep dependencies
 
 Once this is done, I recommend building both debug and optimized versions of
-Ledger, in a subdirectory of your source tree named 'build':
+Ledger, in a subdirectory of your source tree named 'build' (which acprep will
+manage for you, you simply need to make it):
 
     $ mkdir build
     $ ./acprep opt make

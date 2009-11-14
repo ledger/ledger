@@ -745,7 +745,7 @@ class PrepareBuild(CommandLineApp):
                 self.sys_library_dirs.append(path)
 
     def setup_for_johnw(self):
-        if self.current_flavor == 'debug':
+        if self.current_flavor != 'opt':
             if exists('/usr/local/stow/cppunit/include'):
                 self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
                 self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
@@ -972,7 +972,7 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def locate_darwin_libraries(self):
-        if self.current_flavor == 'debug':
+        if self.current_flavor != 'opt':
             self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
 
             if self.options.use_glibcxx_debug:
