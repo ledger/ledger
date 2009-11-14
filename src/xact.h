@@ -146,16 +146,18 @@ class auto_xact_t : public xact_base_t
 {
 public:
   predicate_t predicate;
+  bool        try_quick_match;
 
-  auto_xact_t() {
+  auto_xact_t() : try_quick_match(true) {
     TRACE_CTOR(auto_xact_t, "");
   }
   auto_xact_t(const auto_xact_t& other)
-    : xact_base_t(), predicate(other.predicate) {
+    : xact_base_t(), predicate(other.predicate),
+      try_quick_match(other.try_quick_match) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
   auto_xact_t(const predicate_t& _predicate)
-    : predicate(_predicate)
+    : predicate(_predicate), try_quick_match(true)
   {
     TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }

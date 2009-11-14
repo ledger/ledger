@@ -538,6 +538,50 @@ bool xact_t::valid() const
   return true;
 }
 
+namespace {
+
+  bool post_pred(expr_t::ptr_op_t op, post_t& post)
+  {
+    switch (op->kind) {
+    case expr_t::op_t::VALUE:
+      return op->as_value().to_boolean();
+      break;
+
+    case expr_t::op_t::O_MATCH:
+      if (op->left()->kind == expr_t::op_t::IDENT &&
+	  op->left()->as_ident() == "account" &&
+	  op->right()->kind == expr_t::op_t::VALUE &&
+	  op->right()->as_value().is_mask())
+	return op->right()->as_value().as_mask()
+	  .match(post.reported_account()->fullname());
+      else
+	break;
+      
+    case expr_t::op_t::O_NOT:
+      return ! post_pred(op->left(), post);
+
+    case expr_t::op_t::O_AND:
+      return post_pred(op->left(), post) && post_pred(op->right(), post);
+
+    case expr_t::op_t::O_OR:
+      return post_pred(op->left(), post) || post_pred(op->right(), post);
+
+    case expr_t::op_t::O_QUERY:
+      if (post_pred(op->left(), post))
+	return post_pred(op->right()->left(), post);
+      else
+	return post_pred(op->right()->right(), post);
+
+    default:
+      break;
+    }
+
+    throw_(calc_error, _("Unhandled operator"));
+    return false;
+  }
+
+} // unnamed namespace
+
 void auto_xact_t::extend_xact(xact_base_t& xact)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
@@ -547,8 +591,27 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
   bool needs_further_verification = false;
 
   foreach (post_t * initial_post, initial_posts) {
-    if (! initial_post->has_flags(ITEM_GENERATED) &&
-	predicate(*initial_post)) {
+    if (initial_post->has_flags(ITEM_GENERATED))
+      continue;
+
+    bool matches_predicate = false;
+    if (try_quick_match) {
+      try {
+	// Since the majority of people who use automated transactions simply
+	// match against account names, try using a *much* faster version of
+	// the predicate evaluator.
+	matches_predicate = post_pred(predicate.get_op(), *initial_post);
+      }
+      catch (...) {
+	DEBUG("xact.extend.fail",
+	      "The quick matcher failed, going back to regular eval");
+	try_quick_match   = false;
+	matches_predicate = predicate(*initial_post);
+      }
+    } else {
+      matches_predicate = predicate(*initial_post);
+    }
+    if (matches_predicate) {
       foreach (post_t * post, posts) {
 	amount_t post_amount;
 	if (post->amount.is_null()) {
