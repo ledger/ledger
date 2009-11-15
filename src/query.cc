@@ -53,6 +53,12 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     }
   }
 
+  if (consume_next_arg) {
+    consume_next_arg = false;
+    arg_i = arg_end;
+    return token_t(token_t::TERM, (*begin).as_string());
+  }
+
  resume:
   bool consume_next = false;
   switch (*arg_i) {
@@ -95,13 +101,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
   case '@': ++arg_i; return token_t(token_t::TOK_PAYEE);
   case '#': ++arg_i; return token_t(token_t::TOK_CODE);
   case '%': ++arg_i; return token_t(token_t::TOK_META);
-  case '=':
-    // The '=' keyword at the beginning of a string causes the entire string
-    // to be taken as an expression.
-    if (arg_i == (*begin).as_string().begin())
-      consume_whitespace = true;
-    ++arg_i;
-    return token_t(token_t::TOK_EQ);
+  case '=': ++arg_i; return token_t(token_t::TOK_EQ);
 
   case '\\':
     consume_next = true;
@@ -140,7 +140,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     }
     consume_whitespace = false;
 
-    test_ident:
+test_ident:
     if (ident == "and")
       return token_t(token_t::TOK_AND);
     else if (ident == "or")
@@ -177,7 +177,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
 #endif
     else if (ident == "expr") {
       // The expr keyword takes the whole of the next string as its argument.
-      consume_whitespace = true;
+      consume_next_arg = true;
       return token_t(token_t::TOK_EXPR);
     }
     else
