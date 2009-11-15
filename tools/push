@@ -10,6 +10,6 @@ git checkout next
 git rebase master
 git push
 git checkout master
-./acprep upload
+./acprep opt upload
 mv *.dmg* build
 git checkout next
