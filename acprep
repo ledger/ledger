@@ -42,6 +42,7 @@ class CommandLineApp(object):
 
     force_exit  = True           # If true, always ends run() with sys.exit()
     log_handler = None
+    darwin_gcc  = False
 
     options = {
         'debug':    False,
@@ -188,10 +189,8 @@ class PrepareBuild(CommandLineApp):
 
         self.CPPFLAGS          = []
         self.CCFLAGS           = []
-        self.ARCHFLAGS         = []
         self.CXXFLAGS          = []
         self.LDFLAGS           = []
-        self.LDARCHFLAGS       = []
 
         self.envvars = {
             'PYTHON_HOME':     '/usr',
@@ -204,10 +203,8 @@ class PrepareBuild(CommandLineApp):
             'CCFLAGS':         '',
             'CXX':             'g++',
             'CXXFLAGS':        '',
-            'ARCHFLAGS':       '',
             'LD':              'g++',
-            'LDFLAGS':         '',
-            'LDARCHFLAGS':     '',
+            'LDFLAGS':         ''
         }
 
         for varname in self.envvars.keys():
@@ -554,14 +551,12 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looks like you are using MacPorts on OS X')
                 packages = [
                     'sudo', 'port', 'install', '-f',
-                    'automake', 'autoconf', 'libtool',
-                    'python26', 'boost-jam',
+                    'automake', 'autoconf', 'libtool', 'python26',
                     'libiconv', '+universal', 'zlib', '+universal',
                     'gmp' ,'+universal', 'mpfr', '+universal',
                     'ncurses', '+universal', 'ncursesw', '+universal',
                     'gettext' ,'+universal', 'libedit' ,'+universal',
-                    'boost', '+universal+st+debug+python26+doc',
-                    'cppunit' ,'+universal',
+                     'boost-jam', 'boost', '+st+python26+icu', 'cppunit',
                     'texlive', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
                 ]
@@ -606,8 +601,7 @@ class PrepareBuild(CommandLineApp):
                         'python-devel', 'bboost-devel',
                          'gmp-devel', 'gettext-devel',
                          #'mpfr-devel'
-                         'libedit-devel',
-                         'cppunit-devel',
+                         'libedit-devel', 'cppunit-devel',
                          #'texlive-full',
                          #'doxygen', 'graphviz', 'texinfo',
                          #'lcov', 'sloccount'
@@ -696,6 +690,11 @@ class PrepareBuild(CommandLineApp):
                            path)
         return None
 
+    def inform_boost_location(self, text, suffix):
+        self.log.info('Boost %s here:' % text)
+        self.log.info('BOOST_HOME    => ' + self.envvars['BOOST_HOME'])
+        self.log.info('BOOST_SUFFIX  => ' + suffix)
+
     def locate_boost(self):
         if self.envvars['BOOST_SUFFIX']:
             self.log.info(("Not looking for Boost, since " +
@@ -708,10 +707,7 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looking for Boost in %s...' % path)
                 suffix = self.locate_boost_in_dir(path)
                 if suffix is not None:
-                    self.log.info('Boost is located here:')
-                    self.log.info('BOOST_HOME    => ' +
-                                   self.envvars['BOOST_HOME'])
-                    self.log.info('BOOST_SUFFIX  => ' + suffix)
+                    self.inform_boost_location('was found', suffix)
                     break
             if suffix is None:
                 self.log.error("Boost could not be found.")
@@ -749,29 +745,25 @@ class PrepareBuild(CommandLineApp):
                 self.sys_library_dirs.append(path)
 
     def setup_for_johnw(self):
-        # jww (2009-03-09): Some peculiarities specific to my system
-        if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
-            if self.current_flavor == 'debug':
-                if exists('/usr/local/stow/cppunit/include'):
-                    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
-                    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
+        if self.current_flavor != 'opt':
+            if exists('/usr/local/stow/cppunit/include'):
+                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
 
-                if exists('/usr/local/stow/icu/include'):
-                    self.sys_include_dirs.insert(0, '/usr/local/stow/icu/include')
-                    self.sys_library_dirs.insert(0, '/usr/local/stow/icu/lib')
+            if exists('/usr/local/stow/icu/include'):
+                self.sys_include_dirs.insert(0, '/usr/local/stow/icu/include')
+                self.sys_library_dirs.insert(0, '/usr/local/stow/icu/lib')
 
-                self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
+            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
-                self.options.use_glibcxx_debug = True
+            self.options.use_glibcxx_debug = True
 
-            self.CXXFLAGS.append('-march=nocona')
-            self.CXXFLAGS.append('-msse3')
+        self.CXXFLAGS.append('-march=nocona')
+        self.CXXFLAGS.append('-msse3')
 
-            self.configure_args.append('--disable-shared')
-            self.configure_args.append('--enable-doxygen')
-            self.configure_args.append('--enable-python')
-
-            self.locate_my_libraries()
+        self.configure_args.append('--disable-shared')
+        self.configure_args.append('--enable-doxygen')
+        self.configure_args.append('--enable-python')
 
     def setup_for_system(self):
         self.setup_system_directories()
@@ -797,17 +789,18 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-pthread')
 
         elif system == 'Darwin':
-            #self.ARCHFLAGS += ['-arch', 'i386', '-arch', 'ppc',
-            #                   '-isysroot', '/Developer/SDKs/MacOSX10.5.sdk']
-            #self.LDARCHFLAGS += self.ARCHFLAGS
-            #ldflag = '-Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk'
-            #self.LDARCHFLAGS.append(ldflag)
+            if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
+                self.setup_for_johnw()
 
-            self.setup_for_johnw()
+            self.locate_darwin_libraries()
 
-            # g++ 4.0.1 cannot use PCH headers on OS X 10.5, so we must use a
-            # newer version.
-            if exists('/opt/local/bin/g++-mp-4.4'):
+            if self.current_flavor == 'opt' and \
+               exists('/usr/bin/g++-4.2'):
+                self.envvars['CC']  = '/usr/bin/gcc-4.2'
+                self.envvars['CXX'] = '/usr/bin/g++-4.2'
+                self.envvars['LD']  = '/usr/bin/g++-4.2'
+                self.darwin_gcc = True
+            elif exists('/opt/local/bin/g++-mp-4.4'):
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.4'
                 self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.4'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.4'
@@ -815,12 +808,13 @@ class PrepareBuild(CommandLineApp):
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.3'
                 self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.3'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.3'
-            elif not self.options.use_glibcxx_debug and \
-                 exists('/usr/bin/g++-4.2'):
+            elif exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
                 self.envvars['LD']  = '/usr/bin/g++-4.2'
+                self.darwin_gcc = True
             else:
+                # g++ 4.0.1 cannot use PCH headers on OS X 10.5
                 self.option_no_pch()
 
         if '--enable-pch' not in self.configure_args and \
@@ -859,8 +853,7 @@ class PrepareBuild(CommandLineApp):
     def finalize_config(self):
         self.setup_flavor()
 
-        for var in ('CPPFLAGS', 'CCFLAGS', 'ARCHFLAGS',
-                    'CXXFLAGS', 'LDFLAGS', 'LDARCHFLAGS'):
+        for var in ('CPPFLAGS', 'CCFLAGS', 'CXXFLAGS', 'LDFLAGS'):
             value = self.__dict__[var]
             if value:
                 first = not self.envvars[var]
@@ -978,69 +971,71 @@ class PrepareBuild(CommandLineApp):
     # The various build flavors                                             #
     #########################################################################
 
-    def locate_my_libraries(self):
-        if self.options.use_glibcxx_debug:
+    def locate_darwin_libraries(self):
+        if self.current_flavor != 'opt':
             self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
 
-            self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
+            if self.options.use_glibcxx_debug:
+                self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-            if exists('/usr/local/stow/cppunit-debug/include'):
-                if '/usr/local/stow/cppunit/include' in self.sys_include_dirs:
-                    self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
-                    self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
+                if exists('/usr/local/stow/cppunit-debug/include'):
+                    if '/usr/local/stow/cppunit/include' in self.sys_include_dirs:
+                        self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
+                        self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
 
-                self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
-                self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
+                    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
+                    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
 
-            if exists('/usr/local/stow/icu-debug/include'):
-                if '/usr/local/stow/icu/include' in self.sys_include_dirs:
-                    self.sys_include_dirs.remove('/usr/local/stow/icu/include')
-                    self.sys_library_dirs.remove('/usr/local/stow/icu/lib')
+                if exists('/usr/local/stow/icu-debug/include'):
+                    if '/usr/local/stow/icu/include' in self.sys_include_dirs:
+                        self.sys_include_dirs.remove('/usr/local/stow/icu/include')
+                        self.sys_library_dirs.remove('/usr/local/stow/icu/lib')
 
-                self.sys_include_dirs.insert(0, '/usr/local/stow/icu-debug/include')
-                self.sys_library_dirs.insert(0, '/usr/local/stow/icu-debug/lib')
+                    self.sys_include_dirs.insert(0, '/usr/local/stow/icu-debug/include')
+                    self.sys_library_dirs.insert(0, '/usr/local/stow/icu-debug/lib')
 
-            if exists('/opt/local/lib/libboost_regex-d.a'):
-                self.envvars['BOOST_HOME']   = '/opt/local'
-                self.envvars['BOOST_SUFFIX'] = '-d'
-
-                self.log.info('Setting BOOST_SUFFIX  => %s' %
-                              self.envvars['BOOST_SUFFIX'])
-
-                self.sys_include_dirs.append('/opt/local/include/boost')
-
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
+            if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
                 self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
-                self.log.info('Setting BOOST_SUFFIX  => %s' %
-                              self.envvars['BOOST_SUFFIX'])
-
                 self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.inform_boost_location('is really located',
+                                           self.envvars['BOOST_SUFFIX'])
 
             elif exists('/usr/local/lib/libboost_regex-xgcc44-d-1_40.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
                 self.envvars['BOOST_SUFFIX'] = '-xgcc44-d-1_40'
-                self.log.info('Setting BOOST_SUFFIX  => %s' %
-                              self.envvars['BOOST_SUFFIX'])
-
                 self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.inform_boost_location('is really located',
+                                           self.envvars['BOOST_SUFFIX'])
+
+            elif exists('/opt/local/lib/libboost_regex-d.a'):
+                self.envvars['BOOST_HOME']   = '/opt/local'
+                self.envvars['BOOST_SUFFIX'] = '-d'
+                self.sys_include_dirs.append('/opt/local/include/boost')
+                self.inform_boost_location('is really located',
+                                           self.envvars['BOOST_SUFFIX'])
+
         else:
             if exists('/opt/local/lib/libboost_regex.a'):
                 self.envvars['BOOST_HOME']   = '/opt/local'
                 self.envvars['BOOST_SUFFIX'] = ''
-
-                self.log.info('Setting BOOST_SUFFIX  => %s' %
-                               self.envvars['BOOST_SUFFIX'])
-
                 self.sys_include_dirs.append('/opt/local/include/boost')
+                self.inform_boost_location('is really located',
+                                           self.envvars['BOOST_SUFFIX'])
+
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+                self.envvars['BOOST_HOME']   = '/usr/local'
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
+                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.inform_boost_location('is really located',
+                                           self.envvars['BOOST_SUFFIX'])
 
             elif exists('/usr/local/lib/libboost_regex-xgcc44-1_40.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
                 self.envvars['BOOST_SUFFIX'] = '-xgcc44-1_40'
-                self.log.info('Setting BOOST_SUFFIX  => %s' %
-                              self.envvars['BOOST_SUFFIX'])
-
                 self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.inform_boost_location('is really located',
+                                           self.envvars['BOOST_SUFFIX'])
 
     def setup_flavor_default(self):
         pass
@@ -1052,10 +1047,14 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-g')
 
     def setup_flavor_opt(self):
-        self.CXXFLAGS.append('-O3')
-        self.LDFLAGS.append('-O3')
-        self.CXXFLAGS.append('-fomit-frame-pointer')
-        self.LDFLAGS.append('-fomit-frame-pointer')
+        if self.darwin_gcc:
+            self.CXXFLAGS.append('-fast')
+            self.LDFLAGS.append('-fast')
+        else:
+            self.CXXFLAGS.append('-O3')
+            self.LDFLAGS.append('-O3')
+            self.CXXFLAGS.append('-fomit-frame-pointer')
+            self.LDFLAGS.append('-fomit-frame-pointer')
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
@@ -1122,8 +1121,8 @@ class PrepareBuild(CommandLineApp):
             conf_args = ['sh', join(self.source_dir, 'configure'),
                          '--srcdir', self.source_dir]
 
-        for var in ('CC', 'CPPFLAGS', 'CCFLAGS', 'ARCHFLAGS',
-                    'CXX', 'CXXFLAGS', 'LD', 'LDFLAGS', 'LDARCHFLAGS'):
+        for var in ('CC', 'CPPFLAGS', 'CCFLAGS', 'CXX', 'CXXFLAGS',
+                    'LD', 'LDFLAGS'):
             if self.envvars.has_key(var) and self.envvars[var] and \
                (var.endswith('FLAGS') or exists(self.envvars[var])):
                 conf_args.append('%s=%s' % (var, self.envvars[var]))

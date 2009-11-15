@@ -775,7 +775,7 @@ public:
 	 "%(ansify_if(justify(format_date(date), date_width), green "
 	 "    if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
-	 "    bold if color & !cleared))"
+	 "    bold if color & !cleared & actual))"
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
 	 "    account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "

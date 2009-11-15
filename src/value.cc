@@ -1618,7 +1618,10 @@ void value_t::print(std::ostream& out,
     break;
 
   case STRING:
-    justify(out, as_string(), first_width, right_justify);
+    if (first_width > 0)
+      justify(out, as_string(), first_width, right_justify);
+    else
+      out << as_string();
     break;
 
   case MASK:

@@ -297,6 +297,11 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     break;
 
+  case 'b':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
+    break;
+
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
@@ -325,7 +330,9 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'i':
-    if (name == "id")
+    if (name == "index")
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    else if (name == "id")
       return WRAP_FUNCTOR(get_wrapper<&get_id>);
     else if (name == "idstring")
       return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
@@ -339,6 +346,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'n':
     if (name == "note")
       return WRAP_FUNCTOR(get_wrapper<&get_note>);
+    else if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
     break;
 
   case 'p':
@@ -358,7 +367,7 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 't':
-    if (name[1] == '\0' || name == "total")
+    if (name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
 
@@ -375,6 +384,21 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'x':
     if (name == "xact")
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
+    break;
+
+  case 'N':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    break;
+
+  case 'O':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_total>);
+    break;
+
+  case 'R':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_real>);
     break;
   }
 

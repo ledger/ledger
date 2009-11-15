@@ -135,13 +135,11 @@ public:
     date_t	date;
     datetime_t	datetime;
     account_t *	account;
-    void *	ptr;
 
     std::list<sort_value_t> sort_values;
 
     xdata_t()
-      : supports_flags<uint_least16_t>(), count(0),
-	account(NULL), ptr(NULL) {
+      : supports_flags<uint_least16_t>(), count(0), account(NULL) {
       TRACE_CTOR(post_t::xdata_t, "");
     }
     xdata_t(const xdata_t& other)
@@ -152,7 +150,6 @@ public:
 	count(other.count),
 	date(other.date),
 	account(other.account),
-	ptr(NULL),
 	sort_values(other.sort_values)
     {
       TRACE_CTOR(post_t::xdata_t, "copy");

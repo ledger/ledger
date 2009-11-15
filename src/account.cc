@@ -249,7 +249,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
 
   switch (name[0]) {
   case 'a':
-    if (name == "amount")
+    if (name[1] == '\0' || name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
       return WRAP_FUNCTOR(get_wrapper<&get_account>);
@@ -272,11 +272,20 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'i':
     if (name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&get_true>);
+    else if (name == "is_index")
+      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 'l':
     if (name == "latest_cleared")
       return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
+    else if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
+    break;
+
+  case 'n':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 'p':
@@ -299,6 +308,16 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'u':
     if (name == "use_direct_amount")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    break;
+
+  case 'N':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    break;
+
+  case 'O':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
   }
 

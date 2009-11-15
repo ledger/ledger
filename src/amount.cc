@@ -56,7 +56,7 @@ struct amount_t::bigint_t : public supports_flags<>
 
   mpq_t		 val;
   precision_t	 prec;
-  uint_least16_t refc;
+  uint_least32_t refc;
 
 #define MP(bigint) ((bigint)->val)
 
@@ -80,11 +80,7 @@ struct amount_t::bigint_t : public supports_flags<>
 
   bool valid() const {
     if (prec > 1024) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: prec > 128");
-      return false;
-    }
-    if (refc > 16535) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: refc > 16535");
+      DEBUG("ledger.validate", "amount_t::bigint_t: prec > 1024");
       return false;
     }
     if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC)) {

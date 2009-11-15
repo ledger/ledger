@@ -915,6 +915,45 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
   switch (kind) {
   case symbol_t::FUNCTION:
+    // Support 2.x's single-letter value expression names.
+    if (*(p + 1) == '\0') {
+      switch (*p) {
+      case 'd':
+      case 'm':
+	return MAKE_FUNCTOR(report_t::fn_now);
+      case 'P':
+	return MAKE_FUNCTOR(report_t::fn_market);
+      case 't':
+	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      case 'T':
+	return MAKE_FUNCTOR(report_t::fn_display_total);
+      case 'U':
+	return MAKE_FUNCTOR(report_t::fn_abs);
+      case 'S':
+	return MAKE_FUNCTOR(report_t::fn_strip);
+      case 'i':
+	throw_(std::runtime_error,
+	       _("The i value expression variable is no longer supported"));
+      case 'A':
+	throw_(std::runtime_error,
+	       _("The A value expression variable is no longer supported"));
+      case 'v':
+      case 'V':
+	throw_(std::runtime_error,
+	       _("The V and v value expression variables are no longer supported"));
+      case 'I':
+      case 'B':
+	throw_(std::runtime_error,
+	       _("The I and B value expression variables are no longer supported"));
+      case 'g':
+      case 'G':
+	throw_(std::runtime_error,
+	       _("The G and g value expression variables are no longer supported"));
+      default:
+	return NULL;
+      }
+    }
+
     switch (*p) {
     case 'a':
       if (is_eq(p, "amount_expr"))

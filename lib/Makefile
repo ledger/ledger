@@ -77,7 +77,8 @@ cppunit-release:
 		     CFLAGS="$(EXTRA_DEFINES) $(ARCH_CFLAGS)" \
 		     LDFLAGS="$(ARCH_LDFLAGS)" \
 		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
-		     --prefix=$(STOW_ROOT)/cppunit && \
+		     --prefix=$(STOW_ROOT)/cppunit \
+		     --disable-doxygen --disable-dot && \
 	 make install)
 
 cppunit-debug:
@@ -87,7 +88,8 @@ cppunit-debug:
 		     CFLAGS="-g $(EXTRA_DEFINES) $(ARCH_CFLAGS)" \
 		     LDFLAGS="-g $(ARCH_LDFLAGS)" \
 		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
-		     --prefix=$(STOW_ROOT)/cppunit-debug && \
+		     --prefix=$(STOW_ROOT)/cppunit-debug \
+		     --disable-doxygen --disable-dot && \
 	 make install)
 
 cppunit-build: cppunit-release cppunit-debug

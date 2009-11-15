@@ -466,7 +466,7 @@ public:
     TRACE_DTOR(subtotal_posts);
   }
 
-  void report_subtotal(const char *			spec_fmt = NULL,
+  void report_subtotal(const char * spec_fmt = NULL,
 		       const optional<date_interval_t>& interval = none);
 
   virtual void flush() {
