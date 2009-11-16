@@ -26,6 +26,7 @@ if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
 else
     echo "Ledger proof build succeeded"
     echo $VERSION > ~/Products/last-proofed
+    mv ~/Desktop/proof.log /tmp
 fi
 
 exit 0

@@ -61,6 +61,7 @@ public:
     string::const_iterator arg_end;
 
     bool consume_whitespace;
+    bool consume_next_arg;
 
   public:
     struct token_t
@@ -175,7 +176,9 @@ public:
 
     lexer_t(value_t::sequence_t::const_iterator _begin,
 		  value_t::sequence_t::const_iterator _end)
-      : begin(_begin), end(_end), consume_whitespace(false)
+      : begin(_begin), end(_end),
+	consume_whitespace(false),
+	consume_next_arg(false)
     {
       TRACE_CTOR(lexer_t, "");
       assert(begin != end);
@@ -186,6 +189,7 @@ public:
       : begin(lexer.begin), end(lexer.end),
 	arg_i(lexer.arg_i), arg_end(lexer.arg_end),
 	consume_whitespace(lexer.consume_whitespace),
+	consume_next_arg(lexer.consume_next_arg),
 	token_cache(lexer.token_cache)
     {
       TRACE_CTOR(lexer_t, "copy");
