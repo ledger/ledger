@@ -158,6 +158,8 @@ void ValueExprTestCase::testPredicateTokenizer7()
 
   assertEqual(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
   assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  assertEqual(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
+  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
