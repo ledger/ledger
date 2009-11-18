@@ -194,6 +194,11 @@ public:
   string(const string& str);
   string(const std::string& str);
   string(size_type len, char x);
+  template<class _InputIterator>
+  string(_InputIterator __beg, _InputIterator __end)
+    : std::string(__beg, __end) {
+    TRACE_CTOR(string, "InputIterator, InputIterator");
+  }
   string(const char * str);
   string(const char * str, const char * end);
   string(const string& str, size_type x);
