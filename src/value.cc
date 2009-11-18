@@ -1193,6 +1193,13 @@ void value_t::in_place_negate()
   case BALANCE:
     as_balance_lval().in_place_negate();
     return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(- value);
+    *this = temp;
+    return;
+  }
   default:
     break;
   }
@@ -1222,6 +1229,13 @@ void value_t::in_place_not()
   case STRING:
     set_boolean(as_string().empty());
     return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(! value);
+    *this = temp;
+    return;
+  }
   default:
     break;
   }
