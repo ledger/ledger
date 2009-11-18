@@ -1102,10 +1102,12 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 	DEBUG("times.interval", "stabilize: finish reset to initial finish");
       }
 
+#if defined(DEBUG_ON)
       if (start)
 	DEBUG("times.interval", "stabilize: final start  = " << *start);
       if (finish)
 	DEBUG("times.interval", "stabilize: final finish = " << *finish);
+#endif
     }
     else if (range) {
       if (date) {
