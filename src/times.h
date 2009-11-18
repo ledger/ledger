@@ -534,16 +534,14 @@ public:
   optional<date_t>	    start;  // the real start, after adjustment
   optional<date_t>	    finish; // the real end, likewise
   bool			    aligned;
-  optional<date_duration_t> skip_duration;
-  std::size_t		    factor;
   optional<date_t>	    next;
   optional<date_duration_t> duration;
   optional<date_t>	    end_of_duration;
 
-  explicit date_interval_t() : aligned(false), factor(1) {
+  explicit date_interval_t() : aligned(false) {
     TRACE_CTOR(date_interval_t, "");
   }
-  date_interval_t(const string& str) : aligned(false), factor(1) {
+  date_interval_t(const string& str) : aligned(false) {
     TRACE_CTOR(date_interval_t, "const string&");
     parse(str);
   }
@@ -552,8 +550,6 @@ public:
       start(other.start),
       finish(other.finish),
       aligned(other.aligned),
-      skip_duration(other.skip_duration),
-      factor(other.factor),
       next(other.next),
       duration(other.duration),
       end_of_duration(other.end_of_duration) {
@@ -593,12 +589,6 @@ public:
       containing date, or false if no such period can be found. */
   bool find_period(const date_t& date);
 
-  optional<date_t> inclusive_skip_end() const {
-    if (skip_duration)
-      return skip_duration->add(*start) - gregorian::days(1);
-    else
-      return none;
-  }
   optional<date_t> inclusive_end() const {
     if (end_of_duration)
       return *end_of_duration - gregorian::days(1);
@@ -608,7 +598,7 @@ public:
 
   date_interval_t& operator++();
 
-  void dump(std::ostream& out);
+  void dump(std::ostream& out, optional_year current_year = none);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -622,8 +612,6 @@ private:
     ar & start;
     ar & finish;
     ar & aligned;
-    ar & skip_duration;
-    ar & factor;
     ar & next;
     ar & duration;
     ar & end_of_duration;

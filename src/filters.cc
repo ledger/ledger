@@ -515,12 +515,14 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
   optional<date_t> range_start  = interval ? interval->start : none;
   optional<date_t> range_finish = interval ? interval->inclusive_end() : none;
 
-  foreach (post_t * post, component_posts) {
-    date_t date = post->date();
-    if (! range_start || date < *range_start)
-      range_start = date;
-    if (! range_finish || date > *range_finish)
-      range_finish = date;
+  if (! range_start || ! range_finish) {
+    foreach (post_t * post, component_posts) {
+      date_t date = post->date();
+      if (! range_start || date < *range_start)
+	range_start = date;
+      if (! range_finish || date > *range_finish)
+	range_finish = date;
+    }
   }
   component_posts.clear();
 

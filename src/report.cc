@@ -120,14 +120,15 @@ void report_t::normalize_options(const string& verb)
 
     date_interval_t interval(HANDLER(period_).str());
 
-    if (! HANDLED(begin_) && interval.start) {
-      string predicate =
-	"date>=[" + to_iso_extended_string(*interval.start) + "]";
+    optional<date_t> begin = interval.begin(session.current_year);
+    optional<date_t> end   = interval.end(session.current_year);
+
+    if (! HANDLED(begin_) && begin) {
+      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
       HANDLER(limit_).on(string("?normalize"), predicate);
     }
-    if (! HANDLED(end_) && interval.finish) {
-      string predicate =
-	"date<[" + to_iso_extended_string(*interval.finish) + "]";
+    if (! HANDLED(end_) && end) {
+      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
       HANDLER(limit_).on(string("?normalize"), predicate);
     }
 

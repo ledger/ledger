@@ -1,50 +1,95 @@
 period --now=2010/11/01 12/01
 <<<
 >>>1
-global details => 
+--- Period expression tokens ---
+TOK_DATE:  month Dec day 1
+END_REACHED: <EOF>
 
-   start: 09-Dec-01
-  finish: 09-Dec-02
-  factor: 1
+--- Before stabilization ---
+   range: in month Dec day 1
+
+--- After stabilization ---
+   range: in month Dec day 1
+   start: 10-Dec-01
+  finish: 10-Dec-02
+
+--- Sample dates in range (max. 20) ---
+ 1: 10-Dec-01
 >>>2
 === 0
 period --now=2010/11/01 10/01
 <<<
 >>>1
-global details => 
+--- Period expression tokens ---
+TOK_DATE:  month Oct day 1
+END_REACHED: <EOF>
 
+--- Before stabilization ---
+   range: in month Oct day 1
+
+--- After stabilization ---
+   range: in month Oct day 1
    start: 10-Oct-01
   finish: 10-Oct-02
-  factor: 1
+
+--- Sample dates in range (max. 20) ---
+ 1: 10-Oct-01
 >>>2
 === 0
 period --now=2010/11/01 2009/10
 <<<
 >>>1
-global details => 
+--- Period expression tokens ---
+TOK_DATE:  year 2009 month Oct
+END_REACHED: <EOF>
 
+--- Before stabilization ---
+   range: in year 2009 month Oct
+
+--- After stabilization ---
+   range: in year 2009 month Oct
    start: 09-Oct-01
   finish: 09-Nov-01
-  factor: 1
+
+--- Sample dates in range (max. 20) ---
+ 1: 09-Oct-01
 >>>2
 === 0
 period --now=2010/11/01 2009/10/01
 <<<
 >>>1
-global details => 
+--- Period expression tokens ---
+TOK_DATE:  year 2009 month Oct day 1
+END_REACHED: <EOF>
 
+--- Before stabilization ---
+   range: in year 2009 month Oct day 1
+
+--- After stabilization ---
+   range: in year 2009 month Oct day 1
    start: 09-Oct-01
   finish: 09-Oct-02
-  factor: 1
+
+--- Sample dates in range (max. 20) ---
+ 1: 09-Oct-01
 >>>2
 === 0
 period --now=2010/11/01 2009
 <<<
 >>>1
-global details => 
+--- Period expression tokens ---
+TOK_A_YEAR: 2009
+END_REACHED: <EOF>
 
+--- Before stabilization ---
+   range: in year 2009
+
+--- After stabilization ---
+   range: in year 2009
    start: 09-Jan-01
   finish: 10-Jan-01
-  factor: 1
+
+--- Sample dates in range (max. 20) ---
+ 1: 09-Jan-01
 >>>2
 === 0

@@ -434,6 +434,7 @@ class date_parser_t
       } kind;
 
       typedef variant<unsigned short,
+		      string,
 		      date_specifier_t::year_type,
 		      date_time::months_of_year,
 		      date_time::weekdays,
@@ -442,7 +443,8 @@ class date_parser_t
       optional<content_t> value;
 
       explicit token_t(kind_t _kind = UNKNOWN,
-		       const optional<content_t>& _value = none)
+		       const optional<content_t>& _value =
+		       content_t(empty_string))
 	: kind(_kind), value(_value) {
 	TRACE_CTOR(date_parser_t::lexer_t::token_t, "");
       }
@@ -467,47 +469,110 @@ class date_parser_t
       }
 
       string to_string() const {
+	std::ostringstream out;
+
 	switch (kind) {
-	case UNKNOWN:	    return "UNKNOWN";
-	case TOK_DATE:	    return "TOK_DATE";
-	case TOK_INT:	    return "TOK_INT";
-	case TOK_SLASH:	    return "TOK_SLASH";
-	case TOK_DASH:	    return "TOK_DASH";
-	case TOK_DOT:	    return "TOK_DOT";
-	case TOK_A_YEAR:    return "TOK_A_YEAR";
-	case TOK_A_MONTH:   return "TOK_A_MONTH";
-	case TOK_A_WDAY:    return "TOK_A_WDAY";
-	case TOK_SINCE:	    return "TOK_SINCE";
-	case TOK_UNTIL:	    return "TOK_UNTIL";
-	case TOK_IN:	    return "TOK_IN";
-	case TOK_THIS:	    return "TOK_THIS";
-	case TOK_NEXT:	    return "TOK_NEXT";
-	case TOK_LAST:	    return "TOK_LAST";
-	case TOK_EVERY:	    return "TOK_EVERY";
-	case TOK_TODAY:	    return "TOK_EVERY";
-	case TOK_TOMORROW:  return "TOK_TOMORROW";
-	case TOK_YESTERDAY: return "TOK_YESTERDAY";
-	case TOK_YEAR:	    return "TOK_YEAR";
-	case TOK_QUARTER:   return "TOK_QUARTER";
-	case TOK_MONTH:	    return "TOK_MONTH";
-	case TOK_WEEK:	    return "TOK_WEEK";
-	case TOK_DAY:	    return "TOK_DAY";
-	case TOK_YEARLY:    return "TOK_YEARLY";
-	case TOK_QUARTERLY: return "TOK_QUARTERLY";
-	case TOK_BIMONTHLY: return "TOK_BIMONTHLY";
-	case TOK_MONTHLY:   return "TOK_MONTHLY";
-	case TOK_BIWEEKLY:  return "TOK_BIWEEKLY";
-	case TOK_WEEKLY:    return "TOK_WEEKLY";
-	case TOK_DAILY:	    return "TOK_DAILY";
-	case TOK_YEARS:	    return "TOK_YEARS";
-	case TOK_QUARTERS:  return "TOK_QUARTERS";
-	case TOK_MONTHS:    return "TOK_MONTHS";
-	case TOK_WEEKS:	    return "TOK_WEEKS";
-	case TOK_DAYS:	    return "TOK_DAYS";
-	case END_REACHED:   return "END_REACHED";
+	case UNKNOWN:
+	  out << boost::get<string>(*value);
+	  break;
+	case TOK_DATE:
+	  return boost::get<date_specifier_t>(*value).to_string();
+	case TOK_INT:
+	  out << boost::get<unsigned short>(*value);
+	  break;
+	case TOK_SLASH:	    return "/";
+	case TOK_DASH:	    return "-";
+	case TOK_DOT:	    return ".";
+	case TOK_A_YEAR:
+	  out << boost::get<date_specifier_t::year_type>(*value);
+	  break;
+	case TOK_A_MONTH:
+	  out << date_specifier_t::month_type
+	    (boost::get<date_time::months_of_year>(*value));
+	  break;
+	case TOK_A_WDAY:
+	  out << date_specifier_t::day_of_week_type
+	    (boost::get<date_time::weekdays>(*value));
+	  break;
+	case TOK_SINCE:	    return "since";
+	case TOK_UNTIL:	    return "until";
+	case TOK_IN:	    return "in";
+	case TOK_THIS:	    return "this";
+	case TOK_NEXT:	    return "next";
+	case TOK_LAST:	    return "last";
+	case TOK_EVERY:	    return "every";
+	case TOK_TODAY:	    return "today";
+	case TOK_TOMORROW:  return "tomorrow";
+	case TOK_YESTERDAY: return "yesterday";
+	case TOK_YEAR:	    return "year";
+	case TOK_QUARTER:   return "quarter";
+	case TOK_MONTH:	    return "month";
+	case TOK_WEEK:	    return "week";
+	case TOK_DAY:	    return "day";
+	case TOK_YEARLY:    return "yearly";
+	case TOK_QUARTERLY: return "quarterly";
+	case TOK_BIMONTHLY: return "bimonthly";
+	case TOK_MONTHLY:   return "monthly";
+	case TOK_BIWEEKLY:  return "biweekly";
+	case TOK_WEEKLY:    return "weekly";
+	case TOK_DAILY:	    return "daily";
+	case TOK_YEARS:	    return "years";
+	case TOK_QUARTERS:  return "quarters";
+	case TOK_MONTHS:    return "months";
+	case TOK_WEEKS:	    return "weeks";
+	case TOK_DAYS:	    return "days";
+	case END_REACHED:   return "<EOF>";
+	default:
+	  assert(false);
+	  return empty_string;
 	}
-	assert(false);
-	return empty_string;
+
+	return out.str();
+      }
+
+      void dump(std::ostream& out) const {
+	switch (kind) {
+	case UNKNOWN:	    out << "UNKNOWN"; break;
+	case TOK_DATE:	    out << "TOK_DATE"; break;
+	case TOK_INT:	    out << "TOK_INT"; break;
+	case TOK_SLASH:	    out << "TOK_SLASH"; break;
+	case TOK_DASH:	    out << "TOK_DASH"; break;
+	case TOK_DOT:	    out << "TOK_DOT"; break;
+	case TOK_A_YEAR:    out << "TOK_A_YEAR"; break;
+	case TOK_A_MONTH:   out << "TOK_A_MONTH"; break;
+	case TOK_A_WDAY:    out << "TOK_A_WDAY"; break;
+	case TOK_SINCE:	    out << "TOK_SINCE"; break;
+	case TOK_UNTIL:	    out << "TOK_UNTIL"; break;
+	case TOK_IN:	    out << "TOK_IN"; break;
+	case TOK_THIS:	    out << "TOK_THIS"; break;
+	case TOK_NEXT:	    out << "TOK_NEXT"; break;
+	case TOK_LAST:	    out << "TOK_LAST"; break;
+	case TOK_EVERY:	    out << "TOK_EVERY"; break;
+	case TOK_TODAY:	    out << "TOK_TODAY"; break;
+	case TOK_TOMORROW:  out << "TOK_TOMORROW"; break;
+	case TOK_YESTERDAY: out << "TOK_YESTERDAY"; break;
+	case TOK_YEAR:	    out << "TOK_YEAR"; break;
+	case TOK_QUARTER:   out << "TOK_QUARTER"; break;
+	case TOK_MONTH:	    out << "TOK_MONTH"; break;
+	case TOK_WEEK:	    out << "TOK_WEEK"; break;
+	case TOK_DAY:	    out << "TOK_DAY"; break;
+	case TOK_YEARLY:    out << "TOK_YEARLY"; break;
+	case TOK_QUARTERLY: out << "TOK_QUARTERLY"; break;
+	case TOK_BIMONTHLY: out << "TOK_BIMONTHLY"; break;
+	case TOK_MONTHLY:   out << "TOK_MONTHLY"; break;
+	case TOK_BIWEEKLY:  out << "TOK_BIWEEKLY"; break;
+	case TOK_WEEKLY:    out << "TOK_WEEKLY"; break;
+	case TOK_DAILY:	    out << "TOK_DAILY"; break;
+	case TOK_YEARS:	    out << "TOK_YEARS"; break;
+	case TOK_QUARTERS:  out << "TOK_QUARTERS"; break;
+	case TOK_MONTHS:    out << "TOK_MONTHS"; break;
+	case TOK_WEEKS:	    out << "TOK_WEEKS"; break;
+	case TOK_DAYS:	    out << "TOK_DAYS"; break;
+	case END_REACHED:   out << "END_REACHED"; break;
+	default:
+	  assert(false);
+	  break;
+	}
       }
 
       void unexpected();
@@ -753,7 +818,9 @@ date_interval_t date_parser_t::parse()
 	inclusion_specifier =
 	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
 			   temp.month());
+#if 0
 	period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
+#endif
 	break;
       }
 
@@ -771,7 +838,9 @@ date_interval_t date_parser_t::parse()
 	  date_duration_t::find_nearest(today, date_duration_t::WEEKS);
 	temp += gregorian::days(7 * adjust);
 	inclusion_specifier = date_specifier_t(today);
+#if 0
 	period.duration = date_duration_t(date_duration_t::WEEKS, 1);
+#endif
 	break;
       }
 
@@ -806,19 +875,19 @@ date_interval_t date_parser_t::parse()
 	tok = lexer.next_token();
 	switch (tok.kind) {
 	case lexer_t::token_t::TOK_YEARS:
-	  period.skip_duration = date_duration_t(date_duration_t::YEARS, quantity);
+	  period.duration = date_duration_t(date_duration_t::YEARS, quantity);
 	  break;
 	case lexer_t::token_t::TOK_QUARTERS:
-	  period.skip_duration = date_duration_t(date_duration_t::QUARTERS, quantity);
+	  period.duration = date_duration_t(date_duration_t::QUARTERS, quantity);
 	  break;
 	case lexer_t::token_t::TOK_MONTHS:
-	  period.skip_duration = date_duration_t(date_duration_t::MONTHS, quantity);
+	  period.duration = date_duration_t(date_duration_t::MONTHS, quantity);
 	  break;
 	case lexer_t::token_t::TOK_WEEKS:
-	  period.skip_duration = date_duration_t(date_duration_t::WEEKS, quantity);
+	  period.duration = date_duration_t(date_duration_t::WEEKS, quantity);
 	  break;
 	case lexer_t::token_t::TOK_DAYS:
-	  period.skip_duration = date_duration_t(date_duration_t::DAYS, quantity);
+	  period.duration = date_duration_t(date_duration_t::DAYS, quantity);
 	  break;
 	default:
 	  tok.unexpected();
@@ -827,19 +896,19 @@ date_interval_t date_parser_t::parse()
       } else {
 	switch (tok.kind) {
 	case lexer_t::token_t::TOK_YEAR:
-	  period.skip_duration = date_duration_t(date_duration_t::YEARS, 1);
+	  period.duration = date_duration_t(date_duration_t::YEARS, 1);
 	  break;
 	case lexer_t::token_t::TOK_QUARTER:
-	  period.skip_duration = date_duration_t(date_duration_t::QUARTERS, 1);
+	  period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
 	  break;
 	case lexer_t::token_t::TOK_MONTH:
-	  period.skip_duration = date_duration_t(date_duration_t::MONTHS, 1);
+	  period.duration = date_duration_t(date_duration_t::MONTHS, 1);
 	  break;
 	case lexer_t::token_t::TOK_WEEK:
-	  period.skip_duration = date_duration_t(date_duration_t::WEEKS, 1);
+	  period.duration = date_duration_t(date_duration_t::WEEKS, 1);
 	  break;
 	case lexer_t::token_t::TOK_DAY:
-	  period.skip_duration = date_duration_t(date_duration_t::DAYS, 1);
+	  period.duration = date_duration_t(date_duration_t::DAYS, 1);
 	  break;
 	default:
 	  tok.unexpected();
@@ -849,25 +918,25 @@ date_interval_t date_parser_t::parse()
       break;
 
     case lexer_t::token_t::TOK_YEARLY:
-      period.skip_duration = date_duration_t(date_duration_t::YEARS, 1);
+      period.duration = date_duration_t(date_duration_t::YEARS, 1);
       break;
     case lexer_t::token_t::TOK_QUARTERLY:
-      period.skip_duration = date_duration_t(date_duration_t::QUARTERS, 1);
+      period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
       break;
     case lexer_t::token_t::TOK_BIMONTHLY:
-      period.skip_duration = date_duration_t(date_duration_t::MONTHS, 2);
+      period.duration = date_duration_t(date_duration_t::MONTHS, 2);
       break;
     case lexer_t::token_t::TOK_MONTHLY:
-      period.skip_duration = date_duration_t(date_duration_t::MONTHS, 1);
+      period.duration = date_duration_t(date_duration_t::MONTHS, 1);
       break;
     case lexer_t::token_t::TOK_BIWEEKLY:
-      period.skip_duration = date_duration_t(date_duration_t::WEEKS, 2);
+      period.duration = date_duration_t(date_duration_t::WEEKS, 2);
       break;
     case lexer_t::token_t::TOK_WEEKLY:
-      period.skip_duration = date_duration_t(date_duration_t::WEEKS, 1);
+      period.duration = date_duration_t(date_duration_t::WEEKS, 1);
       break;
     case lexer_t::token_t::TOK_DAILY:
-      period.skip_duration = date_duration_t(date_duration_t::DAYS, 1);
+      period.duration = date_duration_t(date_duration_t::DAYS, 1);
       break;
 
     default:
@@ -876,8 +945,10 @@ date_interval_t date_parser_t::parse()
     }
   }
 
+#if 0
   if (! period.duration && inclusion_specifier)
     period.duration = inclusion_specifier->implied_duration();
+#endif
 
   if (since_specifier || until_specifier) {
     date_range_t range(since_specifier, until_specifier);
@@ -915,16 +986,9 @@ void date_interval_t::resolve_end()
 	  "stabilize: end_of_duration reset to end: " << *end_of_duration);
   }
 
-  if (! skip_duration) {
-    skip_duration = duration;
-    DEBUG("times.interval",
-	  "stabilize: skip_duration set to: " << *skip_duration);
-  }
-
   if (start && ! next) {
-    next = skip_duration->add(*start);
-    DEBUG("times.interval",
-	  "stabilize: next set to: " << *next);
+    next = end_of_duration;
+    DEBUG("times.interval", "stabilize: next set to: " << *next);
   }
 }
 
@@ -988,10 +1052,10 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 #if defined(DEBUG_ON)
       if (initial_start)
 	DEBUG("times.interval",
-	      "stabilize: initial_start = " << *initial_start);
+	      "stabilize: initial_start  = " << *initial_start);
       if (initial_finish)
 	DEBUG("times.interval",
-	      "stabilize: initial_finish   = " << *initial_finish);
+	      "stabilize: initial_finish = " << *initial_finish);
 #endif
 
       date_t when = start ? *start : *date;
@@ -1024,9 +1088,10 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 	}
       }
 
-      DEBUG("times.interval", "stabilize: final start date = " << *start);
+      DEBUG("times.interval", "stabilize: proposed start date = " << *start);
 
       if (initial_start && (! start || *start < *initial_start)) {
+	// Using the discovered start, find the end of the period
 	resolve_end();
 
 	start = initial_start;
@@ -1036,14 +1101,20 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 	finish = initial_finish;
 	DEBUG("times.interval", "stabilize: finish reset to initial finish");
       }
+
+      if (start)
+	DEBUG("times.interval", "stabilize: final start  = " << *start);
+      if (finish)
+	DEBUG("times.interval", "stabilize: final finish = " << *finish);
     }
     else if (range) {
-      start    = range->begin();
-      finish   = range->end();
-
-      if (start && finish)
-	duration = date_duration_t(date_duration_t::DAYS,
-				   static_cast<int>((*finish - *start).days()));
+      if (date) {
+	start    = range->begin(date->year());
+	finish   = range->end(date->year());
+      } else {
+	start    = range->begin();
+	finish   = range->end();
+      }
     }
     aligned = true;
   }
@@ -1116,7 +1187,7 @@ bool date_interval_t::find_period(const date_t& date)
       return true;
     }
 
-    scan = skip_duration->add(scan);
+    scan	= duration->add(scan);
     end_of_scan = duration->add(scan);
   }
 
@@ -1130,7 +1201,7 @@ date_interval_t& date_interval_t::operator++()
 
   stabilize();
 
-  if (! skip_duration || ! duration)
+  if (! duration)
     throw_(date_error,
 	   _("Cannot increment a date interval without a duration"));
 
@@ -1140,10 +1211,8 @@ date_interval_t& date_interval_t::operator++()
     start = none;
   } else {
     start = *next;
-
     end_of_duration = duration->add(*start);
   }
-
   next = none;
 
   resolve_end();
@@ -1151,7 +1220,7 @@ date_interval_t& date_interval_t::operator++()
   return *this;
 }
 
-void date_interval_t::dump(std::ostream& out)
+void date_interval_t::dump(std::ostream& out, optional_year current_year)
 {
   out << _("--- Before stabilization ---") << std::endl;
 
@@ -1162,14 +1231,10 @@ void date_interval_t::dump(std::ostream& out)
   if (finish)
     out << _("  finish: ") << format_date(*finish) << std::endl;
 
-  if (skip_duration)
-    out << _("    skip: ") << skip_duration->to_string() << std::endl;
-  if (factor)
-    out << _("  factor: ") << factor << std::endl;
   if (duration)
     out << _("duration: ") << duration->to_string() << std::endl;
 
-  stabilize(begin());
+  stabilize(begin(current_year));
 
   out << std::endl
       << _("--- After stabilization ---") << std::endl;
@@ -1181,27 +1246,30 @@ void date_interval_t::dump(std::ostream& out)
   if (finish)
     out << _("  finish: ") << format_date(*finish) << std::endl;
 
-  if (skip_duration)
-    out << _("    skip: ") << skip_duration->to_string() << std::endl;
-  if (factor)
-    out << _("  factor: ") << factor << std::endl;
   if (duration)
     out << _("duration: ") << duration->to_string() << std::endl;
 
   out << std::endl
       << _("--- Sample dates in range (max. 20) ---") << std::endl;
 
-  for (int i = 0; i < 20 && *this; i++, ++*this) {
+  date_t last_date;
+
+  for (int i = 0; i < 20 && *this; ++i, ++*this) {
     out << std::right;
     out.width(2);
 
+    if (! last_date.is_not_a_date() && last_date == *start)
+      break;
+
     out << (i + 1) << ": " << format_date(*start);
-    if (skip_duration)
-      out << " -- " << format_date(*inclusive_skip_end());
+    if (duration)
+      out << " -- " << format_date(*inclusive_end());
     out << std::endl;
 
-    if (! skip_duration)
+    if (! duration)
       break;
+
+    last_date = *start;
   }
 }
 
@@ -1268,6 +1336,8 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
 		       token_t::content_t(lexical_cast<unsigned short>(term)));
     }
     else if (std::isalpha(term[0])) {
+      to_lower(term);
+
       if (optional<date_time::months_of_year> month =
 	  string_to_month_of_year(term)) {
 	return token_t(token_t::TOK_A_MONTH, token_t::content_t(*month));
@@ -1339,20 +1409,20 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
     token_t::expected('\0', *begin);
   }
 
-  return token_t(token_t::UNKNOWN);
+  return token_t(token_t::UNKNOWN, token_t::content_t(term));
 }
 
 void date_parser_t::lexer_t::token_t::unexpected()
 {
-  kind_t prev_kind = kind;
-
-  kind = UNKNOWN;
-
-  switch (prev_kind) {
+  switch (kind) {
   case END_REACHED:
+    kind = UNKNOWN;
     throw_(date_error, _("Unexpected end of expression"));
-  default:
-    throw_(date_error, _("Unexpected token '%1'") << to_string());
+  default: {
+    string desc = to_string();
+    kind = UNKNOWN;
+    throw_(date_error, _("Unexpected date period token '%1'") << desc);
+  }
   }
 }
 
@@ -1503,7 +1573,8 @@ void show_period_tokens(std::ostream& out, const string& arg)
   date_parser_t::lexer_t::token_t token;
   do {
     token = lexer.next_token();
-    out << token.to_string() << std::endl;
+    token.dump(out);
+    out << ": " << token.to_string() << std::endl;
   }
   while (token.kind != date_parser_t::lexer_t::token_t::END_REACHED);
 }

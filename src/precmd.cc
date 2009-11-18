@@ -169,7 +169,7 @@ value_t period_command(call_scope_t& args)
   out << std::endl;
 
   date_interval_t interval(arg);
-  interval.dump(out);
+  interval.dump(out, report.session.current_year);
 
   return NULL_VALUE;
 }

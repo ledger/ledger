@@ -1,10 +1,20 @@
 period june 2008
 <<<
 >>>1
-global details => 
+--- Period expression tokens ---
+TOK_A_MONTH: Jun
+TOK_A_YEAR: 2008
+END_REACHED: <EOF>
 
+--- Before stabilization ---
+   range: in year 2008 month Jun
+
+--- After stabilization ---
+   range: in year 2008 month Jun
    start: 08-Jun-01
   finish: 08-Jul-01
-  factor: 1
+
+--- Sample dates in range (max. 20) ---
+ 1: 08-Jun-01
 >>>2
 === 0
