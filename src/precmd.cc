@@ -165,57 +165,12 @@ value_t period_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
+  show_period_tokens(out, arg);
+  out << std::endl;
+
   date_interval_t interval(arg);
+  interval.dump(out);
 
-  out << _("global details => ") << std::endl << std::endl;
-
-  if (interval.start)
-    out << _("   start: ") << format_date(*interval.start) << std::endl;
-  else
-    out << _("   start: TODAY: ") << format_date(CURRENT_DATE()) << std::endl;
-  if (interval.finish)
-    out << _("  finish: ") << format_date(*interval.finish) << std::endl;
-
-  if (interval.skip_duration)
-    out << _("    skip: ") << *interval.skip_duration << std::endl;
-  if (interval.factor)
-    out << _("  factor: ") << interval.factor << std::endl;
-  if (interval.duration)
-    out << _("duration: ") << *interval.duration << std::endl;
-
-  if (interval.find_period(interval.start ?
-			   *interval.start : CURRENT_DATE())) {
-    out << std::endl
-	<< _("after finding first period => ") << std::endl
-	<< std::endl;
-
-    if (interval.start)
-      out << _("   start: ") << format_date(*interval.start) << std::endl;
-    if (interval.finish)
-      out << _("  finish: ") << format_date(*interval.finish) << std::endl;
-
-    if (interval.skip_duration)
-      out << _("    skip: ") << *interval.skip_duration << std::endl;
-    if (interval.factor)
-      out << _("  factor: ") << interval.factor << std::endl;
-    if (interval.duration)
-      out << _("duration: ") << *interval.duration << std::endl;
-
-    out << std::endl;
-
-    for (int i = 0; i < 20 && interval; i++, ++interval) {
-      out << std::right;
-      out.width(2);
-
-      out << i << "): " << format_date(*interval.start);
-      if (interval.end_of_duration)
-	out << " -- " << format_date(*interval.inclusive_end());
-      out << std::endl;
-
-      if (! interval.skip_duration)
-	break;
-    }
-  }
   return NULL_VALUE;
 }
 

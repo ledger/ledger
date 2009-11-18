@@ -361,11 +361,544 @@ std::ostream& operator<<(std::ostream& out,
     out << duration.length << " week(s)";
   else if (duration.quantum == date_duration_t::MONTHS)
     out << duration.length << " month(s)";
+  else if (duration.quantum == date_duration_t::QUARTERS)
+    out << duration.length << " quarter(s)";
   else {
     assert(duration.quantum == date_duration_t::YEARS);
     out << duration.length << " year(s)";
   }
   return out;
+}
+
+class date_parser_t
+{
+  friend void show_period_tokens(std::ostream& out, const string& arg);
+
+  class lexer_t
+  {
+    friend class date_parser_t;
+
+    string::const_iterator begin;
+    string::const_iterator end;
+
+  public:
+    struct token_t
+    {
+      enum kind_t {
+	UNKNOWN,
+
+	TOK_DATE,
+	TOK_INT,
+	TOK_SLASH,
+	TOK_DASH,
+	TOK_DOT,
+
+	TOK_A_YEAR,
+	TOK_A_MONTH,
+	TOK_A_WDAY,
+
+	TOK_SINCE,
+	TOK_UNTIL,
+	TOK_IN,
+	TOK_THIS,
+	TOK_NEXT,
+	TOK_LAST,
+	TOK_EVERY,
+
+	TOK_TODAY,
+	TOK_TOMORROW,
+	TOK_YESTERDAY,
+
+	TOK_YEAR,
+	TOK_QUARTER,
+	TOK_MONTH,
+	TOK_WEEK,
+	TOK_DAY,
+
+	TOK_YEARLY,
+	TOK_QUARTERLY,
+	TOK_BIMONTHLY,
+	TOK_MONTHLY,
+	TOK_BIWEEKLY,
+	TOK_WEEKLY,
+	TOK_DAILY,
+
+	TOK_YEARS,
+	TOK_QUARTERS,
+	TOK_MONTHS,
+	TOK_WEEKS,
+	TOK_DAYS,
+
+	END_REACHED
+
+      } kind;
+
+      typedef variant<unsigned short,
+		      date_specifier_t::year_type,
+		      date_time::months_of_year,
+		      date_time::weekdays,
+		      date_specifier_t> content_t;
+
+      optional<content_t> value;
+
+      explicit token_t(kind_t _kind = UNKNOWN,
+		       const optional<content_t>& _value = none)
+	: kind(_kind), value(_value) {
+	TRACE_CTOR(date_parser_t::lexer_t::token_t, "");
+      }
+      token_t(const token_t& tok)
+	: kind(tok.kind), value(tok.value) {
+	TRACE_CTOR(date_parser_t::lexer_t::token_t, "copy");
+      }
+      ~token_t() throw() {
+	TRACE_DTOR(date_parser_t::lexer_t::token_t);
+      }
+
+      token_t& operator=(const token_t& tok) {
+	if (this != &tok) {
+	  kind  = tok.kind;
+	  value = tok.value;
+	}
+	return *this;
+      }
+
+      operator bool() const {
+	return kind != END_REACHED;
+      }
+
+      string to_string() const {
+	switch (kind) {
+	case UNKNOWN:	    return "UNKNOWN";
+	case TOK_DATE:	    return "TOK_DATE";
+	case TOK_INT:	    return "TOK_INT";
+	case TOK_SLASH:	    return "TOK_SLASH";
+	case TOK_DASH:	    return "TOK_DASH";
+	case TOK_DOT:	    return "TOK_DOT";
+	case TOK_A_YEAR:    return "TOK_A_YEAR";
+	case TOK_A_MONTH:   return "TOK_A_MONTH";
+	case TOK_A_WDAY:    return "TOK_A_WDAY";
+	case TOK_SINCE:	    return "TOK_SINCE";
+	case TOK_UNTIL:	    return "TOK_UNTIL";
+	case TOK_IN:	    return "TOK_IN";
+	case TOK_THIS:	    return "TOK_THIS";
+	case TOK_NEXT:	    return "TOK_NEXT";
+	case TOK_LAST:	    return "TOK_LAST";
+	case TOK_EVERY:	    return "TOK_EVERY";
+	case TOK_TODAY:	    return "TOK_EVERY";
+	case TOK_TOMORROW:  return "TOK_TOMORROW";
+	case TOK_YESTERDAY: return "TOK_YESTERDAY";
+	case TOK_YEAR:	    return "TOK_YEAR";
+	case TOK_QUARTER:   return "TOK_QUARTER";
+	case TOK_MONTH:	    return "TOK_MONTH";
+	case TOK_WEEK:	    return "TOK_WEEK";
+	case TOK_DAY:	    return "TOK_DAY";
+	case TOK_YEARLY:    return "TOK_YEARLY";
+	case TOK_QUARTERLY: return "TOK_QUARTERLY";
+	case TOK_BIMONTHLY: return "TOK_BIMONTHLY";
+	case TOK_MONTHLY:   return "TOK_MONTHLY";
+	case TOK_BIWEEKLY:  return "TOK_BIWEEKLY";
+	case TOK_WEEKLY:    return "TOK_WEEKLY";
+	case TOK_DAILY:	    return "TOK_DAILY";
+	case TOK_YEARS:	    return "TOK_YEARS";
+	case TOK_QUARTERS:  return "TOK_QUARTERS";
+	case TOK_MONTHS:    return "TOK_MONTHS";
+	case TOK_WEEKS:	    return "TOK_WEEKS";
+	case TOK_DAYS:	    return "TOK_DAYS";
+	case END_REACHED:   return "END_REACHED";
+	}
+	assert(false);
+	return empty_string;
+      }
+
+      void unexpected();
+      static void expected(char wanted, char c = '\0');
+    };
+
+    token_t token_cache;
+
+    lexer_t(string::const_iterator _begin,
+	    string::const_iterator _end)
+      : begin(_begin), end(_end)
+    {
+      TRACE_CTOR(date_parser_t::lexer_t, "");
+    }
+    lexer_t(const lexer_t& lexer)
+      : begin(lexer.begin), end(lexer.end),
+	token_cache(lexer.token_cache)
+    {
+      TRACE_CTOR(date_parser_t::lexer_t, "copy");
+    }
+    ~lexer_t() throw() {
+      TRACE_DTOR(date_parser_t::lexer_t);
+    }
+
+    token_t next_token();
+    void    push_token(token_t tok) {
+      assert(token_cache.kind == token_t::UNKNOWN);
+      token_cache = tok;
+    }
+    token_t peek_token() {
+      if (token_cache.kind == token_t::UNKNOWN)
+	token_cache = next_token();
+      return token_cache;
+    }
+  };
+
+  string  arg;
+  lexer_t lexer;
+
+public:
+  date_parser_t(const string& _arg)
+    : arg(_arg), lexer(arg.begin(), arg.end()) {
+    TRACE_CTOR(date_parser_t, "");
+  }
+  date_parser_t(const date_parser_t& parser)
+    : arg(parser.arg), lexer(parser.lexer) {
+    TRACE_CTOR(date_parser_t, "copy");
+  }
+  ~date_parser_t() throw() {
+    TRACE_DTOR(date_parser_t);
+  }
+
+  date_interval_t parse();
+
+private:
+  void determine_when(lexer_t::token_t& tok, date_specifier_t& specifier);
+};
+
+void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
+				   date_specifier_t& specifier)
+{
+  switch (tok.kind) {
+  case lexer_t::token_t::TOK_DATE:
+    specifier = boost::get<date_specifier_t>(*tok.value);
+    break;
+
+  case lexer_t::token_t::TOK_INT:
+    specifier.day   =
+      date_specifier_t::day_type(boost::get<unsigned short>(*tok.value));
+    break;
+  case lexer_t::token_t::TOK_A_YEAR:
+    specifier.year  = boost::get<date_specifier_t::year_type>(*tok.value);
+    break;
+  case lexer_t::token_t::TOK_A_MONTH:
+    specifier.month =
+      date_specifier_t::month_type
+        (boost::get<date_time::months_of_year>(*tok.value));
+    break;
+  case lexer_t::token_t::TOK_A_WDAY:
+    specifier.wday  =
+      date_specifier_t::day_of_week_type
+        (boost::get<date_time::weekdays>(*tok.value));
+    break;
+
+  default:
+    tok.unexpected();
+    break;
+  }
+}
+
+date_interval_t date_parser_t::parse()
+{
+  optional<date_specifier_t> since_specifier;
+  optional<date_specifier_t> until_specifier;
+  optional<date_specifier_t> inclusion_specifier;
+
+  date_interval_t period;
+  date_t	  today = CURRENT_DATE();
+  bool		  end_inclusive = false;
+
+  for (lexer_t::token_t tok = lexer.next_token();
+       tok.kind != lexer_t::token_t::END_REACHED;
+       tok = lexer.next_token()) {
+    switch (tok.kind) {
+#if 0
+    case lexer_t::token_t::TOK_INT:
+      // jww (2009-11-18): NYI
+      assert(! "Need to allow for expressions like \"4 months ago\"");
+      tok.unexpected();
+      break;
+#endif
+
+    case lexer_t::token_t::TOK_DATE:
+      if (! inclusion_specifier)
+	inclusion_specifier = date_specifier_t();
+      determine_when(tok, *inclusion_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_INT:
+      if (! inclusion_specifier)
+	inclusion_specifier = date_specifier_t();
+      determine_when(tok, *inclusion_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_A_YEAR:
+      if (! inclusion_specifier)
+	inclusion_specifier = date_specifier_t();
+      determine_when(tok, *inclusion_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_A_MONTH:
+      if (! inclusion_specifier)
+	inclusion_specifier = date_specifier_t();
+      determine_when(tok, *inclusion_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_A_WDAY:
+      if (! inclusion_specifier)
+	inclusion_specifier = date_specifier_t();
+      determine_when(tok, *inclusion_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_DASH:
+      if (inclusion_specifier) {
+	since_specifier	    = inclusion_specifier;
+	until_specifier	    = date_specifier_t();
+	inclusion_specifier = none;
+
+	tok = lexer.next_token();
+	determine_when(tok, *until_specifier);
+
+	// The dash operator is special: it has an _inclusive_ end.
+	end_inclusive = true;
+      } else {
+	tok.unexpected();
+      }
+      break;
+
+    case lexer_t::token_t::TOK_SINCE:
+      if (since_specifier) {
+	tok.unexpected();
+      } else {
+	since_specifier = date_specifier_t();
+	tok = lexer.next_token();
+	determine_when(tok, *since_specifier);
+      }
+      break;
+
+    case lexer_t::token_t::TOK_UNTIL:
+      if (until_specifier) {
+	tok.unexpected();
+      } else {
+	until_specifier = date_specifier_t();
+	tok = lexer.next_token();
+	determine_when(tok, *until_specifier);
+      }
+      break;
+
+    case lexer_t::token_t::TOK_IN:
+      if (inclusion_specifier) {
+	tok.unexpected();
+      } else {
+	inclusion_specifier = date_specifier_t();
+	tok = lexer.next_token();
+	determine_when(tok, *inclusion_specifier);
+      }
+      break;
+
+    case lexer_t::token_t::TOK_THIS:
+    case lexer_t::token_t::TOK_NEXT:
+    case lexer_t::token_t::TOK_LAST: {
+      int8_t adjust = 0;
+      if (tok.kind == lexer_t::token_t::TOK_NEXT)
+	adjust = 1;
+      else if (tok.kind == lexer_t::token_t::TOK_LAST)
+	adjust = -1;
+
+      tok = lexer.next_token();
+      switch (tok.kind) {
+      case lexer_t::token_t::TOK_INT:
+	// jww (2009-11-18): Allow things like "last 5 weeks"
+	assert(! "Need to allow for expressions like \"last 5 weeks\"");
+	tok.unexpected();
+	break;
+
+      case lexer_t::token_t::TOK_A_MONTH: {
+	inclusion_specifier = date_specifier_t();
+	determine_when(tok, *inclusion_specifier);
+
+	date_t temp(today.year(), *inclusion_specifier->month, 1);
+	temp += gregorian::years(adjust);
+	inclusion_specifier =
+	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
+			   temp.month());
+	break;
+      }
+
+      case lexer_t::token_t::TOK_A_WDAY: {
+	inclusion_specifier = date_specifier_t();
+	determine_when(tok, *inclusion_specifier);
+
+	date_t temp =
+	  date_duration_t::find_nearest(today, date_duration_t::WEEKS);
+	while (temp.day_of_week() != inclusion_specifier->wday)
+	  temp += gregorian::days(1);
+	temp += gregorian::days(7 * adjust);
+	inclusion_specifier = date_specifier_t(temp);
+	break;
+      }
+
+      case lexer_t::token_t::TOK_YEAR: {
+	date_t temp(today);
+	temp += gregorian::years(adjust);
+	inclusion_specifier =
+	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()));
+	break;
+      }
+
+      case lexer_t::token_t::TOK_QUARTER: {
+	date_t temp =
+	  date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
+	temp += gregorian::months(3 * adjust);
+	inclusion_specifier =
+	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
+			   temp.month());
+	period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
+	break;
+      }
+
+      case lexer_t::token_t::TOK_MONTH: {
+	date_t temp(today);
+	temp += gregorian::months(adjust);
+	inclusion_specifier =
+	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
+			   temp.month());
+	break;
+      }
+
+      case lexer_t::token_t::TOK_WEEK: {
+	date_t temp =
+	  date_duration_t::find_nearest(today, date_duration_t::WEEKS);
+	temp += gregorian::days(7 * adjust);
+	inclusion_specifier = date_specifier_t(today);
+	period.duration = date_duration_t(date_duration_t::WEEKS, 1);
+	break;
+      }
+
+      case lexer_t::token_t::TOK_DAY: {
+	date_t temp(today);
+	temp += gregorian::days(adjust);
+	inclusion_specifier = date_specifier_t(temp);
+	break;
+      }
+
+      default:
+	tok.unexpected();
+	break;
+      }
+      break;
+    }
+
+    case lexer_t::token_t::TOK_TODAY:
+      inclusion_specifier = date_specifier_t(today);
+      break;
+    case lexer_t::token_t::TOK_TOMORROW:
+      inclusion_specifier = date_specifier_t(today + gregorian::days(1));
+      break;
+    case lexer_t::token_t::TOK_YESTERDAY:
+      inclusion_specifier = date_specifier_t(today - gregorian::days(1));
+      break;
+
+    case lexer_t::token_t::TOK_EVERY:
+      tok = lexer.next_token();
+      if (tok == lexer_t::token_t::TOK_INT) {
+	int quantity = boost::get<unsigned short>(*tok.value);
+	tok = lexer.next_token();
+	switch (tok.kind) {
+	case lexer_t::token_t::TOK_YEARS:
+	  period.skip_duration = date_duration_t(date_duration_t::YEARS, quantity);
+	  break;
+	case lexer_t::token_t::TOK_QUARTERS:
+	  period.skip_duration = date_duration_t(date_duration_t::QUARTERS, quantity);
+	  break;
+	case lexer_t::token_t::TOK_MONTHS:
+	  period.skip_duration = date_duration_t(date_duration_t::MONTHS, quantity);
+	  break;
+	case lexer_t::token_t::TOK_WEEKS:
+	  period.skip_duration = date_duration_t(date_duration_t::WEEKS, quantity);
+	  break;
+	case lexer_t::token_t::TOK_DAYS:
+	  period.skip_duration = date_duration_t(date_duration_t::DAYS, quantity);
+	  break;
+	default:
+	  tok.unexpected();
+	  break;
+	}
+      } else {
+	switch (tok.kind) {
+	case lexer_t::token_t::TOK_YEAR:
+	  period.skip_duration = date_duration_t(date_duration_t::YEARS, 1);
+	  break;
+	case lexer_t::token_t::TOK_QUARTER:
+	  period.skip_duration = date_duration_t(date_duration_t::QUARTERS, 1);
+	  break;
+	case lexer_t::token_t::TOK_MONTH:
+	  period.skip_duration = date_duration_t(date_duration_t::MONTHS, 1);
+	  break;
+	case lexer_t::token_t::TOK_WEEK:
+	  period.skip_duration = date_duration_t(date_duration_t::WEEKS, 1);
+	  break;
+	case lexer_t::token_t::TOK_DAY:
+	  period.skip_duration = date_duration_t(date_duration_t::DAYS, 1);
+	  break;
+	default:
+	  tok.unexpected();
+	  break;
+	}
+      }
+      break;
+
+    case lexer_t::token_t::TOK_YEARLY:
+      period.skip_duration = date_duration_t(date_duration_t::YEARS, 1);
+      break;
+    case lexer_t::token_t::TOK_QUARTERLY:
+      period.skip_duration = date_duration_t(date_duration_t::QUARTERS, 1);
+      break;
+    case lexer_t::token_t::TOK_BIMONTHLY:
+      period.skip_duration = date_duration_t(date_duration_t::MONTHS, 2);
+      break;
+    case lexer_t::token_t::TOK_MONTHLY:
+      period.skip_duration = date_duration_t(date_duration_t::MONTHS, 1);
+      break;
+    case lexer_t::token_t::TOK_BIWEEKLY:
+      period.skip_duration = date_duration_t(date_duration_t::WEEKS, 2);
+      break;
+    case lexer_t::token_t::TOK_WEEKLY:
+      period.skip_duration = date_duration_t(date_duration_t::WEEKS, 1);
+      break;
+    case lexer_t::token_t::TOK_DAILY:
+      period.skip_duration = date_duration_t(date_duration_t::DAYS, 1);
+      break;
+
+    default:
+      tok.unexpected();
+      break;
+    }
+  }
+
+  if (! period.duration && inclusion_specifier)
+    period.duration = inclusion_specifier->implied_duration();
+
+  if (since_specifier || until_specifier) {
+    date_range_t range(since_specifier, until_specifier);
+    range.end_inclusive = end_inclusive;
+
+    period.range = date_specifier_or_range_t(range);
+  }
+  else if (inclusion_specifier) {
+    period.range = date_specifier_or_range_t(*inclusion_specifier);
+  }
+  else {
+    /* otherwise, it's something like "monthly", with no date reference */
+  }
+
+  return period;
+}
+
+void date_interval_t::parse(const string& str)
+{
+  date_parser_t parser(str);
+  *this = parser.parse();
 }
 
 void date_interval_t::resolve_end()
@@ -393,6 +926,40 @@ void date_interval_t::resolve_end()
     DEBUG("times.interval",
 	  "stabilize: next set to: " << *next);
   }
+}
+
+date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip)
+{
+  date_t result;
+
+  switch (skip) {
+  case date_duration_t::YEARS:
+    result = date_t(date.year(), gregorian::Jan, 1);
+    break;
+  case date_duration_t::QUARTERS:
+    result = date_t(date.year(), date.month(), 1);
+    while (result.month() != gregorian::Jan &&
+	   result.month() != gregorian::Apr &&
+	   result.month() != gregorian::Jul &&
+	   result.month() != gregorian::Oct)
+      result -= gregorian::months(1);
+    break;
+  case date_duration_t::MONTHS:
+    result = date_t(date.year(), date.month(), 1);
+    break;
+  case date_duration_t::WEEKS:
+    result = date;
+    while (result.day_of_week() != start_of_week)
+      result -= gregorian::days(1);
+    break;
+  case date_duration_t::DAYS:
+    result = date;
+    break;
+  default:
+    assert(false);
+    break;
+  }
+  return result;
 }
 
 void date_interval_t::stabilize(const optional<date_t>& date)
@@ -430,20 +997,15 @@ void date_interval_t::stabilize(const optional<date_t>& date)
       date_t when = start ? *start : *date;
 
       if (duration->quantum == date_duration_t::MONTHS ||
+	  duration->quantum == date_duration_t::QUARTERS ||
 	  duration->quantum == date_duration_t::YEARS) {
-	DEBUG("times.interval", "stabilize: monthly or yearly duration");
-
-	start = date_t(when.year(), gregorian::Jan, 1);
+	DEBUG("times.interval",
+	      "stabilize: monthly, quarterly or yearly duration");
+	start = date_duration_t::find_nearest(when, duration->quantum);
       } else {
 	DEBUG("times.interval", "stabilize: daily or weekly duration");
-
-	start = date_t(when - gregorian::days(400));
-
-	if (duration->quantum == date_duration_t::WEEKS) {
-	  // Move it to a Sunday
-	  while (start->day_of_week() != start_of_week)
-	    *start += gregorian::days(1);
-	}
+	start = date_duration_t::find_nearest(when - gregorian::days(400),
+					      duration->quantum);
       }
 
       DEBUG("times.interval",
@@ -474,6 +1036,14 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 	finish = initial_finish;
 	DEBUG("times.interval", "stabilize: finish reset to initial finish");
       }
+    }
+    else if (range) {
+      start    = range->begin();
+      finish   = range->end();
+
+      if (start && finish)
+	duration = date_duration_t(date_duration_t::DAYS,
+				   static_cast<int>((*finish - *start).days()));
     }
     aligned = true;
   }
@@ -546,7 +1116,7 @@ bool date_interval_t::find_period(const date_t& date)
       return true;
     }
 
-    scan	= skip_duration->add(scan);
+    scan = skip_duration->add(scan);
     end_of_scan = duration->add(scan);
   }
 
@@ -581,214 +1151,57 @@ date_interval_t& date_interval_t::operator++()
   return *this;
 }
 
-namespace {
-  void parse_inclusion_specifier(const string& word,
-				 date_t *      begin,
-				 date_t *      end)
-  {
-    date_traits_t traits;
-    date_t	  when = parse_date_mask(word.c_str(), none, &traits);
-
-    if (when.is_not_a_date())
-      throw_(date_error, _("Could not parse date mask: %1") << word);
-
-    if (begin) {
-      *begin = when;
-
-      if (end) {
-	if (traits.has_day)
-	  *end = *begin + gregorian::days(1);
-	else if (traits.has_month)
-	  *end = *begin + gregorian::months(1);
-	else
-	  *end = *begin + gregorian::years(1);
-      }
-    }
-    else if (end) {
-      *end = when;
-    }
-  }
-
-  inline void read_lower_word(std::istream& in, string& word) {
-    in >> word;
-    for (string::size_type i = 0, l = word.length(); i < l; i++)
-      word[i] = static_cast<char>(std::tolower(word[i]));
-  }
-
-  void parse_date_words(std::istream&	 in,
-			string&		 word,
-			date_interval_t& interval,
-			bool             look_for_start  = true,
-			bool             look_for_finish = true)
-  {
-    string type;
-
-    if (word == _("this") || word == _("last") || word == _("next")) {
-      type = word;
-      if (! in.eof())
-	read_lower_word(in, word);
-      else
-	word = _("month");
-    } else {
-      type = _("this");
-    }
-
-    date_t start = CURRENT_DATE();
-    date_t finish;
-    bool   parse_specifier = false;
-
-    optional<date_duration_t> duration;
-
-    assert(look_for_start || look_for_finish);
-
-    if (word == _("year")) {
-      duration = date_duration_t(date_duration_t::YEARS, 1);
-      start    = gregorian::date(start.year(), 1, 1);
-    }
-    else if (word == _("month")) {
-      duration = date_duration_t(date_duration_t::MONTHS, 1);
-      start    = gregorian::date(start.year(), start.month(), 1);
-    }
-    else if (word == _("today") || word == _("day")) {
-      duration = date_duration_t(date_duration_t::DAYS, 1);
-    }
-    else {
-      parse_specifier = true;
-    }
-
-    if (parse_specifier)
-      parse_inclusion_specifier(word, &start, &finish);
-    else
-      finish = duration->add(start);
-
-    if (type == _("last") && duration) {
-      start = duration->subtract(start);
-      finish   = duration->subtract(finish);
-    }
-    else if (type == _("next") && duration) {
-      start = duration->add(start);
-      finish   = duration->add(finish);
-    }
-
-    if (look_for_start  && is_valid(start))  interval.start  = start;
-    if (look_for_finish && is_valid(finish)) interval.finish = finish;
-  }
-}
-
-void date_interval_t::parse(std::istream& in)
+void date_interval_t::dump(std::ostream& out)
 {
-  string word;
+  out << _("--- Before stabilization ---") << std::endl;
 
-  optional<date_time::months_of_year> mon;
-  optional<date_time::weekdays>       wday;
-  optional<date_t::year_type>         year;
+  if (range)
+    out << _("   range: ") << range->to_string() << std::endl;
+  if (start)
+    out << _("   start: ") << format_date(*start) << std::endl;
+  if (finish)
+    out << _("  finish: ") << format_date(*finish) << std::endl;
 
-  while (! in.eof()) {
-    read_lower_word(in, word);
-    if (word == _("every")) {
-      read_lower_word(in, word);
-      if (std::isdigit(word[0])) {
-	int quantity = lexical_cast<int>(word);
-	read_lower_word(in, word);
-	if (word == _("days"))
-	  duration = date_duration_t(date_duration_t::DAYS, quantity);
-	else if (word == _("weeks"))
-	  duration = date_duration_t(date_duration_t::WEEKS, quantity);
-	else if (word == _("months"))
-	  duration = date_duration_t(date_duration_t::MONTHS, quantity);
-	else if (word == _("quarters"))
-	  duration = date_duration_t(date_duration_t::MONTHS, 3 * quantity);
-	else if (word == _("years"))
-	  duration = date_duration_t(date_duration_t::YEARS, quantity);
-      }
-      else if (word == _("day"))
-	duration = date_duration_t(date_duration_t::DAYS, 1);
-      else if (word == _("week"))
-	duration = date_duration_t(date_duration_t::WEEKS, 1);
-      else if (word == _("month"))
-	duration = date_duration_t(date_duration_t::MONTHS, 1);
-      else if (word == _("quarter"))
-	duration = date_duration_t(date_duration_t::MONTHS, 3);
-      else if (word == _("year"))
-	duration = date_duration_t(date_duration_t::YEARS, 1);
-    }
-    else if (word == _("daily"))
-      duration = date_duration_t(date_duration_t::DAYS, 1);
-    else if (word == _("weekly"))
-      duration = date_duration_t(date_duration_t::WEEKS, 1);
-    else if (word == _("biweekly"))
-      duration = date_duration_t(date_duration_t::WEEKS, 2);
-    else if (word == _("monthly"))
-      duration = date_duration_t(date_duration_t::MONTHS, 1);
-    else if (word == _("bimonthly"))
-      duration = date_duration_t(date_duration_t::MONTHS, 2);
-    else if (word == _("quarterly"))
-      duration = date_duration_t(date_duration_t::MONTHS, 3);
-    else if (word == _("yearly"))
-      duration = date_duration_t(date_duration_t::YEARS, 1);
-    else if (word == _("this") || word == _("last") || word == _("next") ||
-	     word == _("today")) {
-      parse_date_words(in, word, *this);
-    }
-    else if (word == _("in")) {
-      read_lower_word(in, word);
-      parse_date_words(in, word, *this);
-    }
-    else if (word == _("from") || word == _("since")) {
-      read_lower_word(in, word);
-      parse_date_words(in, word, *this, true, false);
-    }
-    else if (word == _("to") || word == _("until")) {
-      read_lower_word(in, word);
-      parse_date_words(in, word, *this, false, true);
-    }
-    else if (optional<date_time::months_of_year>
-	     m = string_to_month_of_year(word)) {
-      mon = m;
-    }
-    else if (optional<date_time::weekdays>
-	     d = string_to_day_of_week(word)) {
-      wday = d;
-    }
-    else if (all(word, is_digit())) {
-      year = lexical_cast<unsigned short>(word);
-    }
-    else {
-      // otherwise, it should be an explicit date
-      date_t s, f;
-      parse_inclusion_specifier(word, &s, &f);
-      start  = s;
-      finish = f;
-    }
-  }
+  if (skip_duration)
+    out << _("    skip: ") << skip_duration->to_string() << std::endl;
+  if (factor)
+    out << _("  factor: ") << factor << std::endl;
+  if (duration)
+    out << _("duration: ") << duration->to_string() << std::endl;
 
-  if (year || mon || wday) {
-    if (! start)
-      start = CURRENT_DATE();
+  stabilize(begin());
 
-    if (wday) {
-      while (start->day_of_week() != *wday)
-	*start -= gregorian::days(1);
+  out << std::endl
+      << _("--- After stabilization ---") << std::endl;
 
-      if (! finish)
-	finish = *start + gregorian::days(1);
-    } else {
-      bool overwrite_finish = false;
+  if (range)
+    out << _("   range: ") << range->to_string() << std::endl;
+  if (start)
+    out << _("   start: ") << format_date(*start) << std::endl;
+  if (finish)
+    out << _("  finish: ") << format_date(*finish) << std::endl;
 
-      if (year) {
-	start = date_t(*year, 1, 1);
-	if (! finish) {
-	  finish = *start + gregorian::years(1);
-	  overwrite_finish = true;
-	}
-      }
+  if (skip_duration)
+    out << _("    skip: ") << skip_duration->to_string() << std::endl;
+  if (factor)
+    out << _("  factor: ") << factor << std::endl;
+  if (duration)
+    out << _("duration: ") << duration->to_string() << std::endl;
 
-      if (mon) {
-	start = date_t(start->year(), *mon, 1);
-	if (! finish || overwrite_finish)
-	  finish = *start + gregorian::months(1);
-      }
-    }
+  out << std::endl
+      << _("--- Sample dates in range (max. 20) ---") << std::endl;
+
+  for (int i = 0; i < 20 && *this; i++, ++*this) {
+    out << std::right;
+    out.width(2);
+
+    out << (i + 1) << ": " << format_date(*start);
+    if (skip_duration)
+      out << " -- " << format_date(*inclusive_skip_end());
+    out << std::endl;
+
+    if (! skip_duration)
+      break;
   }
 }
 
@@ -846,22 +1259,22 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
 
   if (! term.empty()) {
     if (std::isdigit(term[0])) {
-      return token_t(term.length() == 4 ?
-		     token_t::TOK_A_YEAR : token_t::TOK_INT,
-		     token_t::content_t(lexical_cast<int>(term)));
+      if (term.length() == 4)
+	return token_t(token_t::TOK_A_YEAR,
+		       token_t::content_t
+		       (lexical_cast<date_specifier_t::year_type>(term)));
+      else
+	return token_t(token_t::TOK_INT,
+		       token_t::content_t(lexical_cast<unsigned short>(term)));
     }
     else if (std::isalpha(term[0])) {
       if (optional<date_time::months_of_year> month =
 	  string_to_month_of_year(term)) {
-	date_specifier_t specifier;
-	specifier.month = static_cast<date_t::month_type>(*month);
-	return token_t(token_t::TOK_A_MONTH, token_t::content_t(specifier));
+	return token_t(token_t::TOK_A_MONTH, token_t::content_t(*month));
       }
       else if (optional<date_time::weekdays> wday =
 	       string_to_day_of_week(term)) {
-	date_specifier_t specifier;
-	specifier.wday = static_cast<date_t::day_of_week_type>(*wday);
-	return token_t(token_t::TOK_A_WDAY, token_t::content_t(specifier));
+	return token_t(token_t::TOK_A_WDAY, token_t::content_t(*wday));
       }
       else if (term == _("from") || term == _("since"))
 	return token_t(token_t::TOK_SINCE);
@@ -875,6 +1288,14 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
 	return token_t(token_t::TOK_NEXT);
       else if (term == _("last"))
 	return token_t(token_t::TOK_LAST);
+      else if (term == _("every"))
+	return token_t(token_t::TOK_EVERY);
+      else if (term == _("today"))
+	return token_t(token_t::TOK_TODAY);
+      else if (term == _("tomorrow"))
+	return token_t(token_t::TOK_TOMORROW);
+      else if (term == _("yesterday"))
+	return token_t(token_t::TOK_YESTERDAY);
       else if (term == _("year"))
 	return token_t(token_t::TOK_YEAR);
       else if (term == _("quarter"))
@@ -948,13 +1369,6 @@ void date_parser_t::lexer_t::token_t::expected(char wanted, char c)
     else
       throw_(date_error, _("Invalid char '%1' (wanted '%2')") << c << wanted);
   }
-}
-
-date_interval_t date_parser_t::parse_date_expr()
-{
-  date_interval_t interval;
-
-  return interval;
 }
 
 namespace {
@@ -1084,85 +1498,14 @@ void show_period_tokens(std::ostream& out, const string& arg)
 {
   date_parser_t::lexer_t lexer(arg.begin(), arg.end());
 
+  out << _("--- Period expression tokens ---") << std::endl;
+
   date_parser_t::lexer_t::token_t token;
   do {
     token = lexer.next_token();
-    out << _("token: ") << token.to_string() << std::endl;
+    out << token.to_string() << std::endl;
   }
   while (token.kind != date_parser_t::lexer_t::token_t::END_REACHED);
 }
 
-void analyze_period(std::ostream& out, const string& arg)
-{
-  date_parser_t date_parser(arg);
-
-  date_interval_t interval = date_parser.parse();
-
-  out << _("global details => ") << std::endl << std::endl;
-
-  if (interval.start)
-    out << _("   start: ") << format_date(*interval.start) << std::endl;
-  else
-    out << _("   start: TODAY: ") << format_date(CURRENT_DATE()) << std::endl;
-  if (interval.finish)
-    out << _("  finish: ") << format_date(*interval.finish) << std::endl;
-
-  if (interval.skip_duration)
-    out << _("    skip: ") << *interval.skip_duration << std::endl;
-  if (interval.factor)
-    out << _("  factor: ") << interval.factor << std::endl;
-  if (interval.duration)
-    out << _("duration: ") << *interval.duration << std::endl;
-
-  if (interval.find_period(interval.start ?
-			   *interval.start : CURRENT_DATE())) {
-    out << std::endl
-	<< _("after finding first period => ") << std::endl
-	<< std::endl;
-
-    if (interval.start)
-      out << _("   start: ") << format_date(*interval.start) << std::endl;
-    if (interval.finish)
-      out << _("  finish: ") << format_date(*interval.finish) << std::endl;
-
-    if (interval.skip_duration)
-      out << _("    skip: ") << *interval.skip_duration << std::endl;
-    if (interval.factor)
-      out << _("  factor: ") << interval.factor << std::endl;
-    if (interval.duration)
-      out << _("duration: ") << *interval.duration << std::endl;
-
-    out << std::endl;
-
-    for (int i = 0; i < 20 && interval; i++, ++interval) {
-      out << std::right;
-      out.width(2);
-
-      out << i << "): " << format_date(*interval.start);
-      if (interval.end_of_duration)
-	out << " -- " << format_date(*interval.inclusive_end());
-      out << std::endl;
-
-      if (! interval.skip_duration)
-	break;
-    }
-  }
-}
-
 } // namespace ledger
-
-#if defined(TIMES_HARNESS)
-
-int main(int argc, char *argv[])
-{
-  if (argc > 1) {
-    ledger::times_initialize();
-    ledger::analyze_period(std::cout, argv[1]);
-    ledger::times_shutdown();
-  } else {
-    std::cerr << "Usage: times <PERIOD>" << std::endl;
-  }
-  return 0;
-}
-
-#endif // TIMES_HARNESS

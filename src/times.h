@@ -146,12 +146,18 @@ struct date_traits_t
   date_traits_t(bool _has_year  = false,
 		bool _has_month = false,
 		bool _has_day   = false)
-    : has_year(_has_year), has_month(_has_month), has_day(_has_day) {}
-
+    : has_year(_has_year), has_month(_has_month), has_day(_has_day) {
+    TRACE_CTOR(date_traits_t, "bool, bool, bool");
+  }
   date_traits_t(const date_traits_t& traits)
     : has_year(traits.has_year),
       has_month(traits.has_month),
-      has_day(traits.has_day) {}
+      has_day(traits.has_day) {
+    TRACE_CTOR(date_traits_t, "copy");
+  }
+  ~date_traits_t() throw() {
+    TRACE_DTOR(date_traits_t);
+  }
 
   date_traits_t& operator=(const date_traits_t& traits) {
     has_year	= traits.has_year;
@@ -181,107 +187,10 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-class date_specifier_t
-{
-  friend class date_parser_t;
-
-#if 0
-  typedef date_t::year_type	   year_type;
-#else
-  typedef unsigned short	   year_type;
-#endif
-  typedef date_t::month_type	   month_type;
-  typedef date_t::day_type	   day_type;
-  typedef date_t::day_of_week_type day_of_week_type;
-
-  optional<year_type>	     year;
-  optional<month_type>	     month;
-  optional<day_type>	     day;
-  optional<day_of_week_type> wday;
-
-public:
-  date_specifier_t() {}
-  date_specifier_t(const date_t& date, const date_traits_t& traits) {
-    if (traits.has_year)
-      year = date.year();
-    if (traits.has_month)
-      month = date.month();
-    if (traits.has_day)
-      day = date.day();
-  }
-
-  date_t begin(const optional_year& current_year = none) const;
-  date_t end(const optional_year& current_year = none) const;
-
-  bool is_within(const date_t& date,
-		 const optional_year& current_year = none) const {
-    return date >= begin(current_year) && date < end(current_year);
-  }
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & year;
-    ar & month;
-    ar & day;
-    ar & wday;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
-};
-
-class date_range_t
-{
-  friend class date_parser_t;
-
-  optional<date_specifier_t> range_begin;
-  optional<date_specifier_t> range_end;
-
-public:
-  optional<date_t> begin(const optional_year& current_year = none) const {
-    if (range_begin)
-      return range_begin->begin(current_year);
-    else
-      return none;
-  }
-  optional<date_t> end(const optional_year& current_year = none) const {
-    if (range_end)
-      return range_end->end(current_year);
-    else
-      return none;
-  }
-
-  bool is_within(const date_t& date,
-		 const optional_year& current_year = none) const {
-    optional<date_t> b = begin(current_year);
-    optional<date_t> e = end(current_year);
-    bool after_begin = b ? date >= *b : true;
-    bool before_end  = e ? date <  *e : true;
-    return after_begin && before_end;
-  }
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & range_begin;
-    ar & range_end;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
-};
-
 struct date_duration_t
 {
   enum skip_quantum_t {
-    DAYS, WEEKS, MONTHS, YEARS
+    DAYS, WEEKS, MONTHS, QUARTERS, YEARS
   } quantum;
   int length;
 
@@ -308,6 +217,8 @@ struct date_duration_t
       return date + gregorian::weeks(length);
     case MONTHS:
       return date + gregorian::months(length);
+    case QUARTERS:
+      return date + gregorian::months(length * 3);
     case YEARS:
       return date + gregorian::years(length);
     default:
@@ -323,12 +234,38 @@ struct date_duration_t
       return date - gregorian::weeks(length);
     case MONTHS:
       return date - gregorian::months(length);
+    case QUARTERS:
+      return date - gregorian::months(length * 3);
     case YEARS:
       return date - gregorian::years(length);
     default:
       assert(false); return date_t();
     }
   }
+
+  string to_string() const {
+    std::ostringstream out;
+
+    out << length << ' ';
+
+    switch (quantum) {
+    case DAYS:	   out << "day"; break;
+    case WEEKS:	   out << "week"; break;
+    case MONTHS:   out << "month"; break;
+    case QUARTERS: out << "quarter"; break;
+    case YEARS:	   out << "year"; break;
+    default:
+      assert(false);
+      break;
+    }
+
+    if (length > 1)
+      out << 's';
+
+    return out.str();
+  }
+
+  static date_t find_nearest(const date_t& date, skip_quantum_t skip);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -344,6 +281,178 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+class date_specifier_t
+{
+  friend class date_parser_t;
+
+#if 0
+  typedef date_t::year_type	   year_type;
+#else
+  typedef unsigned short	   year_type;
+#endif
+  typedef date_t::month_type	   month_type;
+  typedef date_t::day_type	   day_type;
+  typedef date_t::day_of_week_type day_of_week_type;
+
+  optional<year_type>	     year;
+  optional<month_type>	     month;
+  optional<day_type>	     day;
+  optional<day_of_week_type> wday;
+
+public:
+  date_specifier_t(const optional<year_type>&        _year  = none,
+		   const optional<month_type>&       _month = none,
+		   const optional<day_type>&         _day   = none,
+		   const optional<day_of_week_type>& _wday  = none)
+    : year(_year), month(_month), day(_day), wday(_wday) {
+    TRACE_CTOR(date_specifier_t,
+	       "year_type, month_type, day_type, day_of_week_type");
+  }
+  date_specifier_t(const date_t& date,
+		   const optional<date_traits_t>& traits = none) {
+    TRACE_CTOR(date_specifier_t, "date_t, date_traits_t");
+    if (! traits || traits->has_year)
+      year = date.year();
+    if (! traits || traits->has_month)
+      month = date.month();
+    if (! traits || traits->has_day)
+      day = date.day();
+  }
+  date_specifier_t(const date_specifier_t& other)
+    : year(other.year), month(other.month),
+      day(other.day), wday(other.wday) {
+    TRACE_CTOR(date_specifier_t, "copy");
+  }
+  ~date_specifier_t() throw() {
+    TRACE_DTOR(date_specifier_t);
+  }
+
+  date_t begin(const optional_year& current_year = none) const;
+  date_t end(const optional_year& current_year = none) const;
+
+  bool is_within(const date_t& date,
+		 const optional_year& current_year = none) const {
+    return date >= begin(current_year) && date < end(current_year);
+  }
+
+  optional<date_duration_t> implied_duration() const {
+    if (day || wday)
+      return date_duration_t(date_duration_t::DAYS, 1);
+    else if (month)
+      return date_duration_t(date_duration_t::MONTHS, 1);
+    else if (year)
+      return date_duration_t(date_duration_t::YEARS, 1);
+    else
+      return none;
+  }
+
+  string to_string() const {
+    std::ostringstream out;
+
+    if (year)
+      out << " year " << *year;
+    if (month)
+      out << " month " << *month;
+    if (day)
+      out << " day " << *day;
+    if (wday)
+      out << " wday " << *wday;
+
+    return out.str();
+  }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & year;
+    ar & month;
+    ar & day;
+    ar & wday;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
+};
+
+class date_range_t
+{
+  friend class date_parser_t;
+
+  optional<date_specifier_t> range_begin;
+  optional<date_specifier_t> range_end;
+
+  bool end_inclusive;
+
+public:
+  date_range_t(const optional<date_specifier_t>& _range_begin = none,
+	       const optional<date_specifier_t>& _range_end   = none)
+    : range_begin(_range_begin), range_end(_range_end),
+      end_inclusive(false) {
+    TRACE_CTOR(date_range_t, "date_specifier_t, date_specifier_t");
+  }
+  date_range_t(const date_range_t& other)
+    : range_begin(other.range_begin), range_end(other.range_end),
+      end_inclusive(other.end_inclusive) {
+    TRACE_CTOR(date_range_t, "date_range_t");
+  }
+  ~date_range_t() throw() {
+    TRACE_DTOR(date_range_t);
+  }
+
+  optional<date_t> begin(const optional_year& current_year = none) const {
+    if (range_begin)
+      return range_begin->begin(current_year);
+    else
+      return none;
+  }
+  optional<date_t> end(const optional_year& current_year = none) const {
+    if (range_end) {
+      if (end_inclusive)
+	return range_end->end(current_year);
+      else
+	return range_end->begin(current_year);
+    } else {
+      return none;
+    }
+  }
+
+  bool is_within(const date_t& date,
+		 const optional_year& current_year = none) const {
+    optional<date_t> b = begin(current_year);
+    optional<date_t> e = end(current_year);
+    bool after_begin = b ? date >= *b : true;
+    bool before_end  = e ? date <  *e : true;
+    return after_begin && before_end;
+  }
+
+  string to_string() const {
+    std::ostringstream out;
+
+    if (range_begin)
+      out << "from" << range_begin->to_string();
+    if (range_end)
+      out << " to" << range_end->to_string();
+    
+    return out.str();
+  }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & range_begin;
+    ar & range_end;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
+};
+
 class date_specifier_or_range_t
 {
   typedef variant<int, date_specifier_t, date_range_t> value_type;
@@ -351,6 +460,25 @@ class date_specifier_or_range_t
   value_type specifier_or_range;
 
 public:
+  date_specifier_or_range_t() {
+    TRACE_CTOR(date_specifier_or_range_t, "");
+  }
+  date_specifier_or_range_t(const date_specifier_or_range_t& other)
+    : specifier_or_range(other.specifier_or_range) {
+    TRACE_CTOR(date_specifier_or_range_t, "copy");
+  }
+  date_specifier_or_range_t(const date_specifier_t& specifier)
+    : specifier_or_range(specifier) {
+    TRACE_CTOR(date_specifier_or_range_t, "date_specifier_t");
+  }
+  date_specifier_or_range_t(const date_range_t& range)
+    : specifier_or_range(range) {
+    TRACE_CTOR(date_specifier_or_range_t, "date_range_t");
+  }
+  ~date_specifier_or_range_t() throw() {
+    TRACE_DTOR(date_specifier_or_range_t);
+  }
+
   optional<date_t> begin(const optional_year& current_year = none) const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
       return boost::get<date_specifier_t>(specifier_or_range).begin(current_year);
@@ -366,6 +494,18 @@ public:
       return boost::get<date_range_t>(specifier_or_range).end(current_year);
     else
       return none;
+  }
+
+
+  string to_string() const {
+    std::ostringstream out;
+
+    if (specifier_or_range.type() == typeid(date_specifier_t))
+      out << "in" << boost::get<date_specifier_t>(specifier_or_range).to_string();
+    else if (specifier_or_range.type() == typeid(date_range_t))
+      out << boost::get<date_range_t>(specifier_or_range).to_string();
+
+    return out.str();
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
@@ -439,17 +579,12 @@ public:
     return finish ? finish : (range ? range->end(current_year) : none);
   }
 
-  void parse(std::istream& in);
+  void   parse(const string& str);
 
-  void parse(const string& str) {
-    std::istringstream in(str);
-    parse(in);
-  }
+  void	 resolve_end();
+  void	 stabilize(const optional<date_t>& date = none);
 
-  void resolve_end();
-  void stabilize(const optional<date_t>& date = none);
-
-  bool is_valid() const {
+  bool   is_valid() const {
     return start;
   }
 
@@ -458,6 +593,12 @@ public:
       containing date, or false if no such period can be found. */
   bool find_period(const date_t& date);
 
+  optional<date_t> inclusive_skip_end() const {
+    if (skip_duration)
+      return skip_duration->add(*start) - gregorian::days(1);
+    else
+      return none;
+  }
   optional<date_t> inclusive_end() const {
     if (end_of_duration)
       return *end_of_duration - gregorian::days(1);
@@ -466,6 +607,8 @@ public:
   }
 
   date_interval_t& operator++();
+
+  void dump(std::ostream& out);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -488,197 +631,10 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-class date_parser_t
-{
-  friend void show_period_tokens(std::ostream& out, const string& arg);
-  
-  class lexer_t
-  {
-    friend class date_parser_t;
-
-    string::const_iterator begin;
-    string::const_iterator end;
-
-  public:
-    struct token_t
-    {
-      enum kind_t {
-	UNKNOWN,
-
-	TOK_DATE,
-	TOK_INT,
-	TOK_SLASH,
-	TOK_DASH,
-	TOK_DOT,
-
-	TOK_A_YEAR,
-	TOK_A_MONTH,
-	TOK_A_DAY,
-	TOK_A_WDAY,
-
-	TOK_SINCE,
-	TOK_UNTIL,
-	TOK_IN,
-	TOK_THIS,
-	TOK_NEXT,
-	TOK_LAST,
-
-	TOK_YEAR,
-	TOK_QUARTER,
-	TOK_MONTH,
-	TOK_WEEK,
-	TOK_DAY,
-
-	TOK_YEARLY,
-	TOK_QUARTERLY,
-	TOK_BIMONTHLY,
-	TOK_MONTHLY,
-	TOK_BIWEEKLY,
-	TOK_WEEKLY,
-	TOK_DAILY,
-
-	TOK_YEARS,
-	TOK_QUARTERS,
-	TOK_MONTHS,
-	TOK_WEEKS,
-	TOK_DAYS,
-
-	END_REACHED
-
-      } kind;
-
-      typedef variant<string, int, date_specifier_t> content_t;
-
-      optional<content_t> value;
-
-      explicit token_t(kind_t _kind = UNKNOWN,
-		       const optional<content_t>& _value = none)
-	: kind(_kind), value(_value) {
-	TRACE_CTOR(date_parser_t::lexer_t::token_t, "");
-      }
-      token_t(const token_t& tok)
-	: kind(tok.kind), value(tok.value) {
-	TRACE_CTOR(date_parser_t::lexer_t::token_t, "copy");
-      }
-      ~token_t() throw() {
-	TRACE_DTOR(date_parser_t::lexer_t::token_t);
-      }
-
-      token_t& operator=(const token_t& tok) {
-	if (this != &tok) {
-	  kind  = tok.kind;
-	  value = tok.value;
-	}
-	return *this;
-      }
-
-      operator bool() const {
-	return kind != END_REACHED;
-      }
-
-      string to_string() const {
-	switch (kind) {
-	case UNKNOWN:	    return "UNKNOWN";
-	case TOK_DATE:	    return "TOK_DATE";
-	case TOK_INT:	    return "TOK_INT";
-	case TOK_SLASH:	    return "TOK_SLASH";
-	case TOK_DASH:	    return "TOK_DASH";
-	case TOK_DOT:	    return "TOK_DOT";
-	case TOK_A_YEAR:    return "TOK_A_YEAR";
-	case TOK_A_MONTH:   return "TOK_A_MONTH";
-	case TOK_A_DAY:	    return "TOK_A_DAY";
-	case TOK_A_WDAY:    return "TOK_A_WDAY";
-	case TOK_SINCE:	    return "TOK_SINCE";
-	case TOK_UNTIL:	    return "TOK_UNTIL";
-	case TOK_IN:	    return "TOK_IN";
-	case TOK_THIS:	    return "TOK_THIS";
-	case TOK_NEXT:	    return "TOK_NEXT";
-	case TOK_LAST:	    return "TOK_LAST";
-	case TOK_YEAR:	    return "TOK_YEAR";
-	case TOK_QUARTER:   return "TOK_QUARTER";
-	case TOK_MONTH:	    return "TOK_MONTH";
-	case TOK_WEEK:	    return "TOK_WEEK";
-	case TOK_DAY:	    return "TOK_DAY";
-	case TOK_YEARLY:    return "TOK_YEARLY";
-	case TOK_QUARTERLY: return "TOK_QUARTERLY";
-	case TOK_BIMONTHLY: return "TOK_BIMONTHLY";
-	case TOK_MONTHLY:   return "TOK_MONTHLY";
-	case TOK_BIWEEKLY:  return "TOK_BIWEEKLY";
-	case TOK_WEEKLY:    return "TOK_WEEKLY";
-	case TOK_DAILY:	    return "TOK_DAILY";
-	case TOK_YEARS:	    return "TOK_YEARS";
-	case TOK_QUARTERS:  return "TOK_QUARTERS";
-	case TOK_MONTHS:    return "TOK_MONTHS";
-	case TOK_WEEKS:	    return "TOK_WEEKS";
-	case TOK_DAYS:	    return "TOK_DAYS";
-	case END_REACHED:   return "END_REACHED";
-	}
-	assert(false);
-	return empty_string;
-      }
-
-      void unexpected();
-      static void expected(char wanted, char c = '\0');
-    };
-
-    token_t token_cache;
-
-    lexer_t(string::const_iterator _begin,
-	    string::const_iterator _end)
-      : begin(_begin), end(_end)
-    {
-      TRACE_CTOR(date_parser_t::lexer_t, "");
-    }
-    lexer_t(const lexer_t& lexer)
-      : begin(lexer.begin), end(lexer.end),
-	token_cache(lexer.token_cache)
-    {
-      TRACE_CTOR(date_parser_t::lexer_t, "copy");
-    }
-    ~lexer_t() throw() {
-      TRACE_DTOR(date_parser_t::lexer_t);
-    }
-
-    token_t next_token();
-    void    push_token(token_t tok) {
-      assert(token_cache.kind == token_t::UNKNOWN);
-      token_cache = tok;
-    }
-    token_t peek_token() {
-      if (token_cache.kind == token_t::UNKNOWN)
-	token_cache = next_token();
-      return token_cache;
-    }
-  };
-
-  string  arg;
-  lexer_t lexer;
-
-  date_interval_t parse_date_expr();
-
-public:
-  date_parser_t(const string& _arg)
-    : arg(_arg), lexer(arg.begin(), arg.end()) {
-    TRACE_CTOR(date_parser_t, "");
-  }
-  date_parser_t(const date_parser_t& parser)
-    : arg(parser.arg), lexer(parser.lexer) {
-    TRACE_CTOR(date_parser_t, "copy");
-  }
-  ~date_parser_t() throw() {
-    TRACE_DTOR(date_parser_t);
-  }
-
-  date_interval_t parse() {
-    return date_interval_t();
-  }
-};
-
 void times_initialize();
 void times_shutdown();
 
 void show_period_tokens(std::ostream& out, const string& arg);
-void analyze_period(std::ostream& out, const string& arg);
 
 std::ostream& operator<<(std::ostream& out, const date_duration_t& duration);
 
