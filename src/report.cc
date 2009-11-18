@@ -125,9 +125,9 @@ void report_t::normalize_options(const string& verb)
 	"date>=[" + to_iso_extended_string(*interval.start) + "]";
       HANDLER(limit_).on(string("?normalize"), predicate);
     }
-    if (! HANDLED(end_) && interval.end) {
+    if (! HANDLED(end_) && interval.finish) {
       string predicate =
-	"date<[" + to_iso_extended_string(*interval.end) + "]";
+	"date<[" + to_iso_extended_string(*interval.finish) + "]";
       HANDLER(limit_).on(string("?normalize"), predicate);
     }
 

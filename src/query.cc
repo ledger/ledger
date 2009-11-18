@@ -263,12 +263,12 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
 	node->set_right(arg1);
       }
 
-      if (interval.end) {
+      if (interval.finish) {
 	expr_t::ptr_op_t lt = new expr_t::op_t(expr_t::op_t::O_LT);
 	lt->set_left(ident);
 
 	expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
-	arg1->set_value(*interval.end);
+	arg1->set_value(*interval.finish);
 	lt->set_right(arg1);
 
 	if (node) {

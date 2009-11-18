@@ -173,8 +173,8 @@ value_t period_command(call_scope_t& args)
     out << _("   start: ") << format_date(*interval.start) << std::endl;
   else
     out << _("   start: TODAY: ") << format_date(CURRENT_DATE()) << std::endl;
-  if (interval.end)
-    out << _("     end: ") << format_date(*interval.end) << std::endl;
+  if (interval.finish)
+    out << _("  finish: ") << format_date(*interval.finish) << std::endl;
 
   if (interval.skip_duration)
     out << _("    skip: ") << *interval.skip_duration << std::endl;
@@ -191,8 +191,8 @@ value_t period_command(call_scope_t& args)
 
     if (interval.start)
       out << _("   start: ") << format_date(*interval.start) << std::endl;
-    if (interval.end)
-      out << _("     end: ") << format_date(*interval.end) << std::endl;
+    if (interval.finish)
+      out << _("  finish: ") << format_date(*interval.finish) << std::endl;
 
     if (interval.skip_duration)
       out << _("    skip: ") << *interval.skip_duration << std::endl;

@@ -784,7 +784,7 @@ void budget_posts::report_budget_items(const date_t& date)
       assert(begin);
 
       if (*begin <= date &&
-	  (! pair.first.end || *begin < *pair.first.end)) {
+	  (! pair.first.finish || *begin < *pair.first.finish)) {
 	post_t& post = *pair.second;
 
 	DEBUG("budget.generate", "Reporting budget for "
@@ -905,8 +905,8 @@ void forecast_posts::flush()
     }
 
     date_t& begin = *(*least).first.start;
-    if ((*least).first.end)
-      assert(begin < *(*least).first.end);
+    if ((*least).first.finish)
+      assert(begin < *(*least).first.finish);
 
     // If the next date in the series for this periodic posting is more than 5
     // years beyond the last valid post we generated, drop it from further

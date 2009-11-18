@@ -345,8 +345,8 @@ void date_interval_t::resolve_end()
 	  "stabilize: end_of_duration = " << *end_of_duration);
   }
 
-  if (end && *end_of_duration > *end) {
-    end_of_duration = end;
+  if (finish && *end_of_duration > *finish) {
+    end_of_duration = finish;
     DEBUG("times.interval",
 	  "stabilize: end_of_duration reset to end: " << *end_of_duration);
   }
@@ -384,16 +384,16 @@ void date_interval_t::stabilize(const optional<date_t>& date)
       // want a date early enough that the range will be correct, but late
       // enough that we don't spend hundreds of thousands of loops skipping
       // through time.
-      optional<date_t> initial_start = start;
-      optional<date_t> initial_end   = end;
+      optional<date_t> initial_start  = start;
+      optional<date_t> initial_finish = finish;
 
 #if defined(DEBUG_ON)
       if (initial_start)
 	DEBUG("times.interval",
 	      "stabilize: initial_start = " << *initial_start);
-      if (initial_end)
+      if (initial_finish)
 	DEBUG("times.interval",
-	      "stabilize: initial_end   = " << *initial_end);
+	      "stabilize: initial_finish   = " << *initial_finish);
 #endif
 
       date_t when = start ? *start : *date;
@@ -439,22 +439,22 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 	start = initial_start;
 	DEBUG("times.interval", "stabilize: start reset to initial start");
       }
-      if (initial_end && (! end || *end > *initial_end)) {
-	end = initial_end;
-	DEBUG("times.interval", "stabilize: end reset to initial end");
+      if (initial_finish && (! finish || *finish > *initial_finish)) {
+	finish = initial_finish;
+	DEBUG("times.interval", "stabilize: finish reset to initial finish");
       }
     }
     aligned = true;
   }
 
   // If there is no duration, then if we've reached here the date falls
-  // between begin and end.
+  // between start and finish.
   if (! duration) {
     DEBUG("times.interval", "stabilize: there was no duration given");
 
-    if (! start && ! end)
+    if (! start && ! finish)
       throw_(date_error,
-	     _("Invalid date interval: neither start, nor end, nor duration"));
+	     _("Invalid date interval: neither start, nor finish, nor duration"));
   } else {
     resolve_end();
   }
@@ -464,9 +464,9 @@ bool date_interval_t::find_period(const date_t& date)
 {
   stabilize(date);
 
-  if (end && date > *end) {
+  if (finish && date > *finish) {
     DEBUG("times.interval",
-	  "false: date [" << date << "] > end [" << *end << "]");
+	  "false: date [" << date << "] > finish [" << *finish << "]");
     return false;
   }
 
@@ -503,7 +503,7 @@ bool date_interval_t::find_period(const date_t& date)
   DEBUG("times.interval", "scan        = " << scan);
   DEBUG("times.interval", "end_of_scan = " << end_of_scan);
 
-  while (date >= scan && (! end || scan < *end)) {
+  while (date >= scan && (! finish || scan < *finish)) {
     if (date < end_of_scan) {
       start	      = scan;
       end_of_duration = end_of_scan;
@@ -535,7 +535,7 @@ date_interval_t& date_interval_t::operator++()
 
   assert(next);
 
-  if (end && *next >= *end) {
+  if (finish && *next >= *finish) {
     start = none;
   } else {
     start = *next;
@@ -586,8 +586,8 @@ namespace {
   void parse_date_words(std::istream&	 in,
 			string&		 word,
 			date_interval_t& interval,
-			bool             look_for_start = true,
-			bool             look_for_end   = true)
+			bool             look_for_start  = true,
+			bool             look_for_finish = true)
   {
     string type;
 
@@ -602,12 +602,12 @@ namespace {
     }
 
     date_t start = CURRENT_DATE();
-    date_t end;
+    date_t finish;
     bool   parse_specifier = false;
 
     optional<date_interval_t::duration_t> duration;
 
-    assert(look_for_start || look_for_end);
+    assert(look_for_start || look_for_finish);
 
     if (word == _("year")) {
       duration = date_interval_t::duration_t(date_interval_t::duration_t::YEARS, 1);
@@ -625,21 +625,21 @@ namespace {
     }
 
     if (parse_specifier)
-      parse_inclusion_specifier(word, &start, &end);
+      parse_inclusion_specifier(word, &start, &finish);
     else
-      end = duration->add(start);
+      finish = duration->add(start);
 
     if (type == _("last") && duration) {
       start = duration->subtract(start);
-      end   = duration->subtract(end);
+      finish   = duration->subtract(finish);
     }
     else if (type == _("next") && duration) {
       start = duration->add(start);
-      end   = duration->add(end);
+      finish   = duration->add(finish);
     }
 
-    if (look_for_start && is_valid(start)) interval.start = start;
-    if (look_for_end   && is_valid(end))   interval.end   = end;
+    if (look_for_start  && is_valid(start))  interval.start  = start;
+    if (look_for_finish && is_valid(finish)) interval.finish = finish;
   }
 }
 
@@ -723,10 +723,10 @@ void date_interval_t::parse(std::istream& in)
     }
     else {
       // otherwise, it should be an explicit date
-      date_t b, e;
-      parse_inclusion_specifier(word, &b, &e);
-      start = b;
-      end   = e;
+      date_t s, f;
+      parse_inclusion_specifier(word, &s, &f);
+      start  = s;
+      finish = f;
     }
   }
 
@@ -738,23 +738,23 @@ void date_interval_t::parse(std::istream& in)
       while (start->day_of_week() != *wday)
 	*start -= gregorian::days(1);
 
-      if (! end)
-	end = *start + gregorian::days(1);
+      if (! finish)
+	finish = *start + gregorian::days(1);
     } else {
-      bool overwrite_end = false;
+      bool overwrite_finish = false;
 
       if (year) {
 	start = date_t(*year, 1, 1);
-	if (! end) {
-	  end = *start + gregorian::years(1);
-	  overwrite_end = true;
+	if (! finish) {
+	  finish = *start + gregorian::years(1);
+	  overwrite_finish = true;
 	}
       }
 
       if (mon) {
 	start = date_t(start->year(), *mon, 1);
-	if (! end || overwrite_end)
-	  end = *start + gregorian::months(1);
+	if (! finish || overwrite_finish)
+	  finish = *start + gregorian::months(1);
       }
     }
   }

@@ -219,7 +219,7 @@ public:
   optional<date_t>     next;
   optional<duration_t> duration;
   optional<date_t>     end_of_duration;
-  optional<date_t>     end;
+  optional<date_t>     finish;
 
   explicit date_interval_t() : aligned(false), factor(1) {
     TRACE_CTOR(date_interval_t, "");
@@ -236,7 +236,7 @@ public:
       next(other.next),
       duration(other.duration),
       end_of_duration(other.end_of_duration),
-      end(other.end) {
+      finish(other.finish) {
     TRACE_CTOR(date_interval_t, "copy");
   }
   ~date_interval_t() throw() {
@@ -295,7 +295,7 @@ private:
     ar & next;
     ar & duration;
     ar & end_of_duration;
-    ar & end;
+    ar & finish;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
