@@ -84,19 +84,19 @@ string_to_day_of_week(const std::string& str);
 optional<date_time::months_of_year>
 string_to_month_of_year(const std::string& str);
 
-datetime_t parse_datetime(const char * str,
-			  optional<date_t::year_type> current_year = none);
+typedef optional<date_t::year_type> optional_year;
+
+datetime_t parse_datetime(const char * str, optional_year current_year = none);
 
 inline datetime_t parse_datetime(const std::string& str,
-				 optional<date_t::year_type> current_year = none) {
+				 optional_year current_year = none) {
   return parse_datetime(str.c_str(), current_year);
 }
 
-date_t parse_date(const char * str,
-		  optional<date_t::year_type> current_year = none);
+date_t parse_date(const char * str, optional_year current_year = none);
 
 inline date_t parse_date(const std::string& str,
-			 optional<date_t::year_type> current_year = none) {
+			 optional_year current_year = none) {
   return parse_date(str.c_str(), current_year);
 }
 
@@ -210,11 +210,11 @@ public:
       day = date.day();
   }
 
-  date_t begin(const optional<date_t::year_type>& current_year = none) const;
-  date_t end(const optional<date_t::year_type>& current_year = none) const;
+  date_t begin(const optional_year& current_year = none) const;
+  date_t end(const optional_year& current_year = none) const;
 
   bool is_within(const date_t& date,
-		 const optional<date_t::year_type>& current_year = none) const {
+		 const optional_year& current_year = none) const {
     return date >= begin(current_year) && date < end(current_year);
   }
 
@@ -242,15 +242,13 @@ class date_range_t
   optional<date_specifier_t> range_end;
 
 public:
-  optional<date_t>
-  begin(const optional<date_t::year_type>& current_year = none) const {
+  optional<date_t> begin(const optional_year& current_year = none) const {
     if (range_begin)
       return range_begin->begin(current_year);
     else
       return none;
   }
-  optional<date_t>
-  end(const optional<date_t::year_type>& current_year = none) const {
+  optional<date_t> end(const optional_year& current_year = none) const {
     if (range_end)
       return range_end->end(current_year);
     else
@@ -258,7 +256,7 @@ public:
   }
 
   bool is_within(const date_t& date,
-		 const optional<date_t::year_type>& current_year = none) const {
+		 const optional_year& current_year = none) const {
     optional<date_t> b = begin(current_year);
     optional<date_t> e = end(current_year);
     bool after_begin = b ? date >= *b : true;
@@ -353,8 +351,7 @@ class date_specifier_or_range_t
   value_type specifier_or_range;
 
 public:
-  optional<date_t>
-  begin(const optional<date_t::year_type>& current_year = none) const {
+  optional<date_t> begin(const optional_year& current_year = none) const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
       return boost::get<date_specifier_t>(specifier_or_range).begin(current_year);
     else if (specifier_or_range.type() == typeid(date_range_t))
@@ -362,8 +359,7 @@ public:
     else
       return none;
   }
-  optional<date_t>
-  end(const optional<date_t::year_type>& current_year = none) const {
+  optional<date_t> end(const optional_year& current_year = none) const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
       return boost::get<date_specifier_t>(specifier_or_range).end(current_year);
     else if (specifier_or_range.type() == typeid(date_range_t))
@@ -393,6 +389,8 @@ public:
   static date_t subtract_duration(const date_t&		 date,
 				  const date_duration_t& duration);
 
+  optional<date_specifier_or_range_t> range;
+
   optional<date_t>	    start;  // the real start, after adjustment
   optional<date_t>	    finish; // the real end, likewise
   bool			    aligned;
@@ -410,7 +408,8 @@ public:
     parse(str);
   }
   date_interval_t(const date_interval_t& other)
-    : start(other.start),
+    : range(other.range),
+      start(other.start),
       finish(other.finish),
       aligned(other.aligned),
       skip_duration(other.skip_duration),
@@ -431,6 +430,13 @@ public:
 
   operator bool() const {
     return is_valid();
+  }
+
+  optional<date_t> begin(const optional_year& current_year = none) const {
+    return start ? start : (range ? range->begin(current_year) : none);
+  }
+  optional<date_t> end(const optional_year& current_year = none) const {
+    return finish ? finish : (range ? range->end(current_year) : none);
   }
 
   void parse(std::istream& in);
@@ -469,6 +475,7 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & range;
     ar & start;
     ar & finish;
     ar & aligned;

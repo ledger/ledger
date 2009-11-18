@@ -194,7 +194,7 @@ namespace {
   std::vector<shared_ptr<date_io_t> > readers;
 
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
-				 optional<date_t::year_type> year,
+				 optional_year year,
 				 date_traits_t * traits = NULL)
   {
     date_t when;
@@ -231,8 +231,7 @@ namespace {
     return when;
   }
 
-  date_t parse_date_mask(const char * date_str,
-			 optional<date_t::year_type> year,
+  date_t parse_date_mask(const char * date_str, optional_year year,
 			 date_traits_t * traits = NULL)
   {
     if (input_date_io.get()) {
@@ -305,7 +304,7 @@ string_to_month_of_year(const std::string& str)
     return none;
 }
 
-datetime_t parse_datetime(const char * str, optional<date_t::year_type>)
+datetime_t parse_datetime(const char * str, optional_year)
 {
   datetime_t when = input_datetime_io->parse(str);
   if (when.is_not_a_date_time())
@@ -313,13 +312,12 @@ datetime_t parse_datetime(const char * str, optional<date_t::year_type>)
   return when;
 }
 
-date_t parse_date(const char * str, optional<date_t::year_type> current_year)
+date_t parse_date(const char * str, optional_year current_year)
 {
   return parse_date_mask(str, current_year);
 }
 
-date_t
-date_specifier_t::begin(const optional<date_t::year_type>& current_year) const
+date_t date_specifier_t::begin(const optional_year& current_year) const
 {
   assert(year || current_year);
 
@@ -340,8 +338,7 @@ date_specifier_t::begin(const optional<date_t::year_type>& current_year) const
 			 static_cast<date_t::day_type>(the_day));
 }
 
-date_t
-date_specifier_t::end(const optional<date_t::year_type>& current_year) const
+date_t date_specifier_t::end(const optional_year& current_year) const
 {
   if (day || wday)
     return begin(current_year) + gregorian::days(1);
@@ -418,8 +415,8 @@ void date_interval_t::stabilize(const optional<date_t>& date)
       // want a date early enough that the range will be correct, but late
       // enough that we don't spend hundreds of thousands of loops skipping
       // through time.
-      optional<date_t> initial_start  = start;
-      optional<date_t> initial_finish = finish;
+      optional<date_t> initial_start  = start  ? start  : begin(date->year());
+      optional<date_t> initial_finish = finish ? finish : end(date->year());
 
 #if defined(DEBUG_ON)
       if (initial_start)
