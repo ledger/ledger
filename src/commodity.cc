@@ -637,7 +637,8 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       return false;
 
     if (aleftcomm.details.date && arightcomm.details.date) {
-      date_duration_t diff = *aleftcomm.details.date - *arightcomm.details.date;
+      gregorian::date_duration diff =
+	*aleftcomm.details.date - *arightcomm.details.date;
       return diff.is_negative();
     }
 
