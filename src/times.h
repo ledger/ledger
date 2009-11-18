@@ -449,6 +449,7 @@ private:
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & range_begin;
     ar & range_end;
+    ar & end_inclusive;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
