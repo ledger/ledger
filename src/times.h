@@ -138,6 +138,50 @@ inline void to_xml(std::ostream& out, const date_t& when,
   }
 }
 
+struct date_traits_t
+{
+  bool has_year;
+  bool has_month;
+  bool has_day;
+
+  date_traits_t(bool _has_year  = false,
+		bool _has_month = false,
+		bool _has_day   = false)
+    : has_year(_has_year), has_month(_has_month), has_day(_has_day) {}
+
+  date_traits_t(const date_traits_t& traits)
+    : has_year(traits.has_year),
+      has_month(traits.has_month),
+      has_day(traits.has_day) {}
+
+  date_traits_t& operator=(const date_traits_t& traits) {
+    has_year	= traits.has_year;
+    has_month = traits.has_month;
+    has_day	= traits.has_day;
+    return *this;
+  }
+
+  bool operator==(const date_traits_t& traits) const {
+    return (has_year	== traits.has_year &&
+	    has_month == traits.has_month &&
+	    has_day	== traits.has_day);
+  }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & has_year;
+    ar & has_month;
+    ar & has_day;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
+};
+
 class date_interval_t : public equality_comparable<date_interval_t>
 {
 public:
