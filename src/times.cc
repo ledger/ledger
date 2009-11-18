@@ -319,16 +319,16 @@ date_t parse_date(const char * str, optional<date_t::year_type> current_year)
 }
 
 std::ostream& operator<<(std::ostream& out,
-			 const date_interval_t::duration_t& duration)
+			 const date_duration_t& duration)
 {
-  if (duration.quantum == date_interval_t::duration_t::DAYS)
+  if (duration.quantum == date_duration_t::DAYS)
     out << duration.length << " day(s)";
-  else if (duration.quantum == date_interval_t::duration_t::WEEKS)
+  else if (duration.quantum == date_duration_t::WEEKS)
     out << duration.length << " week(s)";
-  else if (duration.quantum == date_interval_t::duration_t::MONTHS)
+  else if (duration.quantum == date_duration_t::MONTHS)
     out << duration.length << " month(s)";
   else {
-    assert(duration.quantum == date_interval_t::duration_t::YEARS);
+    assert(duration.quantum == date_duration_t::YEARS);
     out << duration.length << " year(s)";
   }
   return out;
@@ -395,8 +395,8 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 
       date_t when = start ? *start : *date;
 
-      if (duration->quantum == duration_t::MONTHS ||
-	  duration->quantum == duration_t::YEARS) {
+      if (duration->quantum == date_duration_t::MONTHS ||
+	  duration->quantum == date_duration_t::YEARS) {
 	DEBUG("times.interval", "stabilize: monthly or yearly duration");
 
 	start = date_t(when.year(), gregorian::Jan, 1);
@@ -405,7 +405,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 
 	start = date_t(when - gregorian::days(400));
 
-	if (duration->quantum == duration_t::WEEKS) {
+	if (duration->quantum == date_duration_t::WEEKS) {
 	  // Move it to a Sunday
 	  while (start->day_of_week() != start_of_week)
 	    *start += gregorian::days(1);
@@ -603,20 +603,20 @@ namespace {
     date_t finish;
     bool   parse_specifier = false;
 
-    optional<date_interval_t::duration_t> duration;
+    optional<date_duration_t> duration;
 
     assert(look_for_start || look_for_finish);
 
     if (word == _("year")) {
-      duration = date_interval_t::duration_t(date_interval_t::duration_t::YEARS, 1);
+      duration = date_duration_t(date_duration_t::YEARS, 1);
       start    = gregorian::date(start.year(), 1, 1);
     }
     else if (word == _("month")) {
-      duration = date_interval_t::duration_t(date_interval_t::duration_t::MONTHS, 1);
+      duration = date_duration_t(date_duration_t::MONTHS, 1);
       start    = gregorian::date(start.year(), start.month(), 1);
     }
     else if (word == _("today") || word == _("day")) {
-      duration = date_interval_t::duration_t(date_interval_t::duration_t::DAYS, 1);
+      duration = date_duration_t(date_duration_t::DAYS, 1);
     }
     else {
       parse_specifier = true;
@@ -657,41 +657,41 @@ void date_interval_t::parse(std::istream& in)
 	int quantity = lexical_cast<int>(word);
 	read_lower_word(in, word);
 	if (word == _("days"))
-	  duration = duration_t(duration_t::DAYS, quantity);
+	  duration = date_duration_t(date_duration_t::DAYS, quantity);
 	else if (word == _("weeks"))
-	  duration = duration_t(duration_t::WEEKS, quantity);
+	  duration = date_duration_t(date_duration_t::WEEKS, quantity);
 	else if (word == _("months"))
-	  duration = duration_t(duration_t::MONTHS, quantity);
+	  duration = date_duration_t(date_duration_t::MONTHS, quantity);
 	else if (word == _("quarters"))
-	  duration = duration_t(duration_t::MONTHS, 3 * quantity);
+	  duration = date_duration_t(date_duration_t::MONTHS, 3 * quantity);
 	else if (word == _("years"))
-	  duration = duration_t(duration_t::YEARS, quantity);
+	  duration = date_duration_t(date_duration_t::YEARS, quantity);
       }
       else if (word == _("day"))
-	duration = duration_t(duration_t::DAYS, 1);
+	duration = date_duration_t(date_duration_t::DAYS, 1);
       else if (word == _("week"))
-	duration = duration_t(duration_t::WEEKS, 1);
+	duration = date_duration_t(date_duration_t::WEEKS, 1);
       else if (word == _("month"))
-	duration = duration_t(duration_t::MONTHS, 1);
+	duration = date_duration_t(date_duration_t::MONTHS, 1);
       else if (word == _("quarter"))
-	duration = duration_t(duration_t::MONTHS, 3);
+	duration = date_duration_t(date_duration_t::MONTHS, 3);
       else if (word == _("year"))
-	duration = duration_t(duration_t::YEARS, 1);
+	duration = date_duration_t(date_duration_t::YEARS, 1);
     }
     else if (word == _("daily"))
-      duration = duration_t(duration_t::DAYS, 1);
+      duration = date_duration_t(date_duration_t::DAYS, 1);
     else if (word == _("weekly"))
-      duration = duration_t(duration_t::WEEKS, 1);
+      duration = date_duration_t(date_duration_t::WEEKS, 1);
     else if (word == _("biweekly"))
-      duration = duration_t(duration_t::WEEKS, 2);
+      duration = date_duration_t(date_duration_t::WEEKS, 2);
     else if (word == _("monthly"))
-      duration = duration_t(duration_t::MONTHS, 1);
+      duration = date_duration_t(date_duration_t::MONTHS, 1);
     else if (word == _("bimonthly"))
-      duration = duration_t(duration_t::MONTHS, 2);
+      duration = date_duration_t(date_duration_t::MONTHS, 2);
     else if (word == _("quarterly"))
-      duration = duration_t(duration_t::MONTHS, 3);
+      duration = date_duration_t(date_duration_t::MONTHS, 3);
     else if (word == _("yearly"))
-      duration = duration_t(duration_t::YEARS, 1);
+      duration = date_duration_t(date_duration_t::YEARS, 1);
     else if (word == _("this") || word == _("last") || word == _("next") ||
 	     word == _("today")) {
       parse_date_words(in, word, *this);

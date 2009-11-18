@@ -59,7 +59,6 @@ inline bool is_valid(const datetime_t& moment) {
 }
 
 typedef boost::gregorian::date          date_t;
-typedef boost::gregorian::date_duration date_duration_t;
 typedef boost::gregorian::date_iterator date_iterator_t;
 
 inline bool is_valid(const date_t& moment) {
@@ -182,88 +181,88 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+struct date_duration_t
+{
+  enum skip_quantum_t {
+    DAYS, WEEKS, MONTHS, YEARS
+  } quantum;
+  int length;
+
+  date_duration_t() : quantum(DAYS), length(0) {
+    TRACE_CTOR(date_duration_t, "");
+  }
+  date_duration_t(skip_quantum_t _quantum, int _length)
+    : quantum(_quantum), length(_length) {
+    TRACE_CTOR(date_duration_t, "skip_quantum_t, int");
+  }
+  date_duration_t(const date_duration_t& dur)
+    : quantum(dur.quantum), length(dur.length) {
+    TRACE_CTOR(date_duration_t, "copy");
+  }
+  ~date_duration_t() throw() {
+    TRACE_DTOR(date_duration_t);
+  }      
+
+  date_t add(const date_t& date) const {
+    switch (quantum) {
+    case DAYS:
+      return date + gregorian::days(length);
+    case WEEKS:
+      return date + gregorian::weeks(length);
+    case MONTHS:
+      return date + gregorian::months(length);
+    case YEARS:
+      return date + gregorian::years(length);
+    default:
+      assert(false); return date_t();
+    }
+  }
+
+  date_t subtract(const date_t& date) const {
+    switch (quantum) {
+    case DAYS:
+      return date - gregorian::days(length);
+    case WEEKS:
+      return date - gregorian::weeks(length);
+    case MONTHS:
+      return date - gregorian::months(length);
+    case YEARS:
+      return date - gregorian::years(length);
+    default:
+      assert(false); return date_t();
+    }
+  }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & quantum;
+    ar & length;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
+};
+
 class date_interval_t : public equality_comparable<date_interval_t>
 {
 public:
-  struct duration_t
-  {
-    enum skip_quantum_t {
-      DAYS, WEEKS, MONTHS, YEARS
-    } quantum;
-    int length;
+  static date_t add_duration(const date_t&	    date,
+			     const date_duration_t& duration);
+  static date_t subtract_duration(const date_t&		 date,
+				  const date_duration_t& duration);
 
-    duration_t() : quantum(DAYS), length(0) {
-      TRACE_CTOR(date_interval_t::duration_t, "");
-    }
-    duration_t(skip_quantum_t _quantum, int _length)
-      : quantum(_quantum), length(_length) {
-      TRACE_CTOR(date_interval_t::duration_t, "skip_quantum_t, int");
-    }
-    duration_t(const duration_t& dur)
-      : quantum(dur.quantum), length(dur.length) {
-      TRACE_CTOR(date_interval_t::duration_t, "copy");
-    }
-    ~duration_t() throw() {
-      TRACE_DTOR(date_interval_t::duration_t);
-    }      
-
-    date_t add(const date_t& date) const {
-      switch (quantum) {
-      case DAYS:
-	return date + gregorian::days(length);
-      case WEEKS:
-	return date + gregorian::weeks(length);
-      case MONTHS:
-	return date + gregorian::months(length);
-      case YEARS:
-	return date + gregorian::years(length);
-      default:
-	assert(false); return date_t();
-      }
-    }
-
-    date_t subtract(const date_t& date) const {
-      switch (quantum) {
-      case DAYS:
-	return date - gregorian::days(length);
-      case WEEKS:
-	return date - gregorian::weeks(length);
-      case MONTHS:
-	return date - gregorian::months(length);
-      case YEARS:
-	return date - gregorian::years(length);
-      default:
-	assert(false); return date_t();
-      }
-    }
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-  private:
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & quantum;
-      ar & length;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
-  };
-
-  static date_t add_duration(const date_t&     date,
-			     const duration_t& duration);
-  static date_t subtract_duration(const date_t&     date,
-				  const duration_t& duration);
-
-  optional<date_t>     start;
-  bool                 aligned;
-  optional<duration_t> skip_duration;
-  std::size_t	       factor;
-  optional<date_t>     next;
-  optional<duration_t> duration;
-  optional<date_t>     end_of_duration;
-  optional<date_t>     finish;
+  optional<date_t>	    start;  // the real start, after adjustment
+  optional<date_t>	    finish; // the real end, likewise
+  bool			    aligned;
+  optional<date_duration_t> skip_duration;
+  std::size_t		    factor;
+  optional<date_t>	    next;
+  optional<date_duration_t> duration;
+  optional<date_t>	    end_of_duration;
 
   explicit date_interval_t() : aligned(false), factor(1) {
     TRACE_CTOR(date_interval_t, "");
@@ -274,13 +273,13 @@ public:
   }
   date_interval_t(const date_interval_t& other)
     : start(other.start),
+      finish(other.finish),
       aligned(other.aligned),
       skip_duration(other.skip_duration),
       factor(other.factor),
       next(other.next),
       duration(other.duration),
-      end_of_duration(other.end_of_duration),
-      finish(other.finish) {
+      end_of_duration(other.end_of_duration) {
     TRACE_CTOR(date_interval_t, "copy");
   }
   ~date_interval_t() throw() {
@@ -333,13 +332,13 @@ private:
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & start;
+    ar & finish;
     ar & aligned;
     ar & skip_duration;
     ar & factor;
     ar & next;
     ar & duration;
     ar & end_of_duration;
-    ar & finish;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
@@ -347,8 +346,7 @@ private:
 void times_initialize();
 void times_shutdown();
 
-std::ostream& operator<<(std::ostream& out,
-			 const date_interval_t::duration_t& duration);
+std::ostream& operator<<(std::ostream& out, const date_duration_t& duration);
 
 } // namespace ledger
 
