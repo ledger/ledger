@@ -96,14 +96,14 @@ public:
       explicit token_t(kind_t _kind = UNKNOWN,
 		       const optional<string>& _value = none)
 	: kind(_kind), value(_value) {
-	TRACE_CTOR(lexer_t::token_t, "");
+	TRACE_CTOR(query_t::lexer_t::token_t, "");
       }
       token_t(const token_t& tok)
 	: kind(tok.kind), value(tok.value) {
-	TRACE_CTOR(lexer_t::token_t, "copy");
+	TRACE_CTOR(query_t::lexer_t::token_t, "copy");
       }
       ~token_t() throw() {
-	TRACE_DTOR(lexer_t::token_t);
+	TRACE_DTOR(query_t::lexer_t::token_t);
       }
 
       token_t& operator=(const token_t& tok) {
@@ -120,40 +120,42 @@ public:
 
       string to_string() const {
 	switch (kind) {
-	case UNKNOWN:	return "UNKNOWN";
-	case LPAREN:	return "LPAREN";
-	case RPAREN:	return "RPAREN";
-	case TOK_NOT:	return "TOK_NOT";
-	case TOK_AND:	return "TOK_AND";
-	case TOK_OR:	return "TOK_OR";
-	case TOK_EQ:	return "TOK_EQ";
-	case TOK_DATE:	return "TOK_DATE";
-	case TOK_CODE:	return "TOK_CODE";
-	case TOK_PAYEE:	return "TOK_PAYEE";
-	case TOK_NOTE:	return "TOK_NOTE";
+	case UNKNOWN:	  return "UNKNOWN";
+	case LPAREN:	  return "LPAREN";
+	case RPAREN:	  return "RPAREN";
+	case TOK_NOT:	  return "TOK_NOT";
+	case TOK_AND:	  return "TOK_AND";
+	case TOK_OR:	  return "TOK_OR";
+	case TOK_EQ:	  return "TOK_EQ";
+	case TOK_DATE:	  return "TOK_DATE";
+	case TOK_CODE:	  return "TOK_CODE";
+	case TOK_PAYEE:	  return "TOK_PAYEE";
+	case TOK_NOTE:	  return "TOK_NOTE";
 	case TOK_ACCOUNT: return "TOK_ACCOUNT";
-	case TOK_META:	return "TOK_META";
-	case TOK_EXPR:	return "TOK_EXPR";
-	case TERM:	return string("TERM(") + *value + ")";
+	case TOK_META:	  return "TOK_META";
+	case TOK_EXPR:	  return "TOK_EXPR";
+	case TERM:	  return string("TERM(") + *value + ")";
 	case END_REACHED: return "END_REACHED";
 	}
+	assert(false);
+	return empty_string;
       }
 
       string symbol() const {
 	switch (kind) {
-	case LPAREN:	return "(";
-	case RPAREN:	return ")";
-	case TOK_NOT:	return "not";
-	case TOK_AND:	return "and";
-	case TOK_OR:	return "or";
-	case TOK_EQ:	return "=";
-	case TOK_DATE:	return "date";
-	case TOK_CODE:	return "code";
-	case TOK_PAYEE:	return "payee";
-	case TOK_NOTE:	return "note";
+	case LPAREN:	  return "(";
+	case RPAREN:	  return ")";
+	case TOK_NOT:	  return "not";
+	case TOK_AND:	  return "and";
+	case TOK_OR:	  return "or";
+	case TOK_EQ:	  return "=";
+	case TOK_DATE:	  return "date";
+	case TOK_CODE:	  return "code";
+	case TOK_PAYEE:	  return "payee";
+	case TOK_NOTE:	  return "note";
 	case TOK_ACCOUNT: return "account";
-	case TOK_META:	return "meta";
-	case TOK_EXPR:	return "expr";
+	case TOK_META:	  return "meta";
+	case TOK_EXPR:	  return "expr";
 
 	case END_REACHED: return "<EOF>";
 
@@ -180,7 +182,7 @@ public:
 	consume_whitespace(false),
 	consume_next_arg(false)
     {
-      TRACE_CTOR(lexer_t, "");
+      TRACE_CTOR(query_t::lexer_t, "");
       assert(begin != end);
       arg_i   = (*begin).as_string().begin();
       arg_end = (*begin).as_string().end();
@@ -192,10 +194,10 @@ public:
 	consume_next_arg(lexer.consume_next_arg),
 	token_cache(lexer.token_cache)
     {
-      TRACE_CTOR(lexer_t, "copy");
+      TRACE_CTOR(query_t::lexer_t, "copy");
     }
     ~lexer_t() throw() {
-      TRACE_DTOR(lexer_t);
+      TRACE_DTOR(query_t::lexer_t);
     }
 
     token_t next_token();
@@ -227,14 +229,14 @@ protected:
   public:
     parser_t(const value_t& _args)
       : args(_args), lexer(args.begin(), args.end()) {
-      TRACE_CTOR(parser_t, "");
+      TRACE_CTOR(query_t::parser_t, "");
     }
     parser_t(const parser_t& parser)
       : args(parser.args), lexer(parser.lexer) {
-      TRACE_CTOR(parser_t, "copy");
+      TRACE_CTOR(query_t::parser_t, "copy");
     }
     ~parser_t() throw() {
-      TRACE_DTOR(parser_t);
+      TRACE_DTOR(query_t::parser_t);
     }
 
     expr_t::ptr_op_t parse() {
