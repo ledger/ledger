@@ -241,8 +241,7 @@ public:
 	       const predicate_t& predicate,
 	       scope_t&           _context)
     : item_handler<post_t>(handler), pred(predicate), context(_context) {
-    TRACE_CTOR(filter_posts,
-	       "post_handler_ptr, const predicate_t&, scope_t&");
+    TRACE_CTOR(filter_posts, "post_handler_ptr, predicate_t, scope_t&");
   }
   virtual ~filter_posts() {
     TRACE_DTOR(filter_posts);
