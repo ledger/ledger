@@ -82,14 +82,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     // changes in market value of commodities, which otherwise would affect
     // the running total unpredictably.
     if (report.HANDLED(revalued))
-      handler.reset(new changed_value_posts
-		    (handler,
-		     report.HANDLER(display_amount_).expr,
-		     report.HANDLED(revalued_total_) ?
-		     report.HANDLER(revalued_total_).expr :
-		     report.HANDLER(display_total_).expr,
-		     report.HANDLER(display_total_).expr,
-		     report, report.HANDLED(revalued_only)));
+      handler.reset(new changed_value_posts(handler, report));
   }
 
   // calc_posts computes the running total.  When this appears will determine,

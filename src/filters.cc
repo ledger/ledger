@@ -239,19 +239,20 @@ void calc_posts::operator()(post_t& post)
 }
 
 namespace {
-  typedef function<void (post_t *)> post_functor_t;
+  typedef function<void (post_t&)> post_functor_t;
 
   void handle_value(const value_t&	            value,
-		    account_t *		            account,
+		    account_t *	                    account,
 		    xact_t *		            xact,
 		    temporaries_t&                  temps,
-		    item_handler<post_t>&           handler,
-		    const date_t&                   date          = date_t(),
-		    const value_t&                  total         = value_t(),
+		    post_handler_ptr                handler,
+		    const date_t&                   date	  = date_t(),
+		    const value_t&                  total	  = value_t(),
 		    const bool                      direct_amount = false,
 		    const optional<post_functor_t>& functor       = none)
   {
     post_t& post = temps.create_post(*xact, account);
+    post.add_flags(ITEM_GENERATED);
 
     // If the account for this post is all virtual, then report the post as
     // such.  This allows subtotal reports to show "(Account)" for accounts
@@ -302,11 +303,11 @@ namespace {
       xdata.add_flags(POST_EXT_DIRECT_AMT);
 
     if (functor)
-      (*functor)(&post);
+      (*functor)(post);
 
     DEBUG("filter.changed_value.rounding", "post.amount = " << post.amount);
 
-    handler(post);
+    (*handler)(post);
   }
 }
 
@@ -344,7 +345,7 @@ void collapse_posts::report_subtotal()
 		      earliest_date : last_xact->_date);
     DEBUG("filter.collapse", "Pseudo-xact date = " << *xact._date);
 
-    handle_value(subtotal, &totals_account, &xact, temps, *handler);
+    handle_value(subtotal, &totals_account, &xact, temps, handler);
   }
 
   component_posts.clear();
@@ -404,30 +405,46 @@ void related_posts::flush()
   item_handler<post_t>::flush();
 }
 
+changed_value_posts::changed_value_posts(post_handler_ptr handler,
+					 report_t&	  _report)
+  : item_handler<post_t>(handler), report(_report), last_post(NULL),
+    revalued_account(temps.create_account(_("<Revalued>"))),
+    rounding_account(temps.create_account(_("<Rounding>")))
+{
+  TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool");
+
+  display_amount_expr = report.HANDLER(display_amount_).expr;
+  total_expr	      = (report.HANDLED(revalued_total_) ?
+			 report.HANDLER(revalued_total_).expr :
+			 report.HANDLER(display_total_).expr);
+  display_total_expr  = report.HANDLER(display_total_).expr;
+  changed_values_only = report.HANDLED(revalued_only);
+}
+
 void changed_value_posts::flush()
 {
   if (last_post && last_post->date() <= report.terminus.date()) {
-    output_revaluation(last_post, report.terminus.date());
+    output_revaluation(*last_post, report.terminus.date());
     last_post = NULL;
   }
   item_handler<post_t>::flush();
 }
 
-void changed_value_posts::output_revaluation(post_t * post, const date_t& date)
+void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 {
   if (is_valid(date))
-    post->xdata().date = date;
+    post.xdata().date = date;
 
   value_t repriced_total;
   try {
-    bind_scope_t bound_scope(report, *post);
+    bind_scope_t bound_scope(report, post);
     repriced_total = total_expr.calc(bound_scope);
   }
   catch (...) {
-    post->xdata().date = date_t();
+    post.xdata().date = date_t();
     throw;
   }
-  post->xdata().date = date_t();
+  post.xdata().date = date_t();
 
   DEBUG("filter.changed_value",
 	"output_revaluation(last_balance) = " << last_total);
@@ -441,9 +458,9 @@ void changed_value_posts::output_revaluation(post_t * post, const date_t& date)
 
       xact_t& xact = temps.create_xact();
       xact.payee = _("Commodities revalued");
-      xact._date = is_valid(date) ? date : post->date();
+      xact._date = is_valid(date) ? date : post.date();
 
-      handle_value(diff, &revalued_account, &xact, temps, *handler,
+      handle_value(diff, &revalued_account, &xact, temps, handler,
 		   *xact._date, repriced_total, false,
 		   optional<post_functor_t>
 		   (bind(&changed_value_posts::output_rounding, this, _1)));
@@ -451,9 +468,9 @@ void changed_value_posts::output_revaluation(post_t * post, const date_t& date)
   }
 }
 
-void changed_value_posts::output_rounding(post_t * post)
+void changed_value_posts::output_rounding(post_t& post)
 {
-  bind_scope_t bound_scope(report, *post);
+  bind_scope_t bound_scope(report, post);
   value_t      new_display_total(display_total_expr.calc(bound_scope));
 
   DEBUG("filter.changed_value.rounding",
@@ -478,9 +495,9 @@ void changed_value_posts::output_rounding(post_t * post)
 
 	xact_t& xact = temps.create_xact();
 	xact.payee = _("Commodity rounding");
-	xact._date = post->date();
+	xact._date = post.date();
 
-	handle_value(diff, &rounding_account, &xact, temps, *handler,
+	handle_value(diff, &rounding_account, &xact, temps, handler,
 		     *xact._date, precise_display_total, true);
       }
     }    
@@ -491,12 +508,12 @@ void changed_value_posts::output_rounding(post_t * post)
 void changed_value_posts::operator()(post_t& post)
 {
   if (last_post)
-    output_revaluation(last_post, post.date());
+    output_revaluation(*last_post, post.date());
 
   if (changed_values_only)
     post.xdata().add_flags(POST_EXT_DISPLAYED);
 
-  output_rounding(&post);
+  output_rounding(post);
 
   item_handler<post_t>::operator()(post);
 
@@ -543,7 +560,7 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
 
   foreach (values_map::value_type& pair, values)
     handle_value(pair.second.value, pair.second.account, &xact, temps,
-		 *handler);
+		 handler);
 
   values.clear();
 }
@@ -653,10 +670,10 @@ void posts_as_equity::report_subtotal()
       foreach (balance_t::amounts_map::value_type amount_pair,
 	       pair.second.value.as_balance().amounts)
 	handle_value(amount_pair.second, pair.second.account, &xact, temps,
-		     *handler);
+		     handler);
     } else {
       handle_value(pair.second.value, pair.second.account, &xact, temps,
-		   *handler);
+		   handler);
     }
     total += pair.second.value;
   }
