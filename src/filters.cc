@@ -249,6 +249,7 @@ namespace {
 		    const date_t&                   date	  = date_t(),
 		    const value_t&                  total	  = value_t(),
 		    const bool                      direct_amount = false,
+		    const bool                      mark_visited  = false,
 		    const optional<post_functor_t>& functor       = none)
   {
     post_t& post = temps.create_post(*xact, account);
@@ -308,6 +309,11 @@ namespace {
     DEBUG("filter.changed_value.rounding", "post.amount = " << post.amount);
 
     (*handler)(post);
+
+    if (mark_visited) {
+      post.xdata().add_flags(POST_EXT_VISITED);
+      post.account->xdata().add_flags(ACCOUNT_EXT_VISITED);
+    }
   }
 }
 
@@ -406,8 +412,12 @@ void related_posts::flush()
 }
 
 changed_value_posts::changed_value_posts(post_handler_ptr handler,
-					 report_t&	  _report)
-  : item_handler<post_t>(handler), report(_report), last_post(NULL),
+					 report_t&	  _report,
+					 bool		  _for_accounts_report,
+					 bool		  _show_unrealized)
+  : item_handler<post_t>(handler), report(_report),
+    for_accounts_report(_for_accounts_report),
+    show_unrealized(_show_unrealized), last_post(NULL),
     revalued_account(temps.create_account(_("<Revalued>"))),
     rounding_account(temps.create_account(_("<Rounding>")))
 {
@@ -419,6 +429,14 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler,
 			 report.HANDLER(display_total_).expr);
   display_total_expr  = report.HANDLER(display_total_).expr;
   changed_values_only = report.HANDLED(revalued_only);
+
+  gains_equity_account =
+    report.session.journal->master->find_account(_("Equity:Unrealized Gains"));
+  gains_equity_account->add_flags(ACCOUNT_GENERATED);
+
+  losses_equity_account =
+    report.session.journal->master->find_account(_("Equity:Unrealized Losses"));
+  losses_equity_account->add_flags(ACCOUNT_GENERATED);
 }
 
 void changed_value_posts::flush()
@@ -460,10 +478,35 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
       xact.payee = _("Commodities revalued");
       xact._date = is_valid(date) ? date : post.date();
 
-      handle_value(diff, &revalued_account, &xact, temps, handler,
-		   *xact._date, repriced_total, false,
-		   optional<post_functor_t>
-		   (bind(&changed_value_posts::output_rounding, this, _1)));
+      if (! for_accounts_report) {
+	handle_value
+	  (/* value=         */ diff,
+	   /* account=       */ &revalued_account,
+	   /* xact=          */ &xact,
+	   /* temps=         */ temps,
+	   /* handler=       */ handler,
+	   /* date=          */ *xact._date,
+	   /* total=         */ repriced_total,
+	   /* direct_amount= */ false,
+	   /* mark_visited=  */ false,
+	   /* functor=       */ (optional<post_functor_t>
+				 (bind(&changed_value_posts::output_rounding,
+				       this, _1))));
+      }
+      else if (show_unrealized) {
+	handle_value
+	  (/* value=         */ - diff,
+	   /* account=       */ (diff < 0L ?
+				 losses_equity_account :
+				 gains_equity_account),
+	   /* xact=          */ &xact,
+	   /* temps=         */ temps,
+	   /* handler=       */ handler,
+	   /* date=          */ *xact._date,
+	   /* total=         */ value_t(),
+	   /* direct_amount= */ false,
+	   /* mark_visited=  */ true);
+      }
     }
   }
 }
@@ -513,7 +556,8 @@ void changed_value_posts::operator()(post_t& post)
   if (changed_values_only)
     post.xdata().add_flags(POST_EXT_DISPLAYED);
 
-  output_rounding(post);
+  if (! for_accounts_report)
+    output_rounding(post);
 
   item_handler<post_t>::operator()(post);
 

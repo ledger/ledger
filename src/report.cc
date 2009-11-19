@@ -887,6 +887,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'u':
     OPT(unbudgeted);
     else OPT(uncleared);
+    else OPT(unrealized);
     else OPT(unround);
     else OPT(unsorted);
     break;

@@ -77,18 +77,23 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 				      report.what_to_keep());
       handler.reset(new filter_posts(handler, display_predicate, report));
     }
-
-    // changed_value_posts adds virtual posts to the list to account for
-    // changes in market value of commodities, which otherwise would affect
-    // the running total unpredictably.
-    if (report.HANDLED(revalued))
-      handler.reset(new changed_value_posts(handler, report));
   }
+
+  // changed_value_posts adds virtual posts to the list to account for changes
+  // in market value of commodities, which otherwise would affect the running
+  // total unpredictably.
+  if (report.HANDLED(revalued) && (! for_accounts_report ||
+				   report.HANDLED(unrealized)))
+    handler.reset(new changed_value_posts(handler, report,
+					  for_accounts_report,
+					  report.HANDLED(unrealized)));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
   // running total.
-  handler.reset(new calc_posts(handler, expr, ! for_accounts_report));
+  handler.reset(new calc_posts(handler, expr, (! for_accounts_report ||
+					       (report.HANDLED(revalued) &&
+						report.HANDLED(unrealized)))));
 
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.

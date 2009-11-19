@@ -378,18 +378,24 @@ class changed_value_posts : public item_handler<post_t>
   expr_t	display_total_expr;
   report_t&	report;
   bool		changed_values_only;
+  bool		for_accounts_report;
+  bool		show_unrealized;
   post_t *	last_post;
   value_t	last_total;
   value_t	last_display_total;
   temporaries_t	temps;
   account_t&	revalued_account;
   account_t&	rounding_account;
+  account_t *	gains_equity_account;
+  account_t *	losses_equity_account;
 
   changed_value_posts();
 
 public:
   changed_value_posts(post_handler_ptr handler,
-		      report_t&	       _report);
+		      report_t&	       _report,
+		      bool	       _for_accounts_report,
+		      bool	       _show_unrealized);
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);

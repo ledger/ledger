@@ -301,6 +301,7 @@ public:
     HANDLER(truncate_).report(out);
     HANDLER(unbudgeted).report(out);
     HANDLER(uncleared).report(out);
+    HANDLER(unrealized).report(out);
     HANDLER(unround).report(out);
     HANDLER(unsorted).report(out);
     HANDLER(weekly).report(out);
@@ -872,6 +873,8 @@ public:
   OPTION_(report_t, uncleared, DO() { // -U
       parent->HANDLER(limit_).on(string("--uncleared"), "uncleared|pending");
     });
+
+  OPTION(report_t, unrealized);
 
   OPTION_(report_t, unround, DO() {
       parent->HANDLER(display_amount_)
