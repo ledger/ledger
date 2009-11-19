@@ -96,19 +96,32 @@ the following packages (current as of Ubuntu Hardy):
 <pre>
 sudo apt-get install build-essential libtool autoconf automake   \
      texinfo python-dev zlib1g-dev libbz2-dev stow libgmp3-dev   \
-     bjam libboost1.35-dev libboost-regex1.35-dev                \
-     libboost-date-time1.35-dev libboost-filesystem1.35-dev
+     bjam gettext cvs libboost1.35-dev libboost-regex1.35-dev    \
+     libboost-date-time1.35-dev libboost-filesystem1.35-dev      \
+     libmpfr-dev
 </pre>
 
-h2. Preparing the Build
-
-The next step is preparing your environment for building.  While you can use
-@autogen.sh@, I've prepared a script that does a lot more of the footwork for
-you:
+Or for Ubuntu Karmic:
 
 <pre>
-./acprep pull       # Make sure everything is pulled that needs to be
-./acprep
+sudo apt-get install build-essential libtool autoconf automake   \
+     texinfo python-dev zlib1g-dev libbz2-dev stow libgmp3-dev   \
+     bjam gettext cvs libboost1.40-dev libboost-regex1.40-dev    \
+     libboost-date-time1.40-dev libboost-filesystem1.40-dev      \
+     libmpfr-dev
+</pre>
+
+h2. Building
+
+The next step is preparing your environment for building.  While you can use
+@autogen.sh@, ./configure and make, I've prepared a script that does a lot more
+of the footwork for you:
+
+<pre>
+./acprep update
+# or, if you want to use the Boost libraries with suffix -mt, install in
+# $HOME/local and build with 2 processes in parallel
+./acprep update --boost=-mt -- --prefix=$HOME/local -j2
 </pre>
 
 Please read the contents of @config.log@ if the configure step fails.  Also,
@@ -116,10 +129,7 @@ see the @help@ command to @acprep@, which explains some of its many options.
 It's pretty much the only command I run for configuring, building and testing
 Ledger.
 
-h2. Building
-
-Once you have the dependencies installed and the source prepared for building,
-run @make check@ to get things started and confirm the result.
+You can run @make check@ to confirm the result, and @make install@ to install.
 
 If you have extra CPU cycles to burn, try @./acprep proof@, which provides the
 most thorough shakedown of a healthy source tree.
