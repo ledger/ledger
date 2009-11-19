@@ -45,17 +45,24 @@ much further with those.
 
 h2. Dependencies
 
-If you wish to proceed in this venture, you'll need a few dependencies:
+If you wish to proceed in this venture, you'll need a few dependencies.  The
+easiest way to get them for your platform is to run:
+
+<pre>
+./acprep dependencies
+</pre>
+
+If that doesn't completely work, read on.
 
 h3. For building the current master branch
 
 |_.Library|_.Min.Ver.|_.When needed|
-|Boost|1.35 or higher||
+|Boost|1.35||
 |GMP|4.2.2||
 |MPFR|2.4.0||
 |gettext|0.17|_optional_|
 |libedit|20090111-3.0|_optional_|
-|Python|2.4 or higher|_optional_|
+|Python|2.4|_optional_|
 |cppunit|1.12.1|_optional_, for @make check@|
 |doxygen|1.5.7.1|_optional_, for @make docs@|
 |graphviz|2.20.3|_optional_, for @make docs@|
@@ -63,7 +70,7 @@ h3. For building the current master branch
 |lcov|1.6|_optional_, for @make report@, used with @./acprep gcov@|
 |sloccount|2.26|_optional_, for @make sloc@|
 
-h3. For building the beta or release branches
+h3. For building the current @maint@ branch
 
 |_.Library|_.Min.Ver.|_.When needed|
 |GMP|4.2.2||
@@ -74,12 +81,16 @@ h3. For building the beta or release branches
 
 h3. MacPorts
 
-If you build stuff using MacPorts, as I do, here is what you would run:
+If you build stuff using MacPorts on OS X, as I do, here is what you would
+run:
 
 <pre>
-sudo port install boost +python25+st gmp mpfr gettext libedit \
-     cppunit texlive doxygen graphviz texinfo lcov            \
-     sloccount pcre libofx expat
+sudo port install -f automake autoconf libtool python26
+    libiconv +universal zlib +universal gmp +universal
+    mpfr +universal ncurses +universal ncursesw +universal
+    gettext +universal libedit +universal boost-jam
+    boost +st+python26+icu cppunit texlive doxygen graphviz
+    texinfo lcov sloccount
 </pre>
 
 You can even just install the current Ledger *RELEASE* directly:
@@ -90,22 +101,22 @@ sudo port install ledger
 
 h3. Ubuntu
 
-If you're going to be build on Ubuntu, @sudo apt-get install ...@
-the following packages (current as of Ubuntu Hardy):
+If you're going to be build on Ubuntu, @sudo apt-get install ...@ the
+following packages (current as of Ubuntu Hardy):
 
 <pre>
-sudo apt-get install build-essential libtool autoconf automake   \
-     texinfo python-dev zlib1g-dev libbz2-dev stow libgmp3-dev   \
-     bjam gettext cvs libboost1.35-dev libboost-regex1.35-dev    \
-     libboost-date-time1.35-dev libboost-filesystem1.35-dev      \
-     libmpfr-dev
+sudo apt-get install build-essential libtool autoconf automake	   \
+     zlib1g-dev libbz2-dev python-dev bjam cvs gettext libgmp3-dev \
+     libmpfr-dev libboost1.35-dev libboost-regex1.35-dev	   \
+     libboost-date-time1.35-dev libboost-filesystem1.35-dev	   \
+     libboost-python1.35-dev texinfo lcov sloccount
 </pre>
 
-Or for Ubuntu Karmic:
+Or, for Ubuntu Karmic:
 
 <pre>
 sudo apt-get install build-essential libtool autoconf automake   \
-     texinfo python-dev zlib1g-dev libbz2-dev stow libgmp3-dev   \
+     texinfo python-dev zlib1g-dev libbz2-dev libgmp3-dev        \
      bjam gettext cvs libboost1.40-dev libboost-regex1.40-dev    \
      libboost-date-time1.40-dev libboost-filesystem1.40-dev      \
      libmpfr-dev
