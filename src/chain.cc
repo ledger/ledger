@@ -41,7 +41,7 @@ namespace ledger {
 
 post_handler_ptr chain_post_handlers(report_t&	      report,
 				     post_handler_ptr base_handler,
-				     bool             only_preliminaries)
+				     bool             for_accounts_report)
 {
   post_handler_ptr handler(base_handler);
   predicate_t	   display_predicate;
@@ -51,7 +51,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
 
-  if (! only_preliminaries) {
+  if (! for_accounts_report) {
     // Make sure only forecast postings which match are allowed through
     if (report.HANDLED(forecast_while_)) {
       handler.reset(new filter_posts
@@ -95,7 +95,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
   // running total.
-  handler.reset(new calc_posts(handler, expr, only_preliminaries));
+  handler.reset(new calc_posts(handler, expr));
 
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
@@ -105,7 +105,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     handler.reset(new filter_posts(handler, only_predicate, report));
   }
 
-  if (! only_preliminaries) {
+  if (! for_accounts_report) {
     // sort_posts will sort all the posts it sees, based on the `sort_order'
     // value expression.
     if (report.HANDLED(sort_)) {
