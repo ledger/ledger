@@ -278,6 +278,12 @@ void report_t::accounts_report(acct_handler_ptr handler)
     chain_post_handlers(*this, post_handler_ptr(new ignore_posts), true);
   pass_down_posts(chain, walker);
 
+  HANDLER(amount_).expr.mark_uncompiled();
+  HANDLER(total_).expr.mark_uncompiled();
+  HANDLER(display_amount_).expr.mark_uncompiled();
+  HANDLER(display_total_).expr.mark_uncompiled();
+  HANDLER(revalued_total_).expr.mark_uncompiled();
+
   scoped_ptr<accounts_iterator> iter;
   if (! HANDLED(sort_)) {
     iter.reset(new basic_accounts_iterator(*session.journal->master));
