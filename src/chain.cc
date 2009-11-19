@@ -132,10 +132,6 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     else if (report.HANDLED(subtotal))
       handler.reset(new subtotal_posts(handler, expr));
   }
-  else if (! report.HANDLED(period_) &&
-	   ! report.HANDLED(unsorted)) {
-    handler.reset(new sort_posts(handler, "date"));
-  }
 
   if (report.HANDLED(dow))
     handler.reset(new dow_posts(handler, expr));
