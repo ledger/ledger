@@ -41,7 +41,7 @@ namespace ledger {
 
 post_handler_ptr chain_post_handlers(report_t&	      report,
 				     post_handler_ptr base_handler,
-				     bool             only_preliminaries)
+				     bool             for_accounts_report)
 {
   post_handler_ptr handler(base_handler);
   predicate_t	   display_predicate;
@@ -51,7 +51,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
 
-  if (! only_preliminaries) {
+  if (! for_accounts_report) {
     // Make sure only forecast postings which match are allowed through
     if (report.HANDLED(forecast_while_)) {
       handler.reset(new filter_posts
@@ -77,25 +77,23 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 				      report.what_to_keep());
       handler.reset(new filter_posts(handler, display_predicate, report));
     }
-
-    // changed_value_posts adds virtual posts to the list to account for
-    // changes in market value of commodities, which otherwise would affect
-    // the running total unpredictably.
-    if (report.HANDLED(revalued))
-      handler.reset(new changed_value_posts
-		    (handler,
-		     report.HANDLER(display_amount_).expr,
-		     report.HANDLED(revalued_total_) ?
-		     report.HANDLER(revalued_total_).expr :
-		     report.HANDLER(display_total_).expr,
-		     report.HANDLER(display_total_).expr,
-		     report, report.HANDLED(revalued_only)));
   }
+
+  // changed_value_posts adds virtual posts to the list to account for changes
+  // in market value of commodities, which otherwise would affect the running
+  // total unpredictably.
+  if (report.HANDLED(revalued) && (! for_accounts_report ||
+				   report.HANDLED(unrealized)))
+    handler.reset(new changed_value_posts(handler, report,
+					  for_accounts_report,
+					  report.HANDLED(unrealized)));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
   // running total.
-  handler.reset(new calc_posts(handler, expr, only_preliminaries));
+  handler.reset(new calc_posts(handler, expr, (! for_accounts_report ||
+					       (report.HANDLED(revalued) &&
+						report.HANDLED(unrealized)))));
 
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
@@ -105,7 +103,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     handler.reset(new filter_posts(handler, only_predicate, report));
   }
 
-  if (! only_preliminaries) {
+  if (! for_accounts_report) {
     // sort_posts will sort all the posts it sees, based on the `sort_order'
     // value expression.
     if (report.HANDLED(sort_)) {
@@ -138,10 +136,6 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
       handler.reset(new posts_as_equity(handler, expr));
     else if (report.HANDLED(subtotal))
       handler.reset(new subtotal_posts(handler, expr));
-  }
-  else if (! report.HANDLED(period_) &&
-	   ! report.HANDLED(unsorted)) {
-    handler.reset(new sort_posts(handler, "date"));
   }
 
   if (report.HANDLED(dow))

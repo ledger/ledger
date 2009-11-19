@@ -120,14 +120,15 @@ void report_t::normalize_options(const string& verb)
 
     date_interval_t interval(HANDLER(period_).str());
 
-    if (! HANDLED(begin_) && interval.start) {
-      string predicate =
-	"date>=[" + to_iso_extended_string(*interval.start) + "]";
+    optional<date_t> begin = interval.begin(session.current_year);
+    optional<date_t> end   = interval.end(session.current_year);
+
+    if (! HANDLED(begin_) && begin) {
+      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
       HANDLER(limit_).on(string("?normalize"), predicate);
     }
-    if (! HANDLED(end_) && interval.end) {
-      string predicate =
-	"date<[" + to_iso_extended_string(*interval.end) + "]";
+    if (! HANDLED(end_) && end) {
+      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
       HANDLER(limit_).on(string("?normalize"), predicate);
     }
 
@@ -221,25 +222,21 @@ void report_t::normalize_options(const string& verb)
 void report_t::parse_query_args(const value_t& args, const string& whence)
 {
   query_t query(args, what_to_keep());
-  if (! query)
-    throw_(std::runtime_error,
-	   _("Invalid query predicate: %1") << query.text());
+  if (query) {
+    HANDLER(limit_).on(whence, query.text());
 
-  HANDLER(limit_).on(whence, query.text());
-
-  DEBUG("report.predicate",
-	"Predicate = " << HANDLER(limit_).str());
+    DEBUG("report.predicate",
+	  "Predicate = " << HANDLER(limit_).str());
+  }
 
   if (query.tokens_remaining()) {
     query.parse_again();
-    if (! query)
-      throw_(std::runtime_error,
-	     _("Invalid display predicate: %1") << query.text());
+    if (query) {
+      HANDLER(display_).on(whence, query.text());
 
-    HANDLER(display_).on(whence, query.text());
-
-    DEBUG("report.predicate",
-	  "Display predicate = " << HANDLER(display_).str());
+      DEBUG("report.predicate",
+	    "Display predicate = " << HANDLER(display_).str());
+    }
   }
 }  
 
@@ -280,6 +277,12 @@ void report_t::accounts_report(acct_handler_ptr handler)
   post_handler_ptr chain =
     chain_post_handlers(*this, post_handler_ptr(new ignore_posts), true);
   pass_down_posts(chain, walker);
+
+  HANDLER(amount_).expr.mark_uncompiled();
+  HANDLER(total_).expr.mark_uncompiled();
+  HANDLER(display_amount_).expr.mark_uncompiled();
+  HANDLER(display_total_).expr.mark_uncompiled();
+  HANDLER(revalued_total_).expr.mark_uncompiled();
 
   scoped_ptr<accounts_iterator> iter;
   if (! HANDLED(sort_)) {
@@ -884,6 +887,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'u':
     OPT(unbudgeted);
     else OPT(uncleared);
+    else OPT(unrealized);
     else OPT(unround);
     else OPT(unsorted);
     break;

@@ -241,8 +241,7 @@ public:
 	       const predicate_t& predicate,
 	       scope_t&           _context)
     : item_handler<post_t>(handler), pred(predicate), context(_context) {
-    TRACE_CTOR(filter_posts,
-	       "post_handler_ptr, const predicate_t&, scope_t&");
+    TRACE_CTOR(filter_posts, "post_handler_ptr, predicate_t, scope_t&");
   }
   virtual ~filter_posts() {
     TRACE_DTOR(filter_posts);
@@ -280,16 +279,16 @@ class calc_posts : public item_handler<post_t>
 {
   post_t * last_post;
   expr_t&  amount_expr;
-  bool     account_wise;
+  bool     calc_running_total;
 
   calc_posts();
 
 public:
   calc_posts(post_handler_ptr handler,
 	     expr_t&          _amount_expr,
-	     bool             _account_wise = false)
+	     bool             _calc_running_total = false)
     : item_handler<post_t>(handler), last_post(NULL),
-      amount_expr(_amount_expr), account_wise(_account_wise) {
+      amount_expr(_amount_expr), calc_running_total(_calc_running_total) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   virtual ~calc_posts() {
@@ -379,39 +378,33 @@ class changed_value_posts : public item_handler<post_t>
   expr_t	display_total_expr;
   report_t&	report;
   bool		changed_values_only;
+  bool		for_accounts_report;
+  bool		show_unrealized;
   post_t *	last_post;
   value_t	last_total;
   value_t	last_display_total;
-  temporaries_t temps;
+  temporaries_t	temps;
   account_t&	revalued_account;
   account_t&	rounding_account;
+  account_t *	gains_equity_account;
+  account_t *	losses_equity_account;
 
   changed_value_posts();
 
 public:
   changed_value_posts(post_handler_ptr handler,
-		      const expr_t&    _display_amount_expr,
-		      const expr_t&    _total_expr,
-		      const expr_t&    _display_total_expr,
-		      report_t&        _report,
-		      bool	       _changed_values_only)
-    : item_handler<post_t>(handler),
-      display_amount_expr(_display_amount_expr), total_expr(_total_expr),
-      display_total_expr(_display_total_expr), report(_report),
-      changed_values_only(_changed_values_only), last_post(NULL),
-      revalued_account(temps.create_account(_("<Revalued>"))),
-      rounding_account(temps.create_account(_("<Rounding>"))) {
-    TRACE_CTOR(changed_value_posts,
-	       "post_handler_ptr, const expr_t&, const expr_t&, report_t&, bool");
-  }
+		      report_t&	       _report,
+		      bool	       _for_accounts_report,
+		      bool	       _show_unrealized);
+
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
   }
 
   virtual void flush();
 
-  void output_revaluation(post_t * post, const date_t& current);
-  void output_rounding(post_t * post);
+  void output_revaluation(post_t& post, const date_t& current);
+  void output_rounding(post_t& post);
 
   virtual void operator()(post_t& post);
 };

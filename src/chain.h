@@ -84,7 +84,7 @@ class report_t;
 post_handler_ptr
 chain_post_handlers(report_t&	     report,
 		    post_handler_ptr base_handler,
-		    bool             only_preliminaries = false);
+		    bool             for_accounts_report = false);
 
 } // namespace ledger
 

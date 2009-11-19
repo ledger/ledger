@@ -50,6 +50,7 @@
 #include "option.h"
 #include "commodity.h"
 #include "annotate.h"
+#include "session.h"
 #include "format.h"
 
 namespace ledger {
@@ -300,6 +301,7 @@ public:
     HANDLER(truncate_).report(out);
     HANDLER(unbudgeted).report(out);
     HANDLER(uncleared).report(out);
+    HANDLER(unrealized).report(out);
     HANDLER(unround).report(out);
     HANDLER(unsorted).report(out);
     HANDLER(weekly).report(out);
@@ -352,7 +354,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION(report_t, amount_data);
+  OPTION(report_t, amount_data); // -j
   OPTION(report_t, anon);
 
   OPTION_(report_t, average, DO() { // -A
@@ -377,14 +379,14 @@ public:
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
-      date_interval_t interval(args[1].to_string());
-      if (! interval.start)
+      date_interval_t  interval(args[1].to_string());
+      optional<date_t> begin = interval.begin(parent->session.current_year);
+      if (! begin)
 	throw_(std::invalid_argument,
 	       _("Could not determine beginning of period '%1'")
 	       << args[1].to_string());
 
-      string predicate =
-	"date>=[" + to_iso_extended_string(*interval.start) + "]";
+      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
       parent->HANDLER(limit_).on(string("--begin"), predicate);
     });
 
@@ -524,17 +526,19 @@ public:
   OPTION(report_t, empty); // -E
 
   OPTION_(report_t, end_, DO_(args) { // -e
-      date_interval_t interval(args[1].to_string());
-      if (! interval.start)
+      date_interval_t  interval(args[1].to_string());
+      // Use begin() here so that if the user says --end=2008, we end on
+      // 2008/01/01 instead of 2009/01/01 (which is what end() would return).
+      optional<date_t> end = interval.begin(parent->session.current_year);
+      if (! end)
 	throw_(std::invalid_argument,
 	       _("Could not determine end of period '%1'")
 	       << args[1].to_string());
 
-      string predicate =
-	"date<[" + to_iso_extended_string(*interval.start) + "]";
+      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
       parent->HANDLER(limit_).on(string("--end"), predicate);
 
-      parent->terminus = datetime_t(*interval.start);
+      parent->terminus = datetime_t(*end);
     });
 
   OPTION(report_t, equity);
@@ -622,11 +626,13 @@ public:
 
   OPTION_(report_t, now_, DO_(args) {
       date_interval_t interval(args[1].to_string());
-      if (! interval.start)
+      optional<date_t> begin = interval.begin(parent->session.current_year);
+      if (! begin)
 	throw_(std::invalid_argument,
 	       _("Could not determine beginning of period '%1'")
 	       << args[1].to_string());
-      ledger::epoch = datetime_t(*interval.start);
+      ledger::epoch = parent->terminus = datetime_t(*begin);
+      parent->session.current_year = ledger::epoch->date().year();
     });
 
   OPTION__
@@ -844,7 +850,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION(report_t, total_data);
+  OPTION(report_t, total_data); // -J
 
   OPTION_(report_t, truncate_, DO_(args) {
       string style(args[1].to_string());
@@ -867,6 +873,8 @@ public:
   OPTION_(report_t, uncleared, DO() { // -U
       parent->HANDLER(limit_).on(string("--uncleared"), "uncleared|pending");
     });
+
+  OPTION(report_t, unrealized);
 
   OPTION_(report_t, unround, DO() {
       parent->HANDLER(display_amount_)

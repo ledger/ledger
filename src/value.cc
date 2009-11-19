@@ -338,10 +338,13 @@ value_t& value_t::operator+=(const value_t& val)
   case DATETIME:
     switch (val.type()) {
     case INTEGER:
-      as_datetime_lval() += date_duration(val.as_long());
+      as_datetime_lval() +=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>(val.as_long()));
       return *this;
     case AMOUNT:
-      as_datetime_lval() += date_duration(val.as_amount().to_long());
+      as_datetime_lval() +=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>
+			(val.as_amount().to_long()));
       return *this;
     default:
       break;
@@ -351,10 +354,10 @@ value_t& value_t::operator+=(const value_t& val)
   case DATE:
     switch (val.type()) {
     case INTEGER:
-      as_date_lval() += date_duration_t(val.as_long());
+      as_date_lval() += gregorian::date_duration(val.as_long());
       return *this;
     case AMOUNT:
-      as_date_lval() += date_duration_t(val.as_amount().to_long());
+      as_date_lval() += gregorian::date_duration(val.as_amount().to_long());
       return *this;
     default:
       break;
@@ -466,10 +469,13 @@ value_t& value_t::operator-=(const value_t& val)
   case DATETIME:
     switch (val.type()) {
     case INTEGER:
-      as_datetime_lval() -= date_duration(val.as_long());
+      as_datetime_lval() -=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>(val.as_long()));
       return *this;
     case AMOUNT:
-      as_datetime_lval() -= date_duration(val.as_amount().to_long());
+      as_datetime_lval() -=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>
+			(val.as_amount().to_long()));
       return *this;
     default:
       break;
@@ -479,10 +485,10 @@ value_t& value_t::operator-=(const value_t& val)
   case DATE:
     switch (val.type()) {
     case INTEGER:
-      as_date_lval() -= date_duration_t(val.as_long());
+      as_date_lval() -= gregorian::date_duration(val.as_long());
       return *this;
     case AMOUNT:
-      as_date_lval() -= date_duration_t(val.as_amount().to_long());
+      as_date_lval() -= gregorian::date_duration(val.as_amount().to_long());
       return *this;
     default:
       break;
@@ -1187,6 +1193,13 @@ void value_t::in_place_negate()
   case BALANCE:
     as_balance_lval().in_place_negate();
     return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(- value);
+    *this = temp;
+    return;
+  }
   default:
     break;
   }
@@ -1216,6 +1229,13 @@ void value_t::in_place_not()
   case STRING:
     set_boolean(as_string().empty());
     return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(! value);
+    *this = temp;
+    return;
+  }
   default:
     break;
   }
