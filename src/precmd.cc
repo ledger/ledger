@@ -184,14 +184,12 @@ value_t args_command(call_scope_t& args)
   out << std::endl << std::endl;
 
   query_t query(args.value(), report.what_to_keep());
-  if (! query)
-    throw_(std::runtime_error,
-	   _("Invalid query predicate: %1") << join_args(args));
+  if (query) {
+    call_scope_t sub_args(static_cast<scope_t&>(args));
+    sub_args.push_back(string_value(query.text()));
 
-  call_scope_t sub_args(static_cast<scope_t&>(args));
-  sub_args.push_back(string_value(query.text()));
-
-  parse_command(sub_args);
+    parse_command(sub_args);
+  }
 
   if (query.tokens_remaining()) {
     out << std::endl << _("====== Display predicate ======")
@@ -199,14 +197,12 @@ value_t args_command(call_scope_t& args)
 
     query.parse_again();
 
-    if (! query)
-      throw_(std::runtime_error,
-	     _("Invalid display predicate: %1") << join_args(args));
+    if (query) {
+      call_scope_t disp_sub_args(static_cast<scope_t&>(args));
+      disp_sub_args.push_back(string_value(query.text()));
 
-    call_scope_t disp_sub_args(static_cast<scope_t&>(args));
-    disp_sub_args.push_back(string_value(query.text()));
-
-    parse_command(disp_sub_args);
+      parse_command(disp_sub_args);
+    }
   }
 
   return NULL_VALUE;

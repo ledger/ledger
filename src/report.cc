@@ -222,25 +222,21 @@ void report_t::normalize_options(const string& verb)
 void report_t::parse_query_args(const value_t& args, const string& whence)
 {
   query_t query(args, what_to_keep());
-  if (! query)
-    throw_(std::runtime_error,
-	   _("Invalid query predicate: %1") << query.text());
+  if (query) {
+    HANDLER(limit_).on(whence, query.text());
 
-  HANDLER(limit_).on(whence, query.text());
-
-  DEBUG("report.predicate",
-	"Predicate = " << HANDLER(limit_).str());
+    DEBUG("report.predicate",
+	  "Predicate = " << HANDLER(limit_).str());
+  }
 
   if (query.tokens_remaining()) {
     query.parse_again();
-    if (! query)
-      throw_(std::runtime_error,
-	     _("Invalid display predicate: %1") << query.text());
+    if (query) {
+      HANDLER(display_).on(whence, query.text());
 
-    HANDLER(display_).on(whence, query.text());
-
-    DEBUG("report.predicate",
-	  "Display predicate = " << HANDLER(display_).str());
+      DEBUG("report.predicate",
+	    "Display predicate = " << HANDLER(display_).str());
+    }
   }
 }  
 
