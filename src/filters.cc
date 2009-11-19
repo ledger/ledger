@@ -502,8 +502,7 @@ void changed_value_posts::operator()(post_t& post)
 
   bind_scope_t bound_scope(report, post);
   last_total = total_expr.calc(bound_scope);
-
-  last_post = &post;
+  last_post  = &post;
 }
 
 void subtotal_posts::report_subtotal(const char *		      spec_fmt,
