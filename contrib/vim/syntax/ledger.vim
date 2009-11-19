@@ -24,26 +24,37 @@ endif
 
 " for debugging
 syntax clear
- 
+
+" DATE[=EDATE] [*|!] [(CODE)] DESC <-- first line of transaction
+"   ACCOUNT AMOUNT [; NOTE]  <-- posting
+
 " region: a transaction containing postings
 syn region transNorm start=/^[[:digit:]~]/ skip=/^\s/ end=/^/
-    \ fold keepend transparent contains=transDate, Metadata, Posting
+    \ fold keepend transparent contains=transDate,Metadata,Posting
 syn match transDate /^\d\S\+/ contained
-syn match Metadata /^\s\+;.*/ contained
+syn match Metadata /^\s\+;.*/ contained contains=MetadataTag
 syn match Comment /^;.*$/
 " every space in an account name shall be surrounded by two non-spaces
 " every account name ends with a tab, two spaces or the end of the line
 syn match Account /^\s\+\zs\%(\S \S\|\S\)\+\ze\%([ ]\{2,}\|\t\s*\|\s*$\)/ contained
-syn match Posting /^\s\+[^[:blank:];].*$/ contained transparent contains=Account
+syn match Posting /^\s\+[^[:blank:];].*$/ contained transparent contains=Account,Amount
+" FIXME: add other symbols?
+let s:currency = '\([$€£¢]\|\w\+\)'
+let s:figures = '\d\+\([.,]\d\+\)*'
+let s:amount = '-\?\('.s:figures.'\s*'.s:currency.'\|'.s:currency.'\s*'.s:figures.'\)'
+exe 'syn match Amount /'.s:amount.'/ contained'
+syn match MetadataTag /:\zs[^:]\+\ze:\|;\s*\zs[^:]\+\ze:[^:]\+$/ contained
 
 
-highlight default link transDate Question
-highlight default link Metadata PreProc
+highlight default link transDate Constant
+highlight default link Metadata Tag
+highlight default link MetadataTag Type
+highlight default link Amount Number
 highlight default link Comment Comment
 highlight default link Account Identifier
  
 " syncinc is easy: search for the first transaction.
 syn sync clear
-syn sync match ledgerSync grouphere transNorm "^\d"
+syn sync match ledgerSync grouphere transNorm "^[[:digit:]~]"
  
 let b:current_syntax = "ledger"
