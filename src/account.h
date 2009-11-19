@@ -55,9 +55,10 @@ typedef std::map<const string, account_t *> accounts_map;
 
 class account_t : public supports_flags<>, public scope_t
 {
-#define ACCOUNT_NORMAL 0x00	// no flags at all, a basic account
-#define ACCOUNT_KNOWN  0x01
-#define ACCOUNT_TEMP   0x02	// account is a temporary object
+#define ACCOUNT_NORMAL	  0x00	// no flags at all, a basic account
+#define ACCOUNT_KNOWN	  0x01
+#define ACCOUNT_TEMP	  0x02	// account is a temporary object
+#define ACCOUNT_GENERATED 0x04	// account never actually existed
 
 public:
   account_t *	   parent;
