@@ -217,7 +217,7 @@ void calc_posts::operator()(post_t& post)
 
   if (last_post) {
     assert(last_post->has_xdata());
-    if (! account_wise)
+    if (calc_running_total)
       xdata.total = last_post->xdata().total;
     xdata.count = last_post->xdata().count + 1;
   } else {
@@ -230,7 +230,7 @@ void calc_posts::operator()(post_t& post)
   account_t * acct = post.reported_account();
   acct->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
-  if (! account_wise)
+  if (calc_running_total)
     add_or_set_value(xdata.total, xdata.visited_value);
 
   item_handler<post_t>::operator()(post);

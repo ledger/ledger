@@ -280,16 +280,16 @@ class calc_posts : public item_handler<post_t>
 {
   post_t * last_post;
   expr_t&  amount_expr;
-  bool     account_wise;
+  bool     calc_running_total;
 
   calc_posts();
 
 public:
   calc_posts(post_handler_ptr handler,
 	     expr_t&          _amount_expr,
-	     bool             _account_wise = false)
+	     bool             _calc_running_total = false)
     : item_handler<post_t>(handler), last_post(NULL),
-      amount_expr(_amount_expr), account_wise(_account_wise) {
+      amount_expr(_amount_expr), calc_running_total(_calc_running_total) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   virtual ~calc_posts() {
