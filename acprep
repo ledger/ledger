@@ -183,7 +183,7 @@ class PrepareBuild(CommandLineApp):
         self.current_flavor    = 'debug'
         self.products_dir      = None
         self.build_dir         = self.source_dir
-        self.configure_args    = ['--with-included-gettext']
+        self.configure_args    = ['--with-included-gettext', '--enable-python']
         self.sys_include_dirs  = []
         self.sys_library_dirs  = []
 
