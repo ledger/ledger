@@ -35,7 +35,7 @@
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
-#include "unistring.h"
+#include "unistring.h"		// for justify()
 
 namespace ledger {
 
@@ -338,10 +338,13 @@ value_t& value_t::operator+=(const value_t& val)
   case DATETIME:
     switch (val.type()) {
     case INTEGER:
-      as_datetime_lval() += date_duration(val.as_long());
+      as_datetime_lval() +=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>(val.as_long()));
       return *this;
     case AMOUNT:
-      as_datetime_lval() += date_duration(val.as_amount().to_long());
+      as_datetime_lval() +=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>
+			(val.as_amount().to_long()));
       return *this;
     default:
       break;
@@ -351,10 +354,10 @@ value_t& value_t::operator+=(const value_t& val)
   case DATE:
     switch (val.type()) {
     case INTEGER:
-      as_date_lval() += date_duration_t(val.as_long());
+      as_date_lval() += gregorian::date_duration(val.as_long());
       return *this;
     case AMOUNT:
-      as_date_lval() += date_duration_t(val.as_amount().to_long());
+      as_date_lval() += gregorian::date_duration(val.as_amount().to_long());
       return *this;
     default:
       break;
@@ -466,10 +469,13 @@ value_t& value_t::operator-=(const value_t& val)
   case DATETIME:
     switch (val.type()) {
     case INTEGER:
-      as_datetime_lval() -= date_duration(val.as_long());
+      as_datetime_lval() -=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>(val.as_long()));
       return *this;
     case AMOUNT:
-      as_datetime_lval() -= date_duration(val.as_amount().to_long());
+      as_datetime_lval() -=
+	time_duration_t(0, 0, static_cast<time_duration_t::sec_type>
+			(val.as_amount().to_long()));
       return *this;
     default:
       break;
@@ -479,10 +485,10 @@ value_t& value_t::operator-=(const value_t& val)
   case DATE:
     switch (val.type()) {
     case INTEGER:
-      as_date_lval() -= date_duration_t(val.as_long());
+      as_date_lval() -= gregorian::date_duration(val.as_long());
       return *this;
     case AMOUNT:
-      as_date_lval() -= date_duration_t(val.as_amount().to_long());
+      as_date_lval() -= gregorian::date_duration(val.as_amount().to_long());
       return *this;
     default:
       break;
@@ -696,7 +702,7 @@ value_t& value_t::operator/=(const value_t& val)
 	  as_amount_lval() /= simpler.as_amount();
 	  break;
 	default:
-	  assert(0);
+	  assert(false);
 	  break;
 	}
 	return *this;
@@ -1146,6 +1152,12 @@ void value_t::in_place_cast(type_t cast_type)
     case AMOUNT:
       set_amount(amount_t(as_string()));
       return;
+    case DATE:
+      set_date(parse_date(as_string()));
+      return;
+    case DATETIME:
+      set_datetime(parse_datetime(as_string()));
+      return;
     case MASK:
       set_mask(as_string());
       return;
@@ -1181,6 +1193,13 @@ void value_t::in_place_negate()
   case BALANCE:
     as_balance_lval().in_place_negate();
     return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(- value);
+    *this = temp;
+    return;
+  }
   default:
     break;
   }
@@ -1210,6 +1229,13 @@ void value_t::in_place_not()
   case STRING:
     set_boolean(as_string().empty());
     return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(! value);
+    *this = temp;
+    return;
+  }
   default:
     break;
   }
@@ -1439,6 +1465,31 @@ void value_t::in_place_truncate()
   throw_(value_error, _("Cannot truncate %1") << label());
 }
 
+void value_t::in_place_floor()
+{
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_floor();
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_floor();
+    return;
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.floored());
+    *this = temp;
+    return;
+  }
+  default:
+    break;
+  }
+
+  throw_(value_error, _("Cannot floor %1") << label());
+}
+
 void value_t::in_place_unround()
 {
   switch (type()) {
@@ -1587,7 +1638,10 @@ void value_t::print(std::ostream& out,
     break;
 
   case STRING:
-    justify(out, as_string(), first_width, right_justify);
+    if (first_width > 0)
+      justify(out, as_string(), first_width, right_justify);
+    else
+      out << as_string();
     break;
 
   case MASK:
@@ -1744,6 +1798,59 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
   assert(right_iter == right_values.end());
 
   return false;
+}
+
+void to_xml(std::ostream& out, const value_t& value)
+{
+  switch (value.type()) {
+  case value_t::VOID:
+    out << "<void />";
+    break;
+  case value_t::BOOLEAN: {
+    push_xml y(out, "boolean");
+    out << (value.as_boolean() ? "true" : "false");
+    break;
+  }
+  case value_t::INTEGER: {
+    push_xml y(out, "integer");
+    out << value.as_long();
+    break;
+  }
+
+  case value_t::AMOUNT:
+    to_xml(out, value.as_amount());
+    break;
+  case value_t::BALANCE:
+    to_xml(out, value.as_balance());
+    break;
+
+  case value_t::DATETIME:
+    to_xml(out, value.as_datetime());
+    break;
+  case value_t::DATE:
+    to_xml(out, value.as_date());
+    break;
+  case value_t::STRING: {
+    push_xml y(out, "string");
+    out << y.guard(value.as_string());
+    break;
+  }
+  case value_t::MASK:
+    to_xml(out, value.as_mask());
+    break;
+
+  case value_t::SEQUENCE: {
+    push_xml y(out, "sequence");
+    foreach (const value_t& member, value.as_sequence())
+      to_xml(out, member);
+    break;
+  }
+
+  case value_t::SCOPE:
+  default:
+    assert(false);
+    break;
+  }
 }
 
 } // namespace ledger

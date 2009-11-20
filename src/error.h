@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup util
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _ERROR_H
 #define _ERROR_H

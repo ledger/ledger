@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _OP_H
 #define _OP_H
@@ -50,11 +46,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class expr_t::op_t : public noncopyable
 {
   friend class expr_t;
@@ -70,7 +61,7 @@ private:
   variant<ptr_op_t,		// used by all binary operators
 	  value_t,		// used by constant VALUE
 	  string,		// used by constant IDENT
-	  function_t		// used by terminal FUNCTION
+	  expr_t::func_t	// used by terminal FUNCTION
 	  > data;
 
 public:
@@ -180,14 +171,14 @@ public:
   bool is_function() const {
     return kind == FUNCTION;
   }
-  function_t& as_function_lval() {
+  expr_t::func_t& as_function_lval() {
     assert(kind == FUNCTION);
-    return boost::get<function_t>(data);
+    return boost::get<expr_t::func_t>(data);
   }
-  const function_t& as_function() const {
+  const expr_t::func_t& as_function() const {
     return const_cast<op_t *>(this)->as_function_lval();
   }
-  void set_function(const function_t& val) {
+  void set_function(const expr_t::func_t& val) {
     data = val;
   }
 
@@ -252,9 +243,6 @@ private:
     op->release();
   }
 
-  static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
-			   ptr_op_t _right = NULL);
-
   ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
     ptr_op_t node(new_node(kind, _left, _right));
     if (kind < TERMINALS)
@@ -263,6 +251,9 @@ private:
   }
 
 public:
+  static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
+			   ptr_op_t _right = NULL);
+
   ptr_op_t compile(scope_t& scope, const int depth = 0);
   value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
 		const int depth = 0);
@@ -289,7 +280,7 @@ public:
   void dump(std::ostream& out, const int depth) const;
 
   static ptr_op_t wrap_value(const value_t& val);
-  static ptr_op_t wrap_functor(const function_t& fobj);
+  static ptr_op_t wrap_functor(const expr_t::func_t& fobj);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -312,7 +303,7 @@ private:
 	 (! has_right() || ! right()->is_function()))) {
       ar & data;
     } else {
-      variant<ptr_op_t, value_t, string, function_t> temp_data;
+      variant<ptr_op_t, value_t, string, expr_t::func_t> temp_data;
       ar & temp_data;
     }
   }
@@ -334,7 +325,8 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_value(const value_t& val) {
   return temp;
 }
 
-inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(const function_t& fobj) {
+inline expr_t::ptr_op_t
+expr_t::op_t::wrap_functor(const expr_t::func_t& fobj) {
   ptr_op_t temp(new op_t(op_t::FUNCTION));
   temp->set_function(fobj);
   return temp;

@@ -83,7 +83,7 @@ journal_t::~journal_t()
 void journal_t::initialize()
 {
   master     = new account_t;
-  basket     = NULL;
+  bucket     = NULL;
   was_loaded = false;
 
   commodity_pool.reset(new commodity_pool_t);
@@ -126,16 +126,21 @@ bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
 
-  if (! xact_finalize_hooks.run_hooks(*xact, false) ||
-      ! xact->finalize() ||
-      ! xact_finalize_hooks.run_hooks(*xact, true)) {
+  if (! xact->finalize()) {
     xact->journal = NULL;
     return false;
   }
 
+  extend_xact(xact);
   xacts.push_back(xact);
 
   return true;
+}
+
+void journal_t::extend_xact(xact_base_t * xact)
+{
+  foreach (auto_xact_t * auto_xact, auto_xacts)
+    auto_xact->extend_xact(*xact);
 }
 
 bool journal_t::remove_xact(xact_t * xact)
@@ -204,6 +209,26 @@ std::size_t journal_t::read(const path& pathname,
   if (count > 0)
     sources.push_back(fileinfo_t(filename));
   return count;
+}
+
+bool journal_t::has_xdata()
+{
+  foreach (xact_t * xact, xacts)
+    if (xact->has_xdata())
+      return true;
+
+  foreach (auto_xact_t * xact, auto_xacts)
+    if (xact->has_xdata())
+      return true;
+
+  foreach (period_xact_t * xact, period_xacts)
+    if (xact->has_xdata())
+      return true;
+
+  if (master->has_xdata() || master->children_with_xdata())
+    return true;
+
+  return false;
 }
 
 void journal_t::clear_xdata()

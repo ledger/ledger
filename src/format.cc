@@ -33,7 +33,6 @@
 
 #include "format.h"
 #include "scope.h"
-#include "unistring.h"
 #include "pstream.h"
 
 namespace ledger {
@@ -61,8 +60,12 @@ void format_t::element_t::dump(std::ostream& out) const
   out << std::dec << int(max_width);
 
   switch (type) {
-  case STRING: out << "   str: '" << chars << "'" << std::endl; break;
-  case EXPR:   out << "  expr: "   << expr << std::endl; break;
+  case STRING:
+    out << "   str: '" << boost::get<string>(data) << "'" << std::endl;
+    break;
+  case EXPR:
+    out << "  expr: "   << boost::get<expr_t>(data) << std::endl;
+    break;
   }
 }
 
@@ -72,8 +75,7 @@ namespace {
     string temp(p);
     ptristream str(const_cast<char *&>(p));
     expr_t expr;
-    expr.parse(str, single_expr ? expr_t::PARSE_SINGLE : expr_t::PARSE_PARTIAL,
-	       &temp);
+    expr.parse(str, single_expr ? PARSE_SINGLE : PARSE_PARTIAL, temp);
     if (str.eof()) {
       expr.set_text(p);
       p += std::strlen(p);
@@ -118,7 +120,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 
     if (q != buf) {
       current->type  = element_t::STRING;
-      current->chars = string(buf, q);
+      current->data = string(buf, q);
       q = buf;
 
       current->next.reset(new element_t);
@@ -129,14 +131,14 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
       p++;
       current->type = element_t::STRING;
       switch (*p) {
-      case 'b': current->chars = "\b"; break;
-      case 'f': current->chars = "\f"; break;
-      case 'n': current->chars = "\n"; break;
-      case 'r': current->chars = "\r"; break;
-      case 't': current->chars = "\t"; break;
-      case 'v': current->chars = "\v"; break;
-      case '\\': current->chars = "\\"; break;
-      default: current->chars = string(1, *p); break;
+      case 'b':  current->data = string("\b");  break;
+      case 'f':  current->data = string("\f");  break;
+      case 'n':  current->data = string("\n");  break;
+      case 'r':  current->data = string("\r");  break;
+      case 't':  current->data = string("\t");  break;
+      case 'v':  current->data = string("\v");  break;
+      case '\\': current->data = string("\\");  break;
+      default:   current->data = string(1, *p); break;
       }
       continue;
     }
@@ -172,8 +174,8 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 
     switch (*p) {
     case '%':
-      current->type  = element_t::STRING;
-      current->chars = "%";
+      current->type = element_t::STRING;
+      current->data = string("%");
       break;
 
     case '$': {
@@ -208,7 +210,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
       if (format_amount) p++;
 
       current->type = element_t::EXPR;
-      current->expr = parse_single_expression(p, ! format_amount);
+      current->data = parse_single_expression(p, ! format_amount);
 
       // Wrap the subexpression in calls to justify and scrub
       if (format_amount) {
@@ -217,7 +219,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 	else
 	  p++;
 
-	expr_t::ptr_op_t op = current->expr.get_op();
+	expr_t::ptr_op_t op = boost::get<expr_t>(current->data).get_op();
 
 	expr_t::ptr_op_t amount_op;
 	expr_t::ptr_op_t colorize_op;
@@ -239,8 +241,10 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 	expr_t::ptr_op_t arg2_node(new expr_t::op_t(expr_t::op_t::VALUE));
 	expr_t::ptr_op_t arg3_node(new expr_t::op_t(expr_t::op_t::VALUE));
 
-	arg1_node->set_value(current->min_width > 0 ? long(current->min_width) : -1);
-	arg2_node->set_value(current->max_width > 0 ? long(current->max_width) : -1);
+	arg1_node->set_value(current->min_width > 0 ?
+			     long(current->min_width) : -1);
+	arg2_node->set_value(current->max_width > 0 ?
+			     long(current->max_width) : -1);
 	arg3_node->set_value(! current->has_flags(ELEMENT_ALIGN_LEFT));
 
 	current->min_width = 0;
@@ -258,14 +262,17 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 	args3_node->set_left(call1_node);
 	args3_node->set_right(args2_node);
 
+	expr_t::ptr_op_t seq1_node(new expr_t::op_t(expr_t::op_t::O_SEQ));
+	seq1_node->set_left(args3_node);
+
 	expr_t::ptr_op_t justify_node(new expr_t::op_t(expr_t::op_t::IDENT));
 	justify_node->set_ident("justify");
 
 	expr_t::ptr_op_t call2_node(new expr_t::op_t(expr_t::op_t::O_CALL));
 	call2_node->set_left(justify_node);
-	call2_node->set_right(args3_node);
+	call2_node->set_right(seq1_node);
 
-	string prev_expr = current->expr.text();
+	string prev_expr = boost::get<expr_t>(current->data).text();
 
 	if (colorize_op) {
 	  expr_t::ptr_op_t ansify_if_node(new expr_t::op_t(expr_t::op_t::IDENT));
@@ -275,25 +282,25 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 	  args4_node->set_left(call2_node);
 	  args4_node->set_right(colorize_op);
 
+	  expr_t::ptr_op_t seq2_node(new expr_t::op_t(expr_t::op_t::O_SEQ));
+	  seq2_node->set_left(args4_node);
+
 	  expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
 	  call3_node->set_left(ansify_if_node);
-	  call3_node->set_right(args4_node);
+	  call3_node->set_right(seq2_node);
 
-	  current->expr = expr_t(call3_node);
+	  current->data = expr_t(call3_node);
 	} else {
-	  current->expr = expr_t(call2_node);
+	  current->data = expr_t(call2_node);
 	}
 
-	current->expr.set_text(prev_expr);
+	boost::get<expr_t>(current->data).set_text(prev_expr);
       }
       break;
     }
 
     default:
-      current->type  = element_t::EXPR;
-      current->chars = string(FMT_PREFIX) + *p;
-      current->expr.parse(current->chars);
-      break;
+      throw_(format_error, _("Unrecognized formatting character: %1") << *p);
     }
   }
 
@@ -305,15 +312,17 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
       current->next.reset(new element_t);
       current = current->next.get();
     }
-    current->type  = element_t::STRING;
-    current->chars = string(buf, q);
+    current->type = element_t::STRING;
+    current->data = string(buf, q);
   }
 
   return result.release();
 }
 
-void format_t::format(std::ostream& out_str, scope_t& scope)
+string format_t::real_calc(scope_t& scope)
 {
+  std::ostringstream out_str;
+
   for (element_t * elem = elements.get(); elem; elem = elem->next.get()) {
     std::ostringstream out;
     string name;
@@ -327,32 +336,38 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
     case element_t::STRING:
       if (elem->min_width > 0)
 	out.width(elem->min_width);
-      out << elem->chars;
+      out << boost::get<string>(elem->data);
       break;
 
-    case element_t::EXPR:
+    case element_t::EXPR: {
+      expr_t& expr(boost::get<expr_t>(elem->data));
       try {
-	elem->expr.compile(scope);
+
+	expr.compile(scope);
 
 	value_t value;
-	if (elem->expr.is_function()) {
+	if (expr.is_function()) {
 	  call_scope_t args(scope);
 	  args.push_back(long(elem->max_width));
-	  value = elem->expr.get_function()(args);
+	  value = expr.get_function()(args);
 	} else {
-	  value = elem->expr.calc(scope);
+	  value = expr.calc(scope);
 	}
 	DEBUG("format.expr", "value = (" << value << ")");
 
-	value.print(out, static_cast<int>(elem->min_width), -1,
-		    ! elem->has_flags(ELEMENT_ALIGN_LEFT));
+	if (elem->min_width > 0)
+	  value.print(out, static_cast<int>(elem->min_width), -1,
+		      ! elem->has_flags(ELEMENT_ALIGN_LEFT));
+	else
+	  out << value.to_string();
       }
       catch (const calc_error&) {
 	add_error_context(_("While calculating format expression:"));
-	add_error_context(expr_context(elem->expr));
+	add_error_context(expr.context_to_str());
 	throw;
       }
       break;
+    }
 
     default:
       assert(false);
@@ -376,6 +391,8 @@ void format_t::format(std::ostream& out_str, scope_t& scope)
       out_str << out.str();
     }
   }
+
+  return out_str.str();
 }
 
 string format_t::truncate(const unistring&  ustr,

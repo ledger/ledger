@@ -440,6 +440,13 @@ public:
   }
   void in_place_truncate();
 
+  value_t floored() const {
+    value_t temp(*this);
+    temp.in_place_floor();
+    return temp;
+  }
+  void in_place_floor();
+
   value_t unrounded() const {
     value_t temp(*this);
     temp.in_place_unround();
@@ -870,6 +877,10 @@ public:
       return 1;
   }
 
+  bool empty() const {
+    return size() == 0;
+  }
+
   /**
    * Informational methods.
    */
@@ -942,6 +953,8 @@ inline value_t string_value(const string& str = "") {
 }
 
 #define VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val))
+#define SIMPLIFIED_VALUE_OR_ZERO(val) \
+  ((val).is_null() ? value_t(0L) : (val).simplified())
 
 inline value_t mask_value(const string& str) {
   return value_t(mask_t(str));
@@ -977,6 +990,8 @@ struct sort_value_t
 
 bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
 			     const std::list<sort_value_t>& right_values);
+
+void to_xml(std::ostream& out, const value_t& value);
 
 } // namespace ledger
 

@@ -43,7 +43,7 @@
 #include "xact.h"
 
 #define LEDGER_MAGIC    0x4c454447
-#define ARCHIVE_VERSION 0x03000003
+#define ARCHIVE_VERSION 0x03000006
 
 //BOOST_IS_ABSTRACT(ledger::scope_t)
 BOOST_CLASS_EXPORT(ledger::scope_t)
@@ -201,23 +201,23 @@ bool archive_t::should_load(const std::list<path>& data_files)
   return true;
 }
 
-bool archive_t::should_save(shared_ptr<journal_t> journal)
+bool archive_t::should_save(journal_t& journal)
 {
   std::list<path> data_files;
 
   DEBUG("archive.journal", "Should the archive be saved?");
 
-  if (journal->was_loaded) {
+  if (journal.was_loaded) {
     DEBUG("archive.journal", "No, it's one we loaded before");
     return false;
   }
 
-  if (journal->sources.empty()) {
+  if (journal.sources.empty()) {
     DEBUG("archive.journal", "No, there were no sources!");
     return false;
   }
 
-  foreach (const journal_t::fileinfo_t& i, journal->sources) {
+  foreach (const journal_t::fileinfo_t& i, journal.sources) {
     if (i.from_stream) {
       DEBUG("archive.journal", "No, one source was from a stream");
       return false;
@@ -241,14 +241,14 @@ bool archive_t::should_save(shared_ptr<journal_t> journal)
   return true;
 }
 
-void archive_t::save(shared_ptr<journal_t> journal)
+void archive_t::save(journal_t& journal)
 {
   INFO_START(archive, "Saved journal file cache");
 
   ofstream stream(file, std::ios::binary);
 
   write_header_bits(stream);
-  sources = journal->sources;
+  sources = journal.sources;
 
 #if defined(DEBUG_ON)
   foreach (const journal_t::fileinfo_t& i, sources)
@@ -263,12 +263,12 @@ void archive_t::save(shared_ptr<journal_t> journal)
 
   DEBUG("archive.journal",
 	"Archiving journal with " << sources.size() << " sources");
-  oa << *journal;
+  oa << journal;
 
   INFO_FINISH(archive);
 }
 
-bool archive_t::load(shared_ptr<journal_t> journal)
+bool archive_t::load(journal_t& journal)
 {
   INFO_START(archive, "Read cached journal file");
 
@@ -282,8 +282,8 @@ bool archive_t::load(shared_ptr<journal_t> journal)
   archive_t temp;
   iarchive >> temp;
 
-  iarchive >> *journal.get();
-  journal->was_loaded = true;
+  iarchive >> journal;
+  journal.was_loaded = true;
 
   INFO_FINISH(archive);
 

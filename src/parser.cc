@@ -82,7 +82,7 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
 
     if (node->kind == op_t::O_CONS) {
       ptr_op_t prev(node);
-      node = new op_t(op_t::O_CONS);
+      node = new op_t(op_t::O_SEQ);
       node->set_left(prev);
     }
     break;
@@ -473,8 +473,9 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
 }
 
 expr_t::ptr_op_t
-expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
-			const string * original_string)
+expr_t::parser_t::parse(std::istream&		in,
+			const parse_flags_t&	flags,
+			const optional<string>& original_string)
 {
   try {
     ptr_op_t top_node = parse_value_expr(in, flags);

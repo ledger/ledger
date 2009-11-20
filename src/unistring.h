@@ -38,14 +38,9 @@
  * @author John Wiegley
  *
  * @ingroup utils
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _UNISTRING_H
 #define _UNISTRING_H
-
 
 namespace ledger {
 
@@ -59,12 +54,15 @@ namespace ledger {
  */
 class unistring
 {
+public:
   std::vector<boost::uint32_t> utf32chars;
 
-public:
+  unistring() {
+    TRACE_CTOR(unistring, "");
+  }
   unistring(const std::string& input)
   {
-    TRACE_CTOR(unistring, "");
+    TRACE_CTOR(unistring, "std::string");
 
     const char * p   = input.c_str();
     std::size_t	 len = input.length();

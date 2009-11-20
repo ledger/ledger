@@ -30,62 +30,84 @@
  */
 
 /**
- * @addtogroup util
+ * @addtogroup expr
  */
 
 /**
- * @file   hooks.h
+ * @file   draft.h
  * @author John Wiegley
  *
- * @ingroup util
- *
- * @brief Brief
- *
- * Long.
+ * @ingroup report
  */
-#ifndef _HOOKS_H
-#define _HOOKS_H
+#ifndef _DRAFT_H
+#define _DRAFT_H
 
+#include "exprbase.h"
+#include "value.h"
 
-/**
- * @brief Brief
- *
- * Long.
- */
-template <typename T, typename Data>
-class hooks_t : public boost::noncopyable
+namespace ledger {
+
+class journal_t;
+class xact_t;
+
+class draft_t : public expr_base_t<value_t>
 {
+  typedef expr_base_t<value_t> base_type;
+
+  struct xact_template_t
+  {
+    optional<date_t> date;
+    optional<string> code;
+    optional<string> note;
+    mask_t           payee_mask;
+
+    struct post_template_t {
+      bool               from;
+      optional<mask_t>   account_mask;
+      optional<amount_t> amount;
+      optional<string>   cost_operator;
+      optional<amount_t> cost;
+
+      post_template_t() : from(false) {}
+    };
+
+    std::list<post_template_t> posts;
+
+    xact_template_t() {}
+
+    void dump(std::ostream& out) const;
+  };
+
+  optional<xact_template_t> tmpl;
+
 public:
-  typedef boost::function<bool (Data&, bool)> function_t;
-
-protected:
-  std::list<T *> list;
-
-public:
-  hooks_t() {
-    TRACE_CTOR(hooks_t, "");
+  draft_t(const value_t& args) : base_type() {
+    TRACE_CTOR(draft_t, "value_t");
+    if (! args.empty())
+      parse_args(args);
   }
-  ~hooks_t() throw() {
-    TRACE_DTOR(hooks_t);
+  ~draft_t() {
+    TRACE_DTOR(draft_t);
   }
 
-  void add_hook(T * func, const bool prepend = false) {
-    if (prepend)
-      list.push_front(func);
-    else
-      list.push_back(func);
-  }
+  void parse_args(const value_t& args);
 
-  void remove_hook(T * func) {
-    list.remove(func);
-  }
-
-  bool run_hooks(Data& item, bool post) {
-    foreach (T * func, list)
-      if (! (*func)(item, post))
-	return false;
+  virtual result_type real_calc(scope_t&) {
+    assert(false);
     return true;
+  }
+
+  xact_t * insert(journal_t& journal);
+
+  virtual void dump(std::ostream& out) const {
+    if (tmpl)
+      tmpl->dump(out);
   }
 };
 
-#endif // _HOOKS_H
+value_t xact_command(call_scope_t& args);
+value_t template_command(call_scope_t& args);
+
+} // namespace ledger
+
+#endif // _DRAFT_H

@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup util
- *
- * @brief Brief
- *
- * Full
  */
 #ifndef _PSTREAM_H
 #define _PSTREAM_H

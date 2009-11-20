@@ -30,11 +30,11 @@
  */
 
 /**
- * @addtogroup derive
+ * @addtogroup report
  */
 
 /**
- * @file   derive.h
+ * @file   xml.h
  * @author John Wiegley
  *
  * @ingroup report
@@ -43,24 +43,48 @@
  *
  * Long.
  */
-#ifndef _DERIVE_H
-#define _DERIVE_H
+#ifndef _XML_H
+#define _XML_H
 
-#include "value.h"
+#include "chain.h"
 
 namespace ledger {
 
-class call_scope_t;
-
-value_t xact_command(call_scope_t& args);
-value_t template_command(call_scope_t& args);
-
 class xact_t;
+class account_t;
+class commodity_t;
+class post_t;
 class report_t;
-xact_t * derive_new_xact(report_t& report,
-			 value_t::sequence_t::const_iterator i,
-			 value_t::sequence_t::const_iterator end);
+
+/**
+ * @brief Brief
+ *
+ * Long.
+ */
+class format_xml : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  typedef std::map<string, commodity_t *>  commodities_map;
+  typedef std::pair<string, commodity_t *> commodities_pair;
+
+  commodities_map      commodities;
+  std::set<xact_t *>   transactions_set;
+  std::deque<xact_t *> transactions;
+
+public:
+  format_xml(report_t& _report) : report(_report) {
+    TRACE_CTOR(format_xml, "report&");
+  }
+  virtual ~format_xml() {
+    TRACE_DTOR(format_xml);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+};
 
 } // namespace ledger
 
-#endif // _DERIVE_H
+#endif // _XML_H

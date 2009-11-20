@@ -57,8 +57,10 @@ public:
   }
 
   void initialize();
+  void hack_system_paths();
 
-  python::object import(const string& name);
+  python::object import_into_main(const string& name);
+  python::object import_option(const string& name);
 
   enum py_eval_mode_t {
     PY_EVAL_EXPR,
@@ -67,16 +69,17 @@ public:
   };
 
   python::object eval(std::istream& in,
-			     py_eval_mode_t mode = PY_EVAL_EXPR);
+		      py_eval_mode_t mode = PY_EVAL_EXPR);
   python::object eval(const string& str,
-			     py_eval_mode_t mode = PY_EVAL_EXPR);
+		      py_eval_mode_t mode = PY_EVAL_EXPR);
   python::object eval(const char * c_str,
-			     py_eval_mode_t mode = PY_EVAL_EXPR) {
+		      py_eval_mode_t mode = PY_EVAL_EXPR) {
     string str(c_str);
     return eval(str, mode);
   }
 
   value_t python_command(call_scope_t& scope);
+  value_t server_command(call_scope_t& args);
 
   class functor_t {
     functor_t();
@@ -87,9 +90,9 @@ public:
   public:
     string name;
 
-    functor_t(const string& _name, python::object _func)
+    functor_t(python::object _func, const string& _name)
       : func(_func), name(_name) {
-      TRACE_CTOR(functor_t, "const string&, python::object");
+      TRACE_CTOR(functor_t, "python::object, const string&");
     }
     functor_t(const functor_t& other)
       : func(other.func), name(other.name) {
@@ -106,41 +109,10 @@ public:
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
 				  const string& name);
 
-#if BOOST_VERSION >= 103700
   OPTION_(python_interpreter_t, import_, DO_(scope) {
-      interactive_t args(scope, "s");
-
-      path file(args.get<string>(0));
-
-      python::object module_sys = parent->import("sys"); 
-      python::object sys_dict	= module_sys.attr("__dict__");
-
-      python::list paths(sys_dict["path"]);
-      paths.insert(0, file.parent_path().string());
-      sys_dict["path"] = paths;
-
-      string name = file.filename();
-      if (contains(name, ".py"))
-	parent->import(file.stem());
-      else
-	parent->import(name);
+      interactive_t args(scope, "ss");
+      parent->import_option(args.get<string>(1));
     });
-#else // BOOST_VERSION >= 103700
-  OPTION_(python_interpreter_t, import_, DO_(scope) {
-      interactive_t args(scope, "s");
-
-      path file(args.get<string>(0));
-
-      python::object module_sys = parent->import("sys"); 
-      python::object sys_dict	= module_sys.attr("__dict__");
-
-      python::list paths(sys_dict["path"]);
-      paths.insert(0, file.branch_path().string());
-      sys_dict["path"] = paths;
-
-      parent->import(file.leaf());
-    });
-#endif // BOOST_VERSION >= 103700
 };
 
 extern shared_ptr<python_interpreter_t> python_session;

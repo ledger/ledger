@@ -138,7 +138,7 @@ void expr_t::token_t::parse_ident(std::istream& in)
   value.set_string(buf);
 }
 
-void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
+void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 {
   if (in.eof()) {
     kind = TOK_EOF;
@@ -206,11 +206,12 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     length++;
 
     date_interval_t timespan(buf);
-    if (! timespan)
+    optional<date_t> begin = timespan.begin();
+    if (! begin)
       throw_(parse_error,
 	     _("Date specifier does not refer to a starting date"));
     kind  = VALUE;
-    value = *timespan.start;
+    value = *begin;
     break;
   }
 
@@ -232,7 +233,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
   case '{': {
     in.get(c);
     amount_t temp;
-    temp.parse(in, amount_t::PARSE_NO_MIGRATE);
+    temp.parse(in, PARSE_NO_MIGRATE);
     in.get(c);
     if (c != '}')
       expected('}', c);
@@ -298,7 +299,7 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
 
   case '/': {
     in.get(c);
-    if (pflags & PARSE_OP_CONTEXT) { // operator context
+    if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
       kind = SLASH;
     } else {			// terminal context
       // Read in the regexp
@@ -399,17 +400,16 @@ void expr_t::token_t::next(std::istream& in, const uint_least8_t pflags)
     // When in relaxed parsing mode, we want to migrate commodity flags
     // so that any precision specified by the user updates the current
     // maximum displayed precision.
-    amount_t::parse_flags_t parse_flags;
-    parser_t::parse_flags_t pflags_copy(pflags);
+    parse_flags_t parse_flags;
 
-    if (pflags_copy.has_flags(PARSE_NO_MIGRATE))
-      parse_flags.add_flags(amount_t::PARSE_NO_MIGRATE);
-    if (pflags_copy.has_flags(PARSE_NO_REDUCE))
-      parse_flags.add_flags(amount_t::PARSE_NO_REDUCE);
+    if (pflags.has_flags(PARSE_NO_MIGRATE))
+      parse_flags.add_flags(PARSE_NO_MIGRATE);
+    if (pflags.has_flags(PARSE_NO_REDUCE))
+      parse_flags.add_flags(PARSE_NO_REDUCE);
 
     try {
       amount_t temp;
-      if (! temp.parse(in, parse_flags.plus_flags(amount_t::PARSE_SOFT_FAIL))) {
+      if (! temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
 	// If the amount had no commodity, it must be an unambiguous
 	// variable reference
 

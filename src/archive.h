@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _ARCHIVE_H
 #define _ARCHIVE_H
@@ -50,11 +46,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class archive_t
 {
   path	   file;
@@ -78,10 +69,10 @@ public:
   bool read_header();
 
   bool should_load(const std::list<path>& data_files);
-  bool should_save(shared_ptr<journal_t> journal);
+  bool should_save(journal_t& journal);
 
-  void save(shared_ptr<journal_t> journal);
-  bool load(shared_ptr<journal_t> journal);
+  void save(journal_t& journal);
+  bool load(journal_t& journal);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

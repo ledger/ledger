@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _FILTERS_H
 #define _FILTERS_H
@@ -59,24 +55,43 @@ namespace ledger {
 // Posting filters
 //
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class ignore_posts : public item_handler<post_t>
 {
 public:
   virtual void operator()(post_t&) {}
 };
 
+class collect_posts : public item_handler<post_t>
+{
+public:
+  std::vector<post_t *> posts;
+
+  collect_posts() : item_handler<post_t>() {
+    TRACE_CTOR(collect_posts, "");
+  }
+  virtual ~collect_posts() {
+    TRACE_DTOR(collect_posts);
+  }
+
+  std::size_t length() const {
+    return posts.size();
+  }
+
+  std::vector<post_t *>::iterator begin() {
+    return posts.begin();
+  }
+  std::vector<post_t *>::iterator end() {
+    return posts.end();
+  }
+
+  virtual void flush() {}
+  virtual void operator()(post_t& post) {
+    posts.push_back(&post);
+  }
+};
+
 class posts_iterator;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class pass_down_posts : public item_handler<post_t>
 {
   pass_down_posts();
@@ -89,11 +104,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class push_to_posts_list : public item_handler<post_t>
 {
   push_to_posts_list();
@@ -113,11 +123,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class truncate_xacts : public item_handler<post_t>
 {
   int head_count;
@@ -145,11 +150,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_posts : public item_handler<post_t>
 {
   typedef std::deque<post_t *> posts_deque;
@@ -190,11 +190,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class sort_xacts : public item_handler<post_t>
 {
   sort_posts sorter;
@@ -234,25 +229,19 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class filter_posts : public item_handler<post_t>
 {
-  item_predicate pred;
-  scope_t&       context;
+  predicate_t pred;
+  scope_t&    context;
 
   filter_posts();
 
 public:
-  filter_posts(post_handler_ptr	     handler,
-	       const item_predicate& predicate,
-	       scope_t&              _context)
+  filter_posts(post_handler_ptr	  handler,
+	       const predicate_t& predicate,
+	       scope_t&           _context)
     : item_handler<post_t>(handler), pred(predicate), context(_context) {
-    TRACE_CTOR(filter_posts,
-	       "post_handler_ptr, const item_predicate&, scope_t&");
+    TRACE_CTOR(filter_posts, "post_handler_ptr, predicate_t, scope_t&");
   }
   virtual ~filter_posts() {
     TRACE_DTOR(filter_posts);
@@ -267,11 +256,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class anonymize_posts : public item_handler<post_t>
 {
   temporaries_t temps;
@@ -291,25 +275,20 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class calc_posts : public item_handler<post_t>
 {
   post_t * last_post;
   expr_t&  amount_expr;
-  bool     account_wise;
+  bool     calc_running_total;
 
   calc_posts();
 
 public:
   calc_posts(post_handler_ptr handler,
 	     expr_t&          _amount_expr,
-	     bool             _account_wise = false)
+	     bool             _calc_running_total = false)
     : item_handler<post_t>(handler), last_post(NULL),
-      amount_expr(_amount_expr), account_wise(_account_wise) {
+      amount_expr(_amount_expr), calc_running_total(_calc_running_total) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   virtual ~calc_posts() {
@@ -319,16 +298,11 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class collapse_posts : public item_handler<post_t>
 {
   expr_t&	      amount_expr;
-  item_predicate      display_predicate;
-  item_predicate      only_predicate;
+  predicate_t	      display_predicate;
+  predicate_t	      only_predicate;
   value_t	      subtotal;
   std::size_t	      count;
   xact_t *	      last_xact;
@@ -343,8 +317,8 @@ class collapse_posts : public item_handler<post_t>
 public:
   collapse_posts(post_handler_ptr handler,
 		 expr_t&	  _amount_expr,
-		 item_predicate   _display_predicate,
-		 item_predicate   _only_predicate,
+		 predicate_t	  _display_predicate,
+		 predicate_t	  _only_predicate,
 		 bool             _only_collapse_if_zero = false)
     : item_handler<post_t>(handler), amount_expr(_amount_expr),
       display_predicate(_display_predicate),
@@ -368,11 +342,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class related_posts : public item_handler<post_t>
 {
   posts_list posts;
@@ -399,11 +368,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class changed_value_posts : public item_handler<post_t>
 {
   // This filter requires that calc_posts be used at some point
@@ -414,48 +378,37 @@ class changed_value_posts : public item_handler<post_t>
   expr_t	display_total_expr;
   report_t&	report;
   bool		changed_values_only;
+  bool		for_accounts_report;
+  bool		show_unrealized;
   post_t *	last_post;
   value_t	last_total;
   value_t	last_display_total;
-  temporaries_t temps;
+  temporaries_t	temps;
   account_t&	revalued_account;
   account_t&	rounding_account;
+  account_t *	gains_equity_account;
+  account_t *	losses_equity_account;
 
   changed_value_posts();
 
 public:
   changed_value_posts(post_handler_ptr handler,
-		      const expr_t&    _display_amount_expr,
-		      const expr_t&    _total_expr,
-		      const expr_t&    _display_total_expr,
-		      report_t&        _report,
-		      bool	       _changed_values_only)
-    : item_handler<post_t>(handler),
-      display_amount_expr(_display_amount_expr), total_expr(_total_expr),
-      display_total_expr(_display_total_expr), report(_report),
-      changed_values_only(_changed_values_only), last_post(NULL),
-      revalued_account(temps.create_account(_("<Revalued>"))),
-      rounding_account(temps.create_account(_("<Rounding>"))) {
-    TRACE_CTOR(changed_value_posts,
-	       "post_handler_ptr, const expr_t&, const expr_t&, report_t&, bool");
-  }
+		      report_t&	       _report,
+		      bool	       _for_accounts_report,
+		      bool	       _show_unrealized);
+
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
   }
 
   virtual void flush();
 
-  void output_revaluation(post_t * post, const date_t& current);
-  void output_rounding(post_t * post);
+  void output_revaluation(post_t& post, const date_t& current);
+  void output_rounding(post_t& post);
 
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class subtotal_posts : public item_handler<post_t>
 {
   subtotal_posts();
@@ -506,7 +459,7 @@ public:
     TRACE_DTOR(subtotal_posts);
   }
 
-  void report_subtotal(const char *			spec_fmt = NULL,
+  void report_subtotal(const char * spec_fmt = NULL,
 		       const optional<date_interval_t>& interval = none);
 
   virtual void flush() {
@@ -517,11 +470,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class interval_posts : public subtotal_posts
 {
   date_interval_t interval;
@@ -590,11 +538,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class by_payee_posts : public item_handler<post_t>
 {
   typedef std::map<string, shared_ptr<subtotal_posts> >  payee_subtotals_map;
@@ -618,11 +561,6 @@ class by_payee_posts : public item_handler<post_t>
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class transfer_details : public item_handler<post_t>
 {
   account_t *	master;
@@ -634,8 +572,9 @@ class transfer_details : public item_handler<post_t>
 
 public:
   enum element_t {
-    SET_PAYEE,
-    SET_ACCOUNT
+    SET_DATE,
+    SET_ACCOUNT,
+    SET_PAYEE
   } which_element;
 
   transfer_details(post_handler_ptr handler,
@@ -655,11 +594,6 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class dow_posts : public subtotal_posts
 {
   posts_list days_of_the_week[7];
@@ -681,11 +615,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class generate_posts : public item_handler<post_t>
 {
   generate_posts();
@@ -712,11 +641,6 @@ public:
   virtual void add_post(const date_interval_t& period, post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class budget_posts : public generate_posts
 {
 #define BUDGET_NO_BUDGET   0x00
@@ -743,26 +667,21 @@ public:
   virtual void operator()(post_t& post);
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class forecast_posts : public generate_posts
 {
-  item_predicate    pred;
+  predicate_t	    pred;
   scope_t&	    context;
   const std::size_t forecast_years;
 
  public:
-  forecast_posts(post_handler_ptr      handler,
-		 const item_predicate& predicate,
-		 scope_t&              _context,
-		 const std::size_t     _forecast_years)
+  forecast_posts(post_handler_ptr   handler,
+		 const predicate_t& predicate,
+		 scope_t&           _context,
+		 const std::size_t  _forecast_years)
     : generate_posts(handler), pred(predicate), context(_context),
       forecast_years(_forecast_years) {
     TRACE_CTOR(forecast_posts,
-	       "post_handler_ptr, item_predicate, scope_t&, std::size_t");
+	       "post_handler_ptr, predicate_t, scope_t&, std::size_t");
   }
   virtual ~forecast_posts() throw() {
     TRACE_DTOR(forecast_posts);
@@ -779,23 +698,18 @@ class forecast_posts : public generate_posts
 
 class accounts_iterator;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
 
-  optional<item_predicate> pred;
-  optional<scope_t&>       context;
+  optional<predicate_t> pred;
+  optional<scope_t&>    context;
 
 public:
-  pass_down_accounts(acct_handler_ptr		     handler,
-		     accounts_iterator&		     iter,
-		     const optional<item_predicate>& _pred    = none,
-		     const optional<scope_t&>&	     _context = none);
+  pass_down_accounts(acct_handler_ptr		  handler,
+		     accounts_iterator&		  iter,
+		     const optional<predicate_t>& _pred    = none,
+		     const optional<scope_t&>&	  _context = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

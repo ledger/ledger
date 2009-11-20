@@ -180,11 +180,11 @@ namespace {
   }
 
   value_t get_amount(account_t& account) {
-    return VALUE_OR_ZERO(account.amount());
+    return SIMPLIFIED_VALUE_OR_ZERO(account.amount());
   }
 
   value_t get_total(account_t& account) {
-    return VALUE_OR_ZERO(account.total());
+    return SIMPLIFIED_VALUE_OR_ZERO(account.total());
   }
 
   value_t get_subcount(account_t& account) {
@@ -249,7 +249,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
 
   switch (name[0]) {
   case 'a':
-    if (name == "amount")
+    if (name[1] == '\0' || name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
       return WRAP_FUNCTOR(get_wrapper<&get_account>);
@@ -272,11 +272,20 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'i':
     if (name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&get_true>);
+    else if (name == "is_index")
+      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 'l':
     if (name == "latest_cleared")
       return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
+    else if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
+    break;
+
+  case 'n':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 'p':
@@ -299,6 +308,16 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'u':
     if (name == "use_direct_amount")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    break;
+
+  case 'N':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    break;
+
+  case 'O':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
   }
 
@@ -327,16 +346,25 @@ bool account_t::valid() const
   return true;
 }
 
+bool account_t::children_with_xdata() const
+{
+  foreach (const accounts_map::value_type& pair, accounts)
+    if (pair.second->has_xdata() ||
+	pair.second->children_with_xdata())
+      return true;
+
+  return false;
+}
+
 std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 {
   std::size_t count = 0;
   bool        grandchildren_visited = false;
 
-  foreach (const accounts_map::value_type& pair, accounts) {
+  foreach (const accounts_map::value_type& pair, accounts)
     if (pair.second->has_xflags(flags) ||
 	pair.second->children_with_flags(flags))
       count++;
-  }
 
   // Although no immediately children were visited, if any progeny at all were
   // visited, it counts as one.

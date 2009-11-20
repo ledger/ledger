@@ -63,7 +63,7 @@ void annotation_t::parse(std::istream& in)
 	throw_(amount_error, _("Commodity price lacks closing brace"));
 
       amount_t temp;
-      temp.parse(buf, amount_t::PARSE_NO_MIGRATE);
+      temp.parse(buf, PARSE_NO_MIGRATE);
 
       DEBUG("commodity.annotations", "Parsed annotation price: " << temp);
 

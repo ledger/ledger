@@ -1,0 +1,46 @@
+reg --collapse food
+<<<
+2009/10/01 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+
+2009/10/02 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+
+2009/10/03 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+
+2009/10/04 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+
+2009/10/05 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+
+2009/10/06 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+
+2009/10/07 Test
+   Expenses:Food:Dining    $10
+   Expenses:Food:Tips       $1
+   Assets:Cash
+>>>1
+09-Oct-01 Test                  <Total>                         $11          $11
+09-Oct-02 Test                  <Total>                         $11          $22
+09-Oct-03 Test                  <Total>                         $11          $33
+09-Oct-04 Test                  <Total>                         $11          $44
+09-Oct-05 Test                  <Total>                         $11          $55
+09-Oct-06 Test                  <Total>                         $11          $66
+09-Oct-07 Test                  <Total>                         $11          $77
+>>>2
+=== 0

@@ -38,24 +38,19 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _JOURNAL_H
 #define _JOURNAL_H
 
 #include "utils.h"
-#include "hooks.h"
 #include "times.h"
 
 namespace ledger {
 
 class commodity_pool_t;
+class xact_base_t;
 class xact_t;
 class auto_xact_t;
-class xact_finalizer_t;
 class period_xact_t;
 class account_t;
 class scope_t;
@@ -64,11 +59,6 @@ typedef std::list<xact_t *>	   xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class journal_t : public noncopyable
 {
 public:
@@ -115,7 +105,7 @@ public:
   };
 
   account_t *		master;
-  account_t *		basket;
+  account_t *		bucket;
   xacts_list		xacts;
   auto_xacts_list	auto_xacts;
   period_xacts_list	period_xacts;
@@ -123,7 +113,6 @@ public:
   bool                  was_loaded;
 
   shared_ptr<commodity_pool_t> commodity_pool;
-  hooks_t<xact_finalizer_t, xact_t> xact_finalize_hooks;
 
   journal_t();
   journal_t(const path& pathname);
@@ -147,6 +136,7 @@ public:
   account_t * find_account_re(const string& regexp);
 
   bool add_xact(xact_t * xact);
+  void extend_xact(xact_base_t * xact);
   bool remove_xact(xact_t * xact);
 
   xacts_list::iterator xacts_begin() {
@@ -168,13 +158,6 @@ public:
     return period_xacts.end();
   }
 
-  void add_xact_finalizer(xact_finalizer_t * finalizer) {
-    xact_finalize_hooks.add_hook(finalizer);
-  }
-  void remove_xact_finalizer(xact_finalizer_t * finalizer) {
-    xact_finalize_hooks.remove_hook(finalizer);
-  }
-
   std::size_t read(std::istream& in,
 		   const path&	 pathname,
 		   account_t *   master = NULL,
@@ -189,6 +172,7 @@ public:
 		    const path *  original_file = NULL,
 		    bool          strict	= false);
 
+  bool has_xdata();
   void clear_xdata();
 
   bool valid() const;
@@ -202,7 +186,7 @@ private:
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & master;
-    ar & basket;
+    ar & bucket;
     ar & xacts;
     ar & auto_xacts;
     ar & period_xacts;

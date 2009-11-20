@@ -35,6 +35,7 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "query.h"
 #include "session.h"
 #include "report.h"
 #include "format.h"
@@ -147,7 +148,7 @@ value_t format_command(call_scope_t& args)
   out << std::endl << _("--- Formatted string ---") << std::endl;
   bind_scope_t bound_scope(args, *post);
   out << '"';
-  fmt.format(out, bound_scope);
+  out << fmt(bound_scope);
   out << "\"\n";
 
   return NULL_VALUE;
@@ -164,57 +165,12 @@ value_t period_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
+  show_period_tokens(out, arg);
+  out << std::endl;
+
   date_interval_t interval(arg);
+  interval.dump(out, report.session.current_year);
 
-  out << _("global details => ") << std::endl << std::endl;
-
-  if (interval.start)
-    out << _("   start: ") << format_date(*interval.start) << std::endl;
-  else
-    out << _("   start: TODAY: ") << format_date(CURRENT_DATE()) << std::endl;
-  if (interval.end)
-    out << _("     end: ") << format_date(*interval.end) << std::endl;
-
-  if (interval.skip_duration)
-    out << _("    skip: ") << *interval.skip_duration << std::endl;
-  if (interval.factor)
-    out << _("  factor: ") << interval.factor << std::endl;
-  if (interval.duration)
-    out << _("duration: ") << *interval.duration << std::endl;
-
-  if (interval.find_period(interval.start ?
-			   *interval.start : CURRENT_DATE())) {
-    out << std::endl
-	<< _("after finding first period => ") << std::endl
-	<< std::endl;
-
-    if (interval.start)
-      out << _("   start: ") << format_date(*interval.start) << std::endl;
-    if (interval.end)
-      out << _("     end: ") << format_date(*interval.end) << std::endl;
-
-    if (interval.skip_duration)
-      out << _("    skip: ") << *interval.skip_duration << std::endl;
-    if (interval.factor)
-      out << _("  factor: ") << interval.factor << std::endl;
-    if (interval.duration)
-      out << _("duration: ") << *interval.duration << std::endl;
-
-    out << std::endl;
-
-    for (int i = 0; i < 20 && interval; i++, ++interval) {
-      out << std::right;
-      out.width(2);
-
-      out << i << "): " << format_date(*interval.start);
-      if (interval.end_of_duration)
-	out << " -- " << format_date(*interval.inclusive_end());
-      out << std::endl;
-
-      if (! interval.skip_duration)
-	break;
-    }
-  }
   return NULL_VALUE;
 }
 
@@ -223,37 +179,32 @@ value_t args_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  value_t::sequence_t::const_iterator begin = args.value().begin();
-  value_t::sequence_t::const_iterator end   = args.value().end();
-
   out << _("--- Input arguments ---") << std::endl;
   args.value().dump(out);
   out << std::endl << std::endl;
 
-  std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
-  if (! info.first)
-    throw_(std::runtime_error,
-	   _("Invalid query predicate: %1") << join_args(args));
+  query_t query(args.value(), report.what_to_keep());
+  if (query) {
+    call_scope_t sub_args(static_cast<scope_t&>(args));
+    sub_args.push_back(string_value(query.text()));
 
-  call_scope_t sub_args(static_cast<scope_t&>(args));
-  sub_args.push_back(string_value(info.first.text()));
+    parse_command(sub_args);
+  }
 
-  parse_command(sub_args);
-
-  if (info.second.tokens_remaining()) {
+  if (query.tokens_remaining()) {
     out << std::endl << _("====== Display predicate ======")
 	<< std::endl << std::endl;
 
-    call_scope_t disp_sub_args(static_cast<scope_t&>(args));
-    info = args_to_predicate(info.second);
-    if (! info.first)
-      throw_(std::runtime_error,
-	     _("Invalid display predicate: %1") << join_args(args));
+    query.parse_again();
 
-    disp_sub_args.push_back(string_value(info.first.text()));
+    if (query) {
+      call_scope_t disp_sub_args(static_cast<scope_t&>(args));
+      disp_sub_args.push_back(string_value(query.text()));
 
-    parse_command(disp_sub_args);
+      parse_command(disp_sub_args);
+    }
   }
+
   return NULL_VALUE;
 }
 

@@ -47,6 +47,22 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
 
+  PyObject * py_base_type(value_t& value) {
+    if (value.is_boolean()) {
+      return (PyObject *)&PyBool_Type;
+    }
+    else if (value.is_long()) {
+      return (PyObject *)&PyInt_Type;
+    }
+    else if (value.is_string()) {
+      return (PyObject *)&PyUnicode_Type;
+    }
+    else {
+      object typeobj(object(value).attr("__class__"));
+      return typeobj.ptr();
+    }
+  }
+
   expr_t py_value_getattr(const value_t& value, const string& name)
   {
     if (value.is_scope()) {
@@ -218,6 +234,8 @@ void export_value()
     .def("in_place_round", &value_t::in_place_round)
     .def("truncated", &value_t::truncated)
     .def("in_place_truncate", &value_t::in_place_truncate)
+    .def("floored", &value_t::floored)
+    .def("in_place_floor", &value_t::in_place_floor)
     .def("unrounded", &value_t::unrounded)
     .def("in_place_unround", &value_t::in_place_unround)
     .def("reduced", &value_t::reduced)
@@ -305,6 +323,12 @@ void export_value()
     .def("label", &value_t::label)
 
     .def("valid", &value_t::valid)
+
+    .def("basetype", py_base_type)
+    ;
+
+  class_< value_t::sequence_t > ("ValueSequence")
+    .def(vector_indexing_suite< value_t::sequence_t >());
     ;
 
   scope().attr("NULL_VALUE")    = NULL_VALUE;

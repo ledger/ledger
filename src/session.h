@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _SESSION_H
 #define _SESSION_H
@@ -57,19 +53,14 @@ namespace ledger {
 class commodity_pool_t;
 class xact_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class session_t : public symbol_scope_t
 {
   friend void set_session_context(session_t * session);
 
 public:
-  bool			flush_on_next_data_file;
-  date_t::year_type	current_year;
-  shared_ptr<journal_t>	journal;
+  bool			   flush_on_next_data_file;
+  date_t::year_type	   current_year;
+  std::auto_ptr<journal_t> journal;
 
   explicit session_t();
   virtual ~session_t() {

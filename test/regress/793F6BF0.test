@@ -2,7 +2,7 @@ entry 2009/03/15 book 10
 <<<
 N $
 
-= account =~ /^Expenses:Books/
+= /^Expenses:Books/
     (Liabilities:Taxes)             -0.10
 
 ~ Monthly

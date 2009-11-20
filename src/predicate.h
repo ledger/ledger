@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _PREDICATE_H
 #define _PREDICATE_H
@@ -52,47 +48,43 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
-class item_predicate
+class query_t;
+
+class predicate_t : public expr_t
 {
 public:
-  expr_t	 predicate;
   keep_details_t what_to_keep;
 
-  item_predicate() {
-    TRACE_CTOR(item_predicate, "");
+  predicate_t(const keep_details_t& _what_to_keep = keep_details_t())
+    : what_to_keep(_what_to_keep) {
+    TRACE_CTOR(predicate_t, "");
   }
-  item_predicate(const item_predicate& other)
-    : predicate(other.predicate), what_to_keep(other.what_to_keep) {
-    TRACE_CTOR(item_predicate, "copy");
+  predicate_t(const predicate_t& other)
+    : expr_t(other), what_to_keep(other.what_to_keep) {
+    TRACE_CTOR(predicate_t, "copy");
   }
-  item_predicate(const expr_t&	       _predicate,
-		 const keep_details_t& _what_to_keep)
-    : predicate(_predicate), what_to_keep(_what_to_keep) {
-    TRACE_CTOR(item_predicate, "const expr_t&, const keep_details_t&");
+  predicate_t(const query_t& other);
+
+  predicate_t(const string& str, const keep_details_t& _what_to_keep,
+	      const parse_flags_t& flags = PARSE_DEFAULT)
+    : expr_t(str, flags), what_to_keep(_what_to_keep) {
+    TRACE_CTOR(predicate_t, "string, keep_details_t, parse_flags_t");
   }
-  item_predicate(const string&	       _predicate,
-		 const keep_details_t& _what_to_keep)
-    : predicate(expr_t(_predicate)), what_to_keep(_what_to_keep) {
-    TRACE_CTOR(item_predicate, "const string&, const keep_details_t&");
+  predicate_t(std::istream& in, const keep_details_t& _what_to_keep,
+	      const parse_flags_t& flags = PARSE_DEFAULT)
+    : expr_t(in, flags), what_to_keep(_what_to_keep) {
+    TRACE_CTOR(predicate_t, "std::istream&, keep_details_t, parse_flags_t");
   }
-  ~item_predicate() throw() {
-    TRACE_DTOR(item_predicate);
+  ~predicate_t() throw() {
+    TRACE_DTOR(predicate_t);
   }
 
-  bool operator()(scope_t& item) {
-    try {
-      return ! predicate || predicate.calc(item).strip_annotations(what_to_keep);
-    }
-    catch (const std::exception& err) {
-      add_error_context(_("While determining truth of predicate expression:"));
-      add_error_context(expr_context(predicate));
-      throw;
-    }
+  virtual value_t real_calc(scope_t& scope) {
+    return (*this ?
+	    expr_t::real_calc(scope)
+	      .strip_annotations(what_to_keep)
+	      .to_boolean() :
+	    true);
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
@@ -103,206 +95,11 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & predicate;
+    ar & boost::serialization::base_object<expr_t>(*this);
     ar & what_to_keep;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
-
-class query_lexer_t
-{
-  friend class query_parser_t;
-
-  value_t::sequence_t::const_iterator begin;
-  value_t::sequence_t::const_iterator end;
-
-  string::const_iterator arg_i;
-  string::const_iterator arg_end;
-
-  bool	  consume_whitespace;
-
-public:
-  struct token_t
-  {
-    enum kind_t {
-      UNKNOWN,
-
-      LPAREN,
-      RPAREN,
-
-      TOK_NOT,
-      TOK_AND,
-      TOK_OR,
-      TOK_EQ,
-
-      TOK_DATE,
-      TOK_CODE,
-      TOK_PAYEE,
-      TOK_NOTE,
-      TOK_ACCOUNT,
-      TOK_META,
-      TOK_EXPR,
-
-      TERM,
-
-      END_REACHED
-
-    } kind;
-
-    optional<string> value;
-
-    explicit token_t(kind_t _kind = UNKNOWN,
-		     const optional<string>& _value = none)
-      : kind(_kind), value(_value) {
-      TRACE_CTOR(query_lexer_t::token_t, "");
-    }
-    token_t(const token_t& tok)
-      : kind(tok.kind), value(tok.value) {
-      TRACE_CTOR(query_lexer_t::token_t, "copy");
-    }
-    ~token_t() throw() {
-      TRACE_DTOR(query_lexer_t::token_t);
-    }
-
-    token_t& operator=(const token_t& tok) {
-      if (this != &tok) {
-	kind  = tok.kind;
-	value = tok.value;
-      }
-      return *this;
-    }
-
-    operator bool() const {
-      return kind != END_REACHED;
-    }
-
-    string to_string() const {
-      switch (kind) {
-      case UNKNOWN:	return "UNKNOWN";
-      case LPAREN:	return "LPAREN";
-      case RPAREN:	return "RPAREN";
-      case TOK_NOT:	return "TOK_NOT";
-      case TOK_AND:	return "TOK_AND";
-      case TOK_OR:	return "TOK_OR";
-      case TOK_EQ:	return "TOK_EQ";
-      case TOK_DATE:	return "TOK_DATE";
-      case TOK_CODE:	return "TOK_CODE";
-      case TOK_PAYEE:	return "TOK_PAYEE";
-      case TOK_NOTE:	return "TOK_NOTE";
-      case TOK_ACCOUNT: return "TOK_ACCOUNT";
-      case TOK_META:	return "TOK_META";
-      case TOK_EXPR:	return "TOK_EXPR";
-      case TERM:	return string("TERM(") + *value + ")";
-      case END_REACHED: return "END_REACHED";
-      }
-    }
-
-    string symbol() const {
-      switch (kind) {
-      case LPAREN:	return "(";
-      case RPAREN:	return ")";
-      case TOK_NOT:	return "not";
-      case TOK_AND:	return "and";
-      case TOK_OR:	return "or";
-      case TOK_EQ:	return "=";
-      case TOK_DATE:	return "date";
-      case TOK_CODE:	return "code";
-      case TOK_PAYEE:	return "payee";
-      case TOK_NOTE:	return "note";
-      case TOK_ACCOUNT: return "account";
-      case TOK_META:	return "meta";
-      case TOK_EXPR:	return "expr";
-
-      case END_REACHED: return "<EOF>";
-
-      case TERM:
-	assert(0);
-	return "<TERM>";
-
-      case UNKNOWN:
-      default:
-	assert(0);
-	return "<UNKNOWN>";
-      }
-    }
-
-    void unexpected();
-    void expected(char wanted, char c = '\0');
-  };
-
-  token_t token_cache;
-
-  query_lexer_t(value_t::sequence_t::const_iterator _begin,
-		value_t::sequence_t::const_iterator _end)
-    : begin(_begin), end(_end), consume_whitespace(false)
-  {
-    TRACE_CTOR(query_lexer_t, "");
-    assert(begin != end);
-    arg_i   = (*begin).as_string().begin();
-    arg_end = (*begin).as_string().end();
-  }
-  query_lexer_t(const query_lexer_t& lexer)
-    : begin(lexer.begin), end(lexer.end),
-      arg_i(lexer.arg_i), arg_end(lexer.arg_end),
-      consume_whitespace(lexer.consume_whitespace),
-      token_cache(lexer.token_cache)
-  {
-    TRACE_CTOR(query_lexer_t, "copy");
-  }
-  ~query_lexer_t() throw() {
-    TRACE_DTOR(query_lexer_t);
-  }
-
-  token_t next_token();
-  void    push_token(token_t tok) {
-    assert(token_cache.kind == token_t::UNKNOWN);
-    token_cache = tok;
-  }
-  token_t peek_token() {
-    if (token_cache.kind == token_t::UNKNOWN)
-      token_cache = next_token();
-    return token_cache;
-  }
-};
-
-class query_parser_t
-{
-  query_lexer_t lexer;
-
-  expr_t::ptr_op_t parse_query_term(query_lexer_t::token_t::kind_t tok_context);
-  expr_t::ptr_op_t parse_unary_expr(query_lexer_t::token_t::kind_t tok_context);
-  expr_t::ptr_op_t parse_and_expr(query_lexer_t::token_t::kind_t tok_context);
-  expr_t::ptr_op_t parse_or_expr(query_lexer_t::token_t::kind_t tok_context);
-  expr_t::ptr_op_t parse_query_expr(query_lexer_t::token_t::kind_t tok_context);
-
-public:
-  query_parser_t(value_t::sequence_t::const_iterator begin,
-		 value_t::sequence_t::const_iterator end)
-    : lexer(begin, end) {
-    TRACE_CTOR(query_parser_t, "");
-  }
-  query_parser_t(const query_parser_t& parser)
-    : lexer(parser.lexer) {
-    TRACE_CTOR(query_parser_t, "copy");
-  }
-  ~query_parser_t() throw() {
-    TRACE_DTOR(query_parser_t);
-  }
-
-  expr_t::ptr_op_t parse();
-
-  bool tokens_remaining() {
-    query_lexer_t::token_t tok = lexer.peek_token();
-    assert(tok.kind != query_lexer_t::token_t::UNKNOWN);
-    return tok.kind != query_lexer_t::token_t::END_REACHED;
-  }
-};
-
-std::pair<expr_t, query_parser_t>
-args_to_predicate(value_t::sequence_t::const_iterator begin,
-		  value_t::sequence_t::const_iterator end);
-
-std::pair<expr_t, query_parser_t> args_to_predicate(query_parser_t parser);
 
 } // namespace ledger
 

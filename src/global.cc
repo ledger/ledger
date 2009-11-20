@@ -179,9 +179,9 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   // If such a command is found, create the output stream for the result and
   // then invoke the command.
 
-  function_t   command;
-  bool	       is_precommand = false;
-  bind_scope_t bound_scope(*this, report());
+  expr_t::func_t command;
+  bool		 is_precommand = false;
+  bind_scope_t	 bound_scope(*this, report());
 
   if (bool(command = look_for_precommand(bound_scope, verb)))
     is_precommand = true;
@@ -194,7 +194,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
     if (! at_repl)
       session().read_journal_files();
 
-    normalize_report_options(verb);
+    report().normalize_options(verb);
 
     if (! bool(command = look_for_command(bound_scope, verb)))
       throw_(std::logic_error, _("Unrecognized command '%1'") << verb);
@@ -398,200 +398,22 @@ void global_scope_t::normalize_session_options()
     INFO("Journal file is " << pathname.string());
 }
 
-function_t global_scope_t::look_for_precommand(scope_t&	     scope,
-					       const string& verb)
+expr_t::func_t global_scope_t::look_for_precommand(scope_t&	 scope,
+						   const string& verb)
 {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::PRECOMMAND, verb))
     return def->as_function();
   else
-    return function_t();
+    return expr_t::func_t();
 }
 
-function_t global_scope_t::look_for_command(scope_t&	  scope,
-					    const string& verb)
+expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
+						const string& verb)
 {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::COMMAND, verb))
     return def->as_function();
   else
-    return function_t();
-}
-
-void global_scope_t::normalize_report_options(const string& verb)
-{
-  // Patch up some of the reporting options based on what kind of
-  // command it was.
-
-  report_t& rep(report());
-
-#ifdef HAVE_ISATTY
-  if (! rep.HANDLED(force_color)) {
-    if (! rep.HANDLED(no_color) && isatty(STDOUT_FILENO))
-      rep.HANDLER(color).on_only(string("?normalize"));
-    if (rep.HANDLED(color) && ! isatty(STDOUT_FILENO))
-      rep.HANDLER(color).off();
-  }
-  if (! rep.HANDLED(force_pager)) {
-    if (rep.HANDLED(pager_) && ! isatty(STDOUT_FILENO))
-      rep.HANDLER(pager_).off();
-  }
-#endif
-
-  item_t::use_effective_date = (rep.HANDLED(effective) &&
-				! rep.HANDLED(actual_dates));
-
-  rep.session.journal->commodity_pool->keep_base  = rep.HANDLED(base);
-  rep.session.journal->commodity_pool->get_quotes = rep.session.HANDLED(download);
-
-  if (rep.session.HANDLED(price_exp_))
-    rep.session.journal->commodity_pool->quote_leeway =
-      rep.session.HANDLER(price_exp_).value.as_long();
-
-  if (rep.session.HANDLED(price_db_))
-    rep.session.journal->commodity_pool->price_db =
-      rep.session.HANDLER(price_db_).str();
-  else
-    rep.session.journal->commodity_pool->price_db = none;
-
-  if (rep.HANDLED(date_format_))
-    set_date_format(rep.HANDLER(date_format_).str().c_str());
-  if (rep.HANDLED(datetime_format_))
-    set_datetime_format(rep.HANDLER(datetime_format_).str().c_str());
-  if (rep.HANDLED(start_of_week_)) {
-    if (optional<date_time::weekdays> weekday =
-	string_to_day_of_week(rep.HANDLER(start_of_week_).str()))
-      start_of_week = *weekday;
-  }
-
-  if (verb == "print" || verb == "xact" || verb == "dump") {
-    rep.HANDLER(related).on_only(string("?normalize"));
-    rep.HANDLER(related_all).on_only(string("?normalize"));
-  }
-  else if (verb == "equity") {
-    rep.HANDLER(equity).on_only(string("?normalize"));
-  }
-  else if (rep.HANDLED(related)) {
-    if (verb[0] == 'r') {
-      rep.HANDLER(invert).on_only(string("?normalize"));
-    } else {
-      rep.HANDLER(subtotal).on_only(string("?normalize"));
-      rep.HANDLER(related_all).on_only(string("?normalize"));
-    }
-  }
-
-  if (verb == "print")
-    rep.HANDLER(limit_).on(string("?normalize"), "actual");
-
-  if (! rep.HANDLED(empty))
-    rep.HANDLER(display_).on(string("?normalize"), "amount|(!post&total)");
-
-  if (verb[0] != 'b' && verb[0] != 'r')
-    rep.HANDLER(base).on_only(string("?normalize"));
-
-  // If a time period was specified with -p, check whether it also gave a
-  // begin and/or end to the report period (though these can be overridden
-  // using -b or -e).  Then, if no _duration_ was specified (such as monthly),
-  // then ignore the period since the begin/end are the only interesting
-  // details.
-  if (rep.HANDLED(period_)) {
-    if (! rep.HANDLED(sort_all_))
-      rep.HANDLER(sort_xacts_).on_only(string("?normalize"));
-
-    date_interval_t interval(rep.HANDLER(period_).str());
-
-    if (! rep.HANDLED(begin_) && interval.start) {
-      string predicate =
-	"date>=[" + to_iso_extended_string(*interval.start) + "]";
-      rep.HANDLER(limit_).on(string("?normalize"), predicate);
-    }
-    if (! rep.HANDLED(end_) && interval.end) {
-      string predicate =
-	"date<[" + to_iso_extended_string(*interval.end) + "]";
-      rep.HANDLER(limit_).on(string("?normalize"), predicate);
-    }
-
-    if (! interval.duration)
-      rep.HANDLER(period_).off();
-  }
-
-  // If -j or -J were specified, set the appropriate format string now so as
-  // to avoid option ordering issues were we to have done it during the
-  // initial parsing of the options.
-  if (rep.HANDLED(amount_data)) {
-    rep.HANDLER(format_)
-      .on_with(string("?normalize"), rep.HANDLER(plot_amount_format_).value);
-  }
-  else if (rep.HANDLED(total_data)) {
-    rep.HANDLER(format_)
-      .on_with(string("?normalize"), rep.HANDLER(plot_total_format_).value);
-  }
-
-  // If the --exchange (-X) option was used, parse out any final price
-  // settings that may be there.
-  if (rep.HANDLED(exchange_) &&
-      rep.HANDLER(exchange_).str().find('=') != string::npos) {
-    value_t(0L).exchange_commodities(rep.HANDLER(exchange_).str(), true,
-				     rep.terminus);
-  }
-
-  long cols = 0;
-  if (rep.HANDLED(columns_))
-    cols = rep.HANDLER(columns_).value.to_long();
-  else if (const char * columns = std::getenv("COLUMNS"))
-    cols = lexical_cast<long>(columns);
-
-  if (cols > 0) {
-    DEBUG("auto.columns", "cols = " << cols);
-
-    if (! rep.HANDLER(date_width_).specified)
-      rep.HANDLER(date_width_)
-	.on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
-						     FMT_PRINTED).length()));
-
-    long date_width    = rep.HANDLER(date_width_).value.to_long();
-    long payee_width   = (rep.HANDLER(payee_width_).specified ?
-			  rep.HANDLER(payee_width_).value.to_long() :
-			  int(double(cols) * 0.263157));
-    long account_width = (rep.HANDLER(account_width_).specified ?
-			  rep.HANDLER(account_width_).value.to_long() :
-			  int(double(cols) * 0.302631));
-    long amount_width  = (rep.HANDLER(amount_width_).specified ?
-			  rep.HANDLER(amount_width_).value.to_long() :
-			  int(double(cols) * 0.157894));
-    long total_width   = (rep.HANDLER(total_width_).specified ?
-			  rep.HANDLER(total_width_).value.to_long() :
-			  amount_width);
-
-    DEBUG("auto.columns", "date_width	 = " << date_width);
-    DEBUG("auto.columns", "payee_width	 = " << payee_width);
-    DEBUG("auto.columns", "account_width = " << account_width);
-    DEBUG("auto.columns", "amount_width	 = " << amount_width);
-    DEBUG("auto.columns", "total_width	 = " << total_width);
-
-    if (! rep.HANDLER(date_width_).specified &&
-	! rep.HANDLER(payee_width_).specified &&
-	! rep.HANDLER(account_width_).specified &&
-	! rep.HANDLER(amount_width_).specified &&
-	! rep.HANDLER(total_width_).specified) {
-      long total = (4 /* the spaces between */ + date_width + payee_width +
-		    account_width + amount_width + total_width);
-      if (total > cols) {
-	DEBUG("auto.columns", "adjusting account down");
-	account_width -= total - cols;
-	DEBUG("auto.columns", "account_width now = " << account_width);
-      }
-    }
-
-    if (! rep.HANDLER(date_width_).specified)
-      rep.HANDLER(date_width_).on_with(string("?normalize"), date_width);
-    if (! rep.HANDLER(payee_width_).specified)
-      rep.HANDLER(payee_width_).on_with(string("?normalize"), payee_width);
-    if (! rep.HANDLER(account_width_).specified)
-      rep.HANDLER(account_width_).on_with(string("?normalize"), account_width);
-    if (! rep.HANDLER(amount_width_).specified)
-      rep.HANDLER(amount_width_).on_with(string("?normalize"), amount_width);
-    if (! rep.HANDLER(total_width_).specified)
-      rep.HANDLER(total_width_).on_with(string("?normalize"), total_width);
-  }
+    return expr_t::func_t();
 }
 
 void global_scope_t::visit_man_page() const

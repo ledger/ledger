@@ -66,6 +66,20 @@ class commodity_pool_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
+enum parse_flags_enum_t {
+  PARSE_DEFAULT    = 0x00,
+  PARSE_PARTIAL    = 0x01,
+  PARSE_SINGLE     = 0x02,
+  PARSE_NO_MIGRATE = 0x04,
+  PARSE_NO_REDUCE  = 0x08,
+  PARSE_NO_ASSIGN  = 0x10,
+  PARSE_NO_DATES   = 0x20,
+  PARSE_OP_CONTEXT = 0x40,
+  PARSE_SOFT_FAIL  = 0x80
+};
+
+typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
+
 /**
  * @brief Encapsulate infinite-precision commoditized amounts
  *
@@ -340,6 +354,15 @@ public:
     *this = amount_t(to_string());
   }
     
+  /** Yields an amount which has lost all of its extra precision, beyond what
+      the display precision of the commodity would have printed. */
+  amount_t floored() const {
+    amount_t temp(*this);
+    temp.in_place_floor();
+    return temp;
+  }
+  void in_place_floor();
+    
   /** Yields an amount whose display precision is never truncated, even
       though its commodity normally displays only rounded values. */
   amount_t unrounded() const {
@@ -612,17 +635,8 @@ public:
       amount_t::parse_conversion("1.0m", "60s"); // a minute is 60 seconds
       amount_t::parse_conversion("1.0h", "60m"); // an hour is 60 minutes
       @endcode
-  */
-  enum parse_flags_enum_t {
-    PARSE_DEFAULT    = 0x00,
-    PARSE_NO_MIGRATE = 0x01,
-    PARSE_NO_REDUCE  = 0x02,
-    PARSE_SOFT_FAIL  = 0x04
-  };
 
-  typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
-
-  /** The method parse() is used to parse an amount from an input stream
+      The method parse() is used to parse an amount from an input stream
       or a string.  A global operator>>() is also defined which simply
       calls parse on the input stream.  The parse() method has two forms:
 
@@ -739,6 +753,9 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   amt.parse(in);
   return in;
 }
+
+void to_xml(std::ostream& out, const amount_t& amt,
+	    bool commodity_details = false);
 
 } // namespace ledger
 

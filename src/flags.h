@@ -38,20 +38,11 @@
  * @author John Wiegley
  *
  * @ingroup util
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _FLAGS_H
 #define _FLAGS_H
 
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags
 {
@@ -112,11 +103,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T = boost::uint_least8_t, typename U = T>
 class basic_flags_t : public supports_flags<T, U>
 {
@@ -168,11 +154,6 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 template <typename T = boost::uint_least8_t>
 class delegates_flags : public boost::noncopyable
 {

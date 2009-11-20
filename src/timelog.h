@@ -38,46 +38,44 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _TIMELOG_H
 #define _TIMELOG_H
 
 #include "utils.h"
 #include "times.h"
+#include "item.h"
 
 namespace ledger {
 
 class account_t;
 class journal_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class time_xact_t
 {
 public:
   datetime_t  checkin;
   account_t * account;
   string      desc;
+  string      note;
+  position_t  position;
 
   time_xact_t() : account(NULL) {
     TRACE_CTOR(time_xact_t, "");
   }
-  time_xact_t(const datetime_t& _checkin,
-	       account_t *	 _account = NULL,
-	       const string&     _desc	  = "")
-    : checkin(_checkin), account(_account), desc(_desc) {
-    TRACE_CTOR(time_xact_t, "const datetime_t&, account_t *, const string&");
+  time_xact_t(const optional<position_t>& _position,
+	      const datetime_t&		  _checkin,
+	      account_t *		  _account = NULL,
+	      const string&		  _desc	   = "",
+	      const string&               _note    = "")
+    : checkin(_checkin), account(_account), desc(_desc), note(_note),
+      position(_position ? *_position : position_t()) {
+    TRACE_CTOR(time_xact_t,
+	       "position_t, datetime_t, account_t *, string, string");
   }
   time_xact_t(const time_xact_t& xact)
     : checkin(xact.checkin), account(xact.account),
-      desc(xact.desc) {
+      desc(xact.desc), note(xact.note), position(xact.position) {
     TRACE_CTOR(time_xact_t, "copy");
   }
   ~time_xact_t() throw() {
@@ -85,15 +83,10 @@ public:
   }
 };
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class time_log_t
 {
   std::list<time_xact_t> time_xacts;
-  journal_t&		  journal;
+  journal_t&		 journal;
 
 public:
   time_log_t(journal_t& _journal) : journal(_journal) {
@@ -101,13 +94,8 @@ public:
   }
   ~time_log_t();
 
-  void clock_in(const datetime_t& checkin,
-		account_t *	  account = NULL,
-		const string&     desc	  = "");
-
-  void clock_out(const datetime_t& checkin,
-		 account_t *	   account = NULL,
-		 const string&     desc	  = "");
+  void clock_in(time_xact_t event);
+  void clock_out(time_xact_t event);
 };
 
 } // namespace ledger

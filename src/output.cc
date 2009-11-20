@@ -40,9 +40,10 @@
 
 namespace ledger {
 
-format_posts::format_posts(report_t&	 _report,
-			   const string& format,
-			   bool		 _print_raw)
+format_posts::format_posts(report_t&		   _report,
+			   const string&	   format,
+			   bool			   _print_raw,
+			   const optional<string>& _prepend_format)
   : report(_report), last_xact(NULL), last_post(NULL),
     print_raw(_print_raw)
 {
@@ -51,18 +52,23 @@ format_posts::format_posts(report_t&	 _report,
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.parse(string(f, 0, p - f));
+    first_line_format.parse_format(string(f, 0, p - f));
     const char * n = p + 2;
     if (const char * p = std::strstr(n, "%/")) {
-      next_lines_format.parse(string(n, 0, p - n), first_line_format);
-      between_format.parse(string(p + 2), first_line_format);
+      next_lines_format.parse_format(string(n, 0, p - n),
+				     first_line_format);
+      between_format.parse_format(string(p + 2),
+				  first_line_format);
     } else {
-      next_lines_format.parse(n, first_line_format);
+      next_lines_format.parse_format(string(n), first_line_format);
     }
   } else {
-    first_line_format.parse(format);
-    next_lines_format.parse(format);
+    first_line_format.parse_format(format);
+    next_lines_format.parse_format(format);
   }
+
+  if (_prepend_format)
+    prepend_format.parse_format(*_prepend_format);
 }
 
 void format_posts::flush()
@@ -80,7 +86,7 @@ void format_posts::operator()(post_t& post)
       if (last_xact != post.xact) {
 	if (last_xact) {
 	  bind_scope_t xact_scope(report, *last_xact);
-	  between_format.format(out, xact_scope);
+	  out << between_format(xact_scope);
 	}
 	print_item(out, *post.xact);
 	out << '\n';
@@ -93,19 +99,23 @@ void format_posts::operator()(post_t& post)
   else if (! post.has_xdata() ||
 	   ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     bind_scope_t bound_scope(report, post);
+
+    if (prepend_format)
+      out << prepend_format(bound_scope);
+
     if (last_xact != post.xact) {
       if (last_xact) {
 	bind_scope_t xact_scope(report, *last_xact);
-	between_format.format(out, xact_scope);
+	out << between_format(xact_scope);
       }
-      first_line_format.format(out, bound_scope);
+      out << first_line_format(bound_scope);
       last_xact = post.xact;
     }
     else if (last_post && last_post->date() != post.date()) {
-      first_line_format.format(out, bound_scope);
+      out << first_line_format(bound_scope);
     }
     else {
-      next_lines_format.format(out, bound_scope);
+      out << next_lines_format(bound_scope);
     }
 
     post.xdata().add_flags(POST_EXT_DISPLAYED);
@@ -113,8 +123,9 @@ void format_posts::operator()(post_t& post)
   }
 }
 
-format_accounts::format_accounts(report_t&     _report,
-				 const string& format)
+format_accounts::format_accounts(report_t&		 _report,
+				 const string&		 format,
+				 const optional<string>& _prepend_format)
   : report(_report), disp_pred()
 {
   TRACE_CTOR(format_accounts, "report&, const string&");
@@ -122,18 +133,21 @@ format_accounts::format_accounts(report_t&     _report,
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
-    account_line_format.parse(string(f, 0, p - f));
+    account_line_format.parse_format(string(f, 0, p - f));
     const char * n = p + 2;
     if (const char * p = std::strstr(n, "%/")) {
-      total_line_format.parse(string(n, 0, p - n), account_line_format);
-      separator_format.parse(string(p + 2), account_line_format);
+      total_line_format.parse_format(string(n, 0, p - n), account_line_format);
+      separator_format.parse_format(string(p + 2), account_line_format);
     } else {
-      total_line_format.parse(n, account_line_format);
+      total_line_format.parse_format(n, account_line_format);
     }
   } else {
-    account_line_format.parse(format);
-    total_line_format.parse(format, account_line_format);
+    account_line_format.parse_format(format);
+    total_line_format.parse_format(format, account_line_format);
   }
+
+  if (_prepend_format)
+    prepend_format.parse_format(*_prepend_format);
 }
 
 std::size_t format_accounts::post_account(account_t& account, const bool flat)
@@ -148,7 +162,13 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
     bind_scope_t bound_scope(report, account);
-    account_line_format.format(report.output_stream, bound_scope);
+
+    if (prepend_format)
+      static_cast<std::ostream&>(report.output_stream)
+	<< prepend_format(bound_scope);
+
+    static_cast<std::ostream&>(report.output_stream)
+      << account_line_format(bound_scope);
 
     return 1;
   }
@@ -200,7 +220,7 @@ void format_accounts::flush()
   if (report.HANDLED(display_)) {
     DEBUG("account.display",
 	  "Account display predicate: " << report.HANDLER(display_).str());
-    disp_pred.predicate.parse(report.HANDLER(display_).str());
+    disp_pred.parse(report.HANDLER(display_).str());
   }
 
   mark_accounts(*report.session.journal->master, report.HANDLED(flat));
@@ -213,8 +233,13 @@ void format_accounts::flush()
   if (displayed > 1 &&
       ! report.HANDLED(no_total) && ! report.HANDLED(percent)) {
     bind_scope_t bound_scope(report, *report.session.journal->master);
-    separator_format.format(out, bound_scope);
-    total_line_format.format(out, bound_scope);
+    out << separator_format(bound_scope);
+
+    if (prepend_format)
+      static_cast<std::ostream&>(report.output_stream)
+	<< prepend_format(bound_scope);
+
+    out << total_line_format(bound_scope);
   }
 
   out.flush();

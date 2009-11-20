@@ -34,8 +34,8 @@
 #include "post.h"
 #include "xact.h"
 #include "account.h"
+#include "journal.h"
 #include "interactive.h"
-#include "unistring.h"
 #include "format.h"
 
 namespace ledger {
@@ -212,13 +212,47 @@ namespace {
 
   value_t get_account(call_scope_t& scope)
   {
-    in_context_t<post_t> env(scope, "&l");
+    in_context_t<post_t> env(scope, "&v");
 
-    string name = env->reported_account()->fullname();
+    string name;
 
-    if (env.has(0) && env.get<long>(0) > 2)
-      name = format_t::truncate(name, env.get<long>(0) - 2,
-				2 /* account_abbrev_length */);
+    if (env.has(0)) {
+      if (env.value_at(0).is_long()) {
+	if (env.get<long>(0) > 2)
+	  name = format_t::truncate(env->reported_account()->fullname(),
+				    env.get<long>(0) - 2,
+				    2 /* account_abbrev_length */);
+	else
+	  name = env->reported_account()->fullname();
+      } else {
+	account_t * account = NULL;
+	account_t * master  = env->account;
+	while (master->parent)
+	  master = master->parent;
+
+	if (env.value_at(0).is_string()) {
+	  name    = env.get<string>(0);
+	  account = master->find_account(name, false);
+	}
+	else if (env.value_at(0).is_mask()) {
+	  name    = env.get<mask_t>(0).str();
+	  account = master->find_account_re(name);
+	}
+	else {
+	  throw_(std::runtime_error,
+		 _("Expected string or mask for argument 1, but received %1")
+		 << env.value_at(0).label());
+	}
+
+	if (! account)
+	  throw_(std::runtime_error,
+		 _("Could not find an account matching ") << env.value_at(0));
+	else
+	  return value_t(static_cast<scope_t *>(account));
+      }
+    } else {
+      name = env->reported_account()->fullname();
+    }
 
     if (env->has_flags(POST_VIRTUAL)) {
       if (env->must_balance())
@@ -231,36 +265,6 @@ namespace {
 
   value_t get_account_base(post_t& post) {
     return string_value(post.reported_account()->name);
-  }
-
-  value_t get_account_amount(call_scope_t& scope)
-  {
-    in_context_t<post_t> env(scope, "&v");
-
-    account_t * account = NULL;
-    if (env.has(0)) {
-      account_t * master = env->account;
-      while (master->parent)
-	master = master->parent;
-
-      if (env.value_at(0).is_string())
-	account = master->find_account(env.get<string>(0), false);
-      else if (env.value_at(0).is_mask())
-	account = master->find_account_re(env.get<mask_t>(0).expr.str());
-    } else {
-      account = env->reported_account();
-    }
-
-    if (! account)
-      throw_(std::runtime_error, _("Cannot locate referenced account"));
-
-    DEBUG("post.account_amount", "Found account: " << account->fullname());
-
-    value_t total = account->amount();
-    if (total.is_null())
-      return 0L;
-    else
-      return total.simplified();
   }
 
   value_t get_account_depth(post_t& post) {
@@ -289,10 +293,13 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
       return WRAP_FUNCTOR(get_account);
-    else if (name == "account_amount")
-      return WRAP_FUNCTOR(get_account_amount);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    break;
+
+  case 'b':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
     break;
 
   case 'c':
@@ -323,7 +330,9 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'i':
-    if (name == "id")
+    if (name == "index")
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    else if (name == "id")
       return WRAP_FUNCTOR(get_wrapper<&get_id>);
     else if (name == "idstring")
       return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
@@ -337,6 +346,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'n':
     if (name == "note")
       return WRAP_FUNCTOR(get_wrapper<&get_note>);
+    else if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
     break;
 
   case 'p':
@@ -356,7 +367,7 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 't':
-    if (name[1] == '\0' || name == "total")
+    if (name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
 
@@ -373,6 +384,21 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'x':
     if (name == "xact")
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
+    break;
+
+  case 'N':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    break;
+
+  case 'O':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_total>);
+    break;
+
+  case 'R':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_real>);
     break;
   }
 
@@ -450,6 +476,101 @@ void post_t::set_reported_account(account_t * account)
 {
   xdata().account = account;
   account->xdata().reported_posts.push_back(this);
+}
+
+void to_xml(std::ostream& out, const post_t& post)
+{
+  push_xml x(out, "posting", true);
+
+  if (post.state() == item_t::CLEARED)
+    out << " state=\"cleared\"";
+  else if (post.state() == item_t::PENDING)
+    out << " state=\"pending\"";
+
+  if (post.has_flags(POST_VIRTUAL))
+    out << " virtual=\"true\"";
+  if (post.has_flags(ITEM_GENERATED))
+    out << " generated=\"true\"";
+
+  x.close_attrs();
+
+  if (post._date) {
+    push_xml y(out, "date");
+    to_xml(out, *post._date, false);
+  }
+  if (post._date_eff) {
+    push_xml y(out, "effective-date");
+    to_xml(out, *post._date_eff, false);
+  }
+
+  if (post.account) {
+    push_xml y(out, "account", true);
+
+    out << " ref=\"";
+    out.width(sizeof(unsigned long) * 2);
+    out.fill('0');
+    out << std::hex << reinterpret_cast<unsigned long>(post.account);
+    out << '"';
+    y.close_attrs();
+
+    {
+      push_xml z(out, "name");
+      out << z.guard(post.account->fullname());
+    }
+  }
+
+  {
+    push_xml y(out, "post-amount");
+    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+      to_xml(out, post.xdata().compound_value);
+    else
+      to_xml(out, post.amount);
+  }
+
+  if (post.cost) {
+    push_xml y(out, "cost");
+    to_xml(out, *post.cost);
+  }
+
+  if (post.assigned_amount) {
+    if (post.has_flags(POST_CALCULATED)) {
+      push_xml y(out, "balance-assertion");
+      to_xml(out, *post.assigned_amount);
+    } else {
+      push_xml y(out, "balance-assignment");
+      to_xml(out, *post.assigned_amount);
+    }
+  }
+
+  if (post.note) {
+    push_xml y(out, "note");
+    out << y.guard(*post.note);
+  }
+
+  if (post.metadata) {
+    push_xml y(out, "metadata");
+    foreach (const item_t::string_map::value_type& pair, *post.metadata) {
+      if (pair.second) {
+	push_xml z(out, "variable");
+	{
+	  push_xml z(out, "key");
+	  out << y.guard(pair.first);
+	}
+	{
+	  push_xml z(out, "value");
+	  out << y.guard(*pair.second);
+	}
+      } else {
+	push_xml z(out, "tag");
+	out << y.guard(pair.first);
+      }
+    }
+  }
+
+  if (post.xdata_ && ! post.xdata_->total.is_null()) {
+    push_xml y(out, "total");
+    to_xml(out, post.xdata_->total);
+  }
 }
 
 } // namespace ledger

@@ -512,7 +512,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 	for (std::size_t i = 0; i < bytes; i++) {
 	  in.get(c);
 	  if (in.bad() || in.eof())
-	    break;
+	    throw_(amount_error, _("Invalid UTF-8 encoding for commodity name"));
 	  *_p++ = c;
 	}
       }
@@ -526,7 +526,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 	if (c == '\\') {
 	  in.get(c);
 	  if (in.eof())
-	    break;
+	    throw_(amount_error, _("Backslash at end of commodity name"));
 	}
 	*_p++ = c;
       }
@@ -637,7 +637,8 @@ bool compare_amount_commodities::operator()(const amount_t * left,
       return false;
 
     if (aleftcomm.details.date && arightcomm.details.date) {
-      date_duration_t diff = *aleftcomm.details.date - *arightcomm.details.date;
+      gregorian::date_duration diff =
+	*aleftcomm.details.date - *arightcomm.details.date;
       return diff.is_negative();
     }
 
@@ -651,6 +652,53 @@ bool compare_amount_commodities::operator()(const amount_t * left,
 
     assert(false);
     return true;
+  }
+}
+
+void to_xml(std::ostream& out, const commodity_t& comm,
+	    bool commodity_details)
+{
+  push_xml x(out, "commodity", true);
+
+  out << " flags=\"";
+  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED))) out << 'P';
+  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))    out << 'S';
+  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))    out << 'T';
+  if (comm.has_flags(COMMODITY_STYLE_EUROPEAN))     out << 'E';
+  out << '"';
+
+  x.close_attrs();
+  
+  {
+    push_xml y(out, "symbol");
+    out << y.guard(comm.symbol());
+  }
+
+  if (commodity_details) {
+    if (comm.is_annotated())
+      to_xml(out, as_annotated_commodity(comm).details);
+
+    if (comm.varied_history()) {
+      push_xml y(out, "varied-history");
+
+      foreach (const commodity_t::history_by_commodity_map::value_type& pair,
+	       comm.varied_history()->histories) {
+	{
+	  push_xml z(out, "symbol");
+	  out << y.guard(pair.first->symbol());
+	}
+	{
+	  push_xml z(out, "history");
+
+	  foreach (const commodity_t::history_map::value_type& inner_pair,
+		   pair.second.prices) {
+	    push_xml w(out, "price-point");
+	    to_xml(out, inner_pair.first);
+	    to_xml(out, inner_pair.second);
+	  }
+	}
+      }
+    }
   }
 }
 

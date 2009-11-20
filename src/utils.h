@@ -62,10 +62,6 @@
 #define TIMERS_ON   1
 #endif
 
-#if defined(VERIFY_ON)
-//#define STRING_VERIFY_ON 1
-#endif
-
 /*@}*/
 
 /**
@@ -76,7 +72,7 @@
 namespace ledger {
   using namespace boost;
 
-#if defined(STRING_VERIFY_ON)
+#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
   class string;
 #else
   typedef std::string string;
@@ -162,14 +158,35 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 void report_memory(std::ostream& out, bool report_all = false);
 
-#if defined(STRING_VERIFY_ON)
+} // namespace ledger
+
+#else // ! VERIFY_ON
+
+#define VERIFY(x)
+#define DO_VERIFY() true
+#define TRACE_CTOR(cls, args)
+#define TRACE_DTOR(cls)
+
+#endif // VERIFY_ON
+
+#define IF_VERIFY() if (DO_VERIFY())
+
+/*@}*/
 
 /**
- * @brief Brief
+ * @name String wrapper
  *
- * This string type is a wrapper around std::string that allows us to
- * trace constructor and destructor calls.
+ * This string type is a wrapper around std::string that allows us to trace
+ * constructor and destructor calls.  It also makes ledger's use of strings a
+ * unique type, that the Boost.Python code can use as the basis for
+ * transparent Unicode conversions.
  */
+/*@{*/
+
+namespace ledger {
+
+#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+
 class string : public std::string
 {
 public:
@@ -177,6 +194,11 @@ public:
   string(const string& str);
   string(const std::string& str);
   string(size_type len, char x);
+  template<class _InputIterator>
+  string(_InputIterator __beg, _InputIterator __end)
+    : std::string(__beg, __end) {
+    TRACE_CTOR(string, "InputIterator, InputIterator");
+  }
   string(const char * str);
   string(const char * str, const char * end);
   string(const string& str, size_type x);
@@ -242,24 +264,13 @@ inline bool operator!=(const char* __lhs, const string& __rhs)
 inline bool operator!=(const string& __lhs, const char* __rhs)
 { return __lhs.compare(__rhs) != 0; }
 
-#endif // STRING_VERIFY_ON
+#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+
+extern string empty_string;
+
+strings_list split_arguments(const char * line);
 
 } // namespace ledger
-
-#else // ! VERIFY_ON
-
-#define VERIFY(x)
-#define DO_VERIFY() true
-#define TRACE_CTOR(cls, args)
-#define TRACE_DTOR(cls)
-
-#endif // VERIFY_ON
-
-extern ledger::string empty_string;
-
-ledger::strings_list split_arguments(const char * line);
-
-#define IF_VERIFY() if (DO_VERIFY())
 
 /*@}*/
 
@@ -647,6 +658,51 @@ inline string to_hex(uint_least32_t * message_digest, const int len = 1)
   }
   return buf.str();
 }
+
+class push_xml
+{
+  std::ostream& out;
+  string	tag;
+  bool  	leave_open;
+
+public:
+  push_xml(std::ostream& _out, const string& _tag, bool has_attrs = false,
+	   bool _leave_open = false)
+    : out(_out), tag(_tag), leave_open(_leave_open) {
+    out << '<' << tag;
+    if (! has_attrs)
+      out << '>';
+  }
+  ~push_xml() {
+    if (! leave_open)
+      out << "</" << tag << '>';
+  }
+
+  void close_attrs() {
+    out << '>';
+  }
+
+  static string guard(const string& str) {
+    std::ostringstream buf;
+    foreach (const char& ch, str) {
+      switch (ch) {
+      case '<':
+	buf << "&lt;";
+	break;
+      case '>':
+	buf << "&gt;";
+	break;
+      case '&':
+	buf << "&amp;";
+	break;
+      default:
+	buf << ch;
+	break;
+      }
+    }
+    return buf.str();
+  }
+};
 
 extern const string version;
 

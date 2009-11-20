@@ -38,21 +38,19 @@
  * @author John Wiegley
  *
  * @ingroup report
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _REPORT_H
 #define _REPORT_H
 
 #include "interactive.h"
 #include "expr.h"
+#include "query.h"
 #include "chain.h"
 #include "stream.h"
 #include "option.h"
 #include "commodity.h"
 #include "annotate.h"
+#include "session.h"
 #include "format.h"
 
 namespace ledger {
@@ -104,11 +102,6 @@ class xact_t;
 //    says that the formatter should be "flushed" after the entities are
 //    iterated.  This does not happen for the commodities iteration, however.
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class report_t : public scope_t
 {
   report_t();
@@ -133,6 +126,9 @@ public:
     output_stream.close();
   }
 
+  void normalize_options(const string& verb);
+  void parse_query_args(const value_t& args, const string& whence);
+
   void posts_report(post_handler_ptr handler);
   void generate_report(post_handler_ptr handler);
   void xact_report(post_handler_ptr handler, xact_t& xact);
@@ -152,6 +148,7 @@ public:
   value_t fn_rounded(call_scope_t& scope);
   value_t fn_unrounded(call_scope_t& scope);
   value_t fn_truncated(call_scope_t& scope);
+  value_t fn_floor(call_scope_t& scope);
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
@@ -160,10 +157,18 @@ public:
   value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_percent(call_scope_t& scope);
   value_t fn_price(call_scope_t& scope);
-  value_t fn_account_total(call_scope_t& scope);
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_price(call_scope_t& scope);
   value_t fn_lot_tag(call_scope_t& scope);
+  value_t fn_to_boolean(call_scope_t& scope);
+  value_t fn_to_int(call_scope_t& scope);
+  value_t fn_to_datetime(call_scope_t& scope);
+  value_t fn_to_date(call_scope_t& scope);
+  value_t fn_to_amount(call_scope_t& scope);
+  value_t fn_to_balance(call_scope_t& scope);
+  value_t fn_to_string(call_scope_t& scope);
+  value_t fn_to_mask(call_scope_t& scope);
+  value_t fn_to_sequence(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) {
     return terminus;
@@ -182,6 +187,12 @@ public:
     return option.str();
   }
 
+  optional<string> maybe_format(option_t<report_t>& option) {
+    if (option)
+      return option.str();
+    return none;
+  }
+
   value_t reload_command(call_scope_t&);
   value_t echo_command(call_scope_t& scope);
 
@@ -192,8 +203,6 @@ public:
 			  lots || HANDLED(lot_tags),
 			  HANDLED(lots_actual));
   }
-
-  bool maybe_import(const string& module);
 
   void report_options(std::ostream& out)
   {
@@ -222,6 +231,7 @@ public:
     HANDLER(csv_format_).report(out);
     HANDLER(current).report(out);
     HANDLER(daily).report(out);
+    HANDLER(date_).report(out);
     HANDLER(date_format_).report(out);
     HANDLER(datetime_format_).report(out);
     HANDLER(depth_).report(out);
@@ -264,9 +274,10 @@ public:
     HANDLER(period_).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
+    HANDLER(prepend_format_).report(out);
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
-    HANDLER(pricesdb_format_).report(out);
+    HANDLER(pricedb_format_).report(out);
     HANDLER(print_format_).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
@@ -290,6 +301,7 @@ public:
     HANDLER(truncate_).report(out);
     HANDLER(unbudgeted).report(out);
     HANDLER(uncleared).report(out);
+    HANDLER(unrealized).report(out);
     HANDLER(unround).report(out);
     HANDLER(unsorted).report(out);
     HANDLER(weekly).report(out);
@@ -342,7 +354,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION(report_t, amount_data);
+  OPTION(report_t, amount_data); // -j
   OPTION(report_t, anon);
 
   OPTION_(report_t, average, DO() { // -A
@@ -367,14 +379,14 @@ public:
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
-      date_interval_t interval(args[1].to_string());
-      if (! interval.start)
+      date_interval_t  interval(args[1].to_string());
+      optional<date_t> begin = interval.begin(parent->session.current_year);
+      if (! begin)
 	throw_(std::invalid_argument,
 	       _("Could not determine beginning of period '%1'")
 	       << args[1].to_string());
 
-      string predicate =
-	"date>=[" + to_iso_extended_string(*interval.start) + "]";
+      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
       parent->HANDLER(limit_).on(string("--begin"), predicate);
     });
 
@@ -454,6 +466,7 @@ public:
       parent->HANDLER(period_).on(string("--daily"), "daily");
     });
 
+  OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
@@ -513,17 +526,19 @@ public:
   OPTION(report_t, empty); // -E
 
   OPTION_(report_t, end_, DO_(args) { // -e
-      date_interval_t interval(args[1].to_string());
-      if (! interval.start)
+      date_interval_t  interval(args[1].to_string());
+      // Use begin() here so that if the user says --end=2008, we end on
+      // 2008/01/01 instead of 2009/01/01 (which is what end() would return).
+      optional<date_t> end = interval.begin(parent->session.current_year);
+      if (! end)
 	throw_(std::invalid_argument,
 	       _("Could not determine end of period '%1'")
 	       << args[1].to_string());
 
-      string predicate =
-	"date<[" + to_iso_extended_string(*interval.start) + "]";
+      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
       parent->HANDLER(limit_).on(string("--end"), predicate);
 
-      parent->terminus = datetime_t(*interval.start);
+      parent->terminus = datetime_t(*end);
     });
 
   OPTION(report_t, equity);
@@ -611,11 +626,13 @@ public:
 
   OPTION_(report_t, now_, DO_(args) {
       date_interval_t interval(args[1].to_string());
-      if (! interval.start)
+      optional<date_t> begin = interval.begin(parent->session.current_year);
+      if (! begin)
 	throw_(std::invalid_argument,
 	       _("Could not determine beginning of period '%1'")
 	       << args[1].to_string());
-      ledger::epoch = datetime_t(*interval.start);
+      ledger::epoch = parent->terminus = datetime_t(*begin);
+      parent->session.current_year = ledger::epoch->date().year();
     });
 
   OPTION__
@@ -705,6 +722,8 @@ public:
 	 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
     });
 
+  OPTION(report_t, prepend_format_);
+
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(display_amount_)
 	.set_expr(string("--price"), "price(amount_expr)");
@@ -714,11 +733,11 @@ public:
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,
-	 "%-.9(date) %-8(account) %(justify(scrub(display_amount), 12, "
+	 "%(date) %-8(account) %(justify(scrub(display_amount), 12, "
 	 "    2 + 9 + 8 + 12, true, color))\n");
     });
 
-  OPTION__(report_t, pricesdb_format_, CTOR(report_t, pricesdb_format_) {
+  OPTION__(report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
       on(none,
 	 "P %(datetime) %(account) %(scrub(display_amount))\n");
     });
@@ -762,7 +781,7 @@ public:
 	 "%(ansify_if(justify(format_date(date), date_width), green "
 	 "    if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
-	 "    bold if color & !cleared))"
+	 "    bold if color & !cleared & actual))"
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
 	 "    account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "
@@ -831,7 +850,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION(report_t, total_data);
+  OPTION(report_t, total_data); // -J
 
   OPTION_(report_t, truncate_, DO_(args) {
       string style(args[1].to_string());
@@ -855,6 +874,8 @@ public:
       parent->HANDLER(limit_).on(string("--uncleared"), "uncleared|pending");
     });
 
+  OPTION(report_t, unrealized);
+
   OPTION_(report_t, unround, DO() {
       parent->HANDLER(display_amount_)
 	.set_expr(string("--unround"), "unrounded(amount_expr)");
@@ -869,16 +890,7 @@ public:
     });
 
   OPTION_(report_t, wide, DO() { // -w
-      parent->HANDLER(date_width_).on_with(string("--wide"), 9L);
-      parent->HANDLER(date_width_).specified = true;
-      parent->HANDLER(payee_width_).on_with(string("--wide"), 35L);
-      parent->HANDLER(payee_width_).specified = true;
-      parent->HANDLER(account_width_).on_with(string("--wide"), 39L);
-      parent->HANDLER(account_width_).specified = true;
-      parent->HANDLER(amount_width_).on_with(string("--wide"), 22L);
-      parent->HANDLER(amount_width_).specified = true;
-      parent->HANDLER(total_width_).on_with(string("--wide"), 22L);
-      parent->HANDLER(total_width_).specified = true;
+      parent->HANDLER(columns_).on_with(string("--wide"), 132L);
     });
 
   OPTION_(report_t, yearly, DO() { // -Y
@@ -887,39 +899,52 @@ public:
 
   OPTION__(report_t, date_width_,
 	   bool specified;
-	   CTOR(report_t, date_width_) {
-	     on_with(none, 9L);
-	     specified = false;
-	   }
+	   CTOR(report_t, date_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, payee_width_,
 	   bool specified;
-	   CTOR(report_t, payee_width_) {
-	     on_with(none, 20L);
-	     specified = false;
-	   }
+	   CTOR(report_t, payee_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, account_width_,
 	   bool specified;
-	   CTOR(report_t, account_width_) {
-	     on_with(none, 23L);
-	     specified = false;
-	   }
+	   CTOR(report_t, account_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, amount_width_,
 	   bool specified;
-	   CTOR(report_t, amount_width_) {
-	     on_with(none, 12L);
-	     specified = false;
-	   }
+	   CTOR(report_t, amount_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, total_width_,
 	   bool specified;
-	   CTOR(report_t, total_width_) {
-	     on_with(none, 12L);
-	     specified = false;
-	   }
+	   CTOR(report_t, total_width_) { specified = false; }
 	   DO_(args) { value = args[1].to_long(); specified = true; });
+};
+
+
+template <class Type        = post_t,
+	  class handler_ptr = post_handler_ptr,
+	  void (report_t::*report_method)(handler_ptr) =
+	    &report_t::posts_report>
+class reporter
+{
+  shared_ptr<item_handler<Type> > handler;
+
+  report_t& report;
+  string    whence;
+
+public:
+  reporter(item_handler<Type> * _handler,
+	   report_t& _report, const string& _whence)
+    : handler(_handler), report(_report), whence(_whence) {}
+
+  value_t operator()(call_scope_t& args)
+  {
+    if (args.size() > 0)
+      report.parse_query_args(args.value(), whence);
+
+    (report.*report_method)(handler_ptr(handler));
+
+    return true;
+  }
 };
 
 } // namespace ledger

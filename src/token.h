@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup expr
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _TOKEN_H
 #define _TOKEN_H
@@ -50,11 +46,6 @@
 
 namespace ledger {
 
-/**
- * @brief Brief
- *
- * Long.
- */
 struct expr_t::token_t : public noncopyable
 {
   enum kind_t {
@@ -133,7 +124,7 @@ struct expr_t::token_t : public noncopyable
 
   int  parse_reserved_word(std::istream& in);
   void parse_ident(std::istream& in);
-  void next(std::istream& in, const uint_least8_t flags);
+  void next(std::istream& in, const parse_flags_t& flags);
   void rewind(std::istream& in);
   void unexpected();
   void expected(char wanted, char c = '\0');

@@ -118,17 +118,20 @@ void item_t::set_tag(const string&           tag,
 void item_t::parse_tags(const char * p, optional<date_t::year_type> current_year)
 {
   if (const char * b = std::strchr(p, '[')) {
-    if (const char * e = std::strchr(p, ']')) {
-      char buf[256];
-      std::strncpy(buf, b + 1, e - b - 1);
-      buf[e - b - 1] = '\0';
+    if (*(b + 1) != '\0' &&
+	(std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
+      if (const char * e = std::strchr(p, ']')) {
+	char buf[256];
+	std::strncpy(buf, b + 1, e - b - 1);
+	buf[e - b - 1] = '\0';
 
-      if (char * p = std::strchr(buf, '=')) {
-	*p++ = '\0';
-	_date_eff = parse_date(p, current_year);
+	if (char * p = std::strchr(buf, '=')) {
+	  *p++ = '\0';
+	  _date_eff = parse_date(p, current_year);
+	}
+	if (buf[0])
+	  _date = parse_date(buf, current_year);
       }
-      if (buf[0])
-	_date = parse_date(buf, current_year);
     }
   }
 
@@ -393,6 +396,11 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'u':
     if (name == "uncleared")
       return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
+    break;
+
+  case 'L':
+    if (name[1] == '\0')
+      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
     break;
 
   case 'X':

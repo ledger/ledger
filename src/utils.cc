@@ -406,8 +406,18 @@ void report_memory(std::ostream& out, bool report_all)
   }
 }
 
+} // namespace ledger
 
-#if defined(STRING_VERIFY_ON)
+#endif // VERIFY_ON
+
+/**********************************************************************
+ *
+ * String wrapper
+ */
+
+namespace ledger {
+
+#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
 
 string::string() : std::string() {
   TRACE_CTOR(string, "");
@@ -445,18 +455,12 @@ string::~string() throw() {
   TRACE_DTOR(string);
 }
 
-#endif // STRING_VERIFY_ON
+#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
 
-} // namespace ledger
+string empty_string("");
 
-#endif // VERIFY_ON
-
-ledger::string empty_string("");
-
-ledger::strings_list split_arguments(const char * line)
+strings_list split_arguments(const char * line)
 {
-  using namespace ledger;
-
   strings_list args;
 
   char buf[4096];
@@ -506,6 +510,8 @@ ledger::strings_list split_arguments(const char * line)
   return args;
 }
 
+} // namespace ledger
+
 /**********************************************************************
  *
  * Logging
@@ -544,8 +550,13 @@ bool logger_func(log_level_t level)
     logger_has_run = true;
     logger_start   = TRUE_CURRENT_TIME();
 
+#if defined(VERIFY_ON)
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
+#else
+    IF_VERIFY()
+      *_log_stream << "   TIME" << std::endl;
+#endif
   }
 
   *_log_stream << std::right << std::setw(5)

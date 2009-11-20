@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _ACCOUNT_H
 #define _ACCOUNT_H
@@ -57,16 +53,12 @@ class post_t;
 typedef std::list<post_t *> posts_list;
 typedef std::map<const string, account_t *> accounts_map;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class account_t : public supports_flags<>, public scope_t
 {
-#define ACCOUNT_NORMAL 0x00	// no flags at all, a basic account
-#define ACCOUNT_KNOWN  0x01
-#define ACCOUNT_TEMP   0x02	// account is a temporary object
+#define ACCOUNT_NORMAL	  0x00	// no flags at all, a basic account
+#define ACCOUNT_KNOWN	  0x01
+#define ACCOUNT_TEMP	  0x02	// account is a temporary object
+#define ACCOUNT_GENERATED 0x04	// account never actually existed
 
 public:
   account_t *	   parent;
@@ -250,6 +242,7 @@ public:
   bool has_xflags(xdata_t::flags_t flags) const {
     return xdata_ && xdata_->has_flags(flags);
   }
+  bool children_with_xdata() const;
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
 
 #if defined(HAVE_BOOST_SERIALIZATION)

@@ -38,10 +38,6 @@
  * @author John Wiegley
  *
  * @ingroup data
- *
- * @brief Brief
- *
- * Long.
  */
 #ifndef _POST_H
 #define _POST_H
@@ -53,11 +49,6 @@ namespace ledger {
 class xact_t;
 class account_t;
 
-/**
- * @brief Brief
- *
- * Long.
- */
 class post_t : public item_t
 {
 public:
@@ -70,6 +61,7 @@ public:
   account_t *	     account;
 
   amount_t	     amount;	// can be null until finalization
+  optional<expr_t>   amount_expr;
   optional<amount_t> cost;
   optional<amount_t> assigned_amount;
 
@@ -100,7 +92,7 @@ public:
   {
     TRACE_CTOR(post_t, "copy");
   }
-  ~post_t() {
+  virtual ~post_t() {
     TRACE_DTOR(post_t);
   }
 
@@ -143,13 +135,11 @@ public:
     date_t	date;
     datetime_t	datetime;
     account_t *	account;
-    void *	ptr;
 
     std::list<sort_value_t> sort_values;
 
     xdata_t()
-      : supports_flags<uint_least16_t>(), count(0),
-	account(NULL), ptr(NULL) {
+      : supports_flags<uint_least16_t>(), count(0), account(NULL) {
       TRACE_CTOR(post_t::xdata_t, "");
     }
     xdata_t(const xdata_t& other)
@@ -160,7 +150,6 @@ public:
 	count(other.count),
 	date(other.date),
 	account(other.account),
-	ptr(NULL),
 	sort_values(other.sort_values)
     {
       TRACE_CTOR(post_t::xdata_t, "copy");
@@ -221,11 +210,14 @@ private:
     ar & xact;
     ar & account;
     ar & amount;
+    ar & amount_expr;
     ar & cost;
     ar & assigned_amount;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
+
+void to_xml(std::ostream& out, const post_t& post);
 
 } // namespace ledger
 

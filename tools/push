@@ -9,3 +9,7 @@ git merge --no-ff next
 git checkout next
 git rebase master
 git push
+git checkout master
+./acprep opt upload
+mv *.dmg* build
+git checkout next

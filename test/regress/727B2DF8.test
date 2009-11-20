@@ -2,7 +2,7 @@ reg --color --force-color
 <<<
 N $
 
-= account =~ /^Expenses:Books/
+= /^Expenses:Books/
     (Liabilities:Taxes)             -0.10
 
 ~ Monthly

@@ -33,18 +33,212 @@
 
 #include "report.h"
 #include "session.h"
-#include "unistring.h"
+#include "pool.h"
 #include "format.h"
+#include "query.h"
 #include "output.h"
 #include "iterators.h"
 #include "filters.h"
 #include "precmd.h"
 #include "stats.h"
 #include "generate.h"
-#include "derive.h"
+#include "draft.h"
+#include "xml.h"
 #include "emacs.h"
 
 namespace ledger {
+
+void report_t::normalize_options(const string& verb)
+{
+  // Patch up some of the reporting options based on what kind of
+  // command it was.
+
+#ifdef HAVE_ISATTY
+  if (! HANDLED(force_color)) {
+    if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
+      HANDLER(color).on_only(string("?normalize"));
+    if (HANDLED(color) && ! isatty(STDOUT_FILENO))
+      HANDLER(color).off();
+  }
+  if (! HANDLED(force_pager)) {
+    if (HANDLED(pager_) && ! isatty(STDOUT_FILENO))
+      HANDLER(pager_).off();
+  }
+#endif
+
+  item_t::use_effective_date = (HANDLED(effective) &&
+				! HANDLED(actual_dates));
+
+  session.journal->commodity_pool->keep_base  = HANDLED(base);
+  session.journal->commodity_pool->get_quotes = session.HANDLED(download);
+
+  if (session.HANDLED(price_exp_))
+    session.journal->commodity_pool->quote_leeway =
+      session.HANDLER(price_exp_).value.as_long();
+
+  if (session.HANDLED(price_db_))
+    session.journal->commodity_pool->price_db =
+      session.HANDLER(price_db_).str();
+  else
+    session.journal->commodity_pool->price_db = none;
+
+  if (HANDLED(date_format_))
+    set_date_format(HANDLER(date_format_).str().c_str());
+  if (HANDLED(datetime_format_))
+    set_datetime_format(HANDLER(datetime_format_).str().c_str());
+  if (HANDLED(start_of_week_)) {
+    if (optional<date_time::weekdays> weekday =
+	string_to_day_of_week(HANDLER(start_of_week_).str()))
+      start_of_week = *weekday;
+  }
+
+  if (verb == "print" || verb == "xact" || verb == "dump") {
+    HANDLER(related).on_only(string("?normalize"));
+    HANDLER(related_all).on_only(string("?normalize"));
+  }
+  else if (verb == "equity") {
+    HANDLER(equity).on_only(string("?normalize"));
+  }
+
+  if (verb == "print")
+    HANDLER(limit_).on(string("?normalize"), "actual");
+
+  if (! HANDLED(empty))
+    HANDLER(display_).on(string("?normalize"), "amount|(!post&total)");
+
+  if (verb[0] != 'b' && verb[0] != 'r')
+    HANDLER(base).on_only(string("?normalize"));
+
+  // If a time period was specified with -p, check whether it also gave a
+  // begin and/or end to the report period (though these can be overridden
+  // using -b or -e).  Then, if no _duration_ was specified (such as monthly),
+  // then ignore the period since the begin/end are the only interesting
+  // details.
+  if (HANDLED(period_)) {
+    if (! HANDLED(sort_all_))
+      HANDLER(sort_xacts_).on_only(string("?normalize"));
+
+    date_interval_t interval(HANDLER(period_).str());
+
+    optional<date_t> begin = interval.begin(session.current_year);
+    optional<date_t> end   = interval.end(session.current_year);
+
+    if (! HANDLED(begin_) && begin) {
+      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
+      HANDLER(limit_).on(string("?normalize"), predicate);
+    }
+    if (! HANDLED(end_) && end) {
+      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
+      HANDLER(limit_).on(string("?normalize"), predicate);
+    }
+
+    if (! interval.duration)
+      HANDLER(period_).off();
+  }
+
+  // If -j or -J were specified, set the appropriate format string now so as
+  // to avoid option ordering issues were we to have done it during the
+  // initial parsing of the options.
+  if (HANDLED(amount_data)) {
+    HANDLER(format_)
+      .on_with(string("?normalize"), HANDLER(plot_amount_format_).value);
+  }
+  else if (HANDLED(total_data)) {
+    HANDLER(format_)
+      .on_with(string("?normalize"), HANDLER(plot_total_format_).value);
+  }
+
+  // If the --exchange (-X) option was used, parse out any final price
+  // settings that may be there.
+  if (HANDLED(exchange_) &&
+      HANDLER(exchange_).str().find('=') != string::npos) {
+    value_t(0L).exchange_commodities(HANDLER(exchange_).str(), true,
+				     terminus);
+  }
+
+  long cols = 0;
+  if (HANDLED(columns_))
+    cols = HANDLER(columns_).value.to_long();
+  else if (const char * columns = std::getenv("COLUMNS"))
+    cols = lexical_cast<long>(columns);
+  else
+    cols = 80L;
+
+  if (cols > 0) {
+    DEBUG("auto.columns", "cols = " << cols);
+
+    if (! HANDLER(date_width_).specified)
+      HANDLER(date_width_)
+	.on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
+						     FMT_PRINTED).length()));
+
+    long date_width    = HANDLER(date_width_).value.to_long();
+    long payee_width   = (HANDLER(payee_width_).specified ?
+			  HANDLER(payee_width_).value.to_long() :
+			  int(double(cols) * 0.263157));
+    long account_width = (HANDLER(account_width_).specified ?
+			  HANDLER(account_width_).value.to_long() :
+			  int(double(cols) * 0.302631));
+    long amount_width  = (HANDLER(amount_width_).specified ?
+			  HANDLER(amount_width_).value.to_long() :
+			  int(double(cols) * 0.157894));
+    long total_width   = (HANDLER(total_width_).specified ?
+			  HANDLER(total_width_).value.to_long() :
+			  amount_width);
+
+    DEBUG("auto.columns", "date_width	 = " << date_width);
+    DEBUG("auto.columns", "payee_width	 = " << payee_width);
+    DEBUG("auto.columns", "account_width = " << account_width);
+    DEBUG("auto.columns", "amount_width	 = " << amount_width);
+    DEBUG("auto.columns", "total_width	 = " << total_width);
+
+    if (! HANDLER(date_width_).specified &&
+	! HANDLER(payee_width_).specified &&
+	! HANDLER(account_width_).specified &&
+	! HANDLER(amount_width_).specified &&
+	! HANDLER(total_width_).specified) {
+      long total = (4 /* the spaces between */ + date_width + payee_width +
+		    account_width + amount_width + total_width);
+      if (total > cols) {
+	DEBUG("auto.columns", "adjusting account down");
+	account_width -= total - cols;
+	DEBUG("auto.columns", "account_width now = " << account_width);
+      }
+    }
+
+    if (! HANDLER(date_width_).specified)
+      HANDLER(date_width_).on_with(string("?normalize"), date_width);
+    if (! HANDLER(payee_width_).specified)
+      HANDLER(payee_width_).on_with(string("?normalize"), payee_width);
+    if (! HANDLER(account_width_).specified)
+      HANDLER(account_width_).on_with(string("?normalize"), account_width);
+    if (! HANDLER(amount_width_).specified)
+      HANDLER(amount_width_).on_with(string("?normalize"), amount_width);
+    if (! HANDLER(total_width_).specified)
+      HANDLER(total_width_).on_with(string("?normalize"), total_width);
+  }
+}
+
+void report_t::parse_query_args(const value_t& args, const string& whence)
+{
+  query_t query(args, what_to_keep());
+  if (query) {
+    HANDLER(limit_).on(whence, query.text());
+
+    DEBUG("report.predicate",
+	  "Predicate = " << HANDLER(limit_).str());
+  }
+
+  if (query.tokens_remaining()) {
+    query.parse_again();
+    if (query) {
+      HANDLER(display_).on(whence, query.text());
+
+      DEBUG("report.predicate",
+	    "Display predicate = " << HANDLER(display_).str());
+    }
+  }
+}  
 
 void report_t::posts_report(post_handler_ptr handler)
 {
@@ -84,6 +278,12 @@ void report_t::accounts_report(acct_handler_ptr handler)
     chain_post_handlers(*this, post_handler_ptr(new ignore_posts), true);
   pass_down_posts(chain, walker);
 
+  HANDLER(amount_).expr.mark_uncompiled();
+  HANDLER(total_).expr.mark_uncompiled();
+  HANDLER(display_amount_).expr.mark_uncompiled();
+  HANDLER(display_total_).expr.mark_uncompiled();
+  HANDLER(revalued_total_).expr.mark_uncompiled();
+
   scoped_ptr<accounts_iterator> iter;
   if (! HANDLED(sort_)) {
     iter.reset(new basic_accounts_iterator(*session.journal->master));
@@ -96,7 +296,7 @@ void report_t::accounts_report(acct_handler_ptr handler)
 
   if (HANDLED(display_))
     pass_down_accounts(handler, *iter.get(),
-		       item_predicate(HANDLER(display_).str(), what_to_keep()),
+		       predicate_t(HANDLER(display_).str(), what_to_keep()),
 		       *this);
   else
     pass_down_accounts(handler, *iter.get());
@@ -206,6 +406,12 @@ value_t report_t::fn_quantity(call_scope_t& scope)
   return args.get<amount_t>(0).number();
 }
 
+value_t report_t::fn_floor(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  return args.value_at(0).floored();
+}
+
 value_t report_t::fn_abs(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
@@ -313,31 +519,6 @@ value_t report_t::fn_price(call_scope_t& scope)
   return args.value_at(0).price();
 }
 
-value_t report_t::fn_account_total(call_scope_t& args)
-{
-  account_t * acct = NULL;
-  string name;
-  if (args[0].is_string()) {
-    name = args[0].as_string();
-    acct = session.journal->find_account(name, false);
-  }
-  else if (args[0].is_mask()) {
-    name = args[0].as_mask().expr.str();
-    acct = session.journal->find_account_re(name);
-  }
-  else {
-    throw_(std::runtime_error,
-	   _("Expected string or mask for argument 1, but received %1")
-	   << args[0].label());
-  }
-
-  if (! acct)
-    throw_(std::runtime_error,
-	   _("Could not find an account matching ") << name);
-
-  return acct->amount();
-}
-
 value_t report_t::fn_lot_date(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
@@ -369,6 +550,69 @@ value_t report_t::fn_lot_tag(call_scope_t& scope)
       return string_value(*details.tag);
   }
   return NULL_VALUE;
+}
+
+value_t report_t::fn_to_boolean(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::BOOLEAN);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_int(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::INTEGER);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_datetime(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::DATETIME);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_date(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::DATE);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_amount(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::AMOUNT);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_balance(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::BALANCE);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_string(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::STRING);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_mask(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::MASK);
+  return args.value_at(0);
+}
+
+value_t report_t::fn_to_sequence(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  args.value_at(0).in_place_cast(value_t::SEQUENCE);
+  return args.value_at(0);
 }
 
 namespace {
@@ -411,64 +655,6 @@ namespace {
   value_t fn_null(call_scope_t&) {
     return NULL_VALUE;
   }
-
-  template <class Type        = post_t,
-	    class handler_ptr = post_handler_ptr,
-	    void (report_t::*report_method)(handler_ptr) =
-	      &report_t::posts_report>
-  class reporter
-  {
-    shared_ptr<item_handler<Type> > handler;
-
-    report_t& report;
-    string    whence;
-
-  public:
-    reporter(item_handler<Type> * _handler, report_t& _report,
-	     const string& _whence)
-      : handler(_handler), report(_report), whence(_whence) {}
-
-    value_t operator()(call_scope_t& args)
-    {
-      if (args.size() > 0) {
-	value_t::sequence_t::const_iterator begin =
-	  args.value().as_sequence().begin();
-	value_t::sequence_t::const_iterator end   =
-	  args.value().as_sequence().end();
-
-	std::pair<expr_t, query_parser_t> info = args_to_predicate(begin, end);
-	if (! info.first)
-	  throw_(std::runtime_error,
-		 _("Invalid query predicate: %1") << join_args(args));
-
-	string limit = info.first.text();
-	if (! limit.empty())
-	  report.HANDLER(limit_).on(whence, limit);
-
-	DEBUG("report.predicate",
-	      "Predicate = " << report.HANDLER(limit_).str());
-
-	if (info.second.tokens_remaining()) {
-	  info = args_to_predicate(info.second);
-	  if (! info.first)
-	    throw_(std::runtime_error,
-		   _("Invalid display predicate: %1") << join_args(args));
-
-	  string display = info.first.text();
-
-	  if (! display.empty())
-	    report.HANDLER(display_).on(whence, display);
-
-	  DEBUG("report.predicate",
-		"Display predicate = " << report.HANDLER(display_).str());
-	}
-      }
-
-      (report.*report_method)(handler_ptr(handler));
-
-      return true;
-    }
-  };
 }
 
 value_t report_t::reload_command(call_scope_t&)
@@ -484,15 +670,6 @@ value_t report_t::echo_command(call_scope_t& scope)
   std::ostream& out(output_stream);
   out << args.get<string>(0) << std::endl;
   return true;
-}
-
-bool report_t::maybe_import(const string& module)
-{
-  if (lookup(symbol_t::OPTION, "import_")) {
-    expr_t(string("import_(\"") + module + "\")").calc(*this);
-    return true;
-  }
-  return false;
 }
 
 option_t<report_t> * report_t::lookup_option(const char * p)
@@ -598,6 +775,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'd':
     OPT(daily);
+    else OPT(date_);
     else OPT(date_format_);
     else OPT(datetime_format_);
     else OPT(depth_);
@@ -671,9 +849,10 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(plot_total_format_);
     else OPT(price);
     else OPT(prices_format_);
-    else OPT(pricesdb_format_);
+    else OPT(pricedb_format_);
     else OPT(print_format_);
     else OPT(payee_width_);
+    else OPT(prepend_format_);
     break;
   case 'q':
     OPT(quantity);
@@ -708,6 +887,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'u':
     OPT(unbudgeted);
     else OPT(uncleared);
+    else OPT(unrealized);
     else OPT(unround);
     else OPT(unsorted);
     break;
@@ -739,6 +919,45 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
   switch (kind) {
   case symbol_t::FUNCTION:
+    // Support 2.x's single-letter value expression names.
+    if (*(p + 1) == '\0') {
+      switch (*p) {
+      case 'd':
+      case 'm':
+	return MAKE_FUNCTOR(report_t::fn_now);
+      case 'P':
+	return MAKE_FUNCTOR(report_t::fn_market);
+      case 't':
+	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      case 'T':
+	return MAKE_FUNCTOR(report_t::fn_display_total);
+      case 'U':
+	return MAKE_FUNCTOR(report_t::fn_abs);
+      case 'S':
+	return MAKE_FUNCTOR(report_t::fn_strip);
+      case 'i':
+	throw_(std::runtime_error,
+	       _("The i value expression variable is no longer supported"));
+      case 'A':
+	throw_(std::runtime_error,
+	       _("The A value expression variable is no longer supported"));
+      case 'v':
+      case 'V':
+	throw_(std::runtime_error,
+	       _("The V and v value expression variables are no longer supported"));
+      case 'I':
+      case 'B':
+	throw_(std::runtime_error,
+	       _("The I and B value expression variables are no longer supported"));
+      case 'g':
+      case 'G':
+	throw_(std::runtime_error,
+	       _("The G and g value expression variables are no longer supported"));
+      default:
+	return NULL;
+      }
+    }
+
     switch (*p) {
     case 'a':
       if (is_eq(p, "amount_expr"))
@@ -747,8 +966,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_ansify_if);
       else if (is_eq(p, "abs"))
 	return MAKE_FUNCTOR(report_t::fn_abs);
-      else if (is_eq(p, "account_total"))
-	return MAKE_FUNCTOR(report_t::fn_account_total);
       break;
 
     case 'b':
@@ -779,6 +996,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'f':
       if (is_eq(p, "format_date"))
 	return MAKE_FUNCTOR(report_t::fn_format_date);
+      else if (is_eq(p, "floor"))
+	return MAKE_FUNCTOR(report_t::fn_floor);
       break;
 
     case 'g':
@@ -858,6 +1077,24 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_today);
       else if (is_eq(p, "t"))
 	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      else if (is_eq(p, "to_boolean"))
+	return MAKE_FUNCTOR(report_t::fn_to_boolean);
+      else if (is_eq(p, "to_int"))
+	return MAKE_FUNCTOR(report_t::fn_to_int);
+      else if (is_eq(p, "to_datetime"))
+	return MAKE_FUNCTOR(report_t::fn_to_datetime);
+      else if (is_eq(p, "to_date"))
+	return MAKE_FUNCTOR(report_t::fn_to_date);
+      else if (is_eq(p, "to_amount"))
+	return MAKE_FUNCTOR(report_t::fn_to_amount);
+      else if (is_eq(p, "to_balance"))
+	return MAKE_FUNCTOR(report_t::fn_to_balance);
+      else if (is_eq(p, "to_string"))
+	return MAKE_FUNCTOR(report_t::fn_to_string);
+      else if (is_eq(p, "to_mask"))
+	return MAKE_FUNCTOR(report_t::fn_to_mask);
+      else if (is_eq(p, "to_sequence"))
+	return MAKE_FUNCTOR(report_t::fn_to_sequence);
       break;
 
     case 'T':
@@ -899,7 +1136,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(balance_format_))),
+	   (new format_accounts(*this, report_format(HANDLER(balance_format_)),
+				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#balance"));
       }
       else if (is_eq(p, "budget")) {
@@ -911,7 +1149,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(budget_format_))),
+	   (new format_accounts(*this, report_format(HANDLER(budget_format_)),
+				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#budget"));
       }
       break;
@@ -920,7 +1159,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "csv")) {
 	return WRAP_FUNCTOR
 	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(csv_format_))),
+	   (new format_posts(*this, report_format(HANDLER(csv_format_)),
+			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#csv"));
       }
       else if (is_eq(p, "cleared")) {
@@ -929,7 +1169,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(cleared_format_))),
+	   (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
+				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#cleared"));
       }
       break;
@@ -958,22 +1199,23 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "prices"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(prices_format_))),
+	   (new format_posts(*this, report_format(HANDLER(prices_format_)),
+			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#prices"));
-      else if (is_eq(p, "pricesdb"))
+      else if (is_eq(p, "pricedb"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(pricesdb_format_))),
-	    *this, "#pricesdb"));
-      else if (is_eq(p, "python") && maybe_import("ledger.interp"))
-	return session.lookup(symbol_t::COMMAND, "python");
+	   (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
+			     maybe_format(HANDLER(prepend_format_))),
+	    *this, "#pricedb"));
       break;
 
     case 'r':
       if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
 	return WRAP_FUNCTOR
 	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(register_format_))),
+	   (new format_posts(*this, report_format(HANDLER(register_format_)),
+			     false, maybe_format(HANDLER(prepend_format_))),
 	    *this, "#register"));
       else if (is_eq(p, "reload"))
 	return MAKE_FUNCTOR(report_t::reload_command);
@@ -982,14 +1224,13 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
 	return WRAP_FUNCTOR(report_statistics);
-      else
-	if (is_eq(p, "server") && maybe_import("ledger.server"))
-	  return session.lookup(symbol_t::COMMAND, "server");
       break;
 
     case 'x':
       if (is_eq(p, "xact"))
 	return WRAP_FUNCTOR(xact_command);
+      else if (is_eq(p, "xml"))
+	return WRAP_FUNCTOR(reporter<>(new format_xml(*this), *this, "#xml"));
       break;
     }
     break;
@@ -1014,10 +1255,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
 	   (new format_posts(*this, report_format(HANDLER(print_format_)),
 			     false), *this, "#generate"));
-    case 'h':
-      if (is_eq(p, "hello") && maybe_import("ledger.hello"))
-	return session.lookup(symbol_t::PRECOMMAND, "hello");
-      break;
     case 'p':
       if (is_eq(p, "parse"))
 	return WRAP_FUNCTOR(parse_command);
