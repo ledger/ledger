@@ -224,6 +224,14 @@ namespace {
     return comm.strip_annotations(keep);
   }
 
+  boost::optional<amount_t> py_price(annotation_t& ann) {
+    return ann.price;
+  }
+  boost::optional<amount_t> py_set_price(annotation_t& ann,
+					 const boost::optional<amount_t>& price) {
+    return ann.price = price;
+  }
+
 } // unnamed namespace
 
 void export_commodity()
@@ -295,7 +303,7 @@ void export_commodity()
 
   map_value_type_converter<commodity_pool_t::commodities_map>();
 
-  scope().attr("commodity_pool") = commodity_pool_t::current_pool;
+  scope().attr("commodities") = commodity_pool_t::current_pool;
 
   scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
   scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
@@ -375,9 +383,7 @@ void export_commodity()
     .def("drop_flags", &supports_flags<>::drop_flags)
 #endif
 
-    .add_property("price",
-		  make_getter(&annotation_t::price),
-		  make_setter(&annotation_t::price))
+    .add_property("price", py_price, py_set_price)
     .add_property("date",
 		  make_getter(&annotation_t::date),
 		  make_setter(&annotation_t::date))
