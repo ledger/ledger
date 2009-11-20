@@ -1321,10 +1321,13 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
     catch (...) {}
   }
 
+  start = begin;
+
   string term;
   bool alnum = std::isalnum(*begin);
-  for (start = begin; (begin != end && ! std::isspace(*begin) &&
-		       alnum == std::isalnum(*begin)); begin++)
+  for (; (begin != end && ! std::isspace(*begin) &&
+	  ((alnum && static_cast<bool>(std::isalnum(*begin))) ||
+	   (! alnum && ! static_cast<bool>(std::isalnum(*begin))))); begin++)
     term.push_back(*begin);
 
   if (! term.empty()) {
