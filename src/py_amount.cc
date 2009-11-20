@@ -44,13 +44,16 @@ using namespace boost::python;
 
 namespace {
 
-  boost::optional<amount_t>
-  py_value_1(const amount_t& amount, commodity_t& in_terms_of) {
+  boost::optional<amount_t> py_value_0(const amount_t& amount) {
+    return amount.value(false, CURRENT_TIME());
+  }
+  boost::optional<amount_t> py_value_1(const amount_t& amount,
+				       commodity_t& in_terms_of) {
     return amount.value(false, CURRENT_TIME(), in_terms_of);
   }
-  boost::optional<amount_t>
-  py_value_2(const amount_t& amount, commodity_t& in_terms_of,
-	     datetime_t& moment) {
+  boost::optional<amount_t> py_value_2(const amount_t& amount,
+				       commodity_t& in_terms_of,
+				       datetime_t& moment) {
     return amount.value(false, moment, in_terms_of);
   }
 
@@ -226,7 +229,8 @@ internal precision."))
     .def("in_place_unreduce", &amount_t::in_place_unreduce,
 	 return_internal_reference<>())
 
-    .def("value", py_value_1, args("moment"))
+    .def("value", py_value_0)
+    .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
 
     .def("price", &amount_t::price)
