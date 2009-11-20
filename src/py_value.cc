@@ -47,7 +47,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
 
-  PyObject * py_base_type(value_t& value) {
+  PyObject * py_base_type(value_t& value)
+  {
     if (value.is_boolean()) {
       return (PyObject *)&PyBool_Type;
     }
@@ -63,16 +64,6 @@ namespace {
     }
   }
 
-  expr_t py_value_getattr(const value_t& value, const string& name)
-  {
-    if (value.is_scope()) {
-      if (scope_t * scope = value.as_scope())
-	return expr_t(scope->lookup(symbol_t::FUNCTION, name), scope);
-    }
-    throw_(value_error, _("Cannot lookup attributes in %1") << value.label());
-    return expr_t();
-  }
-
   string py_dump(const value_t& value) {
     std::ostringstream buf;
     value.dump(buf);
@@ -85,10 +76,20 @@ namespace {
     return buf.str();
   }
 
-  void py_set_string(value_t& amount, const string& str) {
-    return amount.set_string(str);
+  void py_set_string(value_t& value, const string& str) {
+    return value.set_string(str);
   }
 
+  annotation_t& py_value_annotation(value_t& value) {
+    return value.annotation();
+  }
+
+  value_t py_strip_annotations_0(value_t& value) {
+    return value.strip_annotations(keep_details_t());
+  }
+  value_t py_strip_annotations_1(value_t& value, const keep_details_t& keep) {
+    return value.strip_annotations(keep);
+  }
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
@@ -306,16 +307,16 @@ void export_value()
     .def("number", &value_t::number)
 
     .def("annotate", &value_t::annotate)
-    .def("is_annotated", &value_t::is_annotated)
-#if 0
-    .def("annotation", &value_t::annotation)
-#endif
-    .def("strip_annotations", &value_t::strip_annotations)
+    .def("has_annotation", &value_t::has_annotation)
+    .add_property("annotation",
+		  make_function(py_value_annotation,
+				return_internal_reference<>()))
+    .def("strip_annotations", py_strip_annotations_0)
+    .def("strip_annotations", py_strip_annotations_1)
 
 #if 0
     .def("__getitem__", &value_t::operator[])
 #endif
-    .def("__getattr__", py_value_getattr)
     .def("push_back", &value_t::push_back)
     .def("pop_back", &value_t::pop_back)
     .def("size", &value_t::size)

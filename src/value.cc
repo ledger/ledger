@@ -1353,7 +1353,8 @@ value_t value_t::exchange_commodities(const std::string&	  commodities,
        p;
        p = std::strtok(NULL, ",")) {
     if (commodity_t * commodity =
-	amount_t::current_pool->parse_price_expression(p, add_prices, moment)) {
+	commodity_pool_t::current_pool->parse_price_expression(p, add_prices,
+							       moment)) {
       value_t result = value(false, moment, *commodity);
       if (! result.is_null())
 	return result;
@@ -1523,10 +1524,10 @@ void value_t::annotate(const annotation_t& details)
     throw_(value_error, _("Cannot annotate %1") << label());
 }
 
-bool value_t::is_annotated() const
+bool value_t::has_annotation() const
 {
   if (is_amount())
-    return as_amount().is_annotated();
+    return as_amount().has_annotation();
   else
     throw_(value_error,
 	   _("Cannot determine whether %1 is annotated") << label());

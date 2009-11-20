@@ -108,6 +108,13 @@ namespace {
     return (*elem).second;
   }
 
+  balance_t py_strip_annotations_0(balance_t& balance) {
+    return balance.strip_annotations(keep_details_t());
+  }
+  balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep) {
+    return balance.strip_annotations(keep);
+  }
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
@@ -215,7 +222,8 @@ void export_balance()
 
     .def("number", &balance_t::number)
 
-    .def("strip_annotations", &balance_t::strip_annotations)
+    .def("strip_annotations", py_strip_annotations_0)
+    .def("strip_annotations", py_strip_annotations_1)
 
     .def("valid",  &balance_t::valid)
     ;

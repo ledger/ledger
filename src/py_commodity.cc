@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
@@ -81,6 +82,12 @@ namespace {
 
   // Exchange one commodity for another, while recording the factored price.
 
+  void py_exchange_2(commodity_pool_t& pool,
+		     commodity_t&      commodity,
+		     const amount_t&   per_unit_cost)
+  {
+    pool.exchange(commodity, per_unit_cost, CURRENT_TIME());
+  }
   void py_exchange_3(commodity_pool_t& pool,
 		     commodity_t&      commodity,
 		     const amount_t&   per_unit_cost,
@@ -97,6 +104,77 @@ namespace {
 				 const boost::optional<string>&     tag)
   {
     return pool.exchange(amount, cost, is_per_unit, moment, tag);
+  }
+
+  commodity_t * py_pool_getitem(commodity_pool_t& pool, const string& symbol)
+  {
+    commodity_pool_t::commodities_map::iterator i =
+      pool.commodities.find(symbol);
+    if (i == pool.commodities.end()) {
+      PyErr_SetString(PyExc_ValueError,
+		      (string("Could not find commodity ") + symbol).c_str());
+      throw boost::python::error_already_set();
+    }
+    return (*i).second;
+  }
+
+  python::list py_pool_keys(commodity_pool_t& pool) {
+    python::list keys;
+    BOOST_REVERSE_FOREACH
+      (const commodity_pool_t::commodities_map::value_type& pair,
+       pool.commodities) {
+      keys.insert(0, pair.first);
+    }
+    return keys;
+  }
+
+  bool py_pool_contains(commodity_pool_t& pool, const string& symbol) {
+    return pool.commodities.find(symbol) != pool.commodities.end();
+  }
+
+  commodity_pool_t::commodities_map::iterator
+  py_pool_commodities_begin(commodity_pool_t& pool) {
+    return pool.commodities.begin();
+  }
+  commodity_pool_t::commodities_map::iterator
+  py_pool_commodities_end(commodity_pool_t& pool) {
+    return pool.commodities.end();
+  }
+
+  typedef transform_iterator
+      <function<string(commodity_pool_t::commodities_map::value_type&)>,
+       commodity_pool_t::commodities_map::iterator>
+    commodities_map_firsts_iterator;
+  commodities_map_firsts_iterator
+
+  py_pool_commodities_keys_begin(commodity_pool_t& pool) {
+    return make_transform_iterator
+      (pool.commodities.begin(),
+       bind(&commodity_pool_t::commodities_map::value_type::first, _1));
+  }
+  commodities_map_firsts_iterator
+  py_pool_commodities_keys_end(commodity_pool_t& pool) {
+    return make_transform_iterator
+      (pool.commodities.end(),
+       bind(&commodity_pool_t::commodities_map::value_type::first, _1));
+  }
+
+  typedef transform_iterator
+      <function<commodity_t *(commodity_pool_t::commodities_map::value_type&)>,
+       commodity_pool_t::commodities_map::iterator>
+    commodities_map_seconds_iterator;
+
+  commodities_map_seconds_iterator
+  py_pool_commodities_values_begin(commodity_pool_t& pool) {
+    return make_transform_iterator
+      (pool.commodities.begin(),
+       bind(&commodity_pool_t::commodities_map::value_type::second, _1));
+  }
+  commodities_map_seconds_iterator
+  py_pool_commodities_values_end(commodity_pool_t& pool) {
+    return make_transform_iterator
+      (pool.commodities.end(),
+       bind(&commodity_pool_t::commodities_map::value_type::second, _1));
   }
 
   void py_add_price_2(commodity_t& commodity,
@@ -123,16 +201,38 @@ namespace {
     return details.keep_any(comm);
   }
 
+  commodity_t& py_commodity_referent(commodity_t& comm) {
+    return comm.referent();
+  }
+  commodity_t& py_annotated_commodity_referent(annotated_commodity_t& comm) {
+    return comm.referent();
+  }
+
+  commodity_t& py_strip_annotations_0(commodity_t& comm) {
+    return comm.strip_annotations(keep_details_t());
+  }
+  commodity_t& py_strip_annotations_1(commodity_t& comm,
+				      const keep_details_t& keep) {
+    return comm.strip_annotations(keep);
+  }
+
+  commodity_t& py_strip_ann_annotations_0(annotated_commodity_t& comm) {
+    return comm.strip_annotations(keep_details_t());
+  }
+  commodity_t& py_strip_ann_annotations_1(annotated_commodity_t& comm,
+					  const keep_details_t& keep) {
+    return comm.strip_annotations(keep);
+  }
+
 } // unnamed namespace
 
 void export_commodity()
 {
-  class_< commodity_pool_t, boost::noncopyable > ("CommodityPool", no_init)
+  class_< commodity_pool_t, shared_ptr<commodity_pool_t>,
+          boost::noncopyable > ("CommodityPool", no_init)
     .add_property("null_commodity",
 		  make_getter(&commodity_pool_t::null_commodity,
-			      return_internal_reference<>()),
-		  make_setter(&commodity_pool_t::null_commodity,
-			      with_custodian_and_ward<1, 2>()))
+			      return_internal_reference<>()))
     .add_property("default_commodity",
 		  make_getter(&commodity_pool_t::default_commodity,
 			      return_internal_reference<>()),
@@ -157,24 +257,45 @@ void export_commodity()
 
     .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
 
-    .def("create", py_create_1, return_internal_reference<>())
-    .def("create", py_create_2, return_internal_reference<>())
+    .def("create", py_create_1,
+	 return_value_policy<reference_existing_object>())
+    .def("create", py_create_2,
+	 return_value_policy<reference_existing_object>())
 
     .def("find_or_create", py_find_or_create_1,
-	 return_internal_reference<>())
+	 return_value_policy<reference_existing_object>())
     .def("find_or_create", py_find_or_create_2,
-	 return_internal_reference<>())
+	 return_value_policy<reference_existing_object>())
 
-    .def("find", py_find_1, return_internal_reference<>())
-    .def("find", py_find_2, return_internal_reference<>())
+    .def("find", py_find_1, return_value_policy<reference_existing_object>())
+    .def("find", py_find_2, return_value_policy<reference_existing_object>())
 
+    .def("exchange", py_exchange_2, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_3, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_5)
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,
-	 return_internal_reference<>())
+	 return_value_policy<reference_existing_object>())
+
+    .def("__getitem__", py_pool_getitem,
+	 return_value_policy<reference_existing_object>())
+    .def("keys", py_pool_keys)
+    .def("has_key", py_pool_contains)
+    .def("__contains__", py_pool_contains)
+    .def("__iter__", range<return_value_policy<reference_existing_object> >
+	 (py_pool_commodities_begin, py_pool_commodities_end))
+    .def("iteritems", range<return_value_policy<reference_existing_object> >
+	 (py_pool_commodities_begin, py_pool_commodities_end))
+    .def("iterkeys", range<>(py_pool_commodities_keys_begin,
+			     py_pool_commodities_keys_end))
+    .def("itervalues", range<return_value_policy<reference_existing_object> >
+	 (py_pool_commodities_values_begin, py_pool_commodities_values_end))
     ;
+
+  map_value_type_converter<commodity_pool_t::commodities_map>();
+
+  scope().attr("commodity_pool") = commodity_pool_t::current_pool;
 
   scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
   scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
@@ -209,33 +330,30 @@ void export_commodity()
     .def("symbol_needs_quotes", &commodity_t::symbol_needs_quotes)
     .staticmethod("symbol_needs_quotes")
 
-#if 0
-    .def("referent", &commodity_t::referent,
-	 return_internal_reference<>())
-#endif
+    .add_property("referent",
+		  make_function(py_commodity_referent,
+				return_value_policy<reference_existing_object>()))
 
-    .def("is_annotated", &commodity_t::is_annotated)
-    .def("strip_annotations", &commodity_t::strip_annotations,
-	 return_internal_reference<>())
+    .def("has_annotation", &commodity_t::has_annotation)
+    .def("strip_annotations", py_strip_annotations_0,
+	 return_value_policy<reference_existing_object>())
+    .def("strip_annotations", py_strip_annotations_1,
+	 return_value_policy<reference_existing_object>())
     .def("write_annotations", &commodity_t::write_annotations)
 
     .def("pool", &commodity_t::pool,
-	 return_internal_reference<>())
+	 return_value_policy<reference_existing_object>())
 
-    .def("base_symbol", &commodity_t::base_symbol)
-    .def("symbol", &commodity_t::symbol)
-    .def("mapping_key", &commodity_t::mapping_key)
+    .add_property("base_symbol", &commodity_t::base_symbol)
+    .add_property("symbol", &commodity_t::symbol)
+    .add_property("mapping_key", &commodity_t::mapping_key)
 
-    .def("name", &commodity_t::name)
-    .def("set_name", &commodity_t::set_name)
-    .def("note", &commodity_t::note)
-    .def("set_note", &commodity_t::set_note)
-    .def("precision", &commodity_t::precision)
-    .def("set_precision", &commodity_t::set_precision)
-    .def("smaller", &commodity_t::smaller)
-    .def("set_smaller", &commodity_t::set_smaller)
-    .def("larger", &commodity_t::larger)
-    .def("set_larger", &commodity_t::set_larger)
+    .add_property("name", &commodity_t::name, &commodity_t::set_name)
+    .add_property("note", &commodity_t::note, &commodity_t::set_note)
+    .add_property("precision", &commodity_t::precision,
+		  &commodity_t::set_precision)
+    .add_property("smaller", &commodity_t::smaller, &commodity_t::set_smaller)
+    .add_property("larger", &commodity_t::larger, &commodity_t::set_larger)
 
     .def("add_price", py_add_price_2)
     .def("add_price", py_add_price_3)
@@ -306,13 +424,14 @@ void export_commodity()
     .def(self == self)
     .def(self == other<commodity_t>())
 
-#if 0
-    .def("referent", &annotated_commodity_t::referent,
-	 return_internal_reference<>())
-#endif
+    .add_property("referent",
+		  make_function(py_annotated_commodity_referent,
+				return_value_policy<reference_existing_object>()))
 
-    .def("strip_annotations", &annotated_commodity_t::strip_annotations,
-	 return_internal_reference<>())
+    .def("strip_annotations", py_strip_ann_annotations_0,
+	 return_value_policy<reference_existing_object>())
+    .def("strip_annotations", py_strip_ann_annotations_1,
+	 return_value_policy<reference_existing_object>())
     .def("write_annotations", &annotated_commodity_t::write_annotations)
     ;
 }

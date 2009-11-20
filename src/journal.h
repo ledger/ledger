@@ -47,7 +47,6 @@
 
 namespace ledger {
 
-class commodity_pool_t;
 class xact_base_t;
 class xact_t;
 class auto_xact_t;
@@ -111,8 +110,6 @@ public:
   period_xacts_list	period_xacts;
   std::list<fileinfo_t> sources;
   bool                  was_loaded;
-
-  shared_ptr<commodity_pool_t> commodity_pool;
 
   journal_t();
   journal_t(const path& pathname);

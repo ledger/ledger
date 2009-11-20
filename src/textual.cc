@@ -490,7 +490,7 @@ void instance_t::default_commodity_directive(char * line)
 {
   amount_t amt(skip_ws(line + 1));
   VERIFY(amt.valid());
-  amount_t::current_pool->default_commodity = &amt.commodity();
+  commodity_pool_t::current_pool->default_commodity = &amt.commodity();
   amt.commodity().add_flags(COMMODITY_KNOWN);
 }
 
@@ -511,7 +511,7 @@ void instance_t::price_conversion_directive(char * line)
 void instance_t::price_xact_directive(char * line)
 {
   optional<price_point_t> point =
-    amount_t::current_pool->parse_price_directive(skip_ws(line + 1));
+    commodity_pool_t::current_pool->parse_price_directive(skip_ws(line + 1));
   if (! point)
     throw parse_error(_("Pricing entry failed to parse"));
 }
@@ -523,7 +523,7 @@ void instance_t::nomarket_directive(char * line)
   commodity_t::parse_symbol(p, symbol);
 
   if (commodity_t * commodity =
-      amount_t::current_pool->find_or_create(symbol))
+      commodity_pool_t::current_pool->find_or_create(symbol))
     commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
 }
 

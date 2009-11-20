@@ -57,6 +57,7 @@ struct cost_breakdown_t
 
 class commodity_pool_t : public noncopyable
 {
+public:
   /**
    * The commodities collection in commodity_pool_t maintains pointers to all
    * the commodities which have ever been created by the user, whether
@@ -65,7 +66,6 @@ class commodity_pool_t : public noncopyable
    */
   typedef std::map<string, commodity_t *> commodities_map;
 
-public:
   commodities_map commodities;
   commodity_t *	  null_commodity;
   commodity_t *	  default_commodity;
@@ -75,6 +75,8 @@ public:
   optional<path>  price_db;         // --price-db=
   long		  quote_leeway;     // --leeway=
   bool		  get_quotes;       // --download
+
+  static shared_ptr<commodity_pool_t> current_pool;
 
   function<optional<price_point_t>
 	   (commodity_t& commodity, const optional<commodity_t&>& in_terms_of)>
@@ -136,6 +138,7 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & current_pool;
     ar & commodities;
     ar & null_commodity;
     ar & default_commodity;

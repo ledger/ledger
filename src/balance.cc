@@ -43,21 +43,21 @@ balance_t::balance_t(const double val)
 {
   TRACE_CTOR(balance_t, "const double");
   amounts.insert
-    (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
+    (amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
 }
 
 balance_t::balance_t(const unsigned long val)
 {
   TRACE_CTOR(balance_t, "const unsigned long");
   amounts.insert
-    (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
+    (amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
 }
 
 balance_t::balance_t(const long val)
 {
   TRACE_CTOR(balance_t, "const long");
   amounts.insert
-    (amounts_map::value_type(amount_t::current_pool->null_commodity, val));
+    (amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
 }
 
 balance_t& balance_t::operator+=(const balance_t& bal)
