@@ -774,7 +774,7 @@ public:
    * Annotated commodity methods.
    */
   void          annotate(const annotation_t& details);
-  bool          is_annotated() const;
+  bool          has_annotation() const;
 
   annotation_t& annotation();
   const annotation_t& annotation() const {

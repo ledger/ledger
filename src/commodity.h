@@ -251,7 +251,7 @@ public:
     return *this;
   }
 
-  bool is_annotated() const {
+  bool has_annotation() const {
     return annotated;
   }
 

@@ -624,7 +624,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
   }
 
   if (! symbol.empty()) {
-    if (amount_t::current_pool->find(symbol))
+    if (commodity_pool_t::current_pool->find(symbol))
       out << '@';
     out << symbol;
   }

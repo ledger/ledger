@@ -183,7 +183,7 @@ class PrepareBuild(CommandLineApp):
         self.current_flavor    = 'debug'
         self.products_dir      = None
         self.build_dir         = self.source_dir
-        self.configure_args    = ['--with-included-gettext']
+        self.configure_args    = ['--with-included-gettext', '--enable-python']
         self.sys_include_dirs  = []
         self.sys_library_dirs  = []
 
@@ -551,14 +551,27 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looks like you are using MacPorts on OS X')
                 packages = [
                     'sudo', 'port', 'install', '-f',
-                    'automake', 'autoconf', 'libtool', 'python26',
-                    'libiconv', '+universal', 'zlib', '+universal',
-                    'gmp' ,'+universal', 'mpfr', '+universal',
-                    'ncurses', '+universal', 'ncursesw', '+universal',
-                    'gettext' ,'+universal', 'libedit' ,'+universal',
-                     'boost-jam', 'boost', '+st+python26+icu', 'cppunit',
-                    'texlive', 'doxygen', 'graphviz', 'texinfo',
-                    'lcov', 'sloccount'
+                    'automake',
+                    'autoconf',
+                    'libtool',
+                    'python26',
+                    'libiconv', '+universal',
+                    'zlib', '+universal',
+                    'gmp' ,'+universal',
+                    'mpfr', '+universal',
+                    'ncurses', '+universal',
+                    'ncursesw', '+universal',
+                    'gettext' ,'+universal',
+                    'libedit' ,'+universal',
+                     'boost-jam',
+                    'boost', '+st+python26+icu',
+                    'cppunit',
+                    #'texlive',
+                    #'doxygen',
+                    #'graphviz',
+                    'texinfo',
+                    'lcov',
+                    'sloccount'
                 ]
                 self.log.info('Executing: ' + string.join(packages, ' '))
                 self.execute(*packages)
@@ -570,23 +583,69 @@ class PrepareBuild(CommandLineApp):
             if exists('/etc/issue'):
                 issue = open('/etc/issue')
                 if issue.readline().startswith('Ubuntu'):
-                    self.log.info('Looks like you are using APT on Ubuntu')
-                    packages = [
-                        'sudo', 'apt-get', 'install',
-                         'build-essential',
-                         'libtool', 'autoconf', 'automake',
-                         'zlib1g-dev', 'libbz2-dev', 'python-dev',
-                         'libboost1.35-dev',
-                         'libboost-python1.35-dev',
-                         'libboost-regex1.35-dev',
-                         'libboost-date-time1.35-dev',
-                         'libboost-filesystem1.35-dev'
-                         'libgmp3-dev', 'libmpfr-dev', 'gettext',
-                         'libedit-dev', 'libcppunit-dev',
-                         #'texlive-full',
-                         #'doxygen', 'graphviz', 'texinfo',
-                         'lcov', 'sloccount'
-                    ]
+                    release = open('/etc/lsb-release')
+                    info = release.read()
+                    release.close()
+                    if re.search('karmic', info):
+                        self.log.info('Looks like you are using APT on Ubuntu Karmic')
+                        packages = [
+                            'sudo', 'apt-get', 'install',
+                            'build-essential',
+                            'libtool',
+                            'autoconf',
+                            'automake',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'libgmp3-dev',
+                            'libmpfr-dev',
+                            'bjam',
+                            'gettext',
+                            'cvs',
+                            'libboost1.40-dev',
+                            'libboost-regex1.40-dev',
+                            'libboost-date-time1.40-dev',
+                            'libboost-filesystem1.40-dev'
+                            'libboost-python1.40-dev',
+                            'libedit-dev',
+                            'libcppunit-dev',
+                            #'texlive-full',
+                            #'doxygen',
+                            #'graphviz',
+                            'texinfo',
+                            'lcov',
+                            'sloccount'
+                        ]
+                    else:
+                        self.log.info('Looks like you are using APT on Ubuntu Hardy')
+                        packages = [
+                            'sudo', 'apt-get', 'install',
+                            'build-essential',
+                            'libtool',
+                            'autoconf',
+                            'automake',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'bjam',
+                            'cvs',
+                            'gettext',
+                            'libgmp3-dev',
+                            'libmpfr-dev',
+                            'libboost1.35-dev',
+                            'libboost-python1.35-dev',
+                            'libboost-regex1.35-dev',
+                            'libboost-date-time1.35-dev',
+                            'libboost-filesystem1.35-dev'
+                            'libedit-dev',
+                            'libcppunit-dev',
+                            #'texlive-full',
+                            #'doxygen',
+                            #'graphviz',
+                            'texinfo',
+                            'lcov',
+                            'sloccount'
+                        ]
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
 

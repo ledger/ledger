@@ -45,7 +45,7 @@ void set_session_context(session_t * session)
 {
   if (session) {
     times_initialize();
-    amount_t::initialize(session->journal->commodity_pool);
+    amount_t::initialize();
 
     amount_t::parse_conversion("1.0m", "60s");
     amount_t::parse_conversion("1.0h", "60m");
@@ -179,7 +179,7 @@ void session_t::close_journal_files()
   amount_t::shutdown();
   
   journal.reset(new journal_t);
-  amount_t::initialize(journal->commodity_pool);
+  amount_t::initialize();
 }
 
 option_t<session_t> * session_t::lookup_option(const char * p)

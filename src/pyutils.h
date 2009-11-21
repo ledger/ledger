@@ -106,6 +106,26 @@ struct register_optional_to_python : public boost::noncopyable
   }
 };
 
+template <typename T1, typename T2>
+struct PairToTupleConverter
+{
+  static PyObject * convert(const std::pair<T1, T2>& pair) {
+    return boost::python::incref
+      (boost::python::make_tuple(pair.first, pair.second).ptr());
+  }
+};
+
+template <typename MapType>
+struct map_value_type_converter
+{
+  map_value_type_converter() {
+    boost::python::to_python_converter
+      <typename MapType::value_type,
+       PairToTupleConverter<const typename MapType::key_type,
+                            typename MapType::mapped_type> >();
+  }
+};
+
 namespace boost { namespace python {
 
 // Use expr to create the PyObject corresponding to x

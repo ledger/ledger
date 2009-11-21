@@ -77,7 +77,6 @@ journal_t::~journal_t()
     checked_delete(xact);
   
   checked_delete(master);
-  commodity_pool.reset();
 }
 
 void journal_t::initialize()
@@ -85,21 +84,6 @@ void journal_t::initialize()
   master     = new account_t;
   bucket     = NULL;
   was_loaded = false;
-
-  commodity_pool.reset(new commodity_pool_t);
-
-  // Add time commodity conversions, so that timelog's may be parsed
-  // in terms of seconds, but reported as minutes or hours.
-  if (commodity_t * commodity = commodity_pool->create("s"))
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  else
-    assert(false);
-
-  // Add a "percentile" commodity
-  if (commodity_t * commodity = commodity_pool->create("%"))
-    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-  else
-    assert(false);
 }
 
 void journal_t::add_account(account_t * acct)

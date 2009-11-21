@@ -97,12 +97,8 @@ class amount_t
 	   ordered_field_operators<amount_t, long> > > >
 {
 public:
-  /** Indicates which commodity pool should be used. */
-  static shared_ptr<commodity_pool_t> current_pool;
-
   /** Ready the amount subsystem for use.
       @note Normally called by session_t::initialize(). */
-  static void initialize(shared_ptr<commodity_pool_t> pool);
   static void initialize();
   /** Shutdown the amount subsystem and free all resources.
       @note Normally called by session_t::shutdown(). */
@@ -577,7 +573,7 @@ public:
       been stripped.
   */
   void          annotate(const annotation_t& details);
-  bool          is_annotated() const;
+  bool          has_annotation() const;
 
   annotation_t& annotation();
   const annotation_t& annotation() const {

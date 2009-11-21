@@ -45,26 +45,16 @@ using namespace boost::python;
 namespace {
 
   boost::optional<amount_t> py_value_0(const amount_t& amount) {
-    return amount.value();
+    return amount.value(false, CURRENT_TIME());
   }
   boost::optional<amount_t> py_value_1(const amount_t& amount,
-				       const bool primary_only) {
-    return amount.value(primary_only);
+				       commodity_t& in_terms_of) {
+    return amount.value(false, CURRENT_TIME(), in_terms_of);
   }
-
-  boost::optional<amount_t>
-  py_value_2(const amount_t& amount,
-	     const bool primary_only,
-	     const boost::optional<datetime_t>& moment) {
-    return amount.value(primary_only, moment);
-  }
-
-  boost::optional<amount_t>
-  py_value_3(const amount_t& amount,
-	     const bool primary_only,
-	     const boost::optional<datetime_t>& moment,
-	     const boost::optional<commodity_t&>& in_terms_of) {
-    return amount.value(primary_only, moment, in_terms_of);
+  boost::optional<amount_t> py_value_2(const amount_t& amount,
+				       commodity_t& in_terms_of,
+				       datetime_t& moment) {
+    return amount.value(false, moment, in_terms_of);
   }
 
   void py_parse_2(amount_t& amount, object in, unsigned char flags) {
@@ -97,8 +87,15 @@ namespace {
     }
   }
 
-  void py_amount_initialize() {
-    amount_t::initialize();
+  annotation_t& py_amount_annotation(amount_t& amount) {
+    return amount.annotation();
+  }
+
+  amount_t py_strip_annotations_0(amount_t& amount) {
+    return amount.strip_annotations(keep_details_t());
+  }
+  amount_t py_strip_annotations_1(amount_t& amount, const keep_details_t& keep) {
+    return amount.strip_annotations(keep);
   }
 
 } // unnamed namespace
@@ -113,11 +110,7 @@ EXC_TRANSLATOR(amount_error)
 void export_amount()
 {
   class_< amount_t > ("Amount")
-    .add_static_property("current_pool",
-			 make_getter(&amount_t::current_pool,
-				     return_internal_reference<>()))
-
-    .def("initialize", py_amount_initialize) // only for the PyUnitTests
+    .def("initialize", &amount_t::initialize) // only for the PyUnitTests
     .staticmethod("initialize")
     .def("shutdown", &amount_t::shutdown)
     .staticmethod("shutdown")
@@ -196,11 +189,11 @@ internal precision."))
     .def(self	  /  long())
     .def(long()	  / self)
 
-    .def("precision", &amount_t::precision)
-    .def("keep_precision", &amount_t::keep_precision)
-    .def("set_keep_precision", &amount_t::set_keep_precision, args("keep"),
-	 _("Set whether an amount should always display at full precision."))
-    .def("display_precision", &amount_t::display_precision)
+    .add_property("precision", &amount_t::precision)
+    .add_property("display_precision", &amount_t::display_precision)
+    .add_property("keep_precision",
+		  &amount_t::keep_precision,
+		  &amount_t::set_keep_precision)
 
     .def("negated", &amount_t::negated)
     .def("in_place_negate", &amount_t::in_place_negate,
@@ -237,9 +230,8 @@ internal precision."))
 	 return_internal_reference<>())
 
     .def("value", py_value_0)
-    .def("value", py_value_1, args("primary_only"))
-    .def("value", py_value_2, args("primary_only", "moment"))
-    .def("value", py_value_3, args("primary_only", "moment", "in_terms_of"))
+    .def("value", py_value_1, args("in_terms_of"))
+    .def("value", py_value_2, args("in_terms_of", "moment"))
 
     .def("price", &amount_t::price)
 
@@ -262,21 +254,23 @@ internal precision."))
     .def("__repr__", &amount_t::to_fullstring)
     .def("quantity_string", &amount_t::quantity_string)
 
-    .def("commodity", &amount_t::commodity,
-	 return_internal_reference<>())
+    .add_property("commodity",
+		  make_function(&amount_t::commodity,
+				return_value_policy<reference_existing_object>()),
+		  make_function(&amount_t::set_commodity,
+				with_custodian_and_ward<1, 2>()))
     .def("has_commodity", &amount_t::has_commodity)
-    .def("set_commodity", &amount_t::set_commodity,
-	 with_custodian_and_ward<1, 2>())
     .def("clear_commodity", &amount_t::clear_commodity)
 
     .def("number", &amount_t::number)
 
     .def("annotate", &amount_t::annotate)
-    .def("is_annotated", &amount_t::is_annotated)
-#if 0
-    .def("annotation", &amount_t::annotation)
-#endif
-    .def("strip_annotations", &amount_t::strip_annotations)
+    .def("has_annotation", &amount_t::has_annotation)
+    .add_property("annotation",
+		  make_function(py_amount_annotation,
+				return_internal_reference<>()))
+    .def("strip_annotations", py_strip_annotations_0)
+    .def("strip_annotations", py_strip_annotations_1)
 
     .def("parse", py_parse_1)
     .def("parse", py_parse_2)
