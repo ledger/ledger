@@ -132,7 +132,7 @@ public:
     if (! _str.empty())
       parse_format(_str);
   }
-  ~format_t() {
+  virtual ~format_t() {
     TRACE_DTOR(format_t);
   }
 

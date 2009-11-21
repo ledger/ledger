@@ -86,7 +86,7 @@ public:
     if (! args.empty())
       parse_args(args);
   }
-  ~draft_t() {
+  virtual ~draft_t() {
     TRACE_DTOR(draft_t);
   }
 

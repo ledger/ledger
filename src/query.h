@@ -276,7 +276,7 @@ public:
     if (! args.empty())
       parse_args(args);
   }
-  ~query_t() throw() {
+  virtual ~query_t() {
     TRACE_DTOR(query_t);
   }
 
