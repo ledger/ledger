@@ -1114,18 +1114,18 @@ void value_t::in_place_cast(type_t cast_type)
     break;
   }
 
-  case BALANCE:
+  case BALANCE: {
+    const balance_t& bal(as_balance());
     switch (cast_type) {
     case AMOUNT: {
-      const balance_t& temp(as_balance());
-      if (temp.amounts.size() == 1) {
+      if (bal.amounts.size() == 1) {
 	// Because we are changing the current balance value to an amount
 	// value, and because set_amount takes a reference (and that memory is
 	// about to be repurposed), we must pass in a copy.
-	set_amount(amount_t((*temp.amounts.begin()).second));
+	set_amount(amount_t((*bal.amounts.begin()).second));
 	return;
       }
-      else if (temp.amounts.size() == 0) {
+      else if (bal.amounts.size() == 0) {
 	set_amount(0L);
 	return;
       }
@@ -1135,10 +1135,17 @@ void value_t::in_place_cast(type_t cast_type)
       }
       break;
     }
+    case STRING:
+      if (bal.is_empty())
+	set_string("");
+      else
+	set_string(as_balance().to_string());
+      return;
     default:
       break;
     }
     break;
+  }
 
   case STRING:
     switch (cast_type) {

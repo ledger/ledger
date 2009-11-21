@@ -4,35 +4,104 @@ import ledger
 import cgi
 import sys
 import types
+import posixpath
+import urllib
+import shutil
+import os
+import re
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from os.path import exists, join, isfile
 
 from Cheetah.Template import Template
-from Cheetah.Filters import WebSafe
+from Cheetah.Filters import Filter, WebSafe
 
-class UnicodeFilter(WebSafe):
+webroot = join(os.getcwd(), 'python', 'res')
+
+class UnicodeFilter(Filter):
     def filter(self, s, **kargs):
-        return WebSafe.filter(self, s, str=unicode, **kargs)
+        return Filter.filter(self, s, str=unicode, **kargs)
+
+def strip(value):
+    #return re.sub('\n', '<br />', value.strip_annotations().to_string())
+    return value.strip_annotations().to_string()
 
 templateDef = '''#encoding utf-8
  <html>
     <head>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
       <title>$title</title>
+      <link rel="stylesheet" href="/style.css" type="text/css" media="print, projection, screen" />
+      <script type="text/javascript" src="/jquery-latest.js"></script>
+      <script type="text/javascript" src="/jquery.tablesorter.min.js"></script>
+      <script type="text/javascript" src="/jquery.tablesorter.pager.js"></script>
+      <script type="text/javascript" src="/jquery.dimensions.min.js"></script>
+      <script type="text/javascript">
+        \$(function() { 
+          \$("table")
+              .tablesorter({textExtraction: 'complex',
+                            widthFixed:     true,
+                            widgets:        ['zebra']}) 
+              .tablesorterPager({size: 100,
+                                 container: \$("\#pager")});
+        }); 
+      </script>
     </head>
     <body>
-      <table>
-        #for $xact in $journal
-        #for $post in $xact
-        <tr>
-          <td>$post.date</td>
-          <td>$post.xact.payee</td>
-          <td>$post.account</td>
-          <td>$post.amount</td>
-        </tr>
-        #end for
-        #end for
+      <div id="main">
+      <h1>Register report</h1>
+      <table id="register" cellspacing="1" class="tablesorter">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Payee</th>
+            <th>Account</th>
+            <th>Amount</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th>Date</th>
+            <th>Payee</th>
+            <th>Account</th>
+            <th>Amount</th>
+            <th>Total</th>
+          </tr>
+        </tfoot>
+        <tbody>
+          #for $xact in $journal
+          #for $post in $xact
+          #set $total = $total + $post.amount
+          <tr>
+            <!--<td>${$xact.date if $xact is not $last_xact else $empty}</td>
+            <td>${$xact.payee if $xact is not $last_xact else $empty}</td>-->
+            <td>$xact.date</td>
+            <td>$xact.payee</td>
+            <td>$post.account</td>
+            <td>${strip($post.amount)}</td>
+            <td>${strip($total)}</td>
+          </tr>
+          #set $last_xact = $xact
+          #end for
+          #end for
+        </tbody>
       </table>
+      <div id="pager" class="pager">
+        <form>
+          <img src="/icons/first.png" class="first"/>
+          <img src="/icons/prev.png" class="prev"/>
+          <input type="text" class="pagedisplay"/>
+          <img src="/icons/next.png" class="next"/>
+          <img src="/icons/last.png" class="last"/>
+          <select class="pagesize">
+            <option selected="selected" value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option  value="1000">1000</option>
+          </select>
+        </form>
+      </div>
     </body>
   </html>
 '''
@@ -43,14 +112,23 @@ class LedgerHandler(BaseHTTPRequestHandler):
         BaseHTTPRequestHandler.__init__(self, *args)
 
     def do_GET(self):
-        tmpl = Template(templateDef, filter=UnicodeFilter)
+        path = self.translate_path(self.path)
 
-        tmpl.title   = 'Ledger Journal'
-        tmpl.journal = self.journal
+        if path and exists(path) and isfile(path):
+            self.copyfile(open(path), self.wfile)
+        else:
+            tmpl = Template(templateDef, filter=UnicodeFilter)
 
-        html = unicode(tmpl)
-        html = html.encode('utf-8')
-        self.wfile.write(html)
+            tmpl.title     = 'Ledger Journal'
+            tmpl.journal   = self.journal
+            tmpl.total     = ledger.Value(0)
+            tmpl.strip     = strip
+            tmpl.last_xact = None
+            tmpl.empty     = ""
+
+            html = unicode(tmpl)
+            html = html.encode('utf-8')
+            self.wfile.write(html)
 
     def do_POST(self):
         print "Saw a POST request!"
@@ -62,6 +140,45 @@ class LedgerHandler(BaseHTTPRequestHandler):
             self.end_headers()
         except Exception:
             print "Saw exception in POST handler"
+
+    # This code is straight from SimpleHTTPServer.py
+    def copyfile(self, source, outputfile):
+        """Copy all data between two file objects.
+
+        The SOURCE argument is a file object open for reading
+        (or anything with a read() method) and the DESTINATION
+        argument is a file object open for writing (or
+        anything with a write() method).
+
+        The only reason for overriding this would be to change
+        the block size or perhaps to replace newlines by CRLF
+        -- note however that this the default server uses this
+        to copy binary data as well.
+
+        """
+        shutil.copyfileobj(source, outputfile)
+
+    def translate_path(self, path):
+        """Translate a /-separated PATH to the local filename syntax.
+
+        Components that mean special things to the local file system
+        (e.g. drive or directory names) are ignored.  (XXX They should
+        probably be diagnosed.)
+
+        """
+        # abandon query parameters
+        path  = path.split('?',1)[0]
+        path  = path.split('#',1)[0]
+        path  = posixpath.normpath(urllib.unquote(path))
+        words = path.split('/')
+        words = filter(None, words)
+        path  = webroot
+        for word in words:
+            drive, word = os.path.splitdrive(word)
+            head, word = os.path.split(word)
+            if word in (os.curdir, os.pardir): continue
+            path = os.path.join(path, word)
+        return path
 
 def main(*args):
     try:

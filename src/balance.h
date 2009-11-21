@@ -541,8 +541,8 @@ public:
   void print(std::ostream& out,
 	     const int	   first_width	 = -1,
 	     const int	   latter_width	 = -1,
-	     const bool	   right_justify = true,
-	     const bool	   colorize      = true) const;
+	     const bool	   right_justify = false,
+	     const bool	   colorize      = false) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with
