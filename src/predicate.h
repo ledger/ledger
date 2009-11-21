@@ -75,7 +75,7 @@ public:
     : expr_t(in, flags), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "std::istream&, keep_details_t, parse_flags_t");
   }
-  ~predicate_t() throw() {
+  virtual ~predicate_t() {
     TRACE_DTOR(predicate_t);
   }
 

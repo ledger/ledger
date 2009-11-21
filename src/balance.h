@@ -461,6 +461,15 @@ public:
    * Conversion methods.  A balance can be converted to an amount, but
    * only if contains a single component amount.
    */
+  operator string() const {
+    return to_string();
+  }
+  string to_string() const {
+    std::ostringstream buf;
+    print(buf);
+    return buf.str();
+  }
+
   amount_t to_amount() const {
     if (is_empty())
       throw_(balance_error, _("Cannot convert an empty balance to an amount"));
@@ -532,8 +541,8 @@ public:
   void print(std::ostream& out,
 	     const int	   first_width	 = -1,
 	     const int	   latter_width	 = -1,
-	     const bool	   right_justify = true,
-	     const bool	   colorize      = true) const;
+	     const bool	   right_justify = false,
+	     const bool	   colorize      = false) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with

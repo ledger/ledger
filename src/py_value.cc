@@ -103,6 +103,11 @@ namespace {
   value_t py_strip_annotations_1(value_t& value, const keep_details_t& keep) {
     return value.strip_annotations(keep);
   }
+
+  PyObject * py_value_unicode(value_t& value) {
+    return str_to_py_unicode(value.to_string());
+  }
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
@@ -115,16 +120,16 @@ EXC_TRANSLATOR(value_error)
 void export_value()
 {
   enum_< value_t::type_t >("ValueType")
-    .value("VOID",	   value_t::VOID)
-    .value("BOOLEAN",	   value_t::BOOLEAN)
-    .value("DATETIME",	   value_t::DATETIME)
-    .value("DATE",	   value_t::DATE)
-    .value("INTEGER",	   value_t::INTEGER)
-    .value("AMOUNT",	   value_t::AMOUNT)
-    .value("BALANCE",	   value_t::BALANCE)
-    .value("STRING",	   value_t::STRING)
-    .value("SEQUENCE",	   value_t::SEQUENCE)
-    .value("SCOPE",	   value_t::SCOPE)
+    .value("Void",	   value_t::VOID)
+    .value("Boolean",	   value_t::BOOLEAN)
+    .value("DateTime",	   value_t::DATETIME)
+    .value("Date",	   value_t::DATE)
+    .value("Integer",	   value_t::INTEGER)
+    .value("Amount",	   value_t::AMOUNT)
+    .value("Balance",	   value_t::BALANCE)
+    .value("String",	   value_t::STRING)
+    .value("Sequence",	   value_t::SEQUENCE)
+    .value("Scope",	   value_t::SCOPE)
     ;
 
   class_< value_t > ("Value")
@@ -309,11 +314,13 @@ void export_value()
     .def("to_date", &value_t::to_date)
     .def("to_amount", &value_t::to_amount)
     .def("to_balance", &value_t::to_balance)
+    .def("__str__", &value_t::to_string)
+    .def("__unicode__", py_value_unicode)
     .def("to_string", &value_t::to_string)
     .def("to_mask", &value_t::to_mask)
     .def("to_sequence", &value_t::to_sequence)
 
-    .def("__str__", py_dump_relaxed)
+    .def("__unicode__", py_dump_relaxed)
     .def("__repr__", py_dump)
 
     .def("casted", &value_t::casted)

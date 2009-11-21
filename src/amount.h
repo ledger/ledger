@@ -496,6 +496,9 @@ public:
   long   to_long() const;
   bool   fits_in_long() const;
 
+  operator string() const {
+    return to_string();
+  }
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;

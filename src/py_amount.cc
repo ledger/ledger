@@ -98,6 +98,10 @@ namespace {
     return amount.strip_annotations(keep);
   }
 
+  PyObject * py_amount_unicode(amount_t& amount) {
+    return str_to_py_unicode(amount.to_string());
+  }
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
@@ -248,8 +252,9 @@ internal precision."))
     .def("__int__", &amount_t::to_long)
     .def("fits_in_long", &amount_t::fits_in_long)
 
-    .def("to_string", &amount_t::to_string)
     .def("__str__", &amount_t::to_string)
+    .def("to_string", &amount_t::to_string)
+    .def("__unicode__", py_amount_unicode)
     .def("to_fullstring", &amount_t::to_fullstring)
     .def("__repr__", &amount_t::to_fullstring)
     .def("quantity_string", &amount_t::quantity_string)
