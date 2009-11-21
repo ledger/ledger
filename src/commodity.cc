@@ -600,11 +600,11 @@ bool compare_amount_commodities::operator()(const amount_t * left,
   if (cmp != 0)
     return cmp < 0;
 
-  if (! leftcomm.is_annotated()) {
-    return rightcomm.is_annotated();
+  if (! leftcomm.has_annotation()) {
+    return rightcomm.has_annotation();
   }
-  else if (! rightcomm.is_annotated()) {
-    return ! leftcomm.is_annotated();
+  else if (! rightcomm.has_annotation()) {
+    return ! leftcomm.has_annotation();
   }
   else {
     annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
@@ -675,7 +675,7 @@ void to_xml(std::ostream& out, const commodity_t& comm,
   }
 
   if (commodity_details) {
-    if (comm.is_annotated())
+    if (comm.has_annotation())
       to_xml(out, as_annotated_commodity(comm).details);
 
     if (comm.varied_history()) {

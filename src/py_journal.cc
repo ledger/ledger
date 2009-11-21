@@ -52,10 +52,6 @@ namespace {
     return *journal.master;
   }
 
-  commodity_pool_t& py_commodity_pool(journal_t& journal) {
-    return *journal.commodity_pool;
-  }
-
   long xacts_len(journal_t& journal)
   {
     return journal.xacts.size();
@@ -276,10 +272,6 @@ void export_journal()
 			          with_custodian_and_ward_postcall<1, 0> >()),
 		  make_setter(&journal_t::bucket))
     .add_property("was_loaded", make_getter(&journal_t::was_loaded))
-    .add_property("commodity_pool",
-		  make_getter(&journal_t::commodity_pool,
-			      return_internal_reference<1,
-			          with_custodian_and_ward_postcall<1, 0> >()))
 
     .def("add_account", &journal_t::add_account)
     .def("remove_account", &journal_t::remove_account)

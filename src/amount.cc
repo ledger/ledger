@@ -106,8 +106,6 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-shared_ptr<commodity_pool_t> amount_t::current_pool;
-
 bool amount_t::is_initialized = false;
 
 namespace {
@@ -203,7 +201,7 @@ namespace {
   }
 }
 
-void amount_t::initialize(shared_ptr<commodity_pool_t> pool)
+void amount_t::initialize()
 {
   if (! is_initialized) {
     mpz_init(temp);
@@ -211,25 +209,34 @@ void amount_t::initialize(shared_ptr<commodity_pool_t> pool)
     mpfr_init(tempf);
     mpfr_init(tempfb);
 
+    commodity_pool_t::current_pool.reset(new commodity_pool_t);
+
+    // Add time commodity conversions, so that timelog's may be parsed
+    // in terms of seconds, but reported as minutes or hours.
+    if (commodity_t * commodity = commodity_pool_t::current_pool->create("s"))
+      commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+    else
+      assert(false);
+
+    // Add a "percentile" commodity
+    if (commodity_t * commodity = commodity_pool_t::current_pool->create("%"))
+      commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+    else
+      assert(false);
+
     is_initialized = true;
   }
-  current_pool = pool;
-}
-
-void amount_t::initialize()
-{
-  initialize(shared_ptr<commodity_pool_t>(new commodity_pool_t));
 }
 
 void amount_t::shutdown()
 {
-  current_pool.reset();
-
   if (is_initialized) {
     mpz_clear(temp);
     mpq_clear(tempq);
     mpfr_clear(tempf);
     mpfr_clear(tempfb);
+
+    commodity_pool_t::current_pool.reset();
 
     is_initialized = false;
   }
@@ -670,7 +677,7 @@ amount_t::value(const bool		      primary_only,
       if (in_terms_of && commodity() == *in_terms_of) {
 	return *this;
       }
-      else if (is_annotated() && annotation().price &&
+      else if (has_annotation() && annotation().price &&
 	       annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
 	return (*annotation().price * number()).rounded();
       }
@@ -696,7 +703,7 @@ amount_t::value(const bool		      primary_only,
 
 amount_t amount_t::price() const
 {
-  if (is_annotated() && annotation().price) {
+  if (has_annotation() && annotation().price) {
     amount_t temp(*annotation().price);
     temp *= *this;
     DEBUG("amount.price", "Returning price of " << *this << " = " << temp);
@@ -776,7 +783,8 @@ bool amount_t::fits_in_long() const
 
 commodity_t& amount_t::commodity() const
 {
-  return has_commodity() ? *commodity_ : *current_pool->null_commodity;
+  return (has_commodity() ?
+	  *commodity_ : *commodity_pool_t::current_pool->null_commodity);
 }
 
 bool amount_t::has_commodity() const
@@ -794,7 +802,7 @@ void amount_t::annotate(const annotation_t& details)
   else if (! has_commodity())
     return;			// ignore attempt to annotate a "bare commodity
 
-  if (commodity().is_annotated()) {
+  if (commodity().has_annotation()) {
     this_ann  = &as_annotated_commodity(commodity());
     this_base = &this_ann->referent();
   } else {
@@ -816,15 +824,15 @@ void amount_t::annotate(const annotation_t& details)
   DEBUG("amounts.commodities", "Annotated amount is " << *this);
 }
 
-bool amount_t::is_annotated() const
+bool amount_t::has_annotation() const
 {
   if (! quantity)
     throw_(amount_error,
 	   _("Cannot determine if an uninitialized amount's commodity is annotated"));
 
-  assert(! has_commodity() || ! commodity().is_annotated() ||
+  assert(! has_commodity() || ! commodity().has_annotation() ||
 	 as_annotated_commodity(commodity()).details);
-  return has_commodity() && commodity().is_annotated();
+  return has_commodity() && commodity().has_annotation();
 }
 
 annotation_t& amount_t::annotation()
@@ -833,7 +841,7 @@ annotation_t& amount_t::annotation()
     throw_(amount_error,
 	   _("Cannot return commodity annotation details of an uninitialized amount"));
 
-  if (! commodity().is_annotated())
+  if (! commodity().has_annotation())
     throw_(amount_error,
 	   _("Request for annotation details from an unannotated amount"));
 
@@ -963,15 +971,16 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   if (symbol.empty()) {
     commodity_ = NULL;
   } else {
-    commodity_ = current_pool->find(symbol);
+    commodity_ = commodity_pool_t::current_pool->find(symbol);
     if (! commodity_) {
-      commodity_ = current_pool->create(symbol);
+      commodity_ = commodity_pool_t::current_pool->create(symbol);
       newly_created = true;
     }
     assert(commodity_);
 
     if (details)
-      commodity_ = current_pool->find_or_create(*commodity_, details);
+      commodity_ =
+	commodity_pool_t::current_pool->find_or_create(*commodity_, details);
   }
 
   // Quickly scan through and verify the correctness of the amount's use of
@@ -1206,7 +1215,6 @@ void to_xml(std::ostream& out, const amount_t& amt, bool commodity_details)
 template<class Archive>
 void amount_t::serialize(Archive& ar, const unsigned int /* version */)
 {
-  ar & current_pool;
   ar & is_initialized;
   ar & quantity;
   ar & commodity_;

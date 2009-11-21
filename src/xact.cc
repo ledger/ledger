@@ -122,7 +122,7 @@ bool xact_base_t::finalize()
     amount_t& p(post->cost ? *post->cost : post->amount);
     if (! p.is_null()) {
       DEBUG("xact.finalize", "post must balance = " << p.reduced());
-      if (! post->cost && post->amount.is_annotated() &&
+      if (! post->cost && post->amount.has_annotation() &&
 	  post->amount.annotation().price) {
 	// If the amount has no cost, but is annotated with a per-unit
 	// price, use the price times the amount as the cost
@@ -221,7 +221,7 @@ bool xact_base_t::finalize()
 
     foreach (post_t * post, posts) {
       if (! post->amount.is_null()) {
-	if (post->amount.is_annotated())
+	if (post->amount.has_annotation())
 	  top_post = post;
 	else if (! top_post)
 	  top_post = post;
@@ -260,7 +260,7 @@ bool xact_base_t::finalize()
 	foreach (post_t * post, posts) {
 	  if (post != top_post && post->must_balance() &&
 	      ! post->amount.is_null() &&
-	      post->amount.is_annotated() &&
+	      post->amount.has_annotation() &&
 	      post->amount.annotation().price) {
 	    amount_t temp = *post->amount.annotation().price * post->amount;
 	    if (total_cost.is_null()) {
@@ -309,10 +309,11 @@ bool xact_base_t::finalize()
 	     _("A posting's cost must be of a different commodity than its amount"));
 
     cost_breakdown_t breakdown =
-      amount_t::current_pool->exchange(post->amount, *post->cost, false,
-				       datetime_t(date(), time_duration(0, 0, 0, 0)));
+      commodity_pool_t::current_pool->exchange
+        (post->amount, *post->cost, false,
+	 datetime_t(date(), time_duration(0, 0, 0, 0)));
 
-    if (post->amount.is_annotated() &&
+    if (post->amount.has_annotation() &&
 	breakdown.basis_cost.commodity() ==
 	breakdown.final_cost.commodity()) {
       if (amount_t gain_loss = (breakdown.basis_cost -

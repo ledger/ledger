@@ -45,28 +45,18 @@ using namespace boost::python;
 namespace {
 
   boost::optional<balance_t> py_value_0(const balance_t& balance) {
-    return balance.value();
+    return balance.value(false, CURRENT_TIME());
   }
   boost::optional<balance_t> py_value_1(const balance_t& balance,
-				       const bool primary_only) {
-    return balance.value(primary_only);
+					commodity_t& in_terms_of) {
+    return balance.value(false, CURRENT_TIME(), in_terms_of);
   }
-
-  boost::optional<balance_t>
-  py_value_2(const balance_t& balance,
-	     const bool primary_only,
-	     const boost::optional<datetime_t>& moment) {
-    return balance.value(primary_only, moment);
+  boost::optional<balance_t> py_value_2(const balance_t& balance,
+					commodity_t& in_terms_of,
+					datetime_t& moment) {
+    return balance.value(false, moment, in_terms_of);
   }
-
-  boost::optional<balance_t>
-  py_value_3(const balance_t& balance,
-	     const bool primary_only,
-	     const boost::optional<datetime_t>& moment,
-	     const boost::optional<commodity_t&>& in_terms_of) {
-    return balance.value(primary_only, moment, in_terms_of);
-  }
-
+  
   boost::optional<amount_t>
   py_commodity_amount_0(const balance_t& balance) {
     return balance.commodity_amount();
@@ -106,6 +96,13 @@ namespace {
       elem++;
 
     return (*elem).second;
+  }
+
+  balance_t py_strip_annotations_0(balance_t& balance) {
+    return balance.strip_annotations(keep_details_t());
+  }
+  balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep) {
+    return balance.strip_annotations(keep);
   }
 
 } // unnamed namespace
@@ -193,9 +190,8 @@ void export_balance()
 	 return_internal_reference<>())
 
     .def("value", py_value_0)
-    .def("value", py_value_1, args("primary_only"))
-    .def("value", py_value_2, args("primary_only", "moment"))
-    .def("value", py_value_3, args("primary_only", "moment", "in_terms_of"))
+    .def("value", py_value_1, args("in_terms_of"))
+    .def("value", py_value_2, args("in_terms_of", "moment"))
 
     .def("price", &balance_t::price)
 
@@ -215,7 +211,8 @@ void export_balance()
 
     .def("number", &balance_t::number)
 
-    .def("strip_annotations", &balance_t::strip_annotations)
+    .def("strip_annotations", py_strip_annotations_0)
+    .def("strip_annotations", py_strip_annotations_1)
 
     .def("valid",  &balance_t::valid)
     ;

@@ -69,18 +69,17 @@ void report_t::normalize_options(const string& verb)
   item_t::use_effective_date = (HANDLED(effective) &&
 				! HANDLED(actual_dates));
 
-  session.journal->commodity_pool->keep_base  = HANDLED(base);
-  session.journal->commodity_pool->get_quotes = session.HANDLED(download);
+  commodity_pool_t::current_pool->keep_base  = HANDLED(base);
+  commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);
 
   if (session.HANDLED(price_exp_))
-    session.journal->commodity_pool->quote_leeway =
+    commodity_pool_t::current_pool->quote_leeway =
       session.HANDLER(price_exp_).value.as_long();
 
   if (session.HANDLED(price_db_))
-    session.journal->commodity_pool->price_db =
-      session.HANDLER(price_db_).str();
+    commodity_pool_t::current_pool->price_db = session.HANDLER(price_db_).str();
   else
-    session.journal->commodity_pool->price_db = none;
+    commodity_pool_t::current_pool->price_db = none;
 
   if (HANDLED(date_format_))
     set_date_format(HANDLER(date_format_).str().c_str());
@@ -522,7 +521,7 @@ value_t report_t::fn_price(call_scope_t& scope)
 value_t report_t::fn_lot_date(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
-  if (args.value_at(0).is_annotated()) {
+  if (args.value_at(0).has_annotation()) {
     const annotation_t& details(args.value_at(0).annotation());
     if (details.date)
       return *details.date;
@@ -533,7 +532,7 @@ value_t report_t::fn_lot_date(call_scope_t& scope)
 value_t report_t::fn_lot_price(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
-  if (args.value_at(0).is_annotated()) {
+  if (args.value_at(0).has_annotation()) {
     const annotation_t& details(args.value_at(0).annotation());
     if (details.price)
       return *details.price;
@@ -544,7 +543,7 @@ value_t report_t::fn_lot_price(call_scope_t& scope)
 value_t report_t::fn_lot_tag(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
-  if (args.value_at(0).is_annotated()) {
+  if (args.value_at(0).has_annotation()) {
     const annotation_t& details(args.value_at(0).annotation());
     if (details.tag)
       return string_value(*details.tag);

@@ -76,13 +76,13 @@ commodity_quote_from_script(commodity_t& commodity,
     DEBUG("commodity.download", "downloaded quote: " << buf);
 
     if (optional<price_point_t> point =
-	amount_t::current_pool->parse_price_directive(buf)) {
-      if (amount_t::current_pool->price_db) {
+	commodity_pool_t::current_pool->parse_price_directive(buf)) {
+      if (commodity_pool_t::current_pool->price_db) {
 #if defined(__GNUG__) && __GNUG__ < 3
-	ofstream database(*amount_t::current_pool->price_db,
+	ofstream database(*commodity_pool_t::current_pool->price_db,
 			  ios::out | ios::app);
 #else
-	ofstream database(*amount_t::current_pool->price_db,
+	ofstream database(*commodity_pool_t::current_pool->price_db,
 			  std::ios_base::out | std::ios_base::app);
 #endif
 	database << "P "

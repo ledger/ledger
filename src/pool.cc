@@ -39,6 +39,8 @@
 
 namespace ledger {
 
+shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
+
 commodity_pool_t::commodity_pool_t()
   : default_commodity(NULL), keep_base(false),
     quote_leeway(86400), get_quotes(false),
@@ -318,8 +320,7 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
   VERIFY(point.price.valid());
 
   DEBUG("commodity.download", "Looking up symbol: " << symbol);
-  if (commodity_t * commodity =
-      amount_t::current_pool->find_or_create(symbol)) {
+  if (commodity_t * commodity = find_or_create(symbol)) {
     DEBUG("commodity.download", "Adding price for " << symbol << ": "
 	  << point.when << " " << point.price);
     commodity->add_price(point.when, point.price, true);
