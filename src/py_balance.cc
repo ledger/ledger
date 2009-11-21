@@ -105,6 +105,10 @@ namespace {
     return balance.strip_annotations(keep);
   }
 
+  PyObject * py_balance_unicode(balance_t& balance) {
+    return str_to_py_unicode(balance.to_string());
+  }
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)				\
@@ -152,7 +156,9 @@ void export_balance()
     .def(self != long())
     .def(! self)
 
-    .def(self_ns::str(self))
+    .def("__str__", &balance_t::to_string)
+    .def("to_string", &balance_t::to_string)
+    .def("__unicode__", py_balance_unicode)
 
     .def("negated", &balance_t::negated)
     .def("in_place_negate", &balance_t::in_place_negate,

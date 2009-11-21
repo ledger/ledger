@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "account.h"
 #include "post.h"
 
@@ -88,6 +89,10 @@ namespace {
 
   account_t::xdata_t& py_xdata(account_t& account) {
     return account.xdata();
+  }
+
+  PyObject * py_account_unicode(account_t& account) {
+    return str_to_py_unicode(account.fullname());
   }
 
 } // unnamed namespace
@@ -180,7 +185,8 @@ void export_account()
     .def_readwrite("note", &account_t::note)
     .def_readonly("depth", &account_t::depth)
 
-    .def(self_ns::str(self))
+    .def("__str__", &account_t::fullname)
+    .def("__unicode__", py_account_unicode)
 
     .def("fullname", &account_t::fullname)
     .def("partial_name", &account_t::partial_name)

@@ -232,6 +232,10 @@ namespace {
     return ann.price = price;
   }
 
+  PyObject * py_commodity_unicode(commodity_t& commodity) {
+    return str_to_py_unicode(commodity.symbol());
+  }
+
 } // unnamed namespace
 
 void export_commodity()
@@ -331,6 +335,8 @@ void export_commodity()
 			 make_getter(&commodity_t::european_by_default),
 			 make_setter(&commodity_t::european_by_default))
 
+    .def("__str__", &commodity_t::symbol)
+    .def("__unicode__", py_commodity_unicode)
     .def("__nonzero__", &commodity_t::operator bool)
 
     .def(self == self)

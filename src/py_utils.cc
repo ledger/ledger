@@ -79,15 +79,8 @@ struct string_to_python
 {
   static PyObject* convert(const string& str)
   {
-#if 1
-    // Return a Unicode object
-    PyObject * pstr = PyString_FromString(str.c_str());
-    PyObject * uni  = PyUnicode_FromEncodedObject(pstr, "UTF-8", NULL);
-    return object(handle<>(borrowed(uni))).ptr();
-#else
-    // Return a 7-bit ASCII string
+    // Return bytes, not characters; see __unicode__ methods for that
     return incref(object(static_cast<const std::string&>(str)).ptr());
-#endif
   }
 };
 
