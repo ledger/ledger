@@ -70,20 +70,18 @@ templateDef = '''#encoding utf-8
           </tr>
         </tfoot>
         <tbody>
-          #for $xact in $journal
-          #for $post in $xact
+          #for $post in $posts
           #set $total = $total + $post.amount
           <tr>
-            <!--<td>${$xact.date if $xact is not $last_xact else $empty}</td>
-            <td>${$xact.payee if $xact is not $last_xact else $empty}</td>-->
-            <td>$xact.date</td>
-            <td>$xact.payee</td>
+            <!--<td>${$post.xact.date if $post.xact is not $last_xact else $empty}</td>
+            <td>${$post.xact.payee if $post.xact is not $last_xact else $empty}</td>-->
+            <td>$post.xact.date</td>
+            <td>$post.xact.payee</td>
             <td>$post.account</td>
             <td>${strip($post.amount)}</td>
             <td>${strip($total)}</td>
           </tr>
-          #set $last_xact = $xact
-          #end for
+          #set $last_xact = $post.xact
           #end for
         </tbody>
       </table>
@@ -120,7 +118,7 @@ class LedgerHandler(BaseHTTPRequestHandler):
             tmpl = Template(templateDef, filter=UnicodeFilter)
 
             tmpl.title     = 'Ledger Journal'
-            tmpl.journal   = self.journal
+            tmpl.posts     = self.journal.collect(sys.argv[2])
             tmpl.total     = ledger.Value(0)
             tmpl.strip     = strip
             tmpl.last_xact = None
@@ -192,7 +190,7 @@ def main(*args):
         server.socket.close()
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print "usage: server.py <DATA-FILE>"
+    if len(sys.argv) < 3:
+        print "usage: server.py <DATA-FILE> <REPORT-QUERY>"
         sys.exit(1)
     main()
