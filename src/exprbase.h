@@ -92,8 +92,7 @@ public:
   {
     TRACE_CTOR(expr_base_t, "scope_t *");
   }
-
-  ~expr_base_t() throw() {
+  virtual ~expr_base_t() throw() {
     TRACE_DTOR(expr_base_t);
   }
 
