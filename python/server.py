@@ -108,7 +108,7 @@ templateDef = '''#encoding utf-8
 
 class LedgerHandler(BaseHTTPRequestHandler):
     def __init__(self, *args):
-        self.journal = ledger.Journal('/Users/johnw/src/ledger/doc/sample.dat')
+        self.journal = ledger.Journal(sys.argv[1])
         BaseHTTPRequestHandler.__init__(self, *args)
 
     def do_GET(self):
@@ -191,6 +191,8 @@ def main(*args):
         print "Shutting down server"
         server.socket.close()
 
-print __name__
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "usage: server.py <DATA-FILE>"
+        sys.exit(1)
     main()
