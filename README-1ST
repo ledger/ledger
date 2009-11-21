@@ -33,9 +33,21 @@ available for testing and more useful bug reports.
 
 ===============================================================================
 
-                                    F.A.Q.
+		   IF YOU HAVE CONFIGURE OR BUILD PROBLEMS
 
-   ----------------------------------------------------------------------
+The first order of business if acprep update doesn't work is to find out where
+things went wrong.  So follow these steps to produce a bug report I can track
+down easily:
+
+    $ ./acprep --debug update          # shows what acprep was thinking
+    $ <edit config.log>                # shows what configure was thinking
+
+With the contents of config.log, and the output from acprep --debug update,
+it's usually fairly obvious where things have gone astray.
+
+===============================================================================
+
+                                    F.A.Q.
 
  - Q: The build fails saying it can't find utf8.h
 
@@ -62,6 +74,14 @@ available for testing and more useful bug reports.
 
    A: You need MPFR version 2.4.0 or higher.  This version does not come with
       most Debian distributions, so you will need to build it.
+
+   ----------------------------------------------------------------------
+
+ - Q: I'm seeing a segfault deep inside the boost_regex code!
+
+   A: Actually, the real segfault is in libstdc++'s facet code.  It's being
+      caused by using a debug Boost with a non-debug build of Ledger, or
+      vice-versa.
 
    ----------------------------------------------------------------------
 
@@ -98,5 +118,3 @@ available for testing and more useful bug reports.
 
    A: This can happen for the same reason as above.  It can also happen if you
       have ICU support enabled.  This is a bug I'm still trying to track down.
-
-   ----------------------------------------------------------------------
