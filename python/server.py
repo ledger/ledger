@@ -93,10 +93,10 @@ templateDef = '''#encoding utf-8
           <img src="/icons/next.png" class="next"/>
           <img src="/icons/last.png" class="last"/>
           <select class="pagesize">
-            <option selected="selected" value="100">100</option>
+            <option selected="selected" value="40">40</option>
+            <option value="100">100</option>
             <option value="200">200</option>
-            <option value="500">500</option>
-            <option  value="1000">1000</option>
+            <option  value="300">300</option>
           </select>
         </form>
       </div>
