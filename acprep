@@ -676,15 +676,15 @@ class PrepareBuild(CommandLineApp):
 
             environ, conf_args = self.configure_environment()
 
-            boost   = 'boost_1_40_0'
-            tarball = boost + '.tar.bz2'
+            boost   = 'boost_1_41_0'
+            tarball = boost + '.7z'
 
             if not exists(boost):
                 if not exists(tarball):
                     self.log.info('Downloading Boost source tarball ...')
                     self.execute('curl', '-L', '-o', tarball,
                                  'http://downloads.sourceforge.net/boost/' +
-                                 boost + '.tar.bz2?use_mirror=ufpr')
+                                 boost + '.7z?use_mirror=ufpr')
 
                 if not exists(tarball):
                     self.log.error('Failed to locate the Boost source tarball')
@@ -699,12 +699,12 @@ class PrepareBuild(CommandLineApp):
                 fd.close()
                 digest = csum.hexdigest()
 
-                if digest != 'a17281fd88c48e0d866e1a12deecbcc0':
+                if digest != 'b74ee2f0f46cef601544dd4ac2d7dec4':
                     self.log.error('Boost source tarball fails to match checksum')
                     sys.exit(1)
 
                 self.log.info('Extracting Boost source tarball ...')
-                self.execute('tar', 'xjf', tarball)
+                self.execute('7za', 'x', tarball)
 
             if not exists(boost):
                 self.log.error('Failed to locate the Boost sources')
@@ -1037,33 +1037,17 @@ class PrepareBuild(CommandLineApp):
             if self.options.use_glibcxx_debug:
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-                if exists('/usr/local/stow/cppunit-debug/include'):
-                    if '/usr/local/stow/cppunit/include' in self.sys_include_dirs:
-                        self.sys_include_dirs.remove('/usr/local/stow/cppunit/include')
-                        self.sys_library_dirs.remove('/usr/local/stow/cppunit/lib')
-
-                    self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit-debug/include')
-                    self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit-debug/lib')
-
-                if exists('/usr/local/stow/icu-debug/include'):
-                    if '/usr/local/stow/icu/include' in self.sys_include_dirs:
-                        self.sys_include_dirs.remove('/usr/local/stow/icu/include')
-                        self.sys_library_dirs.remove('/usr/local/stow/icu/lib')
-
-                    self.sys_include_dirs.insert(0, '/usr/local/stow/icu-debug/include')
-                    self.sys_library_dirs.insert(0, '/usr/local/stow/icu-debug/lib')
-
-            if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_40.a'):
+            if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_41.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_40'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_41'
+                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
                 self.inform_boost_location('is really located',
                                            self.envvars['BOOST_SUFFIX'])
 
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-d-1_40.a'):
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-d-1_41.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-d-1_40'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-d-1_41'
+                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
                 self.inform_boost_location('is really located',
                                            self.envvars['BOOST_SUFFIX'])
 
@@ -1082,17 +1066,17 @@ class PrepareBuild(CommandLineApp):
                 self.inform_boost_location('is really located',
                                            self.envvars['BOOST_SUFFIX'])
 
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_40.a'):
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_41.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_40'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_41'
+                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
                 self.inform_boost_location('is really located',
                                            self.envvars['BOOST_SUFFIX'])
 
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-1_40.a'):
+            elif exists('/usr/local/lib/libboost_regex-xgcc44-1_41.a'):
                 self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-1_40'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_40')
+                self.envvars['BOOST_SUFFIX'] = '-xgcc44-1_41'
+                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
                 self.inform_boost_location('is really located',
                                            self.envvars['BOOST_SUFFIX'])
 
