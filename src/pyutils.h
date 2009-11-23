@@ -126,6 +126,15 @@ struct map_value_type_converter
   }
 };
 
+template <typename T>
+PyObject * str_to_py_unicode(const T& str)
+{
+  using namespace boost::python;
+  PyObject * pstr = PyString_FromString(str.c_str());
+  PyObject * uni  = PyUnicode_FromEncodedObject(pstr, "UTF-8", NULL);
+  return object(handle<>(borrowed(uni))).ptr();
+}
+
 namespace boost { namespace python {
 
 // Use expr to create the PyObject corresponding to x

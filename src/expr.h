@@ -87,7 +87,7 @@ public:
     parse(in, flags);
   }
 
-  ~expr_t() throw() {
+  virtual ~expr_t() {
     TRACE_DTOR(expr_t);
   }
 
