@@ -1096,13 +1096,16 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('--disable-dependency-tracking')
             for i in ['-fast']:
                 self.CXXFLAGS.append(i)
+                self.CFLAGS.append(i)
                 self.LDFLAGS.append(i)
             for i in ['-arch', 'i386', '-arch', 'x86_64']:
                 self.CXXFLAGS.append(i)
+                self.CFLAGS.append(i)
                 self.LDFLAGS.append(i)
         else:
             for i in ['-O3', '-fomit-frame-pointer']:
                 self.CXXFLAGS.append(i)
+                self.CFLAGS.append(i)
                 self.LDFLAGS.append(i)
 
     def setup_flavor_gcov(self):
