@@ -302,6 +302,8 @@ public:
     HANDLER(unbudgeted).report(out);
     HANDLER(uncleared).report(out);
     HANDLER(unrealized).report(out);
+    HANDLER(unrealized_gains_).report(out);
+    HANDLER(unrealized_losses_).report(out);
     HANDLER(unround).report(out);
     HANDLER(unsorted).report(out);
     HANDLER(weekly).report(out);
@@ -875,6 +877,9 @@ public:
     });
 
   OPTION(report_t, unrealized);
+
+  OPTION(report_t, unrealized_gains_);
+  OPTION(report_t, unrealized_losses_);
 
   OPTION_(report_t, unround, DO() {
       parent->HANDLER(display_amount_)
