@@ -188,7 +188,7 @@ class PrepareBuild(CommandLineApp):
         self.sys_library_dirs  = []
 
         self.CPPFLAGS          = []
-        self.CCFLAGS           = []
+        self.CFLAGS            = []
         self.CXXFLAGS          = []
         self.LDFLAGS           = []
 
@@ -200,7 +200,7 @@ class PrepareBuild(CommandLineApp):
             'LEDGER_PRODUCTS': None,
             'CC':              'gcc',
             'CPPFLAGS':        '',
-            'CCFLAGS':         '',
+            'CFLAGS':          '',
             'CXX':             'g++',
             'CXXFLAGS':        '',
             'LD':              'g++',
@@ -554,7 +554,7 @@ class PrepareBuild(CommandLineApp):
                     'automake',
                     'autoconf',
                     'libtool',
-                    'python26',
+                    'python26', '+universal',
                     'libiconv', '+universal',
                     'zlib', '+universal',
                     'gmp' ,'+universal',
@@ -564,8 +564,8 @@ class PrepareBuild(CommandLineApp):
                     'gettext' ,'+universal',
                     'libedit' ,'+universal',
                      'boost-jam',
-                    'boost', '+st+python26+icu',
-                    'cppunit',
+                    'boost', '+icu+python26+st+universal',
+                    'cppunit', '+universal',
                     #'texlive',
                     #'doxygen',
                     #'graphviz',
@@ -912,7 +912,7 @@ class PrepareBuild(CommandLineApp):
     def finalize_config(self):
         self.setup_flavor()
 
-        for var in ('CPPFLAGS', 'CCFLAGS', 'CXXFLAGS', 'LDFLAGS'):
+        for var in ('CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS'):
             value = self.__dict__[var]
             if value:
                 first = not self.envvars[var]
@@ -1091,13 +1091,19 @@ class PrepareBuild(CommandLineApp):
 
     def setup_flavor_opt(self):
         if self.darwin_gcc:
-            self.CXXFLAGS.append('-fast')
-            self.LDFLAGS.append('-fast')
+            self.option_no_pch()
+            self.configure_args.remove('--disable-shared')
+            self.configure_args.append('--disable-dependency-tracking')
+            for i in ['-fast']:
+                self.CXXFLAGS.append(i)
+                self.LDFLAGS.append(i)
+            for i in ['-arch', 'i386', '-arch', 'x86_64']:
+                self.CXXFLAGS.append(i)
+                self.LDFLAGS.append(i)
         else:
-            self.CXXFLAGS.append('-O3')
-            self.LDFLAGS.append('-O3')
-            self.CXXFLAGS.append('-fomit-frame-pointer')
-            self.LDFLAGS.append('-fomit-frame-pointer')
+            for i in ['-O3', '-fomit-frame-pointer']:
+                self.CXXFLAGS.append(i)
+                self.LDFLAGS.append(i)
 
     def setup_flavor_gcov(self):
         self.CXXFLAGS.append('-g')
@@ -1164,7 +1170,7 @@ class PrepareBuild(CommandLineApp):
             conf_args = ['sh', join(self.source_dir, 'configure'),
                          '--srcdir', self.source_dir]
 
-        for var in ('CC', 'CPPFLAGS', 'CCFLAGS', 'CXX', 'CXXFLAGS',
+        for var in ('CC', 'CPPFLAGS', 'CFLAGS', 'CXX', 'CXXFLAGS',
                     'LD', 'LDFLAGS'):
             if self.envvars.has_key(var) and self.envvars[var] and \
                (var.endswith('FLAGS') or exists(self.envvars[var])):
@@ -1221,6 +1227,11 @@ class PrepareBuild(CommandLineApp):
 
                 if not self.options.no_patch:
                     self.phase_patch()
+
+                # Wipe the pre-compiled header, if there is one
+                pch = join(self.build_directory(), 'system.hh.gch')
+                if exists(pch):
+                    os.remove(pch)
             else:
                 if not self.options.no_patch and \
                    self.isnewer('Makefile', '.timestamp'):
