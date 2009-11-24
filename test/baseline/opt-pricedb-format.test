@@ -1,5 +1,7 @@
 pricedb --pricedb-format='P %(date) %(scrub(display_amount))\n'
 <<<
+D $1,000.00
+
 P 2009/01/01 13:30:00 AAPL $10.00
 P 2009/01/01 14:30:00 AAPL $20.00
 P 2009/01/01 15:30:00 AAPL $30.00
