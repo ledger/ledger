@@ -345,8 +345,10 @@ void instance_t::read_next_directive()
     break;
   }
 
-  case '#':			// comment line
-  case ';':			// comment line
+  case ';':			// comments
+  case '#':
+  case '*':
+  case '|':
     break;
 
   case '-':			// option setting
