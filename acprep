@@ -605,7 +605,7 @@ class PrepareBuild(CommandLineApp):
                             'libboost1.40-dev',
                             'libboost-regex1.40-dev',
                             'libboost-date-time1.40-dev',
-                            'libboost-filesystem1.40-dev'
+                            'libboost-filesystem1.40-dev',
                             'libboost-python1.40-dev',
                             'libedit-dev',
                             'libcppunit-dev',
@@ -636,7 +636,7 @@ class PrepareBuild(CommandLineApp):
                             'libboost-python1.35-dev',
                             'libboost-regex1.35-dev',
                             'libboost-date-time1.35-dev',
-                            'libboost-filesystem1.35-dev'
+                            'libboost-filesystem1.35-dev',
                             'libedit-dev',
                             'libcppunit-dev',
                             #'texlive-full',
@@ -654,16 +654,29 @@ class PrepareBuild(CommandLineApp):
                 if release.readline().startswith('CentOS'):
                     self.log.info('Looks like you are using YUM on CentOS')
                     packages = [
-                        'sudo', 'yum', 'install', 'gcc', 'gcc-c++',
-                        'compat-gcc-*', 'make', 'libtool', 'autoconf',
-                        'automake', 'zlib-devel', 'bzip2-devel',
-                        'python-devel', 'bboost-devel',
-                         'gmp-devel', 'gettext-devel',
-                         #'mpfr-devel'
-                         'libedit-devel', 'cppunit-devel',
-                         #'texlive-full',
-                         #'doxygen', 'graphviz', 'texinfo',
-                         #'lcov', 'sloccount'
+                        'sudo', 'yum', 'install',
+                        'gcc',
+                        'gcc-c++',
+                        'compat-gcc-*',
+                        'make',
+                        'libtool',
+                        'autoconf',
+                        'automake',
+                        'zlib-devel',
+                        'bzip2-devel',
+                        'python-devel',
+                        'bboost-devel',
+                        'gmp-devel',
+                        'gettext-devel',
+                        #'mpfr-devel'
+                        'libedit-devel',
+                        'cppunit-devel',
+                        #'texlive-full',
+                        #'doxygen',
+                        #'graphviz',
+                        'texinfo',
+                        #'lcov',
+                        #'sloccount'
                     ]
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
@@ -804,7 +817,7 @@ class PrepareBuild(CommandLineApp):
                 self.sys_library_dirs.append(path)
 
     def setup_for_johnw(self):
-        if self.current_flavor != 'opt':
+        if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
             if exists('/usr/local/stow/cppunit/include'):
                 self.sys_include_dirs.insert(0, '/usr/local/stow/cppunit/include')
                 self.sys_library_dirs.insert(0, '/usr/local/stow/cppunit/lib')
@@ -814,13 +827,13 @@ class PrepareBuild(CommandLineApp):
                 self.sys_library_dirs.insert(0, '/usr/local/stow/icu/lib')
 
             self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
+            self.configure_args.append('--disable-shared')
 
             self.options.use_glibcxx_debug = True
+        else:
+            self.CXXFLAGS.append('-march=nocona')
+            self.CXXFLAGS.append('-msse3')
 
-        self.CXXFLAGS.append('-march=nocona')
-        self.CXXFLAGS.append('-msse3')
-
-        self.configure_args.append('--disable-shared')
         self.configure_args.append('--enable-doxygen')
         self.configure_args.append('--enable-python')
 
@@ -853,7 +866,8 @@ class PrepareBuild(CommandLineApp):
 
             self.locate_darwin_libraries()
 
-            if self.current_flavor == 'opt' and \
+            if (self.current_flavor == 'opt' or \
+                self.current_flavor == 'default') and \
                exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
@@ -1031,7 +1045,7 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def locate_darwin_libraries(self):
-        if self.current_flavor != 'opt':
+        if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
             self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
 
             if self.options.use_glibcxx_debug:
@@ -1092,7 +1106,8 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_opt(self):
         if self.darwin_gcc:
             self.option_no_pch()
-            self.configure_args.remove('--disable-shared')
+            if '--disable-shared' in self.configure_args:
+                self.configure_args.remove('--disable-shared')
             self.configure_args.append('--disable-dependency-tracking')
             for i in ['-fast']:
                 self.CXXFLAGS.append(i)
