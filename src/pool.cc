@@ -316,7 +316,7 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
 
   price_point_t point;
   point.when = datetime;
-  point.price.parse(symbol_and_price);
+  point.price.parse(symbol_and_price, PARSE_NO_MIGRATE);
   VERIFY(point.price.valid());
 
   DEBUG("commodity.download", "Looking up symbol: " << symbol);

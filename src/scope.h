@@ -172,7 +172,7 @@ class symbol_scope_t : public child_scope_t
 {
   typedef std::map<symbol_t, expr_t::ptr_op_t> symbol_map;
 
-  symbol_map symbols;
+  optional<symbol_map> symbols;
 
 public:
   explicit symbol_scope_t() {

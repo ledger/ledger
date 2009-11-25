@@ -232,7 +232,7 @@ ledger_la_CPPFLAGS     = $(libledger_python_la_CPPFLAGS)
 ledger_la_SOURCES      = src/pyledger.cc
 ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
 ledger_la_LDFLAGS      = -avoid-version -module
-ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES) $(INTLLIBS)
+ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES)
 
 pkgpython_PYTHON = python/__init__.py python/server.py
 
