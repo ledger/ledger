@@ -1,0 +1,20 @@
+bal -V --unrealized --unrealized-gains G
+<<<
+2008/10/01 Sample
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-200.00
+
+P 2008/10/20 12:00:00 AAPL $30.00
+
+; 2008/10/20 <Generated Transaction>
+;     Assets:Brokerage           $100
+;     Equity:Unrealized Gains
+>>>1
+             $100.00  Assets
+             $300.00    Brokerage
+            $-200.00    Checking
+            $-100.00  G
+--------------------
+                   0
+>>>2
+=== 0
