@@ -430,12 +430,22 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler,
   display_total_expr  = report.HANDLER(display_total_).expr;
   changed_values_only = report.HANDLED(revalued_only);
 
+  string gains_equity_account_name;
+  if (report.HANDLED(unrealized_gains_))
+    gains_equity_account_name = report.HANDLER(unrealized_gains_).str();
+  else
+    gains_equity_account_name = _("Equity:Unrealized Gains");
   gains_equity_account =
-    report.session.journal->master->find_account(_("Equity:Unrealized Gains"));
+    report.session.journal->master->find_account(gains_equity_account_name);
   gains_equity_account->add_flags(ACCOUNT_GENERATED);
 
+  string losses_equity_account_name;
+  if (report.HANDLED(unrealized_losses_))
+    losses_equity_account_name = report.HANDLER(unrealized_losses_).str();
+  else
+    losses_equity_account_name = _("Equity:Unrealized Losses");
   losses_equity_account =
-    report.session.journal->master->find_account(_("Equity:Unrealized Losses"));
+    report.session.journal->master->find_account(losses_equity_account_name);
   losses_equity_account->add_flags(ACCOUNT_GENERATED);
 }
 

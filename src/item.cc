@@ -115,7 +115,8 @@ void item_t::set_tag(const string&           tag,
   assert(result.second);
 }
 
-void item_t::parse_tags(const char * p, optional<date_t::year_type> current_year)
+void item_t::parse_tags(const char * p,
+			optional<date_t::year_type> current_year)
 {
   if (const char * b = std::strchr(p, '[')) {
     if (*(b + 1) != '\0' &&
@@ -164,7 +165,8 @@ void item_t::parse_tags(const char * p, optional<date_t::year_type> current_year
   }
 }
 
-void item_t::append_note(const char * p, optional<date_t::year_type> current_year)
+void item_t::append_note(const char * p,
+			 optional<date_t::year_type> current_year)
 {
   if (note) {
     *note += '\n';

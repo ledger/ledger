@@ -185,7 +185,7 @@ protected:
 	symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
     }
-    ~base_t() {
+    virtual ~base_t() {
       TRACE_DTOR(base_t);
     }
 

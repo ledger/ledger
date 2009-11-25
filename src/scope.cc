@@ -42,15 +42,18 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
 {
   DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
 
-  std::pair<symbol_map::iterator, bool> result
-    = symbols.insert(symbol_map::value_type(symbol_t(kind, name, def), def));
-  if (! result.second) {
-    symbol_map::iterator i = symbols.find(symbol_t(kind, name));
-    assert(i != symbols.end());
-    symbols.erase(i);
+  if (! symbols)
+    symbols = symbol_map();
 
-    result = symbols.insert(symbol_map::value_type(symbol_t(kind, name, def),
-						   def));
+  std::pair<symbol_map::iterator, bool> result
+    = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
+  if (! result.second) {
+    symbol_map::iterator i = symbols->find(symbol_t(kind, name));
+    assert(i != symbols->end());
+    symbols->erase(i);
+
+    result = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def),
+						    def));
     if (! result.second)
       throw_(compile_error,
 	     _("Redefinition of '%1' in the same scope") << name);
@@ -60,10 +63,11 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
 expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
 					const string& name)
 {
-  symbol_map::const_iterator i = symbols.find(symbol_t(kind, name));
-  if (i != symbols.end())
-    return (*i).second;
-
+  if (symbols) {
+    symbol_map::const_iterator i = symbols->find(symbol_t(kind, name));
+    if (i != symbols->end())
+      return (*i).second;
+  }
   return child_scope_t::lookup(kind, name);
 }
 

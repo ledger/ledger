@@ -887,6 +887,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(unbudgeted);
     else OPT(uncleared);
     else OPT(unrealized);
+    else OPT(unrealized_gains_);
+    else OPT(unrealized_losses_);
     else OPT(unround);
     else OPT(unsorted);
     break;
