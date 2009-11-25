@@ -286,7 +286,8 @@ commodity_pool_t::exchange(const amount_t&	       amount,
   return breakdown;
 }
 
-optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
+optional<std::pair<commodity_t *, price_point_t> >
+commodity_pool_t::parse_price_directive(char * line, bool do_not_add_price)
 {
   char * date_field_ptr = line;
   char * time_field_ptr = next_element(date_field_ptr);
@@ -295,6 +296,7 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
 
   char *     symbol_and_price;
   datetime_t datetime;
+  string     symbol;
 
   if (std::isdigit(time_field_ptr[0])) {
     symbol_and_price = next_element(time_field_ptr);
@@ -307,12 +309,13 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
     datetime = datetime_t(parse_date(date_field));
   }
   else {
-    symbol_and_price = date_field_ptr;
+    symbol = date_field_ptr;
+    symbol_and_price = time_field_ptr;
     datetime = CURRENT_TIME();
   }
 
-  string symbol;
-  commodity_t::parse_symbol(symbol_and_price, symbol);
+  if (symbol.empty())
+    commodity_t::parse_symbol(symbol_and_price, symbol);
 
   price_point_t point;
   point.when = datetime;
@@ -323,9 +326,10 @@ optional<price_point_t> commodity_pool_t::parse_price_directive(char * line)
   if (commodity_t * commodity = find_or_create(symbol)) {
     DEBUG("commodity.download", "Adding price for " << symbol << ": "
 	  << point.when << " " << point.price);
-    commodity->add_price(point.when, point.price, true);
+    if (! do_not_add_price)
+      commodity->add_price(point.when, point.price, true);
     commodity->add_flags(COMMODITY_KNOWN);
-    return point;
+    return std::pair<commodity_t *, price_point_t>(commodity, point);
   }
 
   return none;

@@ -54,7 +54,8 @@ namespace {
     static const std::size_t MAX_LINE = 1024;
 
   public:
-    typedef variant<account_t *, string> state_t;
+    typedef std::pair<commodity_t *, amount_t>	       fixed_rate_t;
+    typedef variant<account_t *, string, fixed_rate_t> state_t;
 
     std::list<state_t>& state_stack;
 
@@ -99,6 +100,9 @@ namespace {
     bool front_is_string() {
       return state_stack.front().type() == typeid(string);
     }
+    bool front_is_fixed_rate() {
+      return state_stack.front().type() == typeid(fixed_rate_t);
+    }
 
     account_t * top_account() {
       foreach (state_t& state, state_stack)
@@ -135,6 +139,7 @@ namespace {
     void master_account_directive(char * line);
     void end_directive(char * line);
     void alias_directive(char * line);
+    void fixed_directive(char * line);
     void tag_directive(char * line);
     void define_directive(char * line);
     bool general_directive(char * line);
@@ -345,8 +350,10 @@ void instance_t::read_next_directive()
     break;
   }
 
-  case '#':			// comment line
-  case ';':			// comment line
+  case ';':			// comments
+  case '#':
+  case '*':
+  case '|':
     break;
 
   case '-':			// option setting
@@ -510,7 +517,7 @@ void instance_t::price_conversion_directive(char * line)
 
 void instance_t::price_xact_directive(char * line)
 {
-  optional<price_point_t> point =
+  optional<std::pair<commodity_t *, price_point_t> > point =
     commodity_pool_t::current_pool->parse_price_directive(skip_ws(line + 1));
   if (! point)
     throw parse_error(_("Pricing entry failed to parse"));
@@ -703,10 +710,13 @@ void instance_t::end_directive(char * kind)
 
   if ((name.empty() || name == "account") && ! front_is_account())
     throw_(std::runtime_error,
-	   _("'end account' directive does not match open tag directive"));
+	   _("'end account' directive does not match open directive"));
   else if (name == "tag" && ! front_is_string())
     throw_(std::runtime_error,
-	   _("'end tag' directive does not match open account directive"));
+	   _("'end tag' directive does not match open directive"));
+  else if (name == "fixed" && ! front_is_fixed_rate())
+    throw_(std::runtime_error,
+	   _("'end fixed' directive does not match open directive"));
 
   if (state_stack.size() <= 1)
     throw_(std::runtime_error,
@@ -733,6 +743,18 @@ void instance_t::alias_directive(char * line)
     std::pair<accounts_map::iterator, bool> result
       = account_aliases.insert(accounts_map::value_type(b, acct));
     assert(result.second);
+  }
+}
+
+void instance_t::fixed_directive(char * line)
+{
+  if (optional<std::pair<commodity_t *, price_point_t> > price_point = 
+      commodity_pool_t::current_pool->parse_price_directive(trim_ws(line),
+							    true)) {
+    state_stack.push_front(fixed_rate_t(price_point->first,
+					price_point->second.price));
+  } else {
+    throw_(std::runtime_error, _("Error in fixed directive"));
   }
 }
 
@@ -797,6 +819,13 @@ bool instance_t::general_directive(char * line)
     }
     break;
 
+  case 'f':
+    if (std::strcmp(p, "fixed") == 0) {
+      fixed_directive(arg);
+      return true;
+    }
+    break;
+
   case 'i':
     if (std::strcmp(p, "include") == 0) {
       include_directive(arg);
@@ -807,6 +836,13 @@ bool instance_t::general_directive(char * line)
   case 't':
     if (std::strcmp(p, "tag") == 0) {
       tag_directive(arg);
+      return true;
+    }
+    break;
+
+  case 'y':
+    if (std::strcmp(p, "year") == 0) {
+      year_directive(arg);
       return true;
     }
     break;
@@ -933,13 +969,28 @@ post_t * instance_t::parse_post(char *		line,
 			post.get(), PARSE_NO_REDUCE | PARSE_SINGLE |
 			PARSE_NO_ASSIGN, defer_expr);
 
-    if (! post->amount.is_null() && honor_strict && strict &&
-	post->amount.has_commodity() &&
+    if (! post->amount.is_null() && post->amount.has_commodity()) {
+      if (honor_strict && strict && 
 	! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
-      if (post->_state == item_t::UNCLEARED)
-	warning_(_("\"%1\", line %2: Unknown commodity '%3'")
-		 << pathname << linenum << post->amount.commodity());
-      post->amount.commodity().add_flags(COMMODITY_KNOWN);
+	if (post->_state == item_t::UNCLEARED)
+	  warning_(_("\"%1\", line %2: Unknown commodity '%3'")
+		   << pathname << linenum << post->amount.commodity());
+	post->amount.commodity().add_flags(COMMODITY_KNOWN);
+      }
+
+      if (! post->amount.has_annotation()) {
+	foreach (state_t& state, state_stack) {
+	  if (state.type() == typeid(fixed_rate_t)) {
+	    fixed_rate_t& rate(boost::get<fixed_rate_t>(state));
+	    if (*rate.first == post->amount.commodity()) {
+	      annotation_t details(rate.second);
+	      details.add_flags(ANNOTATION_PRICE_FIXATED);
+	      post->amount.annotate(details);
+	      break;
+	    }
+	  }
+	}
+      }
     }
 
     DEBUG("textual.parse", "line " << linenum << ": "
