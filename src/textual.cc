@@ -1050,6 +1050,9 @@ post_t * instance_t::parse_post(char *		line,
 	    *post->cost *= post->amount;
 	    post->cost->set_commodity(cost_commodity);
 	  }
+	  else if (post->amount.sign() < 0) {
+	    post->cost->in_place_negate();
+	  }
 
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "Total cost is " << *post->cost);
