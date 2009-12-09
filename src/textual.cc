@@ -663,20 +663,26 @@ void instance_t::include_directive(char * line)
 {
   path filename;
 
+  DEBUG("textual.include", "include: " << line);
+
   if (line[0] != '/' && line[0] != '\\' && line[0] != '~') {
+    DEBUG("textual.include", "received a relative path");
+    DEBUG("textual.include", "parent file path: " << pathname.string());
     string::size_type pos = pathname.string().rfind('/');
     if (pos == string::npos)
       pos = pathname.string().rfind('\\');
-    if (pos != string::npos)
+    if (pos != string::npos) {
       filename = path(string(pathname.string(), 0, pos + 1)) / line;
+      DEBUG("textual.include", "normalized path: " << filename.string());
+    } else {
+      filename = path(string(".")) / line;
+    }
   } else {
     filename = line;
   }
 
   filename = resolve_path(filename);
-
-  DEBUG("textual.include", "Line " << linenum << ": " <<
-	"Including path '" << filename << "'");
+  DEBUG("textual.include", "resolved path: " << filename.string());
 
   if (! exists(filename))
     throw_(std::runtime_error,
@@ -1043,6 +1049,9 @@ post_t * instance_t::parse_post(char *		line,
 	    commodity_t& cost_commodity(post->cost->commodity());
 	    *post->cost *= post->amount;
 	    post->cost->set_commodity(cost_commodity);
+	  }
+	  else if (post->amount.sign() < 0) {
+	    post->cost->in_place_negate();
 	  }
 
 	  DEBUG("textual.parse", "line " << linenum << ": "

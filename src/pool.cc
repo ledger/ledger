@@ -247,7 +247,7 @@ commodity_pool_t::exchange(const amount_t&	       amount,
     current_annotation = &as_annotated_commodity(commodity).details;
 
   amount_t per_unit_cost =
-    (is_per_unit || amount.is_realzero() ? cost : cost / amount).abs();
+    (is_per_unit || amount.is_realzero()) ? cost.abs() : (cost / amount).abs();
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 
@@ -255,7 +255,7 @@ commodity_pool_t::exchange(const amount_t&	       amount,
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
 
   cost_breakdown_t breakdown;
-  breakdown.final_cost = ! is_per_unit ? cost : cost * amount;
+  breakdown.final_cost = ! is_per_unit ? cost : cost * amount.abs();
 
   DEBUG("commodity.prices.add",
 	"exchange: final-cost    = " << breakdown.final_cost);
