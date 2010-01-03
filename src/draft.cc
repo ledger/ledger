@@ -458,6 +458,9 @@ xact_t * draft_t::insert(journal_t& journal)
 	  *post.cost *= new_post->amount;
 	  post.cost->set_commodity(cost_commodity);
 	}
+	else if (new_post->amount.sign() < 0) {
+	  new_post->cost->in_place_negate();
+	}
 
 	new_post->cost = *post.cost;
 	DEBUG("derive.xact", "Copied over posting cost");

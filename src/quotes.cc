@@ -75,7 +75,7 @@ commodity_quote_from_script(commodity_t& commodity,
     if (char * p = std::strchr(buf, '\n')) *p = '\0';
     DEBUG("commodity.download", "downloaded quote: " << buf);
 
-    if (optional<price_point_t> point =
+    if (optional<std::pair<commodity_t *, price_point_t> > point =
 	commodity_pool_t::current_pool->parse_price_directive(buf)) {
       if (commodity_pool_t::current_pool->price_db) {
 #if defined(__GNUG__) && __GNUG__ < 3
@@ -86,12 +86,12 @@ commodity_quote_from_script(commodity_t& commodity,
 			  std::ios_base::out | std::ios_base::app);
 #endif
 	database << "P "
-		 << format_datetime(point->when, FMT_WRITTEN)
+		 << format_datetime(point->second.when, FMT_WRITTEN)
 		 << " " << commodity.symbol()
-		 << " " << point->price
+		 << " " << point->second.price
 		 << std::endl;
       }
-      return point;
+      return point->second;
     }
   } else {
     DEBUG("commodity.download",

@@ -337,7 +337,9 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       }
 
       expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
+      DEBUG("query.mask", "Mask from string: " << *tok.value);
       mask->set_value(mask_t(*tok.value));
+      DEBUG("query.mask", "Mask is: " << mask->as_value().as_mask().str());
 
       node->set_left(ident);
       node->set_right(mask);

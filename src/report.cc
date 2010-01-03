@@ -380,6 +380,32 @@ value_t report_t::fn_strip(call_scope_t& args)
   return args.value().strip_annotations(what_to_keep());
 }
 
+value_t report_t::fn_trim(call_scope_t& args)
+{
+  string temp(args.value().to_string());
+  scoped_array<char> buf(new char[temp.length() + 1]);
+  std::strcpy(buf.get(), temp.c_str());
+
+  const char * p = buf.get();
+  while (*p && std::isspace(*p))
+    p++;
+
+  const char * e = buf.get() + temp.length();
+  while (e > p && std::isspace(*e))
+    e--;
+
+  if (e == p) {
+    return string_value(empty_string);
+  }
+  else if (e < p) {
+    assert(false);
+    return string_value(empty_string);
+  }
+  else {
+    return string_value(string(p, e - p));
+  }
+}
+
 value_t report_t::fn_scrub(call_scope_t& args)
 {
   value_t temp(args.value().strip_annotations(what_to_keep()));
@@ -1078,6 +1104,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_today);
       else if (is_eq(p, "t"))
 	return MAKE_FUNCTOR(report_t::fn_display_amount);
+      else if (is_eq(p, "trim"))
+	return MAKE_FUNCTOR(report_t::fn_trim);
       else if (is_eq(p, "to_boolean"))
 	return MAKE_FUNCTOR(report_t::fn_to_boolean);
       else if (is_eq(p, "to_int"))
