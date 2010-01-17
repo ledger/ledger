@@ -863,7 +863,7 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-pthread')
 
         elif system == 'Darwin':
-            if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
+            if exists('/Users/johnw/Projects/ledger/plan/TODO'):
                 self.setup_for_johnw()
 
             self.locate_darwin_libraries()
@@ -1065,9 +1065,8 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
-            self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
-
             if self.options.use_glibcxx_debug:
+                self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
             if self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
