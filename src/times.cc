@@ -224,7 +224,7 @@ namespace {
 	when = date_t(year ? *year : CURRENT_DATE().year(),
 		      when.month(), when.day());
 
-	if (when.month() > CURRENT_DATE().month())
+	if (! year && when.month() > CURRENT_DATE().month())
 	  when -= gregorian::years(1);
       }
     }
