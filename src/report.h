@@ -362,7 +362,7 @@ public:
 
   OPTION_(report_t, average, DO() { // -A
       parent->HANDLER(display_total_)
-	.set_expr(string("--average"), "total_expr/count");
+	.set_expr(string("--average"), "count>0?(total_expr/count):0");
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
