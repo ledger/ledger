@@ -291,7 +291,8 @@ class PrepareBuild(CommandLineApp):
         if args:
             cmd = args[0]
             if not PrepareBuild.__dict__.has_key('phase_' + cmd):
-                cmd = 'config'
+                sys.stderr.write("Unknown build phase: " + cmd + "\n")
+                sys.exit(1)
             else:
                 args = args[1:]
         else:
