@@ -152,13 +152,12 @@ format_accounts::format_accounts(report_t&		 _report,
 
 std::size_t format_accounts::post_account(account_t& account, const bool flat)
 {
+  if (! flat && account.parent)
+    post_account(*account.parent, flat);
+
   if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
       ! account.xdata().has_flags(ACCOUNT_EXT_DISPLAYED)) {
-    if (! flat && account.parent &&
-	account.parent->xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
-	! account.parent->xdata().has_flags(ACCOUNT_EXT_DISPLAYED))
-      post_account(*account.parent, flat);
-
+    DEBUG("account.display", "Displaying account: " << account.fullname());
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
     bind_scope_t bound_scope(report, account);
