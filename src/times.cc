@@ -824,15 +824,6 @@ date_interval_t date_parser_t::parse()
 	break;
       }
 
-      case lexer_t::token_t::TOK_MONTH: {
-	date_t temp(today);
-	temp += gregorian::months(adjust);
-	inclusion_specifier =
-	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
-			   temp.month());
-	break;
-      }
-
       case lexer_t::token_t::TOK_WEEK: {
 	date_t temp =
 	  date_duration_t::find_nearest(today, date_duration_t::WEEKS);
@@ -852,10 +843,15 @@ date_interval_t date_parser_t::parse()
       }
 
       default:
-	tok.unexpected();
+      case lexer_t::token_t::TOK_MONTH: {
+	date_t temp(today);
+	temp += gregorian::months(adjust);
+	inclusion_specifier =
+	  date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
+			   temp.month());
 	break;
       }
-      break;
+      }
     }
 
     case lexer_t::token_t::TOK_TODAY:
