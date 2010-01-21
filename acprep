@@ -36,6 +36,176 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
+search_prefixes = [ '/usr/local',
+                    '/opt/local',
+                    '/sw',
+                    '/usr' ]
+
+class BoostInfo(object):
+    log          = None
+    suffix       = ""
+    home_path    = "/usr"
+    include_path = "include"
+    library_path = "lib"
+    configured   = False
+
+    def __init__(self, log):
+        self.log = log
+
+    def configure(self, suffix = None, home_path = None,
+                  include_path = None, library_path = None):
+        path = library_path or self.library_path
+        if not isabs(path):
+            path = join(home_path or self.home_path, path)
+        if not exists(path) or not isdir(path) or \
+           not self.check_for_boost_regex_lib(path, suffix or self.suffix):
+            return False
+
+        path = include_path or self.include_path
+        if not isabs(path):
+            path = join(home_path or self.home_path, path)
+        if not exists(path) or not isdir(path) or \
+           not self.check_for_boost_regex_hpp(path):
+            return False
+
+        self.log.debug('Configuring Boost details')
+        if suffix:
+            self.log.debug('Setting Boost suffix to => ' + suffix)
+            self.suffix       = suffix
+        if home_path:
+            self.log.debug('Setting Boost home to => ' + home_path)
+            self.home_path    = home_path
+        if include_path:
+            self.log.debug('Setting Boost include directory to => ' + include_path)
+            self.include_path = include_path
+        if library_path:
+            self.log.debug('Setting Boost lib directory to => ' + library_path)
+            self.library_path = library_path
+
+        self.configured = True
+
+        return True             # The object was configured
+
+    def option_boost_suffix(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --boost or --boost-suffix')
+        self.suffix = value
+
+    def option_boost_home(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --boost-home')
+        self.home_path = value
+
+    def option_boost_include(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --boost-include')
+        self.include_path = value
+
+    def option_boost_lib(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --boost-lib')
+        self.library_path = value
+
+    def inform_boost_details(self):
+        self.log.info('Boost was found here:')
+        self.log.info('Boost include path => ' + self.include_directory())
+        self.log.info('Boost library path => ' + self.library_directory())
+        self.log.info('Boost suffix => ' + self.suffix)
+
+    def find_boost_in_directory(self, path):
+        if exists(path) and isdir(path):
+            for entry in reversed(sorted(os.listdir(path))):
+                if re.search('boost_regex', entry):
+                    self.log.info('Found a Boost library: ' + entry)
+
+                match = re.match('libboost_regex([^.]*)\.(a|so|dylib)', entry)
+                if match:
+                    suffix = match.group(1)
+                    self.log.info('Found a Boost suffix => ' + suffix)
+                    return suffix
+        else:
+            self.log.debug('The directory "%s" is not valid, skipping' % path)
+        return None
+
+    def locate_boost(self):
+        for path in map(lambda x: join(x, 'lib'), search_prefixes):
+            self.log.info('Looking for Boost in %s...' % path)
+            self.suffix = self.find_boost_in_directory(path)
+            if self.suffix is not None:
+                self.home_path = dirname(path)
+                self.configured = True
+                self.inform_boost_details()
+                break
+        if self.suffix is None:
+            self.log.error("Boost not found, try --boost-home (and --boost-suffix)")
+            sys.exit(1)
+
+    def check_for_boost_regex_lib(self, path, suffix):
+        regex_lib = join(path, 'libboost_regex' + suffix)
+        return (exists(regex_lib + '.a') or exists(regex_lib + '.lib') or
+                exists(regex_lib + '.so') or exists(regex_lib + '.dylib'))
+
+    def check_for_boost_regex_hpp(self, path):
+        regex_hpp = join(path, 'boost/regex.hpp')
+        return exists(regex_hpp)
+
+    def get_suffix(self):
+        if not self.configured:
+            self.locate_boost()
+        return self.suffix
+
+    def include_directory(self):
+        if not self.configured:
+            self.locate_boost()
+
+        if isabs(self.include_path):
+            path = self.include_path
+        else:
+            path = join(self.home_path, self.include_path)
+
+        if not exists(path) or not isdir(path):
+            self.log.error("Boost include directory '%s' not found, use --boost-include" % path)
+            sys.exit(1)
+
+        if not self.check_for_boost_regex_hpp(path):
+            self.log.warning("Could not find Boost header 'boost/regex.hpp'; use --boost-* flags")
+
+        return path
+
+    def library_directory(self):
+        if not self.configured:
+            self.locate_boost()
+
+        if isabs(self.library_path):
+            path = self.library_path
+        else:
+            path = join(self.home_path, self.library_path)
+
+        if not exists(path) or not isdir(path):
+            self.log.error("Boost library directory '%s' not found, use --boost-include" % path)
+            sys.exit(1)
+
+        if not self.check_for_boost_regex_lib(path, self.suffix):
+            self.log.warning("Could not find Boost library 'boost_regex'; use --boost-* flags")
+
+        return path
+
+    def dependencies(self, system):
+        if system == 'darwin':
+            return [ 'boost-jam', 'boost', '+icu+python26+st+universal' ]
+
+        if system == 'centos':
+            return [ 'boost-devel' ]
+
+        elif system == 'ubuntu-karmic':
+            return [ 'bjam', 'libboost1.40-dev',
+                     'libboost-regex1.40-dev',
+                     'libboost-date-time1.40-dev',
+                     'libboost-filesystem1.40-dev',
+                     'libboost-python1.40-dev' ]
+
+        elif system == 'ubuntu-hardy':
+            return [ 'bjam', 'libboost1.35-dev',
+                     'libboost-python1.35-dev',
+                     'libboost-regex1.35-dev',
+                     'libboost-date-time1.35-dev',
+                     'libboost-filesystem1.35-dev' ]
 
 class CommandLineApp(object):
     "Base class for building command line applications."
@@ -195,8 +365,6 @@ class PrepareBuild(CommandLineApp):
         self.envvars = {
             'PYTHON_HOME':     '/usr',
             'PYTHON_VERSION':  '2.6',
-            'BOOST_SUFFIX':    None,
-            'BOOST_HOME':      '/usr',
             'LEDGER_PRODUCTS': None,
             'CC':              'gcc',
             'CPPFLAGS':        '',
@@ -226,14 +394,34 @@ class PrepareBuild(CommandLineApp):
         CommandLineApp.__init__(self)
         self.log.setLevel(logging.INFO)
 
+        self.boost_info = BoostInfo(self.log)
         op = self.option_parser
+
+        # These options call into self.boost_info
+        op.add_option('', '--boost', metavar='BOOST_SUFFIX',
+                      action="callback", type="string",
+                      callback=self.boost_info.option_boost_suffix,
+                      help='Set Boost library suffix (ex: "--boost=-mt")')
+        op.add_option('', '--boost-sufix', metavar='BOOST_SUFFIX',
+                      action="callback", type="string",
+                      callback=self.boost_info.option_boost_suffix,
+                      help='Set Boost library suffix (ex: "--boost-suffix=-mt")')
+        op.add_option('', '--boost-home', metavar='BOOST_HOME',
+                      action="callback", type="string",
+                      callback=self.boost_info.option_boost_home,
+                      help='Set Boost home directory (ex: "--boost-home=DIR")')
+        op.add_option('', '--boost-include', metavar='BOOST_INCLUDE',
+                      action="callback", type="string",
+                      callback=self.boost_info.option_boost_include,
+                      help='Set Boost include path (ex: "--boost-include=DIR")')
+        op.add_option('', '--boost-lib', metavar='BOOST_LIB',
+                      action="callback", type="string",
+                      callback=self.boost_info.option_boost_lib,
+                      help='Set Boost library path (ex: "--boost-lib=DIR")')
+
         op.add_option('-j', '--jobs', metavar='N',
                       type='int', action='store', dest='jobs',
                       default=1, help='Allow N make jobs at once')
-        op.add_option('', '--boost', metavar='SUFFIX',
-                      action="callback", type="string",
-                      callback=self.option_boost,
-                      help='Set Boost library suffix (ex: "--boost=-mt")')
         op.add_option('', '--force', action="callback",
                       callback=self.option_force,
                       help="Perform every action, without checking")
@@ -291,7 +479,7 @@ class PrepareBuild(CommandLineApp):
         if args:
             cmd = args[0]
             if not PrepareBuild.__dict__.has_key('phase_' + cmd):
-                sys.stderr.write("Unknown build phase: " + cmd + "\n")
+                self.log.error("Unknown build phase: " + cmd + "\n")
                 sys.exit(1)
             else:
                 args = args[1:]
@@ -550,7 +738,7 @@ class PrepareBuild(CommandLineApp):
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
                 self.log.info('Looks like you are using MacPorts on OS X')
-                packages = [
+                packages = self.boost_info.dependencies('darwin') + [
                     'sudo', 'port', 'install', '-f',
                     'automake',
                     'autoconf',
@@ -564,8 +752,6 @@ class PrepareBuild(CommandLineApp):
                     'ncursesw', '+universal',
                     'gettext' ,'+universal',
                     'libedit' ,'+universal',
-                     'boost-jam',
-                    'boost', '+icu+python26+st+universal',
                     'cppunit', '+universal',
                     #'texlive',
                     #'doxygen',
@@ -579,6 +765,7 @@ class PrepareBuild(CommandLineApp):
             elif exists('/sw/bin/fink'):
                 self.log.info('Looks like you are using Fink on OS X')
                 self.log.error("I don't know the package names for Fink yet!")
+                sys.exit(1)
 
         elif system == 'Linux':
             if exists('/etc/issue'):
@@ -589,7 +776,7 @@ class PrepareBuild(CommandLineApp):
                     release.close()
                     if re.search('karmic', info):
                         self.log.info('Looks like you are using APT on Ubuntu Karmic')
-                        packages = [
+                        packages = self.boost_info.dependencies('ubuntu-karmic') + [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
                             'libtool',
@@ -600,14 +787,8 @@ class PrepareBuild(CommandLineApp):
                             'python-dev',
                             'libgmp3-dev',
                             'libmpfr-dev',
-                            'bjam',
                             'gettext',
                             'cvs',
-                            'libboost1.40-dev',
-                            'libboost-regex1.40-dev',
-                            'libboost-date-time1.40-dev',
-                            'libboost-filesystem1.40-dev',
-                            'libboost-python1.40-dev',
                             'libedit-dev',
                             'libcppunit-dev',
                             #'texlive-full',
@@ -619,7 +800,7 @@ class PrepareBuild(CommandLineApp):
                         ]
                     else:
                         self.log.info('Looks like you are using APT on Ubuntu Hardy')
-                        packages = [
+                        packages = self.boost_info.dependencies('ubuntu-hardy') + [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
                             'libtool',
@@ -628,16 +809,10 @@ class PrepareBuild(CommandLineApp):
                             'zlib1g-dev',
                             'libbz2-dev',
                             'python-dev',
-                            'bjam',
                             'cvs',
                             'gettext',
                             'libgmp3-dev',
                             'libmpfr-dev',
-                            'libboost1.35-dev',
-                            'libboost-python1.35-dev',
-                            'libboost-regex1.35-dev',
-                            'libboost-date-time1.35-dev',
-                            'libboost-filesystem1.35-dev',
                             'libedit-dev',
                             'libcppunit-dev',
                             #'texlive-full',
@@ -666,7 +841,6 @@ class PrepareBuild(CommandLineApp):
                         'zlib-devel',
                         'bzip2-devel',
                         'python-devel',
-                        'bboost-devel',
                         'gmp-devel',
                         'gettext-devel',
                         #'mpfr-devel'
@@ -682,124 +856,19 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
 
-    def phase_buildlibs(self, *args):
-        self.log.info('Executing phase: buildlibs')
-
-        try:
-            os.chdir('lib')
-
-            environ, conf_args = self.configure_environment()
-
-            boost   = 'boost_1_41_0'
-            tarball = boost + '.7z'
-
-            if not exists(boost):
-                if not exists(tarball):
-                    self.log.info('Downloading Boost source tarball ...')
-                    self.execute('curl', '-L', '-o', tarball,
-                                 'http://downloads.sourceforge.net/boost/' +
-                                 boost + '.7z?use_mirror=ufpr')
-
-                if not exists(tarball):
-                    self.log.error('Failed to locate the Boost source tarball')
-                    sys.exit(1)
-
-                fd = open(tarball)
-                try:
-                    csum = hashlib.md5()
-                except:
-                    csum = md5.md5()
-                csum.update(fd.read())
-                fd.close()
-                digest = csum.hexdigest()
-
-                if digest != 'b74ee2f0f46cef601544dd4ac2d7dec4':
-                    self.log.error('Boost source tarball fails to match checksum')
-                    sys.exit(1)
-
-                self.log.info('Extracting Boost source tarball ...')
-                self.execute('7za', 'x', tarball)
-
-            if not exists(boost):
-                self.log.error('Failed to locate the Boost sources')
-                sys.exit(1)
-
-            if not exists('cppunit') and self.git_working_tree():
-                self.execute('git', 'clone', 'git://github.com/jwiegley/cppunit.git')
-
-            if not exists('cppunit'):
-                self.log.error('Failed to locate the CppUnit sources')
-                sys.exit(1)
-
-            self.execute('make',
-                         'BOOST_SOURCE=%s' % boost,
-                         'CC=%s'  % environ['CC'],
-                         'CXX=%s' % environ['CXX'],
-                         'LD=%s'  % environ['LD'],
-                         'build-all')
-        finally:
-            os.chdir(self.source_dir)
-
     #########################################################################
     # Determine the system's basic configuration                            #
     #########################################################################
 
-    def locate_boost_in_dir(self, path):
-        if exists(path) and isdir(path):
-            entries = os.listdir(path)
-            entries.sort()
-            for entry in entries:
-                if re.search('boost_regex', entry):
-                    self.log.info('Found a Boost library: ' + entry)
-
-                match = re.match('libboost_regex([^.]*)\.(a|so|dylib)', entry)
-                if match:
-                    suffix = match.group(1)
-                    self.log.info('Found Boost suffix => ' + suffix)
-                    self.envvars['BOOST_HOME'] = dirname(path)
-                    return suffix
-        else:
-            self.log.debug('The directory "%s" is not valid, skipping' %
-                           path)
-        return None
-
-    def inform_boost_location(self, text, suffix):
-        self.log.info('Boost %s here:' % text)
-        self.log.info('BOOST_HOME    => ' + self.envvars['BOOST_HOME'])
-        self.log.info('BOOST_SUFFIX  => ' + suffix)
-
-    def locate_boost(self):
-        if self.envvars['BOOST_SUFFIX']:
-            self.log.info(("Not looking for Boost, since " +
-                            "a suffix of '%s' was given") %
-                           self.envvars['BOOST_SUFFIX'])
-        else:
-            suffix = None
-            for path in ['/usr/local/lib', '/opt/local/lib',
-                         '/sw/lib', '/usr/lib']:
-                self.log.info('Looking for Boost in %s...' % path)
-                suffix = self.locate_boost_in_dir(path)
-                if suffix is not None:
-                    self.inform_boost_location('was found', suffix)
-                    break
-            if suffix is None:
-                self.log.error("Boost could not be found.")
-            self.envvars['BOOST_SUFFIX'] = suffix
-        return self.envvars['BOOST_SUFFIX']
-
     def setup_system_directories(self):
-        boost_suffix = self.locate_boost()
-
         # Each of these becomes '-isystem <name>'
         for path in ['/usr/local/include',
-                        '%s/include/boost' %
-                        self.envvars['BOOST_HOME'],
-                        '%s/include' % self.envvars['BOOST_HOME'],
-                        '%s/include/python%s' %
-                        (self.envvars['PYTHON_HOME'],
-                         self.envvars['PYTHON_VERSION'].strip()),
-                        '/opt/local/include',
-                        '/sw/include']:
+                     self.boost_info.include_directory(),
+                     '%s/include/python%s' %
+                     (self.envvars['PYTHON_HOME'],
+                      self.envvars['PYTHON_VERSION'].strip()),
+                     '/opt/local/include',
+                     '/sw/include']:
             if exists(path) and isdir(path) and \
                path != '/usr/include':
                 self.log.info('Noticing include directory => ' + path)
@@ -812,7 +881,7 @@ class PrepareBuild(CommandLineApp):
                      % (self.envvars['PYTHON_HOME'],
                         self.envvars['PYTHON_VERSION'].strip()),
                      '/opt/local/lib',
-                     '%s/lib' % self.envvars['BOOST_HOME'],
+                     self.boost_info.library_directory(),
                      '/sw/lib']:
             if exists(path) and isdir(path) and \
                path not in self.sys_library_dirs:
@@ -840,7 +909,11 @@ class PrepareBuild(CommandLineApp):
         self.configure_args.append('--enable-doxygen')
         self.configure_args.append('--enable-python')
 
+        self.locate_darwin_libraries()
+
     def setup_for_system(self):
+        if exists('/Users/johnw/Projects/ledger/plan/TODO'):
+            self.setup_for_johnw()
         self.setup_system_directories()
 
         system = self.get_stdout('uname', '-s')
@@ -864,11 +937,6 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-pthread')
 
         elif system == 'Darwin':
-            if exists('/Users/johnw/Projects/ledger/plan/TODO'):
-                self.setup_for_johnw()
-
-            self.locate_darwin_libraries()
-
             if (self.current_flavor == 'opt' or \
                 self.current_flavor == 'default') and \
                exists('/usr/bin/g++-4.2'):
@@ -1010,10 +1078,6 @@ class PrepareBuild(CommandLineApp):
 	self.CXXFLAGS.append('-Wno-strict-aliasing')
 	self.CXXFLAGS.append('-Werror')
 
-    def option_boost(self, option=None, opt_str=None, value=None, parser=None):
-        self.log.debug('Saw option --boost')
-        self.envvars['BOOST_SUFFIX'] = value
-
     def option_pic(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --pic')
 	self.CXXFLAGS.append('-fPIC')
@@ -1047,50 +1111,33 @@ class PrepareBuild(CommandLineApp):
     # The various build flavors                                             #
     #########################################################################
 
-    def check_for_boost(self, directory = '/opt/local', suffix = '',
-                        boost_dirname = 'boost'):
-        if exists(join(directory, 'lib', 'libboost_regex' + suffix + '.a')):
-            self.envvars['BOOST_HOME']   = directory
-            self.envvars['BOOST_SUFFIX'] = suffix
-            include_directory = join(directory, 'include', boost_dirname)
-            if include_directory not in self.sys_include_dirs:
-                self.sys_include_dirs.append(include_directory)
-            library_directory = join(directory, 'lib')
-            if library_directory not in self.sys_library_dirs:
-                self.sys_library_dirs.append(library_directory)
-            self.inform_boost_location('is really located',
-                                       self.envvars['BOOST_SUFFIX'])
-            return True
-        else:
-            return False
-
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
             if self.options.use_glibcxx_debug:
                 self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-            if self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
-                                    suffix        = '-xgcc44-sd-1_41',
-                                    boost_dirname = 'boost-1_41'):
+            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
+                                         suffix       = '-xgcc44-sd-1_41',
+                                         include_path = 'include/boost-1_41'):
                 pass
-            elif self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
-                                      suffix        = '-xgcc44-d-1_41',
-                                      boost_dirname = 'boost-1_41'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
+                                           suffix       = '-xgcc44-d-1_41',
+                                           include_path = 'include/boost-1_41'):
                 pass
-            elif self.check_for_boost(suffix = '-d'):
+            elif self.boost_info.configure(suffix = '-d'):
                 pass
 
         else:
-            if self.check_for_boost():
+            if self.boost_info.configure():
                 pass
-            elif self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
-                                      suffix        = '-xgcc44-s-1_41',
-                                      boost_dirname = 'boost-1_41'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
+                                           suffix       = '-xgcc44-s-1_41',
+                                           include_path = 'include/boost-1_41'):
                 pass
-            elif self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
-                                      suffix        = '-xgcc44-1_41',
-                                      boost_dirname = 'boost-1_41'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
+                                           suffix       = '-xgcc44-1_41',
+                                           include_path = 'include/boost-1_41'):
                 pass
 
     def setup_flavor_default(self):
@@ -1193,9 +1240,9 @@ class PrepareBuild(CommandLineApp):
                (var.endswith('FLAGS') or exists(self.envvars[var])):
                 conf_args.append('%s=%s' % (var, self.envvars[var]))
 
-        if environ.has_key('BOOST_SUFFIX') and environ['BOOST_SUFFIX']:
+        if self.boost_info.get_suffix():
             conf_args.append('--with-boost-suffix=%s' %
-                             environ['BOOST_SUFFIX'])
+                             self.boost_info.get_suffix())
 
         return (environ, conf_args + self.configure_args)
 
