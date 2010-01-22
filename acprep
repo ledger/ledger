@@ -811,8 +811,10 @@ class PrepareBuild(CommandLineApp):
                      % (self.envvars['PYTHON_HOME'],
                         self.envvars['PYTHON_VERSION'].strip()),
                      '/opt/local/lib',
+                     '%s/lib' % self.envvars['BOOST_HOME'],
                      '/sw/lib']:
-            if exists(path) and isdir(path):
+            if exists(path) and isdir(path) and \
+               path not in self.sys_library_dirs:
                 self.log.info('Noticing library directory => ' + path)
                 self.sys_library_dirs.append(path)
 
@@ -861,7 +863,7 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-pthread')
 
         elif system == 'Darwin':
-            if exists('/Users/johnw/Dropbox/Accounts/ledger.dat'):
+            if exists('/Users/johnw/Projects/ledger/plan/TODO'):
                 self.setup_for_johnw()
 
             self.locate_darwin_libraries()
@@ -1044,55 +1046,51 @@ class PrepareBuild(CommandLineApp):
     # The various build flavors                                             #
     #########################################################################
 
+    def check_for_boost(self, directory = '/opt/local', suffix = '',
+                        boost_dirname = 'boost'):
+        if exists(join(directory, 'lib', 'libboost_regex' + suffix + '.a')):
+            self.envvars['BOOST_HOME']   = directory
+            self.envvars['BOOST_SUFFIX'] = suffix
+            include_directory = join(directory, 'include', boost_dirname)
+            if include_directory not in self.sys_include_dirs:
+                self.sys_include_dirs.append(include_directory)
+            library_directory = join(directory, 'lib')
+            if library_directory not in self.sys_library_dirs:
+                self.sys_library_dirs.append(library_directory)
+            self.inform_boost_location('is really located',
+                                       self.envvars['BOOST_SUFFIX'])
+            return True
+        else:
+            return False
+
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
-            self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
-
             if self.options.use_glibcxx_debug:
+                self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-            if exists('/usr/local/lib/libboost_regex-xgcc44-sd-1_41.a'):
-                self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-sd-1_41'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
-                self.inform_boost_location('is really located',
-                                           self.envvars['BOOST_SUFFIX'])
-
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-d-1_41.a'):
-                self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-d-1_41'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
-                self.inform_boost_location('is really located',
-                                           self.envvars['BOOST_SUFFIX'])
-
-            elif exists('/opt/local/lib/libboost_regex-d.a'):
-                self.envvars['BOOST_HOME']   = '/opt/local'
-                self.envvars['BOOST_SUFFIX'] = '-d'
-                self.sys_include_dirs.append('/opt/local/include/boost')
-                self.inform_boost_location('is really located',
-                                           self.envvars['BOOST_SUFFIX'])
+            if self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
+                                    suffix        = '-xgcc44-sd-1_41',
+                                    boost_dirname = 'boost-1_41'):
+                pass
+            elif self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
+                                      suffix        = '-xgcc44-d-1_41',
+                                      boost_dirname = 'boost-1_41'):
+                pass
+            elif self.check_for_boost(suffix = '-d'):
+                pass
 
         else:
-            if exists('/opt/local/lib/libboost_regex.a'):
-                self.envvars['BOOST_HOME']   = '/opt/local'
-                self.envvars['BOOST_SUFFIX'] = ''
-                self.sys_include_dirs.append('/opt/local/include/boost')
-                self.inform_boost_location('is really located',
-                                           self.envvars['BOOST_SUFFIX'])
-
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-s-1_41.a'):
-                self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-s-1_41'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
-                self.inform_boost_location('is really located',
-                                           self.envvars['BOOST_SUFFIX'])
-
-            elif exists('/usr/local/lib/libboost_regex-xgcc44-1_41.a'):
-                self.envvars['BOOST_HOME']   = '/usr/local'
-                self.envvars['BOOST_SUFFIX'] = '-xgcc44-1_41'
-                self.sys_include_dirs.append('/usr/local/include/boost-1_41')
-                self.inform_boost_location('is really located',
-                                           self.envvars['BOOST_SUFFIX'])
+            if self.check_for_boost():
+                pass
+            elif self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
+                                      suffix        = '-xgcc44-s-1_41',
+                                      boost_dirname = 'boost-1_41'):
+                pass
+            elif self.check_for_boost(directory     = '/usr/local/stow/boost_1_41_0',
+                                      suffix        = '-xgcc44-1_41',
+                                      boost_dirname = 'boost-1_41'):
+                pass
 
     def setup_flavor_default(self):
         pass

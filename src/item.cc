@@ -437,9 +437,12 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix)
 
 string item_context(const item_t& item, const string& desc)
 {
+  if (! item.pos)
+    return empty_string;
+
   std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
   if (! len)
-    return _("<no item context>");
+    return empty_string;
 
   assert(len > 0);
   assert(len < 2048);
