@@ -793,12 +793,18 @@ void transfer_details::operator()(post_t& post)
     break;
 
   case SET_ACCOUNT: {
-    std::list<string> account_names;
+    account_t * prev_account = temp.account;
     temp.account->remove_post(&temp);
+
+    std::list<string> account_names;
     split_string(substitute.to_string(), ':', account_names);
     temp.account = create_temp_account_from_path(account_names, temps,
 						 xact.journal->master);
     temp.account->add_post(&temp);
+
+    temp.account->add_flags(prev_account->flags());
+    if (prev_account->has_xdata())
+      temp.account->xdata().add_flags(prev_account->xdata().flags());
     break;
   }
 
