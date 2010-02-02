@@ -873,6 +873,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(percent);
     else OPT_(period_);
     else OPT_ALT(sort_xacts_, period_sort_);
+    else OPT(pivot_);
     else OPT(plot_amount_format_);
     else OPT(plot_total_format_);
     else OPT(price);

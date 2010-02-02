@@ -238,11 +238,39 @@ namespace {
     return false;
   }
 
-  value_t get_tag(call_scope_t& scope) {
-    in_context_t<item_t> env(scope, "s");
-    if (optional<string> value = env->get_tag(env.get<string>(0)))
-      return string_value(*value);
-    return string_value(empty_string);
+  value_t get_tag(call_scope_t& args) {
+    item_t& item(find_scope<item_t>(args));
+    optional<string> str;
+
+    if (args.size() == 1) {
+      if (args[0].is_string())
+	str = item.get_tag(args[0].as_string());
+      else if (args[0].is_mask())
+	str = item.get_tag(args[0].as_mask());
+      else
+	throw_(std::runtime_error,
+	       _("Expected string or mask for argument 1, but received %1")
+	       << args[0].label());
+    }
+    else if (args.size() == 2) {
+      if (args[0].is_mask() && args[1].is_mask())
+	str = item.get_tag(args[0].to_mask(), args[1].to_mask());
+      else
+	throw_(std::runtime_error,
+	       _("Expected masks for arguments 1 and 2, but received %1 and %2")
+	       << args[0].label() << args[1].label());
+    }
+    else if (args.size() == 0) {
+      throw_(std::runtime_error, _("Too few arguments to function"));
+    }
+    else {
+      throw_(std::runtime_error, _("Too many arguments to function"));
+    }
+
+    if (str)
+      return string_value(*str);
+    else
+      return string_value(empty_string);
   }
 
   value_t get_pathname(item_t& item) {

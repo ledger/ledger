@@ -273,6 +273,7 @@ public:
     HANDLER(pending).report(out);
     HANDLER(percent).report(out);
     HANDLER(period_).report(out);
+    HANDLER(pivot_).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(prepend_format_).report(out);
@@ -714,6 +715,8 @@ public:
        option_t<report_t>::on_with(whence,
 				   string_value(text.as_string() + " " + str()));
    });
+
+  OPTION(report_t, pivot_);
 
   OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
       on(none,
