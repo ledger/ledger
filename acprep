@@ -36,8 +36,8 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/usr/local',
-                    '/opt/local',
+search_prefixes = [ '/opt/local',
+                    '/usr/local',
                     '/sw',
                     '/usr' ]
 
@@ -164,7 +164,8 @@ class BoostInfo(object):
             sys.exit(1)
 
         if not self.check_for_boost_regex_hpp(path):
-            self.log.warning("Could not find Boost header 'boost/regex.hpp'; use --boost-* flags")
+            self.log.error("Could not find Boost header 'boost/regex.hpp' in '%s'; use --boost-* flags" % path)
+            sys.exit(1)
 
         return path
 
@@ -182,7 +183,8 @@ class BoostInfo(object):
             sys.exit(1)
 
         if not self.check_for_boost_regex_lib(path, self.suffix):
-            self.log.warning("Could not find Boost library 'boost_regex'; use --boost-* flags")
+            self.log.error("Could not find Boost library 'boost_regex' in '%s'; use --boost-* flags" % path)
+            sys.exit(1)
 
         return path
 
@@ -1117,13 +1119,13 @@ class PrepareBuild(CommandLineApp):
                 self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
-                                         suffix       = '-xgcc44-sd-1_41',
-                                         include_path = 'include/boost-1_41'):
+            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
+                                         suffix       = '-xgcc44-sd-1_42',
+                                         include_path = 'include/boost-1_42'):
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
-                                           suffix       = '-xgcc44-d-1_41',
-                                           include_path = 'include/boost-1_41'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
+                                           suffix       = '-xgcc44-d-1_42',
+                                           include_path = 'include/boost-1_42'):
                 pass
             elif self.boost_info.configure(suffix = '-d'):
                 pass
@@ -1131,13 +1133,13 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
-                                           suffix       = '-xgcc44-s-1_41',
-                                           include_path = 'include/boost-1_41'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
+                                           suffix       = '-xgcc44-s-1_42',
+                                           include_path = 'include/boost-1_42'):
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_41_0',
-                                           suffix       = '-xgcc44-1_41',
-                                           include_path = 'include/boost-1_41'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
+                                           suffix       = '-xgcc44-1_42',
+                                           include_path = 'include/boost-1_42'):
                 pass
 
     def setup_flavor_default(self):
