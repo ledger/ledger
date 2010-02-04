@@ -296,6 +296,10 @@ namespace {
     return item.pos ? long(item.pos->end_line) : 0L;
   }
 
+  value_t get_seq(item_t& item) {
+    return item.pos ? long(item.pos->sequence) : 0L;
+  }
+
   value_t get_depth(item_t&) {
     return 0L;
   }
@@ -416,6 +420,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 's':
     if (name == "status")
       return WRAP_FUNCTOR(get_wrapper<&get_status>);
+    else if (name == "seq")
+      return WRAP_FUNCTOR(get_wrapper<&get_seq>);
     break;
 
   case 't':

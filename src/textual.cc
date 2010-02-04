@@ -77,6 +77,7 @@ namespace {
     istream_pos_type  curr_pos;
     std::size_t       count;
     std::size_t       errors;
+    std::size_t *     global_sequence;
 
     optional<date_t::year_type> current_year;
 
@@ -87,10 +88,11 @@ namespace {
 	       std::istream&	   _in,
 	       scope_t&	           _scope,
 	       journal_t&	   _journal,
-	       account_t *	   _master        = NULL,
-	       const path *	   _original_file = NULL,
-	       bool                _strict        = false,
-	       instance_t *        _parent        = NULL);
+	       std::size_t *       _global_sequence = NULL,
+	       account_t *	   _master          = NULL,
+	       const path *	   _original_file   = NULL,
+	       bool                _strict          = false,
+	       instance_t *        _parent          = NULL);
 
     ~instance_t();
 
@@ -213,6 +215,7 @@ instance_t::instance_t(std::list<state_t>& _state_stack,
 		       std::istream&	   _in,
 		       scope_t&	           _scope,
 		       journal_t&	   _journal,
+		       std::size_t *       _global_sequence,
 		       account_t *	   _master,
 		       const path *	   _original_file,
 		       bool                _strict,
@@ -223,7 +226,8 @@ instance_t::instance_t(std::list<state_t>& _state_stack,
 #endif
     parent(_parent), in(_in), scope(_scope),
     journal(_journal), master(_master),
-    original_file(_original_file), strict(_strict)
+    original_file(_original_file), strict(_strict),
+    global_sequence(_global_sequence)
 {
   TRACE_CTOR(instance_t, "...");
 
@@ -452,6 +456,7 @@ void instance_t::clock_in_directive(char * line,
   position.beg_line = linenum;
   position.end_pos  = curr_pos;
   position.end_line = linenum;
+  position.sequence = (*global_sequence)++;
 
   time_xact_t event(position, parse_datetime(datetime, current_year),
 		    p ? top_account()->find_account(p) : NULL,
@@ -481,6 +486,7 @@ void instance_t::clock_out_directive(char * line,
   position.beg_line = linenum;
   position.end_pos  = curr_pos;
   position.end_line = linenum;
+  position.sequence = (*global_sequence)++;
 
   time_xact_t event(position, parse_datetime(datetime, current_year),
 		    p ? top_account()->find_account(p) : NULL,
@@ -554,8 +560,7 @@ void instance_t::option_directive(char * line)
 
 void instance_t::automated_xact_directive(char * line)
 {
-  istream_pos_type pos	= line_beg_pos;
-  std::size_t      lnum = linenum;
+  istream_pos_type pos= line_beg_pos;
 
   bool reveal_context = true;
 
@@ -564,6 +569,11 @@ void instance_t::automated_xact_directive(char * line)
   std::auto_ptr<auto_xact_t> ae
     (new auto_xact_t(query_t(string(skip_ws(line + 1)),
 			     keep_details_t(true, true, true))));
+  ae->pos	    = position_t();
+  ae->pos->pathname = pathname;
+  ae->pos->beg_pos  = line_beg_pos;
+  ae->pos->beg_line = linenum;
+  ae->pos->sequence = (*global_sequence)++;
 
   reveal_context = false;
 
@@ -573,10 +583,6 @@ void instance_t::automated_xact_directive(char * line)
     journal.auto_xacts.push_back(ae.get());
 
     ae->journal	      = &journal;
-    ae->pos	      = position_t();
-    ae->pos->pathname = pathname;
-    ae->pos->beg_pos  = pos;
-    ae->pos->beg_line = lnum;
     ae->pos->end_pos  = curr_pos;
     ae->pos->end_line = linenum;
 
@@ -595,14 +601,18 @@ void instance_t::automated_xact_directive(char * line)
 
 void instance_t::period_xact_directive(char * line)
 {
-  istream_pos_type pos	= line_beg_pos;
-  std::size_t      lnum = linenum;
+  istream_pos_type pos = line_beg_pos;
 
   bool reveal_context = true;
 
   try {
 
   std::auto_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
+  pe->pos           = position_t();
+  pe->pos->pathname = pathname;
+  pe->pos->beg_pos  = line_beg_pos;
+  pe->pos->beg_line = linenum;
+  pe->pos->sequence = (*global_sequence)++;
 
   reveal_context = false;
 
@@ -614,10 +624,6 @@ void instance_t::period_xact_directive(char * line)
       journal.extend_xact(pe.get());
       journal.period_xacts.push_back(pe.get());
 
-      pe->pos           = position_t();
-      pe->pos->pathname = pathname;
-      pe->pos->beg_pos  = pos;
-      pe->pos->beg_line = lnum;
       pe->pos->end_pos  = curr_pos;
       pe->pos->end_line = linenum;
 
@@ -694,7 +700,7 @@ void instance_t::include_directive(char * line)
 #if defined(TIMELOG_SUPPORT)
 		      timelog,
 #endif
-		      stream, scope, journal, master,
+		      stream, scope, journal, global_sequence, master,
 		      &filename, strict, this);
   instance.parse();
 
@@ -880,6 +886,7 @@ post_t * instance_t::parse_post(char *		line,
   post->pos->pathname = pathname;
   post->pos->beg_pos  = line_beg_pos;
   post->pos->beg_line = linenum;
+  post->pos->sequence = (*global_sequence)++;
 
   char buf[MAX_LINE + 1];
   std::strcpy(buf, line);
@@ -1229,6 +1236,7 @@ xact_t * instance_t::parse_xact(char *		line,
   xact->pos->pathname = pathname;
   xact->pos->beg_pos  = line_beg_pos;
   xact->pos->beg_line = linenum;
+  xact->pos->sequence = (*global_sequence)++;
 
   bool reveal_context = true;
 
@@ -1378,11 +1386,12 @@ std::size_t journal_t::parse(std::istream& in,
   time_log_t timelog(*this);
 #endif
 
+  std::size_t parsing_sequence = 1;
   instance_t parsing_instance(state_stack,
 #if defined(TIMELOG_SUPPORT)
 			      timelog,
 #endif
-			      in, scope, *this, master,
+			      in, scope, *this, &parsing_sequence, master,
 			      original_file, strict);
   parsing_instance.parse();
 

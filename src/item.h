@@ -53,8 +53,10 @@ struct position_t
   std::size_t	   beg_line;
   istream_pos_type end_pos;
   std::size_t	   end_line;
+  std::size_t	   sequence;
 
-  position_t() : beg_pos(0), beg_line(0), end_pos(0), end_line(0) {
+  position_t()
+    : beg_pos(0), beg_line(0), end_pos(0), end_line(0), sequence(0) {
     TRACE_CTOR(position_t, "");
   }
   position_t(const position_t& pos) {
@@ -72,6 +74,7 @@ struct position_t
       beg_line  = pos.beg_line;
       end_pos   = pos.end_pos;
       end_line  = pos.end_line;
+      sequence  = pos.sequence;
     }
     return *this;
   }
@@ -89,6 +92,7 @@ private:
     ar & beg_line;
     ar & end_pos;
     ar & end_line;
+    ar & sequence;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
