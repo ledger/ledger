@@ -356,6 +356,7 @@ class PrepareBuild(CommandLineApp):
         self.products_dir      = None
         self.build_dir         = self.source_dir
         self.configure_args    = ['--with-included-gettext', '--enable-python']
+        self.boost_info        = BoostInfo(self.log)
         self.sys_include_dirs  = []
         self.sys_library_dirs  = []
 
@@ -396,7 +397,12 @@ class PrepareBuild(CommandLineApp):
         CommandLineApp.__init__(self)
         self.log.setLevel(logging.INFO)
 
-        self.boost_info = BoostInfo(self.log)
+        self.force      = False
+        self.no_pch     = False
+        self.source_dir = os.getcwd()
+
+        self.initialize()
+
         op = self.option_parser
 
         # These options call into self.boost_info
@@ -466,12 +472,6 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--warn', action="callback",
                       callback=self.option_warn,
                       help='Enable full warning flags')
-
-        self.force      = False
-        self.no_pch     = False
-        self.source_dir = os.getcwd()
-
-        self.initialize()
 
     def main(self, *args):
         if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
@@ -1265,6 +1265,10 @@ class PrepareBuild(CommandLineApp):
 
         self.configured = True
 
+        environ, conf_args = self.configure_environment()
+        for arg in args:
+            if arg: conf_args.append(arg)
+
         build_dir = self.ensure(self.build_directory())
         try:
             os.chdir(build_dir)
@@ -1274,11 +1278,6 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('./configure must be run ' + reason)
                 self.log.debug('Source => ' + self.source_dir)
                 self.log.debug('Build  => ' + build_dir)
-
-                environ, conf_args = self.configure_environment()
-                for arg in args:
-                    if arg: conf_args.append(arg)
-
                 self.log.debug('configure env  => ' + str(environ))
                 self.log.debug('configure args => ' + str(conf_args))
 
@@ -1447,11 +1446,10 @@ class PrepareBuild(CommandLineApp):
         self.initialize()               # reset everything
         self.build_dir      = None      # use the build/ tree
         self.current_flavor = flavor
+        self.option_release()
 
         if reset and exists(self.build_directory()) and \
            isdir(self.build_directory()):
-            self.option_release()
-
             self.log.info('=== Wiping build directory %s ===' %
                           self.build_directory())
             shutil.rmtree(self.build_directory())
@@ -1498,21 +1496,22 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info('=== Copying source tree ===')
         self.phase_rsync()
+
         self.phase_makeall(reset=True, *args)
 
-        self.configure_flavor('opt')
+        self.configure_flavor('opt', reset=False)
         self.log.info('=== Testing opt ===')
         self.phase_make('fullcheck')
         
-        self.configure_flavor('gcov')
+        self.configure_flavor('gcov', reset=False)
         self.log.info('=== Testing gcov ===')
         self.phase_make('check')
         
-        self.configure_flavor('debug')
+        self.configure_flavor('debug', reset=False)
         self.log.info('=== Testing debug ===')
         self.phase_make('fullcheck')
         
-        self.configure_flavor('default')
+        self.configure_flavor('default', reset=False)
         self.log.info('=== Testing default ===')
         self.phase_make('fullcheck')
 
