@@ -115,6 +115,8 @@ public:
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
 				  const string& name);
 
+  amount_t resolve_expr(scope_t& scope, expr_t& expr);
+
   bool valid() const;
 
   struct xdata_t : public supports_flags<uint_least16_t>

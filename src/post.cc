@@ -417,6 +417,20 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   return item_t::lookup(kind, name);
 }
 
+amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr)
+{
+  bind_scope_t bound_scope(scope, *this);
+  value_t result(expr.calc(bound_scope));
+  if (result.is_long()) {
+    return result.to_amount();
+  } else {
+    if (! result.is_amount())
+      throw_(amount_error,
+	     _("Amount expressions must result in a simple amount"));
+    return result.as_amount();
+  }
+}
+
 bool post_t::valid() const
 {
   if (! xact) {
