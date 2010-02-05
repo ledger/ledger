@@ -105,6 +105,7 @@ public:
 				   const optional<mask_t>& value_mask = none) const;
 
   virtual date_t date() const;
+  virtual date_t actual_date() const;
   virtual optional<date_t> effective_date() const;
 
   bool must_balance() const {
@@ -113,6 +114,8 @@ public:
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
 				  const string& name);
+
+  amount_t resolve_expr(scope_t& scope, expr_t& expr);
 
   bool valid() const;
 
@@ -197,6 +200,20 @@ public:
   }
 
   friend class xact_t;
+
+  struct compare_by_date_and_sequence
+  {
+    bool operator()(const post_t * left, const post_t * right) const {
+      gregorian::date_duration duration =
+	left->actual_date() - right->actual_date();
+      if (duration.days() == 0) {
+	return ((left->pos ? left->pos->sequence : 0) <
+		(right->pos ? right->pos->sequence : 0));
+      } else {
+	return duration.days() < 0;
+      }
+    }
+  };
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

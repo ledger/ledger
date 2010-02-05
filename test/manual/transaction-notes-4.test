@@ -19,8 +19,8 @@ bal food and tag type --account='"Tags:" + tag("Type")'
     Assets:Checking
 >>>1
                $9.00  Tags
-               $4.50    Coffee
-               $4.50    Dining
+               $4.50    Coffee:Expenses:Food
+               $4.50    Dining:Expenses:Food
 --------------------
                $9.00
 >>>2

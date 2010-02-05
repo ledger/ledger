@@ -64,9 +64,8 @@ journal_t::~journal_t()
 {
   TRACE_DTOR(journal_t);
 
-  // Don't bother unhooking each xact's posts from the
-  // accounts they refer to, because all accounts are about to
-  // be deleted.
+  // Don't bother unhooking each xact's posts from the accounts they refer to,
+  // because all accounts are about to be deleted.
   foreach (xact_t * xact, xacts)
     checked_delete(xact);
 

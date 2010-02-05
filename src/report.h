@@ -273,6 +273,7 @@ public:
     HANDLER(pending).report(out);
     HANDLER(percent).report(out);
     HANDLER(period_).report(out);
+    HANDLER(pivot_).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(prepend_format_).report(out);
@@ -362,7 +363,7 @@ public:
 
   OPTION_(report_t, average, DO() { // -A
       parent->HANDLER(display_total_)
-	.set_expr(string("--average"), "total_expr/count");
+	.set_expr(string("--average"), "count>0?(total_expr/count):0");
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
@@ -714,6 +715,8 @@ public:
        option_t<report_t>::on_with(whence,
 				   string_value(text.as_string() + " " + str()));
    });
+
+  OPTION(report_t, pivot_);
 
   OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
       on(none,
