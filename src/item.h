@@ -173,6 +173,10 @@ public:
 	return *effective;
     return *_date;
   }
+  virtual date_t actual_date() const {
+    assert(_date);
+    return *_date;
+  }
   virtual optional<date_t> effective_date() const {
     return _date_eff;
   }

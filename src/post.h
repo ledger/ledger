@@ -105,6 +105,7 @@ public:
 				   const optional<mask_t>& value_mask = none) const;
 
   virtual date_t date() const;
+  virtual date_t actual_date() const;
   virtual optional<date_t> effective_date() const;
 
   bool must_balance() const {

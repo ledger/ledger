@@ -97,6 +97,18 @@ date_t post_t::date() const
   return *_date;
 }
 
+date_t post_t::actual_date() const
+{
+  if (xdata_ && is_valid(xdata_->date))
+    return xdata_->date;
+
+  if (! _date) {
+    assert(xact);
+    return xact->date();
+  }
+  return *_date;
+}  
+
 optional<date_t> post_t::effective_date() const
 {
   optional<date_t> date = item_t::effective_date();

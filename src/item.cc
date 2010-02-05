@@ -199,6 +199,9 @@ namespace {
   value_t get_date(item_t& item) {
     return item.date();
   }
+  value_t get_actual_date(item_t& item) {
+    return item.actual_date();
+  }
   value_t get_effective_date(item_t& item) {
     if (optional<date_t> effective = item.effective_date())
       return *effective;
@@ -351,6 +354,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'a':
     if (name == "actual")
       return WRAP_FUNCTOR(get_wrapper<&get_actual>);
+    else if (name == "actual_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_actual_date>);
     break;
 
   case 'b':
