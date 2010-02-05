@@ -16,8 +16,8 @@ bal checking --account=code
     Expenses:Food               $4.50
     Liabilities:Credit Card
 >>>1
-              $20.00  DEP
-              $-9.00  XFER
+              $20.00  DEP:Assets:Checking
+              $-9.00  XFER:Assets:Checking
 --------------------
               $11.00
 >>>2

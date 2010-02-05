@@ -861,7 +861,7 @@ bool value_t::is_less_than(const value_t& val) const
 	return as_amount() < val.as_amount();
       }
       catch (const amount_error&) {
-	return compare_amount_commodities()(&as_amount(), &val.as_amount());
+	return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount());
       }
     default:
       break;

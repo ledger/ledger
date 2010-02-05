@@ -293,12 +293,15 @@ void report_t::accounts_report(acct_handler_ptr handler)
 					    sort_expr, HANDLED(flat)));
   }
 
-  if (HANDLED(display_))
+  if (HANDLED(display_)) {
+    DEBUG("report.predicate",
+	  "Display predicate = " << HANDLER(display_).str());
     pass_down_accounts(handler, *iter.get(),
 		       predicate_t(HANDLER(display_).str(), what_to_keep()),
 		       *this);
-  else
+  } else {
     pass_down_accounts(handler, *iter.get());
+  }
 
   session.journal->clear_xdata();
 }
@@ -870,6 +873,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(percent);
     else OPT_(period_);
     else OPT_ALT(sort_xacts_, period_sort_);
+    else OPT(pivot_);
     else OPT(plot_amount_format_);
     else OPT(plot_total_format_);
     else OPT(price);

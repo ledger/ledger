@@ -20,15 +20,15 @@ reg --account=payee
     Expenses:Books          $30.00
     Assets:Cash
 >>>1
-08-Jan-01 January               January                      $10.00       $10.00
-08-Jan-01 January               January                     $-10.00            0
-08-Jan-31 End of January        End of January               $10.00       $10.00
-08-Jan-31 End of January        End of January              $-10.00            0
-08-Feb-01 February              February                     $20.00       $20.00
-08-Feb-01 February              February                    $-20.00            0
-08-Feb-28 End of February       End of February              $20.00       $20.00
-08-Feb-28 End of February       End of February             $-20.00            0
-08-Mar-01 March                 March                        $30.00       $30.00
-08-Mar-01 March                 March                       $-30.00            0
+08-Jan-01 January               January:Expenses:Books       $10.00       $10.00
+08-Jan-01 January               January:Assets:Cash         $-10.00            0
+08-Jan-31 End of January        En:Expenses:Books            $10.00       $10.00
+08-Jan-31 End of January        En:Assets:Cash              $-10.00            0
+08-Feb-01 February              Fe:Expenses:Books            $20.00       $20.00
+08-Feb-01 February              February:Assets:Cash        $-20.00            0
+08-Feb-28 End of February       En:Expenses:Books            $20.00       $20.00
+08-Feb-28 End of February       En:Assets:Cash              $-20.00            0
+08-Mar-01 March                 March:Expenses:Books         $30.00       $30.00
+08-Mar-01 March                 March:Assets:Cash           $-30.00            0
 >>>2
 === 0

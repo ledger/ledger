@@ -199,6 +199,9 @@ namespace {
   value_t get_date(item_t& item) {
     return item.date();
   }
+  value_t get_actual_date(item_t& item) {
+    return item.actual_date();
+  }
   value_t get_effective_date(item_t& item) {
     if (optional<date_t> effective = item.effective_date())
       return *effective;
@@ -238,11 +241,39 @@ namespace {
     return false;
   }
 
-  value_t get_tag(call_scope_t& scope) {
-    in_context_t<item_t> env(scope, "s");
-    if (optional<string> value = env->get_tag(env.get<string>(0)))
-      return string_value(*value);
-    return string_value(empty_string);
+  value_t get_tag(call_scope_t& args) {
+    item_t& item(find_scope<item_t>(args));
+    optional<string> str;
+
+    if (args.size() == 1) {
+      if (args[0].is_string())
+	str = item.get_tag(args[0].as_string());
+      else if (args[0].is_mask())
+	str = item.get_tag(args[0].as_mask());
+      else
+	throw_(std::runtime_error,
+	       _("Expected string or mask for argument 1, but received %1")
+	       << args[0].label());
+    }
+    else if (args.size() == 2) {
+      if (args[0].is_mask() && args[1].is_mask())
+	str = item.get_tag(args[0].to_mask(), args[1].to_mask());
+      else
+	throw_(std::runtime_error,
+	       _("Expected masks for arguments 1 and 2, but received %1 and %2")
+	       << args[0].label() << args[1].label());
+    }
+    else if (args.size() == 0) {
+      throw_(std::runtime_error, _("Too few arguments to function"));
+    }
+    else {
+      throw_(std::runtime_error, _("Too many arguments to function"));
+    }
+
+    if (str)
+      return string_value(*str);
+    else
+      return string_value(empty_string);
   }
 
   value_t get_pathname(item_t& item) {
@@ -266,6 +297,10 @@ namespace {
 
   value_t get_end_line(item_t& item) {
     return item.pos ? long(item.pos->end_line) : 0L;
+  }
+
+  value_t get_seq(item_t& item) {
+    return item.pos ? long(item.pos->sequence) : 0L;
   }
 
   value_t get_depth(item_t&) {
@@ -319,6 +354,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'a':
     if (name == "actual")
       return WRAP_FUNCTOR(get_wrapper<&get_actual>);
+    else if (name == "actual_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_actual_date>);
     break;
 
   case 'b':
@@ -388,6 +425,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 's':
     if (name == "status")
       return WRAP_FUNCTOR(get_wrapper<&get_status>);
+    else if (name == "seq")
+      return WRAP_FUNCTOR(get_wrapper<&get_seq>);
     break;
 
   case 't':

@@ -158,11 +158,21 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 				       report.session.journal->master,
 				       report.HANDLER(date_).str(),
 				       report));
-  if (report.HANDLED(account_))
+
+  if (report.HANDLED(account_)) {
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
 				       report.session.journal->master,
 				       report.HANDLER(account_).str(),
 				       report));
+  }
+  else if (report.HANDLED(pivot_)) {
+    string pivot = report.HANDLER(pivot_).str();
+    pivot = string("\"") + pivot + ":\" + tag(/" + pivot + "/)";
+    handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
+				       report.session.journal->master, pivot,
+				       report));
+  }
+
   if (report.HANDLED(payee_))
     handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
 				       report.session.journal->master,
