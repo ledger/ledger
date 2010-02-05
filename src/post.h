@@ -199,6 +199,20 @@ public:
 
   friend class xact_t;
 
+  struct compare_by_date_and_sequence
+  {
+    bool operator()(const post_t * left, const post_t * right) const {
+      gregorian::date_duration duration =
+	left->actual_date() - right->actual_date();
+      if (duration.days() == 0) {
+	return ((left->pos ? left->pos->sequence : 0) <
+		(right->pos ? right->pos->sequence : 0));
+      } else {
+	return duration.days() < 0;
+      }
+    }
+  };
+
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
   /** Serialization. */
