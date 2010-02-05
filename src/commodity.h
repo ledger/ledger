@@ -386,6 +386,10 @@ public:
 
   bool valid() const;
 
+  struct compare_by_commodity {
+    bool operator()(const amount_t * left, const amount_t * right) const;
+  };
+
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
   supports_flags<uint_least16_t> temp_flags;
@@ -418,10 +422,6 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   comm.print(out);
   return out;
 }
-
-struct compare_amount_commodities {
-  bool operator()(const amount_t * left, const amount_t * right) const;
-};
 
 void to_xml(std::ostream& out, const commodity_t& comm,
 	    bool commodity_details = false);

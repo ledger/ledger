@@ -587,8 +587,8 @@ bool commodity_t::valid() const
   return true;
 }
 
-bool compare_amount_commodities::operator()(const amount_t * left,
-					    const amount_t * right) const
+bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
+						   const amount_t * right) const
 {
   commodity_t& leftcomm(left->commodity());
   commodity_t& rightcomm(right->commodity());

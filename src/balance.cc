@@ -271,7 +271,8 @@ void balance_t::print(std::ostream& out,
     if (pair.second)
       sorted.push_back(&pair.second);
 
-  std::stable_sort(sorted.begin(), sorted.end(), compare_amount_commodities());
+  std::stable_sort(sorted.begin(), sorted.end(),
+		   commodity_t::compare_by_commodity());
 
   foreach (const amount_t * amount, sorted) {
     int width;
