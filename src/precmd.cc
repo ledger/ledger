@@ -174,7 +174,7 @@ value_t period_command(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t args_command(call_scope_t& args)
+value_t query_command(call_scope_t& args)
 {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
