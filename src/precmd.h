@@ -52,7 +52,7 @@ value_t parse_command(call_scope_t& args);
 value_t eval_command(call_scope_t& args);
 value_t format_command(call_scope_t& args);
 value_t period_command(call_scope_t& args);
-value_t args_command(call_scope_t& args);
+value_t query_command(call_scope_t& args);
 
 } // namespace ledger
 
