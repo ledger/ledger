@@ -470,11 +470,11 @@ value_t report_t::fn_justify(call_scope_t& scope)
 
 value_t report_t::fn_quoted(call_scope_t& scope)
 {
-  interactive_t	     args(scope, "s");
+  interactive_t	     args(scope, "v");
   std::ostringstream out;
 
   out << '"';
-  foreach (const char ch, args.get<string>(0)) {
+  foreach (const char ch, args.value_at(0).to_string()) {
     if (ch == '"')
       out << "\\\"";
     else
