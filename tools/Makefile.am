@@ -167,6 +167,7 @@ BUILT_SOURCES += system.hh.gch
 CLEANFILES    += system.hh.gch
 
 system.hh.gch: system.hh
+	-rm -f $@
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(lib_cppflags) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	    -o $@ $<
