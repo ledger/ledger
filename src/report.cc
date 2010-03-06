@@ -43,6 +43,7 @@
 #include "stats.h"
 #include "generate.h"
 #include "draft.h"
+#include "convert.h"
 #include "xml.h"
 #include "emacs.h"
 
@@ -1206,6 +1207,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#cleared"));
       }
+      else if (is_eq(p, "convert"))
+	return WRAP_FUNCTOR(convert_command);
       break;
 
     case 'e':

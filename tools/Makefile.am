@@ -72,6 +72,8 @@ libledger_data_la_LDFLAGS    = -release $(VERSION)
 libledger_report_la_SOURCES  =			\
 	src/stats.cc				\
 	src/generate.cc				\
+	src/csv.cc				\
+	src/convert.cc				\
 	src/draft.cc				\
 	src/emacs.cc                            \
 	src/xml.cc                              \
@@ -133,6 +135,8 @@ pkginclude_HEADERS =				\
 	src/temps.h				\
 	src/chain.h				\
 	src/precmd.h				\
+	src/csv.h				\
+	src/convert.h				\
 	src/draft.h				\
 	src/generate.h				\
 	src/stats.h				\
