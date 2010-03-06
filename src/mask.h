@@ -74,6 +74,9 @@ public:
 
   mask_t& operator=(const string& other);
 
+  bool operator<(const mask_t& other) const {
+    return expr < other.expr;
+  }
   bool operator==(const mask_t& other) const {
     return expr == other.expr;
   }

@@ -144,6 +144,8 @@ namespace {
     void end_directive(char * line);
     void alias_directive(char * line);
     void fixed_directive(char * line);
+    void payee_mapping_directive(char * line);
+    void account_mapping_directive(char * line);
     void tag_directive(char * line);
     void define_directive(char * line);
     bool general_directive(char * line);
@@ -735,6 +737,24 @@ void instance_t::fixed_directive(char * line)
   }
 }
 
+void instance_t::payee_mapping_directive(char * line)
+{
+  char * payee = skip_ws(line);
+  char * regex = next_element(payee, true);
+
+  context.journal.payee_mappings.push_back(payee_mapping_t(mask_t(regex), payee));
+}
+
+void instance_t::account_mapping_directive(char * line)
+{
+  char * account_name = skip_ws(line);
+  char * payee_regex  = next_element(account_name, true);
+
+  context.journal.account_mappings.push_back
+    (account_mapping_t(mask_t(payee_regex),
+		       context.top_account()->find_account(account_name)));
+}
+
 void instance_t::tag_directive(char * line)
 {
   string tag(trim_ws(line));
@@ -782,6 +802,13 @@ bool instance_t::general_directive(char * line)
     }
     break;
 
+  case 'c':
+    if (std::strcmp(p, "capture") == 0) {
+      account_mapping_directive(arg);
+      return true;
+    }
+    break;
+
   case 'd':
     if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
       define_directive(arg);
@@ -806,6 +833,13 @@ bool instance_t::general_directive(char * line)
   case 'i':
     if (std::strcmp(p, "include") == 0) {
       include_directive(arg);
+      return true;
+    }
+    break;
+
+  case 'p':
+    if (std::strcmp(p, "payee") == 0) {
+      payee_mapping_directive(arg);
       return true;
     }
     break;
@@ -927,6 +961,15 @@ post_t * instance_t::parse_post(char *		line,
       warning_(_("\"%1\", line %2: Unknown account '%3'")
 	       << pathname << linenum << post->account->fullname());
     post->account->add_flags(ACCOUNT_KNOWN);
+  }
+
+  if (post->account->name == _("Unknown")) {
+    foreach (account_mapping_t& value, context.journal.account_mappings) {
+      if (value.first.match(xact->payee)) {
+	post->account = value.second;
+	break;
+      }
+    }
   }
 
   // Parse the optional amount
@@ -1242,7 +1285,14 @@ xact_t * instance_t::parse_xact(char *		line,
 
   if (next && *next) {
     char * p = next_element(next, true);
-    xact->payee = next;
+    foreach (payee_mapping_t& value, context.journal.payee_mappings) {
+      if (value.first.match(next)) {
+	xact->payee = value.second;
+	break;
+      }
+    }
+    if (xact->payee.empty())
+      xact->payee = next;
     next = p;
   } else {
     xact->payee = _("<Unspecified payee>");
