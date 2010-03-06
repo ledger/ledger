@@ -857,12 +857,10 @@ bool value_t::is_less_than(const value_t& val) const
     case INTEGER:
       return as_amount() < val.as_long();
     case AMOUNT:
-      try {
+      if (as_amount().commodity() == val.as_amount().commodity())
 	return as_amount() < val.as_amount();
-      }
-      catch (const amount_error&) {
+      else
 	return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount());
-      }
     default:
       break;
     }
