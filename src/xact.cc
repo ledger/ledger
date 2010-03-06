@@ -454,12 +454,7 @@ string xact_t::idstring() const
 
 string xact_t::id() const
 {
-  SHA1 sha;
-  sha.Reset();
-  sha << idstring().c_str();
-  uint_least32_t message_digest[5];
-  sha.Result(message_digest);
-  return to_hex(message_digest, 5);
+  return sha1sum(idstring());
 }
 
 namespace {
