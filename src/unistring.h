@@ -55,6 +55,8 @@ namespace ledger {
 class unistring
 {
 public:
+  static const std::size_t npos = static_cast<std::size_t>(-1);
+
   std::vector<boost::uint32_t> utf32chars;
 
   unistring() {
@@ -95,6 +97,23 @@ public:
 	 std::back_inserter(utf8result));
 
     return utf8result;
+  }
+
+  std::size_t find(const boost::uint32_t __s, std::size_t __pos = 0) const {
+    std::size_t idx = 0;
+    foreach (const boost::uint32_t& ch, utf32chars) {
+      if (idx >= __pos && ch == __s)
+	return idx;
+      idx++;
+    }
+    return npos;
+  }
+
+  boost::uint32_t& operator[](const std::size_t index) {
+    return utf32chars[index];
+  }
+  const boost::uint32_t& operator[](const std::size_t index) const {
+    return utf32chars[index];
   }
 };
 
