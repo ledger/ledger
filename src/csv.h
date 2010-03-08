@@ -56,10 +56,51 @@ class csv_reader
 
   std::istream& in;
 
-public:
-  csv_reader(std::istream& _in) : in(_in) {}
+  enum headers_t {
+    FIELD_DATE = 0,
+    FIELD_DATE_EFF,
+    FIELD_CODE,
+    FIELD_PAYEE,
+    FIELD_AMOUNT,
+    FIELD_COST,
+    FIELD_TOTAL,
+    FIELD_NOTE,
 
-  string read_field();
+    FIELD_UNKNOWN
+  };
+
+  mask_t date_mask;
+  mask_t date_eff_mask;
+  mask_t code_mask;
+  mask_t payee_mask;
+  mask_t amount_mask;
+  mask_t cost_mask;
+  mask_t total_mask;
+  mask_t note_mask;
+
+  std::vector<int>    index;
+  std::vector<string> names;
+  std::vector<string> fields;
+
+  typedef std::map<string, string> string_map;
+
+public:
+  csv_reader(std::istream& _in)
+    : in(_in),
+      date_mask("date"),
+      date_eff_mask("posted( ?date)?"),
+      code_mask("code"),
+      payee_mask("(payee|desc(ription)?|title)"),
+      amount_mask("amount"),
+      cost_mask("cost"),
+      total_mask("total"),
+      note_mask("note") {
+    read_index(in);
+  }
+
+  string read_field(std::istream& in);
+  char * next_line(std::istream& in);
+  void read_index(std::istream& in);
 
   xact_t * read_xact(journal_t& journal, account_t * bucket);
 };
