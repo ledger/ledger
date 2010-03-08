@@ -38,7 +38,8 @@
 #include "iterators.h"
 #include "report.h"
 #include "xact.h"
-#include "output.h"
+#include "print.h"
+#include "lookup.h"
 
 namespace ledger {
 
@@ -54,7 +55,8 @@ value_t convert_command(call_scope_t& scope)
   else
     bucket_name = "Equity:Unknown";
 
-  account_t * bucket = journal.master->find_account(bucket_name);
+  account_t * bucket  = journal.master->find_account(bucket_name);
+  account_t * unknown = journal.master->find_account(_("Expenses:Unknown"));
 
   // Make an amounts mapping for the account under consideration
 
@@ -81,14 +83,15 @@ value_t convert_command(call_scope_t& scope)
     }
   }
 
+  // Create a flat list o
+  xacts_list current_xacts(journal.xacts_begin(), journal.xacts_end());
+
   // Read in the series of transactions from the CSV file
 
-  format_posts formatter(report,
-			 report.report_format(report.HANDLER(print_format_)),
-			 false);
+  print_xacts formatter(report);
+  ifstream    data(path(args.get<string>(0)));
+  csv_reader  reader(data);
 
-  ifstream   data(path(args.get<string>(0)));
-  csv_reader reader(data);
   while (xact_t * xact = reader.read_xact(journal, bucket)) {
     bool matched = false;
     post_map_t::iterator i = post_map.find(- xact->posts.front()->amount);
@@ -111,17 +114,34 @@ value_t convert_command(call_scope_t& scope)
       DEBUG("convert.csv", "Ignored xact with code: " << *xact->code);
       delete xact;		// ignore it
     }
-    else if (! journal.add_xact(xact)) {
-      delete xact;
-      throw_(std::runtime_error,
-	     _("Failed to finalize derived transaction (check commodities)"));
-    }
     else {
-      xact_posts_iterator xact_iter(*xact);
-      while (post_t * post = xact_iter())
-	formatter(*post);
+      if (xact->posts.front()->account == NULL) {
+	xacts_iterator xi;
+	xi.xacts_i   = current_xacts.begin();
+	xi.xacts_end = current_xacts.end();
+	xi.xacts_uninitialized = false;
+
+	// jww (2010-03-07): Bind this logic to an option: --auto-match
+	if (account_t * acct =
+	    lookup_probable_account(xact->payee, xi, bucket).second)
+	  xact->posts.front()->account = acct;
+	else
+	  xact->posts.front()->account = unknown;
+      }
+
+      if (! journal.add_xact(xact)) {
+	delete xact;
+	throw_(std::runtime_error,
+	       _("Failed to finalize derived transaction (check commodities)"));
+      }
+      else {
+	xact_posts_iterator xact_iter(*xact);
+	while (post_t * post = xact_iter())
+	  formatter(*post);
+      }
     }
   }
+  formatter.flush();
 
   // If not, transform the payee according to regexps
 

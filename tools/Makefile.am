@@ -55,6 +55,7 @@ libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
 libledger_expr_la_LDFLAGS   = -release $(VERSION)
 
 libledger_data_la_SOURCES   =			\
+	src/lookup.cc				\
 	src/compare.cc				\
 	src/iterators.cc			\
 	src/timelog.cc				\
@@ -129,6 +130,7 @@ pkginclude_HEADERS =				\
 	src/timelog.h				\
 	src/iterators.h				\
 	src/compare.h				\
+	src/lookup.h				\
 						\
 	src/session.h				\
 	src/report.h				\

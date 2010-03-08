@@ -38,6 +38,7 @@
 #include "journal.h"
 #include "session.h"
 #include "report.h"
+#include "lookup.h"
 #include "print.h"
 
 namespace ledger {
@@ -242,18 +243,25 @@ xact_t * draft_t::insert(journal_t& journal)
   if (tmpl->payee_mask.empty())
     throw std::runtime_error(_("xact' command requires at least a payee"));
 
-  xact_t *   matching = NULL;
+  xact_t * matching = NULL;
 
   std::auto_ptr<xact_t> added(new xact_t);
 
-  for (xacts_list::reverse_iterator j = journal.xacts.rbegin();
-       j != journal.xacts.rend();
-       j++) {
-    if (tmpl->payee_mask.match((*j)->payee)) {
-      matching = *j;
-      DEBUG("derive.xact",
-	    "Found payee match: transaction on line " << (*j)->pos->beg_line);
-      break;
+  xacts_iterator xi(journal);
+  if (xact_t * xact = lookup_probable_account(tmpl->payee_mask.str(), xi).first) {
+    DEBUG("derive.xact", "Found payee by lookup: transaction on line "
+	  << xact->pos->beg_line);
+    matching = xact;
+  } else {
+    for (xacts_list::reverse_iterator j = journal.xacts.rbegin();
+	 j != journal.xacts.rend();
+	 j++) {
+      if (tmpl->payee_mask.match((*j)->payee)) {
+	matching = *j;
+	DEBUG("derive.xact",
+	      "Found payee match: transaction on line " << (*j)->pos->beg_line);
+	break;
+      }
     }
   }
 
