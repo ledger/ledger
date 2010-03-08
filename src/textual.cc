@@ -1031,6 +1031,7 @@ post_t * instance_t::parse_post(char *		line,
 
 	if (*++next == '@') {
 	  per_unit = false;
+	  post->add_flags(POST_COST_IN_FULL);
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "And it's for a total price");
 	}

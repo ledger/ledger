@@ -576,7 +576,7 @@ void to_xml(std::ostream& out, const post_t& post)
   if (post.metadata) {
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *post.metadata) {
-      if (pair.second) {
+      if (pair.second.first) {
 	push_xml z(out, "variable");
 	{
 	  push_xml z(out, "key");
@@ -584,7 +584,7 @@ void to_xml(std::ostream& out, const post_t& post)
 	}
 	{
 	  push_xml z(out, "value");
-	  out << y.guard(*pair.second);
+	  out << y.guard(*pair.second.first);
 	}
       } else {
 	push_xml z(out, "tag");

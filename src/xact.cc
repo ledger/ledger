@@ -755,7 +755,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
   if (xact.metadata) {
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *xact.metadata) {
-      if (pair.second) {
+      if (pair.second.first) {
 	push_xml z(out, "variable");
 	{
 	  push_xml w(out, "key");
@@ -763,7 +763,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
 	}
 	{
 	  push_xml w(out, "value");
-	  out << y.guard(*pair.second);
+	  out << y.guard(*pair.second.first);
 	}
       } else {
 	push_xml z(out, "tag");

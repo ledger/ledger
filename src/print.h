@@ -30,22 +30,21 @@
  */
 
 /**
- * @addtogroup report
+ * @addtogroup data
  */
 
 /**
- * @file   output.h
+ * @file   convert.h
  * @author John Wiegley
  *
- * @ingroup report
+ * @ingroup data
  */
-#ifndef _OUTPUT_H
-#define _OUTPUT_H
+#ifndef _PRINT_H
+#define _PRINT_H
 
 #include "chain.h"
 #include "predicate.h"
 #include "format.h"
-#include "account.h"
 
 namespace ledger {
 
@@ -53,56 +52,28 @@ class xact_t;
 class post_t;
 class report_t;
 
-class format_posts : public item_handler<post_t>
+class print_xacts : public item_handler<post_t>
 {
 protected:
-  report_t& report;
-  format_t  first_line_format;
-  format_t  next_lines_format;
-  format_t  between_format;
-  format_t  prepend_format;
-  xact_t *  last_xact;
-  post_t *  last_post;
+  typedef std::list<xact_t *>	   xacts_list;
+  typedef std::map<xact_t *, bool> xacts_present_map;
+
+  report_t&	    report;
+  xacts_present_map xacts_present;
+  xacts_list	    xacts;
+  bool		    print_raw;
 
 public:
-  format_posts(report_t& _report, const string& format,
-	       const optional<string>& _prepend_format = none);
-  virtual ~format_posts() {
-    TRACE_DTOR(format_posts);
+  print_xacts(report_t& _report, bool _print_raw = false);
+  virtual ~print_xacts() {
+    TRACE_DTOR(print_xacts);
   }
 
   virtual void flush();
   virtual void operator()(post_t& post);
 };
 
-class format_accounts : public item_handler<account_t>
-{
-protected:
-  report_t&   report;
-  format_t    account_line_format;
-  format_t    total_line_format;
-  format_t    separator_format;
-  format_t    prepend_format;
-  predicate_t disp_pred;
-
-  std::list<account_t *> posted_accounts;
-
-public:
-  format_accounts(report_t& _report, const string& _format,
-		  const optional<string>& _prepend_format = none);
-  virtual ~format_accounts() {
-    TRACE_DTOR(format_accounts);
-  }
-
-  std::pair<std::size_t, std::size_t>
-  mark_accounts(account_t& account, const bool flat);
-
-  virtual std::size_t post_account(account_t& account, const bool flat);
-  virtual void	      flush();
-
-  virtual void operator()(account_t& account);
-};
 
 } // namespace ledger
 
-#endif // _OUTPUT_H
+#endif // _PRINT_H

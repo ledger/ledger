@@ -42,10 +42,8 @@ namespace ledger {
 
 format_posts::format_posts(report_t&		   _report,
 			   const string&	   format,
-			   bool			   _print_raw,
 			   const optional<string>& _prepend_format)
-  : report(_report), last_xact(NULL), last_post(NULL),
-    print_raw(_print_raw)
+  : report(_report), last_xact(NULL), last_post(NULL)
 {
   TRACE_CTOR(format_posts, "report&, const string&, bool");
 
@@ -80,24 +78,8 @@ void format_posts::operator()(post_t& post)
 {
   std::ostream& out(report.output_stream);
 
-  if (print_raw) {
-    if (! post.has_xdata() ||
-	! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
-      if (last_xact != post.xact) {
-	if (last_xact) {
-	  bind_scope_t xact_scope(report, *last_xact);
-	  out << between_format(xact_scope);
-	}
-	print_item(out, *post.xact);
-	out << '\n';
-	last_xact = post.xact;
-      }
-      post.xdata().add_flags(POST_EXT_DISPLAYED);
-      last_post = &post;
-    }
-  }
-  else if (! post.has_xdata() ||
-	   ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+  if (! post.has_xdata() ||
+      ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     bind_scope_t bound_scope(report, post);
 
     if (prepend_format)

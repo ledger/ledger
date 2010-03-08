@@ -38,7 +38,7 @@
 #include "journal.h"
 #include "session.h"
 #include "report.h"
-#include "output.h"
+#include "print.h"
 
 namespace ledger {
 
@@ -520,10 +520,7 @@ value_t xact_command(call_scope_t& args)
   // Only consider actual postings for the "xact" command
   report.HANDLER(limit_).on(string("#xact"), "actual");
 
-  report.xact_report(post_handler_ptr
-		     (new format_posts(report,
-				       report.HANDLER(print_format_).str())),
-		     *new_xact);
+  report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);
   return true;
 }
 

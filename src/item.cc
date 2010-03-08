@@ -65,8 +65,8 @@ bool item_t::has_tag(const mask_t& tag_mask,
       if (tag_mask.match(data.first)) {
 	if (! value_mask)
 	  return true;
-	else if (data.second)
-	  return value_mask->match(*data.second);
+	else if (data.second.first)
+	  return value_mask->match(*data.second.first);
       }
     }
   }
@@ -81,7 +81,7 @@ optional<string> item_t::get_tag(const string& tag) const
     string_map::const_iterator i = metadata->find(tag);
     if (i != metadata->end()) {
       DEBUG("item.meta", "Found the item!");
-      return (*i).second;
+      return (*i).second.first;
     }
   }
   return none;
@@ -94,25 +94,33 @@ optional<string> item_t::get_tag(const mask_t& tag_mask,
     foreach (const string_map::value_type& data, *metadata) {
       if (tag_mask.match(data.first) &&
 	  (! value_mask ||
-	   (data.second && value_mask->match(*data.second))))
-	return data.second;
+	   (data.second.first && value_mask->match(*data.second.first))))
+	return data.second.first;
     }
   }
   return none;
 }
 
-void item_t::set_tag(const string&           tag,
-		     const optional<string>& value)
+item_t::string_map::iterator item_t::set_tag(const string&           tag,
+					     const optional<string>& value)
 {
+  assert(! tag.empty());
+
   if (! metadata)
     metadata = string_map();
 
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
 	<< (value ? *value : string("<none>")) << "'");
 
+  optional<string> data = value;
+  if (data && data->empty())
+    data = none;
+
   std::pair<string_map::iterator, bool> result
-    = metadata->insert(string_map::value_type(tag, value));
+    = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
   assert(result.second);
+
+  return result.first;
 }
 
 void item_t::parse_tags(const char * p,
@@ -149,15 +157,19 @@ void item_t::parse_tags(const char * p,
        q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
     if (! tag.empty()) {
-      if (! has_tag(tag))
-	set_tag(tag, string(p + (q - buf.get())));
+      if (! has_tag(tag)) {
+	string_map::iterator i = set_tag(tag, string(p + (q - buf.get())));
+	(*i).second.second = true;
+      }
       break;
     }
     else if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
       for (char * r = std::strtok(q + 1, ":");
 	   r;
-	   r = std::strtok(NULL, ":"))
-	set_tag(r);
+	   r = std::strtok(NULL, ":")) {
+	string_map::iterator i = set_tag(r);
+	(*i).second.second = true;
+      }
     }
     else if (q[len - 1] == ':') { // a metadata setting
       tag = string(q, len - 1);

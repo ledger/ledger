@@ -144,6 +144,7 @@ public:
   value_t fn_is_seq(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_trim(call_scope_t& scope);
+  value_t scrub(value_t val);
   value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
   value_t fn_rounded(call_scope_t& scope);
@@ -280,7 +281,7 @@ public:
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
-    HANDLER(print_format_).report(out);
+    HANDLER(print_virtual).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
     HANDLER(raw).report(out);
@@ -748,23 +749,7 @@ public:
 	 "P %(datetime) %(account) %(scrub(display_amount))\n");
     });
 
-  OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
-      on(none,
-	 "%(xact.date)"
-	 "%(!effective & xact.effective_date ?"
-	 " \"=\" + xact.effective_date : \"\")"
-	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
-	 "%(code ? \" (\" + code + \")\" :"
-	 " \"\") %(payee)%(xact.comment)\n"
-	 "    %(xact.uncleared ?"
-	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-	 "%(calculated ? account : justify(account, 34, -1, false))"
-	 "%(calculated ? \"\" : \"  \" + justify(scrub(amount), 12, -1, true))"
-	 "%(has_cost & !cost_calculated ?"
-	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
-	 "%(comment)\n%/"
-	 "    %$7%$8%$9%$A%$B\n%/\n");
-    });
+  OPTION(report_t, print_virtual);
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();
