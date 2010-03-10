@@ -277,15 +277,15 @@ xact_t * draft_t::insert(journal_t& journal)
 
   if (matching) {
     added->payee = matching->payee;
-    added->code  = matching->code;
-    added->note  = matching->note;
+    //added->code  = matching->code;
+    //added->note  = matching->note;
 
 #if defined(DEBUG_ON)
     DEBUG("derive.xact", "Setting payee from match: " << added->payee);
-    if (added->code)
-      DEBUG("derive.xact", "Setting code  from match: " << *added->code);
-    if (added->note)
-      DEBUG("derive.xact", "Setting note  from match: " << *added->note);
+    //if (added->code)
+    //  DEBUG("derive.xact", "Setting code  from match: " << *added->code);
+    //if (added->note)
+    //  DEBUG("derive.xact", "Setting note  from match: " << *added->note);
 #endif
   } else {
     added->payee = tmpl->payee_mask.str();
