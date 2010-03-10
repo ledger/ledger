@@ -742,7 +742,21 @@ void instance_t::payee_mapping_directive(char * line)
   char * payee = skip_ws(line);
   char * regex = next_element(payee, true);
 
-  context.journal.payee_mappings.push_back(payee_mapping_t(mask_t(regex), payee));
+  if (regex)
+    context.journal.payee_mappings.push_back
+      (payee_mapping_t(mask_t(regex), payee));
+
+  while (peek_whitespace_line()) {
+    std::streamsize len = read_line(line);
+    assert(len > 0);
+
+    regex = skip_ws(line);
+    if (! *regex)
+      break;
+
+    context.journal.payee_mappings.push_back
+      (payee_mapping_t(mask_t(regex), payee));
+  }
 }
 
 void instance_t::account_mapping_directive(char * line)
@@ -750,9 +764,23 @@ void instance_t::account_mapping_directive(char * line)
   char * account_name = skip_ws(line);
   char * payee_regex  = next_element(account_name, true);
 
-  context.journal.account_mappings.push_back
-    (account_mapping_t(mask_t(payee_regex),
-		       context.top_account()->find_account(account_name)));
+  if (payee_regex)
+    context.journal.account_mappings.push_back
+      (account_mapping_t(mask_t(payee_regex),
+			 context.top_account()->find_account(account_name)));
+
+  while (peek_whitespace_line()) {
+    std::streamsize len = read_line(line);
+    assert(len > 0);
+
+    payee_regex = skip_ws(line);
+    if (! *payee_regex)
+      break;
+
+    context.journal.account_mappings.push_back
+      (account_mapping_t(mask_t(payee_regex),
+			 context.top_account()->find_account(account_name)));
+  }
 }
 
 void instance_t::tag_directive(char * line)
