@@ -84,10 +84,12 @@ lookup_probable_account(const string&   ident,
 #endif
 
   while (xact_t * xact = iter_func()) {
+#if 0
     // Only consider transactions from the last two years (jww (2010-03-07):
     // make this an option)
     if ((CURRENT_DATE() - xact->date()).days() > 700)
       continue;
+#endif
     
     // An exact match is worth a score of 100 and terminates the search
     if (ident == xact->payee) {
