@@ -67,29 +67,28 @@
 (defconst ledger-regex-full-note-group--count
   ledger-regex-note-group--count)
 
-(defconst ledger-regex-transaction-line
+(defconst ledger-regex-xact-line
   (macroexpand
    `(rx (and line-start
 	     (regexp ,ledger-regex-full-date)
 	     (? (and (+ space) (regexp ,ledger-regex-state)))
 	     (? (and (+ space) (regexp ,ledger-regex-code)))
 	     (+ space) (+? nonl)
-	     (? (and (regexp ,ledger-regex-long-space) ?\;
-		     (regexp ,ledger-regex-note)))
+	     (? (regexp ,ledger-regex-end-note))
 	     line-end))))
 
-(defconst ledger-regex-transaction-line-group-actual-date
+(defconst ledger-regex-xact-line-group-actual-date
   ledger-regex-full-date-group-actual)
-(defconst ledger-regex-transaction-line-group-effective-date
+(defconst ledger-regex-xact-line-group-effective-date
   ledger-regex-full-date-group-effective)
-(defconst ledger-regex-transaction-line-group-state
+(defconst ledger-regex-xact-line-group-state
   (+ ledger-regex-full-date-group--count
      ledger-regex-state-group))
-(defconst ledger-regex-transaction-line-group-code
+(defconst ledger-regex-xact-line-group-code
   (+ ledger-regex-full-date-group--count
      ledger-regex-state-group--count
      ledger-regex-code-group))
-(defconst ledger-regex-transaction-line-group-note
+(defconst ledger-regex-xact-line-group-note
   (+ ledger-regex-full-date-group--count
      ledger-regex-state-group--count
      ledger-regex-code-group--count
@@ -100,9 +99,9 @@
      ledger-regex-code-group--count
      ledger-regex-note-group--count))
 
-(defun ledger-regex-transaction-line-actual-date
+(defun ledger-regex-xact-line-actual-date
   (&optional string)
-  (match-string ledger-regex-transaction-line-group-actual-date string))
+  (match-string ledger-regex-xact-line-group-actual-date string))
 
 (defconst ledger-regex-account
   (rx (group (and (not (any ?:)) (*? nonl)))))
@@ -154,14 +153,15 @@
 	     (regexp ,ledger-regex-commoditized-amount)))))
 
 (defconst ledger-regex-full-amount
-  (macroexpand `(rx (and line-start (+ space)
-			 ?\; (regexp ,ledger-regex-note)))))
+  (macroexpand `(rx (group (+? (not (any ?\;)))))))
 
-(defconst ledger-regex-posting-line
+(defconst ledger-regex-post-line
   (macroexpand
    `(rx (and line-start
+	     (? (and (+ space) (regexp ,ledger-regex-state)))
 	     (+ space) (regexp ,ledger-regex-full-account)
 	     (+ space) (regexp ,ledger-regex-full-amount)
 	     (? (regexp ,ledger-regex-end-note))
 	     line-end))))
 
+(provide 'ldg-regex)

@@ -1226,7 +1226,7 @@ the default."
   "Align amounts in the current region.
 This is done so that the last digit falls in COLUMN, which defaults to 52."
   (interactive "p")
-  (if (= column 1)
+  (if (or (null column) (= column 1))
       (setq column 52))
   (save-excursion
     (let* ((mark-first (< (mark) (point)))
