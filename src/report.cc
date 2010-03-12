@@ -1272,7 +1272,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     switch (*p) {
     case 'a':
       if (is_eq(p, "args"))
-	return WRAP_FUNCTOR(args_command);
+	return WRAP_FUNCTOR(query_command);
       break;
     case 'e':
       if (is_eq(p, "eval"))
@@ -1293,6 +1293,10 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return WRAP_FUNCTOR(parse_command);
       else if (is_eq(p, "period"))
 	return WRAP_FUNCTOR(period_command);
+      break;
+    case 'q':
+      if (is_eq(p, "query"))
+	return WRAP_FUNCTOR(query_command);
       break;
     case 't':
       if (is_eq(p, "template"))
