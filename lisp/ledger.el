@@ -73,7 +73,7 @@
 (require 'esh-arg)
 (require 'pcomplete)
 
-(defvar ledger-version "1.2"
+(defvar ledger-version "1.3"
   "The version of ledger.el currently loaded")
 
 (defgroup ledger nil
