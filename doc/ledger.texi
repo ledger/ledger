@@ -4107,4 +4107,19 @@ parser_t
 
 @section General Utility
 
+@c data: foo
+@smallexample
+2004/05/01 * Checking balance
+    Assets:Bank:Checking                           $1,000.00
+    Equity:Opening Balances
+@end smallexample
+
+@c smex utility-1: $LEDGER -f $foo bal
+@smallexample
+           $1,000.00  Assets:Bank:Checking
+          $-1,000.00  Equity:Opening Balances
+--------------------
+                   0
+@end smallexample
+
 @bye
