@@ -107,6 +107,9 @@ void truncate_xacts::flush()
 
 void truncate_xacts::operator()(post_t& post)
 {
+  if (completed)
+    return;
+
   if (last_xact != post.xact) {
     if (last_xact)
       xacts_seen++;
@@ -114,8 +117,11 @@ void truncate_xacts::operator()(post_t& post)
   }
 
   if (tail_count == 0 && head_count > 0 &&
-      static_cast<int>(xacts_seen) >= head_count)
+      static_cast<int>(xacts_seen) >= head_count) {
+    flush();
+    completed = true;
     return;
+  }
 
   posts.push_back(&post);
 }
