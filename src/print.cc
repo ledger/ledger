@@ -71,8 +71,6 @@ namespace {
 
   void print_xact(report_t& report, std::ostream& out, xact_t& xact)
   {
-    // jww (2010-03-07): Also add support for --raw
-    
     out << format_date(item_t::use_effective_date ?
 		       xact.date() : xact.actual_date(),
 		       FMT_WRITTEN);
@@ -80,7 +78,6 @@ namespace {
       out << '=' << format_date(*xact.effective_date(), FMT_WRITTEN);
     out << ' ';
 
-    // jww (2010-03-06): Output posting state, if different
     out << (xact.state() == item_t::CLEARED ? "* " :
 	    (xact.state() == item_t::PENDING ? "! " : ""));
 
@@ -112,9 +109,12 @@ namespace {
 	continue;
 
       out << "    ";
-      // jww (2010-03-06): Output posting state, if different
 
       std::ostringstream buf;
+
+      if (xact.state() == item_t::UNCLEARED)
+	buf << (post->state() == item_t::CLEARED ? "* " :
+		(post->state() == item_t::PENDING ? "! " : ""));
 
       if (post->has_flags(POST_VIRTUAL)) {
 	if (post->has_flags(POST_MUST_BALANCE))
