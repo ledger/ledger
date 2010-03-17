@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,7 +38,8 @@
 #include "journal.h"
 #include "session.h"
 #include "report.h"
-#include "output.h"
+#include "lookup.h"
+#include "print.h"
 
 namespace ledger {
 
@@ -240,20 +241,27 @@ void draft_t::parse_args(const value_t& args)
 xact_t * draft_t::insert(journal_t& journal)
 {
   if (tmpl->payee_mask.empty())
-    throw std::runtime_error(_("xact' command requires at least a payee"));
+    throw std::runtime_error(_("'xact' command requires at least a payee"));
 
-  xact_t *   matching = NULL;
+  xact_t * matching = NULL;
 
   std::auto_ptr<xact_t> added(new xact_t);
 
-  for (xacts_list::reverse_iterator j = journal.xacts.rbegin();
-       j != journal.xacts.rend();
-       j++) {
-    if (tmpl->payee_mask.match((*j)->payee)) {
-      matching = *j;
-      DEBUG("derive.xact",
-	    "Found payee match: transaction on line " << (*j)->pos->beg_line);
-      break;
+  xacts_iterator xi(journal);
+  if (xact_t * xact = lookup_probable_account(tmpl->payee_mask.str(), xi).first) {
+    DEBUG("derive.xact", "Found payee by lookup: transaction on line "
+	  << xact->pos->beg_line);
+    matching = xact;
+  } else {
+    for (xacts_list::reverse_iterator j = journal.xacts.rbegin();
+	 j != journal.xacts.rend();
+	 j++) {
+      if (tmpl->payee_mask.match((*j)->payee)) {
+	matching = *j;
+	DEBUG("derive.xact",
+	      "Found payee match: transaction on line " << (*j)->pos->beg_line);
+	break;
+      }
     }
   }
 
@@ -269,15 +277,15 @@ xact_t * draft_t::insert(journal_t& journal)
 
   if (matching) {
     added->payee = matching->payee;
-    added->code  = matching->code;
-    added->note  = matching->note;
+    //added->code  = matching->code;
+    //added->note  = matching->note;
 
 #if defined(DEBUG_ON)
     DEBUG("derive.xact", "Setting payee from match: " << added->payee);
-    if (added->code)
-      DEBUG("derive.xact", "Setting code  from match: " << *added->code);
-    if (added->note)
-      DEBUG("derive.xact", "Setting note  from match: " << *added->note);
+    //if (added->code)
+    //  DEBUG("derive.xact", "Setting code  from match: " << *added->code);
+    //if (added->note)
+    //  DEBUG("derive.xact", "Setting note  from match: " << *added->note);
 #endif
   } else {
     added->payee = tmpl->payee_mask.str();
@@ -520,10 +528,7 @@ value_t xact_command(call_scope_t& args)
   // Only consider actual postings for the "xact" command
   report.HANDLER(limit_).on(string("#xact"), "actual");
 
-  report.xact_report(post_handler_ptr
-		     (new format_posts(report,
-				       report.HANDLER(print_format_).str())),
-		     *new_xact);
+  report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);
   return true;
 }
 

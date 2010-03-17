@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -63,11 +63,9 @@ protected:
   format_t  prepend_format;
   xact_t *  last_xact;
   post_t *  last_post;
-  bool      print_raw;
 
 public:
   format_posts(report_t& _report, const string& format,
-	       bool _print_raw = false,
 	       const optional<string>& _prepend_format = none);
   virtual ~format_posts() {
     TRACE_DTOR(format_posts);

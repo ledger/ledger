@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -144,6 +144,8 @@ namespace {
     void end_directive(char * line);
     void alias_directive(char * line);
     void fixed_directive(char * line);
+    void payee_mapping_directive(char * line);
+    void account_mapping_directive(char * line);
     void tag_directive(char * line);
     void define_directive(char * line);
     bool general_directive(char * line);
@@ -663,14 +665,42 @@ void instance_t::include_directive(char * line)
   filename = resolve_path(filename);
   DEBUG("textual.include", "resolved path: " << filename.string());
 
-  if (! exists(filename))
+  mask_t glob;
+#if BOOST_VERSION >= 103700
+  path	 parent_path = filename.parent_path();
+  glob.assign_glob(filename.filename());
+#else // BOOST_VERSION >= 103700
+  path	 parent_path = filename.branch_path();
+  glob.assign_glob(filename.leaf());
+#endif // BOOST_VERSION >= 103700
+
+  bool files_found = false;
+  if (exists(parent_path)) {
+    filesystem::directory_iterator end;
+    for (filesystem::directory_iterator iter(parent_path);
+	 iter != end;
+	 ++iter) {
+      if (is_regular_file(*iter)) {
+#if BOOST_VERSION >= 103700
+	string base = (*iter).filename();
+#else // BOOST_VERSION >= 103700
+	string base = (*iter).leaf();
+#endif // BOOST_VERSION >= 103700
+	if (glob.match(base)) {
+	  path inner_file(*iter);
+	  ifstream stream(inner_file);
+	  instance_t instance(context, stream, master, &inner_file, this);
+	  instance.parse();
+	  files_found = true;
+	}
+      }
+    }
+  }
+
+  if (! files_found)
     throw_(std::runtime_error,
 	   _("File to include was not found: '%1'") << filename);
 
-  ifstream stream(filename);
-
-  instance_t instance(context, stream, master, &filename, this);
-  instance.parse();
 }
 
 void instance_t::master_account_directive(char * line)
@@ -735,6 +765,52 @@ void instance_t::fixed_directive(char * line)
   }
 }
 
+void instance_t::payee_mapping_directive(char * line)
+{
+  char * payee = skip_ws(line);
+  char * regex = next_element(payee, true);
+
+  if (regex)
+    context.journal.payee_mappings.push_back
+      (payee_mapping_t(mask_t(regex), payee));
+
+  while (peek_whitespace_line()) {
+    std::streamsize len = read_line(line);
+    assert(len > 0);
+
+    regex = skip_ws(line);
+    if (! *regex)
+      break;
+
+    context.journal.payee_mappings.push_back
+      (payee_mapping_t(mask_t(regex), payee));
+  }
+}
+
+void instance_t::account_mapping_directive(char * line)
+{
+  char * account_name = skip_ws(line);
+  char * payee_regex  = next_element(account_name, true);
+
+  if (payee_regex)
+    context.journal.account_mappings.push_back
+      (account_mapping_t(mask_t(payee_regex),
+			 context.top_account()->find_account(account_name)));
+
+  while (peek_whitespace_line()) {
+    std::streamsize len = read_line(line);
+    assert(len > 0);
+
+    payee_regex = skip_ws(line);
+    if (! *payee_regex)
+      break;
+
+    context.journal.account_mappings.push_back
+      (account_mapping_t(mask_t(payee_regex),
+			 context.top_account()->find_account(account_name)));
+  }
+}
+
 void instance_t::tag_directive(char * line)
 {
   string tag(trim_ws(line));
@@ -782,6 +858,13 @@ bool instance_t::general_directive(char * line)
     }
     break;
 
+  case 'c':
+    if (std::strcmp(p, "capture") == 0) {
+      account_mapping_directive(arg);
+      return true;
+    }
+    break;
+
   case 'd':
     if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
       define_directive(arg);
@@ -806,6 +889,13 @@ bool instance_t::general_directive(char * line)
   case 'i':
     if (std::strcmp(p, "include") == 0) {
       include_directive(arg);
+      return true;
+    }
+    break;
+
+  case 'p':
+    if (std::strcmp(p, "payee") == 0) {
+      payee_mapping_directive(arg);
       return true;
     }
     break;
@@ -929,6 +1019,15 @@ post_t * instance_t::parse_post(char *		line,
     post->account->add_flags(ACCOUNT_KNOWN);
   }
 
+  if (post->account->name == _("Unknown")) {
+    foreach (account_mapping_t& value, context.journal.account_mappings) {
+      if (value.first.match(xact->payee)) {
+	post->account = value.second;
+	break;
+      }
+    }
+  }
+
   // Parse the optional amount
 
   bool saw_amount = false;
@@ -988,6 +1087,7 @@ post_t * instance_t::parse_post(char *		line,
 
 	if (*++next == '@') {
 	  per_unit = false;
+	  post->add_flags(POST_COST_IN_FULL);
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "And it's for a total price");
 	}
@@ -1127,7 +1227,7 @@ post_t * instance_t::parse_post(char *		line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    post->append_note(++next, current_year);
+    post->append_note(++next, true, current_year);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed a posting note");
@@ -1146,7 +1246,7 @@ post_t * instance_t::parse_post(char *		line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-	post->parse_tags(boost::get<string>(state).c_str());
+	post->parse_tags(boost::get<string>(state).c_str(), true);
   }
 
   TRACE_STOP(post_details, 1);
@@ -1242,7 +1342,14 @@ xact_t * instance_t::parse_xact(char *		line,
 
   if (next && *next) {
     char * p = next_element(next, true);
-    xact->payee = next;
+    foreach (payee_mapping_t& value, context.journal.payee_mappings) {
+      if (value.first.match(next)) {
+	xact->payee = value.second;
+	break;
+      }
+    }
+    if (xact->payee.empty())
+      xact->payee = next;
     next = p;
   } else {
     xact->payee = _("<Unspecified payee>");
@@ -1276,7 +1383,7 @@ xact_t * instance_t::parse_xact(char *		line,
 	item = xact.get();
 
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, current_year);
+      item->append_note(p + 1, true, current_year);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
     } else {
@@ -1310,7 +1417,7 @@ xact_t * instance_t::parse_xact(char *		line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-	xact->parse_tags(boost::get<string>(state).c_str());
+	xact->parse_tags(boost::get<string>(state).c_str(), false);
   }
 
   TRACE_STOP(xact_details, 1);

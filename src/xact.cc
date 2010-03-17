@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -454,12 +454,7 @@ string xact_t::idstring() const
 
 string xact_t::id() const
 {
-  SHA1 sha;
-  sha.Reset();
-  sha << idstring().c_str();
-  uint_least32_t message_digest[5];
-  sha.Result(message_digest);
-  return to_hex(message_digest, 5);
+  return sha1sum(idstring());
 }
 
 namespace {
@@ -760,7 +755,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
   if (xact.metadata) {
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *xact.metadata) {
-      if (pair.second) {
+      if (pair.second.first) {
 	push_xml z(out, "variable");
 	{
 	  push_xml w(out, "key");
@@ -768,7 +763,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
 	}
 	{
 	  push_xml w(out, "value");
-	  out << y.guard(*pair.second);
+	  out << y.guard(*pair.second.first);
 	}
       } else {
 	push_xml z(out, "tag");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,6 +44,7 @@
 
 #include "utils.h"
 #include "times.h"
+#include "mask.h"
 
 namespace ledger {
 
@@ -57,6 +58,11 @@ class scope_t;
 typedef std::list<xact_t *>	   xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
+
+typedef std::pair<mask_t, string>      payee_mapping_t;
+typedef std::list<payee_mapping_t>     payee_mappings_t;
+typedef std::pair<mask_t, account_t *> account_mapping_t;
+typedef std::list<account_mapping_t>   account_mappings_t;
 
 class journal_t : public noncopyable
 {
@@ -110,6 +116,8 @@ public:
   period_xacts_list	period_xacts;
   std::list<fileinfo_t> sources;
   bool                  was_loaded;
+  payee_mappings_t      payee_mappings;
+  account_mappings_t    account_mappings;
 
   journal_t();
   journal_t(const path& pathname);

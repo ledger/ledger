@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -107,6 +107,9 @@ void truncate_xacts::flush()
 
 void truncate_xacts::operator()(post_t& post)
 {
+  if (completed)
+    return;
+
   if (last_xact != post.xact) {
     if (last_xact)
       xacts_seen++;
@@ -114,8 +117,11 @@ void truncate_xacts::operator()(post_t& post)
   }
 
   if (tail_count == 0 && head_count > 0 &&
-      static_cast<int>(xacts_seen) >= head_count)
+      static_cast<int>(xacts_seen) >= head_count) {
+    flush();
+    completed = true;
     return;
+  }
 
   posts.push_back(&post);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -857,12 +857,12 @@ bool value_t::is_less_than(const value_t& val) const
     case INTEGER:
       return as_amount() < val.as_long();
     case AMOUNT:
-      try {
+      if (as_amount().commodity() == val.as_amount().commodity() ||
+	  ! as_amount().has_commodity() ||
+	  ! val.as_amount().has_commodity())
 	return as_amount() < val.as_amount();
-      }
-      catch (const amount_error&) {
+      else
 	return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount());
-      }
     default:
       break;
     }

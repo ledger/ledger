@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,12 +37,14 @@
 #include "format.h"
 #include "query.h"
 #include "output.h"
+#include "print.h"
 #include "iterators.h"
 #include "filters.h"
 #include "precmd.h"
 #include "stats.h"
 #include "generate.h"
 #include "draft.h"
+#include "convert.h"
 #include "xml.h"
 #include "emacs.h"
 
@@ -89,6 +91,33 @@ void report_t::normalize_options(const string& verb)
     if (optional<date_time::weekdays> weekday =
 	string_to_day_of_week(HANDLER(start_of_week_).str()))
       start_of_week = *weekday;
+  }
+
+  long meta_width = -1;
+
+  if (! HANDLED(prepend_format_) && HANDLED(meta_)) {
+    if (! HANDLED(meta_width_)) {
+      string::size_type i = HANDLER(meta_).str().find(':');
+      if (i != string::npos) {
+	HANDLED(meta_width_).on_with
+	  (string("?normalize"),
+	   lexical_cast<long>(string(HANDLER(meta_).str(), i + 1)));
+	HANDLED(meta_).on(string("?normalize"),
+			  string(HANDLER(meta_).str(), 0, i));
+      }
+    }
+    if (HANDLED(meta_width_)) {
+      HANDLER(prepend_format_).on
+	(string("?normalize"),
+	 string("%(justify(truncated(tag(\"") +
+	 HANDLER(meta_).str() + "\"), " +
+	 HANDLED(meta_width_).value.to_string() + " - 1), " +
+	 HANDLED(meta_width_).value.to_string() + "))");
+      meta_width = HANDLED(meta_width_).value.to_long();
+    } else {
+      HANDLER(prepend_format_).on(string("?normalize"), string("%(tag(\"") +
+				  HANDLER(meta_).str() + "\"))");
+    }
   }
 
   if (verb == "print" || verb == "xact" || verb == "dump") {
@@ -163,6 +192,9 @@ void report_t::normalize_options(const string& verb)
   else
     cols = 80L;
 
+  if (meta_width > 0)
+    cols -= meta_width;
+
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);
 
@@ -185,11 +217,11 @@ void report_t::normalize_options(const string& verb)
 			  HANDLER(total_width_).value.to_long() :
 			  amount_width);
 
-    DEBUG("auto.columns", "date_width	 = " << date_width);
-    DEBUG("auto.columns", "payee_width	 = " << payee_width);
+    DEBUG("auto.columns", "date_width    = " << date_width);
+    DEBUG("auto.columns", "payee_width   = " << payee_width);
     DEBUG("auto.columns", "account_width = " << account_width);
-    DEBUG("auto.columns", "amount_width	 = " << amount_width);
-    DEBUG("auto.columns", "total_width	 = " << total_width);
+    DEBUG("auto.columns", "amount_width  = " << amount_width);
+    DEBUG("auto.columns", "total_width   = " << total_width);
 
     if (! HANDLER(date_width_).specified &&
 	! HANDLER(payee_width_).specified &&
@@ -205,6 +237,8 @@ void report_t::normalize_options(const string& verb)
       }
     }
 
+    if (! HANDLED(meta_width_))
+      HANDLER(meta_width_).on_with(string("?normalize"), 0L);
     if (! HANDLER(date_width_).specified)
       HANDLER(date_width_).on_with(string("?normalize"), date_width);
     if (! HANDLER(payee_width_).specified)
@@ -409,13 +443,18 @@ value_t report_t::fn_trim(call_scope_t& args)
   }
 }
 
-value_t report_t::fn_scrub(call_scope_t& args)
+value_t report_t::scrub(value_t val)
 {
-  value_t temp(args.value().strip_annotations(what_to_keep()));
+  value_t temp(val.strip_annotations(what_to_keep()));
   if (HANDLED(base))
     return temp;
   else
     return temp.unreduced();
+}
+
+value_t report_t::fn_scrub(call_scope_t& args)
+{
+  return scrub(args.value());
 }
 
 value_t report_t::fn_rounded(call_scope_t& args)
@@ -469,11 +508,11 @@ value_t report_t::fn_justify(call_scope_t& scope)
 
 value_t report_t::fn_quoted(call_scope_t& scope)
 {
-  interactive_t	     args(scope, "s");
+  interactive_t	     args(scope, "v");
   std::ostringstream out;
 
   out << '"';
-  foreach (const char ch, args.get<string>(0)) {
+  foreach (const char ch, args.value_at(0).to_string()) {
     if (ch == '"')
       out << "\\\"";
     else
@@ -855,6 +894,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'm':
     OPT(market);
     else OPT(monthly);
+    else OPT(meta_);
+    else OPT(meta_width_);
     break;
   case 'n':
     OPT_CH(collapse);
@@ -879,9 +920,9 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(price);
     else OPT(prices_format_);
     else OPT(pricedb_format_);
-    else OPT(print_format_);
     else OPT(payee_width_);
     else OPT(prepend_format_);
+    else OPT(print_virtual);
     break;
   case 'q':
     OPT(quantity);
@@ -1199,21 +1240,21 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "cleared")) {
 	HANDLER(amount_).set_expr(string("#cleared"),
 				  "(amount, cleared ? amount : 0)");
-
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	   (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
 				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#cleared"));
       }
+      else if (is_eq(p, "convert"))
+	return WRAP_FUNCTOR(convert_command);
       break;
 
     case 'e':
-      if (is_eq(p, "equity"))
-	return WRAP_FUNCTOR
-	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(print_format_))),
-	    *this, "#equity"));
+      if (is_eq(p, "equity")) {
+	HANDLER(print_virtual).on_only(string("#equity"));
+	return WRAP_FUNCTOR(reporter<>(new print_xacts(*this), *this, "#equity"));
+      }
       else if (is_eq(p, "entry"))
 	return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "emacs"))
@@ -1226,9 +1267,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'p':
       if (*(p + 1) == '\0' || is_eq(p, "print"))
 	return WRAP_FUNCTOR
-	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(print_format_)),
-			     HANDLED(raw)), *this, "#print"));
+	  (reporter<>(new print_xacts(*this, HANDLED(raw)), *this, "#print"));
       else if (is_eq(p, "prices"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
@@ -1248,7 +1287,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return WRAP_FUNCTOR
 	  (reporter<>
 	   (new format_posts(*this, report_format(HANDLER(register_format_)),
-			     false, maybe_format(HANDLER(prepend_format_))),
+			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#register"));
       else if (is_eq(p, "reload"))
 	return MAKE_FUNCTOR(report_t::reload_command);
@@ -1283,11 +1322,13 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return WRAP_FUNCTOR(format_command);
       break;
     case 'g':
-      if (is_eq(p, "generate"))
+      if (is_eq(p, "generate")) {
+	HANDLER(print_virtual).on_only(string("#generate"));
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
-	   (new format_posts(*this, report_format(HANDLER(print_format_)),
-			     false), *this, "#generate"));
+	   (new print_xacts(*this), *this, "#generate"));
+      }
+      break;
     case 'p':
       if (is_eq(p, "parse"))
 	return WRAP_FUNCTOR(parse_command);
