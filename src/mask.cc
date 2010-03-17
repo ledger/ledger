@@ -52,4 +52,38 @@ mask_t& mask_t::operator=(const string& pat)
   return *this;
 }
 
+mask_t& mask_t::assign_glob(const string& pat)
+{
+  string re_pat = "";
+  string::size_type len = pat.length();
+  for (string::size_type i = 0; i < len; i++) {
+    switch (pat[i]) {
+    case '?':
+      re_pat += '.';
+      break;
+    case '*':
+      re_pat += ".*";
+      break;
+    case '[':
+      while (i < len && pat[i] != ']')
+	re_pat += pat[i++];
+      if (i < len)
+	re_pat += pat[i];
+      break;
+
+    case '\\':
+      if (i + 1 < len) {
+	re_pat += pat[++i];
+	break;
+      } else {
+	// fallthrough...
+      }
+    default:
+      re_pat += pat[i];
+      break;
+    }
+  }
+  return (*this = re_pat);
+}
+
 } // namespace ledger

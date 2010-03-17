@@ -665,14 +665,42 @@ void instance_t::include_directive(char * line)
   filename = resolve_path(filename);
   DEBUG("textual.include", "resolved path: " << filename.string());
 
-  if (! exists(filename))
+  mask_t glob;
+#if BOOST_VERSION >= 103700
+  path	 parent_path = filename.parent_path();
+  glob.assign_glob(filename.filename());
+#else // BOOST_VERSION >= 103700
+  path	 parent_path = filename.branch_path();
+  glob.assign_glob(filename.leaf());
+#endif // BOOST_VERSION >= 103700
+
+  bool files_found = false;
+  if (exists(parent_path)) {
+    filesystem::directory_iterator end;
+    for (filesystem::directory_iterator iter(parent_path);
+	 iter != end;
+	 ++iter) {
+      if (is_regular_file(*iter)) {
+#if BOOST_VERSION >= 103700
+	string base = (*iter).filename();
+#else // BOOST_VERSION >= 103700
+	string base = (*iter).leaf();
+#endif // BOOST_VERSION >= 103700
+	if (glob.match(base)) {
+	  path inner_file(*iter);
+	  ifstream stream(inner_file);
+	  instance_t instance(context, stream, master, &inner_file, this);
+	  instance.parse();
+	  files_found = true;
+	}
+      }
+    }
+  }
+
+  if (! files_found)
     throw_(std::runtime_error,
 	   _("File to include was not found: '%1'") << filename);
 
-  ifstream stream(filename);
-
-  instance_t instance(context, stream, master, &filename, this);
-  instance.parse();
 }
 
 void instance_t::master_account_directive(char * line)

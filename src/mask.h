@@ -73,6 +73,7 @@ public:
   }
 
   mask_t& operator=(const string& other);
+  mask_t& assign_glob(const string& other);
 
   bool operator<(const mask_t& other) const {
     return expr < other.expr;
