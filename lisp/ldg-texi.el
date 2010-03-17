@@ -2,6 +2,77 @@
 (defvar ledger-sample-doc-path "/Users/johnw/src/ledger/doc/sample.dat")
 (defvar ledger-normalization-args "--args-only --columns 80")
 
+(defun ledger-texi-write-test (name command input output &optional category)
+  (let ((buf (current-buffer)))
+    (with-current-buffer (find-file-noselect
+			  (expand-file-name (concat name ".test") category))
+      (erase-buffer)
+      (let ((case-fold-search nil))
+	(if (string-match "\\$LEDGER\\s-+" command)
+	    (setq command (replace-match "" t t command)))
+	(if (string-match " -f \\$\\([-a-z]+\\)" command)
+	    (setq command (replace-match "" t t command))))
+      (insert command ?\n)
+      (insert "<<<" ?\n)
+      (insert input)
+      (insert ">>>1" ?\n)
+      (insert output)
+      (insert ">>>2" ?\n)
+      (insert "=== 0" ?\n)
+      (save-buffer)
+      (unless (eq buf (current-buffer))
+	(kill-buffer (current-buffer))))))
+
+(defun ledger-texi-update-test ()
+  (interactive)
+  (let ((details (ledger-texi-test-details))
+	(name (file-name-sans-extension
+	       (file-name-nondirectory (buffer-file-name)))))
+    (ledger-texi-write-test
+     name (nth 0 details)
+     (nth 1 details)
+     (ledger-texi-invoke-command
+      (ledger-texi-expand-command
+       (nth 0 details)
+       (ledger-texi-write-test-data name (nth 1 details)))))))
+
+(defun ledger-texi-test-details ()
+  (goto-char (point-min))
+  (let ((command (buffer-substring (point) (line-end-position)))
+	input output)
+    (re-search-forward "^<<<")
+    (let ((input-beg (1+ (match-end 0))))
+      (re-search-forward "^>>>1")
+      (let ((output-beg (1+ (match-end 0))))
+	(setq input (buffer-substring input-beg (match-beginning 0)))
+	(re-search-forward "^>>>2")
+	(setq output (buffer-substring output-beg (match-beginning 0)))
+	(list command input output)))))
+
+(defun ledger-texi-expand-command (command data-file)
+  (if (string-match "\\$LEDGER" command)
+      (replace-match (format "%s -f \"%s\" %s" ledger-path
+			     data-file ledger-normalization-args) t t command)
+    (concat (format "%s -f \"%s\" %s " ledger-path
+		    data-file ledger-normalization-args) command)))
+
+(defun ledger-texi-invoke-command (command)
+  (with-temp-buffer (shell-command command t (current-buffer))
+    (if (= (point-min) (point-max))
+	(progn
+	  (push-mark nil t)
+	  (message "Command '%s' yielded no result at %d" command (point))
+	  (ding))
+      (buffer-string))))
+
+(defun ledger-texi-write-test-data (name input)
+  (let ((path (expand-file-name name temporary-file-directory)))
+    (with-current-buffer (find-file-noselect path)
+      (erase-buffer)
+      (insert input)
+      (save-buffer))
+    path))
+
 (defun ledger-texi-update-examples ()
   (interactive)
   (save-excursion
@@ -22,9 +93,7 @@
 	(when (let ((case-fold-search nil))
 		(string-match " -f \\$\\([-a-z]+\\)" command))
 	  (let ((label (match-string 1 command)))
-	    (setq command (replace-match "" t t command)
-		  data-file (expand-file-name (format "%s.dat" label)
-					      temporary-file-directory))
+	    (setq command (replace-match "" t t command))
 	    (save-excursion
 	      (goto-char (point-min))
 	      (search-forward (format "@c data: %s" label))
@@ -32,62 +101,21 @@
 	      (forward-line)
 	      (let ((beg (point)))
 		(re-search-forward "@end \\(\\(?:small\\)?example\\)")
-		(setq input (buffer-substring-no-properties
-			       beg (match-beginning 0)))
-		(with-current-buffer (find-file-noselect data-file)
-		  (erase-buffer)
-		  (insert input)
-		  (save-buffer))))))
+		(setq data-file (ledger-texi-write-test-data
+				 (format "%s.dat" label)
+				 (buffer-substring-no-properties
+				  beg (match-beginning 0))))))))
 
-	(setq expanded-command command)
-	(if (string-match "\\$LEDGER" expanded-command)
-	    (setq expanded-command
-		  (replace-match
-		   (format "%s -f \"%s\" %s" ledger-path
-			   data-file ledger-normalization-args)
-		   t t expanded-command)))
-
-	(save-restriction
-	  (narrow-to-region (point) (point))
-	  (shell-command expanded-command t (get-buffer-create " *ldg-texi*"))
-	  (if (= (point-min) (point-max))
-	      (progn
-		(push-mark nil t)
-		(message "Command '%s' yielded no result at %d"
-			 expanded-command (point))
-		(ding))
-	    (setq output (buffer-string))
-	    (goto-char (point-min))
-	    (let ((section-name (if (string= section "smex")
-				    "smallexample"
-				  "example")))
-	      (insert "@" section-name ?\n)
-	      (goto-char (point-max))
-	      (unless (eolp)
-		(insert ?\n))
-	      (insert "@end " section-name ?\n))))
+	(let ((section-name (if (string= section "smex")
+				"smallexample"
+			      "example"))
+	      (output (ledger-texi-invoke-command
+		       (ledger-texi-expand-command command data-file))))
+	  (insert "@" section-name ?\n output
+		  "@end " section-name ?\n))
 
 	;; Update the regression test associated with this example
-	
-	(with-current-buffer
-	    (find-file-noselect
-	     (expand-file-name (concat example-name ".test")
-			       "../test/manual"))
-	  (erase-buffer)
-	  (let ((case-fold-search nil))
-	    (if (string-match "\\$LEDGER\\s-+" command)
-		(setq command (replace-match "" t t command)))
-	    (if (string-match " -f \\$\\([-a-z]+\\)" command)
-		(setq command (replace-match "" t t command))))
-
-	  (insert command ?\n)
-	  (insert "<<<" ?\n)
-	  (insert input)
-	  (insert ">>>1" ?\n)
-	  (insert output)
-	  (insert ">>>2" ?\n)
-	  (insert "=== 0" ?\n)
-	  (save-buffer)
-	  (kill-buffer (current-buffer)))))))
+	(ledger-texi-write-test example-name command input output
+				"../test/manual")))))
 
 (provide 'ldg-texi)
