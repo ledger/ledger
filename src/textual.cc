@@ -1199,7 +1199,7 @@ post_t * instance_t::parse_post(char *		line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    post->append_note(++next, current_year);
+    post->append_note(++next, true, current_year);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
 	  << "Parsed a posting note");
@@ -1218,7 +1218,7 @@ post_t * instance_t::parse_post(char *		line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-	post->parse_tags(boost::get<string>(state).c_str());
+	post->parse_tags(boost::get<string>(state).c_str(), true);
   }
 
   TRACE_STOP(post_details, 1);
@@ -1355,7 +1355,7 @@ xact_t * instance_t::parse_xact(char *		line,
 	item = xact.get();
 
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, current_year);
+      item->append_note(p + 1, true, current_year);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
     } else {
@@ -1389,7 +1389,7 @@ xact_t * instance_t::parse_xact(char *		line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-	xact->parse_tags(boost::get<string>(state).c_str());
+	xact->parse_tags(boost::get<string>(state).c_str(), false);
   }
 
   TRACE_STOP(xact_details, 1);

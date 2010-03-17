@@ -101,8 +101,10 @@ optional<string> item_t::get_tag(const mask_t& tag_mask,
   return none;
 }
 
-item_t::string_map::iterator item_t::set_tag(const string&           tag,
-					     const optional<string>& value)
+item_t::string_map::iterator
+item_t::set_tag(const string&           tag,
+		const optional<string>& value,
+		const bool              overwrite_existing)
 {
   assert(! tag.empty());
 
@@ -116,14 +118,20 @@ item_t::string_map::iterator item_t::set_tag(const string&           tag,
   if (data && data->empty())
     data = none;
 
-  std::pair<string_map::iterator, bool> result
-    = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
-  assert(result.second);
-
-  return result.first;
+  string_map::iterator i = metadata->find(tag);
+  if (i == metadata->end()) {
+    std::pair<string_map::iterator, bool> result
+      = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
+    assert(result.second);
+    return result.first;
+  } else {
+    if (overwrite_existing)
+      (*i).second = tag_data_t(data, false);
+    return i;
+  }
 }
 
-void item_t::parse_tags(const char * p,
+void item_t::parse_tags(const char * p, bool overwrite_existing,
 			optional<date_t::year_type> current_year)
 {
   if (const char * b = std::strchr(p, '[')) {
@@ -157,17 +165,16 @@ void item_t::parse_tags(const char * p,
        q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
     if (! tag.empty()) {
-      if (! has_tag(tag)) {
-	string_map::iterator i = set_tag(tag, string(p + (q - buf.get())));
-	(*i).second.second = true;
-      }
+      string_map::iterator i = set_tag(tag, string(p + (q - buf.get())),
+				       overwrite_existing);
+      (*i).second.second = true;
       break;
     }
     else if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
       for (char * r = std::strtok(q + 1, ":");
 	   r;
 	   r = std::strtok(NULL, ":")) {
-	string_map::iterator i = set_tag(r);
+	string_map::iterator i = set_tag(r, none, overwrite_existing);
 	(*i).second.second = true;
       }
     }
@@ -177,7 +184,7 @@ void item_t::parse_tags(const char * p,
   }
 }
 
-void item_t::append_note(const char * p,
+void item_t::append_note(const char * p, bool overwrite_existing,
 			 optional<date_t::year_type> current_year)
 {
   if (note) {
@@ -187,7 +194,7 @@ void item_t::append_note(const char * p,
     note = p;
   }
 
-  parse_tags(p, current_year);
+  parse_tags(p, overwrite_existing, current_year);
 }
 
 namespace {
