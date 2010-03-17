@@ -169,7 +169,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   }
   else if (report.HANDLED(pivot_)) {
     string pivot = report.HANDLER(pivot_).str();
-    pivot = string("\"") + pivot + ":\" + tag(/" + pivot + "/)";
+    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
 				       report.session.journal->master, pivot,
 				       report));
