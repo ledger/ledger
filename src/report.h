@@ -264,6 +264,7 @@ public:
     HANDLER(lots).report(out);
     HANDLER(lots_actual).report(out);
     HANDLER(market).report(out);
+    HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
     HANDLER(no_total).report(out);
     HANDLER(now_).report(out);
@@ -312,6 +313,7 @@ public:
     HANDLER(weekly).report(out);
     HANDLER(wide).report(out);
     HANDLER(yearly).report(out);
+    HANDLER(meta_width_).report(out);
     HANDLER(date_width_).report(out);
     HANDLER(payee_width_).report(out);
     HANDLER(account_width_).report(out);
@@ -619,6 +621,8 @@ public:
 	.set_expr(string("--market"), "market(total_expr, date, exchange)");
     });
 
+  OPTION(report_t, meta_);
+
   OPTION_(report_t, monthly, DO() { // -M
       parent->HANDLER(period_).on(string("--monthly"), "monthly");
     });
@@ -776,12 +780,13 @@ public:
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
 	 "    account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "
-	 "    3 + date_width + payee_width + account_width + amount_width, "
-	 "    true, color))"
+	 "    3 + meta_width + date_width + payee_width + account_width"
+	 "      + amount_width, true, color))"
 	 " %(justify(scrub(display_total), total_width, "
-	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true, color))\n%/"
-	 "%(justify(\" \", 2 + date_width + payee_width))%$3 %$4 %$5\n");
+	 "    4 + meta_width + date_width + payee_width + account_width"
+	 "      + amount_width + total_width, true, color))\n%/"
+	 "%(justify(\" \", 2 + date_width + payee_width))"
+	 "%$3 %$4 %$5\n");
     });
 
   OPTION(report_t, related); // -r
@@ -891,6 +896,10 @@ public:
       parent->HANDLER(period_).on(string("--yearly"), "yearly");
     });
 
+  OPTION__(report_t, meta_width_,
+	   bool specified;
+	   CTOR(report_t, meta_width_) { specified = false; }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, date_width_,
 	   bool specified;
 	   CTOR(report_t, date_width_) { specified = false; }

@@ -93,6 +93,33 @@ void report_t::normalize_options(const string& verb)
       start_of_week = *weekday;
   }
 
+  long meta_width = -1;
+
+  if (! HANDLED(prepend_format_) && HANDLED(meta_)) {
+    if (! HANDLED(meta_width_)) {
+      string::size_type i = HANDLER(meta_).str().find(':');
+      if (i != string::npos) {
+	HANDLED(meta_width_).on_with
+	  (string("?normalize"),
+	   lexical_cast<long>(string(HANDLER(meta_).str(), i + 1)));
+	HANDLED(meta_).on(string("?normalize"),
+			  string(HANDLER(meta_).str(), 0, i));
+      }
+    }
+    if (HANDLED(meta_width_)) {
+      HANDLER(prepend_format_).on
+	(string("?normalize"),
+	 string("%(justify(truncated(tag(\"") +
+	 HANDLER(meta_).str() + "\"), " +
+	 HANDLED(meta_width_).value.to_string() + " - 1), " +
+	 HANDLED(meta_width_).value.to_string() + "))");
+      meta_width = HANDLED(meta_width_).value.to_long();
+    } else {
+      HANDLER(prepend_format_).on(string("?normalize"), string("%(tag(\"") +
+				  HANDLER(meta_).str() + "\"))");
+    }
+  }
+
   if (verb == "print" || verb == "xact" || verb == "dump") {
     HANDLER(related).on_only(string("?normalize"));
     HANDLER(related_all).on_only(string("?normalize"));
@@ -165,6 +192,9 @@ void report_t::normalize_options(const string& verb)
   else
     cols = 80L;
 
+  if (meta_width > 0)
+    cols -= meta_width;
+
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);
 
@@ -187,11 +217,11 @@ void report_t::normalize_options(const string& verb)
 			  HANDLER(total_width_).value.to_long() :
 			  amount_width);
 
-    DEBUG("auto.columns", "date_width	 = " << date_width);
-    DEBUG("auto.columns", "payee_width	 = " << payee_width);
+    DEBUG("auto.columns", "date_width    = " << date_width);
+    DEBUG("auto.columns", "payee_width   = " << payee_width);
     DEBUG("auto.columns", "account_width = " << account_width);
-    DEBUG("auto.columns", "amount_width	 = " << amount_width);
-    DEBUG("auto.columns", "total_width	 = " << total_width);
+    DEBUG("auto.columns", "amount_width  = " << amount_width);
+    DEBUG("auto.columns", "total_width   = " << total_width);
 
     if (! HANDLER(date_width_).specified &&
 	! HANDLER(payee_width_).specified &&
@@ -207,6 +237,8 @@ void report_t::normalize_options(const string& verb)
       }
     }
 
+    if (! HANDLED(meta_width_))
+      HANDLER(meta_width_).on_with(string("?normalize"), 0L);
     if (! HANDLER(date_width_).specified)
       HANDLER(date_width_).on_with(string("?normalize"), date_width);
     if (! HANDLER(payee_width_).specified)
@@ -862,6 +894,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'm':
     OPT(market);
     else OPT(monthly);
+    else OPT(meta_);
+    else OPT(meta_width_);
     break;
   case 'n':
     OPT_CH(collapse);
