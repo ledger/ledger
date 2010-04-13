@@ -105,46 +105,7 @@
   (ledger-reconcile-save))
 
 (defun ledger-do-reconcile ()
-  (let* ((buf ledger-buf)
-	 (account ledger-acct)
-	 (items
-	  (with-temp-buffer
-	    (let ((exit-code
-		   (ledger-run-ledger buf "--uncleared" "emacs" account)))
-	      (when (= 0 exit-code)
-		(goto-char (point-min))
-		(unless (eobp)
-		  (unless (looking-at "(")
-		    (error (buffer-string)))
-		  (read (current-buffer))))))))
-    (dolist (item items)
-      (let ((index 1))
-	(dolist (xact (nthcdr 5 item))
-	  (let ((beg (point))
-		(where
-		 (with-current-buffer buf
-		   (cons
-		    (nth 0 item)
-		    (if ledger-clear-whole-entries
-			(save-excursion
-			  (goto-line (nth 1 item))
-			  (point-marker))
-		      (save-excursion
-			(goto-line (nth 0 xact))
-			(point-marker)))))))
-	    (insert (format "%s %-30s %-25s %15s\n"
-			    (format-time-string "%m/%d" (nth 2 item))
-			    (nth 4 item) (nth 1 xact) (nth 2 xact)))
-	    (if (nth 3 xact)
-		(set-text-properties beg (1- (point))
-				     (list 'face 'bold
-					   'where where))
-	      (set-text-properties beg (1- (point))
-				   (list 'where where))))
-	  (setq index (1+ index)))))
-    (goto-char (point-min))
-    (set-buffer-modified-p nil)
-    (toggle-read-only t)))
+  )
 
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
