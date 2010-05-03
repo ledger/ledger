@@ -34,6 +34,10 @@
 
 (require 'ldg-post)
 
+(autoload #'ledger-mode "ldg-mode" nil t)
+
+(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
+
 (autoload #'ledger-texi-update-test "ldg-texi" nil t)
 (autoload #'ledger-texi-update-examples "ldg-texi" nil t)
 

@@ -57,8 +57,7 @@
       (let ((pos (point))
 	    (inhibit-read-only t))
 	(erase-buffer)
-	(ledger-register-render
-	 buf (apply #'ledger-exec-read buf args))
+	(ledger-register-render buf (apply #'ledger-exec-read buf args))
 	(goto-char pos))
       (set-buffer-modified-p nil)
       (toggle-read-only t)

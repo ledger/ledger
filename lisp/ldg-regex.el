@@ -96,64 +96,64 @@
 
     (cons 'progn defs)))
 
-(put 'ledger-define-regexp 'lisp-indent-function 2)
+(put 'ledger-define-regexp 'lisp-indent-function 1)
 
 (ledger-define-regexp date
-    (let ((sep '(or ?- (any ?. ?/))))	; can't do (any ?- ?. ?/) due to bug
-      (rx (group
-	   (and (? (= 4 num)
-		   (eval sep))
-		(and num (? num))
-		(eval sep)
-		(and num (? num))))))
+  (let ((sep '(or ?- (any ?. ?/))))	; can't do (any ?- ?. ?/) due to bug
+    (rx (group
+	 (and (? (= 4 num)
+		 (eval sep))
+	      (and num (? num))
+	      (eval sep)
+	      (and num (? num))))))
   "Match a single date, in its 'written' form.")
 
 (ledger-define-regexp full-date
-    (macroexpand
-     `(rx (and (regexp ,ledger-date-regexp)
-	       (? (and ?= (regexp ,ledger-date-regexp))))))
+  (macroexpand
+   `(rx (and (regexp ,ledger-date-regexp)
+	     (? (and ?= (regexp ,ledger-date-regexp))))))
   "Match a compound date, of the form ACTUAL=EFFECTIVE"
   (actual date)
   (effective date))
 
 (ledger-define-regexp state
-    (rx (group (any ?! ?*)))
+  (rx (group (any ?! ?*)))
   "Match a transaction or posting's \"state\" character.")
 
 (ledger-define-regexp code
-    (rx (and ?\( (group (+? (not (any ?\))))) ?\)))
+  (rx (and ?\( (group (+? (not (any ?\))))) ?\)))
   "Match the transaction code.")
 
 (ledger-define-regexp long-space
-    (rx (and (*? blank)
-	     (or (and ?  (or ?  ?\t)) ?\t)))
+  (rx (and (*? blank)
+	   (or (and ?  (or ?  ?\t)) ?\t)))
   "Match a \"long space\".")
 
 (ledger-define-regexp note
-    (rx (group (+ nonl)))
+  (rx (group (+ nonl)))
   "")
 
 (ledger-define-regexp end-note
-    (macroexpand
-     `(rx (and (regexp ,ledger-long-space-regexp) ?\;
-	       (regexp ,ledger-note-regexp))))
+  (macroexpand
+   `(rx (and (regexp ,ledger-long-space-regexp) ?\;
+	     (regexp ,ledger-note-regexp))))
   "")
 
 (ledger-define-regexp full-note
-    (macroexpand
-     `(rx (and line-start (+ blank)
-	       ?\; (regexp ,ledger-note-regexp))))
+  (macroexpand
+   `(rx (and line-start (+ blank)
+	     ?\; (regexp ,ledger-note-regexp))))
   "")
 
 (ledger-define-regexp xact-line
-    (macroexpand
-     `(rx (and line-start
-	       (regexp ,ledger-full-date-regexp)
-	       (? (and (+ blank) (regexp ,ledger-state-regexp)))
-	       (? (and (+ blank) (regexp ,ledger-code-regexp)))
-	       (+ blank) (+? nonl)
-	       (? (regexp ,ledger-end-note-regexp))
-	       line-end)))
+  (macroexpand
+   `(rx (and line-start
+	     (regexp ,ledger-full-date-regexp)
+	     (? (and (+ blank) (regexp ,ledger-state-regexp)))
+	     (? (and (+ blank) (regexp ,ledger-code-regexp)))
+	     (+ blank) (+? nonl)
+	     (? (regexp ,ledger-end-note-regexp))
+	     line-end)))
   "Match a transaction's first line (and optional notes)."
   (actual-date full-date actual)
   (effective-date full-date effective)
@@ -162,84 +162,84 @@
   (note end-note))
 
 (ledger-define-regexp account
-    (rx (group (and (not (any blank ?\[ ?\( ?: ?\;)) (*? nonl))))
+  (rx (group (and (not (any blank ?\[ ?\( ?: ?\;)) (*? nonl))))
   "")
 
 (ledger-define-regexp account-kind
-    (rx (group (? (any ?\[ ?\())))
+  (rx (group (? (any ?\[ ?\())))
   "")
 
 (ledger-define-regexp full-account
-    (macroexpand
-     `(rx (and (regexp ,ledger-account-kind-regexp)
-	       (regexp ,ledger-account-regexp)
-	       (? (any ?\] ?\))))))
+  (macroexpand
+   `(rx (and (regexp ,ledger-account-kind-regexp)
+	     (regexp ,ledger-account-regexp)
+	     (? (any ?\] ?\))))))
   ""
   (kind account-kind)
   (name account))
 
 (ledger-define-regexp commodity
-    (rx (group
-	 (or (and ?\" (+ (not (any ?\"))) ?\")
-	     (not (any blank ?\n
-		       digit
-		       ?- ?\[ ?\]
-		       ?. ?, ?\; ?+ ?* ?/ ?^ ?? ?: ?& ?| ?! ?=
-		       ?\< ?\> ?\{ ?\} ?\( ?\) ?@)))))
+  (rx (group
+       (or (and ?\" (+ (not (any ?\"))) ?\")
+	   (not (any blank ?\n
+		     digit
+		     ?- ?\[ ?\]
+		     ?. ?, ?\; ?+ ?* ?/ ?^ ?? ?: ?& ?| ?! ?=
+		     ?\< ?\> ?\{ ?\} ?\( ?\) ?@)))))
   "")
 
 (ledger-define-regexp amount
-    (rx (group
-	 (and (? ?-)
-	      (and (+ digit)
-		   (*? (and (any ?. ?,) (+ digit))))
-	      (? (and (any ?. ?,) (+ digit))))))
+  (rx (group
+       (and (? ?-)
+	    (and (+ digit)
+		 (*? (and (any ?. ?,) (+ digit))))
+	    (? (and (any ?. ?,) (+ digit))))))
   "")
 
 (ledger-define-regexp commoditized-amount
-    (macroexpand
-     `(rx (group
-	   (or (and (regexp ,ledger-commodity-regexp)
-		    (*? blank)
-		    (regexp ,ledger-amount-regexp))
-	       (and (regexp ,ledger-amount-regexp)
-		    (*? blank)
-		    (regexp ,ledger-commodity-regexp))))))
+  (macroexpand
+   `(rx (group
+	 (or (and (regexp ,ledger-commodity-regexp)
+		  (*? blank)
+		  (regexp ,ledger-amount-regexp))
+	     (and (regexp ,ledger-amount-regexp)
+		  (*? blank)
+		  (regexp ,ledger-commodity-regexp))))))
   "")
 
 (ledger-define-regexp commodity-annotations
-    (macroexpand
-     `(rx (* (+ blank)
-	     (or (and ?\{ (regexp ,ledger-commoditized-amount-regexp) ?\})
-		 (and ?\[ (regexp ,ledger-date-regexp) ?\])
-		 (and ?\( (not (any ?\))) ?\))))))
+  (macroexpand
+   `(rx (* (+ blank)
+	   (or (and ?\{ (regexp ,ledger-commoditized-amount-regexp) ?\})
+	       (and ?\[ (regexp ,ledger-date-regexp) ?\])
+	       (and ?\( (not (any ?\))) ?\))))))
   "")
 
 (ledger-define-regexp cost
-    (macroexpand
-     `(rx (and (or "@" "@@") (+ blank)
-	       (regexp ,ledger-commoditized-amount-regexp))))
+  (macroexpand
+   `(rx (and (or "@" "@@") (+ blank)
+	     (regexp ,ledger-commoditized-amount-regexp))))
   "")
 
 (ledger-define-regexp balance-assertion
-    (macroexpand
-     `(rx (and ?= (+ blank)
-	       (regexp ,ledger-commoditized-amount-regexp))))
+  (macroexpand
+   `(rx (and ?= (+ blank)
+	     (regexp ,ledger-commoditized-amount-regexp))))
   "")
 
 (ledger-define-regexp full-amount
-    (macroexpand `(rx (group (+? (not (any ?\;))))))
+  (macroexpand `(rx (group (+? (not (any ?\;))))))
   "")
 
 (ledger-define-regexp post-line
-    (macroexpand
-     `(rx (and line-start (+ blank)
-	       (? (and (regexp ,ledger-state-regexp) (* blank)))
-	       (regexp ,ledger-full-account-regexp)
-	       (? (and (regexp ,ledger-long-space-regexp)
-		       (regexp ,ledger-full-amount-regexp)))
-	       (? (regexp ,ledger-end-note-regexp))
-	       line-end)))
+  (macroexpand
+   `(rx (and line-start (+ blank)
+	     (? (and (regexp ,ledger-state-regexp) (* blank)))
+	     (regexp ,ledger-full-account-regexp)
+	     (? (and (regexp ,ledger-long-space-regexp)
+		     (regexp ,ledger-full-amount-regexp)))
+	     (? (regexp ,ledger-end-note-regexp))
+	     line-end)))
   ""
   state
   (account-kind full-account kind)

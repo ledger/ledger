@@ -83,6 +83,13 @@ to choose from."
 		(delete-char 1)))))))
     (goto-char pos)))
 
+(defun ledger-next-amount (&optional end)
+  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
+    (goto-char (match-beginning 0))
+    (skip-syntax-forward " ")
+    (- (or (match-end 4)
+	   (match-end 3)) (point))))
+
 (defun ledger-align-amounts (&optional column)
   "Align amounts in the current region.
 This is done so that the last digit falls in COLUMN, which defaults to 52."
@@ -163,7 +170,5 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
   (if ledger-post-auto-adjust-amounts
       (add-hook 'after-change-functions 'ledger-post-maybe-align t t))
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
-
-(add-hook 'ledger-mode-hook 'ledger-post-setup)
 
 (provide 'ldg-post)

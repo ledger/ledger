@@ -22,6 +22,8 @@
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
+  (ledger-post-setup)
+
   (set (make-local-variable 'comment-start) " ; ")
   (set (make-local-variable 'comment-end) "")
   (set (make-local-variable 'indent-tabs-mode) nil)
