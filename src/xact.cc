@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "pool.h"
+#include "interactive.h"
 
 namespace ledger {
 
@@ -483,6 +484,36 @@ namespace {
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<xact_t>(scope));
   }
+
+  value_t fn_any(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    post_t& post(find_scope<post_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, post.xact->posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (expr.calc(bound_scope).to_boolean())
+	return true;
+    }
+    return false;
+  }
+
+  value_t fn_all(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    post_t& post(find_scope<post_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, post.xact->posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (! expr.calc(bound_scope).to_boolean())
+	return false;
+    }
+    return true;
+  }
 }
 
 expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
@@ -492,6 +523,13 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
     return item_t::lookup(kind, name);
 
   switch (name[0]) {
+  case 'a':
+    if (name == "any")
+      return WRAP_FUNCTOR(&fn_any);
+    else if (name == "all")
+      return WRAP_FUNCTOR(&fn_all);
+    break;
+
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);

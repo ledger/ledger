@@ -171,10 +171,10 @@ void generate_posts_iterator::generate_commodity(std::ostream& out)
     generate_string(buf, six_gen(), true);
     comm = buf.str();
   }
-  while (comm == "h" || comm == "m" || comm == "s" ||
-	 comm == "and" || comm == "div" || comm == "false" ||
-	 comm == "or" || comm == "not" || comm == "true" ||
-	 comm == "if" || comm == "else");
+  while (comm == "h" || comm == "m" || comm == "s" || comm == "and" ||
+	 comm == "any" || comm == "all" || comm == "div" ||
+	 comm == "false" || comm == "or" || comm == "not" ||
+	 comm == "true" || comm == "if" || comm == "else");
 
   out << comm;
 }
