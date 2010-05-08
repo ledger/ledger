@@ -443,6 +443,20 @@ value_t report_t::fn_trim(call_scope_t& args)
   }
 }
 
+value_t report_t::fn_print(call_scope_t& args)
+{
+  std::ostream& out(output_stream);
+  bool first = true;
+  for (call_scope_t::iterator i = args.begin(); i != args.end(); i++) {
+    if (first)
+      first = false;
+    else
+      out << ' ';
+    (*i).print(out);
+  }
+  return true;
+}
+
 value_t report_t::scrub(value_t val)
 {
   value_t temp(val.strip_annotations(what_to_keep()));
@@ -1117,6 +1131,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_percent);
       else if (is_eq(p, "price"))
 	return MAKE_FUNCTOR(report_t::fn_price);
+      else if (is_eq(p, "print"))
+	return MAKE_FUNCTOR(report_t::fn_print);
       break;
 
     case 'q':
