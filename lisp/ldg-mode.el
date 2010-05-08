@@ -114,3 +114,4 @@ Return the difference in the format of a time value."
   (let ((bounds (ledger-current-entry-bounds)))
     (delete-region (car bounds) (cdr bounds))))
 
+(provide 'ldg-mode)

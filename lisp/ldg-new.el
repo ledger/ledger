@@ -33,10 +33,13 @@
 ;;; Commentary:
 
 (require 'ldg-post)
+(require 'ldg-mode)
+(require 'ldg-complete)
+(require 'ldg-state)
 
-(autoload #'ledger-mode "ldg-mode" nil t)
-
-(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
+;(autoload #'ledger-mode "ldg-mode" nil t)
+;(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
+;(autoload #'ledger-toggle-current "ldg-state" nil t)
 
 (autoload #'ledger-texi-update-test "ldg-texi" nil t)
 (autoload #'ledger-texi-update-examples "ldg-texi" nil t)

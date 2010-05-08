@@ -153,3 +153,4 @@
       (if (re-search-backward "\\(\t\\| [ \t]\\)" nil t)
 	  (goto-char (match-end 0))))))
 
+(provide 'ldg-complete)
