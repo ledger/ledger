@@ -241,6 +241,17 @@ public:
     args.pop_back();
   }
 
+  typedef value_t::sequence_t::iterator iterator;
+
+  value_t::sequence_t::iterator begin() {
+    return args.begin();
+  }
+  value_t::sequence_t::iterator end() {
+    return args.end();
+  }
+
+  typedef value_t::sequence_t::const_iterator const_iterator;
+
   value_t::sequence_t::const_iterator begin() const {
     return args.begin();
   }
