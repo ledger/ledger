@@ -105,6 +105,7 @@ public:
     O_DEFINE,
     O_LOOKUP,
     O_CALL,
+    O_EXPAND,
     O_MATCH,
 
     BINARY_OPERATORS,

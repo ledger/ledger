@@ -38,6 +38,37 @@
 
 namespace ledger {
 
+namespace {
+  value_t split_cons_expr(expr_t::ptr_op_t op, scope_t& scope,
+			  std::vector<expr_t>& exprs)
+  {
+    value_t seq;
+
+    if (op->kind == expr_t::op_t::O_CONS) {
+      exprs.push_back(expr_t(op->left(), &scope));
+      seq.push_back(value_t(exprs.back()));
+
+      expr_t::ptr_op_t next = op->right();
+      while (next) {
+	expr_t::ptr_op_t value_op;
+	if (next->kind == expr_t::op_t::O_CONS) {
+	  value_op = next->left();
+	  next     = next->right();
+	} else {
+	  value_op = next;
+	  next     = NULL;
+	}
+	exprs.push_back(expr_t(value_op, &scope));
+	seq.push_back(value_t(exprs.back()));
+      }
+    } else {
+      exprs.push_back(expr_t(op, &scope));
+      seq.push_back(value_t(exprs.back()));
+    }
+    return seq;
+  }
+}
+
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 {
   if (is_ident()) {
@@ -190,11 +221,24 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 	     _("Failed to lookup member '%1'") << right()->as_ident());
     break;
 
-  case O_CALL: {
+  case O_CALL:
+  case O_EXPAND: {
     call_scope_t call_args(scope);
+    // When evaluating a macro call, these expressions have to live beyond the
+    // call to calc() below.
+    optional<std::vector<expr_t> > args_expr;
 
-    if (has_right())
-      call_args.set_args(right()->calc(scope, locus, depth + 1));
+    if (has_right()) {
+      if (kind == O_CALL) {
+	call_args.set_args(right()->calc(scope, locus, depth + 1));
+      } else {
+	// macros defer calculation to the callee
+	args_expr = std::vector<expr_t>();
+	call_args.set_args(split_cons_expr(right()->kind == O_SEQ ?
+					   right()->left() : right(),
+					   scope, *args_expr));
+      }
+    }
 
     ptr_op_t func = left();
     const string& name(func->as_ident());
@@ -592,6 +636,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_CALL:
+  case O_EXPAND:
     if (left() && left()->print(out, context))
       found = true;
     if (has_right()) {
@@ -663,6 +708,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_LOOKUP: out << "O_LOOKUP"; break;
   case O_CALL:	 out << "O_CALL"; break;
+  case O_EXPAND: out << "O_EXPAND"; break;
   case O_MATCH:	 out << "O_MATCH"; break;
 
   case O_NOT:	 out << "O_NOT"; break;
