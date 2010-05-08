@@ -83,7 +83,7 @@ value_t convert_command(call_scope_t& scope)
     }
   }
 
-  // Create a flat list o
+  // Create a flat list
   xacts_list current_xacts(journal.xacts_begin(), journal.xacts_end());
 
   // Read in the series of transactions from the CSV file
@@ -93,6 +93,11 @@ value_t convert_command(call_scope_t& scope)
   csv_reader  reader(data);
 
   while (xact_t * xact = reader.read_xact(journal, bucket)) {
+    if (report.HANDLED(invert)) {
+      foreach (post_t * post, xact->posts)
+	post->amount.in_place_negate();
+    }
+      
     bool matched = false;
     post_map_t::iterator i = post_map.find(- xact->posts.front()->amount);
     if (i != post_map.end()) {
