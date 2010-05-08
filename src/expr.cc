@@ -39,10 +39,21 @@ namespace ledger {
 void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 		   const optional<string>& original_string)
 {
-  base_type::parse(in, flags, original_string);
-
   parser_t parser;
+  istream_pos_type start_pos = in.tellg();
   ptr = parser.parse(in, flags, original_string);
+  istream_pos_type end_pos = in.tellg();
+
+  if (original_string) {
+    set_text(*original_string);
+  } else {
+    in.clear();
+    in.seekg(start_pos, std::ios::beg);
+    scoped_array<char> buf
+      (new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
+    in.read(buf.get(), end_pos - start_pos);
+    set_text(buf.get());
+  }
 }
 
 void expr_t::compile(scope_t& scope)
