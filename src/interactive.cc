@@ -122,6 +122,10 @@ void interactive_t::verify_arguments() const
       label = _("a scope");
       wrong_arg = ! next_arg->is_scope();
       break;
+    case 'X':
+      label = _("an expression");
+      wrong_arg = ! next_arg->is_expr();
+      break;
     case 'S':
       label = _("a sequence");
       wrong_arg = false;
