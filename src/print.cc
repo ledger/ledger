@@ -140,9 +140,15 @@ namespace {
 	if (slip > 0)
 	  out << string(slip, ' ');
 
-	std::ostringstream amt_str;
-	report.scrub(post->amount).print(amt_str, 12, -1, true);
-	string amt = amt_str.str();
+	string amt;
+	if (post->amount_expr) {
+	  amt = post->amount_expr->text();
+	} else {
+	  std::ostringstream amt_str;
+	  report.scrub(post->amount).print(amt_str, 12, -1, true);
+	  amt = amt_str.str();
+	}
+
 	string trimmed_amt(amt);
 	trim_left(trimmed_amt);
 	int amt_slip = (static_cast<int>(amt.length()) -

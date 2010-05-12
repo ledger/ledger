@@ -239,6 +239,36 @@ namespace {
   value_t get_parent(account_t& account) {
     return value_t(static_cast<scope_t *>(account.parent));
   }
+
+  value_t fn_any(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    account_t& account(find_scope<account_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, account.posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (expr.calc(bound_scope).to_boolean())
+	return true;
+    }
+    return false;
+  }
+
+  value_t fn_all(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    account_t& account(find_scope<account_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, account.posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (! expr.calc(bound_scope).to_boolean())
+	return false;
+    }
+    return true;
+  }
 }
 
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
@@ -255,6 +285,10 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_account>);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "any")
+      return WRAP_FUNCTOR(&fn_any);
+    else if (name == "all")
+      return WRAP_FUNCTOR(&fn_all);
     break;
 
   case 'c':

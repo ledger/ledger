@@ -120,6 +120,19 @@ inline const value_t::sequence_t&
 interactive_t::get<const value_t::sequence_t&>(std::size_t index) {
   return value_at(index).as_sequence();
 }
+template <>
+inline scope_t *
+interactive_t::get<scope_t *>(std::size_t index) {
+  return value_at(index).as_scope();
+}
+template <>
+inline expr_t& interactive_t::get<expr_t&>(std::size_t index) {
+  return value_at(index).as_expr_lval();
+}
+template <>
+inline const expr_t& interactive_t::get<const expr_t&>(std::size_t index) {
+  return value_at(index).as_expr();
+}
 
 template <typename T>
 class in_context_t : public interactive_t

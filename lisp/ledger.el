@@ -4,7 +4,7 @@
 
 ;; Emacs Lisp Archive Entry
 ;; Filename: ledger.el
-;; Version: 3.0
+;; Version: 2.6.3
 ;; Date: Fri 18-Jul-2008
 ;; Keywords: data
 ;; Author: John Wiegley (johnw AT gnu DOT org)

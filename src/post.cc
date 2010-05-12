@@ -291,6 +291,50 @@ namespace {
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<post_t>(scope));
   }
+
+  value_t fn_any(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    post_t& post(find_scope<post_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, post.xact->posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (p == &post && args.has(1) &&
+	  ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
+	// If the user specifies any(EXPR, false), and the context is a
+	// posting, then that posting isn't considered by the test.
+	;			// skip it
+      }
+      else if (expr.calc(bound_scope).to_boolean()) {
+	return true;
+      }
+    }
+    return false;
+  }
+
+  value_t fn_all(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    post_t& post(find_scope<post_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, post.xact->posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (p == &post && args.has(1) &&
+	  ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
+	// If the user specifies any(EXPR, false), and the context is a
+	// posting, then that posting isn't considered by the test.
+	;			// skip it
+      }
+      else if (! expr.calc(bound_scope).to_boolean()) {
+	return false;
+      }
+    }
+    return true;
+  }
 }
 
 expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
@@ -307,6 +351,10 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "any")
+      return WRAP_FUNCTOR(&fn_any);
+    else if (name == "all")
+      return WRAP_FUNCTOR(&fn_all);
     break;
 
   case 'b':
