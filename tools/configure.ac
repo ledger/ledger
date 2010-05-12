@@ -14,6 +14,9 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADER([config.h])
 
+# Use AM_SILENT_RULES if present
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 # Checks for programs.
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CXX
