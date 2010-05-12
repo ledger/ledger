@@ -46,13 +46,18 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 
   if (original_string) {
     set_text(*original_string);
-  } else {
+  }
+  else if (end_pos > start_pos) {
     in.clear();
     in.seekg(start_pos, std::ios::beg);
     scoped_array<char> buf
       (new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
     in.read(buf.get(), end_pos - start_pos);
+    buf[end_pos - start_pos] = '\0';
     set_text(buf.get());
+  }
+  else {
+    set_text("<stream>");
   }
 }
 
