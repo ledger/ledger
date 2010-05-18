@@ -142,6 +142,10 @@ namespace {
     return value_t(static_cast<scope_t *>(post.xact));
   }
 
+  value_t get_xact_id(post_t& post) {
+    return static_cast<long>(post.xact_id());
+  }
+
   value_t get_code(post_t& post) {
     if (post.xact->code)
       return string_value(*post.xact->code);
@@ -275,6 +279,10 @@ namespace {
     return string_value(name);
   }
 
+  value_t get_account_id(post_t& post) {
+    return static_cast<long>(post.account_id());
+  }
+
   value_t get_account_base(post_t& post) {
     return string_value(post.reported_account()->name);
   }
@@ -351,6 +359,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "account_id")
+      return WRAP_FUNCTOR(get_wrapper<&get_account_id>);
     else if (name == "any")
       return WRAP_FUNCTOR(&fn_any);
     else if (name == "all")
@@ -444,6 +454,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'x':
     if (name == "xact")
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
+    else if (name == "xact_id")
+      return WRAP_FUNCTOR(get_wrapper<&get_xact_id>);
     break;
 
   case 'N':
@@ -477,6 +489,30 @@ amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr)
 	     _("Amount expressions must result in a simple amount"));
     return result.as_amount();
   }
+}
+
+std::size_t post_t::xact_id() const
+{
+  std::size_t id = 1;
+  foreach (post_t * p, xact->posts) {
+    if (p == this)
+      return id;
+    id++;
+  }
+  assert(! "Failed to find posting within its transaction");
+  return 0;
+}
+
+std::size_t post_t::account_id() const
+{
+  std::size_t id = 1;
+  foreach (post_t * p, account->posts) {
+    if (p == this)
+      return id;
+    id++;
+  }
+  assert(! "Failed to find posting within its transaction");
+  return 0;
 }
 
 bool post_t::valid() const
