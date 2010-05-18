@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -112,10 +112,12 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
       else
 	handler.reset(new sort_posts(handler, report.HANDLER(sort_).str()));
     }
+#if 0
     else if (! report.HANDLED(period_) &&
 	     ! report.HANDLED(unsorted)) {
       handler.reset(new sort_posts(handler, "date"));
     }
+#endif
 
     // collapse_posts causes xacts with multiple posts to appear as xacts
     // with a subtotaled post for each commodity used.
@@ -167,7 +169,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   }
   else if (report.HANDLED(pivot_)) {
     string pivot = report.HANDLER(pivot_).str();
-    pivot = string("\"") + pivot + ":\" + tag(/" + pivot + "/)";
+    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
 				       report.session.journal->master, pivot,
 				       report));

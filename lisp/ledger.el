@@ -4,7 +4,7 @@
 
 ;; Emacs Lisp Archive Entry
 ;; Filename: ledger.el
-;; Version: 3.0
+;; Version: 2.6.3
 ;; Date: Fri 18-Jul-2008
 ;; Keywords: data
 ;; Author: John Wiegley (johnw AT gnu DOT org)
@@ -73,7 +73,7 @@
 (require 'esh-arg)
 (require 'pcomplete)
 
-(defvar ledger-version "1.2"
+(defvar ledger-version "1.3"
   "The version of ledger.el currently loaded")
 
 (defgroup ledger nil
@@ -152,46 +152,31 @@ customizable to ease retro-entry.")
   "Start a ledger session with the current month, but make it
 customizable to ease retro-entry.")
 
-(defvar ledger-rx-constituents
-  (append (list (cons 'date
-                      (rx (opt (group (= 4 digit)) (in "./"))
-                          (group (1+ digit)) (in "./")
-                          (group (1+ digit))))
-                (cons 'opt-mark
-                      (rx (opt (group "*") (1+ blank)))))
-          rx-constituents))
-
-(defmacro ledger-rx (&rest body)
-  `(let ((rx-constituents ledger-rx-constituents))
-     (rx ,@body)))
-
-(defun ledger--iterate-dispatch (nyear nmonth nday nmark ndesc)
-  (let ((start (point))
-        (year (match-string nyear))
-        (month (string-to-number (match-string nmonth)))
-        (day (string-to-number (match-string nday)))
-        (mark (match-string nmark))
-        (desc (match-string ndesc)))
-    (if (and year (> (length year) 0))
-        (setq year (string-to-number year)))
-    (funcall callback start
-             (encode-time 0 0 0 day month
-                          (or year current-year))
-             mark desc)))
-
 (defun ledger-iterate-entries (callback)
   (goto-char (point-min))
   (let* ((now (current-time))
 	 (current-year (nth 5 (decode-time now))))
     (while (not (eobp))
-      (cond ((looking-at (rx "Y" (1+ blank) (group (1+ digit))))
-             (setq current-year (string-to-number (match-string 1))))
-
-            ((looking-at (ledger-rx date "=" date (1+ blank) opt-mark (group (1+ nonl))))
-             (ledger--iterate-dispatch 1 2 3 7 8))
-
-            ((looking-at (ledger-rx date (1+ blank) opt-mark (group (1+ nonl))))
-             (ledger--iterate-dispatch 1 2 3 4 5)))
+      (when (looking-at
+	     (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
+		     "\\([0-9]\\{4\\}+\\)?[./]?"
+		     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
+		     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
+	(let ((found (match-string 2)))
+	  (if found
+	      (setq current-year (string-to-number found))
+	    (let ((start (match-beginning 0))
+		  (year (match-string 3))
+		  (month (string-to-number (match-string 4)))
+		  (day (string-to-number (match-string 5)))
+		  (mark (match-string 6))
+		  (desc (match-string 7)))
+	      (if (and year (> (length year) 0))
+		  (setq year (string-to-number year)))
+	      (funcall callback start
+		       (encode-time 0 0 0 day month
+				    (or year current-year))
+		       mark desc)))))
       (forward-line))))
 
 (defun ledger-time-less-p (t1 t2)
@@ -1226,7 +1211,7 @@ the default."
   "Align amounts in the current region.
 This is done so that the last digit falls in COLUMN, which defaults to 52."
   (interactive "p")
-  (if (= column 1)
+  (if (or (null column) (= column 1))
       (setq column 52))
   (save-excursion
     (let* ((mark-first (< (mark) (point)))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -657,6 +657,16 @@ inline string to_hex(uint_least32_t * message_digest, const int len = 1)
       break;			// only output the first LEN dwords
   }
   return buf.str();
+}
+
+inline string sha1sum(const string& str)
+{
+  SHA1 sha;
+  sha.Reset();
+  sha << str.c_str();
+  uint_least32_t message_digest[5];
+  sha.Result(message_digest);
+  return to_hex(message_digest, 5);
 }
 
 class push_xml

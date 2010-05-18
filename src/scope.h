@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -240,6 +240,17 @@ public:
   void pop_back() {
     args.pop_back();
   }
+
+  typedef value_t::sequence_t::iterator iterator;
+
+  value_t::sequence_t::iterator begin() {
+    return args.begin();
+  }
+  value_t::sequence_t::iterator end() {
+    return args.end();
+  }
+
+  typedef value_t::sequence_t::const_iterator const_iterator;
 
   value_t::sequence_t::const_iterator begin() const {
     return args.begin();

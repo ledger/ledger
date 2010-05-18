@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -428,7 +428,9 @@ namespace {
   {
     switch (buf[0]) {
     case 'a':
-      return std::strcmp(buf, "and") == 0;
+      return (std::strcmp(buf, "and") == 0 ||
+	      std::strcmp(buf, "any") == 0 ||
+	      std::strcmp(buf, "all") == 0);
     case 'd':
       return std::strcmp(buf, "div") == 0;
     case 'e':

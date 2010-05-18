@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -144,6 +144,8 @@ public:
   value_t fn_is_seq(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_trim(call_scope_t& scope);
+  value_t fn_print(call_scope_t& scope);
+  value_t scrub(value_t val);
   value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
   value_t fn_rounded(call_scope_t& scope);
@@ -263,6 +265,7 @@ public:
     HANDLER(lots).report(out);
     HANDLER(lots_actual).report(out);
     HANDLER(market).report(out);
+    HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
     HANDLER(no_total).report(out);
     HANDLER(now_).report(out);
@@ -280,7 +283,7 @@ public:
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
-    HANDLER(print_format_).report(out);
+    HANDLER(print_virtual).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
     HANDLER(raw).report(out);
@@ -311,6 +314,7 @@ public:
     HANDLER(weekly).report(out);
     HANDLER(wide).report(out);
     HANDLER(yearly).report(out);
+    HANDLER(meta_width_).report(out);
     HANDLER(date_width_).report(out);
     HANDLER(payee_width_).report(out);
     HANDLER(account_width_).report(out);
@@ -618,6 +622,8 @@ public:
 	.set_expr(string("--market"), "market(total_expr, date, exchange)");
     });
 
+  OPTION(report_t, meta_);
+
   OPTION_(report_t, monthly, DO() { // -M
       parent->HANDLER(period_).on(string("--monthly"), "monthly");
     });
@@ -748,23 +754,7 @@ public:
 	 "P %(datetime) %(account) %(scrub(display_amount))\n");
     });
 
-  OPTION__(report_t, print_format_, CTOR(report_t, print_format_) {
-      on(none,
-	 "%(xact.date)"
-	 "%(!effective & xact.effective_date ?"
-	 " \"=\" + xact.effective_date : \"\")"
-	 "%(xact.cleared ? \" *\" : (xact.pending ? \" !\" : \"\"))"
-	 "%(code ? \" (\" + code + \")\" :"
-	 " \"\") %(payee)%(xact.comment)\n"
-	 "    %(xact.uncleared ?"
-	 " (cleared ? \"* \" : (pending ? \"! \" : \"\")) : \"\")"
-	 "%(calculated ? account : justify(account, 34, -1, false))"
-	 "%(calculated ? \"\" : \"  \" + justify(scrub(amount), 12, -1, true))"
-	 "%(has_cost & !cost_calculated ?"
-	 " \" @ \" + justify(scrub(abs(cost / amount)), 0) : \"\")"
-	 "%(comment)\n%/"
-	 "    %$7%$8%$9%$A%$B\n%/\n");
-    });
+  OPTION(report_t, print_virtual);
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();
@@ -791,12 +781,13 @@ public:
 	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
 	 "    account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "
-	 "    3 + date_width + payee_width + account_width + amount_width, "
-	 "    true, color))"
+	 "    3 + meta_width + date_width + payee_width + account_width"
+	 "      + amount_width, true, color))"
 	 " %(justify(scrub(display_total), total_width, "
-	 "    4 + date_width + payee_width + account_width + amount_width "
-	 "    + total_width, true, color))\n%/"
-	 "%(justify(\" \", 2 + date_width + payee_width))%$3 %$4 %$5\n");
+	 "    4 + meta_width + date_width + payee_width + account_width"
+	 "      + amount_width + total_width, true, color))\n%/"
+	 "%(justify(\" \", 2 + date_width + payee_width))"
+	 "%$3 %$4 %$5\n");
     });
 
   OPTION(report_t, related); // -r
@@ -906,6 +897,10 @@ public:
       parent->HANDLER(period_).on(string("--yearly"), "yearly");
     });
 
+  OPTION__(report_t, meta_width_,
+	   bool specified;
+	   CTOR(report_t, meta_width_) { specified = false; }
+	   DO_(args) { value = args[1].to_long(); specified = true; });
   OPTION__(report_t, date_width_,
 	   bool specified;
 	   CTOR(report_t, date_width_) { specified = false; }

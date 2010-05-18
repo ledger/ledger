@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -57,6 +57,7 @@ namespace ledger {
 DECLARE_EXCEPTION(value_error, std::runtime_error);
 
 class scope_t;
+class expr_t;
 
 /**
  * @class value_t
@@ -108,7 +109,8 @@ public:
     STRING,			// a string object
     MASK,			// a regular expression mask
     SEQUENCE,			// a vector of value_t objects
-    SCOPE			// a pointer to a scope
+    SCOPE,			// a pointer to a scope
+    EXPR			// a pointer to a value expression
   };
 
 private:
@@ -135,7 +137,8 @@ private:
 	    string,	  // STRING
 	    mask_t,	  // MASK
 	    sequence_t *, // SEQUENCE
-	    scope_t *	  // SCOPE
+	    scope_t *,	  // SCOPE
+	    expr_t *	  // EXPR
 	    > data;
     
     type_t type;
@@ -350,6 +353,10 @@ public:
   explicit value_t(scope_t * item) {
     TRACE_CTOR(value_t, "scope_t *");
     set_scope(item);
+  }
+  explicit value_t(const expr_t& item) {
+    TRACE_CTOR(value_t, "const expr_t&");
+    set_expr(item);
   }
 
   /**
@@ -723,6 +730,22 @@ public:
   }
 
   /**
+   * Dealing with expr pointers.
+   */
+  bool is_expr() const {
+    return is_type(EXPR);
+  }
+  expr_t& as_expr_lval() const {
+    VERIFY(is_expr());
+    return *boost::get<expr_t *>(storage->data);
+  }
+  const expr_t& as_expr() const {
+    VERIFY(is_expr());
+    return *boost::get<expr_t *>(storage->data);
+  }
+  void set_expr(const expr_t& val);
+
+  /**
    * Data conversion methods.  These methods convert a value object to
    * its underlying type, where possible.  If not possible, an
    * exception is thrown.
@@ -908,6 +931,8 @@ public:
       return _("a sequence");
     case SCOPE:
       return _("a scope");
+    case EXPR:
+      return _("a expr");
     default:
       assert(false);
       break;
@@ -919,11 +944,11 @@ public:
   /**
    * Printing methods.
    */
-  void print(std::ostream&	     out,
-	     const int		     first_width   = -1,
-	     const int		     latter_width  = -1,
-	     const bool              right_justify = false,
-	     const bool              colorize      = false) const;
+  void print(std::ostream& out,
+	     const int	   first_width   = -1,
+	     const int	   latter_width  = -1,
+	     const bool    right_justify = false,
+	     const bool    colorize      = false) const;
   void dump(std::ostream& out, const bool relaxed = true) const;
 
   /**

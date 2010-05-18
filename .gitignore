@@ -53,6 +53,16 @@
 /doc/ledger.info
 /doc/refman.pdf
 /doc/report/
+/doc/*.aux
+/doc/*.cp
+/doc/*.fn
+/doc/*.ky
+/doc/*.log
+/doc/*.pdf
+/doc/*.pg
+/doc/*.toc
+/doc/*.tp
+/doc/*.vr
 /expr_tests
 /libtool
 /math_tests

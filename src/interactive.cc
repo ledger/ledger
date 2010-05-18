@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -121,6 +121,10 @@ void interactive_t::verify_arguments() const
     case '^':
       label = _("a scope");
       wrong_arg = ! next_arg->is_scope();
+      break;
+    case 'X':
+      label = _("an expression");
+      wrong_arg = ! next_arg->is_expr();
       break;
     case 'S':
       label = _("a sequence");

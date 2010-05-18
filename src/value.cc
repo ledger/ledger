@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 #include "annotate.h"
 #include "pool.h"
 #include "unistring.h"		// for justify()
+#include "op.h"
 
 namespace ledger {
 
@@ -115,6 +116,8 @@ value_t::operator bool() const
     return false;
   case SCOPE:
     return as_scope() != NULL;
+  case EXPR:
+    return as_expr();
   default:
     break;
   }
@@ -138,6 +141,12 @@ void value_t::set_type(type_t new_type)
       storage->destroy();
     storage->type = new_type;
   }
+}
+
+void value_t::set_expr(const expr_t& val)
+{
+  set_type(EXPR);
+  storage->data = new expr_t(val);
 }
 
 bool value_t::to_boolean() const
@@ -857,12 +866,12 @@ bool value_t::is_less_than(const value_t& val) const
     case INTEGER:
       return as_amount() < val.as_long();
     case AMOUNT:
-      try {
+      if (as_amount().commodity() == val.as_amount().commodity() ||
+	  ! as_amount().has_commodity() ||
+	  ! val.as_amount().has_commodity())
 	return as_amount() < val.as_amount();
-      }
-      catch (const amount_error&) {
+      else
 	return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount());
-      }
     default:
       break;
     }
@@ -1272,6 +1281,8 @@ bool value_t::is_realzero() const
 
   case SCOPE:
     return as_scope() == NULL;
+  case EXPR:
+    return ! as_expr();
 
   default:
     throw_(value_error, _("Cannot determine if %1 is really zero") << label());
@@ -1301,6 +1312,8 @@ bool value_t::is_zero() const
 
   case SCOPE:
     return as_scope() == NULL;
+  case EXPR:
+    return ! as_expr();
 
   default:
     throw_(value_error, _("Cannot determine if %1 is zero") << label());
@@ -1565,6 +1578,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   case STRING:
   case MASK:
   case SCOPE:
+  case EXPR:
     return *this;
 
   case SEQUENCE: {
@@ -1673,7 +1687,15 @@ void value_t::print(std::ostream& out,
   }
 
   case SCOPE:
-    out << "<SCOPE>";
+    out << "<#SCOPE>";
+    break;
+  case EXPR:
+    out << "<#EXPR ";
+    if (as_expr())
+      as_expr().print(out);
+    else
+      out << "null";
+    out << ">";
     break;
 
   default:
@@ -1742,6 +1764,12 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
 
   case SCOPE:
     out << as_scope();
+    break;
+  case EXPR:
+    if (as_expr())
+      as_expr().dump(out);
+    else
+      out << "null";
     break;
 
   case SEQUENCE: {
@@ -1855,6 +1883,7 @@ void to_xml(std::ostream& out, const value_t& value)
   }
 
   case value_t::SCOPE:
+  case value_t::EXPR:
   default:
     assert(false);
     break;

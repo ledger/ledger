@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -171,10 +171,10 @@ void generate_posts_iterator::generate_commodity(std::ostream& out)
     generate_string(buf, six_gen(), true);
     comm = buf.str();
   }
-  while (comm == "h" || comm == "m" || comm == "s" ||
-	 comm == "and" || comm == "div" || comm == "false" ||
-	 comm == "or" || comm == "not" || comm == "true" ||
-	 comm == "if" || comm == "else");
+  while (comm == "h" || comm == "m" || comm == "s" || comm == "and" ||
+	 comm == "any" || comm == "all" || comm == "div" ||
+	 comm == "false" || comm == "or" || comm == "not" ||
+	 comm == "true" || comm == "if" || comm == "else");
 
   out << comm;
 }

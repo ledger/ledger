@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "pool.h"
+#include "interactive.h"
 
 namespace ledger {
 
@@ -454,12 +455,7 @@ string xact_t::idstring() const
 
 string xact_t::id() const
 {
-  SHA1 sha;
-  sha.Reset();
-  sha << idstring().c_str();
-  uint_least32_t message_digest[5];
-  sha.Result(message_digest);
-  return to_hex(message_digest, 5);
+  return sha1sum(idstring());
 }
 
 namespace {
@@ -488,6 +484,36 @@ namespace {
   value_t get_wrapper(call_scope_t& scope) {
     return (*Func)(find_scope<xact_t>(scope));
   }
+
+  value_t fn_any(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    post_t& post(find_scope<post_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, post.xact->posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (expr.calc(bound_scope).to_boolean())
+	return true;
+    }
+    return false;
+  }
+
+  value_t fn_all(call_scope_t& scope)
+  {
+    interactive_t args(scope, "X&X");
+
+    post_t& post(find_scope<post_t>(scope));
+    expr_t& expr(args.get<expr_t&>(0));
+
+    foreach (post_t * p, post.xact->posts) {
+      bind_scope_t bound_scope(scope, *p);
+      if (! expr.calc(bound_scope).to_boolean())
+	return false;
+    }
+    return true;
+  }
 }
 
 expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
@@ -497,6 +523,13 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
     return item_t::lookup(kind, name);
 
   switch (name[0]) {
+  case 'a':
+    if (name == "any")
+      return WRAP_FUNCTOR(&fn_any);
+    else if (name == "all")
+      return WRAP_FUNCTOR(&fn_all);
+    break;
+
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
@@ -760,7 +793,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
   if (xact.metadata) {
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *xact.metadata) {
-      if (pair.second) {
+      if (pair.second.first) {
 	push_xml z(out, "variable");
 	{
 	  push_xml w(out, "key");
@@ -768,7 +801,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
 	}
 	{
 	  push_xml w(out, "value");
-	  out << y.guard(*pair.second);
+	  out << y.guard(*pair.second.first);
 	}
       } else {
 	push_xml z(out, "tag");

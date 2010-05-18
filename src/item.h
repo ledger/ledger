@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -106,7 +106,8 @@ public:
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
-  typedef std::map<string, optional<string> > string_map;
+  typedef std::pair<optional<string>, bool> tag_data_t;
+  typedef std::map<string, tag_data_t>	    string_map;
 
   state_t	       _state;
   optional<date_t>     _date;
@@ -156,12 +157,14 @@ public:
   virtual optional<string> get_tag(const mask_t& tag_mask,
 				   const optional<mask_t>& value_mask = none) const;
 
-  virtual void set_tag(const string& tag,
-		       const optional<string>& value = none);
+  virtual string_map::iterator
+  set_tag(const string&		  tag,
+	  const optional<string>& value		     = none,
+	  const bool              overwrite_existing = true);
 
-  virtual void parse_tags(const char * p,
+  virtual void parse_tags(const char * p, bool overwrite_existing = true,
 			  optional<date_t::year_type> current_year = none);
-  virtual void append_note(const char * p,
+  virtual void append_note(const char * p, bool overwrite_existing = true,
 			   optional<date_t::year_type> current_year = none);
 
   static bool use_effective_date;

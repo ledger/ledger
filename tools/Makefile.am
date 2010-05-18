@@ -1,9 +1,9 @@
 VERSION		= 3.0.0
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
-SUBDIRS         = po intl
+SUBDIRS		= po intl
 EXTRA_DIST	= autogen.sh config.rpath contrib src/system.hh.in
-DISTCLEANFILES  = .timestamp
+DISTCLEANFILES	= .timestamp
 
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
@@ -55,6 +55,7 @@ libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
 libledger_expr_la_LDFLAGS   = -release $(VERSION)
 
 libledger_data_la_SOURCES   =			\
+	src/lookup.cc				\
 	src/compare.cc				\
 	src/iterators.cc			\
 	src/timelog.cc				\
@@ -72,9 +73,12 @@ libledger_data_la_LDFLAGS    = -release $(VERSION)
 libledger_report_la_SOURCES  =			\
 	src/stats.cc				\
 	src/generate.cc				\
+	src/csv.cc				\
+	src/convert.cc				\
 	src/draft.cc				\
-	src/emacs.cc                            \
-	src/xml.cc                              \
+	src/emacs.cc				\
+	src/xml.cc				\
+	src/print.cc				\
 	src/output.cc				\
 	src/precmd.cc				\
 	src/chain.cc				\
@@ -126,6 +130,7 @@ pkginclude_HEADERS =				\
 	src/timelog.h				\
 	src/iterators.h				\
 	src/compare.h				\
+	src/lookup.h				\
 						\
 	src/session.h				\
 	src/report.h				\
@@ -133,9 +138,12 @@ pkginclude_HEADERS =				\
 	src/temps.h				\
 	src/chain.h				\
 	src/precmd.h				\
+	src/csv.h				\
+	src/convert.h				\
 	src/draft.h				\
 	src/generate.h				\
 	src/stats.h				\
+	src/print.h				\
 	src/output.h				\
 	src/xml.h				\
 	src/emacs.h				\
@@ -167,6 +175,7 @@ BUILT_SOURCES += system.hh.gch
 CLEANFILES    += system.hh.gch
 
 system.hh.gch: system.hh
+	-rm -f $@
 	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(lib_cppflags) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	    -o $@ $<
@@ -190,7 +199,7 @@ dist_lisp_LISP	= lisp/ledger.el lisp/timeclock.el
 ELCFILES	=
 DISTCLEANFILES += ledger.elc timeclock.elc
 
-all_sources     = $(libledger_util_la_SOURCES)		\
+all_sources	= $(libledger_util_la_SOURCES)		\
 		  $(libledger_math_la_SOURCES)		\
 		  $(libledger_expr_la_SOURCES)		\
 		  $(libledger_data_la_SOURCES)		\
@@ -198,7 +207,7 @@ all_sources     = $(libledger_util_la_SOURCES)		\
 		  $(libledger_python_la_SOURCES)	\
 		  src/pyledger.cc
 
-all_files       = $(all_sources) $(pkginclude_HEADERS)
+all_files	= $(all_sources) $(pkginclude_HEADERS)
 
 ######################################################################
 
@@ -271,7 +280,7 @@ UtilTests_SOURCES =		 \
 	test/unit/t_times.h
 
 UtilTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-UtilTests_LDADD    = libledger_util.la -lcppunit
+UtilTests_LDADD	   = libledger_util.la -lcppunit
 
 MathTests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -285,7 +294,7 @@ MathTests_SOURCES =		 \
 	test/unit/t_balance.h
 
 MathTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-MathTests_LDADD    = libledger_math.la $(UtilTests_LDADD)
+MathTests_LDADD	   = libledger_math.la $(UtilTests_LDADD)
 
 ExprTests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -295,7 +304,7 @@ ExprTests_SOURCES =		 \
 	test/unit/t_expr.h
 
 ExprTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-ExprTests_LDADD    = libledger_expr.la $(MathTests_LDADD)
+ExprTests_LDADD	   = libledger_expr.la $(MathTests_LDADD)
 
 DataTests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -303,7 +312,7 @@ DataTests_SOURCES =		 \
 	test/DataTests.cc
 
 DataTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-DataTests_LDADD    = libledger_data.la $(ExprTests_LDADD)
+DataTests_LDADD	   = libledger_data.la $(ExprTests_LDADD)
 
 ReportTests_SOURCES =		 \
 	test/UnitTests.cc	 \
@@ -393,7 +402,7 @@ test/input/mondo.dat: test/input/standard.dat
 	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ; do \
 	    for j in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ; do \
 		cat $< >> $@; \
-            done; \
+	    done; \
 	done
 
 ConfirmTests: $(srcdir)/test/ConfirmTests.py

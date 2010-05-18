@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -119,6 +119,19 @@ template <>
 inline const value_t::sequence_t&
 interactive_t::get<const value_t::sequence_t&>(std::size_t index) {
   return value_at(index).as_sequence();
+}
+template <>
+inline scope_t *
+interactive_t::get<scope_t *>(std::size_t index) {
+  return value_at(index).as_scope();
+}
+template <>
+inline expr_t& interactive_t::get<expr_t&>(std::size_t index) {
+  return value_at(index).as_expr_lval();
+}
+template <>
+inline const expr_t& interactive_t::get<const expr_t&>(std::size_t index) {
+  return value_at(index).as_expr();
 }
 
 template <typename T>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,7 +58,10 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
     // An identifier followed by ( represents a function call
     tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
     if (tok.kind == token_t::LPAREN) {
-      ptr_op_t call_node(new op_t(op_t::O_CALL));
+      op_t::kind_t kind = op_t::O_CALL;
+      if (ident == "any" || ident == "all")
+	kind = op_t::O_EXPAND;
+      ptr_op_t call_node(new op_t(kind));
       call_node->set_left(node);
       node = call_node;
 

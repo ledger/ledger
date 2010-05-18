@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -125,8 +125,9 @@ public:
 
 class truncate_xacts : public item_handler<post_t>
 {
-  int head_count;
-  int tail_count;
+  int  head_count;
+  int  tail_count;
+  bool completed;
 
   posts_list  posts;
   std::size_t xacts_seen;
@@ -139,7 +140,7 @@ public:
 		 int _head_count, int _tail_count)
     : item_handler<post_t>(handler),
       head_count(_head_count), tail_count(_tail_count),
-      xacts_seen(0), last_xact(NULL) {
+      completed(false), xacts_seen(0), last_xact(NULL) {
     TRACE_CTOR(truncate_xacts, "post_handler_ptr, int, int");
   }
   virtual ~truncate_xacts() {

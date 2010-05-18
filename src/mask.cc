@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -50,6 +50,40 @@ mask_t& mask_t::operator=(const string& pat)
 #endif
   VERIFY(valid());
   return *this;
+}
+
+mask_t& mask_t::assign_glob(const string& pat)
+{
+  string re_pat = "";
+  string::size_type len = pat.length();
+  for (string::size_type i = 0; i < len; i++) {
+    switch (pat[i]) {
+    case '?':
+      re_pat += '.';
+      break;
+    case '*':
+      re_pat += ".*";
+      break;
+    case '[':
+      while (i < len && pat[i] != ']')
+	re_pat += pat[i++];
+      if (i < len)
+	re_pat += pat[i];
+      break;
+
+    case '\\':
+      if (i + 1 < len) {
+	re_pat += pat[++i];
+	break;
+      } else {
+	// fallthrough...
+      }
+    default:
+      re_pat += pat[i];
+      break;
+    }
+  }
+  return (*this = re_pat);
 }
 
 } // namespace ledger

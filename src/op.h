@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -105,6 +105,7 @@ public:
     O_DEFINE,
     O_LOOKUP,
     O_CALL,
+    O_EXPAND,
     O_MATCH,
 
     BINARY_OPERATORS,

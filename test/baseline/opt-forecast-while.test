@@ -229,29 +229,29 @@ reg --now=2009/03/21 --forecast-while='total < $3500' books
 09-Apr-01 April                 Expenses:Books               $40.00     $1720.00
 09-Apr-30 End of April          Expenses:Books               $40.00     $1760.00
 09-May-01 May                   Expenses:Books               $50.00     $1810.00
-09-May-01 Forecast transaction  Expenses:Books               $10.00     $1820.00
-09-May-31 End of May            Expenses:Books               $50.00     $1870.00
-09-Jun-01 June                  Expenses:Books               $60.00     $1930.00
-09-Jun-01 Forecast transaction  Expenses:Books               $10.00     $1940.00
-09-Jun-30 End of June           Expenses:Books               $60.00     $2000.00
-09-Jul-01 July                  Expenses:Books               $70.00     $2070.00
-09-Jul-01 Forecast transaction  Expenses:Books               $10.00     $2080.00
-09-Jul-31 End of July           Expenses:Books               $70.00     $2150.00
-09-Aug-01 August                Expenses:Books               $80.00     $2230.00
-09-Aug-01 Forecast transaction  Expenses:Books               $10.00     $2240.00
-09-Aug-31 End of August         Expenses:Books               $80.00     $2320.00
-09-Sep-01 September             Expenses:Books               $90.00     $2410.00
-09-Sep-01 Forecast transaction  Expenses:Books               $10.00     $2420.00
-09-Sep-30 End of September      Expenses:Books               $90.00     $2510.00
-09-Oct-01 October               Expenses:Books              $100.00     $2610.00
-09-Oct-01 Forecast transaction  Expenses:Books               $10.00     $2620.00
-09-Oct-31 End of October        Expenses:Books              $100.00     $2720.00
-09-Nov-01 November              Expenses:Books              $110.00     $2830.00
-09-Nov-01 Forecast transaction  Expenses:Books               $10.00     $2840.00
-09-Nov-30 End of November       Expenses:Books              $110.00     $2950.00
-09-Dec-01 December              Expenses:Books              $120.00     $3070.00
-09-Dec-01 Forecast transaction  Expenses:Books               $10.00     $3080.00
-09-Dec-31 End of December       Expenses:Books              $120.00     $3200.00
+09-May-31 End of May            Expenses:Books               $50.00     $1860.00
+09-Jun-01 June                  Expenses:Books               $60.00     $1920.00
+09-Jun-30 End of June           Expenses:Books               $60.00     $1980.00
+09-Jul-01 July                  Expenses:Books               $70.00     $2050.00
+09-Jul-31 End of July           Expenses:Books               $70.00     $2120.00
+09-Aug-01 August                Expenses:Books               $80.00     $2200.00
+09-Aug-31 End of August         Expenses:Books               $80.00     $2280.00
+09-Sep-01 September             Expenses:Books               $90.00     $2370.00
+09-Sep-30 End of September      Expenses:Books               $90.00     $2460.00
+09-Oct-01 October               Expenses:Books              $100.00     $2560.00
+09-Oct-31 End of October        Expenses:Books              $100.00     $2660.00
+09-Nov-01 November              Expenses:Books              $110.00     $2770.00
+09-Nov-30 End of November       Expenses:Books              $110.00     $2880.00
+09-Dec-01 December              Expenses:Books              $120.00     $3000.00
+09-Dec-31 End of December       Expenses:Books              $120.00     $3120.00
+09-May-01 Forecast transaction  Expenses:Books               $10.00     $3130.00
+09-Jun-01 Forecast transaction  Expenses:Books               $10.00     $3140.00
+09-Jul-01 Forecast transaction  Expenses:Books               $10.00     $3150.00
+09-Aug-01 Forecast transaction  Expenses:Books               $10.00     $3160.00
+09-Sep-01 Forecast transaction  Expenses:Books               $10.00     $3170.00
+09-Oct-01 Forecast transaction  Expenses:Books               $10.00     $3180.00
+09-Nov-01 Forecast transaction  Expenses:Books               $10.00     $3190.00
+09-Dec-01 Forecast transaction  Expenses:Books               $10.00     $3200.00
 10-Jan-01 Forecast transaction  Expenses:Books               $10.00     $3210.00
 10-Feb-01 Forecast transaction  Expenses:Books               $10.00     $3220.00
 10-Mar-01 Forecast transaction  Expenses:Books               $10.00     $3230.00
