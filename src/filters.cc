@@ -869,7 +869,8 @@ void budget_posts::report_budget_items(const date_t& date)
       optional<date_t> begin = pair.first.start;
       if (! begin) {
 	if (! pair.first.find_period(date))
-	  throw_(std::runtime_error, _("Something odd has happened"));
+	  throw_(std::runtime_error,
+		 _("Something odd has happened at date %1") << date);
 	begin = pair.first.start;
       }
       assert(begin);
