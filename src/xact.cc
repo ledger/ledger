@@ -716,8 +716,14 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 	account_t * account  = post->account;
 	string fullname = account->fullname();
 	assert(! fullname.empty());
-	if (fullname == "$account" || fullname == "@account")
-	  account = initial_post->account;
+
+	if (contains(fullname, "$account")) {
+	  fullname = regex_replace(fullname, regex("\\$account\\>"),
+				   initial_post->account->fullname());
+	  while (account->parent)
+	    account = account->parent;
+	  account = account->find_account(fullname);
+	}
 
 	// Copy over details so that the resulting post is a mirror of
 	// the automated xact's one.
