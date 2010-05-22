@@ -103,6 +103,69 @@ public:
   virtual void operator()(account_t& account);
 };
 
+class report_accounts : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<account_t *, bool> accounts;
+
+  typedef std::map<account_t *, bool>::value_type accounts_pair;
+
+public:
+  report_accounts(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_accounts, "report&");
+  }
+  virtual ~report_accounts() {
+    TRACE_DTOR(report_accounts);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+};
+
+class report_payees : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<string, bool> payees;
+
+  typedef std::map<string, bool>::value_type payees_pair;
+
+public:
+  report_payees(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_payees, "report&");
+  }
+  virtual ~report_payees() {
+    TRACE_DTOR(report_payees);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+};
+
+class report_commodities : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<commodity_t *, bool> commodities;
+
+  typedef std::map<commodity_t *, bool>::value_type commodities_pair;
+
+public:
+  report_commodities(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_commodities, "report&");
+  }
+  virtual ~report_commodities() {
+    TRACE_DTOR(report_commodities);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+};
+
 } // namespace ledger
 
 #endif // _OUTPUT_H

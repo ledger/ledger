@@ -1222,6 +1222,12 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
   case symbol_t::COMMAND:
     switch (*p) {
+    case 'a':
+      if (is_eq(p, "accounts"))
+	return WRAP_FUNCTOR(reporter<>(new report_accounts(*this), *this,
+				       "#accounts"));
+      break;
+
     case 'b':
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
 	return expr_t::op_t::wrap_functor
@@ -1262,8 +1268,13 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 				maybe_format(HANDLER(prepend_format_))),
 	    *this, "#cleared"));
       }
-      else if (is_eq(p, "convert"))
+      else if (is_eq(p, "convert")) {
 	return WRAP_FUNCTOR(convert_command);
+      }
+      else if (is_eq(p, "commodities")) {
+	return WRAP_FUNCTOR(reporter<>(new report_commodities(*this), *this,
+				       "#commodities"));
+      }
       break;
 
     case 'e':
@@ -1296,6 +1307,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	   (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
 			     maybe_format(HANDLER(prepend_format_))),
 	    *this, "#pricedb"));
+      else if (is_eq(p, "payees"))
+	return WRAP_FUNCTOR(reporter<>(new report_payees(*this), *this,
+				       "#payees"));
       break;
 
     case 'r':

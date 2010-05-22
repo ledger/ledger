@@ -232,4 +232,70 @@ void format_accounts::operator()(account_t& account)
   posted_accounts.push_back(&account);
 }
 
+void report_accounts::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (accounts_pair& entry, accounts)
+    out << *entry.first << '\n';
+}
+
+void report_accounts::operator()(post_t& post)
+{
+  std::map<account_t *, bool>::iterator i = accounts.find(post.account);
+  if (i == accounts.end())
+    accounts.insert(accounts_pair(post.account, true));
+}
+
+void report_payees::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (payees_pair& entry, payees)
+    out << entry.first << '\n';
+}
+
+void report_payees::operator()(post_t& post)
+{
+  std::map<string, bool>::iterator i = payees.find(post.xact->payee);
+  if (i == payees.end())
+    payees.insert(payees_pair(post.xact->payee, true));
+}
+
+void report_commodities::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (commodities_pair& entry, commodities)
+    out << *entry.first << '\n';
+}
+
+void report_commodities::operator()(post_t& post)
+{
+  amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
+  commodity_t& comm(temp.commodity());
+
+  std::map<commodity_t *, bool>::iterator i = commodities.find(&comm);
+  if (i == commodities.end())
+    commodities.insert(commodities_pair(&comm, true));
+
+  if (comm.has_annotation()) {
+    annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
+    if (ann_comm.details.price) {
+      std::map<commodity_t *, bool>::iterator i =
+	commodities.find(&ann_comm.details.price->commodity());
+      if (i == commodities.end())
+	commodities.insert
+	  (commodities_pair(&ann_comm.details.price->commodity(), true));
+    }
+  }
+
+  if (post.cost) {
+    amount_t temp_cost(post.cost->strip_annotations(report.what_to_keep()));
+    i = commodities.find(&temp_cost.commodity());
+    if (i == commodities.end())
+      commodities.insert(commodities_pair(&temp_cost.commodity(), true));
+  }
+}
+
 } // namespace ledger
