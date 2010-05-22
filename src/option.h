@@ -90,13 +90,16 @@ public:
 
   void report(std::ostream& out) const {
     if (handled && source) {
+      out.width(24);
+      out << std::right << desc();
       if (wants_arg) {
-	out << desc() << " => ";
-	value.dump(out);
+	out << " = ";
+	value.print(out, 42);
       } else {
-	out << desc();
+	out.width(45);
+	out << ' ';
       }
-      out << " <" << *source << ">" << std::endl;
+      out << std::left << *source << std::endl;
     }
   }
 
