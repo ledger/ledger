@@ -454,6 +454,7 @@ public:
     });
 
   OPTION(report_t, columns_);
+  OPTION(report_t, count);
 
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
       on(none,

@@ -108,9 +108,9 @@ class report_accounts : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<account_t *, bool> accounts;
+  std::map<account_t *, std::size_t> accounts;
 
-  typedef std::map<account_t *, bool>::value_type accounts_pair;
+  typedef std::map<account_t *, std::size_t>::value_type accounts_pair;
 
 public:
   report_accounts(report_t& _report) : report(_report) {
@@ -129,9 +129,9 @@ class report_payees : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<string, bool> payees;
+  std::map<string, std::size_t> payees;
 
-  typedef std::map<string, bool>::value_type payees_pair;
+  typedef std::map<string, std::size_t>::value_type payees_pair;
 
 public:
   report_payees(report_t& _report) : report(_report) {
@@ -150,9 +150,9 @@ class report_commodities : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<commodity_t *, bool> commodities;
+  std::map<commodity_t *, std::size_t> commodities;
 
-  typedef std::map<commodity_t *, bool>::value_type commodities_pair;
+  typedef std::map<commodity_t *, std::size_t>::value_type commodities_pair;
 
 public:
   report_commodities(report_t& _report) : report(_report) {

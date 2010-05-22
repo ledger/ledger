@@ -853,6 +853,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(columns_);
     else OPT_ALT(basis, cost);
     else OPT_(current);
+    else OPT(count);
     break;
   case 'd':
     OPT(daily);

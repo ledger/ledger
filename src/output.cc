@@ -236,38 +236,51 @@ void report_accounts::flush()
 {
   std::ostream& out(report.output_stream);
 
-  foreach (accounts_pair& entry, accounts)
+  foreach (accounts_pair& entry, accounts) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
     out << *entry.first << '\n';
+  }
 }
 
 void report_accounts::operator()(post_t& post)
 {
-  std::map<account_t *, bool>::iterator i = accounts.find(post.account);
+  std::map<account_t *, std::size_t>::iterator i = accounts.find(post.account);
   if (i == accounts.end())
-    accounts.insert(accounts_pair(post.account, true));
+    accounts.insert(accounts_pair(post.account, 1));
+  else
+    (*i).second++;
 }
 
 void report_payees::flush()
 {
   std::ostream& out(report.output_stream);
 
-  foreach (payees_pair& entry, payees)
+  foreach (payees_pair& entry, payees) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
     out << entry.first << '\n';
+  }
 }
 
 void report_payees::operator()(post_t& post)
 {
-  std::map<string, bool>::iterator i = payees.find(post.xact->payee);
+  std::map<string, std::size_t>::iterator i = payees.find(post.xact->payee);
   if (i == payees.end())
-    payees.insert(payees_pair(post.xact->payee, true));
+    payees.insert(payees_pair(post.xact->payee, 1));
+  else
+    (*i).second++;
 }
 
 void report_commodities::flush()
 {
   std::ostream& out(report.output_stream);
 
-  foreach (commodities_pair& entry, commodities)
+  foreach (commodities_pair& entry, commodities) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
     out << *entry.first << '\n';
+  }
 }
 
 void report_commodities::operator()(post_t& post)
@@ -275,18 +288,22 @@ void report_commodities::operator()(post_t& post)
   amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
   commodity_t& comm(temp.commodity());
 
-  std::map<commodity_t *, bool>::iterator i = commodities.find(&comm);
+  std::map<commodity_t *, std::size_t>::iterator i = commodities.find(&comm);
   if (i == commodities.end())
-    commodities.insert(commodities_pair(&comm, true));
+    commodities.insert(commodities_pair(&comm, 1));
+  else
+    (*i).second++;
 
   if (comm.has_annotation()) {
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
     if (ann_comm.details.price) {
-      std::map<commodity_t *, bool>::iterator i =
+      std::map<commodity_t *, std::size_t>::iterator i =
 	commodities.find(&ann_comm.details.price->commodity());
       if (i == commodities.end())
 	commodities.insert
-	  (commodities_pair(&ann_comm.details.price->commodity(), true));
+	  (commodities_pair(&ann_comm.details.price->commodity(), 1));
+      else
+	(*i).second++;
     }
   }
 
@@ -294,7 +311,9 @@ void report_commodities::operator()(post_t& post)
     amount_t temp_cost(post.cost->strip_annotations(report.what_to_keep()));
     i = commodities.find(&temp_cost.commodity());
     if (i == commodities.end())
-      commodities.insert(commodities_pair(&temp_cost.commodity(), true));
+      commodities.insert(commodities_pair(&temp_cost.commodity(), 1));
+    else
+      (*i).second++;
   }
 }
 
