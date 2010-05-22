@@ -124,10 +124,11 @@ struct expr_t::token_t : public noncopyable
 
   int  parse_reserved_word(std::istream& in);
   void parse_ident(std::istream& in);
-  void next(std::istream& in, const parse_flags_t& flags);
+  void next(std::istream& in, const parse_flags_t& flags,
+	    const char expecting = '\0');
   void rewind(std::istream& in);
-  void unexpected();
-  void expected(char wanted, char c = '\0');
+  void unexpected(const char wanted = '\0');
+  void expected(const char wanted, char c = '\0');
 };
 
 } // namespace ledger
