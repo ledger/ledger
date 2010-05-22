@@ -56,17 +56,19 @@ class report_t;
 class format_posts : public item_handler<post_t>
 {
 protected:
-  report_t& report;
-  format_t  first_line_format;
-  format_t  next_lines_format;
-  format_t  between_format;
-  format_t  prepend_format;
-  xact_t *  last_xact;
-  post_t *  last_post;
+  report_t&   report;
+  format_t    first_line_format;
+  format_t    next_lines_format;
+  format_t    between_format;
+  format_t    prepend_format;
+  std::size_t prepend_width;
+  xact_t *    last_xact;
+  post_t *    last_post;
 
 public:
   format_posts(report_t& _report, const string& format,
-	       const optional<string>& _prepend_format = none);
+	       const optional<string>& _prepend_format = none,
+	       std::size_t _prepend_width = 0);
   virtual ~format_posts() {
     TRACE_DTOR(format_posts);
   }
@@ -83,13 +85,15 @@ protected:
   format_t    total_line_format;
   format_t    separator_format;
   format_t    prepend_format;
+  std::size_t prepend_width;
   predicate_t disp_pred;
 
   std::list<account_t *> posted_accounts;
 
 public:
   format_accounts(report_t& _report, const string& _format,
-		  const optional<string>& _prepend_format = none);
+		  const optional<string>& _prepend_format = none,
+		  std::size_t _prepend_width = 0);
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }

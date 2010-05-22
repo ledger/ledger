@@ -119,6 +119,8 @@ void report_t::normalize_options(const string& verb)
 				  HANDLER(meta_).str() + "\"))");
     }
   }
+  if (! HANDLED(prepend_width_))
+    HANDLER(prepend_width_).on_with(string("?normalize"), static_cast<long>(0));
 
   if (verb == "print" || verb == "xact" || verb == "dump") {
     HANDLER(related).on_only(string("?normalize"));
@@ -937,6 +939,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(pricedb_format_);
     else OPT(payee_width_);
     else OPT(prepend_format_);
+    else OPT(prepend_width_);
     else OPT(print_virtual);
     break;
   case 'q':
@@ -1234,7 +1237,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	   (new format_accounts(*this, report_format(HANDLER(balance_format_)),
-				maybe_format(HANDLER(prepend_format_))),
+				maybe_format(HANDLER(prepend_format_)),
+				HANDLER(prepend_width_).value.to_long()),
 	    *this, "#balance"));
       }
       else if (is_eq(p, "budget")) {
@@ -1247,7 +1251,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	   (new format_accounts(*this, report_format(HANDLER(budget_format_)),
-				maybe_format(HANDLER(prepend_format_))),
+				maybe_format(HANDLER(prepend_format_)),
+				HANDLER(prepend_width_).value.to_long()),
 	    *this, "#budget"));
       }
       break;
@@ -1257,7 +1262,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return WRAP_FUNCTOR
 	  (reporter<>
 	   (new format_posts(*this, report_format(HANDLER(csv_format_)),
-			     maybe_format(HANDLER(prepend_format_))),
+			     maybe_format(HANDLER(prepend_format_)),
+			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#csv"));
       }
       else if (is_eq(p, "cleared")) {
@@ -1266,7 +1272,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return expr_t::op_t::wrap_functor
 	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
 	   (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
-				maybe_format(HANDLER(prepend_format_))),
+				maybe_format(HANDLER(prepend_format_)),
+				HANDLER(prepend_width_).value.to_long()),
 	    *this, "#cleared"));
       }
       else if (is_eq(p, "convert")) {
@@ -1300,13 +1307,15 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	   (new format_posts(*this, report_format(HANDLER(prices_format_)),
-			     maybe_format(HANDLER(prepend_format_))),
+			     maybe_format(HANDLER(prepend_format_)),
+			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#prices"));
       else if (is_eq(p, "pricedb"))
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	   (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
-			     maybe_format(HANDLER(prepend_format_))),
+			     maybe_format(HANDLER(prepend_format_)),
+			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#pricedb"));
       else if (is_eq(p, "payees"))
 	return WRAP_FUNCTOR(reporter<>(new report_payees(*this), *this,
@@ -1318,7 +1327,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return WRAP_FUNCTOR
 	  (reporter<>
 	   (new format_posts(*this, report_format(HANDLER(register_format_)),
-			     maybe_format(HANDLER(prepend_format_))),
+			     maybe_format(HANDLER(prepend_format_)),
+			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#register"));
       else if (is_eq(p, "reload"))
 	return MAKE_FUNCTOR(report_t::reload_command);

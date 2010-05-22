@@ -42,8 +42,10 @@ namespace ledger {
 
 format_posts::format_posts(report_t&		   _report,
 			   const string&	   format,
-			   const optional<string>& _prepend_format)
-  : report(_report), last_xact(NULL), last_post(NULL)
+			   const optional<string>& _prepend_format,
+			   std::size_t		   _prepend_width)
+  : report(_report), prepend_width(_prepend_width),
+    last_xact(NULL), last_post(NULL)
 {
   TRACE_CTOR(format_posts, "report&, const string&, bool");
 
@@ -82,8 +84,10 @@ void format_posts::operator()(post_t& post)
       ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     bind_scope_t bound_scope(report, post);
 
-    if (prepend_format)
+    if (prepend_format) {
+      out.width(prepend_width);
       out << prepend_format(bound_scope);
+    }
 
     if (last_xact != post.xact) {
       if (last_xact) {
@@ -107,8 +111,9 @@ void format_posts::operator()(post_t& post)
 
 format_accounts::format_accounts(report_t&		 _report,
 				 const string&		 format,
-				 const optional<string>& _prepend_format)
-  : report(_report), disp_pred()
+				 const optional<string>& _prepend_format,
+				 std::size_t		 _prepend_width)
+  : report(_report), prepend_width(_prepend_width), disp_pred()
 {
   TRACE_CTOR(format_accounts, "report&, const string&");
 
@@ -144,9 +149,11 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
 
     bind_scope_t bound_scope(report, account);
 
-    if (prepend_format)
+    if (prepend_format) {
+      static_cast<std::ostream&>(report.output_stream).width(prepend_width);
       static_cast<std::ostream&>(report.output_stream)
 	<< prepend_format(bound_scope);
+    }
 
     static_cast<std::ostream&>(report.output_stream)
       << account_line_format(bound_scope);
@@ -216,9 +223,11 @@ void format_accounts::flush()
     bind_scope_t bound_scope(report, *report.session.journal->master);
     out << separator_format(bound_scope);
 
-    if (prepend_format)
+    if (prepend_format) {
+      static_cast<std::ostream&>(report.output_stream).width(prepend_width);
       static_cast<std::ostream&>(report.output_stream)
 	<< prepend_format(bound_scope);
+    }
 
     out << total_line_format(bound_scope);
   }

@@ -280,6 +280,7 @@ public:
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(prepend_format_).report(out);
+    HANDLER(prepend_width_).report(out);
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
@@ -372,7 +373,7 @@ public:
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
       on(none,
-	 "%(justify(scrub(display_total), 20, -1, true, color))"
+	 "%(justify(scrub(display_total), 20, 20 + prepend_width, true, color))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
 	 "%$1\n%/"
@@ -432,8 +433,9 @@ public:
 
   OPTION__(report_t, cleared_format_, CTOR(report_t, cleared_format_) {
       on(none,
-	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
-	 "  %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
+	 "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
+	 " true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
+	 " 36 + prepend_width, true, color))"
 	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
 	 "    %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
@@ -737,6 +739,9 @@ public:
     });
 
   OPTION(report_t, prepend_format_);
+  OPTION_(report_t, prepend_width_, DO_(args) {
+      value = args[1].to_long();
+    });
 
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(display_amount_)
@@ -784,10 +789,10 @@ public:
 	 "    account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "
 	 "    3 + meta_width + date_width + payee_width + account_width"
-	 "      + amount_width, true, color))"
+	 "      + amount_width + prepend_width, true, color))"
 	 " %(justify(scrub(display_total), total_width, "
 	 "    4 + meta_width + date_width + payee_width + account_width"
-	 "      + amount_width + total_width, true, color))\n%/"
+	 "      + amount_width + total_width + prepend_width, true, color))\n%/"
 	 "%(justify(\" \", 2 + date_width + payee_width))"
 	 "%$3 %$4 %$5\n");
     });
