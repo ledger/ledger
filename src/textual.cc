@@ -713,7 +713,7 @@ void instance_t::master_account_directive(char * line)
 
 void instance_t::end_directive(char * kind)
 {
-  string name(kind);
+  string name(kind ? kind : "");
 
   if ((name.empty() || name == "account") && ! context.front_is_account())
     throw_(std::runtime_error,
