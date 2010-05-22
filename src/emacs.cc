@@ -40,18 +40,21 @@ namespace ledger {
 
 void format_emacs_posts::write_xact(xact_t& xact)
 {
-  out << "\"" << xact.pos->pathname << "\" "
-      << xact.pos->beg_line << " ";
+  if (xact.pos)
+    out << "\"" << xact.pos->pathname << "\" "
+	<< xact.pos->beg_line << " ";
+  else
+    out << "\"\" " << -1 << " ";
 
   tm	      when = gregorian::to_tm(xact.date());
   std::time_t date = std::mktime(&when);
 
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
-  if (! xact.code)
-    out << "nil ";
-  else
+  if (xact.code)
     out << "\"" << *xact.code << "\" ";
+  else
+    out << "nil ";
 
   if (xact.payee.empty())
     out << "nil";
@@ -77,7 +80,11 @@ void format_emacs_posts::operator()(post_t& post)
       out << "\n";
     }
 
-    out << "  (" << post.pos->beg_line << " ";
+    if (post.pos)
+      out << "  (" << post.pos->beg_line << " ";
+    else
+      out << "  (" << -1 << " ";
+
     out << "\"" << post.reported_account()->fullname() << "\" \""
 	<< post.amount << "\"";
 
