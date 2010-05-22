@@ -91,9 +91,9 @@ post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
   post_temps->push_back(origin);
   post_t& temp(post_temps->back());
 
+  temp.add_flags(ITEM_TEMP);
   if (account)
     temp.account = account;
-  temp.add_flags(ITEM_TEMP);
 
   temp.account->add_post(&temp);
   xact.add_post(&temp);
@@ -109,8 +109,8 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t * account)
   post_temps->push_back(post_t(account));
   post_t& temp(post_temps->back());
 
-  temp.account = account;
   temp.add_flags(ITEM_TEMP);
+  temp.account = account;
 
   temp.account->add_post(&temp);
   xact.add_post(&temp);
@@ -127,10 +127,10 @@ account_t& temporaries_t::create_account(const string& name,
   acct_temps->push_back(account_t(parent, name));
   account_t& temp(acct_temps->back());
 
+  temp.add_flags(ACCOUNT_TEMP);
   if (parent)
     parent->add_account(&temp);
 
-  temp.add_flags(ACCOUNT_TEMP);
   return temp;
 }
 
