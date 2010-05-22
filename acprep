@@ -908,9 +908,6 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
 
-        self.configure_args.append('--enable-doxygen')
-        self.configure_args.append('--enable-python')
-
         self.locate_darwin_libraries()
 
     def setup_for_system(self):
