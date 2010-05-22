@@ -1184,38 +1184,6 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-pg')
 
     #########################################################################
-    # Prettify the output from automake, by rewriting the Makefile          #
-    #########################################################################
-
-    def phase_patch(self, *args):
-        """Alter the Makefile so that it's not nearly so verbose.
-
-        This makes errors and warnings much easier to spot."""
-        self.log.info('Executing phase: patch')
-
-        if exists('Makefile'):
-            self.log.debug('Patching generated Makefile')
-            Makefile = open('Makefile')
-            Makefile_new = open('Makefile.new', 'w')
-            for line in Makefile.readlines():
-                line = re.sub('^\t(\$\((LIBTOOL|CXX)\).*?\.(cc|cpp))$',
-                              '\t@echo "   " CXX \$@;\\1 > /dev/null', line)
-                line = re.sub('^\tmv -f', '\t@mv -f', line)
-                line = re.sub('^\t\$\(am__mv\)', '\t@$(am__mv)', line)
-                line = re.sub('^\t(\$\((.*?)LINK\).*)',
-                              '\t@echo "    LD " \$@;\\1 > /dev/null', line)
-                Makefile_new.write(line)
-            Makefile_new.close()
-            Makefile.close()
-
-            os.remove('Makefile')
-            os.rename('Makefile.new', 'Makefile')
-
-            stamp = open('.timestamp', 'w')
-            stamp.write('timestamp')
-            stamp.close()
-
-    #########################################################################
     # Configure build tree using autoconf                                   #
     #########################################################################
 
@@ -1290,18 +1258,11 @@ class PrepareBuild(CommandLineApp):
                     self.log.error("Execution failed: " + string.join(conf_args, ' '))
                     sys.exit(1)
 
-                if not self.options.no_patch:
-                    self.phase_patch()
-
                 # Wipe the pre-compiled header, if there is one
                 pch = join(self.build_directory(), 'system.hh.gch')
                 if exists(pch):
                     os.remove(pch)
             else:
-                if not self.options.no_patch and \
-                   self.isnewer('Makefile', '.timestamp'):
-                    self.phase_patch()
-
                 self.log.debug('configure does not need to be run')
 
         finally:
