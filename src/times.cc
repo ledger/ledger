@@ -199,23 +199,32 @@ namespace {
   {
     date_t when;
 
-    if (std::strchr(date_str, '/')) {
-      when = io.parse(date_str);
-    } else {
-      char buf[128];
-      VERIFY(std::strlen(date_str) < 127);
-      std::strcpy(buf, date_str);
+    VERIFY(std::strlen(date_str) < 127);
 
-      for (char * p = buf; *p; p++)
-	if (*p == '.' || *p == '-')
-	  *p = '/';
+    char buf[128];
+    std::strcpy(buf, date_str);
 
-      when = io.parse(buf);
-    }
+    for (char * p = buf; *p; p++)
+      if (*p == '.' || *p == '-')
+	*p = '/';
+
+    when = io.parse(buf);
 
     if (! when.is_not_a_date()) {
-      DEBUG("times.parse", "Parsed date string: " << date_str);
-      DEBUG("times.parse", "Parsed result is:   " << when);
+      DEBUG("times.parse", "Passed date string:  " << date_str);
+      DEBUG("times.parse", "Parsed date string:  " << buf);
+      DEBUG("times.parse", "Parsed result is:    " << when);
+      DEBUG("times.parse", "Formatted result is: " << io.format(when));
+
+      const char * p = io.format(when).c_str();
+      const char * q = buf;
+      for (; *p != '\0' && *q != '\0';
+	   p++, q++) {
+	if (*p != *q && *p == '0') p++;
+	if (*p != *q) break;
+      }
+      if (*p != '\0' || *q != '\0')
+	throw_(date_error, _("Invalid date: %1") << date_str);
 
       if (traits)
 	*traits = io.traits;
@@ -1299,14 +1308,14 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
   // "2009/08/01", but also dates that fit the user's --input-date-format,
   // assuming their format fits in one argument and begins with a digit.
   if (std::isdigit(*begin)) {
+    string::const_iterator i = begin;
+    for (i = begin; i != end && ! std::isspace(*i); i++) {}
+    assert(i != begin);
+
+    string possible_date(start, i);
+
     try {
-      string::const_iterator i = begin;
-      for (i = begin; i != end && ! std::isspace(*i); i++) {}
-      assert(i != begin);
-
-      string possible_date(start, i);
       date_traits_t traits;
-
       date_t when = parse_date_mask(possible_date.c_str(), none, &traits);
       if (! when.is_not_a_date()) {
 	begin = i;
@@ -1314,7 +1323,12 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
 		       token_t::content_t(date_specifier_t(when, traits)));
       }
     }
-    catch (...) {}
+    catch (date_error&) {
+      if (contains(possible_date, "/") ||
+	  contains(possible_date, "-") ||
+	  contains(possible_date, "."))
+	throw;
+    }
   }
 
   start = begin;
