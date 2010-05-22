@@ -187,11 +187,21 @@ namespace {
   }
 
   value_t get_commodity(post_t& post) {
-    return string_value(post.amount.commodity().symbol());
+    if (post.has_xdata() &&
+	post.xdata().has_flags(POST_EXT_COMPOUND))
+      return string_value(post.xdata().compound_value.to_amount()
+			  .commodity().symbol());
+    else
+      return string_value(post.amount.commodity().symbol());
   }
 
   value_t get_commodity_is_primary(post_t& post) {
-    return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
+    if (post.has_xdata() &&
+	post.xdata().has_flags(POST_EXT_COMPOUND))
+      return post.xdata().compound_value.to_amount()
+	.commodity().has_flags(COMMODITY_PRIMARY);
+    else
+      return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
   }
 
   value_t get_has_cost(post_t& post) {

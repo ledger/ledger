@@ -459,11 +459,12 @@ public:
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
       on(none,
 	 "%(quoted(date)),"
+	 "%(quoted(code)),"
 	 "%(quoted(payee)),"
 	 "%(quoted(account)),"
-	 "%(quoted(scrub(display_amount))),"
+	 "%(quoted(commodity)),"
+	 "%(quoted(quantity(scrub(display_amount)))),"
 	 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-	 "%(quoted(code)),"
 	 "%(quoted(join(note | xact.note)))\n");
     });
 
