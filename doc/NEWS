@@ -2,37 +2,16 @@
 
 * 3.0
 
-** INCOMPATIBLE CHANGES
+Due to the magnitude of changes in 3.0, only changes that affect compatibility
+with 2.x files and usage is mentioned here.  For a description of new
+features, please see the manual.
 
-*** Commands
+- The option -g (--performance) was removed.
 
-**** Removed 'output'
-**** Removed 'xml'
-
-*** Options
-
-**** --descend
-**** --descend_if EXPR
-**** --reconcile
-**** --reconcile-date DATE
-
-**** -s, -n
-
-The balance report now defaults to showing all relevant accounts.  This is the
-opposite of how it worked before.  That is, "bal" in 3.0 does what "-s bal"
-did in 2.x.  To get the 2.6 behavior, use "bal -n" in 3.0.  The -s option no
-longer has any effect on balance reports.
-
-** NEW FEATURES
-
-*** Commands
-
-*** Options
-
-**** --anon
-
-For anonymizing the private details of reports.  This is almost solely for the
-purpose of easing the creation of accurate bug reports.
+- The balance report now defaults to showing all relevant accounts.  This is
+  the opposite of 2.x.  That is, "bal" in 3.0 does what "-s bal" did in 2.x.
+  To see 2.6 behavior, use "bal -n" in 3.0.  The -s option no longer has any
+  effect on balance reports.
 
 * 2.6.1
 
