@@ -451,6 +451,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-git', action='store_true', dest='no_git',
                       default=False,
                       help='Do not call out to Git; useful for offline builds')
+        op.add_option('', '--no-python', action='store_true', dest='no_python',
+                      default=False,
+                      help='Do not enable Python support by default')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -474,6 +477,9 @@ class PrepareBuild(CommandLineApp):
                       help='Enable full warning flags')
 
     def main(self, *args):
+        if self.options.no_python:
+            self.configure_args.remove('--enable-python')
+
         if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
             self.current_flavor = args[0]
             args = args[1:]
