@@ -295,6 +295,7 @@ public:
     HANDLER(revalued).report(out);
     HANDLER(revalued_only).report(out);
     HANDLER(revalued_total_).report(out);
+    HANDLER(rounding).report(out);
     HANDLER(seed_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
@@ -818,6 +819,7 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
+  OPTION(report_t, rounding);
   OPTION(report_t, seed_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S

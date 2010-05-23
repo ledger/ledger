@@ -420,10 +420,12 @@ void related_posts::flush()
 changed_value_posts::changed_value_posts(post_handler_ptr handler,
 					 report_t&	  _report,
 					 bool		  _for_accounts_report,
-					 bool		  _show_unrealized)
+					 bool		  _show_unrealized,
+					 bool		  _show_rounding)
   : item_handler<post_t>(handler), report(_report),
     for_accounts_report(_for_accounts_report),
-    show_unrealized(_show_unrealized), last_post(NULL),
+    show_unrealized(_show_unrealized),
+    show_rounding(_show_rounding), last_post(NULL),
     revalued_account(temps.create_account(_("<Revalued>"))),
     rounding_account(temps.create_account(_("<Rounding>")))
 {
@@ -505,9 +507,10 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 	   /* total=         */ repriced_total,
 	   /* direct_amount= */ false,
 	   /* mark_visited=  */ false,
-	   /* functor=       */ (optional<post_functor_t>
+	   /* functor=       */ (show_rounding ?
+				 optional<post_functor_t>
 				 (bind(&changed_value_posts::output_rounding,
-				       this, _1))));
+				       this, _1)) : none));
       }
       else if (show_unrealized) {
 	handle_value
@@ -572,7 +575,7 @@ void changed_value_posts::operator()(post_t& post)
   if (changed_values_only)
     post.xdata().add_flags(POST_EXT_DISPLAYED);
 
-  if (! for_accounts_report)
+  if (! for_accounts_report && show_rounding)
     output_rounding(post);
 
   item_handler<post_t>::operator()(post);

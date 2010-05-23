@@ -381,6 +381,7 @@ class changed_value_posts : public item_handler<post_t>
   bool		changed_values_only;
   bool		for_accounts_report;
   bool		show_unrealized;
+  bool		show_rounding;
   post_t *	last_post;
   value_t	last_total;
   value_t	last_display_total;
@@ -396,7 +397,8 @@ public:
   changed_value_posts(post_handler_ptr handler,
 		      report_t&	       _report,
 		      bool	       _for_accounts_report,
-		      bool	       _show_unrealized);
+		      bool	       _show_unrealized,
+		      bool	       _show_rounding);
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);

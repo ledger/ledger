@@ -86,7 +86,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 				   report.HANDLED(unrealized)))
     handler.reset(new changed_value_posts(handler, report,
 					  for_accounts_report,
-					  report.HANDLED(unrealized)));
+					  report.HANDLED(unrealized),
+					  report.HANDLED(rounding)));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the

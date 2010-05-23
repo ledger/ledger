@@ -954,6 +954,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(revalued);
     else OPT(revalued_only);
     else OPT(revalued_total_);
+    else OPT(rounding);
     break;
   case 's':
     OPT(sort_);
