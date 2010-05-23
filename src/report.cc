@@ -145,9 +145,6 @@ void report_t::normalize_options(const string& verb)
   // then ignore the period since the begin/end are the only interesting
   // details.
   if (HANDLED(period_)) {
-    if (! HANDLED(sort_all_))
-      HANDLER(sort_xacts_).on_only(string("?normalize"));
-
     date_interval_t interval(HANDLER(period_).str());
 
     optional<date_t> begin = interval.begin(session.current_year);
@@ -164,6 +161,8 @@ void report_t::normalize_options(const string& verb)
 
     if (! interval.duration)
       HANDLER(period_).off();
+    else if (! HANDLED(sort_all_))
+      HANDLER(sort_xacts_).on_only(string("?normalize"));
   }
 
   // If -j or -J were specified, set the appropriate format string now so as
