@@ -71,11 +71,18 @@ namespace {
 
   void print_xact(report_t& report, std::ostream& out, xact_t& xact)
   {
+    format_type_t	   format_type = FMT_WRITTEN;
+    optional<const char *> format;
+
+    if (report.HANDLED(date_format_)) {
+      format_type = FMT_CUSTOM;
+      format      = report.HANDLER(date_format_).str().c_str();
+    }
+
     out << format_date(item_t::use_effective_date ?
-		       xact.date() : xact.actual_date(),
-		       FMT_WRITTEN);
+		       xact.date() : xact.actual_date(), format_type, format);
     if (! item_t::use_effective_date && xact.effective_date())
-      out << '=' << format_date(*xact.effective_date(), FMT_WRITTEN);
+      out << '=' << format_date(*xact.effective_date(), format_type, format);
     out << ' ';
 
     out << (xact.state() == item_t::CLEARED ? "* " :
