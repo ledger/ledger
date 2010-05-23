@@ -172,44 +172,8 @@ bool xact_base_t::finalize()
     add_post(null_post);
   }
 
-  if (null_post != NULL) {
-    // If one post has no value at all, its value will become the inverse of
-    // the rest.  If multiple commodities are involved, multiple posts are
-    // generated to balance them all.
-
-    DEBUG("xact.finalize", "there was a null posting");
-
-    if (balance.is_balance()) {
-      bool first = true;
-      const balance_t& bal(balance.as_balance());
-      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
-	if (first) {
-	  null_post->amount = pair.second.negated();
-	  null_post->add_flags(POST_CALCULATED);
-	  first = false;
-	} else {
-	  post_t * p = new post_t(null_post->account, pair.second.negated(),
-				  ITEM_GENERATED | POST_CALCULATED);
-	  p->set_state(null_post->state());
-	  add_post(p);
-	}
-      }
-    }
-    else if (balance.is_amount()) {
-      null_post->amount = balance.as_amount().negated();
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (balance.is_long()) {
-      null_post->amount = amount_t(- balance.as_long());
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (! balance.is_null() && ! balance.is_realzero()) {
-      throw_(balance_error, _("Transaction does not balance"));
-    }
-    balance = NULL_VALUE;
-  }
-  else if (balance.is_balance() &&
-	   balance.as_balance().amounts.size() == 2) {
+  if (balance.is_balance() &&
+      balance.as_balance().amounts.size() == 2) {
     // When an xact involves two different commodities (regardless of how
     // many posts there are) determine the conversion ratio by dividing the
     // total value of one commodity by the total value of the other.  This
@@ -293,12 +257,6 @@ bool xact_base_t::finalize()
     }
   }
 
-  // Now that the post list has its final form, calculate the balance once
-  // more in terms of total cost, accounting for any possible gain/loss
-  // amounts.
-
-  DEBUG("xact.finalize", "resolved balance = " << balance);
-
   posts_list copy(posts);
 
   foreach (post_t * post, copy) {
@@ -340,7 +298,44 @@ bool xact_base_t::finalize()
     }
   }
 
-  DEBUG("xact.finalize", "final balance = " << balance);
+  if (null_post != NULL) {
+    // If one post has no value at all, its value will become the inverse of
+    // the rest.  If multiple commodities are involved, multiple posts are
+    // generated to balance them all.
+
+    DEBUG("xact.finalize", "there was a null posting");
+
+    if (balance.is_balance()) {
+      bool first = true;
+      const balance_t& bal(balance.as_balance());
+      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+	if (first) {
+	  null_post->amount = pair.second.negated();
+	  null_post->add_flags(POST_CALCULATED);
+	  first = false;
+	} else {
+	  post_t * p = new post_t(null_post->account, pair.second.negated(),
+				  ITEM_GENERATED | POST_CALCULATED);
+	  p->set_state(null_post->state());
+	  add_post(p);
+	}
+      }
+    }
+    else if (balance.is_amount()) {
+      null_post->amount = balance.as_amount().negated();
+      null_post->add_flags(POST_CALCULATED);
+    }
+    else if (balance.is_long()) {
+      null_post->amount = amount_t(- balance.as_long());
+      null_post->add_flags(POST_CALCULATED);
+    }
+    else if (! balance.is_null() && ! balance.is_realzero()) {
+      throw_(balance_error, _("Transaction does not balance"));
+    }
+    balance = NULL_VALUE;
+
+  }
+  DEBUG("xact.finalize", "resolved balance = " << balance);
 
   if (! balance.is_null() && ! balance.is_zero()) {
     add_error_context(item_context(*this, _("While balancing transaction")));
