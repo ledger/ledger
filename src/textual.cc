@@ -663,7 +663,12 @@ void instance_t::include_directive(char * line)
     for (filesystem::directory_iterator iter(parent_path);
 	 iter != end;
 	 ++iter) {
-      if (is_regular_file(*iter)) {
+#if BOOST_VERSION <= 103500
+      if (is_regular(*iter))
+#else
+      if (is_regular_file(*iter))
+#endif
+	{
 #if BOOST_VERSION >= 103700
 	string base = (*iter).filename();
 #else // BOOST_VERSION >= 103700
