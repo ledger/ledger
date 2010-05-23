@@ -236,7 +236,7 @@ namespace {
       return 1L;
   }
 
-  value_t get_account(call_scope_t& scope)
+  value_t account_name(call_scope_t& scope)
   {
     in_context_t<post_t> env(scope, "&v");
 
@@ -279,14 +279,28 @@ namespace {
     } else {
       name = env->reported_account()->fullname();
     }
-
-    if (env->has_flags(POST_VIRTUAL)) {
-      if (env->must_balance())
-	name = string("[") + name + "]";
-      else
-	name = string("(") + name + ")";
-    }
     return string_value(name);
+  }
+
+  value_t get_display_account(call_scope_t& scope)
+  {
+    in_context_t<post_t> env(scope, "&v");
+
+    value_t acct = account_name(scope);
+    if (acct.is_string()) {
+      if (env->has_flags(POST_VIRTUAL)) {
+	if (env->must_balance())
+	  acct = string_value(string("[") + acct.as_string() + "]");
+	else
+	  acct = string_value(string("(") + acct.as_string() + ")");
+      }
+    }
+    return acct;
+  }
+
+  value_t get_account(call_scope_t& scope)
+  {
+    return account_name(scope);
   }
 
   value_t get_account_id(post_t& post) {
@@ -398,7 +412,9 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'd':
-    if (name == "depth")
+    if (name == "display_account")
+      return WRAP_FUNCTOR(get_display_account);
+    else if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
     else if (name == "datetime")
       return WRAP_FUNCTOR(get_wrapper<&get_datetime>);

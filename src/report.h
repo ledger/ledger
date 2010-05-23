@@ -463,7 +463,7 @@ public:
 	 "%(quoted(date)),"
 	 "%(quoted(code)),"
 	 "%(quoted(payee)),"
-	 "%(quoted(account)),"
+	 "%(quoted(display_account)),"
 	 "%(quoted(commodity)),"
 	 "%(quoted(quantity(scrub(display_amount)))),"
 	 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
@@ -752,13 +752,13 @@ public:
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,
-	 "%(date) %-8(account) %(justify(scrub(display_amount), 12, "
+	 "%(date) %-8(display_account) %(justify(scrub(display_amount), 12, "
 	 "    2 + 9 + 8 + 12, true, color))\n");
     });
 
   OPTION__(report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
       on(none,
-	 "P %(datetime) %(account) %(scrub(display_amount))\n");
+	 "P %(datetime) %(display_account) %(scrub(display_amount))\n");
     });
 
   OPTION(report_t, print_virtual);
@@ -785,8 +785,8 @@ public:
 	 "    if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
 	 "    bold if color & !cleared & actual))"
-	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
-	 "    account_width), blue if color))"
+	 " %(ansify_if(justify(truncated(display_account, account_width, "
+	 " abbrev_len), account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "
 	 "    3 + meta_width + date_width + payee_width + account_width"
 	 "      + amount_width + prepend_width, true, color))"
