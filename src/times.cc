@@ -1471,7 +1471,7 @@ std::string format_datetime(const datetime_t&		  when,
   if (format_type == FMT_WRITTEN) {
     return written_datetime_io->format(when);
   }
-  else if (format_type == FMT_CUSTOM || format) {
+  else if (format_type == FMT_CUSTOM && format) {
     datetime_io_map::iterator i = temp_datetime_io.find(*format);
     if (i != temp_datetime_io.end()) {
       return (*i).second->format(when);
@@ -1497,7 +1497,7 @@ std::string format_date(const date_t&		      when,
   if (format_type == FMT_WRITTEN) {
     return written_date_io->format(when);
   }
-  else if (format_type == FMT_CUSTOM || format) {
+  else if (format_type == FMT_CUSTOM && format) {
     date_io_map::iterator i = temp_date_io.find(*format);
     if (i != temp_date_io.end()) {
       return (*i).second->format(when);
