@@ -95,7 +95,6 @@ namespace {
   public:
     parse_context_t&  context;
     instance_t *      parent;
-    account_t *	      master;
     accounts_map      account_aliases;
     const path *      original_file;
     path	      pathname;
@@ -109,7 +108,6 @@ namespace {
 
     instance_t(parse_context_t& _context,
 	       std::istream&	_in,
-	       account_t *	_master        = NULL,
 	       const path *	_original_file = NULL,
 	       instance_t *     _parent        = NULL);
 
@@ -200,30 +198,17 @@ namespace {
 
 instance_t::instance_t(parse_context_t& _context,
 		       std::istream&	_in,
-		       account_t *	_master,
 		       const path *	_original_file,
 		       instance_t *     _parent)
-  : context(_context), parent(_parent), master(_master),
-    original_file(_original_file), in(_in)
+  : context(_context), parent(_parent), original_file(_original_file),
+    pathname(original_file ? *original_file : "/dev/stdin"), in(_in)
 {
   TRACE_CTOR(instance_t, "...");
-
-  if (! master)
-    master = context.journal.master;
-  context.state_stack.push_front(master);
-
-  if (_original_file)
-    pathname = *_original_file;
-  else
-    pathname = "/dev/stdin";
 }
 
 instance_t::~instance_t()
 {
   TRACE_DTOR(instance_t);
-
-  assert(! context.state_stack.empty());
-  context.state_stack.pop_front();
 }
 
 void instance_t::parse()
@@ -411,8 +396,7 @@ void instance_t::read_next_directive()
 
 #if defined(TIMELOG_SUPPORT)
 
-void instance_t::clock_in_directive(char * line,
-				    bool   /*capitalized*/)
+void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
 {
   string datetime(line, 2, 19);
 
@@ -441,8 +425,7 @@ void instance_t::clock_in_directive(char * line,
   context.timelog.clock_in(event);
 }
 
-void instance_t::clock_out_directive(char * line,
-				     bool   /*capitalized*/)
+void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
 {  
   string datetime(line, 2, 19);
 
@@ -689,7 +672,7 @@ void instance_t::include_directive(char * line)
 	if (glob.match(base)) {
 	  path inner_file(*iter);
 	  ifstream stream(inner_file);
-	  instance_t instance(context, stream, master, &inner_file, this);
+	  instance_t instance(context, stream, &inner_file, this);
 	  instance.parse();
 	  files_found = true;
 	}
@@ -1451,8 +1434,10 @@ std::size_t journal_t::parse(std::istream& in,
 
   parse_context_t context(*this, scope);
   context.strict = strict;
+  if (master || this->master)
+    context.state_stack.push_front(master ? master : this->master);
 
-  instance_t instance(context, in, master, original_file);
+  instance_t instance(context, in, original_file);
   instance.parse();
 
   TRACE_STOP(parsing_total, 1);
