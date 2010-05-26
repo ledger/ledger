@@ -594,6 +594,44 @@ void amount_t::in_place_round()
   set_keep_precision(false);
 }
 
+void amount_t::in_place_truncate()
+{
+#if 1
+  if (! quantity)
+    throw_(amount_error, _("Cannot truncate an uninitialized amount"));
+
+  _dup();
+
+  DEBUG("amount.truncate",
+	"Truncating " << *this << " to precision " << display_precision());
+
+  std::ostringstream out;
+  stream_out_mpq(out, MP(quantity), display_precision());
+
+  scoped_array<char> buf(new char [out.str().length() + 1]);
+  std::strcpy(buf.get(), out.str().c_str());
+
+  char * q = buf.get();
+  for (char * p = q; *p != '\0'; p++, q++) {
+    if (*p == '.') p++;
+    if (p != q) *q = *p;
+  }
+  *q = '\0';
+
+  mpq_set_str(MP(quantity), buf.get(), 10);
+
+  mpz_ui_pow_ui(temp, 10, display_precision());
+  mpq_set_z(tempq, temp);
+  mpq_div(MP(quantity), MP(quantity), tempq);
+
+  DEBUG("amount.truncate", "Truncated = " << *this);
+#else
+  // This naive implementation is straightforward, but extremely inefficient
+  // as it requires parsing the commodity too, which might be fully annotated.
+  *this = amount_t(to_string());
+#endif
+}
+
 void amount_t::in_place_floor()
 {
   if (! quantity)
