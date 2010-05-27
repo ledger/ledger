@@ -746,7 +746,7 @@ class PrepareBuild(CommandLineApp):
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
                 self.log.info('Looks like you are using MacPorts on OS X')
-                packages = self.boost_info.dependencies('darwin') + [
+                packages = [
                     'sudo', 'port', 'install', '-f',
                     'automake',
                     'autoconf',
@@ -767,7 +767,7 @@ class PrepareBuild(CommandLineApp):
                     'texinfo',
                     'lcov',
                     'sloccount'
-                ]
+                ] + self.boost_info.dependencies('darwin')
                 self.log.info('Executing: ' + string.join(packages, ' '))
                 self.execute(*packages)
             elif exists('/sw/bin/fink'):
@@ -784,7 +784,7 @@ class PrepareBuild(CommandLineApp):
                     release.close()
                     if re.search('karmic', info):
                         self.log.info('Looks like you are using APT on Ubuntu Karmic')
-                        packages = self.boost_info.dependencies('ubuntu-karmic') + [
+                        packages = [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
                             'libtool',
@@ -805,10 +805,10 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ]
+                        ] + self.boost_info.dependencies('ubuntu-karmic')
                     else:
                         self.log.info('Looks like you are using APT on Ubuntu Hardy')
-                        packages = self.boost_info.dependencies('ubuntu-hardy') + [
+                        packages = [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
                             'libtool',
@@ -829,7 +829,7 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ]
+                        ] + self.boost_info.dependencies('ubuntu-hardy')
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
 
