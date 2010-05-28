@@ -228,7 +228,7 @@ Here is the Pacific Bell example from above, given as a Ledger
 posting:
 
 @smallexample
-9/29 (100) Pacific Bell
+9/29 Pacific Bell
     Expenses:Utilities:Phone                   $23.00
     Assets:Checking                           $-23.00
 @end smallexample
@@ -240,7 +240,7 @@ smart about many things, you don't need to specify the balanced
 amount, if it is the same as the first line:
 
 @smallexample
-9/29 (100) Pacific Bell
+9/29 Pacific Bell
     Expenses:Utilities:Phone                   $23.00
     Assets:Checking
 @end smallexample
