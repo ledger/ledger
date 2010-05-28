@@ -1013,7 +1013,7 @@ output.
 @item d
 This is the same as the @samp{%D} option, unless the transaction has an
 effective date, in which case it prints
-@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
+@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.
 
 @item X
 If a posting has been cleared, this inserts @samp{*} followed by a
