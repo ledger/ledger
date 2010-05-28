@@ -2206,10 +2206,11 @@ Show yearly sub-totals.  Same as @samp{-p yearly}.
 
 @c      --dow              show a days-of-the-week report
 
-There is one kind of period report cannot be done with @option{-p}.
-This is the @option{--dow}, or ``days of the week'' report, which
-shows summarized totals for each day of the week.  The following
-examples shows a ``day of the week'' report of income and expenses:
+There is one kind of period report that cannot be done with
+@option{-p}.  This is the @option{--dow}, or ``days of the week''
+report, which shows summarized totals for each day of the week.  The
+following examples shows a ``day of the week'' report of income and
+expenses:
 
 @example
 ledger --dow reg ^inc ^exp
