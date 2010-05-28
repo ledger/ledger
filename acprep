@@ -1122,13 +1122,13 @@ class PrepareBuild(CommandLineApp):
                 self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                         suffix       = '-xgcc44-sd-1_42',
-                                         include_path = 'include/boost-1_42'):
+            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                         suffix       = '-xgcc44-sd-1_43',
+                                         include_path = 'include/boost-1_43'):
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                           suffix       = '-xgcc44-d-1_42',
-                                           include_path = 'include/boost-1_42'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                           suffix       = '-xgcc44-d-1_43',
+                                           include_path = 'include/boost-1_43'):
                 pass
             elif self.boost_info.configure(suffix = '-d'):
                 pass
@@ -1136,13 +1136,13 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                           suffix       = '-xgcc44-s-1_42',
-                                           include_path = 'include/boost-1_42'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                           suffix       = '-xgcc44-s-1_43',
+                                           include_path = 'include/boost-1_43'):
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                           suffix       = '-xgcc44-1_42',
-                                           include_path = 'include/boost-1_42'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                           suffix       = '-xgcc44-1_43',
+                                           include_path = 'include/boost-1_43'):
                 pass
 
     def setup_flavor_default(self):

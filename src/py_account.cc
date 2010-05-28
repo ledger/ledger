@@ -207,11 +207,11 @@ void export_account()
     .def("__len__", accounts_len)
     .def("__getitem__", accounts_getitem, return_internal_reference<>())
 
-    .def("__iter__", range<return_internal_reference<> >
+    .def("__iter__", python::range<return_internal_reference<> >
 	 (&account_t::accounts_begin, &account_t::accounts_end))
-    .def("accounts", range<return_internal_reference<> >
+    .def("accounts", python::range<return_internal_reference<> >
 	 (&account_t::accounts_begin, &account_t::accounts_end))
-    .def("posts", range<return_internal_reference<> >
+    .def("posts", python::range<return_internal_reference<> >
 	 (&account_t::posts_begin, &account_t::posts_end))
 
     .def("has_xdata", &account_t::has_xdata)

@@ -295,13 +295,16 @@ void export_commodity()
     .def("keys", py_pool_keys)
     .def("has_key", py_pool_contains)
     .def("__contains__", py_pool_contains)
-    .def("__iter__", range<return_value_policy<reference_existing_object> >
+    .def("__iter__",
+	 python::range<return_value_policy<reference_existing_object> >
 	 (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iteritems", range<return_value_policy<reference_existing_object> >
+    .def("iteritems",
+	 python::range<return_value_policy<reference_existing_object> >
 	 (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iterkeys", range<>(py_pool_commodities_keys_begin,
-			     py_pool_commodities_keys_end))
-    .def("itervalues", range<return_value_policy<reference_existing_object> >
+    .def("iterkeys", python::range<>(py_pool_commodities_keys_begin,
+				     py_pool_commodities_keys_end))
+    .def("itervalues",
+	 python::range<return_value_policy<reference_existing_object> >
 	 (py_pool_commodities_values_begin, py_pool_commodities_values_end))
     ;
 
