@@ -1311,7 +1311,7 @@ DATE[=EDATE] [*|!] [(CODE)] DESC
 
 If @samp{*} appears after the date (with optional effective date), it
 indicates the transaction is ``cleared'', which can mean whatever the user
-wants it t omean.  If @samp{!} appears after the date, it indicates d
+wants it to mean.  If @samp{!} appears after the date, it indicates d
 the transaction is ``pending''; i.e., tentatively cleared from the user's
 point of view, but not yet actually cleared.  If a @samp{CODE} appears
 in parentheses, it may be used to indicate a check number, or the type
