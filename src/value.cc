@@ -1075,8 +1075,27 @@ void value_t::in_place_cast(type_t cast_type)
   }
 
   switch (type()) {
+  case VOID:
+    switch (cast_type) {
+    case INTEGER:
+      set_long(0L);
+      return;
+    case AMOUNT:
+      set_amount(0L);
+      return;
+    case STRING:
+      set_string("");
+      return;
+    default:
+      break;
+    }
+    break;
+
   case BOOLEAN:
     switch (cast_type) {
+    case INTEGER:
+      set_long(as_boolean() ? 1L : 0L);
+      return;
     case AMOUNT:
       set_amount(as_boolean() ? 1L : 0L);
       return;
