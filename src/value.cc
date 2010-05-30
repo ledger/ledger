@@ -840,6 +840,23 @@ bool value_t::is_equal_to(const value_t& val) const
 bool value_t::is_less_than(const value_t& val) const
 {
   switch (type()) {
+  case BOOLEAN:
+    if (val.is_boolean()) {
+      if (as_boolean()) {
+	if (! val.as_boolean())
+	  return false;
+	else
+	  return false;
+      }
+      else if (! as_boolean()) {
+	if (! val.as_boolean())
+	  return false;
+	else
+	  return true;
+      }
+    }
+    break;
+
   case DATETIME:
     if (val.is_datetime())
       return as_datetime() < val.as_datetime();
@@ -935,6 +952,22 @@ bool value_t::is_less_than(const value_t& val) const
 bool value_t::is_greater_than(const value_t& val) const
 {
   switch (type()) {
+    if (val.is_boolean()) {
+      if (as_boolean()) {
+	if (! val.as_boolean())
+	  return true;
+	else
+	  return false;
+      }
+      else if (! as_boolean()) {
+	if (! val.as_boolean())
+	  return false;
+	else
+	  return false;
+      }
+    }
+    break;
+
   case DATETIME:
     if (val.is_datetime())
       return as_datetime() > val.as_datetime();
