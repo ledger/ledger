@@ -39,8 +39,49 @@
 
 namespace ledger {
 
+void post_splitter::print_title(const value_t& val)
+{
+  if (! report.HANDLED(no_titles)) {
+    std::ostringstream buf;
+    val.print(buf);
+    post_chain->title(buf.str());
+  }
+}
+
+void post_splitter::flush()
+{
+  foreach (value_to_posts_map::value_type pair, posts_map) {
+    preflush_func(pair.first);
+    
+    foreach (post_t * post, pair.second)
+      (*post_chain)(*post);
+
+    post_chain->flush();
+    post_chain->clear();
+
+    if (postflush_func)
+      (*postflush_func)(pair.first);
+  }
+}
+
+void post_splitter::operator()(post_t& post)
+{
+  bind_scope_t bound_scope(report, post);
+  value_t      result(group_by_expr.calc(bound_scope));
+
+  value_to_posts_map::iterator i = posts_map.find(result);
+  if (i != posts_map.end()) {
+    (*i).second.push_back(&post);
+  } else {
+    std::pair<value_to_posts_map::iterator, bool> inserted
+      = posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
+    assert(inserted.second);
+    (*inserted.first).second.push_back(&post);
+  }
+}
+
 pass_down_posts::pass_down_posts(post_handler_ptr handler,
-				 posts_iterator& iter)
+				 posts_iterator&  iter)
   : item_handler<post_t>(handler)
 {
   TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");

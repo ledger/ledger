@@ -52,6 +52,56 @@ namespace ledger {
 
 //////////////////////////////////////////////////////////////////////
 //
+// Posting collector
+//
+
+class post_splitter : public item_handler<post_t>
+{
+public:
+  typedef std::map<value_t, posts_list> value_to_posts_map;
+  typedef function<void (const value_t&)> custom_flusher_t;
+
+protected:
+  value_to_posts_map	     posts_map;
+  report_t&		     report;
+  post_handler_ptr	     post_chain;
+  expr_t		     group_by_expr;
+  custom_flusher_t	     preflush_func;
+  optional<custom_flusher_t> postflush_func;
+
+public:
+  post_splitter(report_t&        _report,
+		post_handler_ptr _post_chain,
+		expr_t           _group_by_expr)
+    : report(_report), post_chain(_post_chain),
+      group_by_expr(_group_by_expr),
+      preflush_func(bind(&post_splitter::print_title, this, _1)) {
+    TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
+  }
+  virtual ~post_splitter() {
+    TRACE_DTOR(post_splitter);
+  }
+
+  void set_preflush_func(custom_flusher_t functor) {
+    preflush_func = functor;
+  }
+  void set_postflush_func(custom_flusher_t functor) {
+    postflush_func = functor;
+  }
+
+  virtual void print_title(const value_t& val);
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    posts_map.clear();
+    post_chain->clear();
+  }
+};
+
+//////////////////////////////////////////////////////////////////////
+//
 // Posting filters
 //
 
