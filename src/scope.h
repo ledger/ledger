@@ -354,6 +354,30 @@ inline T& find_scope(child_scope_t& scope, bool skip_this = true)
   return reinterpret_cast<T&>(scope); // never executed
 }
 
+class value_scope_t : public scope_t
+{
+  value_t value;
+
+  value_t get_value(call_scope_t&) {
+    return value;
+  }
+
+public:
+  value_scope_t(const value_t& _value) : value(_value) {}
+  
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+				  const string& name)
+  {
+    if (kind != symbol_t::FUNCTION)
+      return NULL;
+
+    if (name == "value")
+      return MAKE_FUNCTOR(value_scope_t::get_value);
+
+    return NULL;
+  }
+};
+
 } // namespace ledger
 
 #endif // _SCOPE_H
