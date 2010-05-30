@@ -267,6 +267,7 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);
     HANDLER(now_).report(out);
     HANDLER(only_).report(out);
@@ -637,6 +638,7 @@ public:
       parent->HANDLER(color).off();
     });
 
+  OPTION(report_t, no_titles);
   OPTION(report_t, no_total);
 
   OPTION_(report_t, now_, DO_(args) {

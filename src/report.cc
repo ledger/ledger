@@ -916,6 +916,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'n':
     OPT_CH(collapse);
     else OPT(no_color);
+    else OPT(no_titles);
     else OPT(no_total);
     else OPT(now_);
     break;
