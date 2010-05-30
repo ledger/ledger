@@ -832,7 +832,7 @@ bool value_t::is_equal_to(const value_t& val) const
     break;
   }
 
-  throw_(value_error, _("Cannot compare %1 by %2") << label() << val.label());
+  throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
 }
