@@ -65,14 +65,19 @@ public:
     TRACE_DTOR(item_handler);
   }
 
+  virtual void title(const string& str) {
+    if (handler)
+      handler->title(str);
+  }
+
   virtual void flush() {
-    if (handler.get())
+    if (handler)
       handler->flush();
   }
   virtual void operator()(T& item) {
-    if (handler.get()) {
+    if (handler) {
       check_for_signal();
-      (*handler.get())(item);
+      (*handler)(item);
     }
   }
 
