@@ -150,7 +150,7 @@ namespace {
     if (post.xact->code)
       return string_value(*post.xact->code);
     else
-      return string_value(empty_string);
+      return NULL_VALUE;
   }
 
   value_t get_payee(post_t& post) {
@@ -158,9 +158,13 @@ namespace {
   }
 
   value_t get_note(post_t& post) {
-    string note = post.note ? *post.note : empty_string;
-    note += post.xact->note ? *post.xact->note : empty_string;
-    return string_value(note);
+    if (post.note || post.xact->note) {
+      string note = post.note ? *post.note : empty_string;
+      note += post.xact->note ? *post.xact->note : empty_string;
+      return string_value(note);
+    } else {
+      return NULL_VALUE;
+    }
   }
 
   value_t get_magnitude(post_t& post) {

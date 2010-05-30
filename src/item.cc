@@ -227,7 +227,7 @@ namespace {
     return NULL_VALUE;
   }
   value_t get_note(item_t& item) {
-    return string_value(item.note ? *item.note : empty_string);
+    return item.note ? string_value(*item.note) : NULL_VALUE;
   }
 
   value_t has_tag(call_scope_t& args) {
@@ -260,7 +260,8 @@ namespace {
     return false;
   }
 
-  value_t get_tag(call_scope_t& args) {
+  value_t get_tag(call_scope_t& args)
+  {
     item_t& item(find_scope<item_t>(args));
     optional<string> str;
 
@@ -292,14 +293,14 @@ namespace {
     if (str)
       return string_value(*str);
     else
-      return string_value(empty_string);
+      return NULL_VALUE;
   }
 
   value_t get_pathname(item_t& item) {
     if (item.pos)
       return string_value(item.pos->pathname.string());
     else
-      return string_value(empty_string);
+      return NULL_VALUE;
   }
 
   value_t get_beg_pos(item_t& item) {

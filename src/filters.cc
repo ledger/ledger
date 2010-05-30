@@ -69,14 +69,16 @@ void post_splitter::operator()(post_t& post)
   bind_scope_t bound_scope(report, post);
   value_t      result(group_by_expr.calc(bound_scope));
 
-  value_to_posts_map::iterator i = posts_map.find(result);
-  if (i != posts_map.end()) {
-    (*i).second.push_back(&post);
-  } else {
-    std::pair<value_to_posts_map::iterator, bool> inserted
-      = posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
-    assert(inserted.second);
-    (*inserted.first).second.push_back(&post);
+  if (! result.is_null()) {
+    value_to_posts_map::iterator i = posts_map.find(result);
+    if (i != posts_map.end()) {
+      (*i).second.push_back(&post);
+    } else {
+      std::pair<value_to_posts_map::iterator, bool> inserted
+	= posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
+      assert(inserted.second);
+      (*inserted.first).second.push_back(&post);
+    }
   }
 }
 
@@ -837,41 +839,43 @@ void transfer_details::operator()(post_t& post)
   bind_scope_t bound_scope(scope, temp);
   value_t      substitute(expr.calc(bound_scope));
 
-  switch (which_element) {
-  case SET_DATE:
-    temp.xdata().date = substitute.to_date();
-    break;
+  if (! substitute.is_null()) {
+    switch (which_element) {
+    case SET_DATE:
+      temp.xdata().date = substitute.to_date();
+      break;
 
-  case SET_ACCOUNT: {
-    string account_name = substitute.to_string();
-    if (! account_name.empty() &&
-	account_name[account_name.length() - 1] != ':') {
-      account_t * prev_account = temp.account;
-      temp.account->remove_post(&temp);
+    case SET_ACCOUNT: {
+      string account_name = substitute.to_string();
+      if (! account_name.empty() &&
+	  account_name[account_name.length() - 1] != ':') {
+	account_t * prev_account = temp.account;
+	temp.account->remove_post(&temp);
 
-      account_name += ':';
-      account_name += prev_account->fullname();
+	account_name += ':';
+	account_name += prev_account->fullname();
 
-      std::list<string> account_names;
-      split_string(account_name, ':', account_names);
-      temp.account = create_temp_account_from_path(account_names, temps,
-						   xact.journal->master);
-      temp.account->add_post(&temp);
+	std::list<string> account_names;
+	split_string(account_name, ':', account_names);
+	temp.account = create_temp_account_from_path(account_names, temps,
+						     xact.journal->master);
+	temp.account->add_post(&temp);
 
-      temp.account->add_flags(prev_account->flags());
-      if (prev_account->has_xdata())
-	temp.account->xdata().add_flags(prev_account->xdata().flags());
+	temp.account->add_flags(prev_account->flags());
+	if (prev_account->has_xdata())
+	  temp.account->xdata().add_flags(prev_account->xdata().flags());
+      }
+      break;
     }
-    break;
-  }
 
-  case SET_PAYEE:
-    xact.payee = substitute.to_string();
-    break;
+    case SET_PAYEE:
+      xact.payee = substitute.to_string();
+      break;
 
-  default:
-    assert(false);
-    break;
+    default:
+      assert(false);
+      break;
+    }
   }
 
   item_handler<post_t>::operator()(temp);

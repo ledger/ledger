@@ -468,7 +468,7 @@ namespace {
     if (xact.code)
       return string_value(*xact.code);
     else
-      return string_value(empty_string);
+      return NULL_VALUE;
   }
 
   value_t get_payee(xact_t& xact) {
