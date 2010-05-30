@@ -256,6 +256,8 @@ public:
     HANDLER(forecast_years_).report(out);
     HANDLER(format_).report(out);
     HANDLER(gain).report(out);
+    HANDLER(group_by_).report(out);
+    HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
@@ -594,6 +596,22 @@ public:
 		  "use_direct_amount ? total_expr :"
 		  " market(get_at(total_expr, 0), date, exchange)"
 		  " - get_at(total_expr, 1)");
+    });
+
+  OPTION__
+  (report_t, group_by_,
+   expr_t expr;
+   CTOR(report_t, group_by_) {}
+   void set_expr(const optional<string>& whence, const string& str) {
+     expr = str;
+     on(whence, str);
+   }
+   DO_(args) {
+     set_expr(args[0].to_string(), args[1].to_string());
+   });
+
+  OPTION__(report_t, group_title_format_, CTOR(report_t, group_title_format_) {
+      on(none, "%(value)\n");
     });
 
   OPTION(report_t, head_);

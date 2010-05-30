@@ -45,7 +45,7 @@ format_posts::format_posts(report_t&		   _report,
 			   const optional<string>& _prepend_format,
 			   std::size_t		   _prepend_width)
   : report(_report), prepend_width(_prepend_width),
-    last_xact(NULL), last_post(NULL)
+    last_xact(NULL), last_post(NULL), first_report_title(true)
 {
   TRACE_CTOR(format_posts, "report&, const string&, bool");
 
@@ -78,11 +78,29 @@ void format_posts::flush()
 
 void format_posts::operator()(post_t& post)
 {
-  std::ostream& out(report.output_stream);
-
   if (! post.has_xdata() ||
       ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+    std::ostream& out(report.output_stream);
+
     bind_scope_t bound_scope(report, post);
+
+    if (! report_title.empty()) {
+      if (first_report_title)
+	first_report_title = false;
+      else
+	out << '\n';
+
+      value_scope_t val_scope(string_value(report_title));
+      bind_scope_t inner_scope(bound_scope, val_scope);
+      
+      format_t group_title_format;
+      group_title_format
+	.parse_format(report.HANDLER(group_title_format_).str());
+
+      out << group_title_format(inner_scope);
+
+      report_title = "";
+    }
 
     if (prepend_format) {
       out.width(prepend_width);
@@ -113,7 +131,8 @@ format_accounts::format_accounts(report_t&		 _report,
 				 const string&		 format,
 				 const optional<string>& _prepend_format,
 				 std::size_t		 _prepend_width)
-  : report(_report), prepend_width(_prepend_width), disp_pred()
+  : report(_report), prepend_width(_prepend_width), disp_pred(),
+    first_report_title(true)
 {
   TRACE_CTOR(format_accounts, "report&, const string&");
 
@@ -144,19 +163,37 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
 
   if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
       ! account.xdata().has_flags(ACCOUNT_EXT_DISPLAYED)) {
+    std::ostream& out(report.output_stream);
+
     DEBUG("account.display", "Displaying account: " << account.fullname());
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
     bind_scope_t bound_scope(report, account);
 
-    if (prepend_format) {
-      static_cast<std::ostream&>(report.output_stream).width(prepend_width);
-      static_cast<std::ostream&>(report.output_stream)
-	<< prepend_format(bound_scope);
+    if (! report_title.empty()) {
+      if (first_report_title)
+	first_report_title = false;
+      else
+	out << '\n';
+
+      value_scope_t val_scope(string_value(report_title));
+      bind_scope_t inner_scope(bound_scope, val_scope);
+      
+      format_t group_title_format;
+      group_title_format
+	.parse_format(report.HANDLER(group_title_format_).str());
+
+      out << group_title_format(inner_scope);
+
+      report_title = "";
     }
 
-    static_cast<std::ostream&>(report.output_stream)
-      << account_line_format(bound_scope);
+    if (prepend_format) {
+      out.width(prepend_width);
+      out << prepend_format(bound_scope);
+    }
+
+    out << account_line_format(bound_scope);
 
     return 1;
   }

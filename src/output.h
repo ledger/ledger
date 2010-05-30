@@ -64,6 +64,8 @@ protected:
   std::size_t prepend_width;
   xact_t *    last_xact;
   post_t *    last_post;
+  bool        first_report_title;
+  string      report_title;
 
 public:
   format_posts(report_t& _report, const string& format,
@@ -73,12 +75,18 @@ public:
     TRACE_DTOR(format_posts);
   }
 
+  virtual void title(const string& str) {
+    report_title = str;
+  }
+
   virtual void flush();
   virtual void operator()(post_t& post);
 
   virtual void clear() {
     last_xact	 = NULL;
     last_post	 = NULL;
+
+    report_title = "";
 
     item_handler<post_t>::clear();
   }
@@ -94,6 +102,8 @@ protected:
   format_t    prepend_format;
   std::size_t prepend_width;
   predicate_t disp_pred;
+  bool        first_report_title;
+  string      report_title;
 
   std::list<account_t *> posted_accounts;
 
@@ -108,6 +118,10 @@ public:
   std::pair<std::size_t, std::size_t>
   mark_accounts(account_t& account, const bool flat);
 
+  virtual void title(const string& str) {
+    report_title = str;
+  }
+
   virtual std::size_t post_account(account_t& account, const bool flat);
   virtual void	      flush();
 
@@ -116,6 +130,8 @@ public:
   virtual void clear() {
     disp_pred.mark_uncompiled();
     posted_accounts.clear();
+
+    report_title = "";
 
     item_handler<account_t>::clear();
   }

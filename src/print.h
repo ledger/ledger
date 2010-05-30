@@ -62,6 +62,7 @@ protected:
   xacts_present_map xacts_present;
   xacts_list	    xacts;
   bool		    print_raw;
+  bool		    first_title;
 
 public:
   print_xacts(report_t& _report, bool _print_raw = false);
@@ -69,8 +70,17 @@ public:
     TRACE_DTOR(print_xacts);
   }
 
+  virtual void title(const string&);
+
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    xacts_present.clear();
+    xacts.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 

@@ -42,7 +42,7 @@ namespace ledger {
 
 print_xacts::print_xacts(report_t& _report,
 			 bool      _print_raw)
-  : report(_report), print_raw(_print_raw)
+  : report(_report), print_raw(_print_raw), first_title(true)
 {
   TRACE_CTOR(print_xacts, "report&, bool");
 }
@@ -218,6 +218,16 @@ namespace {
 	print_note(out, *post->note, columns, 4 + account_width);
       out << '\n';
     }
+  }
+}
+
+void print_xacts::title(const string&)
+{
+  if (first_title) {
+    first_title = false;
+  } else {
+    std::ostream& out(report.output_stream);
+    out << '\n';
   }
 }
 
