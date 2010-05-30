@@ -267,6 +267,7 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_rounding).report(out);
     HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);
     HANDLER(now_).report(out);
@@ -296,7 +297,6 @@ public:
     HANDLER(revalued).report(out);
     HANDLER(revalued_only).report(out);
     HANDLER(revalued_total_).report(out);
-    HANDLER(rounding).report(out);
     HANDLER(seed_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
@@ -638,6 +638,7 @@ public:
       parent->HANDLER(color).off();
     });
 
+  OPTION(report_t, no_rounding);
   OPTION(report_t, no_titles);
   OPTION(report_t, no_total);
 
@@ -821,7 +822,6 @@ public:
      set_expr(args[0].to_string(), args[1].to_string());
    });
 
-  OPTION(report_t, rounding);
   OPTION(report_t, seed_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
