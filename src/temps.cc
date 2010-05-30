@@ -38,26 +38,6 @@
 
 namespace ledger {
 
-temporaries_t::~temporaries_t()
-{
-  if (post_temps) {
-    foreach (post_t& post, *post_temps) {
-      if (! post.xact->has_flags(ITEM_TEMP))
-	post.xact->remove_post(&post);
-
-      if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
-	post.account->remove_post(&post);
-    }
-  }
-
-  if (acct_temps) {
-    foreach (account_t& acct, *acct_temps) {
-      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
-	acct.parent->remove_account(&acct);
-    }
-  }
-}
-
 xact_t& temporaries_t::copy_xact(xact_t& origin)
 {
   if (! xact_temps)
@@ -132,6 +112,31 @@ account_t& temporaries_t::create_account(const string& name,
     parent->add_account(&temp);
 
   return temp;
+}
+
+void temporaries_t::clear()
+{
+  if (post_temps) {
+    foreach (post_t& post, *post_temps) {
+      if (! post.xact->has_flags(ITEM_TEMP))
+	post.xact->remove_post(&post);
+
+      if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
+	post.account->remove_post(&post);
+    }
+    post_temps->clear();
+  }
+
+  if (xact_temps)
+    xact_temps->clear();
+
+  if (acct_temps) {
+    foreach (account_t& acct, *acct_temps) {
+      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
+	acct.parent->remove_account(&acct);
+    }
+    acct_temps->clear();
+  }
 }
 
 } // namespace ledger

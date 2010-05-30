@@ -75,6 +75,13 @@ public:
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    last_xact	 = NULL;
+    last_post	 = NULL;
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class format_accounts : public item_handler<account_t>
@@ -105,6 +112,13 @@ public:
   virtual void	      flush();
 
   virtual void operator()(account_t& account);
+
+  virtual void clear() {
+    disp_pred.mark_uncompiled();
+    posted_accounts.clear();
+
+    item_handler<account_t>::clear();
+  }
 };
 
 class report_accounts : public item_handler<post_t>
@@ -126,6 +140,11 @@ public:
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    accounts.clear();
+    item_handler<post_t>::clear();
+  }
 };
 
 class report_payees : public item_handler<post_t>
@@ -147,6 +166,11 @@ public:
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    payees.clear();
+    item_handler<post_t>::clear();
+  }
 };
 
 class report_commodities : public item_handler<post_t>
@@ -168,6 +192,11 @@ public:
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    commodities.clear();
+    item_handler<post_t>::clear();
+  }
 };
 
 } // namespace ledger

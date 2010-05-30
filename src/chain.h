@@ -75,6 +75,11 @@ public:
       (*handler.get())(item);
     }
   }
+
+  virtual void clear() {
+    if (handler)
+      handler->clear();
+  }
 };
 
 typedef shared_ptr<item_handler<post_t> > post_handler_ptr;
