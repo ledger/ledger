@@ -582,20 +582,68 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
   // date.  If so, generate an output_revaluation for that price change.
   // Mostly this is only going to occur if the user has a series of pricing
   // entries, since a posting-based revaluation would be seen here as a post.
-  assert(! last_total.is_null());
 
-  switch (last_total.type()) {
+  value_t display_total(last_total);
+
+  if (display_total.type() == value_t::SEQUENCE) {
+    xact_t& xact(temps.create_xact());
+
+    xact.payee = _("Commodities revalued");
+    xact._date = is_valid(current) ? current : post.date();
+
+    post_t& temp(temps.copy_post(post, xact));
+    temp.add_flags(ITEM_GENERATED);
+
+    post_t::xdata_t& xdata(temp.xdata());
+    if (is_valid(current))
+      xdata.date = current;
+
+    DEBUG("filters.revalued", "intermediate last_total = " << last_total);
+
+    switch (last_total.type()) {
+    case value_t::BOOLEAN:
+    case value_t::INTEGER:
+      last_total.in_place_cast(value_t::AMOUNT);
+      // fall through...
+
+    case value_t::AMOUNT:
+      temp.amount = last_total.as_amount();
+      break;
+
+    case value_t::BALANCE:
+    case value_t::SEQUENCE:
+      xdata.compound_value = last_total;
+      xdata.add_flags(POST_EXT_COMPOUND);
+      break;
+
+    case value_t::DATETIME:
+    case value_t::DATE:
+    default:
+      assert(false);
+      break; 
+    }
+
+    bind_scope_t inner_scope(report, temp);
+    display_total = display_total_expr.calc(inner_scope);
+
+    DEBUG("filters.revalued", "intermediate display_total = " << display_total);
+  }
+
+  switch (display_total.type()) {
+  case value_t::VOID:
   case value_t::INTEGER:
   case value_t::SEQUENCE:
     break;
+
   case value_t::AMOUNT:
-    last_total.in_place_cast(value_t::BALANCE);
+    display_total.in_place_cast(value_t::BALANCE);
     // fall through...
+
   case value_t::BALANCE: {
     commodity_t::history_map all_prices;
 
     foreach (const balance_t::amounts_map::value_type& amt_comm,
-	     last_total.as_balance().amounts) {
+	     display_total.as_balance().amounts) {
       if (optional<commodity_t::varied_history_t&> hist =
 	  amt_comm.first->varied_history()) {
 	foreach
