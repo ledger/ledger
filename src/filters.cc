@@ -503,6 +503,8 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler,
 void changed_value_posts::flush()
 {
   if (last_post && last_post->date() <= report.terminus.date()) {
+    if (! for_accounts_report)
+      output_intermediate_prices(*last_post, report.terminus.date());
     output_revaluation(*last_post, report.terminus.date());
     last_post = NULL;
   }
@@ -514,7 +516,6 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   if (is_valid(date))
     post.xdata().date = date;
 
-  value_t repriced_total;
   try {
     bind_scope_t bound_scope(report, post);
     repriced_total = total_expr.calc(bound_scope);
@@ -573,6 +574,78 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   }
 }
 
+void changed_value_posts::output_intermediate_prices(post_t&	   post,
+						     const date_t& current)
+{
+  // To fix BZ#199, examine the balance of last_post and determine whether the
+  // price of that amount changed after its date and before the new post's
+  // date.  If so, generate an output_revaluation for that price change.
+  // Mostly this is only going to occur if the user has a series of pricing
+  // entries, since a posting-based revaluation would be seen here as a post.
+  assert(! last_total.is_null());
+
+  switch (last_total.type()) {
+  case value_t::INTEGER:
+  case value_t::SEQUENCE:
+    break;
+  case value_t::AMOUNT:
+    last_total.in_place_cast(value_t::BALANCE);
+    // fall through...
+  case value_t::BALANCE: {
+    commodity_t::history_map all_prices;
+
+    foreach (const balance_t::amounts_map::value_type& amt_comm,
+	     last_total.as_balance().amounts) {
+      if (optional<commodity_t::varied_history_t&> hist =
+	  amt_comm.first->varied_history()) {
+	foreach
+	  (const commodity_t::history_by_commodity_map::value_type& comm_hist,
+	   hist->histories) {
+	  foreach (const commodity_t::history_map::value_type& price,
+		   comm_hist.second.prices) {
+	    if (price.first.date() > post.date() &&
+		price.first.date() < current) {
+	      DEBUG("filters.revalued", post.date() << " < "
+		    << price.first.date() << " < " << current);
+	      DEBUG("filters.revalued", "inserting "
+		    << price.second << " at " << price.first.date());
+	      all_prices.insert(price);
+	    }
+	  }
+	}
+      }
+    }
+
+    // Choose the last price from each day as the price to use
+    typedef std::map<const date_t,
+		     std::pair<const datetime_t,
+			       amount_t> > history_by_date_map;
+    history_by_date_map all_prices_by_date;
+
+    BOOST_REVERSE_FOREACH
+      (const commodity_t::history_map::value_type& price, all_prices) {
+      // This insert will fail if a later price has already been inserted
+      // for that date.
+      DEBUG("filters.revalued",
+	    "re-inserting " << price.second << " at " << price.first.date());
+      all_prices_by_date.insert(history_by_date_map::value_type
+				(price.first.date(), price));
+    }
+
+    // Go through the time-sorted prices list, outputting a revaluation for
+    // each price difference.
+    foreach (const history_by_date_map::value_type& price, all_prices_by_date) {
+      output_revaluation(post, price.first);
+      last_total = repriced_total;
+    }
+    break;
+  }
+  default:
+    assert(false);
+    break;
+  }
+}
+
 void changed_value_posts::output_rounding(post_t& post)
 {
   bind_scope_t bound_scope(report, post);
@@ -612,8 +685,11 @@ void changed_value_posts::output_rounding(post_t& post)
 
 void changed_value_posts::operator()(post_t& post)
 {
-  if (last_post)
+  if (last_post) {
+    if (! for_accounts_report)
+      output_intermediate_prices(*last_post, post.date());
     output_revaluation(*last_post, post.date());
+  }
 
   if (changed_values_only)
     post.xdata().add_flags(POST_EXT_DISPLAYED);

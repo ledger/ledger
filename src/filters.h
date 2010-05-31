@@ -499,6 +499,7 @@ class changed_value_posts : public item_handler<post_t>
   post_t *	last_post;
   value_t	last_total;
   value_t	last_display_total;
+  value_t       repriced_total;
   temporaries_t	temps;
   account_t&	revalued_account;
   account_t&	rounding_account;
@@ -521,6 +522,7 @@ public:
   virtual void flush();
 
   void output_revaluation(post_t& post, const date_t& current);
+  void output_intermediate_prices(post_t& post, const date_t& current);
   void output_rounding(post_t& post);
 
   virtual void operator()(post_t& post);
