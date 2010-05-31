@@ -355,7 +355,7 @@ namespace {
     if (functor)
       (*functor)(post);
 
-    DEBUG("filter.changed_value.rounding", "post.amount = " << post.amount);
+    DEBUG("filters.changed_value.rounding", "post.amount = " << post.amount);
 
     (*handler)(post);
 
@@ -398,7 +398,7 @@ void collapse_posts::report_subtotal()
     xact.payee	   = last_xact->payee;
     xact._date	   = (is_valid(earliest_date) ?
 		      earliest_date : last_xact->_date);
-    DEBUG("filter.collapse", "Pseudo-xact date = " << *xact._date);
+    DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
 
     handle_value(subtotal, &totals_account, &xact, temps, handler);
   }
@@ -525,14 +525,14 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   }
   post.xdata().date = date_t();
 
-  DEBUG("filter.changed_value",
-	"output_revaluation(last_balance) = " << last_total);
-  DEBUG("filter.changed_value",
+  DEBUG("filters.changed_value",
+	"output_revaluation(last_total)     = " << last_total);
+  DEBUG("filters.changed_value",
 	"output_revaluation(repriced_total) = " << repriced_total);
 
   if (! last_total.is_null()) {
     if (value_t diff = repriced_total - last_total) {
-      DEBUG("filter.changed_value", "output_revaluation(strip(diff)) = "
+      DEBUG("filters.changed_value", "output_revaluation(strip(diff)) = "
 	    << diff.strip_annotations(report.what_to_keep()));
 
       xact_t& xact = temps.create_xact();
@@ -578,24 +578,24 @@ void changed_value_posts::output_rounding(post_t& post)
   bind_scope_t bound_scope(report, post);
   value_t      new_display_total(display_total_expr.calc(bound_scope));
 
-  DEBUG("filter.changed_value.rounding",
+  DEBUG("filters.changed_value.rounding",
 	"rounding.new_display_total     = " << new_display_total);
 
   if (! last_display_total.is_null()) {
     if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
-      DEBUG("filter.changed_value.rounding",
+      DEBUG("filters.changed_value.rounding",
 	    "rounding.repriced_amount       = " << repriced_amount);
 
       value_t precise_display_total(new_display_total.truncated() -
 				    repriced_amount.truncated());
 
-      DEBUG("filter.changed_value.rounding",
+      DEBUG("filters.changed_value.rounding",
 	    "rounding.precise_display_total = " << precise_display_total);
-      DEBUG("filter.changed_value.rounding",
+      DEBUG("filters.changed_value.rounding",
 	    "rounding.last_display_total    = " << last_display_total);
 
       if (value_t diff = precise_display_total - last_display_total) {
-	DEBUG("filter.changed_value.rounding",
+	DEBUG("filters.changed_value.rounding",
 	      "rounding.diff                  = " << diff);
 
 	xact_t& xact = temps.create_xact();
