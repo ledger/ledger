@@ -303,7 +303,8 @@ void report_t::posts_report(post_handler_ptr handler)
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts(handler, walker);
 
-  session.journal->clear_xdata();
+  if (! HANDLED(group_by_))
+    posts_flusher(*this, handler)(value_t());
 }
 
 void report_t::generate_report(post_handler_ptr handler)
