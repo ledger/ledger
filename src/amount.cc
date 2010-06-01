@@ -165,8 +165,8 @@ namespace {
 
 	for (const char * p = buf; *p; p++) {
 	  if (*p == '.') {
-	    if (commodity_t::european_by_default ||
-		(comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
+	    if (commodity_t::decimal_comma_by_default ||
+		(comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
 	      out << ',';
 	    else
 	      out << *p;
@@ -179,8 +179,8 @@ namespace {
 	    out << *p;
 
 	    if (integer_digits > 3 && --integer_digits % 3 == 0) {
-	      if (commodity_t::european_by_default ||
-		  (comm && comm->has_flags(COMMODITY_STYLE_EUROPEAN)))
+	      if (commodity_t::decimal_comma_by_default ||
+		  (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
 		out << '.';
 	      else
 		out << ',';
@@ -1031,8 +1031,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   bool no_more_commas  = false;
   bool no_more_periods = false;
-  bool european_style  = (commodity_t::european_by_default ||
-			  commodity().has_flags(COMMODITY_STYLE_EUROPEAN));
+  bool decimal_comma_style
+    = (commodity_t::decimal_comma_by_default ||
+       commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
 
   new_quantity->prec = 0;
 
@@ -1043,16 +1044,16 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
       if (no_more_periods)
 	throw_(amount_error, _("Too many periods in amount"));
 
-      if (european_style) {
+      if (decimal_comma_style) {
 	if (decimal_offset % 3 != 0)
-	  throw_(amount_error, _("Incorrect use of european-style period"));
+	  throw_(amount_error, _("Incorrect use of thousand-mark period"));
 	comm_flags |= COMMODITY_STYLE_THOUSANDS;
 	no_more_commas = true;
       } else {
 	if (last_comma != string::npos) {
-	  european_style = true;
+	  decimal_comma_style = true;
 	  if (decimal_offset % 3 != 0)
-	    throw_(amount_error, _("Incorrect use of european-style period"));
+	    throw_(amount_error, _("Incorrect use of thousand-mark period"));
 	} else {
 	  no_more_periods    = true;
 	  new_quantity->prec = decimal_offset;
@@ -1067,9 +1068,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
       if (no_more_commas)
 	throw_(amount_error, _("Too many commas in amount"));
 
-      if (european_style) {
+      if (decimal_comma_style) {
 	if (last_period != string::npos) {
-	  throw_(amount_error, _("Incorrect use of european-style comma"));
+	  throw_(amount_error, _("Incorrect use of decimal comma"));
 	} else {
 	  no_more_commas     = true;
 	  new_quantity->prec = decimal_offset;
@@ -1079,12 +1080,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 	if (decimal_offset % 3 != 0) {
 	  if (last_comma != string::npos ||
 	      last_period != string::npos) {
-	    throw_(amount_error, _("Incorrect use of American-style comma"));
+	    throw_(amount_error, _("Incorrect use of thousand-mark comma"));
 	  } else {
-	    european_style     = true;
-	    no_more_commas     = true;
-	    new_quantity->prec = decimal_offset;
-	    decimal_offset     = 0;
+	    decimal_comma_style = true;
+	    no_more_commas	= true;
+	    new_quantity->prec	= decimal_offset;
+	    decimal_offset	= 0;
 	  }
 	} else {
 	  comm_flags |= COMMODITY_STYLE_THOUSANDS;
@@ -1100,8 +1101,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     }
   }
 
-  if (european_style)
-    comm_flags |= COMMODITY_STYLE_EUROPEAN;
+  if (decimal_comma_style)
+    comm_flags |= COMMODITY_STYLE_DECIMAL_COMMA;
 
   if (flags.has_flags(PARSE_NO_MIGRATE)) {
     // Can't call set_keep_precision here, because it assumes that `quantity'

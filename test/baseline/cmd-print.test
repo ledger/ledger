@@ -1,4 +1,4 @@
-print --european
+print --decimal-comma
 <<<
 2008/12/31 Market
    Expenses:Food           ($10,00 + $2,50)

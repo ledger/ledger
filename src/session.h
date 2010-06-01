@@ -80,7 +80,7 @@ public:
   {
     HANDLER(cache_).report(out);
     HANDLER(download).report(out);
-    HANDLER(european).report(out);
+    HANDLER(decimal_comma).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(master_account_).report(out);
@@ -101,8 +101,8 @@ public:
   OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
 
-  OPTION_(session_t, european, DO() {
-      commodity_t::european_by_default = true;
+  OPTION_(session_t, decimal_comma, DO() {
+      commodity_t::decimal_comma_by_default = true;
     });
 
   OPTION__

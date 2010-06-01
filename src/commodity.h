@@ -155,16 +155,16 @@ protected:
   class base_t : public noncopyable, public supports_flags<uint_least16_t>
   {
   public:
-#define COMMODITY_STYLE_DEFAULTS  0x000
-#define COMMODITY_STYLE_SUFFIXED  0x001
-#define COMMODITY_STYLE_SEPARATED 0x002
-#define COMMODITY_STYLE_EUROPEAN  0x004
-#define COMMODITY_STYLE_THOUSANDS 0x008
-#define COMMODITY_NOMARKET        0x010
-#define COMMODITY_BUILTIN         0x020
-#define COMMODITY_WALKED          0x040
-#define COMMODITY_KNOWN           0x080
-#define COMMODITY_PRIMARY         0x100
+#define COMMODITY_STYLE_DEFAULTS      0x000
+#define COMMODITY_STYLE_SUFFIXED      0x001
+#define COMMODITY_STYLE_SEPARATED     0x002
+#define COMMODITY_STYLE_DECIMAL_COMMA 0x004
+#define COMMODITY_STYLE_THOUSANDS     0x008
+#define COMMODITY_NOMARKET	      0x010
+#define COMMODITY_BUILTIN	      0x020
+#define COMMODITY_WALKED	      0x040
+#define COMMODITY_KNOWN		      0x080
+#define COMMODITY_PRIMARY	      0x100
 
     string		       symbol;
     amount_t::precision_t      precision;
@@ -179,8 +179,8 @@ protected:
   public:
     explicit base_t(const string& _symbol)
       : supports_flags<uint_least16_t>
-	(commodity_t::european_by_default ?
-	 static_cast<uint_least16_t>(COMMODITY_STYLE_EUROPEAN) :
+	(commodity_t::decimal_comma_by_default ?
+	 static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA) :
 	 static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
 	symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
@@ -228,7 +228,7 @@ protected:
   }
 
 public:
-  static bool european_by_default;
+  static bool decimal_comma_by_default;
 
   virtual ~commodity_t() {
     TRACE_DTOR(commodity_t);

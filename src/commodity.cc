@@ -38,7 +38,7 @@
 
 namespace ledger {
 
-bool commodity_t::european_by_default = false;
+bool commodity_t::decimal_comma_by_default = false;
 
 void commodity_t::history_t::add_price(commodity_t&      source,
 				       const datetime_t& date,
@@ -663,10 +663,10 @@ void to_xml(std::ostream& out, const commodity_t& comm,
   push_xml x(out, "commodity", true);
 
   out << " flags=\"";
-  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED))) out << 'P';
-  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))    out << 'S';
-  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))    out << 'T';
-  if (comm.has_flags(COMMODITY_STYLE_EUROPEAN))     out << 'E';
+  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED)))  out << 'P';
+  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))     out << 'S';
+  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))     out << 'T';
+  if (comm.has_flags(COMMODITY_STYLE_DECIMAL_COMMA)) out << 'D';
   out << '"';
 
   x.close_attrs();
