@@ -454,7 +454,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
 {
   // Invalid commodity characters:
   //   SPACE, TAB, NEWLINE, RETURN
-  //   0-9 . , ; - + * / ^ ? : & | ! =
+  //   0-9 . , ; : ? ! - + * / ^ & | =
   //   < > { } [ ] ( ) @
 
   static int invalid_chars[256] = {
