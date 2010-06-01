@@ -665,10 +665,8 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
     }
 
     // Choose the last price from each day as the price to use
-    typedef std::map<const date_t,
-		     std::pair<const datetime_t,
-			       amount_t> > history_by_date_map;
-    history_by_date_map all_prices_by_date;
+    typedef std::map<const date_t, bool> date_map;
+    date_map pricing_dates;
 
     BOOST_REVERSE_FOREACH
       (const commodity_t::history_map::value_type& price, all_prices) {
@@ -676,13 +674,12 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
       // for that date.
       DEBUG("filters.revalued",
 	    "re-inserting " << price.second << " at " << price.first.date());
-      all_prices_by_date.insert(history_by_date_map::value_type
-				(price.first.date(), price));
+      pricing_dates.insert(date_map::value_type(price.first.date(), true));
     }
 
     // Go through the time-sorted prices list, outputting a revaluation for
     // each price difference.
-    foreach (const history_by_date_map::value_type& price, all_prices_by_date) {
+    foreach (const date_map::value_type& price, pricing_dates) {
       output_revaluation(post, price.first);
       last_total = repriced_total;
     }
