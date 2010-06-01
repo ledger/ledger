@@ -55,8 +55,9 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
 
   if (consume_next_arg) {
     consume_next_arg = false;
+    token_t tok(token_t::TERM, string(arg_i, arg_end));
     arg_i = arg_end;
-    return token_t(token_t::TERM, (*begin).as_string());
+    return tok;
   }
 
  resume:
@@ -70,23 +71,25 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
       return next_token();
   goto resume;
 
+  case '\'':
   case '/': {
     string pat;
-    bool found_end_slash = false;
+    char   closing	 = *arg_i;
+    bool   found_closing = false;
     for (++arg_i; arg_i != arg_end; ++arg_i) {
       if (*arg_i == '\\') {
 	if (++arg_i == arg_end)
 	  throw_(parse_error, _("Unexpected '\\' at end of pattern"));
       }
-      else if (*arg_i == '/') {
+      else if (*arg_i == closing) {
 	++arg_i;
-	found_end_slash = true;
+	found_closing = true;
 	break;
       }
       pat.push_back(*arg_i);
     }
-    if (! found_end_slash)
-      throw_(parse_error, _("Expected '/' at end of pattern"));
+    if (! found_closing)
+      throw_(parse_error, _("Expected '%1' at end of pattern") << closing);
     if (pat.empty())
       throw_(parse_error, _("Match pattern is empty"));
 
