@@ -62,6 +62,7 @@ public:
 
     bool consume_whitespace;
     bool consume_next_arg;
+    bool multiple_args;
 
   public:
     struct token_t
@@ -177,10 +178,11 @@ public:
     token_t token_cache;
 
     lexer_t(value_t::sequence_t::const_iterator _begin,
-		  value_t::sequence_t::const_iterator _end)
+	    value_t::sequence_t::const_iterator _end,
+	    bool _multiple_args = true)
       : begin(_begin), end(_end),
-	consume_whitespace(false),
-	consume_next_arg(false)
+	consume_whitespace(false), consume_next_arg(false),
+	multiple_args(_multiple_args)
     {
       TRACE_CTOR(query_t::lexer_t, "");
       assert(begin != end);
@@ -192,6 +194,7 @@ public:
 	arg_i(lexer.arg_i), arg_end(lexer.arg_end),
 	consume_whitespace(lexer.consume_whitespace),
 	consume_next_arg(lexer.consume_next_arg),
+	multiple_args(lexer.multiple_args),
 	token_cache(lexer.token_cache)
     {
       TRACE_CTOR(query_t::lexer_t, "copy");
@@ -227,8 +230,8 @@ protected:
     expr_t::ptr_op_t parse_query_expr(lexer_t::token_t::kind_t tok_context);
 
   public:
-    parser_t(const value_t& _args)
-      : args(_args), lexer(args.begin(), args.end()) {
+    parser_t(const value_t& _args, bool multiple_args = true)
+      : args(_args), lexer(args.begin(), args.end(), multiple_args) {
       TRACE_CTOR(query_t::parser_t, "");
     }
     parser_t(const parser_t& parser)
@@ -261,28 +264,30 @@ public:
     TRACE_CTOR(query_t, "copy");
   }
   query_t(const string& arg,
-	  const keep_details_t& _what_to_keep = keep_details_t())
+	  const keep_details_t& _what_to_keep = keep_details_t(),
+	  bool multiple_args = true)
     : predicate_t(_what_to_keep) {
     TRACE_CTOR(query_t, "string, keep_details_t");
     if (! arg.empty()) {
       value_t temp(string_value(arg));
-      parse_args(temp.to_sequence());
+      parse_args(temp.to_sequence(), multiple_args);
     }
   }
   query_t(const value_t& args,
-	  const keep_details_t& _what_to_keep = keep_details_t())
+	  const keep_details_t& _what_to_keep = keep_details_t(),
+	  bool multiple_args = true)
     : predicate_t(_what_to_keep) {
     TRACE_CTOR(query_t, "value_t, keep_details_t");
     if (! args.empty())
-      parse_args(args);
+      parse_args(args, multiple_args);
   }
   virtual ~query_t() {
     TRACE_DTOR(query_t);
   }
 
-  void parse_args(const value_t& args) {
+  void parse_args(const value_t& args, bool multiple_args = true) {
     if (! parser)
-      parser = parser_t(args);
+      parser = parser_t(args, multiple_args);
     ptr = parser->parse();	// expr_t::ptr
   }
 

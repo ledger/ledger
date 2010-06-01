@@ -526,7 +526,7 @@ void instance_t::automated_xact_directive(char * line)
 
   std::auto_ptr<auto_xact_t> ae
     (new auto_xact_t(query_t(string(skip_ws(line + 1)),
-			     keep_details_t(true, true, true))));
+			     keep_details_t(true, true, true), false)));
   ae->pos	    = position_t();
   ae->pos->pathname = pathname;
   ae->pos->beg_pos  = line_beg_pos;

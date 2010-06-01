@@ -53,25 +53,9 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     }
   }
 
-  if (consume_next_arg) {
-    consume_next_arg = false;
-    token_t tok(token_t::TERM, string(arg_i, arg_end));
-    arg_i = arg_end;
-    return tok;
-  }
-
- resume:
-  bool consume_next = false;
   switch (*arg_i) {
-  case ' ':
-  case '\t':
-  case '\r':
-  case '\n':
-    if (++arg_i == arg_end)
-      return next_token();
-  goto resume;
-
   case '\'':
+  case '"':
   case '/': {
     string pat;
     char   closing	 = *arg_i;
@@ -95,6 +79,25 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
 
     return token_t(token_t::TERM, pat);
   }
+  }
+
+  if (multiple_args && consume_next_arg) {
+    consume_next_arg = false;
+    token_t tok(token_t::TERM, string(arg_i, arg_end));
+    arg_i = arg_end;
+    return tok;
+  }
+
+ resume:
+  bool consume_next = false;
+  switch (*arg_i) {
+  case ' ':
+  case '\t':
+  case '\r':
+  case '\n':
+    if (++arg_i == arg_end)
+      return next_token();
+  goto resume;
 
   case '(': ++arg_i; return token_t(token_t::LPAREN);
   case ')': ++arg_i; return token_t(token_t::RPAREN);
@@ -104,7 +107,10 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
   case '@': ++arg_i; return token_t(token_t::TOK_PAYEE);
   case '#': ++arg_i; return token_t(token_t::TOK_CODE);
   case '%': ++arg_i; return token_t(token_t::TOK_META);
-  case '=': ++arg_i; return token_t(token_t::TOK_EQ);
+  case '=':
+    ++arg_i;
+    consume_next_arg = true;
+    return token_t(token_t::TOK_EQ);
 
   case '\\':
     consume_next = true;
