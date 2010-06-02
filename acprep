@@ -1146,7 +1146,8 @@ class PrepareBuild(CommandLineApp):
                 pass
 
     def setup_flavor_default(self):
-        pass
+        if self.darwin_gcc:
+            self.option_no_pch()
 
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
