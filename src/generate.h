@@ -110,10 +110,11 @@ public:
 protected:
   void	 generate_string(std::ostream& out, int len, bool only_alpha = false);
   bool	 generate_account(std::ostream& out, bool no_virtual = false);
-  void	 generate_commodity(std::ostream& out);
+  void	 generate_commodity(std::ostream& out, const string& exclude = "");
   string generate_amount(std::ostream& out,
-			 value_t not_this_amount = NULL_VALUE,
-			 bool    no_negative = false);
+			 value_t       not_this_amount = NULL_VALUE,
+			 bool	       no_negative     = false,
+			 const string& exclude	       = "");
   bool	 generate_post(std::ostream& out, bool no_amount = false);
   void	 generate_cost(std::ostream& out, value_t amount);
   void	 generate_date(std::ostream& out);
