@@ -42,9 +42,12 @@ account_t::~account_t()
 {
   TRACE_DTOR(account_t);
 
-  foreach (accounts_map::value_type& pair, accounts)
-    if (! pair.second->has_flags(ACCOUNT_TEMP))
+  foreach (accounts_map::value_type& pair, accounts) {
+    if (! pair.second->has_flags(ACCOUNT_TEMP) ||
+	has_flags(ACCOUNT_TEMP)) {
       checked_delete(pair.second);
+    }      
+  }
 }
 
 account_t * account_t::find_account(const string& name,
@@ -79,6 +82,14 @@ account_t * account_t::find_account(const string& name,
       return NULL;
 
     account = new account_t(this, first);
+
+    // An account created within a temporary or generated account is itself
+    // temporary or generated, so that the whole tree has the same status.
+    if (has_flags(ACCOUNT_TEMP))
+      account->add_flags(ACCOUNT_TEMP);
+    if (has_flags(ACCOUNT_GENERATED))
+      account->add_flags(ACCOUNT_GENERATED);
+
     std::pair<accounts_map::iterator, bool> result
       = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);

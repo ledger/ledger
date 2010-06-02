@@ -84,7 +84,7 @@ def confirm_report(command):
     return not failure
 
 for cmd in commands:
-    if confirm_report('$ledger $cmd ' + re.sub('\$tests', tests, cmd)):
+    if confirm_report('$ledger --rounding $cmd ' + re.sub('\$tests', tests, cmd)):
         harness.success()
     else:
         harness.failure()

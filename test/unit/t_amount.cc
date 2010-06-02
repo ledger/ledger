@@ -64,9 +64,9 @@ void AmountTestCase::testParser()
   x16.parse("$2000,00");
   assertEqual(string("$2.000,00"), x16.to_string());
 
-  // Since European-ness is an additive quality, we must switch back
-  // to American-ness manually
-  x15.commodity().drop_flags(COMMODITY_STYLE_EUROPEAN);
+  // Since use of a decimal-comma is an additive quality, we must switch back
+  // to decimal-period manually.
+  x15.commodity().drop_flags(COMMODITY_STYLE_DECIMAL_COMMA);
 
   amount_t x17("$1,000,000.00"); // parsing this switches back to American
 

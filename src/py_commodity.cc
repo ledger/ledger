@@ -295,13 +295,16 @@ void export_commodity()
     .def("keys", py_pool_keys)
     .def("has_key", py_pool_contains)
     .def("__contains__", py_pool_contains)
-    .def("__iter__", range<return_value_policy<reference_existing_object> >
+    .def("__iter__",
+	 python::range<return_value_policy<reference_existing_object> >
 	 (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iteritems", range<return_value_policy<reference_existing_object> >
+    .def("iteritems",
+	 python::range<return_value_policy<reference_existing_object> >
 	 (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iterkeys", range<>(py_pool_commodities_keys_begin,
-			     py_pool_commodities_keys_end))
-    .def("itervalues", range<return_value_policy<reference_existing_object> >
+    .def("iterkeys", python::range<>(py_pool_commodities_keys_begin,
+				     py_pool_commodities_keys_end))
+    .def("itervalues",
+	 python::range<return_value_policy<reference_existing_object> >
 	 (py_pool_commodities_values_begin, py_pool_commodities_values_end))
     ;
 
@@ -309,16 +312,16 @@ void export_commodity()
 
   scope().attr("commodities") = commodity_pool_t::current_pool;
 
-  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
-  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
-  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
-  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
-  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
-  scope().attr("COMMODITY_NOMARKET")        = COMMODITY_NOMARKET;
-  scope().attr("COMMODITY_BUILTIN")         = COMMODITY_BUILTIN;
-  scope().attr("COMMODITY_WALKED")          = COMMODITY_WALKED;
-  scope().attr("COMMODITY_KNOWN")           = COMMODITY_KNOWN;
-  scope().attr("COMMODITY_PRIMARY")         = COMMODITY_PRIMARY;
+  scope().attr("COMMODITY_STYLE_DEFAULTS")	= COMMODITY_STYLE_DEFAULTS;
+  scope().attr("COMMODITY_STYLE_SUFFIXED")	= COMMODITY_STYLE_SUFFIXED;
+  scope().attr("COMMODITY_STYLE_SEPARATED")	= COMMODITY_STYLE_SEPARATED;
+  scope().attr("COMMODITY_STYLE_DECIMAL_COMMA") = COMMODITY_STYLE_DECIMAL_COMMA;
+  scope().attr("COMMODITY_STYLE_THOUSANDS")	= COMMODITY_STYLE_THOUSANDS;
+  scope().attr("COMMODITY_NOMARKET")		= COMMODITY_NOMARKET;
+  scope().attr("COMMODITY_BUILTIN")		= COMMODITY_BUILTIN;
+  scope().attr("COMMODITY_WALKED")		= COMMODITY_WALKED;
+  scope().attr("COMMODITY_KNOWN")		= COMMODITY_KNOWN;
+  scope().attr("COMMODITY_PRIMARY")		= COMMODITY_PRIMARY;
 
   class_< commodity_t, boost::noncopyable > ("Commodity", no_init)
 #if 1
@@ -331,9 +334,9 @@ void export_commodity()
     .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
 #endif
 
-    .add_static_property("european_by_default",
-			 make_getter(&commodity_t::european_by_default),
-			 make_setter(&commodity_t::european_by_default))
+    .add_static_property("decimal_comma_by_default",
+			 make_getter(&commodity_t::decimal_comma_by_default),
+			 make_setter(&commodity_t::decimal_comma_by_default))
 
     .def("__str__", &commodity_t::symbol)
     .def("__unicode__", py_commodity_unicode)

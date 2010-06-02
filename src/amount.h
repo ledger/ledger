@@ -346,9 +346,7 @@ public:
     temp.in_place_truncate();
     return temp;
   }
-  void in_place_truncate() {
-    *this = amount_t(to_string());
-  }
+  void in_place_truncate();
     
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */

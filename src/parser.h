@@ -52,11 +52,12 @@ class expr_t::parser_t : public noncopyable
   mutable token_t lookahead;
   mutable bool	  use_lookahead;
 
-  token_t& next_token(std::istream& in, const parse_flags_t& tflags) const {
+  token_t& next_token(std::istream& in, const parse_flags_t& tflags,
+		      const char expecting = '\0') const {
     if (use_lookahead)
       use_lookahead = false;
     else
-      lookahead.next(in, tflags);
+      lookahead.next(in, tflags, expecting);
     return lookahead;
   }
 

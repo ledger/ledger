@@ -28,7 +28,8 @@ reg --end 2009/06/26 -V equities
 08-Jan-01 Purchase Apple shares Equities                      $2000        $2000
 08-Jun-30 Commodities revalued  <Revalued>                     $500        $2500
 08-Jun-30 Sell some Apple sha.. Equities                     $-1250        $1250
-09-Jun-26 Commodities revalued  <Revalued>                     $750        $2000
+09-Jan-31 Commodities revalued  <Revalued>                     $250        $1500
+09-Jun-26 Commodities revalued  <Revalued>                     $500        $2000
 >>>2
 === 0
 reg --end 2009/06/26 -G equities
@@ -36,7 +37,8 @@ reg --end 2009/06/26 -G equities
 08-Jan-01 Purchase Apple shares Equities                          0            0
 08-Jun-30 Commodities revalued  <Revalued>                     $500         $500
 08-Jun-30 Sell some Apple sha.. Equities                          0         $500
-09-Jun-26 Commodities revalued  <Revalued>                     $750        $1250
+09-Jan-31 Commodities revalued  <Revalued>                     $250         $750
+09-Jun-26 Commodities revalued  <Revalued>                     $500        $1250
 >>>2
 === 0
 reg -I equities

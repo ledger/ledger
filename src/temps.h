@@ -51,7 +51,9 @@ class temporaries_t
   optional<std::list<account_t> > acct_temps;
 
 public:
-  ~temporaries_t();
+  ~temporaries_t() {
+    clear();
+  }
 
   xact_t&    copy_xact(xact_t& origin);
   xact_t&    create_xact();
@@ -69,6 +71,8 @@ public:
   account_t& last_account() {
     return acct_temps->back();
   }
+
+  void clear();
 };
 
 } // namespace ledger

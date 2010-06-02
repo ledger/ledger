@@ -240,6 +240,9 @@ void draft_t::parse_args(const value_t& args)
 
 xact_t * draft_t::insert(journal_t& journal)
 {
+  if (! tmpl)
+    return NULL;
+
   if (tmpl->payee_mask.empty())
     throw std::runtime_error(_("'xact' command requires at least a payee"));
 
@@ -528,7 +531,8 @@ value_t xact_command(call_scope_t& args)
   // Only consider actual postings for the "xact" command
   report.HANDLER(limit_).on(string("#xact"), "actual");
 
-  report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);
+  if (new_xact)
+    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);
   return true;
 }
 

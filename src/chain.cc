@@ -39,6 +39,73 @@
 
 namespace ledger {
 
+post_handler_ptr chain_pre_post_handlers(report_t&	  report,
+					 post_handler_ptr base_handler)
+{
+  post_handler_ptr handler(base_handler);
+
+  // anonymize_posts removes all meaningful information from xact payee's and
+  // account names, for the sake of creating useful bug reports.
+  if (report.HANDLED(anon))
+    handler.reset(new anonymize_posts(handler));
+
+  // This filter_posts will only pass through posts matching the `predicate'.
+  if (report.HANDLED(limit_)) {
+    DEBUG("report.predicate",
+	  "Report predicate expression = " << report.HANDLER(limit_).str());
+    handler.reset(new filter_posts
+		  (handler, predicate_t(report.HANDLER(limit_).str(),
+					report.what_to_keep()),
+		   report));
+  }
+
+  // budget_posts takes a set of posts from a data file and uses them to
+  // generate "budget posts" which balance against the reported posts.
+  //
+  // forecast_posts is a lot like budget_posts, except that it adds xacts
+  // only for the future, and does not balance them against anything but the
+  // future balance.
+
+  if (report.budget_flags != BUDGET_NO_BUDGET) {
+    budget_posts * budget_handler = new budget_posts(handler,
+						     report.budget_flags);
+    budget_handler->add_period_xacts(report.session.journal->period_xacts);
+    handler.reset(budget_handler);
+
+    // Apply this before the budget handler, so that only matching posts are
+    // calculated toward the budget.  The use of filter_posts above will
+    // further clean the results so that no automated posts that don't match
+    // the filter get reported.
+    if (report.HANDLED(limit_))
+      handler.reset(new filter_posts
+		    (handler, predicate_t(report.HANDLER(limit_).str(),
+					  report.what_to_keep()),
+		     report));
+  }
+  else if (report.HANDLED(forecast_while_)) {
+    forecast_posts * forecast_handler
+      = new forecast_posts(handler,
+			   predicate_t(report.HANDLER(forecast_while_).str(),
+				       report.what_to_keep()),
+			   report,
+			   report.HANDLED(forecast_years_) ?
+			     static_cast<std::size_t>
+			       (report.HANDLER(forecast_years_).value.to_long()) :
+			     5UL);
+    forecast_handler->add_period_xacts(report.session.journal->period_xacts);
+    handler.reset(forecast_handler);
+
+    // See above, under budget_posts.
+    if (report.HANDLED(limit_))
+      handler.reset(new filter_posts
+		    (handler, predicate_t(report.HANDLER(limit_).str(),
+					  report.what_to_keep()),
+		     report));
+  }
+
+  return handler;
+}
+
 post_handler_ptr chain_post_handlers(report_t&	      report,
 				     post_handler_ptr base_handler,
 				     bool             for_accounts_report)
@@ -86,7 +153,8 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 				   report.HANDLED(unrealized)))
     handler.reset(new changed_value_posts(handler, report,
 					  for_accounts_report,
-					  report.HANDLED(unrealized)));
+					  report.HANDLED(unrealized),
+					  ! report.HANDLED(no_rounding)));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
@@ -187,65 +255,6 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   // that xact will be printed.
   if (report.HANDLED(related))
     handler.reset(new related_posts(handler, report.HANDLED(related_all)));
-
-  // anonymize_posts removes all meaningful information from xact payee's and
-  // account names, for the sake of creating useful bug reports.
-  if (report.HANDLED(anon))
-    handler.reset(new anonymize_posts(handler));
-
-  // This filter_posts will only pass through posts matching the `predicate'.
-  if (report.HANDLED(limit_)) {
-    DEBUG("report.predicate",
-	  "Report predicate expression = " << report.HANDLER(limit_).str());
-    handler.reset(new filter_posts
-		  (handler, predicate_t(report.HANDLER(limit_).str(),
-					report.what_to_keep()),
-		   report));
-  }
-
-  // budget_posts takes a set of posts from a data file and uses them to
-  // generate "budget posts" which balance against the reported posts.
-  //
-  // forecast_posts is a lot like budget_posts, except that it adds xacts
-  // only for the future, and does not balance them against anything but the
-  // future balance.
-
-  if (report.budget_flags != BUDGET_NO_BUDGET) {
-    budget_posts * budget_handler = new budget_posts(handler,
-						     report.budget_flags);
-    budget_handler->add_period_xacts(report.session.journal->period_xacts);
-    handler.reset(budget_handler);
-
-    // Apply this before the budget handler, so that only matching posts are
-    // calculated toward the budget.  The use of filter_posts above will
-    // further clean the results so that no automated posts that don't match
-    // the filter get reported.
-    if (report.HANDLED(limit_))
-      handler.reset(new filter_posts
-		    (handler, predicate_t(report.HANDLER(limit_).str(),
-					  report.what_to_keep()),
-		     report));
-  }
-  else if (report.HANDLED(forecast_while_)) {
-    forecast_posts * forecast_handler
-      = new forecast_posts(handler,
-			   predicate_t(report.HANDLER(forecast_while_).str(),
-				       report.what_to_keep()),
-			   report,
-			   report.HANDLED(forecast_years_) ?
-			     static_cast<std::size_t>
-			       (report.HANDLER(forecast_years_).value.to_long()) :
-			     5UL);
-    forecast_handler->add_period_xacts(report.session.journal->period_xacts);
-    handler.reset(forecast_handler);
-
-    // See above, under budget_posts.
-    if (report.HANDLED(limit_))
-      handler.reset(new filter_posts
-		    (handler, predicate_t(report.HANDLER(limit_).str(),
-					  report.what_to_keep()),
-		     report));
-  }
 
   return handler;
 }

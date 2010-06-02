@@ -228,7 +228,7 @@ Here is the Pacific Bell example from above, given as a Ledger
 posting:
 
 @smallexample
-9/29 (100) Pacific Bell
+9/29 Pacific Bell
     Expenses:Utilities:Phone                   $23.00
     Assets:Checking                           $-23.00
 @end smallexample
@@ -240,7 +240,7 @@ smart about many things, you don't need to specify the balanced
 amount, if it is the same as the first line:
 
 @smallexample
-9/29 (100) Pacific Bell
+9/29 Pacific Bell
     Expenses:Utilities:Phone                   $23.00
     Assets:Checking
 @end smallexample
@@ -367,7 +367,7 @@ file whose formatting has gotten out of hand.
 
 The @command{output} command is very similar to the @command{print}
 command, except that it attempts to replicate the specified ledger
-file epostly.  The format of the command is:
+file exactly.  The format of the command is:
 
 @example
 ledger -f FILENAME output FILENAME
@@ -430,7 +430,7 @@ Say you currently have this posting in your ledger file:
 @end smallexample
 
 Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva
-Italiano} again.  The epost amounts are different, but the overall
+Italiano} again.  The exact amounts are different, but the overall
 form is the same.  With the @command{xact} command you can type:
 
 @example
@@ -709,13 +709,13 @@ deviation from the average.  It is only meaningful in the
 @command{xml} report.
 
 @option{--amount-data} (@option{-j}) changes the @command{register}
-report so that it output nothing but the date and the value column,
+report so that it outputs nothing but the date and the value column,
 and the latter without commodities.  This is only meaningful if the
 report uses a single commodity.  This data can then be fed to other
 programs, which could plot the date, analyze it, etc.
 
 @option{--total-data} (@option{-J}) changes the @command{register}
-report so that it output nothing but the date and totals column,
+report so that it outputs nothing but the date and totals column,
 without commodities.
 
 @option{--display EXPR} (@option{-d EXPR}) limits which postings
@@ -986,7 +986,7 @@ stripped from the total.
 
 @item [DATEFMT]
 Inserts the result of formatting a posting's date with a date
-format string, epostly like those supported by @code{strftime}.  For
+format string, exactly like those supported by @code{strftime}.  For
 example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 
 @item S
@@ -1013,7 +1013,7 @@ output.
 @item d
 This is the same as the @samp{%D} option, unless the transaction has an
 effective date, in which case it prints
-@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
+@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.
 
 @item X
 If a posting has been cleared, this inserts @samp{*} followed by a
@@ -1311,7 +1311,7 @@ DATE[=EDATE] [*|!] [(CODE)] DESC
 
 If @samp{*} appears after the date (with optional effective date), it
 indicates the transaction is ``cleared'', which can mean whatever the user
-wants it t omean.  If @samp{!} appears after the date, it indicates d
+wants it to mean.  If @samp{!} appears after the date, it indicates d
 the transaction is ``pending''; i.e., tentatively cleared from the user's
 point of view, but not yet actually cleared.  If a @samp{CODE} appears
 in parentheses, it may be used to indicate a check number, or the type
@@ -1521,7 +1521,7 @@ Now the report is:
 @end smallexample
 
 Since the liability was a virtual posting, it has dropped from the
-report and we see that final total is balanced.
+report and we see that the final total is balanced.
 
 But we only know that it balances because @file{sample.dat} is quite
 simple, and we happen to know that the 50 shares of Apple stock cost
@@ -1571,7 +1571,7 @@ This reports:
 @end smallexample
 
 This shows that the @samp{Assets} total is made up from two child
-account, but that the total for each of the other accounts comes from
+accounts, but that the total for each of the other accounts comes from
 one child account.
 
 Sometimes you may have a lot of children, nested very deeply, but only
@@ -1762,7 +1762,7 @@ Although the easiest way to use the register is to report all the
 postings affecting a set of accounts, it can often result in more
 information than you want.  To cope with an ever-growing amount of
 data, there are several options which can help you pinpoint your
-report to epostly the postings that interest you most.  This is
+report to include just the postings that interest you most.  This is
 called the ``calculation'' phase of Ledger.  All of its related
 options are documented under @option{--help-calc}.
 
@@ -1969,7 +1969,7 @@ Reports:
 2004/05/14 Pay day              Income:Salary              $-500.00            0
 @end smallexample
 
-The final total is zero, indicating that the budget matched epostly
+The final total is zero, indicating that the budget matched exactly
 for the reported period.  Budgeting is most often helpful with period
 reporting; for example, to show monthly budget results use
 @option{--budget -p monthly}.
@@ -2010,7 +2010,7 @@ Reports:
 @end smallexample
 
 The date this report was made was November 5, 2004; the reason the
-first forecast transaction is in december is that forecast transactions are only
+first forecast transaction is in December is that forecast transactions are only
 added for the future, and they only stop after the value expression
 has matched at least once, which is why the January transaction appears.  A
 forecast report can be very useful for determining when money will run
@@ -2206,10 +2206,11 @@ Show yearly sub-totals.  Same as @samp{-p yearly}.
 
 @c      --dow              show a days-of-the-week report
 
-There is one kind of period report cannot be done with @option{-p}.
-This is the @option{--dow}, or ``days of the week'' report, which
-shows summarized totals for each day of the week.  The following
-examples shows a ``day of the week'' report of income and expenses:
+There is one kind of period report that cannot be done with
+@option{-p}.  This is the @option{--dow}, or ``days of the week''
+report, which shows summarized totals for each day of the week.  The
+following examples shows a ``day of the week'' report of income and
+expenses:
 
 @example
 ledger --dow reg ^inc ^exp
@@ -2581,7 +2582,7 @@ Based on that explanation, here's another way to look at your balance
 report: every negative figure means that that account or person or
 place has less money now than when you started your ledger; and every
 positive figure means that that account or person or place has more
-money now that when you started your ledger.  Make sense?
+money now than when you started your ledger.  Make sense?
 
 @node Assets and Liabilities, Typical queries, Stating where money goes, Ledger in Practice
 @section Assets and Liabilities
@@ -3507,7 +3508,7 @@ To view balances without any virtual balances factored in, using the
 
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
 It is similar to tithing for Jews and Christians, or to Zakát for
-Muslims.  The epost details of computing Huqúqu'lláh are somewhat
+Muslims.  The exact details of computing Huqúqu'lláh are somewhat
 complex, but if you have further interest, please consult the Web.
 
 Ledger makes this otherwise difficult law very easy.  Just set up an
@@ -3762,7 +3763,7 @@ And now the time spent has been turned into hard cash in the checking
 account.
 
 The advantage to using timeclock and invoicing to bill time is that
-you will always know, by looking at the balance report, epostly how
+you will always know, by looking at the balance report, exactly how
 much unbilled and unpaid time you've spent working for any particular
 client.
 
@@ -3963,13 +3964,13 @@ price-setting directive):
 P 2009/01/15 00:00:00 S 2 P
 
 2009/02/01 Sample 2a
-    Assets:Brokerage:Stocks                100 S @ 1 P
+    Assets:Brokerage:Stocks                100 S @@ 1 P
     Assets:Brokerage:Cash
 
 P 2009/02/01 00:00:00 S 4 P
 
 2009/03/01 Sample 3a
-    Assets:Brokerage:Stocks                100 S @@ 100 P
+    Assets:Brokerage:Stocks                100 S @@@@ 100 P
     Assets:Brokerage:Cash
 
 P 2009/03/01 00:00:00 S 8 P

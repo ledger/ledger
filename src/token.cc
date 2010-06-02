@@ -138,7 +138,8 @@ void expr_t::token_t::parse_ident(std::istream& in)
   value.set_string(buf);
 }
 
-void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
+void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
+			   const char expecting)
 {
   if (in.eof()) {
     kind = TOK_EOF;
@@ -423,6 +424,13 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 	  expected('\0', c);
 
 	parse_ident(in);
+
+	if (value.as_string().length() == 0) {
+	  kind = ERROR;
+	  symbol[0] = c;
+	  symbol[1] = '\0';
+	  unexpected(expecting);
+	}
       } else {
 	kind   = VALUE;
 	value  = temp;
@@ -447,21 +455,38 @@ void expr_t::token_t::rewind(std::istream& in)
 }
 
 
-void expr_t::token_t::unexpected()
+void expr_t::token_t::unexpected(const char wanted)
 {
   kind_t prev_kind = kind;
 
   kind = ERROR;
 
-  switch (prev_kind) {
-  case TOK_EOF:
-    throw_(parse_error, _("Unexpected end of expression"));
-  case IDENT:
-    throw_(parse_error, _("Unexpected symbol '%1'") << value);
-  case VALUE:
-    throw_(parse_error, _("Unexpected value '%1'") << value);
-  default:
-    throw_(parse_error, _("Unexpected token '%1'") << symbol);
+  if (wanted == '\0') {
+    switch (prev_kind) {
+    case TOK_EOF:
+      throw_(parse_error, _("Unexpected end of expression"));
+    case IDENT:
+      throw_(parse_error, _("Unexpected symbol '%1'") << value);
+    case VALUE:
+      throw_(parse_error, _("Unexpected value '%1'") << value);
+    default:
+      throw_(parse_error, _("Unexpected expression token '%1'") << symbol);
+    }
+  } else {
+    switch (prev_kind) {
+    case TOK_EOF:
+      throw_(parse_error,
+	     _("Unexpected end of expression (wanted '%1')" << wanted));
+    case IDENT:
+      throw_(parse_error,
+	     _("Unexpected symbol '%1' (wanted '%2')") << value << wanted);
+    case VALUE:
+      throw_(parse_error,
+	     _("Unexpected value '%1' (wanted '%2')") << value << wanted);
+    default:
+      throw_(parse_error, _("Unexpected expression token '%1' (wanted '%2')")
+	     << symbol << wanted);
+    }
   }
 }
 

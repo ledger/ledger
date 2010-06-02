@@ -321,10 +321,8 @@ public:
     return temp;
   }
   void in_place_round() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.rounded();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_round();
   }
 
   balance_t truncated() const {
@@ -333,10 +331,8 @@ public:
     return temp;
   }
   void in_place_truncate() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.truncated();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_truncate();
   }
 
   balance_t floored() const {
@@ -345,10 +341,8 @@ public:
     return temp;
   }
   void in_place_floor() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.floored();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_floor();
   }
 
   balance_t unrounded() const {
@@ -357,10 +351,8 @@ public:
     return temp;
   }
   void in_place_unround() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.unrounded();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_unround();
   }
 
   balance_t reduced() const {

@@ -52,6 +52,56 @@ namespace ledger {
 
 //////////////////////////////////////////////////////////////////////
 //
+// Posting collector
+//
+
+class post_splitter : public item_handler<post_t>
+{
+public:
+  typedef std::map<value_t, posts_list> value_to_posts_map;
+  typedef function<void (const value_t&)> custom_flusher_t;
+
+protected:
+  value_to_posts_map	     posts_map;
+  report_t&		     report;
+  post_handler_ptr	     post_chain;
+  expr_t		     group_by_expr;
+  custom_flusher_t	     preflush_func;
+  optional<custom_flusher_t> postflush_func;
+
+public:
+  post_splitter(report_t&        _report,
+		post_handler_ptr _post_chain,
+		expr_t           _group_by_expr)
+    : report(_report), post_chain(_post_chain),
+      group_by_expr(_group_by_expr),
+      preflush_func(bind(&post_splitter::print_title, this, _1)) {
+    TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
+  }
+  virtual ~post_splitter() {
+    TRACE_DTOR(post_splitter);
+  }
+
+  void set_preflush_func(custom_flusher_t functor) {
+    preflush_func = functor;
+  }
+  void set_postflush_func(custom_flusher_t functor) {
+    postflush_func = functor;
+  }
+
+  virtual void print_title(const value_t& val);
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    posts_map.clear();
+    post_chain->clear();
+  }
+};
+
+//////////////////////////////////////////////////////////////////////
+//
 // Posting filters
 //
 
@@ -87,6 +137,11 @@ public:
   virtual void flush() {}
   virtual void operator()(post_t& post) {
     posts.push_back(&post);
+  }
+
+  virtual void clear() {
+    posts.clear();
+    item_handler<post_t>::clear();
   }
 };
 
@@ -149,27 +204,34 @@ public:
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    completed = false;
+    posts.clear();
+    xacts_seen = 0;
+    last_xact = NULL;
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class sort_posts : public item_handler<post_t>
 {
   typedef std::deque<post_t *> posts_deque;
 
-  posts_deque  posts;
-  const expr_t sort_order;
+  posts_deque posts;
+  expr_t      sort_order;
 
   sort_posts();
 
 public:
-  sort_posts(post_handler_ptr handler,
-		    const expr_t&    _sort_order)
+  sort_posts(post_handler_ptr handler, const expr_t& _sort_order)
     : item_handler<post_t>(handler),
       sort_order(_sort_order) {
     TRACE_CTOR(sort_posts,
 	       "post_handler_ptr, const value_expr&");
   }
-  sort_posts(post_handler_ptr handler,
-		    const string& _sort_order)
+  sort_posts(post_handler_ptr handler, const string& _sort_order)
     : item_handler<post_t>(handler),
       sort_order(_sort_order) {
     TRACE_CTOR(sort_posts,
@@ -189,6 +251,13 @@ public:
   virtual void operator()(post_t& post) {
     posts.push_back(&post);
   }
+
+  virtual void clear() {
+    posts.clear();
+    sort_order.mark_uncompiled();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class sort_xacts : public item_handler<post_t>
@@ -199,14 +268,12 @@ class sort_xacts : public item_handler<post_t>
   sort_xacts();
 
 public:
-  sort_xacts(post_handler_ptr handler,
-	       const expr_t&    _sort_order)
+  sort_xacts(post_handler_ptr handler, const expr_t& _sort_order)
     : sorter(handler, _sort_order) {
     TRACE_CTOR(sort_xacts,
 	       "post_handler_ptr, const value_expr&");
   }
-  sort_xacts(post_handler_ptr handler,
-	       const string& _sort_order)
+  sort_xacts(post_handler_ptr handler, const string& _sort_order)
     : sorter(handler, _sort_order) {
     TRACE_CTOR(sort_xacts,
 	       "post_handler_ptr, const string&");
@@ -227,6 +294,13 @@ public:
     sorter(post);
 
     last_xact = post.xact;
+  }
+
+  virtual void clear() {
+    sorter.clear();
+    last_xact = NULL;
+    
+    item_handler<post_t>::clear();
   }
 };
 
@@ -255,6 +329,11 @@ public:
       (*handler)(post);
     }
   }
+
+  virtual void clear() {
+    pred.mark_uncompiled();
+    item_handler<post_t>::clear();
+  }
 };
 
 class anonymize_posts : public item_handler<post_t>
@@ -274,6 +353,13 @@ public:
   }
 
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    temps.clear();
+    last_xact = NULL;
+    
+    item_handler<post_t>::clear();
+  }
 };
 
 class calc_posts : public item_handler<post_t>
@@ -297,6 +383,13 @@ public:
   }
 
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    last_post = NULL;
+    amount_expr.mark_uncompiled();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class collapse_posts : public item_handler<post_t>
@@ -334,13 +427,29 @@ public:
   }
 
   virtual void flush() {
-    report_subtotal();
+    report_subtotal(); 
     item_handler<post_t>::flush();
   }
 
   void report_subtotal();
 
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    amount_expr.mark_uncompiled();
+    display_predicate.mark_uncompiled();
+    only_predicate.mark_uncompiled();
+
+    subtotal  = value_t();
+    count     = 0;
+    last_xact = NULL;
+    last_post = NULL;
+
+    temps.clear();
+    component_posts.clear();
+    
+    item_handler<post_t>::clear();
+  }
 };
 
 class related_posts : public item_handler<post_t>
@@ -367,6 +476,11 @@ public:
     post.xdata().add_flags(POST_EXT_RECEIVED);
     posts.push_back(&post);
   }
+
+  virtual void clear() {
+    posts.clear();
+    item_handler<post_t>::clear();
+  }
 };
 
 class changed_value_posts : public item_handler<post_t>
@@ -381,9 +495,11 @@ class changed_value_posts : public item_handler<post_t>
   bool		changed_values_only;
   bool		for_accounts_report;
   bool		show_unrealized;
+  bool		show_rounding;
   post_t *	last_post;
   value_t	last_total;
   value_t	last_display_total;
+  value_t       repriced_total;
   temporaries_t	temps;
   account_t&	revalued_account;
   account_t&	rounding_account;
@@ -396,7 +512,8 @@ public:
   changed_value_posts(post_handler_ptr handler,
 		      report_t&	       _report,
 		      bool	       _for_accounts_report,
-		      bool	       _show_unrealized);
+		      bool	       _show_unrealized,
+		      bool	       _show_rounding);
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
@@ -405,9 +522,24 @@ public:
   virtual void flush();
 
   void output_revaluation(post_t& post, const date_t& current);
+  void output_intermediate_prices(post_t& post, const date_t& current);
   void output_rounding(post_t& post);
 
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    display_amount_expr.mark_uncompiled();
+    total_expr.mark_uncompiled();
+    display_total_expr.mark_uncompiled();
+
+    last_post = NULL;
+    last_total = value_t();
+    last_display_total = value_t();
+
+    temps.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class subtotal_posts : public item_handler<post_t>
@@ -469,10 +601,20 @@ public:
     item_handler<post_t>::flush();
   }
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    amount_expr.mark_uncompiled();
+    values.clear();
+    temps.clear();
+    component_posts.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class interval_posts : public subtotal_posts
 {
+  date_interval_t start_interval;
   date_interval_t interval;
   date_interval_t last_interval;
   post_t *	  last_post;
@@ -489,8 +631,9 @@ public:
 		 const date_interval_t& _interval,
 		 bool			_exact_periods	      = false,
 		 bool                   _generate_empty_posts = false)
-    : subtotal_posts(_handler, amount_expr), interval(_interval),
-      last_post(NULL), empty_account(temps.create_account(_("<None>"))),
+    : subtotal_posts(_handler, amount_expr), start_interval(_interval),
+      interval(start_interval), last_post(NULL),
+      empty_account(temps.create_account(_("<None>"))),
       exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
     TRACE_CTOR(interval_posts,
@@ -510,6 +653,14 @@ public:
     }
   }
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    interval = start_interval;
+    last_interval = date_interval_t();
+    last_post = NULL;
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class posts_as_equity : public subtotal_posts
@@ -537,6 +688,11 @@ public:
     report_subtotal();
     subtotal_posts::flush();
   }
+
+  virtual void clear() {
+    last_post = NULL;
+    item_handler<post_t>::clear();
+  }
 };
 
 class by_payee_posts : public item_handler<post_t>
@@ -560,6 +716,13 @@ class by_payee_posts : public item_handler<post_t>
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    amount_expr.mark_uncompiled();
+    payee_subtotals.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class transfer_details : public item_handler<post_t>
@@ -593,6 +756,13 @@ public:
   }
 
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    expr.mark_uncompiled();
+    temps.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class dow_posts : public subtotal_posts
@@ -613,6 +783,13 @@ public:
   virtual void flush();
   virtual void operator()(post_t& post) {
     days_of_the_week[post.date().day_of_week()].push_back(&post);
+  }
+
+  virtual void clear() {
+    for (int i = 0; i < 7; i++)
+      days_of_the_week[i].clear();
+
+    item_handler<post_t>::clear();
   }
 };
 
@@ -640,6 +817,13 @@ public:
   void add_period_xacts(period_xacts_list& period_xacts);
 
   virtual void add_post(const date_interval_t& period, post_t& post);
+
+  virtual void clear() {
+    pending_posts.clear();
+    temps.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class budget_posts : public generate_posts
@@ -690,6 +874,11 @@ class forecast_posts : public generate_posts
 
   virtual void add_post(const date_interval_t& period, post_t& post);
   virtual void flush();
+
+  virtual void clear() {
+    pred.mark_uncompiled();
+    item_handler<post_t>::clear();
+  }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -714,6 +903,13 @@ public:
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);
+  }
+
+  virtual void clear() {
+    if (pred)
+      pred->mark_uncompiled();
+
+    item_handler<account_t>::clear();
   }
 };
 

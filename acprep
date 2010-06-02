@@ -451,6 +451,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-git', action='store_true', dest='no_git',
                       default=False,
                       help='Do not call out to Git; useful for offline builds')
+        op.add_option('', '--no-python', action='store_true', dest='no_python',
+                      default=False,
+                      help='Do not enable Python support by default')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -474,6 +477,9 @@ class PrepareBuild(CommandLineApp):
                       help='Enable full warning flags')
 
     def main(self, *args):
+        if self.options.no_python:
+            self.configure_args.remove('--enable-python')
+
         if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
             self.current_flavor = args[0]
             args = args[1:]
@@ -740,7 +746,7 @@ class PrepareBuild(CommandLineApp):
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
                 self.log.info('Looks like you are using MacPorts on OS X')
-                packages = self.boost_info.dependencies('darwin') + [
+                packages = [
                     'sudo', 'port', 'install', '-f',
                     'automake',
                     'autoconf',
@@ -761,7 +767,7 @@ class PrepareBuild(CommandLineApp):
                     'texinfo',
                     'lcov',
                     'sloccount'
-                ]
+                ] + self.boost_info.dependencies('darwin')
                 self.log.info('Executing: ' + string.join(packages, ' '))
                 self.execute(*packages)
             elif exists('/sw/bin/fink'):
@@ -778,7 +784,7 @@ class PrepareBuild(CommandLineApp):
                     release.close()
                     if re.search('karmic', info):
                         self.log.info('Looks like you are using APT on Ubuntu Karmic')
-                        packages = self.boost_info.dependencies('ubuntu-karmic') + [
+                        packages = [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
                             'libtool',
@@ -799,10 +805,10 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ]
+                        ] + self.boost_info.dependencies('ubuntu-karmic')
                     else:
                         self.log.info('Looks like you are using APT on Ubuntu Hardy')
-                        packages = self.boost_info.dependencies('ubuntu-hardy') + [
+                        packages = [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
                             'libtool',
@@ -823,7 +829,7 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ]
+                        ] + self.boost_info.dependencies('ubuntu-hardy')
                     self.log.info('Executing: ' + string.join(packages, ' '))
                     self.execute(*packages)
 
@@ -907,9 +913,6 @@ class PrepareBuild(CommandLineApp):
         else:
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
-
-        self.configure_args.append('--enable-doxygen')
-        self.configure_args.append('--enable-python')
 
         self.locate_darwin_libraries()
 
@@ -1119,13 +1122,13 @@ class PrepareBuild(CommandLineApp):
                 self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
-            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                         suffix       = '-xgcc44-sd-1_42',
-                                         include_path = 'include/boost-1_42'):
+            if self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                         suffix       = '-xgcc44-sd-1_43',
+                                         include_path = 'include/boost-1_43'):
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                           suffix       = '-xgcc44-d-1_42',
-                                           include_path = 'include/boost-1_42'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                           suffix       = '-xgcc44-d-1_43',
+                                           include_path = 'include/boost-1_43'):
                 pass
             elif self.boost_info.configure(suffix = '-d'):
                 pass
@@ -1133,17 +1136,18 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                           suffix       = '-xgcc44-s-1_42',
-                                           include_path = 'include/boost-1_42'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                           suffix       = '-xgcc44-s-1_43',
+                                           include_path = 'include/boost-1_43'):
                 pass
-            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_42_0',
-                                           suffix       = '-xgcc44-1_42',
-                                           include_path = 'include/boost-1_42'):
+            elif self.boost_info.configure(home_path    = '/usr/local/stow/boost_1_43_0',
+                                           suffix       = '-xgcc44-1_43',
+                                           include_path = 'include/boost-1_43'):
                 pass
 
     def setup_flavor_default(self):
-        pass
+        if self.darwin_gcc:
+            self.option_no_pch()
 
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
@@ -1182,38 +1186,6 @@ class PrepareBuild(CommandLineApp):
         self.CXXFLAGS.append('-pg')
         self.LDFLAGS.append('-g')
         self.LDFLAGS.append('-pg')
-
-    #########################################################################
-    # Prettify the output from automake, by rewriting the Makefile          #
-    #########################################################################
-
-    def phase_patch(self, *args):
-        """Alter the Makefile so that it's not nearly so verbose.
-
-        This makes errors and warnings much easier to spot."""
-        self.log.info('Executing phase: patch')
-
-        if exists('Makefile'):
-            self.log.debug('Patching generated Makefile')
-            Makefile = open('Makefile')
-            Makefile_new = open('Makefile.new', 'w')
-            for line in Makefile.readlines():
-                line = re.sub('^\t(\$\((LIBTOOL|CXX)\).*?\.(cc|cpp))$',
-                              '\t@echo "   " CXX \$@;\\1 > /dev/null', line)
-                line = re.sub('^\tmv -f', '\t@mv -f', line)
-                line = re.sub('^\t\$\(am__mv\)', '\t@$(am__mv)', line)
-                line = re.sub('^\t(\$\((.*?)LINK\).*)',
-                              '\t@echo "    LD " \$@;\\1 > /dev/null', line)
-                Makefile_new.write(line)
-            Makefile_new.close()
-            Makefile.close()
-
-            os.remove('Makefile')
-            os.rename('Makefile.new', 'Makefile')
-
-            stamp = open('.timestamp', 'w')
-            stamp.write('timestamp')
-            stamp.close()
 
     #########################################################################
     # Configure build tree using autoconf                                   #
@@ -1290,18 +1262,11 @@ class PrepareBuild(CommandLineApp):
                     self.log.error("Execution failed: " + string.join(conf_args, ' '))
                     sys.exit(1)
 
-                if not self.options.no_patch:
-                    self.phase_patch()
-
                 # Wipe the pre-compiled header, if there is one
                 pch = join(self.build_directory(), 'system.hh.gch')
                 if exists(pch):
                     os.remove(pch)
             else:
-                if not self.options.no_patch and \
-                   self.isnewer('Makefile', '.timestamp'):
-                    self.phase_patch()
-
                 self.log.debug('configure does not need to be run')
 
         finally:

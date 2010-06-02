@@ -226,8 +226,8 @@ void export_journal()
   class_< collect_posts, bases<item_handler<post_t> >,
           shared_ptr<collect_posts>, boost::noncopyable >("PostCollector")
     .def("__len__", &collect_posts::length)
-    .def("__iter__", range<return_internal_reference<1,
-	                     with_custodian_and_ward_postcall<1, 0> > >
+    .def("__iter__", python::range<return_internal_reference<1,
+	                           with_custodian_and_ward_postcall<1, 0> > >
 	 (&collect_posts::begin, &collect_posts::end))
     ;
 
@@ -236,8 +236,9 @@ void export_journal()
     .def("__len__", &collector_wrapper::length)
     .def("__getitem__", posts_getitem, return_internal_reference<1,
 	                     with_custodian_and_ward_postcall<0, 1> >())
-    .def("__iter__", range<return_value_policy<reference_existing_object,
-	                     with_custodian_and_ward_postcall<0, 1> > >
+    .def("__iter__",
+	 python::range<return_value_policy<reference_existing_object,
+		       with_custodian_and_ward_postcall<0, 1> > >
 	 (&collector_wrapper::begin, &collector_wrapper::end))
     ;
 
@@ -296,15 +297,15 @@ void export_journal()
 	     with_custodian_and_ward_postcall<0, 1> >())
 #endif
 
-    .def("__iter__", range<return_internal_reference<> >
+    .def("__iter__", python::range<return_internal_reference<> >
 	 (&journal_t::xacts_begin, &journal_t::xacts_end))
-    .def("xacts", range<return_internal_reference<> >
+    .def("xacts", python::range<return_internal_reference<> >
 	 (&journal_t::xacts_begin, &journal_t::xacts_end))
-    .def("auto_xacts", range<return_internal_reference<> >
+    .def("auto_xacts", python::range<return_internal_reference<> >
 	 (&journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
-    .def("period_xacts", range<return_internal_reference<> >
+    .def("period_xacts", python::range<return_internal_reference<> >
 	 (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
-    .def("sources", range<return_internal_reference<> >
+    .def("sources", python::range<return_internal_reference<> >
 	 (&journal_t::sources_begin, &journal_t::sources_end))
 
     .def("read", py_read)

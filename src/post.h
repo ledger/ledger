@@ -118,6 +118,9 @@ public:
 
   amount_t resolve_expr(scope_t& scope, expr_t& expr);
 
+  std::size_t xact_id() const;
+  std::size_t account_id() const;
+
   bool valid() const;
 
   struct xdata_t : public supports_flags<uint_least16_t>

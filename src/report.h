@@ -256,6 +256,8 @@ public:
     HANDLER(forecast_years_).report(out);
     HANDLER(format_).report(out);
     HANDLER(gain).report(out);
+    HANDLER(group_by_).report(out);
+    HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
@@ -267,6 +269,8 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_rounding).report(out);
+    HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);
     HANDLER(now_).report(out);
     HANDLER(only_).report(out);
@@ -280,6 +284,7 @@ public:
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(prepend_format_).report(out);
+    HANDLER(prepend_width_).report(out);
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
@@ -372,7 +377,7 @@ public:
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
       on(none,
-	 "%(justify(scrub(display_total), 20, -1, true, color))"
+	 "%(justify(scrub(display_total), 20, 20 + prepend_width, true, color))"
 	 "  %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
 	 "%$1\n%/"
@@ -432,8 +437,9 @@ public:
 
   OPTION__(report_t, cleared_format_, CTOR(report_t, cleared_format_) {
       on(none,
-	 "%(justify(scrub(get_at(total_expr, 0)), 16, -1, true, color))"
-	 "  %(justify(scrub(get_at(total_expr, 1)), 16, -1, true, color))"
+	 "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
+	 " true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
+	 " 36 + prepend_width, true, color))"
 	 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
 	 "    %(!options.flat ? depth_spacer : \"\")"
 	 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
@@ -454,15 +460,17 @@ public:
     });
 
   OPTION(report_t, columns_);
+  OPTION(report_t, count);
 
   OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
       on(none,
 	 "%(quoted(date)),"
-	 "%(quoted(payee)),"
-	 "%(quoted(account)),"
-	 "%(quoted(scrub(display_amount))),"
-	 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
 	 "%(quoted(code)),"
+	 "%(quoted(payee)),"
+	 "%(quoted(display_account)),"
+	 "%(quoted(commodity)),"
+	 "%(quoted(quantity(scrub(display_amount)))),"
+	 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
 	 "%(quoted(join(note | xact.note)))\n");
     });
 
@@ -590,6 +598,22 @@ public:
 		  " - get_at(total_expr, 1)");
     });
 
+  OPTION__
+  (report_t, group_by_,
+   expr_t expr;
+   CTOR(report_t, group_by_) {}
+   void set_expr(const optional<string>& whence, const string& str) {
+     expr = str;
+     on(whence, str);
+   }
+   DO_(args) {
+     set_expr(args[0].to_string(), args[1].to_string());
+   });
+
+  OPTION__(report_t, group_title_format_, CTOR(report_t, group_title_format_) {
+      on(none, "%(value)\n");
+    });
+
   OPTION(report_t, head_);
 
   OPTION_(report_t, invert, DO() {
@@ -632,6 +656,8 @@ public:
       parent->HANDLER(color).off();
     });
 
+  OPTION(report_t, no_rounding);
+  OPTION(report_t, no_titles);
   OPTION(report_t, no_total);
 
   OPTION_(report_t, now_, DO_(args) {
@@ -735,6 +761,9 @@ public:
     });
 
   OPTION(report_t, prepend_format_);
+  OPTION_(report_t, prepend_width_, DO_(args) {
+      value = args[1].to_long();
+    });
 
   OPTION_(report_t, price, DO() { // -I
       parent->HANDLER(display_amount_)
@@ -745,13 +774,13 @@ public:
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
       on(none,
-	 "%(date) %-8(account) %(justify(scrub(display_amount), 12, "
+	 "%(date) %-8(display_account) %(justify(scrub(display_amount), 12, "
 	 "    2 + 9 + 8 + 12, true, color))\n");
     });
 
   OPTION__(report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
       on(none,
-	 "P %(datetime) %(account) %(scrub(display_amount))\n");
+	 "P %(datetime) %(display_account) %(scrub(display_amount))\n");
     });
 
   OPTION(report_t, print_virtual);
@@ -778,14 +807,14 @@ public:
 	 "    if color & date > today))"
 	 " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
 	 "    bold if color & !cleared & actual))"
-	 " %(ansify_if(justify(truncated(account, account_width, abbrev_len), "
-	 "    account_width), blue if color))"
+	 " %(ansify_if(justify(truncated(display_account, account_width, "
+	 " abbrev_len), account_width), blue if color))"
 	 " %(justify(scrub(display_amount), amount_width, "
 	 "    3 + meta_width + date_width + payee_width + account_width"
-	 "      + amount_width, true, color))"
+	 "      + amount_width + prepend_width, true, color))"
 	 " %(justify(scrub(display_total), total_width, "
 	 "    4 + meta_width + date_width + payee_width + account_width"
-	 "      + amount_width + total_width, true, color))\n%/"
+	 "      + amount_width + total_width + prepend_width, true, color))\n%/"
 	 "%(justify(\" \", 2 + date_width + payee_width))"
 	 "%$3 %$4 %$5\n");
     });

@@ -65,15 +65,25 @@ public:
     TRACE_DTOR(item_handler);
   }
 
+  virtual void title(const string& str) {
+    if (handler)
+      handler->title(str);
+  }
+
   virtual void flush() {
-    if (handler.get())
+    if (handler)
       handler->flush();
   }
   virtual void operator()(T& item) {
-    if (handler.get()) {
+    if (handler) {
       check_for_signal();
-      (*handler.get())(item);
+      (*handler)(item);
     }
+  }
+
+  virtual void clear() {
+    if (handler)
+      handler->clear();
   }
 };
 
@@ -81,10 +91,24 @@ typedef shared_ptr<item_handler<post_t> > post_handler_ptr;
 typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
 
 class report_t;
+
+post_handler_ptr
+chain_pre_post_handlers(report_t&	 report,
+			post_handler_ptr base_handler);
+
 post_handler_ptr
 chain_post_handlers(report_t&	     report,
 		    post_handler_ptr base_handler,
 		    bool             for_accounts_report = false);
+
+inline post_handler_ptr
+chain_handlers(report_t&	report,
+	       post_handler_ptr handler,
+	       bool             for_accounts_report = false) {
+  handler = chain_post_handlers(report, handler, for_accounts_report);
+  handler = chain_pre_post_handlers(report, handler);
+  return handler;
+}
 
 } // namespace ledger
 

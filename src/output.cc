@@ -42,8 +42,10 @@ namespace ledger {
 
 format_posts::format_posts(report_t&		   _report,
 			   const string&	   format,
-			   const optional<string>& _prepend_format)
-  : report(_report), last_xact(NULL), last_post(NULL)
+			   const optional<string>& _prepend_format,
+			   std::size_t		   _prepend_width)
+  : report(_report), prepend_width(_prepend_width),
+    last_xact(NULL), last_post(NULL), first_report_title(true)
 {
   TRACE_CTOR(format_posts, "report&, const string&, bool");
 
@@ -76,14 +78,34 @@ void format_posts::flush()
 
 void format_posts::operator()(post_t& post)
 {
-  std::ostream& out(report.output_stream);
-
   if (! post.has_xdata() ||
       ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+    std::ostream& out(report.output_stream);
+
     bind_scope_t bound_scope(report, post);
 
-    if (prepend_format)
+    if (! report_title.empty()) {
+      if (first_report_title)
+	first_report_title = false;
+      else
+	out << '\n';
+
+      value_scope_t val_scope(string_value(report_title));
+      bind_scope_t inner_scope(bound_scope, val_scope);
+      
+      format_t group_title_format;
+      group_title_format
+	.parse_format(report.HANDLER(group_title_format_).str());
+
+      out << group_title_format(inner_scope);
+
+      report_title = "";
+    }
+
+    if (prepend_format) {
+      out.width(prepend_width);
       out << prepend_format(bound_scope);
+    }
 
     if (last_xact != post.xact) {
       if (last_xact) {
@@ -107,8 +129,10 @@ void format_posts::operator()(post_t& post)
 
 format_accounts::format_accounts(report_t&		 _report,
 				 const string&		 format,
-				 const optional<string>& _prepend_format)
-  : report(_report), disp_pred()
+				 const optional<string>& _prepend_format,
+				 std::size_t		 _prepend_width)
+  : report(_report), prepend_width(_prepend_width), disp_pred(),
+    first_report_title(true)
 {
   TRACE_CTOR(format_accounts, "report&, const string&");
 
@@ -139,17 +163,37 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
 
   if (account.xdata().has_flags(ACCOUNT_EXT_TO_DISPLAY) &&
       ! account.xdata().has_flags(ACCOUNT_EXT_DISPLAYED)) {
+    std::ostream& out(report.output_stream);
+
     DEBUG("account.display", "Displaying account: " << account.fullname());
     account.xdata().add_flags(ACCOUNT_EXT_DISPLAYED);
 
     bind_scope_t bound_scope(report, account);
 
-    if (prepend_format)
-      static_cast<std::ostream&>(report.output_stream)
-	<< prepend_format(bound_scope);
+    if (! report_title.empty()) {
+      if (first_report_title)
+	first_report_title = false;
+      else
+	out << '\n';
 
-    static_cast<std::ostream&>(report.output_stream)
-      << account_line_format(bound_scope);
+      value_scope_t val_scope(string_value(report_title));
+      bind_scope_t inner_scope(bound_scope, val_scope);
+      
+      format_t group_title_format;
+      group_title_format
+	.parse_format(report.HANDLER(group_title_format_).str());
+
+      out << group_title_format(inner_scope);
+
+      report_title = "";
+    }
+
+    if (prepend_format) {
+      out.width(prepend_width);
+      out << prepend_format(bound_scope);
+    }
+
+    out << account_line_format(bound_scope);
 
     return 1;
   }
@@ -216,9 +260,11 @@ void format_accounts::flush()
     bind_scope_t bound_scope(report, *report.session.journal->master);
     out << separator_format(bound_scope);
 
-    if (prepend_format)
+    if (prepend_format) {
+      static_cast<std::ostream&>(report.output_stream).width(prepend_width);
       static_cast<std::ostream&>(report.output_stream)
 	<< prepend_format(bound_scope);
+    }
 
     out << total_line_format(bound_scope);
   }
@@ -230,6 +276,91 @@ void format_accounts::operator()(account_t& account)
 {
   DEBUG("account.display", "Posting account: " << account.fullname());
   posted_accounts.push_back(&account);
+}
+
+void report_accounts::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (accounts_pair& entry, accounts) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
+    out << *entry.first << '\n';
+  }
+}
+
+void report_accounts::operator()(post_t& post)
+{
+  std::map<account_t *, std::size_t>::iterator i = accounts.find(post.account);
+  if (i == accounts.end())
+    accounts.insert(accounts_pair(post.account, 1));
+  else
+    (*i).second++;
+}
+
+void report_payees::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (payees_pair& entry, payees) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
+    out << entry.first << '\n';
+  }
+}
+
+void report_payees::operator()(post_t& post)
+{
+  std::map<string, std::size_t>::iterator i = payees.find(post.xact->payee);
+  if (i == payees.end())
+    payees.insert(payees_pair(post.xact->payee, 1));
+  else
+    (*i).second++;
+}
+
+void report_commodities::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (commodities_pair& entry, commodities) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
+    out << *entry.first << '\n';
+  }
+}
+
+void report_commodities::operator()(post_t& post)
+{
+  amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
+  commodity_t& comm(temp.commodity());
+
+  std::map<commodity_t *, std::size_t>::iterator i = commodities.find(&comm);
+  if (i == commodities.end())
+    commodities.insert(commodities_pair(&comm, 1));
+  else
+    (*i).second++;
+
+  if (comm.has_annotation()) {
+    annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
+    if (ann_comm.details.price) {
+      std::map<commodity_t *, std::size_t>::iterator i =
+	commodities.find(&ann_comm.details.price->commodity());
+      if (i == commodities.end())
+	commodities.insert
+	  (commodities_pair(&ann_comm.details.price->commodity(), 1));
+      else
+	(*i).second++;
+    }
+  }
+
+  if (post.cost) {
+    amount_t temp_cost(post.cost->strip_annotations(report.what_to_keep()));
+    i = commodities.find(&temp_cost.commodity());
+    if (i == commodities.end())
+      commodities.insert(commodities_pair(&temp_cost.commodity(), 1));
+    else
+      (*i).second++;
+  }
 }
 
 } // namespace ledger

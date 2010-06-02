@@ -196,9 +196,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'd':
     OPT(download); // -Q
-    break;
-  case 'e':
-    OPT(european);
+    else OPT(decimal_comma);
     break;
   case 'f':
     OPT_(file_); // -f

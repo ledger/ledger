@@ -39,8 +39,51 @@
 
 namespace ledger {
 
+void post_splitter::print_title(const value_t& val)
+{
+  if (! report.HANDLED(no_titles)) {
+    std::ostringstream buf;
+    val.print(buf);
+    post_chain->title(buf.str());
+  }
+}
+
+void post_splitter::flush()
+{
+  foreach (value_to_posts_map::value_type pair, posts_map) {
+    preflush_func(pair.first);
+    
+    foreach (post_t * post, pair.second)
+      (*post_chain)(*post);
+
+    post_chain->flush();
+    post_chain->clear();
+
+    if (postflush_func)
+      (*postflush_func)(pair.first);
+  }
+}
+
+void post_splitter::operator()(post_t& post)
+{
+  bind_scope_t bound_scope(report, post);
+  value_t      result(group_by_expr.calc(bound_scope));
+
+  if (! result.is_null()) {
+    value_to_posts_map::iterator i = posts_map.find(result);
+    if (i != posts_map.end()) {
+      (*i).second.push_back(&post);
+    } else {
+      std::pair<value_to_posts_map::iterator, bool> inserted
+	= posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
+      assert(inserted.second);
+      (*inserted.first).second.push_back(&post);
+    }
+  }
+}
+
 pass_down_posts::pass_down_posts(post_handler_ptr handler,
-				 posts_iterator& iter)
+				 posts_iterator&  iter)
   : item_handler<post_t>(handler)
 {
   TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
@@ -312,7 +355,7 @@ namespace {
     if (functor)
       (*functor)(post);
 
-    DEBUG("filter.changed_value.rounding", "post.amount = " << post.amount);
+    DEBUG("filters.changed_value.rounding", "post.amount = " << post.amount);
 
     (*handler)(post);
 
@@ -355,7 +398,7 @@ void collapse_posts::report_subtotal()
     xact.payee	   = last_xact->payee;
     xact._date	   = (is_valid(earliest_date) ?
 		      earliest_date : last_xact->_date);
-    DEBUG("filter.collapse", "Pseudo-xact date = " << *xact._date);
+    DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
 
     handle_value(subtotal, &totals_account, &xact, temps, handler);
   }
@@ -420,10 +463,12 @@ void related_posts::flush()
 changed_value_posts::changed_value_posts(post_handler_ptr handler,
 					 report_t&	  _report,
 					 bool		  _for_accounts_report,
-					 bool		  _show_unrealized)
+					 bool		  _show_unrealized,
+					 bool		  _show_rounding)
   : item_handler<post_t>(handler), report(_report),
     for_accounts_report(_for_accounts_report),
-    show_unrealized(_show_unrealized), last_post(NULL),
+    show_unrealized(_show_unrealized),
+    show_rounding(_show_rounding), last_post(NULL),
     revalued_account(temps.create_account(_("<Revalued>"))),
     rounding_account(temps.create_account(_("<Rounding>")))
 {
@@ -458,6 +503,8 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler,
 void changed_value_posts::flush()
 {
   if (last_post && last_post->date() <= report.terminus.date()) {
+    if (! for_accounts_report)
+      output_intermediate_prices(*last_post, report.terminus.date());
     output_revaluation(*last_post, report.terminus.date());
     last_post = NULL;
   }
@@ -469,7 +516,6 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   if (is_valid(date))
     post.xdata().date = date;
 
-  value_t repriced_total;
   try {
     bind_scope_t bound_scope(report, post);
     repriced_total = total_expr.calc(bound_scope);
@@ -480,14 +526,14 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   }
   post.xdata().date = date_t();
 
-  DEBUG("filter.changed_value",
-	"output_revaluation(last_balance) = " << last_total);
-  DEBUG("filter.changed_value",
+  DEBUG("filters.changed_value",
+	"output_revaluation(last_total)     = " << last_total);
+  DEBUG("filters.changed_value",
 	"output_revaluation(repriced_total) = " << repriced_total);
 
   if (! last_total.is_null()) {
     if (value_t diff = repriced_total - last_total) {
-      DEBUG("filter.changed_value", "output_revaluation(strip(diff)) = "
+      DEBUG("filters.changed_value", "output_revaluation(strip(diff)) = "
 	    << diff.strip_annotations(report.what_to_keep()));
 
       xact_t& xact = temps.create_xact();
@@ -505,9 +551,10 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 	   /* total=         */ repriced_total,
 	   /* direct_amount= */ false,
 	   /* mark_visited=  */ false,
-	   /* functor=       */ (optional<post_functor_t>
+	   /* functor=       */ (show_rounding ?
+				 optional<post_functor_t>
 				 (bind(&changed_value_posts::output_rounding,
-				       this, _1))));
+				       this, _1)) : none));
       }
       else if (show_unrealized) {
 	handle_value
@@ -527,29 +574,146 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   }
 }
 
+void changed_value_posts::output_intermediate_prices(post_t&	   post,
+						     const date_t& current)
+{
+  // To fix BZ#199, examine the balance of last_post and determine whether the
+  // price of that amount changed after its date and before the new post's
+  // date.  If so, generate an output_revaluation for that price change.
+  // Mostly this is only going to occur if the user has a series of pricing
+  // entries, since a posting-based revaluation would be seen here as a post.
+
+  value_t display_total(last_total);
+
+  if (display_total.type() == value_t::SEQUENCE) {
+    xact_t& xact(temps.create_xact());
+
+    xact.payee = _("Commodities revalued");
+    xact._date = is_valid(current) ? current : post.date();
+
+    post_t& temp(temps.copy_post(post, xact));
+    temp.add_flags(ITEM_GENERATED);
+
+    post_t::xdata_t& xdata(temp.xdata());
+    if (is_valid(current))
+      xdata.date = current;
+
+    DEBUG("filters.revalued", "intermediate last_total = " << last_total);
+
+    switch (last_total.type()) {
+    case value_t::BOOLEAN:
+    case value_t::INTEGER:
+      last_total.in_place_cast(value_t::AMOUNT);
+      // fall through...
+
+    case value_t::AMOUNT:
+      temp.amount = last_total.as_amount();
+      break;
+
+    case value_t::BALANCE:
+    case value_t::SEQUENCE:
+      xdata.compound_value = last_total;
+      xdata.add_flags(POST_EXT_COMPOUND);
+      break;
+
+    case value_t::DATETIME:
+    case value_t::DATE:
+    default:
+      assert(false);
+      break; 
+    }
+
+    bind_scope_t inner_scope(report, temp);
+    display_total = display_total_expr.calc(inner_scope);
+
+    DEBUG("filters.revalued", "intermediate display_total = " << display_total);
+  }
+
+  switch (display_total.type()) {
+  case value_t::VOID:
+  case value_t::INTEGER:
+  case value_t::SEQUENCE:
+    break;
+
+  case value_t::AMOUNT:
+    display_total.in_place_cast(value_t::BALANCE);
+    // fall through...
+
+  case value_t::BALANCE: {
+    commodity_t::history_map all_prices;
+
+    foreach (const balance_t::amounts_map::value_type& amt_comm,
+	     display_total.as_balance().amounts) {
+      if (optional<commodity_t::varied_history_t&> hist =
+	  amt_comm.first->varied_history()) {
+	foreach
+	  (const commodity_t::history_by_commodity_map::value_type& comm_hist,
+	   hist->histories) {
+	  foreach (const commodity_t::history_map::value_type& price,
+		   comm_hist.second.prices) {
+	    if (price.first.date() > post.date() &&
+		price.first.date() < current) {
+	      DEBUG("filters.revalued", post.date() << " < "
+		    << price.first.date() << " < " << current);
+	      DEBUG("filters.revalued", "inserting "
+		    << price.second << " at " << price.first.date());
+	      all_prices.insert(price);
+	    }
+	  }
+	}
+      }
+    }
+
+    // Choose the last price from each day as the price to use
+    typedef std::map<const date_t, bool> date_map;
+    date_map pricing_dates;
+
+    BOOST_REVERSE_FOREACH
+      (const commodity_t::history_map::value_type& price, all_prices) {
+      // This insert will fail if a later price has already been inserted
+      // for that date.
+      DEBUG("filters.revalued",
+	    "re-inserting " << price.second << " at " << price.first.date());
+      pricing_dates.insert(date_map::value_type(price.first.date(), true));
+    }
+
+    // Go through the time-sorted prices list, outputting a revaluation for
+    // each price difference.
+    foreach (const date_map::value_type& price, pricing_dates) {
+      output_revaluation(post, price.first);
+      last_total = repriced_total;
+    }
+    break;
+  }
+  default:
+    assert(false);
+    break;
+  }
+}
+
 void changed_value_posts::output_rounding(post_t& post)
 {
   bind_scope_t bound_scope(report, post);
   value_t      new_display_total(display_total_expr.calc(bound_scope));
 
-  DEBUG("filter.changed_value.rounding",
+  DEBUG("filters.changed_value.rounding",
 	"rounding.new_display_total     = " << new_display_total);
 
   if (! last_display_total.is_null()) {
     if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
-      DEBUG("filter.changed_value.rounding",
+      DEBUG("filters.changed_value.rounding",
 	    "rounding.repriced_amount       = " << repriced_amount);
 
       value_t precise_display_total(new_display_total.truncated() -
 				    repriced_amount.truncated());
 
-      DEBUG("filter.changed_value.rounding",
+      DEBUG("filters.changed_value.rounding",
 	    "rounding.precise_display_total = " << precise_display_total);
-      DEBUG("filter.changed_value.rounding",
+      DEBUG("filters.changed_value.rounding",
 	    "rounding.last_display_total    = " << last_display_total);
 
       if (value_t diff = precise_display_total - last_display_total) {
-	DEBUG("filter.changed_value.rounding",
+	DEBUG("filters.changed_value.rounding",
 	      "rounding.diff                  = " << diff);
 
 	xact_t& xact = temps.create_xact();
@@ -566,13 +730,16 @@ void changed_value_posts::output_rounding(post_t& post)
 
 void changed_value_posts::operator()(post_t& post)
 {
-  if (last_post)
+  if (last_post) {
+    if (! for_accounts_report)
+      output_intermediate_prices(*last_post, post.date());
     output_revaluation(*last_post, post.date());
+  }
 
   if (changed_values_only)
     post.xdata().add_flags(POST_EXT_DISPLAYED);
 
-  if (! for_accounts_report)
+  if (! for_accounts_report && show_rounding)
     output_rounding(post);
 
   item_handler<post_t>::operator()(post);
@@ -793,41 +960,43 @@ void transfer_details::operator()(post_t& post)
   bind_scope_t bound_scope(scope, temp);
   value_t      substitute(expr.calc(bound_scope));
 
-  switch (which_element) {
-  case SET_DATE:
-    temp.xdata().date = substitute.to_date();
-    break;
+  if (! substitute.is_null()) {
+    switch (which_element) {
+    case SET_DATE:
+      temp.xdata().date = substitute.to_date();
+      break;
 
-  case SET_ACCOUNT: {
-    string account_name = substitute.to_string();
-    if (! account_name.empty() &&
-	account_name[account_name.length() - 1] != ':') {
-      account_t * prev_account = temp.account;
-      temp.account->remove_post(&temp);
+    case SET_ACCOUNT: {
+      string account_name = substitute.to_string();
+      if (! account_name.empty() &&
+	  account_name[account_name.length() - 1] != ':') {
+	account_t * prev_account = temp.account;
+	temp.account->remove_post(&temp);
 
-      account_name += ':';
-      account_name += prev_account->fullname();
+	account_name += ':';
+	account_name += prev_account->fullname();
 
-      std::list<string> account_names;
-      split_string(account_name, ':', account_names);
-      temp.account = create_temp_account_from_path(account_names, temps,
-						   xact.journal->master);
-      temp.account->add_post(&temp);
+	std::list<string> account_names;
+	split_string(account_name, ':', account_names);
+	temp.account = create_temp_account_from_path(account_names, temps,
+						     xact.journal->master);
+	temp.account->add_post(&temp);
 
-      temp.account->add_flags(prev_account->flags());
-      if (prev_account->has_xdata())
-	temp.account->xdata().add_flags(prev_account->xdata().flags());
+	temp.account->add_flags(prev_account->flags());
+	if (prev_account->has_xdata())
+	  temp.account->xdata().add_flags(prev_account->xdata().flags());
+      }
+      break;
     }
-    break;
-  }
 
-  case SET_PAYEE:
-    xact.payee = substitute.to_string();
-    break;
+    case SET_PAYEE:
+      xact.payee = substitute.to_string();
+      break;
 
-  default:
-    assert(false);
-    break;
+    default:
+      assert(false);
+      break;
+    }
   }
 
   item_handler<post_t>::operator()(temp);
@@ -869,7 +1038,8 @@ void budget_posts::report_budget_items(const date_t& date)
       optional<date_t> begin = pair.first.start;
       if (! begin) {
 	if (! pair.first.find_period(date))
-	  throw_(std::runtime_error, _("Something odd has happened"));
+	  throw_(std::runtime_error,
+		 _("Something odd has happened at date %1") << date);
 	begin = pair.first.start;
       }
       assert(begin);

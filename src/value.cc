@@ -832,7 +832,7 @@ bool value_t::is_equal_to(const value_t& val) const
     break;
   }
 
-  throw_(value_error, _("Cannot compare %1 by %2") << label() << val.label());
+  throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
 }
@@ -840,6 +840,23 @@ bool value_t::is_equal_to(const value_t& val) const
 bool value_t::is_less_than(const value_t& val) const
 {
   switch (type()) {
+  case BOOLEAN:
+    if (val.is_boolean()) {
+      if (as_boolean()) {
+	if (! val.as_boolean())
+	  return false;
+	else
+	  return false;
+      }
+      else if (! as_boolean()) {
+	if (! val.as_boolean())
+	  return false;
+	else
+	  return true;
+      }
+    }
+    break;
+
   case DATETIME:
     if (val.is_datetime())
       return as_datetime() < val.as_datetime();
@@ -935,6 +952,22 @@ bool value_t::is_less_than(const value_t& val) const
 bool value_t::is_greater_than(const value_t& val) const
 {
   switch (type()) {
+    if (val.is_boolean()) {
+      if (as_boolean()) {
+	if (! val.as_boolean())
+	  return true;
+	else
+	  return false;
+      }
+      else if (! as_boolean()) {
+	if (! val.as_boolean())
+	  return false;
+	else
+	  return false;
+      }
+    }
+    break;
+
   case DATETIME:
     if (val.is_datetime())
       return as_datetime() > val.as_datetime();
@@ -1042,8 +1075,27 @@ void value_t::in_place_cast(type_t cast_type)
   }
 
   switch (type()) {
+  case VOID:
+    switch (cast_type) {
+    case INTEGER:
+      set_long(0L);
+      return;
+    case AMOUNT:
+      set_amount(0L);
+      return;
+    case STRING:
+      set_string("");
+      return;
+    default:
+      break;
+    }
+    break;
+
   case BOOLEAN:
     switch (cast_type) {
+    case INTEGER:
+      set_long(as_boolean() ? 1L : 0L);
+      return;
     case AMOUNT:
       set_amount(as_boolean() ? 1L : 0L);
       return;

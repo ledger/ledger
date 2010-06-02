@@ -90,13 +90,16 @@ public:
 
   void report(std::ostream& out) const {
     if (handled && source) {
+      out.width(24);
+      out << std::right << desc();
       if (wants_arg) {
-	out << desc() << " => ";
-	value.dump(out);
+	out << " = ";
+	value.print(out, 42);
       } else {
-	out << desc();
+	out.width(45);
+	out << ' ';
       }
-      out << " <" << *source << ">" << std::endl;
+      out << std::left << *source << std::endl;
     }
   }
 
@@ -202,20 +205,20 @@ public:
 };
 
 #define BEGIN(type, name)				\
-  struct name ## _option_t : public option_t<type>
+  struct name ## option_t : public option_t<type>
 
 #define CTOR(type, name)				\
-  name ## _option_t() : option_t<type>(#name)
+  name ## option_t() : option_t<type>(#name)
 #define DECL1(type, name, vartype, var, value)		\
   vartype var ;						\
-  name ## _option_t() : option_t<type>(#name), var(value)
+  name ## option_t() : option_t<type>(#name), var(value)
   
 #define DO()      virtual void handler_thunk(call_scope_t&)
 #define DO_(var)  virtual void handler_thunk(call_scope_t& var)
 
-#define END(name) name ## _handler
+#define END(name) name ## handler
 
-#define COPY_OPT(name, other) name ## _handler(other.name ## _handler)
+#define COPY_OPT(name, other) name ## handler(other.name ## handler)
 
 #define MAKE_OPT_HANDLER(type, x)					\
   expr_t::op_t::wrap_functor(bind(&option_t<type>::handler_wrapper, x, _1))
@@ -235,26 +238,26 @@ inline bool is_eq(const char * p, const char * n) {
 
 #define OPT(name)							\
   if (is_eq(p, #name))							\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+    return ((name ## handler).parent = this, &(name ## handler))
 
 #define OPT_ALT(name, alt)						\
   if (is_eq(p, #name) || is_eq(p, #alt))				\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+    return ((name ## handler).parent = this, &(name ## handler))
 
 #define OPT_(name)							\
   if (! *(p + 1) ||							\
-      ((name ## _handler).wants_arg &&					\
+      ((name ## handler).wants_arg &&					\
        *(p + 1) == '_' && ! *(p + 2)) ||				\
       is_eq(p, #name))							\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+    return ((name ## handler).parent = this, &(name ## handler))
 
 #define OPT_CH(name)							\
   if (! *(p + 1) ||							\
-      ((name ## _handler).wants_arg &&					\
+      ((name ## handler).wants_arg &&					\
        *(p + 1) == '_' && ! *(p + 2)))					\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+    return ((name ## handler).parent = this, &(name ## handler))
 
-#define HANDLER(name) name ## _handler
+#define HANDLER(name) name ## handler
 #define HANDLED(name) HANDLER(name)
 
 #define OPTION(type, name)				\

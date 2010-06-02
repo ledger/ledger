@@ -56,23 +56,40 @@ class report_t;
 class format_posts : public item_handler<post_t>
 {
 protected:
-  report_t& report;
-  format_t  first_line_format;
-  format_t  next_lines_format;
-  format_t  between_format;
-  format_t  prepend_format;
-  xact_t *  last_xact;
-  post_t *  last_post;
+  report_t&   report;
+  format_t    first_line_format;
+  format_t    next_lines_format;
+  format_t    between_format;
+  format_t    prepend_format;
+  std::size_t prepend_width;
+  xact_t *    last_xact;
+  post_t *    last_post;
+  bool        first_report_title;
+  string      report_title;
 
 public:
   format_posts(report_t& _report, const string& format,
-	       const optional<string>& _prepend_format = none);
+	       const optional<string>& _prepend_format = none,
+	       std::size_t _prepend_width = 0);
   virtual ~format_posts() {
     TRACE_DTOR(format_posts);
   }
 
+  virtual void title(const string& str) {
+    report_title = str;
+  }
+
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    last_xact	 = NULL;
+    last_post	 = NULL;
+
+    report_title = "";
+
+    item_handler<post_t>::clear();
+  }
 };
 
 class format_accounts : public item_handler<account_t>
@@ -83,13 +100,17 @@ protected:
   format_t    total_line_format;
   format_t    separator_format;
   format_t    prepend_format;
+  std::size_t prepend_width;
   predicate_t disp_pred;
+  bool        first_report_title;
+  string      report_title;
 
   std::list<account_t *> posted_accounts;
 
 public:
   format_accounts(report_t& _report, const string& _format,
-		  const optional<string>& _prepend_format = none);
+		  const optional<string>& _prepend_format = none,
+		  std::size_t _prepend_width = 0);
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }
@@ -97,10 +118,101 @@ public:
   std::pair<std::size_t, std::size_t>
   mark_accounts(account_t& account, const bool flat);
 
+  virtual void title(const string& str) {
+    report_title = str;
+  }
+
   virtual std::size_t post_account(account_t& account, const bool flat);
   virtual void	      flush();
 
   virtual void operator()(account_t& account);
+
+  virtual void clear() {
+    disp_pred.mark_uncompiled();
+    posted_accounts.clear();
+
+    report_title = "";
+
+    item_handler<account_t>::clear();
+  }
+};
+
+class report_accounts : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<account_t *, std::size_t> accounts;
+
+  typedef std::map<account_t *, std::size_t>::value_type accounts_pair;
+
+public:
+  report_accounts(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_accounts, "report&");
+  }
+  virtual ~report_accounts() {
+    TRACE_DTOR(report_accounts);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    accounts.clear();
+    item_handler<post_t>::clear();
+  }
+};
+
+class report_payees : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<string, std::size_t> payees;
+
+  typedef std::map<string, std::size_t>::value_type payees_pair;
+
+public:
+  report_payees(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_payees, "report&");
+  }
+  virtual ~report_payees() {
+    TRACE_DTOR(report_payees);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    payees.clear();
+    item_handler<post_t>::clear();
+  }
+};
+
+class report_commodities : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<commodity_t *, std::size_t> commodities;
+
+  typedef std::map<commodity_t *, std::size_t>::value_type commodities_pair;
+
+public:
+  report_commodities(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_commodities, "report&");
+  }
+  virtual ~report_commodities() {
+    TRACE_DTOR(report_commodities);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    commodities.clear();
+    item_handler<post_t>::clear();
+  }
 };
 
 } // namespace ledger

@@ -249,11 +249,7 @@ endif
 
 ######################################################################
 
-TESTS =
-
-if HAVE_PYTHON
-TESTS += RegressTests BaselineTests ManualTests ConfirmTests GenerateTests
-endif
+TESTS = RegressTests BaselineTests ManualTests ConfirmTests GenerateTests
 
 if HAVE_CPPUNIT
 TESTS +=	     \

@@ -98,9 +98,9 @@ void export_xact()
 
     .def("finalize", &xact_base_t::finalize)
 
-    .def("__iter__", range<return_internal_reference<> >
+    .def("__iter__", python::range<return_internal_reference<> >
 	 (&xact_t::posts_begin, &xact_t::posts_end))
-    .def("posts", range<return_internal_reference<> >
+    .def("posts", python::range<return_internal_reference<> >
 	 (&xact_t::posts_begin, &xact_t::posts_end))
 
     .def("valid", &xact_base_t::valid)

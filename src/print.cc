@@ -42,15 +42,20 @@ namespace ledger {
 
 print_xacts::print_xacts(report_t& _report,
 			 bool      _print_raw)
-  : report(_report), print_raw(_print_raw)
+  : report(_report), print_raw(_print_raw), first_title(true)
 {
   TRACE_CTOR(print_xacts, "report&, bool");
 }
 
 namespace {
-  void print_note(std::ostream& out, const string& note)
+  void print_note(std::ostream&	    out,
+		  const string&	    note,
+		  const std::size_t columns,
+		  const std::size_t prior_width)
   {
-    if (note.length() > 15)
+    // The 4 is for four leading spaces at the beginning of the posting, and
+    // the 3 is for two spaces and a semi-colon before the note.
+    if (columns > 0 && note.length() > columns - (prior_width + 3))
       out << "\n    ;";
     else
       out << "  ;";
@@ -71,23 +76,40 @@ namespace {
 
   void print_xact(report_t& report, std::ostream& out, xact_t& xact)
   {
-    out << format_date(item_t::use_effective_date ?
-		       xact.date() : xact.actual_date(),
-		       FMT_WRITTEN);
-    if (! item_t::use_effective_date && xact.effective_date())
-      out << '=' << format_date(*xact.effective_date(), FMT_WRITTEN);
-    out << ' ';
+    format_type_t	   format_type = FMT_WRITTEN;
+    optional<const char *> format;
 
-    out << (xact.state() == item_t::CLEARED ? "* " :
+    if (report.HANDLED(date_format_)) {
+      format_type = FMT_CUSTOM;
+      format      = report.HANDLER(date_format_).str().c_str();
+    }
+
+    std::ostringstream buf;
+
+    buf << format_date(item_t::use_effective_date ?
+		       xact.date() : xact.actual_date(),
+		       format_type, format);
+    if (! item_t::use_effective_date && xact.effective_date())
+      buf << '=' << format_date(*xact.effective_date(),
+				format_type, format);
+    buf << ' ';
+
+    buf << (xact.state() == item_t::CLEARED ? "* " :
 	    (xact.state() == item_t::PENDING ? "! " : ""));
 
     if (xact.code)
-      out << '(' << *xact.code << ") ";
+      buf << '(' << *xact.code << ") ";
 
-    out << xact.payee;
+    buf << xact.payee;
+
+    string leader = buf.str();
+    out << leader;
+
+    std::size_t columns = (report.HANDLED(columns_) ?
+			   report.HANDLER(columns_).value.to_long() : 80);
 
     if (xact.note)
-      print_note(out, *xact.note);
+      print_note(out, *xact.note, columns, unistring(leader).length());
     out << '\n';
 
     if (xact.metadata) {
@@ -132,20 +154,37 @@ namespace {
 	  buf << ')';
       }
 
-      if (! post->has_flags(POST_CALCULATED) || report.HANDLED(print_virtual)) {
-	unistring name(buf.str());
+      unistring name(buf.str());
 
+      std::size_t account_width =
+	(report.HANDLER(account_width_).specified ?
+	 report.HANDLER(account_width_).value.to_long() : 36);
+
+      if (account_width < name.length())
+	account_width = name.length();
+
+      if (! post->has_flags(POST_CALCULATED) || report.HANDLED(print_virtual)) {
 	out << name.extract();
-	int slip = 36 - static_cast<int>(name.length());
-	if (slip > 0)
-	  out << string(slip, ' ');
+	int slip = (static_cast<int>(account_width) -
+		    static_cast<int>(name.length()));
+	if (slip > 0) {
+	  out.width(slip);
+	  out << ' ';
+	}
+
+	std::ostringstream amtbuf;
 
 	string amt;
 	if (post->amount_expr) {
 	  amt = post->amount_expr->text();
 	} else {
+	  std::size_t amount_width =
+	    (report.HANDLER(amount_width_).specified ?
+	     report.HANDLER(amount_width_).value.to_long() : 12);
+
 	  std::ostringstream amt_str;
-	  report.scrub(post->amount).print(amt_str, 12, -1, true);
+	  report.scrub(post->amount)
+	    .print(amt_str, static_cast<int>(amount_width), -1, true);
 	  amt = amt_str.str();
 	}
 
@@ -154,26 +193,41 @@ namespace {
 	int amt_slip = (static_cast<int>(amt.length()) -
 			static_cast<int>(trimmed_amt.length()));
 	if (slip + amt_slip < 2)
-	  out << string(2 - (slip + amt_slip), ' ');
-	out << amt;
+	  amtbuf << string(2 - (slip + amt_slip), ' ');
+	amtbuf << amt;
 
 	if (post->cost && ! post->has_flags(POST_CALCULATED)) {
 	  if (post->has_flags(POST_COST_IN_FULL))
-	    out << " @@ " << report.scrub(post->cost->abs());
+	    amtbuf << " @@ " << report.scrub(post->cost->abs());
 	  else
-	    out << " @ " << report.scrub((*post->cost / post->amount).abs());
+	    amtbuf << " @ " << report.scrub((*post->cost / post->amount).abs());
 	}
 
 	if (post->assigned_amount)
-	  out << " = " << report.scrub(*post->assigned_amount);
+	  amtbuf << " = " << report.scrub(*post->assigned_amount);
+
+	string trailer = amtbuf.str();
+	out << trailer;
+
+	account_width += unistring(trailer).length();
       } else {
 	out << buf.str();
       }
 
       if (post->note)
-	print_note(out, *post->note);
+	print_note(out, *post->note, columns, 4 + account_width);
       out << '\n';
     }
+  }
+}
+
+void print_xacts::title(const string&)
+{
+  if (first_title) {
+    first_title = false;
+  } else {
+    std::ostream& out(report.output_stream);
+    out << '\n';
   }
 }
 

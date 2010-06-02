@@ -28,7 +28,7 @@ reg --payee=code
 08-Feb-01 102                   Assets:Cash                 $-20.00            0
 08-Feb-28 103                   Expenses:Books               $20.00       $20.00
 08-Feb-28 103                   Assets:Cash                 $-20.00            0
-08-Mar-01                       Expenses:Books               $30.00       $30.00
-08-Mar-01                       Assets:Cash                 $-30.00            0
+08-Mar-01 March                 Expenses:Books               $30.00       $30.00
+08-Mar-01 March                 Assets:Cash                 $-30.00            0
 >>>2
 === 0
