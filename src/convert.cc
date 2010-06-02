@@ -117,7 +117,7 @@ value_t convert_command(call_scope_t& scope)
 
     if (matched) {
       DEBUG("convert.csv", "Ignored xact with code: " << *xact->code);
-      delete xact;		// ignore it
+      checked_delete(xact);	// ignore it
     }
     else {
       if (xact->posts.front()->account == NULL) {
@@ -135,7 +135,7 @@ value_t convert_command(call_scope_t& scope)
       }
 
       if (! journal.add_xact(xact)) {
-	delete xact;
+	checked_delete(xact);
 	throw_(std::runtime_error,
 	       _("Failed to finalize derived transaction (check commodities)"));
       }
