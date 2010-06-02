@@ -3964,13 +3964,13 @@ price-setting directive):
 P 2009/01/15 00:00:00 S 2 P
 
 2009/02/01 Sample 2a
-    Assets:Brokerage:Stocks                100 S @ 1 P
+    Assets:Brokerage:Stocks                100 S @@ 1 P
     Assets:Brokerage:Cash
 
 P 2009/02/01 00:00:00 S 4 P
 
 2009/03/01 Sample 3a
-    Assets:Brokerage:Stocks                100 S @@ 100 P
+    Assets:Brokerage:Stocks                100 S @@@@ 100 P
     Assets:Brokerage:Cash
 
 P 2009/03/01 00:00:00 S 8 P
