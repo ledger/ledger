@@ -115,9 +115,9 @@ public:
   auto_xacts_list	auto_xacts;
   period_xacts_list	period_xacts;
   std::list<fileinfo_t> sources;
-  bool                  was_loaded;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
+  bool                  was_loaded;
 
   journal_t();
   journal_t(const path& pathname);
@@ -196,6 +196,8 @@ private:
     ar & auto_xacts;
     ar & period_xacts;
     ar & sources;
+    ar & payee_mappings;
+    ar & account_mappings;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
