@@ -66,8 +66,6 @@ class LedgerHarness:
             if text_data:
                 text += text_data
             text_data = os.read(fd.fileno(), 8192)
-        if text_data:
-            text += text_data
         return text
 
     def readlines(self, fd):
