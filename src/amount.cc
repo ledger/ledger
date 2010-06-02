@@ -130,7 +130,10 @@ namespace {
       mpfr_set_prec(tempfb, bits + amount_t::extend_by_digits*8);
       mpfr_set_q(tempfb, quant, GMP_RNDN);
 
-      mpfr_asprintf(&buf, "%.*Rf", prec, tempfb);
+      if (mpfr_asprintf(&buf, "%.*Rf", prec, tempfb) < 0)
+	throw_(amount_error,
+	       _("Cannot output amount to a floating-point representation"));
+	
       DEBUG("amount.convert",
 	    "mpfr_print = " << buf << " (precision " << prec << ")");
 
