@@ -476,7 +476,7 @@ void expr_t::token_t::unexpected(const char wanted)
     switch (prev_kind) {
     case TOK_EOF:
       throw_(parse_error,
-	     _("Unexpected end of expression (wanted '%1')" << wanted));
+	     _("Unexpected end of expression (wanted '%1')") << wanted);
     case IDENT:
       throw_(parse_error,
 	     _("Unexpected symbol '%1' (wanted '%2')") << value << wanted);
