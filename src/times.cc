@@ -197,8 +197,6 @@ namespace {
 				 optional_year year,
 				 date_traits_t * traits = NULL)
   {
-    date_t when;
-
     VERIFY(std::strlen(date_str) < 127);
 
     char buf[128];
@@ -208,7 +206,7 @@ namespace {
       if (*p == '.' || *p == '-')
 	*p = '/';
 
-    when = io.parse(buf);
+    date_t when = io.parse(buf);
 
     if (! when.is_not_a_date()) {
       DEBUG("times.parse", "Passed date string:  " << date_str);
@@ -216,12 +214,13 @@ namespace {
       DEBUG("times.parse", "Parsed result is:    " << when);
       DEBUG("times.parse", "Formatted result is: " << io.format(when));
 
-      const char * p = io.format(when).c_str();
+      string when_str = io.format(when);
+
+      const char * p = when_str.c_str();
       const char * q = buf;
-      for (; *p != '\0' && *q != '\0';
-	   p++, q++) {
+      for (; *p && *q; p++, q++) {
 	if (*p != *q && *p == '0') p++;
-	if (*p != *q) break;
+	if (! *p || *p != *q) break;
       }
       if (*p != '\0' || *q != '\0')
 	throw_(date_error, _("Invalid date: %1") << date_str);

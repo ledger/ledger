@@ -42,16 +42,11 @@ account_t::~account_t()
 {
   TRACE_DTOR(account_t);
 
-  foreach (accounts_map::value_type& pair, accounts)
+  foreach (accounts_map::value_type& pair, accounts) {
     if (! pair.second->has_flags(ACCOUNT_TEMP) ||
-	has_flags(ACCOUNT_TEMP))
+	has_flags(ACCOUNT_TEMP)) {
       checked_delete(pair.second);
-
-  foreach (post_t * post, posts) {
-    if (post->account) {
-      assert(post->account == this);
-      post->account = NULL;
-    }
+    }      
   }
 }
 
