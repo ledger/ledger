@@ -737,7 +737,9 @@ amount_t::value(const bool		      primary_only,
 #endif
     if (has_commodity() &&
 	(! primary_only || ! commodity().has_flags(COMMODITY_PRIMARY))) {
-      if (in_terms_of && commodity() == *in_terms_of) {
+      if (in_terms_of &&
+	  (commodity() == *in_terms_of ||
+	   commodity().referent() == in_terms_of->referent())) {
 	return *this;
       }
       else if (has_annotation() && annotation().price &&
