@@ -149,10 +149,6 @@ namespace {
       mpfr_set_prec(tempfb, num_prec + den_prec);
       mpfr_div(tempfb, tempfnum, tempfden, GMP_RNDN);
 
-      char bigbuf[4096];
-      mpfr_sprintf(bigbuf, "%.RNf", tempfb);
-      DEBUG("amount.convert", "num/den = " << bigbuf);
-
       if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
 	throw_(amount_error,
 	       _("Cannot output amount to a floating-point representation"));
