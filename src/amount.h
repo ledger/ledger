@@ -275,7 +275,10 @@ public:
 
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
-  amount_t& operator*=(const amount_t& amt);
+  amount_t& operator*=(const amount_t& amt) {
+    return multiply(amt);
+  }
+  amount_t& multiply(const amount_t& amt, bool ignore_commodity = false);
 
   /** Divide two amounts while extending the precision to preserve the
       accuracy of the result.  For example, if \c 10 is divided by \c 3,
