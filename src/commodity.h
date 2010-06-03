@@ -59,6 +59,10 @@ struct price_point_t
   datetime_t when;
   amount_t   price;
 
+  bool operator==(const price_point_t& other) const {
+    return when == other.when && price == other.price;
+  }
+
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
   /** Serialization. */
@@ -174,6 +178,16 @@ protected:
     optional<varied_history_t> varied_history;
     optional<amount_t>	       smaller;
     optional<amount_t>	       larger;
+
+    typedef std::pair<optional<datetime_t>,
+		      optional<datetime_t> > optional_time_pair_t;
+    typedef std::pair<optional_time_pair_t,
+		      commodity_t *> time_and_commodity_t;
+    typedef std::map<time_and_commodity_t,
+		     optional<price_point_t> > memoized_price_map;
+
+    static const std::size_t   max_price_map_size = 16;
+    mutable memoized_price_map price_map;
 
     mutable bool               searched;
 
@@ -334,37 +348,28 @@ public:
 		 const bool reflexive = true) {
     if (! base->varied_history)
       base->varied_history = varied_history_t();
-
     base->varied_history->add_price(*this, date, price, reflexive);
+    DEBUG("commodity.prices.find", "Price added, clearing price_map");
+    base->price_map.clear();	// a price was added, invalid the map
   }
   bool remove_price(const datetime_t& date, commodity_t& commodity) {
-    if (base->varied_history)
+    if (base->varied_history) {
       base->varied_history->remove_price(date, commodity);
+      DEBUG("commodity.prices.find", "Price removed, clearing price_map");
+      base->price_map.clear();	// a price was added, invalid the map
+    }
     return false;
   }
 
   optional<price_point_t>
   find_price(const optional<commodity_t&>& commodity = none,
 	     const optional<datetime_t>&   moment    = none,
-	     const optional<datetime_t>&   oldest    = none
+	     const optional<datetime_t>&   oldest    = none,
+	     const bool                    nested    = false
 #if defined(DEBUG_ON)
 	     , const int indent = 0
 #endif
-	     ) const {
-    if (! has_flags(COMMODITY_WALKED) && base->varied_history &&
-	(commodity || ! has_flags(COMMODITY_PRIMARY))) {
-      const_cast<commodity_t&>(*this).add_flags(COMMODITY_WALKED);
-      optional<price_point_t> point =
-	base->varied_history->find_price(*this, commodity, moment, oldest
-#if defined(DEBUG_ON)
-					 , indent
-#endif
-					 );
-      const_cast<commodity_t&>(*this).drop_flags(COMMODITY_WALKED);
-      return point;
-    }
-    return none;
-  }    
+	     ) const;    
 
   optional<price_point_t>
   check_for_updated_price(const optional<price_point_t>& point,
