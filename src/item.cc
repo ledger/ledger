@@ -323,6 +323,10 @@ namespace {
     return item.pos ? long(item.pos->sequence) : 0L;
   }
 
+  value_t get_addr(item_t& item) {
+    return long(&item);
+  }
+
   value_t get_depth(item_t&) {
     return 0L;
   }
@@ -376,6 +380,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_actual>);
     else if (name == "actual_date")
       return WRAP_FUNCTOR(get_wrapper<&get_actual_date>);
+    else if (name == "addr")
+      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
     break;
 
   case 'b':

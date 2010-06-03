@@ -218,6 +218,10 @@ namespace {
     return true;
   }
 
+  value_t get_addr(account_t& account) {
+    return long(&account);
+  }
+
   value_t get_depth_spacer(account_t& account)
   {
     std::size_t depth = 0;
@@ -296,6 +300,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_account>);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "addr")
+      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
     else if (name == "any")
       return WRAP_FUNCTOR(&fn_any);
     else if (name == "all")
