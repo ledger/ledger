@@ -163,7 +163,8 @@ bool generate_posts_iterator::generate_account(std::ostream& out,
   return must_balance;
 }
 
-void generate_posts_iterator::generate_commodity(std::ostream& out)
+void generate_posts_iterator::generate_commodity(std::ostream& out,
+						 const string& exclude)
 {
   string comm;
   do {
@@ -171,8 +172,8 @@ void generate_posts_iterator::generate_commodity(std::ostream& out)
     generate_string(buf, six_gen(), true);
     comm = buf.str();
   }
-  while (comm == "h" || comm == "m" || comm == "s" || comm == "and" ||
-	 comm == "any" || comm == "all" || comm == "div" ||
+  while (comm == exclude || comm == "h" || comm == "m" || comm == "s" ||
+	 comm == "and" || comm == "any" || comm == "all" || comm == "div" ||
 	 comm == "false" || comm == "or" || comm == "not" ||
 	 comm == "true" || comm == "if" || comm == "else");
 
@@ -181,12 +182,13 @@ void generate_posts_iterator::generate_commodity(std::ostream& out)
 
 string generate_posts_iterator::generate_amount(std::ostream& out,
 						value_t	      not_this_amount,
-						bool	      no_negative)
+						bool	      no_negative,
+						const string& exclude)
 {
   std::ostringstream buf;
 
   if (truth_gen()) {		// commodity goes in front
-    generate_commodity(buf);
+    generate_commodity(buf, exclude);
     if (truth_gen())
       buf << ' ';
     if (no_negative || truth_gen())
@@ -200,7 +202,7 @@ string generate_posts_iterator::generate_amount(std::ostream& out,
       buf << neg_number_gen();
     if (truth_gen())
       buf << ' ';
-    generate_commodity(buf);
+    generate_commodity(buf, exclude);
   }
 
   // Possibly generate an annotized commodity, but make it rarer
@@ -259,7 +261,8 @@ void generate_posts_iterator::generate_cost(std::ostream& out, value_t amount)
   else
     buf << " @@ ";
 
-  if (! generate_amount(buf, amount, true).empty())
+  if (! generate_amount(buf, amount, true,
+			amount.as_amount().commodity().symbol()).empty())
     out << buf.str();
 }
 

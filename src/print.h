@@ -65,7 +65,10 @@ protected:
   bool		    first_title;
 
 public:
-  print_xacts(report_t& _report, bool _print_raw = false);
+  print_xacts(report_t& _report, bool _print_raw = false)
+    : report(_report), print_raw(_print_raw), first_title(true) {
+    TRACE_CTOR(print_xacts, "report&, bool");
+  }
   virtual ~print_xacts() {
     TRACE_DTOR(print_xacts);
   }

@@ -47,6 +47,8 @@ static mpz_t  temp;
 static mpq_t  tempq;
 static mpfr_t tempf;
 static mpfr_t tempfb;
+static mpfr_t tempfnum;
+static mpfr_t tempfden;
 #endif
 
 struct amount_t::bigint_t : public supports_flags<>
@@ -111,7 +113,7 @@ bool amount_t::is_initialized = false;
 namespace {
   void stream_out_mpq(std::ostream&	            out,
 		      mpq_t		            quant,
-		      amount_t::precision_t         prec,
+		      amount_t::precision_t         precision,
 		      int                           zeros_prec = -1,
 		      const optional<commodity_t&>& comm       = none)
   {
@@ -125,14 +127,39 @@ namespace {
 
       // Convert the rational number to a floating-point, extending the
       // floating-point to a large enough size to get a precise answer.
-      const std::size_t bits = (mpz_sizeinbase(mpq_numref(quant), 2) +
-				mpz_sizeinbase(mpq_denref(quant), 2));
-      mpfr_set_prec(tempfb, bits + amount_t::extend_by_digits*8);
-      mpfr_set_q(tempfb, quant, GMP_RNDN);
 
-      mpfr_asprintf(&buf, "%.*Rf", prec, tempfb);
-      DEBUG("amount.convert",
-	    "mpfr_print = " << buf << " (precision " << prec << ")");
+      mp_prec_t num_prec = mpz_sizeinbase(mpq_numref(quant), 2);
+      num_prec += amount_t::extend_by_digits*64;
+      if (num_prec < MPFR_PREC_MIN)
+	num_prec = MPFR_PREC_MIN;
+      DEBUG("amount.convert", "num prec = " << num_prec);
+
+      mpfr_set_prec(tempfnum, num_prec);
+      mpfr_set_z(tempfnum, mpq_numref(quant), GMP_RNDN);
+
+      mp_prec_t den_prec = mpz_sizeinbase(mpq_denref(quant), 2);
+      den_prec += amount_t::extend_by_digits*64;
+      if (den_prec < MPFR_PREC_MIN)
+	den_prec = MPFR_PREC_MIN;
+      DEBUG("amount.convert", "den prec = " << den_prec);
+
+      mpfr_set_prec(tempfden, den_prec);
+      mpfr_set_z(tempfden, mpq_denref(quant), GMP_RNDN);
+
+      mpfr_set_prec(tempfb, num_prec + den_prec);
+      mpfr_div(tempfb, tempfnum, tempfden, GMP_RNDN);
+
+      char bigbuf[4096];
+      mpfr_sprintf(bigbuf, "%.RNf", tempfb);
+      DEBUG("amount.convert", "num/den = " << bigbuf);
+
+      if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
+	throw_(amount_error,
+	       _("Cannot output amount to a floating-point representation"));
+	
+      DEBUG("amount.convert", "mpfr_print = " << buf
+	    << " (precision " << precision
+	    << ", zeros_prec " << zeros_prec << ")");
 
       if (zeros_prec >= 0) {
 	string::size_type index = std::strlen(buf);
@@ -208,6 +235,8 @@ void amount_t::initialize()
     mpq_init(tempq);
     mpfr_init(tempf);
     mpfr_init(tempfb);
+    mpfr_init(tempfnum);
+    mpfr_init(tempfden);
 
     commodity_pool_t::current_pool.reset(new commodity_pool_t);
 
@@ -235,6 +264,8 @@ void amount_t::shutdown()
     mpq_clear(tempq);
     mpfr_clear(tempf);
     mpfr_clear(tempfb);
+    mpfr_clear(tempfnum);
+    mpfr_clear(tempfden);
 
     commodity_pool_t::current_pool.reset();
 
@@ -553,12 +584,10 @@ amount_t::precision_t amount_t::display_precision() const
 
   commodity_t& comm(commodity());
 
-  if (! comm || keep_precision())
-    return quantity->prec;
-  else if (comm.precision() != quantity->prec)
+  if (comm && ! keep_precision())
     return comm.precision();
   else
-    return quantity->prec;
+    return comm ? std::max(quantity->prec, comm.precision()) : quantity->prec;
 }
 
 void amount_t::in_place_negate()
@@ -640,7 +669,7 @@ void amount_t::in_place_floor()
   _dup();
 
   std::ostringstream out;
-  stream_out_mpq(out, MP(quantity), 0);
+  stream_out_mpq(out, MP(quantity), precision_t(0));
 
   mpq_set_str(MP(quantity), out.str().c_str(), 10);
 }

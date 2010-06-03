@@ -68,6 +68,13 @@ void report_t::normalize_options(const string& verb)
   }
 #endif
 
+  if (HANDLED(output_)) {
+    if (HANDLED(color) && ! HANDLED(force_color))
+      HANDLER(color).off();
+    if (HANDLED(pager_) && ! HANDLED(force_pager))
+      HANDLER(pager_).off();
+  }
+
   item_t::use_effective_date = (HANDLED(effective) &&
 				! HANDLED(actual_dates));
 

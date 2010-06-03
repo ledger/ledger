@@ -454,6 +454,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-python', action='store_true', dest='no_python',
                       default=False,
                       help='Do not enable Python support by default')
+        op.add_option('', '--universal', action='store_true',
+                      dest='universal', default=False,
+                      help='Attempt to build universal binaries')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -1165,10 +1168,11 @@ class PrepareBuild(CommandLineApp):
                 self.CXXFLAGS.append(i)
                 self.CFLAGS.append(i)
                 self.LDFLAGS.append(i)
-            for i in ['-arch', 'i386', '-arch', 'x86_64']:
-                self.CXXFLAGS.append(i)
-                self.CFLAGS.append(i)
-                self.LDFLAGS.append(i)
+            if self.options.universal:
+                for i in ['-arch', 'i386', '-arch', 'x86_64']:
+                    self.CXXFLAGS.append(i)
+                    self.CFLAGS.append(i)
+                    self.LDFLAGS.append(i)
         else:
             for i in ['-O3', '-fomit-frame-pointer']:
                 self.CXXFLAGS.append(i)

@@ -53,7 +53,7 @@ value_t convert_command(call_scope_t& scope)
   if (report.HANDLED(account_))
     bucket_name = report.HANDLER(account_).str();
   else
-    bucket_name = "Equity:Unknown";
+    bucket_name = _("Equity:Unknown");
 
   account_t * bucket  = journal.master->find_account(bucket_name);
   account_t * unknown = journal.master->find_account(_("Expenses:Unknown"));

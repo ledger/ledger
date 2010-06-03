@@ -40,13 +40,6 @@
 
 namespace ledger {
 
-print_xacts::print_xacts(report_t& _report,
-			 bool      _print_raw)
-  : report(_report), print_raw(_print_raw), first_title(true)
-{
-  TRACE_CTOR(print_xacts, "report&, bool");
-}
-
 namespace {
   void print_note(std::ostream&	    out,
 		  const string&	    note,
