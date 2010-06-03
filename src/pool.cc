@@ -122,8 +122,11 @@ string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
   comm.print(name);
   details.print(name, comm.pool().keep_base);
 
-  DEBUG("amounts.commodities", "make_qualified_name for "
-	<< *comm.qualified_symbol << std::endl << details);
+#if defined(DEBUG_ON)
+  if (comm.qualified_symbol)
+    DEBUG("amounts.commodities", "make_qualified_name for "
+	  << *comm.qualified_symbol << std::endl << details);
+#endif
   DEBUG("amounts.commodities", "qualified_name is " << name.str());
 
   return name.str();
