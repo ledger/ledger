@@ -262,7 +262,7 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
   price_point_t best;
   bool          found = false;
 
-  foreach (history_by_commodity_map::value_type hist, histories) {
+  foreach (const history_by_commodity_map::value_type& hist, histories) {
     commodity_t& comm(*hist.first);
     if (comm == source)
       continue;
