@@ -1165,6 +1165,7 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-g')
 
     def setup_flavor_opt(self):
+        self.CPPFLAGS.append('-DNDEBUG=1')
         if self.darwin_gcc:
             self.option_no_pch()
             if '--disable-shared' in self.configure_args:
