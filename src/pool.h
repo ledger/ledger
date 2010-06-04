@@ -131,6 +131,12 @@ public:
 			 const bool                  add_prices = true,
 			 const optional<datetime_t>& moment     = none);
 
+  // Output the commodity price map for a given date as a DOT file
+
+  void print_pricemap(std::ostream&		  out,
+		      const keep_details_t&       keep,
+		      const optional<datetime_t>& moment = none);
+
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
   /** Serialization. */

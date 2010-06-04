@@ -198,6 +198,7 @@ public:
 
   value_t reload_command(call_scope_t&);
   value_t echo_command(call_scope_t& scope);
+  value_t pricemap_command(call_scope_t& scope);
 
   keep_details_t what_to_keep() {
     bool lots = HANDLED(lots) || HANDLED(lots_actual);

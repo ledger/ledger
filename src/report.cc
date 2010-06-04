@@ -842,6 +842,18 @@ value_t report_t::echo_command(call_scope_t& scope)
   return true;
 }
 
+value_t report_t::pricemap_command(call_scope_t& scope)
+{
+  interactive_t args(scope, "&s");
+  std::ostream& out(output_stream);
+
+  commodity_pool_t::current_pool->print_pricemap
+    (out, what_to_keep(), args.has(0) ?
+     optional<datetime_t>(datetime_t(parse_date(args.get<string>(0)))) : none);
+
+  return true;
+}
+
 option_t<report_t> * report_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -1414,6 +1426,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 			     maybe_format(HANDLER(prepend_format_)),
 			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#pricedb"));
+      }
+      else if (is_eq(p, "pricemap")) {
+	return MAKE_FUNCTOR(report_t::pricemap_command);
       }
       else if (is_eq(p, "payees")) {
 	return WRAP_FUNCTOR(reporter<>(new report_payees(*this), *this,
