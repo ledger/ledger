@@ -2,18 +2,18 @@
 <<<
 >>>1
 >>>2
-While parsing file "$sourcepath/src/amount.h", line 67: 
+While parsing file "$sourcepath/src/amount.h", line 66: 
 Error: No quantity specified for amount
-While parsing file "$sourcepath/src/amount.h", line 721: 
+While parsing file "$sourcepath/src/amount.h", line 720: 
 Error: Invalid date/time: line amount_t amoun
-While parsing file "$sourcepath/src/amount.h", line 727: 
+While parsing file "$sourcepath/src/amount.h", line 726: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 733: 
+While parsing file "$sourcepath/src/amount.h", line 732: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 739: 
+While parsing file "$sourcepath/src/amount.h", line 738: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 745: 
+While parsing file "$sourcepath/src/amount.h", line 744: 
 Error: Invalid date/time: line std::ostream& 
-While parsing file "$sourcepath/src/amount.h", line 752: 
+While parsing file "$sourcepath/src/amount.h", line 751: 
 Error: Invalid date/time: line std::istream& 
 === 7

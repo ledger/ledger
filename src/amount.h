@@ -62,7 +62,6 @@ namespace ledger {
 class commodity_t;
 class annotation_t;
 class keep_details_t;
-class commodity_pool_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
@@ -514,7 +513,7 @@ public:
       amount's commodity:
 
       commodity() returns an amount's commodity.  If the amount has no
-      commodity, the value returned is `current_pool->null_commodity'.
+      commodity, the value returned is the `null_commodity'.
 
       has_commodity() returns true if the amount has a commodity.
 
