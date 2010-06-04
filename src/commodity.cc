@@ -235,20 +235,20 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
   DEBUG_INDENT("commodity.prices.find", indent);
   DEBUG("commodity.prices.find", "varied_find_price for: " << source);
 
-  DEBUG_INDENT("commodity.prices.find", indent);
+  DEBUG_INDENT("commodity.prices.find", indent + 1);
   if (commodity)
-    DEBUG("commodity.prices.find", "  looking for: commodity '" << *commodity << "'");
+    DEBUG("commodity.prices.find", "looking for: commodity '" << *commodity << "'");
   else
-    DEBUG("commodity.prices.find", "  looking for: any commodity");
+    DEBUG("commodity.prices.find", "looking for: any commodity");
 
   if (moment) {
-    DEBUG_INDENT("commodity.prices.find", indent);
-    DEBUG("commodity.prices.find", "  time index: " << *moment);
+    DEBUG_INDENT("commodity.prices.find", indent + 1);
+    DEBUG("commodity.prices.find", "time index: " << *moment);
   }
 
   if (oldest) {
-    DEBUG_INDENT("commodity.prices.find", indent);
-    DEBUG("commodity.prices.find", "  only consider prices younger than: " << *oldest);
+    DEBUG_INDENT("commodity.prices.find", indent + 1);
+    DEBUG("commodity.prices.find", "only consider prices younger than: " << *oldest);
   }
 #endif
 
@@ -266,7 +266,7 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
 
     DEBUG_INDENT("commodity.prices.find", indent + 1);
     DEBUG("commodity.prices.find",
-	  "  searching for price via commodity '" << comm << "'");
+	  "searching for price via commodity '" << comm << "'");
 
     point = hist.second.find_price(moment, limit
 #if defined(DEBUG_ON)
@@ -280,7 +280,7 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
 
       if (commodity && comm != *commodity) {
 	DEBUG_INDENT("commodity.prices.find", indent + 1);
-	DEBUG("commodity.prices.find", "  looking for translation price");
+	DEBUG("commodity.prices.find", "looking for translation price");
 
 	xlat = comm.find_price(commodity, moment, limit
 #if defined(DEBUG_ON)
@@ -289,7 +289,7 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
 			       );
 	if (xlat) {
 	  DEBUG_INDENT("commodity.prices.find", indent + 1);
-	  DEBUG("commodity.prices.find", "  found translated price "
+	  DEBUG("commodity.prices.find", "found translated price "
 		<< xlat->price << " from " << xlat->when);
 
 	  point->price = xlat->price * point->price;
@@ -298,35 +298,38 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
 
 	    DEBUG_INDENT("commodity.prices.find", indent + 1);
 	    DEBUG("commodity.prices.find",
-		  "  adjusting date of result back to " << point->when);
+		  "adjusting date of result back to " << point->when);
 	  }
 	} else {
 	  DEBUG_INDENT("commodity.prices.find", indent + 1);
-	  DEBUG("commodity.prices.find", "  saw no translated price there");
+	  DEBUG("commodity.prices.find", "saw no translated price there");
 	  continue;
 	}
       }
 
       assert(! commodity || point->price.commodity() == *commodity);
+
       DEBUG_INDENT("commodity.prices.find", indent + 1);
       DEBUG("commodity.prices.find",
-	    "  saw a price there: " << point->price << " from " << point->when);
+	    "saw a price there: " << point->price << " from " << point->when);
 
       if (! limit || point->when > *limit) {
 	limit = point->when;
 	best  = *point;
 	found = true;
+
+	DEBUG_INDENT("commodity.prices.find", indent + 1);
+	DEBUG("commodity.prices.find",
+	      "search limit adjusted to " << *limit);
       }
     } else {
       DEBUG_INDENT("commodity.prices.find", indent + 1);
-      DEBUG("commodity.prices.find", "  saw no price there");
+      DEBUG("commodity.prices.find", "saw no price there");
     }
   }
 
   if (found) {
-    DEBUG_INDENT("commodity.prices.find", indent);
-    DEBUG("commodity.prices.find",
-	  "  found price " << best.price << " from " << best.when);
+    DEBUG_INDENT("commodity.prices.find", indent + 1);
     DEBUG("commodity.download",
 	  "found price " << best.price << " from " << best.when);
     return best;
