@@ -418,9 +418,7 @@ namespace {
   {
     switch (buf[0]) {
     case 'a':
-      return (std::strcmp(buf, "and") == 0 ||
-	      std::strcmp(buf, "any") == 0 ||
-	      std::strcmp(buf, "all") == 0);
+      return std::strcmp(buf, "and") == 0;
     case 'd':
       return std::strcmp(buf, "div") == 0;
     case 'e':
