@@ -124,7 +124,9 @@ class BoostInfo(object):
         return None
 
     def locate_boost(self):
-        for path in map(lambda x: join(x, 'lib'), search_prefixes):
+        lib64_dirs = map(lambda x: join(x, 'lib64'), search_prefixes)
+        lib_dirs = map(lambda x: join(x, 'lib'), search_prefixes)
+        for path in lib64_dirs + lib_dirs:
             self.log.info('Looking for Boost in %s...' % path)
             self.suffix = self.find_boost_in_directory(path)
             if self.suffix is not None:
