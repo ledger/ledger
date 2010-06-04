@@ -351,7 +351,8 @@ public:
 	     , const int indent = 0
 #endif
 	     ) const {
-    if (base->varied_history && ! has_flags(COMMODITY_WALKED)) {
+    if (! has_flags(COMMODITY_WALKED) && base->varied_history &&
+	(commodity || ! has_flags(COMMODITY_PRIMARY))) {
       const_cast<commodity_t&>(*this).add_flags(COMMODITY_WALKED);
       optional<price_point_t> point =
 	base->varied_history->find_price(*this, commodity, moment, oldest

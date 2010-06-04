@@ -264,6 +264,10 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
     if (comm == source)
       continue;
 
+    // Only value secondary commodities in terms of primary ones
+    if (! commodity && ! comm.has_flags(COMMODITY_PRIMARY))
+      continue;
+
     DEBUG_INDENT("commodity.prices.find", indent + 1);
     DEBUG("commodity.prices.find",
 	  "searching for price via commodity '" << comm << "'");
