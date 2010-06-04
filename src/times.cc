@@ -333,10 +333,12 @@ date_t date_specifier_t::begin(const optional_year& current_year) const
   month_type the_month = month ? *month : date_t::month_type(1);
   day_type   the_day   = day ? *day : date_t::day_type(1);
 
+#if !defined(NO_ASSERTS)
   if (day)
     assert(! wday);
   else if (wday)
     assert(! day);
+#endif
 
   // jww (2009-11-16): Handle wday.  If a month is set, find the most recent
   // wday in that month; if the year is set, then in that year.

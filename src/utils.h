@@ -434,8 +434,8 @@ void finish_timer(const char * name);
   (SHOW_TRACE(lvl) ? ledger::finish_timer(#name) : ((void)0))
 #else
 #define TRACE_START(name, lvl, msg)
-#define TRACE_STOP(name)
-#define TRACE_FINISH(name)
+#define TRACE_STOP(name, lvl)
+#define TRACE_FINISH(name, lvl)
 #endif
 
 #if defined(DEBUG_ON)
@@ -474,8 +474,8 @@ void finish_timer(const char * name);
 #else // ! (LOGGING_ON && TIMERS_ON)
 
 #define TRACE_START(lvl, msg, name)
-#define TRACE_STOP(name)
-#define TRACE_FINISH(name)
+#define TRACE_STOP(name, lvl)
+#define TRACE_FINISH(name, lvl)
 
 #define DEBUG_START(name, msg)
 #define DEBUG_START_(name, cat, msg)

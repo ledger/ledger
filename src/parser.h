@@ -61,10 +61,16 @@ class expr_t::parser_t : public noncopyable
     return lookahead;
   }
 
+#if !defined(NO_ASSERTS)
   void push_token(const token_t& tok) const {
     assert(&tok == &lookahead);
     use_lookahead = true;
   }
+#else
+  void push_token(const token_t&) const {
+    use_lookahead = true;
+  }
+#endif // !defined(NO_ASSERTS)
   void push_token() const {
     use_lookahead = true;
   }

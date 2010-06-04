@@ -115,8 +115,10 @@ struct string_from_python
 	utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
       else if (sizeof(Py_UNICODE) == 4) // UTF-32
 	utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+#if !defined(NO_ASSERTS)
       else
 	assert(! "Py_UNICODE has an unexpected size");
+#endif
 
       if (value == 0) throw_error_already_set();
       void* storage =

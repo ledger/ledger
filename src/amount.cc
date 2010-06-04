@@ -240,14 +240,18 @@ void amount_t::initialize()
     // in terms of seconds, but reported as minutes or hours.
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+#if !defined(NO_ASSERTS)
     else
       assert(false);
+#endif
 
     // Add a "percentile" commodity
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("%"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+#if !defined(NO_ASSERTS)
     else
       assert(false);
+#endif
 
     is_initialized = true;
   }
