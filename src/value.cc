@@ -935,6 +935,20 @@ bool value_t::is_less_than(const value_t& val) const
       }
       return ! no_amounts;
     }
+    case SEQUENCE: {
+      sequence_t::const_iterator i = as_sequence().begin();
+      sequence_t::const_iterator j = val.as_sequence().begin();
+      for (; (i != as_sequence().end() &&
+	      j != val.as_sequence().end()); i++, j++) {
+	if (! ((*i) < (*j)))
+	  return false;
+      }
+      if (i == as_sequence().end())
+	return true;
+      else
+	return false;
+      break;
+    }
     default:
       break;
     }
@@ -1040,6 +1054,20 @@ bool value_t::is_greater_than(const value_t& val) const
 	no_amounts = false;
       }
       return ! no_amounts;
+    }
+    case SEQUENCE: {
+      sequence_t::const_iterator i = as_sequence().begin();
+      sequence_t::const_iterator j = val.as_sequence().begin();
+      for (; (i != as_sequence().end() &&
+	      j != val.as_sequence().end()); i++, j++) {
+	if (! ((*i) > (*j)))
+	  return false;
+      }
+      if (i == as_sequence().end())
+	return false;
+      else
+	return true;
+      break;
     }
     default:
       break;
