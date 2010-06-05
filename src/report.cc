@@ -842,6 +842,18 @@ value_t report_t::echo_command(call_scope_t& scope)
   return true;
 }
 
+value_t report_t::pricemap_command(call_scope_t& scope)
+{
+  interactive_t args(scope, "&s");
+  std::ostream& out(output_stream);
+
+  commodity_pool_t::current_pool->print_pricemap
+    (out, what_to_keep(), args.has(0) ?
+     optional<datetime_t>(datetime_t(parse_date(args.get<string>(0)))) : none);
+
+  return true;
+}
+
 option_t<report_t> * report_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -1318,9 +1330,10 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
   case symbol_t::COMMAND:
     switch (*p) {
     case 'a':
-      if (is_eq(p, "accounts"))
+      if (is_eq(p, "accounts")) {
 	return WRAP_FUNCTOR(reporter<>(new report_accounts(*this), *this,
 				       "#accounts"));
+      }
       break;
 
     case 'b':
@@ -1381,48 +1394,60 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	HANDLER(print_virtual).on_only(string("#equity"));
 	return WRAP_FUNCTOR(reporter<>(new print_xacts(*this), *this, "#equity"));
       }
-      else if (is_eq(p, "entry"))
+      else if (is_eq(p, "entry")) {
 	return WRAP_FUNCTOR(xact_command);
-      else if (is_eq(p, "emacs"))
+      }
+      else if (is_eq(p, "emacs")) {
 	return WRAP_FUNCTOR
 	  (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
-      else if (is_eq(p, "echo"))
+      }
+      else if (is_eq(p, "echo")) {
 	return MAKE_FUNCTOR(report_t::echo_command);
+      }
       break;
 
     case 'p':
-      if (*(p + 1) == '\0' || is_eq(p, "print"))
+      if (*(p + 1) == '\0' || is_eq(p, "print")) {
 	return WRAP_FUNCTOR
 	  (reporter<>(new print_xacts(*this, HANDLED(raw)), *this, "#print"));
-      else if (is_eq(p, "prices"))
+      }
+      else if (is_eq(p, "prices")) {
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	   (new format_posts(*this, report_format(HANDLER(prices_format_)),
 			     maybe_format(HANDLER(prepend_format_)),
 			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#prices"));
-      else if (is_eq(p, "pricedb"))
+      }
+      else if (is_eq(p, "pricedb")) {
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
 	   (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
 			     maybe_format(HANDLER(prepend_format_)),
 			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#pricedb"));
-      else if (is_eq(p, "payees"))
+      }
+      else if (is_eq(p, "pricemap")) {
+	return MAKE_FUNCTOR(report_t::pricemap_command);
+      }
+      else if (is_eq(p, "payees")) {
 	return WRAP_FUNCTOR(reporter<>(new report_payees(*this), *this,
 				       "#payees"));
+      }
       break;
 
     case 'r':
-      if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register"))
+      if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register")) {
 	return WRAP_FUNCTOR
 	  (reporter<>
 	   (new format_posts(*this, report_format(HANDLER(register_format_)),
 			     maybe_format(HANDLER(prepend_format_)),
 			     HANDLER(prepend_width_).value.to_long()),
 	    *this, "#register"));
-      else if (is_eq(p, "reload"))
+      }
+      else if (is_eq(p, "reload")) {
 	return MAKE_FUNCTOR(report_t::reload_command);
+      }
       break;
 
     case 's':
@@ -1448,6 +1473,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'e':
       if (is_eq(p, "eval"))
 	return WRAP_FUNCTOR(eval_command);
+      else if (is_eq(p, "expr"))
+	return WRAP_FUNCTOR(parse_command);
       break;
     case 'f':
       if (is_eq(p, "format"))

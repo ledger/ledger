@@ -149,10 +149,6 @@ namespace {
       mpfr_set_prec(tempfb, num_prec + den_prec);
       mpfr_div(tempfb, tempfnum, tempfden, GMP_RNDN);
 
-      char bigbuf[4096];
-      mpfr_sprintf(bigbuf, "%.RNf", tempfb);
-      DEBUG("amount.convert", "num/den = " << bigbuf);
-
       if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
 	throw_(amount_error,
 	       _("Cannot output amount to a floating-point representation"));
@@ -244,14 +240,18 @@ void amount_t::initialize()
     // in terms of seconds, but reported as minutes or hours.
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+#if !defined(NO_ASSERTS)
     else
       assert(false);
+#endif
 
     // Add a "percentile" commodity
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("%"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+#if !defined(NO_ASSERTS)
     else
       assert(false);
+#endif
 
     is_initialized = true;
   }
@@ -472,7 +472,7 @@ amount_t& amount_t::operator-=(const amount_t& amt)
   return *this;
 }
 
-amount_t& amount_t::operator*=(const amount_t& amt)
+amount_t& amount_t::multiply(const amount_t& amt, bool ignore_commodity)
 {
   VERIFY(amt.valid());
 
@@ -491,7 +491,7 @@ amount_t& amount_t::operator*=(const amount_t& amt)
   quantity->prec =
     static_cast<precision_t>(quantity->prec + amt.quantity->prec);
 
-  if (! has_commodity())
+  if (! has_commodity() && ! ignore_commodity)
     commodity_ = amt.commodity_;
 
   if (has_commodity() && ! keep_precision()) {
@@ -741,24 +741,33 @@ amount_t::value(const bool		      primary_only,
 #endif
     if (has_commodity() &&
 	(! primary_only || ! commodity().has_flags(COMMODITY_PRIMARY))) {
-      if (in_terms_of && commodity() == *in_terms_of) {
+      if (in_terms_of &&
+	  commodity().referent() == in_terms_of->referent()) {
 	return *this;
       }
       else if (has_annotation() && annotation().price &&
 	       annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-	return (*annotation().price * number()).rounded();
+	amount_t price(*annotation().price);
+	price.multiply(*this, true);
+	price.in_place_round();
+	return price;
       }
       else {
 	optional<price_point_t> point =
 	  commodity().find_price(in_terms_of, moment);
 
-	// Whether a price was found or not, check whether we should attempt
-	// to download a price from the Internet.  This is done if (a) no
-	// price was found, or (b) the price is "stale" according to the
-	// setting of --price-exp.
-	point = commodity().check_for_updated_price(point, moment, in_terms_of);
-	if (point)
-	  return (point->price * number()).rounded();
+	// Whether a price was found or not, check whether we should
+	// attempt to download a price from the Internet.  This is done
+	// if (a) no price was found, or (b) the price is "stale"
+	// according to the setting of --price-exp.
+	point = commodity().check_for_updated_price(point, moment,
+						    in_terms_of);
+	if (point) {
+	  amount_t price(point->price);
+	  price.multiply(*this, true);
+	  price.in_place_round();
+	  return price;
+	}
       }
     }
   } else {

@@ -124,7 +124,9 @@ class BoostInfo(object):
         return None
 
     def locate_boost(self):
-        for path in map(lambda x: join(x, 'lib'), search_prefixes):
+        lib64_dirs = map(lambda x: join(x, 'lib64'), search_prefixes)
+        lib_dirs = map(lambda x: join(x, 'lib'), search_prefixes)
+        for path in lib64_dirs + lib_dirs:
             self.log.info('Looking for Boost in %s...' % path)
             self.suffix = self.find_boost_in_directory(path)
             if self.suffix is not None:
@@ -685,12 +687,16 @@ class PrepareBuild(CommandLineApp):
                          self.current_version())
         version_m4.close()
 
+    def copytimes(self, src, dest):
+        os.utime(dest, (os.stat(src)[ST_ATIME], os.stat(src)[ST_MTIME]))
+
     def phase_autogen(self, *args):
         self.log.info('Executing phase: autogen')
 
         if not exists('autogen.sh') or \
            self.isnewer('tools/autogen.sh', 'autogen.sh'):
             shutil.copyfile('tools/autogen.sh', 'autogen.sh')
+            self.copytimes('tools/autogen.sh', 'autogen.sh')
 
         self.execute('sh', 'tools/autogen.sh')
 
@@ -704,10 +710,12 @@ class PrepareBuild(CommandLineApp):
         if not exists('configure.ac') or \
            self.isnewer('tools/configure.ac', 'configure.ac'):
             shutil.copyfile('tools/configure.ac', 'configure.ac')
+            self.copytimes('tools/configure.ac', 'configure.ac')
 
         if not exists('Makefile.am') or \
            self.isnewer('tools/Makefile.am', 'Makefile.am'):
             shutil.copyfile('tools/Makefile.am', 'Makefile.am')
+            self.copytimes('tools/Makefile.am', 'Makefile.am')
 
         reason = self.need_to_prepare_autotools()
         if reason:
@@ -1159,6 +1167,7 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-g')
 
     def setup_flavor_opt(self):
+        self.CPPFLAGS.append('-DNDEBUG=1')
         if self.darwin_gcc:
             self.option_no_pch()
             if '--disable-shared' in self.configure_args:

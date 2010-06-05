@@ -50,7 +50,6 @@
 
 namespace ledger {
 
-class commodity_pool_t;
 class xact_t;
 
 class session_t : public symbol_scope_t

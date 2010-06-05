@@ -5,7 +5,7 @@ set -e
 
 # Exit if it's not a branch we're interested in being thorough about
 if echo $(git rev-parse --symbolic-full-name HEAD) | \
-    egrep -q '^refs/heads/(next|t/)'; then
+    egrep -q '^refs/heads/(t/)'; then
     exit 0
 fi
 
@@ -41,12 +41,12 @@ cd $TMPDIR
 if [ ! -f Makefile -o \
      Makefile.in -nt Makefile -o \
      configure -nt Makefile -o \
-     Makefile.am -nt Makefile.in -o \
-     configure.ac -nt configure -o \
+     tools/Makefile.am -nt Makefile.in -o \
+     tools/configure.ac -nt configure -o \
      \( -f acprep -a acprep -nt Makefile \) ]
 then
     if [ -f acprep ]; then
-	./acprep default --local
+	echo Will run acprep in a moment
     elif [ -f autogen.sh ]; then
 	sh autogen.sh && ./configure
     else
@@ -56,6 +56,10 @@ fi
 
 # Finally, (re)build this proposed source tree and see if it passes
 # muster.
-nice -n 20 make check
+if [ -f acprep ]; then
+    nice -n 20 ./acprep default --warn make check
+else
+    nice -n 20 make check
+fi
 
 exit 0

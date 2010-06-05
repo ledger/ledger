@@ -155,17 +155,21 @@ public:
   result_type calc(scope_t& scope)
   {
     if (! compiled) {
+#if defined(DEBUG_ON)
       if (SHOW_DEBUG("expr.compile")) {
 	DEBUG("expr.compile", "Before compilation:");
 	dump(*_log_stream);
       }
+#endif // defined(DEBUG_ON)
 
       compile(scope);
 
+#if defined(DEBUG_ON)
       if (SHOW_DEBUG("expr.compile")) {
 	DEBUG("expr.compile", "After compilation:");
 	dump(*_log_stream);
       }
+#endif // defined(DEBUG_ON)
     }
 
     return real_calc(scope);

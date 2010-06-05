@@ -78,10 +78,12 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
+#if defined(DEBUG_ON)
       if (SHOW_DEBUG("expr.compile")) {
 	DEBUG("expr.compile", "Found definition:");
 	def->dump(*_log_stream, 0);
       }
+#endif // defined(DEBUG_ON)
       return copy(def);
     }
     else if (left()) {

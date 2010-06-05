@@ -695,8 +695,10 @@ void instance_t::master_account_directive(char * line)
 {
   if (account_t * acct = context.top_account()->find_account(line))
     context.state_stack.push_front(acct);
+#if !defined(NO_ASSERTS)
   else
     assert(! "Failed to create account");
+#endif
 }
 
 void instance_t::end_directive(char * kind)
@@ -763,8 +765,12 @@ void instance_t::payee_mapping_directive(char * line)
       (payee_mapping_t(mask_t(regex), payee));
 
   while (peek_whitespace_line()) {
+#if defined(NO_ASSERTS)
+    read_line(line);
+#else
     std::streamsize len = read_line(line);
     assert(len > 0);
+#endif
 
     regex = skip_ws(line);
     if (! *regex)
@@ -786,8 +792,12 @@ void instance_t::account_mapping_directive(char * line)
 			 context.top_account()->find_account(account_name)));
 
   while (peek_whitespace_line()) {
+#if defined(NO_ASSERTS)
+    read_line(line);
+#else
     std::streamsize len = read_line(line);
     assert(len > 0);
+#endif
 
     payee_regex = skip_ws(line);
     if (! *payee_regex)

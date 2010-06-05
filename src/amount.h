@@ -62,7 +62,6 @@ namespace ledger {
 class commodity_t;
 class annotation_t;
 class keep_details_t;
-class commodity_pool_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
@@ -275,7 +274,10 @@ public:
 
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
-  amount_t& operator*=(const amount_t& amt);
+  amount_t& operator*=(const amount_t& amt) {
+    return multiply(amt);
+  }
+  amount_t& multiply(const amount_t& amt, bool ignore_commodity = false);
 
   /** Divide two amounts while extending the precision to preserve the
       accuracy of the result.  For example, if \c 10 is divided by \c 3,
@@ -511,7 +513,7 @@ public:
       amount's commodity:
 
       commodity() returns an amount's commodity.  If the amount has no
-      commodity, the value returned is `current_pool->null_commodity'.
+      commodity, the value returned is the `null_commodity'.
 
       has_commodity() returns true if the amount has a commodity.
 

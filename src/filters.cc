@@ -50,7 +50,7 @@ void post_splitter::print_title(const value_t& val)
 
 void post_splitter::flush()
 {
-  foreach (value_to_posts_map::value_type pair, posts_map) {
+  foreach (value_to_posts_map::value_type& pair, posts_map) {
     preflush_func(pair.first);
     
     foreach (post_t * post, pair.second)
@@ -256,6 +256,7 @@ void anonymize_posts::operator()(post_t& post)
     create_temp_account_from_path(account_names, temps, xact.journal->master);
   post_t& temp = temps.copy_post(post, xact, new_account);
   temp.note = none;
+  temp.add_flags(POST_ANONYMIZED);
 
   (*handler)(temp);
 }
@@ -894,7 +895,7 @@ void posts_as_equity::report_subtotal()
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
     if (pair.second.value.is_balance()) {
-      foreach (balance_t::amounts_map::value_type amount_pair,
+      foreach (const balance_t::amounts_map::value_type& amount_pair,
 	       pair.second.value.as_balance().amounts)
 	handle_value(amount_pair.second, pair.second.account, &xact, temps,
 		     handler);
@@ -907,7 +908,7 @@ void posts_as_equity::report_subtotal()
   values.clear();
 
   if (total.is_balance()) {
-    foreach (balance_t::amounts_map::value_type pair,
+    foreach (const balance_t::amounts_map::value_type& pair,
 	     total.as_balance().amounts) {
       post_t& balance_post = temps.create_post(xact, balance_account);
       balance_post.amount = - pair.second;
@@ -1166,8 +1167,10 @@ void forecast_posts::flush()
     }
 
     date_t& begin = *(*least).first.start;
+#if !defined(NO_ASSERTS)
     if ((*least).first.finish)
       assert(begin < *(*least).first.finish);
+#endif
 
     // If the next date in the series for this periodic posting is more than 5
     // years beyond the last valid post we generated, drop it from further

@@ -226,16 +226,12 @@ class sort_posts : public item_handler<post_t>
 
 public:
   sort_posts(post_handler_ptr handler, const expr_t& _sort_order)
-    : item_handler<post_t>(handler),
-      sort_order(_sort_order) {
-    TRACE_CTOR(sort_posts,
-	       "post_handler_ptr, const value_expr&");
+    : item_handler<post_t>(handler), sort_order(_sort_order) {
+    TRACE_CTOR(sort_posts, "post_handler_ptr, const value_expr&");
   }
   sort_posts(post_handler_ptr handler, const string& _sort_order)
-    : item_handler<post_t>(handler),
-      sort_order(_sort_order) {
-    TRACE_CTOR(sort_posts,
-	       "post_handler_ptr, const string&");
+    : item_handler<post_t>(handler), sort_order(_sort_order) {
+    TRACE_CTOR(sort_posts, "post_handler_ptr, const string&");
   }
   virtual ~sort_posts() {
     TRACE_DTOR(sort_posts);

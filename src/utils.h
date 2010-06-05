@@ -49,17 +49,17 @@
  */
 /*@{*/
 
+#define TIMERS_ON   1
+
 #if defined(DEBUG_MODE)
 #define VERIFY_ON   1
 #define TRACING_ON  1
 #define DEBUG_ON    1
-#define TIMERS_ON   1
 #elif defined(NDEBUG)
 #define NO_ASSERTS  1
-#define NO_LOGGING  1
+//#define NO_LOGGING  1
 #else
 #define TRACING_ON  1		// use --trace X to enable
-#define TIMERS_ON   1
 #endif
 
 /*@}*/
@@ -434,8 +434,8 @@ void finish_timer(const char * name);
   (SHOW_TRACE(lvl) ? ledger::finish_timer(#name) : ((void)0))
 #else
 #define TRACE_START(name, lvl, msg)
-#define TRACE_STOP(name)
-#define TRACE_FINISH(name)
+#define TRACE_STOP(name, lvl)
+#define TRACE_FINISH(name, lvl)
 #endif
 
 #if defined(DEBUG_ON)
@@ -474,8 +474,8 @@ void finish_timer(const char * name);
 #else // ! (LOGGING_ON && TIMERS_ON)
 
 #define TRACE_START(lvl, msg, name)
-#define TRACE_STOP(name)
-#define TRACE_FINISH(name)
+#define TRACE_STOP(name, lvl)
+#define TRACE_FINISH(name, lvl)
 
 #define DEBUG_START(name, msg)
 #define DEBUG_START_(name, cat, msg)

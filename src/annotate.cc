@@ -190,7 +190,7 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 				keep_date  ? details.date  : none,
 				keep_tag   ? details.tag   : none));
   } else {
-    new_comm = pool().find_or_create(base_symbol());
+    new_comm = &referent();
   }
 
   assert(new_comm);

@@ -878,7 +878,6 @@ public:
   sequence_t::iterator begin() {
     return as_sequence_lval().begin();
   }
-
   sequence_t::iterator end() {
     return as_sequence_lval().end();
   }
@@ -886,7 +885,6 @@ public:
   sequence_t::const_iterator begin() const {
     return as_sequence().begin();
   }
-
   sequence_t::const_iterator end() const {
     return as_sequence().end();
   }

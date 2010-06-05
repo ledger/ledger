@@ -122,8 +122,11 @@ string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
   comm.print(name);
   details.print(name, comm.pool().keep_base);
 
-  DEBUG("amounts.commodities", "make_qualified_name for "
-	<< *comm.qualified_symbol << std::endl << details);
+#if defined(DEBUG_ON)
+  if (comm.qualified_symbol)
+    DEBUG("amounts.commodities", "make_qualified_name for "
+	  << *comm.qualified_symbol << std::endl << details);
+#endif
   DEBUG("amounts.commodities", "qualified_name is " << name.str());
 
   return name.str();
@@ -359,6 +362,78 @@ commodity_pool_t::parse_price_expression(const std::string&          str,
     return commodity;
   }
   return NULL;
+}
+
+void commodity_pool_t::print_pricemap(std::ostream&		  out,
+				      const keep_details_t&       keep,
+				      const optional<datetime_t>& moment)
+{
+  typedef std::map<commodity_t *, commodity_t *> comm_map_t;
+
+  comm_map_t comm_map;
+
+  foreach (const commodities_map::value_type& comm_pair, commodities) {
+    commodity_t * comm(&comm_pair.second->strip_annotations(keep));
+    comm_map.insert(comm_map_t::value_type(comm, NULL));
+  }
+
+  out << "digraph commodities {\n";
+
+  foreach (const comm_map_t::value_type& comm_pair, comm_map) {
+    commodity_t * comm(comm_pair.first);
+    if (comm->has_flags(COMMODITY_BUILTIN))
+      continue;
+
+    out << "    ";
+    if (commodity_t::symbol_needs_quotes(comm->symbol()))
+      out << comm->symbol() << ";\n";
+    else
+      out << "\"" << comm->symbol() << "\";\n";
+
+    if (! comm->has_flags(COMMODITY_NOMARKET) &&
+	(! commodity_pool_t::current_pool->default_commodity ||
+	 comm != commodity_pool_t::current_pool->default_commodity)) {
+      if (optional<commodity_t::varied_history_t&> vhist =
+	  comm->varied_history()) {
+	foreach (const commodity_t::history_by_commodity_map::value_type& pair,
+		 vhist->histories) {
+	  datetime_t most_recent;
+	  amount_t   most_recent_amt;
+	  foreach (const commodity_t::history_map::value_type& inner_pair,
+		   pair.second.prices) {
+	    if ((most_recent.is_not_a_date_time() ||
+		 inner_pair.first > most_recent) &&
+		(! moment || inner_pair.first <= moment)) {
+	      most_recent     = inner_pair.first;
+	      most_recent_amt = inner_pair.second;
+	    }
+	  }
+
+	  if (! most_recent.is_not_a_date_time()) {
+	    out << "    ";
+	    if (commodity_t::symbol_needs_quotes(comm->symbol()))
+	      out << comm->symbol();
+	    else
+	      out << "\"" << comm->symbol() << "\"";
+
+	    out << " -> ";
+
+	    if (commodity_t::symbol_needs_quotes(pair.first->symbol()))
+	      out << pair.first->symbol();
+	    else
+	      out << "\"" << pair.first->symbol() << "\"";
+
+	    out << " [label=\""
+		<< most_recent_amt.number() << "\\n"
+		<< format_date(most_recent.date(), FMT_WRITTEN)
+		<< "\" fontcolor=\"#008e28\"];\n";
+	  }
+	}
+      }
+    }
+  }
+
+  out << "}\n";
 }
 
 } // namespace ledger
