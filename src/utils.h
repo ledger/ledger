@@ -49,17 +49,17 @@
  */
 /*@{*/
 
+#define TIMERS_ON   1
+
 #if defined(DEBUG_MODE)
 #define VERIFY_ON   1
 #define TRACING_ON  1
 #define DEBUG_ON    1
-#define TIMERS_ON   1
 #elif defined(NDEBUG)
 #define NO_ASSERTS  1
-#define NO_LOGGING  1
+//#define NO_LOGGING  1
 #else
 #define TRACING_ON  1		// use --trace X to enable
-#define TIMERS_ON   1
 #endif
 
 /*@}*/
