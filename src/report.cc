@@ -1473,6 +1473,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'e':
       if (is_eq(p, "eval"))
 	return WRAP_FUNCTOR(eval_command);
+      else if (is_eq(p, "expr"))
+	return WRAP_FUNCTOR(parse_command);
       break;
     case 'f':
       if (is_eq(p, "format"))
