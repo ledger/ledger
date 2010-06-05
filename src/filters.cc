@@ -256,6 +256,7 @@ void anonymize_posts::operator()(post_t& post)
     create_temp_account_from_path(account_names, temps, xact.journal->master);
   post_t& temp = temps.copy_post(post, xact, new_account);
   temp.note = none;
+  temp.add_flags(POST_ANONYMIZED);
 
   (*handler)(temp);
 }

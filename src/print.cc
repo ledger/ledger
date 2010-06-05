@@ -120,6 +120,7 @@ namespace {
 
     foreach (post_t * post, xact.posts) {
       if (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
+	  ! post->has_flags(POST_ANONYMIZED) &&
 	  ! report.HANDLED(print_virtual))
 	continue;
 
