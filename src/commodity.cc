@@ -375,6 +375,7 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     optional<base_t::time_and_commodity_t> pair;
 #if defined(VERIFY_ON)
     optional<price_point_t> checkpoint;
+    bool found = false;
 #endif
 
     if (! nested) {
@@ -394,6 +395,7 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
 	      << ((*i).second ? (*i).second->price : amount_t(0L)));
 #if defined(VERIFY_ON)
 	IF_VERIFY() {
+	  found = true;
 	  checkpoint = (*i).second;
 	} else
 #endif // defined(VERIFY_ON)
@@ -422,7 +424,7 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     const_cast<commodity_t&>(*this).drop_flags(COMMODITY_WALKED);
 
 #if defined(VERIFY_ON)
-    if (DO_VERIFY() && pair) {
+    if (DO_VERIFY() && found) {
       VERIFY(checkpoint == point);
       return checkpoint;
     }
