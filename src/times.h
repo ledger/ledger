@@ -285,6 +285,7 @@ class date_specifier_t
 {
   friend class date_parser_t;
 
+public:
 #if 0
   typedef date_t::year_type	   year_type;
 #else
@@ -294,6 +295,7 @@ class date_specifier_t
   typedef date_t::day_type	   day_type;
   typedef date_t::day_of_week_type day_of_week_type;
 
+protected:
   optional<year_type>	     year;
   optional<month_type>	     month;
   optional<day_type>	     day;
