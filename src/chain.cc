@@ -39,8 +39,8 @@
 
 namespace ledger {
 
-post_handler_ptr chain_pre_post_handlers(report_t&	  report,
-					 post_handler_ptr base_handler)
+post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
+					 report_t&	  report)
 {
   post_handler_ptr handler(base_handler);
 
@@ -106,13 +106,14 @@ post_handler_ptr chain_pre_post_handlers(report_t&	  report,
   return handler;
 }
 
-post_handler_ptr chain_post_handlers(report_t&	      report,
-				     post_handler_ptr base_handler,
+post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
+				     report_t&	      report,
 				     bool             for_accounts_report)
 {
-  post_handler_ptr handler(base_handler);
-  predicate_t	   display_predicate;
-  predicate_t	   only_predicate;
+  post_handler_ptr	 handler(base_handler);
+  predicate_t		 display_predicate;
+  predicate_t		 only_predicate;
+  rounding_error_posts * rounding_handler = NULL;
 
   assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
@@ -137,6 +138,14 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
 			    report.HANDLED(tail_) ?
 			    report.HANDLER(tail_).value.to_int() : 0));
 
+    // changed_value_posts adds virtual posts to the list to account for changes
+    // in market value of commodities, which otherwise would affect the running
+    // total unpredictably.
+    if (report.HANDLED(revalued) && ! report.HANDLED(no_rounding)) {
+      rounding_handler = new rounding_error_posts(handler, report);
+      handler.reset(rounding_handler);
+    }
+
     // filter_posts will only pass through posts matching the
     // `display_predicate'.
     if (report.HANDLED(display_)) {
@@ -149,12 +158,11 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
   // changed_value_posts adds virtual posts to the list to account for changes
   // in market value of commodities, which otherwise would affect the running
   // total unpredictably.
-  if (report.HANDLED(revalued) && (! for_accounts_report ||
-				   report.HANDLED(unrealized)))
-    handler.reset(new changed_value_posts(handler, report,
-					  for_accounts_report,
+  if (report.HANDLED(revalued) &&
+      (! for_accounts_report || report.HANDLED(unrealized)))
+    handler.reset(new changed_value_posts(handler, report, for_accounts_report,
 					  report.HANDLED(unrealized),
-					  ! report.HANDLED(no_rounding)));
+					  rounding_handler));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
@@ -190,7 +198,7 @@ post_handler_ptr chain_post_handlers(report_t&	      report,
     // collapse_posts causes xacts with multiple posts to appear as xacts
     // with a subtotaled post for each commodity used.
     if (report.HANDLED(collapse))
-      handler.reset(new collapse_posts(handler, expr,
+      handler.reset(new collapse_posts(handler, report, expr,
 				       display_predicate, only_predicate,
 				       report.HANDLED(collapse_if_zero)));
 

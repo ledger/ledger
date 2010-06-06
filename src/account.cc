@@ -205,6 +205,10 @@ namespace {
   value_t get_count(account_t& account) {
     return long(account.family_details().posts_count);
   }
+  value_t get_cost(account_t&) {
+    throw_(calc_error, _("An account does not have a 'cost' value"));
+    return false;
+  }
 
   value_t get_depth(account_t& account) {
     return long(account.depth);
@@ -311,6 +315,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'c':
     if (name == "count")
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    else if (name == "cost")
+      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
     break;
 
   case 'd':

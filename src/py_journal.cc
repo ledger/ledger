@@ -190,8 +190,8 @@ namespace {
 
       journal_posts_iterator walker(coll->journal);
       coll->chain =
-	chain_post_handlers(coll->report,
-			    post_handler_ptr(coll->posts_collector));
+	chain_post_handlers(post_handler_ptr(coll->posts_collector),
+			    coll->report);
       pass_down_posts(coll->chain, walker);
     }
     catch (...) {

@@ -93,20 +93,20 @@ typedef shared_ptr<item_handler<account_t> > acct_handler_ptr;
 class report_t;
 
 post_handler_ptr
-chain_pre_post_handlers(report_t&	 report,
-			post_handler_ptr base_handler);
+chain_pre_post_handlers(post_handler_ptr base_handler,
+			report_t&	 report);
 
 post_handler_ptr
-chain_post_handlers(report_t&	     report,
-		    post_handler_ptr base_handler,
+chain_post_handlers(post_handler_ptr base_handler,
+		    report_t&	     report,
 		    bool             for_accounts_report = false);
 
 inline post_handler_ptr
-chain_handlers(report_t&	report,
-	       post_handler_ptr handler,
+chain_handlers(post_handler_ptr handler,
+	       report_t&	report,
 	       bool             for_accounts_report = false) {
-  handler = chain_post_handlers(report, handler, for_accounts_report);
-  handler = chain_pre_post_handlers(report, handler);
+  handler = chain_post_handlers(handler, report, for_accounts_report);
+  handler = chain_pre_post_handlers(handler, report);
   return handler;
 }
 
