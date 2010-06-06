@@ -141,7 +141,9 @@ void report_t::normalize_options(const string& verb)
     HANDLER(limit_).on(string("?normalize"), "actual");
 
   if (! HANDLED(empty))
-    HANDLER(display_).on(string("?normalize"), "amount|(!post&total)");
+    HANDLER(display_).on(string("?normalize"),
+			 string("(post?(display_amount|account=\"") +
+			 _("<Revalued>") + "\"):display_total)");
 
   if (verb[0] != 'b' && verb[0] != 'r')
     HANDLER(base).on_only(string("?normalize"));
@@ -284,11 +286,11 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
 namespace {
   struct posts_flusher
   {
-    report_t&	     report;
     post_handler_ptr handler;
+    report_t&	     report;
 
-    posts_flusher(report_t& _report, post_handler_ptr _handler)
-      : report(_report), handler(_handler) {}
+    posts_flusher(post_handler_ptr _handler, report_t& _report)
+      : handler(_handler), report(_report) {}
 
     void operator()(const value_t&) {
       report.session.journal->clear_xdata();
@@ -298,27 +300,27 @@ namespace {
 
 void report_t::posts_report(post_handler_ptr handler)
 {
-  handler = chain_post_handlers(*this, handler);
+  handler = chain_post_handlers(handler, *this);
   if (HANDLED(group_by_)) {
     std::auto_ptr<post_splitter>
-      splitter(new post_splitter(*this, handler, HANDLER(group_by_).expr));
-    splitter->set_postflush_func(posts_flusher(*this, handler));
+      splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
+    splitter->set_postflush_func(posts_flusher(handler, *this));
     handler = post_handler_ptr(splitter.release());
   }
-  handler = chain_pre_post_handlers(*this, handler);
+  handler = chain_pre_post_handlers(handler, *this);
 
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts(handler, walker);
 
   if (! HANDLED(group_by_))
-    posts_flusher(*this, handler)(value_t());
+    posts_flusher(handler, *this)(value_t());
 }
 
 void report_t::generate_report(post_handler_ptr handler)
 {
   HANDLER(limit_).on(string("#generate"), "actual");
 
-  handler = chain_handlers(*this, handler);
+  handler = chain_handlers(handler, *this);
 
   generate_posts_iterator walker
     (session, HANDLED(seed_) ?
@@ -331,7 +333,7 @@ void report_t::generate_report(post_handler_ptr handler)
 
 void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 {
-  handler = chain_handlers(*this, handler);
+  handler = chain_handlers(handler, *this);
 
   xact_posts_iterator walker(xact);
   pass_down_posts(handler, walker);
@@ -342,11 +344,11 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 namespace {
   struct accounts_title_printer
   {
-    report_t&	     report;
     acct_handler_ptr handler;
+    report_t&	     report;
 
-    accounts_title_printer(report_t& _report, acct_handler_ptr _handler)
-      : report(_report), handler(_handler) {}
+    accounts_title_printer(acct_handler_ptr _handler, report_t& _report)
+      : handler(_handler), report(_report) {}
 
     void operator()(const value_t& val)
     {
@@ -360,11 +362,11 @@ namespace {
 
   struct accounts_flusher
   {
-    report_t&	     report;
     acct_handler_ptr handler;
+    report_t&	     report;
 
-    accounts_flusher(report_t& _report, acct_handler_ptr _handler)
-      : report(_report), handler(_handler) {}
+    accounts_flusher(acct_handler_ptr _handler, report_t& _report)
+      : handler(_handler), report(_report) {}
 
     void operator()(const value_t&)
     {
@@ -403,18 +405,18 @@ namespace {
 void report_t::accounts_report(acct_handler_ptr handler)
 {
   post_handler_ptr chain =
-    chain_post_handlers(*this, post_handler_ptr(new ignore_posts),
+    chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
 			/* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
     std::auto_ptr<post_splitter>
-      splitter(new post_splitter(*this, chain, HANDLER(group_by_).expr));
+      splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
 
-    splitter->set_preflush_func(accounts_title_printer(*this, handler));
-    splitter->set_postflush_func(accounts_flusher(*this, handler));
+    splitter->set_preflush_func(accounts_title_printer(handler, *this));
+    splitter->set_postflush_func(accounts_flusher(handler, *this));
 
     chain = post_handler_ptr(splitter.release());
   }
-  chain = chain_pre_post_handlers(*this, chain);
+  chain = chain_pre_post_handlers(chain, *this);
 
   // The lifetime of the chain object controls the lifetime of all temporary
   // objects created within it during the call to pass_down_posts, which will
@@ -423,12 +425,12 @@ void report_t::accounts_report(acct_handler_ptr handler)
   pass_down_posts(chain, walker);
 
   if (! HANDLED(group_by_))
-    accounts_flusher(*this, handler)(value_t());
+    accounts_flusher(handler, *this)(value_t());
 }
 
 void report_t::commodities_report(post_handler_ptr handler)
 {
-  handler = chain_handlers(*this, handler);
+  handler = chain_handlers(handler, *this);
 
   posts_commodities_iterator walker(*session.journal.get());
   pass_down_posts(handler, walker);

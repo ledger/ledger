@@ -49,7 +49,6 @@ P 2010/03/01 00:00:00 S 8 P
 
 P 2010/04/01 00:00:00 S 16 P
 >>>1
-09-Jan-01 Sample 1a             As:Brokerage:Stocks               0            0
 09-Jan-15 Commodities revalued  <Revalued>                    100 P        100 P
 09-Feb-01 Commodities revalued  <Revalued>                    200 P        300 P
 09-Feb-01 Sample 2a             As:Brokerage:Stocks           300 P        600 P

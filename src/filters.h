@@ -63,17 +63,17 @@ public:
 
 protected:
   value_to_posts_map	     posts_map;
-  report_t&		     report;
   post_handler_ptr	     post_chain;
+  report_t&		     report;
   expr_t		     group_by_expr;
   custom_flusher_t	     preflush_func;
   optional<custom_flusher_t> postflush_func;
 
 public:
-  post_splitter(report_t&        _report,
-		post_handler_ptr _post_chain,
+  post_splitter(post_handler_ptr _post_chain,
+		report_t&        _report,
 		expr_t           _group_by_expr)
-    : report(_report), post_chain(_post_chain),
+    : post_chain(_post_chain), report(_report), 
       group_by_expr(_group_by_expr),
       preflush_func(bind(&post_splitter::print_title, this, _1)) {
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
@@ -401,11 +401,13 @@ class collapse_posts : public item_handler<post_t>
   account_t&	      totals_account;
   bool		      only_collapse_if_zero;
   std::list<post_t *> component_posts;
+  report_t&           report;
 
   collapse_posts();
 
 public:
   collapse_posts(post_handler_ptr handler,
+		 report_t&        _report,
 		 expr_t&	  _amount_expr,
 		 predicate_t	  _display_predicate,
 		 predicate_t	  _only_predicate,
@@ -415,8 +417,8 @@ public:
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
       totals_account(temps.create_account(_("<Total>"))),
-      only_collapse_if_zero(_only_collapse_if_zero) {
-    TRACE_CTOR(collapse_posts, "post_handler_ptr");
+      only_collapse_if_zero(_only_collapse_if_zero), report(_report) {
+    TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
@@ -479,37 +481,73 @@ public:
   }
 };
 
-class changed_value_posts : public item_handler<post_t>
+class rounding_error_posts : public item_handler<post_t>
 {
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
   expr_t	display_amount_expr;
+  expr_t	display_total_expr;
+  report_t&     report;
+  value_t	last_display_total;
+  temporaries_t	temps;
+  account_t&	rounding_account;
+
+  rounding_error_posts();
+
+public:
+  rounding_error_posts(post_handler_ptr handler,
+		       report_t&        _report);
+
+  virtual ~rounding_error_posts() {
+    TRACE_DTOR(rounding_error_posts);
+  }
+
+  void output_rounding(post_t& post);
+
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    display_amount_expr.mark_uncompiled();
+    display_total_expr.mark_uncompiled();
+
+    last_display_total = value_t();
+
+    temps.clear();
+
+    item_handler<post_t>::clear();
+  }
+};
+
+class changed_value_posts : public item_handler<post_t>
+{
+  // This filter requires that calc_posts be used at some point
+  // later in the chain.
+
   expr_t	total_expr;
   expr_t	display_total_expr;
   report_t&	report;
   bool		changed_values_only;
   bool		for_accounts_report;
   bool		show_unrealized;
-  bool		show_rounding;
   post_t *	last_post;
   value_t	last_total;
-  value_t	last_display_total;
   value_t       repriced_total;
   temporaries_t	temps;
   account_t&	revalued_account;
-  account_t&	rounding_account;
   account_t *	gains_equity_account;
   account_t *	losses_equity_account;
+
+  rounding_error_posts * rounding_handler;
 
   changed_value_posts();
 
 public:
-  changed_value_posts(post_handler_ptr handler,
-		      report_t&	       _report,
-		      bool	       _for_accounts_report,
-		      bool	       _show_unrealized,
-		      bool	       _show_rounding);
+  changed_value_posts(post_handler_ptr	     handler,
+		      report_t&		     _report,
+		      bool		     _for_accounts_report,
+		      bool		     _show_unrealized,
+		      rounding_error_posts * _rounding_handler);
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
@@ -519,18 +557,15 @@ public:
 
   void output_revaluation(post_t& post, const date_t& current);
   void output_intermediate_prices(post_t& post, const date_t& current);
-  void output_rounding(post_t& post);
 
   virtual void operator()(post_t& post);
 
   virtual void clear() {
-    display_amount_expr.mark_uncompiled();
     total_expr.mark_uncompiled();
     display_total_expr.mark_uncompiled();
 
     last_post = NULL;
     last_total = value_t();
-    last_display_total = value_t();
 
     temps.clear();
 
