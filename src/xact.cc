@@ -685,16 +685,15 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 	else
 	  amt = post_amount;
 
+#if defined(DEBUG_ON)
 	IF_DEBUG("xact.extend") {
 	  DEBUG("xact.extend",
 		"Initial post on line " << initial_post->pos->beg_line << ": "
 		<< "amount " << initial_post->amount << " (precision "
 		<< initial_post->amount.precision() << ")");
 
-#if defined(DEBUG_ON)
 	  if (initial_post->amount.keep_precision())
 	    DEBUG("xact.extend", "  precision is kept");
-#endif
 
 	  DEBUG("xact.extend",
 		"Posting on line " << post->pos->beg_line << ": "
@@ -702,13 +701,12 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 		<< " (precision " << post_amount.precision()
 		<< " != " << amt.precision() << ")");
 
-#if defined(DEBUG_ON)
 	  if (post_amount.keep_precision())
 	    DEBUG("xact.extend", "  precision is kept");
 	  if (amt.keep_precision())
 	    DEBUG("xact.extend", "  amt precision is kept");
-#endif
 	}
+#endif // defined(DEBUG_ON)
 
 	account_t * account  = post->account;
 	string fullname = account->fullname();
