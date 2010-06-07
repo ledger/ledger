@@ -942,11 +942,11 @@ public:
   /**
    * Printing methods.
    */
-  void print(std::ostream& out,
-	     const int	   first_width   = -1,
-	     const int	   latter_width  = -1,
-	     const bool    right_justify = false,
-	     const bool    colorize      = false) const;
+  void print(std::ostream&       out,
+	     const int	         first_width  = -1,
+	     const int	         latter_width = -1,
+	     const uint_least8_t flags        = AMOUNT_PRINT_NO_FLAGS) const;
+
   void dump(std::ostream& out, const bool relaxed = true) const;
 
   /**

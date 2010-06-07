@@ -1216,7 +1216,7 @@ void amount_t::parse_conversion(const string& larger_str,
     smaller.commodity().set_larger(larger);
 }
 
-void amount_t::print(std::ostream& _out) const
+void amount_t::print(std::ostream& _out, const uint_least8_t) const
 {
   VERIFY(valid());
 

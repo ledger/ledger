@@ -172,13 +172,14 @@ namespace {
 	if (post->amount_expr) {
 	  amt = post->amount_expr->text();
 	} else {
-	  std::size_t amount_width =
+	  int amount_width =
 	    (report.HANDLER(amount_width_).specified ?
-	     report.HANDLER(amount_width_).value.to_long() : 12);
+	     report.HANDLER(amount_width_).value.to_int() : 12);
 
 	  std::ostringstream amt_str;
 	  report.scrub(post->amount)
-	    .print(amt_str, static_cast<int>(amount_width), -1, true);
+	    .print(amt_str, amount_width, -1, AMOUNT_PRINT_RIGHT_JUSTIFY |
+		   AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
 	  amt = amt_str.str();
 	}
 

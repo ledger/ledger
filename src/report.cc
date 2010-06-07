@@ -597,12 +597,17 @@ value_t report_t::fn_truncated(call_scope_t& scope)
 value_t report_t::fn_justify(call_scope_t& scope)
 {
   interactive_t args(scope, "vl&lbb");
+
+  uint_least8_t flags(AMOUNT_PRINT_NO_FLAGS);
+
+  if (args.has(3) && args.get<bool>(3))
+    flags |= AMOUNT_PRINT_RIGHT_JUSTIFY;
+  if (args.has(4) && args.get<bool>(4))
+    flags |= AMOUNT_PRINT_COLORIZE;
+
   std::ostringstream out;
   args.value_at(0)
-    .print(out, args.get<int>(1),
-	   args.has(2) ? args.get<int>(2) : -1,
-	   args.has(3) ? args.get<bool>(3) : false,
-	   args.has(4) ? args.get<bool>(4) : false);
+    .print(out, args.get<int>(1), args.has(2) ? args.get<int>(2) : -1, flags);
   return string_value(out.str());
 }
 
