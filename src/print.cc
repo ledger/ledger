@@ -177,9 +177,9 @@ namespace {
 	     report.HANDLER(amount_width_).value.to_int() : 12);
 
 	  std::ostringstream amt_str;
-	  report.scrub(post->amount)
-	    .print(amt_str, amount_width, -1, AMOUNT_PRINT_RIGHT_JUSTIFY |
-		   AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+	  value_t(post->amount).print(amt_str, amount_width, -1,
+				      AMOUNT_PRINT_RIGHT_JUSTIFY |
+				      AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
 	  amt = amt_str.str();
 	}
 
@@ -191,15 +191,17 @@ namespace {
 	  amtbuf << string(2 - (slip + amt_slip), ' ');
 	amtbuf << amt;
 
-	if (post->cost && ! post->has_flags(POST_CALCULATED)) {
+	if (post->cost &&
+	    ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
 	  if (post->has_flags(POST_COST_IN_FULL))
-	    amtbuf << " @@ " << report.scrub(post->cost->abs());
+	    amtbuf << " @@ " << post->cost->abs();
 	  else
-	    amtbuf << " @ " << report.scrub((*post->cost / post->amount).abs());
+	    amtbuf << " @ "
+		   << (*post->cost / post->amount).abs();
 	}
 
 	if (post->assigned_amount)
-	  amtbuf << " = " << report.scrub(*post->assigned_amount);
+	  amtbuf << " = " << post->assigned_amount;
 
 	string trailer = amtbuf.str();
 	out << trailer;

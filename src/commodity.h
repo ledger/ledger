@@ -273,7 +273,7 @@ public:
   virtual commodity_t& strip_annotations(const keep_details_t&) {
     return *this;
   }
-  virtual void write_annotations(std::ostream&) const {}
+  virtual void write_annotations(std::ostream&, bool) const {}
 
   commodity_pool_t& pool() const {
     return *parent_;

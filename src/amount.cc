@@ -1216,7 +1216,7 @@ void amount_t::parse_conversion(const string& larger_str,
     smaller.commodity().set_larger(larger);
 }
 
-void amount_t::print(std::ostream& _out, const uint_least8_t) const
+void amount_t::print(std::ostream& _out, const uint_least8_t flags) const
 {
   VERIFY(valid());
 
@@ -1246,7 +1246,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t) const
 
   // If there are any annotations associated with this commodity, output them
   // now.
-  comm.write_annotations(out);
+  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
 
   // Things are output to a string first, so that if anyone has specified a
   // width or fill for _out, it will be applied to the entire amount string,
