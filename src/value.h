@@ -476,8 +476,7 @@ public:
   void    in_place_unreduce();	// exists for efficiency's sake
 
   // Return the "market value" of a given value at a specific time.
-  value_t value(const bool		      primary_only = false,
-		const optional<datetime_t>&   moment	   = none,
+  value_t value(const optional<datetime_t>&   moment	   = none,
 		const optional<commodity_t&>& in_terms_of  = none) const;
 
   value_t price() const;

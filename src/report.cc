@@ -466,7 +466,7 @@ value_t report_t::fn_market(call_scope_t& scope)
 						   /* add_prices= */ false,
 						   moment);
   else
-    result = args.value_at(0).value(true, moment);
+    result = args.value_at(0).value(moment);
 
   if (! result.is_null())
     return result;

@@ -59,6 +59,10 @@ struct price_point_t
   datetime_t when;
   amount_t   price;
 
+  price_point_t() {}
+  price_point_t(datetime_t _when, amount_t _price)
+    : when(_when), price(_price) {}
+
   bool operator==(const price_point_t& other) const {
     return when == other.when && price == other.price;
   }

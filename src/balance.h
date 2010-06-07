@@ -384,9 +384,8 @@ public:
   }
 
   optional<balance_t>
-  value(const bool		      primary_only = false,
-	const optional<datetime_t>&   moment	   = none,
-	const optional<commodity_t&>& in_terms_of  = none) const;
+  value(const optional<datetime_t>&   moment	  = none,
+	const optional<commodity_t&>& in_terms_of = none) const;
 
   balance_t price() const;
 
