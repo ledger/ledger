@@ -529,4 +529,13 @@ report: all
 	genhtml -o doc/report doc/report/ledger_cov.info
 	@echo Coverage reported generated\; now open doc/report/index.html
 
+LEDGER_BINARY  = $(top_builddir)/ledger$(EXEEXT)
+SPEEDTEST_DAT  = $(srcdir)/test/input/speed-test.dat
+SPEEDTEST_ARGS = -v --decimal-comma -o /dev/null reg 2eb75f84 1eede0cb
+
+speedtest:
+	@$(LEDGER_BINARY) -f $(SPEEDTEST_DAT) $(SPEEDTEST_ARGS)
+	@$(LEDGER_BINARY) -f $(SPEEDTEST_DAT) $(SPEEDTEST_ARGS) -V
+	@$(LEDGER_BINARY) -f $(SPEEDTEST_DAT) $(SPEEDTEST_ARGS) -X €
+
 # Makefile.am ends here
