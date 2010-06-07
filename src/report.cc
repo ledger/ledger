@@ -140,11 +140,6 @@ void report_t::normalize_options(const string& verb)
   if (verb == "print")
     HANDLER(limit_).on(string("?normalize"), "actual");
 
-  if (! HANDLED(empty))
-    HANDLER(display_).on(string("?normalize"),
-			 string("(post?(display_amount|account=\"") +
-			 _("<Revalued>") + "\"):display_total)");
-
   if (verb[0] != 'b' && verb[0] != 'r')
     HANDLER(base).on_only(string("?normalize"));
 

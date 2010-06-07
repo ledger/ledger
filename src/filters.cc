@@ -466,27 +466,41 @@ void related_posts::flush()
   item_handler<post_t>::flush();
 }
 
-rounding_error_posts::rounding_error_posts(post_handler_ptr handler,
-					   report_t&        _report)
+display_filter_posts::display_filter_posts(post_handler_ptr handler,
+					   report_t&        _report,
+					   bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
-    rounding_account(temps.create_account(_("<Rounding>")))
+    show_rounding(_show_rounding),
+    rounding_account(temps.create_account(_("<Rounding>"))),
+    revalued_account(temps.create_account(_("<Revalued>")))
 {
-  TRACE_CTOR(rounding_error_posts, "post_handler_ptr, report_t&");
+  TRACE_CTOR(display_filter_posts,
+	     "post_handler_ptr, report_t&, account_t&, bool");
 
   display_amount_expr = report.HANDLER(display_amount_).expr;
   display_total_expr  = report.HANDLER(display_total_).expr;
 }
 
-void rounding_error_posts::output_rounding(post_t& post)
+bool display_filter_posts::output_rounding(post_t& post)
 {
   bind_scope_t bound_scope(report, post);
-  value_t      new_display_total(display_total_expr.calc(bound_scope));
+  value_t      new_display_total;
 
-  DEBUG("filters.changed_value.rounding",
-	"rounding.new_display_total     = " << new_display_total);
+  if (show_rounding) {
+    new_display_total = display_total_expr.calc(bound_scope);
 
-  if (! last_display_total.is_null()) {
-    if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
+    DEBUG("filters.changed_value.rounding",
+	  "rounding.new_display_total     = " << new_display_total);
+  }
+
+  if (post.account == &revalued_account) {
+    if (show_rounding)
+      last_display_total = new_display_total;
+    return true;
+  }
+
+  if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
+    if (! last_display_total.is_null()) {
       DEBUG("filters.changed_value.rounding",
 	    "rounding.repriced_amount       = " << repriced_amount);
 
@@ -515,16 +529,24 @@ void rounding_error_posts::output_rounding(post_t& post)
 		     /* total=         */ precise_display_total,
 		     /* direct_amount= */ true);
       }
-    }    
+    }
+
+    if (show_rounding)
+      last_display_total = new_display_total;
+    return true;
+  } else {
+    // Allow the posting to be displayed if:
+    //  1. It's display_amount would display as non-zero
+    //  2. The --empty option was specified
+    //  3. The account of the posting is <Revalued>
+    return report.HANDLED(empty);
   }
-  last_display_total = new_display_total;
 }
 
-void rounding_error_posts::operator()(post_t& post)
+void display_filter_posts::operator()(post_t& post)
 {
-  output_rounding(post);
-
-  item_handler<post_t>::operator()(post);
+  if (output_rounding(post))
+    item_handler<post_t>::operator()(post);
 }
 
 changed_value_posts::changed_value_posts
@@ -532,12 +554,13 @@ changed_value_posts::changed_value_posts
    report_t&		  _report,
    bool			  _for_accounts_report,
    bool			  _show_unrealized,
-   rounding_error_posts * _rounding_handler)
+   display_filter_posts * _display_filter)
   : item_handler<post_t>(handler), report(_report),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
-    revalued_account(temps.create_account(_("<Revalued>"))),
-    rounding_handler(_rounding_handler)
+    revalued_account(_display_filter ? _display_filter->revalued_account :
+		     temps.create_account(_("<Revalued>"))),
+    display_filter(_display_filter)
 {
   TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool");
 
