@@ -1065,15 +1065,6 @@ post_t * instance_t::parse_post(char *		line,
 	  }
 	}
       }
-      else if (post->amount.annotation().price) {
-	post->cost = *post->amount.annotation().price * post->amount;
-	post->add_flags(POST_COST_CALCULATED);
-	DEBUG("textual.parse", "line " << linenum << ": "
-	      << "cost (based on price annotation) = "
-	      << post->amount.unrounded() << " * "
-	      << post->amount.annotation().price->unrounded()
-	      << " = " << post->cost->unrounded());
-      }
     }
 
     DEBUG("textual.parse", "line " << linenum << ": "
@@ -1104,7 +1095,6 @@ post_t * instance_t::parse_post(char *		line,
 	p = skip_ws(next);
 	if (*p) {
 	  post->cost = amount_t();
-	  post->drop_flags(POST_COST_CALCULATED);
 
 	  beg = p - line;
 	  ptristream cstream(p, len - beg);
