@@ -1233,7 +1233,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const
   commodity_t& comm(commodity());
 
   if (! comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
-    comm.print(out);
+    comm.print(out, flags & AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES);
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
   }
@@ -1244,7 +1244,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
       out << " ";
-    comm.print(out);
+    comm.print(out, flags & AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES);
   }
 
   // If there are any annotations associated with this commodity, output them

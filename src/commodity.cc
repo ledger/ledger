@@ -642,6 +642,17 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
     throw_(amount_error, _("Failed to parse commodity"));
 }
 
+void commodity_t::print(std::ostream& out, bool elide_quotes) const
+{
+  string sym = symbol();
+  if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) &&
+      ! sym.empty() && sym[0] == '"' && ! std::strchr(sym.c_str(), ' ')) {
+    DEBUG("foo", "contracting " << sym << " to " << string(sym, 1, sym.length() - 2));
+    out << string(sym, 1, sym.length() - 2);
+  } else
+    out << sym;
+}
+
 bool commodity_t::valid() const
 {
   if (symbol().empty() && this != pool().null_commodity) {

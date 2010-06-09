@@ -391,10 +391,7 @@ public:
     return temp;
   }
 
-  void print(std::ostream& out) const {
-    out << symbol();
-  }
-
+  void print(std::ostream& out, bool elide_quotes = false) const;
   bool valid() const;
 
   struct compare_by_commodity {
