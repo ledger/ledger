@@ -598,7 +598,7 @@ value_t report_t::fn_justify(call_scope_t& scope)
 {
   interactive_t args(scope, "vl&lbb");
 
-  uint_least8_t flags(AMOUNT_PRINT_NO_FLAGS);
+  uint_least8_t flags(AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES);
 
   if (args.has(3) && args.get<bool>(3))
     flags |= AMOUNT_PRINT_RIGHT_JUSTIFY;

@@ -36,6 +36,7 @@
 #include "journal.h"
 #include "report.h"
 #include "compare.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -216,6 +217,43 @@ namespace {
   }
 }
 
+void anonymize_posts::render_commodity(amount_t& amt)
+{
+  commodity_t& comm(amt.commodity());
+
+  std::size_t id;
+  bool newly_added = false;
+
+  commodity_index_map::iterator i = comms.find(&comm);
+  if (i == comms.end()) {
+    id = next_comm_id++;
+    newly_added = true;
+    comms.insert(commodity_index_map::value_type(&comm, id));
+  } else {
+    id = (*i).second;
+  }
+
+  std::ostringstream buf;
+  do {
+    buf << static_cast<char>('A' + (id % 26));
+    id /= 26;
+  }
+  while (id > 0);
+
+  if (amt.has_annotation())
+    amt.set_commodity
+      (*commodity_pool_t::current_pool->find_or_create(buf.str(),
+						       amt.annotation()));
+  else
+    amt.set_commodity
+      (*commodity_pool_t::current_pool->find_or_create(buf.str()));
+
+  if (newly_added) {
+    amt.commodity().set_flags(comm.flags());
+    amt.commodity().set_precision(comm.precision());
+  }
+}
+
 void anonymize_posts::operator()(post_t& post)
 {
   SHA1		 sha;
@@ -257,6 +295,20 @@ void anonymize_posts::operator()(post_t& post)
   post_t& temp = temps.copy_post(post, xact, new_account);
   temp.note = none;
   temp.add_flags(POST_ANONYMIZED);
+
+  DEBUG("foo", "1.rendering amount: " << temp.amount);
+  render_commodity(temp.amount);
+  DEBUG("foo", "2.rendering amount: " << temp.amount);
+  if (temp.amount.has_annotation()) {
+    temp.amount.annotation().tag = none;
+    if (temp.amount.annotation().price)
+      render_commodity(*temp.amount.annotation().price);
+  }
+
+  if (temp.cost)
+    render_commodity(*temp.cost);
+  if (temp.assigned_amount)
+    render_commodity(*temp.assigned_amount);
 
   (*handler)(temp);
 }

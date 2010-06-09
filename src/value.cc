@@ -1726,7 +1726,7 @@ void value_t::print(std::ostream&       out,
       out << 0;
     } else {
       std::ostringstream buf;
-      as_amount().print(buf, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+      as_amount().print(buf, flags);
       justify(out, buf.str(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
 	      flags & AMOUNT_PRINT_COLORIZE && as_amount().sign() < 0);
     }

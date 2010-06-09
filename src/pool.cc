@@ -57,7 +57,7 @@ commodity_t * commodity_pool_t::create(const string& symbol)
     base_commodity(new commodity_t::base_t(symbol));
   std::auto_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
 
-  DEBUG("amounts.commodities", "Creating base commodity " << symbol);
+  DEBUG("pool.commodities", "Creating base commodity " << symbol);
 
   // Create the "qualified symbol" version of this commodity's symbol
   if (commodity_t::symbol_needs_quotes(symbol)) {
@@ -66,7 +66,7 @@ commodity_t * commodity_pool_t::create(const string& symbol)
     *commodity->qualified_symbol += "\"";
   }
 
-  DEBUG("amounts.commodities",
+  DEBUG("pool.commodities",
 	"Creating commodity '" << commodity->symbol() << "'");
 
   std::pair<commodities_map::iterator, bool> result
@@ -79,7 +79,7 @@ commodity_t * commodity_pool_t::create(const string& symbol)
 
 commodity_t * commodity_pool_t::find_or_create(const string& symbol)
 {
-  DEBUG("amounts.commodities", "Find-or-create commodity " << symbol);
+  DEBUG("pool.commodities", "Find-or-create commodity " << symbol);
 
   commodity_t * commodity = find(symbol);
   if (commodity)
@@ -89,7 +89,7 @@ commodity_t * commodity_pool_t::find_or_create(const string& symbol)
 
 commodity_t * commodity_pool_t::find(const string& symbol)
 {
-  DEBUG("amounts.commodities", "Find commodity " << symbol);
+  DEBUG("pool.commodities", "Find commodity " << symbol);
 
   commodities_map::const_iterator i = commodities.find(symbol);
   if (i != commodities.end())
@@ -124,10 +124,10 @@ string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
 
 #if defined(DEBUG_ON)
   if (comm.qualified_symbol)
-    DEBUG("amounts.commodities", "make_qualified_name for "
+    DEBUG("pool.commodities", "make_qualified_name for "
 	  << *comm.qualified_symbol << std::endl << details);
 #endif
-  DEBUG("amounts.commodities", "qualified_name is " << name.str());
+  DEBUG("pool.commodities", "qualified_name is " << name.str());
 
   return name.str();
 }
@@ -156,7 +156,7 @@ commodity_t *
 commodity_pool_t::find_or_create(const string& symbol,
 				 const annotation_t& details)
 {
-  commodity_t * comm = find(symbol);
+  commodity_t * comm = find_or_create(symbol);
   if (! comm)
     return NULL;
 
@@ -181,7 +181,7 @@ commodity_pool_t::create(commodity_t&	     comm,
   commodity->qualified_symbol = comm.symbol();
   assert(! commodity->qualified_symbol->empty());
 
-  DEBUG("amounts.commodities", "Creating annotated commodity "
+  DEBUG("pool.commodities", "Creating annotated commodity "
 	<< "symbol " << commodity->symbol()
 	<< " key "   << mapping_key << std::endl << details);
 
