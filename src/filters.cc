@@ -499,6 +499,11 @@ bool display_filter_posts::output_rounding(post_t& post)
 	  "rounding.new_display_total     = " << new_display_total);
   }
 
+  // Allow the posting to be displayed if:
+  //  1. It's display_amount would display as non-zero
+  //  2. The --empty option was specified
+  //  3. The account of the posting is <Revalued>
+
   if (post.account == &revalued_account) {
     if (show_rounding)
       last_display_total = new_display_total;
@@ -522,30 +527,21 @@ bool display_filter_posts::output_rounding(post_t& post)
 	DEBUG("filters.changed_value.rounding",
 	      "rounding.diff                  = " << diff);
 
-	xact_t& xact = temps.create_xact();
-	xact.payee = _("Commodity rounding");
-	xact._date = post.date();
-
 	handle_value(/* value=         */ diff,
 		     /* account=       */ &rounding_account,
-		     /* xact=          */ &xact,
+		     /* xact=          */ post.xact,
 		     /* temps=         */ temps,
 		     /* handler=       */ handler,
-		     /* date=          */ *xact._date,
+		     /* date=          */ date_t(),
 		     /* act_date_p=    */ true,
 		     /* total=         */ precise_display_total,
 		     /* direct_amount= */ true);
       }
     }
-
     if (show_rounding)
       last_display_total = new_display_total;
     return true;
   } else {
-    // Allow the posting to be displayed if:
-    //  1. It's display_amount would display as non-zero
-    //  2. The --empty option was specified
-    //  3. The account of the posting is <Revalued>
     return report.HANDLED(empty);
   }
 }
