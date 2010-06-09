@@ -334,19 +334,25 @@ public:
 
 class anonymize_posts : public item_handler<post_t>
 {
-  temporaries_t temps;
-  xact_t *	last_xact;
+  typedef std::map<commodity_t *, std::size_t> commodity_index_map;
+
+  temporaries_t	      temps;
+  commodity_index_map comms;
+  std::size_t         next_comm_id;
+  xact_t *	      last_xact;
 
   anonymize_posts();
 
 public:
   anonymize_posts(post_handler_ptr handler)
-    : item_handler<post_t>(handler), last_xact(NULL) {
+    : item_handler<post_t>(handler), next_comm_id(0), last_xact(NULL) {
     TRACE_CTOR(anonymize_posts, "post_handler_ptr");
   }
   virtual ~anonymize_posts() {
     TRACE_DTOR(anonymize_posts);
   }
+
+  void render_commodity(amount_t& amt);
 
   virtual void operator()(post_t& post);
 
