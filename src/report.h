@@ -586,16 +586,16 @@ public:
 		  "use_direct_amount ? amount :"
 		  " (is_seq(get_at(amount_expr, 0)) ?"
 		  "  get_at(get_at(amount_expr, 0), 0) :"
-		  "  market(get_at(amount_expr, 0), date, exchange)"
+		  "  market(get_at(amount_expr, 0), value_date, exchange)"
 		  "  - get_at(amount_expr, 1))");
       parent->HANDLER(revalued_total_)
 	.set_expr(string("--gain"),
-		  "(market(get_at(total_expr, 0), date, exchange), "
+		  "(market(get_at(total_expr, 0), value_date, exchange), "
 		  "get_at(total_expr, 1))");
       parent->HANDLER(display_total_)
 	.set_expr(string("--gain"),
 		  "use_direct_amount ? total_expr :"
-		  " market(get_at(total_expr, 0), date, exchange)"
+		  " market(get_at(total_expr, 0), value_date, exchange)"
 		  " - get_at(total_expr, 1)");
     });
 
@@ -642,9 +642,11 @@ public:
   OPTION_(report_t, market, DO() { // -V
       parent->HANDLER(revalued).on_only(string("--market"));
       parent->HANDLER(display_amount_)
-	.set_expr(string("--market"), "market(amount_expr, date, exchange)");
+	.set_expr(string("--market"),
+		  "market(amount_expr, value_date, exchange)");
       parent->HANDLER(display_total_)
-	.set_expr(string("--market"), "market(total_expr, date, exchange)");
+	.set_expr(string("--market"),
+		  "market(total_expr, value_date, exchange)");
     });
 
   OPTION(report_t, meta_);

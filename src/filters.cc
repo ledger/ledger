@@ -289,18 +289,16 @@ void calc_posts::operator()(post_t& post)
 }
 
 namespace {
-  typedef function<void (post_t&)> post_functor_t;
-
-  void handle_value(const value_t&	            value,
-		    account_t *	                    account,
-		    xact_t *		            xact,
-		    temporaries_t&                  temps,
-		    post_handler_ptr                handler,
-		    const date_t&                   date	  = date_t(),
-		    const value_t&                  total	  = value_t(),
-		    const bool                      direct_amount = false,
-		    const bool                      mark_visited  = false,
-		    const optional<post_functor_t>& functor       = none)
+  void handle_value(const value_t&   value,
+		    account_t *	     account,
+		    xact_t *	     xact,
+		    temporaries_t&   temps,
+		    post_handler_ptr handler,
+		    const date_t&    date	   = date_t(),
+		    const bool       act_date_p	   = true,
+		    const value_t&   total	   = value_t(),
+		    const bool       direct_amount = false,
+		    const bool       mark_visited  = false)
   {
     post_t& post = temps.create_post(*xact, account);
     post.add_flags(ITEM_GENERATED);
@@ -319,8 +317,12 @@ namespace {
 
     post_t::xdata_t& xdata(post.xdata());
 
-    if (is_valid(date))
-      xdata.date = date;
+    if (is_valid(date)) {
+      if (act_date_p)
+	xdata.date = date;
+      else
+	xdata.value_date = date;
+    }
 
     value_t temp(value);
 
@@ -352,9 +354,6 @@ namespace {
 
     if (direct_amount)
       xdata.add_flags(POST_EXT_DIRECT_AMT);
-
-    if (functor)
-      (*functor)(post);
 
     DEBUG("filters.changed_value.rounding", "post.amount = " << post.amount);
 
@@ -388,12 +387,15 @@ void collapse_posts::report_subtotal()
   }
   else {
     date_t earliest_date;
+    date_t latest_date;
 
     foreach (post_t * post, component_posts) {
-      date_t reported = post->date();
-      if (! is_valid(earliest_date) ||
-	  reported < earliest_date)
-	earliest_date = reported;
+      date_t date	= post->date();
+      date_t value_date = post->value_date();
+      if (! is_valid(earliest_date) || date < earliest_date)
+	earliest_date = date;
+      if (! is_valid(latest_date) || value_date > latest_date)
+	latest_date = value_date;
     }
 
     xact_t& xact = temps.create_xact();
@@ -401,12 +403,16 @@ void collapse_posts::report_subtotal()
     xact._date	   = (is_valid(earliest_date) ?
 		      earliest_date : last_xact->_date);
     DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
+    DEBUG("filters.collapse", "earliest date    = " << earliest_date);
+    DEBUG("filters.collapse", "latest date      = " << latest_date);
 
-    handle_value(/* value=   */ subtotal,
-		 /* account= */ &totals_account,
-		 /* xact=    */ &xact,
-		 /* temps=   */ temps,
-		 /* handler= */ handler);
+    handle_value(/* value=      */ subtotal,
+		 /* account=    */ &totals_account,
+		 /* xact=       */ &xact,
+		 /* temps=      */ temps,
+		 /* handler=    */ handler,
+		 /* date=       */ latest_date,
+		 /* act_date_p= */ false);
   }
 
   component_posts.clear();
@@ -526,6 +532,7 @@ bool display_filter_posts::output_rounding(post_t& post)
 		     /* temps=         */ temps,
 		     /* handler=       */ handler,
 		     /* date=          */ *xact._date,
+		     /* act_date_p=    */ true,
 		     /* total=         */ precise_display_total,
 		     /* direct_amount= */ true);
       }
@@ -627,7 +634,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 
       xact_t& xact = temps.create_xact();
       xact.payee = _("Commodities revalued");
-      xact._date = is_valid(date) ? date : post.date();
+      xact._date = is_valid(date) ? date : post.value_date();
 
       if (! for_accounts_report) {
 	handle_value
@@ -637,6 +644,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 	   /* temps=         */ temps,
 	   /* handler=       */ handler,
 	   /* date=          */ *xact._date,
+	   /* act_date_p=    */ true,
 	   /* total=         */ repriced_total);
       }
       else if (show_unrealized) {
@@ -649,6 +657,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 	   /* temps=         */ temps,
 	   /* handler=       */ handler,
 	   /* date=          */ *xact._date,
+	   /* act_date_p=    */ true,
 	   /* total=         */ value_t(),
 	   /* direct_amount= */ false,
 	   /* mark_visited=  */ true);
@@ -672,7 +681,7 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
     xact_t& xact(temps.create_xact());
 
     xact.payee = _("Commodities revalued");
-    xact._date = is_valid(current) ? current : post.date();
+    xact._date = is_valid(current) ? current : post.value_date();
 
     post_t& temp(temps.copy_post(post, xact));
     temp.add_flags(ITEM_GENERATED);
@@ -734,9 +743,9 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
 	   hist->histories) {
 	  foreach (const commodity_t::history_map::value_type& price,
 		   comm_hist.second.prices) {
-	    if (price.first.date() > post.date() &&
+	    if (price.first.date() > post.value_date() &&
 		price.first.date() < current) {
-	      DEBUG("filters.revalued", post.date() << " < "
+	      DEBUG("filters.revalued", post.value_date() << " < "
 		    << price.first.date() << " < " << current);
 	      DEBUG("filters.revalued", "inserting "
 		    << price.second << " at " << price.first.date());
@@ -778,8 +787,8 @@ void changed_value_posts::operator()(post_t& post)
 {
   if (last_post) {
     if (! for_accounts_report)
-      output_intermediate_prices(*last_post, post.date());
-    output_revaluation(*last_post, post.date());
+      output_intermediate_prices(*last_post, post.value_date());
+    output_revaluation(*last_post, post.value_date());
   }
 
   if (changed_values_only)
@@ -803,11 +812,12 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
 
   if (! range_start || ! range_finish) {
     foreach (post_t * post, component_posts) {
-      date_t date = post->date();
+      date_t date	= post->date();
+      date_t value_date = post->value_date();
       if (! range_start || date < *range_start)
 	range_start = date;
-      if (! range_finish || date > *range_finish)
-	range_finish = date;
+      if (! range_finish || value_date > *range_finish)
+	range_finish = value_date;
     }
   }
   component_posts.clear();
@@ -829,11 +839,13 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
   xact._date = *range_start;
 
   foreach (values_map::value_type& pair, values)
-    handle_value(/* value=   */ pair.second.value,
-		 /* account= */ pair.second.account,
-		 /* xact=    */ &xact,
-		 /* temps=   */ temps,
-		 /* handler= */ handler);
+    handle_value(/* value=      */ pair.second.value,
+		 /* account=    */ pair.second.account,
+		 /* xact=       */ &xact,
+		 /* temps=      */ temps,
+		 /* handler=    */ handler,
+		 /* date=       */ *range_finish,
+		 /* act_date_p= */ false);
 
   values.clear();
 }
@@ -942,17 +954,21 @@ void posts_as_equity::report_subtotal()
     if (pair.second.value.is_balance()) {
       foreach (const balance_t::amounts_map::value_type& amount_pair,
 	       pair.second.value.as_balance().amounts)
-	handle_value(/* value=   */ amount_pair.second,
-		     /* account= */ pair.second.account,
-		     /* xact=    */ &xact,
-		     /* temps=   */ temps,
-		     /* handler= */ handler);
+	handle_value(/* value=      */ amount_pair.second,
+		     /* account=    */ pair.second.account,
+		     /* xact=       */ &xact,
+		     /* temps=      */ temps,
+		     /* handler=    */ handler,
+		     /* date=       */ finish,
+		     /* act_date_p= */ false);
     } else {
-      handle_value(/* value=   */ pair.second.value,
-		   /* account= */ pair.second.account,
-		   /* xact=    */ &xact,
-		   /* temps=   */ temps,
-		   /* handler= */ handler);
+      handle_value(/* value=      */ pair.second.value,
+		   /* account=    */ pair.second.account,
+		   /* xact=       */ &xact,
+		   /* temps=      */ temps,
+		   /* handler=    */ handler,
+		   /* date=       */ finish,
+		   /* act_date_p= */ false);
     }
     total += pair.second.value;
   }

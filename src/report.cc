@@ -1308,6 +1308,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return MAKE_FUNCTOR(report_t::fn_unrounded);
       break;
 
+    case 'v':
+      if (is_eq(p, "value_date"))
+	return MAKE_FUNCTOR(report_t::fn_now);
+      break;
+
     case 'w':
       if (is_eq(p, "white"))
 	return WRAP_FUNCTOR(fn_white);

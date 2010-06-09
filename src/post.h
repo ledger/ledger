@@ -106,6 +106,7 @@ public:
   virtual optional<string> get_tag(const mask_t& tag_mask,
 				   const optional<mask_t>& value_mask = none) const;
 
+  virtual date_t value_date() const;
   virtual date_t date() const;
   virtual date_t actual_date() const;
   virtual optional<date_t> effective_date() const;
@@ -141,6 +142,7 @@ public:
     value_t	total;
     std::size_t	count;
     date_t	date;
+    date_t	value_date;
     datetime_t	datetime;
     account_t *	account;
 
