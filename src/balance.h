@@ -384,9 +384,8 @@ public:
   }
 
   optional<balance_t>
-  value(const bool		      primary_only = false,
-	const optional<datetime_t>&   moment	   = none,
-	const optional<commodity_t&>& in_terms_of  = none) const;
+  value(const optional<datetime_t>&   moment	  = none,
+	const optional<commodity_t&>& in_terms_of = none) const;
 
   balance_t price() const;
 
@@ -530,11 +529,10 @@ public:
    * relative amounts of those commodities.  There is no option to
    * change this behavior.
    */
-  void print(std::ostream& out,
-	     const int	   first_width	 = -1,
-	     const int	   latter_width	 = -1,
-	     const bool	   right_justify = false,
-	     const bool	   colorize      = false) const;
+  void print(std::ostream&	 out,
+	     const int		 first_width  = -1,
+	     const int		 latter_width = -1,
+	     const uint_least8_t flags        = AMOUNT_PRINT_NO_FLAGS) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with

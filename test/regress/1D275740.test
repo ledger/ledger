@@ -89,11 +89,11 @@ D 1.200,40 €
    Actif:SV                      14,89 €
 >>>1
 1999/11/01 * Achat
-    Actif:SSB                           125,0000 STK @ 13,37936 $
+    Actif:SSB                           125,0000 STK
     Actif:SSB                             -1672,42 $
 
 1999/11/04 * Vente
-    Actif:SSB                           -125,0000 STK @ 15,01288 $
+    Actif:SSB                           -125,0000 STK
     Dépense:SSB:Commissions                  55,07 $
     Actif:SSB                              1821,54 $
 

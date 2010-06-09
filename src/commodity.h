@@ -59,6 +59,10 @@ struct price_point_t
   datetime_t when;
   amount_t   price;
 
+  price_point_t() {}
+  price_point_t(datetime_t _when, amount_t _price)
+    : when(_when), price(_price) {}
+
   bool operator==(const price_point_t& other) const {
     return when == other.when && price == other.price;
   }
@@ -273,7 +277,7 @@ public:
   virtual commodity_t& strip_annotations(const keep_details_t&) {
     return *this;
   }
-  virtual void write_annotations(std::ostream&) const {}
+  virtual void write_annotations(std::ostream&, bool) const {}
 
   commodity_pool_t& pool() const {
     return *parent_;

@@ -113,7 +113,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   post_handler_ptr	 handler(base_handler);
   predicate_t		 display_predicate;
   predicate_t		 only_predicate;
-  rounding_error_posts * rounding_handler = NULL;
+  display_filter_posts * display_filter = NULL;
 
   assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
@@ -141,10 +141,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     // changed_value_posts adds virtual posts to the list to account for changes
     // in market value of commodities, which otherwise would affect the running
     // total unpredictably.
-    if (report.HANDLED(revalued) && ! report.HANDLED(no_rounding)) {
-      rounding_handler = new rounding_error_posts(handler, report);
-      handler.reset(rounding_handler);
-    }
+    display_filter = new display_filter_posts(handler, report,
+					      report.HANDLED(revalued) &&
+					      ! report.HANDLED(no_rounding));
+    handler.reset(display_filter);
 
     // filter_posts will only pass through posts matching the
     // `display_predicate'.
@@ -162,7 +162,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
       (! for_accounts_report || report.HANDLED(unrealized)))
     handler.reset(new changed_value_posts(handler, report, for_accounts_report,
 					  report.HANDLED(unrealized),
-					  rounding_handler));
+					  display_filter));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the

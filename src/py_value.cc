@@ -48,16 +48,16 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 namespace {
 
   boost::optional<value_t> py_value_0(const value_t& value) {
-    return value.value(false, CURRENT_TIME());
+    return value.value(CURRENT_TIME());
   }
   boost::optional<value_t> py_value_1(const value_t& value,
 				      commodity_t& in_terms_of) {
-    return value.value(false, CURRENT_TIME(), in_terms_of);
+    return value.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<value_t> py_value_2(const value_t& value,
 				      commodity_t& in_terms_of,
 				      datetime_t& moment) {
-    return value.value(false, moment, in_terms_of);
+    return value.value(moment, in_terms_of);
   }
 
   PyObject * py_base_type(value_t& value)

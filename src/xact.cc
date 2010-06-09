@@ -275,11 +275,11 @@ bool xact_base_t::finalize()
 	 datetime_t(date(), time_duration(0, 0, 0, 0)));
 
     if (post->amount.has_annotation() &&
-	breakdown.basis_cost.commodity() ==
-	breakdown.final_cost.commodity()) {
-      if (amount_t gain_loss = (breakdown.basis_cost -
-				breakdown.final_cost).rounded()) {
+	breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
+      if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
 	DEBUG("xact.finalize", "gain_loss = " << gain_loss);
+	gain_loss.in_place_round();
+	DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
 
 	add_or_set_value(balance, gain_loss.reduced());
 
@@ -293,6 +293,8 @@ bool xact_base_t::finalize()
 	p->set_state(post->state());
 	add_post(p);
 	DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
+      } else {
+	DEBUG("xact.finalize", "gain_loss would have display as zero");
       }
     } else {
       post->amount = breakdown.amount;

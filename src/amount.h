@@ -399,8 +399,7 @@ public:
       $100.00.
   */
   optional<amount_t>
-  value(const bool		    primary_only  = true,
-	const optional<datetime_t>& moment	  = none,
+  value(const optional<datetime_t>& moment	  = none,
 	const optional<commodity_t&>& in_terms_of = none) const;
 
   amount_t price() const;
@@ -677,7 +676,13 @@ public:
       true, the full internal precision of the amount is displayed, regardless
       of its commodity's display precision.
   */
-  void print(std::ostream& out) const;
+#define AMOUNT_PRINT_NO_FLAGS                 0x00
+#define AMOUNT_PRINT_RIGHT_JUSTIFY            0x01
+#define AMOUNT_PRINT_COLORIZE                 0x02
+#define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS  0x04
+
+  void print(std::ostream&       out,
+	     const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 
   /*@}*/
 

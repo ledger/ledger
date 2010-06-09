@@ -481,7 +481,7 @@ public:
   }
 };
 
-class rounding_error_posts : public item_handler<post_t>
+class display_filter_posts : public item_handler<post_t>
 {
   // This filter requires that calc_posts be used at some point
   // later in the chain.
@@ -489,21 +489,25 @@ class rounding_error_posts : public item_handler<post_t>
   expr_t	display_amount_expr;
   expr_t	display_total_expr;
   report_t&     report;
+  bool	        show_rounding;
   value_t	last_display_total;
   temporaries_t	temps;
   account_t&	rounding_account;
 
-  rounding_error_posts();
+  display_filter_posts();
 
 public:
-  rounding_error_posts(post_handler_ptr handler,
-		       report_t&        _report);
+  account_t&	revalued_account;
 
-  virtual ~rounding_error_posts() {
-    TRACE_DTOR(rounding_error_posts);
+  display_filter_posts(post_handler_ptr handler,
+		       report_t&        _report,
+		       bool             _show_rounding);
+
+  virtual ~display_filter_posts() {
+    TRACE_DTOR(display_filter_posts);
   }
 
-  void output_rounding(post_t& post);
+  bool output_rounding(post_t& post);
 
   virtual void operator()(post_t& post);
 
@@ -538,7 +542,7 @@ class changed_value_posts : public item_handler<post_t>
   account_t *	gains_equity_account;
   account_t *	losses_equity_account;
 
-  rounding_error_posts * rounding_handler;
+  display_filter_posts * display_filter;
 
   changed_value_posts();
 
@@ -547,7 +551,7 @@ public:
 		      report_t&		     _report,
 		      bool		     _for_accounts_report,
 		      bool		     _show_unrealized,
-		      rounding_error_posts * _rounding_handler);
+		      display_filter_posts * _display_filter);
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);

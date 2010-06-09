@@ -264,10 +264,6 @@ commodity_t::varied_history_t::find_price(const commodity_t&            source,
     if (comm == source)
       continue;
 
-    // Only value secondary commodities in terms of primary ones
-    if (! commodity && ! comm.has_flags(COMMODITY_PRIMARY))
-      continue;
-
     DEBUG_INDENT("commodity.prices.find", indent + 1);
     DEBUG("commodity.prices.find",
 	  "searching for price via commodity '" << comm << "'");
@@ -370,8 +366,7 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
 #endif
 			) const
 {
-  if (! has_flags(COMMODITY_WALKED) && base->varied_history &&
-      (commodity || ! has_flags(COMMODITY_PRIMARY))) {
+  if (! has_flags(COMMODITY_WALKED) && base->varied_history) {
     optional<base_t::time_and_commodity_t> pair;
 #if defined(VERIFY_ON)
     optional<price_point_t> checkpoint;

@@ -78,6 +78,13 @@ optional<string> post_t::get_tag(const mask_t& tag_mask,
   return none;
 }
 
+date_t post_t::value_date() const
+{
+  if (xdata_ && is_valid(xdata_->value_date))
+    return xdata_->value_date;
+  return date();
+}
+
 date_t post_t::date() const
 {
   if (xdata_ && is_valid(xdata_->date))
@@ -319,6 +326,14 @@ namespace {
     return long(post.reported_account()->depth);
   }
 
+  value_t get_value_date(post_t& post) {
+    if (post.has_xdata()) {
+      post_t::xdata_t& xdata(post.xdata());
+      if (! xdata.value_date.is_not_a_date()) 
+	return xdata.value_date;
+    }
+    return post.date();
+  }
   value_t get_datetime(post_t& post) {
     return post.xdata().datetime;
   }
@@ -479,6 +494,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'v':
     if (name == "virtual")
       return WRAP_FUNCTOR(get_wrapper<&get_virtual>);
+    else if (name == "value_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_value_date>);
     break;
 
   case 'x':

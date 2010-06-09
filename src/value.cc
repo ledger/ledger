@@ -1401,8 +1401,7 @@ bool value_t::is_zero() const
   return false;
 }
 
-value_t value_t::value(const bool		     primary_only,
-		       const optional<datetime_t>&   moment,
+value_t value_t::value(const optional<datetime_t>&   moment,
 		       const optional<commodity_t&>& in_terms_of) const
 {
   switch (type()) {
@@ -1411,13 +1410,13 @@ value_t value_t::value(const bool		     primary_only,
 
   case AMOUNT:
     if (optional<amount_t> val =
-	as_amount().value(primary_only, moment, in_terms_of))
+	as_amount().value(moment, in_terms_of))
       return *val;
     return NULL_VALUE;
 
   case BALANCE:
     if (optional<balance_t> bal =
-	as_balance().value(primary_only, moment, in_terms_of))
+	as_balance().value(moment, in_terms_of))
       return *bal;
     return NULL_VALUE;
 
@@ -1455,7 +1454,7 @@ value_t value_t::exchange_commodities(const std::string&	  commodities,
     if (commodity_t * commodity =
 	commodity_pool_t::current_pool->parse_price_expression(p, add_prices,
 							       moment)) {
-      value_t result = value(false, moment, *commodity);
+      value_t result = value(moment, *commodity);
       if (! result.is_null())
 	return result;
     }
@@ -1681,18 +1680,17 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   return NULL_VALUE;
 }
 
-void value_t::print(std::ostream& out,
-		    const int	  first_width,
-		    const int     latter_width,
-		    const bool    right_justify,
-		    const bool    colorize) const
+void value_t::print(std::ostream&       out,
+		    const int	        first_width,
+		    const int           latter_width,
+		    const uint_least8_t flags) const
 {
   if (first_width > 0 &&
       (! is_amount() || as_amount().is_zero()) &&
       ! is_balance() && ! is_string()) {
     out.width(first_width);
 
-    if (right_justify)
+    if (flags & AMOUNT_PRINT_RIGHT_JUSTIFY)
       out << std::right;
     else
       out << std::left;
@@ -1716,8 +1714,9 @@ void value_t::print(std::ostream& out,
     break;
 
   case INTEGER:
-    if (colorize && as_long() < 0)
-      justify(out, to_string(), first_width, right_justify, true);
+    if (flags & AMOUNT_PRINT_COLORIZE && as_long() < 0)
+      justify(out, to_string(), first_width,
+	      flags & AMOUNT_PRINT_RIGHT_JUSTIFY, true);
     else
       out << as_long();
     break;
@@ -1727,21 +1726,20 @@ void value_t::print(std::ostream& out,
       out << 0;
     } else {
       std::ostringstream buf;
-      buf << as_amount();
-      justify(out, buf.str(), first_width, right_justify,
-	      colorize && as_amount().sign() < 0);
+      as_amount().print(buf, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+      justify(out, buf.str(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
+	      flags & AMOUNT_PRINT_COLORIZE && as_amount().sign() < 0);
     }
     break;
   }
 
   case BALANCE:
-    as_balance().print(out, first_width, latter_width, right_justify,
-		       colorize);
+    as_balance().print(out, first_width, latter_width, flags);
     break;
 
   case STRING:
     if (first_width > 0)
-      justify(out, as_string(), first_width, right_justify);
+      justify(out, as_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY);
     else
       out << as_string();
     break;
@@ -1759,8 +1757,7 @@ void value_t::print(std::ostream& out,
       else
 	out << ", ";
 
-      value.print(out, first_width, latter_width, right_justify,
-		  colorize);
+      value.print(out, first_width, latter_width, flags);
     }
     out << ')';
     break;

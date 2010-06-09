@@ -724,8 +724,7 @@ void amount_t::in_place_unreduce()
 }
 
 optional<amount_t>
-amount_t::value(const bool		      primary_only,
-		const optional<datetime_t>&   moment,
+amount_t::value(const optional<datetime_t>&   moment,
 		const optional<commodity_t&>& in_terms_of) const
 {
   if (quantity) {
@@ -740,34 +739,38 @@ amount_t::value(const bool		      primary_only,
 	    "amount_t::value: in_terms_of = " << in_terms_of->symbol());
 #endif
     if (has_commodity() &&
-	(! primary_only || ! commodity().has_flags(COMMODITY_PRIMARY))) {
-      if (in_terms_of &&
-	  commodity().referent() == in_terms_of->referent()) {
+	(in_terms_of || ! commodity().has_flags(COMMODITY_PRIMARY))) {
+      optional<price_point_t> point;
+      optional<commodity_t&>  comm(in_terms_of);
+
+      if (comm && commodity().referent() == comm->referent()) {
 	return *this;
       }
-      else if (has_annotation() && annotation().price &&
-	       annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-	amount_t price(*annotation().price);
+      else if (has_annotation() && annotation().price) {
+	if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
+	  point = price_point_t();
+	  point->price = *annotation().price;
+	}
+	else if (! in_terms_of) {
+	  comm = annotation().price->commodity();
+	}
+      }
+
+      if (! point) {
+	point = commodity().find_price(comm, moment);
+	// Whether a price was found or not, check whether we should attempt
+	// to download a price from the Internet.  This is done if (a) no
+	// price was found, or (b) the price is "stale" according to the
+	// setting of --price-exp.
+	if (point)
+	  point = commodity().check_for_updated_price(point, moment, comm);
+      }
+
+      if (point) {
+	amount_t price(point->price);
 	price.multiply(*this, true);
 	price.in_place_round();
 	return price;
-      }
-      else {
-	optional<price_point_t> point =
-	  commodity().find_price(in_terms_of, moment);
-
-	// Whether a price was found or not, check whether we should
-	// attempt to download a price from the Internet.  This is done
-	// if (a) no price was found, or (b) the price is "stale"
-	// according to the setting of --price-exp.
-	point = commodity().check_for_updated_price(point, moment,
-						    in_terms_of);
-	if (point) {
-	  amount_t price(point->price);
-	  price.multiply(*this, true);
-	  price.in_place_round();
-	  return price;
-	}
       }
     }
   } else {
@@ -1216,7 +1219,7 @@ void amount_t::parse_conversion(const string& larger_str,
     smaller.commodity().set_larger(larger);
 }
 
-void amount_t::print(std::ostream& _out) const
+void amount_t::print(std::ostream& _out, const uint_least8_t flags) const
 {
   VERIFY(valid());
 
@@ -1246,7 +1249,7 @@ void amount_t::print(std::ostream& _out) const
 
   // If there are any annotations associated with this commodity, output them
   // now.
-  comm.write_annotations(out);
+  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
 
   // Things are output to a string first, so that if anyone has specified a
   // width or fill for _out, it will be applied to the entire amount string,

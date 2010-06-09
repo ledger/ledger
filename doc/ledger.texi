@@ -122,26 +122,12 @@ general ledger you need to record a payment to Pacific Bell for your
 monthly phone bill.  The cost is $23.00, let's say, and you want to
 pay it from your checking account.  In the general ledger you need to
 say where the money came from, in addition to where it's going to.
-The transaction might look like this:
+Such a transaction might look like this:
 
 @smallexample
-9/29  BAL  Pacific Bell              $-200.00   $-200.00
-           Equity:Opening Balances    $200.00
-9/29  BAL  Checking                   $100.00    $100.00
-           Equity:Opening Balances   $-100.00
-9/29  100  Pacific Bell                $23.00    $223.00
-           Checking                   $-23.00     $77.00
+9/29       Pacific Bell                $23.00     $23.00
+           Checking                   $-23.00          0
 @end smallexample
-
-The first line shows a payment to Pacific Bell for $23.00.  Because
-there is no ``balance'' in a general ledger---it's always zero---we
-write in the total balance of all payments to ``Pacific Bell'', which
-now is $223.00 (previously the balance was $200.00).  This is done by
-looking at the last transaction for ``Pacific Bell'' in the ledger, adding
-$23.00 to that amount, and writing the total in the balance column.
-And the money came from ``Checking''---a withdrawal of $23.00---which
-leaves the ending balance in ``Checking'' at $77.00.  This is a very
-manual procedure; but that's where computers come in...
 
 The posting must balance to $0: $23 went to Pacific Bell, $23 came
 from Checking.  There is nothing left over to be accounted for, since
@@ -174,16 +160,8 @@ formatting as the ledger program wishes to see them:
 
 @smallexample
 2004/09/29 Pacific Bell
-     Payable:Pacific Bell            $-200.00
-     Equity:Opening Balances
-
-2004/09/29 Checking
-     Accounts:Checking                $100.00
-     Equity:Opening Balances
-
-2004/09/29 Pacific Bell
-     Payable:Pacific Bell              $23.00
-     Accounts:Checking
+     Expenses:Pacific Bell              $23.00
+     Assets:Checking
 @end smallexample
 
 The account balances and registers in this file, if saved as

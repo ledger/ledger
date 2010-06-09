@@ -140,11 +140,6 @@ void report_t::normalize_options(const string& verb)
   if (verb == "print")
     HANDLER(limit_).on(string("?normalize"), "actual");
 
-  if (! HANDLED(empty))
-    HANDLER(display_).on(string("?normalize"),
-			 string("(post?(display_amount|account=\"") +
-			 _("<Revalued>") + "\"):display_total)");
-
   if (verb[0] != 'b' && verb[0] != 'r')
     HANDLER(base).on_only(string("?normalize"));
 
@@ -471,7 +466,7 @@ value_t report_t::fn_market(call_scope_t& scope)
 						   /* add_prices= */ false,
 						   moment);
   else
-    result = args.value_at(0).value(true, moment);
+    result = args.value_at(0).value(moment);
 
   if (! result.is_null())
     return result;
@@ -602,12 +597,17 @@ value_t report_t::fn_truncated(call_scope_t& scope)
 value_t report_t::fn_justify(call_scope_t& scope)
 {
   interactive_t args(scope, "vl&lbb");
+
+  uint_least8_t flags(AMOUNT_PRINT_NO_FLAGS);
+
+  if (args.has(3) && args.get<bool>(3))
+    flags |= AMOUNT_PRINT_RIGHT_JUSTIFY;
+  if (args.has(4) && args.get<bool>(4))
+    flags |= AMOUNT_PRINT_COLORIZE;
+
   std::ostringstream out;
   args.value_at(0)
-    .print(out, args.get<int>(1),
-	   args.has(2) ? args.get<int>(2) : -1,
-	   args.has(3) ? args.get<bool>(3) : false,
-	   args.has(4) ? args.get<bool>(4) : false);
+    .print(out, args.get<int>(1), args.has(2) ? args.get<int>(2) : -1, flags);
   return string_value(out.str());
 }
 
@@ -1306,6 +1306,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 	return WRAP_FUNCTOR(fn_underline);
       else if (is_eq(p, "unrounded"))
 	return MAKE_FUNCTOR(report_t::fn_unrounded);
+      break;
+
+    case 'v':
+      if (is_eq(p, "value_date"))
+	return MAKE_FUNCTOR(report_t::fn_now);
       break;
 
     case 'w':

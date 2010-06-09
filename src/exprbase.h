@@ -162,6 +162,7 @@ public:
       }
 #endif // defined(DEBUG_ON)
 
+      DEBUG("expr.calc.when", "Compiling: " << str);
       compile(scope);
 
 #if defined(DEBUG_ON)
@@ -172,6 +173,7 @@ public:
 #endif // defined(DEBUG_ON)
     }
 
+    DEBUG("expr.calc.when", "Calculating: " << str);
     return real_calc(scope);
   }
 

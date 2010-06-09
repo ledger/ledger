@@ -465,6 +465,11 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
     break;
 
+  case 'v':
+    if (name == "value_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_date>);
+    break;
+
   case 'L':
     if (name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_actual>);

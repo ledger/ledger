@@ -66,15 +66,6 @@ void annotation_t::parse(std::istream& in)
       temp.parse(buf, PARSE_NO_MIGRATE);
 
       DEBUG("commodity.annotations", "Parsed annotation price: " << temp);
-
-      // Since this price will maintain its own precision, make sure
-      // it is at least as large as the base commodity, since the user
-      // may have only specified {$1} or something similar.
-
-      if (temp.has_commodity() &&
-	  temp.precision() > temp.commodity().precision())
-	temp = temp.rounded();	// no need to retain individual precision
-
       price = temp;
     }
     else if (c == '[') {
@@ -118,18 +109,22 @@ void annotation_t::parse(std::istream& in)
 #endif
 }
 
-void annotation_t::print(std::ostream& out, bool keep_base) const
+void annotation_t::print(std::ostream& out, bool keep_base,
+			 bool no_computed_annotations) const
 {
-  if (price)
+  if (price &&
+      (! no_computed_annotations || ! has_flags(ANNOTATION_PRICE_CALCULATED)))
     out << " {"
 	<< (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
-	<< (keep_base ? *price : price->unreduced()).rounded()
+	<< (keep_base ? *price : price->unreduced())
 	<< '}';
 
-  if (date)
+  if (date &&
+      (! no_computed_annotations || ! has_flags(ANNOTATION_DATE_CALCULATED)))
     out << " [" << format_date(*date, FMT_WRITTEN) << ']';
 
-  if (tag)
+  if (tag &&
+      (! no_computed_annotations || ! has_flags(ANNOTATION_TAG_CALCULATED)))
     out << " (" << *tag << ')';
 }
 
@@ -197,9 +192,10 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
   return *new_comm;
 }
 
-void annotated_commodity_t::write_annotations(std::ostream& out) const
+void annotated_commodity_t::write_annotations
+  (std::ostream& out, bool no_computed_annotations) const
 {
-  details.print(out, pool().keep_base);
+  details.print(out, pool().keep_base, no_computed_annotations);
 }
 
 } // namespace ledger

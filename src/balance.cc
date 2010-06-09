@@ -185,16 +185,14 @@ balance_t& balance_t::operator/=(const amount_t& amt)
 }
 
 optional<balance_t>
-balance_t::value(const bool		       primary_only,
-		 const optional<datetime_t>&   moment,
+balance_t::value(const optional<datetime_t>&   moment,
 		 const optional<commodity_t&>& in_terms_of) const
 {
   balance_t temp;
   bool      resolved = false;
 
   foreach (const amounts_map::value_type& pair, amounts) {
-    if (optional<amount_t> val = pair.second.value(primary_only, moment,
-						   in_terms_of)) {
+    if (optional<amount_t> val = pair.second.value(moment, in_terms_of)) {
       temp += *val;
       resolved = true;
     } else {
@@ -252,11 +250,10 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
   return temp;
 }
 
-void balance_t::print(std::ostream& out,
-		      const int     first_width,
-		      const int     latter_width,
-		      const bool    right_justify,
-		      const bool    colorize) const
+void balance_t::print(std::ostream&       out,
+		      const int           first_width,
+		      const int           latter_width,
+		      const uint_least8_t flags) const
 {
   bool first  = true;
   int  lwidth = latter_width;
@@ -285,14 +282,14 @@ void balance_t::print(std::ostream& out,
     }
 
     std::ostringstream buf;
-    buf << *amount;
-    justify(out, buf.str(), width, right_justify,
-	    colorize && amount->sign() < 0);
+    amount->print(buf, flags);
+    justify(out, buf.str(), width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
+	    flags & AMOUNT_PRINT_COLORIZE && amount->sign() < 0);
   }
 
   if (first) {
     out.width(first_width);
-    if (right_justify)
+    if (flags & AMOUNT_PRINT_RIGHT_JUSTIFY)
       out << std::right;
     else
       out << std::left;

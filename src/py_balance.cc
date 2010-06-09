@@ -45,16 +45,16 @@ using namespace boost::python;
 namespace {
 
   boost::optional<balance_t> py_value_0(const balance_t& balance) {
-    return balance.value(false, CURRENT_TIME());
+    return balance.value(CURRENT_TIME());
   }
   boost::optional<balance_t> py_value_1(const balance_t& balance,
 					commodity_t& in_terms_of) {
-    return balance.value(false, CURRENT_TIME(), in_terms_of);
+    return balance.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<balance_t> py_value_2(const balance_t& balance,
 					commodity_t& in_terms_of,
 					datetime_t& moment) {
-    return balance.value(false, moment, in_terms_of);
+    return balance.value(moment, in_terms_of);
   }
   
   boost::optional<amount_t>
