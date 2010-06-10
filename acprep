@@ -617,7 +617,7 @@ class PrepareBuild(CommandLineApp):
             self.should_clean = True
             return 'because acprep is newer than Makefile.in'
         elif self.isnewer('configure.ac', 'configure'):
-            return 'because confgure.ac is newer than configure'
+            return 'because configure.ac is newer than configure'
         elif self.isnewer('Makefile.am', 'Makefile.in'):
             return 'because Makefile.am is newer than Makefile.in'
         return False
