@@ -12,8 +12,8 @@ fi
 # These are the locations I keep my temporary source and build trees in
 PRODUCTS=$(./acprep products)	# generates a build directory name such as
                                 # ~/Products/ledger
-TMPDIR=$PRODUCTS/pre-commit
-MIRROR=$PRODUCTS/pre-commit-mirror
+TMPDIR=$PRODUCTS/ledger/pre-commit
+MIRROR=$PRODUCTS/ledger/pre-commit-mirror
 
 # Checkout a copy of the current index into MIRROR
 git checkout-index --prefix=$MIRROR/ -af
