@@ -60,8 +60,8 @@ generate_posts_iterator::generate_posts_iterator
     two_six_range(2, 6), two_six_gen(rnd_gen, two_six_range),
     strlen_range(1, 40), strlen_gen(rnd_gen, strlen_range),
 
-    neg_number_range(-1000000, -1), neg_number_gen(rnd_gen, neg_number_range),
-    pos_number_range(1, 1000000), pos_number_gen(rnd_gen, pos_number_range)
+    neg_number_range(-10000, -1), neg_number_gen(rnd_gen, neg_number_range),
+    pos_number_range(1, 10000), pos_number_gen(rnd_gen, pos_number_range)
 {
   TRACE_CTOR(generate_posts_iterator, "bool");
 

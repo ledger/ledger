@@ -119,9 +119,9 @@ namespace {
     }
 
     foreach (post_t * post, xact.posts) {
-      if (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
-	  ! post->has_flags(POST_ANONYMIZED) &&
-	  ! report.HANDLED(print_virtual))
+      if (! report.HANDLED(generated) &&
+	  (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
+	   ! post->has_flags(POST_ANONYMIZED)))
 	continue;
 
       out << "    ";
@@ -157,7 +157,7 @@ namespace {
       if (account_width < name.length())
 	account_width = name.length();
 
-      if (! post->has_flags(POST_CALCULATED) || report.HANDLED(print_virtual)) {
+      if (! post->has_flags(POST_CALCULATED) || report.HANDLED(generated)) {
 	out << name.extract();
 	int slip = (static_cast<int>(account_width) -
 		    static_cast<int>(name.length()));

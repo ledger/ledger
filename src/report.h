@@ -257,6 +257,7 @@ public:
     HANDLER(forecast_years_).report(out);
     HANDLER(format_).report(out);
     HANDLER(gain).report(out);
+    HANDLER(generated).report(out);
     HANDLER(group_by_).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
@@ -289,7 +290,6 @@ public:
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
-    HANDLER(print_virtual).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
     HANDLER(raw).report(out);
@@ -599,6 +599,8 @@ public:
 		  " - get_at(total_expr, 1)");
     });
 
+  OPTION(report_t, generated);
+
   OPTION__
   (report_t, group_by_,
    expr_t expr;
@@ -785,8 +787,6 @@ public:
       on(none,
 	 "P %(datetime) %(display_account) %(scrub(display_amount))\n");
     });
-
-  OPTION(report_t, print_virtual);
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();

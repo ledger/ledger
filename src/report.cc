@@ -137,9 +137,6 @@ void report_t::normalize_options(const string& verb)
     HANDLER(equity).on_only(string("?normalize"));
   }
 
-  if (verb == "print")
-    HANDLER(limit_).on(string("?normalize"), "actual");
-
   if (verb[0] != 'b' && verb[0] != 'r')
     HANDLER(base).on_only(string("?normalize"));
 
@@ -313,8 +310,6 @@ void report_t::posts_report(post_handler_ptr handler)
 
 void report_t::generate_report(post_handler_ptr handler)
 {
-  HANDLER(limit_).on(string("#generate"), "actual");
-
   handler = chain_handlers(handler, *this);
 
   generate_posts_iterator walker
@@ -992,6 +987,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(gain);
     else OPT(group_by_);
     else OPT(group_title_format_);
+    else OPT(generated);
     break;
   case 'h':
     OPT(head_);
@@ -1045,7 +1041,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(payee_width_);
     else OPT(prepend_format_);
     else OPT(prepend_width_);
-    else OPT(print_virtual);
     break;
   case 'q':
     OPT(quantity);
@@ -1398,7 +1393,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'e':
       if (is_eq(p, "equity")) {
-	HANDLER(print_virtual).on_only(string("#equity"));
+	HANDLER(generated).on_only(string("#equity"));
 	return WRAP_FUNCTOR(reporter<>(new print_xacts(*this), *this, "#equity"));
       }
       else if (is_eq(p, "entry")) {
@@ -1489,7 +1484,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       break;
     case 'g':
       if (is_eq(p, "generate")) {
-	HANDLER(print_virtual).on_only(string("#generate"));
 	return expr_t::op_t::wrap_functor
 	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
 	   (new print_xacts(*this), *this, "#generate"));
