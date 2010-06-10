@@ -187,7 +187,7 @@ bool xact_base_t::finalize()
     post_t * top_post = NULL;
 
     foreach (post_t * post, posts) {
-      if (! post->amount.is_null()) {
+      if (! post->amount.is_null() && post->must_balance()) {
 	if (post->amount.has_annotation())
 	  top_post = post;
 	else if (! top_post)
@@ -220,9 +220,10 @@ bool xact_base_t::finalize()
 	DEBUG("xact.finalize", "primary   amount = " << *x);
 	DEBUG("xact.finalize", "secondary amount = " << *y);
 
-	commodity_t& comm(x->commodity());
-	amount_t	   per_unit_cost;
-	amount_t	   total_cost;
+	commodity_t&	 comm(x->commodity());
+	amount_t	 per_unit_cost;
+	amount_t	 total_cost;
+	const amount_t * prev_y = y;
 
 	foreach (post_t * post, posts) {
 	  if (post != top_post && post->must_balance() &&
@@ -233,8 +234,15 @@ bool xact_base_t::finalize()
 	    if (total_cost.is_null()) {
 	      total_cost = temp;
 	      y = &total_cost;
-	    } else {
+	    }
+	    else if (total_cost.commodity() == temp.commodity()) {
 	      total_cost += temp;
+	    }
+	    else {
+	      DEBUG("xact.finalize",
+		    "multiple price commodities, aborting price calc");
+	      y = prev_y;
+	      break;
 	    }
 	    DEBUG("xact.finalize", "total_cost = " << total_cost);
 	  }
