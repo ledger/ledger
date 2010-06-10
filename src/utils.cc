@@ -593,6 +593,7 @@ bool logger_func(log_level_t level)
   }
 
   *_log_stream << ' ' << _log_buffer.str() << std::endl;
+  _log_buffer.clear();
   _log_buffer.str("");
 
   return true;
@@ -663,6 +664,7 @@ void start_timer(const char * name, log_level_t lvl)
     (*i).second.begin  = TRUE_CURRENT_TIME();
     (*i).second.active = true;
   }
+  _log_buffer.clear();
   _log_buffer.str("");
 
 #if defined(VERIFY_ON)

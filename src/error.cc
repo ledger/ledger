@@ -43,6 +43,7 @@ std::ostringstream _desc_buffer;
 string error_context()
 {
   string context = _ctxt_buffer.str();
+  _ctxt_buffer.clear();
   _ctxt_buffer.str("");
   return context;
 }

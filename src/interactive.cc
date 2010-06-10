@@ -143,8 +143,10 @@ void interactive_t::verify_arguments() const
     if (wrong_arg && optional && next_arg->is_null())
       wrong_arg = false;
 
-    if (wrong_arg)
+    if (wrong_arg) {
       vlabel = next_arg->label();
+      break;
+    }
 
     if (! dont_skip) {
       if (is_seq) {

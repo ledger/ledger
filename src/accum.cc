@@ -40,8 +40,6 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
   if (index == 0) {
     // The first item received is the format string
     str = std::string(s, num);
-    index++;
-    return num;
   }
   else {
     std::ostringstream buf;
@@ -68,9 +66,9 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
       buf << std::string(s, num);
 
     str = buf.str();
-    index++;
-    return num;
   }
+  index++;
+  return num;
 }
 
 } // namespace ledger

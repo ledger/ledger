@@ -51,6 +51,7 @@ extern std::ostringstream _desc_buffer;
 
 template <typename T>
 inline void throw_func(const string& message) {
+  _desc_buffer.clear();
   _desc_buffer.str("");
   throw T(message);
 }
@@ -62,6 +63,7 @@ inline void throw_func(const string& message) {
 
 inline void warning_func(const string& message) {
   std::cerr << "Warning: " << message << std::endl;
+  _desc_buffer.clear();
   _desc_buffer.str("");
 }
 
