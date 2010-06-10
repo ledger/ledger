@@ -186,8 +186,7 @@ void draft_t::parse_args(const value_t& args)
 
 	if (tmpl->payee_mask.empty()) {
 	  tmpl->payee_mask = arg;
-	}
-	else {
+	} else {
 	  amount_t	     amt;
 	  optional<mask_t> account;
 
@@ -202,10 +201,10 @@ void draft_t::parse_args(const value_t& args)
 	  }
 
 	  if (account) {
-	    post->from = false;
 	    post->account_mask = account;
 	  } else {
 	    post->amount = amt;
+	    post = NULL;	// an amount concludes this posting
 	  }
 	}
       }
@@ -252,7 +251,7 @@ xact_t * draft_t::insert(journal_t& journal)
 
   xacts_iterator xi(journal);
   if (xact_t * xact = lookup_probable_account(tmpl->payee_mask.str(), xi).first) {
-    DEBUG("derive.xact", "Found payee by lookup: transaction on line "
+    DEBUG("draft.xact", "Found payee by lookup: transaction on line "
 	  << xact->pos->beg_line);
     matching = xact;
   } else {
@@ -261,7 +260,7 @@ xact_t * draft_t::insert(journal_t& journal)
 	 j++) {
       if (tmpl->payee_mask.match((*j)->payee)) {
 	matching = *j;
-	DEBUG("derive.xact",
+	DEBUG("draft.xact",
 	      "Found payee match: transaction on line " << (*j)->pos->beg_line);
 	break;
       }
@@ -270,10 +269,10 @@ xact_t * draft_t::insert(journal_t& journal)
 
   if (! tmpl->date) {
     added->_date = CURRENT_DATE();
-    DEBUG("derive.xact", "Setting date to current date");
+    DEBUG("draft.xact", "Setting date to current date");
   } else {
     added->_date = tmpl->date;
-    DEBUG("derive.xact", "Setting date to template date: " << *tmpl->date);
+    DEBUG("draft.xact", "Setting date to template date: " << *tmpl->date);
   }
 
   added->set_state(item_t::UNCLEARED);
@@ -284,29 +283,29 @@ xact_t * draft_t::insert(journal_t& journal)
     //added->note  = matching->note;
 
 #if defined(DEBUG_ON)
-    DEBUG("derive.xact", "Setting payee from match: " << added->payee);
+    DEBUG("draft.xact", "Setting payee from match: " << added->payee);
     //if (added->code)
-    //  DEBUG("derive.xact", "Setting code  from match: " << *added->code);
+    //  DEBUG("draft.xact", "Setting code  from match: " << *added->code);
     //if (added->note)
-    //  DEBUG("derive.xact", "Setting note  from match: " << *added->note);
+    //  DEBUG("draft.xact", "Setting note  from match: " << *added->note);
 #endif
   } else {
     added->payee = tmpl->payee_mask.str();
-    DEBUG("derive.xact", "Setting payee from template: " << added->payee);
+    DEBUG("draft.xact", "Setting payee from template: " << added->payee);
   }
 
   if (tmpl->code) {
     added->code = tmpl->code;
-    DEBUG("derive.xact", "Now setting code from template: " << *added->code);
+    DEBUG("draft.xact", "Now setting code from template: " << *added->code);
   }
   if (tmpl->note) {
     added->note = tmpl->note;
-    DEBUG("derive.xact", "Now setting note from template: " << *added->note);
+    DEBUG("draft.xact", "Now setting note from template: " << *added->note);
   }
 
   if (tmpl->posts.empty()) {
     if (matching) {
-      DEBUG("derive.xact", "Template had no postings, copying from match");
+      DEBUG("draft.xact", "Template had no postings, copying from match");
 
       foreach (post_t * post, matching->posts) {
 	added->add_post(new post_t(*post));
@@ -318,12 +317,12 @@ xact_t * draft_t::insert(journal_t& journal)
 	     << tmpl->payee_mask);
     }
   } else {
-    DEBUG("derive.xact", "Template had postings");
+    DEBUG("draft.xact", "Template had postings");
 
     bool any_post_has_amount = false;
     foreach (xact_template_t::post_template_t& post, tmpl->posts) {
       if (post.amount) {
-	DEBUG("derive.xact", "  and at least one has an amount specified");
+	DEBUG("draft.xact", "  and at least one has an amount specified");
 	any_post_has_amount = true;
 	break;
       }
@@ -336,13 +335,13 @@ xact_t * draft_t::insert(journal_t& journal)
 
       if (matching) {
 	if (post.account_mask) {
-	  DEBUG("derive.xact",
+	  DEBUG("draft.xact",
 		"Looking for matching posting based on account mask");
 
 	  foreach (post_t * x, matching->posts) {
 	    if (post.account_mask->match(x->account->fullname())) {
 	      new_post.reset(new post_t(*x));
-	      DEBUG("derive.xact",
+	      DEBUG("draft.xact",
 		    "Founding posting from line " << x->pos->beg_line);
 	      break;
 	    }
@@ -354,7 +353,7 @@ xact_t * draft_t::insert(journal_t& journal)
 		 j++) {
 	      if ((*j)->must_balance()) {
 		new_post.reset(new post_t(**j));
-		DEBUG("derive.xact",
+		DEBUG("draft.xact",
 		      "Copied last real posting from matching");
 		break;
 	      }
@@ -365,7 +364,7 @@ xact_t * draft_t::insert(journal_t& journal)
 		 j++) {
 	      if ((*j)->must_balance()) {
 		new_post.reset(new post_t(**j));
-		DEBUG("derive.xact",
+		DEBUG("draft.xact",
 		      "Copied first real posting from matching");
 		break;
 	      }
@@ -376,28 +375,28 @@ xact_t * draft_t::insert(journal_t& journal)
 
       if (! new_post.get()) {
 	new_post.reset(new post_t);
-	DEBUG("derive.xact", "New posting was NULL, creating a blank one");
+	DEBUG("draft.xact", "New posting was NULL, creating a blank one");
       }
 
       if (! new_post->account) {
-	DEBUG("derive.xact", "New posting still needs an account");
+	DEBUG("draft.xact", "New posting still needs an account");
 
 	if (post.account_mask) {
-	  DEBUG("derive.xact", "The template has an account mask");
+	  DEBUG("draft.xact", "The template has an account mask");
 
 	  account_t * acct = NULL;
 	  if (! acct) {
 	    acct = journal.find_account_re(post.account_mask->str());
 #if defined(DEBUG_ON)
 	    if (acct)
-	      DEBUG("derive.xact", "Found account as a regular expression");
+	      DEBUG("draft.xact", "Found account as a regular expression");
 #endif
 	  }
 	  if (! acct) {
 	    acct = journal.find_account(post.account_mask->str());
 #if defined(DEBUG_ON)
 	    if (acct)
-	      DEBUG("derive.xact", "Found (or created) account by name");
+	      DEBUG("draft.xact", "Found (or created) account by name");
 #endif
 	  }
 
@@ -409,7 +408,7 @@ xact_t * draft_t::insert(journal_t& journal)
 	    foreach (post_t * x, (*j)->posts) {
 	      if (x->account == acct && ! x->amount.is_null()) {
 		new_post.reset(new post_t(*x));
-		DEBUG("derive.xact",
+		DEBUG("draft.xact",
 		      "Found account in journal postings, setting new posting");
 		break;
 	      }
@@ -417,16 +416,16 @@ xact_t * draft_t::insert(journal_t& journal)
 	  }
 
 	  new_post->account = acct;
-	  DEBUG("derive.xact",
+	  DEBUG("draft.xact",
 		"Set new posting's account to: " << acct->fullname());
 	} else {
 	  if (post.from) {
 	    new_post->account = journal.find_account(_("Liabilities:Unknown"));
-	    DEBUG("derive.xact",
+	    DEBUG("draft.xact",
 		  "Set new posting's account to: Liabilities:Unknown");
 	  } else {
 	    new_post->account = journal.find_account(_("Expenses:Unknown"));
-	    DEBUG("derive.xact",
+	    DEBUG("draft.xact",
 		  "Set new posting's account to: Expenses:Unknown");
 	  }
 	}
@@ -438,20 +437,20 @@ xact_t * draft_t::insert(journal_t& journal)
 
 	if (any_post_has_amount) {
 	  new_post->amount = amount_t();
-	  DEBUG("derive.xact", "New posting has an amount, but we cleared it");
+	  DEBUG("draft.xact", "New posting has an amount, but we cleared it");
 	} else {
 	  any_post_has_amount = true;
-	  DEBUG("derive.xact", "New posting has an amount, and we're using it");
+	  DEBUG("draft.xact", "New posting has an amount, and we're using it");
 	}
       }
 
       if (post.amount) {
 	new_post->amount = *post.amount;
-	DEBUG("derive.xact", "Copied over posting amount");
+	DEBUG("draft.xact", "Copied over posting amount");
 
 	if (post.from) {
 	  new_post->amount.in_place_negate();
-	  DEBUG("derive.xact", "Negated new posting amount");
+	  DEBUG("draft.xact", "Negated new posting amount");
 	}
       }
 
@@ -474,18 +473,18 @@ xact_t * draft_t::insert(journal_t& journal)
 	}
 
 	new_post->cost = *post.cost;
-	DEBUG("derive.xact", "Copied over posting cost");
+	DEBUG("draft.xact", "Copied over posting cost");
       }
 
       if (found_commodity &&
 	  ! new_post->amount.is_null() &&
 	  ! new_post->amount.has_commodity()) {
 	new_post->amount.set_commodity(*found_commodity);
-	DEBUG("derive.xact", "Set posting amount commodity to: "
+	DEBUG("draft.xact", "Set posting amount commodity to: "
 	      << new_post->amount.commodity());
 
 	new_post->amount = new_post->amount.rounded();
-	DEBUG("derive.xact",
+	DEBUG("draft.xact",
 	      "Rounded posting amount to: " << new_post->amount);
       }
 
@@ -493,7 +492,7 @@ xact_t * draft_t::insert(journal_t& journal)
       added->posts.back()->account->add_post(added->posts.back());
       added->posts.back()->set_state(item_t::UNCLEARED);
 
-      DEBUG("derive.xact", "Added new posting to derived entry");
+      DEBUG("draft.xact", "Added new posting to derived entry");
     }
   }
 
