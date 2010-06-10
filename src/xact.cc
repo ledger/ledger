@@ -281,7 +281,8 @@ bool xact_base_t::finalize()
 	gain_loss.in_place_round();
 	DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
 
-	add_or_set_value(balance, gain_loss.reduced());
+	if (post->must_balance())
+	  add_or_set_value(balance, gain_loss.reduced());
 
 	account_t * account;
 	if (gain_loss.sign() > 0)
@@ -291,6 +292,10 @@ bool xact_base_t::finalize()
 
 	post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
 	p->set_state(post->state());
+	if (post->has_flags(POST_VIRTUAL)) {
+	  DEBUG("xact.finalize", "gain_loss came from a virtual post");
+	  p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
+	}
 	add_post(p);
 	DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
       } else {
