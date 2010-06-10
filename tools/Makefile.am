@@ -408,7 +408,7 @@ ConfirmTests: $(srcdir)/test/ConfirmTests.py
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 20 \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
@@ -433,13 +433,14 @@ endif
 fullcheck: cppunittests
 	@$(top_builddir)/RegressTests  --verify
 	@$(top_builddir)/BaselineTests --verify
-	@$(top_builddir)/ManualTests --verify
+	@$(top_builddir)/ManualTests   --verify
 	@$(top_builddir)/ConfirmTests  --verify
-	@$(top_builddir)/GenerateTests --verify
+	@$(top_builddir)/GenerateTests 20 --verify
 	@$(top_builddir)/RegressTests  --gmalloc
 	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/ManualTests --gmalloc
-#	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/ManualTests   --gmalloc
+	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/GenerateTests 10000
 #	@$(top_builddir)/GenerateTests --gmalloc
 
 ######################################################################
