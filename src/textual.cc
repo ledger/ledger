@@ -1096,6 +1096,14 @@ post_t * instance_t::parse_post(char *		line,
 	if (*p) {
 	  post->cost = amount_t();
 
+	  bool fixed_cost = false;
+	  if (*p == '=') {
+	    p++;
+	    fixed_cost = true;
+	    if (*p == '\0')
+	      throw parse_error(_("Posting is missing a cost amount"));
+	  }
+
 	  beg = p - line;
 	  ptristream cstream(p, len - beg);
 
@@ -1121,6 +1129,9 @@ post_t * instance_t::parse_post(char *		line,
 	  else if (post->amount.sign() < 0) {
 	    post->cost->in_place_negate();
 	  }
+
+	  if (fixed_cost)
+	    post->add_flags(POST_COST_FIXATED);
 
 	  DEBUG("textual.parse", "line " << linenum << ": "
 		<< "Total cost is " << *post->cost);

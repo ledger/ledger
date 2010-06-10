@@ -52,12 +52,13 @@ class account_t;
 class post_t : public item_t
 {
 public:
-#define POST_VIRTUAL	     0x04 // the account was specified with (parens)
-#define POST_MUST_BALANCE    0x08 // posting must balance in the transaction
-#define POST_CALCULATED	     0x10 // posting's amount was calculated
-#define POST_COST_CALCULATED 0x20 // posting's cost was calculated
-#define POST_COST_IN_FULL    0x40 // cost specified using @@
-#define POST_ANONYMIZED      0x80 // a temporary, anonymous posting
+#define POST_VIRTUAL	     0x0010 // the account was specified with (parens)
+#define POST_MUST_BALANCE    0x0020 // posting must balance in the transaction
+#define POST_CALCULATED	     0x0040 // posting's amount was calculated
+#define POST_COST_CALCULATED 0x0080 // posting's cost was calculated
+#define POST_COST_IN_FULL    0x0100 // cost specified using @@
+#define POST_COST_FIXATED    0x0200 // cost is fixed using = indicator
+#define POST_ANONYMIZED      0x0400 // a temporary, anonymous posting
 
   xact_t *	     xact;	// only set for posts of regular xacts
   account_t *	     account;

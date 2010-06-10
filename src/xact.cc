@@ -300,6 +300,12 @@ bool xact_base_t::finalize()
       post->amount = breakdown.amount;
       DEBUG("xact.finalize", "added breakdown, balance = " << balance);
     }
+
+    if (post->has_flags(POST_COST_FIXATED) &&
+	post->amount.has_annotation() && post->amount.annotation().price) {
+      DEBUG("xact.finalize", "fixating annotation price");
+      post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+    }
   }
 
   if (null_post != NULL) {
