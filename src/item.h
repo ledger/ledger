@@ -97,7 +97,7 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-class item_t : public supports_flags<>, public scope_t
+class item_t : public supports_flags<uint_least16_t>, public scope_t
 {
 public:
 #define ITEM_NORMAL     0x00	// no flags at all, a basic posting
@@ -117,11 +117,11 @@ public:
   optional<string_map> metadata;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<>(_flags), _state(UNCLEARED), note(_note)
+    : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
-  item_t(const item_t& item) : supports_flags<>(), scope_t()
+  item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t()
   {
     TRACE_CTOR(item_t, "copy");
     copy_details(item);
@@ -204,7 +204,7 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<> >(*this);
+    ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & _state;
     ar & _date;
