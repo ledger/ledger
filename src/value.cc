@@ -122,7 +122,9 @@ value_t::operator bool() const
     break;
   }
 
+  add_error_context(_("While taking boolean value of %1:") << *this);
   throw_(value_error, _("Cannot determine truth of %1") << label());
+
   return false;
 }
 
@@ -313,7 +315,9 @@ value_t value_t::number() const
     break;
   }
 
+  add_error_context(_("While calling number() on %1:") << *this);
   throw_(value_error, _("Cannot determine numeric value of %1") << label());
+
   return false;
 }
 
@@ -335,6 +339,7 @@ value_t& value_t::operator+=(const value_t& val)
 	for (; i != end(); i++, j++)
 	  *i += *j;
       } else {
+	add_error_context(_("While adding %1 to %2:") << *this << val);
 	throw_(value_error, _("Cannot add sequences of different lengths"));
       }
     } else {
@@ -447,7 +452,9 @@ value_t& value_t::operator+=(const value_t& val)
     break;
   }
 
+  add_error_context(_("While adding %1 to %2:") << *this << val);
   throw_(value_error, _("Cannot add %1 to %2") << val.label() << label());
+
   return *this;
 }
 
@@ -464,6 +471,7 @@ value_t& value_t::operator-=(const value_t& val)
 	for (; i != end(); i++, j++)
 	  *i -= *j;
       } else {
+	add_error_context(_("While subtracting %1 to %2:") << *this << val);
 	throw_(value_error, _("Cannot subtract sequences of different lengths"));
       }
     } else {
@@ -586,6 +594,7 @@ value_t& value_t::operator-=(const value_t& val)
     break;
   }
 
+  add_error_context(_("While subtracting %1 from %2:") << *this << val);
   throw_(value_error, _("Cannot subtract %1 from %2") << val.label() << label());
 
   return *this;
@@ -667,9 +676,7 @@ value_t& value_t::operator*=(const value_t& val)
     break;
   }
 
-  DEBUG("value.multiply.error", "Left:  " << *this);
-  DEBUG("value.multiply.error", "Right: " << val);
-
+  add_error_context(_("While multiplying %1 with %2:") << *this << val);
   throw_(value_error, _("Cannot multiply %1 with %2") << label() << val.label());
 
   return *this;
@@ -747,6 +754,7 @@ value_t& value_t::operator/=(const value_t& val)
     break;
   }
 
+  add_error_context(_("While dividing %1 by %2:") << *this << val);
   throw_(value_error, _("Cannot divide %1 by %2") << label() << val.label());
 
   return *this;
@@ -832,6 +840,7 @@ bool value_t::is_equal_to(const value_t& val) const
     break;
   }
 
+  add_error_context(_("While comparing equality of %1 to %2:") << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -958,6 +967,8 @@ bool value_t::is_less_than(const value_t& val) const
     break;
   }
 
+  add_error_context(_("While comparing if %1 is less than %2:")
+		    << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -1078,6 +1089,8 @@ bool value_t::is_greater_than(const value_t& val) const
     break;
   }
 
+  add_error_context(_("While comparing if %1 is greater than %2:")
+		    << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -1219,6 +1232,7 @@ void value_t::in_place_cast(type_t cast_type)
 	return;
       }
       else {
+	add_error_context(_("While converting %1 to an amount:") << *this);
 	throw_(value_error, _("Cannot convert %1 with multiple commodities to %2")
 	       << label() << label(cast_type));
       }
@@ -1266,6 +1280,7 @@ void value_t::in_place_cast(type_t cast_type)
     break;
   }
 
+  add_error_context(_("While converting %1:") << *this);
   throw_(value_error,
 	 _("Cannot convert %1 to %2") << label() << label(cast_type));
 }
@@ -1300,6 +1315,7 @@ void value_t::in_place_negate()
     break;
   }
 
+  add_error_context(_("While negating %1:") << *this);
   throw_(value_error, _("Cannot negate %1") << label());
 }
 
@@ -1336,6 +1352,7 @@ void value_t::in_place_not()
     break;
   }
 
+  add_error_context(_("While applying not to %1:") << *this);
   throw_(value_error, _("Cannot 'not' %1") << label());
 }
 
@@ -1365,6 +1382,7 @@ bool value_t::is_realzero() const
     return ! as_expr();
 
   default:
+    add_error_context(_("While applying is_realzero to %1:") << *this);
     throw_(value_error, _("Cannot determine if %1 is really zero") << label());
   }
   return false;
@@ -1396,6 +1414,7 @@ bool value_t::is_zero() const
     return ! as_expr();
 
   default:
+    add_error_context(_("While applying is_zero to %1:") << *this);
     throw_(value_error, _("Cannot determine if %1 is zero") << label());
   }
   return false;
@@ -1424,6 +1443,7 @@ value_t value_t::value(const optional<datetime_t>&   moment,
     break;
   }
 
+  add_error_context(_("While finding valuation of %1:") << *this);
   throw_(value_error, _("Cannot find the value of %1") << label());
   return NULL_VALUE;
 }
@@ -1511,6 +1531,7 @@ value_t value_t::abs() const
     break;
   }
 
+  add_error_context(_("While taking abs of %1:") << *this);
   throw_(value_error, _("Cannot abs %1") << label());
   return NULL_VALUE;
 }
@@ -1537,6 +1558,7 @@ void value_t::in_place_round()
     break;
   }
 
+  add_error_context(_("While rounding %1:") << *this);
   throw_(value_error, _("Cannot set rounding for %1") << label());
 }
 
@@ -1562,6 +1584,7 @@ void value_t::in_place_truncate()
     break;
   }
 
+  add_error_context(_("While truncating %1:") << *this);
   throw_(value_error, _("Cannot truncate %1") << label());
 }
 
@@ -1587,6 +1610,7 @@ void value_t::in_place_floor()
     break;
   }
 
+  add_error_context(_("While flooring %1:") << *this);
   throw_(value_error, _("Cannot floor %1") << label());
 }
 
@@ -1612,32 +1636,38 @@ void value_t::in_place_unround()
     break;
   }
 
+  add_error_context(_("While unrounding %1:") << *this);
   throw_(value_error, _("Cannot unround %1") << label());
 }
 
 void value_t::annotate(const annotation_t& details)
 {
-  if (is_amount())
+  if (is_amount()) {
     as_amount_lval().annotate(details);
-  else
+  } else {
+    add_error_context(_("While attempting to annotate %1:") << *this);
     throw_(value_error, _("Cannot annotate %1") << label());
+  }
 }
 
 bool value_t::has_annotation() const
 {
-  if (is_amount())
+  if (is_amount()) {
     return as_amount().has_annotation();
-  else
+  } else {
+    add_error_context(_("While checking if %1 has annotations:") << *this);
     throw_(value_error,
 	   _("Cannot determine whether %1 is annotated") << label());
+  }
   return false;
 }
 
 annotation_t& value_t::annotation()
 {
-  if (is_amount())
+  if (is_amount()) {
     return as_amount_lval().annotation();
-  else {
+  } else {
+    add_error_context(_("While requesting the annotations of %1:") << *this);
     throw_(value_error, _("Cannot request annotation of %1") << label());
     return as_amount_lval().annotation(); // quiet g++ warning
   }
@@ -1776,6 +1806,7 @@ void value_t::print(std::ostream&       out,
     break;
 
   default:
+    add_error_context(_("While printing %1:") << *this);
     throw_(value_error, _("Cannot print %1") << label());
   }
 }

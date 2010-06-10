@@ -78,6 +78,8 @@ value_t expr_t::real_calc(scope_t& scope)
     }
     catch (const std::exception& err) {
       if (locus) {
+	string current_context = error_context();
+
 	add_error_context(_("While evaluating value expression:"));
 	add_error_context(op_context(ptr, locus));
 
@@ -103,6 +105,9 @@ value_t expr_t::real_calc(scope_t& scope)
 	  }
 	  add_error_context(out.str());
 	}
+
+	if (! current_context.empty())
+	  add_error_context(current_context);
       }
       throw;
     }
