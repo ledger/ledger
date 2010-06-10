@@ -343,7 +343,7 @@ value_t& value_t::operator+=(const value_t& val)
 	throw_(value_error, _("Cannot add sequences of different lengths"));
       }
     } else {
-      as_sequence_lval().push_back(val);
+      as_sequence_lval().push_back(new value_t(val));
     }
     return *this;
   }
@@ -1110,7 +1110,7 @@ void value_t::in_place_cast(type_t cast_type)
   else if (cast_type == SEQUENCE) {
     sequence_t temp;
     if (! is_null())
-      temp.push_back(*this);
+      temp.push_back(new value_t(*this));
     set_sequence(temp);
     return;
   }
@@ -1693,7 +1693,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   case SEQUENCE: {
     sequence_t temp;
     foreach (const value_t& value, as_sequence())
-      temp.push_back(value.strip_annotations(what_to_keep));
+      temp.push_back(new value_t(value.strip_annotations(what_to_keep)));
     return temp;
   }
 

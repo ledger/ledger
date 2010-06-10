@@ -352,9 +352,13 @@ void export_value()
     .def("basetype", py_base_type)
     ;
 
+#if 0
+  // jww (2010-06-10): This is not working since I switched sequence_t to
+  // ptr_deque<value_t>.
   class_< value_t::sequence_t > ("ValueSequence")
-    .def(vector_indexing_suite< value_t::sequence_t >());
+    .def(vector_indexing_suite< value_t::sequence_t, true >());
     ;
+#endif
 
   scope().attr("NULL_VALUE")    = NULL_VALUE;
   scope().attr("string_value")  = &string_value;

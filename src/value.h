@@ -88,7 +88,7 @@ public:
    * The sequence_t member type abstracts the type used to represent a
    * resizable "array" of value_t objects.
    */
-  typedef std::deque<value_t>	      sequence_t;
+  typedef ptr_deque<value_t>	      sequence_t;
   typedef sequence_t::iterator	      iterator;
   typedef sequence_t::const_iterator  const_iterator;
   typedef sequence_t::difference_type difference_type;
@@ -836,7 +836,7 @@ public:
       *this = sequence_t();
     if (! is_sequence())
       in_place_cast(SEQUENCE);
-    as_sequence_lval().push_front(val);
+    as_sequence_lval().push_front(new value_t(val));
   }
 
   void push_back(const value_t& val) {
@@ -844,7 +844,7 @@ public:
       *this = sequence_t();
     if (! is_sequence())
       in_place_cast(SEQUENCE);
-    as_sequence_lval().push_back(val);
+    as_sequence_lval().push_back(new value_t(val));
   }
 
   void pop_back() {
