@@ -43,14 +43,24 @@ let s:currency = '\([$€£¢]\|\w\+\)'
 let s:figures = '\d\+\([.,]\d\+\)*'
 let s:amount = '-\?\('.s:figures.'\s*'.s:currency.'\|'.s:currency.'\s*'.s:figures.'\)'
 exe 'syn match Amount /'.s:amount.'/ contained'
-syn match MetadataTag /:\zs[^:]\+\ze:\|;\s*\zs[^:]\+\ze:[^:]\+$/ contained
+syn match MetadataTag /:[^:]\+:/hs=s+1,he=e-1 contained
+syn match MetadataTag /;\s*\zs[^:]\+\ze:[^:]\+$/ contained
 
+syn region TagStack
+    \ matchgroup=TagPush start=/^tag\>/
+    \ matchgroup=TagPop end=/^pop\>/
+    \ contains=TagHead,TagStack,transNorm
+syn match TagHead /\%(^tag\s\+\)\@<=\S.*$/ contained contains=tagKey transparent
+syn match TagKey /:[^:]\+:/hs=s+1,he=e-1 contained
+syn match TagKey /\%(^tag\s\+\)\@<=[^:]\+\ze:[^:]\+$/ contained
 
 highlight default link transDate Constant
 highlight default link Metadata Tag
 highlight default link MetadataTag Type
+highlight default link TagPop Tag
+highlight default link TagPush Tag
+highlight default link TagKey Type
 highlight default link Amount Number
-highlight default link Comment Comment
 highlight default link Account Identifier
  
 " syncinc is easy: search for the first transaction.
