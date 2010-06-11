@@ -218,7 +218,6 @@ class CommandLineApp(object):
     log_handler   = None
     darwin_gcc    = False
     boost_version = "1_43"
-    gcc_version   = "45"
 
     options = {
         'debug':    False,
@@ -913,18 +912,24 @@ class PrepareBuild(CommandLineApp):
                 self.sys_library_dirs.append(path)
 
     def setup_for_johnw(self):
-        if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
-            if exists('/usr/local/stow/cppunit-gcc%s/include' % self.gcc_version):
-                self.sys_include_dirs.insert(
-                    0, '/usr/local/stow/cppunit-gcc%s/include' % self.gcc_version)
-                self.sys_library_dirs.insert(
-                    0, '/usr/local/stow/cppunit-gcc%s/lib' % self.gcc_version)
+        match = re.search('gcc-mp-([0-9]+)\.([0-9]+)', self.envvars['CC'])
+        if match:
+            gcc_version = match.group(1) + match.group(2)
+        else:
+            gcc_version = "42"
 
-            if exists('/usr/local/stow/icu-gcc%s/include' % self.gcc_version):
+        if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
+            if exists('/usr/local/stow/cppunit-gcc%s/include' % gcc_version):
                 self.sys_include_dirs.insert(
-                    0, '/usr/local/stow/icu-gcc%s/include' % self.gcc_version)
+                    0, '/usr/local/stow/cppunit-gcc%s/include' % gcc_version)
                 self.sys_library_dirs.insert(
-                    0, '/usr/local/stow/icu-gcc%s/lib' % self.gcc_version)
+                    0, '/usr/local/stow/cppunit-gcc%s/lib' % gcc_version)
+
+            if exists('/usr/local/stow/icu-gcc%s/include' % gcc_version):
+                self.sys_include_dirs.insert(
+                    0, '/usr/local/stow/icu-gcc%s/include' % gcc_version)
+                self.sys_library_dirs.insert(
+                    0, '/usr/local/stow/icu-gcc%s/lib' % gcc_version)
 
             self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
             self.configure_args.append('--disable-shared')
@@ -937,10 +942,6 @@ class PrepareBuild(CommandLineApp):
         self.locate_darwin_libraries()
 
     def setup_for_system(self):
-        if exists('/Users/johnw/Projects/ledger/plan/TODO'):
-            self.setup_for_johnw()
-        self.setup_system_directories()
-
         system = self.get_stdout('uname', '-s')
 
         self.log.info('System type is => ' + system)
@@ -990,6 +991,10 @@ class PrepareBuild(CommandLineApp):
             else:
                 # g++ 4.0.1 cannot use PCH headers on OS X 10.5
                 self.option_no_pch()
+
+        if exists('/Users/johnw/Projects/ledger/plan/TODO'):
+            self.setup_for_johnw()
+        self.setup_system_directories()
 
         if '--enable-pch' not in self.configure_args and \
            (exists('/opt/local/bin/ccache') or \
@@ -1142,6 +1147,14 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def locate_darwin_libraries(self):
+        match = re.search('gcc-mp-([0-9]+)\.([0-9]+)', self.envvars['CC'])
+        if match:
+            gcc_version = match.group(1) + match.group(2)
+        else:
+            gcc_version = "42"
+
+        self.log.info('Using gcc version: %s' % gcc_version)
+
         if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
             if self.options.use_glibcxx_debug:
                 self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
@@ -1149,16 +1162,16 @@ class PrepareBuild(CommandLineApp):
 
             if self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s_0-gcc%s' % \
-                    (self.boost_version, self.gcc_version),
+                    (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-sd-%s' % \
-                    (self.gcc_version, self.boost_version),
+                    (gcc_version, self.boost_version),
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
             elif self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s_0-gcc%s' % \
-                    (self.boost_version, self.gcc_version),
+                    (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-d-%s' % \
-                    (self.gcc_version, self.boost_version),
+                    (gcc_version, self.boost_version),
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
             elif self.boost_info.configure(suffix = '-d'):
@@ -1169,16 +1182,16 @@ class PrepareBuild(CommandLineApp):
                 pass
             elif self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s_0-gcc%s' % \
-                    (self.boost_version, self.gcc_version),
+                    (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-s-%s' % \
-                    (self.gcc_version, self.boost_version),
+                    (gcc_version, self.boost_version),
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
             elif self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s_0-gcc%s' % \
-                    (self.boost_version, self.gcc_version),
+                    (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-%s' % \
-                    (self.gcc_version, self.boost_version),
+                    (gcc_version, self.boost_version),
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
 
