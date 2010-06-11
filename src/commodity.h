@@ -92,19 +92,19 @@ public:
   {
     history_map prices;
 
-    void add_price(commodity_t&	     source,
-		   const datetime_t& date,
-		   const amount_t&   price,
-		   const bool	     reflexive = true);
+    void add_price(commodity_t&      source,
+                   const datetime_t& date,
+                   const amount_t&   price,
+                   const bool        reflexive = true);
     bool remove_price(const datetime_t& date);
 
     optional<price_point_t>
     find_price(const optional<datetime_t>&   moment = none,
-	       const optional<datetime_t>&   oldest = none
+               const optional<datetime_t>&   oldest = none
 #if defined(DEBUG_ON)
-	       , const int indent = 0
+               , const int indent = 0
 #endif
-	       ) const;
+               ) const;
 
 #if defined(HAVE_BOOST_SERIALIZATION)
   private:
@@ -125,21 +125,21 @@ public:
   {
     history_by_commodity_map histories;
 
-    void add_price(commodity_t&	     source,
-		   const datetime_t& date,
-		   const amount_t&   price,
-		   const bool	     reflexive = true);
+    void add_price(commodity_t&      source,
+                   const datetime_t& date,
+                   const amount_t&   price,
+                   const bool        reflexive = true);
     bool remove_price(const datetime_t& date, commodity_t& commodity);
 
     optional<price_point_t>
-    find_price(const commodity_t&	     source,
-	       const optional<commodity_t&>& commodity = none,
-	       const optional<datetime_t>&   moment    = none,
-	       const optional<datetime_t>&   oldest    = none
+    find_price(const commodity_t&            source,
+               const optional<commodity_t&>& commodity = none,
+               const optional<datetime_t>&   moment    = none,
+               const optional<datetime_t>&   oldest    = none
 #if defined(DEBUG_ON)
-	       , const int indent = 0
+               , const int indent = 0
 #endif
-	       ) const;
+               ) const;
 
     optional<history_t&>
     history(const optional<commodity_t&>& commodity = none);
@@ -169,26 +169,26 @@ protected:
 #define COMMODITY_STYLE_SEPARATED     0x002
 #define COMMODITY_STYLE_DECIMAL_COMMA 0x004
 #define COMMODITY_STYLE_THOUSANDS     0x008
-#define COMMODITY_NOMARKET	      0x010
-#define COMMODITY_BUILTIN	      0x020
-#define COMMODITY_WALKED	      0x040
-#define COMMODITY_KNOWN		      0x080
-#define COMMODITY_PRIMARY	      0x100
+#define COMMODITY_NOMARKET            0x010
+#define COMMODITY_BUILTIN             0x020
+#define COMMODITY_WALKED              0x040
+#define COMMODITY_KNOWN               0x080
+#define COMMODITY_PRIMARY             0x100
 
-    string		       symbol;
+    string                     symbol;
     amount_t::precision_t      precision;
-    optional<string>	       name;
-    optional<string>	       note;
+    optional<string>           name;
+    optional<string>           note;
     optional<varied_history_t> varied_history;
-    optional<amount_t>	       smaller;
-    optional<amount_t>	       larger;
+    optional<amount_t>         smaller;
+    optional<amount_t>         larger;
 
     typedef std::pair<optional<datetime_t>,
-		      optional<datetime_t> > optional_time_pair_t;
+                      optional<datetime_t> > optional_time_pair_t;
     typedef std::pair<optional_time_pair_t,
-		      commodity_t *> time_and_commodity_t;
+                      commodity_t *> time_and_commodity_t;
     typedef std::map<time_and_commodity_t,
-		     optional<price_point_t> > memoized_price_map;
+                     optional<price_point_t> > memoized_price_map;
 
     static const std::size_t   max_price_map_size = 16;
     mutable memoized_price_map price_map;
@@ -198,10 +198,10 @@ protected:
   public:
     explicit base_t(const string& _symbol)
       : supports_flags<uint_least16_t>
-	(commodity_t::decimal_comma_by_default ?
-	 static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA) :
-	 static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
-	symbol(_symbol), precision(0), searched(false) {
+        (commodity_t::decimal_comma_by_default ?
+         static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA) :
+         static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
+        symbol(_symbol), precision(0), searched(false) {
       TRACE_CTOR(base_t, "const string&");
     }
     virtual ~base_t() {
@@ -237,10 +237,10 @@ protected:
   commodity_pool_t * parent_;
   optional<string>   qualified_symbol;
   optional<string>   mapping_key_;
-  bool		     annotated;
+  bool               annotated;
 
-  explicit commodity_t(commodity_pool_t *	 _parent,
-		       const shared_ptr<base_t>& _base)
+  explicit commodity_t(commodity_pool_t *        _parent,
+                       const shared_ptr<base_t>& _base)
     : delegates_flags<uint_least16_t>(*_base.get()), base(_base),
       parent_(_parent), annotated(false) {
     TRACE_CTOR(commodity_t, "commodity_pool_t *, shared_ptr<base_t>");
@@ -349,36 +349,36 @@ public:
   // base->varied_history object.
 
   void add_price(const datetime_t& date, const amount_t& price,
-		 const bool reflexive = true) {
+                 const bool reflexive = true) {
     if (! base->varied_history)
       base->varied_history = varied_history_t();
     base->varied_history->add_price(*this, date, price, reflexive);
     DEBUG("commodity.prices.find", "Price added, clearing price_map");
-    base->price_map.clear();	// a price was added, invalid the map
+    base->price_map.clear();    // a price was added, invalid the map
   }
   bool remove_price(const datetime_t& date, commodity_t& commodity) {
     if (base->varied_history) {
       base->varied_history->remove_price(date, commodity);
       DEBUG("commodity.prices.find", "Price removed, clearing price_map");
-      base->price_map.clear();	// a price was added, invalid the map
+      base->price_map.clear();  // a price was added, invalid the map
     }
     return false;
   }
 
   optional<price_point_t>
   find_price(const optional<commodity_t&>& commodity = none,
-	     const optional<datetime_t>&   moment    = none,
-	     const optional<datetime_t>&   oldest    = none,
-	     const bool                    nested    = false
+             const optional<datetime_t>&   moment    = none,
+             const optional<datetime_t>&   oldest    = none,
+             const bool                    nested    = false
 #if defined(DEBUG_ON)
-	     , const int indent = 0
+             , const int indent = 0
 #endif
-	     ) const;    
+             ) const;    
 
   optional<price_point_t>
   check_for_updated_price(const optional<price_point_t>& point,
-			  const optional<datetime_t>&	 moment,
-			  const optional<commodity_t&>&  in_terms_of);
+                          const optional<datetime_t>&    moment,
+                          const optional<commodity_t&>&  in_terms_of);
 
   // Methods related to parsing, reading, writing, etc., the commodity
   // itself.
@@ -432,7 +432,7 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
 }
 
 void to_xml(std::ostream& out, const commodity_t& comm,
-	    bool commodity_details = false);
+            bool commodity_details = false);
 
 } // namespace ledger
 

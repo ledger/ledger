@@ -105,37 +105,37 @@ std::size_t session_t::read_data(const string& master_account)
     cache = archive_t(HANDLED(cache_).str());
 
   if (! (cache &&
-	 cache->should_load(HANDLER(file_).data_files) &&
-	 cache->load(*journal.get()))) {
+         cache->should_load(HANDLER(file_).data_files) &&
+         cache->load(*journal.get()))) {
 #endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
-	if (journal->read(*price_db_path) > 0)
-	  throw_(parse_error, _("Transactions not allowed in price history file"));
+        if (journal->read(*price_db_path) > 0)
+          throw_(parse_error, _("Transactions not allowed in price history file"));
       }
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
       if (pathname == "-") {
-	// To avoid problems with stdin and pipes, etc., we read the entire
-	// file in beforehand into a memory buffer, and then parcel it out
-	// from there.
-	std::ostringstream buffer;
+        // To avoid problems with stdin and pipes, etc., we read the entire
+        // file in beforehand into a memory buffer, and then parcel it out
+        // from there.
+        std::ostringstream buffer;
 
-	while (std::cin.good() && ! std::cin.eof()) {
-	  char line[8192];
-	  std::cin.read(line, 8192);
-	  std::streamsize count = std::cin.gcount();
-	  buffer.write(line, count);
-	}
-	buffer.flush();
+        while (std::cin.good() && ! std::cin.eof()) {
+          char line[8192];
+          std::cin.read(line, 8192);
+          std::streamsize count = std::cin.gcount();
+          buffer.write(line, count);
+        }
+        buffer.flush();
 
-	std::istringstream buf_in(buffer.str());
+        std::istringstream buf_in(buffer.str());
 
-	xact_count += journal->read(buf_in, "/dev/stdin", acct);
-	journal->sources.push_back(journal_t::fileinfo_t());
+        xact_count += journal->read(buf_in, "/dev/stdin", acct);
+        journal->sources.push_back(journal_t::fileinfo_t());
       } else {
-	xact_count += journal->read(pathname, acct);
+        xact_count += journal->read(pathname, acct);
       }
     }
 
@@ -166,7 +166,7 @@ void session_t::read_journal_files()
   std::size_t count = read_data(master_account);
   if (count == 0)
     throw_(parse_error,
-	   _("Failed to locate any transactions; did you specify a valid file with -f?"));
+           _("Failed to locate any transactions; did you specify a valid file with -f?"));
 
   INFO_FINISH(journal);
 
@@ -222,7 +222,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
 }
 
 expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
-				   const string& name)
+                                   const string& name)
 {
   switch (kind) {
   case symbol_t::FUNCTION:

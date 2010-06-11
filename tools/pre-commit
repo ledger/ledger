@@ -10,7 +10,7 @@ if echo $(git rev-parse --symbolic-full-name HEAD) | \
 fi
 
 # These are the locations I keep my temporary source and build trees in
-PRODUCTS=$(./acprep products)	# generates a build directory name such as
+PRODUCTS=$(./acprep products)   # generates a build directory name such as
                                 # ~/Products/ledger
 TMPDIR=$PRODUCTS/ledger/pre-commit
 MIRROR=$PRODUCTS/ledger/pre-commit-mirror
@@ -46,11 +46,11 @@ if [ ! -f Makefile -o \
      \( -f acprep -a acprep -nt Makefile \) ]
 then
     if [ -f acprep ]; then
-	echo Will run acprep in a moment
+        echo Will run acprep in a moment
     elif [ -f autogen.sh ]; then
-	sh autogen.sh && ./configure
+        sh autogen.sh && ./configure
     else
-	autoreconf && ./configure
+        autoreconf && ./configure
     fi
 fi
 

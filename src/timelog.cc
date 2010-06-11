@@ -41,8 +41,8 @@ namespace ledger {
 
 namespace {
   void clock_out_from_timelog(std::list<time_xact_t>& time_xacts,
-			      time_xact_t	      out_event,
-			      journal_t&	      journal)
+                              time_xact_t             out_event,
+                              journal_t&              journal)
   {
     time_xact_t event;
 
@@ -55,29 +55,29 @@ namespace {
     }
     else if (! out_event.account) {
       throw parse_error
-	(_("When multiple check-ins are active, checking out requires an account"));
+        (_("When multiple check-ins are active, checking out requires an account"));
     }
     else {
       bool found = false;
 
       for (std::list<time_xact_t>::iterator i = time_xacts.begin();
-	   i != time_xacts.end();
-	   i++)
-	if (out_event.account == (*i).account) {
-	  event = *i;
-	  found = true;
-	  time_xacts.erase(i);
-	  break;
-	}
+           i != time_xacts.end();
+           i++)
+        if (out_event.account == (*i).account) {
+          event = *i;
+          found = true;
+          time_xacts.erase(i);
+          break;
+        }
 
       if (! found)
-	throw parse_error
-	  (_("Timelog check-out event does not match any current check-ins"));
+        throw parse_error
+          (_("Timelog check-out event does not match any current check-ins"));
     }
 
     if (out_event.checkin < event.checkin)
       throw parse_error
-	(_("Timelog check-out date less than corresponding check-in"));
+        (_("Timelog check-out date less than corresponding check-in"));
 
     if (! out_event.desc.empty() && event.desc.empty()) {
       event.desc = out_event.desc;
@@ -98,7 +98,7 @@ namespace {
 
     char buf[32];
     std::sprintf(buf, "%lds", long((out_event.checkin - event.checkin)
-				   .total_seconds()));
+                                   .total_seconds()));
     amount_t amt;
     amt.parse(buf);
     VERIFY(amt.valid());
@@ -128,8 +128,8 @@ time_log_t::~time_log_t()
 
     foreach (account_t * account, accounts)
       clock_out_from_timelog(time_xacts,
-			     time_xact_t(none, CURRENT_TIME(), account),
-			     journal);
+                             time_xact_t(none, CURRENT_TIME(), account),
+                             journal);
 
     assert(time_xacts.empty());
   }
@@ -140,7 +140,7 @@ void time_log_t::clock_in(time_xact_t event)
   if (! time_xacts.empty()) {
     foreach (time_xact_t& time_xact, time_xacts) {
       if (event.account == time_xact.account)
-	throw parse_error(_("Cannot double check-in to the same account"));
+        throw parse_error(_("Cannot double check-in to the same account"));
     }
   }
 

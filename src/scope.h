@@ -58,8 +58,8 @@ struct symbol_t
     FORMAT
   };
 
-  kind_t	   kind;
-  string	   name;
+  kind_t           kind;
+  string           name;
   expr_t::ptr_op_t definition;
 
   symbol_t() : kind(UNKNOWN), name(""), definition(NULL) {
@@ -110,9 +110,9 @@ public:
   }
 
   virtual void define(const symbol_t::kind_t, const string&,
-		      expr_t::ptr_op_t) {}
+                      expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name) = 0;
+                                  const string& name) = 0;
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -142,13 +142,13 @@ public:
   }
 
   virtual void define(const symbol_t::kind_t kind,
-		      const string& name, expr_t::ptr_op_t def) {
+                      const string& name, expr_t::ptr_op_t def) {
     if (parent)
       parent->define(kind, name, def);
   }
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name) {
+                                  const string& name) {
     if (parent)
       return parent->lookup(kind, name);
     return NULL;
@@ -186,10 +186,10 @@ public:
   }
 
   virtual void define(const symbol_t::kind_t kind, const string& name,
-		      expr_t::ptr_op_t def);
+                      expr_t::ptr_op_t def);
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -292,7 +292,7 @@ public:
   scope_t& grandchild;
 
   explicit bind_scope_t(scope_t& _parent,
-			scope_t& _grandchild)
+                        scope_t& _grandchild)
     : child_scope_t(_parent), grandchild(_grandchild) {
     TRACE_CTOR(bind_scope_t, "scope_t&, scope_t&");
   }
@@ -301,13 +301,13 @@ public:
   }
 
   virtual void define(const symbol_t::kind_t kind, const string& name,
-		      expr_t::ptr_op_t def) {
+                      expr_t::ptr_op_t def) {
     parent->define(kind, name, def);
     grandchild.define(kind, name, def);
   }
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name) {
+                                  const string& name) {
     if (expr_t::ptr_op_t def = grandchild.lookup(kind, name))
       return def;
     return child_scope_t::lookup(kind, name);
@@ -366,7 +366,7 @@ public:
   value_scope_t(const value_t& _value) : value(_value) {}
   
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name)
+                                  const string& name)
   {
     if (kind != symbol_t::FUNCTION)
       return NULL;

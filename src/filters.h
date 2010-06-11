@@ -62,17 +62,17 @@ public:
   typedef function<void (const value_t&)> custom_flusher_t;
 
 protected:
-  value_to_posts_map	     posts_map;
-  post_handler_ptr	     post_chain;
-  report_t&		     report;
-  expr_t		     group_by_expr;
-  custom_flusher_t	     preflush_func;
+  value_to_posts_map         posts_map;
+  post_handler_ptr           post_chain;
+  report_t&                  report;
+  expr_t                     group_by_expr;
+  custom_flusher_t           preflush_func;
   optional<custom_flusher_t> postflush_func;
 
 public:
   post_splitter(post_handler_ptr _post_chain,
-		report_t&        _report,
-		expr_t           _group_by_expr)
+                report_t&        _report,
+                expr_t           _group_by_expr)
     : post_chain(_post_chain), report(_report), 
       group_by_expr(_group_by_expr),
       preflush_func(bind(&post_splitter::print_title, this, _1)) {
@@ -192,7 +192,7 @@ class truncate_xacts : public item_handler<post_t>
 
 public:
   truncate_xacts(post_handler_ptr handler,
-		 int _head_count, int _tail_count)
+                 int _head_count, int _tail_count)
     : item_handler<post_t>(handler),
       head_count(_head_count), tail_count(_tail_count),
       completed(false), xacts_seen(0), last_xact(NULL) {
@@ -267,12 +267,12 @@ public:
   sort_xacts(post_handler_ptr handler, const expr_t& _sort_order)
     : sorter(handler, _sort_order) {
     TRACE_CTOR(sort_xacts,
-	       "post_handler_ptr, const value_expr&");
+               "post_handler_ptr, const value_expr&");
   }
   sort_xacts(post_handler_ptr handler, const string& _sort_order)
     : sorter(handler, _sort_order) {
     TRACE_CTOR(sort_xacts,
-	       "post_handler_ptr, const string&");
+               "post_handler_ptr, const string&");
   }
   virtual ~sort_xacts() {
     TRACE_DTOR(sort_xacts);
@@ -308,9 +308,9 @@ class filter_posts : public item_handler<post_t>
   filter_posts();
 
 public:
-  filter_posts(post_handler_ptr	  handler,
-	       const predicate_t& predicate,
-	       scope_t&           _context)
+  filter_posts(post_handler_ptr   handler,
+               const predicate_t& predicate,
+               scope_t&           _context)
     : item_handler<post_t>(handler), pred(predicate), context(_context) {
     TRACE_CTOR(filter_posts, "post_handler_ptr, predicate_t, scope_t&");
   }
@@ -336,10 +336,10 @@ class anonymize_posts : public item_handler<post_t>
 {
   typedef std::map<commodity_t *, std::size_t> commodity_index_map;
 
-  temporaries_t	      temps;
+  temporaries_t       temps;
   commodity_index_map comms;
   std::size_t         next_comm_id;
-  xact_t *	      last_xact;
+  xact_t *            last_xact;
 
   anonymize_posts();
 
@@ -374,8 +374,8 @@ class calc_posts : public item_handler<post_t>
 
 public:
   calc_posts(post_handler_ptr handler,
-	     expr_t&          _amount_expr,
-	     bool             _calc_running_total = false)
+             expr_t&          _amount_expr,
+             bool             _calc_running_total = false)
     : item_handler<post_t>(handler), last_post(NULL),
       amount_expr(_amount_expr), calc_running_total(_calc_running_total) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
@@ -396,16 +396,16 @@ public:
 
 class collapse_posts : public item_handler<post_t>
 {
-  expr_t&	      amount_expr;
-  predicate_t	      display_predicate;
-  predicate_t	      only_predicate;
-  value_t	      subtotal;
-  std::size_t	      count;
-  xact_t *	      last_xact;
-  post_t *	      last_post;
+  expr_t&             amount_expr;
+  predicate_t         display_predicate;
+  predicate_t         only_predicate;
+  value_t             subtotal;
+  std::size_t         count;
+  xact_t *            last_xact;
+  post_t *            last_post;
   temporaries_t       temps;
-  account_t&	      totals_account;
-  bool		      only_collapse_if_zero;
+  account_t&          totals_account;
+  bool                only_collapse_if_zero;
   std::list<post_t *> component_posts;
   report_t&           report;
 
@@ -413,11 +413,11 @@ class collapse_posts : public item_handler<post_t>
 
 public:
   collapse_posts(post_handler_ptr handler,
-		 report_t&        _report,
-		 expr_t&	  _amount_expr,
-		 predicate_t	  _display_predicate,
-		 predicate_t	  _only_predicate,
-		 bool             _only_collapse_if_zero = false)
+                 report_t&        _report,
+                 expr_t&          _amount_expr,
+                 predicate_t      _display_predicate,
+                 predicate_t      _only_predicate,
+                 bool             _only_collapse_if_zero = false)
     : item_handler<post_t>(handler), amount_expr(_amount_expr),
       display_predicate(_display_predicate),
       only_predicate(_only_predicate), count(0),
@@ -459,17 +459,17 @@ public:
 class related_posts : public item_handler<post_t>
 {
   posts_list posts;
-  bool	     also_matching;
+  bool       also_matching;
 
   related_posts();
 
 public:
   related_posts(post_handler_ptr handler,
-		       const bool _also_matching = false)
+                       const bool _also_matching = false)
     : item_handler<post_t>(handler),
       also_matching(_also_matching) {
     TRACE_CTOR(related_posts,
-	       "post_handler_ptr, const bool");
+               "post_handler_ptr, const bool");
   }
   virtual ~related_posts() throw() {
     TRACE_DTOR(related_posts);
@@ -492,22 +492,22 @@ class display_filter_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
-  expr_t	display_amount_expr;
-  expr_t	display_total_expr;
+  expr_t        display_amount_expr;
+  expr_t        display_total_expr;
   report_t&     report;
-  bool	        show_rounding;
-  value_t	last_display_total;
-  temporaries_t	temps;
-  account_t&	rounding_account;
+  bool          show_rounding;
+  value_t       last_display_total;
+  temporaries_t temps;
+  account_t&    rounding_account;
 
   display_filter_posts();
 
 public:
-  account_t&	revalued_account;
+  account_t&    revalued_account;
 
   display_filter_posts(post_handler_ptr handler,
-		       report_t&        _report,
-		       bool             _show_rounding);
+                       report_t&        _report,
+                       bool             _show_rounding);
 
   virtual ~display_filter_posts() {
     TRACE_DTOR(display_filter_posts);
@@ -534,30 +534,30 @@ class changed_value_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
-  expr_t	total_expr;
-  expr_t	display_total_expr;
-  report_t&	report;
-  bool		changed_values_only;
-  bool		for_accounts_report;
-  bool		show_unrealized;
-  post_t *	last_post;
-  value_t	last_total;
+  expr_t        total_expr;
+  expr_t        display_total_expr;
+  report_t&     report;
+  bool          changed_values_only;
+  bool          for_accounts_report;
+  bool          show_unrealized;
+  post_t *      last_post;
+  value_t       last_total;
   value_t       repriced_total;
-  temporaries_t	temps;
-  account_t&	revalued_account;
-  account_t *	gains_equity_account;
-  account_t *	losses_equity_account;
+  temporaries_t temps;
+  account_t&    revalued_account;
+  account_t *   gains_equity_account;
+  account_t *   losses_equity_account;
 
   display_filter_posts * display_filter;
 
   changed_value_posts();
 
 public:
-  changed_value_posts(post_handler_ptr	     handler,
-		      report_t&		     _report,
-		      bool		     _for_accounts_report,
-		      bool		     _show_unrealized,
-		      display_filter_posts * _display_filter);
+  changed_value_posts(post_handler_ptr       handler,
+                      report_t&              _report,
+                      bool                   _for_accounts_report,
+                      bool                   _show_unrealized,
+                      display_filter_posts * _display_filter);
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
@@ -593,8 +593,8 @@ protected:
     acct_value_t();
 
   public:
-    account_t *	account;
-    value_t	value;
+    account_t * account;
+    value_t     value;
 
     acct_value_t(account_t * a) : account(a) {
       TRACE_CTOR(acct_value_t, "account_t *");
@@ -615,26 +615,26 @@ protected:
   typedef std::pair<string, acct_value_t> values_pair;
 
 protected:
-  expr_t&	      amount_expr;
-  values_map	      values;
+  expr_t&             amount_expr;
+  values_map          values;
   optional<string>    date_format;
   temporaries_t       temps;
   std::list<post_t *> component_posts;
 
 public:
   subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr,
-		 const optional<string>& _date_format = none)
+                 const optional<string>& _date_format = none)
     : item_handler<post_t>(handler), amount_expr(_amount_expr),
       date_format(_date_format) {
     TRACE_CTOR(subtotal_posts,
-	       "post_handler_ptr, expr_t&, const optional<string>&");
+               "post_handler_ptr, expr_t&, const optional<string>&");
   }
   virtual ~subtotal_posts() {
     TRACE_DTOR(subtotal_posts);
   }
 
   void report_subtotal(const char * spec_fmt = NULL,
-		       const optional<date_interval_t>& interval = none);
+                       const optional<date_interval_t>& interval = none);
 
   virtual void flush() {
     if (values.size() > 0)
@@ -658,27 +658,27 @@ class interval_posts : public subtotal_posts
   date_interval_t start_interval;
   date_interval_t interval;
   date_interval_t last_interval;
-  post_t *	  last_post;
-  account_t&	  empty_account;
-  bool		  exact_periods;
-  bool		  generate_empty_posts;
+  post_t *        last_post;
+  account_t&      empty_account;
+  bool            exact_periods;
+  bool            generate_empty_posts;
 
   interval_posts();
 
 public:
 
-  interval_posts(post_handler_ptr	_handler,
-		 expr_t&		amount_expr,
-		 const date_interval_t& _interval,
-		 bool			_exact_periods	      = false,
-		 bool                   _generate_empty_posts = false)
+  interval_posts(post_handler_ptr       _handler,
+                 expr_t&                amount_expr,
+                 const date_interval_t& _interval,
+                 bool                   _exact_periods        = false,
+                 bool                   _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), start_interval(_interval),
       interval(start_interval), last_post(NULL),
       empty_account(temps.create_account(_("<None>"))),
       exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
     TRACE_CTOR(interval_posts,
-	       "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
+               "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
   }
   virtual ~interval_posts() throw() {
     TRACE_DTOR(interval_posts);
@@ -689,7 +689,7 @@ public:
   virtual void flush() {
     if (last_post && interval.duration) {
       if (interval.is_valid())
-	report_subtotal(interval);
+        report_subtotal(interval);
       subtotal_posts::flush();
     }
   }
@@ -741,7 +741,7 @@ class by_payee_posts : public item_handler<post_t>
   typedef std::map<string, shared_ptr<subtotal_posts> >  payee_subtotals_map;
   typedef std::pair<string, shared_ptr<subtotal_posts> > payee_subtotals_pair;
 
-  expr_t&	      amount_expr;
+  expr_t&             amount_expr;
   payee_subtotals_map payee_subtotals;
 
   by_payee_posts();
@@ -768,9 +768,9 @@ class by_payee_posts : public item_handler<post_t>
 
 class transfer_details : public item_handler<post_t>
 {
-  account_t *	master;
-  expr_t	expr;
-  scope_t&	scope;
+  account_t *   master;
+  expr_t        expr;
+  scope_t&      scope;
   temporaries_t temps;
 
   transfer_details();
@@ -783,14 +783,14 @@ public:
   } which_element;
 
   transfer_details(post_handler_ptr handler,
-		   element_t	    _which_element,
-		   account_t *	    _master,
-		   const expr_t&    _expr,
-		   scope_t&         _scope)
+                   element_t        _which_element,
+                   account_t *      _master,
+                   const expr_t&    _expr,
+                   scope_t&         _scope)
     : item_handler<post_t>(handler), master(_master),
       expr(_expr), scope(_scope), which_element(_which_element) {
     TRACE_CTOR(transfer_details,
-	       "post_handler_ptr, element_t, account_t *, expr_t, scope_t&");
+               "post_handler_ptr, element_t, account_t *, expr_t, scope_t&");
   }
   virtual ~transfer_details() {
     TRACE_DTOR(transfer_details);
@@ -840,7 +840,7 @@ class generate_posts : public item_handler<post_t>
 
 protected:
   typedef std::pair<date_interval_t, post_t *> pending_posts_pair;
-  typedef std::list<pending_posts_pair>	       pending_posts_list;
+  typedef std::list<pending_posts_pair>        pending_posts_list;
 
   pending_posts_list pending_posts;
   temporaries_t      temps;
@@ -870,7 +870,7 @@ public:
 class budget_posts : public generate_posts
 {
 #define BUDGET_NO_BUDGET   0x00
-#define BUDGET_BUDGETED	   0x01
+#define BUDGET_BUDGETED    0x01
 #define BUDGET_UNBUDGETED  0x02
 #define BUDGET_WRAP_VALUES 0x04
 
@@ -880,7 +880,7 @@ class budget_posts : public generate_posts
 
 public:
   budget_posts(post_handler_ptr handler,
-	       uint_least8_t _flags = BUDGET_BUDGETED)
+               uint_least8_t _flags = BUDGET_BUDGETED)
     : generate_posts(handler), flags(_flags) {
     TRACE_CTOR(budget_posts, "post_handler_ptr, uint_least8_t");
   }
@@ -895,19 +895,19 @@ public:
 
 class forecast_posts : public generate_posts
 {
-  predicate_t	    pred;
-  scope_t&	    context;
+  predicate_t       pred;
+  scope_t&          context;
   const std::size_t forecast_years;
 
  public:
   forecast_posts(post_handler_ptr   handler,
-		 const predicate_t& predicate,
-		 scope_t&           _context,
-		 const std::size_t  _forecast_years)
+                 const predicate_t& predicate,
+                 scope_t&           _context,
+                 const std::size_t  _forecast_years)
     : generate_posts(handler), pred(predicate), context(_context),
       forecast_years(_forecast_years) {
     TRACE_CTOR(forecast_posts,
-	       "post_handler_ptr, predicate_t, scope_t&, std::size_t");
+               "post_handler_ptr, predicate_t, scope_t&, std::size_t");
   }
   virtual ~forecast_posts() throw() {
     TRACE_DTOR(forecast_posts);
@@ -937,10 +937,10 @@ class pass_down_accounts : public item_handler<account_t>
   optional<scope_t&>    context;
 
 public:
-  pass_down_accounts(acct_handler_ptr		  handler,
-		     accounts_iterator&		  iter,
-		     const optional<predicate_t>& _pred    = none,
-		     const optional<scope_t&>&	  _context = none);
+  pass_down_accounts(acct_handler_ptr             handler,
+                     accounts_iterator&           iter,
+                     const optional<predicate_t>& _pred    = none,
+                     const optional<scope_t&>&    _context = none);
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

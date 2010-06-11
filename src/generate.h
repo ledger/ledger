@@ -53,7 +53,7 @@ class generate_posts_iterator : public posts_iterator
   session_t&   session;
   unsigned int seed;
   std::size_t  quantity;
-  bool	       allow_invalid;
+  bool         allow_invalid;
   date_t       next_date;
   date_t       next_eff_date;
 
@@ -97,9 +97,9 @@ class generate_posts_iterator : public posts_iterator
 
 public:
   generate_posts_iterator(session_t&   _session,
-			  unsigned int _seed         = 0,
-			  std::size_t  _quantity     = 100,
-			  bool         _allow_invalid = false);
+                          unsigned int _seed         = 0,
+                          std::size_t  _quantity     = 100,
+                          bool         _allow_invalid = false);
 
   virtual ~generate_posts_iterator() throw() {
     TRACE_DTOR(generate_posts_iterator);
@@ -108,21 +108,21 @@ public:
   virtual post_t * operator()();
 
 protected:
-  void	 generate_string(std::ostream& out, int len, bool only_alpha = false);
-  bool	 generate_account(std::ostream& out, bool no_virtual = false);
-  void	 generate_commodity(std::ostream& out, const string& exclude = "");
+  void   generate_string(std::ostream& out, int len, bool only_alpha = false);
+  bool   generate_account(std::ostream& out, bool no_virtual = false);
+  void   generate_commodity(std::ostream& out, const string& exclude = "");
   string generate_amount(std::ostream& out,
-			 value_t       not_this_amount = NULL_VALUE,
-			 bool	       no_negative     = false,
-			 const string& exclude	       = "");
-  bool	 generate_post(std::ostream& out, bool no_amount = false);
-  void	 generate_cost(std::ostream& out, value_t amount);
-  void	 generate_date(std::ostream& out);
-  void	 generate_state(std::ostream& out);
-  void	 generate_code(std::ostream& out);
-  void	 generate_payee(std::ostream& out);
-  void	 generate_note(std::ostream& out);
-  void	 generate_xact(std::ostream& out);
+                         value_t       not_this_amount = NULL_VALUE,
+                         bool          no_negative     = false,
+                         const string& exclude         = "");
+  bool   generate_post(std::ostream& out, bool no_amount = false);
+  void   generate_cost(std::ostream& out, value_t amount);
+  void   generate_date(std::ostream& out);
+  void   generate_state(std::ostream& out);
+  void   generate_code(std::ostream& out);
+  void   generate_payee(std::ostream& out);
+  void   generate_note(std::ostream& out);
+  void   generate_xact(std::ostream& out);
 };
 
 } // namespace ledger

@@ -47,20 +47,20 @@ void annotation_t::parse(std::istream& in)
     char c = peek_next_nonws(in);
     if (c == '{') {
       if (price)
-	throw_(amount_error, _("Commodity specifies more than one price"));
+        throw_(amount_error, _("Commodity specifies more than one price"));
 
       in.get(c);
       c = peek_next_nonws(in);
       if (c == '=') {
-	in.get(c);
-	add_flags(ANNOTATION_PRICE_FIXATED);
+        in.get(c);
+        add_flags(ANNOTATION_PRICE_FIXATED);
       }
 
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}')
-	in.get(c);
+        in.get(c);
       else
-	throw_(amount_error, _("Commodity price lacks closing brace"));
+        throw_(amount_error, _("Commodity price lacks closing brace"));
 
       amount_t temp;
       temp.parse(buf, PARSE_NO_MIGRATE);
@@ -70,27 +70,27 @@ void annotation_t::parse(std::istream& in)
     }
     else if (c == '[') {
       if (date)
-	throw_(amount_error, _("Commodity specifies more than one date"));
+        throw_(amount_error, _("Commodity specifies more than one date"));
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ']');
       if (c == ']')
-	in.get(c);
+        in.get(c);
       else
-	throw_(amount_error, _("Commodity date lacks closing bracket"));
+        throw_(amount_error, _("Commodity date lacks closing bracket"));
 
       date = parse_date(buf);
     }
     else if (c == '(') {
       if (tag)
-	throw_(amount_error, _("Commodity specifies more than one tag"));
+        throw_(amount_error, _("Commodity specifies more than one tag"));
 
       in.get(c);
       READ_INTO(in, buf, 255, c, c != ')');
       if (c == ')')
-	in.get(c);
+        in.get(c);
       else
-	throw_(amount_error, _("Commodity tag lacks closing parenthesis"));
+        throw_(amount_error, _("Commodity tag lacks closing parenthesis"));
 
       tag = buf;
     }
@@ -104,20 +104,20 @@ void annotation_t::parse(std::istream& in)
 #if defined(DEBUG_ON)
   if (SHOW_DEBUG("amounts.commodities") && *this) {
     DEBUG("amounts.commodities",
-	  "Parsed commodity annotations: " << std::endl << *this);
+          "Parsed commodity annotations: " << std::endl << *this);
   }
 #endif
 }
 
 void annotation_t::print(std::ostream& out, bool keep_base,
-			 bool no_computed_annotations) const
+                         bool no_computed_annotations) const
 {
   if (price &&
       (! no_computed_annotations || ! has_flags(ANNOTATION_PRICE_CALCULATED)))
     out << " {"
-	<< (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
-	<< (keep_base ? *price : price->unreduced())
-	<< '}';
+        << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
+        << (keep_base ? *price : price->unreduced())
+        << '}';
 
   if (date &&
       (! no_computed_annotations || ! has_flags(ANNOTATION_DATE_CALCULATED)))
@@ -131,7 +131,7 @@ void annotation_t::print(std::ostream& out, bool keep_base,
 bool keep_details_t::keep_all(const commodity_t& comm) const
 {
   return (! comm.has_annotation() ||
-	  (keep_price && keep_date && keep_tag && ! only_actuals));
+          (keep_price && keep_date && keep_tag && ! only_actuals));
 }
 
 bool keep_details_t::keep_any(const commodity_t& comm) const
@@ -159,22 +159,22 @@ commodity_t&
 annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 {
   DEBUG("commodity.annotated.strip",
-	"Reducing commodity " << *this << std::endl
-	 << "  keep price " << what_to_keep.keep_price << " "
-	 << "  keep date "  << what_to_keep.keep_date << " "
-	 << "  keep tag "   << what_to_keep.keep_tag);
+        "Reducing commodity " << *this << std::endl
+         << "  keep price " << what_to_keep.keep_price << " "
+         << "  keep date "  << what_to_keep.keep_date << " "
+         << "  keep tag "   << what_to_keep.keep_tag);
 
   commodity_t * new_comm;
 
-  bool keep_price = (what_to_keep.keep_price	  &&
-		     (! what_to_keep.only_actuals ||
-		      ! details.has_flags(ANNOTATION_PRICE_CALCULATED)));
-  bool keep_date  = (what_to_keep.keep_date	  &&
-		     (! what_to_keep.only_actuals ||
-		      ! details.has_flags(ANNOTATION_DATE_CALCULATED)));
-  bool keep_tag	  = (what_to_keep.keep_tag	  &&
-		     (! what_to_keep.only_actuals ||
-		      ! details.has_flags(ANNOTATION_TAG_CALCULATED)));
+  bool keep_price = (what_to_keep.keep_price      &&
+                     (! what_to_keep.only_actuals ||
+                      ! details.has_flags(ANNOTATION_PRICE_CALCULATED)));
+  bool keep_date  = (what_to_keep.keep_date       &&
+                     (! what_to_keep.only_actuals ||
+                      ! details.has_flags(ANNOTATION_DATE_CALCULATED)));
+  bool keep_tag   = (what_to_keep.keep_tag        &&
+                     (! what_to_keep.only_actuals ||
+                      ! details.has_flags(ANNOTATION_TAG_CALCULATED)));
 
   if ((keep_price && details.price) ||
       (keep_date  && details.date)  ||
@@ -182,8 +182,8 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
   {
     new_comm = pool().find_or_create
       (referent(), annotation_t(keep_price ? details.price : none,
-				keep_date  ? details.date  : none,
-				keep_tag   ? details.tag   : none));
+                                keep_date  ? details.date  : none,
+                                keep_tag   ? details.tag   : none));
   } else {
     new_comm = &referent();
   }

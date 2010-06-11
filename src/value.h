@@ -49,7 +49,7 @@
 #ifndef _VALUE_H
 #define _VALUE_H
 
-#include "balance.h"		// includes amount.h
+#include "balance.h"            // includes amount.h
 #include "mask.h"
 
 namespace ledger {
@@ -75,21 +75,21 @@ class expr_t;
  */
 class value_t
   : public ordered_field_operators<value_t,
-	   equality_comparable<value_t, balance_t,
-	   additive<value_t, balance_t,
-	   multiplicative<value_t, balance_t,
-	   ordered_field_operators<value_t, amount_t,
-	   ordered_field_operators<value_t, double,
-	   ordered_field_operators<value_t, unsigned long,
-	   ordered_field_operators<value_t, long> > > > > > > >
+           equality_comparable<value_t, balance_t,
+           additive<value_t, balance_t,
+           multiplicative<value_t, balance_t,
+           ordered_field_operators<value_t, amount_t,
+           ordered_field_operators<value_t, double,
+           ordered_field_operators<value_t, unsigned long,
+           ordered_field_operators<value_t, long> > > > > > > >
 {
 public:
   /**
    * The sequence_t member type abstracts the type used to represent a
    * resizable "array" of value_t objects.
    */
-  typedef ptr_deque<value_t>	      sequence_t;
-  typedef sequence_t::iterator	      iterator;
+  typedef ptr_deque<value_t>          sequence_t;
+  typedef sequence_t::iterator        iterator;
   typedef sequence_t::const_iterator  const_iterator;
   typedef sequence_t::difference_type difference_type;
 
@@ -99,18 +99,18 @@ public:
    * type_t.
    */
   enum type_t {
-    VOID,			// a null value (i.e., uninitialized)
-    BOOLEAN,			// a boolean
-    DATETIME,			// a date and time (Boost posix_time)
-    DATE,			// a date (Boost gregorian::date)
-    INTEGER,			// a signed integer value
-    AMOUNT,			// a ledger::amount_t
-    BALANCE,			// a ledger::balance_t
-    STRING,			// a string object
-    MASK,			// a regular expression mask
-    SEQUENCE,			// a vector of value_t objects
-    SCOPE,			// a pointer to a scope
-    EXPR			// a pointer to a value expression
+    VOID,                       // a null value (i.e., uninitialized)
+    BOOLEAN,                    // a boolean
+    DATETIME,                   // a date and time (Boost posix_time)
+    DATE,                       // a date (Boost gregorian::date)
+    INTEGER,                    // a signed integer value
+    AMOUNT,                     // a ledger::amount_t
+    BALANCE,                    // a ledger::balance_t
+    STRING,                     // a string object
+    MASK,                       // a regular expression mask
+    SEQUENCE,                   // a vector of value_t objects
+    SCOPE,                      // a pointer to a scope
+    EXPR                        // a pointer to a value expression
   };
 
 private:
@@ -128,18 +128,18 @@ private:
      * The `type' member holds the value_t::type_t value representing
      * the type of the object stored.
      */
-    variant<bool,	  // BOOLEAN
-	    datetime_t,	  // DATETIME
-	    date_t,	  // DATE
-	    long,	  // INTEGER
-	    amount_t,	  // AMOUNT
-	    balance_t *,  // BALANCE
-	    string,	  // STRING
-	    mask_t,	  // MASK
-	    sequence_t *, // SEQUENCE
-	    scope_t *,	  // SCOPE
-	    expr_t *	  // EXPR
-	    > data;
+    variant<bool,         // BOOLEAN
+            datetime_t,   // DATETIME
+            date_t,       // DATE
+            long,         // INTEGER
+            amount_t,     // AMOUNT
+            balance_t *,  // BALANCE
+            string,       // STRING
+            mask_t,       // MASK
+            sequence_t *, // SEQUENCE
+            scope_t *,    // SCOPE
+            expr_t *      // EXPR
+            > data;
     
     type_t type;
 
@@ -160,7 +160,7 @@ private:
       TRACE_CTOR(value_t::storage_t, "");
     }
 
-  public:			// so `checked_delete' can access it
+  public:                       // so `checked_delete' can access it
     /**
      * Destructor.  Must only be called when the reference count has
      * reached zero.  The `destroy' method is used to do the actual
@@ -193,16 +193,16 @@ private:
      */
     void acquire() const {
       DEBUG("value.storage.refcount",
-	     "Acquiring " << this << ", refc now " << refc + 1);
+             "Acquiring " << this << ", refc now " << refc + 1);
       VERIFY(refc >= 0);
       refc++;
     }
     void release() const {
       DEBUG("value.storage.refcount",
-	     "Releasing " << this << ", refc now " << refc - 1);
+             "Releasing " << this << ", refc now " << refc - 1);
       VERIFY(refc > 0);
       if (--refc == 0)
-	checked_delete(this);
+        checked_delete(this);
     }
 
     friend inline void intrusive_ptr_add_ref(value_t::storage_t * storage) {
@@ -216,15 +216,15 @@ private:
       DEBUG("value.storage.refcount", "Destroying " << this);
       switch (type) {
       case VOID:
-	return;
+        return;
       case BALANCE:
-	checked_delete(boost::get<balance_t *>(data));
-	break;
+        checked_delete(boost::get<balance_t *>(data));
+        break;
       case SEQUENCE:
-	checked_delete(boost::get<sequence_t *>(data));
-	break;
+        checked_delete(boost::get<sequence_t *>(data));
+        break;
       default:
-	break;
+        break;
       }
       data = false;
       type = VOID;
@@ -424,8 +424,8 @@ public:
     temp.in_place_negate();
     return temp;
   }
-  void    in_place_negate();	// exists for efficiency's sake
-  void    in_place_not();	// exists for efficiency's sake
+  void    in_place_negate();    // exists for efficiency's sake
+  void    in_place_not();       // exists for efficiency's sake
 
   value_t operator-() const {
     return negated();
@@ -466,24 +466,24 @@ public:
     temp.in_place_reduce();
     return temp;
   }
-  void    in_place_reduce();	// exists for efficiency's sake
+  void    in_place_reduce();    // exists for efficiency's sake
 
   value_t unreduced() const {
     value_t temp(*this);
     temp.in_place_unreduce();
     return temp;
   }
-  void    in_place_unreduce();	// exists for efficiency's sake
+  void    in_place_unreduce();  // exists for efficiency's sake
 
   // Return the "market value" of a given value at a specific time.
-  value_t value(const optional<datetime_t>&   moment	   = none,
-		const optional<commodity_t&>& in_terms_of  = none) const;
+  value_t value(const optional<datetime_t>&   moment       = none,
+                const optional<commodity_t&>& in_terms_of  = none) const;
 
   value_t price() const;
 
-  value_t exchange_commodities(const std::string&	   commodities,
-			       const bool                  add_prices = false,
-			       const optional<datetime_t>& moment     = none);
+  value_t exchange_commodities(const std::string&          commodities,
+                               const bool                  add_prices = false,
+                               const optional<datetime_t>& moment     = none);
 
   /**
    * Truth tests.
@@ -749,9 +749,9 @@ public:
    * its underlying type, where possible.  If not possible, an
    * exception is thrown.
    */
-  bool	     to_boolean() const;
-  int	     to_int() const;
-  long	     to_long() const;
+  bool       to_boolean() const;
+  int        to_int() const;
+  long       to_long() const;
   datetime_t to_datetime() const;
   date_t     to_date() const;
   amount_t   to_amount() const;
@@ -863,13 +863,13 @@ public:
       std::size_t new_size = seq.size();
       if (new_size == 0) {
 #if BOOST_VERSION >= 103700
-	storage.reset();
+        storage.reset();
 #else
-	storage = intrusive_ptr<storage_t>();
+        storage = intrusive_ptr<storage_t>();
 #endif
       }
       else if (new_size == 1) {
-	*this = seq.front();
+        *this = seq.front();
       }
     }
   }
@@ -942,9 +942,9 @@ public:
    * Printing methods.
    */
   void print(std::ostream&       out,
-	     const int	         first_width  = -1,
-	     const int	         latter_width = -1,
-	     const uint_least8_t flags        = AMOUNT_PRINT_NO_FLAGS) const;
+             const int           first_width  = -1,
+             const int           latter_width = -1,
+             const uint_least8_t flags        = AMOUNT_PRINT_NO_FLAGS) const;
 
   void dump(std::ostream& out, const bool relaxed = true) const;
 
@@ -1011,7 +1011,7 @@ struct sort_value_t
 };
 
 bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
-			     const std::list<sort_value_t>& right_values);
+                             const std::list<sort_value_t>& right_values);
 
 void to_xml(std::ostream& out, const value_t& value);
 

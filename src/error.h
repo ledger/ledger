@@ -56,9 +56,9 @@ inline void throw_func(const string& message) {
   throw T(message);
 }
 
-#define throw_(cls, msg)			\
-  ((_desc_buffer << ACCUM(_desc_accum << msg)),	\
-   _desc_accum.clear(),				\
+#define throw_(cls, msg)                        \
+  ((_desc_buffer << ACCUM(_desc_accum << msg)), \
+   _desc_accum.clear(),                         \
    throw_func<cls>(_desc_buffer.str()))
 
 inline void warning_func(const string& message) {
@@ -67,38 +67,38 @@ inline void warning_func(const string& message) {
   _desc_buffer.str("");
 }
 
-#define warning_(msg)				\
-  ((_desc_buffer << ACCUM(_desc_accum << msg)),	\
-   _desc_accum.clear(),				\
+#define warning_(msg)                           \
+  ((_desc_buffer << ACCUM(_desc_accum << msg)), \
+   _desc_accum.clear(),                         \
    warning_func(_desc_buffer.str()))
 
-extern straccstream	  _ctxt_accum;
+extern straccstream       _ctxt_accum;
 extern std::ostringstream _ctxt_buffer;
 
-#define add_error_context(msg)					\
-  ((long(_ctxt_buffer.tellp()) == 0) ?				\
-   ((_ctxt_buffer << ACCUM(_ctxt_accum << msg)),		\
-    _ctxt_accum.clear()) :					\
-   ((_ctxt_buffer << std::endl << ACCUM(_ctxt_accum << msg)),	\
+#define add_error_context(msg)                                  \
+  ((long(_ctxt_buffer.tellp()) == 0) ?                          \
+   ((_ctxt_buffer << ACCUM(_ctxt_accum << msg)),                \
+    _ctxt_accum.clear()) :                                      \
+   ((_ctxt_buffer << std::endl << ACCUM(_ctxt_accum << msg)),   \
     _ctxt_accum.clear()))
 
 string error_context();
 
 string file_context(const path& file, std::size_t line);
-string line_context(const string&	    line,
-		    const string::size_type pos     = 0,
-		    const string::size_type end_pos = 0);
+string line_context(const string&           line,
+                    const string::size_type pos     = 0,
+                    const string::size_type end_pos = 0);
 
-string source_context(const path&	     file,
-		      const istream_pos_type pos,
-		      const istream_pos_type end_pos,
-		      const string&	     prefix = "");
+string source_context(const path&            file,
+                      const istream_pos_type pos,
+                      const istream_pos_type end_pos,
+                      const string&          prefix = "");
 
-#define DECLARE_EXCEPTION(name, kind)				\
-  class name : public kind {					\
-  public:							\
-  explicit name(const string& why) throw() : kind(why) {}	\
-  virtual ~name() throw() {}					\
+#define DECLARE_EXCEPTION(name, kind)                           \
+  class name : public kind {                                    \
+  public:                                                       \
+  explicit name(const string& why) throw() : kind(why) {}       \
+  virtual ~name() throw() {}                                    \
   }
 
 } // namespace ledger

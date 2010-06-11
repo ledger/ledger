@@ -106,7 +106,7 @@ class xact_t : public xact_base_t
 {
 public:
   optional<string> code;
-  string	   payee;
+  string           payee;
 
   xact_t() {
     TRACE_CTOR(xact_t, "");
@@ -123,7 +123,7 @@ public:
   string id() const;
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   virtual bool valid() const;
 
@@ -188,7 +188,7 @@ class period_xact_t : public xact_base_t
 {
  public:
   date_interval_t period;
-  string	  period_string;
+  string          period_string;
 
   period_xact_t() {
     TRACE_CTOR(period_xact_t, "");
@@ -221,7 +221,7 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-typedef std::list<xact_t *>	   xacts_list;
+typedef std::list<xact_t *>        xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 

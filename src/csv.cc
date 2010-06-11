@@ -51,29 +51,29 @@ string csv_reader::read_field(std::istream& in)
     while (in.good() && ! in.eof()) {
       in.get(x);
       if (x == '\\') {
-	in.get(x);
+        in.get(x);
       }
       else if (x == '"' && in.peek() == '"') {
-	in.get(x);
+        in.get(x);
       }
       else if (x == c) {
-	if (x == '|')
-	  in.unget();
-	else if (in.peek() == ',')
-	  in.get(c);
-	break;
+        if (x == '|')
+          in.unget();
+        else if (in.peek() == ',')
+          in.get(c);
+        break;
       }
       if (x != '\0')
-	field += x;
+        field += x;
     }
   }
   else {
     while (in.good() && ! in.eof()) {
       in.get(c);
       if (c == ',')
-	break;
+        break;
       if (c != '\0')
-	field += c;
+        field += c;
     }
   }
   trim(field);
@@ -144,7 +144,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
   xact->set_state(item_t::CLEARED);
 
-  xact->pos	      = position_t();
+  xact->pos           = position_t();
   xact->pos->pathname = "jww (2010-03-05): unknown";
   xact->pos->beg_pos  = in.tellg();
   xact->pos->beg_line = 0;
@@ -153,7 +153,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
   post->xact = xact.get();
 
 #if 0
-  post->pos	      = position_t();
+  post->pos           = position_t();
   post->pos->pathname = pathname;
   post->pos->beg_pos  = line_beg_pos;
   post->pos->beg_line = linenum;
@@ -163,7 +163,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
   post->set_state(item_t::CLEARED);
   post->account = NULL;
 
-  int	   n = 0;
+  int      n = 0;
   amount_t amt;
   string   total;
 
@@ -173,12 +173,12 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
     switch (index[n]) {
     case FIELD_DATE:
       if (field.empty())
-	goto restart;
+        goto restart;
       try {
-	xact->_date = parse_date(field);
+        xact->_date = parse_date(field);
       }
       catch (date_error&) {
-      	goto restart;
+        goto restart;
       }
       break;
 
@@ -188,21 +188,21 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
     case FIELD_CODE:
       if (! field.empty())
-	xact->code = field;
+        xact->code = field;
       break;
 
     case FIELD_PAYEE: {
       bool found = false;
       foreach (payee_mapping_t& value, journal.payee_mappings) {
-	DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
-	if (value.first.match(field)) {
-	  xact->payee = value.second;
-	  found = true;
-	  break;
-	}
+        DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
+        if (value.first.match(field)) {
+          xact->payee = value.second;
+          found = true;
+          break;
+        }
       }
       if (! found)
-	xact->payee = field;
+        xact->payee = field;
       break;
     }
 
@@ -210,8 +210,8 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
       std::istringstream amount_str(field);
       amt.parse(amount_str, PARSE_NO_REDUCE);
       if (! amt.has_commodity() &&
-	  commodity_pool_t::current_pool->default_commodity)
-	amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+          commodity_pool_t::current_pool->default_commodity)
+        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       post->amount = amt;
       break;
     }
@@ -220,9 +220,9 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
       std::istringstream amount_str(field);
       amt.parse(amount_str, PARSE_NO_REDUCE);
       if (! amt.has_commodity() &&
-	  commodity_pool_t::current_pool->default_commodity)
-	amt.set_commodity
-	  (*commodity_pool_t::current_pool->default_commodity);
+          commodity_pool_t::current_pool->default_commodity)
+        amt.set_commodity
+          (*commodity_pool_t::current_pool->default_commodity);
       post->cost = amt;
       break;
     }
@@ -237,7 +237,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
     case FIELD_UNKNOWN:
       if (! names[n].empty() && ! field.empty())
-	xact->set_tag(names[n], field);
+        xact->set_tag(names[n], field);
       break;
     }
     n++;
@@ -245,7 +245,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
 #if 0
   xact->set_tag(_("Imported"),
-		string(format_date(CURRENT_DATE(), FMT_WRITTEN)));
+                string(format_date(CURRENT_DATE(), FMT_WRITTEN)));
   xact->set_tag(_("Original"), string(line));
   xact->set_tag(_("SHA1"), string(sha1sum(line)));
 #endif
@@ -268,7 +268,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
   post->xact = xact.get();
 
 #if 0
-  post->pos	      = position_t();
+  post->pos           = position_t();
   post->pos->pathname = pathname;
   post->pos->beg_pos  = line_beg_pos;
   post->pos->beg_line = linenum;
@@ -285,7 +285,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
     std::istringstream assigned_amount_str(total);
     amt.parse(assigned_amount_str, PARSE_NO_REDUCE);
     if (! amt.has_commodity() &&
-	commodity_pool_t::current_pool->default_commodity)
+        commodity_pool_t::current_pool->default_commodity)
       amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
     post->assigned_amount = amt;
   }

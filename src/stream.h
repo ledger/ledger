@@ -114,7 +114,7 @@ public:
    * empty.
    */
   void initialize(const optional<path>& output_file = none,
-		  const optional<path>& pager_path  = none);
+                  const optional<path>& pager_path  = none);
 
   /**
    * Convertor to a standard ostream.  This is used so that we can

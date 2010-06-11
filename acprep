@@ -661,7 +661,7 @@ class PrepareBuild(CommandLineApp):
 
     def phase_sloc(self, *args):
         self.log.info('Executing phase: sloc')
-	self.execute('sloccount', 'src', 'python', 'lisp', 'test')
+        self.execute('sloccount', 'src', 'python', 'lisp', 'test')
 
     #########################################################################
     # Configure source tree using autogen                                   #
@@ -1087,30 +1087,30 @@ class PrepareBuild(CommandLineApp):
 
     def option_warn(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --warn')
-	self.CXXFLAGS.append('-ansi')
-	self.CXXFLAGS.append('-pedantic')
-	self.CXXFLAGS.append('-pedantic-errors')
-	self.CXXFLAGS.append('-Wall')
-	self.CXXFLAGS.append('-Winvalid-pch')
-	self.CXXFLAGS.append('-Wextra')
-	self.CXXFLAGS.append('-Wcast-align')
-	self.CXXFLAGS.append('-Wcast-qual')
-	self.CXXFLAGS.append('-Wfloat-equal')
-	self.CXXFLAGS.append('-Wmissing-field-initializers')
-	self.CXXFLAGS.append('-Wno-endif-labels')
-	self.CXXFLAGS.append('-Woverloaded-virtual')
-	self.CXXFLAGS.append('-Wsign-compare')
-	self.CXXFLAGS.append('-Wsign-promo')
-	self.CXXFLAGS.append('-Wstrict-null-sentinel')
-	self.CXXFLAGS.append('-Wwrite-strings')
-	self.CXXFLAGS.append('-Wno-old-style-cast')
-	self.CXXFLAGS.append('-Wno-deprecated')
-	self.CXXFLAGS.append('-Wno-strict-aliasing')
-	self.CXXFLAGS.append('-Werror')
+        self.CXXFLAGS.append('-ansi')
+        self.CXXFLAGS.append('-pedantic')
+        self.CXXFLAGS.append('-pedantic-errors')
+        self.CXXFLAGS.append('-Wall')
+        self.CXXFLAGS.append('-Winvalid-pch')
+        self.CXXFLAGS.append('-Wextra')
+        self.CXXFLAGS.append('-Wcast-align')
+        self.CXXFLAGS.append('-Wcast-qual')
+        self.CXXFLAGS.append('-Wfloat-equal')
+        self.CXXFLAGS.append('-Wmissing-field-initializers')
+        self.CXXFLAGS.append('-Wno-endif-labels')
+        self.CXXFLAGS.append('-Woverloaded-virtual')
+        self.CXXFLAGS.append('-Wsign-compare')
+        self.CXXFLAGS.append('-Wsign-promo')
+        self.CXXFLAGS.append('-Wstrict-null-sentinel')
+        self.CXXFLAGS.append('-Wwrite-strings')
+        self.CXXFLAGS.append('-Wno-old-style-cast')
+        self.CXXFLAGS.append('-Wno-deprecated')
+        self.CXXFLAGS.append('-Wno-strict-aliasing')
+        self.CXXFLAGS.append('-Werror')
 
     def option_pic(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --pic')
-	self.CXXFLAGS.append('-fPIC')
+        self.CXXFLAGS.append('-fPIC')
 
     def option_output(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --output')

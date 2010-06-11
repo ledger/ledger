@@ -43,7 +43,7 @@ namespace {
 
   struct score_sorter {
     bool operator()(const score_entry_t& left,
-		    const score_entry_t& right) const {
+                    const score_entry_t& right) const {
       return left.second > right.second;
     }
   };
@@ -53,7 +53,7 @@ namespace {
 
   struct usage_sorter {
     bool operator()(const account_use_pair& left,
-		    const account_use_pair& right) const {
+                    const account_use_pair& right) const {
       return left.second > right.second;
     }
   };
@@ -61,8 +61,8 @@ namespace {
 
 std::pair<xact_t *, account_t *>
 lookup_probable_account(const string&   ident,
-			xacts_iterator& iter_func,
-			account_t *	ref_account)
+                        xacts_iterator& iter_func,
+                        account_t *     ref_account)
 {
   scorecard_t scores;
 
@@ -76,11 +76,11 @@ lookup_probable_account(const string&   ident,
 #endif
 
   DEBUG("lookup.account",
-	"Looking up identifier '" << lowered_ident.extract() << "'");
+        "Looking up identifier '" << lowered_ident.extract() << "'");
 #if defined(DEBUG_ON)
   if (ref_account != NULL)
     DEBUG("lookup.account",
-	  "  with reference account: " << ref_account->fullname());
+          "  with reference account: " << ref_account->fullname());
 #endif
 
   while (xact_t * xact = iter_func()) {
@@ -109,17 +109,17 @@ lookup_probable_account(const string&   ident,
 
     DEBUG("lookup", "Considering payee: " << value_key.extract());
 
-    std::size_t	       index	      = 0;
-    std::size_t	       last_match_pos = unistring::npos;
-    int		       bonus	      = 0;
-    int		       score	      = 0;
-    std::size_t	       pos;
+    std::size_t        index          = 0;
+    std::size_t        last_match_pos = unistring::npos;
+    int                bonus          = 0;
+    int                score          = 0;
+    std::size_t        pos;
     char_positions_map positions;
 
     // Walk each letter in the source identifier
     foreach (const uint32_t& ch, lowered_ident.utf32chars) {
-      int	  addend      = 0;
-      bool	  added_bonus = false;
+      int         addend      = 0;
+      bool        added_bonus = false;
       std::size_t value_len   = value_key.length();
 
       pos = value_key.find(ch);
@@ -131,76 +131,76 @@ lookup_probable_account(const string&   ident,
 
       char_positions_map::iterator pi = positions.find(ch);
       while (pi != positions.end() &&
-	     pos != unistring::npos && pos <= (*pi).second &&
-	     (*pi).second + 1 < value_len)
-	pos = value_key.find(ch, (*pi).second + 1);
+             pos != unistring::npos && pos <= (*pi).second &&
+             (*pi).second + 1 < value_len)
+        pos = value_key.find(ch, (*pi).second + 1);
 
       if (pos != unistring::npos) {
-	if (pi != positions.end())
-	  (*pi).second = pos;
-	else
-	  positions.insert(char_positions_map::value_type(ch, pos));
+        if (pi != positions.end())
+          (*pi).second = pos;
+        else
+          positions.insert(char_positions_map::value_type(ch, pos));
 
-	// If it occurs in the same order as the source identifier -- that is,
-	// without intervening letters to break the pattern -- it's worth 10
-	// points.  Plus, an extra point is added for every letter in chains
-	// of 3 or more.
+        // If it occurs in the same order as the source identifier -- that is,
+        // without intervening letters to break the pattern -- it's worth 10
+        // points.  Plus, an extra point is added for every letter in chains
+        // of 3 or more.
 
-	if (last_match_pos == unistring::npos ?
-	    index == 0 && pos == 0 : pos == last_match_pos + 1) {
-	  DEBUG("lookup",
-		"  char " << index << " in-sequence match with bonus " << bonus);
-	  addend += 10;
-	  if (bonus > 2)
-	    addend += bonus - 2;
-	  bonus++;
-	  added_bonus = true;
+        if (last_match_pos == unistring::npos ?
+            index == 0 && pos == 0 : pos == last_match_pos + 1) {
+          DEBUG("lookup",
+                "  char " << index << " in-sequence match with bonus " << bonus);
+          addend += 10;
+          if (bonus > 2)
+            addend += bonus - 2;
+          bonus++;
+          added_bonus = true;
 
-	  last_match_pos = pos;
-	}
+          last_match_pos = pos;
+        }
 
-	// If it occurs in the same general sequence as the source identifier,
-	// it's worth 5 points, plus an extra point if it's within the next 3
-	// characters, and an extra point if it's preceded by a non-alphabetic
-	// character.
-	//
-	// If the letter occurs at all in the target identifier, it's worth 1
-	// point, plus an extra point if it's within 3 characters, and an
-	// extra point if it's preceded by a non-alphabetic character.
+        // If it occurs in the same general sequence as the source identifier,
+        // it's worth 5 points, plus an extra point if it's within the next 3
+        // characters, and an extra point if it's preceded by a non-alphabetic
+        // character.
+        //
+        // If the letter occurs at all in the target identifier, it's worth 1
+        // point, plus an extra point if it's within 3 characters, and an
+        // extra point if it's preceded by a non-alphabetic character.
 
-	else {
-	  bool in_order_match = (last_match_pos != unistring::npos &&
-				 pos > last_match_pos);
-	  DEBUG("lookup", "  char " << index << " " <<
-		(in_order_match ? "in-order" : "out-of-order")
-		<< " match" << (in_order_match && pos - index < 3 ?
-				" with proximity bonus of 1" : ""));
+        else {
+          bool in_order_match = (last_match_pos != unistring::npos &&
+                                 pos > last_match_pos);
+          DEBUG("lookup", "  char " << index << " " <<
+                (in_order_match ? "in-order" : "out-of-order")
+                << " match" << (in_order_match && pos - index < 3 ?
+                                " with proximity bonus of 1" : ""));
 
-	  if (pos < index)
-	    addend += 1;
-	  else
-	    addend += 5;
+          if (pos < index)
+            addend += 1;
+          else
+            addend += 5;
 
-	  if (in_order_match && pos - index < 3)
-	    addend++;
+          if (in_order_match && pos - index < 3)
+            addend++;
 
 #if !defined(HAVE_BOOST_REGEX_UNICODE)
-	  if (pos == 0 || (pos > 0 && !std::isalnum(value_key[pos - 1])))
-	    addend++;
+          if (pos == 0 || (pos > 0 && !std::isalnum(value_key[pos - 1])))
+            addend++;
 #else
-	  // jww (2010-03-07): Not yet implemented
+          // jww (2010-03-07): Not yet implemented
 #endif
 
-	  last_match_pos = pos;
-	}
+          last_match_pos = pos;
+        }
 
       // If the letter does not appear at all, decrease the score by 1
 
       } else {
-	last_match_pos = unistring::npos;
+        last_match_pos = unistring::npos;
 
-	DEBUG("lookup", "  char " << index << " does not match");
-	addend--;
+        DEBUG("lookup", "  char " << index << " does not match");
+        addend--;
       }
 
       // Finally, decay what is to be added to the score based on its position
@@ -211,9 +211,9 @@ lookup_probable_account(const string&   ident,
       // divisor for the addend.
 
       if ((int(index / 5) + 1) > 1) {
-	DEBUG("lookup",
-	      "  discounting the addend by / " << (int(index / 5) + 1));
-	addend = int(double(addend) / (int(index / 5) + 1));
+        DEBUG("lookup",
+              "  discounting the addend by / " << (int(index / 5) + 1));
+        addend = int(double(addend) / (int(index / 5) + 1));
       }
 
       DEBUG("lookup", "  final addend is " << addend);
@@ -221,7 +221,7 @@ lookup_probable_account(const string&   ident,
       DEBUG("lookup", "  score is " << score);
 
       if (! added_bonus)
-	bonus = 0;
+        bonus = 0;
 
       index++;
     }
@@ -238,26 +238,26 @@ lookup_probable_account(const string&   ident,
 
   std::stable_sort(scores.begin(), scores.end(), score_sorter());
 
-  scorecard_t::iterator si	  = scores.begin();
-  int			decay     = 0;
-  xact_t *		best_xact = si != scores.end() ? (*si).first : NULL;
-  account_use_map	account_usage;
+  scorecard_t::iterator si        = scores.begin();
+  int                   decay     = 0;
+  xact_t *              best_xact = si != scores.end() ? (*si).first : NULL;
+  account_use_map       account_usage;
 
   for (int i = 0; i < 5 && si != scores.end(); i++, si++) {
     DEBUG("lookup.account",
-	  "Payee: " << std::setw(5) << std::right << (*si).second <<
-	  " - " << (*si).first->payee);
+          "Payee: " << std::setw(5) << std::right << (*si).second <<
+          " - " << (*si).first->payee);
 
     foreach (post_t * post, (*si).first->posts) {
       if (! post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
-	  post->account != ref_account &&
-	  ! post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
-	account_use_map::iterator x = account_usage.find(post->account);
-	if (x == account_usage.end())
-	  account_usage.insert(account_use_pair(post->account,
-						((*si).second - decay)));
-	else
-	  (*x).second += ((*si).second - decay);
+          post->account != ref_account &&
+          ! post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
+        account_use_map::iterator x = account_usage.find(post->account);
+        if (x == account_usage.end())
+          account_usage.insert(account_use_pair(post->account,
+                                                ((*si).second - decay)));
+        else
+          (*x).second += ((*si).second - decay);
       }
       decay++;
     }
@@ -267,14 +267,14 @@ lookup_probable_account(const string&   ident,
 #if defined(DEBUG_ON)
     if (SHOW_DEBUG("lookup.account")) {
       foreach (const account_use_pair& value, account_usage) {
-	DEBUG("lookup.account",
-	      "Account: " << value.second << " - " << value.first->fullname());
+        DEBUG("lookup.account",
+              "Account: " << value.second << " - " << value.first->fullname());
       }
     }
 #endif
     return std::pair<xact_t *, account_t *>
       (best_xact, (*std::max_element(account_usage.begin(), account_usage.end(),
-				     usage_sorter())).first);
+                                     usage_sorter())).first);
   } else {
     return std::pair<xact_t *, account_t *>(best_xact, NULL);
   }

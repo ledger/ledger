@@ -105,10 +105,10 @@ If you're going to be build on Ubuntu, @sudo apt-get install ...@ the
 following packages (current as of Ubuntu Hardy):
 
 <pre>
-sudo apt-get install build-essential libtool autoconf automake	   \
+sudo apt-get install build-essential libtool autoconf automake     \
      zlib1g-dev libbz2-dev python-dev bjam cvs gettext libgmp3-dev \
-     libmpfr-dev libboost1.35-dev libboost-regex1.35-dev	   \
-     libboost-date-time1.35-dev libboost-filesystem1.35-dev	   \
+     libmpfr-dev libboost1.35-dev libboost-regex1.35-dev           \
+     libboost-date-time1.35-dev libboost-filesystem1.35-dev        \
      libboost-python1.35-dev texinfo lcov sloccount
 </pre>
 

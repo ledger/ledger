@@ -68,107 +68,107 @@ public:
     struct token_t
     {
       enum kind_t {
-	UNKNOWN,
+        UNKNOWN,
 
-	LPAREN,
-	RPAREN,
+        LPAREN,
+        RPAREN,
 
-	TOK_NOT,
-	TOK_AND,
-	TOK_OR,
-	TOK_EQ,
+        TOK_NOT,
+        TOK_AND,
+        TOK_OR,
+        TOK_EQ,
 
-	TOK_DATE,
-	TOK_CODE,
-	TOK_PAYEE,
-	TOK_NOTE,
-	TOK_ACCOUNT,
-	TOK_META,
-	TOK_EXPR,
+        TOK_DATE,
+        TOK_CODE,
+        TOK_PAYEE,
+        TOK_NOTE,
+        TOK_ACCOUNT,
+        TOK_META,
+        TOK_EXPR,
 
-	TERM,
+        TERM,
 
-	END_REACHED
+        END_REACHED
 
       } kind;
 
       optional<string> value;
 
       explicit token_t(kind_t _kind = UNKNOWN,
-		       const optional<string>& _value = none)
-	: kind(_kind), value(_value) {
-	TRACE_CTOR(query_t::lexer_t::token_t, "");
+                       const optional<string>& _value = none)
+        : kind(_kind), value(_value) {
+        TRACE_CTOR(query_t::lexer_t::token_t, "");
       }
       token_t(const token_t& tok)
-	: kind(tok.kind), value(tok.value) {
-	TRACE_CTOR(query_t::lexer_t::token_t, "copy");
+        : kind(tok.kind), value(tok.value) {
+        TRACE_CTOR(query_t::lexer_t::token_t, "copy");
       }
       ~token_t() throw() {
-	TRACE_DTOR(query_t::lexer_t::token_t);
+        TRACE_DTOR(query_t::lexer_t::token_t);
       }
 
       token_t& operator=(const token_t& tok) {
-	if (this != &tok) {
-	  kind  = tok.kind;
-	  value = tok.value;
-	}
-	return *this;
+        if (this != &tok) {
+          kind  = tok.kind;
+          value = tok.value;
+        }
+        return *this;
       }
 
       operator bool() const {
-	return kind != END_REACHED;
+        return kind != END_REACHED;
       }
 
       string to_string() const {
-	switch (kind) {
-	case UNKNOWN:	  return "UNKNOWN";
-	case LPAREN:	  return "LPAREN";
-	case RPAREN:	  return "RPAREN";
-	case TOK_NOT:	  return "TOK_NOT";
-	case TOK_AND:	  return "TOK_AND";
-	case TOK_OR:	  return "TOK_OR";
-	case TOK_EQ:	  return "TOK_EQ";
-	case TOK_DATE:	  return "TOK_DATE";
-	case TOK_CODE:	  return "TOK_CODE";
-	case TOK_PAYEE:	  return "TOK_PAYEE";
-	case TOK_NOTE:	  return "TOK_NOTE";
-	case TOK_ACCOUNT: return "TOK_ACCOUNT";
-	case TOK_META:	  return "TOK_META";
-	case TOK_EXPR:	  return "TOK_EXPR";
-	case TERM:	  return string("TERM(") + *value + ")";
-	case END_REACHED: return "END_REACHED";
-	}
-	assert(false);
-	return empty_string;
+        switch (kind) {
+        case UNKNOWN:     return "UNKNOWN";
+        case LPAREN:      return "LPAREN";
+        case RPAREN:      return "RPAREN";
+        case TOK_NOT:     return "TOK_NOT";
+        case TOK_AND:     return "TOK_AND";
+        case TOK_OR:      return "TOK_OR";
+        case TOK_EQ:      return "TOK_EQ";
+        case TOK_DATE:    return "TOK_DATE";
+        case TOK_CODE:    return "TOK_CODE";
+        case TOK_PAYEE:   return "TOK_PAYEE";
+        case TOK_NOTE:    return "TOK_NOTE";
+        case TOK_ACCOUNT: return "TOK_ACCOUNT";
+        case TOK_META:    return "TOK_META";
+        case TOK_EXPR:    return "TOK_EXPR";
+        case TERM:        return string("TERM(") + *value + ")";
+        case END_REACHED: return "END_REACHED";
+        }
+        assert(false);
+        return empty_string;
       }
 
       string symbol() const {
-	switch (kind) {
-	case LPAREN:	  return "(";
-	case RPAREN:	  return ")";
-	case TOK_NOT:	  return "not";
-	case TOK_AND:	  return "and";
-	case TOK_OR:	  return "or";
-	case TOK_EQ:	  return "=";
-	case TOK_DATE:	  return "date";
-	case TOK_CODE:	  return "code";
-	case TOK_PAYEE:	  return "payee";
-	case TOK_NOTE:	  return "note";
-	case TOK_ACCOUNT: return "account";
-	case TOK_META:	  return "meta";
-	case TOK_EXPR:	  return "expr";
+        switch (kind) {
+        case LPAREN:      return "(";
+        case RPAREN:      return ")";
+        case TOK_NOT:     return "not";
+        case TOK_AND:     return "and";
+        case TOK_OR:      return "or";
+        case TOK_EQ:      return "=";
+        case TOK_DATE:    return "date";
+        case TOK_CODE:    return "code";
+        case TOK_PAYEE:   return "payee";
+        case TOK_NOTE:    return "note";
+        case TOK_ACCOUNT: return "account";
+        case TOK_META:    return "meta";
+        case TOK_EXPR:    return "expr";
 
-	case END_REACHED: return "<EOF>";
+        case END_REACHED: return "<EOF>";
 
-	case TERM:
-	  assert(false);
-	  return "<TERM>";
+        case TERM:
+          assert(false);
+          return "<TERM>";
 
-	case UNKNOWN:
-	default:
-	  assert(false);
-	  return "<UNKNOWN>";
-	}
+        case UNKNOWN:
+        default:
+          assert(false);
+          return "<UNKNOWN>";
+        }
       }
 
       void unexpected();
@@ -178,11 +178,11 @@ public:
     token_t token_cache;
 
     lexer_t(value_t::sequence_t::const_iterator _begin,
-	    value_t::sequence_t::const_iterator _end,
-	    bool _multiple_args = true)
+            value_t::sequence_t::const_iterator _end,
+            bool _multiple_args = true)
       : begin(_begin), end(_end),
-	consume_whitespace(false), consume_next_arg(false),
-	multiple_args(_multiple_args)
+        consume_whitespace(false), consume_next_arg(false),
+        multiple_args(_multiple_args)
     {
       TRACE_CTOR(query_t::lexer_t, "");
       assert(begin != end);
@@ -191,11 +191,11 @@ public:
     }
     lexer_t(const lexer_t& lexer)
       : begin(lexer.begin), end(lexer.end),
-	arg_i(lexer.arg_i), arg_end(lexer.arg_end),
-	consume_whitespace(lexer.consume_whitespace),
-	consume_next_arg(lexer.consume_next_arg),
-	multiple_args(lexer.multiple_args),
-	token_cache(lexer.token_cache)
+        arg_i(lexer.arg_i), arg_end(lexer.arg_end),
+        consume_whitespace(lexer.consume_whitespace),
+        consume_next_arg(lexer.consume_next_arg),
+        multiple_args(lexer.multiple_args),
+        token_cache(lexer.token_cache)
     {
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
@@ -210,7 +210,7 @@ public:
     }
     token_t peek_token() {
       if (token_cache.kind == token_t::UNKNOWN)
-	token_cache = next_token();
+        token_cache = next_token();
       return token_cache;
     }
   };
@@ -264,8 +264,8 @@ public:
     TRACE_CTOR(query_t, "copy");
   }
   query_t(const string& arg,
-	  const keep_details_t& _what_to_keep = keep_details_t(),
-	  bool multiple_args = true)
+          const keep_details_t& _what_to_keep = keep_details_t(),
+          bool multiple_args = true)
     : predicate_t(_what_to_keep) {
     TRACE_CTOR(query_t, "string, keep_details_t");
     if (! arg.empty()) {
@@ -274,8 +274,8 @@ public:
     }
   }
   query_t(const value_t& args,
-	  const keep_details_t& _what_to_keep = keep_details_t(),
-	  bool multiple_args = true)
+          const keep_details_t& _what_to_keep = keep_details_t(),
+          bool multiple_args = true)
     : predicate_t(_what_to_keep) {
     TRACE_CTOR(query_t, "value_t, keep_details_t");
     if (! args.empty())
@@ -288,12 +288,12 @@ public:
   void parse_args(const value_t& args, bool multiple_args = true) {
     if (! parser)
       parser = parser_t(args, multiple_args);
-    ptr = parser->parse();	// expr_t::ptr
+    ptr = parser->parse();      // expr_t::ptr
   }
 
   void parse_again() {
     assert(parser);
-    ptr = parser->parse();	// expr_t::ptr
+    ptr = parser->parse();      // expr_t::ptr
   }
 
   bool tokens_remaining() {

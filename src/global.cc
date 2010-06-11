@@ -113,10 +113,10 @@ void global_scope_t::read_init()
       ifstream init(init_file);
 
       if (session().journal->read(init_file, NULL, &report()) > 0 ||
-	  session().journal->auto_xacts.size() > 0 ||
-	  session().journal->period_xacts.size() > 0) {
-	throw_(parse_error, _("Transactions found in initialization file '%1'")
-	       << init_file);
+          session().journal->auto_xacts.size() > 0 ||
+          session().journal->period_xacts.size() > 0) {
+        throw_(parse_error, _("Transactions found in initialization file '%1'")
+               << init_file);
       }
 
       TRACE_FINISH(init, 1);
@@ -137,7 +137,7 @@ char * global_scope_t::prompt_string()
 
 void global_scope_t::report_error(const std::exception& err)
 {
-  std::cout.flush();		// first display anything that was pending
+  std::cout.flush();            // first display anything that was pending
 
   if (caught_signal == NONE_CAUGHT) {
     // Display any pending error context information
@@ -163,7 +163,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   }
 
   strings_list::iterator arg  = args.begin();
-  string		 verb = *arg++;
+  string                 verb = *arg++;
 
   // Look for a precommand first, which is defined as any defined function
   // whose name starts with "ledger_precmd_".  The difference between a
@@ -180,8 +180,8 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
   // then invoke the command.
 
   expr_t::func_t command;
-  bool		 is_precommand = false;
-  bind_scope_t	 bound_scope(*this, report());
+  bool           is_precommand = false;
+  bind_scope_t   bound_scope(*this, report());
 
   if (bool(command = look_for_precommand(bound_scope, verb)))
     is_precommand = true;
@@ -206,11 +206,11 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
 
   report().output_stream
     .initialize(report().HANDLED(output_) ?
-		optional<path>(path(report().HANDLER(output_).str())) :
-		optional<path>(),
-		report().HANDLED(pager_) ?
-		optional<path>(path(report().HANDLER(pager_).str())) :
-		optional<path>());
+                optional<path>(path(report().HANDLER(output_).str())) :
+                optional<path>(),
+                report().HANDLED(pager_) ?
+                optional<path>(path(report().HANDLER(pager_).str())) :
+                optional<path>());
 
   // Now that the output stream is initialized, report the options that will
   // participate in this report, if the user specified --options
@@ -316,7 +316,7 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
 }
 
 expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind,
-					const string& name)
+                                        const string& name)
 {
   switch (kind) {
   case symbol_t::FUNCTION:
@@ -334,9 +334,9 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind,
     switch (*p) {
     case 'p':
       if (is_eq(p, "push"))
-	return MAKE_FUNCTOR(global_scope_t::push_command);
+        return MAKE_FUNCTOR(global_scope_t::push_command);
       else if (is_eq(p, "pop"))
-	return MAKE_FUNCTOR(global_scope_t::pop_command);
+        return MAKE_FUNCTOR(global_scope_t::pop_command);
       break;
     }
   }
@@ -400,8 +400,8 @@ void global_scope_t::normalize_session_options()
 #endif // defined(LOGGING_ON)
 }
 
-expr_t::func_t global_scope_t::look_for_precommand(scope_t&	 scope,
-						   const string& verb)
+expr_t::func_t global_scope_t::look_for_precommand(scope_t&      scope,
+                                                   const string& verb)
 {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::PRECOMMAND, verb))
     return def->as_function();
@@ -410,7 +410,7 @@ expr_t::func_t global_scope_t::look_for_precommand(scope_t&	 scope,
 }
 
 expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
-						const string& verb)
+                                                const string& verb)
 {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::COMMAND, verb))
     return def->as_function();
@@ -424,7 +424,7 @@ void global_scope_t::visit_man_page() const
   if (pid < 0) {
     throw std::logic_error(_("Failed to fork child process"));
   }
-  else if (pid == 0) {	// child
+  else if (pid == 0) {  // child
     execlp("man", "man", "1", "ledger", NULL);
 
     // We should never, ever reach here
@@ -434,7 +434,7 @@ void global_scope_t::visit_man_page() const
 
   int status = -1;
   wait(&status);
-  exit(0);			// parent
+  exit(0);                      // parent
 }
 
 void handle_debug_options(int argc, char * argv[])
@@ -442,37 +442,37 @@ void handle_debug_options(int argc, char * argv[])
   for (int i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
       if (std::strcmp(argv[i], "--args-only") == 0) {
-	args_only = true;
+        args_only = true;
       }
       else if (std::strcmp(argv[i], "--verify") == 0) {
 #if defined(VERIFY_ON)
-	verify_enabled = true; // global in utils.h
+        verify_enabled = true; // global in utils.h
 #endif
       }
       else if (std::strcmp(argv[i], "--verbose") == 0 ||
-	       std::strcmp(argv[i], "-v") == 0) {
+               std::strcmp(argv[i], "-v") == 0) {
 #if defined(LOGGING_ON)
-	_log_level = LOG_INFO; // global in utils.h
+        _log_level = LOG_INFO; // global in utils.h
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if defined(DEBUG_ON)
-	_log_level    = LOG_DEBUG; // global in utils.h
-	_log_category = argv[i + 1]; // global in utils.h
-	i++;
+        _log_level    = LOG_DEBUG; // global in utils.h
+        _log_category = argv[i + 1]; // global in utils.h
+        i++;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 #if defined(TRACING_ON)
-	_log_level   = LOG_TRACE; // global in utils.h
-	try {
-	  // global in utils.h
-	  _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
-	}
-	catch (const boost::bad_lexical_cast& e) {
-	  throw std::logic_error(_("Argument to --trace must be an integer"));
-	}
-	i++;
+        _log_level   = LOG_TRACE; // global in utils.h
+        try {
+          // global in utils.h
+          _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
+        }
+        catch (const boost::bad_lexical_cast& e) {
+          throw std::logic_error(_("Argument to --trace must be an integer"));
+        }
+        i++;
 #endif
       }
     }

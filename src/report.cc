@@ -76,7 +76,7 @@ void report_t::normalize_options(const string& verb)
   }
 
   item_t::use_effective_date = (HANDLED(effective) &&
-				! HANDLED(actual_dates));
+                                ! HANDLED(actual_dates));
 
   commodity_pool_t::current_pool->keep_base  = HANDLED(base);
   commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);
@@ -96,7 +96,7 @@ void report_t::normalize_options(const string& verb)
     set_datetime_format(HANDLER(datetime_format_).str().c_str());
   if (HANDLED(start_of_week_)) {
     if (optional<date_time::weekdays> weekday =
-	string_to_day_of_week(HANDLER(start_of_week_).str()))
+        string_to_day_of_week(HANDLER(start_of_week_).str()))
       start_of_week = *weekday;
   }
 
@@ -106,24 +106,24 @@ void report_t::normalize_options(const string& verb)
     if (! HANDLED(meta_width_)) {
       string::size_type i = HANDLER(meta_).str().find(':');
       if (i != string::npos) {
-	HANDLED(meta_width_).on_with
-	  (string("?normalize"),
-	   lexical_cast<long>(string(HANDLER(meta_).str(), i + 1)));
-	HANDLED(meta_).on(string("?normalize"),
-			  string(HANDLER(meta_).str(), 0, i));
+        HANDLED(meta_width_).on_with
+          (string("?normalize"),
+           lexical_cast<long>(string(HANDLER(meta_).str(), i + 1)));
+        HANDLED(meta_).on(string("?normalize"),
+                          string(HANDLER(meta_).str(), 0, i));
       }
     }
     if (HANDLED(meta_width_)) {
       HANDLER(prepend_format_).on
-	(string("?normalize"),
-	 string("%(justify(truncated(tag(\"") +
-	 HANDLER(meta_).str() + "\"), " +
-	 HANDLED(meta_width_).value.to_string() + " - 1), " +
-	 HANDLED(meta_width_).value.to_string() + "))");
+        (string("?normalize"),
+         string("%(justify(truncated(tag(\"") +
+         HANDLER(meta_).str() + "\"), " +
+         HANDLED(meta_width_).value.to_string() + " - 1), " +
+         HANDLED(meta_width_).value.to_string() + "))");
       meta_width = HANDLED(meta_width_).value.to_long();
     } else {
       HANDLER(prepend_format_).on(string("?normalize"), string("%(tag(\"") +
-				  HANDLER(meta_).str() + "\"))");
+                                  HANDLER(meta_).str() + "\"))");
     }
   }
   if (! HANDLED(prepend_width_))
@@ -183,7 +183,7 @@ void report_t::normalize_options(const string& verb)
   if (HANDLED(exchange_) &&
       HANDLER(exchange_).str().find('=') != string::npos) {
     value_t(0L).exchange_commodities(HANDLER(exchange_).str(), true,
-				     terminus);
+                                     terminus);
   }
 
   long cols = 0;
@@ -202,22 +202,22 @@ void report_t::normalize_options(const string& verb)
 
     if (! HANDLER(date_width_).specified)
       HANDLER(date_width_)
-	.on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
-						     FMT_PRINTED).length()));
+        .on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
+                                                     FMT_PRINTED).length()));
 
     long date_width    = HANDLER(date_width_).value.to_long();
     long payee_width   = (HANDLER(payee_width_).specified ?
-			  HANDLER(payee_width_).value.to_long() :
-			  int(double(cols) * 0.263157));
+                          HANDLER(payee_width_).value.to_long() :
+                          int(double(cols) * 0.263157));
     long account_width = (HANDLER(account_width_).specified ?
-			  HANDLER(account_width_).value.to_long() :
-			  int(double(cols) * 0.302631));
+                          HANDLER(account_width_).value.to_long() :
+                          int(double(cols) * 0.302631));
     long amount_width  = (HANDLER(amount_width_).specified ?
-			  HANDLER(amount_width_).value.to_long() :
-			  int(double(cols) * 0.157894));
+                          HANDLER(amount_width_).value.to_long() :
+                          int(double(cols) * 0.157894));
     long total_width   = (HANDLER(total_width_).specified ?
-			  HANDLER(total_width_).value.to_long() :
-			  amount_width);
+                          HANDLER(total_width_).value.to_long() :
+                          amount_width);
 
     DEBUG("auto.columns", "date_width    = " << date_width);
     DEBUG("auto.columns", "payee_width   = " << payee_width);
@@ -226,16 +226,16 @@ void report_t::normalize_options(const string& verb)
     DEBUG("auto.columns", "total_width   = " << total_width);
 
     if (! HANDLER(date_width_).specified &&
-	! HANDLER(payee_width_).specified &&
-	! HANDLER(account_width_).specified &&
-	! HANDLER(amount_width_).specified &&
-	! HANDLER(total_width_).specified) {
+        ! HANDLER(payee_width_).specified &&
+        ! HANDLER(account_width_).specified &&
+        ! HANDLER(amount_width_).specified &&
+        ! HANDLER(total_width_).specified) {
       long total = (4 /* the spaces between */ + date_width + payee_width +
-		    account_width + amount_width + total_width);
+                    account_width + amount_width + total_width);
       if (total > cols) {
-	DEBUG("auto.columns", "adjusting account down");
-	account_width -= total - cols;
-	DEBUG("auto.columns", "account_width now = " << account_width);
+        DEBUG("auto.columns", "adjusting account down");
+        account_width -= total - cols;
+        DEBUG("auto.columns", "account_width now = " << account_width);
       }
     }
 
@@ -261,7 +261,7 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
     HANDLER(limit_).on(whence, query.text());
 
     DEBUG("report.predicate",
-	  "Predicate = " << HANDLER(limit_).str());
+          "Predicate = " << HANDLER(limit_).str());
   }
 
   if (query.tokens_remaining()) {
@@ -270,7 +270,7 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
       HANDLER(display_).on(whence, query.text());
 
       DEBUG("report.predicate",
-	    "Display predicate = " << HANDLER(display_).str());
+            "Display predicate = " << HANDLER(display_).str());
     }
   }
 }  
@@ -279,7 +279,7 @@ namespace {
   struct posts_flusher
   {
     post_handler_ptr handler;
-    report_t&	     report;
+    report_t&        report;
 
     posts_flusher(post_handler_ptr _handler, report_t& _report)
       : handler(_handler), report(_report) {}
@@ -335,7 +335,7 @@ namespace {
   struct accounts_title_printer
   {
     acct_handler_ptr handler;
-    report_t&	     report;
+    report_t&        report;
 
     accounts_title_printer(acct_handler_ptr _handler, report_t& _report)
       : handler(_handler), report(_report) {}
@@ -343,9 +343,9 @@ namespace {
     void operator()(const value_t& val)
     {
       if (! report.HANDLED(no_titles)) {
-	std::ostringstream buf;
-	val.print(buf);
-	handler->title(buf.str());
+        std::ostringstream buf;
+        val.print(buf);
+        handler->title(buf.str());
       }
     }
   };
@@ -353,7 +353,7 @@ namespace {
   struct accounts_flusher
   {
     acct_handler_ptr handler;
-    report_t&	     report;
+    report_t&        report;
 
     accounts_flusher(acct_handler_ptr _handler, report_t& _report)
       : handler(_handler), report(_report) {}
@@ -368,23 +368,23 @@ namespace {
 
       scoped_ptr<accounts_iterator> iter;
       if (! report.HANDLED(sort_)) {
-	iter.reset(new basic_accounts_iterator(*report.session.journal->master));
+        iter.reset(new basic_accounts_iterator(*report.session.journal->master));
       } else {
-	expr_t sort_expr(report.HANDLER(sort_).str());
-	sort_expr.set_context(&report);
-	iter.reset(new sorted_accounts_iterator(*report.session.journal->master,
-						sort_expr, report.HANDLED(flat)));
+        expr_t sort_expr(report.HANDLER(sort_).str());
+        sort_expr.set_context(&report);
+        iter.reset(new sorted_accounts_iterator(*report.session.journal->master,
+                                                sort_expr, report.HANDLED(flat)));
       }
 
       if (report.HANDLED(display_)) {
-	DEBUG("report.predicate",
-	      "Display predicate = " << report.HANDLER(display_).str());
-	pass_down_accounts(handler, *iter.get(),
-			   predicate_t(report.HANDLER(display_).str(),
-				       report.what_to_keep()),
-			   report);
+        DEBUG("report.predicate",
+              "Display predicate = " << report.HANDLER(display_).str());
+        pass_down_accounts(handler, *iter.get(),
+                           predicate_t(report.HANDLER(display_).str(),
+                                       report.what_to_keep()),
+                           report);
       } else {
-	pass_down_accounts(handler, *iter.get());
+        pass_down_accounts(handler, *iter.get());
       }
 
       report.session.journal->clear_xdata();
@@ -396,7 +396,7 @@ void report_t::accounts_report(acct_handler_ptr handler)
 {
   post_handler_ptr chain =
     chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
-			/* for_accounts_report= */ true);
+                        /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
     std::auto_ptr<post_splitter>
       splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
@@ -454,12 +454,12 @@ value_t report_t::fn_market(call_scope_t& scope)
 
   value_t              result;
   optional<datetime_t> moment = (args.has(1) ?
-				 args.get<datetime_t>(1) :
-				 optional<datetime_t>());
+                                 args.get<datetime_t>(1) :
+                                 optional<datetime_t>());
   if (args.has(2))
     result = args.value_at(0).exchange_commodities(args.get<string>(2),
-						   /* add_prices= */ false,
-						   moment);
+                                                   /* add_prices= */ false,
+                                                   moment);
   else
     result = args.value_at(0).value(moment);
 
@@ -482,8 +482,8 @@ value_t report_t::fn_get_at(call_scope_t& scope)
   } else {
     if (! args.value_at(0).is_sequence())
       throw_(std::runtime_error,
-	     _("Attempting to get argument at index %1 from %2")
-	     << args.get<long>(1) << args.value_at(0).label());
+             _("Attempting to get argument at index %1 from %2")
+             << args.get<long>(1) << args.value_at(0).label());
   }
   return args.get<const value_t::sequence_t&>(0)[args.get<long>(1)];
 }
@@ -584,9 +584,9 @@ value_t report_t::fn_truncated(call_scope_t& scope)
 {
   interactive_t args(scope, "v&ll");
   return string_value(format_t::truncate
-		      (args.get<string>(0),
-		       args.has(1) && args.get<int>(1) > 0 ? args.get<int>(1) : 0,
-		       args.has(2) ? args.get<int>(2) : 0));
+                      (args.get<string>(0),
+                       args.has(1) && args.get<int>(1) > 0 ? args.get<int>(1) : 0,
+                       args.has(2) ? args.get<int>(2) : 0));
 }
 
 value_t report_t::fn_justify(call_scope_t& scope)
@@ -608,7 +608,7 @@ value_t report_t::fn_justify(call_scope_t& scope)
 
 value_t report_t::fn_quoted(call_scope_t& scope)
 {
-  interactive_t	     args(scope, "v");
+  interactive_t      args(scope, "v");
   std::ostringstream out;
 
   out << '"';
@@ -625,7 +625,7 @@ value_t report_t::fn_quoted(call_scope_t& scope)
 
 value_t report_t::fn_join(call_scope_t& scope)
 {
-  interactive_t	     args(scope, "s");
+  interactive_t      args(scope, "s");
   std::ostringstream out;
 
   foreach (const char ch, args.get<string>(0)) {
@@ -642,7 +642,7 @@ value_t report_t::fn_format_date(call_scope_t& scope)
   interactive_t args(scope, "d&s");
   if (args.has(1))
     return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM,
-				    args.get<string>(1).c_str()));
+                                    args.get<string>(1).c_str()));
   else
     return string_value(format_date(args.get<date_t>(0), FMT_PRINTED));
 }
@@ -654,17 +654,17 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
   if (args.has(1)) {
     string color = args.get<string>(1);
     std::ostringstream buf;
-    if (color == "black")	   buf << "\033[30m";
-    else if (color == "red")	   buf << "\033[31m";
-    else if (color == "green")	   buf << "\033[32m";
-    else if (color == "yellow")	   buf << "\033[33m";
-    else if (color == "blue")	   buf << "\033[34m";
+    if (color == "black")          buf << "\033[30m";
+    else if (color == "red")       buf << "\033[31m";
+    else if (color == "green")     buf << "\033[32m";
+    else if (color == "yellow")    buf << "\033[33m";
+    else if (color == "blue")      buf << "\033[34m";
     else if (color == "magenta")   buf << "\033[35m";
-    else if (color == "cyan")	   buf << "\033[36m";
-    else if (color == "white")	   buf << "\033[37m";
-    else if (color == "bold")	   buf << "\033[1m";
+    else if (color == "cyan")      buf << "\033[36m";
+    else if (color == "white")     buf << "\033[37m";
+    else if (color == "bold")      buf << "\033[1m";
     else if (color == "underline") buf << "\033[4m";
-    else if (color == "blink")	   buf << "\033[5m";
+    else if (color == "blink")     buf << "\033[5m";
     buf << args.value_at(0);
     buf << "\033[0m";
     return string_value(buf.str());
@@ -677,7 +677,7 @@ value_t report_t::fn_percent(call_scope_t& scope)
 {
   interactive_t args(scope, "aa");
   return (amount_t("100.00%") *
-	  (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
+          (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
 }
 
 value_t report_t::fn_price(call_scope_t& scope)
@@ -1094,13 +1094,13 @@ option_t<report_t> * report_t::lookup_option(const char * p)
 }
 
 void report_t::define(const symbol_t::kind_t kind, const string& name,
-		      expr_t::ptr_op_t def)
+                      expr_t::ptr_op_t def)
 {
   session.define(kind, name, def);
 }
 
 expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
-				  const string& name)
+                                  const string& name)
 {
   if (expr_t::ptr_op_t def = session.lookup(kind, name))
     return def;
@@ -1114,208 +1114,208 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       switch (*p) {
       case 'd':
       case 'm':
-	return MAKE_FUNCTOR(report_t::fn_now);
+        return MAKE_FUNCTOR(report_t::fn_now);
       case 'P':
-	return MAKE_FUNCTOR(report_t::fn_market);
+        return MAKE_FUNCTOR(report_t::fn_market);
       case 't':
-	return MAKE_FUNCTOR(report_t::fn_display_amount);
+        return MAKE_FUNCTOR(report_t::fn_display_amount);
       case 'T':
-	return MAKE_FUNCTOR(report_t::fn_display_total);
+        return MAKE_FUNCTOR(report_t::fn_display_total);
       case 'U':
-	return MAKE_FUNCTOR(report_t::fn_abs);
+        return MAKE_FUNCTOR(report_t::fn_abs);
       case 'S':
-	return MAKE_FUNCTOR(report_t::fn_strip);
+        return MAKE_FUNCTOR(report_t::fn_strip);
       case 'i':
-	throw_(std::runtime_error,
-	       _("The i value expression variable is no longer supported"));
+        throw_(std::runtime_error,
+               _("The i value expression variable is no longer supported"));
       case 'A':
-	throw_(std::runtime_error,
-	       _("The A value expression variable is no longer supported"));
+        throw_(std::runtime_error,
+               _("The A value expression variable is no longer supported"));
       case 'v':
       case 'V':
-	throw_(std::runtime_error,
-	       _("The V and v value expression variables are no longer supported"));
+        throw_(std::runtime_error,
+               _("The V and v value expression variables are no longer supported"));
       case 'I':
       case 'B':
-	throw_(std::runtime_error,
-	       _("The I and B value expression variables are no longer supported"));
+        throw_(std::runtime_error,
+               _("The I and B value expression variables are no longer supported"));
       case 'g':
       case 'G':
-	throw_(std::runtime_error,
-	       _("The G and g value expression variables are no longer supported"));
+        throw_(std::runtime_error,
+               _("The G and g value expression variables are no longer supported"));
       default:
-	return NULL;
+        return NULL;
       }
     }
 
     switch (*p) {
     case 'a':
       if (is_eq(p, "amount_expr"))
-	return MAKE_FUNCTOR(report_t::fn_amount_expr);
+        return MAKE_FUNCTOR(report_t::fn_amount_expr);
       else if (is_eq(p, "ansify_if"))
-	return MAKE_FUNCTOR(report_t::fn_ansify_if);
+        return MAKE_FUNCTOR(report_t::fn_ansify_if);
       else if (is_eq(p, "abs"))
-	return MAKE_FUNCTOR(report_t::fn_abs);
+        return MAKE_FUNCTOR(report_t::fn_abs);
       break;
 
     case 'b':
       if (is_eq(p, "black"))
-	return WRAP_FUNCTOR(fn_black);
+        return WRAP_FUNCTOR(fn_black);
       else if (is_eq(p, "blink"))
-	return WRAP_FUNCTOR(fn_blink);
+        return WRAP_FUNCTOR(fn_blink);
       else if (is_eq(p, "blue"))
-	return WRAP_FUNCTOR(fn_blue);
+        return WRAP_FUNCTOR(fn_blue);
       else if (is_eq(p, "bold"))
-	return WRAP_FUNCTOR(fn_bold);
+        return WRAP_FUNCTOR(fn_bold);
       break;
 
     case 'c':
       if (is_eq(p, "cyan"))
-	return WRAP_FUNCTOR(fn_cyan);
+        return WRAP_FUNCTOR(fn_cyan);
       break;
 
     case 'd':
       if (is_eq(p, "display_amount"))
-	return MAKE_FUNCTOR(report_t::fn_display_amount);
+        return MAKE_FUNCTOR(report_t::fn_display_amount);
       else if (is_eq(p, "display_total"))
-	return MAKE_FUNCTOR(report_t::fn_display_total);
+        return MAKE_FUNCTOR(report_t::fn_display_total);
       else if (is_eq(p, "date"))
-	return MAKE_FUNCTOR(report_t::fn_now);
+        return MAKE_FUNCTOR(report_t::fn_now);
       break;
 
     case 'f':
       if (is_eq(p, "format_date"))
-	return MAKE_FUNCTOR(report_t::fn_format_date);
+        return MAKE_FUNCTOR(report_t::fn_format_date);
       else if (is_eq(p, "floor"))
-	return MAKE_FUNCTOR(report_t::fn_floor);
+        return MAKE_FUNCTOR(report_t::fn_floor);
       break;
 
     case 'g':
       if (is_eq(p, "get_at"))
-	return MAKE_FUNCTOR(report_t::fn_get_at);
+        return MAKE_FUNCTOR(report_t::fn_get_at);
       else if (is_eq(p, "green"))
-	return WRAP_FUNCTOR(fn_green);
+        return WRAP_FUNCTOR(fn_green);
       break;
 
     case 'i':
       if (is_eq(p, "is_seq"))
-	return MAKE_FUNCTOR(report_t::fn_is_seq);
+        return MAKE_FUNCTOR(report_t::fn_is_seq);
       break;
 
     case 'j':
       if (is_eq(p, "justify"))
-	return MAKE_FUNCTOR(report_t::fn_justify);
+        return MAKE_FUNCTOR(report_t::fn_justify);
       else if (is_eq(p, "join"))
-	return MAKE_FUNCTOR(report_t::fn_join);
+        return MAKE_FUNCTOR(report_t::fn_join);
       break;
 
     case 'm':
       if (is_eq(p, "market"))
-	return MAKE_FUNCTOR(report_t::fn_market);
+        return MAKE_FUNCTOR(report_t::fn_market);
       else if (is_eq(p, "magenta"))
-	return WRAP_FUNCTOR(fn_magenta);
+        return WRAP_FUNCTOR(fn_magenta);
       break;
 
     case 'n':
       if (is_eq(p, "null"))
-	return WRAP_FUNCTOR(fn_null);
+        return WRAP_FUNCTOR(fn_null);
       else if (is_eq(p, "now"))
-	return MAKE_FUNCTOR(report_t::fn_now);
+        return MAKE_FUNCTOR(report_t::fn_now);
       break;
 
     case 'o':
       if (is_eq(p, "options"))
-	return MAKE_FUNCTOR(report_t::fn_options);
+        return MAKE_FUNCTOR(report_t::fn_options);
       break;
 
     case 'p':
       if (is_eq(p, "post"))
-	return WRAP_FUNCTOR(fn_false);
+        return WRAP_FUNCTOR(fn_false);
       else if (is_eq(p, "percent"))
-	return MAKE_FUNCTOR(report_t::fn_percent);
+        return MAKE_FUNCTOR(report_t::fn_percent);
       else if (is_eq(p, "price"))
-	return MAKE_FUNCTOR(report_t::fn_price);
+        return MAKE_FUNCTOR(report_t::fn_price);
       else if (is_eq(p, "print"))
-	return MAKE_FUNCTOR(report_t::fn_print);
+        return MAKE_FUNCTOR(report_t::fn_print);
       break;
 
     case 'q':
       if (is_eq(p, "quoted"))
-	return MAKE_FUNCTOR(report_t::fn_quoted);
+        return MAKE_FUNCTOR(report_t::fn_quoted);
       else if (is_eq(p, "quantity"))
-	return MAKE_FUNCTOR(report_t::fn_quantity);
+        return MAKE_FUNCTOR(report_t::fn_quantity);
       break;
 
     case 'r':
       if (is_eq(p, "rounded"))
-	return MAKE_FUNCTOR(report_t::fn_rounded);
+        return MAKE_FUNCTOR(report_t::fn_rounded);
       else if (is_eq(p, "red"))
-	return WRAP_FUNCTOR(fn_red);
+        return WRAP_FUNCTOR(fn_red);
       break;
 
     case 's':
       if (is_eq(p, "scrub"))
-	return MAKE_FUNCTOR(report_t::fn_scrub);
+        return MAKE_FUNCTOR(report_t::fn_scrub);
       else if (is_eq(p, "strip"))
-	return MAKE_FUNCTOR(report_t::fn_strip);
+        return MAKE_FUNCTOR(report_t::fn_strip);
       break;
 
     case 't':
       if (is_eq(p, "truncated"))
-	return MAKE_FUNCTOR(report_t::fn_truncated);
+        return MAKE_FUNCTOR(report_t::fn_truncated);
       else if (is_eq(p, "total_expr"))
-	return MAKE_FUNCTOR(report_t::fn_total_expr);
+        return MAKE_FUNCTOR(report_t::fn_total_expr);
       else if (is_eq(p, "today"))
-	return MAKE_FUNCTOR(report_t::fn_today);
+        return MAKE_FUNCTOR(report_t::fn_today);
       else if (is_eq(p, "t"))
-	return MAKE_FUNCTOR(report_t::fn_display_amount);
+        return MAKE_FUNCTOR(report_t::fn_display_amount);
       else if (is_eq(p, "trim"))
-	return MAKE_FUNCTOR(report_t::fn_trim);
+        return MAKE_FUNCTOR(report_t::fn_trim);
       else if (is_eq(p, "to_boolean"))
-	return MAKE_FUNCTOR(report_t::fn_to_boolean);
+        return MAKE_FUNCTOR(report_t::fn_to_boolean);
       else if (is_eq(p, "to_int"))
-	return MAKE_FUNCTOR(report_t::fn_to_int);
+        return MAKE_FUNCTOR(report_t::fn_to_int);
       else if (is_eq(p, "to_datetime"))
-	return MAKE_FUNCTOR(report_t::fn_to_datetime);
+        return MAKE_FUNCTOR(report_t::fn_to_datetime);
       else if (is_eq(p, "to_date"))
-	return MAKE_FUNCTOR(report_t::fn_to_date);
+        return MAKE_FUNCTOR(report_t::fn_to_date);
       else if (is_eq(p, "to_amount"))
-	return MAKE_FUNCTOR(report_t::fn_to_amount);
+        return MAKE_FUNCTOR(report_t::fn_to_amount);
       else if (is_eq(p, "to_balance"))
-	return MAKE_FUNCTOR(report_t::fn_to_balance);
+        return MAKE_FUNCTOR(report_t::fn_to_balance);
       else if (is_eq(p, "to_string"))
-	return MAKE_FUNCTOR(report_t::fn_to_string);
+        return MAKE_FUNCTOR(report_t::fn_to_string);
       else if (is_eq(p, "to_mask"))
-	return MAKE_FUNCTOR(report_t::fn_to_mask);
+        return MAKE_FUNCTOR(report_t::fn_to_mask);
       else if (is_eq(p, "to_sequence"))
-	return MAKE_FUNCTOR(report_t::fn_to_sequence);
+        return MAKE_FUNCTOR(report_t::fn_to_sequence);
       break;
 
     case 'T':
       if (is_eq(p, "T"))
-	return MAKE_FUNCTOR(report_t::fn_display_total);
+        return MAKE_FUNCTOR(report_t::fn_display_total);
       break;
 
     case 'u':
       if (is_eq(p, "underline"))
-	return WRAP_FUNCTOR(fn_underline);
+        return WRAP_FUNCTOR(fn_underline);
       else if (is_eq(p, "unrounded"))
-	return MAKE_FUNCTOR(report_t::fn_unrounded);
+        return MAKE_FUNCTOR(report_t::fn_unrounded);
       break;
 
     case 'v':
       if (is_eq(p, "value_date"))
-	return MAKE_FUNCTOR(report_t::fn_now);
+        return MAKE_FUNCTOR(report_t::fn_now);
       break;
 
     case 'w':
       if (is_eq(p, "white"))
-	return WRAP_FUNCTOR(fn_white);
+        return WRAP_FUNCTOR(fn_white);
       break;
 
     case 'y':
       if (is_eq(p, "yellow"))
-	return WRAP_FUNCTOR(fn_yellow);
+        return WRAP_FUNCTOR(fn_yellow);
       break;
     }
 
@@ -1333,135 +1333,135 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     switch (*p) {
     case 'a':
       if (is_eq(p, "accounts")) {
-	return WRAP_FUNCTOR(reporter<>(new report_accounts(*this), *this,
-				       "#accounts"));
+        return WRAP_FUNCTOR(reporter<>(new report_accounts(*this), *this,
+                                       "#accounts"));
       }
       break;
 
     case 'b':
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
-	return expr_t::op_t::wrap_functor
-	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(balance_format_)),
-				maybe_format(HANDLER(prepend_format_)),
-				HANDLER(prepend_width_).value.to_long()),
-	    *this, "#balance"));
+        return expr_t::op_t::wrap_functor
+          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+           (new format_accounts(*this, report_format(HANDLER(balance_format_)),
+                                maybe_format(HANDLER(prepend_format_)),
+                                HANDLER(prepend_width_).value.to_long()),
+            *this, "#balance"));
       }
       else if (is_eq(p, "budget")) {
-	HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
+        HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
 
-	budget_flags |= BUDGET_WRAP_VALUES;
-	if (! (budget_flags & ~BUDGET_WRAP_VALUES))
-	  budget_flags |= BUDGET_BUDGETED;
+        budget_flags |= BUDGET_WRAP_VALUES;
+        if (! (budget_flags & ~BUDGET_WRAP_VALUES))
+          budget_flags |= BUDGET_BUDGETED;
 
-	return expr_t::op_t::wrap_functor
-	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(budget_format_)),
-				maybe_format(HANDLER(prepend_format_)),
-				HANDLER(prepend_width_).value.to_long()),
-	    *this, "#budget"));
+        return expr_t::op_t::wrap_functor
+          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+           (new format_accounts(*this, report_format(HANDLER(budget_format_)),
+                                maybe_format(HANDLER(prepend_format_)),
+                                HANDLER(prepend_width_).value.to_long()),
+            *this, "#budget"));
       }
       break;
 
     case 'c':
       if (is_eq(p, "csv")) {
-	return WRAP_FUNCTOR
-	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(csv_format_)),
-			     maybe_format(HANDLER(prepend_format_)),
-			     HANDLER(prepend_width_).value.to_long()),
-	    *this, "#csv"));
+        return WRAP_FUNCTOR
+          (reporter<>
+           (new format_posts(*this, report_format(HANDLER(csv_format_)),
+                             maybe_format(HANDLER(prepend_format_)),
+                             HANDLER(prepend_width_).value.to_long()),
+            *this, "#csv"));
       }
       else if (is_eq(p, "cleared")) {
-	HANDLER(amount_).set_expr(string("#cleared"),
-				  "(amount, cleared ? amount : 0)");
-	return expr_t::op_t::wrap_functor
-	  (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-	   (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
-				maybe_format(HANDLER(prepend_format_)),
-				HANDLER(prepend_width_).value.to_long()),
-	    *this, "#cleared"));
+        HANDLER(amount_).set_expr(string("#cleared"),
+                                  "(amount, cleared ? amount : 0)");
+        return expr_t::op_t::wrap_functor
+          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
+           (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
+                                maybe_format(HANDLER(prepend_format_)),
+                                HANDLER(prepend_width_).value.to_long()),
+            *this, "#cleared"));
       }
       else if (is_eq(p, "convert")) {
-	return WRAP_FUNCTOR(convert_command);
+        return WRAP_FUNCTOR(convert_command);
       }
       else if (is_eq(p, "commodities")) {
-	return WRAP_FUNCTOR(reporter<>(new report_commodities(*this), *this,
-				       "#commodities"));
+        return WRAP_FUNCTOR(reporter<>(new report_commodities(*this), *this,
+                                       "#commodities"));
       }
       break;
 
     case 'e':
       if (is_eq(p, "equity")) {
-	HANDLER(generated).on_only(string("#equity"));
-	return WRAP_FUNCTOR(reporter<>(new print_xacts(*this), *this, "#equity"));
+        HANDLER(generated).on_only(string("#equity"));
+        return WRAP_FUNCTOR(reporter<>(new print_xacts(*this), *this, "#equity"));
       }
       else if (is_eq(p, "entry")) {
-	return WRAP_FUNCTOR(xact_command);
+        return WRAP_FUNCTOR(xact_command);
       }
       else if (is_eq(p, "emacs")) {
-	return WRAP_FUNCTOR
-	  (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
+        return WRAP_FUNCTOR
+          (reporter<>(new format_emacs_posts(output_stream), *this, "#emacs"));
       }
       else if (is_eq(p, "echo")) {
-	return MAKE_FUNCTOR(report_t::echo_command);
+        return MAKE_FUNCTOR(report_t::echo_command);
       }
       break;
 
     case 'p':
       if (*(p + 1) == '\0' || is_eq(p, "print")) {
-	return WRAP_FUNCTOR
-	  (reporter<>(new print_xacts(*this, HANDLED(raw)), *this, "#print"));
+        return WRAP_FUNCTOR
+          (reporter<>(new print_xacts(*this, HANDLED(raw)), *this, "#print"));
       }
       else if (is_eq(p, "prices")) {
-	return expr_t::op_t::wrap_functor
-	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(prices_format_)),
-			     maybe_format(HANDLER(prepend_format_)),
-			     HANDLER(prepend_width_).value.to_long()),
-	    *this, "#prices"));
+        return expr_t::op_t::wrap_functor
+          (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
+           (new format_posts(*this, report_format(HANDLER(prices_format_)),
+                             maybe_format(HANDLER(prepend_format_)),
+                             HANDLER(prepend_width_).value.to_long()),
+            *this, "#prices"));
       }
       else if (is_eq(p, "pricedb")) {
-	return expr_t::op_t::wrap_functor
-	  (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-	   (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
-			     maybe_format(HANDLER(prepend_format_)),
-			     HANDLER(prepend_width_).value.to_long()),
-	    *this, "#pricedb"));
+        return expr_t::op_t::wrap_functor
+          (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
+           (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
+                             maybe_format(HANDLER(prepend_format_)),
+                             HANDLER(prepend_width_).value.to_long()),
+            *this, "#pricedb"));
       }
       else if (is_eq(p, "pricemap")) {
-	return MAKE_FUNCTOR(report_t::pricemap_command);
+        return MAKE_FUNCTOR(report_t::pricemap_command);
       }
       else if (is_eq(p, "payees")) {
-	return WRAP_FUNCTOR(reporter<>(new report_payees(*this), *this,
-				       "#payees"));
+        return WRAP_FUNCTOR(reporter<>(new report_payees(*this), *this,
+                                       "#payees"));
       }
       break;
 
     case 'r':
       if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register")) {
-	return WRAP_FUNCTOR
-	  (reporter<>
-	   (new format_posts(*this, report_format(HANDLER(register_format_)),
-			     maybe_format(HANDLER(prepend_format_)),
-			     HANDLER(prepend_width_).value.to_long()),
-	    *this, "#register"));
+        return WRAP_FUNCTOR
+          (reporter<>
+           (new format_posts(*this, report_format(HANDLER(register_format_)),
+                             maybe_format(HANDLER(prepend_format_)),
+                             HANDLER(prepend_width_).value.to_long()),
+            *this, "#register"));
       }
       else if (is_eq(p, "reload")) {
-	return MAKE_FUNCTOR(report_t::reload_command);
+        return MAKE_FUNCTOR(report_t::reload_command);
       }
       break;
 
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
-	return WRAP_FUNCTOR(report_statistics);
+        return WRAP_FUNCTOR(report_statistics);
       break;
 
     case 'x':
       if (is_eq(p, "xact"))
-	return WRAP_FUNCTOR(xact_command);
+        return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "xml"))
-	return WRAP_FUNCTOR(reporter<>(new format_xml(*this), *this, "#xml"));
+        return WRAP_FUNCTOR(reporter<>(new format_xml(*this), *this, "#xml"));
       break;
     }
     break;
@@ -1470,38 +1470,38 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     switch (*p) {
     case 'a':
       if (is_eq(p, "args"))
-	return WRAP_FUNCTOR(query_command);
+        return WRAP_FUNCTOR(query_command);
       break;
     case 'e':
       if (is_eq(p, "eval"))
-	return WRAP_FUNCTOR(eval_command);
+        return WRAP_FUNCTOR(eval_command);
       else if (is_eq(p, "expr"))
-	return WRAP_FUNCTOR(parse_command);
+        return WRAP_FUNCTOR(parse_command);
       break;
     case 'f':
       if (is_eq(p, "format"))
-	return WRAP_FUNCTOR(format_command);
+        return WRAP_FUNCTOR(format_command);
       break;
     case 'g':
       if (is_eq(p, "generate")) {
-	return expr_t::op_t::wrap_functor
-	  (reporter<post_t, post_handler_ptr, &report_t::generate_report>
-	   (new print_xacts(*this), *this, "#generate"));
+        return expr_t::op_t::wrap_functor
+          (reporter<post_t, post_handler_ptr, &report_t::generate_report>
+           (new print_xacts(*this), *this, "#generate"));
       }
       break;
     case 'p':
       if (is_eq(p, "parse"))
-	return WRAP_FUNCTOR(parse_command);
+        return WRAP_FUNCTOR(parse_command);
       else if (is_eq(p, "period"))
-	return WRAP_FUNCTOR(period_command);
+        return WRAP_FUNCTOR(period_command);
       break;
     case 'q':
       if (is_eq(p, "query"))
-	return WRAP_FUNCTOR(query_command);
+        return WRAP_FUNCTOR(query_command);
       break;
     case 't':
       if (is_eq(p, "template"))
-	return WRAP_FUNCTOR(template_command);
+        return WRAP_FUNCTOR(template_command);
       break;
     }
     break;

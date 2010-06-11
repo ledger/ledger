@@ -59,7 +59,7 @@ protected:
       z[0] = static_cast<char>(c);
       z[1] = '\0';
       if (PyFile_WriteString(z, reinterpret_cast<PyObject *>(fo)) < 0) {
-	return EOF;
+        return EOF;
       }
     }
     return c;
@@ -124,8 +124,8 @@ public:
     TRACE_CTOR(pyinbuf, "PyFileObject *");
 
     setg (buffer+pbSize,     // beginning of putback area
-	  buffer+pbSize,     // read position
-	  buffer+pbSize);    // end position
+          buffer+pbSize,     // read position
+          buffer+pbSize);    // end position
   }
   ~pyinbuf() throw() {
     TRACE_DTOR(pyinbuf);
@@ -157,7 +157,7 @@ protected:
      * the putback area
      */
     memmove (buffer+(pbSize-numPutback), gptr()-numPutback,
-	     numPutback);
+             numPutback);
 
     // read at most bufSize new characters
     PyObject *line = PyFile_GetLine(reinterpret_cast<PyObject *>(fo), bufSize);
@@ -174,8 +174,8 @@ protected:
 
     // reset buffer pointers
     setg (buffer+(pbSize-numPutback),   // beginning of putback area
-	  buffer+pbSize,                // read position
-	  buffer+pbSize+num);           // end of buffer
+          buffer+pbSize,                // read position
+          buffer+pbSize+num);           // end of buffer
 
     // return next character
     return traits_type::to_int_type(*gptr());

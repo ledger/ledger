@@ -19,10 +19,10 @@ time ./acprep --universal -j16 --warn proof 2>&1 | \
 
 if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
     if [[ "$1" = "--alert" ]]; then
-	notify "Ledger proof build FAILED"
+        notify "Ledger proof build FAILED"
     else
-	echo "Ledger proof build FAILED"
-	exit 1
+        echo "Ledger proof build FAILED"
+        exit 1
     fi
 else
     echo "Ledger proof build succeeded"

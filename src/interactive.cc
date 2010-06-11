@@ -39,16 +39,16 @@ void interactive_t::verify_arguments() const
 {
   value_t::sequence_t::const_iterator i;
 
-  const char *	  p	    = spec.c_str();
-  const char *	  label	    = _("unknown");
-  bool		  wrong_arg = false;
-  bool		  dont_skip = false;
-  bool		  optional  = *p == '&';
-  bool		  exit_loop = *p == '*';
-  std::size_t	  offset    = 1;
-  bool		  is_seq    = args.value().is_sequence();
+  const char *    p         = spec.c_str();
+  const char *    label     = _("unknown");
+  bool            wrong_arg = false;
+  bool            dont_skip = false;
+  bool            optional  = *p == '&';
+  bool            exit_loop = *p == '*';
+  std::size_t     offset    = 1;
+  bool            is_seq    = args.value().is_sequence();
   const value_t * next_arg  = NULL;
-  string	  vlabel;
+  string          vlabel;
 
   if (is_seq) {
     i = args.begin();
@@ -61,45 +61,45 @@ void interactive_t::verify_arguments() const
 
   for (; ! wrong_arg && ! exit_loop && *p && next_arg; p++) {
     DEBUG("interactive.verify",
-	  "Want " << *p << " got: " << next_arg->label());
+          "Want " << *p << " got: " << next_arg->label());
 
     wrong_arg = false;
     switch (*p) {
     case 'a':
       label = _("an amount");
       wrong_arg = (! next_arg->is_long() &&
-		   ! next_arg->is_amount() &&
-		   ! next_arg->is_balance());
+                   ! next_arg->is_amount() &&
+                   ! next_arg->is_balance());
       break;
     case 'b':
       label = _("a boolean");
-      wrong_arg = false;	// booleans are converted
+      wrong_arg = false;        // booleans are converted
       break;
     case 'd':
       label = _("a date");
       wrong_arg = (! next_arg->is_date() &&
-		   ! next_arg->is_datetime());
+                   ! next_arg->is_datetime());
       break;
     case 't':
       label = _("a date/time");
       wrong_arg = (! next_arg->is_date() &&
-		   ! next_arg->is_datetime());
+                   ! next_arg->is_datetime());
       break;
     case 'i':
     case 'l':
       label = _("an integer");
     if (next_arg->is_long() ||
-	(next_arg->is_amount() &&
-	 ! next_arg->as_amount().has_commodity())) {
+        (next_arg->is_amount() &&
+         ! next_arg->as_amount().has_commodity())) {
       wrong_arg = false;
     }
     else if (next_arg->is_string()) {
       wrong_arg = false;
       for (const char * q = next_arg->as_string().c_str(); *q; q++) {
-	if (! std::isdigit(*q) && *q != '-') {
-	  wrong_arg = true;
-	  break;
-	}
+        if (! std::isdigit(*q) && *q != '-') {
+          wrong_arg = true;
+          break;
+        }
       }
     }
     else {
@@ -150,14 +150,14 @@ void interactive_t::verify_arguments() const
 
     if (! dont_skip) {
       if (is_seq) {
-	if (++i != args.end()) {
-	  next_arg = &(*i);
-	  offset++;
-	} else {
-	  next_arg = NULL;
-	}
+        if (++i != args.end()) {
+          next_arg = &(*i);
+          offset++;
+        } else {
+          next_arg = NULL;
+        }
       } else {
-	next_arg = NULL;
+        next_arg = NULL;
       }
     }
     dont_skip = false;
@@ -170,8 +170,8 @@ void interactive_t::verify_arguments() const
 
   if (wrong_arg) {
     throw_(std::logic_error,
-	   _("Expected %1 for argument %2, but received %3")
-	   << label << offset << vlabel);
+           _("Expected %1 for argument %2, but received %3")
+           << label << offset << vlabel);
   }
   else if (*p && ! optional && ! next_arg) {
     throw_(std::logic_error, _("Too few arguments to function"));

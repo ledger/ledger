@@ -249,7 +249,7 @@ void AmountTestCase::testAssignment()
   assertEqual(x10, x9);
 
   assertFalse(x1.is_null());
-  x1 = x0;			// sets x1 back to uninitialized state
+  x1 = x0;                      // sets x1 back to uninitialized state
   assertTrue(x0.is_null());
   assertTrue(x1.is_null());
 
@@ -699,11 +699,11 @@ void AmountTestCase::testCommoditySubtraction()
   assertEqual(internalAmount("$123454434148472090.138858329277476789"), x7 - x8);
   assertEqual(string("$123454434148472090.138858329277476789"), (x7 - x8).to_string());
   assertEqual(string("$123454434148472090.14"),
-	      (amount_t("$1.00") * (x7 - x8)).to_string());
+              (amount_t("$1.00") * (x7 - x8)).to_string());
   assertEqual(internalAmount("$-123454434148472090.138858329277476789"), x8 - x7);
   assertEqual(string("$-123454434148472090.138858329277476789"), (x8 - x7).to_string());
   assertEqual(string("$-123454434148472090.14"),
-	      (amount_t("$1.00") * (x8 - x7)).to_string());
+              (amount_t("$1.00") * (x8 - x7)).to_string());
 
   assertValid(x1);
   assertValid(x2);
@@ -743,7 +743,7 @@ void AmountTestCase::testIntegerMultiplication()
   amount_t x4("123456789123456789123456789");
 
   assertEqual(amount_t("15241578780673678546105778281054720515622620750190521"),
-	      x4 * x4);
+              x4 * x4);
 
   assertValid(x1);
   assertValid(y1);
@@ -780,7 +780,7 @@ void AmountTestCase::testFractionalMultiplication()
   amount_t x2("123456789123456789.123456789123456789");
 
   assertEqual(amount_t("15241578780673678546105778311537878.046486820281054720515622620750190521"),
-	      x2 * x2);
+              x2 * x2);
 
   assertValid(x1);
   assertValid(y1);
@@ -835,7 +835,7 @@ void AmountTestCase::testCommodityMultiplication()
   amount_t x7(internalAmount("$123456789123456789.123456789123456789"));
 
   assertEqual(internalAmount("$15241578780673678546105778311537878.046486820281054720515622620750190521"),
-	      x7 * x7);
+              x7 * x7);
 
   assertValid(x1);
   assertValid(x2);
@@ -877,7 +877,7 @@ void AmountTestCase::testIntegerDivision()
   assertEqual(string("2204585520061728377204585.517857"), (x4 / y4).to_string());
 
   assertEqual(amount_t("0.000000000000000000000000000001"),
-	      amount_t("10") / amount_t("10000000000000000000000000000000"));
+              amount_t("10") / amount_t("10000000000000000000000000000000"));
 
   assertValid(x1);
   assertValid(y1);
@@ -973,9 +973,9 @@ void AmountTestCase::testCommodityDivision()
 
   assertEqual(amount_t("$1"), x7 / x7);
   assertEqual(string("$0.0019216115121765559608381226612019501"),
-	      (x6 / x7).to_fullstring());
+              (x6 / x7).to_fullstring());
   assertEqual(string("$520.39654928343335571379527154924040947272"),
-	      (x7 / x6).to_fullstring());
+              (x7 / x6).to_fullstring());
 
   assertValid(x1);
   assertValid(x2);
@@ -1110,14 +1110,14 @@ void AmountTestCase::testReduction()
   amount_t x2("600s");
   amount_t x3("6000s");
   amount_t x4("360000s");
-  amount_t x5("10m");		// 600s
-  amount_t x6("100m");		// 6000s
-  amount_t x7("1000m");		// 60000s
-  amount_t x8("10000m");	// 600000s
-  amount_t x9("10h");		// 36000s
-  amount_t x10("100h");		// 360000s
-  amount_t x11("1000h");	// 3600000s
-  amount_t x12("10000h");	// 36000000s
+  amount_t x5("10m");           // 600s
+  amount_t x6("100m");          // 6000s
+  amount_t x7("1000m");         // 60000s
+  amount_t x8("10000m");        // 600000s
+  amount_t x9("10h");           // 36000s
+  amount_t x10("100h");         // 360000s
+  amount_t x11("1000h");        // 3600000s
+  amount_t x12("10000h");       // 36000000s
 
   assertThrow(x0.reduce(), amount_error);
   assertThrow(x0.unreduce(), amount_error);
@@ -1220,7 +1220,7 @@ void AmountTestCase::testCommodityForZero()
 {
   amount_t x1(internalAmount("$0.000000000000000000001"));
 
-  assertTrue(x1);		// an internal amount never betrays its precision
+  assertTrue(x1);               // an internal amount never betrays its precision
   assertFalse(x1.is_zero());
   assertFalse(x1.is_realzero());
 
@@ -1287,7 +1287,7 @@ void AmountTestCase::testPrinting()
   x1.print(bufstr);
 
   assertEqual(std::string("982340823.380238098235098235098235098"),
-	      bufstr.str());
+              bufstr.str());
   }
 
   assertValid(x0);
@@ -1304,7 +1304,7 @@ void AmountTestCase::testCommodityPrinting()
   x1.print(bufstr);
 
   assertEqual(std::string("$982340823.386238098235098235098235098"),
-	      bufstr.str());
+              bufstr.str());
   }
 
   {
@@ -1312,7 +1312,7 @@ void AmountTestCase::testCommodityPrinting()
   (x1 * x2).print(bufstr);
 
   assertEqual(std::string("$964993493285024293.18099172508158508135413499124"),
-	      bufstr.str());
+              bufstr.str());
   }
 
   {

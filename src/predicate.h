@@ -66,12 +66,12 @@ public:
   predicate_t(const query_t& other);
 
   predicate_t(const string& str, const keep_details_t& _what_to_keep,
-	      const parse_flags_t& flags = PARSE_DEFAULT)
+              const parse_flags_t& flags = PARSE_DEFAULT)
     : expr_t(str, flags), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "string, keep_details_t, parse_flags_t");
   }
   predicate_t(std::istream& in, const keep_details_t& _what_to_keep,
-	      const parse_flags_t& flags = PARSE_DEFAULT)
+              const parse_flags_t& flags = PARSE_DEFAULT)
     : expr_t(in, flags), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "std::istream&, keep_details_t, parse_flags_t");
   }
@@ -81,10 +81,10 @@ public:
 
   virtual value_t real_calc(scope_t& scope) {
     return (*this ?
-	    expr_t::real_calc(scope)
-	      .strip_annotations(what_to_keep)
-	      .to_boolean() :
-	    true);
+            expr_t::real_calc(scope)
+              .strip_annotations(what_to_keep)
+              .to_boolean() :
+            true);
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)

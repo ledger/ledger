@@ -42,7 +42,7 @@ using namespace boost::python;
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(exchange_commodities_overloads,
-				       exchange_commodities, 1, 2)
+                                       exchange_commodities, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
@@ -51,12 +51,12 @@ namespace {
     return value.value(CURRENT_TIME());
   }
   boost::optional<value_t> py_value_1(const value_t& value,
-				      commodity_t& in_terms_of) {
+                                      commodity_t& in_terms_of) {
     return value.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<value_t> py_value_2(const value_t& value,
-				      commodity_t& in_terms_of,
-				      datetime_t& moment) {
+                                      commodity_t& in_terms_of,
+                                      datetime_t& moment) {
     return value.value(moment, in_terms_of);
   }
 
@@ -110,9 +110,9 @@ namespace {
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+#define EXC_TRANSLATOR(type)                            \
+  void exc_translate_ ## type(const type& err) {        \
+    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
   }
 
 EXC_TRANSLATOR(value_error)
@@ -120,16 +120,16 @@ EXC_TRANSLATOR(value_error)
 void export_value()
 {
   enum_< value_t::type_t >("ValueType")
-    .value("Void",	   value_t::VOID)
-    .value("Boolean",	   value_t::BOOLEAN)
-    .value("DateTime",	   value_t::DATETIME)
-    .value("Date",	   value_t::DATE)
-    .value("Integer",	   value_t::INTEGER)
-    .value("Amount",	   value_t::AMOUNT)
-    .value("Balance",	   value_t::BALANCE)
-    .value("String",	   value_t::STRING)
-    .value("Sequence",	   value_t::SEQUENCE)
-    .value("Scope",	   value_t::SCOPE)
+    .value("Void",         value_t::VOID)
+    .value("Boolean",      value_t::BOOLEAN)
+    .value("DateTime",     value_t::DATETIME)
+    .value("Date",         value_t::DATE)
+    .value("Integer",      value_t::INTEGER)
+    .value("Amount",       value_t::AMOUNT)
+    .value("Balance",      value_t::BALANCE)
+    .value("String",       value_t::STRING)
+    .value("Sequence",     value_t::SEQUENCE)
+    .value("Scope",        value_t::SCOPE)
     ;
 
   class_< value_t > ("Value")
@@ -214,9 +214,9 @@ void export_value()
     .def(self -= other<amount_t>())
     .def(self -= other<balance_t>())
 
-    .def(self	- self)
-    .def(self	- long())
-    .def(long()	- self)
+    .def(self   - self)
+    .def(self   - long())
+    .def(long() - self)
     .def(self - other<amount_t>())
     .def(other<amount_t>() - self)
     .def(self - other<balance_t>())
@@ -225,8 +225,8 @@ void export_value()
     .def(self *= long())
     .def(self *= other<amount_t>())
 
-    .def(self	* self)
-    .def(self	* long())
+    .def(self   * self)
+    .def(self   * long())
     .def(long() * self)
     .def(self * other<amount_t>())
     .def(other<amount_t>() * self)
@@ -235,9 +235,9 @@ void export_value()
     .def(self /= long())
     .def(self /= other<amount_t>())
 
-    .def(self	/  self)
-    .def(self	/  long())
-    .def(long()	/ self)
+    .def(self   /  self)
+    .def(self   /  long())
+    .def(long() / self)
     .def(self / other<amount_t>())
     .def(other<amount_t>() / self)
 
@@ -269,7 +269,7 @@ void export_value()
     .def("value", &value_t::value, value_overloads())
     .def("price", &value_t::price)
     .def("exchange_commodities", &value_t::exchange_commodities,
-	 exchange_commodities_overloads())
+         exchange_commodities_overloads())
 
     .def("__nonzero__", &value_t::is_nonzero)
     .def("is_nonzero", &value_t::is_nonzero)
@@ -333,8 +333,8 @@ void export_value()
     .def("annotate", &value_t::annotate)
     .def("has_annotation", &value_t::has_annotation)
     .add_property("annotation",
-		  make_function(py_value_annotation,
-				return_internal_reference<>()))
+                  make_function(py_value_annotation,
+                                return_internal_reference<>()))
     .def("strip_annotations", py_strip_annotations_0)
     .def("strip_annotations", py_strip_annotations_1)
 
@@ -362,7 +362,7 @@ void export_value()
 
   scope().attr("NULL_VALUE")    = NULL_VALUE;
   scope().attr("string_value")  = &string_value;
-  scope().attr("mask_value")	= &mask_value;
+  scope().attr("mask_value")    = &mask_value;
   scope().attr("value_context") = &value_context;
 
   register_optional_to_python<value_t>();

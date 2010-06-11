@@ -49,17 +49,17 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
     bool matched = false;
     for (const char * p = str.c_str(); *p; p++) {
       if (*p == '%') {
-	const char * q = p + 1;
-	if (*q && *q != '%' && std::isdigit(*q) &&
-	    std::string::size_type(*q - '0') == index) {
-	  p++;
-	  buf << std::string(s, num);
-	  matched = true;
-	} else {
-	  buf << *p;
-	}
+        const char * q = p + 1;
+        if (*q && *q != '%' && std::isdigit(*q) &&
+            std::string::size_type(*q - '0') == index) {
+          p++;
+          buf << std::string(s, num);
+          matched = true;
+        } else {
+          buf << *p;
+        }
       } else {
-	buf << *p;
+        buf << *p;
       }
     }
     if (! matched)

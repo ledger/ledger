@@ -50,7 +50,7 @@ bool post_t::has_tag(const string& tag) const
 }
 
 bool post_t::has_tag(const mask_t& tag_mask,
-		     const optional<mask_t>& value_mask) const
+                     const optional<mask_t>& value_mask) const
 {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
@@ -69,7 +69,7 @@ optional<string> post_t::get_tag(const string& tag) const
 }
 
 optional<string> post_t::get_tag(const mask_t& tag_mask,
-				 const optional<mask_t>& value_mask) const
+                                 const optional<mask_t>& value_mask) const
 {
   if (optional<string> value = item_t::get_tag(tag_mask, value_mask))
     return value;
@@ -199,18 +199,18 @@ namespace {
 
   value_t get_commodity(post_t& post) {
     if (post.has_xdata() &&
-	post.xdata().has_flags(POST_EXT_COMPOUND))
+        post.xdata().has_flags(POST_EXT_COMPOUND))
       return string_value(post.xdata().compound_value.to_amount()
-			  .commodity().symbol());
+                          .commodity().symbol());
     else
       return string_value(post.amount.commodity().symbol());
   }
 
   value_t get_commodity_is_primary(post_t& post) {
     if (post.has_xdata() &&
-	post.xdata().has_flags(POST_EXT_COMPOUND))
+        post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value.to_amount()
-	.commodity().has_flags(COMMODITY_PRIMARY);
+        .commodity().has_flags(COMMODITY_PRIMARY);
     else
       return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
   }
@@ -223,7 +223,7 @@ namespace {
     if (post.cost)
       return *post.cost;
     else if (post.has_xdata() &&
-	     post.xdata().has_flags(POST_EXT_COMPOUND))
+             post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
     else if (post.amount.is_null())
       return 0L;
@@ -255,37 +255,37 @@ namespace {
 
     if (env.has(0)) {
       if (env.value_at(0).is_long()) {
-	if (env.get<long>(0) > 2)
-	  name = format_t::truncate(env->reported_account()->fullname(),
-				    env.get<long>(0) - 2,
-				    2 /* account_abbrev_length */);
-	else
-	  name = env->reported_account()->fullname();
+        if (env.get<long>(0) > 2)
+          name = format_t::truncate(env->reported_account()->fullname(),
+                                    env.get<long>(0) - 2,
+                                    2 /* account_abbrev_length */);
+        else
+          name = env->reported_account()->fullname();
       } else {
-	account_t * account = NULL;
-	account_t * master  = env->account;
-	while (master->parent)
-	  master = master->parent;
+        account_t * account = NULL;
+        account_t * master  = env->account;
+        while (master->parent)
+          master = master->parent;
 
-	if (env.value_at(0).is_string()) {
-	  name    = env.get<string>(0);
-	  account = master->find_account(name, false);
-	}
-	else if (env.value_at(0).is_mask()) {
-	  name    = env.get<mask_t>(0).str();
-	  account = master->find_account_re(name);
-	}
-	else {
-	  throw_(std::runtime_error,
-		 _("Expected string or mask for argument 1, but received %1")
-		 << env.value_at(0).label());
-	}
+        if (env.value_at(0).is_string()) {
+          name    = env.get<string>(0);
+          account = master->find_account(name, false);
+        }
+        else if (env.value_at(0).is_mask()) {
+          name    = env.get<mask_t>(0).str();
+          account = master->find_account_re(name);
+        }
+        else {
+          throw_(std::runtime_error,
+                 _("Expected string or mask for argument 1, but received %1")
+                 << env.value_at(0).label());
+        }
 
-	if (! account)
-	  throw_(std::runtime_error,
-		 _("Could not find an account matching ") << env.value_at(0));
-	else
-	  return value_t(static_cast<scope_t *>(account));
+        if (! account)
+          throw_(std::runtime_error,
+                 _("Could not find an account matching ") << env.value_at(0));
+        else
+          return value_t(static_cast<scope_t *>(account));
       }
     } else {
       name = env->reported_account()->fullname();
@@ -300,10 +300,10 @@ namespace {
     value_t acct = account_name(scope);
     if (acct.is_string()) {
       if (env->has_flags(POST_VIRTUAL)) {
-	if (env->must_balance())
-	  acct = string_value(string("[") + acct.as_string() + "]");
-	else
-	  acct = string_value(string("(") + acct.as_string() + ")");
+        if (env->must_balance())
+          acct = string_value(string("[") + acct.as_string() + "]");
+        else
+          acct = string_value(string("(") + acct.as_string() + ")");
       }
     }
     return acct;
@@ -330,7 +330,7 @@ namespace {
     if (post.has_xdata()) {
       post_t::xdata_t& xdata(post.xdata());
       if (! xdata.value_date.is_not_a_date()) 
-	return xdata.value_date;
+        return xdata.value_date;
     }
     return post.date();
   }
@@ -353,13 +353,13 @@ namespace {
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(scope, *p);
       if (p == &post && args.has(1) &&
-	  ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
-	// If the user specifies any(EXPR, false), and the context is a
-	// posting, then that posting isn't considered by the test.
-	;			// skip it
+          ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
+        // If the user specifies any(EXPR, false), and the context is a
+        // posting, then that posting isn't considered by the test.
+        ;                       // skip it
       }
       else if (expr.calc(bound_scope).to_boolean()) {
-	return true;
+        return true;
       }
     }
     return false;
@@ -375,13 +375,13 @@ namespace {
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(scope, *p);
       if (p == &post && args.has(1) &&
-	  ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
-	// If the user specifies any(EXPR, false), and the context is a
-	// posting, then that posting isn't considered by the test.
-	;			// skip it
+          ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
+        // If the user specifies any(EXPR, false), and the context is a
+        // posting, then that posting isn't considered by the test.
+        ;                       // skip it
       }
       else if (! expr.calc(bound_scope).to_boolean()) {
-	return false;
+        return false;
       }
     }
     return true;
@@ -389,7 +389,7 @@ namespace {
 }
 
 expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
-				const string& name)
+                                const string& name)
 {
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
@@ -533,7 +533,7 @@ amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr)
   } else {
     if (! result.is_amount())
       throw_(amount_error,
-	     _("Amount expressions must result in a simple amount"));
+             _("Amount expressions must result in a simple amount"));
     return result.as_amount();
   }
 }
@@ -571,7 +571,7 @@ bool post_t::valid() const
 
   posts_list::const_iterator i =
     std::find(xact->posts.begin(),
-	      xact->posts.end(), this);
+              xact->posts.end(), this);
   if (i == xact->posts.end()) {
     DEBUG("ledger.validate", "post_t: ! found");
     return false;
@@ -608,7 +608,7 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
   }
   else if (expr) {
     bind_scope_t bound_scope(*expr->get_context(),
-			     const_cast<post_t&>(*this));
+                             const_cast<post_t&>(*this));
 #if 1
     value_t temp(expr->calc(bound_scope));
     add_or_set_value(value, temp);
@@ -621,7 +621,7 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
 #endif
   }
   else if (xdata_ && xdata_->has_flags(POST_EXT_VISITED) &&
-	   ! xdata_->visited_value.is_null()) {
+           ! xdata_->visited_value.is_null()) {
     add_or_set_value(value, xdata_->visited_value);
   }
   else {
@@ -708,18 +708,18 @@ void to_xml(std::ostream& out, const post_t& post)
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *post.metadata) {
       if (pair.second.first) {
-	push_xml z(out, "variable");
-	{
-	  push_xml z(out, "key");
-	  out << y.guard(pair.first);
-	}
-	{
-	  push_xml z(out, "value");
-	  out << y.guard(*pair.second.first);
-	}
+        push_xml z(out, "variable");
+        {
+          push_xml z(out, "key");
+          out << y.guard(pair.first);
+        }
+        {
+          push_xml z(out, "value");
+          out << y.guard(*pair.second.first);
+        }
       } else {
-	push_xml z(out, "tag");
-	out << y.guard(pair.first);
+        push_xml z(out, "tag");
+        out << y.guard(pair.first);
       }
     }
   }

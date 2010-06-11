@@ -48,7 +48,7 @@ namespace ledger {
 
 class archive_t
 {
-  path	   file;
+  path     file;
 
   std::list<journal_t::fileinfo_t> sources;
 

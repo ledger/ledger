@@ -49,52 +49,52 @@ namespace ledger {
 struct expr_t::token_t : public noncopyable
 {
   enum kind_t {
-    ERROR,			// an error occurred while tokenizing
-    VALUE,			// any kind of literal value
-    IDENT,			// [A-Za-z_][-A-Za-z0-9_:]*
-    MASK,			// /regexp/
+    ERROR,                      // an error occurred while tokenizing
+    VALUE,                      // any kind of literal value
+    IDENT,                      // [A-Za-z_][-A-Za-z0-9_:]*
+    MASK,                       // /regexp/
 
-    LPAREN,			// (
-    RPAREN,			// )
+    LPAREN,                     // (
+    RPAREN,                     // )
 
-    EQUAL,			// ==
-    NEQUAL,			// !=
-    LESS,			// <
-    LESSEQ,			// <=
-    GREATER,			// >
-    GREATEREQ,			// >=
+    EQUAL,                      // ==
+    NEQUAL,                     // !=
+    LESS,                       // <
+    LESSEQ,                     // <=
+    GREATER,                    // >
+    GREATEREQ,                  // >=
 
-    DEFINE,			// :=
-    ASSIGN,			// =
-    MATCH,			// =~
-    NMATCH,			// !~
-    MINUS,			// -
-    PLUS,			// +
-    STAR,			// *
-    SLASH,			// /
-    KW_DIV,			// div
+    DEFINE,                     // :=
+    ASSIGN,                     // =
+    MATCH,                      // =~
+    NMATCH,                     // !~
+    MINUS,                      // -
+    PLUS,                       // +
+    STAR,                       // *
+    SLASH,                      // /
+    KW_DIV,                     // div
 
-    EXCLAM,			// !, not
-    KW_AND,			// &, &&, and
-    KW_OR,			// |, ||, or
-    KW_MOD,			// %
+    EXCLAM,                     // !, not
+    KW_AND,                     // &, &&, and
+    KW_OR,                      // |, ||, or
+    KW_MOD,                     // %
 
-    KW_IF,			// if
-    KW_ELSE,			// else
+    KW_IF,                      // if
+    KW_ELSE,                    // else
 
-    QUERY,			// ?
-    COLON,			// :
+    QUERY,                      // ?
+    COLON,                      // :
 
-    DOT,			// .
-    COMMA,			// ,
-    SEMI,			// ;
+    DOT,                        // .
+    COMMA,                      // ,
+    SEMI,                       // ;
 
     TOK_EOF,
     UNKNOWN
 
   } kind;
 
-  char	      symbol[3];
+  char        symbol[3];
   value_t     value;
   std::size_t length;
 
@@ -108,7 +108,7 @@ struct expr_t::token_t : public noncopyable
   token_t& operator=(const token_t& other) {
     if (&other == this)
       return *this;
-    assert(false);		// only one token object is used at a time
+    assert(false);              // only one token object is used at a time
     return *this;
   }
 
@@ -125,7 +125,7 @@ struct expr_t::token_t : public noncopyable
   int  parse_reserved_word(std::istream& in);
   void parse_ident(std::istream& in);
   void next(std::istream& in, const parse_flags_t& flags,
-	    const char expecting = '\0');
+            const char expecting = '\0');
   void rewind(std::istream& in);
   void unexpected(const char wanted = '\0');
   void expected(const char wanted, char c = '\0');

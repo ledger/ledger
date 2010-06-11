@@ -67,7 +67,7 @@ public:
     TRACE_CTOR(unistring, "std::string");
 
     const char * p   = input.c_str();
-    std::size_t	 len = input.length();
+    std::size_t  len = input.length();
 
     VERIFY(utf8::is_valid(p, p + len));
     utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
@@ -81,9 +81,9 @@ public:
   }
 
   std::string extract(const std::string::size_type begin = 0,
-		      const std::string::size_type len   = 0) const
+                      const std::string::size_type len   = 0) const
   {
-    std::string		   utf8result;
+    std::string            utf8result;
     std::string::size_type this_len = length();
 
     assert(begin <= this_len);
@@ -91,10 +91,10 @@ public:
 
     if (this_len)
       utf8::unchecked::utf32to8
-	(utf32chars.begin() + begin,
-	 utf32chars.begin() + begin +
-	 (len ? (len > this_len ? this_len : len) : this_len),
-	 std::back_inserter(utf8result));
+        (utf32chars.begin() + begin,
+         utf32chars.begin() + begin +
+         (len ? (len > this_len ? this_len : len) : this_len),
+         std::back_inserter(utf8result));
 
     return utf8result;
   }
@@ -103,7 +103,7 @@ public:
     std::size_t idx = 0;
     foreach (const boost::uint32_t& ch, utf32chars) {
       if (idx >= __pos && ch == __s)
-	return idx;
+        return idx;
       idx++;
     }
     return npos;
@@ -118,10 +118,10 @@ public:
 };
 
 inline void justify(std::ostream&      out,
-		    const std::string& str,
-		    int		       width,
-		    bool               right  = false,
-		    bool               redden = false)
+                    const std::string& str,
+                    int                width,
+                    bool               right  = false,
+                    bool               redden = false)
 {
   if (! right) {
     if (redden) out << "\033[31m";

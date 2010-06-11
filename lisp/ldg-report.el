@@ -15,7 +15,7 @@ the substitution.  See the documentation of the individual functions
 in that variable for more information on the behavior of each
 specifier."
   :type '(repeat (list (string :tag "Report Name")
-		       (string :tag "Command Line")))
+                       (string :tag "Command Line")))
   :group 'ledger)
 
 (defcustom ledger-report-format-specifiers
@@ -73,8 +73,8 @@ text that should replace the format specifier."
 
 The empty string and unknown names are allowed."
   (completing-read "Report name: "
-		   ledger-reports nil nil nil
-		   'ledger-report-name-prompt-history nil))
+                   ledger-reports nil nil nil
+                   'ledger-report-name-prompt-history nil))
 
 (defun ledger-report (report-name edit)
   "Run a user-specified report from `ledger-reports'.
@@ -93,18 +93,18 @@ used to generate the buffer, navigating the buffer, etc."
   (interactive
    (progn
      (when (and (buffer-modified-p)
-		(y-or-n-p "Buffer modified, save it? "))
+                (y-or-n-p "Buffer modified, save it? "))
        (save-buffer))
      (let ((rname (ledger-report-read-name))
-	   (edit (not (null current-prefix-arg))))
+           (edit (not (null current-prefix-arg))))
        (list rname edit))))
   (let ((buf (current-buffer))
-	(rbuf (get-buffer ledger-report-buffer-name))
-	(wcfg (current-window-configuration)))
+        (rbuf (get-buffer ledger-report-buffer-name))
+        (wcfg (current-window-configuration)))
     (if rbuf
-	(kill-buffer rbuf))
+        (kill-buffer rbuf))
     (with-current-buffer
-	(pop-to-buffer (get-buffer-create ledger-report-buffer-name))
+        (pop-to-buffer (get-buffer-create ledger-report-buffer-name))
       (ledger-report-mode)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-report-name) report-name)
@@ -137,8 +137,8 @@ If name exists, returns the object naming the report, otherwise returns nil."
 (defun ledger-report-read-command (report-cmd)
   "Read the command line to create a report."
   (read-from-minibuffer "Report command line: "
-			(if (null report-cmd) "ledger " report-cmd)
-			nil nil 'ledger-report-cmd-prompt-history))
+                        (if (null report-cmd) "ledger " report-cmd)
+                        nil nil 'ledger-report-cmd-prompt-history))
 
 (defun ledger-report-ledger-file-format-specifier ()
   "Substitute the full path to master or current ledger file
@@ -165,9 +165,9 @@ end of a ledger file which is included in some other file."
 
 (defun ledger-read-string-with-default (prompt default)
   (let ((default-prompt (concat prompt
-				(if default
-				    (concat " (" default "): ")
-				  ": "))))
+                                (if default
+                                    (concat " (" default "): ")
+                                  ": "))))
     (read-string default-prompt nil nil default)))
 
 (defun ledger-report-payee-format-specifier ()
@@ -191,26 +191,26 @@ the default."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
   (let* ((context (ledger-context-at-point))
-	 (default
-	  (if (eq (ledger-context-line-type context) 'acct-transaction)
-	      (regexp-quote (ledger-context-field-value context 'account))
-	    nil)))
+         (default
+          (if (eq (ledger-context-line-type context) 'acct-transaction)
+              (regexp-quote (ledger-context-field-value context 'account))
+            nil)))
     (ledger-read-string-with-default "Account" default)))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
   (let ((expanded-cmd report-cmd))
     (while (string-match "%(\\([^)]*\\))" expanded-cmd)
       (let* ((specifier (match-string 1 expanded-cmd))
-	     (f (cdr (assoc specifier ledger-report-format-specifiers))))
-	(if f
-	    (setq expanded-cmd (replace-match
-				(save-match-data
-				  (with-current-buffer ledger-buf
-				    (shell-quote-argument (funcall f))))
-				t t expanded-cmd))
-	  (progn
-	    (set-window-configuration ledger-original-window-cfg)
-	    (error "Invalid ledger report format specifier '%s'" specifier)))))
+             (f (cdr (assoc specifier ledger-report-format-specifiers))))
+        (if f
+            (setq expanded-cmd (replace-match
+                                (save-match-data
+                                  (with-current-buffer ledger-buf
+                                    (shell-quote-argument (funcall f))))
+                                t t expanded-cmd))
+          (progn
+            (set-window-configuration ledger-original-window-cfg)
+            (error "Invalid ledger report format specifier '%s'" specifier)))))
     expanded-cmd))
 
 (defun ledger-report-cmd (report-name edit)
@@ -222,18 +222,18 @@ the default."
     (setq report-cmd (ledger-report-expand-format-specifiers report-cmd))
     (set (make-local-variable 'ledger-report-cmd) report-cmd)
     (or (string-empty-p report-name)
-	(ledger-report-name-exists report-name)
-	(ledger-reports-add report-name report-cmd)
-	(ledger-reports-custom-save))
+        (ledger-report-name-exists report-name)
+        (ledger-reports-add report-name report-cmd)
+        (ledger-reports-custom-save))
     report-cmd))
 
 (defun ledger-do-report (cmd)
   "Run a report command line."
   (goto-char (point-min))
   (insert (format "Report: %s\n" ledger-report-name)
-	  (format "Command: %s\n" cmd)
-	  (make-string (- (window-width) 1) ?=)
-	  "\n")
+          (format "Command: %s\n" cmd)
+          (make-string (- (window-width) 1) ?=)
+          "\n")
   (shell-command cmd t nil))
 
 (defun ledger-report-goto ()
@@ -241,7 +241,7 @@ the default."
   (interactive)
   (let ((rbuf (get-buffer ledger-report-buffer-name)))
     (if (not rbuf)
-	(error "There is no ledger report buffer"))
+        (error "There is no ledger report buffer"))
     (pop-to-buffer rbuf)
     (shrink-window-if-larger-than-buffer)))
 
@@ -277,7 +277,7 @@ the default."
   (let ((name ""))
     (while (string-empty-p name)
       (setq name (read-from-minibuffer "Report name: " nil nil nil
-				       'ledger-report-name-prompt-history)))
+                                       'ledger-report-name-prompt-history)))
     name))
 
 (defun ledger-report-save ()
@@ -290,15 +290,15 @@ the default."
 
     (while (setq existing-name (ledger-report-name-exists ledger-report-name))
       (cond ((y-or-n-p (format "Overwrite existing report named '%s' "
-			       ledger-report-name))
-	     (when (string-equal
-		    ledger-report-cmd
-		    (car (cdr (assq existing-name ledger-reports))))
-	       (error "Current command is identical to existing saved one"))
-	     (setq ledger-reports
-		   (assq-delete-all existing-name ledger-reports)))
-	    (t
-	     (setq ledger-report-name (ledger-report-read-new-name)))))
+                               ledger-report-name))
+             (when (string-equal
+                    ledger-report-cmd
+                    (car (cdr (assq existing-name ledger-reports))))
+               (error "Current command is identical to existing saved one"))
+             (setq ledger-reports
+                   (assq-delete-all existing-name ledger-reports)))
+            (t
+             (setq ledger-report-name (ledger-report-read-new-name)))))
 
     (ledger-reports-add ledger-report-name ledger-report-cmd)
     (ledger-reports-custom-save)))
@@ -333,24 +333,24 @@ the default."
 Assumes point is at beginning of line, and the pos argument specifies
 where the \"users\" point was."
   (let ((linfo (assoc line-type ledger-line-config))
-	found field fields)
+        found field fields)
     (dolist (re-info (nth 1 linfo))
       (let ((re (nth 0 re-info))
-	    (names (nth 1 re-info)))
-	(unless found
-	  (when (looking-at re)
-	    (setq found t)
-	    (dotimes (i (length names))
-	      (when (nth i names)
-		(setq fields (append fields
-				     (list
-				      (list (nth i names)
-					    (match-string-no-properties (1+ i))
-					    (match-beginning (1+ i))))))))
-	    (dolist (f fields)
-	      (and (nth 1 f)
-		   (>= pos (nth 2 f))
-		   (setq field (nth 0 f))))))))
+            (names (nth 1 re-info)))
+        (unless found
+          (when (looking-at re)
+            (setq found t)
+            (dotimes (i (length names))
+              (when (nth i names)
+                (setq fields (append fields
+                                     (list
+                                      (list (nth i names)
+                                            (match-string-no-properties (1+ i))
+                                            (match-beginning (1+ i))))))))
+            (dolist (f fields)
+              (and (nth 1 f)
+                   (>= pos (nth 2 f))
+                   (setq field (nth 0 f))))))))
     (list line-type field fields)))
 
 (defun ledger-context-at-point ()
@@ -363,40 +363,40 @@ the fields in the line in a association list."
     (save-excursion
       (beginning-of-line)
       (let ((first-char (char-after)))
-	(cond ((equal (point) (line-end-position))
-	       '(empty-line nil nil))
-	      ((memq first-char '(?\ ?\t))
-	       (ledger-extract-context-info 'acct-transaction pos))
-	      ((memq first-char '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-	       (ledger-extract-context-info 'entry pos))
-	      ((equal first-char ?\=)
-	       '(automated-entry nil nil))
-	      ((equal first-char ?\~)
-	       '(period-entry nil nil))
-	      ((equal first-char ?\!)
-	       '(command-directive))
-	      ((equal first-char ?\;)
-	       '(comment nil nil))
-	      ((equal first-char ?Y)
-	       '(default-year nil nil))
-	      ((equal first-char ?P)
-	       '(commodity-price nil nil))
-	      ((equal first-char ?N)
-	       '(price-ignored-commodity nil nil))
-	      ((equal first-char ?D)
-	       '(default-commodity nil nil))
-	      ((equal first-char ?C)
-	       '(commodity-conversion nil nil))
-	      ((equal first-char ?i)
-	       '(timeclock-i nil nil))
-	      ((equal first-char ?o)
-	       '(timeclock-o nil nil))
-	      ((equal first-char ?b)
-	       '(timeclock-b nil nil))
-	      ((equal first-char ?h)
-	       '(timeclock-h  nil nil))
-	      (t
-	       '(unknown nil nil)))))))
+        (cond ((equal (point) (line-end-position))
+               '(empty-line nil nil))
+              ((memq first-char '(?\ ?\t))
+               (ledger-extract-context-info 'acct-transaction pos))
+              ((memq first-char '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+               (ledger-extract-context-info 'entry pos))
+              ((equal first-char ?\=)
+               '(automated-entry nil nil))
+              ((equal first-char ?\~)
+               '(period-entry nil nil))
+              ((equal first-char ?\!)
+               '(command-directive))
+              ((equal first-char ?\;)
+               '(comment nil nil))
+              ((equal first-char ?Y)
+               '(default-year nil nil))
+              ((equal first-char ?P)
+               '(commodity-price nil nil))
+              ((equal first-char ?N)
+               '(price-ignored-commodity nil nil))
+              ((equal first-char ?D)
+               '(default-commodity nil nil))
+              ((equal first-char ?C)
+               '(commodity-conversion nil nil))
+              ((equal first-char ?i)
+               '(timeclock-i nil nil))
+              ((equal first-char ?o)
+               '(timeclock-o nil nil))
+              ((equal first-char ?b)
+               '(timeclock-b nil nil))
+              ((equal first-char ?h)
+               '(timeclock-h  nil nil))
+              (t
+               '(unknown nil nil)))))))
 
 (defun ledger-context-other-line (offset)
   "Return a list describing context of line offset for existing position.
@@ -406,8 +406,8 @@ specified line, returns nil."
   (save-excursion
     (let ((left (forward-line offset)))
       (if (not (equal left 0))
-	  nil
-	(ledger-context-at-point)))))
+          nil
+        (ledger-context-at-point)))))
 
 (defun ledger-context-line-type (context-info)
   (nth 0 context-info))
@@ -444,5 +444,5 @@ specified line, returns nil."
       (setq i (- i 1)))
     (let ((context-info (ledger-context-other-line i)))
       (if (eq (ledger-context-line-type context-info) 'entry)
-	  (ledger-context-field-value context-info 'payee)
-	nil))))
+          (ledger-context-field-value context-info 'payee)
+        nil))))

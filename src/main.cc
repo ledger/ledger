@@ -31,8 +31,8 @@
 
 #include <system.hh>
 
-#include "global.h"		// This is where the meat of main() is, which
-				// was moved there for the sake of clarity here
+#include "global.h"             // This is where the meat of main() is, which
+                                // was moved there for the sake of clarity here
 #include "session.h"
 
 using namespace ledger;
@@ -103,13 +103,13 @@ int main(int argc, char * argv[], char * envp[])
 
       ifstream in(global_scope->HANDLER(script_).str());
       while (status == 0 && ! in.eof()) {
-	char line[1024];
-	in.getline(line, 1023);
+        char line[1024];
+        in.getline(line, 1023);
 
-	char * p = skip_ws(line);
-	if (*p && *p != '#')
-	  status = global_scope->execute_command_wrapper(split_arguments(p),
-							 true);
+        char * p = skip_ws(line);
+        if (*p && *p != '#')
+          status = global_scope->execute_command_wrapper(split_arguments(p),
+                                                         true);
       }
     }
     else if (! args.empty()) {
@@ -133,53 +133,53 @@ int main(int argc, char * argv[], char * envp[])
 #endif
 
       while (char * p = readline(global_scope->prompt_string())) {
-	char * expansion = NULL;
-	int    result;
+        char * expansion = NULL;
+        int    result;
 
-	result = history_expand(skip_ws(p), &expansion);
+        result = history_expand(skip_ws(p), &expansion);
 
-	if (result < 0 || result == 2) {
-	  if (expansion)
-	    std::free(expansion);
-	  std::free(p);
-	  throw_(std::logic_error,
-		 _("Failed to expand history reference '%1'") << p);
-	}
-	else if (expansion) {
-	  add_history(expansion);
-	}
+        if (result < 0 || result == 2) {
+          if (expansion)
+            std::free(expansion);
+          std::free(p);
+          throw_(std::logic_error,
+                 _("Failed to expand history reference '%1'") << p);
+        }
+        else if (expansion) {
+          add_history(expansion);
+        }
 
 #else // HAVE_LIBEDIT
 
       while (! std::cin.eof()) {
-	std::cout << global_scope->prompt_string();
-	char line[1024];
-	std::cin.getline(line, 1023);
+        std::cout << global_scope->prompt_string();
+        char line[1024];
+        std::cin.getline(line, 1023);
 
-	char * p = skip_ws(line);
+        char * p = skip_ws(line);
 
 #endif // HAVE_LIBEDIT
 
-	check_for_signal();
+        check_for_signal();
 
-	if (*p && *p != '#') {
-	  if (std::strncmp(p, "quit", 4) == 0)
-	    exit_loop = true;
-	  else
-	    global_scope->execute_command_wrapper(split_arguments(p), true);
-	}
+        if (*p && *p != '#') {
+          if (std::strncmp(p, "quit", 4) == 0)
+            exit_loop = true;
+          else
+            global_scope->execute_command_wrapper(split_arguments(p), true);
+        }
 
 #ifdef HAVE_LIBEDIT
-	if (expansion)
-	  std::free(expansion);
-	std::free(p);
+        if (expansion)
+          std::free(expansion);
+        std::free(p);
 #endif
 
-	if (exit_loop)
-	  break;
+        if (exit_loop)
+          break;
       }
 
-      status = 0;			// report success
+      status = 0;                       // report success
     }
   }
   catch (const std::exception& err) {
@@ -187,11 +187,11 @@ int main(int argc, char * argv[], char * envp[])
       global_scope->report_error(err);
     else
       std::cerr << "Exception during initialization: " << err.what()
-		<< std::endl;
+                << std::endl;
   }
   catch (int _status) {
-    status = _status;		// used for a "quick" exit, and is used only
-				// if help text (such as --help) was displayed
+    status = _status;           // used for a "quick" exit, and is used only
+                                // if help text (such as --help) was displayed
   }
 
   // If memory verification is being performed (which can be very slow), clean

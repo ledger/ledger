@@ -9,12 +9,12 @@
      nil
      (function
       (lambda ()
-	(if (re-search-forward
-	     (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-		     "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
-	    (goto-char (match-beginning 0))
-	  (goto-char (point-max)))))
+        (if (re-search-forward
+             (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+                     "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
+            (goto-char (match-beginning 0))
+          (goto-char (point-max)))))
      (function
       (lambda ()
-	(forward-paragraph))))))
+        (forward-paragraph))))))
 
