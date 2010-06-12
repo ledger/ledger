@@ -66,14 +66,14 @@ bool item_t::has_tag(const mask_t& tag_mask,
         if (! value_mask)
           return true;
         else if (data.second.first)
-          return value_mask->match(*data.second.first);
+          return value_mask->match(data.second.first->to_string());
       }
     }
   }
   return false;
 }
 
-optional<string> item_t::get_tag(const string& tag) const
+optional<value_t> item_t::get_tag(const string& tag) const
 {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
@@ -87,24 +87,26 @@ optional<string> item_t::get_tag(const string& tag) const
   return none;
 }
 
-optional<string> item_t::get_tag(const mask_t& tag_mask,
-                                 const optional<mask_t>& value_mask) const
+optional<value_t> item_t::get_tag(const mask_t& tag_mask,
+                                  const optional<mask_t>& value_mask) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
       if (tag_mask.match(data.first) &&
           (! value_mask ||
-           (data.second.first && value_mask->match(*data.second.first))))
+           (data.second.first &&
+            value_mask->match(data.second.first->to_string())))) {
         return data.second.first;
+      }
     }
   }
   return none;
 }
 
 item_t::string_map::iterator
-item_t::set_tag(const string&           tag,
-                const optional<string>& value,
-                const bool              overwrite_existing)
+item_t::set_tag(const string&            tag,
+                const optional<value_t>& value,
+                const bool               overwrite_existing)
 {
   assert(! tag.empty());
 
@@ -112,10 +114,12 @@ item_t::set_tag(const string&           tag,
     metadata = string_map();
 
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
-        << (value ? *value : string("<none>")) << "'");
+        << (value ? *value : string_value("<none>")) << "'");
 
-  optional<string> data = value;
-  if (data && data->empty())
+  optional<value_t> data = value;
+  if (data &&
+      (data->is_null() ||
+       (data->is_string() && data->as_string().empty())))
     data = none;
 
   string_map::iterator i = metadata->find(tag);
@@ -165,8 +169,9 @@ void item_t::parse_tags(const char * p, bool overwrite_existing,
        q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
     if (! tag.empty()) {
-      string_map::iterator i = set_tag(tag, string(p + (q - buf.get())),
-                                       overwrite_existing);
+      string_map::iterator i =
+        set_tag(tag, string_value(string(p + (q - buf.get()))),
+                overwrite_existing);
       (*i).second.second = true;
       break;
     }
@@ -263,13 +268,13 @@ namespace {
   value_t get_tag(call_scope_t& args)
   {
     item_t& item(find_scope<item_t>(args));
-    optional<string> str;
+    optional<value_t> val;
 
     if (args.size() == 1) {
       if (args[0].is_string())
-        str = item.get_tag(args[0].as_string());
+        val = item.get_tag(args[0].as_string());
       else if (args[0].is_mask())
-        str = item.get_tag(args[0].as_mask());
+        val = item.get_tag(args[0].as_mask());
       else
         throw_(std::runtime_error,
                _("Expected string or mask for argument 1, but received %1")
@@ -277,7 +282,7 @@ namespace {
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
-        str = item.get_tag(args[0].to_mask(), args[1].to_mask());
+        val = item.get_tag(args[0].to_mask(), args[1].to_mask());
       else
         throw_(std::runtime_error,
                _("Expected masks for arguments 1 and 2, but received %1 and %2")
@@ -290,10 +295,7 @@ namespace {
       throw_(std::runtime_error, _("Too many arguments to function"));
     }
 
-    if (str)
-      return string_value(*str);
-    else
-      return NULL_VALUE;
+    return val ? *val : NULL_VALUE;
   }
 
   value_t get_pathname(item_t& item) {

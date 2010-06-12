@@ -106,8 +106,8 @@ public:
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
-  typedef std::pair<optional<string>, bool> tag_data_t;
-  typedef std::map<string, tag_data_t>      string_map;
+  typedef std::pair<optional<value_t>, bool> tag_data_t;
+  typedef std::map<string, tag_data_t>       string_map;
 
   state_t              _state;
   optional<date_t>     _date;
@@ -153,14 +153,14 @@ public:
   virtual bool has_tag(const mask_t& tag_mask,
                        const optional<mask_t>& value_mask = none) const;
 
-  virtual optional<string> get_tag(const string& tag) const;
-  virtual optional<string> get_tag(const mask_t& tag_mask,
-                                   const optional<mask_t>& value_mask = none) const;
+  virtual optional<value_t> get_tag(const string& tag) const;
+  virtual optional<value_t> get_tag(const mask_t& tag_mask,
+                                    const optional<mask_t>& value_mask = none) const;
 
   virtual string_map::iterator
-  set_tag(const string&           tag,
-          const optional<string>& value              = none,
-          const bool              overwrite_existing = true);
+  set_tag(const string&            tag,
+          const optional<value_t>& value              = none,
+          const bool               overwrite_existing = true);
 
   virtual void parse_tags(const char * p, bool overwrite_existing = true,
                           optional<date_t::year_type> current_year = none);

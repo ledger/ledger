@@ -103,9 +103,9 @@ public:
   virtual bool has_tag(const mask_t& tag_mask,
                        const optional<mask_t>& value_mask = none) const;
 
-  virtual optional<string> get_tag(const string& tag) const;
-  virtual optional<string> get_tag(const mask_t& tag_mask,
-                                   const optional<mask_t>& value_mask = none) const;
+  virtual optional<value_t> get_tag(const string& tag) const;
+  virtual optional<value_t> get_tag(const mask_t& tag_mask,
+                                    const optional<mask_t>& value_mask = none) const;
 
   virtual date_t value_date() const;
   virtual date_t date() const;

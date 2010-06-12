@@ -59,19 +59,19 @@ bool post_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-optional<string> post_t::get_tag(const string& tag) const
+optional<value_t> post_t::get_tag(const string& tag) const
 {
-  if (optional<string> value = item_t::get_tag(tag))
+  if (optional<value_t> value = item_t::get_tag(tag))
     return value;
   if (xact)
     return xact->get_tag(tag);
   return none;
 }
 
-optional<string> post_t::get_tag(const mask_t& tag_mask,
-                                 const optional<mask_t>& value_mask) const
+optional<value_t> post_t::get_tag(const mask_t& tag_mask,
+                                  const optional<mask_t>& value_mask) const
 {
-  if (optional<string> value = item_t::get_tag(tag_mask, value_mask))
+  if (optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
   if (xact)
     return xact->get_tag(tag_mask, value_mask);
@@ -715,7 +715,7 @@ void to_xml(std::ostream& out, const post_t& post)
         }
         {
           push_xml z(out, "value");
-          out << y.guard(*pair.second.first);
+          to_xml(out, *pair.second.first);
         }
       } else {
         push_xml z(out, "tag");

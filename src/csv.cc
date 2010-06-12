@@ -237,7 +237,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
     case FIELD_UNKNOWN:
       if (! names[n].empty() && ! field.empty())
-        xact->set_tag(names[n], field);
+        xact->set_tag(names[n], string_value(field));
       break;
     }
     n++;

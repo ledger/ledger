@@ -823,7 +823,7 @@ void to_xml(std::ostream& out, const xact_t& xact)
         }
         {
           push_xml w(out, "value");
-          out << y.guard(*pair.second.first);
+          to_xml(out, *pair.second.first);
         }
       } else {
         push_xml z(out, "tag");

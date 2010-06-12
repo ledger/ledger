@@ -52,14 +52,14 @@ namespace {
     return post.has_tag(tag_mask, value_mask);
   }
 
-  boost::optional<string> py_get_tag_1s(post_t& post, const string& tag) {
+  boost::optional<value_t> py_get_tag_1s(post_t& post, const string& tag) {
     return post.get_tag(tag);
   }
-  boost::optional<string> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
+  boost::optional<value_t> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
     return post.get_tag(tag_mask);
   }
-  boost::optional<string> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
-                                        const boost::optional<mask_t>& value_mask) {
+  boost::optional<value_t> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
+                                         const boost::optional<mask_t>& value_mask) {
     return post.get_tag(tag_mask, value_mask);
   }
 
