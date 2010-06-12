@@ -197,13 +197,20 @@ namespace {
     return post.has_xdata() && post.xdata().has_flags(POST_EXT_DIRECT_AMT);
   }
 
-  value_t get_commodity(post_t& post) {
-    if (post.has_xdata() &&
-        post.xdata().has_flags(POST_EXT_COMPOUND))
-      return string_value(post.xdata().compound_value.to_amount()
-                          .commodity().symbol());
-    else
-      return string_value(post.amount.commodity().symbol());
+  value_t get_commodity(call_scope_t& scope)
+  {
+    in_context_t<post_t> env(scope, "&v");
+    if (env.has(0)) {
+      return string_value(env.value_at(0).to_amount().commodity().symbol());
+    } else {
+      post_t& post(find_scope<post_t>(scope));
+      if (post.has_xdata() &&
+          post.xdata().has_flags(POST_EXT_COMPOUND))
+        return string_value(post.xdata().compound_value.to_amount()
+                            .commodity().symbol());
+      else
+        return string_value(post.amount.commodity().symbol());
+    }
   }
 
   value_t get_commodity_is_primary(post_t& post) {
@@ -427,7 +434,7 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     else if (name == "calculated")
       return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
     else if (name == "commodity")
-      return WRAP_FUNCTOR(get_wrapper<&get_commodity>);
+      return WRAP_FUNCTOR(&get_commodity);
     break;
 
   case 'd':

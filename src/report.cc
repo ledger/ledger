@@ -686,6 +686,12 @@ value_t report_t::fn_price(call_scope_t& scope)
   return args.value_at(0).price();
 }
 
+value_t report_t::fn_commodity(call_scope_t& scope)
+{
+  in_context_t<post_t> env(scope, "v");
+  return string_value(env.value_at(0).to_amount().commodity().symbol());
+}
+
 value_t report_t::fn_lot_date(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
@@ -1172,6 +1178,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'c':
       if (is_eq(p, "cyan"))
         return WRAP_FUNCTOR(fn_cyan);
+      else if (is_eq(p, "commodity"))
+        return MAKE_FUNCTOR(report_t::fn_commodity);
       break;
 
     case 'd':
