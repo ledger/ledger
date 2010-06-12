@@ -118,7 +118,7 @@ class BoostInfo(object):
                 if match:
                     suffix = match.group(1)
                     self.log.info('Found a Boost suffix => ' + suffix)
-                    return suffix
+                    return [suffix]
         else:
             self.log.debug('The directory "%s" is not valid, skipping' % path)
         return None
@@ -130,6 +130,7 @@ class BoostInfo(object):
             self.log.info('Looking for Boost in %s...' % path)
             self.suffix = self.find_boost_in_directory(path)
             if self.suffix is not None:
+                self.suffix = self.suffix[0]
                 self.home_path = dirname(path)
                 self.configured = True
                 self.inform_boost_details()
