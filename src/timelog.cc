@@ -42,7 +42,8 @@ namespace ledger {
 namespace {
   void clock_out_from_timelog(std::list<time_xact_t>& time_xacts,
                               time_xact_t             out_event,
-                              journal_t&              journal)
+                              journal_t&              journal,
+                              scope_t&                scope)
   {
     time_xact_t event;
 
@@ -94,7 +95,7 @@ namespace {
     curr->pos   = event.position;
 
     if (! event.note.empty())
-      curr->append_note(event.note.c_str());
+      curr->append_note(event.note.c_str(), scope);
 
     char buf[32];
     std::sprintf(buf, "%lds", long((out_event.checkin - event.checkin)
@@ -129,7 +130,7 @@ time_log_t::~time_log_t()
     foreach (account_t * account, accounts)
       clock_out_from_timelog(time_xacts,
                              time_xact_t(none, CURRENT_TIME(), account),
-                             journal);
+                             journal, scope);
 
     assert(time_xacts.empty());
   }
@@ -152,7 +153,7 @@ void time_log_t::clock_out(time_xact_t event)
   if (time_xacts.empty())
     throw std::logic_error(_("Timelog check-out event without a check-in"));
 
-  clock_out_from_timelog(time_xacts, event, journal);
+  clock_out_from_timelog(time_xacts, event, journal, scope);
 }
 
 } // namespace ledger

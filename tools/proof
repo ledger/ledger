@@ -12,7 +12,7 @@ if [[ -f ~/Products/last-proofed && \
     exit 0
 fi
 
-rm -fr ~/Products/ledger*
+rm -fr ~/Products/ledger-proof
 
 time ./acprep --enable-cache --enable-doxygen \
     --universal -j16 --warn proof 2>&1 | \

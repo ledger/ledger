@@ -135,7 +135,9 @@ item_t::set_tag(const string&            tag,
   }
 }
 
-void item_t::parse_tags(const char * p, bool overwrite_existing,
+void item_t::parse_tags(const char *                p,
+                        scope_t&                    scope,
+                        bool                        overwrite_existing,
                         optional<date_t::year_type> current_year)
 {
   if (const char * b = std::strchr(p, '[')) {
@@ -164,14 +166,21 @@ void item_t::parse_tags(const char * p, bool overwrite_existing,
   std::strcpy(buf.get(), p);
 
   string tag;
+  bool   by_value = false;
   for (char * q = std::strtok(buf.get(), " \t");
        q;
        q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
+    if (len < 2) continue;
     if (! tag.empty()) {
-      string_map::iterator i =
-        set_tag(tag, string_value(string(p + (q - buf.get()))),
-                overwrite_existing);
+      string_map::iterator i;
+      string field(p + (q - buf.get()));
+      if (by_value) {
+        bind_scope_t bound_scope(scope, *this);
+        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
+      } else {
+        i = set_tag(tag, string_value(field), overwrite_existing);
+      }
       (*i).second.second = true;
       break;
     }
@@ -184,12 +193,19 @@ void item_t::parse_tags(const char * p, bool overwrite_existing,
       }
     }
     else if (q[len - 1] == ':') { // a metadata setting
-      tag = string(q, len - 1);
+      int index = 1;
+      if (q[len - 2] == ':') {
+        by_value = true;
+        index    = 2;
+      }
+      tag = string(q, len - index);
     }
   }
 }
 
-void item_t::append_note(const char * p, bool overwrite_existing,
+void item_t::append_note(const char *                p,
+                         scope_t&                    scope,
+                         bool                        overwrite_existing,
                          optional<date_t::year_type> current_year)
 {
   if (note) {
@@ -199,7 +215,7 @@ void item_t::append_note(const char * p, bool overwrite_existing,
     note = p;
   }
 
-  parse_tags(p, overwrite_existing, current_year);
+  parse_tags(p, scope, overwrite_existing, current_year);
 }
 
 namespace {

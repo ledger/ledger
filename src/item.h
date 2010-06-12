@@ -162,10 +162,14 @@ public:
           const optional<value_t>& value              = none,
           const bool               overwrite_existing = true);
 
-  virtual void parse_tags(const char * p, bool overwrite_existing = true,
-                          optional<date_t::year_type> current_year = none);
-  virtual void append_note(const char * p, bool overwrite_existing = true,
-                           optional<date_t::year_type> current_year = none);
+  virtual void parse_tags(const char *                p,
+                          scope_t&                    scope,
+                          bool                        overwrite_existing = true,
+                          optional<date_t::year_type> current_year       = none);
+  virtual void append_note(const char *                p,
+                           scope_t&                    scope,
+                           bool                        overwrite_existing = true,
+                           optional<date_t::year_type> current_year       = none);
 
   static bool use_effective_date;
 

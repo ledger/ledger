@@ -6,6 +6,7 @@ format "%-12(scrub(amount))"
     ; This note applies to all postings. :SecondTag:
     Expenses:Books                 20 BOOK @ $10
     ; Metadata: Some Value
+    ; Typed:: $100 + $200
     ; :ExampleTag:
     ; Here follows a note describing the posting.
     Liabilities:MasterCard        $-200.00
@@ -27,6 +28,7 @@ format "%12(scrub(amount))"
     ; This note applies to all postings. :SecondTag:
     Expenses:Books                 20 BOOK @ $10
     ; Metadata: Some Value
+    ; Typed:: $100 + $200
     ; :ExampleTag:
     ; Here follows a note describing the posting.
     Liabilities:MasterCard        $-200.00

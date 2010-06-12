@@ -87,10 +87,12 @@ class time_log_t
 {
   std::list<time_xact_t> time_xacts;
   journal_t&             journal;
+  scope_t&               scope;
 
 public:
-  time_log_t(journal_t& _journal) : journal(_journal) {
-    TRACE_CTOR(time_log_t, "journal_t&");
+  time_log_t(journal_t& _journal, scope_t& _scope)
+    : journal(_journal), scope(_scope) {
+    TRACE_CTOR(time_log_t, "journal_t&, scope_t&");
   }
   ~time_log_t();
 

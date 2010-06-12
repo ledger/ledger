@@ -54,6 +54,7 @@ namespace {
             << "    ; This note applies to all postings. :SecondTag:\n"
             << "    Expenses:Books                 20 BOOK @ $10\n"
             << "    ; Metadata: Some Value\n"
+            << "    ; Typed:: $100 + $200\n"
             << "    ; :ExampleTag:\n"
             << "    ; Here follows a note describing the posting.\n"
             << "    Liabilities:MasterCard        $-200.00\n";
