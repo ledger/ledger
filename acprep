@@ -480,6 +480,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-python', action='store_true', dest='no_python',
                       default=False,
                       help='Do not enable Python support by default')
+        op.add_option('', '--enable-cache', action='store_true',
+                      dest='enable_cache', default=False,
+                      help='Enable use of Boost.Serialization (--cache)')
+        op.add_option('', '--enable-doxygen', action='store_true',
+                      dest='enable_doxygen', default=False,
+                      help='Enable use of Doxygen to build ref manual ("make docs")')
         op.add_option('', '--universal', action='store_true',
                       dest='universal', default=False,
                       help='Attempt to build universal binaries')
@@ -1014,6 +1020,11 @@ class PrepareBuild(CommandLineApp):
             else:
                 # g++ 4.0.1 cannot use PCH headers on OS X 10.5
                 self.option_no_pch()
+
+        if self.options.enable_doxygen:
+            self.configure_args.append('--enable-doxygen')
+        if self.options.enable_cache:
+            self.configure_args.append('--enable-cache')
 
         if exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
@@ -1562,6 +1573,7 @@ class PrepareBuild(CommandLineApp):
         self.configure_flavor('default', reset=False)
         self.log.info('=== Testing default ===')
         self.phase_make('fullcheck')
+        self.phase_make('docs')
 
         self.log.info('=== Building final distcheck ===')
         self.phase_distcheck()
