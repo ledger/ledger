@@ -270,8 +270,12 @@ void anonymize_posts::operator()(post_t& post)
   if (copy_xact_details) {
     xact.copy_details(*post.xact);
 
+    std::ostringstream buf;
+    buf << reinterpret_cast<uintmax_t>(post.xact->payee.c_str())
+        << integer_gen() << post.xact->payee.c_str();
+
     sha.Reset();
-    sha << post.xact->payee.c_str();
+    sha << buf.str().c_str();
     sha.Result(message_digest);
 
     xact.payee = to_hex(message_digest);
@@ -283,8 +287,11 @@ void anonymize_posts::operator()(post_t& post)
   for (account_t * acct = post.account;
        acct;
        acct = acct->parent) {
+    std::ostringstream buf;
+    buf << integer_gen() << acct << acct->fullname();
+
     sha.Reset();
-    sha << acct->name.c_str();
+    sha << buf.str().c_str();
     sha.Result(message_digest);
 
     account_names.push_front(to_hex(message_digest));
@@ -296,9 +303,7 @@ void anonymize_posts::operator()(post_t& post)
   temp.note = none;
   temp.add_flags(POST_ANONYMIZED);
 
-  DEBUG("foo", "1.rendering amount: " << temp.amount);
   render_commodity(temp.amount);
-  DEBUG("foo", "2.rendering amount: " << temp.amount);
   if (temp.amount.has_annotation()) {
     temp.amount.annotation().tag = none;
     if (temp.amount.annotation().price)

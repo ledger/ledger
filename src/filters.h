@@ -334,18 +334,26 @@ public:
 
 class anonymize_posts : public item_handler<post_t>
 {
-  typedef std::map<commodity_t *, std::size_t> commodity_index_map;
+  typedef std::map<commodity_t *, std::size_t>        commodity_index_map;
+  typedef variate_generator<mt19937&, uniform_int<> > int_generator_t;
 
   temporaries_t       temps;
   commodity_index_map comms;
   std::size_t         next_comm_id;
   xact_t *            last_xact;
+  mt19937             rnd_gen;
+  uniform_int<>       integer_range;
+  int_generator_t     integer_gen;
 
   anonymize_posts();
 
 public:
   anonymize_posts(post_handler_ptr handler)
-    : item_handler<post_t>(handler), next_comm_id(0), last_xact(NULL) {
+    : item_handler<post_t>(handler), next_comm_id(0), last_xact(NULL),
+      rnd_gen(static_cast<unsigned int>(reinterpret_cast<uintmax_t>(this) +
+                                        static_cast<uintmax_t>(std::time(0)))),
+      integer_range(1, 2000000000L),
+      integer_gen(rnd_gen, integer_range) {
     TRACE_CTOR(anonymize_posts, "post_handler_ptr");
   }
   virtual ~anonymize_posts() {
