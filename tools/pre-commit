@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Exit with status 1 if any command below fails
 set -e
@@ -10,10 +10,13 @@ if echo $(git rev-parse --symbolic-full-name HEAD) | \
 fi
 
 # These are the locations I keep my temporary source and build trees in
-PRODUCTS=$(./acprep products)   # generates a build directory name such as
+PRODUCTS=$(./acprep products)	# generates a build directory name such as
                                 # ~/Products/ledger
-TMPDIR=$PRODUCTS/ledger/pre-commit
-MIRROR=$PRODUCTS/ledger/pre-commit-mirror
+if echo $PRODUCTS | grep -qv ledger; then
+    PRODUCTS=$PRODUCTS/ledger
+fi
+TMPDIR=$PRODUCTS/pre-commit
+MIRROR=$PRODUCTS/pre-commit-mirror
 
 # Checkout a copy of the current index into MIRROR
 git checkout-index --prefix=$MIRROR/ -af
@@ -46,16 +49,17 @@ if [ ! -f Makefile -o \
      \( -f acprep -a acprep -nt Makefile \) ]
 then
     if [ -f acprep ]; then
-        echo Will run acprep in a moment
+	echo Will run acprep in a moment
     elif [ -f autogen.sh ]; then
-        sh autogen.sh && ./configure
+	sh autogen.sh && ./configure
     else
-        autoreconf && ./configure
+	autoreconf && ./configure
     fi
 fi
 
 # Finally, (re)build this proposed source tree and see if it passes
 # muster.
+
 if [ -f acprep ]; then
     nice -n 20 ./acprep default --warn make check
 else
