@@ -44,6 +44,7 @@ search_prefixes = [ '/opt/local',
 class BoostInfo(object):
     log          = None
     suffix       = ""
+    file_suffix  = ".so"
     home_path    = "/usr"
     include_path = "include"
     library_path = "lib"
@@ -52,13 +53,14 @@ class BoostInfo(object):
     def __init__(self, log):
         self.log = log
 
-    def configure(self, suffix = None, home_path = None,
+    def configure(self, suffix = None, file_suffix = None, home_path = None,
                   include_path = None, library_path = None):
         path = library_path or self.library_path
         if not isabs(path):
             path = join(home_path or self.home_path, path)
         if not exists(path) or not isdir(path) or \
-           not self.check_for_boost_regex_lib(path, suffix or self.suffix):
+           not self.check_for_boost_regex_lib(path, suffix or self.suffix,
+                                              file_suffix or self.file_suffix):
             return False
 
         path = include_path or self.include_path
@@ -72,6 +74,9 @@ class BoostInfo(object):
         if suffix:
             self.log.debug('Setting Boost suffix to => ' + suffix)
             self.suffix       = suffix
+        if file_suffix:
+            self.log.debug('Setting Boost file suffix to => ' + file_suffix)
+            self.file_suffix  = file_suffix
         if home_path:
             self.log.debug('Setting Boost home to => ' + home_path)
             self.home_path    = home_path
@@ -90,6 +95,10 @@ class BoostInfo(object):
         self.log.debug('Saw option --boost or --boost-suffix')
         self.suffix = value
 
+    def option_boost_file_suffix(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --boost-file-suffix')
+        self.file_suffix = value
+
     def option_boost_home(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --boost-home')
         self.home_path = value
@@ -107,18 +116,21 @@ class BoostInfo(object):
         self.log.info('Boost include path => ' + self.include_directory())
         self.log.info('Boost library path => ' + self.library_directory())
         self.log.info('Boost suffix => ' + self.suffix)
+        self.log.info('Boost file suffix => ' + self.file_suffix)
 
     def find_boost_in_directory(self, path):
         if exists(path) and isdir(path):
             for entry in reversed(sorted(os.listdir(path))):
                 if re.search('boost_regex', entry):
-                    self.log.info('Found a Boost library: ' + entry)
+                    self.log.info('Found a Boost library: ' + join(path, entry))
 
-                match = re.match('libboost_regex([^.]*)\.(a|so|dylib)', entry)
+                match = re.match('libboost_regex([^.]*)(\.(a|so|dylib))', entry)
                 if match:
                     suffix = match.group(1)
+                    file_suffix = match.group(2)
                     self.log.info('Found a Boost suffix => ' + suffix)
-                    return [suffix]
+                    self.log.info('Found a Boost file suffix => ' + file_suffix)
+                    return [suffix, file_suffix]
         else:
             self.log.debug('The directory "%s" is not valid, skipping' % path)
         return None
@@ -126,23 +138,24 @@ class BoostInfo(object):
     def locate_boost(self):
         lib64_dirs = map(lambda x: join(x, 'lib64'), search_prefixes)
         lib_dirs = map(lambda x: join(x, 'lib'), search_prefixes)
+        result = None
         for path in lib64_dirs + lib_dirs:
             self.log.info('Looking for Boost in %s...' % path)
-            self.suffix = self.find_boost_in_directory(path)
-            if self.suffix is not None:
-                self.suffix = self.suffix[0]
+            result = self.find_boost_in_directory(path)
+            if result is not None:
+                self.suffix, self.file_suffix = result
+                self.library_path = path
                 self.home_path = dirname(path)
                 self.configured = True
                 self.inform_boost_details()
                 break
-        if self.suffix is None:
-            self.log.error("Boost not found, try --boost-home (and --boost-suffix)")
+        if result is None:
+            self.log.error("Boost not found, try --boost-home (and --boost-suffix, --boost-file-suffix)")
             sys.exit(1)
 
-    def check_for_boost_regex_lib(self, path, suffix):
+    def check_for_boost_regex_lib(self, path, suffix, file_suffix):
         regex_lib = join(path, 'libboost_regex' + suffix)
-        return (exists(regex_lib + '.a') or exists(regex_lib + '.lib') or
-                exists(regex_lib + '.so') or exists(regex_lib + '.dylib'))
+        return exists(regex_lib + file_suffix)
 
     def check_for_boost_regex_hpp(self, path):
         regex_hpp = join(path, 'boost/regex.hpp')
@@ -152,6 +165,11 @@ class BoostInfo(object):
         if not self.configured:
             self.locate_boost()
         return self.suffix
+
+    def get_file_suffix(self):
+        if not self.configured:
+            self.locate_boost()
+        return self.file_suffix
 
     def include_directory(self):
         if not self.configured:
@@ -185,7 +203,7 @@ class BoostInfo(object):
             self.log.error("Boost library directory '%s' not found, use --boost-include" % path)
             sys.exit(1)
 
-        if not self.check_for_boost_regex_lib(path, self.suffix):
+        if not self.check_for_boost_regex_lib(path, self.suffix, self.file_suffix):
             self.log.error("Could not find Boost library 'boost_regex' in '%s'; use --boost-* flags" % path)
             sys.exit(1)
 
@@ -414,10 +432,14 @@ class PrepareBuild(CommandLineApp):
                       action="callback", type="string",
                       callback=self.boost_info.option_boost_suffix,
                       help='Set Boost library suffix (ex: "--boost=-mt")')
-        op.add_option('', '--boost-sufix', metavar='BOOST_SUFFIX',
+        op.add_option('', '--boost-suffix', metavar='BOOST_SUFFIX',
                       action="callback", type="string",
                       callback=self.boost_info.option_boost_suffix,
                       help='Set Boost library suffix (ex: "--boost-suffix=-mt")')
+        op.add_option('', '--boost-file-suffix', metavar='BOOST_FILE_SUFFIX',
+                      action="callback", type="string",
+                      callback=self.boost_info.option_boost_file_suffix,
+                      help='Set Boost library file suffix (ex: "--boost-file-suffix=.so")')
         op.add_option('', '--boost-home', metavar='BOOST_HOME',
                       action="callback", type="string",
                       callback=self.boost_info.option_boost_home,
@@ -1154,7 +1176,7 @@ class PrepareBuild(CommandLineApp):
         else:
             gcc_version = "42"
 
-        self.log.info('Using gcc version: %s' % gcc_version)
+        self.log.debug('Using gcc version: %s' % gcc_version)
 
         if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
             if self.options.use_glibcxx_debug:
@@ -1166,6 +1188,7 @@ class PrepareBuild(CommandLineApp):
                     (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-sd-%s' % \
                     (gcc_version, self.boost_version),
+                file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
             elif self.boost_info.configure(
@@ -1173,9 +1196,10 @@ class PrepareBuild(CommandLineApp):
                     (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-d-%s' % \
                     (gcc_version, self.boost_version),
+                file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
-            elif self.boost_info.configure(suffix = '-d'):
+            elif self.boost_info.configure(suffix = '-d', file_suffix  = '.dylib'):
                 pass
 
         else:
@@ -1186,6 +1210,7 @@ class PrepareBuild(CommandLineApp):
                     (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-s-%s' % \
                     (gcc_version, self.boost_version),
+                file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
             elif self.boost_info.configure(
@@ -1193,6 +1218,7 @@ class PrepareBuild(CommandLineApp):
                     (self.boost_version, gcc_version),
                 suffix       = '-xgcc%s-%s' % \
                     (gcc_version, self.boost_version),
+                file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_version):
                 pass
 
