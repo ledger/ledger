@@ -119,9 +119,7 @@ public:
       (accounts.end(), bind(&accounts_map::value_type::second, _1));
   }
 
-  void add_post(post_t * post) {
-    posts.push_back(post);
-  }
+  void add_post(post_t * post);
   bool remove_post(post_t * post);
 
   posts_list::iterator posts_begin() {

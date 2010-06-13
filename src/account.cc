@@ -122,6 +122,20 @@ account_t * account_t::find_account_re(const string& regexp)
   return find_account_re_(this, mask_t(regexp));
 }
 
+void account_t::add_post(post_t * post)
+{
+  posts.push_back(post);
+
+  // Adding a new post changes the possible totals that may have been
+  // computed before.
+  if (xdata_) {
+    xdata_->self_details.gathered     = false;
+    xdata_->self_details.calculated   = false;
+    xdata_->family_details.gathered   = false;
+    xdata_->family_details.calculated = false;
+  }
+}
+
 bool account_t::remove_post(post_t * post)
 {
   assert(! posts.empty());
