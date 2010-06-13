@@ -460,11 +460,6 @@ value_t report_t::fn_market(call_scope_t& args)
   else
     result = args[0].value(moment);
 
-  DEBUG("fn_market", "value  = " << args[0]);
-  if (moment)
-    DEBUG("fn_market", "moment = " << *moment);
-  DEBUG("fn_market", "result = " << result);
-
   if (! result.is_null())
     return result;
 
