@@ -318,7 +318,22 @@ namespace {
 
   value_t get_account(call_scope_t& scope)
   {
-    return account_name(scope);
+    interactive_t args(scope, "&v");
+    account_t& account(*find_scope<post_t>(scope).account);
+    if (args.has(0)) {
+      account_t * acct = account.parent;
+      for (; acct && acct->parent; acct = acct->parent) ;
+      if (scope[0].is_string())
+        return value_t(static_cast<scope_t *>
+                       (acct->find_account(args.get<string>(0), false)));
+      else if (scope[0].is_mask())
+        return value_t(static_cast<scope_t *>
+                       (acct->find_account_re(args.get<mask_t>(0).str())));
+      else
+        return NULL_VALUE;
+    } else {
+      return account_name(scope);
+    }
   }
 
   value_t get_account_id(post_t& post) {

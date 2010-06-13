@@ -182,6 +182,19 @@ void session_t::close_journal_files()
   amount_t::initialize();
 }
 
+value_t session_t::fn_account(call_scope_t& scope)
+{
+  interactive_t args(scope, "v");
+  if (scope[0].is_string())
+    return value_t(static_cast<scope_t *>
+                   (journal->find_account(args.get<string>(0), false)));
+  else if (scope[0].is_mask())
+    return value_t(static_cast<scope_t *>
+                   (journal->find_account_re(args.get<mask_t>(0).str())));
+  else
+    return NULL_VALUE;
+}
+
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -224,15 +237,25 @@ option_t<session_t> * session_t::lookup_option(const char * p)
 expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
                                    const string& name)
 {
+  const char * p = name.c_str();
+
   switch (kind) {
   case symbol_t::FUNCTION:
+    switch (*p) {
+    case 'a':
+      if (is_eq(p, "account"))
+        return MAKE_FUNCTOR(session_t::fn_account);
+      break;
+    default:
+      break;
+    }
     // Check if they are trying to access an option's setting or value.
-    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+    if (option_t<session_t> * handler = lookup_option(p))
       return MAKE_OPT_FUNCTOR(session_t, handler);
     break;
 
   case symbol_t::OPTION:
-    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+    if (option_t<session_t> * handler = lookup_option(p))
       return MAKE_OPT_HANDLER(session_t, handler);
     break;
 

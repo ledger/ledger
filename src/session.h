@@ -75,6 +75,8 @@ public:
   void read_journal_files();
   void close_journal_files();
 
+  value_t fn_account(call_scope_t& scope);
+
   void report_options(std::ostream& out)
   {
     HANDLER(cache_).report(out);

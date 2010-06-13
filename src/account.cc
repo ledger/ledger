@@ -182,8 +182,23 @@ namespace {
                                           env.get<bool>(0) : false));
   }
 
-  value_t get_account(account_t& account) { // this gets the name
-    return string_value(account.fullname());
+  value_t get_account(call_scope_t& scope) { // this gets the name
+    interactive_t args(scope, "&v");
+    account_t& account(find_scope<account_t>(scope));
+    if (args.has(0)) {
+      account_t * acct = account.parent;
+      for (; acct && acct->parent; acct = acct->parent) ;
+      if (scope[0].is_string())
+        return value_t(static_cast<scope_t *>
+                       (acct->find_account(args.get<string>(0), false)));
+      else if (scope[0].is_mask())
+        return value_t(static_cast<scope_t *>
+                       (acct->find_account_re(args.get<mask_t>(0).str())));
+      else
+        return NULL_VALUE;
+    } else {
+      return string_value(account.fullname());
+    }
   }
 
   value_t get_account_base(account_t& account) {
@@ -301,7 +316,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
     if (name[1] == '\0' || name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
-      return WRAP_FUNCTOR(get_wrapper<&get_account>);
+      return WRAP_FUNCTOR(&get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     else if (name == "addr")
