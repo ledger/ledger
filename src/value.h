@@ -57,7 +57,6 @@ namespace ledger {
 DECLARE_EXCEPTION(value_error, std::runtime_error);
 
 class scope_t;
-class expr_t;
 
 /**
  * @class value_t
@@ -110,7 +109,7 @@ public:
     MASK,                       // a regular expression mask
     SEQUENCE,                   // a vector of value_t objects
     SCOPE,                      // a pointer to a scope
-    EXPR                        // a pointer to a value expression
+    ANY                         // a pointer to an arbitrary object
   };
 
 private:
@@ -128,17 +127,17 @@ private:
      * The `type' member holds the value_t::type_t value representing
      * the type of the object stored.
      */
-    variant<bool,         // BOOLEAN
-            datetime_t,   // DATETIME
-            date_t,       // DATE
-            long,         // INTEGER
-            amount_t,     // AMOUNT
-            balance_t *,  // BALANCE
-            string,       // STRING
-            mask_t,       // MASK
-            sequence_t *, // SEQUENCE
-            scope_t *,    // SCOPE
-            expr_t *      // EXPR
+    variant<bool,               // BOOLEAN
+            datetime_t,         // DATETIME
+            date_t,             // DATE
+            long,               // INTEGER
+            amount_t,           // AMOUNT
+            balance_t *,        // BALANCE
+            string,             // STRING
+            mask_t,             // MASK
+            sequence_t *,       // SEQUENCE
+            scope_t *,          // SCOPE
+            boost::any          // ANY
             > data;
     
     type_t type;
@@ -354,10 +353,13 @@ public:
     TRACE_CTOR(value_t, "scope_t *");
     set_scope(item);
   }
-  explicit value_t(const expr_t& item) {
-    TRACE_CTOR(value_t, "const expr_t&");
-    set_expr(item);
+#if 0
+  template <typename T>
+  explicit value_t(T& item) {
+    TRACE_CTOR(value_t, "T&");
+    set_any(item);
   }
+#endif
 
   /**
    * Destructor.  This does not do anything, because the intrusive_ptr
@@ -530,7 +532,7 @@ public:
    * is_string()
    * is_mask()
    * is_sequence()
-   * is_pointer()
+   * is_any()
    *
    * There are corresponding as_*() methods that represent a value as a
    * reference to its underlying type.  For example, as_long() returns a
@@ -729,20 +731,45 @@ public:
   }
 
   /**
-   * Dealing with expr pointers.
+   * Dealing with any type at all is bit involved because we actually
+   * deal with typed object.  For example, if you call as_any it returns
+   * a boost::any object, but if you use as_any<type_t>, then it returns
+   * a type_t by value.
    */
-  bool is_expr() const {
-    return is_type(EXPR);
+  bool is_any() const {
+    return is_type(ANY);
   }
-  expr_t& as_expr_lval() const {
-    VERIFY(is_expr());
-    return *boost::get<expr_t *>(storage->data);
+  template <typename T>
+  bool is_any() const {
+    return (is_type(ANY) &&
+            boost::get<boost::any>(storage->data).type() == typeid(T));
   }
-  const expr_t& as_expr() const {
-    VERIFY(is_expr());
-    return *boost::get<expr_t *>(storage->data);
+  boost::any& as_any_lval() {
+    VERIFY(is_any());
+    _dup();
+    return boost::get<boost::any>(storage->data);
   }
-  void set_expr(const expr_t& val);
+  template <typename T>
+  T& as_any_lval() {
+    return any_cast<T&>(as_any_lval());
+  }
+  const boost::any& as_any() const {
+    VERIFY(is_any());
+    return boost::get<boost::any>(storage->data);
+  }
+  template <typename T>
+  const T& as_any() const {
+    return any_cast<const T&>(as_any());
+  }
+  void set_any(const boost::any& val) {
+    set_type(ANY);
+    storage->data = val;
+  }
+  template <typename T>
+  void set_any(T& val) {
+    set_type(ANY);
+    storage->data = boost::any(val);
+  }
 
   /**
    * Data conversion methods.  These methods convert a value object to

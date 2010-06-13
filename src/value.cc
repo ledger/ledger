@@ -116,8 +116,8 @@ value_t::operator bool() const
     return false;
   case SCOPE:
     return as_scope() != NULL;
-  case EXPR:
-    return as_expr();
+  case ANY:
+    return ! as_any().empty();
   default:
     break;
   }
@@ -143,12 +143,6 @@ void value_t::set_type(type_t new_type)
       storage->destroy();
     storage->type = new_type;
   }
-}
-
-void value_t::set_expr(const expr_t& val)
-{
-  set_type(EXPR);
-  storage->data = new expr_t(val);
 }
 
 bool value_t::to_boolean() const
@@ -1372,8 +1366,8 @@ bool value_t::is_realzero() const
 
   case SCOPE:
     return as_scope() == NULL;
-  case EXPR:
-    return ! as_expr();
+  case ANY:
+    return as_any().empty();
 
   default:
     add_error_context(_("While applying is_realzero to %1:") << *this);
@@ -1404,8 +1398,8 @@ bool value_t::is_zero() const
 
   case SCOPE:
     return as_scope() == NULL;
-  case EXPR:
-    return ! as_expr();
+  case ANY:
+    return as_any().empty();
 
   default:
     add_error_context(_("While applying is_zero to %1:") << *this);
@@ -1677,7 +1671,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   case STRING:
   case MASK:
   case SCOPE:
-  case EXPR:
+  case ANY:
     return *this;
 
   case SEQUENCE: {
@@ -1825,13 +1819,14 @@ void value_t::print(std::ostream&       out,
   case SCOPE:
     out << "<#SCOPE>";
     break;
-  case EXPR:
-    out << "<#EXPR ";
-    if (as_expr())
-      as_expr().print(out);
-    else
-      out << "null";
-    out << ">";
+  case ANY:
+    if (as_any().type() == typeid(expr_t::ptr_op_t)) {
+      out << "<#EXPR ";
+      as_any<expr_t::ptr_op_t>()->print(out);
+      out << ">";
+    } else {
+      out << "<#OBJECT>";
+    }
     break;
 
   default:
@@ -1902,11 +1897,11 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
   case SCOPE:
     out << as_scope();
     break;
-  case EXPR:
-    if (as_expr())
-      as_expr().dump(out);
+  case ANY:
+    if (as_any().type() == typeid(expr_t::ptr_op_t))
+      as_any<expr_t::ptr_op_t>()->dump(out);
     else
-      out << "null";
+      out << boost::unsafe_any_cast<const void *>(&as_any());
     break;
 
   case SEQUENCE: {
@@ -2020,7 +2015,7 @@ void to_xml(std::ostream& out, const value_t& value)
   }
 
   case value_t::SCOPE:
-  case value_t::EXPR:
+  case value_t::ANY:
   default:
     assert(false);
     break;
