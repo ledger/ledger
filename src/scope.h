@@ -114,6 +114,10 @@ public:
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name) = 0;
 
+  virtual value_t::type_t type_context() const {
+    return value_t::VOID;
+  }
+
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
   /** Serialization. */
@@ -205,13 +209,34 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-class call_scope_t : public child_scope_t
+class context_scope_t : public child_scope_t
+{
+  value_t::type_t value_type_context;
+
+public:
+  explicit context_scope_t(scope_t&        _parent,
+                           value_t::type_t _type_context = value_t::VOID)
+    : child_scope_t(_parent), value_type_context(_type_context) {
+    TRACE_CTOR(context_scope_t, "scope_t&, value_t::type_t");
+  }
+  virtual ~context_scope_t() {
+    TRACE_DTOR(context_scope_t);
+  }
+
+  virtual value_t::type_t type_context() const {
+    return value_type_context;
+  }
+};
+
+class call_scope_t : public context_scope_t
 {
   value_t args;
 
 public:
-  explicit call_scope_t(scope_t& _parent) : child_scope_t(_parent) {
-    TRACE_CTOR(call_scope_t, "scope_t&");
+  explicit call_scope_t(scope_t&        _parent,
+                        value_t::type_t _type_context = value_t::VOID)
+    : context_scope_t(_parent, _type_context) {
+    TRACE_CTOR(call_scope_t, "scope_t&, value_t::type_t");
   }
   virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);

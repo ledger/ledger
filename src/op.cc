@@ -39,7 +39,8 @@
 namespace ledger {
 
 namespace {
-  value_t split_cons_expr(expr_t::ptr_op_t op, scope_t& scope,
+  value_t split_cons_expr(expr_t::ptr_op_t     op,
+                          scope_t&             scope,
                           std::vector<expr_t>& exprs)
   {
     value_t seq;
@@ -150,7 +151,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // Evaluating an identifier is the same as calling its definition
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
-    call_scope_t call_args(scope);
+    call_scope_t call_args(scope, scope.type_context());
     result = left()->compile(call_args, depth + 1)
                    ->calc(call_args, locus, depth + 1);
     break;
@@ -160,7 +161,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // Evaluating a FUNCTION is the same as calling it directly; this happens
     // when certain functions-that-look-like-variables (such as "amount") are
     // resolved.
-    call_scope_t call_args(scope);
+    call_scope_t call_args(scope, scope.type_context());
     result = as_function()(call_args);
 #if defined(DEBUG_ON)
     skip_debug = true;
@@ -200,8 +201,9 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
   }
 
-  case O_LOOKUP:
-    if (value_t obj = left()->calc(scope, locus, depth + 1)) {
+  case O_LOOKUP: {
+    context_scope_t context_scope(scope, value_t::SCOPE);
+    if (value_t obj = left()->calc(context_scope, locus, depth + 1)) {
       if (obj.is_scope()) {
         if (obj.as_scope() == NULL) {
           throw_(calc_error, _("Left operand of . operator is NULL"));
@@ -222,10 +224,11 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       throw_(calc_error,
              _("Failed to lookup member '%1'") << right()->as_ident());
     break;
+  }
 
   case O_CALL:
   case O_EXPAND: {
-    call_scope_t call_args(scope);
+    call_scope_t call_args(scope, scope.type_context());
     // When evaluating a macro call, these expressions have to live beyond the
     // call to calc() below.
     optional<std::vector<expr_t> > args_expr;

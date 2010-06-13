@@ -208,7 +208,11 @@ namespace {
         return scope_value(acct->find_account_re(args.get<mask_t>(0).str()));
       else
         return NULL_VALUE;
-    } else {
+    }
+    else if (scope.type_context() == value_t::SCOPE) {
+      return scope_value(&account);
+    }
+    else {
       return string_value(account.fullname());
     }
   }

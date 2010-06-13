@@ -254,20 +254,20 @@ namespace {
       return 1L;
   }
 
-  value_t account_name(call_scope_t& scope)
+  value_t get_account(call_scope_t& scope)
   {
     in_context_t<post_t> env(scope, "&v");
-
-    string name;
+    account_t&           account(*env->reported_account());
+    string               name;
 
     if (env.has(0)) {
       if (env.value_at(0).is_long()) {
         if (env.get<long>(0) > 2)
-          name = format_t::truncate(env->reported_account()->fullname(),
+          name = format_t::truncate(account.fullname(),
                                     env.get<long>(0) - 2,
                                     2 /* account_abbrev_length */);
         else
-          name = env->reported_account()->fullname();
+          name = account.fullname();
       } else {
         account_t * account = NULL;
         account_t * master  = env->account;
@@ -294,8 +294,12 @@ namespace {
         else
           return value_t(static_cast<scope_t *>(account));
       }
-    } else {
-      name = env->reported_account()->fullname();
+    }
+    else if (scope.type_context() == value_t::SCOPE) {
+      return scope_value(&account);
+    }
+    else {
+      name = account.fullname();
     }
     return string_value(name);
   }
@@ -304,7 +308,7 @@ namespace {
   {
     in_context_t<post_t> env(scope, "&v");
 
-    value_t acct = account_name(scope);
+    value_t acct = get_account(scope);
     if (acct.is_string()) {
       if (env->has_flags(POST_VIRTUAL)) {
         if (env->must_balance())
@@ -314,26 +318,6 @@ namespace {
       }
     }
     return acct;
-  }
-
-  value_t get_account(call_scope_t& scope)
-  {
-    interactive_t args(scope, "&v");
-    account_t& account(*find_scope<post_t>(scope).account);
-    if (args.has(0)) {
-      account_t * acct = account.parent;
-      for (; acct && acct->parent; acct = acct->parent) ;
-      if (scope[0].is_string())
-        return value_t(static_cast<scope_t *>
-                       (acct->find_account(args.get<string>(0), false)));
-      else if (scope[0].is_mask())
-        return value_t(static_cast<scope_t *>
-                       (acct->find_account_re(args.get<mask_t>(0).str())));
-      else
-        return NULL_VALUE;
-    } else {
-      return account_name(scope);
-    }
   }
 
   value_t get_account_id(post_t& post) {
