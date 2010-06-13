@@ -611,9 +611,9 @@ void instance_t::xact_directive(char * line, std::streamsize len)
       manager.release();        // it's owned by the journal now
       context.count++;
     }
-    // It's perfectly valid for the journal to reject the xact, which it will
-    // do if the xact has no substantive effect (for example, a checking
-    // xact, all of whose postings have null amounts).
+    // It's perfectly valid for the journal to reject the xact, which it
+    // will do if the xact has no substantive effect (for example, a
+    // checking xact, all of whose postings have null amounts).
   } else {
     throw parse_error(_("Failed to parse transaction"));
   }
