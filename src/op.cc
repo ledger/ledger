@@ -157,7 +157,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // Evaluating an identifier is the same as calling its definition
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
-    call_scope_t call_args(scope, scope.type_context(), scope.type_required());
+    call_scope_t call_args(scope, locus, depth);
     result = left()->compile(call_args, depth + 1)
                    ->calc(call_args, locus, depth + 1);
     check_type_context(scope, result);
@@ -168,7 +168,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // Evaluating a FUNCTION is the same as calling it directly; this happens
     // when certain functions-that-look-like-variables (such as "amount") are
     // resolved.
-    call_scope_t call_args(scope, scope.type_context(), scope.type_required());
+    call_scope_t call_args(scope, locus, depth);
     result = as_function()(call_args);
     check_type_context(scope, result);
 #if defined(DEBUG_ON)
@@ -235,7 +235,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   }
 
   case O_CALL: {
-    call_scope_t call_args(scope, scope.type_context(), scope.type_required());
+    call_scope_t call_args(scope, locus, depth);
     if (has_right())
       call_args.set_args(split_cons_expr(right()->kind == O_SEQ ?
                                          right()->left() : right()));

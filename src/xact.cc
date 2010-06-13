@@ -509,7 +509,7 @@ namespace {
 
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(args, *p);
-      if (expr->calc(bound_scope).to_boolean())
+      if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
         return true;
     }
     return false;
@@ -522,7 +522,7 @@ namespace {
 
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(args, *p);
-      if (! expr->calc(bound_scope).to_boolean())
+      if (! expr->calc(bound_scope, args.locus, args.depth).to_boolean())
         return false;
     }
     return true;

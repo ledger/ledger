@@ -335,11 +335,17 @@ class call_scope_t : public context_scope_t
                    const bool        required = false);
 
 public:
-  explicit call_scope_t(scope_t&        _parent,
-                        value_t::type_t _type_context = value_t::VOID,
-                        const bool      _required     = true)
-    : context_scope_t(_parent, _type_context, _required), ptr(NULL) {
-    TRACE_CTOR(call_scope_t, "scope_t&, value_t::type_t, bool");
+  expr_t::ptr_op_t * locus;
+  const int          depth;
+
+  explicit call_scope_t(scope_t&           _parent,
+                        expr_t::ptr_op_t * _locus = NULL,
+                        const int          _depth = 0)
+    : context_scope_t(_parent, _parent.type_context(),
+                      _parent.type_required()),
+      ptr(NULL), locus(_locus), depth(_depth) {
+    TRACE_CTOR(call_scope_t,
+               "scope_t&, value_t::type_t, bool, expr_t::ptr_op_t *, int");
   }
   virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);
