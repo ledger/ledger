@@ -65,6 +65,16 @@ AC_ARG_ENABLE(doxygen,
 
 AM_CONDITIONAL(USE_DOXYGEN, test x$doxygen = xtrue)
 
+AC_ARG_ENABLE(cache,
+  [  --enable-cache           Enable use of the --cache option],
+  [case "${enableval}" in
+    yes) cache=true ;;
+    no)  cache=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-cache) ;;
+  esac],[cache=false])
+
+AM_CONDITIONAL(USE_CACHE_OPTION, test x$cache = xtrue)
+
 AC_ARG_ENABLE(python,
   [  --enable-python          Turn on Python support (experimental)],
   [case "${enableval}" in
@@ -340,11 +350,11 @@ AC_CACHE_CHECK(
    AC_LANG_POP
    LIBS=$boost_serialization_save_libs])
 
-if [test x$boost_serialization_cpplib_avail_cv_ = xtrue ]; then
+if [test x$boost_serialization_cpplib_avail_cv_ = xtrue -a x$cache = xtrue]; then
   AC_DEFINE([HAVE_BOOST_SERIALIZATION], [1], [Whether Boost.Serialization is available])
   LIBS="-lboost_serialization$BOOST_SUFFIX $LIBS"
 fi
-AM_CONDITIONAL(HAVE_BOOST_SERIALIZATION, test x$boost_serialization_cpplib_avail_cv_ = xtrue)
+AM_CONDITIONAL(HAVE_BOOST_SERIALIZATION, test x$boost_serialization_cpplib_avail_cv_ = xtrue -a x$cache = xtrue)
 
 # check for Python
 if [ test x$python = xtrue ]; then

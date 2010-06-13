@@ -85,13 +85,13 @@ public:
   bool match(const string& text) const {
 #if defined(HAVE_BOOST_REGEX_UNICODE)
     DEBUG("mask.match",
-	  "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-	  << (boost::u32regex_search(text, expr) ? "true" : "false"));
+          "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+          << (boost::u32regex_search(text, expr) ? "true" : "false"));
     return boost::u32regex_search(text, expr);
 #else
     DEBUG("mask.match",
-	  "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-	  << (boost::regex_search(text, expr) ? "true" : "false"));
+          "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+          << (boost::regex_search(text, expr) ? "true" : "false"));
     return boost::regex_search(text, expr);
 #endif
   }
@@ -107,7 +107,7 @@ public:
       unistring ustr;
       std::basic_string<UChar32> expr_str = expr.str();
       std::copy(expr_str.begin(), expr_str.end(),
-		std::back_inserter(ustr.utf32chars));
+                std::back_inserter(ustr.utf32chars));
       return ustr.extract();
 #else
       return expr.str();

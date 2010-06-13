@@ -43,8 +43,8 @@ namespace ledger {
 namespace {
   void xml_account(std::ostream& out, const account_t * acct) {
     if ((acct->has_xdata() &&
-	 acct->xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
-	acct->children_with_flags(ACCOUNT_EXT_VISITED)) {
+         acct->xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
+        acct->children_with_flags(ACCOUNT_EXT_VISITED)) {
       out << "<account id=\"";
       out.width(sizeof(unsigned long) * 2);
       out.fill('0');
@@ -54,15 +54,15 @@ namespace {
       out << "<name>" << acct->name << "</name>\n";
       value_t total = acct->amount();
       if (! total.is_null()) {
-	out << "<amount>\n";
-	to_xml(out, total);
-	out << "</amount>\n";
+        out << "<amount>\n";
+        to_xml(out, total);
+        out << "</amount>\n";
       }
       total = acct->total();
       if (! total.is_null()) {
-	out << "<total>\n";
-	to_xml(out, total);
-	out << "</total>\n";
+        out << "<total>\n";
+        to_xml(out, total);
+        out << "</total>\n";
       }
       out << "</account>\n";
     }
@@ -76,8 +76,8 @@ namespace {
 
     foreach (const post_t * post, xact->posts)
       if (post->has_xdata() &&
-	  post->xdata().has_flags(POST_EXT_VISITED))
-	to_xml(out, *post);
+          post->xdata().has_flags(POST_EXT_VISITED))
+        to_xml(out, *post);
 
     out << "</transaction>\n";
   }
@@ -115,7 +115,7 @@ void format_xml::operator()(post_t& post)
   assert(post.xdata().has_flags(POST_EXT_VISITED));
 
   commodities.insert(commodities_pair(post.amount.commodity().symbol(),
-				      &post.amount.commodity()));
+                                      &post.amount.commodity()));
 
   if (transactions_set.find(post.xact) == transactions_set.end())
     transactions.push_back(post.xact);

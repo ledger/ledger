@@ -70,3 +70,7 @@ clean:
 	-rm -fr $(STOW_ROOT)/icu-gcc$(CXX_VERSION)
 	-(cd cppunit; make distclean)
 	-(cd icu/source; make distclean)
+
+lib-clean:
+	-(cd cppunit; make distclean)
+	-(cd icu/source; make distclean)

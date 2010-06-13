@@ -58,22 +58,22 @@ bool item_t::has_tag(const string& tag) const
 }
 
 bool item_t::has_tag(const mask_t& tag_mask,
-		     const optional<mask_t>& value_mask) const
+                     const optional<mask_t>& value_mask) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
       if (tag_mask.match(data.first)) {
-	if (! value_mask)
-	  return true;
-	else if (data.second.first)
-	  return value_mask->match(*data.second.first);
+        if (! value_mask)
+          return true;
+        else if (data.second.first)
+          return value_mask->match(data.second.first->to_string());
       }
     }
   }
   return false;
 }
 
-optional<string> item_t::get_tag(const string& tag) const
+optional<value_t> item_t::get_tag(const string& tag) const
 {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
@@ -87,24 +87,26 @@ optional<string> item_t::get_tag(const string& tag) const
   return none;
 }
 
-optional<string> item_t::get_tag(const mask_t& tag_mask,
-				 const optional<mask_t>& value_mask) const
+optional<value_t> item_t::get_tag(const mask_t& tag_mask,
+                                  const optional<mask_t>& value_mask) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
       if (tag_mask.match(data.first) &&
-	  (! value_mask ||
-	   (data.second.first && value_mask->match(*data.second.first))))
-	return data.second.first;
+          (! value_mask ||
+           (data.second.first &&
+            value_mask->match(data.second.first->to_string())))) {
+        return data.second.first;
+      }
     }
   }
   return none;
 }
 
 item_t::string_map::iterator
-item_t::set_tag(const string&           tag,
-		const optional<string>& value,
-		const bool              overwrite_existing)
+item_t::set_tag(const string&            tag,
+                const optional<value_t>& value,
+                const bool               overwrite_existing)
 {
   assert(! tag.empty());
 
@@ -112,10 +114,12 @@ item_t::set_tag(const string&           tag,
     metadata = string_map();
 
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
-	<< (value ? *value : string("<none>")) << "'");
+        << (value ? *value : string_value("<none>")) << "'");
 
-  optional<string> data = value;
-  if (data && data->empty())
+  optional<value_t> data = value;
+  if (data &&
+      (data->is_null() ||
+       (data->is_string() && data->as_string().empty())))
     data = none;
 
   string_map::iterator i = metadata->find(tag);
@@ -131,23 +135,25 @@ item_t::set_tag(const string&           tag,
   }
 }
 
-void item_t::parse_tags(const char * p, bool overwrite_existing,
-			optional<date_t::year_type> current_year)
+void item_t::parse_tags(const char *                p,
+                        scope_t&                    scope,
+                        bool                        overwrite_existing,
+                        optional<date_t::year_type> current_year)
 {
   if (const char * b = std::strchr(p, '[')) {
     if (*(b + 1) != '\0' &&
-	(std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
+        (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
       if (const char * e = std::strchr(p, ']')) {
-	char buf[256];
-	std::strncpy(buf, b + 1, e - b - 1);
-	buf[e - b - 1] = '\0';
+        char buf[256];
+        std::strncpy(buf, b + 1, e - b - 1);
+        buf[e - b - 1] = '\0';
 
-	if (char * p = std::strchr(buf, '=')) {
-	  *p++ = '\0';
-	  _date_eff = parse_date(p, current_year);
-	}
-	if (buf[0])
-	  _date = parse_date(buf, current_year);
+        if (char * p = std::strchr(buf, '=')) {
+          *p++ = '\0';
+          _date_eff = parse_date(p, current_year);
+        }
+        if (buf[0])
+          _date = parse_date(buf, current_year);
       }
     }
   }
@@ -160,32 +166,47 @@ void item_t::parse_tags(const char * p, bool overwrite_existing,
   std::strcpy(buf.get(), p);
 
   string tag;
+  bool   by_value = false;
   for (char * q = std::strtok(buf.get(), " \t");
        q;
        q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
+    if (len < 2) continue;
     if (! tag.empty()) {
-      string_map::iterator i = set_tag(tag, string(p + (q - buf.get())),
-				       overwrite_existing);
+      string_map::iterator i;
+      string field(p + (q - buf.get()));
+      if (by_value) {
+        bind_scope_t bound_scope(scope, *this);
+        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
+      } else {
+        i = set_tag(tag, string_value(field), overwrite_existing);
+      }
       (*i).second.second = true;
       break;
     }
     else if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
       for (char * r = std::strtok(q + 1, ":");
-	   r;
-	   r = std::strtok(NULL, ":")) {
-	string_map::iterator i = set_tag(r, none, overwrite_existing);
-	(*i).second.second = true;
+           r;
+           r = std::strtok(NULL, ":")) {
+        string_map::iterator i = set_tag(r, none, overwrite_existing);
+        (*i).second.second = true;
       }
     }
     else if (q[len - 1] == ':') { // a metadata setting
-      tag = string(q, len - 1);
+      int index = 1;
+      if (q[len - 2] == ':') {
+        by_value = true;
+        index    = 2;
+      }
+      tag = string(q, len - index);
     }
   }
 }
 
-void item_t::append_note(const char * p, bool overwrite_existing,
-			 optional<date_t::year_type> current_year)
+void item_t::append_note(const char *                p,
+                         scope_t&                    scope,
+                         bool                        overwrite_existing,
+                         optional<date_t::year_type> current_year)
 {
   if (note) {
     *note += '\n';
@@ -194,7 +215,7 @@ void item_t::append_note(const char * p, bool overwrite_existing,
     note = p;
   }
 
-  parse_tags(p, overwrite_existing, current_year);
+  parse_tags(p, scope, overwrite_existing, current_year);
 }
 
 namespace {
@@ -235,21 +256,21 @@ namespace {
 
     if (args.size() == 1) {
       if (args[0].is_string())
-	return item.has_tag(args[0].as_string());
+        return item.has_tag(args[0].as_string());
       else if (args[0].is_mask())
-	return item.has_tag(args[0].as_mask());
+        return item.has_tag(args[0].as_mask());
       else
-	throw_(std::runtime_error,
-	       _("Expected string or mask for argument 1, but received %1")
-	       << args[0].label());
+        throw_(std::runtime_error,
+               _("Expected string or mask for argument 1, but received %1")
+               << args[0].label());
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
-	return item.has_tag(args[0].to_mask(), args[1].to_mask());
+        return item.has_tag(args[0].to_mask(), args[1].to_mask());
       else
-	throw_(std::runtime_error,
-	       _("Expected masks for arguments 1 and 2, but received %1 and %2")
-	       << args[0].label() << args[1].label());
+        throw_(std::runtime_error,
+               _("Expected masks for arguments 1 and 2, but received %1 and %2")
+               << args[0].label() << args[1].label());
     }
     else if (args.size() == 0) {
       throw_(std::runtime_error, _("Too few arguments to function"));
@@ -263,25 +284,25 @@ namespace {
   value_t get_tag(call_scope_t& args)
   {
     item_t& item(find_scope<item_t>(args));
-    optional<string> str;
+    optional<value_t> val;
 
     if (args.size() == 1) {
       if (args[0].is_string())
-	str = item.get_tag(args[0].as_string());
+        val = item.get_tag(args[0].as_string());
       else if (args[0].is_mask())
-	str = item.get_tag(args[0].as_mask());
+        val = item.get_tag(args[0].as_mask());
       else
-	throw_(std::runtime_error,
-	       _("Expected string or mask for argument 1, but received %1")
-	       << args[0].label());
+        throw_(std::runtime_error,
+               _("Expected string or mask for argument 1, but received %1")
+               << args[0].label());
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
-	str = item.get_tag(args[0].to_mask(), args[1].to_mask());
+        val = item.get_tag(args[0].to_mask(), args[1].to_mask());
       else
-	throw_(std::runtime_error,
-	       _("Expected masks for arguments 1 and 2, but received %1 and %2")
-	       << args[0].label() << args[1].label());
+        throw_(std::runtime_error,
+               _("Expected masks for arguments 1 and 2, but received %1 and %2")
+               << args[0].label() << args[1].label());
     }
     else if (args.size() == 0) {
       throw_(std::runtime_error, _("Too few arguments to function"));
@@ -290,10 +311,7 @@ namespace {
       throw_(std::runtime_error, _("Too many arguments to function"));
     }
 
-    if (str)
-      return string_value(*str);
-    else
-      return NULL_VALUE;
+    return val ? *val : NULL_VALUE;
   }
 
   value_t get_pathname(item_t& item) {
@@ -355,13 +373,13 @@ value_t get_comment(item_t& item)
     bool need_separator = false;
     for (const char * p = item.note->c_str(); *p; p++) {
       if (*p == '\n') {
-	need_separator = true;
+        need_separator = true;
       } else {
-	if (need_separator) {
-	  buf << "\n    ;";
-	  need_separator = false;
-	}
-	buf << *p;
+        if (need_separator) {
+          buf << "\n    ;";
+          need_separator = false;
+        }
+        buf << *p;
       }
     }
     return string_value(buf.str());
@@ -369,7 +387,7 @@ value_t get_comment(item_t& item)
 }
 
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
-				const string& name)
+                                const string& name)
 {
   if (kind != symbol_t::FUNCTION)
     return NULL;
@@ -502,7 +520,7 @@ bool item_t::valid() const
 void print_item(std::ostream& out, const item_t& item, const string& prefix)
 {
   out << source_context(item.pos->pathname, item.pos->beg_pos,
-			item.pos->end_pos, prefix);
+                        item.pos->end_pos, prefix);
 }
 
 string item_context(const item_t& item, const string& desc)
@@ -528,7 +546,7 @@ string item_context(const item_t& item, const string& desc)
 
   if (item.pos->beg_line != item.pos->end_line)
     out << _(", lines ") << item.pos->beg_line << "-"
-	<< item.pos->end_line << ":\n";
+        << item.pos->end_line << ":\n";
   else
     out << _(", line ") << item.pos->beg_line << ":\n";
 

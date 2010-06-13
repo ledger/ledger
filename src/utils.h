@@ -59,7 +59,7 @@
 #define NO_ASSERTS  1
 //#define NO_LOGGING  1
 #else
-#define TRACING_ON  1		// use --trace X to enable
+#define TRACING_ON  1           // use --trace X to enable
 #endif
 
 /*@}*/
@@ -80,15 +80,15 @@ namespace ledger {
 
   typedef std::list<string> strings_list;
 
-  typedef posix_time::ptime	    ptime;
+  typedef posix_time::ptime         ptime;
   typedef ptime::time_duration_type time_duration;
-  typedef gregorian::date	    date;
+  typedef gregorian::date           date;
   typedef gregorian::date_duration  date_duration;
-  typedef posix_time::seconds	    seconds;
+  typedef posix_time::seconds       seconds;
 
-  typedef boost::filesystem::path	      path;
-  typedef boost::filesystem::ifstream	      ifstream;
-  typedef boost::filesystem::ofstream	      ofstream;
+  typedef boost::filesystem::path             path;
+  typedef boost::filesystem::ifstream         ifstream;
+  typedef boost::filesystem::ofstream         ofstream;
   typedef boost::filesystem::filesystem_error filesystem_error;
 }
 
@@ -110,12 +110,12 @@ namespace ledger {
 
 namespace ledger {
   void debug_assert(const string& reason, const string& func,
-		    const string& file, std::size_t line);
+                    const string& file, std::size_t line);
 }
 
-#define assert(x)						\
-  ((x) ? ((void)0) : debug_assert(#x, BOOST_CURRENT_FUNCTION,	\
-				  __FILE__, __LINE__))
+#define assert(x)                                               \
+  ((x) ? ((void)0) : debug_assert(#x, BOOST_CURRENT_FUNCTION,   \
+                                  __FILE__, __LINE__))
 
 #else // ! ASSERTS_ON
 
@@ -146,7 +146,7 @@ std::size_t current_memory_size();
 std::size_t current_objects_size();
 
 void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
-		     std::size_t cls_size);
+                     std::size_t cls_size);
 void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size);
 
 #define TRACE_CTOR(cls, args) \
@@ -239,8 +239,8 @@ inline string operator+(const string& __lhs, const char* __rhs)
 
 inline string operator+(const string& __lhs, char __rhs)
 {
-  typedef string		__string_type;
-  typedef string::size_type	__size_type;
+  typedef string                __string_type;
+  typedef string::size_type     __size_type;
   __string_type __str(__lhs);
   __str.append(__size_type(1), __rhs);
   return __str;
@@ -301,8 +301,8 @@ enum log_level_t {
   LOG_ALL
 };
 
-extern log_level_t	  _log_level;
-extern std::ostream *	  _log_stream;
+extern log_level_t        _log_level;
+extern std::ostream *     _log_stream;
 extern std::ostringstream _log_buffer;
 
 bool logger_func(log_level_t level);
@@ -539,7 +539,7 @@ extern "C" char * realpath(const char *, char resolved_path[]);
 #endif
 
 inline const string& either_or(const string& first,
-			       const string& second) {
+                               const string& second) {
   return first.empty() ? second : first;
 }
 
@@ -587,62 +587,62 @@ inline char peek_next_nonws(std::istream& in) {
   return c;
 }
 
-#define READ_INTO(str, targ, size, var, cond) {		\
-    char * _p = targ;					\
-    var = static_cast<char>(str.peek());		\
-    while (str.good() && ! str.eof() && var != '\n' &&	\
-	   (cond) && _p - targ < size) {		\
-      str.get(var);					\
-      if (str.eof())					\
-	break;						\
-      if (var == '\\') {				\
-	str.get(var);					\
-	if (in.eof())					\
-	  break;					\
-        switch (var) {					\
-        case 'b': var = '\b'; break;			\
-        case 'f': var = '\f'; break;			\
-        case 'n': var = '\n'; break;			\
-        case 'r': var = '\r'; break;			\
-        case 't': var = '\t'; break;			\
-        case 'v': var = '\v'; break;			\
-        default: break;					\
-        }						\
-      }							\
-      *_p++ = var;					\
-      var = static_cast<char>(str.peek());		\
-    }							\
-    *_p = '\0';						\
+#define READ_INTO(str, targ, size, var, cond) {         \
+    char * _p = targ;                                   \
+    var = static_cast<char>(str.peek());                \
+    while (str.good() && ! str.eof() && var != '\n' &&  \
+           (cond) && _p - targ < size) {                \
+      str.get(var);                                     \
+      if (str.eof())                                    \
+        break;                                          \
+      if (var == '\\') {                                \
+        str.get(var);                                   \
+        if (in.eof())                                   \
+          break;                                        \
+        switch (var) {                                  \
+        case 'b': var = '\b'; break;                    \
+        case 'f': var = '\f'; break;                    \
+        case 'n': var = '\n'; break;                    \
+        case 'r': var = '\r'; break;                    \
+        case 't': var = '\t'; break;                    \
+        case 'v': var = '\v'; break;                    \
+        default: break;                                 \
+        }                                               \
+      }                                                 \
+      *_p++ = var;                                      \
+      var = static_cast<char>(str.peek());              \
+    }                                                   \
+    *_p = '\0';                                         \
   }
 
-#define READ_INTO_(str, targ, size, var, idx, cond) {	\
-    char * _p = targ;					\
-    var = static_cast<char>(str.peek());		\
-    while (str.good() && ! str.eof() && var != '\n' &&	\
-	   (cond) && _p - targ < size) {		\
-      str.get(var);					\
-      if (str.eof())					\
-	break;						\
-      idx++;						\
-      if (var == '\\') {				\
-	str.get(var);					\
-	if (in.eof())					\
-	  break;					\
-        switch (var) {					\
-        case 'b': var = '\b'; break;			\
-        case 'f': var = '\f'; break;			\
-        case 'n': var = '\n'; break;			\
-        case 'r': var = '\r'; break;			\
-        case 't': var = '\t'; break;			\
-        case 'v': var = '\v'; break;			\
-        default: break;					\
-        }						\
-	idx++;						\
-      }							\
-      *_p++ = var;					\
-      var = static_cast<char>(str.peek());		\
-    }							\
-    *_p = '\0';						\
+#define READ_INTO_(str, targ, size, var, idx, cond) {   \
+    char * _p = targ;                                   \
+    var = static_cast<char>(str.peek());                \
+    while (str.good() && ! str.eof() && var != '\n' &&  \
+           (cond) && _p - targ < size) {                \
+      str.get(var);                                     \
+      if (str.eof())                                    \
+        break;                                          \
+      idx++;                                            \
+      if (var == '\\') {                                \
+        str.get(var);                                   \
+        if (in.eof())                                   \
+          break;                                        \
+        switch (var) {                                  \
+        case 'b': var = '\b'; break;                    \
+        case 'f': var = '\f'; break;                    \
+        case 'n': var = '\n'; break;                    \
+        case 'r': var = '\r'; break;                    \
+        case 't': var = '\t'; break;                    \
+        case 'v': var = '\v'; break;                    \
+        default: break;                                 \
+        }                                               \
+        idx++;                                          \
+      }                                                 \
+      *_p++ = var;                                      \
+      var = static_cast<char>(str.peek());              \
+    }                                                   \
+    *_p = '\0';                                         \
   }
 
 inline string to_hex(uint_least32_t * message_digest, const int len = 1)
@@ -654,7 +654,7 @@ inline string to_hex(uint_least32_t * message_digest, const int len = 1)
     buf.fill('0');
     buf << std::hex << message_digest[i];
     if (i + 1 >= len)
-      break;			// only output the first LEN dwords
+      break;                    // only output the first LEN dwords
   }
   return buf.str();
 }
@@ -672,12 +672,12 @@ inline string sha1sum(const string& str)
 class push_xml
 {
   std::ostream& out;
-  string	tag;
-  bool  	leave_open;
+  string        tag;
+  bool          leave_open;
 
 public:
   push_xml(std::ostream& _out, const string& _tag, bool has_attrs = false,
-	   bool _leave_open = false)
+           bool _leave_open = false)
     : out(_out), tag(_tag), leave_open(_leave_open) {
     out << '<' << tag;
     if (! has_attrs)
@@ -697,17 +697,17 @@ public:
     foreach (const char& ch, str) {
       switch (ch) {
       case '<':
-	buf << "&lt;";
-	break;
+        buf << "&lt;";
+        break;
       case '>':
-	buf << "&gt;";
-	break;
+        buf << "&gt;";
+        break;
       case '&':
-	buf << "&amp;";
-	break;
+        buf << "&amp;";
+        break;
       default:
-	buf << ch;
-	break;
+        buf << ch;
+        break;
       }
     }
     return buf.str();

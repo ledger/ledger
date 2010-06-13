@@ -42,11 +42,11 @@ void format_emacs_posts::write_xact(xact_t& xact)
 {
   if (xact.pos)
     out << "\"" << xact.pos->pathname << "\" "
-	<< xact.pos->beg_line << " ";
+        << xact.pos->beg_line << " ";
   else
     out << "\"\" " << -1 << " ";
 
-  tm	      when = gregorian::to_tm(xact.date());
+  tm          when = gregorian::to_tm(xact.date());
   std::time_t date = std::mktime(&when);
 
   out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
@@ -86,7 +86,7 @@ void format_emacs_posts::operator()(post_t& post)
       out << "  (" << -1 << " ";
 
     out << "\"" << post.reported_account()->fullname() << "\" \""
-	<< post.amount << "\"";
+        << post.amount << "\"";
 
     switch (post.state()) {
     case item_t::CLEARED:

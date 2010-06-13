@@ -73,11 +73,11 @@ namespace {
     if (status < 0) {
       throw std::logic_error(_("Failed to fork child process"));
     }
-    else if (status == 0) {	// child
+    else if (status == 0) {     // child
       // Duplicate pipe's reading end into stdin
       status = dup2(pfd[0], STDIN_FILENO);
       if (status == -1)
-	perror("dup2");
+        perror("dup2");
 
       // Close unuseful file descriptors: the pipe's writing and reading
       // ends (the latter is not needed anymore, after the duplication).
@@ -98,7 +98,7 @@ namespace {
       perror((std::string("execlp: ") + pager_path.string()).c_str());
       exit(1);
     }
-    else {			// parent
+    else {                      // parent
       close(pfd[0]);
       typedef iostreams::stream<iostreams::file_descriptor_sink> fdstream;
       *os = new fdstream(pfd[1]);
@@ -108,7 +108,7 @@ namespace {
 }
 
 void output_stream_t::initialize(const optional<path>& output_file,
-				 const optional<path>& pager_path)
+                                 const optional<path>& pager_path)
 {
   if (output_file && *output_file != "-")
     os = new ofstream(*output_file);

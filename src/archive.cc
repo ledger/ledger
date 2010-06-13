@@ -59,9 +59,9 @@ BOOST_CLASS_EXPORT(ledger::auto_xact_t)
 BOOST_CLASS_EXPORT(ledger::period_xact_t)
 
 template void ledger::journal_t::serialize(boost::archive::binary_oarchive&,
-					   const unsigned int);
+                                           const unsigned int);
 template void ledger::journal_t::serialize(boost::archive::binary_iarchive&,
-					   const unsigned int);
+                                           const unsigned int);
 namespace ledger {
 
 namespace {
@@ -113,7 +113,7 @@ bool archive_t::read_header()
   iarchive >> *this;
 
   DEBUG("archive.journal",
-	"Version number:    " << std::hex << ARCHIVE_VERSION << std::dec);
+        "Version number:    " << std::hex << ARCHIVE_VERSION << std::dec);
   DEBUG("archive.journal", "Number of sources: " << sources.size());
 
 #if defined(DEBUG_ON)
@@ -152,7 +152,7 @@ bool archive_t::should_load(const std::list<path>& data_files)
 
   if (data_files.size() != sources.size()) {
     DEBUG("archive.journal", "No, number of sources doesn't match: "
-	  << data_files.size() << " != " << sources.size());
+          << data_files.size() << " != " << sources.size());
     return false;
   }
 
@@ -171,23 +171,23 @@ bool archive_t::should_load(const std::list<path>& data_files)
       DEBUG("archive.journal", "Comparing against source file: " << *i.filename);
 
       if (*i.filename == p) {
-	if (! exists(*i.filename)) {
-	  DEBUG("archive.journal",
-		"No, a referent source no longer exists: " << *i.filename);
-	  return false;
-	}
+        if (! exists(*i.filename)) {
+          DEBUG("archive.journal",
+                "No, a referent source no longer exists: " << *i.filename);
+          return false;
+        }
 
-	if (i.modtime != posix_time::from_time_t(last_write_time(p))) {
-	  DEBUG("archive.journal", "No, a source's modtime has changed: " << p);
-	  return false;
-	}
+        if (i.modtime != posix_time::from_time_t(last_write_time(p))) {
+          DEBUG("archive.journal", "No, a source's modtime has changed: " << p);
+          return false;
+        }
 
-	if (i.size != file_size(p)) {
-	  DEBUG("archive.journal", "No, a source's size has changed: " << p);
-	  return false;
-	}
+        if (i.size != file_size(p)) {
+          DEBUG("archive.journal", "No, a source's size has changed: " << p);
+          return false;
+        }
 
-	found++;
+        found++;
       }
     }
   }
@@ -225,7 +225,7 @@ bool archive_t::should_save(journal_t& journal)
 
     if (! exists(*i.filename)) {
       DEBUG("archive.journal",
-	    "No, a source no longer exists: " << *i.filename);
+            "No, a source no longer exists: " << *i.filename);
       return false;
     }
 
@@ -258,11 +258,11 @@ void archive_t::save(journal_t& journal)
   boost::archive::binary_oarchive oa(stream);
 
   DEBUG("archive.journal", "Creating archive with version "
-	<< std::hex << ARCHIVE_VERSION << std::dec);
+        << std::hex << ARCHIVE_VERSION << std::dec);
   oa << *this;
 
   DEBUG("archive.journal",
-	"Archiving journal with " << sources.size() << " sources");
+        "Archiving journal with " << sources.size() << " sources");
   oa << journal;
 
   INFO_FINISH(archive);

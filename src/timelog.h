@@ -64,14 +64,14 @@ public:
     TRACE_CTOR(time_xact_t, "");
   }
   time_xact_t(const optional<position_t>& _position,
-	      const datetime_t&		  _checkin,
-	      account_t *		  _account = NULL,
-	      const string&		  _desc	   = "",
-	      const string&               _note    = "")
+              const datetime_t&           _checkin,
+              account_t *                 _account = NULL,
+              const string&               _desc    = "",
+              const string&               _note    = "")
     : checkin(_checkin), account(_account), desc(_desc), note(_note),
       position(_position ? *_position : position_t()) {
     TRACE_CTOR(time_xact_t,
-	       "position_t, datetime_t, account_t *, string, string");
+               "position_t, datetime_t, account_t *, string, string");
   }
   time_xact_t(const time_xact_t& xact)
     : checkin(xact.checkin), account(xact.account),
@@ -86,11 +86,13 @@ public:
 class time_log_t
 {
   std::list<time_xact_t> time_xacts;
-  journal_t&		 journal;
+  journal_t&             journal;
+  scope_t&               scope;
 
 public:
-  time_log_t(journal_t& _journal) : journal(_journal) {
-    TRACE_CTOR(time_log_t, "journal_t&");
+  time_log_t(journal_t& _journal, scope_t& _scope)
+    : journal(_journal), scope(_scope) {
+    TRACE_CTOR(time_log_t, "journal_t&, scope_t&");
   }
   ~time_log_t();
 

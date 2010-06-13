@@ -38,7 +38,7 @@ namespace ledger {
 scope_t * scope_t::default_scope = NULL;
 
 void symbol_scope_t::define(const symbol_t::kind_t kind,
-			    const string& name, expr_t::ptr_op_t def)
+                            const string& name, expr_t::ptr_op_t def)
 {
   DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
 
@@ -53,15 +53,15 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
     symbols->erase(i);
 
     result = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def),
-						    def));
+                                                    def));
     if (! result.second)
       throw_(compile_error,
-	     _("Redefinition of '%1' in the same scope") << name);
+             _("Redefinition of '%1' in the same scope") << name);
   }
 }
 
 expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
-					const string& name)
+                                        const string& name)
 {
   if (symbols) {
     symbol_map::const_iterator i = symbols->find(symbol_t(kind, name));

@@ -3,20 +3,20 @@ reg
 Y2008
 
 01/30 A
-	Bank	130
-	Income
+        Bank    130
+        Income
 
 02/01 B
-	Bank	140
-	Income
+        Bank    140
+        Income
 
 02/20 C
-	Bank	150
-	Income
+        Bank    150
+        Income
 
 03/01 D
-	Bank	160
-	Income
+        Bank    160
+        Income
 >>>1
 08-Jan-30 A                     Bank                            130          130
                                 Income                         -130            0

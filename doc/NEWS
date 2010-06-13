@@ -1,4 +1,4 @@
-			     Ledger NEWS
+                             Ledger NEWS
 
 * 3.0
 
@@ -291,7 +291,7 @@ features, please see the manual.
       monthly costs report, for example, because it makes the
       following command possible:
 
-	ledger -M --only "a>100" reg ^Expenses:Food
+        ledger -M --only "a>100" reg ^Expenses:Food
 
       This shows only *months* whose amount is greater than 100.  If
       --limit had been used, it would have been a monthly summary of
@@ -303,7 +303,7 @@ features, please see the manual.
       This predicate does not constrain calculation, but only display.
       Consider the same command as above:
 
-	ledger -M --display "a>100" reg ^Expenses:Food
+        ledger -M --display "a>100" reg ^Expenses:Food
 
       This displays only lines whose amount is greater than 100, *yet
       the running total still includes amounts from all transactions*.
@@ -311,7 +311,7 @@ features, please see the manual.
       the current month's checking register while still giving a
       correct ending balance:
 
-	ledger --display "d>[this month]" reg Checking
+        ledger --display "d>[this month]" reg Checking
 
     Note that these predicates can be combined.  Here is a report that
     considers only food bills whose individual cost is greater than
@@ -320,8 +320,8 @@ features, please see the manual.
     retain an accurate running total with respect to the entire ledger
     file:
 
-	ledger -M --limit "a>20" --only "a>200" \
-	  --display "year == yearof([last year])" reg ^Expenses:Food
+        ledger -M --limit "a>20" --only "a>200" \
+          --display "year == yearof([last year])" reg ^Expenses:Food
 
 - Added new "--descend AMOUNT" and "--descend-if VALEXPR" reporting
   options.  For any reports that display valued transactions (i.e.,
@@ -398,12 +398,12 @@ features, please see the manual.
      G      gain_total
      U(x)   abs(x)
      S(x)   quant(x), quantity(x)
-	    comm(x), commodity(x)
-	    setcomm(x,y), set_commodity(x,y)
+            comm(x), commodity(x)
+            setcomm(x,y), set_commodity(x,y)
      A(x)   mean(x), avg(x), average(x)
      P(x,y) val(x,y), value(x,y)
-	    min(x,y)
-	    max(x,y)
+            min(x,y)
+            max(x,y)
 
 - There are new "parse" and "expr" commands, whose argument is a
   single value expression.  Ledger will simply print out the result of
@@ -554,10 +554,10 @@ features, please see the manual.
   the following is now supported, which wasn't previously:
 
     2004/06/21 Adjustment
-	Retirement          100 FUNDA
-	Retirement          200 FUNDB
-	Retirement          300 FUNDC
-	Equity:Adjustments
+        Retirement          100 FUNDA
+        Retirement          200 FUNDB
+        Retirement          300 FUNDC
+        Equity:Adjustments
 
 - Fixed several bugs relating to QIF parsing, budgeting and
   forecasting.

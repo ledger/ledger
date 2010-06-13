@@ -66,17 +66,17 @@ mask_t& mask_t::assign_glob(const string& pat)
       break;
     case '[':
       while (i < len && pat[i] != ']')
-	re_pat += pat[i++];
+        re_pat += pat[i++];
       if (i < len)
-	re_pat += pat[i];
+        re_pat += pat[i];
       break;
 
     case '\\':
       if (i + 1 < len) {
-	re_pat += pat[++i];
-	break;
+        re_pat += pat[++i];
+        break;
       } else {
-	// fallthrough...
+        // fallthrough...
       }
     default:
       re_pat += pat[i];

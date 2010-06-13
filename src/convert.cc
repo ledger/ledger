@@ -46,8 +46,8 @@ namespace ledger {
 value_t convert_command(call_scope_t& scope)
 {
   interactive_t args(scope, "s");
-  report_t&	report(find_scope<report_t>(scope));
-  journal_t&	journal(*report.session.journal.get());
+  report_t&     report(find_scope<report_t>(scope));
+  journal_t&    journal(*report.session.journal.get());
 
   string bucket_name;
   if (report.HANDLED(account_))
@@ -69,16 +69,16 @@ value_t convert_command(call_scope_t& scope)
     xact_posts_iterator xact_iter(*xact);
     while ((post = xact_iter()) != NULL) {
       if (post->account == bucket)
-	break;
+        break;
     }
     if (post) {
       post_map_t::iterator i = post_map.find(post->amount);
       if (i == post_map.end()) {
-	std::list<post_t *> post_list;
-	post_list.push_back(post);
-	post_map.insert(post_map_t::value_type(post->amount, post_list));
+        std::list<post_t *> post_list;
+        post_list.push_back(post);
+        post_map.insert(post_map_t::value_type(post->amount, post_list));
       } else {
-	(*i).second.push_back(post);
+        (*i).second.push_back(post);
       }
     }
   }
@@ -95,7 +95,7 @@ value_t convert_command(call_scope_t& scope)
   while (xact_t * xact = reader.read_xact(journal, bucket)) {
     if (report.HANDLED(invert)) {
       foreach (post_t * post, xact->posts)
-	post->amount.in_place_negate();
+        post->amount.in_place_negate();
     }
       
     bool matched = false;
@@ -103,46 +103,46 @@ value_t convert_command(call_scope_t& scope)
     if (i != post_map.end()) {
       std::list<post_t *>& post_list((*i).second);
       foreach (post_t * post, post_list) {
-	if (xact->code && post->xact->code &&
-	    *xact->code == *post->xact->code) {
-	  matched = true;
-	  break;
-	}
-	else if (xact->actual_date() == post->actual_date()) {
-	  matched = true;
-	  break;
-	}
+        if (xact->code && post->xact->code &&
+            *xact->code == *post->xact->code) {
+          matched = true;
+          break;
+        }
+        else if (xact->actual_date() == post->actual_date()) {
+          matched = true;
+          break;
+        }
       }
     }
 
     if (matched) {
       DEBUG("convert.csv", "Ignored xact with code: " << *xact->code);
-      checked_delete(xact);	// ignore it
+      checked_delete(xact);     // ignore it
     }
     else {
       if (xact->posts.front()->account == NULL) {
-	xacts_iterator xi;
-	xi.xacts_i   = current_xacts.begin();
-	xi.xacts_end = current_xacts.end();
-	xi.xacts_uninitialized = false;
+        xacts_iterator xi;
+        xi.xacts_i   = current_xacts.begin();
+        xi.xacts_end = current_xacts.end();
+        xi.xacts_uninitialized = false;
 
-	// jww (2010-03-07): Bind this logic to an option: --auto-match
-	if (account_t * acct =
-	    lookup_probable_account(xact->payee, xi, bucket).second)
-	  xact->posts.front()->account = acct;
-	else
-	  xact->posts.front()->account = unknown;
+        // jww (2010-03-07): Bind this logic to an option: --auto-match
+        if (account_t * acct =
+            lookup_probable_account(xact->payee, xi, bucket).second)
+          xact->posts.front()->account = acct;
+        else
+          xact->posts.front()->account = unknown;
       }
 
       if (! journal.add_xact(xact)) {
-	checked_delete(xact);
-	throw_(std::runtime_error,
-	       _("Failed to finalize derived transaction (check commodities)"));
+        checked_delete(xact);
+        throw_(std::runtime_error,
+               _("Failed to finalize derived transaction (check commodities)"));
       }
       else {
-	xact_posts_iterator xact_iter(*xact);
-	while (post_t * post = xact_iter())
-	  formatter(*post);
+        xact_posts_iterator xact_iter(*xact);
+        while (post_t * post = xact_iter())
+          formatter(*post);
       }
     }
   }

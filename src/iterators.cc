@@ -91,47 +91,47 @@ void posts_commodities_iterator::reset(journal_t& journal)
 
   foreach (commodity_t * comm, commodities) {
     if (optional<commodity_t::varied_history_t&> history =
-	comm->varied_history()) {
+        comm->varied_history()) {
       account_t * account = journal.master->find_account(comm->symbol());
 
       foreach (commodity_t::history_by_commodity_map::value_type& pair,
-	       history->histories) {
-	foreach (commodity_t::history_map::value_type& hpair,
-		 pair.second.prices) {
-	  xact_t * xact;
-	  string   symbol = hpair.second.commodity().symbol();
+               history->histories) {
+        foreach (commodity_t::history_map::value_type& hpair,
+                 pair.second.prices) {
+          xact_t * xact;
+          string   symbol = hpair.second.commodity().symbol();
 
-	  std::map<string, xact_t *>::iterator i =
-	    xacts_by_commodity.find(symbol);
-	  if (i != xacts_by_commodity.end()) {
-	    xact = (*i).second;
-	  } else {
-	    xact = &temps.create_xact();
-	    xact_temps.push_back(xact);
-	    xact->payee = symbol;
-	    xact->_date = hpair.first.date();
-	    xacts_by_commodity.insert
-	      (std::pair<string, xact_t *>(symbol, xact));
-	  }
+          std::map<string, xact_t *>::iterator i =
+            xacts_by_commodity.find(symbol);
+          if (i != xacts_by_commodity.end()) {
+            xact = (*i).second;
+          } else {
+            xact = &temps.create_xact();
+            xact_temps.push_back(xact);
+            xact->payee = symbol;
+            xact->_date = hpair.first.date();
+            xacts_by_commodity.insert
+              (std::pair<string, xact_t *>(symbol, xact));
+          }
 
-	  bool post_already_exists = false;
+          bool post_already_exists = false;
 
-	  foreach (post_t * post, xact->posts) {
-	    if (post->_date  == hpair.first.date() &&
-		post->amount == hpair.second) {
-	      post_already_exists = true;
-	      break;
-	    }
-	  }
+          foreach (post_t * post, xact->posts) {
+            if (post->_date  == hpair.first.date() &&
+                post->amount == hpair.second) {
+              post_already_exists = true;
+              break;
+            }
+          }
 
-	  if (! post_already_exists) {
-	    post_t& temp = temps.create_post(*xact, account);
-	    temp._date  = hpair.first.date();
-	    temp.amount = hpair.second;
+          if (! post_already_exists) {
+            post_t& temp = temps.create_post(*xact, account);
+            temp._date  = hpair.first.date();
+            temp.amount = hpair.second;
 
-	    temp.xdata().datetime = hpair.first;
-	  }
-	}
+            temp.xdata().datetime = hpair.first;
+          }
+        }
       }
     }
   }
@@ -162,7 +162,7 @@ post_t * posts_commodities_iterator::operator()()
 account_t * basic_accounts_iterator::operator()()
 {
   while (! accounts_i.empty() &&
-	 accounts_i.back() == accounts_end.back()) {
+         accounts_i.back() == accounts_end.back()) {
     accounts_i.pop_back();
     accounts_end.pop_back();
   }
@@ -187,14 +187,14 @@ void sorted_accounts_iterator::push_back(account_t& account)
     push_all(account, accounts_list.back());
 
     std::stable_sort(accounts_list.back().begin(),
-		     accounts_list.back().end(),
-		     compare_items<account_t>(sort_cmp));
+                     accounts_list.back().end(),
+                     compare_items<account_t>(sort_cmp));
 
 #if defined(DEBUG_ON)
     if (SHOW_DEBUG("accounts.sorted")) {
       foreach (account_t * account, accounts_list.back())
-	DEBUG("accounts.sorted",
-	      "Account (flat): " << account->fullname());
+        DEBUG("accounts.sorted",
+              "Account (flat): " << account->fullname());
     }
 #endif
   } else {
@@ -206,7 +206,7 @@ void sorted_accounts_iterator::push_back(account_t& account)
 }
 
 void sorted_accounts_iterator::push_all(account_t& account,
-					accounts_deque_t& deque)
+                                        accounts_deque_t& deque)
 {
   foreach (accounts_map::value_type& pair, account.accounts) {
     deque.push_back(pair.second);
@@ -215,13 +215,13 @@ void sorted_accounts_iterator::push_all(account_t& account,
 }
 
 void sorted_accounts_iterator::sort_accounts(account_t& account,
-					     accounts_deque_t& deque)
+                                             accounts_deque_t& deque)
 {
   foreach (accounts_map::value_type& pair, account.accounts)
     deque.push_back(pair.second);
 
   std::stable_sort(deque.begin(), deque.end(),
-		   compare_items<account_t>(sort_cmp));
+                   compare_items<account_t>(sort_cmp));
 
 #if defined(DEBUG_ON)
   if (SHOW_DEBUG("accounts.sorted")) {
@@ -234,7 +234,7 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
 account_t * sorted_accounts_iterator::operator()()
 {
   while (! sorted_accounts_i.empty() &&
-	 sorted_accounts_i.back() == sorted_accounts_end.back()) {
+         sorted_accounts_i.back() == sorted_accounts_end.back()) {
     sorted_accounts_i.pop_back();
     sorted_accounts_end.pop_back();
     assert(! accounts_list.empty());

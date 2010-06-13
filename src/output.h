@@ -69,8 +69,8 @@ protected:
 
 public:
   format_posts(report_t& _report, const string& format,
-	       const optional<string>& _prepend_format = none,
-	       std::size_t _prepend_width = 0);
+               const optional<string>& _prepend_format = none,
+               std::size_t _prepend_width = 0);
   virtual ~format_posts() {
     TRACE_DTOR(format_posts);
   }
@@ -83,8 +83,8 @@ public:
   virtual void operator()(post_t& post);
 
   virtual void clear() {
-    last_xact	 = NULL;
-    last_post	 = NULL;
+    last_xact    = NULL;
+    last_post    = NULL;
 
     report_title = "";
 
@@ -109,8 +109,8 @@ protected:
 
 public:
   format_accounts(report_t& _report, const string& _format,
-		  const optional<string>& _prepend_format = none,
-		  std::size_t _prepend_width = 0);
+                  const optional<string>& _prepend_format = none,
+                  std::size_t _prepend_width = 0);
   virtual ~format_accounts() {
     TRACE_DTOR(format_accounts);
   }
@@ -123,7 +123,7 @@ public:
   }
 
   virtual std::size_t post_account(account_t& account, const bool flat);
-  virtual void	      flush();
+  virtual void        flush();
 
   virtual void operator()(account_t& account);
 

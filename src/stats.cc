@@ -58,11 +58,11 @@ value_t report_statistics(call_scope_t& args)
   {
     straccstream accum;
     out << ACCUM(accum << _("Time period: %1 to %2 (%3 days)")
-		 << format_date(statistics.earliest_post)
-		 << format_date(statistics.latest_post)
-		 << (statistics.latest_post -
-		     statistics.earliest_post).days())
-	<< std::endl << std::endl;
+                 << format_date(statistics.earliest_post)
+                 << format_date(statistics.latest_post)
+                 << (statistics.latest_post -
+                     statistics.earliest_post).days())
+        << std::endl << std::endl;
   }
 
   out << _("  Files these postings came from:") << std::endl;
@@ -89,12 +89,12 @@ value_t report_statistics(call_scope_t& args)
   out << " (";
   out.precision(2);
   out << (double((statistics.latest_post - statistics.earliest_post).days()) /
-	  double(statistics.posts_count)) << _(" per day)") << std::endl;
+          double(statistics.posts_count)) << _(" per day)") << std::endl;
 
   out << _("  Uncleared postings:     ");
   out.width(6);
   out << (statistics.posts_count -
-			statistics.posts_cleared_count) << std::endl;
+                        statistics.posts_cleared_count) << std::endl;
 
   out << std::endl;
 

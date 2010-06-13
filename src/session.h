@@ -57,8 +57,8 @@ class session_t : public symbol_scope_t
   friend void set_session_context(session_t * session);
 
 public:
-  bool			   flush_on_next_data_file;
-  date_t::year_type	   current_year;
+  bool                     flush_on_next_data_file;
+  date_t::year_type        current_year;
   std::auto_ptr<journal_t> journal;
 
   explicit session_t();
@@ -91,7 +91,7 @@ public:
   option_t<session_t> * lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   /**
    * Option handlers

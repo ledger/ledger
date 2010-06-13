@@ -41,10 +41,10 @@
 namespace ledger {
 
 namespace {
-  void print_note(std::ostream&	    out,
-		  const string&	    note,
-		  const std::size_t columns,
-		  const std::size_t prior_width)
+  void print_note(std::ostream&     out,
+                  const string&     note,
+                  const std::size_t columns,
+                  const std::size_t prior_width)
   {
     // The 4 is for four leading spaces at the beginning of the posting, and
     // the 3 is for two spaces and a semi-colon before the note.
@@ -56,20 +56,20 @@ namespace {
     bool need_separator = false;
     for (const char * p = note.c_str(); *p; p++) {
       if (*p == '\n') {
-	need_separator = true;
+        need_separator = true;
       } else {
-	if (need_separator) {
-	  out << "\n    ;";
-	  need_separator = false;
-	}
-	out << *p;
+        if (need_separator) {
+          out << "\n    ;";
+          need_separator = false;
+        }
+        out << *p;
       }
     }
   }
 
   void print_xact(report_t& report, std::ostream& out, xact_t& xact)
   {
-    format_type_t	   format_type = FMT_WRITTEN;
+    format_type_t          format_type = FMT_WRITTEN;
     optional<const char *> format;
 
     if (report.HANDLED(date_format_)) {
@@ -80,15 +80,15 @@ namespace {
     std::ostringstream buf;
 
     buf << format_date(item_t::use_effective_date ?
-		       xact.date() : xact.actual_date(),
-		       format_type, format);
+                       xact.date() : xact.actual_date(),
+                       format_type, format);
     if (! item_t::use_effective_date && xact.effective_date())
       buf << '=' << format_date(*xact.effective_date(),
-				format_type, format);
+                                format_type, format);
     buf << ' ';
 
     buf << (xact.state() == item_t::CLEARED ? "* " :
-	    (xact.state() == item_t::PENDING ? "! " : ""));
+            (xact.state() == item_t::PENDING ? "! " : ""));
 
     if (xact.code)
       buf << '(' << *xact.code << ") ";
@@ -99,7 +99,7 @@ namespace {
     out << leader;
 
     std::size_t columns = (report.HANDLED(columns_) ?
-			   report.HANDLER(columns_).value.to_long() : 80);
+                           report.HANDLER(columns_).value.to_long() : 80);
 
     if (xact.note)
       print_note(out, *xact.note, columns, unistring(leader).length());
@@ -107,112 +107,112 @@ namespace {
 
     if (xact.metadata) {
       foreach (const item_t::string_map::value_type& data, *xact.metadata) {
-	if (! data.second.second) {
-	  out << "    ; ";
-	  if (data.second.first)
-	    out << data.first << ": " << *data.second.first;
-	  else
-	    out << ':' << data.first << ":";
-	  out << '\n';
-	}
+        if (! data.second.second) {
+          out << "    ; ";
+          if (data.second.first)
+            out << data.first << ": " << *data.second.first;
+          else
+            out << ':' << data.first << ":";
+          out << '\n';
+        }
       }
     }
 
     foreach (post_t * post, xact.posts) {
-      if (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
-	  ! post->has_flags(POST_ANONYMIZED) &&
-	  ! report.HANDLED(print_virtual))
-	continue;
+      if (! report.HANDLED(generated) &&
+          (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
+           ! post->has_flags(POST_ANONYMIZED)))
+        continue;
 
       out << "    ";
 
       std::ostringstream buf;
 
       if (xact.state() == item_t::UNCLEARED)
-	buf << (post->state() == item_t::CLEARED ? "* " :
-		(post->state() == item_t::PENDING ? "! " : ""));
+        buf << (post->state() == item_t::CLEARED ? "* " :
+                (post->state() == item_t::PENDING ? "! " : ""));
 
       if (post->has_flags(POST_VIRTUAL)) {
-	if (post->has_flags(POST_MUST_BALANCE))
-	  buf << '[';
-	else
-	  buf << '(';
+        if (post->has_flags(POST_MUST_BALANCE))
+          buf << '[';
+        else
+          buf << '(';
       }
 
       buf << post->account->fullname();
 
       if (post->has_flags(POST_VIRTUAL)) {
-	if (post->has_flags(POST_MUST_BALANCE))
-	  buf << ']';
-	else
-	  buf << ')';
+        if (post->has_flags(POST_MUST_BALANCE))
+          buf << ']';
+        else
+          buf << ')';
       }
 
       unistring name(buf.str());
 
       std::size_t account_width =
-	(report.HANDLER(account_width_).specified ?
-	 report.HANDLER(account_width_).value.to_long() : 36);
+        (report.HANDLER(account_width_).specified ?
+         report.HANDLER(account_width_).value.to_long() : 36);
 
       if (account_width < name.length())
-	account_width = name.length();
+        account_width = name.length();
 
-      if (! post->has_flags(POST_CALCULATED) || report.HANDLED(print_virtual)) {
-	out << name.extract();
-	int slip = (static_cast<int>(account_width) -
-		    static_cast<int>(name.length()));
-	if (slip > 0) {
-	  out.width(slip);
-	  out << ' ';
-	}
+      if (! post->has_flags(POST_CALCULATED) || report.HANDLED(generated)) {
+        out << name.extract();
+        int slip = (static_cast<int>(account_width) -
+                    static_cast<int>(name.length()));
+        if (slip > 0) {
+          out.width(slip);
+          out << ' ';
+        }
 
-	std::ostringstream amtbuf;
+        std::ostringstream amtbuf;
 
-	string amt;
-	if (post->amount_expr) {
-	  amt = post->amount_expr->text();
-	} else {
-	  int amount_width =
-	    (report.HANDLER(amount_width_).specified ?
-	     report.HANDLER(amount_width_).value.to_int() : 12);
+        string amt;
+        if (post->amount_expr) {
+          amt = post->amount_expr->text();
+        } else {
+          int amount_width =
+            (report.HANDLER(amount_width_).specified ?
+             report.HANDLER(amount_width_).value.to_int() : 12);
 
-	  std::ostringstream amt_str;
-	  value_t(post->amount).print(amt_str, amount_width, -1,
-				      AMOUNT_PRINT_RIGHT_JUSTIFY |
-				      AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
-	  amt = amt_str.str();
-	}
+          std::ostringstream amt_str;
+          value_t(post->amount).print(amt_str, amount_width, -1,
+                                      AMOUNT_PRINT_RIGHT_JUSTIFY |
+                                      AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+          amt = amt_str.str();
+        }
 
-	string trimmed_amt(amt);
-	trim_left(trimmed_amt);
-	int amt_slip = (static_cast<int>(amt.length()) -
-			static_cast<int>(trimmed_amt.length()));
-	if (slip + amt_slip < 2)
-	  amtbuf << string(2 - (slip + amt_slip), ' ');
-	amtbuf << amt;
+        string trimmed_amt(amt);
+        trim_left(trimmed_amt);
+        int amt_slip = (static_cast<int>(amt.length()) -
+                        static_cast<int>(trimmed_amt.length()));
+        if (slip + amt_slip < 2)
+          amtbuf << string(2 - (slip + amt_slip), ' ');
+        amtbuf << amt;
 
-	if (post->cost &&
-	    ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
-	  if (post->has_flags(POST_COST_IN_FULL))
-	    amtbuf << " @@ " << post->cost->abs();
-	  else
-	    amtbuf << " @ "
-		   << (*post->cost / post->amount).abs();
-	}
+        if (post->cost &&
+            ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
+          if (post->has_flags(POST_COST_IN_FULL))
+            amtbuf << " @@ " << post->cost->abs();
+          else
+            amtbuf << " @ "
+                   << (*post->cost / post->amount).abs();
+        }
 
-	if (post->assigned_amount)
-	  amtbuf << " = " << post->assigned_amount;
+        if (post->assigned_amount)
+          amtbuf << " = " << post->assigned_amount;
 
-	string trailer = amtbuf.str();
-	out << trailer;
+        string trailer = amtbuf.str();
+        out << trailer;
 
-	account_width += unistring(trailer).length();
+        account_width += unistring(trailer).length();
       } else {
-	out << buf.str();
+        out << buf.str();
       }
 
       if (post->note)
-	print_note(out, *post->note, columns, 4 + account_width);
+        print_note(out, *post->note, columns, 4 + account_width);
       out << '\n';
     }
   }

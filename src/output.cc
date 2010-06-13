@@ -40,10 +40,10 @@
 
 namespace ledger {
 
-format_posts::format_posts(report_t&		   _report,
-			   const string&	   format,
-			   const optional<string>& _prepend_format,
-			   std::size_t		   _prepend_width)
+format_posts::format_posts(report_t&               _report,
+                           const string&           format,
+                           const optional<string>& _prepend_format,
+                           std::size_t             _prepend_width)
   : report(_report), prepend_width(_prepend_width),
     last_xact(NULL), last_post(NULL), first_report_title(true)
 {
@@ -56,9 +56,9 @@ format_posts::format_posts(report_t&		   _report,
     const char * n = p + 2;
     if (const char * p = std::strstr(n, "%/")) {
       next_lines_format.parse_format(string(n, 0, p - n),
-				     first_line_format);
+                                     first_line_format);
       between_format.parse_format(string(p + 2),
-				  first_line_format);
+                                  first_line_format);
     } else {
       next_lines_format.parse_format(string(n), first_line_format);
     }
@@ -86,16 +86,16 @@ void format_posts::operator()(post_t& post)
 
     if (! report_title.empty()) {
       if (first_report_title)
-	first_report_title = false;
+        first_report_title = false;
       else
-	out << '\n';
+        out << '\n';
 
       value_scope_t val_scope(string_value(report_title));
       bind_scope_t inner_scope(bound_scope, val_scope);
       
       format_t group_title_format;
       group_title_format
-	.parse_format(report.HANDLER(group_title_format_).str());
+        .parse_format(report.HANDLER(group_title_format_).str());
 
       out << group_title_format(inner_scope);
 
@@ -109,8 +109,8 @@ void format_posts::operator()(post_t& post)
 
     if (last_xact != post.xact) {
       if (last_xact) {
-	bind_scope_t xact_scope(report, *last_xact);
-	out << between_format(xact_scope);
+        bind_scope_t xact_scope(report, *last_xact);
+        out << between_format(xact_scope);
       }
       out << first_line_format(bound_scope);
       last_xact = post.xact;
@@ -127,10 +127,10 @@ void format_posts::operator()(post_t& post)
   }
 }
 
-format_accounts::format_accounts(report_t&		 _report,
-				 const string&		 format,
-				 const optional<string>& _prepend_format,
-				 std::size_t		 _prepend_width)
+format_accounts::format_accounts(report_t&               _report,
+                                 const string&           format,
+                                 const optional<string>& _prepend_format,
+                                 std::size_t             _prepend_width)
   : report(_report), prepend_width(_prepend_width), disp_pred(),
     first_report_title(true)
 {
@@ -172,16 +172,16 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
 
     if (! report_title.empty()) {
       if (first_report_title)
-	first_report_title = false;
+        first_report_title = false;
       else
-	out << '\n';
+        out << '\n';
 
       value_scope_t val_scope(string_value(report_title));
       bind_scope_t inner_scope(bound_scope, val_scope);
       
       format_t group_title_format;
       group_title_format
-	.parse_format(report.HANDLER(group_title_format_).str());
+        .parse_format(report.HANDLER(group_title_format_).str());
 
       out << group_title_format(inner_scope);
 
@@ -203,7 +203,7 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
 std::pair<std::size_t, std::size_t>
 format_accounts::mark_accounts(account_t& account, const bool flat)
 {
-  std::size_t visited	 = 0;
+  std::size_t visited    = 0;
   std::size_t to_display = 0;
 
   foreach (accounts_map::value_type& pair, account.accounts) {
@@ -218,7 +218,7 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
     DEBUG("account.display", "  it was visited itself");
   DEBUG("account.display", "  it has " << visited << " visited children");
   DEBUG("account.display",
-	"  it has " << to_display << " children to display");
+        "  it has " << to_display << " children to display");
 #endif
 
   if (account.parent &&
@@ -226,10 +226,10 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
     bind_scope_t bound_scope(report, account);
     call_scope_t call_scope(bound_scope);
     if ((! flat && to_display > 1) ||
-	((flat || to_display != 1 ||
-	  account.has_xflags(ACCOUNT_EXT_VISITED)) &&
-	 (report.HANDLED(empty) || report.fn_display_total(call_scope)) &&
-	 disp_pred(bound_scope))) {
+        ((flat || to_display != 1 ||
+          account.has_xflags(ACCOUNT_EXT_VISITED)) &&
+         (report.HANDLED(empty) || report.fn_display_total(call_scope)) &&
+         disp_pred(bound_scope))) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
       DEBUG("account.display", "Marking account as TO_DISPLAY");
       to_display = 1;
@@ -246,7 +246,7 @@ void format_accounts::flush()
 
   if (report.HANDLED(display_)) {
     DEBUG("account.display",
-	  "Account display predicate: " << report.HANDLER(display_).str());
+          "Account display predicate: " << report.HANDLER(display_).str());
     disp_pred.parse(report.HANDLER(display_).str());
   }
 
@@ -265,7 +265,7 @@ void format_accounts::flush()
     if (prepend_format) {
       static_cast<std::ostream&>(report.output_stream).width(prepend_width);
       static_cast<std::ostream&>(report.output_stream)
-	<< prepend_format(bound_scope);
+        << prepend_format(bound_scope);
     }
 
     out << total_line_format(bound_scope);
@@ -346,12 +346,12 @@ void report_commodities::operator()(post_t& post)
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
     if (ann_comm.details.price) {
       std::map<commodity_t *, std::size_t>::iterator i =
-	commodities.find(&ann_comm.details.price->commodity());
+        commodities.find(&ann_comm.details.price->commodity());
       if (i == commodities.end())
-	commodities.insert
-	  (commodities_pair(&ann_comm.details.price->commodity(), 1));
+        commodities.insert
+          (commodities_pair(&ann_comm.details.price->commodity(), 1));
       else
-	(*i).second++;
+        (*i).second++;
     }
   }
 

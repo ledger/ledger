@@ -41,10 +41,10 @@ namespace ledger {
 
 using namespace boost::python;
 
-#define MY_PyDateTime_IMPORT				\
-  PyDateTimeAPI = (PyDateTime_CAPI*)			\
-  PyCObject_Import(const_cast<char *>("datetime"),	\
-		   const_cast<char *>("datetime_CAPI"))
+#define MY_PyDateTime_IMPORT                            \
+  PyDateTimeAPI = (PyDateTime_CAPI*)                    \
+  PyCObject_Import(const_cast<char *>("datetime"),      \
+                   const_cast<char *>("datetime_CAPI"))
 
 struct date_to_python
 {
@@ -65,7 +65,7 @@ struct date_from_python
   }
 
   static void construct(PyObject * obj_ptr,
-			converter::rvalue_from_python_stage1_data * data)
+                        converter::rvalue_from_python_stage1_data * data)
   {
     MY_PyDateTime_IMPORT;
 
@@ -113,7 +113,7 @@ struct datetime_from_python
   }
 
   static void construct(PyObject * obj_ptr,
-			converter::rvalue_from_python_stage1_data * data)
+                        converter::rvalue_from_python_stage1_data * data)
   {
     MY_PyDateTime_IMPORT;
 
@@ -139,14 +139,14 @@ struct datetime_from_python
 
     datetime_t * moment
       = new datetime_t(date_t(y, m, d),
-		       datetime_t::time_duration_type(h, min, s, ms));
+                       datetime_t::time_duration_type(h, min, s, ms));
 
     data->convertible = (void *) moment;
   }
 };
 
 typedef register_python_conversion<datetime_t,
-				   datetime_to_python, datetime_from_python>
+                                   datetime_to_python, datetime_from_python>
   datetime_python_conversion;
 
 
@@ -189,7 +189,7 @@ struct duration_from_python
   }
 
   static void construct(PyObject* obj_ptr,
-			python::converter::rvalue_from_python_stage1_data * data)
+                        python::converter::rvalue_from_python_stage1_data * data)
   {
     PyDateTime_Delta const* pydelta
       = reinterpret_cast<PyDateTime_Delta*>(obj_ptr);
@@ -202,8 +202,8 @@ struct duration_from_python
     // Create time duration object
     posix_time::time_duration
       duration = (posix_time::hours(24) * days +
-		  posix_time::seconds(pydelta->seconds) +
-		  posix_time::microseconds(pydelta->microseconds));
+                  posix_time::seconds(pydelta->seconds) +
+                  posix_time::microseconds(pydelta->microseconds));
     if (is_negative)
       duration = duration.invert_sign();
 
@@ -218,7 +218,7 @@ struct duration_from_python
 };
 
 typedef register_python_conversion<time_duration_t,
-				   duration_to_python, duration_from_python>
+                                   duration_to_python, duration_from_python>
   duration_python_conversion;
 
 
@@ -240,7 +240,7 @@ void export_times()
   register_optional_to_python<date_t>();
 
   scope().attr("parse_datetime")   = &py_parse_datetime;
-  scope().attr("parse_date")	   = &py_parse_date;
+  scope().attr("parse_date")       = &py_parse_date;
   scope().attr("times_initialize") = &times_initialize;
   scope().attr("times_shutdown")   = &times_shutdown;
 

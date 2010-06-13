@@ -91,9 +91,9 @@ typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
  */
 class amount_t
   : public ordered_field_operators<amount_t,
-	   ordered_field_operators<amount_t, double,
-	   ordered_field_operators<amount_t, unsigned long,
-	   ordered_field_operators<amount_t, long> > > >
+           ordered_field_operators<amount_t, double,
+           ordered_field_operators<amount_t, unsigned long,
+           ordered_field_operators<amount_t, long> > > >
 {
 public:
   /** Ready the amount subsystem for use.
@@ -125,8 +125,8 @@ protected:
 
   struct bigint_t;
 
-  bigint_t *	quantity;
-  commodity_t *	commodity_;
+  bigint_t *    quantity;
+  commodity_t * commodity_;
 
 public:
   /** @name Constructors
@@ -399,8 +399,8 @@ public:
       $100.00.
   */
   optional<amount_t>
-  value(const optional<datetime_t>& moment	  = none,
-	const optional<commodity_t&>& in_terms_of = none) const;
+  value(const optional<datetime_t>& moment        = none,
+        const optional<commodity_t&>& in_terms_of = none) const;
 
   amount_t price() const;
 
@@ -646,16 +646,16 @@ public:
       parse(string, flags_t) also parses an amount from a string.
   */
   bool parse(std::istream& in,
-	     const parse_flags_t& flags = PARSE_DEFAULT);
+             const parse_flags_t& flags = PARSE_DEFAULT);
   bool parse(const string& str,
-	     const parse_flags_t& flags = PARSE_DEFAULT) {
+             const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
     bool result = parse(stream, flags);
     return result;
   }
 
   static void parse_conversion(const string& larger_str,
-			       const string& smaller_str);
+                               const string& smaller_str);
 
   /*@}*/
 
@@ -683,7 +683,7 @@ public:
 #define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES   0x08
 
   void print(std::ostream&       out,
-	     const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 
   /*@}*/
 
@@ -760,7 +760,7 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 }
 
 void to_xml(std::ostream& out, const amount_t& amt,
-	    bool commodity_details = false);
+            bool commodity_details = false);
 
 } // namespace ledger
 

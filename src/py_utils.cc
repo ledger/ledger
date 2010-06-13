@@ -59,7 +59,7 @@ struct bool_from_python
   }
 
   static void construct(PyObject* obj_ptr,
-			converter::rvalue_from_python_stage1_data* data)
+                        converter::rvalue_from_python_stage1_data* data)
   {
     void * storage =
       ((converter::rvalue_from_python_storage<bool>*) data)->storage.bytes;
@@ -89,19 +89,19 @@ struct string_from_python
   static void* convertible(PyObject* obj_ptr)
   {
     if (!PyUnicode_Check(obj_ptr) &&
-	!PyString_Check(obj_ptr)) return 0;
+        !PyString_Check(obj_ptr)) return 0;
     return obj_ptr;
   }
 
   static void construct(PyObject* obj_ptr,
-			converter::rvalue_from_python_stage1_data* data)
+                        converter::rvalue_from_python_stage1_data* data)
   {
     if (PyString_Check(obj_ptr)) {
       const char* value = PyString_AsString(obj_ptr);
       if (value == 0) throw_error_already_set();
       void* storage =
-	reinterpret_cast<converter::rvalue_from_python_storage<string> *>
-	                (data)->storage.bytes;
+        reinterpret_cast<converter::rvalue_from_python_storage<string> *>
+                        (data)->storage.bytes;
       new (storage) string(value);
       data->convertible = storage;
     } else {
@@ -112,18 +112,18 @@ struct string_from_python
 
       string str;
       if (sizeof(Py_UNICODE) == 2) // UTF-16
-	utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
       else if (sizeof(Py_UNICODE) == 4) // UTF-32
-	utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+        utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
 #if !defined(NO_ASSERTS)
       else
-	assert(! "Py_UNICODE has an unexpected size");
+        assert(! "Py_UNICODE has an unexpected size");
 #endif
 
       if (value == 0) throw_error_already_set();
       void* storage =
-	reinterpret_cast<converter::rvalue_from_python_storage<string> *>
-	                (data)->storage.bytes;
+        reinterpret_cast<converter::rvalue_from_python_storage<string> *>
+                        (data)->storage.bytes;
       new (storage) string(str);
       data->convertible = storage;
     }
@@ -151,7 +151,7 @@ struct istream_from_python
   }
 
   static void construct(PyObject* obj_ptr,
-			converter::rvalue_from_python_stage1_data* data)
+                        converter::rvalue_from_python_stage1_data* data)
   {
     void* storage =
       reinterpret_cast<converter::rvalue_from_python_storage<pyifstream> *>
@@ -162,7 +162,7 @@ struct istream_from_python
 };
 
 typedef register_python_conversion<std::istream,
-				   istream_to_python, istream_from_python>
+                                   istream_to_python, istream_from_python>
   istream_python_conversion;
 
 
@@ -183,7 +183,7 @@ struct ostream_from_python
   }
 
   static void construct(PyObject* obj_ptr,
-			converter::rvalue_from_python_stage1_data* data)
+                        converter::rvalue_from_python_stage1_data* data)
   {
     void* storage =
       reinterpret_cast<converter::rvalue_from_python_storage<pyofstream> *>
@@ -194,7 +194,7 @@ struct ostream_from_python
 };
 
 typedef register_python_conversion<std::ostream,
-				   ostream_to_python, ostream_from_python>
+                                   ostream_to_python, ostream_from_python>
   ostream_python_conversion;
 
 
@@ -205,8 +205,8 @@ void export_utils()
     .def(init<uint_least8_t>())
 
     .add_property("flags",
-		  &supports_flags<uint_least8_t>::flags,
-		  &supports_flags<uint_least8_t>::set_flags)
+                  &supports_flags<uint_least8_t>::flags,
+                  &supports_flags<uint_least8_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least8_t>::has_flags)
     .def("clear_flags", &supports_flags<uint_least8_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least8_t>::add_flags)
@@ -218,8 +218,8 @@ void export_utils()
     .def(init<uint_least16_t>())
 
     .add_property("flags",
-		  &supports_flags<uint_least16_t>::flags,
-		  &supports_flags<uint_least16_t>::set_flags)
+                  &supports_flags<uint_least16_t>::flags,
+                  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
@@ -237,10 +237,10 @@ void export_utils()
 #endif
 
   class_< delegates_flags<uint_least16_t>,
-	  boost::noncopyable > ("DelegatesFlags16", no_init)
+          boost::noncopyable > ("DelegatesFlags16", no_init)
     .add_property("flags",
-		  &delegates_flags<uint_least16_t>::flags,
-		  &delegates_flags<uint_least16_t>::set_flags)
+                  &delegates_flags<uint_least16_t>::flags,
+                  &delegates_flags<uint_least16_t>::set_flags)
     .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
     .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)

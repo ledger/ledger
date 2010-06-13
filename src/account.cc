@@ -44,14 +44,14 @@ account_t::~account_t()
 
   foreach (accounts_map::value_type& pair, accounts) {
     if (! pair.second->has_flags(ACCOUNT_TEMP) ||
-	has_flags(ACCOUNT_TEMP)) {
+        has_flags(ACCOUNT_TEMP)) {
       checked_delete(pair.second);
     }      
   }
 }
 
 account_t * account_t::find_account(const string& name,
-				    const bool	  auto_create)
+                                    const bool    auto_create)
 {
   accounts_map::const_iterator i = accounts.find(name);
   if (i != accounts.end())
@@ -111,7 +111,7 @@ namespace {
 
     foreach (accounts_map::value_type& pair, account->accounts)
       if (account_t * a = find_account_re_(pair.second, regexp))
-	return a;
+        return a;
 
     return NULL;
   }
@@ -135,13 +135,13 @@ string account_t::fullname() const
   if (! _fullname.empty()) {
     return _fullname;
   } else {
-    const account_t *	first	 = this;
-    string		fullname = name;
+    const account_t *   first    = this;
+    string              fullname = name;
 
     while (first->parent) {
       first = first->parent;
       if (! first->name.empty())
-	fullname = first->name + ":" + fullname;
+        fullname = first->name + ":" + fullname;
     }
 
     _fullname = fullname;
@@ -161,7 +161,7 @@ string account_t::partial_name(bool flat) const
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
       if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
-	break;
+        break;
     }
     pname = acct->name + ":" + pname;
   }
@@ -179,7 +179,7 @@ namespace {
   {
     in_context_t<account_t> env(scope, "&b");
     return string_value(env->partial_name(env.has(0) ?
-					  env.get<bool>(0) : false));
+                                          env.get<bool>(0) : false));
   }
 
   value_t get_account(account_t& account) { // this gets the name
@@ -230,12 +230,12 @@ namespace {
   {
     std::size_t depth = 0;
     for (const account_t * acct = account.parent;
-	 acct && acct->parent;
-	 acct = acct->parent) {
+         acct && acct->parent;
+         acct = acct->parent) {
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
       if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
-	depth++;
+        depth++;
     }
 
     std::ostringstream out;
@@ -269,7 +269,7 @@ namespace {
     foreach (post_t * p, account.posts) {
       bind_scope_t bound_scope(scope, *p);
       if (expr.calc(bound_scope).to_boolean())
-	return true;
+        return true;
     }
     return false;
   }
@@ -284,14 +284,14 @@ namespace {
     foreach (post_t * p, account.posts) {
       bind_scope_t bound_scope(scope, *p);
       if (! expr.calc(bound_scope).to_boolean())
-	return false;
+        return false;
     }
     return true;
   }
 }
 
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
-				   const string& name)
+                                   const string& name)
 {
   if (kind != symbol_t::FUNCTION)
     return NULL;
@@ -407,7 +407,7 @@ bool account_t::children_with_xdata() const
 {
   foreach (const accounts_map::value_type& pair, accounts)
     if (pair.second->has_xdata() ||
-	pair.second->children_with_xdata())
+        pair.second->children_with_xdata())
       return true;
 
   return false;
@@ -420,7 +420,7 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 
   foreach (const accounts_map::value_type& pair, accounts)
     if (pair.second->has_xflags(flags) ||
-	pair.second->children_with_flags(flags))
+        pair.second->children_with_flags(flags))
       count++;
 
   // Although no immediately children were visited, if any progeny at all were
@@ -434,11 +434,11 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 account_t::xdata_t::details_t&
 account_t::xdata_t::details_t::operator+=(const details_t& other)
 {
-  posts_count    	 += other.posts_count;
-  posts_virtuals_count	 += other.posts_virtuals_count;
-  posts_cleared_count	 += other.posts_cleared_count;
-  posts_last_7_count	 += other.posts_last_7_count;
-  posts_last_30_count	 += other.posts_last_30_count;
+  posts_count            += other.posts_count;
+  posts_virtuals_count   += other.posts_virtuals_count;
+  posts_cleared_count    += other.posts_cleared_count;
+  posts_last_7_count     += other.posts_last_7_count;
+  posts_last_30_count    += other.posts_last_30_count;
   posts_this_month_count += other.posts_this_month_count;
 
   if (! is_valid(earliest_post) ||
@@ -461,9 +461,9 @@ account_t::xdata_t::details_t::operator+=(const details_t& other)
 
   filenames.insert(other.filenames.begin(), other.filenames.end());
   accounts_referenced.insert(other.accounts_referenced.begin(),
-			     other.accounts_referenced.end());
+                             other.accounts_referenced.end());
   payees_referenced.insert(other.payees_referenced.begin(),
-			   other.payees_referenced.end());
+                           other.payees_referenced.end());
   return *this;
 }
 
@@ -487,10 +487,10 @@ value_t account_t::amount(const optional<expr_t&>& expr) const
 
     for (; i != posts.end(); i++) {
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-	  (*i)->add_to_value(xdata_->self_details.total, expr);
-	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-	}
+        if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+        }
       }
       xdata_->self_details.last_post = i;
     }
@@ -502,10 +502,10 @@ value_t account_t::amount(const optional<expr_t&>& expr) const
 
     for (; i != xdata_->reported_posts.end(); i++) {
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-	  (*i)->add_to_value(xdata_->self_details.total, expr);
-	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-	}
+        if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+        }
       }
       xdata_->self_details.last_reported_post = i;
     }
@@ -525,7 +525,7 @@ value_t account_t::total(const optional<expr_t&>& expr) const
     foreach (const accounts_map::value_type& pair, accounts) {
       temp = pair.second->total(expr);
       if (! temp.is_null())
-	add_or_set_value(xdata_->family_details.total, temp);
+        add_or_set_value(xdata_->family_details.total, temp);
     }
 
     temp = amount(expr);
@@ -562,7 +562,7 @@ account_t::family_details(bool gather_all) const
 }
 
 void account_t::xdata_t::details_t::update(post_t& post,
-					   bool	   gather_all)
+                                           bool    gather_all)
 {
   posts_count++;
 
@@ -592,10 +592,10 @@ void account_t::xdata_t::details_t::update(post_t& post,
     posts_cleared_count++;
 
     if (! is_valid(earliest_cleared_post) ||
-	post.date() < earliest_cleared_post)
+        post.date() < earliest_cleared_post)
       earliest_cleared_post = post.date();
     if (! is_valid(latest_cleared_post) ||
-	post.date() > latest_cleared_post)
+        post.date() > latest_cleared_post)
       latest_cleared_post = post.date();
   }
 

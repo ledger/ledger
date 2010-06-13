@@ -37,7 +37,7 @@
 namespace ledger {
 
 void expr_t::parse(std::istream& in, const parse_flags_t& flags,
-		   const optional<string>& original_string)
+                   const optional<string>& original_string)
 {
   parser_t parser;
   istream_pos_type start_pos = in.tellg();
@@ -78,31 +78,36 @@ value_t expr_t::real_calc(scope_t& scope)
     }
     catch (const std::exception& err) {
       if (locus) {
-	add_error_context(_("While evaluating value expression:"));
-	add_error_context(op_context(ptr, locus));
+        string current_context = error_context();
 
-	if (SHOW_INFO()) {
-	  add_error_context(_("The value expression tree was:"));
-	  std::ostringstream buf;
-	  ptr->dump(buf, 0);
+        add_error_context(_("While evaluating value expression:"));
+        add_error_context(op_context(ptr, locus));
 
-	  std::istringstream in(buf.str());
-	  std::ostringstream out;
-	  char linebuf[1024];
-	  bool first = true;
-	  while (in.good() && ! in.eof()) {
-	    in.getline(linebuf, 1023);
-	    std::streamsize len = in.gcount();
-	    if (len > 0) {
-	      if (first)
-		first = false;
-	      else
-		out << '\n';
-	      out << "  " << linebuf;
-	    }
-	  }
-	  add_error_context(out.str());
-	}
+        if (SHOW_INFO()) {
+          add_error_context(_("The value expression tree was:"));
+          std::ostringstream buf;
+          ptr->dump(buf, 0);
+
+          std::istringstream in(buf.str());
+          std::ostringstream out;
+          char linebuf[1024];
+          bool first = true;
+          while (in.good() && ! in.eof()) {
+            in.getline(linebuf, 1023);
+            std::streamsize len = in.gcount();
+            if (len > 0) {
+              if (first)
+                first = false;
+              else
+                out << '\n';
+              out << "  " << linebuf;
+            }
+          }
+          add_error_context(out.str());
+        }
+
+        if (! current_context.empty())
+          add_error_context(current_context);
       }
       throw;
     }

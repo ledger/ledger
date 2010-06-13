@@ -45,9 +45,9 @@ namespace ledger {
 DECLARE_EXCEPTION(assertion_failed, std::logic_error);
 
 void debug_assert(const string& reason,
-		  const string& func,
-		  const string& file,
-		  std::size_t	line)
+                  const string& func,
+                  const string& file,
+                  std::size_t   line)
 {
   std::ostringstream buf;
   buf << "Assertion failed in \"" << file << "\", line " << line
@@ -80,11 +80,11 @@ typedef std::map<std::string, count_size_pair>  object_count_map;
 namespace {
   bool memory_tracing_active = false;
 
-  memory_map  *	     live_memory	= NULL;
-  memory_map *	     freed_memory	= NULL;
+  memory_map  *      live_memory        = NULL;
+  memory_map *       freed_memory       = NULL;
   object_count_map * live_memory_count  = NULL;
   object_count_map * total_memory_count = NULL;
-  objects_map *	     live_objects	= NULL;
+  objects_map *      live_objects       = NULL;
   object_count_map * live_object_count  = NULL;
   object_count_map * total_object_count = NULL;
   object_count_map * total_ctor_count   = NULL;
@@ -94,11 +94,11 @@ void initialize_memory_tracing()
 {
   memory_tracing_active = false;
 
-  live_memory	     = new memory_map;
-  freed_memory	     = new memory_map;
+  live_memory        = new memory_map;
+  freed_memory       = new memory_map;
   live_memory_count  = new object_count_map;
   total_memory_count = new object_count_map;
-  live_objects	     = new objects_map;
+  live_objects       = new objects_map;
   live_object_count  = new object_count_map;
   total_object_count = new object_count_map;
   total_ctor_count   = new object_count_map;
@@ -119,18 +119,18 @@ void shutdown_memory_tracing()
       report_memory(std::cerr);
   }
 
-  checked_delete(live_memory);        live_memory	 = NULL;
-  checked_delete(freed_memory);       freed_memory	 = NULL;
-  checked_delete(live_memory_count);  live_memory_count	 = NULL;
+  checked_delete(live_memory);        live_memory        = NULL;
+  checked_delete(freed_memory);       freed_memory       = NULL;
+  checked_delete(live_memory_count);  live_memory_count  = NULL;
   checked_delete(total_memory_count); total_memory_count = NULL;
-  checked_delete(live_objects);       live_objects	 = NULL;
-  checked_delete(live_object_count);  live_object_count	 = NULL;
+  checked_delete(live_objects);       live_objects       = NULL;
+  checked_delete(live_object_count);  live_object_count  = NULL;
   checked_delete(total_object_count); total_object_count = NULL;
-  checked_delete(total_ctor_count);   total_ctor_count	 = NULL;
+  checked_delete(total_ctor_count);   total_ctor_count   = NULL;
 }
 
 inline void add_to_count_map(object_count_map& the_map,
-			     const char * name, std::size_t size)
+                             const char * name, std::size_t size)
 {
   object_count_map::iterator k = the_map.find(name);
   if (k != the_map.end()) {
@@ -274,9 +274,9 @@ inline void report_count_map(std::ostream& out, object_count_map& the_map)
 {
   foreach (object_count_map::value_type& pair, the_map)
     out << "  " << std::right << std::setw(12) << pair.second.first
-	<< "  " << std::right << std::setw(7) << pair.second.second
-	<< "  " << std::left  << pair.first
-	<< std::endl;
+        << "  " << std::right << std::setw(7) << pair.second.second
+        << "  " << std::left  << pair.first
+        << std::endl;
 }
 
 std::size_t current_objects_size()
@@ -290,7 +290,7 @@ std::size_t current_objects_size()
 }
 
 void trace_ctor_func(void * ptr, const char * cls_name, const char * args,
-		     std::size_t cls_size)
+                     std::size_t cls_size)
 {
   if (! live_objects || ! memory_tracing_active) return;
 
@@ -358,7 +358,7 @@ void report_memory(std::ostream& out, bool report_all)
 
   if (live_memory_count->size() > 0) {
     out << "NOTE: There may be memory held by Boost "
-	<< "and libstdc++ after ledger::shutdown()" << std::endl;
+        << "and libstdc++ after ledger::shutdown()" << std::endl;
     out << "Live memory count:" << std::endl;
     report_count_map(out, *live_memory_count);
   }
@@ -368,9 +368,9 @@ void report_memory(std::ostream& out, bool report_all)
 
     foreach (const memory_map::value_type& pair, *live_memory)
       out << "  " << std::right << std::setw(12) << pair.first
-	  << "  " << std::right << std::setw(7) << pair.second.second
-	  << "  " << std::left  << pair.second.first
-	  << std::endl;
+          << "  " << std::right << std::setw(7) << pair.second.second
+          << "  " << std::left  << pair.second.first
+          << std::endl;
   }
 
   if (report_all && total_memory_count->size() > 0) {
@@ -388,9 +388,9 @@ void report_memory(std::ostream& out, bool report_all)
 
     foreach (const objects_map::value_type& pair, *live_objects)
       out << "  " << std::right << std::setw(12) << pair.first
-	  << "  " << std::right << std::setw(7) << pair.second.second
-	  << "  " << std::left  << pair.second.first
-	  << std::endl;
+          << "  " << std::right << std::setw(7) << pair.second.second
+          << "  " << std::left  << pair.second.first
+          << std::endl;
   }
 
   if (report_all) {
@@ -470,28 +470,28 @@ strings_list split_arguments(const char * line)
   for (const char * p = line; *p; p++) {
     if (! in_quoted_string && std::isspace(*p)) {
       if (q != buf) {
-	*q = '\0';
-	args.push_back(buf);
-	q = buf;
+        *q = '\0';
+        args.push_back(buf);
+        q = buf;
       }
     }
     else if (in_quoted_string != '\'' && *p == '\\') {
       p++;
       if (! *p)
-	throw_(std::logic_error, _("Invalid use of backslash"));
+        throw_(std::logic_error, _("Invalid use of backslash"));
       *q++ = *p;
     }
     else if (in_quoted_string != '"' && *p == '\'') {
       if (in_quoted_string == '\'')
-	in_quoted_string = '\0';
+        in_quoted_string = '\0';
       else
-	in_quoted_string = '\'';
+        in_quoted_string = '\'';
     }
     else if (in_quoted_string != '\'' && *p == '"') {
       if (in_quoted_string == '"')
-	in_quoted_string = '\0';
+        in_quoted_string = '\0';
       else
-	in_quoted_string = '"';
+        in_quoted_string = '"';
     }
     else {
       *q++ = *p;
@@ -500,7 +500,7 @@ strings_list split_arguments(const char * line)
 
   if (in_quoted_string)
     throw_(std::logic_error,
-	   _("Unterminated string, expected '%1'") << in_quoted_string);
+           _("Unterminated string, expected '%1'") << in_quoted_string);
 
   if (q != buf) {
     *q = '\0';
@@ -521,12 +521,12 @@ strings_list split_arguments(const char * line)
 
 namespace ledger {
 
-log_level_t	   _log_level  = LOG_WARN;
-std::ostream *	   _log_stream = &std::cerr;
+log_level_t        _log_level  = LOG_WARN;
+std::ostream *     _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
 
 #if defined(TRACING_ON)
-uint8_t		   _trace_level;
+uint8_t            _trace_level;
 #endif
 
 static inline void stream_memory_size(std::ostream& out, std::size_t size)
@@ -560,8 +560,8 @@ bool logger_func(log_level_t level)
   }
 
   *_log_stream << std::right << std::setw(5)
-	       << (TRUE_CURRENT_TIME() -
-		   logger_start).total_milliseconds() << "ms";
+               << (TRUE_CURRENT_TIME() -
+                   logger_start).total_milliseconds() << "ms";
 
 #if defined(VERIFY_ON)
   IF_VERIFY() {
@@ -593,6 +593,7 @@ bool logger_func(log_level_t level)
   }
 
   *_log_stream << ' ' << _log_buffer.str() << std::endl;
+  _log_buffer.clear();
   _log_buffer.str("");
 
   return true;
@@ -632,11 +633,11 @@ namespace ledger {
 
 struct timer_t
 {
-  log_level_t	level;
-  ptime		begin;
-  time_duration	spent;
-  std::string	description;
-  bool		active;
+  log_level_t   level;
+  ptime         begin;
+  time_duration spent;
+  std::string   description;
+  bool          active;
 
   timer_t(log_level_t _level, std::string _description)
     : level(_level), begin(TRUE_CURRENT_TIME()),
@@ -663,6 +664,7 @@ void start_timer(const char * name, log_level_t lvl)
     (*i).second.begin  = TRUE_CURRENT_TIME();
     (*i).second.active = true;
   }
+  _log_buffer.clear();
   _log_buffer.str("");
 
 #if defined(VERIFY_ON)
@@ -767,7 +769,7 @@ path expand_path(const path& pathname)
     return pathname;
 
   std::string       path_string = pathname.string();
-  const char *	    pfx = NULL;
+  const char *      pfx = NULL;
   string::size_type pos = path_string.find_first_of('/');
 
   if (path_string.length() == 1 || pos == 1) {
@@ -777,14 +779,14 @@ path expand_path(const path& pathname)
       // Punt. We're trying to expand ~/, but HOME isn't set
       struct passwd * pw = getpwuid(getuid());
       if (pw)
-	pfx = pw->pw_dir;
+        pfx = pw->pw_dir;
     }
 #endif
   }
 #ifdef HAVE_GETPWNAM
   else {
     string user(path_string, 1, pos == string::npos ?
-		string::npos : pos - 1);
+                string::npos : pos - 1);
     struct passwd * pw = getpwnam(user.c_str());
     if (pw)
       pfx = pw->pw_dir;

@@ -47,7 +47,7 @@ namespace ledger {
 class straccbuf : public std::streambuf
 {
 protected:
-  std::string		 str;	// accumulator
+  std::string            str;   // accumulator
   std::string::size_type index;
 
 public:
@@ -70,6 +70,8 @@ public:
   }
 
   void clear() {
+    std::ostream::clear();
+    buf.pubseekoff(0, ios_base::beg);
     buf.str.clear();
     buf.index = 0;
   }
@@ -79,7 +81,7 @@ public:
   }
 };
 
-#define ACCUM(obj) (static_cast<straccstream&>(obj).str())
+#define ACCUM(obj) (static_cast<const straccstream&>(obj).str())
 
 } // namespace ledger
 

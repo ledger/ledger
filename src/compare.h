@@ -50,7 +50,7 @@ class post_t;
 class account_t;
 
 void push_sort_value(std::list<sort_value_t>& sort_values,
-		     expr_t::ptr_op_t node, scope_t& scope);
+                     expr_t::ptr_op_t node, scope_t& scope);
 
 template <typename T>
 class compare_items
@@ -84,14 +84,14 @@ bool compare_items<T>::operator()(T * left, T * right)
 {
   assert(left); assert(right);
   return sort_value_is_less_than(find_sort_values(left),
-				 find_sort_values(right));
+                                 find_sort_values(right));
 }
 
 template <>
 bool compare_items<post_t>::operator()(post_t * left, post_t * right);
 template <>
 bool compare_items<account_t>::operator()(account_t * left,
-					  account_t * right);
+                                          account_t * right);
 
 } // namespace ledger
 

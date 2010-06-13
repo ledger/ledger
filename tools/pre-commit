@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Exit with status 1 if any command below fails
 set -e
@@ -12,6 +12,9 @@ fi
 # These are the locations I keep my temporary source and build trees in
 PRODUCTS=$(./acprep products)	# generates a build directory name such as
                                 # ~/Products/ledger
+if echo $PRODUCTS | grep -qv ledger; then
+    PRODUCTS=$PRODUCTS/ledger
+fi
 TMPDIR=$PRODUCTS/pre-commit
 MIRROR=$PRODUCTS/pre-commit-mirror
 
@@ -56,6 +59,7 @@ fi
 
 # Finally, (re)build this proposed source tree and see if it passes
 # muster.
+
 if [ -f acprep ]; then
     nice -n 20 ./acprep default --warn make check
 else

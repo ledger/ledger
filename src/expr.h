@@ -56,7 +56,7 @@ class expr_t : public expr_base_t<value_t>
 
 public:
   class op_t;
-  typedef intrusive_ptr<op_t>	    ptr_op_t;
+  typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
 protected:
@@ -112,13 +112,13 @@ public:
     return parse(stream, flags, str);
   }
 
-  virtual void    parse(std::istream&		in,
-			const parse_flags_t&	flags		= PARSE_DEFAULT,
-			const optional<string>& original_string = none);
+  virtual void    parse(std::istream&           in,
+                        const parse_flags_t&    flags           = PARSE_DEFAULT,
+                        const optional<string>& original_string = none);
   virtual void    compile(scope_t& scope);
   virtual value_t real_calc(scope_t& scope);
 
-  bool	          is_constant() const;
+  bool            is_constant() const;
   value_t&        constant_value();
   const value_t&  constant_value() const;
   bool            is_function() const;

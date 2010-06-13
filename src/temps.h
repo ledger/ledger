@@ -61,13 +61,13 @@ public:
     return xact_temps->back();
   }
   post_t&    copy_post(post_t& origin, xact_t& xact,
-		       account_t * account = NULL);
+                       account_t * account = NULL);
   post_t&    create_post(xact_t& xact, account_t * account);
   post_t&    last_post() {
     return post_temps->back();
   }
   account_t& create_account(const string& name   = "",
-			    account_t *   parent = NULL);
+                            account_t *   parent = NULL);
   account_t& last_account() {
     return acct_temps->back();
   }

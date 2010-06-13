@@ -35,7 +35,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @end copying
 
-@documentencoding utf-8
+@documentencoding UTF-8
 
 @iftex
 @finalout

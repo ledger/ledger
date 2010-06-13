@@ -76,7 +76,7 @@ void post_splitter::operator()(post_t& post)
       (*i).second.push_back(&post);
     } else {
       std::pair<value_to_posts_map::iterator, bool> inserted
-	= posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
+        = posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
       assert(inserted.second);
       (*inserted.first).second.push_back(&post);
     }
@@ -84,7 +84,7 @@ void post_splitter::operator()(post_t& post)
 }
 
 pass_down_posts::pass_down_posts(post_handler_ptr handler,
-				 posts_iterator&  iter)
+                                 posts_iterator&  iter)
   : item_handler<post_t>(handler)
 {
   TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
@@ -129,16 +129,16 @@ void truncate_xacts::flush()
     bool print = false;
     if (head_count) {
       if (head_count > 0 && i < head_count)
-	print = true;
+        print = true;
       else if (head_count < 0 && i >= - head_count)
-	print = true;
+        print = true;
     }
 
     if (! print && tail_count) {
       if (tail_count > 0 && l - i <= tail_count)
-	print = true;
+        print = true;
       else if (tail_count < 0 && l - i > - tail_count)
-	print = true;
+        print = true;
     }
 
     if (print)
@@ -173,7 +173,7 @@ void truncate_xacts::operator()(post_t& post)
 void sort_posts::post_accumulated_posts()
 {
   std::stable_sort(posts.begin(), posts.end(),
-		   compare_items<post_t>(sort_order));
+                   compare_items<post_t>(sort_order));
 
   foreach (post_t * post, posts) {
     post->xdata().drop_flags(POST_EXT_SORT_CALC);
@@ -185,30 +185,30 @@ void sort_posts::post_accumulated_posts()
 
 namespace {
   void split_string(const string& str, const char ch,
-		    std::list<string>& strings)
+                    std::list<string>& strings)
   {
     const char * b = str.c_str();
     for (const char * p = b; *p; p++) {
       if (*p == ch) {
-	strings.push_back(string(b, p - b));
-	b = p + 1;
+        strings.push_back(string(b, p - b));
+        b = p + 1;
       }
     }
     strings.push_back(string(b));
   }
 
   account_t * create_temp_account_from_path(std::list<string>& account_names,
-					    temporaries_t&     temps,
-					    account_t *        master)
+                                            temporaries_t&     temps,
+                                            account_t *        master)
   {
     account_t * new_account = NULL;
     foreach (const string& name, account_names) {
       if (new_account) {
-	new_account = new_account->find_account(name);
+        new_account = new_account->find_account(name);
       } else {
-	new_account = master->find_account(name, false);
-	if (! new_account)
-	  new_account = &temps.create_account(name, master);
+        new_account = master->find_account(name, false);
+        if (! new_account)
+          new_account = &temps.create_account(name, master);
       }
     }
 
@@ -243,7 +243,7 @@ void anonymize_posts::render_commodity(amount_t& amt)
   if (amt.has_annotation())
     amt.set_commodity
       (*commodity_pool_t::current_pool->find_or_create(buf.str(),
-						       amt.annotation()));
+                                                       amt.annotation()));
   else
     amt.set_commodity
       (*commodity_pool_t::current_pool->find_or_create(buf.str()));
@@ -256,9 +256,9 @@ void anonymize_posts::render_commodity(amount_t& amt)
 
 void anonymize_posts::operator()(post_t& post)
 {
-  SHA1		 sha;
+  SHA1           sha;
   uint_least32_t message_digest[5];
-  bool		 copy_xact_details = false;
+  bool           copy_xact_details = false;
 
   if (last_xact != post.xact) {
     temps.copy_xact(*post.xact);
@@ -270,8 +270,12 @@ void anonymize_posts::operator()(post_t& post)
   if (copy_xact_details) {
     xact.copy_details(*post.xact);
 
+    std::ostringstream buf;
+    buf << reinterpret_cast<uintmax_t>(post.xact->payee.c_str())
+        << integer_gen() << post.xact->payee.c_str();
+
     sha.Reset();
-    sha << post.xact->payee.c_str();
+    sha << buf.str().c_str();
     sha.Result(message_digest);
 
     xact.payee = to_hex(message_digest);
@@ -283,8 +287,11 @@ void anonymize_posts::operator()(post_t& post)
   for (account_t * acct = post.account;
        acct;
        acct = acct->parent) {
+    std::ostringstream buf;
+    buf << integer_gen() << acct << acct->fullname();
+
     sha.Reset();
-    sha << acct->name.c_str();
+    sha << buf.str().c_str();
     sha.Result(message_digest);
 
     account_names.push_front(to_hex(message_digest));
@@ -296,9 +303,7 @@ void anonymize_posts::operator()(post_t& post)
   temp.note = none;
   temp.add_flags(POST_ANONYMIZED);
 
-  DEBUG("foo", "1.rendering amount: " << temp.amount);
   render_commodity(temp.amount);
-  DEBUG("foo", "2.rendering amount: " << temp.amount);
   if (temp.amount.has_annotation()) {
     temp.amount.annotation().tag = none;
     if (temp.amount.annotation().price)
@@ -342,15 +347,15 @@ void calc_posts::operator()(post_t& post)
 
 namespace {
   void handle_value(const value_t&   value,
-		    account_t *	     account,
-		    xact_t *	     xact,
-		    temporaries_t&   temps,
-		    post_handler_ptr handler,
-		    const date_t&    date	   = date_t(),
-		    const bool       act_date_p	   = true,
-		    const value_t&   total	   = value_t(),
-		    const bool       direct_amount = false,
-		    const bool       mark_visited  = false)
+                    account_t *      account,
+                    xact_t *         xact,
+                    temporaries_t&   temps,
+                    post_handler_ptr handler,
+                    const date_t&    date          = date_t(),
+                    const bool       act_date_p    = true,
+                    const value_t&   total         = value_t(),
+                    const bool       direct_amount = false,
+                    const bool       mark_visited  = false)
   {
     post_t& post = temps.create_post(*xact, account);
     post.add_flags(ITEM_GENERATED);
@@ -359,11 +364,11 @@ namespace {
     // such.  This allows subtotal reports to show "(Account)" for accounts
     // that contain only virtual posts.
     if (account && account->has_xdata() &&
-	account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
+        account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
       if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
-	post.add_flags(POST_VIRTUAL);
-	if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
-	  post.add_flags(POST_MUST_BALANCE);
+        post.add_flags(POST_VIRTUAL);
+        if (! account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
+          post.add_flags(POST_MUST_BALANCE);
       }
     }
 
@@ -371,9 +376,9 @@ namespace {
 
     if (is_valid(date)) {
       if (act_date_p)
-	xdata.date = date;
+        xdata.date = date;
       else
-	xdata.value_date = date;
+        xdata.value_date = date;
     }
 
     value_t temp(value);
@@ -442,29 +447,29 @@ void collapse_posts::report_subtotal()
     date_t latest_date;
 
     foreach (post_t * post, component_posts) {
-      date_t date	= post->date();
+      date_t date       = post->date();
       date_t value_date = post->value_date();
       if (! is_valid(earliest_date) || date < earliest_date)
-	earliest_date = date;
+        earliest_date = date;
       if (! is_valid(latest_date) || value_date > latest_date)
-	latest_date = value_date;
+        latest_date = value_date;
     }
 
     xact_t& xact = temps.create_xact();
-    xact.payee	   = last_xact->payee;
-    xact._date	   = (is_valid(earliest_date) ?
-		      earliest_date : last_xact->_date);
+    xact.payee     = last_xact->payee;
+    xact._date     = (is_valid(earliest_date) ?
+                      earliest_date : last_xact->_date);
     DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
 
     handle_value(/* value=      */ subtotal,
-		 /* account=    */ &totals_account,
-		 /* xact=       */ &xact,
-		 /* temps=      */ temps,
-		 /* handler=    */ handler,
-		 /* date=       */ latest_date,
-		 /* act_date_p= */ false);
+                 /* account=    */ &totals_account,
+                 /* xact=       */ &xact,
+                 /* temps=      */ temps,
+                 /* handler=    */ handler,
+                 /* date=       */ latest_date,
+                 /* act_date_p= */ false);
   }
 
   component_posts.clear();
@@ -497,26 +502,26 @@ void related_posts::flush()
   if (posts.size() > 0) {
     foreach (post_t * post, posts) {
       if (post->xact) {
-	foreach (post_t * r_post, post->xact->posts) {
-	  post_t::xdata_t& xdata(r_post->xdata());
-	  if (! xdata.has_flags(POST_EXT_HANDLED) &&
-	      (! xdata.has_flags(POST_EXT_RECEIVED) ?
-	       ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
-	       also_matching)) {
-	    xdata.add_flags(POST_EXT_HANDLED);
-	    item_handler<post_t>::operator()(*r_post);
-	  }
-	}
+        foreach (post_t * r_post, post->xact->posts) {
+          post_t::xdata_t& xdata(r_post->xdata());
+          if (! xdata.has_flags(POST_EXT_HANDLED) &&
+              (! xdata.has_flags(POST_EXT_RECEIVED) ?
+               ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
+               also_matching)) {
+            xdata.add_flags(POST_EXT_HANDLED);
+            item_handler<post_t>::operator()(*r_post);
+          }
+        }
       } else {
-	// This code should only be reachable from the "output"
-	// command, since that is the only command which attempts to
-	// output auto or period xacts.
-	post_t::xdata_t& xdata(post->xdata());
-	if (! xdata.has_flags(POST_EXT_HANDLED) &&
-	    ! post->has_flags(ITEM_GENERATED)) {
-	  xdata.add_flags(POST_EXT_HANDLED);
-	  item_handler<post_t>::operator()(*post);
-	}
+        // This code should only be reachable from the "output"
+        // command, since that is the only command which attempts to
+        // output auto or period xacts.
+        post_t::xdata_t& xdata(post->xdata());
+        if (! xdata.has_flags(POST_EXT_HANDLED) &&
+            ! post->has_flags(ITEM_GENERATED)) {
+          xdata.add_flags(POST_EXT_HANDLED);
+          item_handler<post_t>::operator()(*post);
+        }
       }
     }
   }
@@ -525,15 +530,15 @@ void related_posts::flush()
 }
 
 display_filter_posts::display_filter_posts(post_handler_ptr handler,
-					   report_t&        _report,
-					   bool             _show_rounding)
+                                           report_t&        _report,
+                                           bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
     show_rounding(_show_rounding),
     rounding_account(temps.create_account(_("<Rounding>"))),
     revalued_account(temps.create_account(_("<Revalued>")))
 {
   TRACE_CTOR(display_filter_posts,
-	     "post_handler_ptr, report_t&, account_t&, bool");
+             "post_handler_ptr, report_t&, account_t&, bool");
 
   display_amount_expr = report.HANDLER(display_amount_).expr;
   display_total_expr  = report.HANDLER(display_total_).expr;
@@ -548,7 +553,7 @@ bool display_filter_posts::output_rounding(post_t& post)
     new_display_total = display_total_expr.calc(bound_scope);
 
     DEBUG("filters.changed_value.rounding",
-	  "rounding.new_display_total     = " << new_display_total);
+          "rounding.new_display_total     = " << new_display_total);
   }
 
   // Allow the posting to be displayed if:
@@ -565,29 +570,29 @@ bool display_filter_posts::output_rounding(post_t& post)
   if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
     if (! last_display_total.is_null()) {
       DEBUG("filters.changed_value.rounding",
-	    "rounding.repriced_amount       = " << repriced_amount);
+            "rounding.repriced_amount       = " << repriced_amount);
 
       value_t precise_display_total(new_display_total.truncated() -
-				    repriced_amount.truncated());
+                                    repriced_amount.truncated());
 
       DEBUG("filters.changed_value.rounding",
-	    "rounding.precise_display_total = " << precise_display_total);
+            "rounding.precise_display_total = " << precise_display_total);
       DEBUG("filters.changed_value.rounding",
-	    "rounding.last_display_total    = " << last_display_total);
+            "rounding.last_display_total    = " << last_display_total);
 
       if (value_t diff = precise_display_total - last_display_total) {
-	DEBUG("filters.changed_value.rounding",
-	      "rounding.diff                  = " << diff);
+        DEBUG("filters.changed_value.rounding",
+              "rounding.diff                  = " << diff);
 
-	handle_value(/* value=         */ diff,
-		     /* account=       */ &rounding_account,
-		     /* xact=          */ post.xact,
-		     /* temps=         */ temps,
-		     /* handler=       */ handler,
-		     /* date=          */ date_t(),
-		     /* act_date_p=    */ true,
-		     /* total=         */ precise_display_total,
-		     /* direct_amount= */ true);
+        handle_value(/* value=         */ diff,
+                     /* account=       */ &rounding_account,
+                     /* xact=          */ post.xact,
+                     /* temps=         */ temps,
+                     /* handler=       */ handler,
+                     /* date=          */ date_t(),
+                     /* act_date_p=    */ true,
+                     /* total=         */ precise_display_total,
+                     /* direct_amount= */ true);
       }
     }
     if (show_rounding)
@@ -605,23 +610,23 @@ void display_filter_posts::operator()(post_t& post)
 }
 
 changed_value_posts::changed_value_posts
-  (post_handler_ptr	  handler,
-   report_t&		  _report,
-   bool			  _for_accounts_report,
-   bool			  _show_unrealized,
+  (post_handler_ptr       handler,
+   report_t&              _report,
+   bool                   _for_accounts_report,
+   bool                   _show_unrealized,
    display_filter_posts * _display_filter)
   : item_handler<post_t>(handler), report(_report),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
     revalued_account(_display_filter ? _display_filter->revalued_account :
-		     temps.create_account(_("<Revalued>"))),
+                     temps.create_account(_("<Revalued>"))),
     display_filter(_display_filter)
 {
   TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool");
 
-  total_expr	      = (report.HANDLED(revalued_total_) ?
-			 report.HANDLER(revalued_total_).expr :
-			 report.HANDLER(display_total_).expr);
+  total_expr          = (report.HANDLED(revalued_total_) ?
+                         report.HANDLER(revalued_total_).expr :
+                         report.HANDLER(display_total_).expr);
   display_total_expr  = report.HANDLER(display_total_).expr;
   changed_values_only = report.HANDLED(revalued_only);
 
@@ -671,51 +676,51 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   post.xdata().date = date_t();
 
   DEBUG("filters.changed_value",
-	"output_revaluation(last_total)     = " << last_total);
+        "output_revaluation(last_total)     = " << last_total);
   DEBUG("filters.changed_value",
-	"output_revaluation(repriced_total) = " << repriced_total);
+        "output_revaluation(repriced_total) = " << repriced_total);
 
   if (! last_total.is_null()) {
     if (value_t diff = repriced_total - last_total) {
       DEBUG("filters.changed_value", "output_revaluation(strip(diff)) = "
-	    << diff.strip_annotations(report.what_to_keep()));
+            << diff.strip_annotations(report.what_to_keep()));
 
       xact_t& xact = temps.create_xact();
       xact.payee = _("Commodities revalued");
       xact._date = is_valid(date) ? date : post.value_date();
 
       if (! for_accounts_report) {
-	handle_value
-	  (/* value=         */ diff,
-	   /* account=       */ &revalued_account,
-	   /* xact=          */ &xact,
-	   /* temps=         */ temps,
-	   /* handler=       */ handler,
-	   /* date=          */ *xact._date,
-	   /* act_date_p=    */ true,
-	   /* total=         */ repriced_total);
+        handle_value
+          (/* value=         */ diff,
+           /* account=       */ &revalued_account,
+           /* xact=          */ &xact,
+           /* temps=         */ temps,
+           /* handler=       */ handler,
+           /* date=          */ *xact._date,
+           /* act_date_p=    */ true,
+           /* total=         */ repriced_total);
       }
       else if (show_unrealized) {
-	handle_value
-	  (/* value=         */ - diff,
-	   /* account=       */ (diff < 0L ?
-				 losses_equity_account :
-				 gains_equity_account),
-	   /* xact=          */ &xact,
-	   /* temps=         */ temps,
-	   /* handler=       */ handler,
-	   /* date=          */ *xact._date,
-	   /* act_date_p=    */ true,
-	   /* total=         */ value_t(),
-	   /* direct_amount= */ false,
-	   /* mark_visited=  */ true);
+        handle_value
+          (/* value=         */ - diff,
+           /* account=       */ (diff < 0L ?
+                                 losses_equity_account :
+                                 gains_equity_account),
+           /* xact=          */ &xact,
+           /* temps=         */ temps,
+           /* handler=       */ handler,
+           /* date=          */ *xact._date,
+           /* act_date_p=    */ true,
+           /* total=         */ value_t(),
+           /* direct_amount= */ false,
+           /* mark_visited=  */ true);
       }
     }
   }
 }
 
-void changed_value_posts::output_intermediate_prices(post_t&	   post,
-						     const date_t& current)
+void changed_value_posts::output_intermediate_prices(post_t&       post,
+                                                     const date_t& current)
 {
   // To fix BZ#199, examine the balance of last_post and determine whether the
   // price of that amount changed after its date and before the new post's
@@ -783,24 +788,24 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
     commodity_t::history_map all_prices;
 
     foreach (const balance_t::amounts_map::value_type& amt_comm,
-	     display_total.as_balance().amounts) {
+             display_total.as_balance().amounts) {
       if (optional<commodity_t::varied_history_t&> hist =
-	  amt_comm.first->varied_history()) {
-	foreach
-	  (const commodity_t::history_by_commodity_map::value_type& comm_hist,
-	   hist->histories) {
-	  foreach (const commodity_t::history_map::value_type& price,
-		   comm_hist.second.prices) {
-	    if (price.first.date() > post.value_date() &&
-		price.first.date() < current) {
-	      DEBUG("filters.revalued", post.value_date() << " < "
-		    << price.first.date() << " < " << current);
-	      DEBUG("filters.revalued", "inserting "
-		    << price.second << " at " << price.first.date());
-	      all_prices.insert(price);
-	    }
-	  }
-	}
+          amt_comm.first->varied_history()) {
+        foreach
+          (const commodity_t::history_by_commodity_map::value_type& comm_hist,
+           hist->histories) {
+          foreach (const commodity_t::history_map::value_type& price,
+                   comm_hist.second.prices) {
+            if (price.first.date() > post.value_date() &&
+                price.first.date() < current) {
+              DEBUG("filters.revalued", post.value_date() << " < "
+                    << price.first.date() << " < " << current);
+              DEBUG("filters.revalued", "inserting "
+                    << price.second << " at " << price.first.date());
+              all_prices.insert(price);
+            }
+          }
+        }
       }
     }
 
@@ -813,7 +818,7 @@ void changed_value_posts::output_intermediate_prices(post_t&	   post,
       // This insert will fail if a later price has already been inserted
       // for that date.
       DEBUG("filters.revalued",
-	    "re-inserting " << price.second << " at " << price.first.date());
+            "re-inserting " << price.second << " at " << price.first.date());
       pricing_dates.insert(date_map::value_type(price.first.date(), true));
     }
 
@@ -849,8 +854,8 @@ void changed_value_posts::operator()(post_t& post)
   last_post  = &post;
 }
 
-void subtotal_posts::report_subtotal(const char *		      spec_fmt,
-				     const optional<date_interval_t>& interval)
+void subtotal_posts::report_subtotal(const char *                     spec_fmt,
+                                     const optional<date_interval_t>& interval)
 {
   if (component_posts.empty())
     return;
@@ -860,12 +865,12 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
 
   if (! range_start || ! range_finish) {
     foreach (post_t * post, component_posts) {
-      date_t date	= post->date();
+      date_t date       = post->date();
       date_t value_date = post->value_date();
       if (! range_start || date < *range_start)
-	range_start = date;
+        range_start = date;
       if (! range_finish || value_date > *range_finish)
-	range_finish = value_date;
+        range_finish = value_date;
     }
   }
   component_posts.clear();
@@ -876,7 +881,7 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
   }
   else if (date_format) {
     out_date << "- " << format_date(*range_finish, FMT_CUSTOM,
-				    date_format->c_str());
+                                    date_format->c_str());
   }
   else {
     out_date << "- " << format_date(*range_finish);
@@ -888,12 +893,12 @@ void subtotal_posts::report_subtotal(const char *		      spec_fmt,
 
   foreach (values_map::value_type& pair, values)
     handle_value(/* value=      */ pair.second.value,
-		 /* account=    */ pair.second.account,
-		 /* xact=       */ &xact,
-		 /* temps=      */ temps,
-		 /* handler=    */ handler,
-		 /* date=       */ *range_finish,
-		 /* act_date_p= */ false);
+                 /* account=    */ pair.second.account,
+                 /* xact=       */ &xact,
+                 /* temps=      */ temps,
+                 /* handler=    */ handler,
+                 /* date=       */ *range_finish,
+                 /* act_date_p= */ false);
 
   values.clear();
 }
@@ -952,25 +957,25 @@ void interval_posts::operator()(post_t& post)
       report_subtotal(last_interval);
 
       if (generate_empty_posts) {
-	for (++last_interval; interval != last_interval; ++last_interval) {
-	  // Generate a null posting, so the intervening periods can be
-	  // seen when -E is used, or if the calculated amount ends up being
-	  // non-zero
-	  xact_t& null_xact = temps.create_xact();
-	  null_xact._date = last_interval.inclusive_end();
+        for (++last_interval; interval != last_interval; ++last_interval) {
+          // Generate a null posting, so the intervening periods can be
+          // seen when -E is used, or if the calculated amount ends up being
+          // non-zero
+          xact_t& null_xact = temps.create_xact();
+          null_xact._date = last_interval.inclusive_end();
 
-	  post_t& null_post = temps.create_post(null_xact, &empty_account);
-	  null_post.add_flags(POST_CALCULATED);
-	  null_post.amount = 0L;
+          post_t& null_post = temps.create_post(null_xact, &empty_account);
+          null_post.add_flags(POST_CALCULATED);
+          null_post.amount = 0L;
 
-	  last_post = &null_post;
-	  subtotal_posts::operator()(null_post);
+          last_post = &null_post;
+          subtotal_posts::operator()(null_post);
 
-	  report_subtotal(last_interval);
-	}
-	assert(interval == last_interval);
+          report_subtotal(last_interval);
+        }
+        assert(interval == last_interval);
       } else {
-	last_interval = interval;
+        last_interval = interval;
       }
     } else {
       last_interval = interval;
@@ -1001,22 +1006,22 @@ void posts_as_equity::report_subtotal()
   foreach (values_map::value_type& pair, values) {
     if (pair.second.value.is_balance()) {
       foreach (const balance_t::amounts_map::value_type& amount_pair,
-	       pair.second.value.as_balance().amounts)
-	handle_value(/* value=      */ amount_pair.second,
-		     /* account=    */ pair.second.account,
-		     /* xact=       */ &xact,
-		     /* temps=      */ temps,
-		     /* handler=    */ handler,
-		     /* date=       */ finish,
-		     /* act_date_p= */ false);
+               pair.second.value.as_balance().amounts)
+        handle_value(/* value=      */ amount_pair.second,
+                     /* account=    */ pair.second.account,
+                     /* xact=       */ &xact,
+                     /* temps=      */ temps,
+                     /* handler=    */ handler,
+                     /* date=       */ finish,
+                     /* act_date_p= */ false);
     } else {
       handle_value(/* value=      */ pair.second.value,
-		   /* account=    */ pair.second.account,
-		   /* xact=       */ &xact,
-		   /* temps=      */ temps,
-		   /* handler=    */ handler,
-		   /* date=       */ finish,
-		   /* act_date_p= */ false);
+                   /* account=    */ pair.second.account,
+                   /* xact=       */ &xact,
+                   /* temps=      */ temps,
+                   /* handler=    */ handler,
+                   /* date=       */ finish,
+                   /* act_date_p= */ false);
     }
     total += pair.second.value;
   }
@@ -1024,7 +1029,7 @@ void posts_as_equity::report_subtotal()
 
   if (total.is_balance()) {
     foreach (const balance_t::amounts_map::value_type& pair,
-	     total.as_balance().amounts) {
+             total.as_balance().amounts) {
       post_t& balance_post = temps.create_post(xact, balance_account);
       balance_post.amount = - pair.second;
       (*handler)(balance_post);
@@ -1052,7 +1057,7 @@ void by_payee_posts::operator()(post_t& post)
   if (i == payee_subtotals.end()) {
     payee_subtotals_pair
       temp(post.xact->payee,
-	   shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
+           shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);
 
@@ -1085,22 +1090,22 @@ void transfer_details::operator()(post_t& post)
     case SET_ACCOUNT: {
       string account_name = substitute.to_string();
       if (! account_name.empty() &&
-	  account_name[account_name.length() - 1] != ':') {
-	account_t * prev_account = temp.account;
-	temp.account->remove_post(&temp);
+          account_name[account_name.length() - 1] != ':') {
+        account_t * prev_account = temp.account;
+        temp.account->remove_post(&temp);
 
-	account_name += ':';
-	account_name += prev_account->fullname();
+        account_name += ':';
+        account_name += prev_account->fullname();
 
-	std::list<string> account_names;
-	split_string(account_name, ':', account_names);
-	temp.account = create_temp_account_from_path(account_names, temps,
-						     xact.journal->master);
-	temp.account->add_post(&temp);
+        std::list<string> account_names;
+        split_string(account_name, ':', account_names);
+        temp.account = create_temp_account_from_path(account_names, temps,
+                                                     xact.journal->master);
+        temp.account->add_post(&temp);
 
-	temp.account->add_flags(prev_account->flags());
-	if (prev_account->has_xdata())
-	  temp.account->xdata().add_flags(prev_account->xdata().flags());
+        temp.account->add_flags(prev_account->flags());
+        if (prev_account->has_xdata())
+          temp.account->xdata().add_flags(prev_account->xdata().flags());
       }
       break;
     }
@@ -1153,42 +1158,41 @@ void budget_posts::report_budget_items(const date_t& date)
     foreach (pending_posts_list::value_type& pair, pending_posts) {
       optional<date_t> begin = pair.first.start;
       if (! begin) {
-	if (! pair.first.find_period(date))
-	  throw_(std::runtime_error,
-		 _("Something odd has happened at date %1") << date);
-	begin = pair.first.start;
+        if (! pair.first.find_period(date))
+          continue;
+        begin = pair.first.start;
       }
       assert(begin);
 
       if (*begin <= date &&
-	  (! pair.first.finish || *begin < *pair.first.finish)) {
-	post_t& post = *pair.second;
+          (! pair.first.finish || *begin < *pair.first.finish)) {
+        post_t& post = *pair.second;
 
-	DEBUG("budget.generate", "Reporting budget for "
-	      << post.reported_account()->fullname());
+        DEBUG("budget.generate", "Reporting budget for "
+              << post.reported_account()->fullname());
 
-	xact_t& xact = temps.create_xact();
-	xact.payee = _("Budget transaction");
-	xact._date = begin;
+        xact_t& xact = temps.create_xact();
+        xact.payee = _("Budget transaction");
+        xact._date = begin;
 
-	post_t& temp = temps.copy_post(post, xact);
-	temp.amount.in_place_negate();
+        post_t& temp = temps.copy_post(post, xact);
+        temp.amount.in_place_negate();
 
-	if (flags & BUDGET_WRAP_VALUES) {
-	  value_t seq;
-	  seq.push_back(0L);
-	  seq.push_back(temp.amount);
+        if (flags & BUDGET_WRAP_VALUES) {
+          value_t seq;
+          seq.push_back(0L);
+          seq.push_back(temp.amount);
 
-	  temp.xdata().compound_value = seq;
-	  temp.xdata().add_flags(POST_EXT_COMPOUND);
-	}
+          temp.xdata().compound_value = seq;
+          temp.xdata().add_flags(POST_EXT_COMPOUND);
+        }
 
-	++pair.first;
-	begin = *pair.first.start;
+        ++pair.first;
+        begin = *pair.first.start;
 
-	item_handler<post_t>::operator()(temp);
+        item_handler<post_t>::operator()(temp);
 
-	reported = true;
+        reported = true;
       }
     }
   } while (reported);
@@ -1200,14 +1204,14 @@ void budget_posts::operator()(post_t& post)
 
   foreach (pending_posts_list::value_type& pair, pending_posts) {
     for (account_t * acct = post.reported_account();
-	 acct;
-	 acct = acct->parent) {
+         acct;
+         acct = acct->parent) {
       if (acct == (*pair.second).reported_account()) {
-	post_in_budget = true;
-	// Report the post as if it had occurred in the parent account.
-	if (post.reported_account() != acct)
-	  post.set_reported_account(acct);
-	goto handle;
+        post_in_budget = true;
+        // Report the post as if it had occurred in the parent account.
+        if (post.reported_account() != acct)
+          post.set_reported_account(acct);
+        goto handle;
       }
     }
   }
@@ -1275,10 +1279,10 @@ void forecast_posts::flush()
     // period contains the earliest starting date.
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin();
-	 i != pending_posts.end();
-	 i++) {
+         i != pending_posts.end();
+         i++) {
       if (*(*i).first.start < *(*least).first.start)
-	least = i;
+        least = i;
     }
 
     date_t& begin = *(*least).first.start;
@@ -1294,10 +1298,10 @@ void forecast_posts::flush()
     assert(next > begin);
 
     if (static_cast<std::size_t>((next - last).days()) >
-	static_cast<std::size_t>(365U) * forecast_years) {
+        static_cast<std::size_t>(365U) * forecast_years) {
       DEBUG("filters.forecast",
-	    "Forecast transaction exceeds " << forecast_years
-	    << " years beyond today");
+            "Forecast transaction exceeds " << forecast_years
+            << " years beyond today");
       pending_posts.erase(least);
       continue;
     }
@@ -1310,15 +1314,15 @@ void forecast_posts::flush()
     // "Forecast transaction".
     post_t& post = *(*least).second;
     xact_t& xact = temps.create_xact();
-    xact.payee	 = _("Forecast transaction");
-    xact._date	 = begin;
+    xact.payee   = _("Forecast transaction");
+    xact._date   = begin;
     post_t& temp = temps.copy_post(post, xact);
 
     // Submit the generated posting
     DEBUG("filters.forecast",
-	  "Forecast transaction: " << temp.date()
-	  << " " << temp.account->fullname()
-	  << " " << temp.amount);
+          "Forecast transaction: " << temp.date()
+          << " " << temp.account->fullname()
+          << " " << temp.amount);
     item_handler<post_t>::operator()(temp);
 
     // If the generated posting matches the user's report query, check whether
@@ -1328,9 +1332,9 @@ void forecast_posts::flush()
       DEBUG("filters.forecast", "  matches report query");
       bind_scope_t bound_scope(context, temp);
       if (! pred(bound_scope)) {
-	DEBUG("filters.forecast", "  fails to match continuation criteria");
-	pending_posts.erase(least);
-	continue;
+        DEBUG("filters.forecast", "  fails to match continuation criteria");
+        pending_posts.erase(least);
+        continue;
       }
     }
   }
@@ -1338,10 +1342,10 @@ void forecast_posts::flush()
   item_handler<post_t>::flush();
 }
 
-pass_down_accounts::pass_down_accounts(acct_handler_ptr		    handler,
-				       accounts_iterator&	    iter,
-				       const optional<predicate_t>& _pred,
-				       const optional<scope_t&>&    _context)
+pass_down_accounts::pass_down_accounts(acct_handler_ptr             handler,
+                                       accounts_iterator&           iter,
+                                       const optional<predicate_t>& _pred,
+                                       const optional<scope_t&>&    _context)
   : item_handler<account_t>(handler), pred(_pred), context(_context)
 {
   TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
@@ -1352,7 +1356,7 @@ pass_down_accounts::pass_down_accounts(acct_handler_ptr		    handler,
     } else {
       bind_scope_t bound_scope(*context, *account);
       if ((*pred)(bound_scope))
-	item_handler<account_t>::operator()(*account);
+        item_handler<account_t>::operator()(*account);
     }
   }
 

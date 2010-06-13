@@ -235,7 +235,7 @@ libledger_python_la_SOURCES =			\
 
 libledger_python_la_CPPFLAGS = $(lib_cppflags) -I$(srcdir)/python
 
-pyexec_LTLIBRARIES = ledger.la
+pyexec_LTLIBRARIES     = ledger.la
 
 ledger_la_CPPFLAGS     = $(libledger_python_la_CPPFLAGS)
 ledger_la_SOURCES      = src/pyledger.cc
@@ -243,7 +243,7 @@ ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
 ledger_la_LDFLAGS      = -avoid-version -module
 ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES)
 
-pkgpython_PYTHON = python/__init__.py python/server.py
+pkgpython_PYTHON       = python/__init__.py python/server.py
 
 endif
 
@@ -408,7 +408,7 @@ ConfirmTests: $(srcdir)/test/ConfirmTests.py
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 20 \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
@@ -433,13 +433,14 @@ endif
 fullcheck: cppunittests
 	@$(top_builddir)/RegressTests  --verify
 	@$(top_builddir)/BaselineTests --verify
-	@$(top_builddir)/ManualTests --verify
+	@$(top_builddir)/ManualTests   --verify
 	@$(top_builddir)/ConfirmTests  --verify
-	@$(top_builddir)/GenerateTests --verify
+	@$(top_builddir)/GenerateTests 20 --verify
 	@$(top_builddir)/RegressTests  --gmalloc
 	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/ManualTests --gmalloc
-#	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/ManualTests   --gmalloc
+	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/GenerateTests 10000
 #	@$(top_builddir)/GenerateTests --gmalloc
 
 ######################################################################

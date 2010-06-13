@@ -107,7 +107,7 @@ the substitution.  See the documentation of the individual functions
 in that variable for more information on the behavior of each
 specifier."
   :type '(repeat (list (string :tag "Report Name")
-		       (string :tag "Command Line")))
+                       (string :tag "Command Line")))
   :group 'ledger)
 
 (defcustom ledger-report-format-specifiers
@@ -128,13 +128,13 @@ text that should replace the format specifier."
 
 (defvar bold 'bold)
 (defvar ledger-font-lock-keywords
-  '(("\\(	\\|  \\|^\\)\\(;.*\\)" 2 font-lock-comment-face)
-    ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(	;\\|  ;\\|$\\)\\)" 2 bold)
-    ;;("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([*].+?\\)\\(\\(	;\\|  ;\\|$\\)\\)"
+  '(("\\(       \\|  \\|^\\)\\(;.*\\)" 2 font-lock-comment-face)
+    ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 bold)
+    ;;("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([*].+?\\)\\(\\(       ;\\|  ;\\|$\\)\\)"
     ;; 2 font-lock-type-face)
     ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?[^*:
-	]+?:[^]);
-	]+?\\([])]\\)?\\)\\(	\\|  \\|$\\)"
+        ]+?:[^]);
+        ]+?\\([])]\\)?\\)\\(    \\|  \\|$\\)"
      2 font-lock-keyword-face)
     ("^\\([~=].+\\)" 1 font-lock-function-name-face)
     ("^\\([A-Za-z]+ .+\\)" 1 font-lock-function-name-face))
@@ -155,88 +155,88 @@ customizable to ease retro-entry.")
 (defun ledger-iterate-entries (callback)
   (goto-char (point-min))
   (let* ((now (current-time))
-	 (current-year (nth 5 (decode-time now))))
+         (current-year (nth 5 (decode-time now))))
     (while (not (eobp))
       (when (looking-at
-	     (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
-		     "\\([0-9]\\{4\\}+\\)?[./]?"
-		     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
-		     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
-	(let ((found (match-string 2)))
-	  (if found
-	      (setq current-year (string-to-number found))
-	    (let ((start (match-beginning 0))
-		  (year (match-string 3))
-		  (month (string-to-number (match-string 4)))
-		  (day (string-to-number (match-string 5)))
-		  (mark (match-string 6))
-		  (desc (match-string 7)))
-	      (if (and year (> (length year) 0))
-		  (setq year (string-to-number year)))
-	      (funcall callback start
-		       (encode-time 0 0 0 day month
-				    (or year current-year))
-		       mark desc)))))
+             (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
+                     "\\([0-9]\\{4\\}+\\)?[./]?"
+                     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
+                     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
+        (let ((found (match-string 2)))
+          (if found
+              (setq current-year (string-to-number found))
+            (let ((start (match-beginning 0))
+                  (year (match-string 3))
+                  (month (string-to-number (match-string 4)))
+                  (day (string-to-number (match-string 5)))
+                  (mark (match-string 6))
+                  (desc (match-string 7)))
+              (if (and year (> (length year) 0))
+                  (setq year (string-to-number year)))
+              (funcall callback start
+                       (encode-time 0 0 0 day month
+                                    (or year current-year))
+                       mark desc)))))
       (forward-line))))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
   (or (< (car t1) (car t2))
       (and (= (car t1) (car t2))
-	   (< (nth 1 t1) (nth 1 t2)))))
+           (< (nth 1 t1) (nth 1 t2)))))
 
 (defun ledger-time-subtract (t1 t2)
   "Subtract two time values.
 Return the difference in the format of a time value."
   (let ((borrow (< (cadr t1) (cadr t2))))
     (list (- (car t1) (car t2) (if borrow 1 0))
-	  (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
+          (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
 
 (defun ledger-find-slot (moment)
   (catch 'found
     (ledger-iterate-entries
      (function
       (lambda (start date mark desc)
-	(if (ledger-time-less-p moment date)
-	    (throw 'found t)))))))
+        (if (ledger-time-less-p moment date)
+            (throw 'found t)))))))
 
 (defun ledger-add-entry (entry-text &optional insert-at-point)
   (interactive
    (list
     (read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((args (with-temp-buffer
-		 (insert entry-text)
-		 (eshell-parse-arguments (point-min) (point-max))))
-	 (ledger-buf (current-buffer))
-	 exit-code)
+                 (insert entry-text)
+                 (eshell-parse-arguments (point-min) (point-max))))
+         (ledger-buf (current-buffer))
+         exit-code)
     (unless insert-at-point
       (let ((date (car args)))
-	(if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
-	    (setq date
-		  (encode-time 0 0 0 (string-to-number (match-string 3 date))
-			       (string-to-number (match-string 2 date))
-			       (string-to-number (match-string 1 date)))))
-	(ledger-find-slot date)))
+        (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
+            (setq date
+                  (encode-time 0 0 0 (string-to-number (match-string 3 date))
+                               (string-to-number (match-string 2 date))
+                               (string-to-number (match-string 1 date)))))
+        (ledger-find-slot date)))
     (save-excursion
       (insert
        (with-temp-buffer
-	 (setq exit-code
-	       (apply #'ledger-run-ledger ledger-buf "entry"
-		      (mapcar 'eval args)))
-	 (goto-char (point-min))
-	 (if (looking-at "Error: ")
-	     (error (buffer-string))
-	   (buffer-string)))
+         (setq exit-code
+               (apply #'ledger-run-ledger ledger-buf "entry"
+                      (mapcar 'eval args)))
+         (goto-char (point-min))
+         (if (looking-at "Error: ")
+             (error (buffer-string))
+           (buffer-string)))
        "\n"))))
 
 (defun ledger-current-entry-bounds ()
   (save-excursion
     (when (or (looking-at "^[0-9]")
-	      (re-search-backward "^[0-9]" nil t))
+              (re-search-backward "^[0-9]" nil t))
       (let ((beg (point)))
-	(while (not (eolp))
-	  (forward-line))
-	(cons (copy-marker beg) (point-marker))))))
+        (while (not (eolp))
+          (forward-line))
+        (cons (copy-marker beg) (point-marker))))))
 
 (defun ledger-delete-current-entry ()
   (interactive)
@@ -248,18 +248,18 @@ Return the difference in the format of a time value."
   (let (clear)
     (save-excursion
       (when (or (looking-at "^[0-9]")
-		(re-search-backward "^[0-9]" nil t))
-	(skip-chars-forward "0-9./=")
-	(delete-horizontal-space)
-	(if (member (char-after) '(?\* ?\!))
-	    (progn
-	      (delete-char 1)
-	      (if (and style (eq style 'cleared))
-		  (insert " *")))
-	  (if (and style (eq style 'pending))
-	      (insert " ! ")
-	    (insert " * "))
-	  (setq clear t))))
+                (re-search-backward "^[0-9]" nil t))
+        (skip-chars-forward "0-9./=")
+        (delete-horizontal-space)
+        (if (member (char-after) '(?\* ?\!))
+            (progn
+              (delete-char 1)
+              (if (and style (eq style 'cleared))
+                  (insert " *")))
+          (if (and style (eq style 'pending))
+              (insert " ! ")
+            (insert " * "))
+          (setq clear t))))
     clear))
 
 (defun ledger-move-to-next-field ()
@@ -268,28 +268,28 @@ Return the difference in the format of a time value."
 (defun ledger-toggle-state (state &optional style)
   (if (not (null state))
       (if (and style (eq style 'cleared))
-	  'cleared)
+          'cleared)
     (if (and style (eq style 'pending))
-	'pending
+        'pending
       'cleared)))
 
 (defun ledger-entry-state ()
   (save-excursion
     (when (or (looking-at "^[0-9]")
-	      (re-search-backward "^[0-9]" nil t))
+              (re-search-backward "^[0-9]" nil t))
       (skip-chars-forward "0-9./=")
       (skip-syntax-forward " ")
       (cond ((looking-at "!\\s-*") 'pending)
-	    ((looking-at "\\*\\s-*") 'cleared)
-	    (t nil)))))
+            ((looking-at "\\*\\s-*") 'cleared)
+            (t nil)))))
 
 (defun ledger-transaction-state ()
   (save-excursion
     (goto-char (line-beginning-position))
     (skip-syntax-forward " ")
     (cond ((looking-at "!\\s-*") 'pending)
-	  ((looking-at "\\*\\s-*") 'cleared)
-	  (t (ledger-entry-state)))))
+          ((looking-at "\\*\\s-*") 'cleared)
+          (t (ledger-entry-state)))))
 
 (defun ledger-toggle-current-transaction (&optional style)
   "Toggle the cleared status of the transaction under point.
@@ -304,129 +304,129 @@ formatting, but doing so causes inline math expressions to be
 dropped."
   (interactive)
   (let ((bounds (ledger-current-entry-bounds))
-	clear cleared)
+        clear cleared)
     ;; Uncompact the entry, to make it easier to toggle the
     ;; transaction
     (save-excursion
       (goto-char (car bounds))
       (skip-chars-forward "0-9./= \t")
       (setq cleared (and (member (char-after) '(?\* ?\!))
-			 (char-after)))
+                         (char-after)))
       (when cleared
-	(let ((here (point)))
-	  (skip-chars-forward "*! ")
-	  (let ((width (- (point) here)))
-	    (when (> width 0)
-	      (delete-region here (point))
-	      (if (search-forward "  " (line-end-position) t)
-		  (insert (make-string width ? ))))))
-	(forward-line)
-	(while (looking-at "[ \t]")
-	  (skip-chars-forward " \t")
-	  (insert cleared " ")
-	  (if (search-forward "  " (line-end-position) t)
-	      (delete-char 2))
-	  (forward-line))))
+        (let ((here (point)))
+          (skip-chars-forward "*! ")
+          (let ((width (- (point) here)))
+            (when (> width 0)
+              (delete-region here (point))
+              (if (search-forward "  " (line-end-position) t)
+                  (insert (make-string width ? ))))))
+        (forward-line)
+        (while (looking-at "[ \t]")
+          (skip-chars-forward " \t")
+          (insert cleared " ")
+          (if (search-forward "  " (line-end-position) t)
+              (delete-char 2))
+          (forward-line))))
     ;; Toggle the individual transaction
     (save-excursion
       (goto-char (line-beginning-position))
       (when (looking-at "[ \t]")
-	(skip-chars-forward " \t")
-	(let ((here (point))
-	      (cleared (member (char-after) '(?\* ?\!))))
-	  (skip-chars-forward "*! ")
-	  (let ((width (- (point) here)))
-	    (when (> width 0)
-	      (delete-region here (point))
-	      (save-excursion
-		(if (search-forward "  " (line-end-position) t)
-		    (insert (make-string width ? ))))))
-	  (let (inserted)
-	    (if cleared
-		(if (and style (eq style 'cleared))
-		    (progn
-		      (insert "* ")
-		      (setq inserted t)))
-	      (if (and style (eq style 'pending))
-		  (progn
-		    (insert "! ")
-		    (setq inserted t))
-		(progn
-		  (insert "* ")
-		  (setq inserted t))))
-	    (if (and inserted
-		     (re-search-forward "\\(\t\\| [ \t]\\)"
-					(line-end-position) t))
-		(cond
-		 ((looking-at "\t")
-		  (delete-char 1))
-		 ((looking-at " [ \t]")
-		  (delete-char 2))
-		 ((looking-at " ")
-		  (delete-char 1))))
-	    (setq clear inserted)))))
+        (skip-chars-forward " \t")
+        (let ((here (point))
+              (cleared (member (char-after) '(?\* ?\!))))
+          (skip-chars-forward "*! ")
+          (let ((width (- (point) here)))
+            (when (> width 0)
+              (delete-region here (point))
+              (save-excursion
+                (if (search-forward "  " (line-end-position) t)
+                    (insert (make-string width ? ))))))
+          (let (inserted)
+            (if cleared
+                (if (and style (eq style 'cleared))
+                    (progn
+                      (insert "* ")
+                      (setq inserted t)))
+              (if (and style (eq style 'pending))
+                  (progn
+                    (insert "! ")
+                    (setq inserted t))
+                (progn
+                  (insert "* ")
+                  (setq inserted t))))
+            (if (and inserted
+                     (re-search-forward "\\(\t\\| [ \t]\\)"
+                                        (line-end-position) t))
+                (cond
+                 ((looking-at "\t")
+                  (delete-char 1))
+                 ((looking-at " [ \t]")
+                  (delete-char 2))
+                 ((looking-at " ")
+                  (delete-char 1))))
+            (setq clear inserted)))))
     ;; Clean up the entry so that it displays minimally
     (save-excursion
       (goto-char (car bounds))
       (forward-line)
       (let ((first t)
-	    (state ? )
-	    (hetero nil))
-	(while (and (not hetero) (looking-at "[ \t]"))
-	  (skip-chars-forward " \t")
-	  (let ((cleared (if (member (char-after) '(?\* ?\!))
-			     (char-after)
-			   ? )))
-	    (if first
-		(setq state cleared
-		      first nil)
-	      (if (/= state cleared)
-		  (setq hetero t))))
-	  (forward-line))
-	(when (and (not hetero) (/= state ? ))
-	  (goto-char (car bounds))
-	  (forward-line)
-	  (while (looking-at "[ \t]")
-	    (skip-chars-forward " \t")
-	    (let ((here (point)))
-	      (skip-chars-forward "*! ")
-	      (let ((width (- (point) here)))
-		(when (> width 0)
-		  (delete-region here (point))
-		  (if (re-search-forward "\\(\t\\| [ \t]\\)"
-					 (line-end-position) t)
-		      (insert (make-string width ? ))))))
-	    (forward-line))
-	  (goto-char (car bounds))
-	  (skip-chars-forward "0-9./= \t")
-	  (insert state " ")
-	  (if (re-search-forward "\\(\t\\| [ \t]\\)"
-				 (line-end-position) t)
-	      (cond
-	       ((looking-at "\t")
-		(delete-char 1))
-	       ((looking-at " [ \t]")
-		(delete-char 2))
-	       ((looking-at " ")
-		(delete-char 1)))))))
+            (state ? )
+            (hetero nil))
+        (while (and (not hetero) (looking-at "[ \t]"))
+          (skip-chars-forward " \t")
+          (let ((cleared (if (member (char-after) '(?\* ?\!))
+                             (char-after)
+                           ? )))
+            (if first
+                (setq state cleared
+                      first nil)
+              (if (/= state cleared)
+                  (setq hetero t))))
+          (forward-line))
+        (when (and (not hetero) (/= state ? ))
+          (goto-char (car bounds))
+          (forward-line)
+          (while (looking-at "[ \t]")
+            (skip-chars-forward " \t")
+            (let ((here (point)))
+              (skip-chars-forward "*! ")
+              (let ((width (- (point) here)))
+                (when (> width 0)
+                  (delete-region here (point))
+                  (if (re-search-forward "\\(\t\\| [ \t]\\)"
+                                         (line-end-position) t)
+                      (insert (make-string width ? ))))))
+            (forward-line))
+          (goto-char (car bounds))
+          (skip-chars-forward "0-9./= \t")
+          (insert state " ")
+          (if (re-search-forward "\\(\t\\| [ \t]\\)"
+                                 (line-end-position) t)
+              (cond
+               ((looking-at "\t")
+                (delete-char 1))
+               ((looking-at " [ \t]")
+                (delete-char 2))
+               ((looking-at " ")
+                (delete-char 1)))))))
     clear))
 
 (defun ledger-toggle-current (&optional style)
   (interactive)
   (if (or ledger-clear-whole-entries
-	  (eq 'entry (ledger-thing-at-point)))
+          (eq 'entry (ledger-thing-at-point)))
       (progn
-	(save-excursion
-	  (forward-line)
-	  (goto-char (line-beginning-position))
-	  (while (and (not (eolp))
-		      (save-excursion
-			(not (eq 'entry (ledger-thing-at-point)))))
-	    (if (looking-at "\\s-+[*!]")
-		(ledger-toggle-current-transaction nil))
-	    (forward-line)
-	    (goto-char (line-beginning-position))))
-	(ledger-toggle-current-entry style))
+        (save-excursion
+          (forward-line)
+          (goto-char (line-beginning-position))
+          (while (and (not (eolp))
+                      (save-excursion
+                        (not (eq 'entry (ledger-thing-at-point)))))
+            (if (looking-at "\\s-+[*!]")
+                (ledger-toggle-current-transaction nil))
+            (forward-line)
+            (goto-char (line-beginning-position))))
+        (ledger-toggle-current-entry style))
     (ledger-toggle-current-transaction style)))
 
 (defvar ledger-mode-abbrev-table)
@@ -440,7 +440,7 @@ dropped."
 
   (if (boundp 'font-lock-defaults)
       (set (make-local-variable 'font-lock-defaults)
-	   '(ledger-font-lock-keywords nil t)))
+           '(ledger-font-lock-keywords nil t)))
 
   (set (make-local-variable 'pcomplete-parse-arguments-function)
        'ledger-parse-arguments)
@@ -475,41 +475,41 @@ dropped."
 
 (defun ledger-display-balance ()
   (let ((buffer ledger-buf)
-	(account ledger-acct))
+        (account ledger-acct))
     (with-temp-buffer
       (let ((exit-code (ledger-run-ledger buffer "-C" "balance" account)))
-	(if (/= 0 exit-code)
-	    (message "Error determining cleared balance")
-	  (goto-char (1- (point-max)))
-	  (goto-char (line-beginning-position))
-	  (delete-horizontal-space)
-	  (message "Cleared balance = %s"
-		   (buffer-substring-no-properties (point)
-						   (line-end-position))))))))
+        (if (/= 0 exit-code)
+            (message "Error determining cleared balance")
+          (goto-char (1- (point-max)))
+          (goto-char (line-beginning-position))
+          (delete-horizontal-space)
+          (message "Cleared balance = %s"
+                   (buffer-substring-no-properties (point)
+                                                   (line-end-position))))))))
 
 (defun ledger-reconcile-toggle ()
   (interactive)
   (let ((where (get-text-property (point) 'where))
-	(account ledger-acct)
-	(inhibit-read-only t)
-	cleared)
+        (account ledger-acct)
+        (inhibit-read-only t)
+        cleared)
     (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
       (with-current-buffer ledger-buf
-	  (goto-char (cdr where))
-	(setq cleared (ledger-toggle-current 'pending)))
+          (goto-char (cdr where))
+        (setq cleared (ledger-toggle-current 'pending)))
       (if cleared
-	  (add-text-properties (line-beginning-position)
-			       (line-end-position)
-			       (list 'face 'bold))
-	(remove-text-properties (line-beginning-position)
-				(line-end-position)
-				(list 'face))))
+          (add-text-properties (line-beginning-position)
+                               (line-end-position)
+                               (list 'face 'bold))
+        (remove-text-properties (line-beginning-position)
+                                (line-end-position)
+                                (list 'face))))
     (forward-line)))
 
 (defun ledger-reconcile-refresh ()
   (interactive)
   (let ((inhibit-read-only t)
-	(line (count-lines (point-min) (point))))
+        (line (count-lines (point-min) (point))))
     (erase-buffer)
     (ledger-do-reconcile)
     (set-buffer-modified-p t)
@@ -519,9 +519,9 @@ dropped."
 (defun ledger-reconcile-refresh-after-save ()
   (let ((buf (get-buffer "*Reconcile*")))
     (if buf
-	(with-current-buffer buf
-	  (ledger-reconcile-refresh)
-	  (set-buffer-modified-p nil)))))
+        (with-current-buffer buf
+          (ledger-reconcile-refresh)
+          (set-buffer-modified-p nil)))))
 
 (defun ledger-reconcile-add ()
   (interactive)
@@ -534,12 +534,12 @@ dropped."
   (let ((where (get-text-property (point) 'where)))
     (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
       (with-current-buffer ledger-buf
-	(goto-char (cdr where))
-	(ledger-delete-current-entry))
+        (goto-char (cdr where))
+        (ledger-delete-current-entry))
       (let ((inhibit-read-only t))
-	(goto-char (line-beginning-position))
-	(delete-region (point) (1+ (line-end-position)))
-	(set-buffer-modified-p t)))))
+        (goto-char (line-beginning-position))
+        (delete-region (point) (1+ (line-end-position)))
+        (set-buffer-modified-p t)))))
 
 (defun ledger-reconcile-visit ()
   (interactive)
@@ -565,53 +565,53 @@ dropped."
     (goto-char (point-min))
     (while (not (eobp))
       (let ((where (get-text-property (point) 'where))
-	    (face  (get-text-property (point) 'face)))
-	(if (and (eq face 'bold)
-		 (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin")))
-	    (with-current-buffer ledger-buf
-	      (goto-char (cdr where))
-	      (ledger-toggle-current 'cleared))))
+            (face  (get-text-property (point) 'face)))
+        (if (and (eq face 'bold)
+                 (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin")))
+            (with-current-buffer ledger-buf
+              (goto-char (cdr where))
+              (ledger-toggle-current 'cleared))))
       (forward-line 1)))
   (ledger-reconcile-save))
 
 (defun ledger-do-reconcile ()
   (let* ((buf ledger-buf)
-	 (account ledger-acct)
-	 (items
-	  (with-temp-buffer
-	    (let ((exit-code
-		   (ledger-run-ledger buf "--uncleared" "emacs" account)))
-	      (when (= 0 exit-code)
-		(goto-char (point-min))
-		(unless (eobp)
-		  (unless (looking-at "(")
-		    (error (buffer-string)))
-		  (read (current-buffer))))))))
+         (account ledger-acct)
+         (items
+          (with-temp-buffer
+            (let ((exit-code
+                   (ledger-run-ledger buf "--uncleared" "emacs" account)))
+              (when (= 0 exit-code)
+                (goto-char (point-min))
+                (unless (eobp)
+                  (unless (looking-at "(")
+                    (error (buffer-string)))
+                  (read (current-buffer))))))))
     (dolist (item items)
       (let ((index 1))
-	(dolist (xact (nthcdr 5 item))
-	  (let ((beg (point))
-		(where
-		 (with-current-buffer buf
-		   (cons
-		    (nth 0 item)
-		    (if ledger-clear-whole-entries
-			(save-excursion
-			  (goto-line (nth 1 item))
-			  (point-marker))
-		      (save-excursion
-			(goto-line (nth 0 xact))
-			(point-marker)))))))
-	    (insert (format "%s %-30s %-25s %15s\n"
-			    (format-time-string "%m/%d" (nth 2 item))
-			    (nth 4 item) (nth 1 xact) (nth 2 xact)))
-	    (if (nth 3 xact)
-		(set-text-properties beg (1- (point))
-				     (list 'face 'bold
-					   'where where))
-	      (set-text-properties beg (1- (point))
-				   (list 'where where))))
-	  (setq index (1+ index)))))
+        (dolist (xact (nthcdr 5 item))
+          (let ((beg (point))
+                (where
+                 (with-current-buffer buf
+                   (cons
+                    (nth 0 item)
+                    (if ledger-clear-whole-entries
+                        (save-excursion
+                          (goto-line (nth 1 item))
+                          (point-marker))
+                      (save-excursion
+                        (goto-line (nth 0 xact))
+                        (point-marker)))))))
+            (insert (format "%s %-30s %-25s %15s\n"
+                            (format-time-string "%m/%d" (nth 2 item))
+                            (nth 4 item) (nth 1 xact) (nth 2 xact)))
+            (if (nth 3 xact)
+                (set-text-properties beg (1- (point))
+                                     (list 'face 'bold
+                                           'where where))
+              (set-text-properties beg (1- (point))
+                                   (list 'where where))))
+          (setq index (1+ index)))))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)))
@@ -619,12 +619,12 @@ dropped."
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
   (let ((buf (current-buffer))
-	(rbuf (get-buffer "*Reconcile*")))
+        (rbuf (get-buffer "*Reconcile*")))
     (if rbuf
-	(kill-buffer rbuf))
+        (kill-buffer rbuf))
     (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save)
     (with-current-buffer
-	(pop-to-buffer (get-buffer-create "*Reconcile*"))
+        (pop-to-buffer (get-buffer-create "*Reconcile*"))
       (ledger-reconcile-mode)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-acct) account)
@@ -681,24 +681,24 @@ dropped."
 Assumes point is at beginning of line, and the pos argument specifies
 where the \"users\" point was."
   (let ((linfo (assoc line-type ledger-line-config))
-	found field fields)
+        found field fields)
     (dolist (re-info (nth 1 linfo))
       (let ((re (nth 0 re-info))
-	    (names (nth 1 re-info)))
-	(unless found
-	  (when (looking-at re)
-	    (setq found t)
-	    (dotimes (i (length names))
-	      (when (nth i names)
-		(setq fields (append fields
-				     (list
-				      (list (nth i names)
-					    (match-string-no-properties (1+ i))
-					    (match-beginning (1+ i))))))))
-	    (dolist (f fields)
-	      (and (nth 1 f)
-		   (>= pos (nth 2 f))
-		   (setq field (nth 0 f))))))))
+            (names (nth 1 re-info)))
+        (unless found
+          (when (looking-at re)
+            (setq found t)
+            (dotimes (i (length names))
+              (when (nth i names)
+                (setq fields (append fields
+                                     (list
+                                      (list (nth i names)
+                                            (match-string-no-properties (1+ i))
+                                            (match-beginning (1+ i))))))))
+            (dolist (f fields)
+              (and (nth 1 f)
+                   (>= pos (nth 2 f))
+                   (setq field (nth 0 f))))))))
     (list line-type field fields)))
 
 (defun ledger-context-at-point ()
@@ -711,40 +711,40 @@ the fields in the line in a association list."
     (save-excursion
       (beginning-of-line)
       (let ((first-char (char-after)))
-	(cond ((equal (point) (line-end-position))
-	       '(empty-line nil nil))
-	      ((memq first-char '(?\ ?\t))
-	       (ledger-extract-context-info 'acct-transaction pos))
-	      ((memq first-char '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-	       (ledger-extract-context-info 'entry pos))
-	      ((equal first-char ?\=)
-	       '(automated-entry nil nil))
-	      ((equal first-char ?\~)
-	       '(period-entry nil nil))
-	      ((equal first-char ?\!)
-	       '(command-directive))
-	      ((equal first-char ?\;)
-	       '(comment nil nil))
-	      ((equal first-char ?Y)
-	       '(default-year nil nil))
-	      ((equal first-char ?P)
-	       '(commodity-price nil nil))
-	      ((equal first-char ?N)
-	       '(price-ignored-commodity nil nil))
-	      ((equal first-char ?D)
-	       '(default-commodity nil nil))
-	      ((equal first-char ?C)
-	       '(commodity-conversion nil nil))
-	      ((equal first-char ?i)
-	       '(timeclock-i nil nil))
-	      ((equal first-char ?o)
-	       '(timeclock-o nil nil))
-	      ((equal first-char ?b)
-	       '(timeclock-b nil nil))
-	      ((equal first-char ?h)
-	       '(timeclock-h  nil nil))
-	      (t
-	       '(unknown nil nil)))))))
+        (cond ((equal (point) (line-end-position))
+               '(empty-line nil nil))
+              ((memq first-char '(?\ ?\t))
+               (ledger-extract-context-info 'acct-transaction pos))
+              ((memq first-char '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+               (ledger-extract-context-info 'entry pos))
+              ((equal first-char ?\=)
+               '(automated-entry nil nil))
+              ((equal first-char ?\~)
+               '(period-entry nil nil))
+              ((equal first-char ?\!)
+               '(command-directive))
+              ((equal first-char ?\;)
+               '(comment nil nil))
+              ((equal first-char ?Y)
+               '(default-year nil nil))
+              ((equal first-char ?P)
+               '(commodity-price nil nil))
+              ((equal first-char ?N)
+               '(price-ignored-commodity nil nil))
+              ((equal first-char ?D)
+               '(default-commodity nil nil))
+              ((equal first-char ?C)
+               '(commodity-conversion nil nil))
+              ((equal first-char ?i)
+               '(timeclock-i nil nil))
+              ((equal first-char ?o)
+               '(timeclock-o nil nil))
+              ((equal first-char ?b)
+               '(timeclock-b nil nil))
+              ((equal first-char ?h)
+               '(timeclock-h  nil nil))
+              (t
+               '(unknown nil nil)))))))
 
 (defun ledger-context-other-line (offset)
   "Return a list describing context of line offset for existing position.
@@ -754,8 +754,8 @@ specified line, returns nil."
   (save-excursion
     (let ((left (forward-line offset)))
       (if (not (equal left 0))
-	  nil
-	(ledger-context-at-point)))))
+          nil
+        (ledger-context-at-point)))))
 
 (defun ledger-context-line-type (context-info)
   (nth 0 context-info))
@@ -792,8 +792,8 @@ specified line, returns nil."
       (setq i (- i 1)))
     (let ((context-info (ledger-context-other-line i)))
       (if (eq (ledger-context-line-type context-info) 'entry)
-	  (ledger-context-field-value context-info 'payee)
-	nil))))
+          (ledger-context-field-value context-info 'payee)
+        nil))))
 
 ;; Ledger report mode
 
@@ -832,8 +832,8 @@ specified line, returns nil."
 
 The empty string and unknown names are allowed."
   (completing-read "Report name: "
-		   ledger-reports nil nil nil
-		   'ledger-report-name-prompt-history nil))
+                   ledger-reports nil nil nil
+                   'ledger-report-name-prompt-history nil))
 
 (defun ledger-report (report-name edit)
   "Run a user-specified report from `ledger-reports'.
@@ -852,18 +852,18 @@ used to generate the buffer, navigating the buffer, etc."
   (interactive
    (progn
      (when (and (buffer-modified-p)
-		(y-or-n-p "Buffer modified, save it? "))
+                (y-or-n-p "Buffer modified, save it? "))
        (save-buffer))
      (let ((rname (ledger-report-read-name))
-	   (edit (not (null current-prefix-arg))))
+           (edit (not (null current-prefix-arg))))
        (list rname edit))))
   (let ((buf (current-buffer))
-	(rbuf (get-buffer ledger-report-buffer-name))
-	(wcfg (current-window-configuration)))
+        (rbuf (get-buffer ledger-report-buffer-name))
+        (wcfg (current-window-configuration)))
     (if rbuf
-	(kill-buffer rbuf))
+        (kill-buffer rbuf))
     (with-current-buffer
-	(pop-to-buffer (get-buffer-create ledger-report-buffer-name))
+        (pop-to-buffer (get-buffer-create ledger-report-buffer-name))
       (ledger-report-mode)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-report-name) report-name)
@@ -896,8 +896,8 @@ If name exists, returns the object naming the report, otherwise returns nil."
 (defun ledger-report-read-command (report-cmd)
   "Read the command line to create a report."
   (read-from-minibuffer "Report command line: "
-			(if (null report-cmd) "ledger " report-cmd)
-			nil nil 'ledger-report-cmd-prompt-history))
+                        (if (null report-cmd) "ledger " report-cmd)
+                        nil nil 'ledger-report-cmd-prompt-history))
 
 (defun ledger-report-ledger-file-format-specifier ()
   "Substitute the full path to master or current ledger file
@@ -909,9 +909,9 @@ otherwise the current buffer file is used."
 
 (defun ledger-read-string-with-default (prompt default)
   (let ((default-prompt (concat prompt
-				(if default
-				    (concat " (" default "): ")
-				  ": "))))
+                                (if default
+                                    (concat " (" default "): ")
+                                  ": "))))
     (read-string default-prompt nil nil default)))
 
 (defun ledger-report-payee-format-specifier ()
@@ -935,26 +935,26 @@ the default."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
   (let* ((context (ledger-context-at-point))
-	 (default
-	  (if (eq (ledger-context-line-type context) 'acct-transaction)
-	      (regexp-quote (ledger-context-field-value context 'account))
-	    nil)))
+         (default
+          (if (eq (ledger-context-line-type context) 'acct-transaction)
+              (regexp-quote (ledger-context-field-value context 'account))
+            nil)))
     (ledger-read-string-with-default "Account" default)))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
   (let ((expanded-cmd report-cmd))
     (while (string-match "%(\\([^)]*\\))" expanded-cmd)
       (let* ((specifier (match-string 1 expanded-cmd))
-	     (f (cdr (assoc specifier ledger-report-format-specifiers))))
-	(if f
-	    (setq expanded-cmd (replace-match
-				(save-match-data
-				  (with-current-buffer ledger-buf
-				    (shell-quote-argument (funcall f))))
-				t t expanded-cmd))
-	  (progn
-	    (set-window-configuration ledger-original-window-cfg)
-	    (error "Invalid ledger report format specifier '%s'" specifier)))))
+             (f (cdr (assoc specifier ledger-report-format-specifiers))))
+        (if f
+            (setq expanded-cmd (replace-match
+                                (save-match-data
+                                  (with-current-buffer ledger-buf
+                                    (shell-quote-argument (funcall f))))
+                                t t expanded-cmd))
+          (progn
+            (set-window-configuration ledger-original-window-cfg)
+            (error "Invalid ledger report format specifier '%s'" specifier)))))
     expanded-cmd))
 
 (defun ledger-report-cmd (report-name edit)
@@ -966,18 +966,18 @@ the default."
     (setq report-cmd (ledger-report-expand-format-specifiers report-cmd))
     (set (make-local-variable 'ledger-report-cmd) report-cmd)
     (or (string-empty-p report-name)
-	(ledger-report-name-exists report-name)
-	(ledger-reports-add report-name report-cmd)
-	(ledger-reports-custom-save))
+        (ledger-report-name-exists report-name)
+        (ledger-reports-add report-name report-cmd)
+        (ledger-reports-custom-save))
     report-cmd))
 
 (defun ledger-do-report (cmd)
   "Run a report command line."
   (goto-char (point-min))
   (insert (format "Report: %s\n" ledger-report-name)
-	  (format "Command: %s\n" cmd)
-	  (make-string (- (window-width) 1) ?=)
-	  "\n")
+          (format "Command: %s\n" cmd)
+          (make-string (- (window-width) 1) ?=)
+          "\n")
   (shell-command cmd t nil))
 
 (defun ledger-report-goto ()
@@ -985,7 +985,7 @@ the default."
   (interactive)
   (let ((rbuf (get-buffer ledger-report-buffer-name)))
     (if (not rbuf)
-	(error "There is no ledger report buffer"))
+        (error "There is no ledger report buffer"))
     (pop-to-buffer rbuf)
     (shrink-window-if-larger-than-buffer)))
 
@@ -1021,7 +1021,7 @@ the default."
   (let ((name ""))
     (while (string-empty-p name)
       (setq name (read-from-minibuffer "Report name: " nil nil nil
-				       'ledger-report-name-prompt-history)))
+                                       'ledger-report-name-prompt-history)))
     name))
 
 (defun ledger-report-save ()
@@ -1034,15 +1034,15 @@ the default."
 
     (while (setq existing-name (ledger-report-name-exists ledger-report-name))
       (cond ((y-or-n-p (format "Overwrite existing report named '%s' "
-			       ledger-report-name))
-	     (when (string-equal
-		    ledger-report-cmd
-		    (car (cdr (assq existing-name ledger-reports))))
-	       (error "Current command is identical to existing saved one"))
-	     (setq ledger-reports
-		   (assq-delete-all existing-name ledger-reports)))
-	    (t
-	     (setq ledger-report-name (ledger-report-read-new-name)))))
+                               ledger-report-name))
+             (when (string-equal
+                    ledger-report-cmd
+                    (car (cdr (assq existing-name ledger-reports))))
+               (error "Current command is identical to existing saved one"))
+             (setq ledger-reports
+                   (assq-delete-all existing-name ledger-reports)))
+            (t
+             (setq ledger-report-name (ledger-report-read-new-name)))))
 
     (ledger-reports-add ledger-report-name ledger-report-cmd)
     (ledger-reports-custom-save)))
@@ -1053,46 +1053,46 @@ the default."
   (let ((here (point)))
     (goto-char (line-beginning-position))
     (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
-	   (goto-char (match-end 0))
-	   'entry)
-	  ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
-	   (goto-char (match-beginning 2))
-	   'transaction)
-	  ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
-	   (goto-char (match-end 0))
-	   'entry)
-	  (t
-	   (ignore (goto-char here))))))
+           (goto-char (match-end 0))
+           'entry)
+          ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
+           (goto-char (match-beginning 2))
+           'transaction)
+          ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
+           (goto-char (match-end 0))
+           'entry)
+          (t
+           (ignore (goto-char here))))))
 
 (defun ledger-parse-arguments ()
   "Parse whitespace separated arguments in the current region."
   (let* ((info (save-excursion
-		 (cons (ledger-thing-at-point) (point))))
-	 (begin (cdr info))
-	 (end (point))
-	 begins args)
+                 (cons (ledger-thing-at-point) (point))))
+         (begin (cdr info))
+         (end (point))
+         begins args)
     (save-excursion
       (goto-char begin)
       (when (< (point) end)
-	(skip-chars-forward " \t\n")
-	(setq begins (cons (point) begins))
-	(setq args (cons (buffer-substring-no-properties
-			  (car begins) end)
-			 args)))
+        (skip-chars-forward " \t\n")
+        (setq begins (cons (point) begins))
+        (setq args (cons (buffer-substring-no-properties
+                          (car begins) end)
+                         args)))
       (cons (reverse args) (reverse begins)))))
 
 (defun ledger-entries ()
   (let ((origin (point))
-	entries-list)
+        entries-list)
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-	      (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-		      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
-	(unless (and (>= origin (match-beginning 0))
-		     (< origin (match-end 0)))
-	  (setq entries-list (cons (match-string-no-properties 3)
-				   entries-list)))))
+              (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
+        (unless (and (>= origin (match-beginning 0))
+                     (< origin (match-end 0)))
+          (setq entries-list (cons (match-string-no-properties 3)
+                                   entries-list)))))
     (pcomplete-uniqify-list (nreverse entries-list))))
 
 (defvar ledger-account-tree nil)
@@ -1103,100 +1103,100 @@ the default."
       (setq ledger-account-tree (list t))
       (goto-char (point-min))
       (while (re-search-forward
-	      "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)" nil t)
-	(unless (and (>= origin (match-beginning 0))
-		     (< origin (match-end 0)))
-	  (setq account-path (match-string-no-properties 2))
-	  (setq elements (split-string account-path ":"))
-	  (let ((root ledger-account-tree))
-	    (while elements
-	      (let ((entry (assoc (car elements) root)))
-		(if entry
-		    (setq root (cdr entry))
-		  (setq entry (cons (car elements) (list t)))
-		  (nconc root (list entry))
-		  (setq root (cdr entry))))
-	      (setq elements (cdr elements)))))))))
+              "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)" nil t)
+        (unless (and (>= origin (match-beginning 0))
+                     (< origin (match-end 0)))
+          (setq account-path (match-string-no-properties 2))
+          (setq elements (split-string account-path ":"))
+          (let ((root ledger-account-tree))
+            (while elements
+              (let ((entry (assoc (car elements) root)))
+                (if entry
+                    (setq root (cdr entry))
+                  (setq entry (cons (car elements) (list t)))
+                  (nconc root (list entry))
+                  (setq root (cdr entry))))
+              (setq elements (cdr elements)))))))))
 
 (defun ledger-accounts ()
   (ledger-find-accounts)
   (let* ((current (caar (ledger-parse-arguments)))
-	 (elements (and current (split-string current ":")))
-	 (root ledger-account-tree)
-	 (prefix nil))
+         (elements (and current (split-string current ":")))
+         (root ledger-account-tree)
+         (prefix nil))
     (while (cdr elements)
       (let ((entry (assoc (car elements) root)))
-	(if entry
-	    (setq prefix (concat prefix (and prefix ":")
-				 (car elements))
-		  root (cdr entry))
-	  (setq root nil elements nil)))
+        (if entry
+            (setq prefix (concat prefix (and prefix ":")
+                                 (car elements))
+                  root (cdr entry))
+          (setq root nil elements nil)))
       (setq elements (cdr elements)))
     (and root
-	 (sort
-	  (mapcar (function
-		   (lambda (x)
-		     (let ((term (if prefix
-				     (concat prefix ":" (car x))
-				   (car x))))
-		       (if (> (length (cdr x)) 1)
-			   (concat term ":")
-			 term))))
-		  (cdr root))
-	  'string-lessp))))
+         (sort
+          (mapcar (function
+                   (lambda (x)
+                     (let ((term (if prefix
+                                     (concat prefix ":" (car x))
+                                   (car x))))
+                       (if (> (length (cdr x)) 1)
+                           (concat term ":")
+                         term))))
+                  (cdr root))
+          'string-lessp))))
 
 (defun ledger-complete-at-point ()
   "Do appropriate completion for the thing at point"
   (interactive)
   (while (pcomplete-here
-	  (if (eq (save-excursion
-		    (ledger-thing-at-point)) 'entry)
-	      (if (null current-prefix-arg)
-		  (ledger-entries)  ; this completes against entry names
-		(progn
-		  (let ((text (buffer-substring (line-beginning-position)
-						(line-end-position))))
-		    (delete-region (line-beginning-position)
-				   (line-end-position))
-		    (condition-case err
-			(ledger-add-entry text t)
-		      ((error)
-		       (insert text))))
-		  (forward-line)
-		  (goto-char (line-end-position))
-		  (search-backward ";" (line-beginning-position) t)
-		  (skip-chars-backward " \t0123456789.,")
-		  (throw 'pcompleted t)))
-	    (ledger-accounts)))))
+          (if (eq (save-excursion
+                    (ledger-thing-at-point)) 'entry)
+              (if (null current-prefix-arg)
+                  (ledger-entries)  ; this completes against entry names
+                (progn
+                  (let ((text (buffer-substring (line-beginning-position)
+                                                (line-end-position))))
+                    (delete-region (line-beginning-position)
+                                   (line-end-position))
+                    (condition-case err
+                        (ledger-add-entry text t)
+                      ((error)
+                       (insert text))))
+                  (forward-line)
+                  (goto-char (line-end-position))
+                  (search-backward ";" (line-beginning-position) t)
+                  (skip-chars-backward " \t0123456789.,")
+                  (throw 'pcompleted t)))
+            (ledger-accounts)))))
 
 (defun ledger-fully-complete-entry ()
   "Do appropriate completion for the thing at point"
   (interactive)
   (let ((name (caar (ledger-parse-arguments)))
-	xacts)
+        xacts)
     (save-excursion
       (when (eq 'entry (ledger-thing-at-point))
-	(when (re-search-backward
-	       (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-		       (regexp-quote name) "\\(\t\\|\n\\| [ \t]\\)") nil t)
-	  (forward-line)
-	  (while (looking-at "^\\s-+")
-	    (setq xacts (cons (buffer-substring-no-properties
-			       (line-beginning-position)
-			       (line-end-position))
-			      xacts))
-	    (forward-line))
-	  (setq xacts (nreverse xacts)))))
+        (when (re-search-backward
+               (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+                       (regexp-quote name) "\\(\t\\|\n\\| [ \t]\\)") nil t)
+          (forward-line)
+          (while (looking-at "^\\s-+")
+            (setq xacts (cons (buffer-substring-no-properties
+                               (line-beginning-position)
+                               (line-end-position))
+                              xacts))
+            (forward-line))
+          (setq xacts (nreverse xacts)))))
     (when xacts
       (save-excursion
-	(insert ?\n)
-	(while xacts
-	  (insert (car xacts) ?\n)
-	  (setq xacts (cdr xacts))))
+        (insert ?\n)
+        (while xacts
+          (insert (car xacts) ?\n)
+          (setq xacts (cdr xacts))))
       (forward-line)
       (goto-char (line-end-position))
       (if (re-search-backward "\\(\t\\| [ \t]\\)" nil t)
-	  (goto-char (match-end 0))))))
+          (goto-char (match-end 0))))))
 
 ;; A sample function for $ users
 
@@ -1205,7 +1205,7 @@ the default."
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
-	   (match-end 3)) (point))))
+           (match-end 3)) (point))))
 
 (defun ledger-align-amounts (&optional column)
   "Align amounts in the current region.
@@ -1215,24 +1215,24 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
       (setq column 52))
   (save-excursion
     (let* ((mark-first (< (mark) (point)))
-	   (begin (if mark-first (mark) (point)))
-	   (end (if mark-first (point-marker) (mark-marker)))
-	   offset)
+           (begin (if mark-first (mark) (point)))
+           (end (if mark-first (point-marker) (mark-marker)))
+           offset)
       (goto-char begin)
       (while (setq offset (ledger-next-amount end))
-	(let ((col (current-column))
-	      (target-col (- column offset))
-	      adjust)
-	  (setq adjust (- target-col col))
-	  (if (< col target-col)
-	      (insert (make-string (- target-col col) ? ))
-	    (move-to-column target-col)
-	    (if (looking-back "  ")
-		(delete-char (- col target-col))
-	      (skip-chars-forward "^ \t")
-	      (delete-horizontal-space)
-	      (insert "  ")))
-	  (forward-line))))))
+        (let ((col (current-column))
+              (target-col (- column offset))
+              adjust)
+          (setq adjust (- target-col col))
+          (if (< col target-col)
+              (insert (make-string (- target-col col) ? ))
+            (move-to-column target-col)
+            (if (looking-back "  ")
+                (delete-char (- col target-col))
+              (skip-chars-forward "^ \t")
+              (delete-horizontal-space)
+              (insert "  ")))
+          (forward-line))))))
 
 (defalias 'ledger-align-dollars 'ledger-align-amounts)
 
@@ -1247,14 +1247,14 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
      nil
      (function
       (lambda ()
-	(if (re-search-forward
-	     (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-		     "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
-	    (goto-char (match-beginning 0))
-	  (goto-char (point-max)))))
+        (if (re-search-forward
+             (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+                     "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
+            (goto-char (match-beginning 0))
+          (goto-char (point-max)))))
      (function
       (lambda ()
-	(forward-paragraph))))))
+        (forward-paragraph))))))
 
 ;; General helper functions
 
@@ -1269,13 +1269,13 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
    (t
     (let ((buf (current-buffer)))
       (with-current-buffer buffer
-	(let ((coding-system-for-write 'utf-8)
-	      (coding-system-for-read 'utf-8))
-	  (apply #'call-process-region
-		 (append (list (point-min) (point-max)
-			       ledger-binary-path ledger-delete-after
-			       buf nil "-f" "-")
-			 args))))))))
+        (let ((coding-system-for-write 'utf-8)
+              (coding-system-for-read 'utf-8))
+          (apply #'call-process-region
+                 (append (list (point-min) (point-max)
+                               ledger-binary-path ledger-delete-after
+                               buf nil "-f" "-")
+                         args))))))))
 
 (defun ledger-run-ledger-and-delete (buffer &rest args)
   (let ((ledger-delete-after t))

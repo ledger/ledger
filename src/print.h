@@ -55,14 +55,14 @@ class report_t;
 class print_xacts : public item_handler<post_t>
 {
 protected:
-  typedef std::list<xact_t *>	   xacts_list;
+  typedef std::list<xact_t *>      xacts_list;
   typedef std::map<xact_t *, bool> xacts_present_map;
 
-  report_t&	    report;
+  report_t&         report;
   xacts_present_map xacts_present;
-  xacts_list	    xacts;
-  bool		    print_raw;
-  bool		    first_title;
+  xacts_list        xacts;
+  bool              print_raw;
+  bool              first_title;
 
 public:
   print_xacts(report_t& _report, bool _print_raw = false)

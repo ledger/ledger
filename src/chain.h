@@ -94,17 +94,17 @@ class report_t;
 
 post_handler_ptr
 chain_pre_post_handlers(post_handler_ptr base_handler,
-			report_t&	 report);
+                        report_t&        report);
 
 post_handler_ptr
 chain_post_handlers(post_handler_ptr base_handler,
-		    report_t&	     report,
-		    bool             for_accounts_report = false);
+                    report_t&        report,
+                    bool             for_accounts_report = false);
 
 inline post_handler_ptr
 chain_handlers(post_handler_ptr handler,
-	       report_t&	report,
-	       bool             for_accounts_report = false) {
+               report_t&        report,
+               bool             for_accounts_report = false) {
   handler = chain_post_handlers(handler, report, for_accounts_report);
   handler = chain_pre_post_handlers(handler, report);
   return handler;

@@ -63,7 +63,7 @@ xact_t& temporaries_t::create_xact()
 }
 
 post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
-				 account_t * account)
+                                 account_t * account)
 {
   if (! post_temps)
     post_temps = std::list<post_t>();
@@ -99,7 +99,7 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t * account)
 }
 
 account_t& temporaries_t::create_account(const string& name,
-					 account_t *   parent)
+                                         account_t *   parent)
 {
   if (! acct_temps)
     acct_temps = std::list<account_t>();
@@ -119,10 +119,10 @@ void temporaries_t::clear()
   if (post_temps) {
     foreach (post_t& post, *post_temps) {
       if (! post.xact->has_flags(ITEM_TEMP))
-	post.xact->remove_post(&post);
+        post.xact->remove_post(&post);
 
       if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
-	post.account->remove_post(&post);
+        post.account->remove_post(&post);
     }
     post_temps->clear();
   }
@@ -133,7 +133,7 @@ void temporaries_t::clear()
   if (acct_temps) {
     foreach (account_t& acct, *acct_temps) {
       if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
-	acct.parent->remove_account(&acct);
+        acct.parent->remove_account(&acct);
     }
     acct_temps->clear();
   }

@@ -52,32 +52,33 @@ class account_t;
 class post_t : public item_t
 {
 public:
-#define POST_VIRTUAL	     0x04 // the account was specified with (parens)
-#define POST_MUST_BALANCE    0x08 // posting must balance in the transaction
-#define POST_CALCULATED	     0x10 // posting's amount was calculated
-#define POST_COST_CALCULATED 0x20 // posting's cost was calculated
-#define POST_COST_IN_FULL    0x40 // cost specified using @@
-#define POST_ANONYMIZED      0x80 // a temporary, anonymous posting
+#define POST_VIRTUAL         0x0010 // the account was specified with (parens)
+#define POST_MUST_BALANCE    0x0020 // posting must balance in the transaction
+#define POST_CALCULATED      0x0040 // posting's amount was calculated
+#define POST_COST_CALCULATED 0x0080 // posting's cost was calculated
+#define POST_COST_IN_FULL    0x0100 // cost specified using @@
+#define POST_COST_FIXATED    0x0200 // cost is fixed using = indicator
+#define POST_ANONYMIZED      0x0400 // a temporary, anonymous posting
 
-  xact_t *	     xact;	// only set for posts of regular xacts
-  account_t *	     account;
+  xact_t *           xact;      // only set for posts of regular xacts
+  account_t *        account;
 
-  amount_t	     amount;	// can be null until finalization
+  amount_t           amount;    // can be null until finalization
   optional<expr_t>   amount_expr;
   optional<amount_t> cost;
   optional<amount_t> assigned_amount;
 
   post_t(account_t * _account = NULL,
-	 flags_t     _flags   = ITEM_NORMAL)
+         flags_t     _flags   = ITEM_NORMAL)
     : item_t(_flags),
       xact(NULL), account(_account)
   {
     TRACE_CTOR(post_t, "account_t *, flags_t");
   }
-  post_t(account_t *	         _account,
-	 const amount_t&         _amount,
-	 flags_t                 _flags = ITEM_NORMAL,
-	 const optional<string>& _note = none)
+  post_t(account_t *             _account,
+         const amount_t&         _amount,
+         flags_t                 _flags = ITEM_NORMAL,
+         const optional<string>& _note = none)
     : item_t(_flags, _note),
       xact(NULL), account(_account), amount(_amount)
   {
@@ -100,11 +101,11 @@ public:
 
   virtual bool has_tag(const string& tag) const;
   virtual bool has_tag(const mask_t& tag_mask,
-		       const optional<mask_t>& value_mask = none) const;
+                       const optional<mask_t>& value_mask = none) const;
 
-  virtual optional<string> get_tag(const string& tag) const;
-  virtual optional<string> get_tag(const mask_t& tag_mask,
-				   const optional<mask_t>& value_mask = none) const;
+  virtual optional<value_t> get_tag(const string& tag) const;
+  virtual optional<value_t> get_tag(const mask_t& tag_mask,
+                                    const optional<mask_t>& value_mask = none) const;
 
   virtual date_t value_date() const;
   virtual date_t date() const;
@@ -116,7 +117,7 @@ public:
   }
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   amount_t resolve_expr(scope_t& scope, expr_t& expr);
 
@@ -137,14 +138,14 @@ public:
 #define POST_EXT_MATCHES    0x0080
 #define POST_EXT_CONSIDERED 0x0100
 
-    value_t	visited_value;
-    value_t	compound_value;
-    value_t	total;
-    std::size_t	count;
-    date_t	date;
-    date_t	value_date;
-    datetime_t	datetime;
-    account_t *	account;
+    value_t     visited_value;
+    value_t     compound_value;
+    value_t     total;
+    std::size_t count;
+    date_t      date;
+    date_t      value_date;
+    datetime_t  datetime;
+    account_t * account;
 
     std::list<sort_value_t> sort_values;
 
@@ -154,13 +155,13 @@ public:
     }
     xdata_t(const xdata_t& other)
       : supports_flags<uint_least16_t>(other.flags()),
-	visited_value(other.visited_value),
-	compound_value(other.compound_value),
-	total(other.total),
-	count(other.count),
-	date(other.date),
-	account(other.account),
-	sort_values(other.sort_values)
+        visited_value(other.visited_value),
+        compound_value(other.compound_value),
+        total(other.total),
+        count(other.count),
+        date(other.date),
+        account(other.account),
+        sort_values(other.sort_values)
     {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }
@@ -191,14 +192,14 @@ public:
   }
 
   void add_to_value(value_t& value,
-		    const optional<expr_t&>& expr = none) const;
+                    const optional<expr_t&>& expr = none) const;
 
   void set_reported_account(account_t * account);
 
   account_t * reported_account() {
     if (xdata_)
       if (account_t * acct = xdata_->account)
-	return acct;
+        return acct;
     return account;
   }
 
@@ -212,12 +213,12 @@ public:
   {
     bool operator()(const post_t * left, const post_t * right) const {
       gregorian::date_duration duration =
-	left->actual_date() - right->actual_date();
+        left->actual_date() - right->actual_date();
       if (duration.days() == 0) {
-	return ((left->pos ? left->pos->sequence : 0) <
-		(right->pos ? right->pos->sequence : 0));
+        return ((left->pos ? left->pos->sequence : 0) <
+                (right->pos ? right->pos->sequence : 0));
       } else {
-	return duration.days() < 0;
+        return duration.days() < 0;
       }
     }
   };

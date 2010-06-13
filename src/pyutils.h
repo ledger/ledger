@@ -59,8 +59,8 @@ struct register_optional_to_python : public boost::noncopyable
     static PyObject * convert(const boost::optional<T>& value)
     {
       return boost::python::incref
-	(value ? boost::python::to_python_value<T>()(*value) :
-		 boost::python::detail::none());
+        (value ? boost::python::to_python_value<T>()(*value) :
+                 boost::python::detail::none());
     }
   };
 
@@ -71,30 +71,30 @@ struct register_optional_to_python : public boost::noncopyable
       using namespace boost::python::converter;
 
       if (source == Py_None)
-	return source;
+        return source;
 
       const registration& converters(registered<T>::converters);
 
       if (implicit_rvalue_convertible_from_python(source, converters)) {
-	rvalue_from_python_stage1_data data =
-	  rvalue_from_python_stage1(source, converters);
-	return rvalue_from_python_stage2(source, data, converters);
+        rvalue_from_python_stage1_data data =
+          rvalue_from_python_stage1(source, converters);
+        return rvalue_from_python_stage2(source, data, converters);
       }
       return NULL;
     }
 
     static void construct(PyObject * source,
-			  boost::python::converter::rvalue_from_python_stage1_data * data)
+                          boost::python::converter::rvalue_from_python_stage1_data * data)
     {
       using namespace boost::python::converter;
 
       void * const storage =
-	reinterpret_cast<rvalue_from_python_storage<T> *>(data)->storage.bytes;
+        reinterpret_cast<rvalue_from_python_storage<T> *>(data)->storage.bytes;
 
-      if (data->convertible == source)	    // == None
-	new (storage) boost::optional<T>(); // A Boost uninitialized value
+      if (data->convertible == source)      // == None
+        new (storage) boost::optional<T>(); // A Boost uninitialized value
       else
-	new (storage) boost::optional<T>(*reinterpret_cast<T *>(data->convertible));
+        new (storage) boost::optional<T>(*reinterpret_cast<T *>(data->convertible));
 
       data->convertible = storage;
     }

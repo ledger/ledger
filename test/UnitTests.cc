@@ -35,7 +35,7 @@ public:
 
   void testInitialization() {
     assertEqual(std::string("Hello, world!"),
-		std::string("Hello, world!"));
+                std::string("Hello, world!"));
   }
 
 private:
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
   // Retreive test path from command line first argument. Default to
   // "" which resolves to the top level suite.
   std::string testPath = ((argc > index) ? std::string(argv[index]) :
-			  std::string(""));
+                          std::string(""));
 
   // Create the event manager and test controller
   CPPUNIT_NS::TestResult controller;

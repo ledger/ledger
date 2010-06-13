@@ -58,17 +58,17 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
   case '"':
   case '/': {
     string pat;
-    char   closing	 = *arg_i;
+    char   closing       = *arg_i;
     bool   found_closing = false;
     for (++arg_i; arg_i != arg_end; ++arg_i) {
       if (*arg_i == '\\') {
-	if (++arg_i == arg_end)
-	  throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+        if (++arg_i == arg_end)
+          throw_(parse_error, _("Unexpected '\\' at end of pattern"));
       }
       else if (*arg_i == closing) {
-	++arg_i;
-	found_closing = true;
-	break;
+        ++arg_i;
+        found_closing = true;
+        break;
       }
       pat.push_back(*arg_i);
     }
@@ -125,11 +125,11 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
       case '\t':
       case '\n':
       case '\r':
-	if (! consume_whitespace)
-	  goto test_ident;
-	else
-	  ident.push_back(*arg_i);
-	break;
+        if (! consume_whitespace)
+          goto test_ident;
+        else
+          ident.push_back(*arg_i);
+        break;
       case '(':
       case ')':
       case '&':
@@ -139,12 +139,12 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
       case '#':
       case '%':
       case '=':
-	if (! consume_next)
-	  goto test_ident;
+        if (! consume_next)
+          goto test_ident;
       // fall through...
       default:
-	ident.push_back(*arg_i);
-	break;
+        ident.push_back(*arg_i);
+        break;
       }
     }
     consume_whitespace = false;
@@ -251,7 +251,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     node = parse_query_term(tok.kind);
     if (! node)
       throw_(parse_error,
-	     _("%1 operator not followed by argument") << tok.symbol());
+             _("%1 operator not followed by argument") << tok.symbol());
     break;
 
   case lexer_t::token_t::TERM:
@@ -264,30 +264,30 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       date_interval_t interval(*tok.value);
 
       if (interval.start) {
-	node = new expr_t::op_t(expr_t::op_t::O_GTE);
-	node->set_left(ident);
+        node = new expr_t::op_t(expr_t::op_t::O_GTE);
+        node->set_left(ident);
 
-	expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
-	arg1->set_value(*interval.start);
-	node->set_right(arg1);
+        expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
+        arg1->set_value(*interval.start);
+        node->set_right(arg1);
       }
 
       if (interval.finish) {
-	expr_t::ptr_op_t lt = new expr_t::op_t(expr_t::op_t::O_LT);
-	lt->set_left(ident);
+        expr_t::ptr_op_t lt = new expr_t::op_t(expr_t::op_t::O_LT);
+        lt->set_left(ident);
 
-	expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
-	arg1->set_value(*interval.finish);
-	lt->set_right(arg1);
+        expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
+        arg1->set_value(*interval.finish);
+        lt->set_right(arg1);
 
-	if (node) {
-	  expr_t::ptr_op_t prev(node);
-	  node = new expr_t::op_t(expr_t::op_t::O_AND);
-	  node->set_left(prev);
-	  node->set_right(lt);
-	} else {
-	  node = lt;
-	}
+        if (node) {
+          expr_t::ptr_op_t prev(node);
+          node = new expr_t::op_t(expr_t::op_t::O_AND);
+          node->set_left(prev);
+          node->set_right(lt);
+        } else {
+          node = lt;
+        }
       }
       break;
     }
@@ -308,22 +308,22 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
 
       tok = lexer.peek_token();
       if (tok.kind == lexer_t::token_t::TOK_EQ) {
-	tok = lexer.next_token();
-	tok = lexer.next_token();
-	if (tok.kind != lexer_t::token_t::TERM)
-	  throw_(parse_error,
-		 _("Metadata equality operator not followed by term"));
-	
-	expr_t::ptr_op_t arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
-	assert(tok.value);
-	arg2->set_value(mask_t(*tok.value));
+        tok = lexer.next_token();
+        tok = lexer.next_token();
+        if (tok.kind != lexer_t::token_t::TERM)
+          throw_(parse_error,
+                 _("Metadata equality operator not followed by term"));
+        
+        expr_t::ptr_op_t arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
+        assert(tok.value);
+        arg2->set_value(mask_t(*tok.value));
 
-	node->set_right(expr_t::op_t::new_node
-			(expr_t::op_t::O_SEQ,
-			 expr_t::op_t::new_node
-			 (expr_t::op_t::O_CONS, arg1, arg2)));
+        node->set_right(expr_t::op_t::new_node
+                        (expr_t::op_t::O_SEQ,
+                         expr_t::op_t::new_node
+                         (expr_t::op_t::O_CONS, arg1, arg2)));
       } else {
-	node->set_right(arg1);
+        node->set_right(arg1);
       }
       break;
     }
@@ -334,15 +334,15 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
       switch (tok_context) {
       case lexer_t::token_t::TOK_ACCOUNT:
-	ident->set_ident("account"); break;
+        ident->set_ident("account"); break;
       case lexer_t::token_t::TOK_PAYEE:
-	ident->set_ident("payee"); break;
+        ident->set_ident("payee"); break;
       case lexer_t::token_t::TOK_CODE:
-	ident->set_ident("code"); break;
+        ident->set_ident("code"); break;
       case lexer_t::token_t::TOK_NOTE:
-	ident->set_ident("note"); break;
+        ident->set_ident("note"); break;
       default:
-	assert(false); break;
+        assert(false); break;
       }
 
       expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
@@ -382,7 +382,7 @@ query_t::parser_t::parse_unary_expr(lexer_t::token_t::kind_t tok_context)
     expr_t::ptr_op_t term(parse_query_term(tok_context));
     if (! term)
       throw_(parse_error,
-	     _("%1 operator not followed by argument") << tok.symbol());
+             _("%1 operator not followed by argument") << tok.symbol());
 
     node = new expr_t::op_t(expr_t::op_t::O_NOT);
     node->set_left(term);
@@ -405,16 +405,16 @@ query_t::parser_t::parse_and_expr(lexer_t::token_t::kind_t tok_context)
     while (true) {
       lexer_t::token_t tok = lexer.next_token();
       if (tok.kind == lexer_t::token_t::TOK_AND) {
-	expr_t::ptr_op_t prev(node);
-	node = new expr_t::op_t(expr_t::op_t::O_AND);
-	node->set_left(prev);
-	node->set_right(parse_unary_expr(tok_context));
-	if (! node->right())
-	  throw_(parse_error,
-		 _("%1 operator not followed by argument") << tok.symbol());
+        expr_t::ptr_op_t prev(node);
+        node = new expr_t::op_t(expr_t::op_t::O_AND);
+        node->set_left(prev);
+        node->set_right(parse_unary_expr(tok_context));
+        if (! node->right())
+          throw_(parse_error,
+                 _("%1 operator not followed by argument") << tok.symbol());
       } else {
-	lexer.push_token(tok);
-	break;
+        lexer.push_token(tok);
+        break;
       }
     }
     return node;
@@ -429,16 +429,16 @@ query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_context)
     while (true) {
       lexer_t::token_t tok = lexer.next_token();
       if (tok.kind == lexer_t::token_t::TOK_OR) {
-	expr_t::ptr_op_t prev(node);
-	node = new expr_t::op_t(expr_t::op_t::O_OR);
-	node->set_left(prev);
-	node->set_right(parse_and_expr(tok_context));
-	if (! node->right())
-	  throw_(parse_error,
-		 _("%1 operator not followed by argument") << tok.symbol());
+        expr_t::ptr_op_t prev(node);
+        node = new expr_t::op_t(expr_t::op_t::O_OR);
+        node->set_left(prev);
+        node->set_right(parse_and_expr(tok_context));
+        if (! node->right())
+          throw_(parse_error,
+                 _("%1 operator not followed by argument") << tok.symbol());
       } else {
-	lexer.push_token(tok);
-	break;
+        lexer.push_token(tok);
+        break;
       }
     }
     return node;

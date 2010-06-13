@@ -49,26 +49,26 @@ namespace {
     return item.has_tag(tag_mask);
   }
   bool py_has_tag_2m(item_t& item, const mask_t& tag_mask,
-		     const boost::optional<mask_t>& value_mask) {
+                     const boost::optional<mask_t>& value_mask) {
     return item.has_tag(tag_mask, value_mask);
   }
 
-  boost::optional<string> py_get_tag_1s(item_t& item, const string& tag) {
+  boost::optional<value_t> py_get_tag_1s(item_t& item, const string& tag) {
     return item.get_tag(tag);
   }
-  boost::optional<string> py_get_tag_1m(item_t& item, const mask_t& tag_mask) {
+  boost::optional<value_t> py_get_tag_1m(item_t& item, const mask_t& tag_mask) {
     return item.get_tag(tag_mask);
   }
-  boost::optional<string> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
-					const boost::optional<mask_t>& value_mask) {
+  boost::optional<value_t> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
+                                         const boost::optional<mask_t>& value_mask) {
     return item.get_tag(tag_mask, value_mask);
   }
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+#define EXC_TRANSLATOR(type)                            \
+  void exc_translate_ ## type(const type& err) {        \
+    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
   }
 
 //EXC_TRANSLATOR(item_error)
@@ -77,25 +77,25 @@ void export_item()
 {
   class_< position_t > ("Position")
     .add_property("pathname",
-		  make_getter(&position_t::pathname),
-		  make_setter(&position_t::pathname))
+                  make_getter(&position_t::pathname),
+                  make_setter(&position_t::pathname))
     .add_property("beg_pos",
-		  make_getter(&position_t::beg_pos),
-		  make_setter(&position_t::beg_pos))
+                  make_getter(&position_t::beg_pos),
+                  make_setter(&position_t::beg_pos))
     .add_property("beg_line",
-		  make_getter(&position_t::beg_line),
-		  make_setter(&position_t::beg_line))
+                  make_getter(&position_t::beg_line),
+                  make_setter(&position_t::beg_line))
     .add_property("end_pos",
-		  make_getter(&position_t::end_pos),
-		  make_setter(&position_t::end_pos))
+                  make_getter(&position_t::end_pos),
+                  make_setter(&position_t::end_pos))
     .add_property("end_line",
-		  make_getter(&position_t::end_line),
-		  make_setter(&position_t::end_line))
+                  make_getter(&position_t::end_line),
+                  make_setter(&position_t::end_line))
     ;
 
-  scope().attr("ITEM_NORMAL")	 = ITEM_NORMAL;
+  scope().attr("ITEM_NORMAL")    = ITEM_NORMAL;
   scope().attr("ITEM_GENERATED") = ITEM_GENERATED;
-  scope().attr("ITEM_TEMP")	 = ITEM_TEMP;
+  scope().attr("ITEM_TEMP")      = ITEM_TEMP;
 
   enum_< item_t::state_t > ("State")
     .value("Uncleared", item_t::UNCLEARED)
@@ -110,7 +110,7 @@ void export_item()
 #endif
 #if 1
     .add_property("flags", &supports_flags<>::flags,
-		  &supports_flags<>::set_flags)
+                  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
@@ -118,14 +118,14 @@ void export_item()
 #endif
 
     .add_property("note",
-		  make_getter(&item_t::note),
-		  make_setter(&item_t::note))
+                  make_getter(&item_t::note),
+                  make_setter(&item_t::note))
     .add_property("pos",
-		  make_getter(&item_t::pos),
-		  make_setter(&item_t::pos))
+                  make_getter(&item_t::pos),
+                  make_setter(&item_t::pos))
     .add_property("metadata",
-		  make_getter(&item_t::metadata),
-		  make_setter(&item_t::metadata))
+                  make_getter(&item_t::metadata),
+                  make_setter(&item_t::metadata))
 
     .def("copy_details", &item_t::copy_details)
 
@@ -148,12 +148,12 @@ void export_item()
     .def("append_note", &item_t::append_note)
 
     .add_static_property("use_effective_date",
-			 make_getter(&item_t::use_effective_date),
-			 make_setter(&item_t::use_effective_date))
+                         make_getter(&item_t::use_effective_date),
+                         make_setter(&item_t::use_effective_date))
 
     .add_property("date", &item_t::date, make_setter(&item_t::_date))
     .add_property("effective_date", &item_t::effective_date,
-		  make_setter(&item_t::_date_eff))
+                  make_setter(&item_t::_date_eff))
 
     .add_property("state", &item_t::state, &item_t::set_state)
 
