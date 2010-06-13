@@ -904,39 +904,7 @@ public:
   /**
    * Informational methods.
    */
-  string label(optional<type_t> the_type = none) const {
-    switch (the_type ? *the_type : type()) {
-    case VOID:
-      return _("an uninitialized value");
-    case BOOLEAN:
-      return _("a boolean");
-    case DATETIME:
-      return _("a date/time");
-    case DATE:
-      return _("a date");
-    case INTEGER:
-      return _("an integer");
-    case AMOUNT:
-      return _("an amount");
-    case BALANCE:
-      return _("a balance");
-    case STRING:
-      return _("a string");
-    case MASK:
-      return _("a regexp");
-    case SEQUENCE:
-      return _("a sequence");
-    case SCOPE:
-      return _("a scope");
-    case EXPR:
-      return _("a expr");
-    default:
-      assert(false);
-      break;
-    }
-    assert(false);
-    return _("<invalid>");
-  }
+  string label(optional<type_t> the_type = none) const;
 
   /**
    * Printing methods.

@@ -1700,6 +1700,45 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   return NULL_VALUE;
 }
 
+string value_t::label(optional<type_t> the_type) const
+{
+  switch (the_type ? *the_type : type()) {
+  case VOID:
+    return _("an uninitialized value");
+  case BOOLEAN:
+    return _("a boolean");
+  case DATETIME:
+    return _("a date/time");
+  case DATE:
+    return _("a date");
+  case INTEGER:
+    return _("an integer");
+  case AMOUNT:
+    return _("an amount");
+  case BALANCE:
+    return _("a balance");
+  case STRING:
+    return _("a string");
+  case MASK:
+    return _("a regexp");
+  case SEQUENCE:
+    return _("a sequence");
+  case SCOPE:
+    return _("a scope");
+  case ANY:
+    if (as_any().type() == typeid(expr_t::ptr_op_t))
+      return _("an expr");
+    else
+      return _("an object");
+    break;
+  default:
+    assert(false);
+    break;
+  }
+  assert(false);
+  return _("<invalid>");
+}
+
 void value_t::print(std::ostream&       out,
                     const int           first_width,
                     const int           latter_width,
