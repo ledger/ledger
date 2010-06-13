@@ -546,11 +546,9 @@ void instance_t::automated_xact_directive(char * line)
 
     ae.release();
   }
-
-  }
   catch (const std::exception& err) {
     if (reveal_context) {
-      add_error_context(_("While parsing periodic transaction:"));
+      add_error_context(_("While parsing automated transaction:"));
       add_error_context(source_context(pathname, pos, curr_pos, "> "));
     }
     throw;
