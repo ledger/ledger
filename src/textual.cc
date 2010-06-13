@@ -885,14 +885,14 @@ void instance_t::assert_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(context.scope).to_boolean())
-    throw_(parse_error, _("Assertion failed: %1" << line));
+    throw_(parse_error, _("Assertion failed: %1") << line);
 }
 
 void instance_t::check_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(context.scope).to_boolean())
-    warning_(_("Check failed: %1" << line));
+    warning_(_("Check failed: %1") << line);
 }
 
 void instance_t::expr_directive(char * line)
@@ -1502,9 +1502,9 @@ xact_t * instance_t::parse_xact(char *          line,
       }
       else if (! expr.calc(bound_scope).to_boolean()) {
         if (c == 'a') {
-          throw_(parse_error, _("Transaction assertion failed: %1" << p));
+          throw_(parse_error, _("Transaction assertion failed: %1") << p);
         } else {
-          warning_(_("Transaction check failed: %1" << p));
+          warning_(_("Transaction check failed: %1") << p);
         }
       }
     }
