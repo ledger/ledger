@@ -255,7 +255,6 @@ private:
    * subsequently be modified.
    */
   void _dup() {
-    VERIFY(storage);
     if (storage && storage->refc > 1)
       storage = new storage_t(*storage.get());
   }
