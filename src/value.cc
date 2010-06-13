@@ -1304,13 +1304,10 @@ void value_t::in_place_negate()
   case BALANCE:
     as_balance_lval().in_place_negate();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(- value);
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_negate();
     return;
-  }
   default:
     break;
   }
@@ -1341,13 +1338,10 @@ void value_t::in_place_not()
   case STRING:
     set_boolean(as_string().empty());
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(! value);
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_not();
     return;
-  }
   default:
     break;
   }
@@ -1491,6 +1485,10 @@ void value_t::in_place_reduce()
   case BALANCE:
     as_balance_lval().in_place_reduce();
     return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_reduce();
+    return;
   default:
     return;
   }
@@ -1506,6 +1504,10 @@ void value_t::in_place_unreduce()
     return;
   case BALANCE:
     as_balance_lval().in_place_unreduce();
+    return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_unreduce();
     return;
   default:
     return;
@@ -1547,13 +1549,10 @@ void value_t::in_place_round()
   case BALANCE:
     as_balance_lval().in_place_round();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.rounded());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_round();
     return;
-  }
   default:
     break;
   }
@@ -1573,13 +1572,10 @@ void value_t::in_place_truncate()
   case BALANCE:
     as_balance_lval().in_place_truncate();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.truncated());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_truncate();
     return;
-  }
   default:
     break;
   }
@@ -1599,13 +1595,10 @@ void value_t::in_place_floor()
   case BALANCE:
     as_balance_lval().in_place_floor();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.floored());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_floor();
     return;
-  }
   default:
     break;
   }
@@ -1625,13 +1618,10 @@ void value_t::in_place_unround()
   case BALANCE:
     as_balance_lval().in_place_unround();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.unrounded());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_unround();
     return;
-  }
   default:
     break;
   }
