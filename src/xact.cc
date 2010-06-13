@@ -789,13 +789,6 @@ void auto_xact_t::extend_xact(xact_base_t&                xact,
   }
 }
 
-void extend_xact_base(journal_t *  journal,
-                      xact_base_t& base)
-{
-  foreach (auto_xact_t * xact, journal->auto_xacts)
-    xact->extend_xact(base);
-}
-
 void to_xml(std::ostream& out, const xact_t& xact)
 {
   push_xml x(out, "transaction", true, true);
