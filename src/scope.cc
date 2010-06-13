@@ -71,4 +71,23 @@ expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
   return child_scope_t::lookup(kind, name);
 }
 
+value_t& call_scope_t::resolve(const std::size_t index,
+                               value_t::type_t   context,
+                               const bool        required)
+{
+  if (index >= args.size())
+    throw_(calc_error, _("Too few arguments to function"));
+
+  value_t& value(args[index]);
+  if (value.is_any()) {
+    context_scope_t scope(*this, context, required);
+    value = as_expr(value)->calc(scope);
+    if (required && ! value.is_type(context))
+      throw_(calc_error, _("Expected %1 for argument %2, but received %3")
+             << value.label(context) << index
+             << value.label());
+  }
+  return value;
+}
+
 } // namespace ledger

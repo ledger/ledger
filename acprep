@@ -1679,7 +1679,7 @@ your options.  Here are some real-world examples:
 
   ./acprep
   ./acprep opt -- make -j3
-  ./acprep -- --enable-doxygen"""
+  ./acprep --enable-doxygen"""
         sys.exit(0)
 
 PrepareBuild().run()

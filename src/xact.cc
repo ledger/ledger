@@ -36,7 +36,6 @@
 #include "account.h"
 #include "journal.h"
 #include "pool.h"
-#include "interactive.h"
 
 namespace ledger {
 
@@ -503,31 +502,27 @@ namespace {
     return (*Func)(find_scope<xact_t>(scope));
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (expr.calc(bound_scope).to_boolean())
+      bind_scope_t bound_scope(args, *p);
+      if (expr->calc(bound_scope).to_boolean())
         return true;
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (! expr.calc(bound_scope).to_boolean())
+      bind_scope_t bound_scope(args, *p);
+      if (! expr->calc(bound_scope).to_boolean())
         return false;
     }
     return true;
@@ -634,7 +629,8 @@ namespace {
 
 } // unnamed namespace
 
-void auto_xact_t::extend_xact(xact_base_t& xact)
+void auto_xact_t::extend_xact(xact_base_t&                xact,
+                              optional<date_t::year_type> current_year)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -679,6 +675,33 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
       matches_predicate = predicate(*initial_post);
     }
     if (matches_predicate) {
+      bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
+
+      if (deferred_notes) {
+        foreach (deferred_tag_data_t& data, *deferred_notes) {
+          if (data.apply_to_post == NULL)
+            initial_post->parse_tags(data.tag_data.c_str(),
+                                     bound_scope,
+                                     data.overwrite_existing,
+                                     current_year);
+        }
+      }
+      if (check_exprs) {
+        foreach (check_expr_pair& pair, *check_exprs) {
+          if (pair.second == auto_xact_t::EXPR_GENERAL) {
+            pair.first.calc(bound_scope);
+          }
+          else if (! pair.first.calc(bound_scope).to_boolean()) {
+            if (pair.second == auto_xact_t::EXPR_ASSERTION) {
+              throw_(parse_error,
+                     _("Transaction assertion failed: %1" << pair.first));
+            } else {
+              warning_(_("Transaction check failed: %1" << pair.first));
+            }
+          }
+        }
+      }
+
       foreach (post_t * post, posts) {
         amount_t post_amount;
         if (post->amount.is_null()) {
@@ -686,7 +709,6 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
             throw_(amount_error,
                    _("Automated transaction's posting has no amount"));
 
-          bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
           value_t result(post->amount_expr->calc(bound_scope));
           if (result.is_long()) {
             post_amount = result.to_amount();
@@ -752,6 +774,16 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 
         if (new_post->must_balance())
           needs_further_verification = true;
+
+        if (deferred_notes) {
+          foreach (deferred_tag_data_t& data, *deferred_notes) {
+            if (data.apply_to_post == post)
+              new_post->parse_tags(data.tag_data.c_str(),
+                                   bound_scope,
+                                   data.overwrite_existing,
+                                   current_year);
+          }
+        }
       }
     }
   }
@@ -765,13 +797,6 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     add_error_context(item_context(xact, _("While extending transaction")));
     throw;
   }
-}
-
-void extend_xact_base(journal_t *  journal,
-                      xact_base_t& base)
-{
-  foreach (auto_xact_t * xact, journal->auto_xacts)
-    xact->extend_xact(base);
 }
 
 void to_xml(std::ostream& out, const xact_t& xact)

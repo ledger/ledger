@@ -109,8 +109,7 @@ public:
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
 
-  OPTION_(python_interpreter_t, import_, DO_(scope) {
-      interactive_t args(scope, "ss");
+  OPTION_(python_interpreter_t, import_, DO_(args) {
       parent->import_option(args.get<string>(1));
     });
 };

@@ -150,6 +150,32 @@ public:
 
   std::map<string, bool> memoized_results;
 
+  enum xact_expr_kind_t {
+    EXPR_GENERAL,
+    EXPR_ASSERTION,
+    EXPR_CHECK
+  };
+
+  typedef std::pair<expr_t, xact_expr_kind_t> check_expr_pair;
+  typedef std::list<check_expr_pair>          check_expr_list;
+
+  optional<check_expr_list> check_exprs;
+
+  struct deferred_tag_data_t {
+    string   tag_data;
+    bool     overwrite_existing;
+    post_t * apply_to_post;
+
+    deferred_tag_data_t(string _tag_data,
+                        bool   _overwrite_existing)
+      : tag_data(_tag_data), overwrite_existing(_overwrite_existing),
+        apply_to_post(NULL) {}
+  };
+
+  typedef std::list<deferred_tag_data_t> deferred_notes_list;
+
+  optional<deferred_notes_list> deferred_notes;
+
   auto_xact_t() : try_quick_match(true) {
     TRACE_CTOR(auto_xact_t, "");
   }
@@ -168,7 +194,17 @@ public:
     TRACE_DTOR(auto_xact_t);
   }
 
-  virtual void extend_xact(xact_base_t& xact);
+  virtual void parse_tags(const char * p,
+                          scope_t&,
+                          bool         overwrite_existing = true,
+                          optional<date_t::year_type>     = none) {
+    if (! deferred_notes)
+      deferred_notes = deferred_notes_list();
+    deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
+  }
+
+  virtual void extend_xact(xact_base_t&                xact,
+                           optional<date_t::year_type> current_year);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -180,6 +216,8 @@ private:
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & boost::serialization::base_object<xact_base_t>(*this);
     ar & predicate;
+    ar & check_exprs;
+    ar & deferred_notes;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };

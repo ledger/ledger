@@ -42,7 +42,6 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include "interactive.h"
 #include "account.h"
 #include "journal.h"
 #include "option.h"
@@ -74,6 +73,8 @@ public:
 
   void read_journal_files();
   void close_journal_files();
+
+  value_t fn_account(call_scope_t& scope);
 
   void report_options(std::ostream& out)
   {
@@ -108,7 +109,7 @@ public:
   (session_t, price_exp_, // -Z
    CTOR(session_t, price_exp_) { value = 24L * 3600L; }
    DO_(args) {
-     value = args[1].to_long() * 60L;
+     value = args.get<long>(1) * 60L;
    });
 
   OPTION__
@@ -121,13 +122,13 @@ public:
        data_files.clear();
        parent->flush_on_next_data_file = false;
      }
-     data_files.push_back(args[1].as_string());
+     data_files.push_back(args.get<string>(1));
    });
 
   OPTION_(session_t, input_date_format_, DO_(args) {
       // This changes static variables inside times.h, which affects the basic
       // date parser.
-      set_input_date_format(args[1].as_string().c_str());
+      set_input_date_format(args.get<string>(1).c_str());
     });
 
   OPTION(session_t, master_account_);

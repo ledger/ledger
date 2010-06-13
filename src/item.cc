@@ -32,7 +32,6 @@
 #include <system.hh>
 
 #include "item.h"
-#include "interactive.h"
 
 namespace ledger {
 
@@ -256,9 +255,9 @@ namespace {
 
     if (args.size() == 1) {
       if (args[0].is_string())
-        return item.has_tag(args[0].as_string());
+        return item.has_tag(args.get<string>(0));
       else if (args[0].is_mask())
-        return item.has_tag(args[0].as_mask());
+        return item.has_tag(args.get<mask_t>(0));
       else
         throw_(std::runtime_error,
                _("Expected string or mask for argument 1, but received %1")
@@ -266,7 +265,7 @@ namespace {
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
-        return item.has_tag(args[0].to_mask(), args[1].to_mask());
+        return item.has_tag(args.get<mask_t>(0), args.get<mask_t>(1));
       else
         throw_(std::runtime_error,
                _("Expected masks for arguments 1 and 2, but received %1 and %2")
@@ -288,9 +287,9 @@ namespace {
 
     if (args.size() == 1) {
       if (args[0].is_string())
-        val = item.get_tag(args[0].as_string());
+        val = item.get_tag(args.get<string>(0));
       else if (args[0].is_mask())
-        val = item.get_tag(args[0].as_mask());
+        val = item.get_tag(args.get<mask_t>(0));
       else
         throw_(std::runtime_error,
                _("Expected string or mask for argument 1, but received %1")
@@ -298,7 +297,7 @@ namespace {
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
-        val = item.get_tag(args[0].to_mask(), args[1].to_mask());
+        val = item.get_tag(args.get<mask_t>(0), args.get<mask_t>(1));
       else
         throw_(std::runtime_error,
                _("Expected masks for arguments 1 and 2, but received %1 and %2")

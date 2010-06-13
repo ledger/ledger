@@ -35,7 +35,6 @@
 #include "xact.h"
 #include "account.h"
 #include "journal.h"
-#include "interactive.h"
 #include "format.h"
 
 namespace ledger {
@@ -126,7 +125,7 @@ optional<date_t> post_t::effective_date() const
 
 namespace {
   value_t get_this(post_t& post) {
-    return value_t(static_cast<scope_t *>(&post));
+    return scope_value(&post);
   }
 
   value_t get_is_calculated(post_t& post) {
@@ -146,7 +145,7 @@ namespace {
   }
 
   value_t get_xact(post_t& post) {
-    return value_t(static_cast<scope_t *>(post.xact));
+    return scope_value(post.xact);
   }
 
   value_t get_xact_id(post_t& post) {
@@ -197,15 +196,13 @@ namespace {
     return post.has_xdata() && post.xdata().has_flags(POST_EXT_DIRECT_AMT);
   }
 
-  value_t get_commodity(call_scope_t& scope)
+  value_t get_commodity(call_scope_t& args)
   {
-    in_context_t<post_t> env(scope, "&v");
-    if (env.has(0)) {
-      return string_value(env.value_at(0).to_amount().commodity().symbol());
+    if (args.has<amount_t>(0)) {
+      return string_value(args.get<amount_t>(0).commodity().symbol());
     } else {
-      post_t& post(find_scope<post_t>(scope));
-      if (post.has_xdata() &&
-          post.xdata().has_flags(POST_EXT_COMPOUND))
+      post_t& post(args.context<post_t>());
+      if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
         return string_value(post.xdata().compound_value.to_amount()
                             .commodity().symbol());
       else
@@ -254,71 +251,69 @@ namespace {
       return 1L;
   }
 
-  value_t account_name(call_scope_t& scope)
+  value_t get_account(call_scope_t& args)
   {
-    in_context_t<post_t> env(scope, "&v");
+    post_t&    post(args.context<post_t>());
+    account_t& account(*post.reported_account());
+    string     name;
 
-    string name;
-
-    if (env.has(0)) {
-      if (env.value_at(0).is_long()) {
-        if (env.get<long>(0) > 2)
-          name = format_t::truncate(env->reported_account()->fullname(),
-                                    env.get<long>(0) - 2,
+    if (args.has(0)) {
+      if (args[0].is_long()) {
+        if (args.get<long>(0) > 2)
+          name = format_t::truncate(account.fullname(),
+                                    args.get<long>(0) - 2,
                                     2 /* account_abbrev_length */);
         else
-          name = env->reported_account()->fullname();
+          name = account.fullname();
       } else {
-        account_t * account = NULL;
-        account_t * master  = env->account;
+        account_t * acct   = NULL;
+        account_t * master = &account;
         while (master->parent)
           master = master->parent;
 
-        if (env.value_at(0).is_string()) {
-          name    = env.get<string>(0);
-          account = master->find_account(name, false);
+        if (args[0].is_string()) {
+          name    = args.get<string>(0);
+          acct = master->find_account(name, false);
         }
-        else if (env.value_at(0).is_mask()) {
-          name    = env.get<mask_t>(0).str();
-          account = master->find_account_re(name);
+        else if (args[0].is_mask()) {
+          name    = args.get<mask_t>(0).str();
+          acct = master->find_account_re(name);
         }
         else {
           throw_(std::runtime_error,
                  _("Expected string or mask for argument 1, but received %1")
-                 << env.value_at(0).label());
+                 << args[0].label());
         }
 
-        if (! account)
+        if (! acct)
           throw_(std::runtime_error,
-                 _("Could not find an account matching ") << env.value_at(0));
+                 _("Could not find an account matching ") << args[0]);
         else
-          return value_t(static_cast<scope_t *>(account));
+          return value_t(static_cast<scope_t *>(acct));
       }
-    } else {
-      name = env->reported_account()->fullname();
+    }
+    else if (args.type_context() == value_t::SCOPE) {
+      return scope_value(&account);
+    }
+    else {
+      name = account.fullname();
     }
     return string_value(name);
   }
 
-  value_t get_display_account(call_scope_t& scope)
+  value_t get_display_account(call_scope_t& args)
   {
-    in_context_t<post_t> env(scope, "&v");
-
-    value_t acct = account_name(scope);
+    post_t& post(args.context<post_t>());
+    value_t acct = get_account(args);
     if (acct.is_string()) {
-      if (env->has_flags(POST_VIRTUAL)) {
-        if (env->must_balance())
+      if (post.has_flags(POST_VIRTUAL)) {
+        if (post.must_balance())
           acct = string_value(string("[") + acct.as_string() + "]");
         else
           acct = string_value(string("(") + acct.as_string() + ")");
       }
     }
     return acct;
-  }
-
-  value_t get_account(call_scope_t& scope)
-  {
-    return account_name(scope);
   }
 
   value_t get_account_id(post_t& post) {
@@ -350,44 +345,40 @@ namespace {
     return (*Func)(find_scope<post_t>(scope));
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (p == &post && args.has(1) &&
-          ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
+      bind_scope_t bound_scope(args, *p);
+      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
+          ! args.get<expr_t::ptr_op_t>(1)->calc(bound_scope).to_boolean()) {
         // If the user specifies any(EXPR, false), and the context is a
         // posting, then that posting isn't considered by the test.
         ;                       // skip it
       }
-      else if (expr.calc(bound_scope).to_boolean()) {
+      else if (expr->calc(bound_scope).to_boolean()) {
         return true;
       }
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (p == &post && args.has(1) &&
-          ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
+      bind_scope_t bound_scope(args, *p);
+      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
+          ! args.get<expr_t::ptr_op_t>(1)->calc(bound_scope).to_boolean()) {
         // If the user specifies any(EXPR, false), and the context is a
         // posting, then that posting isn't considered by the test.
         ;                       // skip it
       }
-      else if (! expr.calc(bound_scope).to_boolean()) {
+      else if (! expr->calc(bound_scope).to_boolean()) {
         return false;
       }
     }

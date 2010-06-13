@@ -167,7 +167,7 @@ public:
         throw_(std::runtime_error, _("To many arguments provided for %1") << desc());
       else if (! args[0].is_string())
         throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
-      on_with(args[0].as_string(), args[1]);
+      on_with(args.get<string>(0), args[1]);
     }
     else if (args.size() < 1) {
       throw_(std::runtime_error, _("No argument provided for %1") << desc());
@@ -176,7 +176,7 @@ public:
       throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
     }
     else {
-      on_only(args[0].as_string());
+      on_only(args.get<string>(0));
     }
 
     handler_thunk(args);

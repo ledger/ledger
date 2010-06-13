@@ -28,7 +28,6 @@ libledger_util_la_CPPFLAGS = $(lib_cppflags)
 libledger_util_la_LDFLAGS  = -release $(VERSION)
 
 libledger_math_la_SOURCES  =			\
-	src/value.cc				\
 	src/balance.cc				\
 	src/quotes.cc				\
 	src/pool.cc				\
@@ -45,11 +44,11 @@ libledger_expr_la_SOURCES  =			\
 	src/query.cc				\
 	src/predicate.cc			\
 	src/scope.cc				\
-	src/interactive.cc			\
 	src/expr.cc				\
 	src/op.cc				\
 	src/parser.cc				\
-	src/token.cc
+	src/token.cc				\
+	src/value.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
 libledger_expr_la_LDFLAGS   = -release $(VERSION)
@@ -107,15 +106,14 @@ pkginclude_HEADERS =				\
 	src/pool.h				\
 	src/quotes.h				\
 	src/balance.h				\
-	src/value.h				\
 						\
+	src/value.h				\
 	src/token.h				\
 	src/parser.h				\
 	src/op.h				\
 	src/exprbase.h				\
 	src/expr.h				\
 	src/scope.h				\
-	src/interactive.h			\
 	src/predicate.h				\
 	src/query.h				\
 	src/format.h				\

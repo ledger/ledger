@@ -34,7 +34,6 @@
 #include "account.h"
 #include "post.h"
 #include "xact.h"
-#include "interactive.h"
 
 namespace ledger {
 
@@ -122,6 +121,20 @@ account_t * account_t::find_account_re(const string& regexp)
   return find_account_re_(this, mask_t(regexp));
 }
 
+void account_t::add_post(post_t * post)
+{
+  posts.push_back(post);
+
+  // Adding a new post changes the possible totals that may have been
+  // computed before.
+  if (xdata_) {
+    xdata_->self_details.gathered     = false;
+    xdata_->self_details.calculated   = false;
+    xdata_->family_details.gathered   = false;
+    xdata_->family_details.calculated = false;
+  }
+}
+
 bool account_t::remove_post(post_t * post)
 {
   assert(! posts.empty());
@@ -175,15 +188,31 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 }
 
 namespace {
-  value_t get_partial_name(call_scope_t& scope)
+  value_t get_partial_name(call_scope_t& args)
   {
-    in_context_t<account_t> env(scope, "&b");
-    return string_value(env->partial_name(env.has(0) ?
-                                          env.get<bool>(0) : false));
+    return string_value(args.context<account_t>()
+                        .partial_name(args.has<bool>(0) &&
+                                      args.get<bool>(0)));
   }
 
-  value_t get_account(account_t& account) { // this gets the name
-    return string_value(account.fullname());
+  value_t get_account(call_scope_t& args) { // this gets the name
+    account_t& account(args.context<account_t>());
+    if (args.has<string>(0)) {
+      account_t * acct = account.parent;
+      for (; acct && acct->parent; acct = acct->parent) ;
+      if (args[0].is_string())
+        return scope_value(acct->find_account(args.get<string>(0), false));
+      else if (args[0].is_mask())
+        return scope_value(acct->find_account_re(args.get<mask_t>(0).str()));
+      else
+        return NULL_VALUE;
+    }
+    else if (args.type_context() == value_t::SCOPE) {
+      return scope_value(&account);
+    }
+    else {
+      return string_value(account.fullname());
+    }
   }
 
   value_t get_account_base(account_t& account) {
@@ -251,39 +280,35 @@ namespace {
   }
 
   template <value_t (*Func)(account_t&)>
-  value_t get_wrapper(call_scope_t& scope) {
-    return (*Func)(find_scope<account_t>(scope));
+  value_t get_wrapper(call_scope_t& args) {
+    return (*Func)(args.context<account_t>());
   }
 
   value_t get_parent(account_t& account) {
-    return value_t(static_cast<scope_t *>(account.parent));
+    return scope_value(account.parent);
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    account_t& account(find_scope<account_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    account_t& account(args.context<account_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, account.posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (expr.calc(bound_scope).to_boolean())
+      bind_scope_t bound_scope(args, *p);
+      if (expr->calc(bound_scope).to_boolean())
         return true;
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    account_t& account(find_scope<account_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    account_t& account(args.context<account_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, account.posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (! expr.calc(bound_scope).to_boolean())
+      bind_scope_t bound_scope(args, *p);
+      if (! expr->calc(bound_scope).to_boolean())
         return false;
     }
     return true;
@@ -301,7 +326,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
     if (name[1] == '\0' || name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
-      return WRAP_FUNCTOR(get_wrapper<&get_account>);
+      return WRAP_FUNCTOR(&get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     else if (name == "addr")

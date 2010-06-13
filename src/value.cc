@@ -116,8 +116,8 @@ value_t::operator bool() const
     return false;
   case SCOPE:
     return as_scope() != NULL;
-  case EXPR:
-    return as_expr();
+  case ANY:
+    return ! as_any().empty();
   default:
     break;
   }
@@ -143,12 +143,6 @@ void value_t::set_type(type_t new_type)
       storage->destroy();
     storage->type = new_type;
   }
-}
-
-void value_t::set_expr(const expr_t& val)
-{
-  set_type(EXPR);
-  storage->data = new expr_t(val);
 }
 
 bool value_t::to_boolean() const
@@ -1304,13 +1298,10 @@ void value_t::in_place_negate()
   case BALANCE:
     as_balance_lval().in_place_negate();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(- value);
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_negate();
     return;
-  }
   default:
     break;
   }
@@ -1341,13 +1332,10 @@ void value_t::in_place_not()
   case STRING:
     set_boolean(as_string().empty());
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(! value);
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_not();
     return;
-  }
   default:
     break;
   }
@@ -1378,8 +1366,8 @@ bool value_t::is_realzero() const
 
   case SCOPE:
     return as_scope() == NULL;
-  case EXPR:
-    return ! as_expr();
+  case ANY:
+    return as_any().empty();
 
   default:
     add_error_context(_("While applying is_realzero to %1:") << *this);
@@ -1410,8 +1398,8 @@ bool value_t::is_zero() const
 
   case SCOPE:
     return as_scope() == NULL;
-  case EXPR:
-    return ! as_expr();
+  case ANY:
+    return as_any().empty();
 
   default:
     add_error_context(_("While applying is_zero to %1:") << *this);
@@ -1491,6 +1479,10 @@ void value_t::in_place_reduce()
   case BALANCE:
     as_balance_lval().in_place_reduce();
     return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_reduce();
+    return;
   default:
     return;
   }
@@ -1506,6 +1498,10 @@ void value_t::in_place_unreduce()
     return;
   case BALANCE:
     as_balance_lval().in_place_unreduce();
+    return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_unreduce();
     return;
   default:
     return;
@@ -1547,13 +1543,10 @@ void value_t::in_place_round()
   case BALANCE:
     as_balance_lval().in_place_round();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.rounded());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_round();
     return;
-  }
   default:
     break;
   }
@@ -1573,13 +1566,10 @@ void value_t::in_place_truncate()
   case BALANCE:
     as_balance_lval().in_place_truncate();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.truncated());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_truncate();
     return;
-  }
   default:
     break;
   }
@@ -1599,13 +1589,10 @@ void value_t::in_place_floor()
   case BALANCE:
     as_balance_lval().in_place_floor();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.floored());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_floor();
     return;
-  }
   default:
     break;
   }
@@ -1625,13 +1612,10 @@ void value_t::in_place_unround()
   case BALANCE:
     as_balance_lval().in_place_unround();
     return;
-  case SEQUENCE: {
-    value_t temp;
-    foreach (const value_t& value, as_sequence())
-      temp.push_back(value.unrounded());
-    *this = temp;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_unround();
     return;
-  }
   default:
     break;
   }
@@ -1687,7 +1671,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   case STRING:
   case MASK:
   case SCOPE:
-  case EXPR:
+  case ANY:
     return *this;
 
   case SEQUENCE: {
@@ -1708,6 +1692,45 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   }
   assert(false);
   return NULL_VALUE;
+}
+
+string value_t::label(optional<type_t> the_type) const
+{
+  switch (the_type ? *the_type : type()) {
+  case VOID:
+    return _("an uninitialized value");
+  case BOOLEAN:
+    return _("a boolean");
+  case DATETIME:
+    return _("a date/time");
+  case DATE:
+    return _("a date");
+  case INTEGER:
+    return _("an integer");
+  case AMOUNT:
+    return _("an amount");
+  case BALANCE:
+    return _("a balance");
+  case STRING:
+    return _("a string");
+  case MASK:
+    return _("a regexp");
+  case SEQUENCE:
+    return _("a sequence");
+  case SCOPE:
+    return _("a scope");
+  case ANY:
+    if (as_any().type() == typeid(expr_t::ptr_op_t))
+      return _("an expr");
+    else
+      return _("an object");
+    break;
+  default:
+    assert(false);
+    break;
+  }
+  assert(false);
+  return _("<invalid>");
 }
 
 void value_t::print(std::ostream&       out,
@@ -1796,13 +1819,14 @@ void value_t::print(std::ostream&       out,
   case SCOPE:
     out << "<#SCOPE>";
     break;
-  case EXPR:
-    out << "<#EXPR ";
-    if (as_expr())
-      as_expr().print(out);
-    else
-      out << "null";
-    out << ">";
+  case ANY:
+    if (as_any().type() == typeid(expr_t::ptr_op_t)) {
+      out << "<#EXPR ";
+      as_any<expr_t::ptr_op_t>()->print(out);
+      out << ">";
+    } else {
+      out << "<#OBJECT>";
+    }
     break;
 
   default:
@@ -1873,11 +1897,11 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
   case SCOPE:
     out << as_scope();
     break;
-  case EXPR:
-    if (as_expr())
-      as_expr().dump(out);
+  case ANY:
+    if (as_any().type() == typeid(expr_t::ptr_op_t))
+      as_any<expr_t::ptr_op_t>()->dump(out);
     else
-      out << "null";
+      out << boost::unsafe_any_cast<const void *>(&as_any());
     break;
 
   case SEQUENCE: {
@@ -1991,7 +2015,7 @@ void to_xml(std::ostream& out, const value_t& value)
   }
 
   case value_t::SCOPE:
-  case value_t::EXPR:
+  case value_t::ANY:
   default:
     assert(false);
     break;

@@ -448,44 +448,37 @@ value_t report_t::fn_display_total(call_scope_t& scope)
   return HANDLER(display_total_).expr.calc(scope);
 }
 
-value_t report_t::fn_market(call_scope_t& scope)
+value_t report_t::fn_market(call_scope_t& args)
 {
-  interactive_t args(scope, "a&ts");
-
-  value_t              result;
-  optional<datetime_t> moment = (args.has(1) ?
+  optional<datetime_t> moment = (args.has<datetime_t>(1) ?
                                  args.get<datetime_t>(1) :
                                  optional<datetime_t>());
-  if (args.has(2))
-    result = args.value_at(0).exchange_commodities(args.get<string>(2),
-                                                   /* add_prices= */ false,
-                                                   moment);
+  value_t result;
+  if (args.has<string>(2))
+    result = args[0].exchange_commodities(args.get<string>(2),
+                                          /* add_prices= */ false, moment);
   else
-    result = args.value_at(0).value(moment);
+    result = args[0].value(moment);
 
   if (! result.is_null())
     return result;
 
-  return args.value_at(0);
+  return args[0];
 }
 
-value_t report_t::fn_get_at(call_scope_t& scope)
+value_t report_t::fn_get_at(call_scope_t& args)
 {
-  interactive_t args(scope, "Sl");
-
-  DEBUG("report.get_at", "get_at[0] = " << args.value_at(0));
-  DEBUG("report.get_at", "get_at[1] = " << args.value_at(1));
-
-  if (args.get<long>(1) == 0) {
-    if (! args.value_at(0).is_sequence())
-      return args.value_at(0);
+  std::size_t index = static_cast<std::size_t>(args.get<long>(1));
+  if (index == 0) {
+    if (! args[0].is_sequence())
+      return args[0];
   } else {
-    if (! args.value_at(0).is_sequence())
+    if (! args[0].is_sequence())
       throw_(std::runtime_error,
              _("Attempting to get argument at index %1 from %2")
-             << args.get<long>(1) << args.value_at(0).label());
+             << index << args[0].label());
   }
-  return args.get<const value_t::sequence_t&>(0)[args.get<long>(1)];
+  return args[0].as_sequence()[index];
 }
 
 value_t report_t::fn_is_seq(call_scope_t& scope)
@@ -500,7 +493,7 @@ value_t report_t::fn_strip(call_scope_t& args)
 
 value_t report_t::fn_trim(call_scope_t& args)
 {
-  string temp(args.value().to_string());
+  string             temp(args.value().to_string());
   scoped_array<char> buf(new char[temp.length() + 1]);
   std::strcpy(buf.get(), temp.c_str());
 
@@ -527,29 +520,24 @@ value_t report_t::fn_trim(call_scope_t& args)
 value_t report_t::fn_print(call_scope_t& args)
 {
   std::ostream& out(output_stream);
-  bool first = true;
-  for (call_scope_t::iterator i = args.begin(); i != args.end(); i++) {
+  bool          first = true;
+  for (std::size_t i = 0; i < args.size(); i++) {
     if (first)
       first = false;
     else
       out << ' ';
-    (*i).print(out);
+    args[i].print(out);
   }
   return true;
 }
 
-value_t report_t::scrub(value_t val)
+value_t report_t::fn_scrub(call_scope_t& args)
 {
-  value_t temp(val.strip_annotations(what_to_keep()));
+  value_t temp(args.value().strip_annotations(what_to_keep()));
   if (HANDLED(base))
     return temp;
   else
     return temp.unreduced();
-}
-
-value_t report_t::fn_scrub(call_scope_t& args)
-{
-  return scrub(args.value());
 }
 
 value_t report_t::fn_rounded(call_scope_t& args)
@@ -562,57 +550,52 @@ value_t report_t::fn_unrounded(call_scope_t& args)
   return args.value().unrounded();
 }
 
-value_t report_t::fn_quantity(call_scope_t& scope)
+value_t report_t::fn_quantity(call_scope_t& args)
 {
-  interactive_t args(scope, "a");
   return args.get<amount_t>(0).number();
 }
 
-value_t report_t::fn_floor(call_scope_t& scope)
+value_t report_t::fn_floor(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  return args.value_at(0).floored();
+  return args[0].floored();
 }
 
-value_t report_t::fn_abs(call_scope_t& scope)
+value_t report_t::fn_abs(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  return args.value_at(0).abs();
+  return args[0].abs();
 }
 
-value_t report_t::fn_truncated(call_scope_t& scope)
+value_t report_t::fn_truncated(call_scope_t& args)
 {
-  interactive_t args(scope, "v&ll");
   return string_value(format_t::truncate
                       (args.get<string>(0),
-                       args.has(1) && args.get<int>(1) > 0 ? args.get<int>(1) : 0,
-                       args.has(2) ? args.get<int>(2) : 0));
+                       args.has<int>(1) &&
+                       args.get<int>(1) > 0 ? args.get<int>(1) : 0,
+                      args.has<int>(2) ? args.get<int>(2) : 0));
 }
 
-value_t report_t::fn_justify(call_scope_t& scope)
+value_t report_t::fn_justify(call_scope_t& args)
 {
-  interactive_t args(scope, "vl&lbb");
-
   uint_least8_t flags(AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES);
 
-  if (args.has(3) && args.get<bool>(3))
+  if (args.has<bool>(3) && args.get<bool>(3))
     flags |= AMOUNT_PRINT_RIGHT_JUSTIFY;
-  if (args.has(4) && args.get<bool>(4))
+  if (args.has<bool>(4) && args.get<bool>(4))
     flags |= AMOUNT_PRINT_COLORIZE;
 
   std::ostringstream out;
-  args.value_at(0)
-    .print(out, args.get<int>(1), args.has(2) ? args.get<int>(2) : -1, flags);
+  args[0].print(out, args.get<int>(1),
+                args.has<int>(2) ? args.get<int>(2) : -1, flags);
+
   return string_value(out.str());
 }
 
-value_t report_t::fn_quoted(call_scope_t& scope)
+value_t report_t::fn_quoted(call_scope_t& args)
 {
-  interactive_t      args(scope, "v");
   std::ostringstream out;
 
   out << '"';
-  foreach (const char ch, args.value_at(0).to_string()) {
+  foreach (const char ch, args.get<string>(0)) {
     if (ch == '"')
       out << "\\\"";
     else
@@ -623,9 +606,8 @@ value_t report_t::fn_quoted(call_scope_t& scope)
   return string_value(out.str());
 }
 
-value_t report_t::fn_join(call_scope_t& scope)
+value_t report_t::fn_join(call_scope_t& args)
 {
-  interactive_t      args(scope, "s");
   std::ostringstream out;
 
   foreach (const char ch, args.get<string>(0)) {
@@ -637,21 +619,18 @@ value_t report_t::fn_join(call_scope_t& scope)
   return string_value(out.str());
 }
 
-value_t report_t::fn_format_date(call_scope_t& scope)
+value_t report_t::fn_format_date(call_scope_t& args)
 {
-  interactive_t args(scope, "d&s");
-  if (args.has(1))
+  if (args.has<string>(1))
     return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM,
                                     args.get<string>(1).c_str()));
   else
     return string_value(format_date(args.get<date_t>(0), FMT_PRINTED));
 }
 
-value_t report_t::fn_ansify_if(call_scope_t& scope)
+value_t report_t::fn_ansify_if(call_scope_t& args)
 {
-  interactive_t args(scope, "v&s");
-
-  if (args.has(1)) {
+  if (args.has<string>(1)) {
     string color = args.get<string>(1);
     std::ostringstream buf;
     if (color == "black")          buf << "\033[30m";
@@ -665,127 +644,105 @@ value_t report_t::fn_ansify_if(call_scope_t& scope)
     else if (color == "bold")      buf << "\033[1m";
     else if (color == "underline") buf << "\033[4m";
     else if (color == "blink")     buf << "\033[5m";
-    buf << args.value_at(0);
+    buf << args[0];
     buf << "\033[0m";
     return string_value(buf.str());
-  } else {
-    return args.value_at(0);
   }
+  return args[0];
 }
 
-value_t report_t::fn_percent(call_scope_t& scope)
+value_t report_t::fn_percent(call_scope_t& args)
 {
-  interactive_t args(scope, "aa");
   return (amount_t("100.00%") *
           (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
 }
 
-value_t report_t::fn_price(call_scope_t& scope)
+value_t report_t::fn_price(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  return args.value_at(0).price();
+  return args[0].price();
 }
 
-value_t report_t::fn_commodity(call_scope_t& scope)
+value_t report_t::fn_commodity(call_scope_t& args)
 {
-  in_context_t<post_t> env(scope, "v");
-  return string_value(env.value_at(0).to_amount().commodity().symbol());
+  return string_value(args.get<amount_t>(0).commodity().symbol());
 }
 
-value_t report_t::fn_lot_date(call_scope_t& scope)
+value_t report_t::fn_lot_date(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  if (args.value_at(0).has_annotation()) {
-    const annotation_t& details(args.value_at(0).annotation());
+  if (args[0].has_annotation()) {
+    const annotation_t& details(args[0].annotation());
     if (details.date)
       return *details.date;
   }
   return NULL_VALUE;
 }
 
-value_t report_t::fn_lot_price(call_scope_t& scope)
+value_t report_t::fn_lot_price(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  if (args.value_at(0).has_annotation()) {
-    const annotation_t& details(args.value_at(0).annotation());
+  if (args[0].has_annotation()) {
+    const annotation_t& details(args[0].annotation());
     if (details.price)
       return *details.price;
   }
   return NULL_VALUE;
 }
 
-value_t report_t::fn_lot_tag(call_scope_t& scope)
+value_t report_t::fn_lot_tag(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  if (args.value_at(0).has_annotation()) {
-    const annotation_t& details(args.value_at(0).annotation());
+  if (args[0].has_annotation()) {
+    const annotation_t& details(args[0].annotation());
     if (details.tag)
       return string_value(*details.tag);
   }
   return NULL_VALUE;
 }
 
-value_t report_t::fn_to_boolean(call_scope_t& scope)
+value_t report_t::fn_to_boolean(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::BOOLEAN);
-  return args.value_at(0);
+  return args.get<bool>(0);
 }
 
-value_t report_t::fn_to_int(call_scope_t& scope)
+value_t report_t::fn_to_int(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::INTEGER);
-  return args.value_at(0);
+  // This method is not called fn_to_long, because that would be
+  // confusing to users who don't care about the distinction between
+  // integer and long.
+  return args.get<long>(0);
 }
 
-value_t report_t::fn_to_datetime(call_scope_t& scope)
+value_t report_t::fn_to_datetime(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::DATETIME);
-  return args.value_at(0);
+  return args.get<datetime_t>(0);
 }
 
-value_t report_t::fn_to_date(call_scope_t& scope)
+value_t report_t::fn_to_date(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::DATE);
-  return args.value_at(0);
+  return args.get<date_t>(0);
 }
 
-value_t report_t::fn_to_amount(call_scope_t& scope)
+value_t report_t::fn_to_amount(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::AMOUNT);
-  return args.value_at(0);
+  return args.get<amount_t>(0);
 }
 
-value_t report_t::fn_to_balance(call_scope_t& scope)
+value_t report_t::fn_to_balance(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::BALANCE);
-  return args.value_at(0);
+  return args.get<balance_t>(0);
 }
 
-value_t report_t::fn_to_string(call_scope_t& scope)
+value_t report_t::fn_to_string(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::STRING);
-  return args.value_at(0);
+  return string_value(args.get<string>(0));
 }
 
-value_t report_t::fn_to_mask(call_scope_t& scope)
+value_t report_t::fn_to_mask(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::MASK);
-  return args.value_at(0);
+  return args.get<mask_t>(0);
 }
 
-value_t report_t::fn_to_sequence(call_scope_t& scope)
+value_t report_t::fn_to_sequence(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  args.value_at(0).in_place_cast(value_t::SEQUENCE);
-  return args.value_at(0);
+  return args[0].to_sequence();
 }
 
 namespace {
@@ -837,21 +794,19 @@ value_t report_t::reload_command(call_scope_t&)
   return true;
 }
 
-value_t report_t::echo_command(call_scope_t& scope)
+value_t report_t::echo_command(call_scope_t& args)
 {
-  interactive_t args(scope, "s");
   std::ostream& out(output_stream);
   out << args.get<string>(0) << std::endl;
   return true;
 }
 
-value_t report_t::pricemap_command(call_scope_t& scope)
+value_t report_t::pricemap_command(call_scope_t& args)
 {
-  interactive_t args(scope, "&s");
   std::ostream& out(output_stream);
 
   commodity_pool_t::current_pool->print_pricemap
-    (out, what_to_keep(), args.has(0) ?
+    (out, what_to_keep(), args.has<string>(0) ?
      optional<datetime_t>(datetime_t(parse_date(args.get<string>(0)))) : none);
 
   return true;

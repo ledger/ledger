@@ -11,7 +11,8 @@ git rebase master
 git push
 git checkout master
 ./acprep --enable-cache --universal -j16 --warn opt upload
-./acprep --enable-cache --universal -j16 --warn opt make speedtest | \
-    tee build/last-speed.txt
+cp -p ~/Products/ledger/opt/ledger ~/bin
+./acprep --enable-cache --universal -j16 --warn opt make speedtest 2>&1 \
+    | tee build/last-speed.txt
 mv *.dmg* build
 git checkout next

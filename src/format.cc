@@ -362,8 +362,13 @@ string format_t::real_calc(scope_t& scope)
           out << value.to_string();
       }
       catch (const calc_error&) {
+        string current_context = error_context();
+
         add_error_context(_("While calculating format expression:"));
         add_error_context(expr.context_to_str());
+
+        if (! current_context.empty())
+          add_error_context(current_context);
         throw;
       }
       break;

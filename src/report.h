@@ -42,7 +42,6 @@
 #ifndef _REPORT_H
 #define _REPORT_H
 
-#include "interactive.h"
 #include "expr.h"
 #include "query.h"
 #include "chain.h"
@@ -145,7 +144,6 @@ public:
   value_t fn_strip(call_scope_t& scope);
   value_t fn_trim(call_scope_t& scope);
   value_t fn_print(call_scope_t& scope);
-  value_t scrub(value_t val);
   value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
   value_t fn_rounded(call_scope_t& scope);
@@ -182,7 +180,7 @@ public:
   }
 
   value_t fn_options(call_scope_t&) {
-    return value_t(static_cast<scope_t *>(this));
+    return scope_value(this);
   }
 
   string report_format(option_t<report_t>& option) {
@@ -366,7 +364,7 @@ public:
      on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string(), args[1].to_string());
+     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION(report_t, amount_data); // -j
@@ -394,12 +392,12 @@ public:
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
-      date_interval_t  interval(args[1].to_string());
+      date_interval_t  interval(args.get<string>(1));
       optional<date_t> begin = interval.begin(parent->session.current_year);
       if (! begin)
         throw_(std::invalid_argument,
                _("Could not determine beginning of period '%1'")
-               << args[1].to_string());
+               << args.get<string>(1));
 
       string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
       parent->HANDLER(limit_).on(string("--begin"), predicate);
@@ -488,10 +486,9 @@ public:
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
-  OPTION_(report_t, depth_, DO_(scope) {
-      interactive_t args(scope, "sl");
-      parent->HANDLER(display_).on(string("--depth"),
-                                   string("depth<=") + args.get<string>(1));
+  OPTION_(report_t, depth_, DO_(args) {
+      parent->HANDLER(display_)
+        .on(string("--depth"), string("depth<=") + args.get<string>(1));
     });
 
   OPTION_(report_t, deviation, DO() {
@@ -522,7 +519,7 @@ public:
      on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string(), args[1].to_string());
+     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION__
@@ -536,7 +533,7 @@ public:
      on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string(), args[1].to_string());
+     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION(report_t, dow);
@@ -544,14 +541,14 @@ public:
   OPTION(report_t, empty); // -E
 
   OPTION_(report_t, end_, DO_(args) { // -e
-      date_interval_t  interval(args[1].to_string());
+      date_interval_t  interval(args.get<string>(1));
       // Use begin() here so that if the user says --end=2008, we end on
       // 2008/01/01 instead of 2009/01/01 (which is what end() would return).
       optional<date_t> end = interval.begin(parent->session.current_year);
       if (! end)
         throw_(std::invalid_argument,
                _("Could not determine end of period '%1'")
-               << args[1].to_string());
+               << args.get<string>(1));
 
       string predicate = "date<[" + to_iso_extended_string(*end) + "]";
       parent->HANDLER(limit_).on(string("--end"), predicate);
@@ -563,7 +560,7 @@ public:
   OPTION(report_t, exact);
 
   OPTION_(report_t, exchange_, DO_(args) { // -X
-      on_with(args[0].as_string(), args[1]);
+      on_with(args.get<string>(0), args[1]);
       call_scope_t no_args(*parent);
       no_args.push_back(args[0]);
       parent->HANDLER(market).parent = parent;
@@ -611,7 +608,7 @@ public:
      on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string(), args[1].to_string());
+     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION__(report_t, group_title_format_, CTOR(report_t, group_title_format_) {
@@ -667,12 +664,12 @@ public:
   OPTION(report_t, no_total);
 
   OPTION_(report_t, now_, DO_(args) {
-      date_interval_t interval(args[1].to_string());
+      date_interval_t interval(args.get<string>(1));
       optional<date_t> begin = interval.begin(parent->session.current_year);
       if (! begin)
         throw_(std::invalid_argument,
                _("Could not determine beginning of period '%1'")
-               << args[1].to_string());
+               << args.get<string>(1));
       ledger::epoch = parent->terminus = datetime_t(*begin);
       parent->session.current_year = ledger::epoch->date().year();
     });
@@ -769,7 +766,7 @@ public:
 
   OPTION(report_t, prepend_format_);
   OPTION_(report_t, prepend_width_, DO_(args) {
-      value = args[1].to_long();
+      value = args.get<long>(1);
     });
 
   OPTION_(report_t, price, DO() { // -I
@@ -842,13 +839,13 @@ public:
      on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string(), args[1].to_string());
+     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION(report_t, seed_);
 
   OPTION_(report_t, sort_, DO_(args) { // -S
-      on_with(args[0].as_string(), args[1]);
+      on_with(args.get<string>(0), args[1]);
       parent->HANDLER(sort_xacts_).off();
       parent->HANDLER(sort_all_).off();
     });
@@ -878,13 +875,13 @@ public:
      on(whence, str);
    }
    DO_(args) {
-     set_expr(args[0].to_string(), args[1].to_string());
+     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION(report_t, total_data); // -J
 
   OPTION_(report_t, truncate_, DO_(args) {
-      string style(args[1].to_string());
+      string style(args.get<string>(1));
       if (style == "leading")
         format_t::default_style = format_t::TRUNCATE_LEADING;
       else if (style == "middle")
@@ -934,27 +931,27 @@ public:
   OPTION__(report_t, meta_width_,
            bool specified;
            CTOR(report_t, meta_width_) { specified = false; }
-           DO_(args) { value = args[1].to_long(); specified = true; });
+           DO_(args) { value = args.get<long>(1); specified = true; });
   OPTION__(report_t, date_width_,
            bool specified;
            CTOR(report_t, date_width_) { specified = false; }
-           DO_(args) { value = args[1].to_long(); specified = true; });
+           DO_(args) { value = args.get<long>(1); specified = true; });
   OPTION__(report_t, payee_width_,
            bool specified;
            CTOR(report_t, payee_width_) { specified = false; }
-           DO_(args) { value = args[1].to_long(); specified = true; });
+           DO_(args) { value = args.get<long>(1); specified = true; });
   OPTION__(report_t, account_width_,
            bool specified;
            CTOR(report_t, account_width_) { specified = false; }
-           DO_(args) { value = args[1].to_long(); specified = true; });
+           DO_(args) { value = args.get<long>(1); specified = true; });
   OPTION__(report_t, amount_width_,
            bool specified;
            CTOR(report_t, amount_width_) { specified = false; }
-           DO_(args) { value = args[1].to_long(); specified = true; });
+           DO_(args) { value = args.get<long>(1); specified = true; });
   OPTION__(report_t, total_width_,
            bool specified;
            CTOR(report_t, total_width_) { specified = false; }
-           DO_(args) { value = args[1].to_long(); specified = true; });
+           DO_(args) { value = args.get<long>(1); specified = true; });
 };
 
 
