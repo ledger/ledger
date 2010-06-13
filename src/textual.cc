@@ -158,9 +158,9 @@ namespace {
                      xact_base_t& xact,
                      const bool   defer_expr = false);
 
-    xact_t * parse_xact(char *    line,
-                          std::streamsize len,
-                          account_t *     account);
+    xact_t * parse_xact(char *          line,
+                        std::streamsize len,
+                        account_t *     account);
 
     virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                     const string& name);
