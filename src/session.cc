@@ -182,12 +182,11 @@ void session_t::close_journal_files()
   amount_t::initialize();
 }
 
-value_t session_t::fn_account(call_scope_t& scope)
+value_t session_t::fn_account(call_scope_t& args)
 {
-  interactive_t args(scope, "v");
-  if (scope[0].is_string())
+  if (args[0].is_string())
     return scope_value(journal->find_account(args.get<string>(0), false));
-  else if (scope[0].is_mask())
+  else if (args[0].is_mask())
     return scope_value(journal->find_account_re(args.get<mask_t>(0).str()));
   else
     return NULL_VALUE;

@@ -59,8 +59,6 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
     tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
     if (tok.kind == token_t::LPAREN) {
       op_t::kind_t kind = op_t::O_CALL;
-      if (ident == "any" || ident == "all")
-        kind = op_t::O_EXPAND;
       ptr_op_t call_node(new op_t(kind));
       call_node->set_left(node);
       node = call_node;
@@ -81,7 +79,7 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
                             .minus_flags(PARSE_SINGLE));
     tok = next_token(in, tflags, ')');
 
-    if (node->kind == op_t::O_CONS) {
+    if (node && node->kind == op_t::O_CONS) {
       ptr_op_t prev(node);
       node = new op_t(op_t::O_SEQ);
       node->set_left(prev);

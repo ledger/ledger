@@ -34,7 +34,6 @@
 #include "convert.h"
 #include "csv.h"
 #include "scope.h"
-#include "interactive.h"
 #include "iterators.h"
 #include "report.h"
 #include "xact.h"
@@ -43,11 +42,10 @@
 
 namespace ledger {
 
-value_t convert_command(call_scope_t& scope)
+value_t convert_command(call_scope_t& args)
 {
-  interactive_t args(scope, "s");
-  report_t&     report(find_scope<report_t>(scope));
-  journal_t&    journal(*report.session.journal.get());
+  report_t&  report(args.context<report_t>());
+  journal_t& journal(*report.session.journal.get());
 
   string bucket_name;
   if (report.HANDLED(account_))

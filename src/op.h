@@ -105,7 +105,6 @@ public:
     O_DEFINE,
     O_LOOKUP,
     O_CALL,
-    O_EXPAND,
     O_MATCH,
 
     BINARY_OPERATORS,
@@ -278,7 +277,7 @@ public:
   };
 
   bool print(std::ostream& out, const context_t& context = context_t()) const;
-  void dump(std::ostream& out, const int depth) const;
+  void dump(std::ostream& out, const int depth = 0) const;
 
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(const expr_t::func_t& fobj);

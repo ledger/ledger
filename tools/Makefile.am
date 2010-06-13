@@ -44,7 +44,6 @@ libledger_expr_la_SOURCES  =			\
 	src/query.cc				\
 	src/predicate.cc			\
 	src/scope.cc				\
-	src/interactive.cc			\
 	src/expr.cc				\
 	src/op.cc				\
 	src/parser.cc				\
@@ -115,7 +114,6 @@ pkginclude_HEADERS =				\
 	src/exprbase.h				\
 	src/expr.h				\
 	src/scope.h				\
-	src/interactive.h			\
 	src/predicate.h				\
 	src/query.h				\
 	src/format.h				\

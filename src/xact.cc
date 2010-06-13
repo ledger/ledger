@@ -36,7 +36,6 @@
 #include "account.h"
 #include "journal.h"
 #include "pool.h"
-#include "interactive.h"
 
 namespace ledger {
 
@@ -503,31 +502,27 @@ namespace {
     return (*Func)(find_scope<xact_t>(scope));
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (expr.calc(bound_scope).to_boolean())
+      bind_scope_t bound_scope(args, *p);
+      if (expr->calc(bound_scope).to_boolean())
         return true;
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (! expr.calc(bound_scope).to_boolean())
+      bind_scope_t bound_scope(args, *p);
+      if (! expr->calc(bound_scope).to_boolean())
         return false;
     }
     return true;

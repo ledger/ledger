@@ -286,7 +286,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   std::strcpy(argv[0], argv0);
 
   for (std::size_t i = 0; i < args.size(); i++) {
-    string arg = args[i].as_string();
+    string arg = args.get<string>(i);
     argv[i + 1] = new char[arg.length() + 1];
     std::strcpy(argv[i + 1], arg.c_str());
   }
