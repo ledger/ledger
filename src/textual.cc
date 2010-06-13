@@ -146,6 +146,9 @@ namespace {
     void account_mapping_directive(char * line);
     void tag_directive(char * line);
     void define_directive(char * line);
+    void assert_directive(char * line);
+    void check_directive(char * line);
+    void expr_directive(char * line);
     bool general_directive(char * line);
 
     post_t * parse_post(char *          line,
@@ -523,20 +526,74 @@ void instance_t::automated_xact_directive(char * line)
   bool reveal_context = true;
 
   try {
+    std::auto_ptr<auto_xact_t> ae
+      (new auto_xact_t(query_t(string(skip_ws(line + 1)),
+                               keep_details_t(true, true, true), false)));
+    ae->pos           = position_t();
+    ae->pos->pathname = pathname;
+    ae->pos->beg_pos  = line_beg_pos;
+    ae->pos->beg_line = linenum;
+    ae->pos->sequence = context.sequence++;
 
-  std::auto_ptr<auto_xact_t> ae
-    (new auto_xact_t(query_t(string(skip_ws(line + 1)),
-                             keep_details_t(true, true, true), false)));
-  ae->pos           = position_t();
-  ae->pos->pathname = pathname;
-  ae->pos->beg_pos  = line_beg_pos;
-  ae->pos->beg_line = linenum;
-  ae->pos->sequence = context.sequence++;
+    post_t * last_post = NULL;
 
-  reveal_context = false;
+    while (peek_whitespace_line()) {
+      std::streamsize len = read_line(line);
 
-  if (parse_posts(context.top_account(), *ae.get(), true)) {
-    reveal_context = true;
+      char * p = skip_ws(line);
+      if (! *p)
+        break;
+
+      const std::size_t remlen = std::strlen(p);
+
+      if (*p == ';') {
+        item_t * item;
+        if (last_post)
+          item = last_post;
+        else
+          item = ae.get();
+
+        // This is a trailing note, and possibly a metadata info tag
+        item->append_note(p + 1, context.scope, true, current_year);
+        item->pos->end_pos = curr_pos;
+        item->pos->end_line++;
+
+        // If there was no last_post yet, then deferred notes get applied to
+        // the matched posting.  Other notes get applied to the auto-generated
+        // posting.
+        ae->deferred_notes->back().apply_to_post = last_post;
+      }
+      else if ((remlen > 7 && *p == 'a' &&
+                std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
+               (remlen > 6 && *p == 'c' &&
+                std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+               (remlen > 5 && *p == 'e' &&
+                std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
+        const char c = *p;
+        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+        if (! ae->check_exprs)
+          ae->check_exprs = auto_xact_t::check_expr_list();
+        ae->check_exprs->push_back
+          (auto_xact_t::check_expr_pair(expr_t(p),
+                                        c == 'a' ?
+                                        auto_xact_t::EXPR_ASSERTION :
+                                        (c == 'c' ?
+                                         auto_xact_t::EXPR_CHECK :
+                                         auto_xact_t::EXPR_GENERAL)));
+      }
+      else {
+        reveal_context = false;
+
+        if (post_t * post =
+            parse_post(p, len - (p - line), context.top_account(),
+                       NULL, true)) {
+          reveal_context = true;
+          ae->add_post(post);
+          last_post = post;
+        }
+        reveal_context = true;
+      }
+    }
 
     context.journal.auto_xacts.push_back(ae.get());
 
@@ -585,6 +642,7 @@ void instance_t::period_xact_directive(char * line)
 
       pe.release();
     } else {
+      reveal_context = true;
       pe->journal = NULL;
       throw parse_error(_("Period transaction failed to balance"));
     }
@@ -823,6 +881,26 @@ void instance_t::define_directive(char * line)
   def.compile(context.scope);   // causes definitions to be established
 }
 
+void instance_t::assert_directive(char * line)
+{
+  expr_t expr(line);
+  if (! expr.calc(context.scope).to_boolean())
+    throw_(parse_error, _("Assertion failed: %1" << line));
+}
+
+void instance_t::check_directive(char * line)
+{
+  expr_t expr(line);
+  if (! expr.calc(context.scope).to_boolean())
+    warning_(_("Check failed: %1" << line));
+}
+
+void instance_t::expr_directive(char * line)
+{
+  expr_t expr(line);
+  expr.calc(context.scope);
+}
+
 bool instance_t::general_directive(char * line)
 {
   char buf[8192];
@@ -845,6 +923,10 @@ bool instance_t::general_directive(char * line)
       alias_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "assert") == 0) {
+      assert_directive(arg);
+      return true;
+    }
     break;
 
   case 'b':
@@ -859,6 +941,10 @@ bool instance_t::general_directive(char * line)
       account_mapping_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "check") == 0) {
+      check_directive(arg);
+      return true;
+    }
     break;
 
   case 'd':
@@ -871,6 +957,10 @@ bool instance_t::general_directive(char * line)
   case 'e':
     if (std::strcmp(p, "end") == 0) {
       end_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "expr") == 0) {
+      expr_directive(arg);
       return true;
     }
     break;
@@ -1383,25 +1473,51 @@ xact_t * instance_t::parse_xact(char *          line,
     if (! *p)
       break;
 
-    if (*p == ';') {
-      item_t * item;
-      if (last_post)
-        item = last_post;
-      else
-        item = xact.get();
+    const std::size_t remlen = std::strlen(p);
 
+    item_t * item;
+    if (last_post)
+      item = last_post;
+    else
+      item = xact.get();
+
+    if (*p == ';') {
       // This is a trailing note, and possibly a metadata info tag
       item->append_note(p + 1, context.scope, true, current_year);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
-    } else {
+    }
+    else if ((remlen > 7 && *p == 'a' &&
+              std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
+             (remlen > 6 && *p == 'c' &&
+              std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+             (remlen > 5 && *p == 'e' &&
+              std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
+      const char c = *p;
+      p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+      expr_t expr(p);
+      bind_scope_t bound_scope(context.scope, *item);
+      if (c == 'e') {
+        expr.calc(bound_scope);
+      }
+      else if (! expr.calc(bound_scope).to_boolean()) {
+        if (c == 'a') {
+          throw_(parse_error, _("Transaction assertion failed: %1" << p));
+        } else {
+          warning_(_("Transaction check failed: %1" << p));
+        }
+      }
+    }
+    else {
       reveal_context = false;
 
       if (post_t * post =
           parse_post(p, len - (p - line), account, xact.get())) {
+        reveal_context = true;
         xact->add_post(post);
         last_post = post;
       }
+      reveal_context = true;
     }
   }
 
