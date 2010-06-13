@@ -993,6 +993,10 @@ inline string value_context(const value_t& val) {
   return buf.str();
 }
 
+inline value_t scope_value(scope_t * val) {
+  return value_t(val);
+}
+
 template <typename T>
 inline value_t& add_or_set_value(value_t& lhs, const T& rhs) {
   if (lhs.is_null())

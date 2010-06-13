@@ -186,11 +186,9 @@ value_t session_t::fn_account(call_scope_t& scope)
 {
   interactive_t args(scope, "v");
   if (scope[0].is_string())
-    return value_t(static_cast<scope_t *>
-                   (journal->find_account(args.get<string>(0), false)));
+    return scope_value(journal->find_account(args.get<string>(0), false));
   else if (scope[0].is_mask())
-    return value_t(static_cast<scope_t *>
-                   (journal->find_account_re(args.get<mask_t>(0).str())));
+    return scope_value(journal->find_account_re(args.get<mask_t>(0).str()));
   else
     return NULL_VALUE;
 }

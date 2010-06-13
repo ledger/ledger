@@ -182,7 +182,7 @@ public:
   }
 
   value_t fn_options(call_scope_t&) {
-    return value_t(static_cast<scope_t *>(this));
+    return scope_value(this);
   }
 
   string report_format(option_t<report_t>& option) {

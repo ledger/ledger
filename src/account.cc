@@ -203,11 +203,9 @@ namespace {
       account_t * acct = account.parent;
       for (; acct && acct->parent; acct = acct->parent) ;
       if (scope[0].is_string())
-        return value_t(static_cast<scope_t *>
-                       (acct->find_account(args.get<string>(0), false)));
+        return scope_value(acct->find_account(args.get<string>(0), false));
       else if (scope[0].is_mask())
-        return value_t(static_cast<scope_t *>
-                       (acct->find_account_re(args.get<mask_t>(0).str())));
+        return scope_value(acct->find_account_re(args.get<mask_t>(0).str()));
       else
         return NULL_VALUE;
     } else {
@@ -285,7 +283,7 @@ namespace {
   }
 
   value_t get_parent(account_t& account) {
-    return value_t(static_cast<scope_t *>(account.parent));
+    return scope_value(account.parent);
   }
 
   value_t fn_any(call_scope_t& scope)

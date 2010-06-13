@@ -126,7 +126,7 @@ optional<date_t> post_t::effective_date() const
 
 namespace {
   value_t get_this(post_t& post) {
-    return value_t(static_cast<scope_t *>(&post));
+    return scope_value(&post);
   }
 
   value_t get_is_calculated(post_t& post) {
@@ -146,7 +146,7 @@ namespace {
   }
 
   value_t get_xact(post_t& post) {
-    return value_t(static_cast<scope_t *>(post.xact));
+    return scope_value(post.xact);
   }
 
   value_t get_xact_id(post_t& post) {
