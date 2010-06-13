@@ -191,7 +191,7 @@ namespace {
   shared_ptr<datetime_io_t> printed_datetime_io;
   shared_ptr<date_io_t>     printed_date_io;
 
-  std::vector<shared_ptr<date_io_t> > readers;
+  std::deque<shared_ptr<date_io_t> > readers;
 
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
                                  optional_year year,
@@ -1533,7 +1533,7 @@ void set_date_format(const char * format)
 
 void set_input_date_format(const char * format)
 {
-  input_date_io.reset(new date_io_t(format, true));
+  readers.push_front(shared_ptr<date_io_t>(new date_io_t(format, true)));
 }
 
 void times_initialize()
