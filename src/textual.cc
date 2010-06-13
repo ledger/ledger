@@ -577,7 +577,7 @@ void instance_t::period_xact_directive(char * line)
     pe->journal = &context.journal;
 
     if (pe->finalize()) {
-      context.journal.extend_xact(pe.get());
+      context.journal.extend_xact(pe.get(), current_year);
       context.journal.period_xacts.push_back(pe.get());
 
       pe->pos->end_pos  = curr_pos;
@@ -1254,7 +1254,7 @@ post_t * instance_t::parse_post(char *          line,
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
         post->parse_tags(boost::get<string>(state).c_str(), context.scope,
-                         true);
+                         true, current_year);
   }
 
   TRACE_STOP(post_details, 1);
@@ -1426,7 +1426,7 @@ xact_t * instance_t::parse_xact(char *          line,
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
         xact->parse_tags(boost::get<string>(state).c_str(), context.scope,
-                         false);
+                         false, current_year);
   }
 
   TRACE_STOP(xact_details, 1);

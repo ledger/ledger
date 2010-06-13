@@ -634,7 +634,8 @@ namespace {
 
 } // unnamed namespace
 
-void auto_xact_t::extend_xact(xact_base_t& xact)
+void auto_xact_t::extend_xact(xact_base_t&                xact,
+                              optional<date_t::year_type> current_year)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -679,6 +680,18 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
       matches_predicate = predicate(*initial_post);
     }
     if (matches_predicate) {
+      bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
+
+      if (deferred_notes) {
+        foreach (deferred_tag_data_t& data, *deferred_notes) {
+          if (data.apply_to_post == NULL)
+            initial_post->parse_tags(data.tag_data.c_str(),
+                                     bound_scope,
+                                     data.overwrite_existing,
+                                     current_year);
+        }
+      }
+
       foreach (post_t * post, posts) {
         amount_t post_amount;
         if (post->amount.is_null()) {
@@ -686,7 +699,6 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
             throw_(amount_error,
                    _("Automated transaction's posting has no amount"));
 
-          bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
           value_t result(post->amount_expr->calc(bound_scope));
           if (result.is_long()) {
             post_amount = result.to_amount();
@@ -752,6 +764,16 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 
         if (new_post->must_balance())
           needs_further_verification = true;
+
+        if (deferred_notes) {
+          foreach (deferred_tag_data_t& data, *deferred_notes) {
+            if (data.apply_to_post == post)
+              new_post->parse_tags(data.tag_data.c_str(),
+                                   bound_scope,
+                                   data.overwrite_existing,
+                                   current_year);
+          }
+        }
       }
     }
   }

@@ -140,8 +140,10 @@ public:
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
-  bool add_xact(xact_t * xact);
-  void extend_xact(xact_base_t * xact);
+  bool add_xact(xact_t *                    xact,
+                optional<date_t::year_type> current_year = none);
+  void extend_xact(xact_base_t *               xact,
+                   optional<date_t::year_type> current_year = none);
   bool remove_xact(xact_t * xact);
 
   xacts_list::iterator xacts_begin() {
