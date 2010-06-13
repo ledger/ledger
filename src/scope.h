@@ -305,6 +305,24 @@ public:
   virtual bool type_required() const {
     return required;
   }
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+protected:
+  explicit context_scope_t() {
+    TRACE_CTOR(context_scope_t, "");
+  }
+
+  /** Serialization. */
+
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int /* version */) {
+    ar & boost::serialization::base_object<child_scope_t>(*this);
+    ar & value_type_context;
+    ar & required;
+  }
+#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class call_scope_t : public context_scope_t
@@ -398,7 +416,7 @@ public:
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
-private:
+protected:
   explicit call_scope_t() {
     TRACE_CTOR(call_scope_t, "");
   }
@@ -409,8 +427,9 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<child_scope_t>(*this);
+    ar & boost::serialization::base_object<context_scope_t>(*this);
     ar & args;
+    //ar & ptr;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
