@@ -68,6 +68,17 @@ namespace {
     }
     return seq;
   }
+
+  void check_type_context(scope_t& scope, value_t& result)
+  {
+    if (scope.type_context() != value_t::VOID &&
+        result.type() != scope.type_context()) {
+      throw_(calc_error,
+             _("Expected return of %1, but received %2")
+             << result.label(scope.type_context())
+             << result.label());
+    }
+  }
 }
 
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
@@ -154,6 +165,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     call_scope_t call_args(scope, scope.type_context());
     result = left()->compile(call_args, depth + 1)
                    ->calc(call_args, locus, depth + 1);
+    check_type_context(scope, result);
     break;
   }
 
@@ -163,6 +175,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // resolved.
     call_scope_t call_args(scope, scope.type_context());
     result = as_function()(call_args);
+    check_type_context(scope, result);
 #if defined(DEBUG_ON)
     skip_debug = true;
 #endif
@@ -256,6 +269,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       result = func->as_function()(call_args);
     else
       result = func->calc(call_args, locus, depth + 1);
+
+    check_type_context(scope, result);
     break;
   }
 

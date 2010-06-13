@@ -169,15 +169,14 @@ void interactive_t::verify_arguments() const
   DEBUG("interactive.verify", "Remaining args are optional");
 
   if (wrong_arg) {
-    throw_(std::logic_error,
-           _("Expected %1 for argument %2, but received %3")
-           << label << offset << vlabel);
+    throw_(calc_error, _("Expected %1 for argument %2, but received %3")
+          << label << offset << vlabel);
   }
   else if (*p && ! optional && ! next_arg) {
-    throw_(std::logic_error, _("Too few arguments to function"));
+    throw_(calc_error, _("Too few arguments to function"));
   }
   else if (! *p && next_arg) {
-    throw_(std::logic_error, _("Too many arguments to function"));
+    throw_(calc_error, _("Too many arguments to function"));
   }
 }
 
