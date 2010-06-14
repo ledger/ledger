@@ -629,8 +629,7 @@ namespace {
 
 } // unnamed namespace
 
-void auto_xact_t::extend_xact(xact_base_t&                xact,
-                              optional<date_t::year_type> current_year)
+void auto_xact_t::extend_xact(xact_base_t& xact)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -680,10 +679,8 @@ void auto_xact_t::extend_xact(xact_base_t&                xact,
       if (deferred_notes) {
         foreach (deferred_tag_data_t& data, *deferred_notes) {
           if (data.apply_to_post == NULL)
-            initial_post->parse_tags(data.tag_data.c_str(),
-                                     bound_scope,
-                                     data.overwrite_existing,
-                                     current_year);
+            initial_post->parse_tags(data.tag_data.c_str(), bound_scope,
+                                     data.overwrite_existing);
         }
       }
       if (check_exprs) {
@@ -778,10 +775,8 @@ void auto_xact_t::extend_xact(xact_base_t&                xact,
         if (deferred_notes) {
           foreach (deferred_tag_data_t& data, *deferred_notes) {
             if (data.apply_to_post == post)
-              new_post->parse_tags(data.tag_data.c_str(),
-                                   bound_scope,
-                                   data.overwrite_existing,
-                                   current_year);
+              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
+                                   data.overwrite_existing);
           }
         }
       }

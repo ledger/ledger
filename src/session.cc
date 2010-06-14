@@ -60,9 +60,7 @@ void set_session_context(session_t * session)
 }
 
 session_t::session_t()
-  : flush_on_next_data_file(false),
-    current_year(CURRENT_DATE().year()),
-    journal(new journal_t)
+  : flush_on_next_data_file(false), journal(new journal_t)
 {
   TRACE_CTOR(session_t, "");
 

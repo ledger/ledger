@@ -56,8 +56,7 @@ class session_t : public symbol_scope_t
   friend void set_session_context(session_t * session);
 
 public:
-  bool                     flush_on_next_data_file;
-  date_t::year_type        current_year;
+  bool flush_on_next_data_file;
   std::auto_ptr<journal_t> journal;
 
   explicit session_t();

@@ -134,10 +134,9 @@ item_t::set_tag(const string&            tag,
   }
 }
 
-void item_t::parse_tags(const char *                p,
-                        scope_t&                    scope,
-                        bool                        overwrite_existing,
-                        optional<date_t::year_type> current_year)
+void item_t::parse_tags(const char * p,
+                        scope_t&     scope,
+                        bool         overwrite_existing)
 {
   if (const char * b = std::strchr(p, '[')) {
     if (*(b + 1) != '\0' &&
@@ -149,10 +148,10 @@ void item_t::parse_tags(const char *                p,
 
         if (char * p = std::strchr(buf, '=')) {
           *p++ = '\0';
-          _date_eff = parse_date(p, current_year);
+          _date_eff = parse_date(p);
         }
         if (buf[0])
-          _date = parse_date(buf, current_year);
+          _date = parse_date(buf);
       }
     }
   }
@@ -202,10 +201,9 @@ void item_t::parse_tags(const char *                p,
   }
 }
 
-void item_t::append_note(const char *                p,
-                         scope_t&                    scope,
-                         bool                        overwrite_existing,
-                         optional<date_t::year_type> current_year)
+void item_t::append_note(const char * p,
+                         scope_t&     scope,
+                         bool         overwrite_existing)
 {
   if (note) {
     *note += '\n';
@@ -214,7 +212,7 @@ void item_t::append_note(const char *                p,
     note = p;
   }
 
-  parse_tags(p, scope, overwrite_existing, current_year);
+  parse_tags(p, scope, overwrite_existing);
 }
 
 namespace {

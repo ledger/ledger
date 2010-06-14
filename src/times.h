@@ -77,27 +77,23 @@ extern optional<datetime_t> epoch;
 #define CURRENT_DATE() \
   (epoch ? epoch->date() : boost::gregorian::day_clock::universal_day())
 
-extern date_time::weekdays   start_of_week;
+extern date_time::weekdays start_of_week;
 
 optional<date_time::weekdays>
 string_to_day_of_week(const std::string& str);
 optional<date_time::months_of_year>
 string_to_month_of_year(const std::string& str);
 
-typedef optional<date_t::year_type> optional_year;
+datetime_t parse_datetime(const char * str);
 
-datetime_t parse_datetime(const char * str, optional_year current_year = none);
-
-inline datetime_t parse_datetime(const std::string& str,
-                                 optional_year current_year = none) {
-  return parse_datetime(str.c_str(), current_year);
+inline datetime_t parse_datetime(const std::string& str) {
+  return parse_datetime(str.c_str());
 }
 
-date_t parse_date(const char * str, optional_year current_year = none);
+date_t parse_date(const char * str);
 
-inline date_t parse_date(const std::string& str,
-                         optional_year current_year = none) {
-  return parse_date(str.c_str(), current_year);
+inline date_t parse_date(const std::string& str) {
+  return parse_date(str.c_str());
 }
 
 enum format_type_t {
@@ -329,12 +325,11 @@ public:
     TRACE_DTOR(date_specifier_t);
   }
 
-  date_t begin(const optional_year& current_year = none) const;
-  date_t end(const optional_year& current_year = none) const;
+  date_t begin() const;
+  date_t end() const;
 
-  bool is_within(const date_t& date,
-                 const optional_year& current_year = none) const {
-    return date >= begin(current_year) && date < end(current_year);
+  bool is_within(const date_t& date) const {
+    return date >= begin() && date < end();
   }
 
   optional<date_duration_t> implied_duration() const {
@@ -404,27 +399,26 @@ public:
     TRACE_DTOR(date_range_t);
   }
 
-  optional<date_t> begin(const optional_year& current_year = none) const {
+  optional<date_t> begin() const {
     if (range_begin)
-      return range_begin->begin(current_year);
+      return range_begin->begin();
     else
       return none;
   }
-  optional<date_t> end(const optional_year& current_year = none) const {
+  optional<date_t> end() const {
     if (range_end) {
       if (end_inclusive)
-        return range_end->end(current_year);
+        return range_end->end();
       else
-        return range_end->begin(current_year);
+        return range_end->begin();
     } else {
       return none;
     }
   }
 
-  bool is_within(const date_t& date,
-                 const optional_year& current_year = none) const {
-    optional<date_t> b = begin(current_year);
-    optional<date_t> e = end(current_year);
+  bool is_within(const date_t& date) const {
+    optional<date_t> b = begin();
+    optional<date_t> e = end();
     bool after_begin = b ? date >= *b : true;
     bool before_end  = e ? date <  *e : true;
     return after_begin && before_end;
@@ -482,19 +476,19 @@ public:
     TRACE_DTOR(date_specifier_or_range_t);
   }
 
-  optional<date_t> begin(const optional_year& current_year = none) const {
+  optional<date_t> begin() const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).begin(current_year);
+      return boost::get<date_specifier_t>(specifier_or_range).begin();
     else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).begin(current_year);
+      return boost::get<date_range_t>(specifier_or_range).begin();
     else
       return none;
   }
-  optional<date_t> end(const optional_year& current_year = none) const {
+  optional<date_t> end() const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).end(current_year);
+      return boost::get<date_specifier_t>(specifier_or_range).end();
     else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).end(current_year);
+      return boost::get<date_range_t>(specifier_or_range).end();
     else
       return none;
   }
@@ -571,11 +565,11 @@ public:
     return is_valid();
   }
 
-  optional<date_t> begin(const optional_year& current_year = none) const {
-    return start ? start : (range ? range->begin(current_year) : none);
+  optional<date_t> begin() const {
+    return start ? start : (range ? range->begin() : none);
   }
-  optional<date_t> end(const optional_year& current_year = none) const {
-    return finish ? finish : (range ? range->end(current_year) : none);
+  optional<date_t> end() const {
+    return finish ? finish : (range ? range->end() : none);
   }
 
   void   parse(const string& str);
@@ -590,7 +584,7 @@ public:
   /** Find the current or next period containing date.  Returns true if the
       date_interval_t object has been altered to reflect the interval
       containing date, or false if no such period can be found. */
-  bool find_period(const date_t& date);
+  bool find_period(const date_t& date = CURRENT_DATE());
 
   optional<date_t> inclusive_end() const {
     if (end_of_duration)
@@ -601,7 +595,7 @@ public:
 
   date_interval_t& operator++();
 
-  void dump(std::ostream& out, optional_year current_year = none);
+  void dump(std::ostream& out);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

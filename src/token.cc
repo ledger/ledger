@@ -207,7 +207,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
     length++;
 
     date_interval_t timespan(buf);
-    optional<date_t> begin = timespan.begin(CURRENT_DATE().year());
+    optional<date_t> begin = timespan.begin();
     if (! begin)
       throw_(parse_error,
              _("Date specifier does not refer to a starting date"));

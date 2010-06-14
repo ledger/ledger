@@ -105,8 +105,7 @@ account_t * journal_t::find_account_re(const string& regexp)
   return master->find_account_re(regexp);
 }
 
-bool journal_t::add_xact(xact_t *                    xact,
-                         optional<date_t::year_type> current_year)
+bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
 
@@ -115,17 +114,16 @@ bool journal_t::add_xact(xact_t *                    xact,
     return false;
   }
 
-  extend_xact(xact, current_year);
+  extend_xact(xact);
   xacts.push_back(xact);
 
   return true;
 }
 
-void journal_t::extend_xact(xact_base_t *               xact,
-                            optional<date_t::year_type> current_year)
+void journal_t::extend_xact(xact_base_t * xact)
 {
   foreach (auto_xact_t * auto_xact, auto_xacts)
-    auto_xact->extend_xact(*xact, current_year);
+    auto_xact->extend_xact(*xact);
 }
 
 bool journal_t::remove_xact(xact_t * xact)

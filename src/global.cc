@@ -49,6 +49,8 @@ global_scope_t::global_scope_t(char ** envp)
 {
   TRACE_CTOR(global_scope_t, "");
 
+  epoch = CURRENT_TIME();
+
 #if defined(HAVE_BOOST_PYTHON)
   if (! python_session.get()) {
     python_session.reset(new ledger::python_interpreter_t);

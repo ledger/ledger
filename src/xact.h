@@ -196,15 +196,13 @@ public:
 
   virtual void parse_tags(const char * p,
                           scope_t&,
-                          bool         overwrite_existing = true,
-                          optional<date_t::year_type>     = none) {
+                          bool         overwrite_existing = true) {
     if (! deferred_notes)
       deferred_notes = deferred_notes_list();
     deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
   }
 
-  virtual void extend_xact(xact_base_t&                xact,
-                           optional<date_t::year_type> current_year);
+  virtual void extend_xact(xact_base_t& xact);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
