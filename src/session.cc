@@ -192,6 +192,16 @@ value_t session_t::fn_account(call_scope_t& args)
     return NULL_VALUE;
 }
 
+value_t session_t::fn_min(call_scope_t& args)
+{
+  return args[1] < args[0] ? args[1] : args[0];
+}
+
+value_t session_t::fn_max(call_scope_t& args)
+{
+  return args[1] > args[0] ? args[1] : args[0];
+}
+
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -243,6 +253,14 @@ expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "account"))
         return MAKE_FUNCTOR(session_t::fn_account);
       break;
+
+    case 'm':
+      if (is_eq(p, "min"))
+        return MAKE_FUNCTOR(session_t::fn_min);
+      else if (is_eq(p, "max"))
+        return MAKE_FUNCTOR(session_t::fn_max);
+      break;
+
     default:
       break;
     }

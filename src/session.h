@@ -75,6 +75,8 @@ public:
   void close_journal_files();
 
   value_t fn_account(call_scope_t& scope);
+  value_t fn_min(call_scope_t& scope);
+  value_t fn_max(call_scope_t& scope);
 
   void report_options(std::ostream& out)
   {
