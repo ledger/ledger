@@ -871,7 +871,7 @@ date_interval_t date_parser_t::parse()
 
     case lexer_t::token_t::TOK_EVERY:
       tok = lexer.next_token();
-      if (tok == lexer_t::token_t::TOK_INT) {
+      if (tok.kind == lexer_t::token_t::TOK_INT) {
         int quantity = boost::get<unsigned short>(*tok.value);
         tok = lexer.next_token();
         switch (tok.kind) {
