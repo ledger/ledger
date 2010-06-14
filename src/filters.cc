@@ -501,26 +501,15 @@ void related_posts::flush()
 {
   if (posts.size() > 0) {
     foreach (post_t * post, posts) {
-      if (post->xact) {
-        foreach (post_t * r_post, post->xact->posts) {
-          post_t::xdata_t& xdata(r_post->xdata());
-          if (! xdata.has_flags(POST_EXT_HANDLED) &&
-              (! xdata.has_flags(POST_EXT_RECEIVED) ?
-               ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
-               also_matching)) {
-            xdata.add_flags(POST_EXT_HANDLED);
-            item_handler<post_t>::operator()(*r_post);
-          }
-        }
-      } else {
-        // This code should only be reachable from the "output"
-        // command, since that is the only command which attempts to
-        // output auto or period xacts.
-        post_t::xdata_t& xdata(post->xdata());
+      assert(post->xact);
+      foreach (post_t * r_post, post->xact->posts) {
+        post_t::xdata_t& xdata(r_post->xdata());
         if (! xdata.has_flags(POST_EXT_HANDLED) &&
-            ! post->has_flags(ITEM_GENERATED)) {
+            (! xdata.has_flags(POST_EXT_RECEIVED) ?
+             ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
+             also_matching)) {
           xdata.add_flags(POST_EXT_HANDLED);
-          item_handler<post_t>::operator()(*post);
+          item_handler<post_t>::operator()(*r_post);
         }
       }
     }
