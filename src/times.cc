@@ -661,6 +661,16 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
         (boost::get<date_time::weekdays>(*tok.value));
     break;
 
+  case lexer_t::token_t::TOK_TODAY:
+    specifier = date_specifier_t(CURRENT_DATE());
+    break;
+  case lexer_t::token_t::TOK_TOMORROW:
+    specifier = date_specifier_t(CURRENT_DATE() + gregorian::days(1));
+    break;
+  case lexer_t::token_t::TOK_YESTERDAY:
+    specifier = date_specifier_t(CURRENT_DATE() - gregorian::days(1));
+    break;
+
   default:
     tok.unexpected();
     break;
