@@ -76,6 +76,9 @@ public:
   value_t fn_account(call_scope_t& scope);
   value_t fn_min(call_scope_t& scope);
   value_t fn_max(call_scope_t& scope);
+  value_t fn_lot_price(call_scope_t& scope);
+  value_t fn_lot_date(call_scope_t& scope);
+  value_t fn_lot_tag(call_scope_t& scope);
 
   void report_options(std::ostream& out)
   {
