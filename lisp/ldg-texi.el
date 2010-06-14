@@ -2,6 +2,26 @@
 (defvar ledger-sample-doc-path "/Users/johnw/src/ledger/doc/sample.dat")
 (defvar ledger-normalization-args "--args-only --columns 80")
 
+(defun ledger-update-test ()
+  (interactive)
+  (goto-char (point-min))
+  (let ((command (buffer-substring (point-min) (line-end-position)))
+        input)
+    (re-search-forward "^<<<\n")
+    (let ((beg (point)) end)
+      (re-search-forward "^>>>")
+      (setq end (match-beginning 0))
+      (forward-line 1)
+      (let ((output-beg (point)))
+        (re-search-forward "^>>>")
+        (goto-char (match-beginning 0))
+        (delete-region output-beg (point))
+        (apply #'call-process-region
+               beg end (expand-file-name "~/Products/ledger/debug/ledger")
+               nil t nil
+               "-f" "-" "--args-only" "--columns=80" "--no-color"
+               (split-string command " "))))))
+
 (defun ledger-texi-write-test (name command input output &optional category)
   (let ((buf (current-buffer)))
     (with-current-buffer (find-file-noselect
