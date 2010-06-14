@@ -851,26 +851,40 @@ date_interval_t date_parser_t::parse()
       }
 
       case lexer_t::token_t::TOK_QUARTER: {
-        date_t temp =
+        date_t base =
           date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-        temp += gregorian::months(3 * adjust);
-        inclusion_specifier =
-          date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
-                           temp.month());
-#if 0
-        period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
-#endif
+        date_t temp;
+        if (adjust < 0) {
+          temp = base + gregorian::months(3 * adjust);
+        }
+        else if (adjust == 0) {
+          temp = base + gregorian::months(3);
+        }
+        else if (adjust > 0) {
+          base += gregorian::months(3 * adjust);
+          temp = base + gregorian::months(3 * adjust);
+        }
+        since_specifier = date_specifier_t(adjust < 0 ? temp : base);
+        until_specifier = date_specifier_t(adjust < 0 ? base : temp);
         break;
       }
 
       case lexer_t::token_t::TOK_WEEK: {
-        date_t temp =
+        date_t base =
           date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-        temp += gregorian::days(7 * adjust);
-        inclusion_specifier = date_specifier_t(today);
-#if 0
-        period.duration = date_duration_t(date_duration_t::WEEKS, 1);
-#endif
+        date_t temp;
+        if (adjust < 0) {
+          temp = base + gregorian::days(7 * adjust);
+        }
+        else if (adjust == 0) {
+          temp = base + gregorian::days(7);
+        }
+        else if (adjust > 0) {
+          base += gregorian::days(7 * adjust);
+          temp = base + gregorian::days(7 * adjust);
+        }
+        since_specifier = date_specifier_t(adjust < 0 ? temp : base);
+        until_specifier = date_specifier_t(adjust < 0 ? base : temp);
         break;
       }
 
