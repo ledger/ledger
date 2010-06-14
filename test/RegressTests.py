@@ -23,6 +23,7 @@ class RegressFile:
 
     def is_directive(self, line):
         return line == "<<<\n" or \
+               line == ">>>\n" or \
                line == ">>>1\n" or \
                line == ">>>2\n" or \
                line.startswith("===")
@@ -42,10 +43,10 @@ class RegressFile:
     def read_test(self, last_test = None):
         test = {
             'command':  None,
-            'input':    None,
-            'output':   None,
-            'error':    None,
-            'exitcode': None
+            'input':    "",
+            'output':   "",
+            'error':    "",
+            'exitcode': 0
         }
         if last_test:
             test['input'] = last_test['input']
@@ -54,7 +55,7 @@ class RegressFile:
         while line:
             if line == "<<<\n":
                 (test['input'], line) = self.read_section()
-            elif line == ">>>1\n":
+            elif line == ">>>\n" or line == ">>>1\n":
                 (test['output'], line) = self.read_section()
             elif line == ">>>2\n":
                 (test['error'], line) = self.read_section()
