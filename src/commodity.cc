@@ -646,9 +646,13 @@ void commodity_t::print(std::ostream& out, bool elide_quotes) const
 {
   string sym = symbol();
   if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) &&
-      ! sym.empty() && sym[0] == '"' && ! std::strchr(sym.c_str(), ' ')) {
-    DEBUG("foo", "contracting " << sym << " to " << string(sym, 1, sym.length() - 2));
-    out << string(sym, 1, sym.length() - 2);
+      ! sym.empty() && sym[0] == '"' &&
+      ! std::strchr(sym.c_str(), ' ')) {
+    string subsym(sym, 1, sym.length() - 2);
+    if (! all(subsym, is_digit()))
+      out << subsym;
+    else
+      out << sym;
   } else
     out << sym;
 }
