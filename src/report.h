@@ -393,7 +393,7 @@ public:
 
   OPTION_(report_t, begin_, DO_(args) { // -b
       date_interval_t  interval(args.get<string>(1));
-      optional<date_t> begin = interval.begin(parent->session.current_year);
+      optional<date_t> begin = interval.begin();
       if (! begin)
         throw_(std::invalid_argument,
                _("Could not determine beginning of period '%1'")
@@ -543,8 +543,9 @@ public:
   OPTION_(report_t, end_, DO_(args) { // -e
       date_interval_t  interval(args.get<string>(1));
       // Use begin() here so that if the user says --end=2008, we end on
-      // 2008/01/01 instead of 2009/01/01 (which is what end() would return).
-      optional<date_t> end = interval.begin(parent->session.current_year);
+      // 2008/01/01 instead of 2009/01/01 (which is what end() would
+      // return).
+      optional<date_t> end = interval.begin();
       if (! end)
         throw_(std::invalid_argument,
                _("Could not determine end of period '%1'")
@@ -665,13 +666,12 @@ public:
 
   OPTION_(report_t, now_, DO_(args) {
       date_interval_t interval(args.get<string>(1));
-      optional<date_t> begin = interval.begin(parent->session.current_year);
+      optional<date_t> begin = interval.begin();
       if (! begin)
         throw_(std::invalid_argument,
                _("Could not determine beginning of period '%1'")
                << args.get<string>(1));
       ledger::epoch = parent->terminus = datetime_t(*begin);
-      parent->session.current_year = ledger::epoch->date().year();
     });
 
   OPTION__

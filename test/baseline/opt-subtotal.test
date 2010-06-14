@@ -85,9 +85,9 @@ reg --subtotal
     Assets:Checking                             
 >>>1
 08-Jan-11 - 08-Dec-26           Assets:Checking            $-254.00     $-254.00
-                                Ex:Travel:Airfare         $8,275.07    $8,021.07
+                                Expense:Travel:Airfare    $8,275.07    $8,021.07
                                 Expenses:Travel:Auto        $280.97    $8,302.04
-                                Ex:Travel:Passport          $424.00    $8,726.04
+                                Expens:Travel:Passport      $424.00    $8,726.04
                                 Liabilities:MasterCard   $-8,726.04            0
 >>>2
 === 0

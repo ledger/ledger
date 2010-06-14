@@ -357,7 +357,7 @@ class CommandLineApp(object):
             exit_code = self.handleMainException()
             if self.options.debug:
                 raise
-            
+
         if self.force_exit:
             sys.exit(exit_code)
         return exit_code
@@ -376,6 +376,7 @@ class PrepareBuild(CommandLineApp):
         self.current_ver       = None
         #self.current_flavor    = 'default'
         self.current_flavor    = 'debug'
+        self.prefix_dir        = None
         self.products_dir      = None
         self.build_dir         = self.source_dir
         self.configure_args    = ['--with-included-gettext', '--enable-python']
@@ -502,6 +503,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--pic', action="callback",
                       callback=self.option_pic,
                       help='Compile with explicit PIC support')
+        op.add_option('', '--prefix', metavar='DIR', action="callback",
+                      callback=self.option_prefix, type="string",
+                      help='Use custom installation prefix')
         op.add_option('', '--products', metavar='DIR', action="callback",
                       callback=self.option_products,
                       help='Collect all build products in this directory')
@@ -584,6 +588,12 @@ class PrepareBuild(CommandLineApp):
     # Determine information about the surroundings                          #
     #########################################################################
 
+    def prefix_directory(self):
+        if self.prefix_dir:
+            return self.prefix_dir
+        else:
+            return None
+
     def default_products_directory(self):
         if self.envvars['LEDGER_PRODUCTS']:
             return self.envvars['LEDGER_PRODUCTS']
@@ -665,6 +675,8 @@ class PrepareBuild(CommandLineApp):
         self.log.info("Source directory         => " + self.source_dir)
         self.log.info("Need to run autogen.sh   => " +
                       str(self.need_to_prepare_autotools()))
+        if self.prefix_directory():
+            self.log.info("Installation prefix      => " + self.prefix_directory())
         self.log.info("Products directory       => " + self.products_directory())
         self.log.info("Build directory          => " + self.build_directory())
         self.log.info("Need to run configure    => " +
@@ -1163,6 +1175,10 @@ class PrepareBuild(CommandLineApp):
         self.log.debug('Saw option --output')
         self.build_dir = value
 
+    def option_prefix(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --prefix')
+        self.prefix_dir = value
+
     def option_products(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --products')
         self.products_dir = value
@@ -1319,6 +1335,9 @@ class PrepareBuild(CommandLineApp):
         if self.boost_info.get_suffix():
             conf_args.append('--with-boost-suffix=%s' %
                              self.boost_info.get_suffix())
+
+        if self.prefix_directory():
+            conf_args.append('--prefix=%s' % self.prefix_directory())
 
         return (environ, conf_args + self.configure_args)
 
@@ -1514,6 +1533,7 @@ class PrepareBuild(CommandLineApp):
         self.build_dir      = None      # use the build/ tree
         self.current_flavor = flavor
         self.option_release()
+        self.prefix_dir     = None
 
         if reset and exists(self.build_directory()) and \
            isdir(self.build_directory()):

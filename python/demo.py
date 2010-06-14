@@ -67,8 +67,8 @@ assert not 'CAD' in comms
 # want all amounts to default to the European-style, set the static variable
 # `european_by_default'.
 
-eur.add_flags(ledger.COMMODITY_STYLE_EUROPEAN)
-assert eur.has_flags(ledger.COMMODITY_STYLE_EUROPEAN)
+eur.add_flags(ledger.COMMODITY_STYLE_DECIMAL_COMMA)
+assert eur.has_flags(ledger.COMMODITY_STYLE_DECIMAL_COMMA)
 assert not eur.has_flags(ledger.COMMODITY_STYLE_THOUSANDS)
 
 comms.european_by_default = True

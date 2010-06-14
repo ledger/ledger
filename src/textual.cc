@@ -93,18 +93,17 @@ namespace {
     static const std::size_t MAX_LINE = 1024;
 
   public:
-    parse_context_t&  context;
-    instance_t *      parent;
-    accounts_map      account_aliases;
-    const path *      original_file;
-    path              pathname;
-    std::istream&     in;
-    char              linebuf[MAX_LINE + 1];
-    std::size_t       linenum;
-    istream_pos_type  line_beg_pos;
-    istream_pos_type  curr_pos;
-
-    optional<date_t::year_type> current_year;
+    parse_context_t&     context;
+    instance_t *         parent;
+    accounts_map         account_aliases;
+    const path *         original_file;
+    path                 pathname;
+    std::istream&        in;
+    char                 linebuf[MAX_LINE + 1];
+    std::size_t          linenum;
+    istream_pos_type     line_beg_pos;
+    istream_pos_type     curr_pos;
+    optional<datetime_t> prev_epoch;
 
     instance_t(parse_context_t& _context,
                std::istream&    _in,
@@ -207,11 +206,15 @@ instance_t::instance_t(parse_context_t& _context,
     pathname(original_file ? *original_file : "/dev/stdin"), in(_in)
 {
   TRACE_CTOR(instance_t, "...");
+  DEBUG("times.epoch", "Saving epoch " << epoch);
+  prev_epoch = epoch;           // declared in times.h
 }
 
 instance_t::~instance_t()
 {
   TRACE_DTOR(instance_t);
+  epoch = prev_epoch;
+  DEBUG("times.epoch", "Restored epoch to " << epoch);
 }
 
 void instance_t::parse()
@@ -420,7 +423,7 @@ void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
   position.end_line = linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime, current_year),
+  time_xact_t event(position, parse_datetime(datetime),
                     p ? context.top_account()->find_account(p) : NULL,
                     n ? n : "",
                     end ? end : "");
@@ -449,7 +452,7 @@ void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
   position.end_line = linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime, current_year),
+  time_xact_t event(position, parse_datetime(datetime),
                     p ? context.top_account()->find_account(p) : NULL,
                     n ? n : "",
                     end ? end : "");
@@ -503,7 +506,12 @@ void instance_t::nomarket_directive(char * line)
 
 void instance_t::year_directive(char * line)
 {
-  current_year = lexical_cast<unsigned short>(skip_ws(line + 1));
+  unsigned short year(lexical_cast<unsigned short>(skip_ws(line + 1)));
+  DEBUG("times.epoch", "Setting current year to " << year);
+  // This must be set to the last day of the year, otherwise partial
+  // dates like "11/01" will refer to last year's november, not the
+  // current year.
+  epoch = datetime_t(date_t(year, 12, 31));
 }
 
 void instance_t::option_directive(char * line)
@@ -554,7 +562,7 @@ void instance_t::automated_xact_directive(char * line)
           item = ae.get();
 
         // This is a trailing note, and possibly a metadata info tag
-        item->append_note(p + 1, context.scope, true, current_year);
+        item->append_note(p + 1, context.scope, true);
         item->pos->end_pos = curr_pos;
         item->pos->end_line++;
 
@@ -634,7 +642,7 @@ void instance_t::period_xact_directive(char * line)
     pe->journal = &context.journal;
 
     if (pe->finalize()) {
-      context.journal.extend_xact(pe.get(), current_year);
+      context.journal.extend_xact(pe.get());
       context.journal.period_xacts.push_back(pe.get());
 
       pe->pos->end_pos  = curr_pos;
@@ -885,14 +893,14 @@ void instance_t::assert_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(context.scope).to_boolean())
-    throw_(parse_error, _("Assertion failed: %1" << line));
+    throw_(parse_error, _("Assertion failed: %1") << line);
 }
 
 void instance_t::check_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(context.scope).to_boolean())
-    warning_(_("Check failed: %1" << line));
+    warning_(_("Check failed: %1") << line);
 }
 
 void instance_t::expr_directive(char * line)
@@ -1324,7 +1332,7 @@ post_t * instance_t::parse_post(char *          line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    post->append_note(++next, context.scope, true, current_year);
+    post->append_note(++next, context.scope, true);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
           << "Parsed a posting note");
@@ -1343,8 +1351,7 @@ post_t * instance_t::parse_post(char *          line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-        post->parse_tags(boost::get<string>(state).c_str(), context.scope,
-                         true, current_year);
+        post->parse_tags(boost::get<string>(state).c_str(), context.scope, true);
   }
 
   TRACE_STOP(post_details, 1);
@@ -1407,9 +1414,9 @@ xact_t * instance_t::parse_xact(char *          line,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    xact->_date_eff = parse_date(p, current_year);
+    xact->_date_eff = parse_date(p);
   }
-  xact->_date = parse_date(line, current_year);
+  xact->_date = parse_date(line);
 
   // Parse the optional cleared flag: *
 
@@ -1456,7 +1463,7 @@ xact_t * instance_t::parse_xact(char *          line,
   // Parse the xact note
 
   if (next && *next == ';')
-    xact->append_note(++next, context.scope, false, current_year);
+    xact->append_note(++next, context.scope, false);
 
   TRACE_STOP(xact_text, 1);
 
@@ -1483,7 +1490,7 @@ xact_t * instance_t::parse_xact(char *          line,
 
     if (*p == ';') {
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, context.scope, true, current_year);
+      item->append_note(p + 1, context.scope, true);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
     }
@@ -1502,9 +1509,9 @@ xact_t * instance_t::parse_xact(char *          line,
       }
       else if (! expr.calc(bound_scope).to_boolean()) {
         if (c == 'a') {
-          throw_(parse_error, _("Transaction assertion failed: %1" << p));
+          throw_(parse_error, _("Transaction assertion failed: %1") << p);
         } else {
-          warning_(_("Transaction check failed: %1" << p));
+          warning_(_("Transaction check failed: %1") << p);
         }
       }
     }
@@ -1542,7 +1549,7 @@ xact_t * instance_t::parse_xact(char *          line,
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
         xact->parse_tags(boost::get<string>(state).c_str(), context.scope,
-                         false, current_year);
+                         false);
   }
 
   TRACE_STOP(xact_details, 1);

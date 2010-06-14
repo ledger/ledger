@@ -59,6 +59,7 @@ libledger_data_la_SOURCES   =			\
 	src/iterators.cc			\
 	src/timelog.cc				\
 	src/textual.cc				\
+	src/temps.cc				\
 	src/journal.cc				\
 	src/archive.cc				\
 	src/account.cc				\
@@ -82,7 +83,6 @@ libledger_report_la_SOURCES  =			\
 	src/precmd.cc				\
 	src/chain.cc				\
 	src/filters.cc				\
-	src/temps.cc				\
 	src/report.cc				\
 	src/session.cc
 
@@ -124,6 +124,7 @@ pkginclude_HEADERS =				\
 	src/xact.h				\
 	src/account.h				\
 	src/journal.h				\
+	src/temps.h				\
 	src/archive.h				\
 	src/timelog.h				\
 	src/iterators.h				\
@@ -133,7 +134,6 @@ pkginclude_HEADERS =				\
 	src/session.h				\
 	src/report.h				\
 	src/filters.h				\
-	src/temps.h				\
 	src/chain.h				\
 	src/precmd.h				\
 	src/csv.h				\

@@ -148,8 +148,8 @@ void report_t::normalize_options(const string& verb)
   if (HANDLED(period_)) {
     date_interval_t interval(HANDLER(period_).str());
 
-    optional<date_t> begin = interval.begin(session.current_year);
-    optional<date_t> end   = interval.end(session.current_year);
+    optional<date_t> begin = interval.begin();
+    optional<date_t> end   = interval.end();
 
     if (! HANDLED(begin_) && begin) {
       string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";

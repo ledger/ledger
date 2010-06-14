@@ -501,26 +501,15 @@ void related_posts::flush()
 {
   if (posts.size() > 0) {
     foreach (post_t * post, posts) {
-      if (post->xact) {
-        foreach (post_t * r_post, post->xact->posts) {
-          post_t::xdata_t& xdata(r_post->xdata());
-          if (! xdata.has_flags(POST_EXT_HANDLED) &&
-              (! xdata.has_flags(POST_EXT_RECEIVED) ?
-               ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
-               also_matching)) {
-            xdata.add_flags(POST_EXT_HANDLED);
-            item_handler<post_t>::operator()(*r_post);
-          }
-        }
-      } else {
-        // This code should only be reachable from the "output"
-        // command, since that is the only command which attempts to
-        // output auto or period xacts.
-        post_t::xdata_t& xdata(post->xdata());
+      assert(post->xact);
+      foreach (post_t * r_post, post->xact->posts) {
+        post_t::xdata_t& xdata(r_post->xdata());
         if (! xdata.has_flags(POST_EXT_HANDLED) &&
-            ! post->has_flags(ITEM_GENERATED)) {
+            (! xdata.has_flags(POST_EXT_RECEIVED) ?
+             ! r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL) :
+             also_matching)) {
           xdata.add_flags(POST_EXT_HANDLED);
-          item_handler<post_t>::operator()(*post);
+          item_handler<post_t>::operator()(*r_post);
         }
       }
     }
@@ -1228,18 +1217,16 @@ void budget_posts::operator()(post_t& post)
 
 void forecast_posts::add_post(const date_interval_t& period, post_t& post)
 {
-  generate_posts::add_post(period, post);
+  date_interval_t i(period);
+  if (! i.start && ! i.find_period(CURRENT_DATE()))
+    return;
 
-  // Advance the period's interval until it is at or beyond the current date.
-  date_interval_t& i = pending_posts.back().first;
-  if (! i.start) {
-    if (! i.find_period(CURRENT_DATE()))
-      throw_(std::runtime_error, _("Something odd has happened"));
+  generate_posts::add_post(i, post);
+
+  // Advance the period's interval until it is at or beyond the current
+  // date.
+  while (*i.start < CURRENT_DATE())
     ++i;
-  } else {
-    while (*i.start < CURRENT_DATE())
-      ++i;
-  }
 }
 
 void forecast_posts::flush()
@@ -1281,6 +1268,8 @@ void forecast_posts::flush()
     for (pending_posts_list::iterator i = ++pending_posts.begin();
          i != pending_posts.end();
          i++) {
+      assert((*i).first.start);
+      assert((*least).first.start);
       if (*(*i).first.start < *(*least).first.start)
         least = i;
     }
@@ -1307,7 +1296,6 @@ void forecast_posts::flush()
     }
 
     begin = next;
-    ++(*least).first;
 
     // `post' refers to the posting defined in the period transaction.  We
     // make a copy of it within a temporary transaction with the payee
@@ -1336,6 +1324,14 @@ void forecast_posts::flush()
         pending_posts.erase(least);
         continue;
       }
+    }
+
+    // Increment the 'least', but remove it from pending_posts if it
+    // exceeds its own boundaries.
+    ++(*least).first;
+    if (! (*least).first.start) {
+      pending_posts.erase(least);
+      continue;
     }
   }
 

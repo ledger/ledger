@@ -84,82 +84,82 @@ reg airfare --sort=date
     Expenses:Travel:Passport                 $127.00
     Assets:Checking                             
 >>>1
-08-Jan-11 LIAT                  Ex:Travel:Airfare            $40.00       $40.00
-08-Jan-14 cheaptickets.com      Ex:Travel:Airfare           $182.19      $222.19
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $460.99
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $699.79
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $1,931.39
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $3,162.99
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,318.85
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,474.71
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $3,911.92
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $4,349.13
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $5,261.73
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $6,174.33
-08-Sep-22 AGNT FEE              Ex:Travel:Airfare            $70.00    $6,244.33
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $7,050.53
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $7,856.73
-08-Sep-22 LIAT 1974 LIMITED     Ex:Travel:Airfare           $418.34    $8,275.07
+08-Jan-11 LIAT                  Expense:Travel:Airfare       $40.00       $40.00
+08-Jan-14 cheaptickets.com      Expense:Travel:Airfare      $182.19      $222.19
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $460.99
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $699.79
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $1,931.39
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $3,162.99
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,318.85
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,474.71
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $3,911.92
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $4,349.13
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $5,261.73
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $6,174.33
+08-Sep-22 AGNT FEE              Expense:Travel:Airfare       $70.00    $6,244.33
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,050.53
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,856.73
+08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $8,275.07
 >>>2
 === 0
 reg airfare --sort=date,amount
 >>>1
-08-Jan-11 LIAT                  Ex:Travel:Airfare            $40.00       $40.00
-08-Jan-14 cheaptickets.com      Ex:Travel:Airfare           $182.19      $222.19
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $460.99
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $699.79
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $1,931.39
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $3,162.99
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,318.85
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,474.71
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $3,911.92
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $4,349.13
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $5,261.73
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $6,174.33
-08-Sep-22 AGNT FEE              Ex:Travel:Airfare            $70.00    $6,244.33
-08-Sep-22 LIAT 1974 LIMITED     Ex:Travel:Airfare           $418.34    $6,662.67
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $7,468.87
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $8,275.07
+08-Jan-11 LIAT                  Expense:Travel:Airfare       $40.00       $40.00
+08-Jan-14 cheaptickets.com      Expense:Travel:Airfare      $182.19      $222.19
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $460.99
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $699.79
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $1,931.39
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $3,162.99
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,318.85
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,474.71
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $3,911.92
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $4,349.13
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $5,261.73
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $6,174.33
+08-Sep-22 AGNT FEE              Expense:Travel:Airfare       $70.00    $6,244.33
+08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $6,662.67
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,468.87
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $8,275.07
 >>>2
 === 0
 reg airfare --sort=date,-amount
 >>>1
-08-Jan-11 LIAT                  Ex:Travel:Airfare            $40.00       $40.00
-08-Jan-14 cheaptickets.com      Ex:Travel:Airfare           $182.19      $222.19
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $460.99
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $699.79
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $1,931.39
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $3,162.99
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,318.85
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,474.71
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $3,911.92
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $4,349.13
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $5,261.73
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $6,174.33
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $6,980.53
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $7,786.73
-08-Sep-22 LIAT 1974 LIMITED     Ex:Travel:Airfare           $418.34    $8,205.07
-08-Sep-22 AGNT FEE              Ex:Travel:Airfare            $70.00    $8,275.07
+08-Jan-11 LIAT                  Expense:Travel:Airfare       $40.00       $40.00
+08-Jan-14 cheaptickets.com      Expense:Travel:Airfare      $182.19      $222.19
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $460.99
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $699.79
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $1,931.39
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $3,162.99
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,318.85
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,474.71
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $3,911.92
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $4,349.13
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $5,261.73
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $6,174.33
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $6,980.53
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,786.73
+08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $8,205.07
+08-Sep-22 AGNT FEE              Expense:Travel:Airfare       $70.00    $8,275.07
 >>>2
 === 0
 reg airfare --sort=-date,-amount
 >>>1
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20      $806.20
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $1,612.40
-08-Sep-22 LIAT 1974 LIMITED     Ex:Travel:Airfare           $418.34    $2,030.74
-08-Sep-22 AGNT FEE              Ex:Travel:Airfare            $70.00    $2,100.74
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $3,013.34
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $3,925.94
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $4,363.15
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $4,800.36
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $4,956.22
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $5,112.08
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $6,343.68
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $7,575.28
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80    $7,814.08
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80    $8,052.88
-08-Jan-14 cheaptickets.com      Ex:Travel:Airfare           $182.19    $8,235.07
-08-Jan-11 LIAT                  Ex:Travel:Airfare            $40.00    $8,275.07
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20      $806.20
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $1,612.40
+08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $2,030.74
+08-Sep-22 AGNT FEE              Expense:Travel:Airfare       $70.00    $2,100.74
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $3,013.34
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $3,925.94
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $4,363.15
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $4,800.36
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $4,956.22
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $5,112.08
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $6,343.68
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $7,575.28
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80    $7,814.08
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80    $8,052.88
+08-Jan-14 cheaptickets.com      Expense:Travel:Airfare      $182.19    $8,235.07
+08-Jan-11 LIAT                  Expense:Travel:Airfare       $40.00    $8,275.07
 >>>2
 === 0
 bal --sort=total
@@ -202,27 +202,27 @@ reg --sort=account
 >>>1
 08-Dec-26 U.S. Department of .. Assets:Checking            $-127.00     $-127.00
 08-Dec-26 U.S. Department of .. Assets:Checking            $-127.00     $-254.00
-08-Jan-11 LIAT                  Ex:Travel:Airfare            $40.00     $-214.00
-08-Jan-14 cheaptickets.com      Ex:Travel:Airfare           $182.19      $-31.81
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $206.99
-08-Feb-05 UNITED                Ex:Travel:Airfare           $238.80      $445.79
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $1,677.39
-08-Mar-16 IBERIA                Ex:Travel:Airfare         $1,231.60    $2,908.99
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,064.85
-08-Apr-03 AMERICAN              Ex:Travel:Airfare           $155.86    $3,220.71
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $3,657.92
-08-Apr-30 UNITED                Ex:Travel:Airfare           $437.21    $4,095.13
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $5,007.73
-08-Sep-06 AMERICAN              Ex:Travel:Airfare           $912.60    $5,920.33
-08-Sep-22 AGNT FEE              Ex:Travel:Airfare            $70.00    $5,990.33
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $6,796.53
-08-Sep-22 DELTA                 Ex:Travel:Airfare           $806.20    $7,602.73
-08-Sep-22 LIAT 1974 LIMITED     Ex:Travel:Airfare           $418.34    $8,021.07
+08-Jan-11 LIAT                  Expense:Travel:Airfare       $40.00     $-214.00
+08-Jan-14 cheaptickets.com      Expense:Travel:Airfare      $182.19      $-31.81
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $206.99
+08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80      $445.79
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $1,677.39
+08-Mar-16 IBERIA                Expense:Travel:Airfare    $1,231.60    $2,908.99
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,064.85
+08-Apr-03 AMERICAN              Expense:Travel:Airfare      $155.86    $3,220.71
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $3,657.92
+08-Apr-30 UNITED                Expense:Travel:Airfare      $437.21    $4,095.13
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $5,007.73
+08-Sep-06 AMERICAN              Expense:Travel:Airfare      $912.60    $5,920.33
+08-Sep-22 AGNT FEE              Expense:Travel:Airfare       $70.00    $5,990.33
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $6,796.53
+08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,602.73
+08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $8,021.07
 08-Feb-05 CTX                   Expenses:Travel:Auto        $240.38    $8,261.45
 08-Feb-22 BUDGET RENT-A-CAR     Expenses:Travel:Auto         $40.59    $8,302.04
-08-Aug-08 BCIS I-131 FILING F.. Ex:Travel:Passport          $170.00    $8,472.04
-08-Dec-26 U.S. Department of .. Ex:Travel:Passport          $127.00    $8,599.04
-08-Dec-26 U.S. Department of .. Ex:Travel:Passport          $127.00    $8,726.04
+08-Aug-08 BCIS I-131 FILING F.. Expens:Travel:Passport      $170.00    $8,472.04
+08-Dec-26 U.S. Department of .. Expens:Travel:Passport      $127.00    $8,599.04
+08-Dec-26 U.S. Department of .. Expens:Travel:Passport      $127.00    $8,726.04
 08-Jan-11 LIAT                  Liabilities:MasterCard      $-40.00    $8,686.04
 08-Jan-14 cheaptickets.com      Liabilities:MasterCard     $-182.19    $8,503.85
 08-Feb-05 CTX                   Liabilities:MasterCard     $-240.38    $8,263.47

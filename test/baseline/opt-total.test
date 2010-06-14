@@ -4,7 +4,7 @@ reg --total=10
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 >>>1
-07-Feb-02 RD VMMXX              As:In:Vanguard:VMMXX    0.350 VMMXX           10
-                                In:Di:Vanguard:VMMXX         $-0.35           10
+07-Feb-02 RD VMMXX              As:Inves:Vanguar:VMMXX  0.350 VMMXX           10
+                                In:Divid:Vanguar:VMMXX       $-0.35           10
 >>>2
 === 0

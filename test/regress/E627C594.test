@@ -10,6 +10,8 @@ reg --forecast-while="d<[2010/03/01]" --now=2009/11/01
 >>>1
 09-Nov-01 Sample                Expenses:Food:Dining         $20.00       $20.00
                                 Assets                      $-20.00            0
+09-Dec-01 Forecast transaction  Expenses:Food               $500.00      $500.00
+09-Dec-01 Forecast transaction  Assets                     $-500.00            0
 10-Jan-01 Forecast transaction  Expenses:Food               $500.00      $500.00
 10-Jan-01 Forecast transaction  Assets                     $-500.00            0
 10-Feb-01 Forecast transaction  Expenses:Food               $500.00      $500.00

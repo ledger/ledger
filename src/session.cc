@@ -60,9 +60,7 @@ void set_session_context(session_t * session)
 }
 
 session_t::session_t()
-  : flush_on_next_data_file(false),
-    current_year(CURRENT_DATE().year()),
-    journal(new journal_t)
+  : flush_on_next_data_file(false), journal(new journal_t)
 {
   TRACE_CTOR(session_t, "");
 
@@ -192,6 +190,40 @@ value_t session_t::fn_account(call_scope_t& args)
     return NULL_VALUE;
 }
 
+value_t session_t::fn_min(call_scope_t& args)
+{
+  return args[1] < args[0] ? args[1] : args[0];
+}
+value_t session_t::fn_max(call_scope_t& args)
+{
+  return args[1] > args[0] ? args[1] : args[0];
+}
+
+value_t session_t::fn_lot_price(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(1, false));
+  if (amt.has_annotation() && amt.annotation().price)
+    return *amt.annotation().price;
+  else
+    return NULL_VALUE;
+}
+value_t session_t::fn_lot_date(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(1, false));
+  if (amt.has_annotation() && amt.annotation().date)
+    return *amt.annotation().date;
+  else
+    return NULL_VALUE;
+}
+value_t session_t::fn_lot_tag(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(1, false));
+  if (amt.has_annotation() && amt.annotation().tag)
+    return string_value(*amt.annotation().tag);
+  else
+    return NULL_VALUE;
+}
+
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -243,6 +275,23 @@ expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "account"))
         return MAKE_FUNCTOR(session_t::fn_account);
       break;
+
+    case 'l':
+      if (is_eq(p, "lot_price"))
+        return MAKE_FUNCTOR(session_t::fn_lot_price);
+      else if (is_eq(p, "lot_date"))
+        return MAKE_FUNCTOR(session_t::fn_lot_date);
+      else if (is_eq(p, "lot_tag"))
+        return MAKE_FUNCTOR(session_t::fn_lot_tag);
+      break;
+
+    case 'm':
+      if (is_eq(p, "min"))
+        return MAKE_FUNCTOR(session_t::fn_min);
+      else if (is_eq(p, "max"))
+        return MAKE_FUNCTOR(session_t::fn_max);
+      break;
+
     default:
       break;
     }

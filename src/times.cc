@@ -194,7 +194,6 @@ namespace {
   std::deque<shared_ptr<date_io_t> > readers;
 
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
-                                 optional_year year,
                                  date_traits_t * traits = NULL)
   {
     VERIFY(std::strlen(date_str) < 127);
@@ -229,29 +228,26 @@ namespace {
         *traits = io.traits;
 
       if (! io.traits.has_year) {
-        when = date_t(year ? *year : CURRENT_DATE().year(),
-                      when.month(), when.day());
+        when = date_t(CURRENT_DATE().year(), when.month(), when.day());
 
-        if (! year && when.month() > CURRENT_DATE().month())
+        if (when.month() > CURRENT_DATE().month())
           when -= gregorian::years(1);
       }
     }
     return when;
   }
 
-  date_t parse_date_mask(const char * date_str, optional_year year,
-                         date_traits_t * traits = NULL)
+  date_t parse_date_mask(const char * date_str, date_traits_t * traits = NULL)
   {
     if (input_date_io.get()) {
       date_t when = parse_date_mask_routine(date_str, *input_date_io.get(),
-                                            year, traits);
+                                            traits);
       if (! when.is_not_a_date())
         return when;
     }
 
     foreach (shared_ptr<date_io_t>& reader, readers) {
-      date_t when = parse_date_mask_routine(date_str, *reader.get(),
-                                            year, traits);
+      date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
       if (! when.is_not_a_date())
         return when;
     }
@@ -312,7 +308,7 @@ string_to_month_of_year(const std::string& str)
     return none;
 }
 
-datetime_t parse_datetime(const char * str, optional_year)
+datetime_t parse_datetime(const char * str)
 {
   datetime_t when = input_datetime_io->parse(str);
   if (when.is_not_a_date_time())
@@ -320,18 +316,16 @@ datetime_t parse_datetime(const char * str, optional_year)
   return when;
 }
 
-date_t parse_date(const char * str, optional_year current_year)
+date_t parse_date(const char * str)
 {
-  return parse_date_mask(str, current_year);
+  return parse_date_mask(str);
 }
 
-date_t date_specifier_t::begin(const optional_year& current_year) const
+date_t date_specifier_t::begin() const
 {
-  assert(year || current_year);
-
-  year_type  the_year  = year ? *year : static_cast<year_type>(*current_year);
+  year_type  the_year  = year  ? *year  : year_type(CURRENT_DATE().year());
   month_type the_month = month ? *month : date_t::month_type(1);
-  day_type   the_day   = day ? *day : date_t::day_type(1);
+  day_type   the_day   = day   ? *day   : date_t::day_type(1);
 
 #if !defined(NO_ASSERTS)
   if (day)
@@ -348,14 +342,14 @@ date_t date_specifier_t::begin(const optional_year& current_year) const
                          static_cast<date_t::day_type>(the_day));
 }
 
-date_t date_specifier_t::end(const optional_year& current_year) const
+date_t date_specifier_t::end() const
 {
   if (day || wday)
-    return begin(current_year) + gregorian::days(1);
+    return begin() + gregorian::days(1);
   else if (month)
-    return begin(current_year) + gregorian::months(1);
+    return begin() + gregorian::months(1);
   else if (year)
-    return begin(current_year) + gregorian::years(1);
+    return begin() + gregorian::years(1);
   else {
     assert(false);
     return date_t();
@@ -667,6 +661,16 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
         (boost::get<date_time::weekdays>(*tok.value));
     break;
 
+  case lexer_t::token_t::TOK_TODAY:
+    specifier = date_specifier_t(CURRENT_DATE());
+    break;
+  case lexer_t::token_t::TOK_TOMORROW:
+    specifier = date_specifier_t(CURRENT_DATE() + gregorian::days(1));
+    break;
+  case lexer_t::token_t::TOK_YESTERDAY:
+    specifier = date_specifier_t(CURRENT_DATE() - gregorian::days(1));
+    break;
+
   default:
     tok.unexpected();
     break;
@@ -687,14 +691,6 @@ date_interval_t date_parser_t::parse()
        tok.kind != lexer_t::token_t::END_REACHED;
        tok = lexer.next_token()) {
     switch (tok.kind) {
-#if 0
-    case lexer_t::token_t::TOK_INT:
-      // jww (2009-11-18): NYI
-      assert(! "Need to allow for expressions like \"4 months ago\"");
-      tok.unexpected();
-      break;
-#endif
-
     case lexer_t::token_t::TOK_DATE:
       if (! inclusion_specifier)
         inclusion_specifier = date_specifier_t();
@@ -782,11 +778,44 @@ date_interval_t date_parser_t::parse()
 
       tok = lexer.next_token();
       switch (tok.kind) {
-      case lexer_t::token_t::TOK_INT:
-        // jww (2009-11-18): Allow things like "last 5 weeks"
-        assert(! "Need to allow for expressions like \"last 5 weeks\"");
-        tok.unexpected();
+      case lexer_t::token_t::TOK_INT: {
+        unsigned short amount = boost::get<unsigned short>(*tok.value);
+
+        date_t base(today);
+        date_t end(today);
+
+        tok = lexer.next_token();
+        switch (tok.kind) {
+        case lexer_t::token_t::TOK_YEARS:
+          base += gregorian::years(amount * adjust);
+          break;
+        case lexer_t::token_t::TOK_QUARTERS:
+          base += gregorian::months(amount * adjust * 3);
+          break;
+        case lexer_t::token_t::TOK_MONTHS:
+          base += gregorian::months(amount * adjust);
+          break;
+        case lexer_t::token_t::TOK_WEEKS:
+          base += gregorian::weeks(amount * adjust);
+          break;
+        case lexer_t::token_t::TOK_DAYS:
+          base += gregorian::days(amount * adjust);
+          break;
+        default:
+          tok.unexpected();
+          break;
+        }
+
+        if (adjust >= 0) {
+          date_t temp = base;
+          base = end;
+          end = temp;
+        }
+
+        since_specifier = date_specifier_t(base);
+        until_specifier = date_specifier_t(end);
         break;
+      }
 
       case lexer_t::token_t::TOK_A_MONTH: {
         inclusion_specifier = date_specifier_t();
@@ -822,26 +851,40 @@ date_interval_t date_parser_t::parse()
       }
 
       case lexer_t::token_t::TOK_QUARTER: {
-        date_t temp =
+        date_t base =
           date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-        temp += gregorian::months(3 * adjust);
-        inclusion_specifier =
-          date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
-                           temp.month());
-#if 0
-        period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
-#endif
+        date_t temp;
+        if (adjust < 0) {
+          temp = base + gregorian::months(3 * adjust);
+        }
+        else if (adjust == 0) {
+          temp = base + gregorian::months(3);
+        }
+        else if (adjust > 0) {
+          base += gregorian::months(3 * adjust);
+          temp = base + gregorian::months(3 * adjust);
+        }
+        since_specifier = date_specifier_t(adjust < 0 ? temp : base);
+        until_specifier = date_specifier_t(adjust < 0 ? base : temp);
         break;
       }
 
       case lexer_t::token_t::TOK_WEEK: {
-        date_t temp =
+        date_t base =
           date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-        temp += gregorian::days(7 * adjust);
-        inclusion_specifier = date_specifier_t(today);
-#if 0
-        period.duration = date_duration_t(date_duration_t::WEEKS, 1);
-#endif
+        date_t temp;
+        if (adjust < 0) {
+          temp = base + gregorian::days(7 * adjust);
+        }
+        else if (adjust == 0) {
+          temp = base + gregorian::days(7);
+        }
+        else if (adjust > 0) {
+          base += gregorian::days(7 * adjust);
+          temp = base + gregorian::days(7 * adjust);
+        }
+        since_specifier = date_specifier_t(adjust < 0 ? temp : base);
+        until_specifier = date_specifier_t(adjust < 0 ? base : temp);
         break;
       }
 
@@ -862,6 +905,7 @@ date_interval_t date_parser_t::parse()
         break;
       }
       }
+      break;
     }
 
     case lexer_t::token_t::TOK_TODAY:
@@ -876,7 +920,7 @@ date_interval_t date_parser_t::parse()
 
     case lexer_t::token_t::TOK_EVERY:
       tok = lexer.next_token();
-      if (tok == lexer_t::token_t::TOK_INT) {
+      if (tok.kind == lexer_t::token_t::TOK_INT) {
         int quantity = boost::get<unsigned short>(*tok.value);
         tok = lexer.next_token();
         switch (tok.kind) {
@@ -1052,8 +1096,8 @@ void date_interval_t::stabilize(const optional<date_t>& date)
       // want a date early enough that the range will be correct, but late
       // enough that we don't spend hundreds of thousands of loops skipping
       // through time.
-      optional<date_t> initial_start  = start  ? start  : begin(date->year());
-      optional<date_t> initial_finish = finish ? finish : end(date->year());
+      optional<date_t> initial_start  = start  ? start  : begin();
+      optional<date_t> initial_finish = finish ? finish : end();
 
 #if defined(DEBUG_ON)
       if (initial_start)
@@ -1116,13 +1160,8 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 #endif
     }
     else if (range) {
-      if (date) {
-        start    = range->begin(date->year());
-        finish   = range->end(date->year());
-      } else {
-        start    = range->begin();
-        finish   = range->end();
-      }
+      start  = range->begin();
+      finish = range->end();
     }
     aligned = true;
   }
@@ -1228,7 +1267,7 @@ date_interval_t& date_interval_t::operator++()
   return *this;
 }
 
-void date_interval_t::dump(std::ostream& out, optional_year current_year)
+void date_interval_t::dump(std::ostream& out)
 {
   out << _("--- Before stabilization ---") << std::endl;
 
@@ -1242,7 +1281,7 @@ void date_interval_t::dump(std::ostream& out, optional_year current_year)
   if (duration)
     out << _("duration: ") << duration->to_string() << std::endl;
 
-  stabilize(begin(current_year));
+  stabilize(begin());
 
   out << std::endl
       << _("--- After stabilization ---") << std::endl;
@@ -1317,7 +1356,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
 
     try {
       date_traits_t traits;
-      date_t when = parse_date_mask(possible_date.c_str(), none, &traits);
+      date_t when = parse_date_mask(possible_date.c_str(), &traits);
       if (! when.is_not_a_date()) {
         begin = i;
         return token_t(token_t::TOK_DATE,
