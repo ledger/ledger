@@ -4,8 +4,8 @@ reg --abbrev-len=4
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 >>>1
-07-Feb-02 RD VMMXX              Asse:Inve:Vang:VMMXX    0.350 VMMXX  0.350 VMMXX
-                                Inco:Divi:Vang:VMMXX         $-0.35       $-0.35
+07-Feb-02 RD VMMXX              Asse:Inve:Vangua:VMMXX  0.350 VMMXX  0.350 VMMXX
+                                Inco:Divi:Vangua:VMMXX       $-0.35       $-0.35
                                                                      0.350 VMMXX
 >>>2
 === 0

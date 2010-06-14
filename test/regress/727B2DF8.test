@@ -46,9 +46,9 @@ N $
     ; :AnotherTag:
 >>>1
 04-May-01 Checking balance      [34mAssets:Bank:Checking  [0m    $1,000.00    $1,000.00
-                                [34mEq:Opening Balances   [0m   [31m$-1,000.00[0m            0
+                                [34mEquit:Opening Balances[0m   [31m$-1,000.00[0m            0
 04-May-03 Investment balance    [34mAssets:Brokerage      [0m      50 AAPL      50 AAPL
-                                [34mEq:Opening Balances   [0m   [31m$-1,500.00[0m   [31m$-1,500.00[0m
+                                [34mEquit:Opening Balances[0m   [31m$-1,500.00[0m   [31m$-1,500.00[0m
                                                                          50 AAPL
 04-May-14 Páy dày               [34mAssets:Bank:Checking  [0m      500.00€   [31m$-1,500.00[0m
                                                                          50 AAPL
@@ -59,7 +59,7 @@ N $
                                                                          50 AAPL
                                 [34mIncome:Salary         [0m     [31m$-500.00[0m   [31m$-1,500.00[0m
                                                                          50 AAPL
-04-May-14 Another dày in whic.. [34mРу:Ру:Ру:Русский язык [0m    $1,000.00     [31m$-500.00[0m
+04-May-14 Another dày in whic.. [34mРу:Ру:Рус:Русский язык[0m    $1,000.00     [31m$-500.00[0m
                                                                          50 AAPL
                                 [34mIncome:Salary         [0m   [31m$-1,000.00[0m   [31m$-1,500.00[0m
                                                                          50 AAPL

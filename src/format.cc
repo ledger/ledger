@@ -432,6 +432,23 @@ string format_t::truncate(const unistring&  ustr,
 
   case ABBREVIATE:
     if (account_abbrev_length > 0) {
+      // The algorithm here is complex, but aims to preserve the most
+      // information in the most useful places.
+      //
+      // Consider: You have an account name like
+      // 'Assets:Banking:Check:Register'.  This account name, which is
+      // 29 characters long, must be shortened to fit in 20.  How would
+      // you shorten it?
+      //
+      // The approach taken below is to compute the difference, or 9
+      // characters, and then distribute this difference semi-evenly
+      // among first three segments of the account name, by taking
+      // characters until the difference is gone.  Further, earlier
+      // segments will give up more of their share of letters than later
+      // segments, since the later segments usually contain more useful
+      // information.
+
+      // First, chop up the Unicode string into individual segments.
       std::list<string> parts;
       string::size_type beg = 0;
       string strcopy(ustr.extract());
@@ -441,34 +458,140 @@ string format_t::truncate(const unistring&  ustr,
         parts.push_back(string(strcopy, beg, pos - beg));
       parts.push_back(string(strcopy, beg));
 
-      std::ostringstream result;
+      DEBUG("format.abbrev", "Account name: " << strcopy);
+      DEBUG("format.abbrev",
+            "Must fit a " << len << " char string in " << width << " chars");
 
-      std::size_t newlen = len;
+      // Figure out the lengths of all the parts.  The last part is
+      // always displayed in full, while the former parts are
+      // distributed, with the latter parts being longer than the
+      // former, but with none shorter than account_abbrev_length.
+      std::list<std::size_t> lens;
+#if defined(DEBUG_ON)
+      int index = 0;
+#endif
       for (std::list<string>::iterator i = parts.begin();
            i != parts.end();
            i++) {
-        // Don't contract the last element
+        std::size_t l = unistring(*i).length();
+        DEBUG("format.abbrev",
+              "Segment " << ++index << " is " << l << " chars wide");
+        lens.push_back(l);
+      }
+
+      // Determine the "overflow", or how many chars in excess we are.
+
+      std::size_t overflow = len - width;
+      DEBUG("format.abbrev",
+            "There are " << overflow << " chars of overflow");
+
+      // Walk through the first n-1 segments, and start subtracting
+      // letters to decrease the overflow.  This is done in multiple
+      // passes until the overflow is gone, or we cannot reduce any
+      // further.  The calculation to find the amount to remove is:
+      //
+      //   overflow * (((len(segment) + counter) * iteration) /
+      //               (len(string) - len(last_segment) - counter))
+      //
+      // Where:
+      //   overflow - the amount that needs to be removed
+      //   counter - starts at n-1 for the first segment, then
+      //             decreases by one until it reaches 0 for the
+      //             last segment (which is never shortened).
+      //             This value is used to weight the shrinkage
+      //             so that earlier segments shrink faster.
+      //   iteration - starts at 1, increase by 1 for every
+      //               iteration of the loop
+      //
+      // In the example above, we have this account name:
+      //
+      //   Assets:Banking:Check:Register
+      //
+      // Therefore, the amount to be removed from Assets is calculated as:
+      //
+      //   9 * (((6 + 3) * 1) / (29 - 8 - 3)) = ceil(4.5) = 5
+      //
+      // However, since removing 5 chars would make the length of the
+      // segment shorter than the default minimum of 2, we can only
+      // remove 4 chars from Assets to reduce the overflow.  And on it
+      // goes.
+      //
+      // The final result will be: As:Ban:Chec:Register
+
+      std::size_t iteration      = 1;
+      std::size_t len_minus_last = len - lens.back();
+      while (overflow > 0) {
+        std::size_t overflow_at_start = overflow;
+        DEBUG("format.abbrev",
+              "Overflow starting at " << overflow << " chars");
+#if defined(DEBUG_ON)
+        index = 0;
+#endif
+        std::size_t counter = lens.size();
+        for (std::list<std::size_t>::iterator i = lens.begin();
+             i != lens.end();
+             i++) {
+          if (--counter == 0 || overflow == 0)
+            break;
+          DEBUG("format.abbrev", "Overflow is " << overflow << " chars");
+          std::size_t adjust;
+          if (overflow == 1)
+            adjust = 1;
+          else
+            adjust = std::size_t
+              (std::ceil(double(overflow) *
+                         ((double(*i + counter) * double(iteration)) /
+                          (double(len_minus_last) - double(counter)))));
+          DEBUG("format.abbrev", "Weight calc: (" << overflow
+                << " * (((" << *i << " + " << counter << ") * "
+                << iteration << ") / (" << len_minus_last
+                << " - " << counter << ")))");
+          if (adjust == 0)
+            adjust = 1;
+          else if (adjust > overflow)
+            adjust = overflow;
+          DEBUG("format.abbrev", "The weighted part is " << adjust << " chars");
+          std::size_t slack = *i - std::min(*i, account_abbrev_length);
+          if (adjust > slack)
+            adjust = slack;
+          if (adjust > 0) {
+            DEBUG("format.abbrev",
+                  "Reducing segment " << ++index << " by " << adjust << " chars");
+            (*i) -= adjust;
+            DEBUG("format.abbrev",
+                  "Segment " << index << " is now " << *i << " chars wide");
+            overflow -= adjust;
+            DEBUG("format.abbrev", "Overflow is now " << overflow << " chars");
+          }
+        }
+        DEBUG("format.abbrev",
+              "Overflow ending this time at " << overflow << " chars");
+        if (overflow == overflow_at_start)
+          break;
+        iteration++;
+      }
+
+      assert(parts.size() == lens.size());
+
+      std::list<string>::iterator      i = parts.begin();
+      std::list<std::size_t>::iterator l = lens.begin();
+      std::ostringstream               result;
+
+      for (; i != parts.end() && l != lens.end(); i++, l++) {
         std::list<string>::iterator x = i;
         if (++x == parts.end()) {
           result << *i;
           break;
         }
 
-        if (newlen > width) {
-          unistring temp(*i);
-          if (temp.length() > account_abbrev_length) {
-            result << temp.extract(0, account_abbrev_length) << ":";
-            newlen -= temp.length() - account_abbrev_length;
-          } else {
-            result << temp.extract() << ":";
-            newlen -= temp.length();
-          }
-        } else {
+        unistring temp(*i);
+        if (temp.length() > *l)
+          result << temp.extract(0, *l) << ":";
+        else
           result << *i << ":";
-        }
       }
 
-      if (newlen > width) {
+      if (overflow > 0) {
         // Even abbreviated its too big to show the last account, so
         // abbreviate all but the last and truncate at the beginning.
         unistring temp(result.str());

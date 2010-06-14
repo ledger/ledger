@@ -10,15 +10,15 @@ reg
   Assets:Investments:RBC-Broker:Account-RSP              72.06 CAD
   Expenses:Financial:Fees
 >>>1
-07-Dec-31 Cost basis for: RED.. As:In:RB:Account-RSP       4.00 RHT     4.00 RHT
-                                Eq:Op:Cost              -689.87 CAD  -689.87 CAD
+07-Dec-31 Cost basis for: RED.. As:In:RBC-:Account-RSP     4.00 RHT     4.00 RHT
+                                Equ:Opening-Balan:Cost  -689.87 CAD  -689.87 CAD
                                                                         4.00 RHT
-08-Jan-03 Sell -- RHT -- RED .. As:In:RB:Account-RSP      -4.00 RHT  -689.87 CAD
-                                Ex:Fi:Commissions          9.95 USD  -689.87 CAD
+08-Jan-03 Sell -- RHT -- RED .. As:In:RBC-:Account-RSP    -4.00 RHT  -689.87 CAD
+                                Ex:Financi:Commissions     9.95 USD  -689.87 CAD
                                                                         9.95 USD
-                                As:In:RB:Account-RSP      72.06 CAD  -617.81 CAD
+                                As:In:RBC-:Account-RSP    72.06 CAD  -617.81 CAD
                                                                         9.95 USD
-                                Ex:Financial:Fees          2.89 CAD  -614.92 CAD
+                                Expense:Financial:Fees     2.89 CAD  -614.92 CAD
                                                                         9.95 USD
 >>>2
 === 0
