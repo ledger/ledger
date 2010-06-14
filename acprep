@@ -589,7 +589,10 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def prefix_directory(self):
-        return self.prefix_dir if self.prefix_dir else None
+        if self.prefix_dir:
+            return self.prefix_dir
+        else:
+            return None
 
     def default_products_directory(self):
         if self.envvars['LEDGER_PRODUCTS']:
