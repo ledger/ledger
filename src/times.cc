@@ -681,14 +681,6 @@ date_interval_t date_parser_t::parse()
        tok.kind != lexer_t::token_t::END_REACHED;
        tok = lexer.next_token()) {
     switch (tok.kind) {
-#if 0
-    case lexer_t::token_t::TOK_INT:
-      // jww (2009-11-18): NYI
-      assert(! "Need to allow for expressions like \"4 months ago\"");
-      tok.unexpected();
-      break;
-#endif
-
     case lexer_t::token_t::TOK_DATE:
       if (! inclusion_specifier)
         inclusion_specifier = date_specifier_t();
@@ -776,11 +768,44 @@ date_interval_t date_parser_t::parse()
 
       tok = lexer.next_token();
       switch (tok.kind) {
-      case lexer_t::token_t::TOK_INT:
-        // jww (2009-11-18): Allow things like "last 5 weeks"
-        assert(! "Need to allow for expressions like \"last 5 weeks\"");
-        tok.unexpected();
+      case lexer_t::token_t::TOK_INT: {
+        unsigned short amount = boost::get<unsigned short>(*tok.value);
+
+        date_t base(today);
+        date_t end(today);
+
+        tok = lexer.next_token();
+        switch (tok.kind) {
+        case lexer_t::token_t::TOK_YEARS:
+          base += gregorian::years(amount * adjust);
+          break;
+        case lexer_t::token_t::TOK_QUARTERS:
+          base += gregorian::months(amount * adjust * 3);
+          break;
+        case lexer_t::token_t::TOK_MONTHS:
+          base += gregorian::months(amount * adjust);
+          break;
+        case lexer_t::token_t::TOK_WEEKS:
+          base += gregorian::weeks(amount * adjust);
+          break;
+        case lexer_t::token_t::TOK_DAYS:
+          base += gregorian::days(amount * adjust);
+          break;
+        default:
+          tok.unexpected();
+          break;
+        }
+
+        if (adjust >= 0) {
+          date_t temp = base;
+          base = end;
+          end = temp;
+        }
+
+        since_specifier = date_specifier_t(base);
+        until_specifier = date_specifier_t(end);
         break;
+      }
 
       case lexer_t::token_t::TOK_A_MONTH: {
         inclusion_specifier = date_specifier_t();
