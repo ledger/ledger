@@ -862,6 +862,7 @@ date_interval_t date_parser_t::parse()
         break;
       }
       }
+      break;
     }
 
     case lexer_t::token_t::TOK_TODAY:
