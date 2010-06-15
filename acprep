@@ -1419,6 +1419,7 @@ class PrepareBuild(CommandLineApp):
 
         if self.options.jobs > 1:
             make_args.append('-j%d' % self.options.jobs)
+            make_args.append('JOBS=%d' % self.options.jobs)
 
         self.log.debug('Configure arguments => ' + str(config_args))
         self.log.debug('Makefile arguments  => ' + str(make_args))
