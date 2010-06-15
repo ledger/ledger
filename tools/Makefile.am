@@ -247,7 +247,8 @@ endif
 
 ######################################################################
 
-TESTS = RegressTests BaselineTests ManualTests ConfirmTests GenerateTests
+TESTS = RegressTests BaselineTests ManualTests ConfirmTests \
+        GenerateTests CheckTests
 
 if HAVE_CPPUNIT
 TESTS +=	     \
@@ -407,6 +408,12 @@ GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
 	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
+	chmod 755 $@
+
+CheckTests_SOURCES = test/CheckTests.py
+
+CheckTests:
+	echo "$(PYTHON) $(srcdir)/test/CheckTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
