@@ -1040,7 +1040,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(unrealized_gains_);
     else OPT(unrealized_losses_);
     else OPT(unround);
-    else OPT(unsorted);
     break;
   case 'w':
     OPT(weekly);

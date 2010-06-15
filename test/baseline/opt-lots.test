@@ -1,4 +1,4 @@
-reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lots --unsorted
+reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lots
 <<<
 C 1.00s = 100c
 C 1.00G = 100s

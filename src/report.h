@@ -315,7 +315,6 @@ public:
     HANDLER(unrealized_gains_).report(out);
     HANDLER(unrealized_losses_).report(out);
     HANDLER(unround).report(out);
-    HANDLER(unsorted).report(out);
     HANDLER(weekly).report(out);
     HANDLER(wide).report(out);
     HANDLER(yearly).report(out);
@@ -913,8 +912,6 @@ public:
       parent->HANDLER(display_total_)
         .set_expr(string("--unround"), "unrounded(total_expr)");
     });
-
-  OPTION(report_t, unsorted);
 
   OPTION_(report_t, weekly, DO() { // -W
       parent->HANDLER(period_).on(string("--weekly"), "weekly");
