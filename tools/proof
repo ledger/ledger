@@ -14,8 +14,7 @@ fi
 
 rm -fr ~/Products/ledger-proof
 
-time ./acprep --enable-cache --enable-doxygen \
-    --universal -j16 --warn proof 2>&1 | \
+time ./acprep --enable-doxygen --universal -j16 --warn proof 2>&1 | \
     tee ~/Desktop/proof.log
 
 if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
@@ -26,9 +25,13 @@ if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
         exit 1
     fi
 else
-    echo "Ledger proof build succeeded"
     echo $VERSION > ~/Products/last-proofed
     mv ~/Desktop/proof.log /tmp
+
+    cd ~/Product/ledger-proof/debug; make docs
+    cd ~/Product/ledger-proof/gcov;  make report
+
+    echo "Ledger proof build succeeded"
 fi
 
 exit 0
