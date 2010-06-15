@@ -515,15 +515,15 @@ libs:
 	(cd lib; make)
 
 report: all
-	-rm -fr build
 	lcov -d $(shell pwd) --zerocounters
+	if [ -d doc/report ]; then rm -fr doc/report; fi
 	-mkdir doc/report
 	lcov -c -i -d $(shell pwd) -o doc/report/ledger_base.info
-	make fullcheck
+	make check
 	lcov -c -d $(shell pwd) --checksum -o doc/report/ledger_test.info
 	lcov -a doc/report/ledger_base.info \
 	     -a doc/report/ledger_test.info -o doc/report/ledger_total.info
-	lcov --extract doc/report/ledger_total.info '*src/ledger/*' \
+	lcov --extract doc/report/ledger_total.info '*/src/*' \
 	     -o doc/report/ledger_cov.info
 	genhtml -o doc/report doc/report/ledger_cov.info
 	@echo Coverage reported generated\; now open doc/report/index.html
