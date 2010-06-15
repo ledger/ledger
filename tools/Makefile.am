@@ -1,4 +1,4 @@
-VERSION		= 3.0.0
+LIBVERSION	= $(shell echo $(PACKAGE_VERSION) | sed 's/[-abgrc].*//')
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS		= po intl
@@ -25,7 +25,7 @@ libledger_util_la_SOURCES =			\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
-libledger_util_la_LDFLAGS  = -release $(VERSION)
+libledger_util_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_math_la_SOURCES  =			\
 	src/balance.cc				\
@@ -36,7 +36,7 @@ libledger_math_la_SOURCES  =			\
 	src/amount.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
-libledger_math_la_LDFLAGS  = -release $(VERSION)
+libledger_math_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_expr_la_SOURCES  =			\
 	src/option.cc				\
@@ -51,7 +51,7 @@ libledger_expr_la_SOURCES  =			\
 	src/value.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS   = -release $(VERSION)
+libledger_expr_la_LDFLAGS   = -release $(LIBVERSION)
 
 libledger_data_la_SOURCES   =			\
 	src/lookup.cc				\
@@ -68,7 +68,7 @@ libledger_data_la_SOURCES   =			\
 	src/item.cc
 
 libledger_data_la_CPPFLAGS   = $(lib_cppflags)
-libledger_data_la_LDFLAGS    = -release $(VERSION)
+libledger_data_la_LDFLAGS    = -release $(LIBVERSION)
 
 libledger_report_la_SOURCES  =			\
 	src/stats.cc				\
@@ -87,7 +87,7 @@ libledger_report_la_SOURCES  =			\
 	src/session.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
-libledger_report_la_LDFLAGS  = -release $(VERSION)
+libledger_report_la_LDFLAGS  = -release $(LIBVERSION)
 
 pkginclude_HEADERS =				\
 	src/utils.h				\
