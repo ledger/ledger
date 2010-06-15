@@ -188,12 +188,6 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
       else
         handler.reset(new sort_posts(handler, report.HANDLER(sort_).str()));
     }
-#if 0
-    else if (! report.HANDLED(period_) &&
-             ! report.HANDLED(unsorted)) {
-      handler.reset(new sort_posts(handler, "date"));
-    }
-#endif
 
     // collapse_posts causes xacts with multiple posts to appear as xacts
     // with a subtotaled post for each commodity used.

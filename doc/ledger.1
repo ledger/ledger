@@ -1,4 +1,4 @@
-.Dd February  2, 2010
+.Dd June 15, 2010
 .Dt ledger 1
 .Sh NAME
 .Nm ledger
@@ -53,7 +53,7 @@ Also show accounts whose total is zero.
 Rather than display a hierarchical tree, flatten the report to show subtotals
 for only accounts matching
 .Ar report-query .
-.It Fl \-no\-total
+.It Fl \-no-total
 Suppress the summary total shown at the bottom of the report (when not zero).
 .El
 .Pp
@@ -263,6 +263,7 @@ transactions they are contained in.  See the manual for more information.
 .It Fl \-account Ar STR
 .It Fl \-account-width Ar INT
 .It Fl \-actual Pq Fl L
+.It Fl \-actual-dates
 .It Fl \-add-budget
 .It Fl \-amount Ar EXPR Pq Fl t
 .It Fl \-amount-data Pq Fl j
@@ -275,8 +276,11 @@ transactions they are contained in.  See the manual for more information.
 .It Fl \-basis Pq Fl B
 .It Fl \-begin Ar DATE Pq Fl b
 .It Fl \-budget
+.It Fl \-budget-format Ar FMT
 .It Fl \-by-payee Pq Fl P
+.It Fl \-cache Ar FILE
 .It Fl \-cleared Pq Fl C
+.It Fl \-cleared-format Ar FMT
 .It Fl \-collapse Pq Fl n
 .It Fl \-collapse-if-zero
 .It Fl \-color
@@ -284,12 +288,16 @@ transactions they are contained in.  See the manual for more information.
 .It Fl \-cost
 See
 .Fl \-basis .
+.It Fl \-count
 .It Fl \-csv-format Ar FMT
 .It Fl \-current Pq Fl c
 .It Fl \-daily
+.It Fl \-date Ar EXPR
 .It Fl \-date-format Ar DATEFMT Pq Fl y
+.It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
 .It Fl \-debug Ar STR
+.It Fl \-decimal-comma
 .It Fl \-depth Ar INT
 .It Fl \-deviation Pq Fl D
 .It Fl \-display Ar EXPR Pq Fl d
@@ -308,13 +316,25 @@ See
 See
 .Fl \-head .
 .It Fl \-flat
+.It Fl \-force-color
+.It Fl \-force-pager
 .It Fl \-forecast-while Ar EXPR
 (Also
 .Fl \-forecast
 ).
+.It Fl \-forecast-years Ar INT
 .It Fl \-format Ar FMT Pq Fl F
+.It Fl \-full-help
 .It Fl \-gain Pq Fl G
+.It Fl \-generated
+.It Fl \-group-by Ar EXPR
+.It Fl \-group-title-format Ar FMT
 .It Fl \-head Ar INT
+.It Fl \-help
+.It Fl \-help-calc
+.It Fl \-help-comm
+.It Fl \-help-disp
+.It Fl \-import Ar STR
 .It Fl \-init-file Ar FILE
 .It Fl \-input-date-format Ar DATEFMT
 .It Fl \-invert
@@ -329,26 +349,37 @@ See
 .It Fl \-lots
 .It Fl \-lots-actual
 .It Fl \-market Pq Fl V
+.It Fl \-master-account Ar STR
+.It Fl \-meta Ar EXPR
+.It Fl \-meta-width Ar INT
 .It Fl \-monthly Pq Fl M
+.It Fl \-no-color
+.It Fl \-no-rounding
+.It Fl \-no-titles
+.It Fl \-no-total
+.It Fl \-now Ar DATE
 .It Fl \-only Ar EXPR
+.It Fl \-options
 .It Fl \-output Ar FILE Pq Fl o
 .It Fl \-pager Ar STR
+.It Fl \-payee
 .It Fl \-payee-width Ar INT
 .It Fl \-pending
-.It Fl \-percentage Pq Fl \%
+.It Fl \-percent Pq Fl \%
 .It Fl \-period Ar PERIOD Pq Fl p
 .It Fl \-period-sort
 .It Fl \-pivot Ar STR
 .It Fl \-plot-amount-format Ar FMT
 .It Fl \-plot-total-format Ar FMT
+.It Fl \-prepend-format Ar FMT
+.It Fl \-prepend-width Ar INT
 .It Fl \-price Pq Fl I
 .It Fl \-price-db Ar FILE
 .It Fl \-price-exp Ar STR
 See
 .Fl \-leeway .
 .It Fl \-prices-format Ar FMT
-.It Fl \-pricesdb-format Ar FMT
-.It Fl \-print-format Ar FMT
+.It Fl \-pricedb-format Ar FMT
 .It Fl \-quantity Pq Fl O
 .It Fl \-quarterly
 .It Fl \-raw
@@ -365,9 +396,6 @@ appeared in the original journal file.
 .It Fl \-revalued-total Ar EXPR
 .It Fl \-seed Ar INT
 .It Fl \-script
-.It Fl \-set-account Ar EXPR
-.It Fl \-set-payee Ar EXPR
-.It Fl \-set-price Ar EXPR
 .It Fl \-sort Ar EXPR Pq Fl S
 .It Fl \-sort-all
 .It Fl \-sort-xacts
@@ -382,6 +410,9 @@ appeared in the original journal file.
 .It Fl \-truncate
 .It Fl \-unbudgeted
 .It Fl \-uncleared Pq Fl U
+.It Fl \-unrealized
+.It Fl \-unrealized-gains
+.It Fl \-unrealized-losses
 .It Fl \-unround
 .It Fl \-verbose
 .It Fl \-verify

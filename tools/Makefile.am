@@ -1,4 +1,4 @@
-VERSION		= 3.0.0
+LIBVERSION	= $(shell echo $(PACKAGE_VERSION) | sed 's/[-abgrc].*//')
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS		= po intl
@@ -25,7 +25,7 @@ libledger_util_la_SOURCES =			\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
-libledger_util_la_LDFLAGS  = -release $(VERSION)
+libledger_util_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_math_la_SOURCES  =			\
 	src/balance.cc				\
@@ -36,7 +36,7 @@ libledger_math_la_SOURCES  =			\
 	src/amount.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
-libledger_math_la_LDFLAGS  = -release $(VERSION)
+libledger_math_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_expr_la_SOURCES  =			\
 	src/option.cc				\
@@ -51,7 +51,7 @@ libledger_expr_la_SOURCES  =			\
 	src/value.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS   = -release $(VERSION)
+libledger_expr_la_LDFLAGS   = -release $(LIBVERSION)
 
 libledger_data_la_SOURCES   =			\
 	src/lookup.cc				\
@@ -68,7 +68,7 @@ libledger_data_la_SOURCES   =			\
 	src/item.cc
 
 libledger_data_la_CPPFLAGS   = $(lib_cppflags)
-libledger_data_la_LDFLAGS    = -release $(VERSION)
+libledger_data_la_LDFLAGS    = -release $(LIBVERSION)
 
 libledger_report_la_SOURCES  =			\
 	src/stats.cc				\
@@ -87,7 +87,7 @@ libledger_report_la_SOURCES  =			\
 	src/session.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
-libledger_report_la_LDFLAGS  = -release $(VERSION)
+libledger_report_la_LDFLAGS  = -release $(LIBVERSION)
 
 pkginclude_HEADERS =				\
 	src/utils.h				\
@@ -369,7 +369,7 @@ RegressTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
 RegressTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
 	chmod 755 $@
 
 BaselineTests_SOURCES = test/RegressTests.py
@@ -377,7 +377,7 @@ BaselineTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/baseline
 
 BaselineTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
 	chmod 755 $@
 
 ManualTests_SOURCES = test/RegressTests.py
@@ -385,7 +385,7 @@ ManualTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/manual
 
 ManualTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -406,7 +406,7 @@ ConfirmTests: $(srcdir)/test/ConfirmTests.py
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh

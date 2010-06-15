@@ -633,17 +633,13 @@ class PrepareBuild(CommandLineApp):
 
     def current_version(self):
         if not self.current_ver:
-            if self.git_working_tree():
-                #date = self.get_stdout('git', 'log', '--format=%ci', '-1', 'HEAD')
-                #date = re.sub(" [-+][0-9][0-9][0-9][0-9]$", "", date)
-                #when = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-                #self.current_ver = when.strftime("%Y%m%d_%H%M%S")
-                #commit = self.get_stdout('git', 'log', '--format=%h', 'HEAD^..HEAD')
-                #self.current_ver += "_" + commit
-                tag = self.get_stdout('git', 'describe', '--all', '--long')
-                self.current_ver = re.sub('heads/', '', tag)
-            else:
-                self.current_ver = "no-git"
+            version_m4 = open('version.m4', 'r')
+            for line in version_m4.readlines():
+                match = re.match('m4_define\(\[VERSION_NUMBER\], \[([0-9.]+[-abgrc0-9]*)\]\)',
+                                 line)
+                assert(match)
+                self.current_ver = match.group(1)
+            version_m4.close()
         return self.current_ver
 
     def need_to_prepare_autotools(self):
@@ -726,13 +722,6 @@ class PrepareBuild(CommandLineApp):
             POTFILES_in.write('\n')
         POTFILES_in.close()
 
-    def phase_version(self, *args):
-        self.log.info('Executing phase: version')
-        version_m4 = open('version.m4', 'w')
-        version_m4.write("m4_define([VERSION_NUMBER], [%s])\n" %
-                         self.current_version())
-        version_m4.close()
-
     def copytimes(self, src, dest):
         os.utime(dest, (os.stat(src)[ST_ATIME], os.stat(src)[ST_MTIME]))
 
@@ -766,7 +755,6 @@ class PrepareBuild(CommandLineApp):
         reason = self.need_to_prepare_autotools()
         if reason:
             self.log.info('autogen.sh must be run ' + reason)
-            self.phase_version()
             self.phase_autogen()
             self.phase_gettext()
             self.phase_aclocal()
@@ -1419,6 +1407,7 @@ class PrepareBuild(CommandLineApp):
 
         if self.options.jobs > 1:
             make_args.append('-j%d' % self.options.jobs)
+            make_args.append('JOBS=%d' % self.options.jobs)
 
         self.log.debug('Configure arguments => ' + str(config_args))
         self.log.debug('Makefile arguments  => ' + str(make_args))

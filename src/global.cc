@@ -422,6 +422,7 @@ expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
 
 void global_scope_t::visit_man_page() const
 {
+#ifndef WIN32
   int pid = fork();
   if (pid < 0) {
     throw std::logic_error(_("Failed to fork child process"));
@@ -436,6 +437,7 @@ void global_scope_t::visit_man_page() const
 
   int status = -1;
   wait(&status);
+#endif
   exit(0);                      // parent
 }
 
@@ -471,7 +473,7 @@ void handle_debug_options(int argc, char * argv[])
           // global in utils.h
           _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
         }
-        catch (const boost::bad_lexical_cast& e) {
+        catch (const boost::bad_lexical_cast&) {
           throw std::logic_error(_("Argument to --trace must be an integer"));
         }
         i++;

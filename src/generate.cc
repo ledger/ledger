@@ -367,13 +367,13 @@ post_t * generate_posts_iterator::operator()()
         post = posts();
       }
     }
-    catch (std::exception& err) {
+    catch (std::exception&) {
       add_error_context(_("While parsing generated transaction (seed %1):")
                         << seed);
       add_error_context(buf.str());
       throw;
     }
-    catch (int status) {
+    catch (int) {
       add_error_context(_("While parsing generated transaction (seed %1):")
                         << seed);
       add_error_context(buf.str());

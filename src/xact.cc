@@ -787,7 +787,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     xact.verify();
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     add_error_context(item_context(*this, _("While applying automated transaction")));
     add_error_context(item_context(xact, _("While extending transaction")));
     throw;

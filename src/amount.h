@@ -60,8 +60,8 @@
 namespace ledger {
 
 class commodity_t;
-class annotation_t;
-class keep_details_t;
+struct annotation_t;
+struct keep_details_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 

@@ -484,7 +484,7 @@ expr_t::parser_t::parse(std::istream&           in,
 
     return top_node;
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (original_string) {
       add_error_context(_("While parsing value expression:"));
 
