@@ -437,7 +437,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
         length = static_cast<std::size_t>(in.tellg() - pos);
       }
     }
-    catch (const std::exception& err) {
+    catch (const std::exception&) {
       kind   = ERROR;
       length = static_cast<std::size_t>(in.tellg() - pos);
       throw;
@@ -449,7 +449,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
 
 void expr_t::token_t::rewind(std::istream& in)
 {
-  in.seekg(- length, std::ios::cur);
+  in.seekg(- int(length), std::ios::cur);
   if (in.fail())
     throw_(parse_error, _("Failed to rewind input stream"));
 }

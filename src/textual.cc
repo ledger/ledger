@@ -611,7 +611,7 @@ void instance_t::automated_xact_directive(char * line)
 
     ae.release();
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing automated transaction:"));
       add_error_context(source_context(pathname, pos, curr_pos, "> "));
@@ -657,7 +657,7 @@ void instance_t::period_xact_directive(char * line)
   }
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing periodic transaction:"));
       add_error_context(source_context(pathname, pos, curr_pos, "> "));
@@ -1359,7 +1359,7 @@ post_t * instance_t::parse_post(char *          line,
   return post.release();
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     add_error_context(_("While parsing posting:"));
     add_error_context(line_context(buf, beg, len));
     throw;
@@ -1557,7 +1557,7 @@ xact_t * instance_t::parse_xact(char *          line,
   return xact.release();
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing transaction:"));
       add_error_context(source_context(xact->pos->pathname,

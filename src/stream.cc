@@ -63,6 +63,7 @@ namespace {
    */
   int do_fork(std::ostream ** os, const path& pager_path)
   {
+#ifndef WIN32
     int pfd[2];
 
     int status = pipe(pfd);
@@ -104,6 +105,9 @@ namespace {
       *os = new fdstream(pfd[1]);
     }
     return pfd[1];
+#else
+    return 0;
+#endif
   }
 }
 
@@ -120,6 +124,7 @@ void output_stream_t::initialize(const optional<path>& output_file,
 
 void output_stream_t::close()
 {
+#ifndef WIN32
   if (os != &std::cout) {
     checked_delete(os);
     os = &std::cout;
@@ -134,6 +139,7 @@ void output_stream_t::close()
     if (! WIFEXITED(status) || WEXITSTATUS(status) != 0)
       throw std::logic_error(_("Error in the pager"));
   }
+#endif
 }
 
 } // namespace ledger

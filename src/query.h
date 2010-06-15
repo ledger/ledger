@@ -48,6 +48,9 @@ namespace ledger {
 
 class query_t : public predicate_t
 {
+protected:
+  class parser_t;
+
 public:
   class lexer_t
   {

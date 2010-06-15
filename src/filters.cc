@@ -93,7 +93,7 @@ pass_down_posts::pass_down_posts(post_handler_ptr handler,
     try {
       item_handler<post_t>::operator()(*post);
     }
-    catch (const std::exception& err) {
+    catch (const std::exception&) {
       add_error_context(item_context(*post, _("While handling posting")));
       throw;
     }
@@ -256,9 +256,9 @@ void anonymize_posts::render_commodity(amount_t& amt)
 
 void anonymize_posts::operator()(post_t& post)
 {
-  SHA1           sha;
-  uint_least32_t message_digest[5];
-  bool           copy_xact_details = false;
+  SHA1         sha;
+  unsigned int message_digest[5];
+  bool         copy_xact_details = false;
 
   if (last_xact != post.xact) {
     temps.copy_xact(*post.xact);

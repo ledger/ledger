@@ -76,7 +76,7 @@ value_t expr_t::real_calc(scope_t& scope)
     try {
       return ptr->calc(scope, &locus);
     }
-    catch (const std::exception& err) {
+    catch (const std::exception&) {
       if (locus) {
         string current_context = error_context();
 

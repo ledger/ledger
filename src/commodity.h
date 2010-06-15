@@ -49,7 +49,7 @@
 
 namespace ledger {
 
-class keep_details_t;
+struct keep_details_t;
 class commodity_pool_t;
 
 DECLARE_EXCEPTION(commodity_error, std::runtime_error);

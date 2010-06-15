@@ -70,7 +70,9 @@ int main(int argc, char * argv[], char * envp[])
   filesystem::path::default_name_check(filesystem::portable_posix_name);
 
   std::signal(SIGINT, sigint_handler);
+#ifndef WIN32
   std::signal(SIGPIPE, sigpipe_handler);
+#endif
 
 #if defined(HAVE_GETTEXT)
   ::textdomain("ledger");

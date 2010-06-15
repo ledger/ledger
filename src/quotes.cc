@@ -62,6 +62,7 @@ commodity_quote_from_script(commodity_t& commodity,
   DEBUG("commodity.download", "invoking command: " << getquote_cmd);
 
   bool success = true;
+#ifndef WIN32
   if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
     if (std::feof(fp) || ! std::fgets(buf, 255, fp))
       success = false;
@@ -103,6 +104,7 @@ commodity_quote_from_script(commodity_t& commodity,
     // Don't try to download this commodity again.
     commodity.add_flags(COMMODITY_NOMARKET);
   }
+#endif
   return none;
 }
 

@@ -86,7 +86,7 @@ namespace {
 
       opt(args);
     }
-    catch (const std::exception& err) {
+    catch (const std::exception&) {
       if (name[0] == '-')
         add_error_context(_("While parsing option '%1'") << name);
           
@@ -137,7 +137,7 @@ void process_environment(const char ** envp, const string& tag,
           if (! value.empty())
             process_option(string("$") + buf, string(buf), scope, q + 1, value);
         }
-        catch (const std::exception& err) {
+        catch (const std::exception&) {
           add_error_context(_("While parsing environment variable option '%1':")
                             << *p);
           throw;

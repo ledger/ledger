@@ -645,7 +645,7 @@ inline char peek_next_nonws(std::istream& in) {
     *_p = '\0';                                         \
   }
 
-inline string to_hex(uint_least32_t * message_digest, const int len = 1)
+inline string to_hex(unsigned int * message_digest, const int len = 1)
 {
   std::ostringstream buf;
 
@@ -664,7 +664,7 @@ inline string sha1sum(const string& str)
   SHA1 sha;
   sha.Reset();
   sha << str.c_str();
-  uint_least32_t message_digest[5];
+  unsigned int message_digest[5];
   sha.Result(message_digest);
   return to_hex(message_digest, 5);
 }

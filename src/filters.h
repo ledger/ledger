@@ -74,9 +74,9 @@ public:
                 report_t&        _report,
                 expr_t           _group_by_expr)
     : post_chain(_post_chain), report(_report), 
-      group_by_expr(_group_by_expr),
-      preflush_func(bind(&post_splitter::print_title, this, _1)) {
+      group_by_expr(_group_by_expr) {
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
+	preflush_func = bind(&post_splitter::print_title, this, _1);
   }
   virtual ~post_splitter() {
     TRACE_DTOR(post_splitter);
@@ -350,8 +350,7 @@ class anonymize_posts : public item_handler<post_t>
 public:
   anonymize_posts(post_handler_ptr handler)
     : item_handler<post_t>(handler), next_comm_id(0), last_xact(NULL),
-      rnd_gen(static_cast<unsigned int>(reinterpret_cast<uintmax_t>(this) +
-                                        static_cast<uintmax_t>(std::time(0)))),
+      rnd_gen(static_cast<unsigned int>(static_cast<uintmax_t>(std::time(0)))),
       integer_range(1, 2000000000L),
       integer_gen(rnd_gen, integer_range) {
     TRACE_CTOR(anonymize_posts, "post_handler_ptr");
