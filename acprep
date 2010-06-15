@@ -955,7 +955,10 @@ class PrepareBuild(CommandLineApp):
         else:
             gcc_version = "42"
 
-        if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
+        if gcc_version != "42":
+            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
+
+        if self.current_flavor == 'debug':
             if exists('/usr/local/stow/cppunit-gcc%s/include' % gcc_version):
                 self.sys_include_dirs.insert(
                     0, '/usr/local/stow/cppunit-gcc%s/include' % gcc_version)
@@ -968,10 +971,11 @@ class PrepareBuild(CommandLineApp):
                 self.sys_library_dirs.insert(
                     0, '/usr/local/stow/icu-gcc%s/lib' % gcc_version)
 
-            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
             self.configure_args.append('--disable-shared')
 
             self.options.use_glibcxx_debug = True
+        elif self.current_flavor == 'gcov':
+            self.configure_args.append('--disable-shared')
         else:
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
@@ -1201,7 +1205,7 @@ class PrepareBuild(CommandLineApp):
 
         self.log.debug('Using gcc version: %s' % gcc_version)
 
-        if self.current_flavor == 'debug' or self.current_flavor == 'gcov':
+        if self.current_flavor == 'debug':
             if self.options.use_glibcxx_debug:
                 self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
@@ -1282,6 +1286,9 @@ class PrepareBuild(CommandLineApp):
                     self.LDFLAGS.append(i)
 
     def setup_flavor_gcov(self):
+        # NDEBUG is set so that branch coverage ignores the never-taken else
+        # branch inside assert statements.
+        self.CPPFLAGS.append('-DNDEBUG=1')
         self.CXXFLAGS.append('-g')
         self.CXXFLAGS.append('-fprofile-arcs')
         self.CXXFLAGS.append('-ftest-coverage')
