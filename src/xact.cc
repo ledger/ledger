@@ -36,7 +36,6 @@
 #include "account.h"
 #include "journal.h"
 #include "pool.h"
-#include "interactive.h"
 
 namespace ledger {
 
@@ -62,10 +61,12 @@ xact_base_t::~xact_base_t()
 
 void xact_base_t::add_post(post_t * post)
 {
+#if !defined(NO_ASSERTS)
   // You can add temporary postings to transactions, but not real postings to
   // temporary transactions.
   if (! post->has_flags(ITEM_TEMP))
     assert(! has_flags(ITEM_TEMP));
+#endif
 
   posts.push_back(post);
 }
@@ -99,9 +100,9 @@ value_t xact_base_t::magnitude() const
   foreach (const post_t * post, posts) {
     if (post->amount.sign() > 0) {
       if (post->cost)
-	halfbal += *post->cost;
+        halfbal += *post->cost;
       else
-	halfbal += post->amount;
+        halfbal += post->amount;
     }
   }
   return halfbal;
@@ -124,30 +125,30 @@ bool xact_base_t::finalize()
     if (! p.is_null()) {
       DEBUG("xact.finalize", "post must balance = " << p.reduced());
       if (! post->cost && post->amount.has_annotation() &&
-	  post->amount.annotation().price) {
-	// If the amount has no cost, but is annotated with a per-unit
-	// price, use the price times the amount as the cost
-	post->cost = (*post->amount.annotation().price *
-		      post->amount).unrounded();
-	DEBUG("xact.finalize",
-	      "annotation price = " << *post->amount.annotation().price);
-	DEBUG("xact.finalize", "amount = " << post->amount);
-	DEBUG("xact.finalize", "priced cost = " << *post->cost);
-	post->add_flags(POST_COST_CALCULATED);
-	add_or_set_value(balance, post->cost->rounded().reduced());
+          post->amount.annotation().price) {
+        // If the amount has no cost, but is annotated with a per-unit
+        // price, use the price times the amount as the cost
+        post->cost = (*post->amount.annotation().price *
+                      post->amount).unrounded();
+        DEBUG("xact.finalize",
+              "annotation price = " << *post->amount.annotation().price);
+        DEBUG("xact.finalize", "amount = " << post->amount);
+        DEBUG("xact.finalize", "priced cost = " << *post->cost);
+        post->add_flags(POST_COST_CALCULATED);
+        add_or_set_value(balance, post->cost->rounded().reduced());
       } else {
-	// If the amount was a cost, it very likely has the "keep_precision"
-	// flag set, meaning commodity display precision is ignored when
-	// displaying the amount.  We never want this set for the balance,
-	// so we must clear the flag in a temporary to avoid it propagating
-	// into the balance.
-	add_or_set_value(balance, p.keep_precision() ?
-			 p.rounded().reduced() : p.reduced());
+        // If the amount was a cost, it very likely has the "keep_precision"
+        // flag set, meaning commodity display precision is ignored when
+        // displaying the amount.  We never want this set for the balance,
+        // so we must clear the flag in a temporary to avoid it propagating
+        // into the balance.
+        add_or_set_value(balance, p.keep_precision() ?
+                         p.rounded().reduced() : p.reduced());
       }
     }
     else if (null_post) {
       throw_(std::logic_error,
-	     _("Only one posting with null amount allowed per transaction"));
+             _("Only one posting with null amount allowed per transaction"));
     }
     else {
       null_post = post;
@@ -160,7 +161,7 @@ bool xact_base_t::finalize()
   DEBUG("xact.finalize", "balance is " << balance.label());
   if (balance.is_balance())
     DEBUG("xact.finalize", "balance commodity count = "
-	  << balance.as_balance().amounts.size());
+          << balance.as_balance().amounts.size());
 #endif
 
   // If there is only one post, balance against the default account if one has
@@ -172,44 +173,8 @@ bool xact_base_t::finalize()
     add_post(null_post);
   }
 
-  if (null_post != NULL) {
-    // If one post has no value at all, its value will become the inverse of
-    // the rest.  If multiple commodities are involved, multiple posts are
-    // generated to balance them all.
-
-    DEBUG("xact.finalize", "there was a null posting");
-
-    if (balance.is_balance()) {
-      bool first = true;
-      const balance_t& bal(balance.as_balance());
-      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
-	if (first) {
-	  null_post->amount = pair.second.negated();
-	  null_post->add_flags(POST_CALCULATED);
-	  first = false;
-	} else {
-	  post_t * p = new post_t(null_post->account, pair.second.negated(),
-				  ITEM_GENERATED | POST_CALCULATED);
-	  p->set_state(null_post->state());
-	  add_post(p);
-	}
-      }
-    }
-    else if (balance.is_amount()) {
-      null_post->amount = balance.as_amount().negated();
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (balance.is_long()) {
-      null_post->amount = amount_t(- balance.as_long());
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (! balance.is_null() && ! balance.is_realzero()) {
-      throw_(balance_error, _("Transaction does not balance"));
-    }
-    balance = NULL_VALUE;
-  }
-  else if (balance.is_balance() &&
-	   balance.as_balance().amounts.size() == 2) {
+  if (balance.is_balance() &&
+      balance.as_balance().amounts.size() == 2) {
     // When an xact involves two different commodities (regardless of how
     // many posts there are) determine the conversion ratio by dividing the
     // total value of one commodity by the total value of the other.  This
@@ -221,16 +186,16 @@ bool xact_base_t::finalize()
     post_t * top_post = NULL;
 
     foreach (post_t * post, posts) {
-      if (! post->amount.is_null()) {
-	if (post->amount.has_annotation())
-	  top_post = post;
-	else if (! top_post)
-	  top_post = post;
+      if (! post->amount.is_null() && post->must_balance()) {
+        if (post->amount.has_annotation())
+          top_post = post;
+        else if (! top_post)
+          top_post = post;
       }
 
       if (post->cost && ! post->has_flags(POST_COST_CALCULATED)) {
-	saw_cost = true;
-	break;
+        saw_cost = true;
+        break;
       }
     }
 
@@ -245,59 +210,61 @@ bool xact_base_t::finalize()
       const amount_t * y = &(*a++).second;
 
       if (x->commodity() != top_post->amount.commodity()) {
-	const amount_t * t = x;
-	x = y;
-	y = t;
+        const amount_t * t = x;
+        x = y;
+        y = t;
       }
 
       if (*x && *y) {
-	DEBUG("xact.finalize", "primary   amount = " << *x);
-	DEBUG("xact.finalize", "secondary amount = " << *y);
+        DEBUG("xact.finalize", "primary   amount = " << *x);
+        DEBUG("xact.finalize", "secondary amount = " << *y);
 
-	commodity_t& comm(x->commodity());
-	amount_t	   per_unit_cost;
-	amount_t	   total_cost;
+        commodity_t&     comm(x->commodity());
+        amount_t         per_unit_cost;
+        amount_t         total_cost;
+        const amount_t * prev_y = y;
 
-	foreach (post_t * post, posts) {
-	  if (post != top_post && post->must_balance() &&
-	      ! post->amount.is_null() &&
-	      post->amount.has_annotation() &&
-	      post->amount.annotation().price) {
-	    amount_t temp = *post->amount.annotation().price * post->amount;
-	    if (total_cost.is_null()) {
-	      total_cost = temp;
-	      y = &total_cost;
-	    } else {
-	      total_cost += temp;
-	    }
-	    DEBUG("xact.finalize", "total_cost = " << total_cost);
-	  }
-	}
-	per_unit_cost = (*y / *x).abs().unrounded();
+        foreach (post_t * post, posts) {
+          if (post != top_post && post->must_balance() &&
+              ! post->amount.is_null() &&
+              post->amount.has_annotation() &&
+              post->amount.annotation().price) {
+            amount_t temp = *post->amount.annotation().price * post->amount;
+            if (total_cost.is_null()) {
+              total_cost = temp;
+              y = &total_cost;
+            }
+            else if (total_cost.commodity() == temp.commodity()) {
+              total_cost += temp;
+            }
+            else {
+              DEBUG("xact.finalize",
+                    "multiple price commodities, aborting price calc");
+              y = prev_y;
+              break;
+            }
+            DEBUG("xact.finalize", "total_cost = " << total_cost);
+          }
+        }
+        per_unit_cost = (*y / *x).abs().unrounded();
 
-	DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
+        DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
-	foreach (post_t * post, posts) {
-	  const amount_t& amt(post->amount);
+        foreach (post_t * post, posts) {
+          const amount_t& amt(post->amount);
 
-	  if (post->must_balance() && amt.commodity() == comm) {
-	    balance -= amt;
-	    post->cost = per_unit_cost * amt;
-	    post->add_flags(POST_COST_CALCULATED);
-	    balance += *post->cost;
+          if (post->must_balance() && amt.commodity() == comm) {
+            balance -= amt;
+            post->cost = per_unit_cost * amt;
+            post->add_flags(POST_COST_CALCULATED);
+            balance += *post->cost;
 
-	    DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
-	  }
-	}
+            DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
+          }
+        }
       }
     }
   }
-
-  // Now that the post list has its final form, calculate the balance once
-  // more in terms of total cost, accounting for any possible gain/loss
-  // amounts.
-
-  DEBUG("xact.finalize", "resolved balance = " << balance);
 
   posts_list copy(posts);
 
@@ -307,40 +274,90 @@ bool xact_base_t::finalize()
 
     if (post->amount.commodity() == post->cost->commodity())
       throw_(balance_error,
-	     _("A posting's cost must be of a different commodity than its amount"));
+             _("A posting's cost must be of a different commodity than its amount"));
 
     cost_breakdown_t breakdown =
       commodity_pool_t::current_pool->exchange
         (post->amount, *post->cost, false,
-	 datetime_t(date(), time_duration(0, 0, 0, 0)));
+         datetime_t(date(), time_duration(0, 0, 0, 0)));
 
     if (post->amount.has_annotation() &&
-	breakdown.basis_cost.commodity() ==
-	breakdown.final_cost.commodity()) {
-      if (amount_t gain_loss = (breakdown.basis_cost -
-				breakdown.final_cost).rounded()) {
-	DEBUG("xact.finalize", "gain_loss = " << gain_loss);
+        breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
+      if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
+        DEBUG("xact.finalize", "gain_loss = " << gain_loss);
+        gain_loss.in_place_round();
+        DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
 
-	add_or_set_value(balance, gain_loss.reduced());
+        if (post->must_balance())
+          add_or_set_value(balance, gain_loss.reduced());
 
-	account_t * account;
-	if (gain_loss.sign() > 0)
-	  account = journal->find_account(_("Equity:Capital Gains"));
-	else
-	  account = journal->find_account(_("Equity:Capital Losses"));
+        account_t * account;
+        if (gain_loss.sign() > 0)
+          account = journal->find_account(_("Equity:Capital Gains"));
+        else
+          account = journal->find_account(_("Equity:Capital Losses"));
 
-	post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
-	p->set_state(post->state());
-	add_post(p);
-	DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
+        post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
+        p->set_state(post->state());
+        if (post->has_flags(POST_VIRTUAL)) {
+          DEBUG("xact.finalize", "gain_loss came from a virtual post");
+          p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
+        }
+        add_post(p);
+        DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
+      } else {
+        DEBUG("xact.finalize", "gain_loss would have display as zero");
       }
     } else {
       post->amount = breakdown.amount;
       DEBUG("xact.finalize", "added breakdown, balance = " << balance);
     }
+
+    if (post->has_flags(POST_COST_FIXATED) &&
+        post->amount.has_annotation() && post->amount.annotation().price) {
+      DEBUG("xact.finalize", "fixating annotation price");
+      post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+    }
   }
 
-  DEBUG("xact.finalize", "final balance = " << balance);
+  if (null_post != NULL) {
+    // If one post has no value at all, its value will become the inverse of
+    // the rest.  If multiple commodities are involved, multiple posts are
+    // generated to balance them all.
+
+    DEBUG("xact.finalize", "there was a null posting");
+
+    if (balance.is_balance()) {
+      bool first = true;
+      const balance_t& bal(balance.as_balance());
+      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+        if (first) {
+          null_post->amount = pair.second.negated();
+          null_post->add_flags(POST_CALCULATED);
+          first = false;
+        } else {
+          post_t * p = new post_t(null_post->account, pair.second.negated(),
+                                  ITEM_GENERATED | POST_CALCULATED);
+          p->set_state(null_post->state());
+          add_post(p);
+        }
+      }
+    }
+    else if (balance.is_amount()) {
+      null_post->amount = balance.as_amount().negated();
+      null_post->add_flags(POST_CALCULATED);
+    }
+    else if (balance.is_long()) {
+      null_post->amount = amount_t(- balance.as_long());
+      null_post->add_flags(POST_CALCULATED);
+    }
+    else if (! balance.is_null() && ! balance.is_realzero()) {
+      throw_(balance_error, _("Transaction does not balance"));
+    }
+    balance = NULL_VALUE;
+
+  }
+  DEBUG("xact.finalize", "resolved balance = " << balance);
 
   if (! balance.is_null() && ! balance.is_zero()) {
     add_error_context(item_context(*this, _("While balancing transaction")));
@@ -359,10 +376,10 @@ bool xact_base_t::finalize()
 
     foreach (post_t * post, posts) {
       if (! post->amount.is_null()) {
-	all_null = false;
-	post->amount.in_place_reduce();
+        all_null = false;
+        post->amount.in_place_reduce();
       } else {
-	some_null = true;
+        some_null = true;
       }
 
       post->account->add_post(post);
@@ -372,10 +389,10 @@ bool xact_base_t::finalize()
     }
 
     if (all_null)
-      return false;		// ignore this xact completely
+      return false;             // ignore this xact completely
     else if (some_null)
       throw_(balance_error,
-	     _("There cannot be null amounts after balancing a transaction"));
+             _("There cannot be null amounts after balancing a transaction"));
   }
 
   VERIFY(valid());
@@ -401,7 +418,7 @@ bool xact_base_t::verify()
     // amount.  We never want this set for the balance, so we must clear the
     // flag in a temporary to avoid it propagating into the balance.
     add_or_set_value(balance, p.keep_precision() ?
-		     p.rounded().reduced() : p.reduced());
+                     p.rounded().reduced() : p.reduced());
   }
   VERIFY(balance.valid());
 
@@ -415,7 +432,7 @@ bool xact_base_t::verify()
 
     if (post->amount.commodity() == post->cost->commodity())
       throw_(amount_error,
-	     _("A posting's cost must be of a different commodity than its amount"));
+             _("A posting's cost must be of a different commodity than its amount"));
   }
 
   if (! balance.is_null() && ! balance.is_zero()) {
@@ -473,7 +490,7 @@ namespace {
     if (xact.code)
       return string_value(*xact.code);
     else
-      return string_value(empty_string);
+      return NULL_VALUE;
   }
 
   value_t get_payee(xact_t& xact) {
@@ -485,39 +502,35 @@ namespace {
     return (*Func)(find_scope<xact_t>(scope));
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (expr.calc(bound_scope).to_boolean())
-	return true;
+      bind_scope_t bound_scope(args, *p);
+      if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
+        return true;
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (! expr.calc(bound_scope).to_boolean())
-	return false;
+      bind_scope_t bound_scope(args, *p);
+      if (! expr->calc(bound_scope, args.locus, args.depth).to_boolean())
+        return false;
     }
     return true;
   }
 }
 
 expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
-				const string& name)
+                                const string& name)
 {
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
@@ -583,13 +596,13 @@ namespace {
 
     case expr_t::op_t::O_MATCH:
       if (op->left()->kind == expr_t::op_t::IDENT &&
-	  op->left()->as_ident() == "account" &&
-	  op->right()->kind == expr_t::op_t::VALUE &&
-	  op->right()->as_value().is_mask())
-	return op->right()->as_value().as_mask()
-	  .match(post.reported_account()->fullname());
+          op->left()->as_ident() == "account" &&
+          op->right()->kind == expr_t::op_t::VALUE &&
+          op->right()->as_value().is_mask())
+        return op->right()->as_value().as_mask()
+          .match(post.reported_account()->fullname());
       else
-	break;
+        break;
       
     case expr_t::op_t::O_NOT:
       return ! post_pred(op->left(), post);
@@ -602,9 +615,9 @@ namespace {
 
     case expr_t::op_t::O_QUERY:
       if (post_pred(op->left(), post))
-	return post_pred(op->right()->left(), post);
+        return post_pred(op->right()->left(), post);
       else
-	return post_pred(op->right()->right(), post);
+        return post_pred(op->right()->right(), post);
 
     default:
       break;
@@ -631,105 +644,141 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     bool matches_predicate = false;
     if (try_quick_match) {
       try {
-	bool found_memoized_result = false;
-	if (! memoized_results.empty()) {
-	  std::map<string, bool>::iterator i =
-	    memoized_results.find(initial_post->account->fullname());
-	  if (i != memoized_results.end()) {
-	    found_memoized_result = true;
-	    matches_predicate = (*i).second;
-	  }
-	}
+        bool found_memoized_result = false;
+        if (! memoized_results.empty()) {
+          std::map<string, bool>::iterator i =
+            memoized_results.find(initial_post->account->fullname());
+          if (i != memoized_results.end()) {
+            found_memoized_result = true;
+            matches_predicate = (*i).second;
+          }
+        }
 
-	// Since the majority of people who use automated transactions simply
-	// match against account names, try using a *much* faster version of
-	// the predicate evaluator.
-	if (! found_memoized_result) {
-	  matches_predicate = post_pred(predicate.get_op(), *initial_post);
-	  memoized_results.insert
-	    (std::pair<string, bool>(initial_post->account->fullname(),
-				     matches_predicate));
-	}
+        // Since the majority of people who use automated transactions simply
+        // match against account names, try using a *much* faster version of
+        // the predicate evaluator.
+        if (! found_memoized_result) {
+          matches_predicate = post_pred(predicate.get_op(), *initial_post);
+          memoized_results.insert
+            (std::pair<string, bool>(initial_post->account->fullname(),
+                                     matches_predicate));
+        }
       }
       catch (...) {
-	DEBUG("xact.extend.fail",
-	      "The quick matcher failed, going back to regular eval");
-	try_quick_match   = false;
-	matches_predicate = predicate(*initial_post);
+        DEBUG("xact.extend.fail",
+              "The quick matcher failed, going back to regular eval");
+        try_quick_match   = false;
+        matches_predicate = predicate(*initial_post);
       }
     } else {
       matches_predicate = predicate(*initial_post);
     }
     if (matches_predicate) {
+      bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
+
+      if (deferred_notes) {
+        foreach (deferred_tag_data_t& data, *deferred_notes) {
+          if (data.apply_to_post == NULL)
+            initial_post->parse_tags(data.tag_data.c_str(), bound_scope,
+                                     data.overwrite_existing);
+        }
+      }
+      if (check_exprs) {
+        foreach (check_expr_pair& pair, *check_exprs) {
+          if (pair.second == auto_xact_t::EXPR_GENERAL) {
+            pair.first.calc(bound_scope);
+          }
+          else if (! pair.first.calc(bound_scope).to_boolean()) {
+            if (pair.second == auto_xact_t::EXPR_ASSERTION) {
+              throw_(parse_error,
+                     _("Transaction assertion failed: %1") << pair.first);
+            } else {
+              warning_(_("Transaction check failed: %1") << pair.first);
+            }
+          }
+        }
+      }
+
       foreach (post_t * post, posts) {
-	amount_t post_amount;
-	if (post->amount.is_null()) {
-	  if (! post->amount_expr)
-	    throw_(amount_error,
-		   _("Automated transaction's posting has no amount"));
+        amount_t post_amount;
+        if (post->amount.is_null()) {
+          if (! post->amount_expr)
+            throw_(amount_error,
+                   _("Automated transaction's posting has no amount"));
 
-	  bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
-	  value_t result(post->amount_expr->calc(bound_scope));
-	  if (result.is_long()) {
-	    post_amount = result.to_amount();
-	  } else {
-	    if (! result.is_amount())
-	      throw_(amount_error,
-		     _("Amount expressions must result in a simple amount"));
-	    post_amount = result.as_amount();
-	  }
-	} else {
-	  post_amount = post->amount;
-	}
+          value_t result(post->amount_expr->calc(bound_scope));
+          if (result.is_long()) {
+            post_amount = result.to_amount();
+          } else {
+            if (! result.is_amount())
+              throw_(amount_error,
+                     _("Amount expressions must result in a simple amount"));
+            post_amount = result.as_amount();
+          }
+        } else {
+          post_amount = post->amount;
+        }
 
-	amount_t amt;
-	if (! post_amount.commodity())
-	  amt = initial_post->amount * post_amount;
-	else
-	  amt = post_amount;
-
-	IF_DEBUG("xact.extend") {
-	  DEBUG("xact.extend",
-		"Initial post on line " << initial_post->pos->beg_line << ": "
-		<< "amount " << initial_post->amount << " (precision "
-		<< initial_post->amount.precision() << ")");
+        amount_t amt;
+        if (! post_amount.commodity())
+          amt = initial_post->amount * post_amount;
+        else
+          amt = post_amount;
 
 #if defined(DEBUG_ON)
-	  if (initial_post->amount.keep_precision())
-	    DEBUG("xact.extend", "  precision is kept");
-#endif
+        IF_DEBUG("xact.extend") {
+          DEBUG("xact.extend",
+                "Initial post on line " << initial_post->pos->beg_line << ": "
+                << "amount " << initial_post->amount << " (precision "
+                << initial_post->amount.precision() << ")");
 
-	  DEBUG("xact.extend",
-		"Posting on line " << post->pos->beg_line << ": "
-		<< "amount " << post_amount << ", amt " << amt
-		<< " (precision " << post_amount.precision()
-		<< " != " << amt.precision() << ")");
+          if (initial_post->amount.keep_precision())
+            DEBUG("xact.extend", "  precision is kept");
 
-#if defined(DEBUG_ON)
-	  if (post_amount.keep_precision())
-	    DEBUG("xact.extend", "  precision is kept");
-	  if (amt.keep_precision())
-	    DEBUG("xact.extend", "  amt precision is kept");
-#endif
-	}
+          DEBUG("xact.extend",
+                "Posting on line " << post->pos->beg_line << ": "
+                << "amount " << post_amount << ", amt " << amt
+                << " (precision " << post_amount.precision()
+                << " != " << amt.precision() << ")");
 
-	account_t * account  = post->account;
-	string fullname = account->fullname();
-	assert(! fullname.empty());
-	if (fullname == "$account" || fullname == "@account")
-	  account = initial_post->account;
+          if (post_amount.keep_precision())
+            DEBUG("xact.extend", "  precision is kept");
+          if (amt.keep_precision())
+            DEBUG("xact.extend", "  amt precision is kept");
+        }
+#endif // defined(DEBUG_ON)
 
-	// Copy over details so that the resulting post is a mirror of
-	// the automated xact's one.
-	post_t * new_post = new post_t(account, amt);
-	new_post->copy_details(*post);
-	new_post->add_flags(ITEM_GENERATED);
+        account_t * account  = post->account;
+        string fullname = account->fullname();
+        assert(! fullname.empty());
 
-	xact.add_post(new_post);
-	new_post->account->add_post(new_post);
+        if (contains(fullname, "$account")) {
+          fullname = regex_replace(fullname, regex("\\$account\\>"),
+                                   initial_post->account->fullname());
+          while (account->parent)
+            account = account->parent;
+          account = account->find_account(fullname);
+        }
 
-	if (new_post->must_balance())
-	  needs_further_verification = true;
+        // Copy over details so that the resulting post is a mirror of
+        // the automated xact's one.
+        post_t * new_post = new post_t(account, amt);
+        new_post->copy_details(*post);
+        new_post->add_flags(ITEM_GENERATED);
+
+        xact.add_post(new_post);
+        new_post->account->add_post(new_post);
+
+        if (new_post->must_balance())
+          needs_further_verification = true;
+
+        if (deferred_notes) {
+          foreach (deferred_tag_data_t& data, *deferred_notes) {
+            if (data.apply_to_post == post)
+              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
+                                   data.overwrite_existing);
+          }
+        }
       }
     }
   }
@@ -738,18 +787,11 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     xact.verify();
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     add_error_context(item_context(*this, _("While applying automated transaction")));
     add_error_context(item_context(xact, _("While extending transaction")));
     throw;
   }
-}
-
-void extend_xact_base(journal_t *  journal,
-		      xact_base_t& base)
-{
-  foreach (auto_xact_t * xact, journal->auto_xacts)
-    xact->extend_xact(base);
 }
 
 void to_xml(std::ostream& out, const xact_t& xact)
@@ -794,18 +836,18 @@ void to_xml(std::ostream& out, const xact_t& xact)
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *xact.metadata) {
       if (pair.second.first) {
-	push_xml z(out, "variable");
-	{
-	  push_xml w(out, "key");
-	  out << y.guard(pair.first);
-	}
-	{
-	  push_xml w(out, "value");
-	  out << y.guard(*pair.second.first);
-	}
+        push_xml z(out, "variable");
+        {
+          push_xml w(out, "key");
+          out << y.guard(pair.first);
+        }
+        {
+          push_xml w(out, "value");
+          to_xml(out, *pair.second.first);
+        }
       } else {
-	push_xml z(out, "tag");
-	out << y.guard(pair.first);
+        push_xml z(out, "tag");
+        out << y.guard(pair.first);
       }
     }
   }

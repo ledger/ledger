@@ -60,8 +60,8 @@ generate_posts_iterator::generate_posts_iterator
     two_six_range(2, 6), two_six_gen(rnd_gen, two_six_range),
     strlen_range(1, 40), strlen_gen(rnd_gen, strlen_range),
 
-    neg_number_range(-1000000, -1), neg_number_gen(rnd_gen, neg_number_range),
-    pos_number_range(1, 1000000), pos_number_gen(rnd_gen, pos_number_range)
+    neg_number_range(-10000, -1), neg_number_gen(rnd_gen, neg_number_range),
+    pos_number_range(1, 10000), pos_number_gen(rnd_gen, pos_number_range)
 {
   TRACE_CTOR(generate_posts_iterator, "bool");
 
@@ -76,10 +76,10 @@ generate_posts_iterator::generate_posts_iterator
 }
 
 void generate_posts_iterator::generate_string(std::ostream& out, int len,
-					      bool only_alpha)
+                                              bool only_alpha)
 {
   DEBUG("generate.post.string",
-	"Generating string of length " << len << ", only alpha " << only_alpha);
+        "Generating string of length " << len << ", only alpha " << only_alpha);
 
   int last = -1;
   bool first = true;
@@ -87,38 +87,38 @@ void generate_posts_iterator::generate_string(std::ostream& out, int len,
     int next = only_alpha ? 3 : three_gen();
     bool output = true;
     switch (next) {
-    case 1:			// colon
+    case 1:                     // colon
       if (! first && last == 3 && strlen_gen() % 10 == 0 && i + 1 != len)
-	out << ':';
+        out << ':';
       else {
-	i--;
-	output = false;
+        i--;
+        output = false;
       }
       break;
-    case 2:			// space
+    case 2:                     // space
       if (! first && last == 3 && strlen_gen() % 20 == 0 && i + 1 != len)
-	out << ' ';
+        out << ' ';
       else {
-	i--;
-	output = false;
+        i--;
+        output = false;
       }
       break;
-    case 3:			// character
+    case 3:                     // character
       switch (three_gen()) {
-      case 1:			// uppercase
-	out << char(upchar_gen());
-	break;
-      case 2:			// lowercase
-	out << char(downchar_gen());
-	break;
-      case 3:			// number
-	if (! only_alpha && ! first)
-	  out << char(numchar_gen());
-	else {
-	  i--;
-	  output = false;
-	}
-	break;
+      case 1:                   // uppercase
+        out << char(upchar_gen());
+        break;
+      case 2:                   // lowercase
+        out << char(downchar_gen());
+        break;
+      case 3:                   // number
+        if (! only_alpha && ! first)
+          out << char(numchar_gen());
+        else {
+          i--;
+          output = false;
+        }
+        break;
       }
       break;
     }
@@ -130,7 +130,7 @@ void generate_posts_iterator::generate_string(std::ostream& out, int len,
 }
 
 bool generate_posts_iterator::generate_account(std::ostream& out,
-					       bool no_virtual)
+                                               bool no_virtual)
 {
   bool must_balance = true;
   bool is_virtual   = false;
@@ -163,7 +163,8 @@ bool generate_posts_iterator::generate_account(std::ostream& out,
   return must_balance;
 }
 
-void generate_posts_iterator::generate_commodity(std::ostream& out)
+void generate_posts_iterator::generate_commodity(std::ostream& out,
+                                                 const string& exclude)
 {
   string comm;
   do {
@@ -171,22 +172,23 @@ void generate_posts_iterator::generate_commodity(std::ostream& out)
     generate_string(buf, six_gen(), true);
     comm = buf.str();
   }
-  while (comm == "h" || comm == "m" || comm == "s" || comm == "and" ||
-	 comm == "any" || comm == "all" || comm == "div" ||
-	 comm == "false" || comm == "or" || comm == "not" ||
-	 comm == "true" || comm == "if" || comm == "else");
+  while (comm == exclude || comm == "h" || comm == "m" || comm == "s" ||
+         comm == "and" || comm == "any" || comm == "all" || comm == "div" ||
+         comm == "false" || comm == "or" || comm == "not" ||
+         comm == "true" || comm == "if" || comm == "else");
 
   out << comm;
 }
 
 string generate_posts_iterator::generate_amount(std::ostream& out,
-						value_t	      not_this_amount,
-						bool	      no_negative)
+                                                value_t       not_this_amount,
+                                                bool          no_negative,
+                                                const string& exclude)
 {
   std::ostringstream buf;
 
-  if (truth_gen()) {		// commodity goes in front
-    generate_commodity(buf);
+  if (truth_gen()) {            // commodity goes in front
+    generate_commodity(buf, exclude);
     if (truth_gen())
       buf << ' ';
     if (no_negative || truth_gen())
@@ -200,7 +202,7 @@ string generate_posts_iterator::generate_amount(std::ostream& out,
       buf << neg_number_gen();
     if (truth_gen())
       buf << ' ';
-    generate_commodity(buf);
+    generate_commodity(buf, exclude);
   }
 
   // Possibly generate an annotized commodity, but make it rarer
@@ -259,7 +261,8 @@ void generate_posts_iterator::generate_cost(std::ostream& out, value_t amount)
   else
     buf << " @@ ";
 
-  if (! generate_amount(buf, amount, true).empty())
+  if (! generate_amount(buf, amount, true,
+                        amount.as_amount().commodity().symbol()).empty())
     out << buf.str();
 }
 
@@ -359,20 +362,20 @@ post_t * generate_posts_iterator::operator()()
     std::istringstream in(buf.str());
     try {
       if (session.journal->parse(in, session) != 0) {
-	VERIFY(session.journal->xacts.back()->valid());
-	posts.reset(*session.journal->xacts.back());
-	post = posts();
+        VERIFY(session.journal->xacts.back()->valid());
+        posts.reset(*session.journal->xacts.back());
+        post = posts();
       }
     }
-    catch (std::exception& err) {
+    catch (std::exception&) {
       add_error_context(_("While parsing generated transaction (seed %1):")
-			<< seed);
+                        << seed);
       add_error_context(buf.str());
       throw;
     }
-    catch (int status) {
+    catch (int) {
       add_error_context(_("While parsing generated transaction (seed %1):")
-			<< seed);
+                        << seed);
       add_error_context(buf.str());
       throw;
     }

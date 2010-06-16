@@ -49,7 +49,7 @@
 namespace ledger {
 
 struct annotation_t : public supports_flags<>,
-		      public equality_comparable<annotation_t>
+                      public equality_comparable<annotation_t>
 {
 #define ANNOTATION_PRICE_CALCULATED 0x01
 #define ANNOTATION_PRICE_FIXATED    0x02
@@ -61,8 +61,8 @@ struct annotation_t : public supports_flags<>,
   optional<string>   tag;
 
   explicit annotation_t(const optional<amount_t>& _price = none,
-			const optional<date_t>&   _date  = none,
-			const optional<string>&   _tag   = none)
+                        const optional<date_t>&   _date  = none,
+                        const optional<string>&   _tag   = none)
     : supports_flags<>(), price(_price), date(_date), tag(_tag) {
     TRACE_CTOR(annotation_t, "const optional<amount_t>& + date_t + string");
   }
@@ -81,13 +81,14 @@ struct annotation_t : public supports_flags<>,
 
   bool operator==(const annotation_t& rhs) const {
     return (price == rhs.price &&
-	    date  == rhs.date &&
-	    tag   == rhs.tag);
+            date  == rhs.date &&
+            tag   == rhs.tag);
   }
 
   void parse(std::istream& in);
 
-  void print(std::ostream& out, bool keep_base = false) const;
+  void print(std::ostream& out, bool keep_base = false,
+             bool no_computed_annotations = false) const;
 
   bool valid() const {
     assert(*this);
@@ -141,9 +142,9 @@ struct keep_details_t
   bool only_actuals;
 
   explicit keep_details_t(bool _keep_price   = false,
-			  bool _keep_date    = false,
-			  bool _keep_tag     = false,
-			  bool _only_actuals = false)
+                          bool _keep_date    = false,
+                          bool _keep_tag     = false,
+                          bool _only_actuals = false)
     : keep_price(_keep_price),
       keep_date(_keep_date),
       keep_tag(_keep_tag),
@@ -187,7 +188,7 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream&       out,
-				const annotation_t& details) {
+                                const annotation_t& details) {
   details.print(out);
   return out;
 }
@@ -195,8 +196,8 @@ inline std::ostream& operator<<(std::ostream&       out,
 class annotated_commodity_t
   : public commodity_t,
     public equality_comparable<annotated_commodity_t,
-	   equality_comparable2<annotated_commodity_t, commodity_t,
-				noncopyable> >
+           equality_comparable2<annotated_commodity_t, commodity_t,
+                                noncopyable> >
 {
 protected:
   friend class commodity_pool_t;
@@ -204,7 +205,7 @@ protected:
   commodity_t * ptr;
 
   explicit annotated_commodity_t(commodity_t * _ptr,
-				 const annotation_t& _details)
+                                 const annotation_t& _details)
     : commodity_t(_ptr->parent_, _ptr->base), ptr(_ptr), details(_details) {
     TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
     annotated = true;
@@ -230,7 +231,8 @@ public:
   }
 
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
-  virtual void         write_annotations(std::ostream& out) const;
+  virtual void write_annotations(std::ostream& out,
+                                 bool no_computed_annotations = false) const;
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

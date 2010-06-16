@@ -55,7 +55,7 @@ class period_xact_t;
 class account_t;
 class scope_t;
 
-typedef std::list<xact_t *>	   xacts_list;
+typedef std::list<xact_t *>        xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 
@@ -70,9 +70,9 @@ public:
   struct fileinfo_t
   {
     optional<path> filename;
-    uintmax_t	   size;
-    datetime_t	   modtime;
-    bool	   from_stream;
+    uintmax_t      size;
+    datetime_t     modtime;
+    bool           from_stream;
 
     fileinfo_t() : size(0), from_stream(true) {
       TRACE_CTOR(journal_t::fileinfo_t, "");
@@ -85,7 +85,7 @@ public:
     }
     fileinfo_t(const fileinfo_t& info)
       : filename(info.filename), size(info.size),
-	modtime(info.modtime), from_stream(info.from_stream)
+        modtime(info.modtime), from_stream(info.from_stream)
     {
       TRACE_CTOR(journal_t::fileinfo_t, "copy");
     }
@@ -109,15 +109,15 @@ public:
 #endif // HAVE_BOOST_SERIALIZATION
   };
 
-  account_t *		master;
-  account_t *		bucket;
-  xacts_list		xacts;
-  auto_xacts_list	auto_xacts;
-  period_xacts_list	period_xacts;
+  account_t *           master;
+  account_t *           bucket;
+  xacts_list            xacts;
+  auto_xacts_list       auto_xacts;
+  period_xacts_list     period_xacts;
   std::list<fileinfo_t> sources;
-  bool                  was_loaded;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
+  bool                  was_loaded;
 
   journal_t();
   journal_t(const path& pathname);
@@ -135,8 +135,8 @@ public:
 
   // These four methods are delegated to the current session, since all
   // accounts processed are gathered together at the session level.
-  void	      add_account(account_t * acct);
-  bool	      remove_account(account_t * acct);
+  void        add_account(account_t * acct);
+  bool        remove_account(account_t * acct);
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
@@ -164,18 +164,18 @@ public:
   }
 
   std::size_t read(std::istream& in,
-		   const path&	 pathname,
-		   account_t *   master = NULL,
-		   scope_t *     scope  = NULL);
-  std::size_t read(const path&	 pathname,
-		   account_t *   master = NULL,
-		   scope_t *     scope  = NULL);
+                   const path&   pathname,
+                   account_t *   master = NULL,
+                   scope_t *     scope  = NULL);
+  std::size_t read(const path&   pathname,
+                   account_t *   master = NULL,
+                   scope_t *     scope  = NULL);
 
   std::size_t parse(std::istream& in,
-		    scope_t&      session_scope,
-		    account_t *   master	= NULL,
-		    const path *  original_file = NULL,
-		    bool          strict	= false);
+                    scope_t&      session_scope,
+                    account_t *   master        = NULL,
+                    const path *  original_file = NULL,
+                    bool          strict        = false);
 
   bool has_xdata();
   void clear_xdata();
@@ -196,6 +196,8 @@ private:
     ar & auto_xacts;
     ar & period_xacts;
     ar & sources;
+    ar & payee_mappings;
+    ar & account_mappings;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };

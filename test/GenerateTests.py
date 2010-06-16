@@ -4,13 +4,30 @@
 # final balance is the same as what the balance report shows.
 
 import sys
-#import re
+import re
 
 from difflib import ndiff
 
+multiproc = False
+try:
+    from multiprocessing import Pool
+    multiproc = True
+except:
+    pass
+
+args = sys.argv
+jobs = 1
+match = re.match('-j([0-9]+)?', args[1])
+if match:
+    args = [args[0]] + args[2:]
+    if match.group(1):
+        jobs = int(match.group(1))
+if jobs == 1:
+    multiproc = False
+
 from LedgerHarness import LedgerHarness
 
-harness = LedgerHarness(sys.argv)
+harness = LedgerHarness(args)
 
 #def normalize(line):
 #    match = re.match("((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$", line)
@@ -104,14 +121,28 @@ def generation_test(seed):
 
 beg_range = 1
 end_range = 20
-if len(sys.argv) > 4:
-    beg_range = int(sys.argv[3])
-    end_range = int(sys.argv[4])
+if len(args) > 4:
+    beg_range = int(args[3])
+    end_range = int(args[4])
 
-for i in range(beg_range, end_range):
+def run_gen_test(i):
     if generation_test(i):
         harness.success()
     else:
         harness.failure()
 
+if multiproc:
+    pool = Pool(jobs*2)
+else:
+    pool = None
+
+if pool:
+    pool.map(run_gen_test, range(beg_range, end_range))
+else:
+    for i in range(beg_range, end_range):
+        run_gen_test(i)
+
+if pool:
+    pool.close()
+    pool.join()
 harness.exit()

@@ -78,7 +78,7 @@ public:
 protected:
   scope_t * context;
   string    str;
-  bool	    compiled;
+  bool      compiled;
 
   virtual result_type real_calc(scope_t& scope) = 0;
 
@@ -117,7 +117,7 @@ public:
     return str;
   }
   void set_text(const string& txt) {
-    str	     = txt;
+    str      = txt;
     compiled = false;
   }
 
@@ -126,11 +126,11 @@ public:
     return parse(stream, flags, str);
   }
   virtual void parse(std::istream&,
-		     const parse_flags_t& = PARSE_DEFAULT,
-		     const optional<string>& original_string = none) {
+                     const parse_flags_t& = PARSE_DEFAULT,
+                     const optional<string>& original_string = none) {
     set_text(original_string ? *original_string : "<stream>");
   }
-	   
+           
   void     mark_uncompiled() {
     compiled = false;
   }
@@ -155,19 +155,25 @@ public:
   result_type calc(scope_t& scope)
   {
     if (! compiled) {
+#if defined(DEBUG_ON)
       if (SHOW_DEBUG("expr.compile")) {
-	DEBUG("expr.compile", "Before compilation:");
-	dump(*_log_stream);
+        DEBUG("expr.compile", "Before compilation:");
+        dump(*_log_stream);
       }
+#endif // defined(DEBUG_ON)
 
+      DEBUG("expr.calc.when", "Compiling: " << str);
       compile(scope);
 
+#if defined(DEBUG_ON)
       if (SHOW_DEBUG("expr.compile")) {
-	DEBUG("expr.compile", "After compilation:");
-	dump(*_log_stream);
+        DEBUG("expr.compile", "After compilation:");
+        dump(*_log_stream);
       }
+#endif // defined(DEBUG_ON)
     }
 
+    DEBUG("expr.calc.when", "Calculating: " << str);
     return real_calc(scope);
   }
 
@@ -243,7 +249,7 @@ private:
 
 template <typename ResultType>
 std::ostream& operator<<(std::ostream& out,
-			 const expr_base_t<ResultType>& expr) {
+                         const expr_base_t<ResultType>& expr) {
   expr.print(out);
   return out;
 }

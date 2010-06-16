@@ -1,4 +1,4 @@
-reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lots --unsorted
+reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lots
 <<<
 C 1.00s = 100c
 C 1.00G = 100s
@@ -830,33 +830,33 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -68.50G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                          "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -70.61G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                          "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -70.61G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                          "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -72.90G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                          "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -72.90G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -864,7 +864,7 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -74.40G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -872,7 +872,7 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -71.40G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -880,7 +880,7 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -74.40G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -888,7 +888,7 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -74.40G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -896,7 +896,7 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                          -74.40G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -904,7 +904,7 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -913,7 +913,7 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -922,7 +922,7 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           -9.40G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -931,7 +931,7 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -940,8 +940,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -950,8 +950,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -961,8 +961,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -973,8 +973,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           45.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -986,8 +986,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -999,8 +999,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           42.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1012,8 +1012,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1025,8 +1025,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           51.68G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1038,8 +1038,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1051,8 +1051,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1064,8 +1064,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1077,8 +1077,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1090,8 +1090,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.28G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1103,8 +1103,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1116,8 +1116,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.51G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1129,8 +1129,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.63G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1142,8 +1142,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.75G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1155,8 +1155,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.76G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1168,8 +1168,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.76G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1181,8 +1181,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1194,8 +1194,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.67G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1207,8 +1207,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           39.07G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1220,8 +1220,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1233,8 +1233,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1246,8 +1246,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           43.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1259,8 +1259,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1272,8 +1272,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1285,8 +1285,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           58.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1298,8 +1298,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1311,8 +1311,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           38.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1325,8 +1325,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           37.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1339,8 +1339,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           37.36G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1353,8 +1353,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           37.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1367,8 +1367,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           37.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1381,8 +1381,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           67.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1395,8 +1395,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           37.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1410,8 +1410,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           37.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1425,8 +1425,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                            7.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1441,8 +1441,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                            7.27G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1457,8 +1457,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1473,8 +1473,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1489,8 +1489,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1505,8 +1505,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.72G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1521,8 +1521,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1537,8 +1537,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.52G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1553,8 +1553,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1569,8 +1569,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -21.98G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1585,8 +1585,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -21.23G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1601,8 +1601,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1617,8 +1617,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1633,8 +1633,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1649,8 +1649,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1665,8 +1665,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1681,8 +1681,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1697,8 +1697,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1713,8 +1713,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1729,8 +1729,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1745,8 +1745,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -21.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1761,8 +1761,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -22.73G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1777,8 +1777,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           -4.67G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1793,8 +1793,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           -4.67G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1808,8 +1808,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                          -21.23G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1823,8 +1823,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           -4.67G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1838,8 +1838,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1853,8 +1853,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1867,8 +1867,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           -3.67G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1881,8 +1881,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1895,8 +1895,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.39G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1909,8 +1909,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1923,8 +1923,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1937,8 +1937,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1951,8 +1951,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.13G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1965,8 +1965,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1979,8 +1979,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.41G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -1993,8 +1993,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           13.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2007,8 +2007,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2021,8 +2021,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2034,8 +2034,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.63G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2047,8 +2047,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2060,8 +2060,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           17.17G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2073,22 +2073,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
-                            "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                  "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
-                                  "Pulsating Hydra Heart" 1 {1.00G} [2006/03/16]
-                         "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
-                         "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
-                                                     "Wildheart Belt" 1 {30.00G}
-                                        "Ace of Warlords" 1 {3.00G} [2006/03/17]
-                                       "Ace of Warlords" 2 {15.00G} [2006/03/16]
-                                   "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
-                                               "Beaststalker's Belt" -1 {65.00G}
-                                                                          14.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2097,13 +2083,12 @@ D 1.00G
                          "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
                                                      "Wildheart Belt" 1 {30.00G}
                                         "Ace of Warlords" 1 {3.00G} [2006/03/17]
-                                        "Ace of Warlords" 1 {3.90G} [2006/03/17]
                                        "Ace of Warlords" 2 {15.00G} [2006/03/16]
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2117,9 +2102,8 @@ D 1.00G
                                    "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
-                                           "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2134,8 +2118,24 @@ D 1.00G
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
+                            "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
+                                         "Plans: Mithril Shield Spike" 1 {2.30G}
+                                  "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
+                                  "Pulsating Hydra Heart" 1 {1.00G} [2006/03/16]
+                         "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
+                         "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
+                                                     "Wildheart Belt" 1 {30.00G}
+                                        "Ace of Warlords" 1 {3.00G} [2006/03/17]
+                                        "Ace of Warlords" 1 {3.90G} [2006/03/17]
+                                       "Ace of Warlords" 2 {15.00G} [2006/03/16]
+                                   "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
+                                               "Beaststalker's Belt" -1 {65.00G}
+                                                                          14.38G
+                                           "Holy Bologna" 1 {2.00G} [2006/03/17]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2151,8 +2151,8 @@ D 1.00G
                                                "Beaststalker's Belt" -1 {65.00G}
                                                                           14.38G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2170,28 +2170,8 @@ D 1.00G
                                                                           14.38G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
-                            "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                  "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
-                                  "Pulsating Hydra Heart" 1 {1.00G} [2006/03/16]
-                         "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
-                         "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
-                                "The Arcanist's Cookbook" 1 {4.00G} [2006/03/17]
-                                      "The Emerald Dream" 1 {4.00G} [2006/03/17]
-                                                     "Wildheart Belt" 1 {30.00G}
-                                        "Ace of Warlords" 1 {3.00G} [2006/03/17]
-                                        "Ace of Warlords" 1 {3.90G} [2006/03/17]
-                                       "Ace of Warlords" 2 {15.00G} [2006/03/16]
-                                   "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
-                                               "Beaststalker's Belt" -1 {65.00G}
-                                                                          14.38G
-                              "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
-                                     "Harnessing Shadows" 1 {5.00G} [2006/03/17]
-                                           "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2210,8 +2190,28 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
+                            "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
+                                         "Plans: Mithril Shield Spike" 1 {2.30G}
+                                  "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
+                                  "Pulsating Hydra Heart" 1 {1.00G} [2006/03/16]
+                         "Recipe: Elixir of Giant Growth" 1 {1.00G} [2006/03/15]
+                         "Recipe: Elixir of Giant Growth" 1 {1.50G} [2006/03/15]
+                                "The Arcanist's Cookbook" 1 {4.00G} [2006/03/17]
+                                      "The Emerald Dream" 1 {4.00G} [2006/03/17]
+                                                     "Wildheart Belt" 1 {30.00G}
+                                        "Ace of Warlords" 1 {3.00G} [2006/03/17]
+                                        "Ace of Warlords" 1 {3.90G} [2006/03/17]
+                                       "Ace of Warlords" 2 {15.00G} [2006/03/16]
+                                   "Beaststalker's Belt" 1 {65.00G} [2006/03/15]
+                                               "Beaststalker's Belt" -1 {65.00G}
+                                                                          14.38G
+                              "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
+                                     "Harnessing Shadows" 1 {5.00G} [2006/03/17]
+                                           "Holy Bologna" 1 {2.00G} [2006/03/17]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2231,8 +2231,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2252,8 +2252,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2273,8 +2273,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2295,8 +2295,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2317,8 +2317,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2339,8 +2339,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2362,8 +2362,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2385,8 +2385,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2408,8 +2408,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2431,8 +2431,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2454,8 +2454,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2477,8 +2477,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2500,8 +2500,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2523,8 +2523,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2546,8 +2546,8 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
-                                         "Plans: Mithril Shield Spike" 1 {2.11G}
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2569,7 +2569,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
@@ -2591,7 +2591,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2612,7 +2612,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2633,7 +2633,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2654,7 +2654,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2675,7 +2675,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2696,7 +2696,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2717,7 +2717,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2738,7 +2738,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2759,7 +2759,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2780,7 +2780,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2801,7 +2801,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2822,7 +2822,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2843,7 +2843,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2864,7 +2864,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2885,7 +2885,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2906,7 +2906,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2927,7 +2927,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2948,7 +2948,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2969,7 +2969,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -2990,7 +2990,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3011,7 +3011,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3033,7 +3033,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3055,7 +3055,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3077,7 +3077,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3099,7 +3099,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3121,7 +3121,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3142,7 +3142,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3163,7 +3163,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3184,7 +3184,7 @@ D 1.00G
                               "Garona: Book on Treachery" 1 {4.00G} [2006/03/17]
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3206,7 +3206,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3228,7 +3228,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3250,7 +3250,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3272,7 +3272,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3295,7 +3295,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3318,7 +3318,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3341,7 +3341,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3364,7 +3364,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3387,7 +3387,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3411,7 +3411,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3435,7 +3435,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3459,7 +3459,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3483,7 +3483,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3508,7 +3508,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3533,7 +3533,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3558,7 +3558,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3584,7 +3584,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3611,7 +3611,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3638,7 +3638,7 @@ D 1.00G
                                      "Harnessing Shadows" 1 {5.00G} [2006/03/17]
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3666,7 +3666,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3694,7 +3694,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3722,7 +3722,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3750,7 +3750,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3778,7 +3778,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3807,7 +3807,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3836,7 +3836,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3865,7 +3865,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3894,7 +3894,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3924,7 +3924,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3954,7 +3954,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -3984,7 +3984,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4014,7 +4014,7 @@ D 1.00G
                                                  "Harnessing Shadows" -1 {5.00G}
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4045,7 +4045,7 @@ D 1.00G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4076,7 +4076,7 @@ D 1.00G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4107,7 +4107,7 @@ D 1.00G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4138,7 +4138,7 @@ D 1.00G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4169,7 +4169,7 @@ D 1.00G
                                            "Holy Bologna" 1 {2.00G} [2006/03/17]
                                                        "Holy Bologna" -1 {2.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4201,7 +4201,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4233,7 +4233,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4265,7 +4265,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4297,7 +4297,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4329,7 +4329,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4361,7 +4361,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4393,7 +4393,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4425,7 +4425,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4457,7 +4457,7 @@ D 1.00G
                                                        "Holy Bologna" -1 {2.00G}
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4490,7 +4490,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4523,7 +4523,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4556,7 +4556,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4589,7 +4589,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4622,7 +4622,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4656,7 +4656,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4690,7 +4690,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4724,7 +4724,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4758,7 +4758,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4792,7 +4792,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4826,7 +4826,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4860,7 +4860,7 @@ D 1.00G
                                              Nightblade 1 {200.00G} [2006/03/22]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4895,7 +4895,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4930,7 +4930,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -4965,7 +4965,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5000,7 +5000,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5035,7 +5035,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5070,7 +5070,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5105,7 +5105,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5140,7 +5140,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5175,7 +5175,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5210,7 +5210,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5245,7 +5245,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5280,7 +5280,7 @@ D 1.00G
                                                          Nightblade -1 {200.00G}
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5316,7 +5316,7 @@ D 1.00G
                                      "Orb of Deception" 1 {155.00G} [2006/04/01]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]
@@ -5352,7 +5352,7 @@ D 1.00G
                                      "Orb of Deception" 1 {155.00G} [2006/04/01]
                                      "Orb of Deception" 1 {170.00G} [2006/03/21]
                                                  "Orb of Deception" -1 {170.00G}
-                            "Plans: Mithril Shield Spike" 1 {2.11G} [2006/03/15]
+                           "Plans: Mithril Shield Spike" 1 {2.105G} [2006/03/15]
                             "Plans: Mithril Shield Spike" 1 {2.30G} [2006/03/15]
                                   "Plans: Wildthorn Mail" 1 {1.25G} [2006/03/14]
                                        "Preserved Holly" 5 {20.00s} [2006/03/17]

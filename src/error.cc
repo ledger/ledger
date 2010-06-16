@@ -43,6 +43,7 @@ std::ostringstream _desc_buffer;
 string error_context()
 {
   string context = _ctxt_buffer.str();
+  _ctxt_buffer.clear();
   _ctxt_buffer.str("");
   return context;
 }
@@ -54,9 +55,9 @@ string file_context(const path& file, const std::size_t line)
   return buf.str();
 }
 
-string line_context(const string&	    line,
-		    const string::size_type pos,
-		    const string::size_type end_pos)
+string line_context(const string&           line,
+                    const string::size_type pos,
+                    const string::size_type end_pos)
 {
   std::ostringstream buf;
   buf << "  " << line << "\n";
@@ -65,24 +66,24 @@ string line_context(const string&	    line,
     buf << "  ";
     if (end_pos == 0) {
       for (string::size_type i = 0; i < pos; i += 1)
-	buf << " ";
+        buf << " ";
       buf << "^";
     } else {
       for (string::size_type i = 0; i < end_pos; i += 1) {
-	if (i >= pos)
-	  buf << "^";
-	else
-	  buf << " ";
+        if (i >= pos)
+          buf << "^";
+        else
+          buf << " ";
       }
     }
   }
   return buf.str();
 }
 
-string source_context(const path&	     file,
-		      const istream_pos_type pos,
-		      const istream_pos_type end_pos,
-		      const string&	     prefix)
+string source_context(const path&            file,
+                      const istream_pos_type pos,
+                      const istream_pos_type end_pos,
+                      const string&          prefix)
 {
   const std::streamoff len = end_pos - pos;
   if (! len || file == path("/dev/stdin"))

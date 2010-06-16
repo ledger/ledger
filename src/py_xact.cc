@@ -84,35 +84,35 @@ void export_xact()
 {
   class_< xact_base_t, bases<item_t> > ("TransactionBase")
     .add_property("journal",
-		  make_getter(&xact_base_t::journal,
-			      return_internal_reference<>()),
-		  make_setter(&xact_base_t::journal,
-			      with_custodian_and_ward<1, 2>()))
+                  make_getter(&xact_base_t::journal,
+                              return_internal_reference<>()),
+                  make_setter(&xact_base_t::journal,
+                              with_custodian_and_ward<1, 2>()))
 
     .def("__len__", posts_len)
     .def("__getitem__", posts_getitem,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("add_post", &xact_base_t::add_post, with_custodian_and_ward<1, 2>())
     .def("remove_post", &xact_base_t::add_post)
 
     .def("finalize", &xact_base_t::finalize)
 
-    .def("__iter__", range<return_internal_reference<> >
-	 (&xact_t::posts_begin, &xact_t::posts_end))
-    .def("posts", range<return_internal_reference<> >
-	 (&xact_t::posts_begin, &xact_t::posts_end))
+    .def("__iter__", python::range<return_internal_reference<> >
+         (&xact_t::posts_begin, &xact_t::posts_end))
+    .def("posts", python::range<return_internal_reference<> >
+         (&xact_t::posts_begin, &xact_t::posts_end))
 
     .def("valid", &xact_base_t::valid)
     ;
 
   class_< xact_t, bases<xact_base_t> > ("Transaction")
     .add_property("code",
-		  make_getter(&xact_t::code),
-		  make_setter(&xact_t::code))
+                  make_getter(&xact_t::code),
+                  make_setter(&xact_t::code))
     .add_property("payee",
-		  make_getter(&xact_t::payee),
-		  make_setter(&xact_t::payee))
+                  make_getter(&xact_t::payee),
+                  make_setter(&xact_t::payee))
 
     .def("add_post", &xact_t::add_post, with_custodian_and_ward<1, 2>())
 
@@ -132,8 +132,8 @@ void export_xact()
     .def(init<predicate_t>())
 
     .add_property("predicate",
-		  make_getter(&auto_xact_t::predicate),
-		  make_setter(&auto_xact_t::predicate))
+                  make_getter(&auto_xact_t::predicate),
+                  make_setter(&auto_xact_t::predicate))
 
     .def("extend_xact", &auto_xact_t::extend_xact)
     ;
@@ -142,11 +142,11 @@ void export_xact()
     .def(init<string>())
     
     .add_property("period",
-		  make_getter(&period_xact_t::period),
-		  make_setter(&period_xact_t::period))
+                  make_getter(&period_xact_t::period),
+                  make_setter(&period_xact_t::period))
     .add_property("period_string",
-		  make_getter(&period_xact_t::period_string),
-		  make_setter(&period_xact_t::period_string))
+                  make_getter(&period_xact_t::period_string),
+                  make_setter(&period_xact_t::period_string))
     ;
 }
 

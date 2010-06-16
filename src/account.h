@@ -55,24 +55,24 @@ typedef std::map<const string, account_t *> accounts_map;
 
 class account_t : public supports_flags<>, public scope_t
 {
-#define ACCOUNT_NORMAL	  0x00	// no flags at all, a basic account
-#define ACCOUNT_KNOWN	  0x01
-#define ACCOUNT_TEMP	  0x02	// account is a temporary object
-#define ACCOUNT_GENERATED 0x04	// account never actually existed
+#define ACCOUNT_NORMAL    0x00  // no flags at all, a basic account
+#define ACCOUNT_KNOWN     0x01
+#define ACCOUNT_TEMP      0x02  // account is a temporary object
+#define ACCOUNT_GENERATED 0x04  // account never actually existed
 
 public:
-  account_t *	   parent;
-  string	   name;
+  account_t *      parent;
+  string           name;
   optional<string> note;
   unsigned short   depth;
-  accounts_map	   accounts;
-  posts_list	   posts;
+  accounts_map     accounts;
+  posts_list       posts;
 
   mutable string   _fullname;
 
   account_t(account_t *             _parent = NULL,
-	    const string&           _name   = "",
-	    const optional<string>& _note   = none)
+            const string&           _name   = "",
+            const optional<string>& _note   = none)
     : supports_flags<>(), scope_t(), parent(_parent),
       name(_name), note(_note),
       depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
@@ -107,7 +107,7 @@ public:
   account_t * find_account_re(const string& regexp);
 
   typedef transform_iterator<function<account_t *(accounts_map::value_type&)>,
-			     accounts_map::iterator>
+                             accounts_map::iterator>
     accounts_map_seconds_iterator;
 
   accounts_map_seconds_iterator accounts_begin() {
@@ -119,9 +119,7 @@ public:
       (accounts.end(), bind(&accounts_map::value_type::second, _1));
   }
 
-  void add_post(post_t * post) {
-    posts.push_back(post);
-  }
+  void add_post(post_t * post);
   bool remove_post(post_t * post);
 
   posts_list::iterator posts_begin() {
@@ -132,7 +130,7 @@ public:
   }
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   bool valid() const;
 
@@ -140,50 +138,50 @@ public:
 
   struct xdata_t : public supports_flags<>
   {
-#define ACCOUNT_EXT_SORT_CALC	     0x01
+#define ACCOUNT_EXT_SORT_CALC        0x01
 #define ACCOUNT_EXT_HAS_NON_VIRTUALS 0x02
 #define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x04
 #define ACCOUNT_EXT_AUTO_VIRTUALIZE  0x08
 #define ACCOUNT_EXT_VISITED          0x10
 #define ACCOUNT_EXT_MATCHING         0x20
-#define ACCOUNT_EXT_TO_DISPLAY	     0x40
-#define ACCOUNT_EXT_DISPLAYED	     0x80
+#define ACCOUNT_EXT_TO_DISPLAY       0x40
+#define ACCOUNT_EXT_DISPLAYED        0x80
 
     struct details_t
     {
-      value_t		 total;
-      bool		 calculated;
-      bool		 gathered;
+      value_t            total;
+      bool               calculated;
+      bool               gathered;
 
-      std::size_t	 posts_count;
-      std::size_t	 posts_virtuals_count;
-      std::size_t	 posts_cleared_count;
-      std::size_t	 posts_last_7_count;
-      std::size_t	 posts_last_30_count;
-      std::size_t	 posts_this_month_count;
+      std::size_t        posts_count;
+      std::size_t        posts_virtuals_count;
+      std::size_t        posts_cleared_count;
+      std::size_t        posts_last_7_count;
+      std::size_t        posts_last_30_count;
+      std::size_t        posts_this_month_count;
 
-      date_t		 earliest_post;
-      date_t		 earliest_cleared_post;
-      date_t		 latest_post;
-      date_t		 latest_cleared_post;
+      date_t             earliest_post;
+      date_t             earliest_cleared_post;
+      date_t             latest_post;
+      date_t             latest_cleared_post;
 
-      std::set<path>	 filenames;
-      std::set<string>	 accounts_referenced;
-      std::set<string>	 payees_referenced;
+      std::set<path>     filenames;
+      std::set<string>   accounts_referenced;
+      std::set<string>   payees_referenced;
 
       optional<posts_list::const_iterator> last_post;
       optional<posts_list::const_iterator> last_reported_post;
 
       details_t()
-	: calculated(false),
-	  gathered(false),
+        : calculated(false),
+          gathered(false),
 
-	  posts_count(0),
-	  posts_virtuals_count(0),
-	  posts_cleared_count(0),
-	  posts_last_7_count(0),
-	  posts_last_30_count(0),
-	  posts_this_month_count(0) {}
+          posts_count(0),
+          posts_virtuals_count(0),
+          posts_cleared_count(0),
+          posts_last_7_count(0),
+          posts_last_30_count(0),
+          posts_this_month_count(0) {}
 
       details_t& operator+=(const details_t& other);
 
@@ -202,9 +200,9 @@ public:
     }
     xdata_t(const xdata_t& other)
       : supports_flags<>(other.flags()),
-	self_details(other.self_details),
-	family_details(other.family_details),
-	sort_values(other.sort_values)
+        self_details(other.self_details),
+        family_details(other.family_details),
+        sort_values(other.sort_values)
     {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }

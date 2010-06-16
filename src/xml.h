@@ -83,6 +83,14 @@ public:
 
   virtual void flush();
   virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    commodities.clear();
+    transactions_set.clear();
+    transactions.clear();
+
+    item_handler<post_t>::clear();
+  }
 };
 
 } // namespace ledger

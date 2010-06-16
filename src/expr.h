@@ -56,9 +56,8 @@ class expr_t : public expr_base_t<value_t>
 
 public:
   class op_t;
-  typedef intrusive_ptr<op_t>	    ptr_op_t;
+  typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
-
 protected:
   ptr_op_t ptr;
 
@@ -112,13 +111,13 @@ public:
     return parse(stream, flags, str);
   }
 
-  virtual void    parse(std::istream&		in,
-			const parse_flags_t&	flags		= PARSE_DEFAULT,
-			const optional<string>& original_string = none);
+  virtual void    parse(std::istream&           in,
+                        const parse_flags_t&    flags           = PARSE_DEFAULT,
+                        const optional<string>& original_string = none);
   virtual void    compile(scope_t& scope);
   virtual value_t real_calc(scope_t& scope);
 
-  bool	          is_constant() const;
+  bool            is_constant() const;
   value_t&        constant_value();
   const value_t&  constant_value() const;
   bool            is_function() const;
@@ -141,6 +140,25 @@ private:
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
+
+/**
+ * Dealing with expr pointers tucked into value objects.
+ */
+inline bool is_expr(const value_t& val) {
+  return val.is_any() && val.as_any().type() == typeid(expr_t::ptr_op_t);
+}
+inline expr_t::ptr_op_t as_expr(const value_t& val) {
+  VERIFY(val.is_any());
+  return val.as_any<expr_t::ptr_op_t>();
+}
+inline void set_expr(value_t& val, expr_t::ptr_op_t op) {
+  val.set_any(op);
+}
+inline value_t expr_value(expr_t::ptr_op_t op) {
+  value_t temp;
+  temp.set_any(op);
+  return temp;
+}
 
 } // namespace ledger
 

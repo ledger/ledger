@@ -5,24 +5,42 @@ import os
 import re
 import tempfile
 
+multiproc = False
+try:
+    from multiprocessing import Pool
+    multiproc = True
+except:
+    pass
+
 from string import join
 from difflib import unified_diff
 
 from LedgerHarness import LedgerHarness
 
-harness = LedgerHarness(sys.argv)
-tests   = sys.argv[3]
+args = sys.argv
+jobs = 1
+match = re.match('-j([0-9]+)?', args[1])
+if match:
+    args = [args[0]] + args[2:]
+    if match.group(1):
+        jobs = int(match.group(1))
+if jobs == 1:
+    multiproc = False
+
+harness = LedgerHarness(args)
+tests   = args[3]
 
 if not os.path.isdir(tests) and not os.path.isfile(tests):
     sys.exit(1)
 
-class RegressFile:
+class RegressFile(object):
     def __init__(self, filename):
         self.filename = filename
         self.fd = open(self.filename)
 
     def is_directive(self, line):
         return line == "<<<\n" or \
+               line == ">>>\n" or \
                line == ">>>1\n" or \
                line == ">>>2\n" or \
                line.startswith("===")
@@ -42,10 +60,10 @@ class RegressFile:
     def read_test(self, last_test = None):
         test = {
             'command':  None,
-            'input':    None,
-            'output':   None,
-            'error':    None,
-            'exitcode': None
+            'input':    "",
+            'output':   "",
+            'error':    "",
+            'exitcode': 0
         }
         if last_test:
             test['input'] = last_test['input']
@@ -54,7 +72,7 @@ class RegressFile:
         while line:
             if line == "<<<\n":
                 (test['input'], line) = self.read_section()
-            elif line == ">>>1\n":
+            elif line == ">>>\n" or line == ">>>1\n":
                 (test['output'], line) = self.read_section()
             elif line == ">>>2\n":
                 (test['error'], line) = self.read_section()
@@ -136,24 +154,36 @@ class RegressFile:
         if not use_stdin:
             os.remove(tempdata[1])
 
-    def run_tests(self):
+    def run_tests(self, pool):
         test = self.read_test()
         while test:
-            self.run_test(test)
+            if pool:
+                pool.apply_async(RegressFile.run_test, (self, test,))
+            else:
+                self.run_test(test)
             test = self.read_test(test)
 
     def close(self):
         self.fd.close()
 
-if os.path.isdir(tests):
-    for test_file in os.listdir(tests):
-        if re.search('\.test$', test_file):
-            entry = RegressFile(os.path.join(tests, test_file))
-            entry.run_tests()
-            entry.close()
-else:
-    entry = RegressFile(tests)
-    entry.run_tests()
-    entry.close()
+if __name__ == '__main__':
+    if multiproc:
+        pool = Pool(jobs*2)
+    else:
+        pool = None
 
-harness.exit()
+    if os.path.isdir(tests):
+        for test_file in os.listdir(tests):
+            if re.search('\.test$', test_file):
+                entry = RegressFile(os.path.join(tests, test_file))
+                entry.run_tests(pool)
+                entry.close()
+    else:
+        entry = RegressFile(tests)
+        entry.run_tests(pool)
+        entry.close()
+
+    if pool:
+        pool.close()
+        pool.join()
+    harness.exit()

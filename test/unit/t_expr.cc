@@ -158,8 +158,6 @@ void ValueExprTestCase::testPredicateTokenizer7()
 
   assertEqual(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
   assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
@@ -167,7 +165,7 @@ void ValueExprTestCase::testPredicateTokenizer7()
 void ValueExprTestCase::testPredicateTokenizer8()
 {
   value_t args;
-  args.push_back(string_value("expr foo and bar"));
+  args.push_back(string_value("expr 'foo and bar'"));
 
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
@@ -182,7 +180,7 @@ void ValueExprTestCase::testPredicateTokenizer9()
 {
   value_t args;
   args.push_back(string_value("expr"));
-  args.push_back(string_value("foo and bar"));
+  args.push_back(string_value("'foo and bar'"));
 
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());

@@ -45,16 +45,16 @@ using namespace boost::python;
 namespace {
 
   boost::optional<amount_t> py_value_0(const amount_t& amount) {
-    return amount.value(false, CURRENT_TIME());
+    return amount.value(CURRENT_TIME());
   }
   boost::optional<amount_t> py_value_1(const amount_t& amount,
-				       commodity_t& in_terms_of) {
-    return amount.value(false, CURRENT_TIME(), in_terms_of);
+                                       commodity_t& in_terms_of) {
+    return amount.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<amount_t> py_value_2(const amount_t& amount,
-				       commodity_t& in_terms_of,
-				       datetime_t& moment) {
-    return amount.value(false, moment, in_terms_of);
+                                       commodity_t& in_terms_of,
+                                       datetime_t& moment) {
+    return amount.value(moment, in_terms_of);
   }
 
   void py_parse_2(amount_t& amount, object in, unsigned char flags) {
@@ -63,7 +63,7 @@ namespace {
       amount.parse(instr, flags);
     } else {
       PyErr_SetString(PyExc_IOError,
-		      _("Argument to amount.parse(file) is not a file object"));
+                      _("Argument to amount.parse(file) is not a file object"));
     }
   }
   void py_parse_1(amount_t& amount, object in) {
@@ -83,7 +83,7 @@ namespace {
       amount.print(outstr);
     } else {
       PyErr_SetString(PyExc_IOError,
-		      _("Argument to amount.print_(file) is not a file object"));
+                      _("Argument to amount.print_(file) is not a file object"));
     }
   }
 
@@ -104,9 +104,9 @@ namespace {
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+#define EXC_TRANSLATOR(type)                            \
+  void exc_translate_ ## type(const type& err) {        \
+    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
   }
 
 EXC_TRANSLATOR(amount_error)
@@ -120,24 +120,24 @@ void export_amount()
     .staticmethod("shutdown")
 
     .add_static_property("is_initialized",
-			 make_getter(&amount_t::is_initialized),
-			 make_setter(&amount_t::is_initialized))
+                         make_getter(&amount_t::is_initialized),
+                         make_setter(&amount_t::is_initialized))
     .add_static_property("stream_fullstrings",
-			 make_getter(&amount_t::stream_fullstrings),
-			 make_setter(&amount_t::stream_fullstrings))
+                         make_getter(&amount_t::stream_fullstrings),
+                         make_setter(&amount_t::stream_fullstrings))
 
     .def(init<long>())
     .def(init<std::string>())
 
     .def("exact", &amount_t::exact, args("value"),
-	 _("Construct an amount object whose display precision is always equal to its\n\
+         _("Construct an amount object whose display precision is always equal to its\n\
 internal precision."))
     .staticmethod("exact")
 
     .def(init<amount_t>())
 
     .def("compare", &amount_t::compare, args("amount"),
-	 _("Compare two amounts for equality, returning <0, 0 or >0."))
+         _("Compare two amounts for equality, returning <0, 0 or >0."))
 
     .def(self == self)
     .def(self == long())
@@ -168,40 +168,40 @@ internal precision."))
     .def(self += self)
     .def(self += long())
 
-    .def(self	  + self)
-    .def(self	  + long())
-    .def(long()	  + self)
+    .def(self     + self)
+    .def(self     + long())
+    .def(long()   + self)
 
     .def(self -= self)
     .def(self -= long())
 
-    .def(self	  - self)
-    .def(self	  - long())
-    .def(long()	  - self)
+    .def(self     - self)
+    .def(self     - long())
+    .def(long()   - self)
 
     .def(self *= self)
     .def(self *= long())
 
-    .def(self	  * self)
-    .def(self	  * long())
-    .def(long()	  * self)
+    .def(self     * self)
+    .def(self     * long())
+    .def(long()   * self)
 
     .def(self /= self)
     .def(self /= long())
 
-    .def(self	  /  self)
-    .def(self	  /  long())
-    .def(long()	  / self)
+    .def(self     /  self)
+    .def(self     /  long())
+    .def(long()   / self)
 
     .add_property("precision", &amount_t::precision)
     .add_property("display_precision", &amount_t::display_precision)
     .add_property("keep_precision",
-		  &amount_t::keep_precision,
-		  &amount_t::set_keep_precision)
+                  &amount_t::keep_precision,
+                  &amount_t::set_keep_precision)
 
     .def("negated", &amount_t::negated)
     .def("in_place_negate", &amount_t::in_place_negate,
-	 return_internal_reference<>())
+         return_internal_reference<>())
     .def(- self)
 
     .def("abs", &amount_t::abs)
@@ -211,27 +211,27 @@ internal precision."))
 
     .def("rounded", &amount_t::rounded)
     .def("in_place_round", &amount_t::in_place_round,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("truncated", &amount_t::truncated)
     .def("in_place_truncate", &amount_t::in_place_truncate,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("floored", &amount_t::floored)
     .def("in_place_floor", &amount_t::in_place_floor,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("unrounded", &amount_t::unrounded)
     .def("in_place_unround", &amount_t::in_place_unround,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("reduced", &amount_t::reduced)
     .def("in_place_reduce", &amount_t::in_place_reduce,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("unreduced", &amount_t::unreduced)
     .def("in_place_unreduce", &amount_t::in_place_unreduce,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
@@ -260,10 +260,10 @@ internal precision."))
     .def("quantity_string", &amount_t::quantity_string)
 
     .add_property("commodity",
-		  make_function(&amount_t::commodity,
-				return_value_policy<reference_existing_object>()),
-		  make_function(&amount_t::set_commodity,
-				with_custodian_and_ward<1, 2>()))
+                  make_function(&amount_t::commodity,
+                                return_value_policy<reference_existing_object>()),
+                  make_function(&amount_t::set_commodity,
+                                with_custodian_and_ward<1, 2>()))
     .def("has_commodity", &amount_t::has_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
 
@@ -272,8 +272,8 @@ internal precision."))
     .def("annotate", &amount_t::annotate)
     .def("has_annotation", &amount_t::has_annotation)
     .add_property("annotation",
-		  make_function(py_amount_annotation,
-				return_internal_reference<>()))
+                  make_function(py_amount_annotation,
+                                return_internal_reference<>()))
     .def("strip_annotations", py_strip_annotations_0)
     .def("strip_annotations", py_strip_annotations_1)
 

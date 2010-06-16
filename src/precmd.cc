@@ -43,32 +43,49 @@
 namespace ledger {
 
 namespace {
+  string join_args(call_scope_t& args)
+  {
+    std::ostringstream buf;
+    bool first = true;
+
+    for (std::size_t i = 0; i < args.size(); i++) {
+      if (first)
+        first = false;
+      else
+        buf << ' ';
+      buf << args[i];
+    }
+
+    return buf.str();
+  }
+
   post_t * get_sample_xact(report_t& report)
   {
     {
       string str;
       {
-	std::ostringstream buf;
+        std::ostringstream buf;
 
-	buf << "2004/05/27 Book Store\n"
-	    << "    ; This note applies to all postings. :SecondTag:\n"
-	    << "    Expenses:Books                 20 BOOK @ $10\n"
-	    << "    ; Metadata: Some Value\n"
-	    << "    ; :ExampleTag:\n"
-	    << "    ; Here follows a note describing the posting.\n"
-	    << "    Liabilities:MasterCard        $-200.00\n";
+        buf << "2004/05/27 Book Store\n"
+            << "    ; This note applies to all postings. :SecondTag:\n"
+            << "    Expenses:Books                 20 BOOK @ $10\n"
+            << "    ; Metadata: Some Value\n"
+            << "    ; Typed:: $100 + $200\n"
+            << "    ; :ExampleTag:\n"
+            << "    ; Here follows a note describing the posting.\n"
+            << "    Liabilities:MasterCard        $-200.00\n";
 
-	str = buf.str();
+        str = buf.str();
       }
 
       std::ostream& out(report.output_stream);
 
       out << _("--- Context is first posting of the following transaction ---")
-	  << std::endl << str << std::endl;
+          << std::endl << str << std::endl;
       {
-	std::istringstream in(str);
-	report.session.journal->parse(in, report.session);
-	report.session.journal->clear_xdata();
+        std::istringstream in(str);
+        report.session.journal->parse(in, report.session);
+        report.session.journal->clear_xdata();
       }
     }
     xact_t * first = report.session.journal->xacts.front();
@@ -169,7 +186,7 @@ value_t period_command(call_scope_t& args)
   out << std::endl;
 
   date_interval_t interval(arg);
-  interval.dump(out, report.session.current_year);
+  interval.dump(out);
 
   return NULL_VALUE;
 }
@@ -193,7 +210,7 @@ value_t query_command(call_scope_t& args)
 
   if (query.tokens_remaining()) {
     out << std::endl << _("====== Display predicate ======")
-	<< std::endl << std::endl;
+        << std::endl << std::endl;
 
     query.parse_again();
 

@@ -38,7 +38,7 @@ namespace ledger {
 scope_t * scope_t::default_scope = NULL;
 
 void symbol_scope_t::define(const symbol_t::kind_t kind,
-			    const string& name, expr_t::ptr_op_t def)
+                            const string& name, expr_t::ptr_op_t def)
 {
   DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
 
@@ -53,15 +53,15 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
     symbols->erase(i);
 
     result = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def),
-						    def));
+                                                    def));
     if (! result.second)
       throw_(compile_error,
-	     _("Redefinition of '%1' in the same scope") << name);
+             _("Redefinition of '%1' in the same scope") << name);
   }
 }
 
 expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
-					const string& name)
+                                        const string& name)
 {
   if (symbols) {
     symbol_map::const_iterator i = symbols->find(symbol_t(kind, name));
@@ -69,6 +69,25 @@ expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
       return (*i).second;
   }
   return child_scope_t::lookup(kind, name);
+}
+
+value_t& call_scope_t::resolve(const std::size_t index,
+                               value_t::type_t   context,
+                               const bool        required)
+{
+  if (index >= args.size())
+    throw_(calc_error, _("Too few arguments to function"));
+
+  value_t& value(args[index]);
+  if (value.is_any()) {
+    context_scope_t scope(*this, context, required);
+    value = as_expr(value)->calc(scope, locus, depth);
+    if (required && ! value.is_type(context))
+      throw_(calc_error, _("Expected %1 for argument %2, but received %3")
+             << value.label(context) << index
+             << value.label());
+  }
+  return value;
 }
 
 } // namespace ledger

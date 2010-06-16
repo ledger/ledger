@@ -38,7 +38,6 @@
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 
-#include "interactive.h"
 #include "option.h"
 #include "report.h"
 
@@ -50,16 +49,16 @@ class report_t;
 class global_scope_t : public noncopyable, public scope_t
 {
   shared_ptr<session_t> session_ptr;
-  ptr_list<report_t>	report_stack;
+  ptr_list<report_t>    report_stack;
 
 public:
   global_scope_t(char ** envp);
   ~global_scope_t();
 
-  void		 read_init();
-  void		 read_environment_settings(char * envp[]);
-  strings_list	 read_command_arguments(scope_t& scope, strings_list args);
-  void		 normalize_session_options();
+  void           read_init();
+  void           read_environment_settings(char * envp[]);
+  strings_list   read_command_arguments(scope_t& scope, strings_list args);
+  void           normalize_session_options();
   expr_t::func_t look_for_precommand(scope_t& scope, const string& verb);
   expr_t::func_t look_for_command(scope_t& scope, const string& verb);
 
@@ -98,7 +97,7 @@ public:
     // open output stream at this point.  We want it to get popped off as
     // soon as this command terminate so that the stream is closed cleanly.
     report_stack.insert(++report_stack.begin(),
-			new report_t(report_stack.front()));
+                        new report_t(report_stack.front()));
     return true;
   }
   value_t pop_command(call_scope_t&) {
@@ -121,7 +120,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
   option_t<global_scope_t> * lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);
@@ -152,7 +151,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   OPTION_(global_scope_t, version, DO() { // -v
       parent->show_version_info(std::cout);
-      throw int(0);		// exit immediately
+      throw int(0);             // exit immediately
     });
 };
 

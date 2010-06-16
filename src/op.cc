@@ -39,33 +39,40 @@
 namespace ledger {
 
 namespace {
-  value_t split_cons_expr(expr_t::ptr_op_t op, scope_t& scope,
-			  std::vector<expr_t>& exprs)
+  value_t split_cons_expr(expr_t::ptr_op_t op)
   {
-    value_t seq;
-
     if (op->kind == expr_t::op_t::O_CONS) {
-      exprs.push_back(expr_t(op->left(), &scope));
-      seq.push_back(value_t(exprs.back()));
+      value_t seq;
+      seq.push_back(expr_value(op->left()));
 
       expr_t::ptr_op_t next = op->right();
       while (next) {
-	expr_t::ptr_op_t value_op;
-	if (next->kind == expr_t::op_t::O_CONS) {
-	  value_op = next->left();
-	  next     = next->right();
-	} else {
-	  value_op = next;
-	  next     = NULL;
-	}
-	exprs.push_back(expr_t(value_op, &scope));
-	seq.push_back(value_t(exprs.back()));
+        expr_t::ptr_op_t value_op;
+        if (next->kind == expr_t::op_t::O_CONS) {
+          value_op = next->left();
+          next     = next->right();
+        } else {
+          value_op = next;
+          next     = NULL;
+        }
+        seq.push_back(expr_value(value_op));
       }
+      return seq;
     } else {
-      exprs.push_back(expr_t(op, &scope));
-      seq.push_back(value_t(exprs.back()));
+      return expr_value(op);
     }
-    return seq;
+  }
+
+  inline void check_type_context(scope_t& scope, value_t& result)
+  {
+    if (scope.type_required() &&
+        scope.type_context() != value_t::VOID &&
+        result.type() != scope.type_context()) {
+      throw_(calc_error,
+             _("Expected return of %1, but received %2")
+             << result.label(scope.type_context())
+             << result.label());
+    }
   }
 }
 
@@ -78,10 +85,12 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
+#if defined(DEBUG_ON)
       if (SHOW_DEBUG("expr.compile")) {
-	DEBUG("expr.compile", "Found definition:");
-	def->dump(*_log_stream, 0);
+        DEBUG("expr.compile", "Found definition:");
+        def->dump(*_log_stream, 0);
       }
+#endif // defined(DEBUG_ON)
       return copy(def);
     }
     else if (left()) {
@@ -100,9 +109,9 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
       break;
     case O_CALL:
       if (left()->left()->is_ident())
-	scope.define(symbol_t::FUNCTION, left()->left()->as_ident(), this);
+        scope.define(symbol_t::FUNCTION, left()->left()->as_ident(), this);
       else
-	throw_(compile_error, _("Invalid function definition"));
+        throw_(compile_error, _("Invalid function definition"));
       break;
     default:
       throw_(compile_error, _("Invalid function definition"));
@@ -112,8 +121,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 
   ptr_op_t lhs(left()->compile(scope, depth));
   ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
-	       (kind == O_LOOKUP ? right() :
-		right()->compile(scope, depth)) : NULL);
+               (kind == O_LOOKUP ? right() :
+                right()->compile(scope, depth)) : NULL);
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
@@ -148,9 +157,10 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // Evaluating an identifier is the same as calling its definition
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
-    call_scope_t call_args(scope);
+    call_scope_t call_args(scope, locus, depth);
     result = left()->compile(call_args, depth + 1)
                    ->calc(call_args, locus, depth + 1);
+    check_type_context(scope, result);
     break;
   }
 
@@ -158,8 +168,9 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     // Evaluating a FUNCTION is the same as calling it directly; this happens
     // when certain functions-that-look-like-variables (such as "amount") are
     // resolved.
-    call_scope_t call_args(scope);
+    call_scope_t call_args(scope, locus, depth);
     result = as_function()(call_args);
+    check_type_context(scope, result);
 #if defined(DEBUG_ON)
     skip_debug = true;
 #endif
@@ -168,77 +179,66 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
   case O_DEFINE: {
     call_scope_t&  call_args(downcast<call_scope_t>(scope));
-    std::size_t	   args_count = call_args.size();
-    std::size_t	   args_index = 0;
+    std::size_t    args_count = call_args.size();
+    std::size_t    args_index = 0;
 
     assert(left()->kind == O_CALL);
 
     for (ptr_op_t sym = left()->right();
-	 sym;
-	 sym = sym->has_right() ? sym->right() : NULL) {
+         sym;
+         sym = sym->has_right() ? sym->right() : NULL) {
       ptr_op_t varname = sym;
       if (sym->kind == O_CONS)
-	varname = sym->left();
+        varname = sym->left();
 
       if (! varname->is_ident())
-	throw_(calc_error, _("Invalid function definition"));
+        throw_(calc_error, _("Invalid function definition"));
       else if (args_index == args_count)
-	scope.define(symbol_t::FUNCTION, varname->as_ident(),
-		     wrap_value(false));
+        scope.define(symbol_t::FUNCTION, varname->as_ident(),
+                     wrap_value(false));
       else
-	scope.define(symbol_t::FUNCTION, varname->as_ident(),
-		     wrap_value(call_args[args_index++]));
+        scope.define(symbol_t::FUNCTION, varname->as_ident(),
+                     wrap_value(call_args[args_index++]));
     }
 
     if (args_index < args_count)
       throw_(calc_error,
-	     _("Too many arguments in function call (saw %1)") << args_count);
+             _("Too many arguments in function call (saw %1)") << args_count);
 
     result = right()->calc(scope, locus, depth + 1);
     break;
   }
 
-  case O_LOOKUP:
-    if (value_t obj = left()->calc(scope, locus, depth + 1)) {
+  case O_LOOKUP: {
+    context_scope_t context_scope(scope, value_t::SCOPE);
+    if (value_t obj = left()->calc(context_scope, locus, depth + 1)) {
       if (obj.is_scope()) {
-	if (obj.as_scope() == NULL) {
-	  throw_(calc_error, _("Left operand of . operator is NULL"));
-	} else {
-	  scope_t& objscope(*obj.as_scope());
-	  if (ptr_op_t member =
-	      objscope.lookup(symbol_t::FUNCTION, right()->as_ident())) {
-	    result = member->calc(objscope, NULL, depth + 1);
-	    break;
-	  }
-	}
+        if (obj.as_scope() == NULL) {
+          throw_(calc_error, _("Left operand of . operator is NULL"));
+        } else {
+          scope_t& objscope(*obj.as_scope());
+          if (ptr_op_t member =
+              objscope.lookup(symbol_t::FUNCTION, right()->as_ident())) {
+            result = member->calc(objscope, NULL, depth + 1);
+            break;
+          }
+        }
       }
     }
     if (right()->kind != IDENT)
       throw_(calc_error,
-	     _("Right operand of . operator must be an identifier"));
+             _("Right operand of . operator must be an identifier"));
     else
       throw_(calc_error,
-	     _("Failed to lookup member '%1'") << right()->as_ident());
+             _("Failed to lookup member '%1'") << right()->as_ident());
     break;
+  }
 
-  case O_CALL:
-  case O_EXPAND: {
-    call_scope_t call_args(scope);
-    // When evaluating a macro call, these expressions have to live beyond the
-    // call to calc() below.
-    optional<std::vector<expr_t> > args_expr;
-
-    if (has_right()) {
-      if (kind == O_CALL) {
-	call_args.set_args(right()->calc(scope, locus, depth + 1));
-      } else {
-	// macros defer calculation to the callee
-	args_expr = std::vector<expr_t>();
-	call_args.set_args(split_cons_expr(right()->kind == O_SEQ ?
-					   right()->left() : right(),
-					   scope, *args_expr));
-      }
-    }
+  case O_CALL: {
+    call_scope_t call_args(scope, locus, depth);
+    if (has_right())
+      call_args.set_args(split_cons_expr(right()->kind == O_SEQ ?
+                                         right()->left() : right()));
 
     ptr_op_t func = left();
     const string& name(func->as_ident());
@@ -251,50 +251,52 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       result = func->as_function()(call_args);
     else
       result = func->calc(call_args, locus, depth + 1);
+
+    check_type_context(scope, result);
     break;
   }
 
   case O_MATCH:
     result = (right()->calc(scope, locus, depth + 1).as_mask()
-	      .match(left()->calc(scope, locus, depth + 1).to_string()));
+              .match(left()->calc(scope, locus, depth + 1).to_string()));
     break;
 
   case O_EQ:
     result = (left()->calc(scope, locus, depth + 1) ==
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_LT:
     result = (left()->calc(scope, locus, depth + 1) <
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_LTE:
     result = (left()->calc(scope, locus, depth + 1) <=
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_GT:
     result = (left()->calc(scope, locus, depth + 1) >
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_GTE:
     result = (left()->calc(scope, locus, depth + 1) >=
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
 
   case O_ADD:
     result = (left()->calc(scope, locus, depth + 1) +
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_SUB:
     result = (left()->calc(scope, locus, depth + 1) -
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_MUL:
     result = (left()->calc(scope, locus, depth + 1) *
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
   case O_DIV:
     result = (left()->calc(scope, locus, depth + 1) /
-	      right()->calc(scope, locus, depth + 1));
+              right()->calc(scope, locus, depth + 1));
     break;
 
   case O_NEG:
@@ -343,16 +345,16 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
       ptr_op_t next = right();
       while (next) {
-	ptr_op_t value_op;
-	if (next->kind == O_CONS) {
-	  value_op = next->left();
-	  next     = next->right();
-	} else {
-	  value_op = next;
-	  next     = NULL;
-	}
-	temp.push_back(value_op->calc(scope, locus, depth + 1));
-	DEBUG("op.cons", "temp now = " << temp);
+        ptr_op_t value_op;
+        if (next->kind == O_CONS) {
+          value_op = next->left();
+          next     = next->right();
+        } else {
+          value_op = next;
+          next     = NULL;
+        }
+        temp.push_back(value_op->calc(scope, locus, depth + 1));
+        DEBUG("op.cons", "temp now = " << temp);
       }
       result = temp;
     }
@@ -371,15 +373,15 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     if (has_right()) {
       ptr_op_t next = right();
       while (next) {
-	ptr_op_t value_op;
-	if (next->kind == O_SEQ) {
-	  value_op = next->left();
-	  next     = next->right();
-	} else {
-	  value_op = next;
-	  next     = NULL;
-	}
-	result = value_op->calc(seq_scope, locus, depth + 1);
+        ptr_op_t value_op;
+        if (next->kind == O_SEQ) {
+          value_op = next->left();
+          next     = next->right();
+        } else {
+          value_op = next;
+          next     = NULL;
+        }
+        result = value_op->calc(seq_scope, locus, depth + 1);
       }
     }
     break;
@@ -404,7 +406,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   return result;
 
   }
-  catch (const std::exception& err) { 
+  catch (const std::exception&) { 
     if (locus && ! *locus)
       *locus = this;
     throw;
@@ -413,7 +415,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
 namespace {
   bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t op,
-		  const expr_t::op_t::context_t& context)
+                  const expr_t::op_t::context_t& context)
   {
     bool found = false;
 
@@ -424,15 +426,15 @@ namespace {
     if (op->has_right()) {
       out << ", ";
       if (op->right()->kind == expr_t::op_t::O_CONS)
-	found = print_cons(out, op->right(), context);
+        found = print_cons(out, op->right(), context);
       else if (op->right()->print(out, context))
-	found = true;
+        found = true;
     }
     return found;
   }
 
   bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t op,
-		 const expr_t::op_t::context_t& context)
+                 const expr_t::op_t::context_t& context)
   {
     bool found = false;
 
@@ -444,9 +446,9 @@ namespace {
       out << "; ";
 
       if (op->right()->kind == expr_t::op_t::O_CONS)
-	found = print_cons(out, op->right(), context);
+        found = print_cons(out, op->right(), context);
       else if (op->right()->print(out, context))
-	found = true;
+        found = true;
     }
 
     return found;
@@ -636,18 +638,17 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_CALL:
-  case O_EXPAND:
     if (left() && left()->print(out, context))
       found = true;
     if (has_right()) {
       if (right()->kind == O_SEQ) {
-	if (right()->print(out, context))
-	  found = true;
+        if (right()->print(out, context))
+          found = true;
       } else {
-	out << "(";
-	if (has_right() && right()->print(out, context))
-	  found = true;
-	out << ")";
+        out << "(";
+        if (has_right() && right()->print(out, context))
+          found = true;
+        out << ")";
       }
     } else {
       out << "()";
@@ -707,32 +708,31 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_LOOKUP: out << "O_LOOKUP"; break;
-  case O_CALL:	 out << "O_CALL"; break;
-  case O_EXPAND: out << "O_EXPAND"; break;
-  case O_MATCH:	 out << "O_MATCH"; break;
+  case O_CALL:   out << "O_CALL"; break;
+  case O_MATCH:  out << "O_MATCH"; break;
 
-  case O_NOT:	 out << "O_NOT"; break;
-  case O_NEG:	 out << "O_NEG"; break;
+  case O_NOT:    out << "O_NOT"; break;
+  case O_NEG:    out << "O_NEG"; break;
 
-  case O_ADD:	 out << "O_ADD"; break;
-  case O_SUB:	 out << "O_SUB"; break;
-  case O_MUL:	 out << "O_MUL"; break;
-  case O_DIV:	 out << "O_DIV"; break;
+  case O_ADD:    out << "O_ADD"; break;
+  case O_SUB:    out << "O_SUB"; break;
+  case O_MUL:    out << "O_MUL"; break;
+  case O_DIV:    out << "O_DIV"; break;
 
-  case O_EQ:	 out << "O_EQ"; break;
-  case O_LT:	 out << "O_LT"; break;
-  case O_LTE:	 out << "O_LTE"; break;
-  case O_GT:	 out << "O_GT"; break;
-  case O_GTE:	 out << "O_GTE"; break;
+  case O_EQ:     out << "O_EQ"; break;
+  case O_LT:     out << "O_LT"; break;
+  case O_LTE:    out << "O_LTE"; break;
+  case O_GT:     out << "O_GT"; break;
+  case O_GTE:    out << "O_GTE"; break;
 
-  case O_AND:	 out << "O_AND"; break;
-  case O_OR:	 out << "O_OR"; break;
+  case O_AND:    out << "O_AND"; break;
+  case O_OR:     out << "O_OR"; break;
 
   case O_QUERY:  out << "O_QUERY"; break;
-  case O_COLON:	 out << "O_COLON"; break;
+  case O_COLON:  out << "O_COLON"; break;
 
-  case O_CONS:	 out << "O_CONS"; break;
-  case O_SEQ:	 out << "O_SEQ"; break;
+  case O_CONS:   out << "O_CONS"; break;
+  case O_SEQ:    out << "O_SEQ"; break;
 
   case LAST:
   default:
@@ -748,7 +748,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     if (left()) {
       left()->dump(out, depth + 1);
       if (kind > UNARY_OPERATORS && has_right())
-	right()->dump(out, depth + 1);
+        right()->dump(out, depth + 1);
     }
     else if (kind > UNARY_OPERATORS) {
       assert(! has_right());
@@ -757,7 +757,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 }
 
 string op_context(const expr_t::ptr_op_t op,
-		  const expr_t::ptr_op_t locus)
+                  const expr_t::ptr_op_t locus)
 {
   ostream_pos_type start_pos, end_pos;
   expr_t::op_t::context_t context(op, locus, &start_pos, &end_pos);
@@ -767,9 +767,9 @@ string op_context(const expr_t::ptr_op_t op,
     buf << "\n";
     for (int i = 0; i <= end_pos; i++) {
       if (i > start_pos)
-	buf << "^";
+        buf << "^";
       else
-	buf << " ";
+        buf << " ";
     }
   }
   return buf.str();

@@ -4,8 +4,8 @@ reg --columns=100
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 >>>1
-07-Feb-02 RD VMMXX                   As:Investments:Vanguard:VMMXX      0.350 VMMXX     0.350 VMMXX
-                                     In:Dividends:Vanguard:VMMXX             $-0.35          $-0.35
+07-Feb-02 RD VMMXX                   Asse:Investment:Vanguard:VMMXX     0.350 VMMXX     0.350 VMMXX
+                                     Incom:Dividends:Vanguard:VMMXX          $-0.35          $-0.35
                                                                                         0.350 VMMXX
 >>>2
 === 0

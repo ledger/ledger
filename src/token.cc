@@ -50,74 +50,74 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
     switch (buf[0]) {
     case 'a':
       if (std::strcmp(buf, "and") == 0) {
-	symbol[0] = '&';
-	symbol[1] = '\0';
-	kind = KW_AND;
-	return 1;
+        symbol[0] = '&';
+        symbol[1] = '\0';
+        kind = KW_AND;
+        return 1;
       }
       break;
 
     case 'd':
       if (std::strcmp(buf, "div") == 0) {
-	symbol[0] = '/';
-	symbol[1] = '/';
-	symbol[2] = '\0';
-	kind = KW_DIV;
-	return 1;
+        symbol[0] = '/';
+        symbol[1] = '/';
+        symbol[2] = '\0';
+        kind = KW_DIV;
+        return 1;
       }
       break;
 
     case 'e':
       if (std::strcmp(buf, "else") == 0) {
-	symbol[0] = 'L';
-	symbol[1] = 'S';
-	symbol[2] = '\0';
-	kind = KW_ELSE;
-	return 1;
+        symbol[0] = 'L';
+        symbol[1] = 'S';
+        symbol[2] = '\0';
+        kind = KW_ELSE;
+        return 1;
       }
       break;
 
     case 'f':
       if (std::strcmp(buf, "false") == 0) {
-	kind = VALUE;
-	value = false;
-	return 1;
+        kind = VALUE;
+        value = false;
+        return 1;
       }
       break;
 
     case 'i':
       if (std::strcmp(buf, "if") == 0) {
-	symbol[0] = 'i';
-	symbol[1] = 'f';
-	symbol[2] = '\0';
-	kind = KW_IF;
-	return 1;
+        symbol[0] = 'i';
+        symbol[1] = 'f';
+        symbol[2] = '\0';
+        kind = KW_IF;
+        return 1;
       }
       break;
 
     case 'o':
       if (std::strcmp(buf, "or") == 0) {
-	symbol[0] = '|';
-	symbol[1] = '\0';
-	kind = KW_OR;
-	return 1;
+        symbol[0] = '|';
+        symbol[1] = '\0';
+        kind = KW_OR;
+        return 1;
       }
       break;
 
     case 'n':
       if (std::strcmp(buf, "not") == 0) {
-	symbol[0] = '!';
-	symbol[1] = '\0';
-	kind = EXCLAM;
-	return 1;
+        symbol[0] = '!';
+        symbol[1] = '\0';
+        kind = EXCLAM;
+        return 1;
       }
       break;
 
     case 't':
       if (std::strcmp(buf, "true") == 0) {
-	kind = VALUE;
-	value = true;
-	return 1;
+        kind = VALUE;
+        value = true;
+        return 1;
       }
       break;
     }
@@ -129,7 +129,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 
 void expr_t::token_t::parse_ident(std::istream& in)
 {
-  kind	 = IDENT;
+  kind   = IDENT;
   length = 0;
 
   char c, buf[256];
@@ -138,7 +138,8 @@ void expr_t::token_t::parse_ident(std::istream& in)
   value.set_string(buf);
 }
 
-void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
+void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
+                           const char expecting)
 {
   if (in.eof()) {
     kind = TOK_EOF;
@@ -209,7 +210,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     optional<date_t> begin = timespan.begin();
     if (! begin)
       throw_(parse_error,
-	     _("Date specifier does not refer to a starting date"));
+             _("Date specifier does not refer to a starting date"));
     kind  = VALUE;
     value = *begin;
     break;
@@ -301,12 +302,12 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     in.get(c);
     if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
       kind = SLASH;
-    } else {			// terminal context
+    } else {                    // terminal context
       // Read in the regexp
       char buf[256];
       READ_INTO_(in, buf, 255, c, length, c != '/');
       if (c != '/')
-	expected('/', c);
+        expected('/', c);
       in.get(c);
       length++;
 
@@ -394,7 +395,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       in.clear();
       in.seekg(pos, std::ios::beg);
       if (in.fail())
-	throw_(parse_error, _("Failed to reset input stream"));
+        throw_(parse_error, _("Failed to reset input stream"));
     }
 
     // When in relaxed parsing mode, we want to migrate commodity flags
@@ -410,26 +411,33 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     try {
       amount_t temp;
       if (! temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
-	// If the amount had no commodity, it must be an unambiguous
-	// variable reference
+        // If the amount had no commodity, it must be an unambiguous
+        // variable reference
 
-	in.clear();
-	in.seekg(pos, std::ios::beg);
-	if (in.fail())
-	  throw_(parse_error, _("Failed to reset input stream"));
+        in.clear();
+        in.seekg(pos, std::ios::beg);
+        if (in.fail())
+          throw_(parse_error, _("Failed to reset input stream"));
 
-	c = static_cast<char>(in.peek());
-	if (std::isdigit(c) || c == '.')
-	  expected('\0', c);
+        c = static_cast<char>(in.peek());
+        if (std::isdigit(c) || c == '.')
+          expected('\0', c);
 
-	parse_ident(in);
+        parse_ident(in);
+
+        if (value.as_string().length() == 0) {
+          kind = ERROR;
+          symbol[0] = c;
+          symbol[1] = '\0';
+          unexpected(expecting);
+        }
       } else {
-	kind   = VALUE;
-	value  = temp;
-	length = static_cast<std::size_t>(in.tellg() - pos);
+        kind   = VALUE;
+        value  = temp;
+        length = static_cast<std::size_t>(in.tellg() - pos);
       }
     }
-    catch (const std::exception& err) {
+    catch (const std::exception&) {
       kind   = ERROR;
       length = static_cast<std::size_t>(in.tellg() - pos);
       throw;
@@ -441,27 +449,44 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
 void expr_t::token_t::rewind(std::istream& in)
 {
-  in.seekg(- length, std::ios::cur);
+  in.seekg(- int(length), std::ios::cur);
   if (in.fail())
     throw_(parse_error, _("Failed to rewind input stream"));
 }
 
 
-void expr_t::token_t::unexpected()
+void expr_t::token_t::unexpected(const char wanted)
 {
   kind_t prev_kind = kind;
 
   kind = ERROR;
 
-  switch (prev_kind) {
-  case TOK_EOF:
-    throw_(parse_error, _("Unexpected end of expression"));
-  case IDENT:
-    throw_(parse_error, _("Unexpected symbol '%1'") << value);
-  case VALUE:
-    throw_(parse_error, _("Unexpected value '%1'") << value);
-  default:
-    throw_(parse_error, _("Unexpected token '%1'") << symbol);
+  if (wanted == '\0') {
+    switch (prev_kind) {
+    case TOK_EOF:
+      throw_(parse_error, _("Unexpected end of expression"));
+    case IDENT:
+      throw_(parse_error, _("Unexpected symbol '%1'") << value);
+    case VALUE:
+      throw_(parse_error, _("Unexpected value '%1'") << value);
+    default:
+      throw_(parse_error, _("Unexpected expression token '%1'") << symbol);
+    }
+  } else {
+    switch (prev_kind) {
+    case TOK_EOF:
+      throw_(parse_error,
+             _("Unexpected end of expression (wanted '%1')") << wanted);
+    case IDENT:
+      throw_(parse_error,
+             _("Unexpected symbol '%1' (wanted '%2')") << value << wanted);
+    case VALUE:
+      throw_(parse_error,
+             _("Unexpected value '%1' (wanted '%2')") << value << wanted);
+    default:
+      throw_(parse_error, _("Unexpected expression token '%1' (wanted '%2')")
+             << symbol << wanted);
+    }
   }
 }
 

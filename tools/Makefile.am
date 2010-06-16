@@ -1,4 +1,4 @@
-VERSION		= 3.0.0
+LIBVERSION	= $(shell echo $(PACKAGE_VERSION) | sed 's/[-abgrc].*//')
 ACLOCAL_AMFLAGS = -I m4
 dist_man_MANS	= doc/ledger.1
 SUBDIRS		= po intl
@@ -25,10 +25,9 @@ libledger_util_la_SOURCES =			\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
-libledger_util_la_LDFLAGS  = -release $(VERSION)
+libledger_util_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_math_la_SOURCES  =			\
-	src/value.cc				\
 	src/balance.cc				\
 	src/quotes.cc				\
 	src/pool.cc				\
@@ -37,7 +36,7 @@ libledger_math_la_SOURCES  =			\
 	src/amount.cc
 
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
-libledger_math_la_LDFLAGS  = -release $(VERSION)
+libledger_math_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_expr_la_SOURCES  =			\
 	src/option.cc				\
@@ -45,14 +44,14 @@ libledger_expr_la_SOURCES  =			\
 	src/query.cc				\
 	src/predicate.cc			\
 	src/scope.cc				\
-	src/interactive.cc			\
 	src/expr.cc				\
 	src/op.cc				\
 	src/parser.cc				\
-	src/token.cc
+	src/token.cc				\
+	src/value.cc
 
 libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS   = -release $(VERSION)
+libledger_expr_la_LDFLAGS   = -release $(LIBVERSION)
 
 libledger_data_la_SOURCES   =			\
 	src/lookup.cc				\
@@ -60,6 +59,7 @@ libledger_data_la_SOURCES   =			\
 	src/iterators.cc			\
 	src/timelog.cc				\
 	src/textual.cc				\
+	src/temps.cc				\
 	src/journal.cc				\
 	src/archive.cc				\
 	src/account.cc				\
@@ -68,7 +68,7 @@ libledger_data_la_SOURCES   =			\
 	src/item.cc
 
 libledger_data_la_CPPFLAGS   = $(lib_cppflags)
-libledger_data_la_LDFLAGS    = -release $(VERSION)
+libledger_data_la_LDFLAGS    = -release $(LIBVERSION)
 
 libledger_report_la_SOURCES  =			\
 	src/stats.cc				\
@@ -83,12 +83,11 @@ libledger_report_la_SOURCES  =			\
 	src/precmd.cc				\
 	src/chain.cc				\
 	src/filters.cc				\
-	src/temps.cc				\
 	src/report.cc				\
 	src/session.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
-libledger_report_la_LDFLAGS  = -release $(VERSION)
+libledger_report_la_LDFLAGS  = -release $(LIBVERSION)
 
 pkginclude_HEADERS =				\
 	src/utils.h				\
@@ -107,15 +106,14 @@ pkginclude_HEADERS =				\
 	src/pool.h				\
 	src/quotes.h				\
 	src/balance.h				\
-	src/value.h				\
 						\
+	src/value.h				\
 	src/token.h				\
 	src/parser.h				\
 	src/op.h				\
 	src/exprbase.h				\
 	src/expr.h				\
 	src/scope.h				\
-	src/interactive.h			\
 	src/predicate.h				\
 	src/query.h				\
 	src/format.h				\
@@ -126,6 +124,7 @@ pkginclude_HEADERS =				\
 	src/xact.h				\
 	src/account.h				\
 	src/journal.h				\
+	src/temps.h				\
 	src/archive.h				\
 	src/timelog.h				\
 	src/iterators.h				\
@@ -135,7 +134,6 @@ pkginclude_HEADERS =				\
 	src/session.h				\
 	src/report.h				\
 	src/filters.h				\
-	src/temps.h				\
 	src/chain.h				\
 	src/precmd.h				\
 	src/csv.h				\
@@ -235,7 +233,7 @@ libledger_python_la_SOURCES =			\
 
 libledger_python_la_CPPFLAGS = $(lib_cppflags) -I$(srcdir)/python
 
-pyexec_LTLIBRARIES = ledger.la
+pyexec_LTLIBRARIES     = ledger.la
 
 ledger_la_CPPFLAGS     = $(libledger_python_la_CPPFLAGS)
 ledger_la_SOURCES      = src/pyledger.cc
@@ -243,17 +241,13 @@ ledger_la_DEPENDENCIES = $(lib_LTLIBRARIES)
 ledger_la_LDFLAGS      = -avoid-version -module
 ledger_la_LIBADD       = $(LIBOBJS) $(lib_LTLIBRARIES)
 
-pkgpython_PYTHON = python/__init__.py python/server.py
+pkgpython_PYTHON       = python/__init__.py python/server.py
 
 endif
 
 ######################################################################
 
-TESTS =
-
-if HAVE_PYTHON
-TESTS += RegressTests BaselineTests ManualTests ConfirmTests GenerateTests
-endif
+TESTS = RegressTests BaselineTests ManualTests ConfirmTests GenerateTests
 
 if HAVE_CPPUNIT
 TESTS +=	     \
@@ -375,7 +369,7 @@ RegressTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
 RegressTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
 	chmod 755 $@
 
 BaselineTests_SOURCES = test/RegressTests.py
@@ -383,7 +377,7 @@ BaselineTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/baseline
 
 BaselineTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
 	chmod 755 $@
 
 ManualTests_SOURCES = test/RegressTests.py
@@ -391,7 +385,7 @@ ManualTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/manual
 
 ManualTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -412,7 +406,7 @@ ConfirmTests: $(srcdir)/test/ConfirmTests.py
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 20 \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
 	chmod 755 $@
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
@@ -437,13 +431,14 @@ endif
 fullcheck: cppunittests
 	@$(top_builddir)/RegressTests  --verify
 	@$(top_builddir)/BaselineTests --verify
-	@$(top_builddir)/ManualTests --verify
+	@$(top_builddir)/ManualTests   --verify
 	@$(top_builddir)/ConfirmTests  --verify
-	@$(top_builddir)/GenerateTests --verify
+	@$(top_builddir)/GenerateTests 20 --verify
 	@$(top_builddir)/RegressTests  --gmalloc
 	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/ManualTests --gmalloc
-#	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/ManualTests   --gmalloc
+	@$(top_builddir)/ConfirmTests  --gmalloc
+	@$(top_builddir)/GenerateTests 10000
 #	@$(top_builddir)/GenerateTests --gmalloc
 
 ######################################################################
@@ -520,17 +515,26 @@ libs:
 	(cd lib; make)
 
 report: all
-	-rm -fr build
 	lcov -d $(shell pwd) --zerocounters
+	if [ -d doc/report ]; then rm -fr doc/report; fi
 	-mkdir doc/report
 	lcov -c -i -d $(shell pwd) -o doc/report/ledger_base.info
-	make fullcheck
+	make check
 	lcov -c -d $(shell pwd) --checksum -o doc/report/ledger_test.info
 	lcov -a doc/report/ledger_base.info \
 	     -a doc/report/ledger_test.info -o doc/report/ledger_total.info
-	lcov --extract doc/report/ledger_total.info '*src/ledger/*' \
+	lcov --extract doc/report/ledger_total.info '*/src/*' \
 	     -o doc/report/ledger_cov.info
 	genhtml -o doc/report doc/report/ledger_cov.info
 	@echo Coverage reported generated\; now open doc/report/index.html
+
+LEDGER_BINARY  = $(top_builddir)/ledger$(EXEEXT)
+SPEEDTEST_DAT  = $(srcdir)/test/input/speed-test.dat
+SPEEDTEST_ARGS = -v --decimal-comma -o /dev/null reg 2eb75f84 1eede0cb
+
+speedtest:
+	@$(LEDGER_BINARY) -f $(SPEEDTEST_DAT) $(SPEEDTEST_ARGS)
+	@$(LEDGER_BINARY) -f $(SPEEDTEST_DAT) $(SPEEDTEST_ARGS) -V
+	@$(LEDGER_BINARY) -f $(SPEEDTEST_DAT) $(SPEEDTEST_ARGS) -X €
 
 # Makefile.am ends here

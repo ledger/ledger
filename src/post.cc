@@ -35,7 +35,6 @@
 #include "xact.h"
 #include "account.h"
 #include "journal.h"
-#include "interactive.h"
 #include "format.h"
 
 namespace ledger {
@@ -50,7 +49,7 @@ bool post_t::has_tag(const string& tag) const
 }
 
 bool post_t::has_tag(const mask_t& tag_mask,
-		     const optional<mask_t>& value_mask) const
+                     const optional<mask_t>& value_mask) const
 {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
@@ -59,23 +58,30 @@ bool post_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-optional<string> post_t::get_tag(const string& tag) const
+optional<value_t> post_t::get_tag(const string& tag) const
 {
-  if (optional<string> value = item_t::get_tag(tag))
+  if (optional<value_t> value = item_t::get_tag(tag))
     return value;
   if (xact)
     return xact->get_tag(tag);
   return none;
 }
 
-optional<string> post_t::get_tag(const mask_t& tag_mask,
-				 const optional<mask_t>& value_mask) const
+optional<value_t> post_t::get_tag(const mask_t& tag_mask,
+                                  const optional<mask_t>& value_mask) const
 {
-  if (optional<string> value = item_t::get_tag(tag_mask, value_mask))
+  if (optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
   if (xact)
     return xact->get_tag(tag_mask, value_mask);
   return none;
+}
+
+date_t post_t::value_date() const
+{
+  if (xdata_ && is_valid(xdata_->value_date))
+    return xdata_->value_date;
+  return date();
 }
 
 date_t post_t::date() const
@@ -119,7 +125,7 @@ optional<date_t> post_t::effective_date() const
 
 namespace {
   value_t get_this(post_t& post) {
-    return value_t(static_cast<scope_t *>(&post));
+    return scope_value(&post);
   }
 
   value_t get_is_calculated(post_t& post) {
@@ -139,14 +145,18 @@ namespace {
   }
 
   value_t get_xact(post_t& post) {
-    return value_t(static_cast<scope_t *>(post.xact));
+    return scope_value(post.xact);
+  }
+
+  value_t get_xact_id(post_t& post) {
+    return static_cast<long>(post.xact_id());
   }
 
   value_t get_code(post_t& post) {
     if (post.xact->code)
       return string_value(*post.xact->code);
     else
-      return string_value(empty_string);
+      return NULL_VALUE;
   }
 
   value_t get_payee(post_t& post) {
@@ -154,9 +164,13 @@ namespace {
   }
 
   value_t get_note(post_t& post) {
-    string note = post.note ? *post.note : empty_string;
-    note += post.xact->note ? *post.xact->note : empty_string;
-    return string_value(note);
+    if (post.note || post.xact->note) {
+      string note = post.note ? *post.note : empty_string;
+      note += post.xact->note ? *post.xact->note : empty_string;
+      return string_value(note);
+    } else {
+      return NULL_VALUE;
+    }
   }
 
   value_t get_magnitude(post_t& post) {
@@ -182,12 +196,27 @@ namespace {
     return post.has_xdata() && post.xdata().has_flags(POST_EXT_DIRECT_AMT);
   }
 
-  value_t get_commodity(post_t& post) {
-    return string_value(post.amount.commodity().symbol());
+  value_t get_commodity(call_scope_t& args)
+  {
+    if (args.has<amount_t>(0)) {
+      return string_value(args.get<amount_t>(0).commodity().symbol());
+    } else {
+      post_t& post(args.context<post_t>());
+      if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+        return string_value(post.xdata().compound_value.to_amount()
+                            .commodity().symbol());
+      else
+        return string_value(post.amount.commodity().symbol());
+    }
   }
 
   value_t get_commodity_is_primary(post_t& post) {
-    return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
+    if (post.has_xdata() &&
+        post.xdata().has_flags(POST_EXT_COMPOUND))
+      return post.xdata().compound_value.to_amount()
+        .commodity().has_flags(COMMODITY_PRIMARY);
+    else
+      return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
   }
 
   value_t get_has_cost(post_t& post) {
@@ -198,7 +227,7 @@ namespace {
     if (post.cost)
       return *post.cost;
     else if (post.has_xdata() &&
-	     post.xdata().has_flags(POST_EXT_COMPOUND))
+             post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
     else if (post.amount.is_null())
       return 0L;
@@ -222,57 +251,73 @@ namespace {
       return 1L;
   }
 
-  value_t get_account(call_scope_t& scope)
+  value_t get_account(call_scope_t& args)
   {
-    in_context_t<post_t> env(scope, "&v");
+    post_t&    post(args.context<post_t>());
+    account_t& account(*post.reported_account());
+    string     name;
 
-    string name;
-
-    if (env.has(0)) {
-      if (env.value_at(0).is_long()) {
-	if (env.get<long>(0) > 2)
-	  name = format_t::truncate(env->reported_account()->fullname(),
-				    env.get<long>(0) - 2,
-				    2 /* account_abbrev_length */);
-	else
-	  name = env->reported_account()->fullname();
+    if (args.has(0)) {
+      if (args[0].is_long()) {
+        if (args.get<long>(0) > 2)
+          name = format_t::truncate(account.fullname(),
+                                    args.get<long>(0) - 2,
+                                    2 /* account_abbrev_length */);
+        else
+          name = account.fullname();
       } else {
-	account_t * account = NULL;
-	account_t * master  = env->account;
-	while (master->parent)
-	  master = master->parent;
+        account_t * acct   = NULL;
+        account_t * master = &account;
+        while (master->parent)
+          master = master->parent;
 
-	if (env.value_at(0).is_string()) {
-	  name    = env.get<string>(0);
-	  account = master->find_account(name, false);
-	}
-	else if (env.value_at(0).is_mask()) {
-	  name    = env.get<mask_t>(0).str();
-	  account = master->find_account_re(name);
-	}
-	else {
-	  throw_(std::runtime_error,
-		 _("Expected string or mask for argument 1, but received %1")
-		 << env.value_at(0).label());
-	}
+        if (args[0].is_string()) {
+          name    = args.get<string>(0);
+          acct = master->find_account(name, false);
+        }
+        else if (args[0].is_mask()) {
+          name    = args.get<mask_t>(0).str();
+          acct = master->find_account_re(name);
+        }
+        else {
+          throw_(std::runtime_error,
+                 _("Expected string or mask for argument 1, but received %1")
+                 << args[0].label());
+        }
 
-	if (! account)
-	  throw_(std::runtime_error,
-		 _("Could not find an account matching ") << env.value_at(0));
-	else
-	  return value_t(static_cast<scope_t *>(account));
+        if (! acct)
+          throw_(std::runtime_error,
+                 _("Could not find an account matching ") << args[0]);
+        else
+          return value_t(static_cast<scope_t *>(acct));
       }
-    } else {
-      name = env->reported_account()->fullname();
     }
-
-    if (env->has_flags(POST_VIRTUAL)) {
-      if (env->must_balance())
-	name = string("[") + name + "]";
-      else
-	name = string("(") + name + ")";
+    else if (args.type_context() == value_t::SCOPE) {
+      return scope_value(&account);
+    }
+    else {
+      name = account.fullname();
     }
     return string_value(name);
+  }
+
+  value_t get_display_account(call_scope_t& args)
+  {
+    post_t& post(args.context<post_t>());
+    value_t acct = get_account(args);
+    if (acct.is_string()) {
+      if (post.has_flags(POST_VIRTUAL)) {
+        if (post.must_balance())
+          acct = string_value(string("[") + acct.as_string() + "]");
+        else
+          acct = string_value(string("(") + acct.as_string() + ")");
+      }
+    }
+    return acct;
+  }
+
+  value_t get_account_id(post_t& post) {
+    return static_cast<long>(post.account_id());
   }
 
   value_t get_account_base(post_t& post) {
@@ -283,6 +328,14 @@ namespace {
     return long(post.reported_account()->depth);
   }
 
+  value_t get_value_date(post_t& post) {
+    if (post.has_xdata()) {
+      post_t::xdata_t& xdata(post.xdata());
+      if (! xdata.value_date.is_not_a_date()) 
+        return xdata.value_date;
+    }
+    return post.date();
+  }
   value_t get_datetime(post_t& post) {
     return post.xdata().datetime;
   }
@@ -292,45 +345,45 @@ namespace {
     return (*Func)(find_scope<post_t>(scope));
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (p == &post && args.has(1) &&
-	  ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
-	// If the user specifies any(EXPR, false), and the context is a
-	// posting, then that posting isn't considered by the test.
-	;			// skip it
+      bind_scope_t bound_scope(args, *p);
+      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
+          ! args.get<expr_t::ptr_op_t>(1)
+            ->calc(bound_scope, args.locus, args.depth).to_boolean()) {
+        // If the user specifies any(EXPR, false), and the context is a
+        // posting, then that posting isn't considered by the test.
+        ;                       // skip it
       }
-      else if (expr.calc(bound_scope).to_boolean()) {
-	return true;
+      else if (expr->calc(bound_scope, args.locus,
+                          args.depth).to_boolean()) {
+        return true;
       }
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    post_t& post(find_scope<post_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    post_t& post(args.context<post_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, post.xact->posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (p == &post && args.has(1) &&
-	  ! args.get<expr_t&>(1).calc(bound_scope).to_boolean()) {
-	// If the user specifies any(EXPR, false), and the context is a
-	// posting, then that posting isn't considered by the test.
-	;			// skip it
+      bind_scope_t bound_scope(args, *p);
+      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
+          ! args.get<expr_t::ptr_op_t>(1)
+            ->calc(bound_scope, args.locus, args.depth).to_boolean()) {
+        // If the user specifies any(EXPR, false), and the context is a
+        // posting, then that posting isn't considered by the test.
+        ;                       // skip it
       }
-      else if (! expr.calc(bound_scope).to_boolean()) {
-	return false;
+      else if (! expr->calc(bound_scope, args.locus,
+                            args.depth).to_boolean()) {
+        return false;
       }
     }
     return true;
@@ -338,7 +391,7 @@ namespace {
 }
 
 expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
-				const string& name)
+                                const string& name)
 {
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
@@ -351,6 +404,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "account_id")
+      return WRAP_FUNCTOR(get_wrapper<&get_account_id>);
     else if (name == "any")
       return WRAP_FUNCTOR(&fn_any);
     else if (name == "all")
@@ -374,11 +429,13 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     else if (name == "calculated")
       return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
     else if (name == "commodity")
-      return WRAP_FUNCTOR(get_wrapper<&get_commodity>);
+      return WRAP_FUNCTOR(&get_commodity);
     break;
 
   case 'd':
-    if (name == "depth")
+    if (name == "display_account")
+      return WRAP_FUNCTOR(get_display_account);
+    else if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
     else if (name == "datetime")
       return WRAP_FUNCTOR(get_wrapper<&get_datetime>);
@@ -439,11 +496,15 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'v':
     if (name == "virtual")
       return WRAP_FUNCTOR(get_wrapper<&get_virtual>);
+    else if (name == "value_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_value_date>);
     break;
 
   case 'x':
     if (name == "xact")
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
+    else if (name == "xact_id")
+      return WRAP_FUNCTOR(get_wrapper<&get_xact_id>);
     break;
 
   case 'N':
@@ -474,9 +535,33 @@ amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr)
   } else {
     if (! result.is_amount())
       throw_(amount_error,
-	     _("Amount expressions must result in a simple amount"));
+             _("Amount expressions must result in a simple amount"));
     return result.as_amount();
   }
+}
+
+std::size_t post_t::xact_id() const
+{
+  std::size_t id = 1;
+  foreach (post_t * p, xact->posts) {
+    if (p == this)
+      return id;
+    id++;
+  }
+  assert(! "Failed to find posting within its transaction");
+  return 0;
+}
+
+std::size_t post_t::account_id() const
+{
+  std::size_t id = 1;
+  foreach (post_t * p, account->posts) {
+    if (p == this)
+      return id;
+    id++;
+  }
+  assert(! "Failed to find posting within its transaction");
+  return 0;
 }
 
 bool post_t::valid() const
@@ -488,7 +573,7 @@ bool post_t::valid() const
 
   posts_list::const_iterator i =
     std::find(xact->posts.begin(),
-	      xact->posts.end(), this);
+              xact->posts.end(), this);
   if (i == xact->posts.end()) {
     DEBUG("ledger.validate", "post_t: ! found");
     return false;
@@ -525,7 +610,7 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
   }
   else if (expr) {
     bind_scope_t bound_scope(*expr->get_context(),
-			     const_cast<post_t&>(*this));
+                             const_cast<post_t&>(*this));
 #if 1
     value_t temp(expr->calc(bound_scope));
     add_or_set_value(value, temp);
@@ -538,7 +623,7 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
 #endif
   }
   else if (xdata_ && xdata_->has_flags(POST_EXT_VISITED) &&
-	   ! xdata_->visited_value.is_null()) {
+           ! xdata_->visited_value.is_null()) {
     add_or_set_value(value, xdata_->visited_value);
   }
   else {
@@ -625,18 +710,18 @@ void to_xml(std::ostream& out, const post_t& post)
     push_xml y(out, "metadata");
     foreach (const item_t::string_map::value_type& pair, *post.metadata) {
       if (pair.second.first) {
-	push_xml z(out, "variable");
-	{
-	  push_xml z(out, "key");
-	  out << y.guard(pair.first);
-	}
-	{
-	  push_xml z(out, "value");
-	  out << y.guard(*pair.second.first);
-	}
+        push_xml z(out, "variable");
+        {
+          push_xml z(out, "key");
+          out << y.guard(pair.first);
+        }
+        {
+          push_xml z(out, "value");
+          to_xml(out, *pair.second.first);
+        }
       } else {
-	push_xml z(out, "tag");
-	out << y.guard(pair.first);
+        push_xml z(out, "tag");
+        out << y.guard(pair.first);
       }
     }
   }

@@ -56,13 +56,13 @@ public:
 
 private:
   mutable short refc;
-  ptr_op_t	left_;
+  ptr_op_t      left_;
 
-  variant<ptr_op_t,		// used by all binary operators
-	  value_t,		// used by constant VALUE
-	  string,		// used by constant IDENT
-	  expr_t::func_t	// used by terminal FUNCTION
-	  > data;
+  variant<ptr_op_t,             // used by all binary operators
+          value_t,              // used by constant VALUE
+          string,               // used by constant IDENT
+          expr_t::func_t        // used by terminal FUNCTION
+          > data;
 
 public:
   enum kind_t {
@@ -105,7 +105,6 @@ public:
     O_DEFINE,
     O_LOOKUP,
     O_CALL,
-    O_EXPAND,
     O_MATCH,
 
     BINARY_OPERATORS,
@@ -225,13 +224,13 @@ public:
 private:
   void acquire() const {
     DEBUG("op.memory",
-	  "Acquiring " << this << ", refc now " << refc + 1);
+          "Acquiring " << this << ", refc now " << refc + 1);
     assert(refc >= 0);
     refc++;
   }
   void release() const {
     DEBUG("op.memory",
-	  "Releasing " << this << ", refc now " << refc - 1);
+          "Releasing " << this << ", refc now " << refc - 1);
     assert(refc > 0);
     if (--refc == 0)
       checked_delete(this);
@@ -253,32 +252,32 @@ private:
 
 public:
   static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
-			   ptr_op_t _right = NULL);
+                           ptr_op_t _right = NULL);
 
   ptr_op_t compile(scope_t& scope, const int depth = 0);
   value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
-		const int depth = 0);
+                const int depth = 0);
 
   struct context_t
   {
-    ptr_op_t	       expr_op;
-    ptr_op_t	       op_to_find;
+    ptr_op_t           expr_op;
+    ptr_op_t           op_to_find;
     ostream_pos_type * start_pos;
     ostream_pos_type * end_pos;
-    bool	       relaxed;
+    bool               relaxed;
 
     context_t(const ptr_op_t&          _expr_op    = NULL,
-	      const ptr_op_t&	       _op_to_find = NULL,
-	      ostream_pos_type * const _start_pos  = NULL,
-	      ostream_pos_type * const _end_pos    = NULL,
-	      const bool	       _relaxed	   = true)
+              const ptr_op_t&          _op_to_find = NULL,
+              ostream_pos_type * const _start_pos  = NULL,
+              ostream_pos_type * const _end_pos    = NULL,
+              const bool               _relaxed    = true)
       : expr_op(_expr_op), op_to_find(_op_to_find),
-	start_pos(_start_pos), end_pos(_end_pos),
-	relaxed(_relaxed) {}
+        start_pos(_start_pos), end_pos(_end_pos),
+        relaxed(_relaxed) {}
   };
 
   bool print(std::ostream& out, const context_t& context = context_t()) const;
-  void dump(std::ostream& out, const int depth) const;
+  void dump(std::ostream& out, const int depth = 0) const;
 
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(const expr_t::func_t& fobj);
@@ -300,8 +299,8 @@ private:
       ar & temp_op;
     }
     if (Archive::is_loading::value || kind == VALUE || kind == IDENT ||
-	(kind > UNARY_OPERATORS &&
-	 (! has_right() || ! right()->is_function()))) {
+        (kind > UNARY_OPERATORS &&
+         (! has_right() || ! right()->is_function()))) {
       ar & data;
     } else {
       variant<ptr_op_t, value_t, string, expr_t::func_t> temp_data;
@@ -337,7 +336,7 @@ expr_t::op_t::wrap_functor(const expr_t::func_t& fobj) {
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
 
 string op_context(const expr_t::ptr_op_t op,
-		  const expr_t::ptr_op_t locus = NULL);
+                  const expr_t::ptr_op_t locus = NULL);
 
 } // namespace ledger
 

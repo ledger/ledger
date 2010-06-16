@@ -60,9 +60,7 @@ void set_session_context(session_t * session)
 }
 
 session_t::session_t()
-  : flush_on_next_data_file(false),
-    current_year(CURRENT_DATE().year()),
-    journal(new journal_t)
+  : flush_on_next_data_file(false), journal(new journal_t)
 {
   TRACE_CTOR(session_t, "");
 
@@ -105,37 +103,37 @@ std::size_t session_t::read_data(const string& master_account)
     cache = archive_t(HANDLED(cache_).str());
 
   if (! (cache &&
-	 cache->should_load(HANDLER(file_).data_files) &&
-	 cache->load(*journal.get()))) {
+         cache->should_load(HANDLER(file_).data_files) &&
+         cache->load(*journal.get()))) {
 #endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
-	if (journal->read(*price_db_path) > 0)
-	  throw_(parse_error, _("Transactions not allowed in price history file"));
+        if (journal->read(*price_db_path) > 0)
+          throw_(parse_error, _("Transactions not allowed in price history file"));
       }
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
       if (pathname == "-") {
-	// To avoid problems with stdin and pipes, etc., we read the entire
-	// file in beforehand into a memory buffer, and then parcel it out
-	// from there.
-	std::ostringstream buffer;
+        // To avoid problems with stdin and pipes, etc., we read the entire
+        // file in beforehand into a memory buffer, and then parcel it out
+        // from there.
+        std::ostringstream buffer;
 
-	while (std::cin.good() && ! std::cin.eof()) {
-	  char line[8192];
-	  std::cin.read(line, 8192);
-	  std::streamsize count = std::cin.gcount();
-	  buffer.write(line, count);
-	}
-	buffer.flush();
+        while (std::cin.good() && ! std::cin.eof()) {
+          char line[8192];
+          std::cin.read(line, 8192);
+          std::streamsize count = std::cin.gcount();
+          buffer.write(line, count);
+        }
+        buffer.flush();
 
-	std::istringstream buf_in(buffer.str());
+        std::istringstream buf_in(buffer.str());
 
-	xact_count += journal->read(buf_in, "/dev/stdin", acct);
-	journal->sources.push_back(journal_t::fileinfo_t());
+        xact_count += journal->read(buf_in, "/dev/stdin", acct);
+        journal->sources.push_back(journal_t::fileinfo_t());
       } else {
-	xact_count += journal->read(pathname, acct);
+        xact_count += journal->read(pathname, acct);
       }
     }
 
@@ -166,7 +164,7 @@ void session_t::read_journal_files()
   std::size_t count = read_data(master_account);
   if (count == 0)
     throw_(parse_error,
-	   _("Failed to locate any transactions; did you specify a valid file with -f?"));
+           _("Failed to locate any transactions; did you specify a valid file with -f?"));
 
   INFO_FINISH(journal);
 
@@ -180,6 +178,50 @@ void session_t::close_journal_files()
   
   journal.reset(new journal_t);
   amount_t::initialize();
+}
+
+value_t session_t::fn_account(call_scope_t& args)
+{
+  if (args[0].is_string())
+    return scope_value(journal->find_account(args.get<string>(0), false));
+  else if (args[0].is_mask())
+    return scope_value(journal->find_account_re(args.get<mask_t>(0).str()));
+  else
+    return NULL_VALUE;
+}
+
+value_t session_t::fn_min(call_scope_t& args)
+{
+  return args[1] < args[0] ? args[1] : args[0];
+}
+value_t session_t::fn_max(call_scope_t& args)
+{
+  return args[1] > args[0] ? args[1] : args[0];
+}
+
+value_t session_t::fn_lot_price(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(1, false));
+  if (amt.has_annotation() && amt.annotation().price)
+    return *amt.annotation().price;
+  else
+    return NULL_VALUE;
+}
+value_t session_t::fn_lot_date(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(1, false));
+  if (amt.has_annotation() && amt.annotation().date)
+    return *amt.annotation().date;
+  else
+    return NULL_VALUE;
+}
+value_t session_t::fn_lot_tag(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(1, false));
+  if (amt.has_annotation() && amt.annotation().tag)
+    return string_value(*amt.annotation().tag);
+  else
+    return NULL_VALUE;
 }
 
 option_t<session_t> * session_t::lookup_option(const char * p)
@@ -196,9 +238,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'd':
     OPT(download); // -Q
-    break;
-  case 'e':
-    OPT(european);
+    else OPT(decimal_comma);
     break;
   case 'f':
     OPT_(file_); // -f
@@ -224,17 +264,44 @@ option_t<session_t> * session_t::lookup_option(const char * p)
 }
 
 expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
-				   const string& name)
+                                   const string& name)
 {
+  const char * p = name.c_str();
+
   switch (kind) {
   case symbol_t::FUNCTION:
+    switch (*p) {
+    case 'a':
+      if (is_eq(p, "account"))
+        return MAKE_FUNCTOR(session_t::fn_account);
+      break;
+
+    case 'l':
+      if (is_eq(p, "lot_price"))
+        return MAKE_FUNCTOR(session_t::fn_lot_price);
+      else if (is_eq(p, "lot_date"))
+        return MAKE_FUNCTOR(session_t::fn_lot_date);
+      else if (is_eq(p, "lot_tag"))
+        return MAKE_FUNCTOR(session_t::fn_lot_tag);
+      break;
+
+    case 'm':
+      if (is_eq(p, "min"))
+        return MAKE_FUNCTOR(session_t::fn_min);
+      else if (is_eq(p, "max"))
+        return MAKE_FUNCTOR(session_t::fn_max);
+      break;
+
+    default:
+      break;
+    }
     // Check if they are trying to access an option's setting or value.
-    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+    if (option_t<session_t> * handler = lookup_option(p))
       return MAKE_OPT_FUNCTOR(session_t, handler);
     break;
 
   case symbol_t::OPTION:
-    if (option_t<session_t> * handler = lookup_option(name.c_str()))
+    if (option_t<session_t> * handler = lookup_option(p))
       return MAKE_OPT_HANDLER(session_t, handler);
     break;
 

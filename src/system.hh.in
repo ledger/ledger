@@ -137,6 +137,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <boost/algorithm/string.hpp>
+#include <boost/any.hpp>
 #include <boost/bind.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>
@@ -159,6 +160,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
+#include <boost/ptr_container/serialize_ptr_deque.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>

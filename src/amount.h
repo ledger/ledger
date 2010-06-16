@@ -60,9 +60,8 @@
 namespace ledger {
 
 class commodity_t;
-class annotation_t;
-class keep_details_t;
-class commodity_pool_t;
+struct annotation_t;
+struct keep_details_t;
 
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
@@ -92,9 +91,9 @@ typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
  */
 class amount_t
   : public ordered_field_operators<amount_t,
-	   ordered_field_operators<amount_t, double,
-	   ordered_field_operators<amount_t, unsigned long,
-	   ordered_field_operators<amount_t, long> > > >
+           ordered_field_operators<amount_t, double,
+           ordered_field_operators<amount_t, unsigned long,
+           ordered_field_operators<amount_t, long> > > >
 {
 public:
   /** Ready the amount subsystem for use.
@@ -126,8 +125,8 @@ protected:
 
   struct bigint_t;
 
-  bigint_t *	quantity;
-  commodity_t *	commodity_;
+  bigint_t *    quantity;
+  commodity_t * commodity_;
 
 public:
   /** @name Constructors
@@ -275,7 +274,10 @@ public:
 
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
-  amount_t& operator*=(const amount_t& amt);
+  amount_t& operator*=(const amount_t& amt) {
+    return multiply(amt);
+  }
+  amount_t& multiply(const amount_t& amt, bool ignore_commodity = false);
 
   /** Divide two amounts while extending the precision to preserve the
       accuracy of the result.  For example, if \c 10 is divided by \c 3,
@@ -346,9 +348,7 @@ public:
     temp.in_place_truncate();
     return temp;
   }
-  void in_place_truncate() {
-    *this = amount_t(to_string());
-  }
+  void in_place_truncate();
     
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
@@ -399,9 +399,8 @@ public:
       $100.00.
   */
   optional<amount_t>
-  value(const bool		    primary_only  = true,
-	const optional<datetime_t>& moment	  = none,
-	const optional<commodity_t&>& in_terms_of = none) const;
+  value(const optional<datetime_t>& moment        = none,
+        const optional<commodity_t&>& in_terms_of = none) const;
 
   amount_t price() const;
 
@@ -513,7 +512,7 @@ public:
       amount's commodity:
 
       commodity() returns an amount's commodity.  If the amount has no
-      commodity, the value returned is `current_pool->null_commodity'.
+      commodity, the value returned is the `null_commodity'.
 
       has_commodity() returns true if the amount has a commodity.
 
@@ -647,16 +646,16 @@ public:
       parse(string, flags_t) also parses an amount from a string.
   */
   bool parse(std::istream& in,
-	     const parse_flags_t& flags = PARSE_DEFAULT);
+             const parse_flags_t& flags = PARSE_DEFAULT);
   bool parse(const string& str,
-	     const parse_flags_t& flags = PARSE_DEFAULT) {
+             const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
     bool result = parse(stream, flags);
     return result;
   }
 
   static void parse_conversion(const string& larger_str,
-			       const string& smaller_str);
+                               const string& smaller_str);
 
   /*@}*/
 
@@ -677,7 +676,14 @@ public:
       true, the full internal precision of the amount is displayed, regardless
       of its commodity's display precision.
   */
-  void print(std::ostream& out) const;
+#define AMOUNT_PRINT_NO_FLAGS                 0x00
+#define AMOUNT_PRINT_RIGHT_JUSTIFY            0x01
+#define AMOUNT_PRINT_COLORIZE                 0x02
+#define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS  0x04
+#define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES   0x08
+
+  void print(std::ostream&       out,
+             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 
   /*@}*/
 
@@ -754,7 +760,7 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 }
 
 void to_xml(std::ostream& out, const amount_t& amt,
-	    bool commodity_details = false);
+            bool commodity_details = false);
 
 } // namespace ledger
 

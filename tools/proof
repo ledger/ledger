@@ -12,16 +12,18 @@ if [[ -f ~/Products/last-proofed && \
     exit 0
 fi
 
-rm -fr ~/Products/ledger*
+rm -fr ~/Products/ledger-proof
 
-time ./acprep -j16 --warn proof 2>&1 | tee ~/Desktop/proof.log
+time ./acprep --enable-cache --enable-doxygen \
+    --universal -j16 --warn proof 2>&1 | \
+    tee ~/Desktop/proof.log
 
 if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
     if [[ "$1" = "--alert" ]]; then
-	notify "Ledger proof build FAILED"
+        notify "Ledger proof build FAILED"
     else
-	echo "Ledger proof build FAILED"
-	exit 1
+        echo "Ledger proof build FAILED"
+        exit 1
     fi
 else
     echo "Ledger proof build succeeded"

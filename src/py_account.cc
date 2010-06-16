@@ -82,7 +82,7 @@ namespace {
   }
 
   account_t * py_find_account_2(journal_t& journal, const string& name,
-				const bool auto_create)
+                                const bool auto_create)
   {
     return journal.find_account(name, auto_create);
   }
@@ -99,14 +99,14 @@ namespace {
 
 void export_account()
 {
-  scope().attr("ACCOUNT_EXT_SORT_CALC")	       = ACCOUNT_EXT_SORT_CALC;
+  scope().attr("ACCOUNT_EXT_SORT_CALC")        = ACCOUNT_EXT_SORT_CALC;
   scope().attr("ACCOUNT_EXT_HAS_NON_VIRTUALS") = ACCOUNT_EXT_HAS_NON_VIRTUALS;
   scope().attr("ACCOUNT_EXT_HAS_UNB_VIRTUALS") = ACCOUNT_EXT_HAS_UNB_VIRTUALS;
   scope().attr("ACCOUNT_EXT_AUTO_VIRTUALIZE")  = ACCOUNT_EXT_AUTO_VIRTUALIZE;
-  scope().attr("ACCOUNT_EXT_VISITED")	       = ACCOUNT_EXT_VISITED;
-  scope().attr("ACCOUNT_EXT_MATCHING")	       = ACCOUNT_EXT_MATCHING;
+  scope().attr("ACCOUNT_EXT_VISITED")          = ACCOUNT_EXT_VISITED;
+  scope().attr("ACCOUNT_EXT_MATCHING")         = ACCOUNT_EXT_MATCHING;
   scope().attr("ACCOUNT_EXT_TO_DISPLAY")       = ACCOUNT_EXT_TO_DISPLAY;
-  scope().attr("ACCOUNT_EXT_DISPLAYED")	       = ACCOUNT_EXT_DISPLAYED;
+  scope().attr("ACCOUNT_EXT_DISPLAYED")        = ACCOUNT_EXT_DISPLAYED;
 
   class_< account_t::xdata_t::details_t > ("AccountXDataDetails")
     .def_readonly("total", &account_t::xdata_t::details_t::total)
@@ -115,30 +115,30 @@ void export_account()
 
     .def_readonly("posts_count", &account_t::xdata_t::details_t::posts_count)
     .def_readonly("posts_virtuals_count",
-		  &account_t::xdata_t::details_t::posts_virtuals_count)
+                  &account_t::xdata_t::details_t::posts_virtuals_count)
     .def_readonly("posts_cleared_count",
-		  &account_t::xdata_t::details_t::posts_cleared_count)
+                  &account_t::xdata_t::details_t::posts_cleared_count)
     .def_readonly("posts_last_7_count",
-		  &account_t::xdata_t::details_t::posts_last_7_count)
+                  &account_t::xdata_t::details_t::posts_last_7_count)
     .def_readonly("posts_last_30_count",
-		  &account_t::xdata_t::details_t::posts_last_30_count)
+                  &account_t::xdata_t::details_t::posts_last_30_count)
     .def_readonly("posts_this_month_count",
-		  &account_t::xdata_t::details_t::posts_this_month_count)
+                  &account_t::xdata_t::details_t::posts_this_month_count)
 
     .def_readonly("earliest_post",
-		  &account_t::xdata_t::details_t::earliest_post)
+                  &account_t::xdata_t::details_t::earliest_post)
     .def_readonly("earliest_cleared_post",
-		  &account_t::xdata_t::details_t::earliest_cleared_post)
+                  &account_t::xdata_t::details_t::earliest_cleared_post)
     .def_readonly("latest_post",
-		  &account_t::xdata_t::details_t::latest_post)
+                  &account_t::xdata_t::details_t::latest_post)
     .def_readonly("latest_cleared_post",
-		  &account_t::xdata_t::details_t::latest_cleared_post)
+                  &account_t::xdata_t::details_t::latest_cleared_post)
 
     .def_readonly("filenames", &account_t::xdata_t::details_t::filenames)
     .def_readonly("accounts_referenced",
-		  &account_t::xdata_t::details_t::accounts_referenced)
+                  &account_t::xdata_t::details_t::accounts_referenced)
     .def_readonly("payees_referenced",
-		  &account_t::xdata_t::details_t::payees_referenced)
+                  &account_t::xdata_t::details_t::payees_referenced)
 
     .def(self += self)
 
@@ -148,8 +148,8 @@ void export_account()
   class_< account_t::xdata_t > ("AccountXData")
 #if 1
     .add_property("flags",
-		  &supports_flags<uint_least16_t>::flags,
-		  &supports_flags<uint_least16_t>::set_flags)
+                  &supports_flags<uint_least16_t>::flags,
+                  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
@@ -163,14 +163,14 @@ void export_account()
     ;
 
   scope().attr("ACCOUNT_NORMAL") = ACCOUNT_NORMAL;
-  scope().attr("ACCOUNT_KNOWN")	 = ACCOUNT_KNOWN;
-  scope().attr("ACCOUNT_TEMP")	 = ACCOUNT_TEMP;
+  scope().attr("ACCOUNT_KNOWN")  = ACCOUNT_KNOWN;
+  scope().attr("ACCOUNT_TEMP")   = ACCOUNT_TEMP;
 
   class_< account_t > ("Account")
 #if 1
     .add_property("flags",
-		  &supports_flags<>::flags,
-		  &supports_flags<>::set_flags)
+                  &supports_flags<>::flags,
+                  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
@@ -178,8 +178,8 @@ void export_account()
 #endif
 
     .add_property("parent",
-		  make_getter(&account_t::parent,
-			      return_internal_reference<>()))
+                  make_getter(&account_t::parent,
+                              return_internal_reference<>()))
 
     .def_readwrite("name", &account_t::name)
     .def_readwrite("note", &account_t::note)
@@ -195,9 +195,9 @@ void export_account()
     .def("remove_account", &account_t::remove_account)
 
     .def("find_account", &account_t::find_account,
-	 return_internal_reference<>())
+         return_internal_reference<>())
     .def("find_account_re", &account_t::find_account,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("add_post", &account_t::add_post)
     .def("remove_post", &account_t::remove_post)
@@ -207,25 +207,25 @@ void export_account()
     .def("__len__", accounts_len)
     .def("__getitem__", accounts_getitem, return_internal_reference<>())
 
-    .def("__iter__", range<return_internal_reference<> >
-	 (&account_t::accounts_begin, &account_t::accounts_end))
-    .def("accounts", range<return_internal_reference<> >
-	 (&account_t::accounts_begin, &account_t::accounts_end))
-    .def("posts", range<return_internal_reference<> >
-	 (&account_t::posts_begin, &account_t::posts_end))
+    .def("__iter__", python::range<return_internal_reference<> >
+         (&account_t::accounts_begin, &account_t::accounts_end))
+    .def("accounts", python::range<return_internal_reference<> >
+         (&account_t::accounts_begin, &account_t::accounts_end))
+    .def("posts", python::range<return_internal_reference<> >
+         (&account_t::posts_begin, &account_t::posts_end))
 
     .def("has_xdata", &account_t::has_xdata)
     .def("clear_xdata", &account_t::clear_xdata)
     .def("xdata", py_xdata,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("amount", &account_t::amount)
     .def("total", &account_t::total)
 
     .def("self_details", &account_t::self_details,
-	 return_internal_reference<>())
+         return_internal_reference<>())
     .def("family_details", &account_t::family_details,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("has_xflags", &account_t::has_xflags)
     .def("children_with_flags", &account_t::children_with_flags)

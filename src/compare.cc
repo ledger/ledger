@@ -39,7 +39,7 @@
 namespace ledger {
 
 void push_sort_value(std::list<sort_value_t>& sort_values,
-		     expr_t::ptr_op_t node, scope_t& scope)
+                     expr_t::ptr_op_t node, scope_t& scope)
 {
   if (node->kind == expr_t::op_t::O_CONS) {
     push_sort_value(sort_values, node->left(), scope);
@@ -54,11 +54,11 @@ void push_sort_value(std::list<sort_value_t>& sort_values,
 
     sort_values.push_back(sort_value_t());
     sort_values.back().inverted = inverted;
-    sort_values.back().value	= expr_t(node).calc(scope).simplified();
+    sort_values.back().value    = expr_t(node).calc(scope).simplified();
 
     if (sort_values.back().value.is_null())
       throw_(calc_error,
-	     _("Could not determine sorting value based an expression"));
+             _("Could not determine sorting value based an expression"));
   }
 }
 
@@ -106,7 +106,7 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
   }
 
   DEBUG("value.sort", "Comparing accounts " << left->fullname()
-	<< " <> " << right->fullname());
+        << " <> " << right->fullname());
 
   return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }

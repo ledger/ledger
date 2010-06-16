@@ -42,7 +42,6 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include "interactive.h"
 #include "account.h"
 #include "journal.h"
 #include "option.h"
@@ -50,7 +49,6 @@
 
 namespace ledger {
 
-class commodity_pool_t;
 class xact_t;
 
 class session_t : public symbol_scope_t
@@ -58,8 +56,7 @@ class session_t : public symbol_scope_t
   friend void set_session_context(session_t * session);
 
 public:
-  bool			   flush_on_next_data_file;
-  date_t::year_type	   current_year;
+  bool flush_on_next_data_file;
   std::auto_ptr<journal_t> journal;
 
   explicit session_t();
@@ -76,11 +73,18 @@ public:
   void read_journal_files();
   void close_journal_files();
 
+  value_t fn_account(call_scope_t& scope);
+  value_t fn_min(call_scope_t& scope);
+  value_t fn_max(call_scope_t& scope);
+  value_t fn_lot_price(call_scope_t& scope);
+  value_t fn_lot_date(call_scope_t& scope);
+  value_t fn_lot_tag(call_scope_t& scope);
+
   void report_options(std::ostream& out)
   {
     HANDLER(cache_).report(out);
     HANDLER(download).report(out);
-    HANDLER(european).report(out);
+    HANDLER(decimal_comma).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(master_account_).report(out);
@@ -92,7 +96,7 @@ public:
   option_t<session_t> * lookup_option(const char * p);
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   /**
    * Option handlers
@@ -101,15 +105,15 @@ public:
   OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
 
-  OPTION_(session_t, european, DO() {
-      commodity_t::european_by_default = true;
+  OPTION_(session_t, decimal_comma, DO() {
+      commodity_t::decimal_comma_by_default = true;
     });
 
   OPTION__
   (session_t, price_exp_, // -Z
    CTOR(session_t, price_exp_) { value = 24L * 3600L; }
    DO_(args) {
-     value = args[1].to_long() * 60L;
+     value = args.get<long>(1) * 60L;
    });
 
   OPTION__
@@ -122,13 +126,13 @@ public:
        data_files.clear();
        parent->flush_on_next_data_file = false;
      }
-     data_files.push_back(args[1].as_string());
+     data_files.push_back(args.get<string>(1));
    });
 
   OPTION_(session_t, input_date_format_, DO_(args) {
       // This changes static variables inside times.h, which affects the basic
       // date parser.
-      set_input_date_format(args[1].as_string().c_str());
+      set_input_date_format(args.get<string>(1).c_str());
     });
 
   OPTION(session_t, master_account_);

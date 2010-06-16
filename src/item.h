@@ -50,10 +50,10 @@ struct position_t
 {
   path             pathname;
   istream_pos_type beg_pos;
-  std::size_t	   beg_line;
+  std::size_t      beg_line;
   istream_pos_type end_pos;
-  std::size_t	   end_line;
-  std::size_t	   sequence;
+  std::size_t      end_line;
+  std::size_t      sequence;
 
   position_t()
     : beg_pos(0), beg_line(0), end_pos(0), end_line(0), sequence(0) {
@@ -97,19 +97,19 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-class item_t : public supports_flags<>, public scope_t
+class item_t : public supports_flags<uint_least16_t>, public scope_t
 {
 public:
-#define ITEM_NORMAL     0x00	// no flags at all, a basic posting
-#define ITEM_GENERATED  0x01	// posting was not found in a journal
-#define ITEM_TEMP       0x02	// posting is a managed temporary
+#define ITEM_NORMAL     0x00    // no flags at all, a basic posting
+#define ITEM_GENERATED  0x01    // posting was not found in a journal
+#define ITEM_TEMP       0x02    // posting is a managed temporary
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
-  typedef std::pair<optional<string>, bool> tag_data_t;
-  typedef std::map<string, tag_data_t>	    string_map;
+  typedef std::pair<optional<value_t>, bool> tag_data_t;
+  typedef std::map<string, tag_data_t>       string_map;
 
-  state_t	       _state;
+  state_t              _state;
   optional<date_t>     _date;
   optional<date_t>     _date_eff;
   optional<string>     note;
@@ -117,11 +117,11 @@ public:
   optional<string_map> metadata;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<>(_flags), _state(UNCLEARED), note(_note)
+    : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
-  item_t(const item_t& item) : supports_flags<>(), scope_t()
+  item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t()
   {
     TRACE_CTOR(item_t, "copy");
     copy_details(item);
@@ -151,21 +151,23 @@ public:
 
   virtual bool has_tag(const string& tag) const;
   virtual bool has_tag(const mask_t& tag_mask,
-		       const optional<mask_t>& value_mask = none) const;
+                       const optional<mask_t>& value_mask = none) const;
 
-  virtual optional<string> get_tag(const string& tag) const;
-  virtual optional<string> get_tag(const mask_t& tag_mask,
-				   const optional<mask_t>& value_mask = none) const;
+  virtual optional<value_t> get_tag(const string& tag) const;
+  virtual optional<value_t> get_tag(const mask_t& tag_mask,
+                                    const optional<mask_t>& value_mask = none) const;
 
   virtual string_map::iterator
-  set_tag(const string&		  tag,
-	  const optional<string>& value		     = none,
-	  const bool              overwrite_existing = true);
+  set_tag(const string&            tag,
+          const optional<value_t>& value              = none,
+          const bool               overwrite_existing = true);
 
-  virtual void parse_tags(const char * p, bool overwrite_existing = true,
-			  optional<date_t::year_type> current_year = none);
-  virtual void append_note(const char * p, bool overwrite_existing = true,
-			   optional<date_t::year_type> current_year = none);
+  virtual void parse_tags(const char * p,
+                          scope_t&     scope,
+                          bool         overwrite_existing = true);
+  virtual void append_note(const char * p,
+                           scope_t&     scope,
+                           bool         overwrite_existing = true);
 
   static bool use_effective_date;
 
@@ -173,7 +175,7 @@ public:
     assert(_date);
     if (use_effective_date)
       if (optional<date_t> effective = effective_date())
-	return *effective;
+        return *effective;
     return *_date;
   }
   virtual date_t actual_date() const {
@@ -192,7 +194,7 @@ public:
   }
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				  const string& name);
+                                  const string& name);
 
   bool valid() const;
 
@@ -204,7 +206,7 @@ private:
 
   template<class Archive>
   void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<> >(*this);
+    ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & _state;
     ar & _date;
@@ -217,9 +219,9 @@ private:
 };
 
 value_t get_comment(item_t& item);
-void	print_item(std::ostream& out, const item_t& item,
-		   const string& prefix = "");
-string	item_context(const item_t& item, const string& desc);
+void    print_item(std::ostream& out, const item_t& item,
+                   const string& prefix = "");
+string  item_context(const item_t& item, const string& desc);
 
 } // namespace ledger
 

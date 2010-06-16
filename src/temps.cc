@@ -38,26 +38,6 @@
 
 namespace ledger {
 
-temporaries_t::~temporaries_t()
-{
-  if (post_temps) {
-    foreach (post_t& post, *post_temps) {
-      if (! post.xact->has_flags(ITEM_TEMP))
-	post.xact->remove_post(&post);
-
-      if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
-	post.account->remove_post(&post);
-    }
-  }
-
-  if (acct_temps) {
-    foreach (account_t& acct, *acct_temps) {
-      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
-	acct.parent->remove_account(&acct);
-    }
-  }
-}
-
 xact_t& temporaries_t::copy_xact(xact_t& origin)
 {
   if (! xact_temps)
@@ -83,7 +63,7 @@ xact_t& temporaries_t::create_xact()
 }
 
 post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
-				 account_t * account)
+                                 account_t * account)
 {
   if (! post_temps)
     post_temps = std::list<post_t>();
@@ -91,9 +71,9 @@ post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
   post_temps->push_back(origin);
   post_t& temp(post_temps->back());
 
+  temp.add_flags(ITEM_TEMP);
   if (account)
     temp.account = account;
-  temp.add_flags(ITEM_TEMP);
 
   temp.account->add_post(&temp);
   xact.add_post(&temp);
@@ -109,8 +89,8 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t * account)
   post_temps->push_back(post_t(account));
   post_t& temp(post_temps->back());
 
-  temp.account = account;
   temp.add_flags(ITEM_TEMP);
+  temp.account = account;
 
   temp.account->add_post(&temp);
   xact.add_post(&temp);
@@ -119,7 +99,7 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t * account)
 }
 
 account_t& temporaries_t::create_account(const string& name,
-					 account_t *   parent)
+                                         account_t *   parent)
 {
   if (! acct_temps)
     acct_temps = std::list<account_t>();
@@ -127,11 +107,36 @@ account_t& temporaries_t::create_account(const string& name,
   acct_temps->push_back(account_t(parent, name));
   account_t& temp(acct_temps->back());
 
+  temp.add_flags(ACCOUNT_TEMP);
   if (parent)
     parent->add_account(&temp);
 
-  temp.add_flags(ACCOUNT_TEMP);
   return temp;
+}
+
+void temporaries_t::clear()
+{
+  if (post_temps) {
+    foreach (post_t& post, *post_temps) {
+      if (! post.xact->has_flags(ITEM_TEMP))
+        post.xact->remove_post(&post);
+
+      if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
+        post.account->remove_post(&post);
+    }
+    post_temps->clear();
+  }
+
+  if (xact_temps)
+    xact_temps->clear();
+
+  if (acct_temps) {
+    foreach (account_t& acct, *acct_temps) {
+      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
+        acct.parent->remove_account(&acct);
+    }
+    acct_temps->clear();
+  }
 }
 
 } // namespace ledger

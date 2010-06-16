@@ -57,7 +57,7 @@ commodity_t * commodity_pool_t::create(const string& symbol)
     base_commodity(new commodity_t::base_t(symbol));
   std::auto_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
 
-  DEBUG("amounts.commodities", "Creating base commodity " << symbol);
+  DEBUG("pool.commodities", "Creating base commodity " << symbol);
 
   // Create the "qualified symbol" version of this commodity's symbol
   if (commodity_t::symbol_needs_quotes(symbol)) {
@@ -66,12 +66,12 @@ commodity_t * commodity_pool_t::create(const string& symbol)
     *commodity->qualified_symbol += "\"";
   }
 
-  DEBUG("amounts.commodities",
-	"Creating commodity '" << commodity->symbol() << "'");
+  DEBUG("pool.commodities",
+        "Creating commodity '" << commodity->symbol() << "'");
 
   std::pair<commodities_map::iterator, bool> result
     = commodities.insert(commodities_map::value_type(commodity->mapping_key(),
-						     commodity.get()));
+                                                     commodity.get()));
   assert(result.second);
 
   return commodity.release();
@@ -79,7 +79,7 @@ commodity_t * commodity_pool_t::create(const string& symbol)
 
 commodity_t * commodity_pool_t::find_or_create(const string& symbol)
 {
-  DEBUG("amounts.commodities", "Find-or-create commodity " << symbol);
+  DEBUG("pool.commodities", "Find-or-create commodity " << symbol);
 
   commodity_t * commodity = find(symbol);
   if (commodity)
@@ -89,7 +89,7 @@ commodity_t * commodity_pool_t::find_or_create(const string& symbol)
 
 commodity_t * commodity_pool_t::find(const string& symbol)
 {
-  DEBUG("amounts.commodities", "Find commodity " << symbol);
+  DEBUG("pool.commodities", "Find commodity " << symbol);
 
   commodities_map::const_iterator i = commodities.find(symbol);
   if (i != commodities.end())
@@ -111,7 +111,7 @@ commodity_pool_t::create(const string& symbol, const annotation_t& details)
 }
 
 string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
-					     const annotation_t& details)
+                                             const annotation_t& details)
 {
   assert(details);
 
@@ -122,9 +122,12 @@ string commodity_pool_t::make_qualified_name(const commodity_t&  comm,
   comm.print(name);
   details.print(name, comm.pool().keep_base);
 
-  DEBUG("amounts.commodities", "make_qualified_name for "
-	<< *comm.qualified_symbol << std::endl << details);
-  DEBUG("amounts.commodities", "qualified_name is " << name.str());
+#if defined(DEBUG_ON)
+  if (comm.qualified_symbol)
+    DEBUG("pool.commodities", "make_qualified_name for "
+          << *comm.qualified_symbol << std::endl << details);
+#endif
+  DEBUG("pool.commodities", "qualified_name is " << name.str());
 
   return name.str();
 }
@@ -151,9 +154,9 @@ commodity_pool_t::find(const string& symbol, const annotation_t& details)
 
 commodity_t *
 commodity_pool_t::find_or_create(const string& symbol,
-				 const annotation_t& details)
+                                 const annotation_t& details)
 {
-  commodity_t * comm = find(symbol);
+  commodity_t * comm = find_or_create(symbol);
   if (! comm)
     return NULL;
 
@@ -164,9 +167,9 @@ commodity_pool_t::find_or_create(const string& symbol,
 }
 
 commodity_t *
-commodity_pool_t::create(commodity_t&	     comm,
-			 const annotation_t& details,
-			 const string&	     mapping_key)
+commodity_pool_t::create(commodity_t&        comm,
+                         const annotation_t& details,
+                         const string&       mapping_key)
 {
   assert(comm);
   assert(details);
@@ -178,9 +181,9 @@ commodity_pool_t::create(commodity_t&	     comm,
   commodity->qualified_symbol = comm.symbol();
   assert(! commodity->qualified_symbol->empty());
 
-  DEBUG("amounts.commodities", "Creating annotated commodity "
-	<< "symbol " << commodity->symbol()
-	<< " key "   << mapping_key << std::endl << details);
+  DEBUG("pool.commodities", "Creating annotated commodity "
+        << "symbol " << commodity->symbol()
+        << " key "   << mapping_key << std::endl << details);
 
   // Add the fully annotated name to the map, so that this symbol may
   // quickly be found again.
@@ -188,14 +191,14 @@ commodity_pool_t::create(commodity_t&	     comm,
 
   std::pair<commodities_map::iterator, bool> result
     = commodities.insert(commodities_map::value_type(mapping_key,
-						     commodity.get()));
+                                                     commodity.get()));
   assert(result.second);
 
   return commodity.release();
 }
 
-commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,
-					       const annotation_t& details)
+commodity_t * commodity_pool_t::find_or_create(commodity_t&        comm,
+                                               const annotation_t& details)
 {
   assert(comm);
   assert(details);
@@ -210,12 +213,12 @@ commodity_t * commodity_pool_t::find_or_create(commodity_t&	   comm,
   return create(comm, details, name);
 }
 
-void commodity_pool_t::exchange(commodity_t&	  commodity,
-				const amount_t&   per_unit_cost,
-				const datetime_t& moment)
+void commodity_pool_t::exchange(commodity_t&      commodity,
+                                const amount_t&   per_unit_cost,
+                                const datetime_t& moment)
 {
   DEBUG("commodity.prices.add", "exchanging commodity " << commodity
-	<< " at per unit cost " << per_unit_cost << " on " << moment);
+        << " at per unit cost " << per_unit_cost << " on " << moment);
 
   commodity_t& base_commodity
     (commodity.annotated ?
@@ -225,11 +228,11 @@ void commodity_pool_t::exchange(commodity_t&	  commodity,
 }
 
 cost_breakdown_t
-commodity_pool_t::exchange(const amount_t&	       amount,
-			   const amount_t&	       cost,
-			   const bool		       is_per_unit,
-			   const optional<datetime_t>& moment,
-			   const optional<string>&     tag)
+commodity_pool_t::exchange(const amount_t&             amount,
+                           const amount_t&             cost,
+                           const bool                  is_per_unit,
+                           const optional<datetime_t>& moment,
+                           const optional<string>&     tag)
 {
   DEBUG("commodity.prices.add", "exchange: " << amount << " for " << cost);
   DEBUG("commodity.prices.add", "exchange: is-per-unit   = " << is_per_unit);
@@ -258,7 +261,7 @@ commodity_pool_t::exchange(const amount_t&	       amount,
   breakdown.final_cost = ! is_per_unit ? cost : cost * amount.abs();
 
   DEBUG("commodity.prices.add",
-	"exchange: final-cost    = " << breakdown.final_cost);
+        "exchange: final-cost    = " << breakdown.final_cost);
 
   if (current_annotation && current_annotation->price)
     breakdown.basis_cost
@@ -267,10 +270,10 @@ commodity_pool_t::exchange(const amount_t&	       amount,
     breakdown.basis_cost = breakdown.final_cost;
 
   DEBUG("commodity.prices.add",
-	"exchange: basis-cost    = " << breakdown.basis_cost);
+        "exchange: basis-cost    = " << breakdown.basis_cost);
 
   annotation_t annotation(per_unit_cost, moment ?
-			  moment->date() : optional<date_t>(), tag);
+                          moment->date() : optional<date_t>(), tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
   if (moment)
@@ -281,7 +284,7 @@ commodity_pool_t::exchange(const amount_t&	       amount,
   breakdown.amount = amount_t(amount, annotation);
 
   DEBUG("commodity.prices.add",
-	"exchange: amount        = " << breakdown.amount);
+        "exchange: amount        = " << breakdown.amount);
 
   return breakdown;
 }
@@ -325,7 +328,7 @@ commodity_pool_t::parse_price_directive(char * line, bool do_not_add_price)
   DEBUG("commodity.download", "Looking up symbol: " << symbol);
   if (commodity_t * commodity = find_or_create(symbol)) {
     DEBUG("commodity.download", "Adding price for " << symbol << ": "
-	  << point.when << " " << point.price);
+          << point.when << " " << point.price);
     if (! do_not_add_price)
       commodity->add_price(point.when, point.price, true);
     commodity->add_flags(COMMODITY_KNOWN);
@@ -337,8 +340,8 @@ commodity_pool_t::parse_price_directive(char * line, bool do_not_add_price)
 
 commodity_t *
 commodity_pool_t::parse_price_expression(const std::string&          str,
-					 const bool                  add_prices,
-					 const optional<datetime_t>& moment)
+                                         const bool                  add_prices,
+                                         const optional<datetime_t>& moment)
 {
   scoped_array<char> buf(new char[str.length() + 1]);
 
@@ -351,14 +354,86 @@ commodity_pool_t::parse_price_expression(const std::string&          str,
   if (commodity_t * commodity = find_or_create(trim_ws(buf.get()))) {
     if (price && add_prices) {
       for (char * p = std::strtok(price, ";");
-	   p;
-	   p = std::strtok(NULL, ";")) {
-	commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
+           p;
+           p = std::strtok(NULL, ";")) {
+        commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
       }
     }
     return commodity;
   }
   return NULL;
+}
+
+void commodity_pool_t::print_pricemap(std::ostream&               out,
+                                      const keep_details_t&       keep,
+                                      const optional<datetime_t>& moment)
+{
+  typedef std::map<commodity_t *, commodity_t *> comm_map_t;
+
+  comm_map_t comm_map;
+
+  foreach (const commodities_map::value_type& comm_pair, commodities) {
+    commodity_t * comm(&comm_pair.second->strip_annotations(keep));
+    comm_map.insert(comm_map_t::value_type(comm, NULL));
+  }
+
+  out << "digraph commodities {\n";
+
+  foreach (const comm_map_t::value_type& comm_pair, comm_map) {
+    commodity_t * comm(comm_pair.first);
+    if (comm->has_flags(COMMODITY_BUILTIN))
+      continue;
+
+    out << "    ";
+    if (commodity_t::symbol_needs_quotes(comm->symbol()))
+      out << comm->symbol() << ";\n";
+    else
+      out << "\"" << comm->symbol() << "\";\n";
+
+    if (! comm->has_flags(COMMODITY_NOMARKET) &&
+        (! commodity_pool_t::current_pool->default_commodity ||
+         comm != commodity_pool_t::current_pool->default_commodity)) {
+      if (optional<commodity_t::varied_history_t&> vhist =
+          comm->varied_history()) {
+        foreach (const commodity_t::history_by_commodity_map::value_type& pair,
+                 vhist->histories) {
+          datetime_t most_recent;
+          amount_t   most_recent_amt;
+          foreach (const commodity_t::history_map::value_type& inner_pair,
+                   pair.second.prices) {
+            if ((most_recent.is_not_a_date_time() ||
+                 inner_pair.first > most_recent) &&
+                (! moment || inner_pair.first <= moment)) {
+              most_recent     = inner_pair.first;
+              most_recent_amt = inner_pair.second;
+            }
+          }
+
+          if (! most_recent.is_not_a_date_time()) {
+            out << "    ";
+            if (commodity_t::symbol_needs_quotes(comm->symbol()))
+              out << comm->symbol();
+            else
+              out << "\"" << comm->symbol() << "\"";
+
+            out << " -> ";
+
+            if (commodity_t::symbol_needs_quotes(pair.first->symbol()))
+              out << pair.first->symbol();
+            else
+              out << "\"" << pair.first->symbol() << "\"";
+
+            out << " [label=\""
+                << most_recent_amt.number() << "\\n"
+                << format_date(most_recent.date(), FMT_WRITTEN)
+                << "\" fontcolor=\"#008e28\"];\n";
+          }
+        }
+      }
+    }
+  }
+
+  out << "}\n";
 }
 
 } // namespace ledger

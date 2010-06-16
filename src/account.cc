@@ -34,7 +34,6 @@
 #include "account.h"
 #include "post.h"
 #include "xact.h"
-#include "interactive.h"
 
 namespace ledger {
 
@@ -42,13 +41,16 @@ account_t::~account_t()
 {
   TRACE_DTOR(account_t);
 
-  foreach (accounts_map::value_type& pair, accounts)
-    if (! pair.second->has_flags(ACCOUNT_TEMP))
+  foreach (accounts_map::value_type& pair, accounts) {
+    if (! pair.second->has_flags(ACCOUNT_TEMP) ||
+        has_flags(ACCOUNT_TEMP)) {
       checked_delete(pair.second);
+    }      
+  }
 }
 
 account_t * account_t::find_account(const string& name,
-				    const bool	  auto_create)
+                                    const bool    auto_create)
 {
   accounts_map::const_iterator i = accounts.find(name);
   if (i != accounts.end())
@@ -79,6 +81,14 @@ account_t * account_t::find_account(const string& name,
       return NULL;
 
     account = new account_t(this, first);
+
+    // An account created within a temporary or generated account is itself
+    // temporary or generated, so that the whole tree has the same status.
+    if (has_flags(ACCOUNT_TEMP))
+      account->add_flags(ACCOUNT_TEMP);
+    if (has_flags(ACCOUNT_GENERATED))
+      account->add_flags(ACCOUNT_GENERATED);
+
     std::pair<accounts_map::iterator, bool> result
       = accounts.insert(accounts_map::value_type(first, account));
     assert(result.second);
@@ -100,7 +110,7 @@ namespace {
 
     foreach (accounts_map::value_type& pair, account->accounts)
       if (account_t * a = find_account_re_(pair.second, regexp))
-	return a;
+        return a;
 
     return NULL;
   }
@@ -109,6 +119,20 @@ namespace {
 account_t * account_t::find_account_re(const string& regexp)
 {
   return find_account_re_(this, mask_t(regexp));
+}
+
+void account_t::add_post(post_t * post)
+{
+  posts.push_back(post);
+
+  // Adding a new post changes the possible totals that may have been
+  // computed before.
+  if (xdata_) {
+    xdata_->self_details.gathered     = false;
+    xdata_->self_details.calculated   = false;
+    xdata_->family_details.gathered   = false;
+    xdata_->family_details.calculated = false;
+  }
 }
 
 bool account_t::remove_post(post_t * post)
@@ -124,13 +148,13 @@ string account_t::fullname() const
   if (! _fullname.empty()) {
     return _fullname;
   } else {
-    const account_t *	first	 = this;
-    string		fullname = name;
+    const account_t *   first    = this;
+    string              fullname = name;
 
     while (first->parent) {
       first = first->parent;
       if (! first->name.empty())
-	fullname = first->name + ":" + fullname;
+        fullname = first->name + ":" + fullname;
     }
 
     _fullname = fullname;
@@ -150,7 +174,7 @@ string account_t::partial_name(bool flat) const
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
       if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
-	break;
+        break;
     }
     pname = acct->name + ":" + pname;
   }
@@ -164,15 +188,31 @@ std::ostream& operator<<(std::ostream& out, const account_t& account)
 }
 
 namespace {
-  value_t get_partial_name(call_scope_t& scope)
+  value_t get_partial_name(call_scope_t& args)
   {
-    in_context_t<account_t> env(scope, "&b");
-    return string_value(env->partial_name(env.has(0) ?
-					  env.get<bool>(0) : false));
+    return string_value(args.context<account_t>()
+                        .partial_name(args.has<bool>(0) &&
+                                      args.get<bool>(0)));
   }
 
-  value_t get_account(account_t& account) { // this gets the name
-    return string_value(account.fullname());
+  value_t get_account(call_scope_t& args) { // this gets the name
+    account_t& account(args.context<account_t>());
+    if (args.has<string>(0)) {
+      account_t * acct = account.parent;
+      for (; acct && acct->parent; acct = acct->parent) ;
+      if (args[0].is_string())
+        return scope_value(acct->find_account(args.get<string>(0), false));
+      else if (args[0].is_mask())
+        return scope_value(acct->find_account_re(args.get<mask_t>(0).str()));
+      else
+        return NULL_VALUE;
+    }
+    else if (args.type_context() == value_t::SCOPE) {
+      return scope_value(&account);
+    }
+    else {
+      return string_value(account.fullname());
+    }
   }
 
   value_t get_account_base(account_t& account) {
@@ -194,6 +234,10 @@ namespace {
   value_t get_count(account_t& account) {
     return long(account.family_details().posts_count);
   }
+  value_t get_cost(account_t&) {
+    throw_(calc_error, _("An account does not have a 'cost' value"));
+    return false;
+  }
 
   value_t get_depth(account_t& account) {
     return long(account.depth);
@@ -207,16 +251,20 @@ namespace {
     return true;
   }
 
+  value_t get_addr(account_t& account) {
+    return long(&account);
+  }
+
   value_t get_depth_spacer(account_t& account)
   {
     std::size_t depth = 0;
     for (const account_t * acct = account.parent;
-	 acct && acct->parent;
-	 acct = acct->parent) {
+         acct && acct->parent;
+         acct = acct->parent) {
       std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
       assert(count > 0);
       if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
-	depth++;
+        depth++;
     }
 
     std::ostringstream out;
@@ -232,47 +280,43 @@ namespace {
   }
 
   template <value_t (*Func)(account_t&)>
-  value_t get_wrapper(call_scope_t& scope) {
-    return (*Func)(find_scope<account_t>(scope));
+  value_t get_wrapper(call_scope_t& args) {
+    return (*Func)(args.context<account_t>());
   }
 
   value_t get_parent(account_t& account) {
-    return value_t(static_cast<scope_t *>(account.parent));
+    return scope_value(account.parent);
   }
 
-  value_t fn_any(call_scope_t& scope)
+  value_t fn_any(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    account_t& account(find_scope<account_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    account_t& account(args.context<account_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, account.posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (expr.calc(bound_scope).to_boolean())
-	return true;
+      bind_scope_t bound_scope(args, *p);
+      if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
+        return true;
     }
     return false;
   }
 
-  value_t fn_all(call_scope_t& scope)
+  value_t fn_all(call_scope_t& args)
   {
-    interactive_t args(scope, "X&X");
-
-    account_t& account(find_scope<account_t>(scope));
-    expr_t& expr(args.get<expr_t&>(0));
+    account_t& account(args.context<account_t>());
+    expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
     foreach (post_t * p, account.posts) {
-      bind_scope_t bound_scope(scope, *p);
-      if (! expr.calc(bound_scope).to_boolean())
-	return false;
+      bind_scope_t bound_scope(args, *p);
+      if (! expr->calc(bound_scope, args.locus, args.depth).to_boolean())
+        return false;
     }
     return true;
   }
 }
 
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
-				   const string& name)
+                                   const string& name)
 {
   if (kind != symbol_t::FUNCTION)
     return NULL;
@@ -282,9 +326,11 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
     if (name[1] == '\0' || name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
     else if (name == "account")
-      return WRAP_FUNCTOR(get_wrapper<&get_account>);
+      return WRAP_FUNCTOR(&get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
+    else if (name == "addr")
+      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
     else if (name == "any")
       return WRAP_FUNCTOR(&fn_any);
     else if (name == "all")
@@ -294,6 +340,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'c':
     if (name == "count")
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
+    else if (name == "cost")
+      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
     break;
 
   case 'd':
@@ -384,7 +432,7 @@ bool account_t::children_with_xdata() const
 {
   foreach (const accounts_map::value_type& pair, accounts)
     if (pair.second->has_xdata() ||
-	pair.second->children_with_xdata())
+        pair.second->children_with_xdata())
       return true;
 
   return false;
@@ -397,7 +445,7 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 
   foreach (const accounts_map::value_type& pair, accounts)
     if (pair.second->has_xflags(flags) ||
-	pair.second->children_with_flags(flags))
+        pair.second->children_with_flags(flags))
       count++;
 
   // Although no immediately children were visited, if any progeny at all were
@@ -411,11 +459,11 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const
 account_t::xdata_t::details_t&
 account_t::xdata_t::details_t::operator+=(const details_t& other)
 {
-  posts_count    	 += other.posts_count;
-  posts_virtuals_count	 += other.posts_virtuals_count;
-  posts_cleared_count	 += other.posts_cleared_count;
-  posts_last_7_count	 += other.posts_last_7_count;
-  posts_last_30_count	 += other.posts_last_30_count;
+  posts_count            += other.posts_count;
+  posts_virtuals_count   += other.posts_virtuals_count;
+  posts_cleared_count    += other.posts_cleared_count;
+  posts_last_7_count     += other.posts_last_7_count;
+  posts_last_30_count    += other.posts_last_30_count;
   posts_this_month_count += other.posts_this_month_count;
 
   if (! is_valid(earliest_post) ||
@@ -438,9 +486,9 @@ account_t::xdata_t::details_t::operator+=(const details_t& other)
 
   filenames.insert(other.filenames.begin(), other.filenames.end());
   accounts_referenced.insert(other.accounts_referenced.begin(),
-			     other.accounts_referenced.end());
+                             other.accounts_referenced.end());
   payees_referenced.insert(other.payees_referenced.begin(),
-			   other.payees_referenced.end());
+                           other.payees_referenced.end());
   return *this;
 }
 
@@ -464,10 +512,10 @@ value_t account_t::amount(const optional<expr_t&>& expr) const
 
     for (; i != posts.end(); i++) {
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-	  (*i)->add_to_value(xdata_->self_details.total, expr);
-	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-	}
+        if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+        }
       }
       xdata_->self_details.last_post = i;
     }
@@ -479,10 +527,10 @@ value_t account_t::amount(const optional<expr_t&>& expr) const
 
     for (; i != xdata_->reported_posts.end(); i++) {
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-	if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-	  (*i)->add_to_value(xdata_->self_details.total, expr);
-	  (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-	}
+        if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
+        }
       }
       xdata_->self_details.last_reported_post = i;
     }
@@ -502,7 +550,7 @@ value_t account_t::total(const optional<expr_t&>& expr) const
     foreach (const accounts_map::value_type& pair, accounts) {
       temp = pair.second->total(expr);
       if (! temp.is_null())
-	add_or_set_value(xdata_->family_details.total, temp);
+        add_or_set_value(xdata_->family_details.total, temp);
     }
 
     temp = amount(expr);
@@ -539,7 +587,7 @@ account_t::family_details(bool gather_all) const
 }
 
 void account_t::xdata_t::details_t::update(post_t& post,
-					   bool	   gather_all)
+                                           bool    gather_all)
 {
   posts_count++;
 
@@ -569,10 +617,10 @@ void account_t::xdata_t::details_t::update(post_t& post,
     posts_cleared_count++;
 
     if (! is_valid(earliest_cleared_post) ||
-	post.date() < earliest_cleared_post)
+        post.date() < earliest_cleared_post)
       earliest_cleared_post = post.date();
     if (! is_valid(latest_cleared_post) ||
-	post.date() > latest_cleared_post)
+        post.date() > latest_cleared_post)
       latest_cleared_post = post.date();
   }
 

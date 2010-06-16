@@ -52,10 +52,10 @@ template <typename T>
 class option_t
 {
 protected:
-  const char *	    name;
+  const char *      name;
   string::size_type name_len;
-  const char	    ch;
-  bool		    handled;
+  const char        ch;
+  bool              handled;
   optional<string>  source;
 
   option_t& operator=(const option_t&);
@@ -63,7 +63,7 @@ protected:
 public:
   T *          parent;
   value_t      value;
-  bool	       wants_arg;
+  bool         wants_arg;
 
   option_t(const char * _name, const char _ch = '\0')
     : name(_name), name_len(std::strlen(name)), ch(_ch),
@@ -90,13 +90,16 @@ public:
 
   void report(std::ostream& out) const {
     if (handled && source) {
+      out.width(24);
+      out << std::right << desc();
       if (wants_arg) {
-	out << desc() << " => ";
-	value.dump(out);
+        out << " = ";
+        value.print(out, 42);
       } else {
-	out << desc();
+        out.width(45);
+        out << ' ';
       }
-      out << " <" << *source << ">" << std::endl;
+      out << std::left << *source << std::endl;
     }
   }
 
@@ -105,10 +108,10 @@ public:
     out << "--";
     for (const char * p = name; *p; p++) {
       if (*p == '_') {
-	if (*(p + 1))
-	  out << '-';
+        if (*(p + 1))
+          out << '-';
       } else {
-	out << *p;
+        out << *p;
       }
     }
     if (ch)
@@ -142,7 +145,7 @@ public:
     on_with(whence, string_value(str));
   }
   virtual void on_with(const optional<string>& whence,
-		       const value_t& val) {
+                       const value_t& val) {
     handled = true;
     value   = val;
     source  = whence;
@@ -159,12 +162,12 @@ public:
   virtual void handler(call_scope_t& args) {
     if (wants_arg) {
       if (args.size() < 2)
-	throw_(std::runtime_error, _("No argument provided for %1") << desc());
+        throw_(std::runtime_error, _("No argument provided for %1") << desc());
       else if (args.size() > 2)
-	throw_(std::runtime_error, _("To many arguments provided for %1") << desc());
+        throw_(std::runtime_error, _("To many arguments provided for %1") << desc());
       else if (! args[0].is_string())
-	throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
-      on_with(args[0].as_string(), args[1]);
+        throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
+      on_with(args.get<string>(0), args[1]);
     }
     else if (args.size() < 1) {
       throw_(std::runtime_error, _("No argument provided for %1") << desc());
@@ -173,7 +176,7 @@ public:
       throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
     }
     else {
-      on_only(args[0].as_string());
+      on_only(args.get<string>(0));
     }
 
     handler_thunk(args);
@@ -191,9 +194,9 @@ public:
     }
     else if (wants_arg) {
       if (handled)
-	return value;
+        return value;
       else
-	return NULL_VALUE;
+        return NULL_VALUE;
     }
     else {
       return handled;
@@ -201,26 +204,26 @@ public:
   }
 };
 
-#define BEGIN(type, name)				\
-  struct name ## _option_t : public option_t<type>
+#define BEGIN(type, name)                               \
+  struct name ## option_t : public option_t<type>
 
-#define CTOR(type, name)				\
-  name ## _option_t() : option_t<type>(#name)
-#define DECL1(type, name, vartype, var, value)		\
-  vartype var ;						\
-  name ## _option_t() : option_t<type>(#name), var(value)
+#define CTOR(type, name)                                \
+  name ## option_t() : option_t<type>(#name)
+#define DECL1(type, name, vartype, var, value)          \
+  vartype var ;                                         \
+  name ## option_t() : option_t<type>(#name), var(value)
   
 #define DO()      virtual void handler_thunk(call_scope_t&)
 #define DO_(var)  virtual void handler_thunk(call_scope_t& var)
 
-#define END(name) name ## _handler
+#define END(name) name ## handler
 
-#define COPY_OPT(name, other) name ## _handler(other.name ## _handler)
+#define COPY_OPT(name, other) name ## handler(other.name ## handler)
 
-#define MAKE_OPT_HANDLER(type, x)					\
+#define MAKE_OPT_HANDLER(type, x)                                       \
   expr_t::op_t::wrap_functor(bind(&option_t<type>::handler_wrapper, x, _1))
 
-#define MAKE_OPT_FUNCTOR(type, x)					\
+#define MAKE_OPT_FUNCTOR(type, x)                                       \
   expr_t::op_t::wrap_functor(bind(&option_t<type>::operator(), x, _1))
 
 inline bool is_eq(const char * p, const char * n) {
@@ -233,57 +236,57 @@ inline bool is_eq(const char * p, const char * n) {
   return *p == *n || (! *p && *n == '_' && ! *(n + 1));
 }
 
-#define OPT(name)							\
-  if (is_eq(p, #name))							\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+#define OPT(name)                                                       \
+  if (is_eq(p, #name))                                                  \
+    return ((name ## handler).parent = this, &(name ## handler))
 
-#define OPT_ALT(name, alt)						\
-  if (is_eq(p, #name) || is_eq(p, #alt))				\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+#define OPT_ALT(name, alt)                                              \
+  if (is_eq(p, #name) || is_eq(p, #alt))                                \
+    return ((name ## handler).parent = this, &(name ## handler))
 
-#define OPT_(name)							\
-  if (! *(p + 1) ||							\
-      ((name ## _handler).wants_arg &&					\
-       *(p + 1) == '_' && ! *(p + 2)) ||				\
-      is_eq(p, #name))							\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+#define OPT_(name)                                                      \
+  if (! *(p + 1) ||                                                     \
+      ((name ## handler).wants_arg &&                                   \
+       *(p + 1) == '_' && ! *(p + 2)) ||                                \
+      is_eq(p, #name))                                                  \
+    return ((name ## handler).parent = this, &(name ## handler))
 
-#define OPT_CH(name)							\
-  if (! *(p + 1) ||							\
-      ((name ## _handler).wants_arg &&					\
-       *(p + 1) == '_' && ! *(p + 2)))					\
-    return ((name ## _handler).parent = this, &(name ## _handler))
+#define OPT_CH(name)                                                    \
+  if (! *(p + 1) ||                                                     \
+      ((name ## handler).wants_arg &&                                   \
+       *(p + 1) == '_' && ! *(p + 2)))                                  \
+    return ((name ## handler).parent = this, &(name ## handler))
 
-#define HANDLER(name) name ## _handler
+#define HANDLER(name) name ## handler
 #define HANDLED(name) HANDLER(name)
 
-#define OPTION(type, name)				\
-  BEGIN(type, name)					\
-  {							\
-    CTOR(type, name) {}					\
-  }							\
+#define OPTION(type, name)                              \
+  BEGIN(type, name)                                     \
+  {                                                     \
+    CTOR(type, name) {}                                 \
+  }                                                     \
   END(name)
 
-#define OPTION_(type, name, body)			\
-  BEGIN(type, name)					\
-  {							\
-    CTOR(type, name) {}					\
-    body						\
-  }							\
+#define OPTION_(type, name, body)                       \
+  BEGIN(type, name)                                     \
+  {                                                     \
+    CTOR(type, name) {}                                 \
+    body                                                \
+  }                                                     \
   END(name)
 
-#define OPTION__(type, name, body)			\
-  BEGIN(type, name)					\
-  {							\
-    body						\
-  }							\
+#define OPTION__(type, name, body)                      \
+  BEGIN(type, name)                                     \
+  {                                                     \
+    body                                                \
+  }                                                     \
   END(name)
 
 bool process_option(const string& whence, const string& name, scope_t& scope,
-		    const char * arg, const string& varname);
+                    const char * arg, const string& varname);
 
 void process_environment(const char ** envp, const string& tag,
-			 scope_t& scope);
+                         scope_t& scope);
 
 strings_list process_arguments(strings_list args, scope_t& scope);
 

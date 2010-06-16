@@ -67,31 +67,31 @@ public:
   typedef std::map<string, commodity_t *> commodities_map;
 
   commodities_map commodities;
-  commodity_t *	  null_commodity;
-  commodity_t *	  default_commodity;
+  commodity_t *   null_commodity;
+  commodity_t *   default_commodity;
 
-  bool		  keep_base;	    // --base
+  bool            keep_base;        // --base
 
   optional<path>  price_db;         // --price-db=
-  long		  quote_leeway;     // --leeway=
-  bool		  get_quotes;       // --download
+  long            quote_leeway;     // --leeway=
+  bool            get_quotes;       // --download
 
   static shared_ptr<commodity_pool_t> current_pool;
 
   function<optional<price_point_t>
-	   (commodity_t& commodity, const optional<commodity_t&>& in_terms_of)>
+           (commodity_t& commodity, const optional<commodity_t&>& in_terms_of)>
       get_commodity_quote;
 
   explicit commodity_pool_t();
 
   virtual ~commodity_pool_t() {
     TRACE_DTOR(commodity_pool_t);
-    foreach (commodities_map::value_type pair, commodities)
+    foreach (commodities_map::value_type& pair, commodities)
       checked_delete(pair.second);
   }
 
   string make_qualified_name(const commodity_t&  comm,
-			     const annotation_t& details);
+                             const annotation_t& details);
 
   commodity_t * create(const string& symbol);
   commodity_t * find(const string& name);
@@ -100,26 +100,26 @@ public:
   commodity_t * create(const string& symbol, const annotation_t& details);
   commodity_t * find(const string& symbol, const annotation_t& details);
   commodity_t * find_or_create(const string& symbol,
-			       const annotation_t& details);
+                               const annotation_t& details);
 
-  commodity_t * create(commodity_t&	   comm,
-		       const annotation_t& details,
-		       const string&	   mapping_key);
+  commodity_t * create(commodity_t&        comm,
+                       const annotation_t& details,
+                       const string&       mapping_key);
 
-  commodity_t * find_or_create(commodity_t&	   comm,
-			       const annotation_t& details);
+  commodity_t * find_or_create(commodity_t&        comm,
+                               const annotation_t& details);
 
   // Exchange one commodity for another, while recording the factored price.
 
-  void exchange(commodity_t&	  commodity,
-		const amount_t&   per_unit_cost,
-		const datetime_t& moment);
+  void exchange(commodity_t&      commodity,
+                const amount_t&   per_unit_cost,
+                const datetime_t& moment);
 
-  cost_breakdown_t exchange(const amount_t&	        amount,
-			    const amount_t&	        cost,
-			    const bool		        is_per_unit = false,
-			    const optional<datetime_t>& moment	   = none,
-			    const optional<string>&     tag	   = none);
+  cost_breakdown_t exchange(const amount_t&             amount,
+                            const amount_t&             cost,
+                            const bool                  is_per_unit = false,
+                            const optional<datetime_t>& moment     = none,
+                            const optional<string>&     tag        = none);
 
   // Parse commodity prices from a textual representation
 
@@ -128,8 +128,14 @@ public:
 
   commodity_t *
   parse_price_expression(const std::string&          str,
-			 const bool                  add_prices = true,
-			 const optional<datetime_t>& moment     = none);
+                         const bool                  add_prices = true,
+                         const optional<datetime_t>& moment     = none);
+
+  // Output the commodity price map for a given date as a DOT file
+
+  void print_pricemap(std::ostream&               out,
+                      const keep_details_t&       keep,
+                      const optional<datetime_t>& moment = none);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

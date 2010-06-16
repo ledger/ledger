@@ -145,9 +145,9 @@ bool journal_t::remove_xact(xact_t * xact)
 }
 
 std::size_t journal_t::read(std::istream& in,
-			    const path&	  pathname,
-			    account_t *   master_alt,
-			    scope_t *     scope)
+                            const path&   pathname,
+                            account_t *   master_alt,
+                            scope_t *     scope)
 {
   std::size_t count = 0;
   try {
@@ -156,13 +156,13 @@ std::size_t journal_t::read(std::istream& in,
 
     if (! scope)
       throw_(std::runtime_error,
-	     _("No default scope in which to read journal file '%1'")
-	     << pathname);
+             _("No default scope in which to read journal file '%1'")
+             << pathname);
 
     value_t strict = expr_t("strict").calc(*scope);
 
     count = parse(in, *scope, master_alt ? master_alt : master,
-		  &pathname, strict.to_boolean());
+                  &pathname, strict.to_boolean());
   }
   catch (...) {
     clear_xdata();
@@ -178,14 +178,14 @@ std::size_t journal_t::read(std::istream& in,
 }
 
 std::size_t journal_t::read(const path& pathname,
-			    account_t * master,
-			    scope_t *   scope)
+                            account_t * master,
+                            scope_t *   scope)
 {
   path filename = resolve_path(pathname);
 
   if (! exists(filename))
     throw_(std::runtime_error,
-	   _("Cannot read journal file '%1'") << filename);
+           _("Cannot read journal file '%1'") << filename);
 
   ifstream stream(filename);
   std::size_t count = read(stream, filename, master, scope);

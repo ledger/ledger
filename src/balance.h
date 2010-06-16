@@ -65,19 +65,19 @@ DECLARE_EXCEPTION(balance_error, std::runtime_error);
  */
 class balance_t
   : public equality_comparable<balance_t,
-	   equality_comparable<balance_t, amount_t,
-	   equality_comparable<balance_t, double,
-	   equality_comparable<balance_t, unsigned long,
-	   equality_comparable<balance_t, long,
-	   additive<balance_t,
-	   additive<balance_t, amount_t,
-	   additive<balance_t, double,
-	   additive<balance_t, unsigned long,
-	   additive<balance_t, long,
-	   multiplicative<balance_t, amount_t,
-	   multiplicative<balance_t, double,
-	   multiplicative<balance_t, unsigned long,
-	   multiplicative<balance_t, long> > > > > > > > > > > > > >
+           equality_comparable<balance_t, amount_t,
+           equality_comparable<balance_t, double,
+           equality_comparable<balance_t, unsigned long,
+           equality_comparable<balance_t, long,
+           additive<balance_t,
+           additive<balance_t, amount_t,
+           additive<balance_t, double,
+           additive<balance_t, unsigned long,
+           additive<balance_t, long,
+           multiplicative<balance_t, amount_t,
+           multiplicative<balance_t, double,
+           multiplicative<balance_t, unsigned long,
+           multiplicative<balance_t, long> > > > > > > > > > > > > >
 {
 public:
   typedef std::map<commodity_t *, amount_t> amounts_map;
@@ -111,7 +111,7 @@ public:
     TRACE_CTOR(balance_t, "const amount_t&");
     if (amt.is_null())
       throw_(balance_error,
-	     _("Cannot initialize a balance from an uninitialized amount"));
+             _("Cannot initialize a balance from an uninitialized amount"));
     if (! amt.is_realzero())
       amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
   }
@@ -153,7 +153,7 @@ public:
   balance_t& operator=(const amount_t& amt) {
     if (amt.is_null())
       throw_(balance_error,
-	     _("Cannot assign an uninitialized amount to a balance"));
+             _("Cannot assign an uninitialized amount to a balance"));
 
     amounts.clear();
     if (! amt.is_realzero())
@@ -187,17 +187,17 @@ public:
   bool operator==(const balance_t& bal) const {
     amounts_map::const_iterator i, j;
     for (i = amounts.begin(), j = bal.amounts.begin();
-	 i != amounts.end() && j != bal.amounts.end();
-	 i++, j++) {
+         i != amounts.end() && j != bal.amounts.end();
+         i++, j++) {
       if (! (i->first == j->first && i->second == j->second))
-	return false;
+        return false;
     }
     return i == amounts.end() && j == bal.amounts.end();
   }
   bool operator==(const amount_t& amt) const {
     if (amt.is_null())
       throw_(balance_error,
-	     _("Cannot compare a balance to an uninitialized amount"));
+             _("Cannot compare a balance to an uninitialized amount"));
 
     if (amt.is_realzero())
       return amounts.empty();
@@ -321,10 +321,8 @@ public:
     return temp;
   }
   void in_place_round() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.rounded();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_round();
   }
 
   balance_t truncated() const {
@@ -333,10 +331,8 @@ public:
     return temp;
   }
   void in_place_truncate() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.truncated();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_truncate();
   }
 
   balance_t floored() const {
@@ -345,10 +341,8 @@ public:
     return temp;
   }
   void in_place_floor() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.floored();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_floor();
   }
 
   balance_t unrounded() const {
@@ -357,10 +351,8 @@ public:
     return temp;
   }
   void in_place_unround() {
-    balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
-      temp += pair.second.unrounded();
-    *this = temp;
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_unround();
   }
 
   balance_t reduced() const {
@@ -392,9 +384,8 @@ public:
   }
 
   optional<balance_t>
-  value(const bool		      primary_only = false,
-	const optional<datetime_t>&   moment	   = none,
-	const optional<commodity_t&>& in_terms_of  = none) const;
+  value(const optional<datetime_t>&   moment      = none,
+        const optional<commodity_t&>& in_terms_of = none) const;
 
   balance_t price() const;
 
@@ -426,7 +417,7 @@ public:
 
     foreach (const amounts_map::value_type& pair, amounts)
       if (pair.second.is_nonzero())
-	return true;
+        return true;
     return false;
   }
 
@@ -436,7 +427,7 @@ public:
 
     foreach (const amounts_map::value_type& pair, amounts)
       if (! pair.second.is_zero())
-	return false;
+        return false;
     return true;
   }
 
@@ -446,7 +437,7 @@ public:
 
     foreach (const amounts_map::value_type& pair, amounts)
       if (! pair.second.is_realzero())
-	return false;
+        return false;
     return true;
   }
 
@@ -477,7 +468,7 @@ public:
       return amounts.begin()->second;
     else
       throw_(balance_error,
-	     _("Cannot convert a balance with multiple commodities to an amount"));
+             _("Cannot convert a balance with multiple commodities to an amount"));
     return amount_t();
   }
 
@@ -538,11 +529,10 @@ public:
    * relative amounts of those commodities.  There is no option to
    * change this behavior.
    */
-  void print(std::ostream& out,
-	     const int	   first_width	 = -1,
-	     const int	   latter_width	 = -1,
-	     const bool	   right_justify = false,
-	     const bool	   colorize      = false) const;
+  void print(std::ostream&       out,
+             const int           first_width  = -1,
+             const int           latter_width = -1,
+             const uint_least8_t flags        = AMOUNT_PRINT_NO_FLAGS) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with
@@ -560,9 +550,9 @@ public:
     bool first = true;
     foreach (const amounts_map::value_type& pair, amounts) {
       if (first)
-	first = false;
+        first = false;
       else
-	out << ", ";
+        out << ", ";
       pair.second.print(out);
     }
     out << ")";
@@ -571,8 +561,8 @@ public:
   bool valid() const {
     foreach (const amounts_map::value_type& pair, amounts)
       if (! pair.second.valid()) {
-	DEBUG("ledger.validate", "balance_t: ! pair.second.valid()");
-	return false;
+        DEBUG("ledger.validate", "balance_t: ! pair.second.valid()");
+        return false;
       }
     return true;
   }

@@ -45,16 +45,16 @@ using namespace boost::python;
 namespace {
 
   boost::optional<balance_t> py_value_0(const balance_t& balance) {
-    return balance.value(false, CURRENT_TIME());
+    return balance.value(CURRENT_TIME());
   }
   boost::optional<balance_t> py_value_1(const balance_t& balance,
-					commodity_t& in_terms_of) {
-    return balance.value(false, CURRENT_TIME(), in_terms_of);
+                                        commodity_t& in_terms_of) {
+    return balance.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<balance_t> py_value_2(const balance_t& balance,
-					commodity_t& in_terms_of,
-					datetime_t& moment) {
-    return balance.value(false, moment, in_terms_of);
+                                        commodity_t& in_terms_of,
+                                        datetime_t& moment) {
+    return balance.value(moment, in_terms_of);
   }
   
   boost::optional<amount_t>
@@ -64,7 +64,7 @@ namespace {
 
   boost::optional<amount_t>
   py_commodity_amount_1(const balance_t& balance,
-			const boost::optional<const commodity_t&>& commodity) {
+                        const boost::optional<const commodity_t&>& commodity) {
     return balance.commodity_amount(commodity);
   }
 
@@ -74,7 +74,7 @@ namespace {
       balance.print(outstr);
     } else {
       PyErr_SetString(PyExc_IOError,
-		      _("Argument to balance.print_(file) is not a file object"));
+                      _("Argument to balance.print_(file) is not a file object"));
     }
   }
 
@@ -111,9 +111,9 @@ namespace {
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+#define EXC_TRANSLATOR(type)                            \
+  void exc_translate_ ## type(const type& err) {        \
+    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
   }
 
 EXC_TRANSLATOR(balance_error)
@@ -162,7 +162,7 @@ void export_balance()
 
     .def("negated", &balance_t::negated)
     .def("in_place_negate", &balance_t::in_place_negate,
-	 return_internal_reference<>())
+         return_internal_reference<>())
     .def(- self)
 
     .def("abs", &balance_t::abs)
@@ -173,27 +173,27 @@ void export_balance()
 
     .def("rounded", &balance_t::rounded)
     .def("in_place_round", &balance_t::in_place_round,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("truncated", &balance_t::truncated)
     .def("in_place_truncate", &balance_t::in_place_truncate,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("floored", &balance_t::floored)
     .def("in_place_floor", &balance_t::in_place_floor,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("unrounded", &balance_t::unrounded)
     .def("in_place_unround", &balance_t::in_place_unround,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("reduced", &balance_t::reduced)
     .def("in_place_reduce", &balance_t::in_place_reduce,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("unreduced", &balance_t::unreduced)
     .def("in_place_unreduce", &balance_t::in_place_unreduce,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))

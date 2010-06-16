@@ -61,10 +61,10 @@ class format_t : public expr_base_t<string>
 
     enum kind_t { STRING, EXPR };
 
-    kind_t			 type;
-    std::size_t			 min_width;
-    std::size_t			 max_width;
-    variant<string, expr_t>	 data;
+    kind_t                       type;
+    std::size_t                  min_width;
+    std::size_t                  max_width;
+    variant<string, expr_t>      data;
     scoped_ptr<struct element_t> next;
 
     element_t() throw()
@@ -80,11 +80,11 @@ class format_t : public expr_base_t<string>
 
     element_t& operator=(const element_t& elem) {
       if (this != &elem) {
-	supports_flags<>::operator=(elem);
-	type	  = elem.type;
-	min_width = elem.min_width;
-	max_width = elem.max_width;
-	data	  = elem.data;
+        supports_flags<>::operator=(elem);
+        type      = elem.type;
+        min_width = elem.min_width;
+        max_width = elem.max_width;
+        data      = elem.data;
       }
       return *this;
     }
@@ -95,12 +95,12 @@ class format_t : public expr_base_t<string>
       out << "\033[31m";
 
       if (elem->has_flags(ELEMENT_ALIGN_LEFT))
-	out << std::left;
+        out << std::left;
       else
-	out << std::right;
+        out << std::right;
 
       if (elem->min_width > 0)
-	out.width(elem->min_width);
+        out.width(elem->min_width);
     }
 
     void dump(std::ostream& out) const;
@@ -120,7 +120,7 @@ public:
 
 private:
   static element_t * parse_elements(const string& fmt,
-				    const optional<format_t&>& tmpl);
+                                    const optional<format_t&>& tmpl);
 
 public:
   format_t() : base_type() {
@@ -137,7 +137,7 @@ public:
   }
 
   void parse_format(const string& _format,
-		    const optional<format_t&>& tmpl = none) {
+                    const optional<format_t&>& tmpl = none) {
     elements.reset(parse_elements(_format, tmpl));
     set_text(_format);
   }
@@ -146,14 +146,14 @@ public:
 
   virtual void dump(std::ostream& out) const {
     for (const element_t * elem = elements.get();
-	 elem;
-	 elem = elem->next.get())
+         elem;
+         elem = elem->next.get())
       elem->dump(out);
   }
 
   static string truncate(const unistring&  str,
-			 const std::size_t width,
-			 const std::size_t account_abbrev_length = 0);
+                         const std::size_t width,
+                         const std::size_t account_abbrev_length = 0);
 };
 
 } // namespace ledger

@@ -4,8 +4,8 @@ reg --payee=commodity
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 >>>1
-07-Feb-02 VMMXX                 As:In:Vanguard:VMMXX    0.350 VMMXX  0.350 VMMXX
-07-Feb-02 $                     In:Di:Vanguard:VMMXX         $-0.35       $-0.35
+07-Feb-02 VMMXX                 As:Inves:Vanguar:VMMXX  0.350 VMMXX  0.350 VMMXX
+07-Feb-02 $                     In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
                                                                      0.350 VMMXX
 >>>2
 === 0

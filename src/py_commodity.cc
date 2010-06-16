@@ -44,38 +44,38 @@ using namespace boost::python;
 namespace {
 
   commodity_t * py_create_1(commodity_pool_t& pool,
-			    const string&     symbol)
+                            const string&     symbol)
   {
     return pool.create(symbol);
   }
-  commodity_t * py_create_2(commodity_pool_t&	pool,
-			    const string&	symbol,
-			    const annotation_t& details)
+  commodity_t * py_create_2(commodity_pool_t&   pool,
+                            const string&       symbol,
+                            const annotation_t& details)
   {
     return pool.create(symbol, details);
   }
 
   commodity_t * py_find_or_create_1(commodity_pool_t& pool,
-				    const string&     symbol)
+                                    const string&     symbol)
   {
     return pool.find_or_create(symbol);
   }
-  commodity_t * py_find_or_create_2(commodity_pool_t&	 pool,
-				     const string&	 symbol,
-				     const annotation_t& details)
+  commodity_t * py_find_or_create_2(commodity_pool_t&    pool,
+                                     const string&       symbol,
+                                     const annotation_t& details)
   {
     return pool.find_or_create(symbol, details);
   }
 
   commodity_t * py_find_1(commodity_pool_t& pool,
-			  const string&	    name)
+                          const string&     name)
   {
     return pool.find(name);
   }
 
   commodity_t * py_find_2(commodity_pool_t&   pool,
-			  const string&	      symbol,
-			  const annotation_t& details)
+                          const string&       symbol,
+                          const annotation_t& details)
   {
     return pool.find(symbol, details);
   }
@@ -83,25 +83,25 @@ namespace {
   // Exchange one commodity for another, while recording the factored price.
 
   void py_exchange_2(commodity_pool_t& pool,
-		     commodity_t&      commodity,
-		     const amount_t&   per_unit_cost)
+                     commodity_t&      commodity,
+                     const amount_t&   per_unit_cost)
   {
     pool.exchange(commodity, per_unit_cost, CURRENT_TIME());
   }
   void py_exchange_3(commodity_pool_t& pool,
-		     commodity_t&      commodity,
-		     const amount_t&   per_unit_cost,
-		     const datetime_t& moment)
+                     commodity_t&      commodity,
+                     const amount_t&   per_unit_cost,
+                     const datetime_t& moment)
   {
     pool.exchange(commodity, per_unit_cost, moment);
   }
 
-  cost_breakdown_t py_exchange_5(commodity_pool_t&		    pool,
-				 const amount_t&		    amount,
-				 const amount_t&		    cost,
-				 const bool			    is_per_unit,
-				 const boost::optional<datetime_t>& moment,
-				 const boost::optional<string>&     tag)
+  cost_breakdown_t py_exchange_5(commodity_pool_t&                  pool,
+                                 const amount_t&                    amount,
+                                 const amount_t&                    cost,
+                                 const bool                         is_per_unit,
+                                 const boost::optional<datetime_t>& moment,
+                                 const boost::optional<string>&     tag)
   {
     return pool.exchange(amount, cost, is_per_unit, moment, tag);
   }
@@ -112,7 +112,7 @@ namespace {
       pool.commodities.find(symbol);
     if (i == pool.commodities.end()) {
       PyErr_SetString(PyExc_ValueError,
-		      (string("Could not find commodity ") + symbol).c_str());
+                      (string("Could not find commodity ") + symbol).c_str());
       throw boost::python::error_already_set();
     }
     return (*i).second;
@@ -178,12 +178,12 @@ namespace {
   }
 
   void py_add_price_2(commodity_t& commodity,
-		      const datetime_t& date, const amount_t& price) {
+                      const datetime_t& date, const amount_t& price) {
     commodity.add_price(date, price);
   }
     
   void py_add_price_3(commodity_t& commodity, const datetime_t& date,
-		      const amount_t& price, const bool reflexive) {
+                      const amount_t& price, const bool reflexive) {
     commodity.add_price(date, price, reflexive);
   }
 
@@ -212,7 +212,7 @@ namespace {
     return comm.strip_annotations(keep_details_t());
   }
   commodity_t& py_strip_annotations_1(commodity_t& comm,
-				      const keep_details_t& keep) {
+                                      const keep_details_t& keep) {
     return comm.strip_annotations(keep);
   }
 
@@ -220,7 +220,7 @@ namespace {
     return comm.strip_annotations(keep_details_t());
   }
   commodity_t& py_strip_ann_annotations_1(annotated_commodity_t& comm,
-					  const keep_details_t& keep) {
+                                          const keep_details_t& keep) {
     return comm.strip_annotations(keep);
   }
 
@@ -228,7 +228,7 @@ namespace {
     return ann.price;
   }
   boost::optional<amount_t> py_set_price(annotation_t& ann,
-					 const boost::optional<amount_t>& price) {
+                                         const boost::optional<amount_t>& price) {
     return ann.price = price;
   }
 
@@ -243,41 +243,41 @@ void export_commodity()
   class_< commodity_pool_t, shared_ptr<commodity_pool_t>,
           boost::noncopyable > ("CommodityPool", no_init)
     .add_property("null_commodity",
-		  make_getter(&commodity_pool_t::null_commodity,
-			      return_internal_reference<>()))
+                  make_getter(&commodity_pool_t::null_commodity,
+                              return_internal_reference<>()))
     .add_property("default_commodity",
-		  make_getter(&commodity_pool_t::default_commodity,
-			      return_internal_reference<>()),
-		  make_setter(&commodity_pool_t::default_commodity,
-			      with_custodian_and_ward<1, 2>()))
+                  make_getter(&commodity_pool_t::default_commodity,
+                              return_internal_reference<>()),
+                  make_setter(&commodity_pool_t::default_commodity,
+                              with_custodian_and_ward<1, 2>()))
 
     .add_property("keep_base",
-		  make_getter(&commodity_pool_t::keep_base),
-		  make_setter(&commodity_pool_t::keep_base))
+                  make_getter(&commodity_pool_t::keep_base),
+                  make_setter(&commodity_pool_t::keep_base))
     .add_property("price_db",
-		  make_getter(&commodity_pool_t::price_db),
-		  make_setter(&commodity_pool_t::price_db))
+                  make_getter(&commodity_pool_t::price_db),
+                  make_setter(&commodity_pool_t::price_db))
     .add_property("quote_leeway",
-		  make_getter(&commodity_pool_t::quote_leeway),
-		  make_setter(&commodity_pool_t::quote_leeway))
+                  make_getter(&commodity_pool_t::quote_leeway),
+                  make_setter(&commodity_pool_t::quote_leeway))
     .add_property("get_quotes",
-		  make_getter(&commodity_pool_t::get_quotes),
-		  make_setter(&commodity_pool_t::get_quotes))
+                  make_getter(&commodity_pool_t::get_quotes),
+                  make_setter(&commodity_pool_t::get_quotes))
     .add_property("get_commodity_quote",
-		  make_getter(&commodity_pool_t::get_commodity_quote),
-		  make_setter(&commodity_pool_t::get_commodity_quote))
+                  make_getter(&commodity_pool_t::get_commodity_quote),
+                  make_setter(&commodity_pool_t::get_commodity_quote))
 
     .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
 
     .def("create", py_create_1,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("create", py_create_2,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
 
     .def("find_or_create", py_find_or_create_1,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("find_or_create", py_find_or_create_2,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
 
     .def("find", py_find_1, return_value_policy<reference_existing_object>())
     .def("find", py_find_2, return_value_policy<reference_existing_object>())
@@ -288,52 +288,55 @@ void export_commodity()
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
 
     .def("__getitem__", py_pool_getitem,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("keys", py_pool_keys)
     .def("has_key", py_pool_contains)
     .def("__contains__", py_pool_contains)
-    .def("__iter__", range<return_value_policy<reference_existing_object> >
-	 (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iteritems", range<return_value_policy<reference_existing_object> >
-	 (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iterkeys", range<>(py_pool_commodities_keys_begin,
-			     py_pool_commodities_keys_end))
-    .def("itervalues", range<return_value_policy<reference_existing_object> >
-	 (py_pool_commodities_values_begin, py_pool_commodities_values_end))
+    .def("__iter__",
+         python::range<return_value_policy<reference_existing_object> >
+         (py_pool_commodities_begin, py_pool_commodities_end))
+    .def("iteritems",
+         python::range<return_value_policy<reference_existing_object> >
+         (py_pool_commodities_begin, py_pool_commodities_end))
+    .def("iterkeys", python::range<>(py_pool_commodities_keys_begin,
+                                     py_pool_commodities_keys_end))
+    .def("itervalues",
+         python::range<return_value_policy<reference_existing_object> >
+         (py_pool_commodities_values_begin, py_pool_commodities_values_end))
     ;
 
   map_value_type_converter<commodity_pool_t::commodities_map>();
 
   scope().attr("commodities") = commodity_pool_t::current_pool;
 
-  scope().attr("COMMODITY_STYLE_DEFAULTS")  = COMMODITY_STYLE_DEFAULTS;
-  scope().attr("COMMODITY_STYLE_SUFFIXED")  = COMMODITY_STYLE_SUFFIXED;
-  scope().attr("COMMODITY_STYLE_SEPARATED") = COMMODITY_STYLE_SEPARATED;
-  scope().attr("COMMODITY_STYLE_EUROPEAN")  = COMMODITY_STYLE_EUROPEAN;
-  scope().attr("COMMODITY_STYLE_THOUSANDS") = COMMODITY_STYLE_THOUSANDS;
-  scope().attr("COMMODITY_NOMARKET")        = COMMODITY_NOMARKET;
-  scope().attr("COMMODITY_BUILTIN")         = COMMODITY_BUILTIN;
-  scope().attr("COMMODITY_WALKED")          = COMMODITY_WALKED;
-  scope().attr("COMMODITY_KNOWN")           = COMMODITY_KNOWN;
-  scope().attr("COMMODITY_PRIMARY")         = COMMODITY_PRIMARY;
+  scope().attr("COMMODITY_STYLE_DEFAULTS")      = COMMODITY_STYLE_DEFAULTS;
+  scope().attr("COMMODITY_STYLE_SUFFIXED")      = COMMODITY_STYLE_SUFFIXED;
+  scope().attr("COMMODITY_STYLE_SEPARATED")     = COMMODITY_STYLE_SEPARATED;
+  scope().attr("COMMODITY_STYLE_DECIMAL_COMMA") = COMMODITY_STYLE_DECIMAL_COMMA;
+  scope().attr("COMMODITY_STYLE_THOUSANDS")     = COMMODITY_STYLE_THOUSANDS;
+  scope().attr("COMMODITY_NOMARKET")            = COMMODITY_NOMARKET;
+  scope().attr("COMMODITY_BUILTIN")             = COMMODITY_BUILTIN;
+  scope().attr("COMMODITY_WALKED")              = COMMODITY_WALKED;
+  scope().attr("COMMODITY_KNOWN")               = COMMODITY_KNOWN;
+  scope().attr("COMMODITY_PRIMARY")             = COMMODITY_PRIMARY;
 
   class_< commodity_t, boost::noncopyable > ("Commodity", no_init)
 #if 1
     .add_property("flags",
-		  &supports_flags<uint_least16_t>::flags,
-		  &supports_flags<uint_least16_t>::set_flags)
+                  &supports_flags<uint_least16_t>::flags,
+                  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
     .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
     .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
 #endif
 
-    .add_static_property("european_by_default",
-			 make_getter(&commodity_t::european_by_default),
-			 make_setter(&commodity_t::european_by_default))
+    .add_static_property("decimal_comma_by_default",
+                         make_getter(&commodity_t::decimal_comma_by_default),
+                         make_setter(&commodity_t::decimal_comma_by_default))
 
     .def("__str__", &commodity_t::symbol)
     .def("__unicode__", py_commodity_unicode)
@@ -345,18 +348,18 @@ void export_commodity()
     .staticmethod("symbol_needs_quotes")
 
     .add_property("referent",
-		  make_function(py_commodity_referent,
-				return_value_policy<reference_existing_object>()))
+                  make_function(py_commodity_referent,
+                                return_value_policy<reference_existing_object>()))
 
     .def("has_annotation", &commodity_t::has_annotation)
     .def("strip_annotations", py_strip_annotations_0,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("strip_annotations", py_strip_annotations_1,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("write_annotations", &commodity_t::write_annotations)
 
     .def("pool", &commodity_t::pool,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
 
     .add_property("base_symbol", &commodity_t::base_symbol)
     .add_property("symbol", &commodity_t::symbol)
@@ -365,14 +368,14 @@ void export_commodity()
     .add_property("name", &commodity_t::name, &commodity_t::set_name)
     .add_property("note", &commodity_t::note, &commodity_t::set_note)
     .add_property("precision", &commodity_t::precision,
-		  &commodity_t::set_precision)
+                  &commodity_t::set_precision)
     .add_property("smaller", &commodity_t::smaller, &commodity_t::set_smaller)
     .add_property("larger", &commodity_t::larger, &commodity_t::set_larger)
 
     .def("add_price", py_add_price_2)
     .def("add_price", py_add_price_3)
     .def("remove_price", &commodity_t::remove_price,
-	 with_custodian_and_ward<1, 3>())
+         with_custodian_and_ward<1, 3>())
     .def("find_price", &commodity_t::find_price)
     .def("check_for_updated_price", &commodity_t::check_for_updated_price)
 
@@ -382,7 +385,7 @@ void export_commodity()
   class_< annotation_t > ("Annotation", no_init)
 #if 1
     .add_property("flags", &supports_flags<>::flags,
-		  &supports_flags<>::set_flags)
+                  &supports_flags<>::set_flags)
     .def("has_flags", &supports_flags<>::has_flags)
     .def("clear_flags", &supports_flags<>::clear_flags)
     .def("add_flags", &supports_flags<>::add_flags)
@@ -391,11 +394,11 @@ void export_commodity()
 
     .add_property("price", py_price, py_set_price)
     .add_property("date",
-		  make_getter(&annotation_t::date),
-		  make_setter(&annotation_t::date))
+                  make_getter(&annotation_t::date),
+                  make_setter(&annotation_t::date))
     .add_property("tag",
-		  make_getter(&annotation_t::tag),
-		  make_setter(&annotation_t::tag))
+                  make_getter(&annotation_t::tag),
+                  make_setter(&annotation_t::tag))
 
     .def("__nonzero__", &annotation_t::operator bool)
 
@@ -408,17 +411,17 @@ void export_commodity()
     .def(init<bool, bool, bool, bool>())
 
     .add_property("keep_price",
-		  make_getter(&keep_details_t::keep_price),
-		  make_setter(&keep_details_t::keep_price))
+                  make_getter(&keep_details_t::keep_price),
+                  make_setter(&keep_details_t::keep_price))
     .add_property("keep_date",
-		  make_getter(&keep_details_t::keep_date),
-		  make_setter(&keep_details_t::keep_date))
+                  make_getter(&keep_details_t::keep_date),
+                  make_setter(&keep_details_t::keep_date))
     .add_property("keep_tag",
-		  make_getter(&keep_details_t::keep_tag),
-		  make_setter(&keep_details_t::keep_tag))
+                  make_getter(&keep_details_t::keep_tag),
+                  make_setter(&keep_details_t::keep_tag))
     .add_property("only_actuals",
-		  make_getter(&keep_details_t::only_actuals),
-		  make_setter(&keep_details_t::only_actuals))
+                  make_getter(&keep_details_t::only_actuals),
+                  make_setter(&keep_details_t::only_actuals))
 
     .def("keep_all", py_keep_all_0)
     .def("keep_all", py_keep_all_1)
@@ -430,20 +433,20 @@ void export_commodity()
           annotated_commodity_t, boost::noncopyable >
     ("AnnotatedCommodity", no_init)
     .add_property("details",
-		  make_getter(&annotated_commodity_t::details),
-		  make_setter(&annotated_commodity_t::details))
+                  make_getter(&annotated_commodity_t::details),
+                  make_setter(&annotated_commodity_t::details))
 
     .def(self == self)
     .def(self == other<commodity_t>())
 
     .add_property("referent",
-		  make_function(py_annotated_commodity_referent,
-				return_value_policy<reference_existing_object>()))
+                  make_function(py_annotated_commodity_referent,
+                                return_value_policy<reference_existing_object>()))
 
     .def("strip_annotations", py_strip_ann_annotations_0,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("strip_annotations", py_strip_ann_annotations_1,
-	 return_value_policy<reference_existing_object>())
+         return_value_policy<reference_existing_object>())
     .def("write_annotations", &annotated_commodity_t::write_annotations)
     ;
 }

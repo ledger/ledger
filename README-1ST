@@ -13,7 +13,7 @@ and it will keep you updated to the very latest version.
 
 ===============================================================================
 
-			   NOTE FOR MAC OS X USERS
+                           NOTE FOR MAC OS X USERS
 
 To build and install Ledger on the Mac requires several dependencies.  If you
 are a MacPorts user, you can install these dependencies very simply using:
@@ -33,7 +33,7 @@ available for testing and more useful bug reports.
 
 ===============================================================================
 
-		   IF YOU HAVE CONFIGURE OR BUILD PROBLEMS
+                   IF YOU HAVE CONFIGURE OR BUILD PROBLEMS
 
 The first order of business if acprep update doesn't work is to find out where
 things went wrong.  So follow these steps to produce a bug report I can track

@@ -37,9 +37,9 @@ namespace ledger {
 
 using namespace boost::python;
 
-#define EXC_TRANSLATOR(type)				\
-  void exc_translate_ ## type(const type& err) {	\
-    PyErr_SetString(PyExc_ArithmeticError, err.what());	\
+#define EXC_TRANSLATOR(type)                            \
+  void exc_translate_ ## type(const type& err) {        \
+    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
   }
 
 //EXC_TRANSLATOR(format_error)

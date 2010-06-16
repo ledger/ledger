@@ -22,8 +22,8 @@ void DateTimeTestCase::tearDown()
 void DateTimeTestCase::testConstructors()
 {
 #ifndef NOT_FOR_PYTHON
-  std::time_t now	  = std::time(NULL);
-  struct tm * moment	  = std::localtime(&now);
+  std::time_t now         = std::time(NULL);
+  struct tm * moment      = std::localtime(&now);
   std::time_t localMoment = std::mktime(moment);
 #endif // NOT_FOR_PYTHON
 

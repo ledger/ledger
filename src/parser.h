@@ -50,44 +50,51 @@ namespace ledger {
 class expr_t::parser_t : public noncopyable
 {
   mutable token_t lookahead;
-  mutable bool	  use_lookahead;
+  mutable bool    use_lookahead;
 
-  token_t& next_token(std::istream& in, const parse_flags_t& tflags) const {
+  token_t& next_token(std::istream& in, const parse_flags_t& tflags,
+                      const char expecting = '\0') const {
     if (use_lookahead)
       use_lookahead = false;
     else
-      lookahead.next(in, tflags);
+      lookahead.next(in, tflags, expecting);
     return lookahead;
   }
 
+#if !defined(NO_ASSERTS)
   void push_token(const token_t& tok) const {
     assert(&tok == &lookahead);
     use_lookahead = true;
   }
+#else
+  void push_token(const token_t&) const {
+    use_lookahead = true;
+  }
+#endif // !defined(NO_ASSERTS)
   void push_token() const {
     use_lookahead = true;
   }
 
   ptr_op_t parse_value_term(std::istream& in,
-			    const parse_flags_t& flags) const;
+                            const parse_flags_t& flags) const;
   ptr_op_t parse_dot_expr(std::istream& in,
-			  const parse_flags_t& flags) const;
+                          const parse_flags_t& flags) const;
   ptr_op_t parse_unary_expr(std::istream& in,
-			    const parse_flags_t& flags) const;
+                            const parse_flags_t& flags) const;
   ptr_op_t parse_mul_expr(std::istream& in,
-			  const parse_flags_t& flags) const;
+                          const parse_flags_t& flags) const;
   ptr_op_t parse_add_expr(std::istream& in,
-			  const parse_flags_t& flags) const;
+                          const parse_flags_t& flags) const;
   ptr_op_t parse_logic_expr(std::istream& in,
-			    const parse_flags_t& flags) const;
+                            const parse_flags_t& flags) const;
   ptr_op_t parse_and_expr(std::istream& in,
-			  const parse_flags_t& flags) const;
+                          const parse_flags_t& flags) const;
   ptr_op_t parse_or_expr(std::istream& in,
-			 const parse_flags_t& flags) const;
+                         const parse_flags_t& flags) const;
   ptr_op_t parse_querycolon_expr(std::istream& in,
-				 const parse_flags_t& flags) const;
+                                 const parse_flags_t& flags) const;
   ptr_op_t parse_value_expr(std::istream& in,
-			    const parse_flags_t& flags) const;
+                            const parse_flags_t& flags) const;
 
 public:
   parser_t() : use_lookahead(false) {
@@ -97,9 +104,9 @@ public:
     TRACE_DTOR(parser_t);
   }
 
-  ptr_op_t parse(std::istream&		 in,
-		 const parse_flags_t&	 flags		 = PARSE_DEFAULT,
-		 const optional<string>& original_string = NULL);
+  ptr_op_t parse(std::istream&           in,
+                 const parse_flags_t&    flags           = PARSE_DEFAULT,
+                 const optional<string>& original_string = NULL);
 };
 
 } // namespace ledger

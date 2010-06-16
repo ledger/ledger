@@ -48,18 +48,18 @@ namespace {
     return post.has_tag(tag_mask);
   }
   bool py_has_tag_2m(post_t& post, const mask_t& tag_mask,
-		     const boost::optional<mask_t>& value_mask) {
+                     const boost::optional<mask_t>& value_mask) {
     return post.has_tag(tag_mask, value_mask);
   }
 
-  boost::optional<string> py_get_tag_1s(post_t& post, const string& tag) {
+  boost::optional<value_t> py_get_tag_1s(post_t& post, const string& tag) {
     return post.get_tag(tag);
   }
-  boost::optional<string> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
+  boost::optional<value_t> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
     return post.get_tag(tag_mask);
   }
-  boost::optional<string> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
-					const boost::optional<mask_t>& value_mask) {
+  boost::optional<value_t> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
+                                         const boost::optional<mask_t>& value_mask) {
     return post.get_tag(tag_mask, value_mask);
   }
 
@@ -88,8 +88,8 @@ void export_post()
   class_< post_t::xdata_t > ("PostingXData")
 #if 1
     .add_property("flags",
-		  &supports_flags<uint_least16_t>::flags,
-		  &supports_flags<uint_least16_t>::set_flags)
+                  &supports_flags<uint_least16_t>::flags,
+                  &supports_flags<uint_least16_t>::set_flags)
     .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
     .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
     .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
@@ -97,34 +97,34 @@ void export_post()
 #endif
 
     .add_property("visited_value",
-		  make_getter(&post_t::xdata_t::visited_value),
-		  make_setter(&post_t::xdata_t::visited_value))
+                  make_getter(&post_t::xdata_t::visited_value),
+                  make_setter(&post_t::xdata_t::visited_value))
     .add_property("compound_value",
-		  make_getter(&post_t::xdata_t::compound_value),
-		  make_setter(&post_t::xdata_t::compound_value))
+                  make_getter(&post_t::xdata_t::compound_value),
+                  make_setter(&post_t::xdata_t::compound_value))
     .add_property("total",
-		  make_getter(&post_t::xdata_t::total),
-		  make_setter(&post_t::xdata_t::total))
+                  make_getter(&post_t::xdata_t::total),
+                  make_setter(&post_t::xdata_t::total))
     .add_property("count",
-		  make_getter(&post_t::xdata_t::count),
-		  make_setter(&post_t::xdata_t::count))
+                  make_getter(&post_t::xdata_t::count),
+                  make_setter(&post_t::xdata_t::count))
     .add_property("date",
-		  make_getter(&post_t::xdata_t::date),
-		  make_setter(&post_t::xdata_t::date))
+                  make_getter(&post_t::xdata_t::date),
+                  make_setter(&post_t::xdata_t::date))
     .add_property("datetime",
-		  make_getter(&post_t::xdata_t::datetime),
-		  make_setter(&post_t::xdata_t::datetime))
+                  make_getter(&post_t::xdata_t::datetime),
+                  make_setter(&post_t::xdata_t::datetime))
     .add_property("account",
-		  make_getter(&post_t::xdata_t::account,
-			      return_value_policy<reference_existing_object>()),
-		  make_setter(&post_t::xdata_t::account,
-			      with_custodian_and_ward<1, 2>()))
+                  make_getter(&post_t::xdata_t::account,
+                              return_value_policy<reference_existing_object>()),
+                  make_setter(&post_t::xdata_t::account,
+                              with_custodian_and_ward<1, 2>()))
     .add_property("sort_values",
-		  make_getter(&post_t::xdata_t::sort_values),
-		  make_setter(&post_t::xdata_t::sort_values))
+                  make_getter(&post_t::xdata_t::sort_values),
+                  make_setter(&post_t::xdata_t::sort_values))
     ;
 
-  scope().attr("POST_VIRTUAL")	       = POST_VIRTUAL;
+  scope().attr("POST_VIRTUAL")         = POST_VIRTUAL;
   scope().attr("POST_MUST_BALANCE")    = POST_MUST_BALANCE;
   scope().attr("POST_CALCULATED")      = POST_CALCULATED;
   scope().attr("POST_COST_CALCULATED") = POST_COST_CALCULATED;
@@ -133,24 +133,24 @@ void export_post()
     //.def(init<account_t *>())
 
     .add_property("xact",
-		  make_getter(&post_t::xact,
-			      return_internal_reference<>()),
-		  make_setter(&post_t::xact,
-			      with_custodian_and_ward<1, 2>()))
+                  make_getter(&post_t::xact,
+                              return_internal_reference<>()),
+                  make_setter(&post_t::xact,
+                              with_custodian_and_ward<1, 2>()))
     .add_property("account",
-		  make_getter(&post_t::account,
-			      return_internal_reference<>()),
-		  make_setter(&post_t::account,
-			      with_custodian_and_ward<1, 2>()))
+                  make_getter(&post_t::account,
+                              return_internal_reference<>()),
+                  make_setter(&post_t::account,
+                              with_custodian_and_ward<1, 2>()))
     .add_property("amount",
-		  make_getter(&post_t::amount),
-		  make_setter(&post_t::amount))
+                  make_getter(&post_t::amount),
+                  make_setter(&post_t::amount))
     .add_property("cost",
-		  make_getter(&post_t::cost),
-		  make_setter(&post_t::cost))
+                  make_getter(&post_t::cost),
+                  make_setter(&post_t::cost))
     .add_property("assigned_amount",
-		  make_getter(&post_t::assigned_amount),
-		  make_setter(&post_t::assigned_amount))
+                  make_getter(&post_t::assigned_amount),
+                  make_setter(&post_t::assigned_amount))
 
     .def("has_tag", py_has_tag_1s)
     .def("has_tag", py_has_tag_1m)
@@ -171,13 +171,13 @@ void export_post()
     .def("has_xdata", &post_t::has_xdata)
     .def("clear_xdata", &post_t::clear_xdata)
     .def("xdata", py_xdata,
-	 return_internal_reference<>())
+         return_internal_reference<>())
 
     .def("add_to_value", &post_t::add_to_value)
     .def("set_reported_account", &post_t::set_reported_account)
 
     .def("reported_account", py_reported_account,
-	 return_internal_reference<>())
+         return_internal_reference<>())
     ;
 }
 

@@ -49,26 +49,26 @@
 namespace ledger {
 
 namespace {
-  typedef std::pair<commodity_t *, amount_t>	     fixed_rate_t;
+  typedef std::pair<commodity_t *, amount_t>         fixed_rate_t;
   typedef variant<account_t *, string, fixed_rate_t> state_t;
 
   class parse_context_t : public noncopyable
   {
   public:
-    journal_t&	       journal;
-    scope_t&	       scope;
+    journal_t&         journal;
+    scope_t&           scope;
     std::list<state_t> state_stack;
 #if defined(TIMELOG_SUPPORT)
-    time_log_t	       timelog;
+    time_log_t         timelog;
 #endif
-    bool	       strict;
-    std::size_t	       count;
-    std::size_t	       errors;
-    std::size_t	       sequence;
+    bool               strict;
+    std::size_t        count;
+    std::size_t        errors;
+    std::size_t        sequence;
 
     parse_context_t(journal_t& _journal, scope_t& _scope)
-      : journal(_journal), scope(_scope), timelog(journal),
-	strict(false), count(0), errors(0), sequence(1) {}
+      : journal(_journal), scope(_scope), timelog(journal, scope),
+        strict(false), count(0), errors(0), sequence(1) {}
 
     bool front_is_account() {
       return state_stack.front().type() == typeid(account_t *);
@@ -82,8 +82,8 @@ namespace {
 
     account_t * top_account() {
       foreach (state_t& state, state_stack)
-	if (state.type() == typeid(account_t *))
-	  return boost::get<account_t *>(state);
+        if (state.type() == typeid(account_t *))
+          return boost::get<account_t *>(state);
       return NULL;
     }
   };
@@ -93,25 +93,22 @@ namespace {
     static const std::size_t MAX_LINE = 1024;
 
   public:
-    parse_context_t&  context;
-    instance_t *      parent;
-    account_t *	      master;
-    accounts_map      account_aliases;
-    const path *      original_file;
-    path	      pathname;
-    std::istream&     in;
-    char	      linebuf[MAX_LINE + 1];
-    std::size_t       linenum;
-    istream_pos_type  line_beg_pos;
-    istream_pos_type  curr_pos;
-
-    optional<date_t::year_type> current_year;
+    parse_context_t&     context;
+    instance_t *         parent;
+    accounts_map         account_aliases;
+    const path *         original_file;
+    path                 pathname;
+    std::istream&        in;
+    char                 linebuf[MAX_LINE + 1];
+    std::size_t          linenum;
+    istream_pos_type     line_beg_pos;
+    istream_pos_type     curr_pos;
+    optional<datetime_t> prev_epoch;
 
     instance_t(parse_context_t& _context,
-	       std::istream&	_in,
-	       account_t *	_master        = NULL,
-	       const path *	_original_file = NULL,
-	       instance_t *     _parent        = NULL);
+               std::istream&    _in,
+               const path *     _original_file = NULL,
+               instance_t *     _parent        = NULL);
 
     ~instance_t();
 
@@ -119,7 +116,7 @@ namespace {
     std::streamsize read_line(char *& line);
     bool peek_whitespace_line() {
       return (in.good() && ! in.eof() &&
-	      (in.peek() == ' ' || in.peek() == '\t'));
+              (in.peek() == ' ' || in.peek() == '\t'));
     }
 
     void read_next_directive(); 
@@ -148,33 +145,36 @@ namespace {
     void account_mapping_directive(char * line);
     void tag_directive(char * line);
     void define_directive(char * line);
+    void assert_directive(char * line);
+    void check_directive(char * line);
+    void expr_directive(char * line);
     bool general_directive(char * line);
 
-    post_t * parse_post(char *		line,
-			std::streamsize len,
-			account_t *	account,
-			xact_t *	xact,
-			bool            defer_expr   = false);
+    post_t * parse_post(char *          line,
+                        std::streamsize len,
+                        account_t *     account,
+                        xact_t *        xact,
+                        bool            defer_expr   = false);
 
     bool parse_posts(account_t *  account,
-		     xact_base_t& xact,
-		     const bool   defer_expr = false);
+                     xact_base_t& xact,
+                     const bool   defer_expr = false);
 
-    xact_t * parse_xact(char *	  line,
-			  std::streamsize len,
-			  account_t *	  account);
+    xact_t * parse_xact(char *          line,
+                        std::streamsize len,
+                        account_t *     account);
 
     virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-				    const string& name);
+                                    const string& name);
   };
 
-  void parse_amount_expr(std::istream&	      in,
-			 scope_t&	      scope,
-			 post_t&	      post,
-			 amount_t&	      amount,
-			 const parse_flags_t& flags	  = PARSE_DEFAULT,
-			 const bool           defer_expr  = false,
-			 optional<expr_t> *   amount_expr = NULL)
+  void parse_amount_expr(std::istream&        in,
+                         scope_t&             scope,
+                         post_t&              post,
+                         amount_t&            amount,
+                         const parse_flags_t& flags       = PARSE_DEFAULT,
+                         const bool           defer_expr  = false,
+                         optional<expr_t> *   amount_expr = NULL)
   {
     expr_t expr(in, flags.plus_flags(PARSE_PARTIAL));
 
@@ -183,47 +183,38 @@ namespace {
 #if defined(DEBUG_ENABLED)
     DEBUG_IF("textual.parse") {
       if (_debug_stream) {
-	ledger::dump_value_expr(*_debug_stream, expr);
-	*_debug_stream << std::endl;
+        ledger::dump_value_expr(*_debug_stream, expr);
+        *_debug_stream << std::endl;
       }
     }
 #endif
 
     if (expr) {
       if (amount_expr)
-	*amount_expr = expr;
+        *amount_expr = expr;
       if (! defer_expr)
-	amount = post.resolve_expr(scope, expr);
+        amount = post.resolve_expr(scope, expr);
     }
   }
 }
 
 instance_t::instance_t(parse_context_t& _context,
-		       std::istream&	_in,
-		       account_t *	_master,
-		       const path *	_original_file,
-		       instance_t *     _parent)
-  : context(_context), parent(_parent), master(_master),
-    original_file(_original_file), in(_in)
+                       std::istream&    _in,
+                       const path *     _original_file,
+                       instance_t *     _parent)
+  : context(_context), parent(_parent), original_file(_original_file),
+    pathname(original_file ? *original_file : "/dev/stdin"), in(_in)
 {
   TRACE_CTOR(instance_t, "...");
-
-  if (! master)
-    master = context.journal.master;
-  context.state_stack.push_front(master);
-
-  if (_original_file)
-    pathname = *_original_file;
-  else
-    pathname = "/dev/stdin";
+  DEBUG("times.epoch", "Saving epoch " << epoch);
+  prev_epoch = epoch;           // declared in times.h
 }
 
 instance_t::~instance_t()
 {
   TRACE_DTOR(instance_t);
-
-  assert(! context.state_stack.empty());
-  context.state_stack.pop_front();
+  epoch = prev_epoch;
+  DEBUG("times.epoch", "Restored epoch to " << epoch);
 }
 
 void instance_t::parse()
@@ -231,7 +222,7 @@ void instance_t::parse()
   INFO("Parsing file '" << pathname.string() << "'");
 
   TRACE_START(instance_parse, 1,
-	      "Done parsing file '" << pathname.string() << "'");
+              "Done parsing file '" << pathname.string() << "'");
 
   if (! in.good() || in.eof())
     return;
@@ -247,30 +238,30 @@ void instance_t::parse()
       string current_context = error_context();
 
       if (parent) {
-	std::list<instance_t *> instances;
+        std::list<instance_t *> instances;
 
-	for (instance_t * instance = parent;
-	     instance;
-	     instance = instance->parent)
-	  instances.push_front(instance);
+        for (instance_t * instance = parent;
+             instance;
+             instance = instance->parent)
+          instances.push_front(instance);
 
-	foreach (instance_t * instance, instances)
-	  add_error_context(_("In file included from %1")
-			    << file_context(instance->pathname,
-					    instance->linenum));
+        foreach (instance_t * instance, instances)
+          add_error_context(_("In file included from %1")
+                            << file_context(instance->pathname,
+                                            instance->linenum));
       }
       add_error_context(_("While parsing file %1")
-			<< file_context(pathname, linenum));
+                        << file_context(pathname, linenum));
 
       if (caught_signal != NONE_CAUGHT)
-	throw;
+        throw;
 
       string err_context = error_context();
       if (! err_context.empty())
-	std::cerr << err_context << std::endl;
+        std::cerr << err_context << std::endl;
     
       if (! current_context.empty())
-	std::cerr << current_context << std::endl;
+        std::cerr << current_context << std::endl;
 
       std::cerr << _("Error: ") << err.what() << std::endl;
       context.errors++;
@@ -283,7 +274,7 @@ void instance_t::parse()
 std::streamsize instance_t::read_line(char *& line)
 {
   assert(in.good());
-  assert(! in.eof());		// no one should call us in that case
+  assert(! in.eof());           // no one should call us in that case
 
   line_beg_pos = curr_pos;
 
@@ -298,7 +289,7 @@ std::streamsize instance_t::read_line(char *& line)
     else
       line = linebuf;
 
-    if (line[len - 1] == '\r')	// strip Windows CRLF down to LF
+    if (line[len - 1] == '\r')  // strip Windows CRLF down to LF
       line[--len] = '\0';
 
     linenum++;
@@ -306,7 +297,7 @@ std::streamsize instance_t::read_line(char *& line)
     curr_pos  = line_beg_pos;
     curr_pos += len;
 
-    return len - 1;		// LF is being silently dropped
+    return len - 1;             // LF is being silently dropped
   }
   return 0;
 }
@@ -321,7 +312,7 @@ void instance_t::read_next_directive()
 
   switch (line[0]) {
   case '\0':
-    assert(false);		// shouldn't ever reach here
+    assert(false);              // shouldn't ever reach here
     break;
 
   case ' ':
@@ -329,13 +320,13 @@ void instance_t::read_next_directive()
     break;
   }
 
-  case ';':			// comments
+  case ';':                     // comments
   case '#':
   case '*':
   case '|':
     break;
 
-  case '-':			// option setting
+  case '-':                     // option setting
     option_directive(line);
     break;
 
@@ -351,10 +342,10 @@ void instance_t::read_next_directive()
   case '9':
     xact_directive(line, len);
     break;
-  case '=':			// automated xact
+  case '=':                     // automated xact
     automated_xact_directive(line);
     break;
-  case '~':			// period xact
+  case '~':                     // period xact
     period_xact_directive(line);
     break;
 
@@ -362,47 +353,47 @@ void instance_t::read_next_directive()
   case '!':
     line++;
     // fall through...
-  default:			// some other directive
+  default:                      // some other directive
     if (! general_directive(line)) {
       switch (line[0]) {
 #if defined(TIMELOG_SUPPORT)
       case 'i':
-	clock_in_directive(line, false);
-	break;
+        clock_in_directive(line, false);
+        break;
       case 'I':
-	clock_in_directive(line, true);
-	break;
+        clock_in_directive(line, true);
+        break;
 
       case 'o':
-	clock_out_directive(line, false);
-	break;
+        clock_out_directive(line, false);
+        break;
       case 'O':
-	clock_out_directive(line, true);
-	break;
+        clock_out_directive(line, true);
+        break;
 
       case 'h':
       case 'b':
-	break;
+        break;
 #endif // TIMELOG_SUPPORT
 
-      case 'A':		        // a default account for unbalanced posts
-	default_account_directive(line);
-	break;
-      case 'C':			// a set of conversions
-	price_conversion_directive(line);
-	break;
-      case 'D':			// a default commodity for "xact"
-	default_commodity_directive(line);
-	break;
-      case 'N':			// don't download prices
-	nomarket_directive(line);
-	break;
-      case 'P':			// a pricing xact
-	price_xact_directive(line);
-	break;
-      case 'Y':			// set the current year
-	year_directive(line);
-	break;
+      case 'A':                 // a default account for unbalanced posts
+        default_account_directive(line);
+        break;
+      case 'C':                 // a set of conversions
+        price_conversion_directive(line);
+        break;
+      case 'D':                 // a default commodity for "xact"
+        default_commodity_directive(line);
+        break;
+      case 'N':                 // don't download prices
+        nomarket_directive(line);
+        break;
+      case 'P':                 // a pricing xact
+        price_xact_directive(line);
+        break;
+      case 'Y':                 // set the current year
+        year_directive(line);
+        break;
       }
     }
     break;
@@ -411,8 +402,7 @@ void instance_t::read_next_directive()
 
 #if defined(TIMELOG_SUPPORT)
 
-void instance_t::clock_in_directive(char * line,
-				    bool   /*capitalized*/)
+void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
 {
   string datetime(line, 2, 19);
 
@@ -433,16 +423,15 @@ void instance_t::clock_in_directive(char * line,
   position.end_line = linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime, current_year),
-		    p ? context.top_account()->find_account(p) : NULL,
-		    n ? n : "",
-		    end ? end : "");
+  time_xact_t event(position, parse_datetime(datetime),
+                    p ? context.top_account()->find_account(p) : NULL,
+                    n ? n : "",
+                    end ? end : "");
 
   context.timelog.clock_in(event);
 }
 
-void instance_t::clock_out_directive(char * line,
-				     bool   /*capitalized*/)
+void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
 {  
   string datetime(line, 2, 19);
 
@@ -463,10 +452,10 @@ void instance_t::clock_out_directive(char * line,
   position.end_line = linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime, current_year),
-		    p ? context.top_account()->find_account(p) : NULL,
-		    n ? n : "",
-		    end ? end : "");
+  time_xact_t event(position, parse_datetime(datetime),
+                    p ? context.top_account()->find_account(p) : NULL,
+                    n ? n : "",
+                    end ? end : "");
 
   context.timelog.clock_out(event);
   context.count++;
@@ -517,7 +506,12 @@ void instance_t::nomarket_directive(char * line)
 
 void instance_t::year_directive(char * line)
 {
-  current_year = lexical_cast<unsigned short>(skip_ws(line + 1));
+  unsigned short year(lexical_cast<unsigned short>(skip_ws(line + 1)));
+  DEBUG("times.epoch", "Setting current year to " << year);
+  // This must be set to the last day of the year, otherwise partial
+  // dates like "11/01" will refer to last year's november, not the
+  // current year.
+  epoch = datetime_t(date_t(year, 12, 31));
 }
 
 void instance_t::option_directive(char * line)
@@ -540,34 +534,86 @@ void instance_t::automated_xact_directive(char * line)
   bool reveal_context = true;
 
   try {
+    std::auto_ptr<auto_xact_t> ae
+      (new auto_xact_t(query_t(string(skip_ws(line + 1)),
+                               keep_details_t(true, true, true), false)));
+    ae->pos           = position_t();
+    ae->pos->pathname = pathname;
+    ae->pos->beg_pos  = line_beg_pos;
+    ae->pos->beg_line = linenum;
+    ae->pos->sequence = context.sequence++;
 
-  std::auto_ptr<auto_xact_t> ae
-    (new auto_xact_t(query_t(string(skip_ws(line + 1)),
-			     keep_details_t(true, true, true))));
-  ae->pos	    = position_t();
-  ae->pos->pathname = pathname;
-  ae->pos->beg_pos  = line_beg_pos;
-  ae->pos->beg_line = linenum;
-  ae->pos->sequence = context.sequence++;
+    post_t * last_post = NULL;
 
-  reveal_context = false;
+    while (peek_whitespace_line()) {
+      std::streamsize len = read_line(line);
 
-  if (parse_posts(context.top_account(), *ae.get(), true)) {
-    reveal_context = true;
+      char * p = skip_ws(line);
+      if (! *p)
+        break;
+
+      const std::size_t remlen = std::strlen(p);
+
+      if (*p == ';') {
+        item_t * item;
+        if (last_post)
+          item = last_post;
+        else
+          item = ae.get();
+
+        // This is a trailing note, and possibly a metadata info tag
+        item->append_note(p + 1, context.scope, true);
+        item->pos->end_pos = curr_pos;
+        item->pos->end_line++;
+
+        // If there was no last_post yet, then deferred notes get applied to
+        // the matched posting.  Other notes get applied to the auto-generated
+        // posting.
+        ae->deferred_notes->back().apply_to_post = last_post;
+      }
+      else if ((remlen > 7 && *p == 'a' &&
+                std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
+               (remlen > 6 && *p == 'c' &&
+                std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+               (remlen > 5 && *p == 'e' &&
+                std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
+        const char c = *p;
+        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+        if (! ae->check_exprs)
+          ae->check_exprs = auto_xact_t::check_expr_list();
+        ae->check_exprs->push_back
+          (auto_xact_t::check_expr_pair(expr_t(p),
+                                        c == 'a' ?
+                                        auto_xact_t::EXPR_ASSERTION :
+                                        (c == 'c' ?
+                                         auto_xact_t::EXPR_CHECK :
+                                         auto_xact_t::EXPR_GENERAL)));
+      }
+      else {
+        reveal_context = false;
+
+        if (post_t * post =
+            parse_post(p, len - (p - line), context.top_account(),
+                       NULL, true)) {
+          reveal_context = true;
+          ae->add_post(post);
+          last_post = post;
+        }
+        reveal_context = true;
+      }
+    }
 
     context.journal.auto_xacts.push_back(ae.get());
 
-    ae->journal	      = &context.journal;
+    ae->journal       = &context.journal;
     ae->pos->end_pos  = curr_pos;
     ae->pos->end_line = linenum;
 
     ae.release();
   }
-
-  }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (reveal_context) {
-      add_error_context(_("While parsing periodic transaction:"));
+      add_error_context(_("While parsing automated transaction:"));
       add_error_context(source_context(pathname, pos, curr_pos, "> "));
     }
     throw;
@@ -604,13 +650,14 @@ void instance_t::period_xact_directive(char * line)
 
       pe.release();
     } else {
+      reveal_context = true;
       pe->journal = NULL;
       throw parse_error(_("Period transaction failed to balance"));
     }
   }
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing periodic transaction:"));
       add_error_context(source_context(pathname, pos, curr_pos, "> "));
@@ -627,12 +674,12 @@ void instance_t::xact_directive(char * line, std::streamsize len)
     std::auto_ptr<xact_t> manager(xact);
 
     if (context.journal.add_xact(xact)) {
-      manager.release();	// it's owned by the journal now
+      manager.release();        // it's owned by the journal now
       context.count++;
     }
-    // It's perfectly valid for the journal to reject the xact, which it will
-    // do if the xact has no substantive effect (for example, a checking
-    // xact, all of whose postings have null amounts).
+    // It's perfectly valid for the journal to reject the xact, which it
+    // will do if the xact has no substantive effect (for example, a
+    // checking xact, all of whose postings have null amounts).
   } else {
     throw parse_error(_("Failed to parse transaction"));
   }
@@ -667,10 +714,10 @@ void instance_t::include_directive(char * line)
 
   mask_t glob;
 #if BOOST_VERSION >= 103700
-  path	 parent_path = filename.parent_path();
+  path   parent_path = filename.parent_path();
   glob.assign_glob(filename.filename());
 #else // BOOST_VERSION >= 103700
-  path	 parent_path = filename.branch_path();
+  path   parent_path = filename.branch_path();
   glob.assign_glob(filename.leaf());
 #endif // BOOST_VERSION >= 103700
 
@@ -678,28 +725,33 @@ void instance_t::include_directive(char * line)
   if (exists(parent_path)) {
     filesystem::directory_iterator end;
     for (filesystem::directory_iterator iter(parent_path);
-	 iter != end;
-	 ++iter) {
-      if (is_regular_file(*iter)) {
+         iter != end;
+         ++iter) {
+#if BOOST_VERSION <= 103500
+      if (is_regular(*iter))
+#else
+      if (is_regular_file(*iter))
+#endif
+        {
 #if BOOST_VERSION >= 103700
-	string base = (*iter).filename();
+        string base = (*iter).filename();
 #else // BOOST_VERSION >= 103700
-	string base = (*iter).leaf();
+        string base = (*iter).leaf();
 #endif // BOOST_VERSION >= 103700
-	if (glob.match(base)) {
-	  path inner_file(*iter);
-	  ifstream stream(inner_file);
-	  instance_t instance(context, stream, master, &inner_file, this);
-	  instance.parse();
-	  files_found = true;
-	}
+        if (glob.match(base)) {
+          path inner_file(*iter);
+          ifstream stream(inner_file);
+          instance_t instance(context, stream, &inner_file, this);
+          instance.parse();
+          files_found = true;
+        }
       }
     }
   }
 
   if (! files_found)
     throw_(std::runtime_error,
-	   _("File to include was not found: '%1'") << filename);
+           _("File to include was not found: '%1'") << filename);
 
 }
 
@@ -707,27 +759,29 @@ void instance_t::master_account_directive(char * line)
 {
   if (account_t * acct = context.top_account()->find_account(line))
     context.state_stack.push_front(acct);
+#if !defined(NO_ASSERTS)
   else
     assert(! "Failed to create account");
+#endif
 }
 
 void instance_t::end_directive(char * kind)
 {
-  string name(kind);
+  string name(kind ? kind : "");
 
   if ((name.empty() || name == "account") && ! context.front_is_account())
     throw_(std::runtime_error,
-	   _("'end account' directive does not match open directive"));
+           _("'end account' directive does not match open directive"));
   else if (name == "tag" && ! context.front_is_string())
     throw_(std::runtime_error,
-	   _("'end tag' directive does not match open directive"));
+           _("'end tag' directive does not match open directive"));
   else if (name == "fixed" && ! context.front_is_fixed_rate())
     throw_(std::runtime_error,
-	   _("'end fixed' directive does not match open directive"));
+           _("'end fixed' directive does not match open directive"));
 
   if (context.state_stack.size() <= 1)
     throw_(std::runtime_error,
-	   _("'end' found, but no enclosing tag or account directive"));
+           _("'end' found, but no enclosing tag or account directive"));
   else
     context.state_stack.pop_front();
 }
@@ -757,9 +811,9 @@ void instance_t::fixed_directive(char * line)
 {
   if (optional<std::pair<commodity_t *, price_point_t> > price_point = 
       commodity_pool_t::current_pool->parse_price_directive(trim_ws(line),
-							    true)) {
+                                                            true)) {
     context.state_stack.push_front(fixed_rate_t(price_point->first,
-						price_point->second.price));
+                                                price_point->second.price));
   } else {
     throw_(std::runtime_error, _("Error in fixed directive"));
   }
@@ -775,8 +829,12 @@ void instance_t::payee_mapping_directive(char * line)
       (payee_mapping_t(mask_t(regex), payee));
 
   while (peek_whitespace_line()) {
+#if defined(NO_ASSERTS)
+    read_line(line);
+#else
     std::streamsize len = read_line(line);
     assert(len > 0);
+#endif
 
     regex = skip_ws(line);
     if (! *regex)
@@ -795,11 +853,15 @@ void instance_t::account_mapping_directive(char * line)
   if (payee_regex)
     context.journal.account_mappings.push_back
       (account_mapping_t(mask_t(payee_regex),
-			 context.top_account()->find_account(account_name)));
+                         context.top_account()->find_account(account_name)));
 
   while (peek_whitespace_line()) {
+#if defined(NO_ASSERTS)
+    read_line(line);
+#else
     std::streamsize len = read_line(line);
     assert(len > 0);
+#endif
 
     payee_regex = skip_ws(line);
     if (! *payee_regex)
@@ -807,7 +869,7 @@ void instance_t::account_mapping_directive(char * line)
 
     context.journal.account_mappings.push_back
       (account_mapping_t(mask_t(payee_regex),
-			 context.top_account()->find_account(account_name)));
+                         context.top_account()->find_account(account_name)));
   }
 }
 
@@ -824,7 +886,27 @@ void instance_t::tag_directive(char * line)
 void instance_t::define_directive(char * line)
 {
   expr_t def(skip_ws(line));
-  def.compile(context.scope);	// causes definitions to be established
+  def.compile(context.scope);   // causes definitions to be established
+}
+
+void instance_t::assert_directive(char * line)
+{
+  expr_t expr(line);
+  if (! expr.calc(context.scope).to_boolean())
+    throw_(parse_error, _("Assertion failed: %1") << line);
+}
+
+void instance_t::check_directive(char * line)
+{
+  expr_t expr(line);
+  if (! expr.calc(context.scope).to_boolean())
+    warning_(_("Check failed: %1") << line);
+}
+
+void instance_t::expr_directive(char * line)
+{
+  expr_t expr(line);
+  expr.calc(context.scope);
 }
 
 bool instance_t::general_directive(char * line)
@@ -849,6 +931,10 @@ bool instance_t::general_directive(char * line)
       alias_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "assert") == 0) {
+      assert_directive(arg);
+      return true;
+    }
     break;
 
   case 'b':
@@ -863,6 +949,10 @@ bool instance_t::general_directive(char * line)
       account_mapping_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "check") == 0) {
+      check_directive(arg);
+      return true;
+    }
     break;
 
   case 'd':
@@ -875,6 +965,10 @@ bool instance_t::general_directive(char * line)
   case 'e':
     if (std::strcmp(p, "end") == 0) {
       end_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "expr") == 0) {
+      expr_directive(arg);
       return true;
     }
     break;
@@ -925,18 +1019,18 @@ bool instance_t::general_directive(char * line)
   return false;
 }
 
-post_t * instance_t::parse_post(char *		line,
-				std::streamsize len,
-				account_t *	account,
-				xact_t *	xact,
-				bool            defer_expr)
+post_t * instance_t::parse_post(char *          line,
+                                std::streamsize len,
+                                account_t *     account,
+                                xact_t *        xact,
+                                bool            defer_expr)
 {
   TRACE_START(post_details, 1, "Time spent parsing postings:");
 
   std::auto_ptr<post_t> post(new post_t);
 
-  post->xact	      = xact;	// this could be NULL
-  post->pos	      = position_t();
+  post->xact          = xact;   // this could be NULL
+  post->pos           = position_t();
   post->pos->pathname = pathname;
   post->pos->beg_pos  = line_beg_pos;
   post->pos->beg_line = linenum;
@@ -960,14 +1054,14 @@ post_t * instance_t::parse_post(char *		line,
     post->set_state(item_t::CLEARED);
     p = skip_ws(p + 1);
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "Parsed the CLEARED flag");
+          << "Parsed the CLEARED flag");
     break;
 
   case '!':
     post->set_state(item_t::PENDING);
     p = skip_ws(p + 1);
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "Parsed the PENDING flag");
+          << "Parsed the PENDING flag");
     break;
   }
 
@@ -990,19 +1084,19 @@ post_t * instance_t::parse_post(char *		line,
   if ((*p == '[' && *(e - 1) == ']') || (*p == '(' && *(e - 1) == ')')) {
     post->add_flags(POST_VIRTUAL);
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "Parsed a virtual account name");
+          << "Parsed a virtual account name");
 
     if (*p == '[') {
       post->add_flags(POST_MUST_BALANCE);
       DEBUG("textual.parse", "line " << linenum << ": "
-	    << "Posting must balance");
+            << "Posting must balance");
     }
     p++; e--;
   }
 
   string name(p, e - p);
   DEBUG("textual.parse", "line " << linenum << ": "
-	<< "Parsed account name " << name);
+        << "Parsed account name " << name);
 
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(name);
@@ -1015,15 +1109,15 @@ post_t * instance_t::parse_post(char *		line,
   if (context.strict && ! post->account->has_flags(ACCOUNT_KNOWN)) {
     if (post->_state == item_t::UNCLEARED)
       warning_(_("\"%1\", line %2: Unknown account '%3'")
-	       << pathname << linenum << post->account->fullname());
+               << pathname << linenum << post->account->fullname());
     post->account->add_flags(ACCOUNT_KNOWN);
   }
 
   if (post->account->name == _("Unknown")) {
     foreach (account_mapping_t& value, context.journal.account_mappings) {
       if (value.first.match(xact->payee)) {
-	post->account = value.second;
-	break;
+        post->account = value.second;
+        break;
       }
     }
   }
@@ -1038,39 +1132,39 @@ post_t * instance_t::parse_post(char *		line,
     beg = next - line;
     ptristream stream(next, len - beg);
 
-    if (*next != '(')		// indicates a value expression
+    if (*next != '(')           // indicates a value expression
       post->amount.parse(stream, PARSE_NO_REDUCE);
     else
       parse_amount_expr(stream, context.scope, *post.get(), post->amount,
-			PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN,
-			defer_expr, &post->amount_expr);
+                        PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN,
+                        defer_expr, &post->amount_expr);
 
     if (! post->amount.is_null() && post->amount.has_commodity()) {
       if (context.strict &&
-	  ! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
-	if (post->_state == item_t::UNCLEARED)
-	  warning_(_("\"%1\", line %2: Unknown commodity '%3'")
-		   << pathname << linenum << post->amount.commodity());
-	post->amount.commodity().add_flags(COMMODITY_KNOWN);
+          ! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
+        if (post->_state == item_t::UNCLEARED)
+          warning_(_("\"%1\", line %2: Unknown commodity '%3'")
+                   << pathname << linenum << post->amount.commodity());
+        post->amount.commodity().add_flags(COMMODITY_KNOWN);
       }
 
       if (! post->amount.has_annotation()) {
-	foreach (state_t& state, context.state_stack) {
-	  if (state.type() == typeid(fixed_rate_t)) {
-	    fixed_rate_t& rate(boost::get<fixed_rate_t>(state));
-	    if (*rate.first == post->amount.commodity()) {
-	      annotation_t details(rate.second);
-	      details.add_flags(ANNOTATION_PRICE_FIXATED);
-	      post->amount.annotate(details);
-	      break;
-	    }
-	  }
-	}
+        foreach (state_t& state, context.state_stack) {
+          if (state.type() == typeid(fixed_rate_t)) {
+            fixed_rate_t& rate(boost::get<fixed_rate_t>(state));
+            if (*rate.first == post->amount.commodity()) {
+              annotation_t details(rate.second);
+              details.add_flags(ANNOTATION_PRICE_FIXATED);
+              post->amount.annotate(details);
+              break;
+            }
+          }
+        }
       }
     }
 
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "post amount = " << post->amount);
+          << "post amount = " << post->amount);
 
     if (stream.eof()) {
       next = NULL;
@@ -1080,62 +1174,73 @@ post_t * instance_t::parse_post(char *		line,
       // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
 
       if (*next == '@') {
-	DEBUG("textual.parse", "line " << linenum << ": "
-	      << "Found a price indicator");
+        DEBUG("textual.parse", "line " << linenum << ": "
+              << "Found a price indicator");
 
-	bool per_unit = true;
+        bool per_unit = true;
 
-	if (*++next == '@') {
-	  per_unit = false;
-	  post->add_flags(POST_COST_IN_FULL);
-	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "And it's for a total price");
-	}
+        if (*++next == '@') {
+          per_unit = false;
+          post->add_flags(POST_COST_IN_FULL);
+          DEBUG("textual.parse", "line " << linenum << ": "
+                << "And it's for a total price");
+        }
 
-	beg = ++next - line;
+        beg = ++next - line;
 
-	p = skip_ws(next);
-	if (*p) {
-	  post->cost = amount_t();
+        p = skip_ws(next);
+        if (*p) {
+          post->cost = amount_t();
 
-	  beg = p - line;
-	  ptristream cstream(p, len - beg);
+          bool fixed_cost = false;
+          if (*p == '=') {
+            p++;
+            fixed_cost = true;
+            if (*p == '\0')
+              throw parse_error(_("Posting is missing a cost amount"));
+          }
 
-	  if (*p != '(')		// indicates a value expression
-	    post->cost->parse(cstream, PARSE_NO_MIGRATE);
-	  else
-	    parse_amount_expr(cstream, context.scope, *post.get(), *post->cost,
-			      PARSE_NO_MIGRATE | PARSE_SINGLE | PARSE_NO_ASSIGN);
+          beg = p - line;
+          ptristream cstream(p, len - beg);
 
-	  if (post->cost->sign() < 0)
-	    throw parse_error(_("A posting's cost may not be negative"));
+          if (*p != '(')                // indicates a value expression
+            post->cost->parse(cstream, PARSE_NO_MIGRATE);
+          else
+            parse_amount_expr(cstream, context.scope, *post.get(), *post->cost,
+                              PARSE_NO_MIGRATE | PARSE_SINGLE | PARSE_NO_ASSIGN);
 
-	  post->cost->in_place_unround();
+          if (post->cost->sign() < 0)
+            throw parse_error(_("A posting's cost may not be negative"));
 
-	  if (per_unit) {
-	    // For the sole case where the cost might be uncommoditized,
-	    // guarantee that the commodity of the cost after multiplication
-	    // is the same as it was before.
-	    commodity_t& cost_commodity(post->cost->commodity());
-	    *post->cost *= post->amount;
-	    post->cost->set_commodity(cost_commodity);
-	  }
-	  else if (post->amount.sign() < 0) {
-	    post->cost->in_place_negate();
-	  }
+          post->cost->in_place_unround();
 
-	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Total cost is " << *post->cost);
-	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Annotated amount is " << post->amount);
+          if (per_unit) {
+            // For the sole case where the cost might be uncommoditized,
+            // guarantee that the commodity of the cost after multiplication
+            // is the same as it was before.
+            commodity_t& cost_commodity(post->cost->commodity());
+            *post->cost *= post->amount;
+            post->cost->set_commodity(cost_commodity);
+          }
+          else if (post->amount.sign() < 0) {
+            post->cost->in_place_negate();
+          }
 
-	  if (cstream.eof())
-	    next = NULL;
-	  else
-	    next = skip_ws(p + static_cast<std::ptrdiff_t>(cstream.tellg()));
-	} else {
-	  throw parse_error(_("Expected a cost amount"));
-	}
+          if (fixed_cost)
+            post->add_flags(POST_COST_FIXATED);
+
+          DEBUG("textual.parse", "line " << linenum << ": "
+                << "Total cost is " << *post->cost);
+          DEBUG("textual.parse", "line " << linenum << ": "
+                << "Annotated amount is " << post->amount);
+
+          if (cstream.eof())
+            next = NULL;
+          else
+            next = skip_ws(p + static_cast<std::ptrdiff_t>(cstream.tellg()));
+        } else {
+          throw parse_error(_("Expected a cost amount"));
+        }
       }
     }
   }
@@ -1144,7 +1249,7 @@ post_t * instance_t::parse_post(char *		line,
 
   if (xact && next && *next == '=') {
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "Found a balance assignment indicator");
+          << "Found a balance assignment indicator");
 
     beg = ++next - line;
 
@@ -1155,70 +1260,70 @@ post_t * instance_t::parse_post(char *		line,
       beg = p - line;
       ptristream stream(p, len - beg);
 
-      if (*p != '(')		// indicates a value expression
-	post->assigned_amount->parse(stream, PARSE_NO_MIGRATE);
+      if (*p != '(')            // indicates a value expression
+        post->assigned_amount->parse(stream, PARSE_NO_MIGRATE);
       else
-	parse_amount_expr(stream, context.scope, *post.get(),
-			  *post->assigned_amount,
-			  PARSE_SINGLE | PARSE_NO_MIGRATE);
+        parse_amount_expr(stream, context.scope, *post.get(),
+                          *post->assigned_amount,
+                          PARSE_SINGLE | PARSE_NO_MIGRATE);
 
       if (post->assigned_amount->is_null()) {
-	if (post->amount.is_null())
-	  throw parse_error(_("Balance assignment must evaluate to a constant"));
-	else
-	  throw parse_error(_("Balance assertion must evaluate to a constant"));
+        if (post->amount.is_null())
+          throw parse_error(_("Balance assignment must evaluate to a constant"));
+        else
+          throw parse_error(_("Balance assertion must evaluate to a constant"));
       }
 
       DEBUG("textual.parse", "line " << linenum << ": "
-	    << "POST assign: parsed amt = " << *post->assigned_amount);
+            << "POST assign: parsed amt = " << *post->assigned_amount);
 
-      amount_t&	amt(*post->assigned_amount);
+      amount_t& amt(*post->assigned_amount);
       value_t account_total
-	(post->account->amount(false).strip_annotations(keep_details_t()));
+        (post->account->amount(false).strip_annotations(keep_details_t()));
 
       DEBUG("post.assign",
-	    "line " << linenum << ": " "account balance = " << account_total);
+            "line " << linenum << ": " "account balance = " << account_total);
       DEBUG("post.assign",
-	    "line " << linenum << ": " "post amount = " << amt);
+            "line " << linenum << ": " "post amount = " << amt);
 
       amount_t diff = amt;
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-	diff -= account_total.as_amount();
-	break;
+        diff -= account_total.as_amount();
+        break;
 
       case value_t::BALANCE:
-	if (optional<amount_t> comm_bal =
-	    account_total.as_balance().commodity_amount(amt.commodity()))
-	  diff -= *comm_bal;
-	break;
+        if (optional<amount_t> comm_bal =
+            account_total.as_balance().commodity_amount(amt.commodity()))
+          diff -= *comm_bal;
+        break;
 
       default:
-	break;
+        break;
       }
 
       DEBUG("post.assign",
-	    "line " << linenum << ": " << "diff = " << diff);
+            "line " << linenum << ": " << "diff = " << diff);
       DEBUG("textual.parse",
-	    "line " << linenum << ": " << "POST assign: diff = " << diff);
+            "line " << linenum << ": " << "POST assign: diff = " << diff);
 
       if (! diff.is_zero()) {
-	if (! post->amount.is_null()) {
-	  diff -= post->amount;
-	  if (! diff.is_zero())
-	    throw_(parse_error, _("Balance assertion off by %1") << diff);
-	} else {
-	  post->amount = diff;
-	  DEBUG("textual.parse", "line " << linenum << ": "
-		<< "Overwrite null posting");
-	}
+        if (! post->amount.is_null()) {
+          diff -= post->amount;
+          if (! diff.is_zero())
+            throw_(parse_error, _("Balance assertion off by %1") << diff);
+        } else {
+          post->amount = diff;
+          DEBUG("textual.parse", "line " << linenum << ": "
+                << "Overwrite null posting");
+        }
       }
 
       if (stream.eof())
-	next = NULL;
+        next = NULL;
       else
-	next = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
+        next = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
     } else {
       throw parse_error(_("Expected an balance assignment/assertion amount"));
     }
@@ -1227,18 +1332,18 @@ post_t * instance_t::parse_post(char *		line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    post->append_note(++next, true, current_year);
+    post->append_note(++next, context.scope, true);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
-	  << "Parsed a posting note");
+          << "Parsed a posting note");
   }
 
   // There should be nothing more to read
 
   if (next && *next)
     throw_(parse_error,
-	   _("Unexpected char '%1' (Note: inline math requires parentheses)")
-	   << *next);
+           _("Unexpected char '%1' (Note: inline math requires parentheses)")
+           << *next);
 
   post->pos->end_pos  = curr_pos;
   post->pos->end_line = linenum;
@@ -1246,7 +1351,7 @@ post_t * instance_t::parse_post(char *		line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-	post->parse_tags(boost::get<string>(state).c_str(), true);
+        post->parse_tags(boost::get<string>(state).c_str(), context.scope, true);
   }
 
   TRACE_STOP(post_details, 1);
@@ -1254,7 +1359,7 @@ post_t * instance_t::parse_post(char *		line,
   return post.release();
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     add_error_context(_("While parsing posting:"));
     add_error_context(line_context(buf, beg, len));
     throw;
@@ -1262,8 +1367,8 @@ post_t * instance_t::parse_post(char *		line,
 }
 
 bool instance_t::parse_posts(account_t *  account,
-			     xact_base_t& xact,
-			     const bool   defer_expr)
+                             xact_base_t& xact,
+                             const bool   defer_expr)
 {
   TRACE_START(xact_posts, 1, "Time spent parsing postings:");
 
@@ -1285,15 +1390,15 @@ bool instance_t::parse_posts(account_t *  account,
   return added;
 }
 
-xact_t * instance_t::parse_xact(char *		line,
-				std::streamsize len,
-				account_t *	account)
+xact_t * instance_t::parse_xact(char *          line,
+                                std::streamsize len,
+                                account_t *     account)
 {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
   std::auto_ptr<xact_t> xact(new xact_t);
 
-  xact->pos	      = position_t();
+  xact->pos           = position_t();
   xact->pos->pathname = pathname;
   xact->pos->beg_pos  = line_beg_pos;
   xact->pos->beg_line = linenum;
@@ -1309,9 +1414,9 @@ xact_t * instance_t::parse_xact(char *		line,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    xact->_date_eff = parse_date(p, current_year);
+    xact->_date_eff = parse_date(p);
   }
-  xact->_date = parse_date(line, current_year);
+  xact->_date = parse_date(line);
 
   // Parse the optional cleared flag: *
 
@@ -1344,8 +1449,8 @@ xact_t * instance_t::parse_xact(char *		line,
     char * p = next_element(next, true);
     foreach (payee_mapping_t& value, context.journal.payee_mappings) {
       if (value.first.match(next)) {
-	xact->payee = value.second;
-	break;
+        xact->payee = value.second;
+        break;
       }
     }
     if (xact->payee.empty())
@@ -1358,7 +1463,7 @@ xact_t * instance_t::parse_xact(char *		line,
   // Parse the xact note
 
   if (next && *next == ';')
-    xact->append_note(++next, current_year);
+    xact->append_note(++next, context.scope, false);
 
   TRACE_STOP(xact_text, 1);
 
@@ -1375,25 +1480,51 @@ xact_t * instance_t::parse_xact(char *		line,
     if (! *p)
       break;
 
-    if (*p == ';') {
-      item_t * item;
-      if (last_post)
-	item = last_post;
-      else
-	item = xact.get();
+    const std::size_t remlen = std::strlen(p);
 
+    item_t * item;
+    if (last_post)
+      item = last_post;
+    else
+      item = xact.get();
+
+    if (*p == ';') {
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, true, current_year);
+      item->append_note(p + 1, context.scope, true);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
-    } else {
+    }
+    else if ((remlen > 7 && *p == 'a' &&
+              std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
+             (remlen > 6 && *p == 'c' &&
+              std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+             (remlen > 5 && *p == 'e' &&
+              std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
+      const char c = *p;
+      p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+      expr_t expr(p);
+      bind_scope_t bound_scope(context.scope, *item);
+      if (c == 'e') {
+        expr.calc(bound_scope);
+      }
+      else if (! expr.calc(bound_scope).to_boolean()) {
+        if (c == 'a') {
+          throw_(parse_error, _("Transaction assertion failed: %1") << p);
+        } else {
+          warning_(_("Transaction check failed: %1") << p);
+        }
+      }
+    }
+    else {
       reveal_context = false;
 
       if (post_t * post =
-	  parse_post(p, len - (p - line), account, xact.get())) {
-	xact->add_post(post);
-	last_post = post;
+          parse_post(p, len - (p - line), account, xact.get())) {
+        reveal_context = true;
+        xact->add_post(post);
+        last_post = post;
       }
+      reveal_context = true;
     }
   }
 
@@ -1402,11 +1533,11 @@ xact_t * instance_t::parse_xact(char *		line,
 
     foreach (post_t * post, xact->posts) {
       if (post->_state == item_t::UNCLEARED) {
-	result = item_t::UNCLEARED;
-	break;
+        result = item_t::UNCLEARED;
+        break;
       }
       else if (post->_state == item_t::PENDING) {
-	result = item_t::PENDING;
+        result = item_t::PENDING;
       }
     }
   }
@@ -1417,7 +1548,8 @@ xact_t * instance_t::parse_xact(char *		line,
   if (! context.state_stack.empty()) {
     foreach (const state_t& state, context.state_stack)
       if (state.type() == typeid(string))
-	xact->parse_tags(boost::get<string>(state).c_str(), false);
+        xact->parse_tags(boost::get<string>(state).c_str(), context.scope,
+                         false);
   }
 
   TRACE_STOP(xact_details, 1);
@@ -1425,34 +1557,36 @@ xact_t * instance_t::parse_xact(char *		line,
   return xact.release();
 
   }
-  catch (const std::exception& err) {
+  catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing transaction:"));
       add_error_context(source_context(xact->pos->pathname,
-				       xact->pos->beg_pos, curr_pos, "> "));
+                                       xact->pos->beg_pos, curr_pos, "> "));
     }
     throw;
   }
 }
 
 expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind,
-				    const string& name)
+                                    const string& name)
 {
   return context.scope.lookup(kind, name);
 }
 
 std::size_t journal_t::parse(std::istream& in,
-			     scope_t&      scope,
-			     account_t *   master,
-			     const path *  original_file,
-			     bool          strict)
+                             scope_t&      scope,
+                             account_t *   master,
+                             const path *  original_file,
+                             bool          strict)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
 
   parse_context_t context(*this, scope);
   context.strict = strict;
+  if (master || this->master)
+    context.state_stack.push_front(master ? master : this->master);
 
-  instance_t instance(context, in, master, original_file);
+  instance_t instance(context, in, original_file);
   instance.parse();
 
   TRACE_STOP(parsing_total, 1);

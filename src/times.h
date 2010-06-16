@@ -51,8 +51,8 @@ namespace ledger {
 DECLARE_EXCEPTION(datetime_error, std::runtime_error);
 DECLARE_EXCEPTION(date_error, std::runtime_error);
 
-typedef boost::posix_time::ptime	datetime_t;
-typedef datetime_t::time_duration_type	time_duration_t;
+typedef boost::posix_time::ptime        datetime_t;
+typedef datetime_t::time_duration_type  time_duration_t;
 
 inline bool is_valid(const datetime_t& moment) {
   return ! moment.is_not_a_date_time();
@@ -77,27 +77,23 @@ extern optional<datetime_t> epoch;
 #define CURRENT_DATE() \
   (epoch ? epoch->date() : boost::gregorian::day_clock::universal_day())
 
-extern date_time::weekdays   start_of_week;
+extern date_time::weekdays start_of_week;
 
 optional<date_time::weekdays>
 string_to_day_of_week(const std::string& str);
 optional<date_time::months_of_year>
 string_to_month_of_year(const std::string& str);
 
-typedef optional<date_t::year_type> optional_year;
+datetime_t parse_datetime(const char * str);
 
-datetime_t parse_datetime(const char * str, optional_year current_year = none);
-
-inline datetime_t parse_datetime(const std::string& str,
-				 optional_year current_year = none) {
-  return parse_datetime(str.c_str(), current_year);
+inline datetime_t parse_datetime(const std::string& str) {
+  return parse_datetime(str.c_str());
 }
 
-date_t parse_date(const char * str, optional_year current_year = none);
+date_t parse_date(const char * str);
 
-inline date_t parse_date(const std::string& str,
-			 optional_year current_year = none) {
-  return parse_date(str.c_str(), current_year);
+inline date_t parse_date(const std::string& str) {
+  return parse_date(str.c_str());
 }
 
 enum format_type_t {
@@ -105,18 +101,18 @@ enum format_type_t {
 };
 
 std::string format_datetime(const datetime_t& when,
-			    const format_type_t format_type = FMT_PRINTED,
-			    const optional<const char *>& format = none);
+                            const format_type_t format_type = FMT_PRINTED,
+                            const optional<const char *>& format = none);
 void set_datetime_format(const char * format);
 
 std::string format_date(const date_t& when,
-			const format_type_t format_type = FMT_PRINTED,
-			const optional<const char *>& format = none);
+                        const format_type_t format_type = FMT_PRINTED,
+                        const optional<const char *>& format = none);
 void set_date_format(const char * format);
 void set_input_date_format(const char * format);
 
 inline void to_xml(std::ostream& out, const datetime_t& when,
-		   bool wrap = true)
+                   bool wrap = true)
 {
   if (wrap) {
     push_xml x(out, "datetime");
@@ -127,7 +123,7 @@ inline void to_xml(std::ostream& out, const datetime_t& when,
 }
 
 inline void to_xml(std::ostream& out, const date_t& when,
-		   bool wrap = true)
+                   bool wrap = true)
 {
   if (wrap) {
     push_xml x(out, "date");
@@ -144,8 +140,8 @@ struct date_traits_t
   bool has_day;
 
   date_traits_t(bool _has_year  = false,
-		bool _has_month = false,
-		bool _has_day   = false)
+                bool _has_month = false,
+                bool _has_day   = false)
     : has_year(_has_year), has_month(_has_month), has_day(_has_day) {
     TRACE_CTOR(date_traits_t, "bool, bool, bool");
   }
@@ -160,16 +156,16 @@ struct date_traits_t
   }
 
   date_traits_t& operator=(const date_traits_t& traits) {
-    has_year	= traits.has_year;
+    has_year    = traits.has_year;
     has_month = traits.has_month;
-    has_day	= traits.has_day;
+    has_day     = traits.has_day;
     return *this;
   }
 
   bool operator==(const date_traits_t& traits) const {
-    return (has_year	== traits.has_year &&
-	    has_month == traits.has_month &&
-	    has_day	== traits.has_day);
+    return (has_year    == traits.has_year &&
+            has_month == traits.has_month &&
+            has_day     == traits.has_day);
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
@@ -249,11 +245,11 @@ struct date_duration_t
     out << length << ' ';
 
     switch (quantum) {
-    case DAYS:	   out << "day"; break;
-    case WEEKS:	   out << "week"; break;
+    case DAYS:     out << "day"; break;
+    case WEEKS:    out << "week"; break;
     case MONTHS:   out << "month"; break;
     case QUARTERS: out << "quarter"; break;
-    case YEARS:	   out << "year"; break;
+    case YEARS:    out << "year"; break;
     default:
       assert(false);
       break;
@@ -285,31 +281,33 @@ class date_specifier_t
 {
   friend class date_parser_t;
 
+public:
 #if 0
-  typedef date_t::year_type	   year_type;
+  typedef date_t::year_type        year_type;
 #else
-  typedef unsigned short	   year_type;
+  typedef unsigned short           year_type;
 #endif
-  typedef date_t::month_type	   month_type;
-  typedef date_t::day_type	   day_type;
+  typedef date_t::month_type       month_type;
+  typedef date_t::day_type         day_type;
   typedef date_t::day_of_week_type day_of_week_type;
 
-  optional<year_type>	     year;
-  optional<month_type>	     month;
-  optional<day_type>	     day;
+protected:
+  optional<year_type>        year;
+  optional<month_type>       month;
+  optional<day_type>         day;
   optional<day_of_week_type> wday;
 
 public:
   date_specifier_t(const optional<year_type>&        _year  = none,
-		   const optional<month_type>&       _month = none,
-		   const optional<day_type>&         _day   = none,
-		   const optional<day_of_week_type>& _wday  = none)
+                   const optional<month_type>&       _month = none,
+                   const optional<day_type>&         _day   = none,
+                   const optional<day_of_week_type>& _wday  = none)
     : year(_year), month(_month), day(_day), wday(_wday) {
     TRACE_CTOR(date_specifier_t,
-	       "year_type, month_type, day_type, day_of_week_type");
+               "year_type, month_type, day_type, day_of_week_type");
   }
   date_specifier_t(const date_t& date,
-		   const optional<date_traits_t>& traits = none) {
+                   const optional<date_traits_t>& traits = none) {
     TRACE_CTOR(date_specifier_t, "date_t, date_traits_t");
     if (! traits || traits->has_year)
       year = date.year();
@@ -327,12 +325,11 @@ public:
     TRACE_DTOR(date_specifier_t);
   }
 
-  date_t begin(const optional_year& current_year = none) const;
-  date_t end(const optional_year& current_year = none) const;
+  date_t begin() const;
+  date_t end() const;
 
-  bool is_within(const date_t& date,
-		 const optional_year& current_year = none) const {
-    return date >= begin(current_year) && date < end(current_year);
+  bool is_within(const date_t& date) const {
+    return date >= begin() && date < end();
   }
 
   optional<date_duration_t> implied_duration() const {
@@ -388,7 +385,7 @@ class date_range_t
 
 public:
   date_range_t(const optional<date_specifier_t>& _range_begin = none,
-	       const optional<date_specifier_t>& _range_end   = none)
+               const optional<date_specifier_t>& _range_end   = none)
     : range_begin(_range_begin), range_end(_range_end),
       end_inclusive(false) {
     TRACE_CTOR(date_range_t, "date_specifier_t, date_specifier_t");
@@ -402,27 +399,26 @@ public:
     TRACE_DTOR(date_range_t);
   }
 
-  optional<date_t> begin(const optional_year& current_year = none) const {
+  optional<date_t> begin() const {
     if (range_begin)
-      return range_begin->begin(current_year);
+      return range_begin->begin();
     else
       return none;
   }
-  optional<date_t> end(const optional_year& current_year = none) const {
+  optional<date_t> end() const {
     if (range_end) {
       if (end_inclusive)
-	return range_end->end(current_year);
+        return range_end->end();
       else
-	return range_end->begin(current_year);
+        return range_end->begin();
     } else {
       return none;
     }
   }
 
-  bool is_within(const date_t& date,
-		 const optional_year& current_year = none) const {
-    optional<date_t> b = begin(current_year);
-    optional<date_t> e = end(current_year);
+  bool is_within(const date_t& date) const {
+    optional<date_t> b = begin();
+    optional<date_t> e = end();
     bool after_begin = b ? date >= *b : true;
     bool before_end  = e ? date <  *e : true;
     return after_begin && before_end;
@@ -480,19 +476,19 @@ public:
     TRACE_DTOR(date_specifier_or_range_t);
   }
 
-  optional<date_t> begin(const optional_year& current_year = none) const {
+  optional<date_t> begin() const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).begin(current_year);
+      return boost::get<date_specifier_t>(specifier_or_range).begin();
     else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).begin(current_year);
+      return boost::get<date_range_t>(specifier_or_range).begin();
     else
       return none;
   }
-  optional<date_t> end(const optional_year& current_year = none) const {
+  optional<date_t> end() const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).end(current_year);
+      return boost::get<date_specifier_t>(specifier_or_range).end();
     else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).end(current_year);
+      return boost::get<date_range_t>(specifier_or_range).end();
     else
       return none;
   }
@@ -525,19 +521,19 @@ private:
 class date_interval_t : public equality_comparable<date_interval_t>
 {
 public:
-  static date_t add_duration(const date_t&	    date,
-			     const date_duration_t& duration);
-  static date_t subtract_duration(const date_t&		 date,
-				  const date_duration_t& duration);
+  static date_t add_duration(const date_t&          date,
+                             const date_duration_t& duration);
+  static date_t subtract_duration(const date_t&          date,
+                                  const date_duration_t& duration);
 
   optional<date_specifier_or_range_t> range;
 
-  optional<date_t>	    start;  // the real start, after adjustment
-  optional<date_t>	    finish; // the real end, likewise
-  bool			    aligned;
-  optional<date_t>	    next;
+  optional<date_t>          start;  // the real start, after adjustment
+  optional<date_t>          finish; // the real end, likewise
+  bool                      aligned;
+  optional<date_t>          next;
   optional<date_duration_t> duration;
-  optional<date_t>	    end_of_duration;
+  optional<date_t>          end_of_duration;
 
   explicit date_interval_t() : aligned(false) {
     TRACE_CTOR(date_interval_t, "");
@@ -562,24 +558,24 @@ public:
 
   bool operator==(const date_interval_t& other) const {
     return (start == other.start &&
-	    (! start || *start == *other.start));
+            (! start || *start == *other.start));
   }
 
   operator bool() const {
     return is_valid();
   }
 
-  optional<date_t> begin(const optional_year& current_year = none) const {
-    return start ? start : (range ? range->begin(current_year) : none);
+  optional<date_t> begin() const {
+    return start ? start : (range ? range->begin() : none);
   }
-  optional<date_t> end(const optional_year& current_year = none) const {
-    return finish ? finish : (range ? range->end(current_year) : none);
+  optional<date_t> end() const {
+    return finish ? finish : (range ? range->end() : none);
   }
 
   void   parse(const string& str);
 
-  void	 resolve_end();
-  void	 stabilize(const optional<date_t>& date = none);
+  void   resolve_end();
+  void   stabilize(const optional<date_t>& date = none);
 
   bool   is_valid() const {
     return start;
@@ -588,7 +584,7 @@ public:
   /** Find the current or next period containing date.  Returns true if the
       date_interval_t object has been altered to reflect the interval
       containing date, or false if no such period can be found. */
-  bool find_period(const date_t& date);
+  bool find_period(const date_t& date = CURRENT_DATE());
 
   optional<date_t> inclusive_end() const {
     if (end_of_duration)
@@ -599,7 +595,7 @@ public:
 
   date_interval_t& operator++();
 
-  void dump(std::ostream& out, optional_year current_year = none);
+  void dump(std::ostream& out);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

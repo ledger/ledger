@@ -142,8 +142,8 @@ class posts_commodities_iterator : public posts_iterator
 {
 protected:
   journal_posts_iterator  journal_posts;
-  xacts_iterator	  xacts;
-  xact_posts_iterator	  posts;
+  xacts_iterator          xacts;
+  xact_posts_iterator     posts;
   temporaries_t           temps;
   xacts_list              xact_temps;
 
@@ -203,13 +203,13 @@ class sorted_accounts_iterator : public accounts_iterator
 
   typedef std::deque<account_t *> accounts_deque_t;
 
-  std::list<accounts_deque_t>		      accounts_list;
+  std::list<accounts_deque_t>                 accounts_list;
   std::list<accounts_deque_t::const_iterator> sorted_accounts_i;
   std::list<accounts_deque_t::const_iterator> sorted_accounts_end;
 
 public:
   sorted_accounts_iterator(account_t& account,
-			   const expr_t& _sort_cmp, bool _flatten_all)
+                           const expr_t& _sort_cmp, bool _flatten_all)
     : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
     TRACE_CTOR(sorted_accounts_iterator, "const expr_t&, bool, account_t&");
     push_back(account);

@@ -53,7 +53,7 @@ journal_item:
 whitespace:
     EOL |
     WHITESPACE EOL |
-    ';' TEXT EOL |		/* these next four are all ignored */
+    ';' TEXT EOL |              /* these next four are all ignored */
     '*' TEXT EOL |
     ;
 
@@ -70,23 +70,23 @@ word_directive:
     "end" |
     "alias" STRING '=' TEXT |
     "def" TEXT |
-    TEXT WHITESPACE TEXT	/* looked up in session (aka maybe Python) */
+    TEXT WHITESPACE TEXT        /* looked up in session (aka maybe Python) */
     ;
 
 char_directive:
-    'i' date time TEXT |	/* a timeclock.el "check in" */
+    'i' date time TEXT |        /* a timeclock.el "check in" */
     'I' date time TEXT |
-    'o' date time TEXT |	/* a timeclock.el "check out" */
+    'o' date time TEXT |        /* a timeclock.el "check out" */
     'O' date time TEXT |
     'h' TEXT EOL |
     'b' TEXT EOL |
-    'D' amount |		/* sets display parameters for a commodity */
-    'A' TEXT |			/* sets the "default balancing account" */
-    'C' commodity '=' amount |	/* specifies a commodity conversion */
+    'D' amount |                /* sets display parameters for a commodity */
+    'A' TEXT |                  /* sets the "default balancing account" */
+    'C' commodity '=' amount |  /* specifies a commodity conversion */
     'P' date time commodity amount | /* a pricing history xact */
-    'N' commodity |		/* commodity's price is never downloaded */
-    'Y' INT4 |			/* sets the default year for date parsing */
-    '-' '-' STRING TEXT |	/* specify command-line options in the file */
+    'N' commodity |             /* commodity's price is never downloaded */
+    'Y' INT4 |                  /* sets the default year for date parsing */
+    '-' '-' STRING TEXT |       /* specify command-line options in the file */
     ;
 
 date: INT4 date_sep INT2 date_sep INT2 ;
@@ -210,7 +210,7 @@ values_opt:
 price_opt: price | /* epsilon */ ;
 price:
     '@' amount_expr |
-    '@@' amount_expr		/* in this case, it's the whole price */
+    '@@' amount_expr            /* in this case, it's the whole price */
     ;
 
 account:
