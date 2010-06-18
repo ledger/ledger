@@ -819,7 +819,8 @@ public:
          "    4 + meta_width + date_width + payee_width + account_width"
          "      + amount_width + total_width + prepend_width, true, color))\n%/"
          "%(justify(\" \", date_width))"
-         " %(justify((has_tag(\"Payee\") ? payee : \" \"), payee_width))"
+         " %(justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+         "                     payee_width), payee_width))"
          " %$3 %$4 %$5\n");
     });
 
