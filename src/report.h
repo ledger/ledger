@@ -816,8 +816,9 @@ public:
          " %(justify(scrub(display_total), total_width, "
          "    4 + meta_width + date_width + payee_width + account_width"
          "      + amount_width + total_width + prepend_width, true, color))\n%/"
-         "%(justify(\" \", 2 + date_width + payee_width))"
-         "%$3 %$4 %$5\n");
+         "%(justify(\" \", date_width))"
+         " %(justify((has_tag(\"Payee\") ? payee : \" \"), payee_width))"
+         " %$3 %$4 %$5\n");
     });
 
   OPTION(report_t, related); // -r

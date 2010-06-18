@@ -123,6 +123,14 @@ optional<date_t> post_t::effective_date() const
   return date;
 }
 
+string post_t::payee() const
+{
+  if (optional<value_t> post_payee = get_tag(_("Payee")))
+    return post_payee->as_string();
+  else
+    return xact->payee;
+}
+
 namespace {
   value_t get_this(post_t& post) {
     return scope_value(&post);
@@ -160,7 +168,7 @@ namespace {
   }
 
   value_t get_payee(post_t& post) {
-    return string_value(post.xact->payee);
+    return string_value(post.payee());
   }
 
   value_t get_note(post_t& post) {

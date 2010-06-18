@@ -1042,10 +1042,10 @@ void by_payee_posts::flush()
 
 void by_payee_posts::operator()(post_t& post)
 {
-  payee_subtotals_map::iterator i = payee_subtotals.find(post.xact->payee);
+  payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
   if (i == payee_subtotals.end()) {
     payee_subtotals_pair
-      temp(post.xact->payee,
+      temp(post.payee(),
            shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);

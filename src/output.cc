@@ -313,9 +313,9 @@ void report_payees::flush()
 
 void report_payees::operator()(post_t& post)
 {
-  std::map<string, std::size_t>::iterator i = payees.find(post.xact->payee);
+  std::map<string, std::size_t>::iterator i = payees.find(post.payee());
   if (i == payees.end())
-    payees.insert(payees_pair(post.xact->payee, 1));
+    payees.insert(payees_pair(post.payee(), 1));
   else
     (*i).second++;
 }
