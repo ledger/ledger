@@ -166,6 +166,7 @@ void item_t::parse_tags(const char * p,
 
   string tag;
   bool   by_value = false;
+  bool   first = true;
   for (char * q = std::strtok(buf.get(), " \t");
        q;
        q = std::strtok(NULL, " \t")) {
@@ -191,7 +192,7 @@ void item_t::parse_tags(const char * p,
         (*i).second.second = true;
       }
     }
-    else if (q[len - 1] == ':') { // a metadata setting
+    else if (first && q[len - 1] == ':') { // a metadata setting
       int index = 1;
       if (q[len - 2] == ':') {
         by_value = true;
@@ -199,6 +200,7 @@ void item_t::parse_tags(const char * p,
       }
       tag = string(q, len - index);
     }
+    first = false;
   }
 }
 
