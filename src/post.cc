@@ -39,40 +39,42 @@
 
 namespace ledger {
 
-bool post_t::has_tag(const string& tag) const
+bool post_t::has_tag(const string& tag, bool inherit) const
 {
   if (item_t::has_tag(tag))
     return true;
-  if (xact)
+  if (inherit && xact)
     return xact->has_tag(tag);
   return false;
 }
 
 bool post_t::has_tag(const mask_t& tag_mask,
-                     const optional<mask_t>& value_mask) const
+                     const optional<mask_t>& value_mask,
+                     bool inherit) const
 {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
-  if (xact)
+  if (inherit && xact)
     return xact->has_tag(tag_mask, value_mask);
   return false;
 }
 
-optional<value_t> post_t::get_tag(const string& tag) const
+optional<value_t> post_t::get_tag(const string& tag, bool inherit) const
 {
   if (optional<value_t> value = item_t::get_tag(tag))
     return value;
-  if (xact)
+  if (inherit && xact)
     return xact->get_tag(tag);
   return none;
 }
 
 optional<value_t> post_t::get_tag(const mask_t& tag_mask,
-                                  const optional<mask_t>& value_mask) const
+                                  const optional<mask_t>& value_mask,
+                                  bool inherit) const
 {
   if (optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
-  if (xact)
+  if (inherit && xact)
     return xact->get_tag(tag_mask, value_mask);
   return none;
 }

@@ -37,7 +37,7 @@ namespace ledger {
 
 bool item_t::use_effective_date = false;
 
-bool item_t::has_tag(const string& tag) const
+bool item_t::has_tag(const string& tag, bool) const
 {
   DEBUG("item.meta", "Checking if item has tag: " << tag);
   if (! metadata) {
@@ -57,7 +57,7 @@ bool item_t::has_tag(const string& tag) const
 }
 
 bool item_t::has_tag(const mask_t& tag_mask,
-                     const optional<mask_t>& value_mask) const
+                     const optional<mask_t>& value_mask, bool) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
@@ -72,7 +72,7 @@ bool item_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-optional<value_t> item_t::get_tag(const string& tag) const
+  optional<value_t> item_t::get_tag(const string& tag, bool) const
 {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
@@ -87,7 +87,8 @@ optional<value_t> item_t::get_tag(const string& tag) const
 }
 
 optional<value_t> item_t::get_tag(const mask_t& tag_mask,
-                                  const optional<mask_t>& value_mask) const
+                                  const optional<mask_t>& value_mask,
+                                  bool) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
