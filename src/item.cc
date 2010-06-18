@@ -138,26 +138,26 @@ void item_t::parse_tags(const char * p,
                         scope_t&     scope,
                         bool         overwrite_existing)
 {
-  if (const char * b = std::strchr(p, '[')) {
-    if (*(b + 1) != '\0' &&
-        (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
-      if (const char * e = std::strchr(p, ']')) {
-        char buf[256];
-        std::strncpy(buf, b + 1, e - b - 1);
-        buf[e - b - 1] = '\0';
+  if (! std::strchr(p, ':')) {
+    if (const char * b = std::strchr(p, '[')) {
+      if (*(b + 1) != '\0' &&
+          (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
+        if (const char * e = std::strchr(p, ']')) {
+          char buf[256];
+          std::strncpy(buf, b + 1, e - b - 1);
+          buf[e - b - 1] = '\0';
 
-        if (char * p = std::strchr(buf, '=')) {
-          *p++ = '\0';
-          _date_eff = parse_date(p);
+          if (char * p = std::strchr(buf, '=')) {
+            *p++ = '\0';
+            _date_eff = parse_date(p);
+          }
+          if (buf[0])
+            _date = parse_date(buf);
         }
-        if (buf[0])
-          _date = parse_date(buf);
       }
     }
-  }
-
-  if (! std::strchr(p, ':'))
     return;
+  }
 
   scoped_array<char> buf(new char[std::strlen(p) + 1]);
 
