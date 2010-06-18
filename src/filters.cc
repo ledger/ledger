@@ -1376,22 +1376,16 @@ void inject_posts::operator()(post_t& post)
     }
 
     if (tag_value) {
-      if (tag_value->is_amount()) {
-        xact_t& xact = temps.copy_xact(*post.xact);
-        xact._date = post.date();
-        xact.add_flags(ITEM_GENERATED);
-        post_t& temp = temps.copy_post(post, xact);
+      xact_t& xact = temps.copy_xact(*post.xact);
+      xact._date = post.date();
+      xact.add_flags(ITEM_GENERATED);
+      post_t& temp = temps.copy_post(post, xact);
 
-        temp.account = pair.second.first;
-        temp.amount  = tag_value->as_amount();
-        temp.add_flags(ITEM_GENERATED);
+      temp.account = pair.second.first;
+      temp.amount  = tag_value->to_amount();
+      temp.add_flags(ITEM_GENERATED);
 
-        item_handler<post_t>::operator()(temp);
-      } else {
-        throw_(std::logic_error,
-               _("Attempt to inject a posting with non-amount %1 for tag %2")
-               << *tag_value << pair.first);
-      }
+      item_handler<post_t>::operator()(temp);
     }
   }
 
