@@ -523,7 +523,7 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
                                            bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
     show_rounding(_show_rounding),
-    rounding_account(temps.create_account(_("<Rounding>"))),
+    rounding_account(temps.create_account(_("<Adjustment>"))),
     revalued_account(temps.create_account(_("<Revalued>")))
 {
   TRACE_CTOR(display_filter_posts,
