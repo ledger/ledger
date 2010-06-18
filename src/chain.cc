@@ -258,6 +258,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   if (report.HANDLED(related))
     handler.reset(new related_posts(handler, report.HANDLED(related_all)));
 
+  if (report.HANDLED(inject_))
+    handler.reset(new inject_posts(handler, report.HANDLED(inject_).str(),
+                                   report.session.journal->master));
+
   return handler;
 }
 

@@ -929,6 +929,26 @@ class forecast_posts : public generate_posts
   }
 };
 
+class inject_posts : public item_handler<post_t>
+{
+  typedef std::set<xact_t *>                       tag_injected_set;
+  typedef std::pair<account_t *, tag_injected_set> tag_mapping_pair;
+  typedef std::pair<string, tag_mapping_pair>      tags_list_pair;
+
+  std::list<tags_list_pair> tags_list;
+  temporaries_t             temps;
+
+ public:
+  inject_posts(post_handler_ptr handler, const string& tag_list,
+               account_t * master);
+
+  virtual ~inject_posts() throw() {
+    TRACE_DTOR(inject_posts);
+  }
+
+  virtual void operator()(post_t& post);
+};
+
 //////////////////////////////////////////////////////////////////////
 //
 // Account filters

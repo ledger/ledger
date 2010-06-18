@@ -1338,6 +1338,66 @@ void forecast_posts::flush()
   item_handler<post_t>::flush();
 }
 
+inject_posts::inject_posts(post_handler_ptr handler,
+                           const string&    tag_list,
+                           account_t *      master)
+  : item_handler<post_t>(handler)
+{
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string");
+
+  scoped_array<char> buf(new char[tag_list.length() + 1]);
+  std::strcpy(buf.get(), tag_list.c_str());
+
+  for (char * q = std::strtok(buf.get(), ",");
+       q;
+       q = std::strtok(NULL, ",")) {
+
+    std::list<string> account_names;
+    split_string(q, ':', account_names);
+    account_t * account =
+      create_temp_account_from_path(account_names, temps, master);
+    account->add_flags(ACCOUNT_GENERATED);
+
+    tags_list.push_back
+      (tags_list_pair(q, tag_mapping_pair(account, tag_injected_set())));
+  }
+}
+
+void inject_posts::operator()(post_t& post)
+{
+  foreach (tags_list_pair& pair, tags_list) {
+    optional<value_t> tag_value = post.get_tag(pair.first, false);
+    if (! tag_value &&
+        pair.second.second.find(post.xact) == pair.second.second.end()) {
+      // When checking if the transaction has the tag, only inject once
+      // per transaction.
+      pair.second.second.insert(post.xact);
+      tag_value = post.xact->get_tag(pair.first);
+    }
+
+    if (tag_value) {
+      if (tag_value->is_amount()) {
+        xact_t& xact = temps.copy_xact(*post.xact);
+        xact._date = post.date();
+        xact.add_flags(ITEM_GENERATED);
+        post_t& temp = temps.copy_post(post, xact);
+
+        temp.account = pair.second.first;
+        temp.amount  = tag_value->as_amount();
+        temp.add_flags(ITEM_GENERATED);
+
+        item_handler<post_t>::operator()(temp);
+      } else {
+        throw_(std::logic_error,
+               _("Attempt to inject a posting with non-amount %1 for tag %2")
+               << *tag_value << pair.first);
+      }
+    }
+  }
+
+  item_handler<post_t>::operator()(post);
+}
+
 pass_down_accounts::pass_down_accounts(acct_handler_ptr             handler,
                                        accounts_iterator&           iter,
                                        const optional<predicate_t>& _pred,

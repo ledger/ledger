@@ -955,6 +955,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'i':
     OPT(invert);
+    else OPT(inject_);
     break;
   case 'j':
     OPT_CH(amount_data);

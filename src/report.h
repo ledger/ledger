@@ -260,6 +260,7 @@ public:
     HANDLER(group_by_).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
+    HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
     HANDLER(lot_dates).report(out);
@@ -616,6 +617,7 @@ public:
     });
 
   OPTION(report_t, head_);
+  OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {
       parent->HANDLER(amount_).set_expr(string("--invert"), "-amount");
