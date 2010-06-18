@@ -1073,7 +1073,7 @@ void transfer_details::operator()(post_t& post)
   if (! substitute.is_null()) {
     switch (which_element) {
     case SET_DATE:
-      temp.xdata().date = substitute.to_date();
+      temp._date = substitute.to_date();
       break;
 
     case SET_ACCOUNT: {
