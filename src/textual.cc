@@ -715,10 +715,10 @@ void instance_t::include_directive(char * line)
   mask_t glob;
 #if BOOST_VERSION >= 103700
   path   parent_path = filename.parent_path();
-  glob.assign_glob(filename.filename());
+  glob.assign_glob('^' + filename.filename() + '$');
 #else // BOOST_VERSION >= 103700
   path   parent_path = filename.branch_path();
-  glob.assign_glob(filename.leaf());
+  glob.assign_glob('^' + filename.leaf() + '$');
 #endif // BOOST_VERSION >= 103700
 
   bool files_found = false;
