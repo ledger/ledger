@@ -45,7 +45,7 @@ BOOST_ICU_DIR	= boost_$(BOOST_VERSION)-icu-$(DIR_SUFFIX)
 BOOST_ICU_STOW	= $(STOW_ROOT)/$(BOOST_ICU_DIR)
 BOOST_ICU_BUILD = $(PRODUCTS)/$(BOOST_ICU_DIR)
 
-all: boost-build cppunit-build #icu-build boost-icu-build
+all: boost-build #icu-build boost-icu-build
 
 prepare-boost:
 	perl -i -pe 's/local command = \[ common\.get-invocation-command darwin : g\+\+ : \$$\(command\) \] ;/local command = [ common.get-invocation-command darwin : g++ : $(CXX) ] ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
@@ -56,17 +56,6 @@ boost-build: prepare-boost
 	 sh bootstrap.sh && \
 	 ./bjam $(OPTJ) debug --prefix=$(BOOST_STOW) --build-dir=$(BOOST_BUILD) \
 	    $(BOOST_FLAGS) install)
-
-cppunit-build:
-	-(cd cppunit; make distclean)
-	(cd cppunit; sh autogen.sh; \
-	 ./configure CPPFLAGS="$(CPPFLAGS)" \
-		     CFLAGS="$(CFLAGS)" \
-		     LDFLAGS="$(LDFLAGS)" \
-		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
-		     --prefix=$(STOW_ROOT)/cppunit-$(DIR_SUFFIX) \
-		     --disable-doxygen --disable-dot && \
-	 make install)
 
 #icu-build:
 #	-(cd icu/source; make distclean)
@@ -87,11 +76,8 @@ cppunit-build:
 clean:
 	-rm -fr $(BOOST_STOW) $(BOOST_BUILD)
 	-rm -fr $(BOOST_ICU_STOW) $(BOOST_ICU_BUILD)
-	-rm -fr $(STOW_ROOT)/cppunit-$(DIR_SUFFIX)
 	-rm -fr $(STOW_ROOT)/icu-$(DIR_SUFFIX)
-	-(cd cppunit; make distclean)
 	-(cd icu/source; make distclean)
 
 lib-clean:
-	-(cd cppunit; make distclean)
 	-(cd icu/source; make distclean)

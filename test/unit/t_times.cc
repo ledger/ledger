@@ -1,25 +1,26 @@
-#include <system.hh>
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE util
+#include <boost/test/unit_test.hpp>
 
-#include "t_times.h"
+#include <system.hh>
 
 #include "utils.h"
 #include "times.h"
 
 using namespace ledger;
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(DateTimeTestCase, "util");
+struct times_fixture {
+  times_fixture() {
+    times_initialize();
+  }
+  ~times_fixture() {
+    times_shutdown();
+  }
+};
 
-void DateTimeTestCase::setUp()
-{
-  times_initialize();
-}
+BOOST_FIXTURE_TEST_SUITE(times, times_fixture)
 
-void DateTimeTestCase::tearDown()
-{
-  times_shutdown();
-}
-
-void DateTimeTestCase::testConstructors()
+BOOST_AUTO_TEST_CASE(testConstructors)
 {
 #ifndef NOT_FOR_PYTHON
   std::time_t now         = std::time(NULL);
@@ -71,51 +72,51 @@ void DateTimeTestCase::testConstructors()
 #endif // NOT_FOR_PYTHON
 
 #ifndef NOT_FOR_PYTHON
-  assertTrue(d0.is_not_a_date());
-  assertFalse(d1.is_not_a_date());
-  assertFalse(d4.is_not_a_date());
+  BOOST_CHECK(d0.is_not_a_date());
+  BOOST_CHECK(! d1.is_not_a_date());
+  BOOST_CHECK(! d4.is_not_a_date());
 #endif // NOT_FOR_PYTHON
 
-  assertTrue(CURRENT_DATE() > d1);
-  assertTrue(CURRENT_DATE() > d4);
+  BOOST_CHECK(CURRENT_DATE() > d1);
+  BOOST_CHECK(CURRENT_DATE() > d4);
 
 #ifndef NOT_FOR_PYTHON
 #if 0
-  assertEqual(d3, d15);
+  BOOST_CHECK_EQUAL(d3, d15);
 #endif
 #endif // NOT_FOR_PYTHON
-  assertEqual(d4, d6);
-  assertEqual(d4, d8);
-  assertEqual(d5, d7);
-  assertEqual(d5, d9);
+  BOOST_CHECK_EQUAL(d4, d6);
+  BOOST_CHECK_EQUAL(d4, d8);
+  BOOST_CHECK_EQUAL(d5, d7);
+  BOOST_CHECK_EQUAL(d5, d9);
 #ifndef NOT_FOR_PYTHON
 #if 0
-  assertEqual(d10, d11);
-  assertEqual(d12, d13);
+  BOOST_CHECK_EQUAL(d10, d11);
+  BOOST_CHECK_EQUAL(d12, d13);
   
-  assertThrow(parse_date("2007/02/29"), boost::gregorian::bad_day_of_month);
-  //assertThrow(parse_date("2007/13/01"), datetime_error);
-  //assertThrow(parse_date("2007/00/01"), datetime_error);
-  assertThrow(parse_date("2007/01/00"), boost::gregorian::bad_day_of_month);
-  //assertThrow(parse_date("2007/00/00"), boost::gregorian::bad_day_of_month);
-  //assertThrow(parse_date("2007/05/32"), boost::gregorian::bad_day_of_month);
+  BOOST_CHECK_THROW(parse_date("2007/02/29"), boost::gregorian::bad_day_of_month);
+  //BOOST_CHECK_THROW(parse_date("2007/13/01"), datetime_error);
+  //BOOST_CHECK_THROW(parse_date("2007/00/01"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("2007/01/00"), boost::gregorian::bad_day_of_month);
+  //BOOST_CHECK_THROW(parse_date("2007/00/00"), boost::gregorian::bad_day_of_month);
+  //BOOST_CHECK_THROW(parse_date("2007/05/32"), boost::gregorian::bad_day_of_month);
 
-  assertThrow(parse_date("2006x/12/25"), datetime_error);
-  assertThrow(parse_date("2006/12x/25"), datetime_error);
-  assertThrow(parse_date("2006/12/25x"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("2006x/12/25"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("2006/12x/25"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("2006/12/25x"), datetime_error);
 
-  assertThrow(parse_date("feb/12/25"), datetime_error);
-  assertThrow(parse_date("2006/mon/25"), datetime_error);
-  assertThrow(parse_date("2006/12/web"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("feb/12/25"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("2006/mon/25"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("2006/12/web"), datetime_error);
 
-  assertThrow(parse_date("12*25"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("12*25"), datetime_error);
 
-  assertThrow(parse_date("tuf"), datetime_error);
-  assertThrow(parse_date("tufsday"), datetime_error);
-  assertThrow(parse_date("fec"), datetime_error);
-  assertThrow(parse_date("fecruary"), datetime_error);
-  assertThrow(parse_date("207x"), datetime_error);
-  assertThrow(parse_date("hello"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("tuf"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("tufsday"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("fec"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("fecruary"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("207x"), datetime_error);
+  BOOST_CHECK_THROW(parse_date("hello"), datetime_error);
 
   d1 = parse_date("2002-02-02");
   d1 = parse_date("2002/02/02");
@@ -160,7 +161,9 @@ void DateTimeTestCase::testConstructors()
   d1 = parse_date("2002-02-02 12p");
   d1 = parse_date("2002-02-02 12a");
 
-  assertValid(d1);
+  BOOST_CHECK(d1.valid());
 #endif // NOT_FOR_PYTHON
 #endif
 }
+
+BOOST_AUTO_TEST_SUITE_END()

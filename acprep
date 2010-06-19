@@ -809,7 +809,6 @@ class PrepareBuild(CommandLineApp):
                     'ncursesw', '+universal',
                     'gettext' ,'+universal',
                     'libedit' ,'+universal',
-                    'cppunit', '+universal',
                     #'texlive',
                     #'doxygen',
                     #'graphviz',
@@ -847,7 +846,6 @@ class PrepareBuild(CommandLineApp):
                             'gettext',
                             'cvs',
                             'libedit-dev',
-                            'libcppunit-dev',
                             #'texlive-full',
                             #'doxygen',
                             #'graphviz',
@@ -871,7 +869,6 @@ class PrepareBuild(CommandLineApp):
                             'libgmp3-dev',
                             'libmpfr-dev',
                             'libedit-dev',
-                            'libcppunit-dev',
                             #'texlive-full',
                             #'doxygen',
                             #'graphviz',
@@ -902,7 +899,6 @@ class PrepareBuild(CommandLineApp):
                         'gettext-devel',
                         #'mpfr-devel'
                         'libedit-devel',
-                        'cppunit-devel',
                         #'texlive-full',
                         #'doxygen',
                         #'graphviz',
@@ -975,12 +971,6 @@ class PrepareBuild(CommandLineApp):
             self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
         if self.current_flavor == 'debug':
-            if exists('/usr/local/stow/cppunit-%s/include' % self.boost_inc_ident):
-                self.sys_include_dirs.insert(
-                    0, '/usr/local/stow/cppunit-%s/include' % self.boost_inc_ident)
-                self.sys_library_dirs.insert(
-                    0, '/usr/local/stow/cppunit-%s/lib' % self.boost_inc_ident)
-
             if exists('/usr/local/stow/icu-%s/include' % self.boost_inc_ident):
                 self.sys_include_dirs.insert(
                     0, '/usr/local/stow/icu-%s/include' % self.boost_inc_ident)

@@ -252,13 +252,13 @@ endif
 TESTS = RegressTests BaselineTests ManualTests ConfirmTests \
         GenerateTests
 
-if HAVE_CPPUNIT
-TESTS +=	     \
+if HAVE_BOOST_TEST
+TESTS +=	    \
 	UtilTests   \
 	MathTests   \
-	ExprTests   \
-	DataTests   \
-	ReportTests
+	ExprTests
+#	DataTests   \
+#	ReportTests
 endif
 
 if DEBUG
@@ -271,54 +271,35 @@ endif
 
 check_PROGRAMS = $(TESTS)
 
+TESTLIBS = -lboost_unit_test_framework$(BOOST_SUFFIX) \
+	   -lboost_test_exec_monitor$(BOOST_SUFFIX)
+
 UtilTests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/UtilTests.cc	 \
-	test/unit/t_utils.cc	 \
-	test/unit/t_utils.h	 \
-	test/unit/t_times.cc	 \
-	test/unit/t_times.h
+	test/unit/t_times.cc
 
 UtilTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-UtilTests_LDADD	   = libledger_util.la -lcppunit
+UtilTests_LDADD	   = libledger_util.la $(TESTLIBS)
 
 MathTests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/MathTests.cc	 \
 	test/unit/t_commodity.cc \
-	test/unit/t_commodity.h	 \
 	test/unit/t_amount.cc	 \
-	test/unit/t_amount.h	 \
-	test/unit/t_balance.cc	 \
-	test/unit/t_balance.h
+	test/unit/t_balance.cc
 
 MathTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 MathTests_LDADD	   = libledger_math.la $(UtilTests_LDADD)
 
 ExprTests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/ExprTests.cc	 \
-	test/unit/t_expr.cc	 \
-	test/unit/t_expr.h
+	test/unit/t_expr.cc
 
 ExprTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 ExprTests_LDADD	   = libledger_expr.la $(MathTests_LDADD)
 
-DataTests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/DataTests.cc
+DataTests_SOURCES =
 
 DataTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 DataTests_LDADD	   = libledger_data.la $(ExprTests_LDADD)
 
-ReportTests_SOURCES =		 \
-	test/UnitTests.cc	 \
-	test/UnitTests.h	 \
-	test/ReportTests.cc
+ReportTests_SOURCES =
 
 ReportTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 ReportTests_LDADD    = libledger_report.la $(DataTests_LDADD)
@@ -424,8 +405,8 @@ CheckTests:
 
 FULLCHECK=$(srcdir)/test/fullcheck.sh
 
-if HAVE_CPPUNIT
-cppunittests: check
+if HAVE_BOOST_TEST
+unittests: check
 	@sh $(FULLCHECK) $(top_builddir)/UtilTests$(EXEEXT)   --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
 	@sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify \
@@ -437,11 +418,11 @@ cppunittests: check
 	@sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
 else
-cppunittests: check
+unittests: check
 	@test 1 -eq 1
 endif
 
-fullcheck: cppunittests
+fullcheck: unittests
 	@$(top_builddir)/RegressTests  --verify
 	@$(top_builddir)/BaselineTests --verify
 	@$(top_builddir)/ManualTests   --verify

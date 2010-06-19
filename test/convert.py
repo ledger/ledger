@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# convert.py: This script converts a C++ Ledger unit test into an equivalent
-# Python unit test.
+# convert.py: This script converts a Boost.Test unit test into an
+# equivalent Python unit test.
 #
-# Copyright (c) 2003-2009, John Wiegley.  All rights reserved.
+# Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -61,12 +61,10 @@ from datetime import *
 internalAmount = Amount.exact
 
 class %sTestCase(unittest.TestCase):
-    testSession = None
-
-    def assertValid(self, amt):
-        self.assertTrue(amt.valid())''' % os.path.basename(base))
+    testSession = None''' % os.path.basename(base))
 
 not_for_python = 0
+class_name = None
 
 for line in fd.readlines():
     if re.match('^#ifndef NOT_FOR_PYTHON', line):
@@ -83,6 +81,32 @@ for line in fd.readlines():
         continue
 
     if not re.search('assert', line):
+        match = re.match('^};', line)
+        if match:
+            continue
+        match = re.match('BOOST_.*_TEST_SUITE', line)
+        if match:
+            continue
+
+        match = re.match('^struct (.*?) {', line)
+        if match:
+            class_name = match.group(1)
+            continue
+
+        if class_name:
+            match = re.search('(~)?%s\(\) {' % class_name, line)
+            if match:
+                if match.group(1):
+                    fo.write('    def tearDown(self):\n')
+                else:
+                    fo.write('    def setUp(self):\n')
+                continue
+
+        match = re.match('BOOST_AUTO_TEST_CASE\((.+?)\)', line)
+        if match:
+            fo.write('    def %s(self):\n' % match.group(1))
+            continue
+
         match = re.match('void [^:]+::(test[^(]+|setUp|tearDown)\(\)', line)
         if match:
             fo.write('    def %s(self):\n' % match.group(1))
@@ -105,19 +129,15 @@ for line in fd.readlines():
         if match:
             line = '  %s = %s\n' % (match.group(2), match.group(3))
 
-    line = re.sub('CPPUNIT_ASSERT', 'self.assertTrue', line)
-    line = re.sub('assertValid', 'self.assertValid', line)
-    line = re.sub('assertTrue', 'self.assertTrue', line)
-    line = re.sub('assertFalse', 'self.assertFalse', line)
-    line = re.sub('assertNotEqual', 'self.assertNotEqual', line)
-    line = re.sub('assertEqual', 'self.assertEqual', line)
-    line = re.sub('assertThrow\(([^,]+), ([^,)]+?)\)',
+    line = re.sub('BOOST_CHECK_NE', 'self.assertNotEqual', line)
+    line = re.sub('BOOST_CHECK_EQUAL', 'self.assertEqual', line)
+    line = re.sub('BOOST_CHECK_THROW\(([^,]+), ([^,)]+?)\)',
                   'self.assertRaises(\\2, lambda: \\1)', line)
-    #line = re.sub('optional<([^>]+?)>', '\\1', line)
-    line = re.sub('amount_t::precision_t\(([^)]+?)\)', '\\1', line)
+    line = re.sub('BOOST_CHECK', 'self.assertTrue', line)
 
-    # Determine this list automatically by scanning the class_ lines in
-    # src/py_*.cc
+    # jww (2010-06-20): Determine this list automatically by scanning
+    # the class_ lines in src/py_*.cc
+    line = re.sub('amount_t::precision_t\(([^)]+?)\)', '\\1', line)
     line = re.sub('amount_t::', 'Amount.', line)
     line = re.sub('Amount\.PARSE_', 'AmountParse.', line)
     line = re.sub('commodity_t\(([^)]+?)\)', '\\1', line)
