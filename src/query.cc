@@ -53,6 +53,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     }
   }
 
+ resume:
   switch (*arg_i) {
   case '\'':
   case '"':
@@ -88,7 +89,6 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     return tok;
   }
 
- resume:
   bool consume_next = false;
   switch (*arg_i) {
   case ' ':
@@ -125,7 +125,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
       case '\t':
       case '\n':
       case '\r':
-        if (! consume_whitespace)
+        if (! multiple_args && ! consume_whitespace)
           goto test_ident;
         else
           ident.push_back(*arg_i);
