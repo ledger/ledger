@@ -1,0 +1,111 @@
+reg --now=2010/02 --sort=date exp --budget
+<<<
+~ monthly
+  Expenses:Food    $100
+  Expenses:Movies  $20
+  Assets:Cash
+
+~ monthly from 2009
+  Expenses:Food    $101
+  Expenses:Movies  $21
+  Assets:Cash
+
+~ monthly to 2010
+  Expenses:Food    $102
+  Expenses:Movies  $22
+  Assets:Cash
+
+~ monthly from 2009 to 2010
+  Expenses:Food    $103
+  Expenses:Movies  $23
+  Assets:Cash
+
+2009/06/05 Grocery
+  Expenses:Food    $5
+  Assets:Cash
+>>>
+09-Jan-01 Budget transaction    Expenses:Food                 $-101        $-101
+09-Jan-01 Budget transaction    Expenses:Movies                $-21        $-122
+09-Jan-01 Budget transaction    Expenses:Food                 $-103        $-225
+09-Jan-01 Budget transaction    Expenses:Movies                $-23        $-248
+09-Feb-01 Budget transaction    Expenses:Food                 $-101        $-349
+09-Feb-01 Budget transaction    Expenses:Movies                $-21        $-370
+09-Feb-01 Budget transaction    Expenses:Food                 $-103        $-473
+09-Feb-01 Budget transaction    Expenses:Movies                $-23        $-496
+09-Mar-01 Budget transaction    Expenses:Food                 $-101        $-597
+09-Mar-01 Budget transaction    Expenses:Movies                $-21        $-618
+09-Mar-01 Budget transaction    Expenses:Food                 $-103        $-721
+09-Mar-01 Budget transaction    Expenses:Movies                $-23        $-744
+09-Apr-01 Budget transaction    Expenses:Food                 $-101        $-845
+09-Apr-01 Budget transaction    Expenses:Movies                $-21        $-866
+09-Apr-01 Budget transaction    Expenses:Food                 $-103        $-969
+09-Apr-01 Budget transaction    Expenses:Movies                $-23        $-992
+09-May-01 Budget transaction    Expenses:Food                 $-101       $-1093
+09-May-01 Budget transaction    Expenses:Movies                $-21       $-1114
+09-May-01 Budget transaction    Expenses:Food                 $-103       $-1217
+09-May-01 Budget transaction    Expenses:Movies                $-23       $-1240
+09-Jun-01 Budget transaction    Expenses:Food                 $-100       $-1340
+09-Jun-01 Budget transaction    Expenses:Movies                $-20       $-1360
+09-Jun-01 Budget transaction    Expenses:Food                 $-102       $-1462
+09-Jun-01 Budget transaction    Expenses:Movies                $-22       $-1484
+09-Jun-01 Budget transaction    Expenses:Food                 $-101       $-1585
+09-Jun-01 Budget transaction    Expenses:Movies                $-21       $-1606
+09-Jun-01 Budget transaction    Expenses:Food                 $-103       $-1709
+09-Jun-01 Budget transaction    Expenses:Movies                $-23       $-1732
+09-Jun-05 Grocery               Expenses:Food                    $5       $-1727
+09-Jul-01 Budget transaction    Expenses:Food                 $-100       $-1827
+09-Jul-01 Budget transaction    Expenses:Movies                $-20       $-1847
+09-Jul-01 Budget transaction    Expenses:Food                 $-101       $-1948
+09-Jul-01 Budget transaction    Expenses:Movies                $-21       $-1969
+09-Jul-01 Budget transaction    Expenses:Food                 $-102       $-2071
+09-Jul-01 Budget transaction    Expenses:Movies                $-22       $-2093
+09-Jul-01 Budget transaction    Expenses:Food                 $-103       $-2196
+09-Jul-01 Budget transaction    Expenses:Movies                $-23       $-2219
+09-Aug-01 Budget transaction    Expenses:Food                 $-100       $-2319
+09-Aug-01 Budget transaction    Expenses:Movies                $-20       $-2339
+09-Aug-01 Budget transaction    Expenses:Food                 $-101       $-2440
+09-Aug-01 Budget transaction    Expenses:Movies                $-21       $-2461
+09-Aug-01 Budget transaction    Expenses:Food                 $-102       $-2563
+09-Aug-01 Budget transaction    Expenses:Movies                $-22       $-2585
+09-Aug-01 Budget transaction    Expenses:Food                 $-103       $-2688
+09-Aug-01 Budget transaction    Expenses:Movies                $-23       $-2711
+09-Sep-01 Budget transaction    Expenses:Food                 $-100       $-2811
+09-Sep-01 Budget transaction    Expenses:Movies                $-20       $-2831
+09-Sep-01 Budget transaction    Expenses:Food                 $-101       $-2932
+09-Sep-01 Budget transaction    Expenses:Movies                $-21       $-2953
+09-Sep-01 Budget transaction    Expenses:Food                 $-102       $-3055
+09-Sep-01 Budget transaction    Expenses:Movies                $-22       $-3077
+09-Sep-01 Budget transaction    Expenses:Food                 $-103       $-3180
+09-Sep-01 Budget transaction    Expenses:Movies                $-23       $-3203
+09-Oct-01 Budget transaction    Expenses:Food                 $-100       $-3303
+09-Oct-01 Budget transaction    Expenses:Movies                $-20       $-3323
+09-Oct-01 Budget transaction    Expenses:Food                 $-101       $-3424
+09-Oct-01 Budget transaction    Expenses:Movies                $-21       $-3445
+09-Oct-01 Budget transaction    Expenses:Food                 $-102       $-3547
+09-Oct-01 Budget transaction    Expenses:Movies                $-22       $-3569
+09-Oct-01 Budget transaction    Expenses:Food                 $-103       $-3672
+09-Oct-01 Budget transaction    Expenses:Movies                $-23       $-3695
+09-Nov-01 Budget transaction    Expenses:Food                 $-100       $-3795
+09-Nov-01 Budget transaction    Expenses:Movies                $-20       $-3815
+09-Nov-01 Budget transaction    Expenses:Food                 $-101       $-3916
+09-Nov-01 Budget transaction    Expenses:Movies                $-21       $-3937
+09-Nov-01 Budget transaction    Expenses:Food                 $-102       $-4039
+09-Nov-01 Budget transaction    Expenses:Movies                $-22       $-4061
+09-Nov-01 Budget transaction    Expenses:Food                 $-103       $-4164
+09-Nov-01 Budget transaction    Expenses:Movies                $-23       $-4187
+09-Dec-01 Budget transaction    Expenses:Food                 $-100       $-4287
+09-Dec-01 Budget transaction    Expenses:Movies                $-20       $-4307
+09-Dec-01 Budget transaction    Expenses:Food                 $-101       $-4408
+09-Dec-01 Budget transaction    Expenses:Movies                $-21       $-4429
+09-Dec-01 Budget transaction    Expenses:Food                 $-102       $-4531
+09-Dec-01 Budget transaction    Expenses:Movies                $-22       $-4553
+09-Dec-01 Budget transaction    Expenses:Food                 $-103       $-4656
+09-Dec-01 Budget transaction    Expenses:Movies                $-23       $-4679
+10-Jan-01 Budget transaction    Expenses:Food                 $-100       $-4779
+10-Jan-01 Budget transaction    Expenses:Movies                $-20       $-4799
+10-Jan-01 Budget transaction    Expenses:Food                 $-101       $-4900
+10-Jan-01 Budget transaction    Expenses:Movies                $-21       $-4921
+10-Feb-01 Budget transaction    Expenses:Food                 $-100       $-5021
+10-Feb-01 Budget transaction    Expenses:Movies                $-20       $-5041
+10-Feb-01 Budget transaction    Expenses:Food                 $-101       $-5142
+10-Feb-01 Budget transaction    Expenses:Movies                $-21       $-5163

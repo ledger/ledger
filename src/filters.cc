@@ -1143,19 +1143,43 @@ void budget_posts::report_budget_items(const date_t& date)
 
   bool reported;
   do {
+    std::list<pending_posts_list::iterator> posts_to_erase;
+
     reported = false;
-    foreach (pending_posts_list::value_type& pair, pending_posts) {
+    for (pending_posts_list::iterator i = pending_posts.begin();
+         i != pending_posts.end();
+         i++) {
+      pending_posts_list::value_type& pair(*i);
+
       optional<date_t> begin = pair.first.start;
       if (! begin) {
-        if (! pair.first.find_period(date))
+        optional<date_t> range_begin;
+        if (pair.first.range)
+          range_begin = pair.first.range->begin();
+
+        DEBUG("budget.generate", "Finding period for pending post");
+        if (! pair.first.find_period(range_begin ? *range_begin : date))
           continue;
+        if (! pair.first.start)
+          throw_(std::logic_error,
+                 _("Failed to find period for periodic transaction"));
         begin = pair.first.start;
       }
-      assert(begin);
+
+#if defined(DEBUG_ON)
+      DEBUG("budget.generate", "begin = " << *begin);
+      DEBUG("budget.generate", "date  = " << date);
+      if (pair.first.finish)
+        DEBUG("budget.generate", "pair.first.finish = " << *pair.first.finish);
+#endif
 
       if (*begin <= date &&
           (! pair.first.finish || *begin < *pair.first.finish)) {
         post_t& post = *pair.second;
+
+        ++pair.first;
+        if (! pair.first.start)
+          posts_to_erase.push_back(i);
 
         DEBUG("budget.generate", "Reporting budget for "
               << post.reported_account()->fullname());
@@ -1176,14 +1200,14 @@ void budget_posts::report_budget_items(const date_t& date)
           temp.xdata().add_flags(POST_EXT_COMPOUND);
         }
 
-        ++pair.first;
-        begin = *pair.first.start;
-
         item_handler<post_t>::operator()(temp);
 
         reported = true;
       }
     }
+
+    foreach (pending_posts_list::iterator& i, posts_to_erase)
+      pending_posts.erase(i);
   } while (reported);
 }
 
@@ -1208,11 +1232,20 @@ void budget_posts::operator()(post_t& post)
  handle:
   if (post_in_budget && flags & BUDGET_BUDGETED) {
     report_budget_items(post.date());
+    count++;
     item_handler<post_t>::operator()(post);
   }
   else if (! post_in_budget && flags & BUDGET_UNBUDGETED) {
     item_handler<post_t>::operator()(post);
   }
+}
+
+void budget_posts::flush()
+{
+  if (count > 0)
+    report_budget_items(terminus);
+
+  item_handler<post_t>::flush();
 }
 
 void forecast_posts::add_post(const date_interval_t& period, post_t& post)

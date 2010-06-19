@@ -67,8 +67,8 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
   // future balance.
 
   if (report.budget_flags != BUDGET_NO_BUDGET) {
-    budget_posts * budget_handler = new budget_posts(handler,
-                                                     report.budget_flags);
+    budget_posts * budget_handler =
+      new budget_posts(handler, report.terminus.date(), report.budget_flags);
     budget_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(budget_handler);
 

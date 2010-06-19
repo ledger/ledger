@@ -1,4 +1,4 @@
-bal --flat food:out
+bal --flat food:out --now=2009/12/31
 <<<
 ~ Monthly
   Expenses:Auto:Fuel           $120.00
@@ -13,8 +13,8 @@ bal --flat food:out
               $50.00  Expenses:Food:Out
 >>>2
 === 0
-bal --flat --budget food:out
+bal --flat --budget food:out --now=2009/12/31
 >>>1
-             $-50.00  Expenses:Food:Out
+            $-150.00  Expenses:Food:Out
 >>>2
 === 0

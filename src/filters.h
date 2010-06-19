@@ -882,14 +882,17 @@ class budget_posts : public generate_posts
 #define BUDGET_WRAP_VALUES 0x04
 
   uint_least8_t flags;
+  date_t        terminus;
+  std::size_t   count;
 
   budget_posts();
 
 public:
   budget_posts(post_handler_ptr handler,
-               uint_least8_t _flags = BUDGET_BUDGETED)
-    : generate_posts(handler), flags(_flags) {
-    TRACE_CTOR(budget_posts, "post_handler_ptr, uint_least8_t");
+               date_t           _terminus,
+               uint_least8_t    _flags = BUDGET_BUDGETED)
+    : generate_posts(handler), flags(_flags), terminus(_terminus), count(0) {
+    TRACE_CTOR(budget_posts, "post_handler_ptr, date_t, uint_least8_t");
   }
   virtual ~budget_posts() throw() {
     TRACE_DTOR(budget_posts);
@@ -897,6 +900,7 @@ public:
 
   void report_budget_items(const date_t& date);
 
+  virtual void flush();
   virtual void operator()(post_t& post);
 };
 
