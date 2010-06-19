@@ -1,5 +1,9 @@
 			     Ledger NEWS
 
+* 2.6.3
+
+- Minor fixes to allow for compilation with gcc 4.4.
+
 * 2.6.2
 
 - Bug fix: Command-line options, such as -O, now override init-file options

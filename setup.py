@@ -8,7 +8,7 @@ defines = [('PYTHON_MODULE', 1)]
 libs    = ["amounts", "boost_python", "gmp"]
 
 setup(name         = "Amounts",
-      version      = "2.6.2",
+      version      = "2.6.3",
       description  = "Amounts and Commodities Library",
       author       = "John Wiegley",
       author_email = "johnw@newartisans.com",
