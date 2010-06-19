@@ -200,7 +200,8 @@ value_t query_command(call_scope_t& args)
   args.value().dump(out);
   out << std::endl << std::endl;
 
-  query_t query(args.value(), report.what_to_keep());
+  query_t query(args.value(), report.what_to_keep(),
+                ! report.HANDLED(collapse));
   if (query) {
     call_scope_t sub_args(static_cast<scope_t&>(args));
     sub_args.push_back(string_value(query.text()));
