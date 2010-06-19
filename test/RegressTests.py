@@ -52,7 +52,7 @@ class RegressFile(object):
     def read_section(self):
         lines = []
         line = self.fd.readline()
-        while not self.is_directive(line):
+        while line and not self.is_directive(line):
             lines.append(self.transform_line(line))
             line = self.fd.readline()
         return (lines, line)
