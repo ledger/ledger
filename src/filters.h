@@ -813,19 +813,19 @@ public:
   }
 };
 
-class dow_posts : public subtotal_posts
+class day_of_week_posts : public subtotal_posts
 {
   posts_list days_of_the_week[7];
 
-  dow_posts();
+  day_of_week_posts();
 
 public:
-  dow_posts(post_handler_ptr handler, expr_t& amount_expr)
+  day_of_week_posts(post_handler_ptr handler, expr_t& amount_expr)
     : subtotal_posts(handler, amount_expr) {
-    TRACE_CTOR(dow_posts, "post_handler_ptr, bool");
+    TRACE_CTOR(day_of_week_posts, "post_handler_ptr, bool");
   }
-  virtual ~dow_posts() throw() {
-    TRACE_DTOR(dow_posts);
+  virtual ~day_of_week_posts() throw() {
+    TRACE_DTOR(day_of_week_posts);
   }
 
   virtual void flush();

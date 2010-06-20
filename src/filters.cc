@@ -1113,7 +1113,7 @@ void transfer_details::operator()(post_t& post)
   item_handler<post_t>::operator()(temp);
 }
 
-void dow_posts::flush()
+void day_of_week_posts::flush()
 {
   for (int i = 0; i < 7; i++) {
     foreach (post_t * post, days_of_the_week[i])
