@@ -1316,10 +1316,10 @@ void forecast_posts::flush()
     // If the next date in the series for this periodic posting is more than 5
     // years beyond the last valid post we generated, drop it from further
     // consideration.
-    date_t next = *(*least).first.next;
-    assert(next > begin);
+    optional<date_t> next((*least).first.next);
 
-    if (static_cast<std::size_t>((next - last).days()) >
+    if (! next ||
+        static_cast<std::size_t>((*next - last).days()) >
         static_cast<std::size_t>(365U) * forecast_years) {
       DEBUG("filters.forecast",
             "Forecast transaction exceeds " << forecast_years
@@ -1328,7 +1328,8 @@ void forecast_posts::flush()
       continue;
     }
 
-    begin = next;
+    assert(*next > begin);
+    begin = *next;
 
     // `post' refers to the posting defined in the period transaction.  We
     // make a copy of it within a temporary transaction with the payee
