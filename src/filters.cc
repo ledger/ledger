@@ -266,6 +266,7 @@ void anonymize_posts::operator()(post_t& post)
     copy_xact_details = true;
   }
   xact_t& xact = temps.last_xact();
+  xact.code = none;
 
   if (copy_xact_details) {
     xact.copy_details(*post.xact);
