@@ -248,7 +248,7 @@ endif
 ######################################################################
 
 TESTS = RegressTests BaselineTests ManualTests ConfirmTests \
-        GenerateTests CheckTests
+        GenerateTests
 
 if HAVE_CPPUNIT
 TESTS +=	     \
@@ -257,6 +257,10 @@ TESTS +=	     \
 	ExprTests   \
 	DataTests   \
 	ReportTests
+endif
+
+if DEBUG
+TESTS += CheckTests
 endif
 
 if HAVE_BOOST_PYTHON
