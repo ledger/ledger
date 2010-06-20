@@ -254,7 +254,13 @@ commodity_pool_t::exchange(const amount_t&             amount,
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 
-  if (! per_unit_cost.is_realzero())
+  // Do not record commodity exchanges where amount's commodity has a
+  // fixated price, since this does not establish a market value for the
+  // base commodity.
+  if (! per_unit_cost.is_realzero() &&
+      (current_annotation == NULL ||
+       ! (current_annotation->price &&
+          current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))))
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
 
   cost_breakdown_t breakdown;
