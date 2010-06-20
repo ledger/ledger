@@ -310,7 +310,14 @@ string_to_month_of_year(const std::string& str)
 
 datetime_t parse_datetime(const char * str)
 {
-  datetime_t when = input_datetime_io->parse(str);
+  char buf[128];
+  std::strcpy(buf, str);
+
+  for (char * p = buf; *p; p++)
+    if (*p == '.' || *p == '-')
+      *p = '/';
+
+  datetime_t when = input_datetime_io->parse(buf);
   if (when.is_not_a_date_time())
     throw_(date_error, _("Invalid date/time: %1") << str);
   return when;
