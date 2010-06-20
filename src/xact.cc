@@ -281,34 +281,42 @@ bool xact_base_t::finalize()
         (post->amount, *post->cost, false,
          datetime_t(date(), time_duration(0, 0, 0, 0)));
 
-    if (post->amount.has_annotation() &&
-        breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
-      if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
-        DEBUG("xact.finalize", "gain_loss = " << gain_loss);
-        gain_loss.in_place_round();
-        DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
+    if (post->amount.has_annotation() && post->amount.annotation().price) {
+      if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
+        if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
+          DEBUG("xact.finalize", "gain_loss = " << gain_loss);
+          gain_loss.in_place_round();
+          DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
 
-        if (post->must_balance())
-          add_or_set_value(balance, gain_loss.reduced());
+          if (post->must_balance())
+            add_or_set_value(balance, gain_loss.reduced());
 
-        account_t * account;
-        if (gain_loss.sign() > 0)
-          account = journal->find_account(_("Equity:Capital Gains"));
-        else
-          account = journal->find_account(_("Equity:Capital Losses"));
+          account_t * account;
+          if (gain_loss.sign() > 0)
+            account = journal->find_account(_("Equity:Capital Gains"));
+          else
+            account = journal->find_account(_("Equity:Capital Losses"));
 
-        post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
-        p->set_state(post->state());
-        if (post->has_flags(POST_VIRTUAL)) {
-          DEBUG("xact.finalize", "gain_loss came from a virtual post");
-          p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
+          post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
+          p->set_state(post->state());
+          if (post->has_flags(POST_VIRTUAL)) {
+            DEBUG("xact.finalize", "gain_loss came from a virtual post");
+            p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
+          }
+          add_post(p);
+          DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
+        } else {
+          DEBUG("xact.finalize", "gain_loss would have displayed as zero");
         }
-        add_post(p);
-        DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
-      } else {
-        DEBUG("xact.finalize", "gain_loss would have display as zero");
       }
     } else {
+      if (post->amount.has_annotation()) {
+        if (breakdown.amount.has_annotation())
+          breakdown.amount.annotation().tag = post->amount.annotation().tag;
+        else
+          breakdown.amount.annotate
+            (annotation_t(none, none, post->amount.annotation().tag));
+      }
       post->amount = breakdown.amount;
       DEBUG("xact.finalize", "added breakdown, balance = " << balance);
     }
