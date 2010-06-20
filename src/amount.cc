@@ -747,6 +747,8 @@ amount_t::value(const optional<datetime_t>&   moment,
         if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
           point = price_point_t();
           point->price = *annotation().price;
+          DEBUG("commodity.prices.find",
+                "amount_t::value: fixated price =  " << point->price);
         }
         else if (! comm) {
           comm = annotation().price->commodity();
