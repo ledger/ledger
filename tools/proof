@@ -28,8 +28,8 @@ else
     echo $VERSION > ~/Products/last-proofed
     mv ~/Desktop/proof.log /tmp
 
-    cd ~/Product/ledger-proof/debug; make docs
-    cd ~/Product/ledger-proof/gcov;  make report
+    cd ~/Products/ledger-proof/debug; make docs
+    cd ~/Products/ledger-proof/gcov;  make report
 
     echo "Ledger proof build succeeded"
 fi
