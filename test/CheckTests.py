@@ -71,7 +71,14 @@ for line in pipe.stderr:
         else:
             documented_options.remove(option)
 
-known_alternates = [ 'cost', 'first', 'last', 'leeway', 'period-sort' ]
+known_alternates = [
+    'cost',
+    'first',
+    'import',
+    'last',
+    'leeway',
+    'period-sort'
+]
 
 for option in documented_options:
     if option not in known_alternates:
