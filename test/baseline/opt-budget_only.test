@@ -1,0 +1,22 @@
+reg income --budget --now=2010/06/20
+<<<
+~ Monthly since 2010/01/01
+    Expenses:Bills:Rent                 $873.00
+    Expenses:Household                  $200.00
+    Income:Salary                       -$2491.60
+    Assets:Bank:Checking
+
+~ biweekly from 2010/02/23
+    Expenses:Bills:Housecleaning        $85.00
+    Assets:Bank:Checking
+
+2010/06/22 c897683b
+    Expenses:Household              $100.00
+    Assets:Bank:Checking
+>>>
+10-Jan-01 Budget transaction    Income:Salary              $2491.60     $2491.60
+10-Feb-01 Budget transaction    Income:Salary              $2491.60     $4983.20
+10-Mar-01 Budget transaction    Income:Salary              $2491.60     $7474.80
+10-Apr-01 Budget transaction    Income:Salary              $2491.60     $9966.40
+10-May-01 Budget transaction    Income:Salary              $2491.60    $12458.00
+10-Jun-01 Budget transaction    Income:Salary              $2491.60    $14949.60
