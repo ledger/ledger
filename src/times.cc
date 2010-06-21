@@ -1238,6 +1238,8 @@ bool date_interval_t::find_period(const date_t& date)
       DEBUG("times.interval", "true: start           = " << *start);
       DEBUG("times.interval", "true: end_of_duration = " << *end_of_duration);
 
+      resolve_end();
+
       return true;
     }
 
