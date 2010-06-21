@@ -173,14 +173,15 @@ bool xact_base_t::finalize()
     add_post(null_post);
   }
 
-  if (balance.is_balance() &&
+  if (! null_post && balance.is_balance() &&
       balance.as_balance().amounts.size() == 2) {
     // When an xact involves two different commodities (regardless of how
     // many posts there are) determine the conversion ratio by dividing the
     // total value of one commodity by the total value of the other.  This
     // establishes the per-unit cost for this post for both commodities.
 
-    DEBUG("xact.finalize", "there were exactly two commodities");
+    DEBUG("xact.finalize",
+          "there were exactly two commodities, and no null post");
 
     bool     saw_cost = false;
     post_t * top_post = NULL;
