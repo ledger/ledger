@@ -1233,7 +1233,6 @@ void budget_posts::operator()(post_t& post)
  handle:
   if (post_in_budget && flags & BUDGET_BUDGETED) {
     report_budget_items(post.date());
-    count++;
     item_handler<post_t>::operator()(post);
   }
   else if (! post_in_budget && flags & BUDGET_UNBUDGETED) {
@@ -1243,7 +1242,7 @@ void budget_posts::operator()(post_t& post)
 
 void budget_posts::flush()
 {
-  if (count > 0)
+  if (flags & BUDGET_BUDGETED)
     report_budget_items(terminus);
 
   item_handler<post_t>::flush();
