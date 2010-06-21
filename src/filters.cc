@@ -1308,19 +1308,18 @@ void forecast_posts::flush()
         least = i;
     }
 
-    date_t& begin = *(*least).first.start;
 #if !defined(NO_ASSERTS)
     if ((*least).first.finish)
-      assert(begin < *(*least).first.finish);
+      assert(*(*least).first.start < *(*least).first.finish);
 #endif
 
     // If the next date in the series for this periodic posting is more than 5
     // years beyond the last valid post we generated, drop it from further
     // consideration.
-    optional<date_t> next((*least).first.next);
+    date_t& next(*(*least).first.next);
+    assert(next > *(*least).first.start);
 
-    if (! next ||
-        static_cast<std::size_t>((*next - last).days()) >
+    if (static_cast<std::size_t>((next - last).days()) >
         static_cast<std::size_t>(365U) * forecast_years) {
       DEBUG("filters.forecast",
             "Forecast transaction exceeds " << forecast_years
@@ -1329,16 +1328,13 @@ void forecast_posts::flush()
       continue;
     }
 
-    assert(*next > begin);
-    begin = *next;
-
     // `post' refers to the posting defined in the period transaction.  We
     // make a copy of it within a temporary transaction with the payee
     // "Forecast transaction".
     post_t& post = *(*least).second;
     xact_t& xact = temps.create_xact();
     xact.payee   = _("Forecast transaction");
-    xact._date   = begin;
+    xact._date   = next;
     post_t& temp = temps.copy_post(post, xact);
 
     // Submit the generated posting
