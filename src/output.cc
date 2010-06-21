@@ -228,7 +228,8 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
     if ((! flat && to_display > 1) ||
         ((flat || to_display != 1 ||
           account.has_xflags(ACCOUNT_EXT_VISITED)) &&
-         (report.HANDLED(empty) || report.fn_display_total(call_scope)) &&
+         (report.HANDLED(empty) ||
+          report.display_value(report.fn_display_total(call_scope))) &&
          disp_pred(bound_scope))) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
       DEBUG("account.display", "Marking account as TO_DISPLAY");

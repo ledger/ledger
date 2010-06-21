@@ -134,6 +134,8 @@ public:
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(post_handler_ptr handler);
 
+  value_t display_value(const value_t& val);
+
   value_t fn_amount_expr(call_scope_t& scope);
   value_t fn_total_expr(call_scope_t& scope);
   value_t fn_display_amount(call_scope_t& scope);

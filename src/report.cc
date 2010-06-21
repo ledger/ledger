@@ -428,6 +428,15 @@ void report_t::commodities_report(post_handler_ptr handler)
   session.journal->clear_xdata();
 }
 
+value_t report_t::display_value(const value_t& val)
+{
+  value_t temp(val.strip_annotations(what_to_keep()));
+  if (HANDLED(base))
+    return temp;
+  else
+    return temp.unreduced();
+}
+
 value_t report_t::fn_amount_expr(call_scope_t& scope)
 {
   return HANDLER(amount_).expr.calc(scope);
@@ -533,11 +542,7 @@ value_t report_t::fn_print(call_scope_t& args)
 
 value_t report_t::fn_scrub(call_scope_t& args)
 {
-  value_t temp(args.value().strip_annotations(what_to_keep()));
-  if (HANDLED(base))
-    return temp;
-  else
-    return temp.unreduced();
+  return display_value(args.value());
 }
 
 value_t report_t::fn_rounded(call_scope_t& args)
