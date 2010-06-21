@@ -540,7 +540,7 @@ string format_t::truncate(const unistring&  ustr,
           else
             adjust = std::size_t
               (std::ceil(double(overflow) *
-                         ((double(*i + counter) * double(iteration)) /
+                         ((double(*i + counter*3) * double(iteration)) /
                           (double(len_minus_last) - double(counter)))));
           DEBUG("format.abbrev", "Weight calc: (" << overflow
                 << " * (((" << *i << " + " << counter << ") * "
