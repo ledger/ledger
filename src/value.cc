@@ -901,13 +901,10 @@ bool value_t::is_less_than(const value_t& val) const
     switch (val.type()) {
     case INTEGER:
     case AMOUNT: {
-      if (val.is_nonzero())
-        break;
-
       bool no_amounts = true;
       foreach (const balance_t::amounts_map::value_type& pair,
                as_balance().amounts) {
-        if (pair.second >= 0L)
+        if (pair.second >= val)
           return false;
         no_amounts = false;
       }
@@ -927,12 +924,9 @@ bool value_t::is_less_than(const value_t& val) const
     switch (val.type()) {
     case INTEGER:
     case AMOUNT: {
-      if (val.is_nonzero())
-        break;
-
       bool no_amounts = true;
       foreach (const value_t& value, as_sequence()) {
-        if (value >= 0L)
+        if (value >= val)
           return false;
         no_amounts = false;
       }
@@ -1023,13 +1017,10 @@ bool value_t::is_greater_than(const value_t& val) const
     switch (val.type()) {
     case INTEGER:
     case AMOUNT: {
-      if (val.is_nonzero())
-        break;
-
       bool no_amounts = true;
       foreach (const balance_t::amounts_map::value_type& pair,
                as_balance().amounts) {
-        if (pair.second <= 0L)
+        if (pair.second <= val)
           return false;
         no_amounts = false;
       }
@@ -1049,12 +1040,9 @@ bool value_t::is_greater_than(const value_t& val) const
     switch (val.type()) {
     case INTEGER:
     case AMOUNT: {
-      if (val.is_nonzero())
-        break;
-
       bool no_amounts = true;
       foreach (const value_t& value, as_sequence()) {
-        if (value <= 0L)
+        if (value <= val)
           return false;
         no_amounts = false;
       }
