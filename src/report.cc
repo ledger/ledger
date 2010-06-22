@@ -457,6 +457,14 @@ value_t report_t::fn_display_total(call_scope_t& scope)
   return HANDLER(display_total_).expr.calc(scope);
 }
 
+value_t report_t::fn_should_bold(call_scope_t& scope)
+{
+  if (HANDLED(bold_if_))
+    return HANDLER(bold_if_).expr.calc(scope);
+  else
+    return false;
+}
+
 value_t report_t::fn_market(call_scope_t& args)
 {
   optional<datetime_t> moment = (args.has<datetime_t>(1) ?
@@ -905,6 +913,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(base);
     else OPT_ALT(basis, cost);
     else OPT_(begin_);
+    else OPT(bold_if_);
     else OPT(budget);
     else OPT(by_payee);
     break;
@@ -1226,6 +1235,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_scrub);
       else if (is_eq(p, "strip"))
         return MAKE_FUNCTOR(report_t::fn_strip);
+      else if (is_eq(p, "should_bold"))
+        return MAKE_FUNCTOR(report_t::fn_should_bold);
       break;
 
     case 't':
