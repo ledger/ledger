@@ -154,17 +154,21 @@ class RegressFile(object):
         if not use_stdin:
             os.remove(tempdata[1])
 
-    def run_tests(self, pool):
+    def run_tests(self):
         test = self.read_test()
         while test:
-            if pool:
-                pool.apply_async(RegressFile.run_test, (self, test,))
-            else:
-                self.run_test(test)
+            self.run_test(test)
             test = self.read_test(test)
+        return harness.failed
 
     def close(self):
         self.fd.close()
+
+def do_test(path):
+    entry = RegressFile(path)
+    failed = entry.run_tests()
+    entry.close()
+    return failed
 
 if __name__ == '__main__':
     if multiproc:
@@ -173,17 +177,16 @@ if __name__ == '__main__':
         pool = None
 
     if os.path.isdir(tests):
-        for test_file in os.listdir(tests):
-            if re.search('\.test$', test_file):
-                entry = RegressFile(os.path.join(tests, test_file))
-                entry.run_tests(pool)
-                entry.close()
+        tests = [os.path.join(tests, x)
+                 for x in os.listdir(tests) if x.endswith('.test')]
+        harness.failed = sum(pool.map(do_test, tests, 1))
     else:
         entry = RegressFile(tests)
-        entry.run_tests(pool)
+        entry.run_tests()
         entry.close()
 
     if pool:
         pool.close()
         pool.join()
+
     harness.exit()
