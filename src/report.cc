@@ -257,21 +257,23 @@ void report_t::normalize_options(const string& verb)
 void report_t::parse_query_args(const value_t& args, const string& whence)
 {
   query_t query(args, what_to_keep());
-  if (query) {
-    HANDLER(limit_).on(whence, query.text());
 
-    DEBUG("report.predicate",
-          "Predicate = " << HANDLER(limit_).str());
+  if (query.has_predicate(query_t::QUERY_LIMIT)) {
+    HANDLER(limit_)
+      .on(whence, query.get_predicate(query_t::QUERY_LIMIT).print_to_str());
+    DEBUG("report.predicate", "Predicate = " << HANDLER(limit_).str());
   }
 
-  if (query.tokens_remaining()) {
-    query.parse_again();
-    if (query) {
-      HANDLER(display_).on(whence, query.text());
+  if (query.has_predicate(query_t::QUERY_SHOW)) {
+    HANDLER(display_)
+      .on(whence, query.get_predicate(query_t::QUERY_SHOW).print_to_str());
+    DEBUG("report.predicate", "Display predicate = " << HANDLER(display_).str());
+  }
 
-      DEBUG("report.predicate",
-            "Display predicate = " << HANDLER(display_).str());
-    }
+  if (query.has_predicate(query_t::QUERY_BOLD)) {
+    HANDLER(bold_if_)
+      .set_expr(whence, query.get_predicate(query_t::QUERY_BOLD).print_to_str());
+    DEBUG("report.predicate", "Bolding predicate = " << HANDLER(display_).str());
   }
 }  
 

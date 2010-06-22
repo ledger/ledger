@@ -46,7 +46,7 @@
 
 namespace ledger {
 
-class query_t : public predicate_t
+class query_t
 {
 protected:
   class parser_t;
@@ -81,13 +81,15 @@ public:
         TOK_OR,
         TOK_EQ,
 
-        TOK_DATE,
         TOK_CODE,
         TOK_PAYEE,
         TOK_NOTE,
         TOK_ACCOUNT,
         TOK_META,
         TOK_EXPR,
+
+        TOK_SHOW,
+        TOK_BOLD,
 
         TERM,
 
@@ -131,13 +133,14 @@ public:
         case TOK_AND:     return "TOK_AND";
         case TOK_OR:      return "TOK_OR";
         case TOK_EQ:      return "TOK_EQ";
-        case TOK_DATE:    return "TOK_DATE";
         case TOK_CODE:    return "TOK_CODE";
         case TOK_PAYEE:   return "TOK_PAYEE";
         case TOK_NOTE:    return "TOK_NOTE";
         case TOK_ACCOUNT: return "TOK_ACCOUNT";
         case TOK_META:    return "TOK_META";
         case TOK_EXPR:    return "TOK_EXPR";
+        case TOK_SHOW:    return "TOK_SHOW";
+        case TOK_BOLD:    return "TOK_BOLD";
         case TERM:        return string("TERM(") + *value + ")";
         case END_REACHED: return "END_REACHED";
         }
@@ -153,13 +156,14 @@ public:
         case TOK_AND:     return "and";
         case TOK_OR:      return "or";
         case TOK_EQ:      return "=";
-        case TOK_DATE:    return "date";
         case TOK_CODE:    return "code";
         case TOK_PAYEE:   return "payee";
         case TOK_NOTE:    return "note";
         case TOK_ACCOUNT: return "account";
         case TOK_META:    return "meta";
         case TOK_EXPR:    return "expr";
+        case TOK_SHOW:    return "show";
+        case TOK_BOLD:    return "bold";
 
         case END_REACHED: return "<EOF>";
 
@@ -218,24 +222,38 @@ public:
     }
   };
 
+  enum kind_t {
+    QUERY_LIMIT,
+    QUERY_SHOW,
+    QUERY_BOLD
+  };
+
+  typedef std::map<kind_t, predicate_t> query_map_t;
+
 protected:
   class parser_t
   {
     friend class query_t;
 
-    value_t args;
-    lexer_t lexer;
+    value_t        args;
+    lexer_t        lexer;
+    keep_details_t what_to_keep;
+    query_map_t    query_map;
 
     expr_t::ptr_op_t parse_query_term(lexer_t::token_t::kind_t tok_context);
     expr_t::ptr_op_t parse_unary_expr(lexer_t::token_t::kind_t tok_context);
     expr_t::ptr_op_t parse_and_expr(lexer_t::token_t::kind_t tok_context);
     expr_t::ptr_op_t parse_or_expr(lexer_t::token_t::kind_t tok_context);
-    expr_t::ptr_op_t parse_query_expr(lexer_t::token_t::kind_t tok_context);
+    expr_t::ptr_op_t parse_query_expr(lexer_t::token_t::kind_t tok_context,
+                                      bool subexpression = false);
 
   public:
-    parser_t(const value_t& _args, bool multiple_args = true)
-      : args(_args), lexer(args.begin(), args.end(), multiple_args) {
-      TRACE_CTOR(query_t::parser_t, "");
+    parser_t(const value_t&        _args,
+             const keep_details_t& _what_to_keep = keep_details_t(),
+             bool                  multiple_args = true)
+      : args(_args), lexer(args.begin(), args.end(), multiple_args),
+        what_to_keep(_what_to_keep) {
+      TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool");
     }
     parser_t(const parser_t& parser)
       : args(parser.args), lexer(parser.lexer) {
@@ -245,8 +263,8 @@ protected:
       TRACE_DTOR(query_t::parser_t);
     }
 
-    expr_t::ptr_op_t parse() {
-      return parse_query_expr(lexer_t::token_t::TOK_ACCOUNT);
+    expr_t::ptr_op_t parse(bool subexpression = false) {
+      return parse_query_expr(lexer_t::token_t::TOK_ACCOUNT, subexpression);
     }
 
     bool tokens_remaining() {
@@ -257,54 +275,60 @@ protected:
   };
 
   optional<parser_t> parser;
+  query_map_t        predicates;
 
 public:
   query_t() {
     TRACE_CTOR(query_t, "");
   }
   query_t(const query_t& other)
-    : predicate_t(other) {
+    : parser(other.parser), predicates(other.predicates) {
     TRACE_CTOR(query_t, "copy");
   }
-  query_t(const string& arg,
-          const keep_details_t& _what_to_keep = keep_details_t(),
-          bool multiple_args = true)
-    : predicate_t(_what_to_keep) {
-    TRACE_CTOR(query_t, "string, keep_details_t");
+  query_t(const string&         arg,
+          const keep_details_t& what_to_keep  = keep_details_t(),
+          bool                  multiple_args = true) {
+    TRACE_CTOR(query_t, "string, keep_details_t, bool");
     if (! arg.empty()) {
       value_t temp(string_value(arg));
-      parse_args(temp.to_sequence(), multiple_args);
+      parse_args(temp.to_sequence(), what_to_keep, multiple_args);
     }
   }
-  query_t(const value_t& args,
-          const keep_details_t& _what_to_keep = keep_details_t(),
-          bool multiple_args = true)
-    : predicate_t(_what_to_keep) {
-    TRACE_CTOR(query_t, "value_t, keep_details_t");
+  query_t(const value_t&        args,
+          const keep_details_t& what_to_keep  = keep_details_t(),
+          bool                  multiple_args = true) {
+    TRACE_CTOR(query_t, "value_t, keep_details_t, bool");
     if (! args.empty())
-      parse_args(args, multiple_args);
+      parse_args(args, what_to_keep, multiple_args);
   }
   virtual ~query_t() {
     TRACE_DTOR(query_t);
   }
 
-  void parse_args(const value_t& args, bool multiple_args = true) {
+  expr_t::ptr_op_t
+  parse_args(const value_t&        args,
+             const keep_details_t& what_to_keep  = keep_details_t(),
+             bool                  multiple_args = true,
+             bool                  subexpression = false) {
     if (! parser)
-      parser = parser_t(args, multiple_args);
-    ptr = parser->parse();      // expr_t::ptr
+      parser = parser_t(args, what_to_keep, multiple_args);
+    return parser->parse(subexpression);
   }
 
-  void parse_again() {
-    assert(parser);
-    ptr = parser->parse();      // expr_t::ptr
+  bool has_predicate(const kind_t& id) const {
+    return parser && parser->query_map.find(id) != parser->query_map.end();
+  }
+  predicate_t get_predicate(const kind_t& id) const {
+    if (parser) {
+      query_map_t::const_iterator i = parser->query_map.find(id);
+      if (i != parser->query_map.end())
+        return (*i).second;
+    }
+    return predicate_t();
   }
 
   bool tokens_remaining() {
     return parser && parser->tokens_remaining();
-  }
-
-  virtual string text() {
-    return print_to_str();
   }
 };
 

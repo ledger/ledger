@@ -37,10 +37,4 @@
 
 namespace ledger {
 
-predicate_t::predicate_t(const query_t& other)
-  : expr_t(other), what_to_keep(other.what_to_keep)
-{
-  TRACE_CTOR(predicate_t, "query_t");
-}
-
 } // namespace ledger

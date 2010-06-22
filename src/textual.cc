@@ -534,9 +534,13 @@ void instance_t::automated_xact_directive(char * line)
   bool reveal_context = true;
 
   try {
-    std::auto_ptr<auto_xact_t> ae
-      (new auto_xact_t(query_t(string(skip_ws(line + 1)),
-                               keep_details_t(true, true, true), false)));
+    query_t          query;
+    keep_details_t   keeper(true, true, true);
+    expr_t::ptr_op_t expr = 
+      query.parse_args(string_value(skip_ws(line + 1)).to_sequence(),
+                       keeper, false, true);
+
+    std::auto_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper)));
     ae->pos           = position_t();
     ae->pos->pathname = pathname;
     ae->pos->beg_pos  = line_beg_pos;

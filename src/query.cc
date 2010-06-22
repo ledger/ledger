@@ -170,20 +170,10 @@ test_ident:
       return token_t(token_t::TOK_META);
     else if (ident == "data")
       return token_t(token_t::TOK_META);
-    else if (ident == "show") {
-      // The "show" keyword is special, and separates a limiting predicate
-      // from a display predicate.
-      DEBUG("pred.show", "string = " << (*begin).as_string());
-      return token_t(token_t::END_REACHED);
-    }
-#if 0
-    // jww (2009-11-06): This is disabled for the time being.
-    else if (ident == "date") {
-      // The date keyword takes the whole of the next string as its argument.
-      consume_whitespace = true;
-      return token_t(token_t::TOK_DATE);
-    }
-#endif
+    else if (ident == "show")
+      return token_t(token_t::TOK_SHOW);
+    else if (ident == "bold")
+      return token_t(token_t::TOK_BOLD);
     else if (ident == "expr") {
       // The expr keyword takes the whole of the next string as its argument.
       consume_next_arg = true;
@@ -238,10 +228,12 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
 
   lexer_t::token_t tok = lexer.next_token();
   switch (tok.kind) {
+  case lexer_t::token_t::TOK_SHOW:
+  case lexer_t::token_t::TOK_BOLD:
   case lexer_t::token_t::END_REACHED:
+    lexer.push_token(tok);
     break;
 
-  case lexer_t::token_t::TOK_DATE:
   case lexer_t::token_t::TOK_CODE:
   case lexer_t::token_t::TOK_PAYEE:
   case lexer_t::token_t::TOK_NOTE:
@@ -257,41 +249,6 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   case lexer_t::token_t::TERM:
     assert(tok.value);
     switch (tok_context) {
-    case lexer_t::token_t::TOK_DATE: {
-      expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
-      ident->set_ident("date");
-
-      date_interval_t interval(*tok.value);
-
-      if (interval.start) {
-        node = new expr_t::op_t(expr_t::op_t::O_GTE);
-        node->set_left(ident);
-
-        expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
-        arg1->set_value(*interval.start);
-        node->set_right(arg1);
-      }
-
-      if (interval.finish) {
-        expr_t::ptr_op_t lt = new expr_t::op_t(expr_t::op_t::O_LT);
-        lt->set_left(ident);
-
-        expr_t::ptr_op_t arg1 = new expr_t::op_t(expr_t::op_t::VALUE);
-        arg1->set_value(*interval.finish);
-        lt->set_right(arg1);
-
-        if (node) {
-          expr_t::ptr_op_t prev(node);
-          node = new expr_t::op_t(expr_t::op_t::O_AND);
-          node->set_left(prev);
-          node->set_right(lt);
-        } else {
-          node = lt;
-        }
-      }
-      break;
-    }
-
     case lexer_t::token_t::TOK_EXPR:
       node = expr_t(*tok.value).get_op();
       break;
@@ -357,7 +314,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     break;
 
   case lexer_t::token_t::LPAREN:
-    node = parse_query_expr(tok_context);
+    node = parse_query_expr(tok_context, true);
     tok = lexer.next_token();
     if (tok.kind != lexer_t::token_t::RPAREN)
       tok.expected(')');
@@ -447,18 +404,77 @@ query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_context)
 }
 
 expr_t::ptr_op_t
-query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context)
+query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
+                                    bool                     subexpression)
 {
-  if (expr_t::ptr_op_t node = parse_or_expr(tok_context)) {
-    if (expr_t::ptr_op_t next = parse_query_expr(tok_context)) {
-      expr_t::ptr_op_t prev(node);
-      node = new expr_t::op_t(expr_t::op_t::O_OR);
-      node->set_left(prev);
-      node->set_right(next);
+  expr_t::ptr_op_t limiter;
+
+  while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
+    if (! limiter) {
+      limiter = next;
+    } else {
+      expr_t::ptr_op_t prev(limiter);
+      limiter = new expr_t::op_t(expr_t::op_t::O_OR);
+      limiter->set_left(prev);
+      limiter->set_right(next);
     }
-    return node;
   }
-  return expr_t::ptr_op_t();
+
+  if (! subexpression) {
+    if (limiter)
+      query_map.insert
+        (query_map_t::value_type(QUERY_LIMIT, predicate_t(limiter, what_to_keep)));
+
+    lexer_t::token_t tok = lexer.peek_token();
+    while (tok.kind != lexer_t::token_t::END_REACHED) {
+      switch (tok.kind) {
+      case lexer_t::token_t::TOK_SHOW: {
+        lexer.next_token();
+
+        expr_t::ptr_op_t node;
+        while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
+          if (! node) {
+            node = next;
+          } else {
+            expr_t::ptr_op_t prev(node);
+            node = new expr_t::op_t(expr_t::op_t::O_OR);
+            node->set_left(prev);
+            node->set_right(next);
+          }
+        }
+
+        if (node)
+          query_map.insert
+            (query_map_t::value_type(QUERY_SHOW, predicate_t(node, what_to_keep)));
+        break;
+      }
+
+      case lexer_t::token_t::TOK_BOLD: {
+        lexer.next_token();
+
+        expr_t::ptr_op_t node = parse_or_expr(tok_context);
+        while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
+          expr_t::ptr_op_t prev(node);
+          node = new expr_t::op_t(expr_t::op_t::O_OR);
+          node->set_left(prev);
+          node->set_right(next);
+        }
+
+        if (node)
+          query_map.insert
+            (query_map_t::value_type(QUERY_BOLD, predicate_t(node, what_to_keep)));
+        break;
+      }
+
+      default:
+        break;
+      }
+
+      tok = lexer.peek_token();
+    }
+  }
+
+  return limiter;
 }
 
 } // namespace ledger

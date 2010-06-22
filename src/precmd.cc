@@ -202,25 +202,23 @@ value_t query_command(call_scope_t& args)
 
   query_t query(args.value(), report.what_to_keep(),
                 ! report.HANDLED(collapse));
-  if (query) {
+  if (query.has_predicate(query_t::QUERY_LIMIT)) {
     call_scope_t sub_args(static_cast<scope_t&>(args));
-    sub_args.push_back(string_value(query.text()));
+    sub_args.push_back
+      (string_value(query.get_predicate(query_t::QUERY_LIMIT).print_to_str()));
 
     parse_command(sub_args);
   }
 
-  if (query.tokens_remaining()) {
+  if (query.has_predicate(query_t::QUERY_SHOW)) {
     out << std::endl << _("====== Display predicate ======")
         << std::endl << std::endl;
 
-    query.parse_again();
+    call_scope_t disp_sub_args(static_cast<scope_t&>(args));
+    disp_sub_args.push_back
+      (string_value(query.get_predicate(query_t::QUERY_SHOW).print_to_str()));
 
-    if (query) {
-      call_scope_t disp_sub_args(static_cast<scope_t&>(args));
-      disp_sub_args.push_back(string_value(query.text()));
-
-      parse_command(disp_sub_args);
-    }
+    parse_command(disp_sub_args);
   }
 
   return NULL_VALUE;
