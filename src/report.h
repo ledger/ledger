@@ -126,6 +126,7 @@ public:
   }
 
   void normalize_options(const string& verb);
+  void normalize_period();
   void parse_query_args(const value_t& args, const string& whence);
 
   void posts_report(post_handler_ptr handler);

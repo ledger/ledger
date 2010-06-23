@@ -145,26 +145,8 @@ void report_t::normalize_options(const string& verb)
   // using -b or -e).  Then, if no _duration_ was specified (such as monthly),
   // then ignore the period since the begin/end are the only interesting
   // details.
-  if (HANDLED(period_)) {
-    date_interval_t interval(HANDLER(period_).str());
-
-    optional<date_t> begin = interval.begin();
-    optional<date_t> end   = interval.end();
-
-    if (! HANDLED(begin_) && begin) {
-      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
-      HANDLER(limit_).on(string("?normalize"), predicate);
-    }
-    if (! HANDLED(end_) && end) {
-      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
-      HANDLER(limit_).on(string("?normalize"), predicate);
-    }
-
-    if (! interval.duration)
-      HANDLER(period_).off();
-    else if (! HANDLED(sort_all_))
-      HANDLER(sort_xacts_).on_only(string("?normalize"));
-  }
+  if (HANDLED(period_))
+    normalize_period();
 
   // If -j or -J were specified, set the appropriate format string now so as
   // to avoid option ordering issues were we to have done it during the
@@ -254,26 +236,52 @@ void report_t::normalize_options(const string& verb)
   }
 }
 
+void report_t::normalize_period()
+{
+  date_interval_t interval(HANDLER(period_).str());
+
+  optional<date_t> begin = interval.begin();
+  optional<date_t> end   = interval.end();
+
+  if (! HANDLED(begin_) && begin) {
+    string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
+    HANDLER(limit_).on(string("?normalize"), predicate);
+  }
+  if (! HANDLED(end_) && end) {
+    string predicate = "date<[" + to_iso_extended_string(*end) + "]";
+    HANDLER(limit_).on(string("?normalize"), predicate);
+  }
+
+  if (! interval.duration)
+    HANDLER(period_).off();
+  else if (! HANDLED(sort_all_))
+    HANDLER(sort_xacts_).on_only(string("?normalize"));
+}
+
 void report_t::parse_query_args(const value_t& args, const string& whence)
 {
   query_t query(args, what_to_keep());
 
-  if (query.has_predicate(query_t::QUERY_LIMIT)) {
-    HANDLER(limit_)
-      .on(whence, query.get_predicate(query_t::QUERY_LIMIT).print_to_str());
-    DEBUG("report.predicate", "Predicate = " << HANDLER(limit_).str());
+  if (query.has_query(query_t::QUERY_LIMIT)) {
+    HANDLER(limit_).on(whence, query.get_query(query_t::QUERY_LIMIT));
+    DEBUG("report.predicate", "Limit predicate   = " << HANDLER(limit_).str());
   }
 
-  if (query.has_predicate(query_t::QUERY_SHOW)) {
-    HANDLER(display_)
-      .on(whence, query.get_predicate(query_t::QUERY_SHOW).print_to_str());
+  if (query.has_query(query_t::QUERY_SHOW)) {
+    HANDLER(display_).on(whence, query.get_query(query_t::QUERY_SHOW));
     DEBUG("report.predicate", "Display predicate = " << HANDLER(display_).str());
   }
 
-  if (query.has_predicate(query_t::QUERY_BOLD)) {
-    HANDLER(bold_if_)
-      .set_expr(whence, query.get_predicate(query_t::QUERY_BOLD).print_to_str());
-    DEBUG("report.predicate", "Bolding predicate = " << HANDLER(display_).str());
+  if (query.has_query(query_t::QUERY_BOLD)) {
+    HANDLER(bold_if_).set_expr(whence, query.get_query(query_t::QUERY_BOLD));
+    DEBUG("report.predicate", "Bolding predicate = " << HANDLER(bold_if_).str());
+  }
+
+  if (query.has_query(query_t::QUERY_FOR)) {
+    HANDLER(period_).on(whence, query.get_query(query_t::QUERY_FOR));
+    DEBUG("report.predicate", "Report period     = " << HANDLER(period_).str());
+
+    normalize_period();         // it needs normalization
   }
 }  
 

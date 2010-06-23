@@ -60,6 +60,7 @@ public:
     value_t::sequence_t::const_iterator begin;
     value_t::sequence_t::const_iterator end;
 
+    string::const_iterator prev_arg_i;
     string::const_iterator arg_i;
     string::const_iterator arg_end;
 
@@ -90,6 +91,9 @@ public:
 
         TOK_SHOW,
         TOK_BOLD,
+        TOK_FOR,
+        TOK_SINCE,
+        TOK_UNTIL,
 
         TERM,
 
@@ -141,6 +145,9 @@ public:
         case TOK_EXPR:    return "TOK_EXPR";
         case TOK_SHOW:    return "TOK_SHOW";
         case TOK_BOLD:    return "TOK_BOLD";
+        case TOK_FOR:     return "TOK_FOR";
+        case TOK_SINCE:   return "TOK_SINCE";
+        case TOK_UNTIL:   return "TOK_UNTIL";
         case TERM:        return string("TERM(") + *value + ")";
         case END_REACHED: return "END_REACHED";
         }
@@ -164,6 +171,9 @@ public:
         case TOK_EXPR:    return "expr";
         case TOK_SHOW:    return "show";
         case TOK_BOLD:    return "bold";
+        case TOK_FOR:     return "for";
+        case TOK_SINCE:   return "since";
+        case TOK_UNTIL:   return "until";
 
         case END_REACHED: return "<EOF>";
 
@@ -201,8 +211,7 @@ public:
         arg_i(lexer.arg_i), arg_end(lexer.arg_end),
         consume_whitespace(lexer.consume_whitespace),
         consume_next_arg(lexer.consume_next_arg),
-        multiple_args(lexer.multiple_args),
-        token_cache(lexer.token_cache)
+        multiple_args(lexer.multiple_args), token_cache(lexer.token_cache)
     {
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
@@ -225,10 +234,11 @@ public:
   enum kind_t {
     QUERY_LIMIT,
     QUERY_SHOW,
-    QUERY_BOLD
+    QUERY_BOLD,
+    QUERY_FOR
   };
 
-  typedef std::map<kind_t, predicate_t> query_map_t;
+  typedef std::map<kind_t, string> query_map_t;
 
 protected:
   class parser_t
@@ -315,16 +325,16 @@ public:
     return parser->parse(subexpression);
   }
 
-  bool has_predicate(const kind_t& id) const {
+  bool has_query(const kind_t& id) const {
     return parser && parser->query_map.find(id) != parser->query_map.end();
   }
-  predicate_t get_predicate(const kind_t& id) const {
+  string get_query(const kind_t& id) const {
     if (parser) {
       query_map_t::const_iterator i = parser->query_map.find(id);
       if (i != parser->query_map.end())
         return (*i).second;
     }
-    return predicate_t();
+    return empty_string;
   }
 
   bool tokens_remaining() {

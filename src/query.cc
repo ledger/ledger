@@ -55,6 +55,10 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
 
  resume:
   switch (*arg_i) {
+  case '\0':
+    assert(false);
+    break;
+
   case '\'':
   case '"':
   case '/': {
@@ -85,12 +89,17 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
   if (multiple_args && consume_next_arg) {
     consume_next_arg = false;
     token_t tok(token_t::TERM, string(arg_i, arg_end));
+    prev_arg_i = arg_i;
     arg_i = arg_end;
     return tok;
   }
 
   bool consume_next = false;
   switch (*arg_i) {
+  case '\0':
+    assert(false);
+    break;
+
   case ' ':
   case '\t':
   case '\r':
@@ -121,6 +130,10 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     string::const_iterator beg = arg_i;
     for (; arg_i != arg_end; ++arg_i) {
       switch (*arg_i) {
+      case '\0':
+        assert(false);
+        break;
+
       case ' ':
       case '\t':
       case '\n':
@@ -130,6 +143,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
         else
           ident.push_back(*arg_i);
         break;
+
       case '(':
       case ')':
       case '&':
@@ -174,6 +188,12 @@ test_ident:
       return token_t(token_t::TOK_SHOW);
     else if (ident == "bold")
       return token_t(token_t::TOK_BOLD);
+    else if (ident == "for")
+      return token_t(token_t::TOK_FOR);
+    else if (ident == "since")
+      return token_t(token_t::TOK_SINCE);
+    else if (ident == "until")
+      return token_t(token_t::TOK_UNTIL);
     else if (ident == "expr") {
       // The expr keyword takes the whole of the next string as its argument.
       consume_next_arg = true;
@@ -230,6 +250,9 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   switch (tok.kind) {
   case lexer_t::token_t::TOK_SHOW:
   case lexer_t::token_t::TOK_BOLD:
+  case lexer_t::token_t::TOK_FOR:
+  case lexer_t::token_t::TOK_SINCE:
+  case lexer_t::token_t::TOK_UNTIL:
   case lexer_t::token_t::END_REACHED:
     lexer.push_token(tok);
     break;
@@ -423,7 +446,8 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
   if (! subexpression) {
     if (limiter)
       query_map.insert
-        (query_map_t::value_type(QUERY_LIMIT, predicate_t(limiter, what_to_keep)));
+        (query_map_t::value_type
+         (QUERY_LIMIT, predicate_t(limiter, what_to_keep).print_to_str()));
 
     lexer_t::token_t tok = lexer.peek_token();
     while (tok.kind != lexer_t::token_t::END_REACHED) {
@@ -445,7 +469,8 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
 
         if (node)
           query_map.insert
-            (query_map_t::value_type(QUERY_SHOW, predicate_t(node, what_to_keep)));
+            (query_map_t::value_type
+             (QUERY_SHOW, predicate_t(node, what_to_keep).print_to_str()));
         break;
       }
 
@@ -462,7 +487,49 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
 
         if (node)
           query_map.insert
-            (query_map_t::value_type(QUERY_BOLD, predicate_t(node, what_to_keep)));
+            (query_map_t::value_type
+             (QUERY_BOLD, predicate_t(node, what_to_keep).print_to_str()));
+        break;
+      }
+
+      case lexer_t::token_t::TOK_FOR:
+      case lexer_t::token_t::TOK_SINCE:
+      case lexer_t::token_t::TOK_UNTIL: {
+        tok = lexer.next_token();
+
+        string                 for_string;
+
+        if (tok.kind == lexer_t::token_t::TOK_SINCE)
+          for_string = "since";
+        else if (tok.kind == lexer_t::token_t::TOK_UNTIL)
+          for_string = "until";
+
+        lexer.consume_next_arg = true;
+        tok = lexer.peek_token();
+
+        while (tok.kind != lexer_t::token_t::END_REACHED) {
+          tok = lexer.next_token();
+          assert(tok.kind == lexer_t::token_t::TERM);
+
+          if (*tok.value == "show" || *tok.value == "bold" ||
+              *tok.value == "for" || *tok.value == "since" ||
+              *tok.value == "until") {
+            lexer.token_cache = lexer_t::token_t();
+            lexer.arg_i = lexer.prev_arg_i;
+            lexer.consume_next_arg = false;
+            break;
+          }
+
+          if (! for_string.empty())
+            for_string += " ";
+          for_string += *tok.value;
+
+          lexer.consume_next_arg = true;
+          tok = lexer.peek_token();
+        }
+
+        if (! for_string.empty())
+          query_map.insert(query_map_t::value_type(QUERY_FOR, for_string));
         break;
       }
 
