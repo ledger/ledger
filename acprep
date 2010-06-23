@@ -1412,7 +1412,7 @@ class PrepareBuild(CommandLineApp):
             else:
                 make_args.append(arg)
 
-        if self.options.jobs > 1:
+        if self.options.jobs > 1 and self.current_flavor != 'gcov':
             make_args.append('-j%d' % self.options.jobs)
             make_args.append('JOBS=%d' % self.options.jobs)
 

@@ -179,7 +179,10 @@ if __name__ == '__main__':
     if os.path.isdir(tests):
         tests = [os.path.join(tests, x)
                  for x in os.listdir(tests) if x.endswith('.test')]
-        harness.failed = sum(pool.map(do_test, tests, 1))
+        if pool:
+            harness.failed = sum(pool.map(do_test, tests, 1))
+        else:
+            harness.failed = sum(map(do_test, tests))
     else:
         entry = RegressFile(tests)
         entry.run_tests()

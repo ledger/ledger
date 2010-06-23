@@ -138,8 +138,7 @@ else:
     pool = None
 
 if pool:
-    harness.failed = sum(pool.map(run_gen_test,
-                                  range(beg_range, end_range)))
+    harness.failed = sum(pool.map(run_gen_test, range(beg_range, end_range)))
 else:
     for i in range(beg_range, end_range):
         run_gen_test(i)
