@@ -356,8 +356,8 @@ D 1.00G
     Assets:Tajer
 
 2006/03/17 Player: raev
-    Assets:Tajer:Items                  "Wildheart Belt" 1 {30G}
-    Assets:Tajer:Items                  "Ace of Warlords" -2 {15G}
+    Assets:Tajer:Items                  "Wildheart Belt" 1   @ 30G
+    Assets:Tajer:Items                  "Ace of Warlords" -2 @ 15G
 
 2006/03/17 Auction House
     Expenses:Fees:Auction          7482c
@@ -609,8 +609,8 @@ D 1.00G
                                 Assets:Tajer                 -1.20s            0
 06-Mar-14 Puldoost              Assets:Tajer                  8.00G        8.00G
                                 Expenses:Items               -8.00G            0
-06-Mar-14 Auction House         Assets:Wyshona:Items          1.25G        1.25G
-                                Assets:Tajer:Items           -1.25G            0
+06-Mar-14 Auction House         Assets:Wyshona:Items   "Plans: Wildthorn Mail" 1 "Plans: Wildthorn Mail" 1
+                                Assets:Tajer:Items     "Plans: Wildthorn Mail" -1            0
 06-Mar-15 Auction House         Assets:Tajer                 45.00s       45.00s
                                 Assets:Tajer                  2.59s       47.59s
                                 Assets:Bids                 -47.59s            0
@@ -680,11 +680,17 @@ D 1.00G
                                 Assets:Tajer:Items         -119.58G            0
                                 Income:Brokering            -54.58G      -54.58G
                                 Equity:Capital Gains         54.58G            0
-06-Mar-16 Auction House         Assets:Wyshona:Items          2.11G        2.11G
-                                Assets:Wyshona:Items          2.30G        4.40G
-                                Assets:Wyshona:Items          1.00G        5.40G
-                                Assets:Wyshona:Items          1.50G        6.90G
-                                Assets:Tajer:Items           -6.90G            0
+06-Mar-16 Auction House         Assets:Wyshona:Items   "Plans: Mithril Shield Spike" 1 "Plans: Mithril Shield Spike" 1
+                                Assets:Wyshona:Items   "Plans: Mithril Shield Spike" 1 "Plans: Mithril Shield Spike" 2
+                                Assets:Wyshona:Items   "Recipe: Elixir of Giant Growth" 1 "Plans: Mithril Shield Spike" 2
+                                              "Recipe: Elixir of Giant Growth" 1
+                                Assets:Wyshona:Items   "Recipe: Elixir of Giant Growth" 1 "Plans: Mithril Shield Spike" 2
+                                              "Recipe: Elixir of Giant Growth" 2
+                                Assets:Tajer:Items     "Plans: Mithril Shield Spike" -1 "Plans: Mithril Shield Spike" 1
+                                              "Recipe: Elixir of Giant Growth" 2
+                                Assets:Tajer:Items     "Plans: Mithril Shield Spike" -1 "Recipe: Elixir of Giant Growth" 2
+                                Assets:Tajer:Items     "Recipe: Elixir of Giant Growth" -1 "Recipe: Elixir of Giant Growth" 1
+                                Assets:Tajer:Items     "Recipe: Elixir of Giant Growth" -1            0
 06-Mar-16 Player                Assets:Tajer                  4.00G        4.00G
                                 Equity:Gold                  -4.00G            0
 06-Mar-16 Auction House         Assets:Wyshona               13.41G       13.41G
@@ -718,8 +724,8 @@ D 1.00G
                                 Assets:Tajer                -30.00G            0
 06-Mar-16 Auction House         Assets:Gruulmorg:Items       30.00G       30.00G
                                 Assets:Gruulmorg            -30.00G            0
-06-Mar-16 Transfer              Assets:Tajer:Items           30.00G       30.00G
-                                Assets:Gruulmorg:Items      -30.00G            0
+06-Mar-16 Transfer              Assets:Tajer:Items     "Ace of Warlords" 2 "Ace of Warlords" 2
+                                Assets:Gruulmorg:Items "Ace of Warlords" -2            0
 06-Mar-16 Post                  Expenses:Fees:Mail              60c          60c
                                 Assets:Gruulmorg               -60c            0
 06-Mar-16 Post                  Expenses:Fees:Mail            1.20s        1.20s

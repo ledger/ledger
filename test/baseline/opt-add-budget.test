@@ -1,4 +1,4 @@
-reg --add-budget books cards
+reg --add-budget books cards --now=2009/12/31
 <<<
 ~ monthly
     Expenses:Books          $10.00

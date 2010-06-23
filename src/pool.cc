@@ -172,11 +172,20 @@ commodity_pool_t::create(commodity_t&        comm,
                          const string&       mapping_key)
 {
   assert(comm);
+  assert(! comm.has_annotation());
   assert(details);
   assert(! mapping_key.empty());
 
   std::auto_ptr<commodity_t> commodity
     (new annotated_commodity_t(&comm, details));
+
+  comm.add_flags(COMMODITY_SAW_ANNOTATED);
+  if (details.price) {
+    if (details.has_flags(ANNOTATION_PRICE_FIXATED))
+      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FIXATED);
+    else
+      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FLOAT);
+  }
 
   commodity->qualified_symbol = comm.symbol();
   assert(! commodity->qualified_symbol->empty());
@@ -254,7 +263,13 @@ commodity_pool_t::exchange(const amount_t&             amount,
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 
-  if (! per_unit_cost.is_realzero())
+  // Do not record commodity exchanges where amount's commodity has a
+  // fixated price, since this does not establish a market value for the
+  // base commodity.
+  if (! per_unit_cost.is_realzero() &&
+      (current_annotation == NULL ||
+       ! (current_annotation->price &&
+          current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))))
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
 
   cost_breakdown_t breakdown;
@@ -276,6 +291,9 @@ commodity_pool_t::exchange(const amount_t&             amount,
                           moment->date() : optional<date_t>(), tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
+  if (current_annotation &&
+      current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))
+    annotation.add_flags(ANNOTATION_PRICE_FIXATED);
   if (moment)
     annotation.add_flags(ANNOTATION_DATE_CALCULATED);
   if (tag)

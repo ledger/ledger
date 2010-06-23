@@ -37,7 +37,7 @@ namespace ledger {
 
 bool item_t::use_effective_date = false;
 
-bool item_t::has_tag(const string& tag) const
+bool item_t::has_tag(const string& tag, bool) const
 {
   DEBUG("item.meta", "Checking if item has tag: " << tag);
   if (! metadata) {
@@ -57,7 +57,7 @@ bool item_t::has_tag(const string& tag) const
 }
 
 bool item_t::has_tag(const mask_t& tag_mask,
-                     const optional<mask_t>& value_mask) const
+                     const optional<mask_t>& value_mask, bool) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
@@ -72,7 +72,7 @@ bool item_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-optional<value_t> item_t::get_tag(const string& tag) const
+  optional<value_t> item_t::get_tag(const string& tag, bool) const
 {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
@@ -87,7 +87,8 @@ optional<value_t> item_t::get_tag(const string& tag) const
 }
 
 optional<value_t> item_t::get_tag(const mask_t& tag_mask,
-                                  const optional<mask_t>& value_mask) const
+                                  const optional<mask_t>& value_mask,
+                                  bool) const
 {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
@@ -138,26 +139,26 @@ void item_t::parse_tags(const char * p,
                         scope_t&     scope,
                         bool         overwrite_existing)
 {
-  if (const char * b = std::strchr(p, '[')) {
-    if (*(b + 1) != '\0' &&
-        (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
-      if (const char * e = std::strchr(p, ']')) {
-        char buf[256];
-        std::strncpy(buf, b + 1, e - b - 1);
-        buf[e - b - 1] = '\0';
+  if (! std::strchr(p, ':')) {
+    if (const char * b = std::strchr(p, '[')) {
+      if (*(b + 1) != '\0' &&
+          (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
+        if (const char * e = std::strchr(p, ']')) {
+          char buf[256];
+          std::strncpy(buf, b + 1, e - b - 1);
+          buf[e - b - 1] = '\0';
 
-        if (char * p = std::strchr(buf, '=')) {
-          *p++ = '\0';
-          _date_eff = parse_date(p);
+          if (char * p = std::strchr(buf, '=')) {
+            *p++ = '\0';
+            _date_eff = parse_date(p);
+          }
+          if (buf[0])
+            _date = parse_date(buf);
         }
-        if (buf[0])
-          _date = parse_date(buf);
       }
     }
-  }
-
-  if (! std::strchr(p, ':'))
     return;
+  }
 
   scoped_array<char> buf(new char[std::strlen(p) + 1]);
 
@@ -165,6 +166,7 @@ void item_t::parse_tags(const char * p,
 
   string tag;
   bool   by_value = false;
+  bool   first = true;
   for (char * q = std::strtok(buf.get(), " \t");
        q;
        q = std::strtok(NULL, " \t")) {
@@ -190,7 +192,7 @@ void item_t::parse_tags(const char * p,
         (*i).second.second = true;
       }
     }
-    else if (q[len - 1] == ':') { // a metadata setting
+    else if (first && q[len - 1] == ':') { // a metadata setting
       int index = 1;
       if (q[len - 2] == ':') {
         by_value = true;
@@ -198,6 +200,7 @@ void item_t::parse_tags(const char * p,
       }
       tag = string(q, len - index);
     }
+    first = false;
   }
 }
 

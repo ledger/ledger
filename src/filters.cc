@@ -266,6 +266,7 @@ void anonymize_posts::operator()(post_t& post)
     copy_xact_details = true;
   }
   xact_t& xact = temps.last_xact();
+  xact.code = none;
 
   if (copy_xact_details) {
     xact.copy_details(*post.xact);
@@ -523,7 +524,7 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
                                            bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
     show_rounding(_show_rounding),
-    rounding_account(temps.create_account(_("<Rounding>"))),
+    rounding_account(temps.create_account(_("<Adjustment>"))),
     revalued_account(temps.create_account(_("<Revalued>")))
 {
   TRACE_CTOR(display_filter_posts,
@@ -1042,10 +1043,10 @@ void by_payee_posts::flush()
 
 void by_payee_posts::operator()(post_t& post)
 {
-  payee_subtotals_map::iterator i = payee_subtotals.find(post.xact->payee);
+  payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
   if (i == payee_subtotals.end()) {
     payee_subtotals_pair
-      temp(post.xact->payee,
+      temp(post.payee(),
            shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
     std::pair<payee_subtotals_map::iterator, bool> result
       = payee_subtotals.insert(temp);
@@ -1073,7 +1074,7 @@ void transfer_details::operator()(post_t& post)
   if (! substitute.is_null()) {
     switch (which_element) {
     case SET_DATE:
-      temp.xdata().date = substitute.to_date();
+      temp._date = substitute.to_date();
       break;
 
     case SET_ACCOUNT: {
@@ -1112,7 +1113,7 @@ void transfer_details::operator()(post_t& post)
   item_handler<post_t>::operator()(temp);
 }
 
-void dow_posts::flush()
+void day_of_week_posts::flush()
 {
   for (int i = 0; i < 7; i++) {
     foreach (post_t * post, days_of_the_week[i])
@@ -1143,19 +1144,43 @@ void budget_posts::report_budget_items(const date_t& date)
 
   bool reported;
   do {
+    std::list<pending_posts_list::iterator> posts_to_erase;
+
     reported = false;
-    foreach (pending_posts_list::value_type& pair, pending_posts) {
+    for (pending_posts_list::iterator i = pending_posts.begin();
+         i != pending_posts.end();
+         i++) {
+      pending_posts_list::value_type& pair(*i);
+
       optional<date_t> begin = pair.first.start;
       if (! begin) {
-        if (! pair.first.find_period(date))
+        optional<date_t> range_begin;
+        if (pair.first.range)
+          range_begin = pair.first.range->begin();
+
+        DEBUG("budget.generate", "Finding period for pending post");
+        if (! pair.first.find_period(range_begin ? *range_begin : date))
           continue;
+        if (! pair.first.start)
+          throw_(std::logic_error,
+                 _("Failed to find period for periodic transaction"));
         begin = pair.first.start;
       }
-      assert(begin);
+
+#if defined(DEBUG_ON)
+      DEBUG("budget.generate", "begin = " << *begin);
+      DEBUG("budget.generate", "date  = " << date);
+      if (pair.first.finish)
+        DEBUG("budget.generate", "pair.first.finish = " << *pair.first.finish);
+#endif
 
       if (*begin <= date &&
           (! pair.first.finish || *begin < *pair.first.finish)) {
         post_t& post = *pair.second;
+
+        ++pair.first;
+        if (! pair.first.start)
+          posts_to_erase.push_back(i);
 
         DEBUG("budget.generate", "Reporting budget for "
               << post.reported_account()->fullname());
@@ -1176,14 +1201,14 @@ void budget_posts::report_budget_items(const date_t& date)
           temp.xdata().add_flags(POST_EXT_COMPOUND);
         }
 
-        ++pair.first;
-        begin = *pair.first.start;
-
         item_handler<post_t>::operator()(temp);
 
         reported = true;
       }
     }
+
+    foreach (pending_posts_list::iterator& i, posts_to_erase)
+      pending_posts.erase(i);
   } while (reported);
 }
 
@@ -1213,6 +1238,14 @@ void budget_posts::operator()(post_t& post)
   else if (! post_in_budget && flags & BUDGET_UNBUDGETED) {
     item_handler<post_t>::operator()(post);
   }
+}
+
+void budget_posts::flush()
+{
+  if (flags & BUDGET_BUDGETED)
+    report_budget_items(terminus);
+
+  item_handler<post_t>::flush();
 }
 
 void forecast_posts::add_post(const date_interval_t& period, post_t& post)
@@ -1274,17 +1307,16 @@ void forecast_posts::flush()
         least = i;
     }
 
-    date_t& begin = *(*least).first.start;
 #if !defined(NO_ASSERTS)
     if ((*least).first.finish)
-      assert(begin < *(*least).first.finish);
+      assert(*(*least).first.start < *(*least).first.finish);
 #endif
 
     // If the next date in the series for this periodic posting is more than 5
     // years beyond the last valid post we generated, drop it from further
     // consideration.
-    date_t next = *(*least).first.next;
-    assert(next > begin);
+    date_t& next(*(*least).first.next);
+    assert(next > *(*least).first.start);
 
     if (static_cast<std::size_t>((next - last).days()) >
         static_cast<std::size_t>(365U) * forecast_years) {
@@ -1295,15 +1327,13 @@ void forecast_posts::flush()
       continue;
     }
 
-    begin = next;
-
     // `post' refers to the posting defined in the period transaction.  We
     // make a copy of it within a temporary transaction with the payee
     // "Forecast transaction".
     post_t& post = *(*least).second;
     xact_t& xact = temps.create_xact();
     xact.payee   = _("Forecast transaction");
-    xact._date   = begin;
+    xact._date   = next;
     post_t& temp = temps.copy_post(post, xact);
 
     // Submit the generated posting
@@ -1336,6 +1366,60 @@ void forecast_posts::flush()
   }
 
   item_handler<post_t>::flush();
+}
+
+inject_posts::inject_posts(post_handler_ptr handler,
+                           const string&    tag_list,
+                           account_t *      master)
+  : item_handler<post_t>(handler)
+{
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string");
+
+  scoped_array<char> buf(new char[tag_list.length() + 1]);
+  std::strcpy(buf.get(), tag_list.c_str());
+
+  for (char * q = std::strtok(buf.get(), ",");
+       q;
+       q = std::strtok(NULL, ",")) {
+
+    std::list<string> account_names;
+    split_string(q, ':', account_names);
+    account_t * account =
+      create_temp_account_from_path(account_names, temps, master);
+    account->add_flags(ACCOUNT_GENERATED);
+
+    tags_list.push_back
+      (tags_list_pair(q, tag_mapping_pair(account, tag_injected_set())));
+  }
+}
+
+void inject_posts::operator()(post_t& post)
+{
+  foreach (tags_list_pair& pair, tags_list) {
+    optional<value_t> tag_value = post.get_tag(pair.first, false);
+    if (! tag_value &&
+        pair.second.second.find(post.xact) == pair.second.second.end()) {
+      // When checking if the transaction has the tag, only inject once
+      // per transaction.
+      pair.second.second.insert(post.xact);
+      tag_value = post.xact->get_tag(pair.first);
+    }
+
+    if (tag_value) {
+      xact_t& xact = temps.copy_xact(*post.xact);
+      xact._date = post.date();
+      xact.add_flags(ITEM_GENERATED);
+      post_t& temp = temps.copy_post(post, xact);
+
+      temp.account = pair.second.first;
+      temp.amount  = tag_value->to_amount();
+      temp.add_flags(ITEM_GENERATED);
+
+      item_handler<post_t>::operator()(temp);
+    }
+  }
+
+  item_handler<post_t>::operator()(post);
 }
 
 pass_down_accounts::pass_down_accounts(acct_handler_ptr             handler,

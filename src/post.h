@@ -99,18 +99,24 @@ public:
     TRACE_DTOR(post_t);
   }
 
-  virtual bool has_tag(const string& tag) const;
-  virtual bool has_tag(const mask_t& tag_mask,
-                       const optional<mask_t>& value_mask = none) const;
+  virtual bool has_tag(const string& tag,
+                       bool          inherit = true) const;
+  virtual bool has_tag(const mask_t&           tag_mask,
+                       const optional<mask_t>& value_mask = none,
+                       bool                    inherit    = true) const;
 
-  virtual optional<value_t> get_tag(const string& tag) const;
-  virtual optional<value_t> get_tag(const mask_t& tag_mask,
-                                    const optional<mask_t>& value_mask = none) const;
+  virtual optional<value_t> get_tag(const string& tag,
+                       bool                       inherit = true) const;
+  virtual optional<value_t> get_tag(const mask_t&           tag_mask,
+                                    const optional<mask_t>& value_mask = none,
+                       bool                                 inherit    = true) const;
 
   virtual date_t value_date() const;
   virtual date_t date() const;
   virtual date_t actual_date() const;
   virtual optional<date_t> effective_date() const;
+
+  string payee() const;
 
   bool must_balance() const {
     return ! has_flags(POST_VIRTUAL) || has_flags(POST_MUST_BALANCE);

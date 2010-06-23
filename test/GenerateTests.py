@@ -130,6 +130,7 @@ def run_gen_test(i):
         harness.success()
     else:
         harness.failure()
+    return harness.failed
 
 if multiproc:
     pool = Pool(jobs*2)
@@ -137,7 +138,7 @@ else:
     pool = None
 
 if pool:
-    pool.map(run_gen_test, range(beg_range, end_range))
+    harness.failed = sum(pool.map(run_gen_test, range(beg_range, end_range)))
 else:
     for i in range(beg_range, end_range):
         run_gen_test(i)
@@ -145,4 +146,5 @@ else:
 if pool:
     pool.close()
     pool.join()
+
 harness.exit()

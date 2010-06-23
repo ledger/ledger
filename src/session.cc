@@ -161,14 +161,16 @@ void session_t::read_journal_files()
   if (HANDLED(master_account_))
     master_account = HANDLER(master_account_).str();
 
-  std::size_t count = read_data(master_account);
-  if (count == 0)
-    throw_(parse_error,
-           _("Failed to locate any transactions; did you specify a valid file with -f?"));
+#if defined(DEBUG_ON)
+  std::size_t count =
+#endif
+    read_data(master_account);
 
   INFO_FINISH(journal);
 
+#if defined(DEBUG_ON)
   INFO("Found " << count << " transactions");
+#endif
 }
 
 void session_t::close_journal_files()

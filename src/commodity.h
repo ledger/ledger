@@ -164,16 +164,19 @@ protected:
   class base_t : public noncopyable, public supports_flags<uint_least16_t>
   {
   public:
-#define COMMODITY_STYLE_DEFAULTS      0x000
-#define COMMODITY_STYLE_SUFFIXED      0x001
-#define COMMODITY_STYLE_SEPARATED     0x002
-#define COMMODITY_STYLE_DECIMAL_COMMA 0x004
-#define COMMODITY_STYLE_THOUSANDS     0x008
-#define COMMODITY_NOMARKET            0x010
-#define COMMODITY_BUILTIN             0x020
-#define COMMODITY_WALKED              0x040
-#define COMMODITY_KNOWN               0x080
-#define COMMODITY_PRIMARY             0x100
+#define COMMODITY_STYLE_DEFAULTS         0x000
+#define COMMODITY_STYLE_SUFFIXED         0x001
+#define COMMODITY_STYLE_SEPARATED        0x002
+#define COMMODITY_STYLE_DECIMAL_COMMA    0x004
+#define COMMODITY_STYLE_THOUSANDS        0x008
+#define COMMODITY_NOMARKET               0x010
+#define COMMODITY_BUILTIN                0x020
+#define COMMODITY_WALKED                 0x040
+#define COMMODITY_KNOWN                  0x080
+#define COMMODITY_PRIMARY                0x100
+#define COMMODITY_SAW_ANNOTATED          0x200
+#define COMMODITY_SAW_ANN_PRICE_FLOAT    0x400
+#define COMMODITY_SAW_ANN_PRICE_FIXATED  0x800
 
     string                     symbol;
     amount_t::precision_t      precision;

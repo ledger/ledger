@@ -124,27 +124,13 @@ bool xact_base_t::finalize()
     amount_t& p(post->cost ? *post->cost : post->amount);
     if (! p.is_null()) {
       DEBUG("xact.finalize", "post must balance = " << p.reduced());
-      if (! post->cost && post->amount.has_annotation() &&
-          post->amount.annotation().price) {
-        // If the amount has no cost, but is annotated with a per-unit
-        // price, use the price times the amount as the cost
-        post->cost = (*post->amount.annotation().price *
-                      post->amount).unrounded();
-        DEBUG("xact.finalize",
-              "annotation price = " << *post->amount.annotation().price);
-        DEBUG("xact.finalize", "amount = " << post->amount);
-        DEBUG("xact.finalize", "priced cost = " << *post->cost);
-        post->add_flags(POST_COST_CALCULATED);
-        add_or_set_value(balance, post->cost->rounded().reduced());
-      } else {
-        // If the amount was a cost, it very likely has the "keep_precision"
-        // flag set, meaning commodity display precision is ignored when
-        // displaying the amount.  We never want this set for the balance,
-        // so we must clear the flag in a temporary to avoid it propagating
-        // into the balance.
-        add_or_set_value(balance, p.keep_precision() ?
-                         p.rounded().reduced() : p.reduced());
-      }
+      // If the amount was a cost, it very likely has the
+      // "keep_precision" flag set, meaning commodity display precision
+      // is ignored when displaying the amount.  We never want this set
+      // for the balance, so we must clear the flag in a temporary to
+      // avoid it propagating into the balance.
+      add_or_set_value(balance, p.keep_precision() ?
+                       p.rounded().reduced() : p.reduced());
     }
     else if (null_post) {
       throw_(std::logic_error,
@@ -173,14 +159,15 @@ bool xact_base_t::finalize()
     add_post(null_post);
   }
 
-  if (balance.is_balance() &&
+  if (! null_post && balance.is_balance() &&
       balance.as_balance().amounts.size() == 2) {
     // When an xact involves two different commodities (regardless of how
     // many posts there are) determine the conversion ratio by dividing the
     // total value of one commodity by the total value of the other.  This
     // establishes the per-unit cost for this post for both commodities.
 
-    DEBUG("xact.finalize", "there were exactly two commodities");
+    DEBUG("xact.finalize",
+          "there were exactly two commodities, and no null post");
 
     bool     saw_cost = false;
     post_t * top_post = NULL;
@@ -268,55 +255,65 @@ bool xact_base_t::finalize()
 
   posts_list copy(posts);
 
-  foreach (post_t * post, copy) {
-    if (! post->cost)
-      continue;
+  if (has_date()) {
+    foreach (post_t * post, copy) {
+      if (! post->cost)
+        continue;
 
-    if (post->amount.commodity() == post->cost->commodity())
-      throw_(balance_error,
-             _("A posting's cost must be of a different commodity than its amount"));
+      if (post->amount.commodity() == post->cost->commodity())
+        throw_(balance_error,
+               _("A posting's cost must be of a different commodity than its amount"));
 
-    cost_breakdown_t breakdown =
-      commodity_pool_t::current_pool->exchange
+      cost_breakdown_t breakdown =
+        commodity_pool_t::current_pool->exchange
         (post->amount, *post->cost, false,
          datetime_t(date(), time_duration(0, 0, 0, 0)));
 
-    if (post->amount.has_annotation() &&
-        breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
-      if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
-        DEBUG("xact.finalize", "gain_loss = " << gain_loss);
-        gain_loss.in_place_round();
-        DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
+      if (post->amount.has_annotation() && post->amount.annotation().price) {
+        if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
+          if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
+            DEBUG("xact.finalize", "gain_loss = " << gain_loss);
+            gain_loss.in_place_round();
+            DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
 
-        if (post->must_balance())
-          add_or_set_value(balance, gain_loss.reduced());
+            if (post->must_balance())
+              add_or_set_value(balance, gain_loss.reduced());
 
-        account_t * account;
-        if (gain_loss.sign() > 0)
-          account = journal->find_account(_("Equity:Capital Gains"));
-        else
-          account = journal->find_account(_("Equity:Capital Losses"));
+            account_t * account;
+            if (gain_loss.sign() > 0)
+              account = journal->find_account(_("Equity:Capital Gains"));
+            else
+              account = journal->find_account(_("Equity:Capital Losses"));
 
-        post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
-        p->set_state(post->state());
-        if (post->has_flags(POST_VIRTUAL)) {
-          DEBUG("xact.finalize", "gain_loss came from a virtual post");
-          p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
+            post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
+            p->set_state(post->state());
+            if (post->has_flags(POST_VIRTUAL)) {
+              DEBUG("xact.finalize", "gain_loss came from a virtual post");
+              p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
+            }
+            add_post(p);
+            DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
+          } else {
+            DEBUG("xact.finalize", "gain_loss would have displayed as zero");
+          }
         }
-        add_post(p);
-        DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
       } else {
-        DEBUG("xact.finalize", "gain_loss would have display as zero");
+        if (post->amount.has_annotation()) {
+          if (breakdown.amount.has_annotation())
+            breakdown.amount.annotation().tag = post->amount.annotation().tag;
+          else
+            breakdown.amount.annotate
+              (annotation_t(none, none, post->amount.annotation().tag));
+        }
+        post->amount = breakdown.amount;
+        DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
-    } else {
-      post->amount = breakdown.amount;
-      DEBUG("xact.finalize", "added breakdown, balance = " << balance);
-    }
 
-    if (post->has_flags(POST_COST_FIXATED) &&
-        post->amount.has_annotation() && post->amount.annotation().price) {
-      DEBUG("xact.finalize", "fixating annotation price");
-      post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+      if (post->has_flags(POST_COST_FIXATED) &&
+          post->amount.has_annotation() && post->amount.annotation().price) {
+        DEBUG("xact.finalize", "fixating annotation price");
+        post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+      }
     }
   }
 

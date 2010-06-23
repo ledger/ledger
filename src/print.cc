@@ -201,7 +201,7 @@ namespace {
         }
 
         if (post->assigned_amount)
-          amtbuf << " = " << post->assigned_amount;
+          amtbuf << " = " << *post->assigned_amount;
 
         string trailer = amtbuf.str();
         out << trailer;

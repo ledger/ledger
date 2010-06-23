@@ -228,7 +228,8 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
     if ((! flat && to_display > 1) ||
         ((flat || to_display != 1 ||
           account.has_xflags(ACCOUNT_EXT_VISITED)) &&
-         (report.HANDLED(empty) || report.fn_display_total(call_scope)) &&
+         (report.HANDLED(empty) ||
+          report.display_value(report.fn_display_total(call_scope))) &&
          disp_pred(bound_scope))) {
       account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
       DEBUG("account.display", "Marking account as TO_DISPLAY");
@@ -313,9 +314,9 @@ void report_payees::flush()
 
 void report_payees::operator()(post_t& post)
 {
-  std::map<string, std::size_t>::iterator i = payees.find(post.xact->payee);
+  std::map<string, std::size_t>::iterator i = payees.find(post.payee());
   if (i == payees.end())
-    payees.insert(payees_pair(post.xact->payee, 1));
+    payees.insert(payees_pair(post.payee(), 1));
   else
     (*i).second++;
 }

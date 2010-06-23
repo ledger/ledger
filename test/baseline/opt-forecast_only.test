@@ -1,0 +1,64 @@
+reg --forecast 'date <[2011]' --now=2010/06/21
+<<<
+~ Monthly since 2010/01/01
+    Expenses:Bills:Rent                 $873.00
+    Expenses:Household                  $200.00
+    Income:Salary                       -$2491.60
+    Assets:Bank:Checking
+
+~ biweekly from 2010/02/23
+    Expenses:Bills:Housecleaning        $85.00
+    Assets:Bank:Checking
+>>>
+10-Jul-01 Forecast transaction  Expenses:Bills:Rent         $873.00      $873.00
+10-Jul-01 Forecast transaction  Expenses:Household          $200.00     $1073.00
+10-Jul-01 Forecast transaction  Income:Salary             $-2491.60    $-1418.60
+10-Jul-01 Forecast transaction  Assets:Bank:Checking       $1418.60            0
+10-Jun-27 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Jun-27 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Jul-11 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Jul-11 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Aug-01 Forecast transaction  Expenses:Bills:Rent         $873.00      $873.00
+10-Aug-01 Forecast transaction  Expenses:Household          $200.00     $1073.00
+10-Aug-01 Forecast transaction  Income:Salary             $-2491.60    $-1418.60
+10-Aug-01 Forecast transaction  Assets:Bank:Checking       $1418.60            0
+10-Jul-25 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Jul-25 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Aug-08 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Aug-08 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Sep-01 Forecast transaction  Expenses:Bills:Rent         $873.00      $873.00
+10-Sep-01 Forecast transaction  Expenses:Household          $200.00     $1073.00
+10-Sep-01 Forecast transaction  Income:Salary             $-2491.60    $-1418.60
+10-Sep-01 Forecast transaction  Assets:Bank:Checking       $1418.60            0
+10-Aug-22 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Aug-22 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Sep-05 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Sep-05 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Oct-01 Forecast transaction  Expenses:Bills:Rent         $873.00      $873.00
+10-Oct-01 Forecast transaction  Expenses:Household          $200.00     $1073.00
+10-Oct-01 Forecast transaction  Income:Salary             $-2491.60    $-1418.60
+10-Oct-01 Forecast transaction  Assets:Bank:Checking       $1418.60            0
+10-Sep-19 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Sep-19 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Oct-03 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Oct-03 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Nov-01 Forecast transaction  Expenses:Bills:Rent         $873.00      $873.00
+10-Nov-01 Forecast transaction  Expenses:Household          $200.00     $1073.00
+10-Nov-01 Forecast transaction  Income:Salary             $-2491.60    $-1418.60
+10-Nov-01 Forecast transaction  Assets:Bank:Checking       $1418.60            0
+10-Oct-17 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Oct-17 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Oct-31 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Oct-31 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Nov-14 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Nov-14 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Dec-01 Forecast transaction  Expenses:Bills:Rent         $873.00      $873.00
+10-Dec-01 Forecast transaction  Expenses:Household          $200.00     $1073.00
+10-Dec-01 Forecast transaction  Income:Salary             $-2491.60    $-1418.60
+10-Dec-01 Forecast transaction  Assets:Bank:Checking       $1418.60            0
+10-Nov-28 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Nov-28 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Dec-12 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Dec-12 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Dec-26 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
+10-Dec-26 Forecast transaction  Assets:Bank:Checking        $-85.00            0

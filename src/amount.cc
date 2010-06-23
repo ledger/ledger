@@ -743,21 +743,24 @@ amount_t::value(const optional<datetime_t>&   moment,
       optional<price_point_t> point;
       optional<commodity_t&>  comm(in_terms_of);
 
-      if (comm && commodity().referent() == comm->referent()) {
-        return *this;
-      }
-      else if (has_annotation() && annotation().price) {
+      if (has_annotation() && annotation().price) {
         if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
           point = price_point_t();
           point->price = *annotation().price;
+          DEBUG("commodity.prices.find",
+                "amount_t::value: fixated price =  " << point->price);
         }
-        else if (! in_terms_of) {
+        else if (! comm) {
           comm = annotation().price->commodity();
         }
       }
 
       if (! point) {
+        if (comm && commodity().referent() == comm->referent())
+          return *this;
+
         point = commodity().find_price(comm, moment);
+
         // Whether a price was found or not, check whether we should attempt
         // to download a price from the Internet.  This is done if (a) no
         // price was found, or (b) the price is "stale" according to the

@@ -13,6 +13,23 @@ features, please see the manual.
   To see 2.6 behavior, use "bal -n" in 3.0.  The -s option no longer has any
   effect on balance reports.
 
+* 2.6.3
+
+- Minor fixes to allow for compilation with gcc 4.4.
+
+* 2.6.2
+
+- Bug fix: Command-line options, such as -O, now override init-file options
+  such as -V.
+
+- Bug fix: "cat data | ledger -f -" now works.
+
+- Bug fix: --no-cache is now honored.  Previously, it was writing out a cache
+  file named "<none>".
+
+- Bug fix: Using %.2X in a format string now outputs 2 spaces if the state is
+  cleared.
+
 * 2.6.1
 
 - Added the concept of "balance setting transactions":

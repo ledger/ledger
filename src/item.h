@@ -149,13 +149,17 @@ public:
     return ! (*this == xact);
   }
 
-  virtual bool has_tag(const string& tag) const;
-  virtual bool has_tag(const mask_t& tag_mask,
-                       const optional<mask_t>& value_mask = none) const;
+  virtual bool has_tag(const string& tag,
+                       bool          inherit = true) const;
+  virtual bool has_tag(const mask_t&           tag_mask,
+                       const optional<mask_t>& value_mask = none,
+                       bool                    inherit    = true) const;
 
-  virtual optional<value_t> get_tag(const string& tag) const;
-  virtual optional<value_t> get_tag(const mask_t& tag_mask,
-                                    const optional<mask_t>& value_mask = none) const;
+  virtual optional<value_t> get_tag(const string& tag,
+                                    bool          inherit = true) const;
+  virtual optional<value_t> get_tag(const mask_t&           tag_mask,
+                                    const optional<mask_t>& value_mask = none,
+                                    bool                    inherit    = true) const;
 
   virtual string_map::iterator
   set_tag(const string&            tag,
@@ -170,6 +174,10 @@ public:
                            bool         overwrite_existing = true);
 
   static bool use_effective_date;
+
+  virtual bool has_date() const {
+    return _date;
+  }
 
   virtual date_t date() const {
     assert(_date);

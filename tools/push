@@ -2,17 +2,38 @@
 
 set -e
 
+ACPREP="./acprep --universal -j16 --warn opt"
+
 (cd plan/data; git push)
 (cd plan; git commit -a -m "Update TODO files" && git push)
+
+git checkout next
+
+perl -i -pe "s/([-abgrc][0-9]*)?\\]\\)/-$(date +%Y%m%d)])/;" version.m4
+git add version.m4
+echo git commit -m "v$(cat version.m4 | sed 's/.*\[//' | sed 's/\].*//')"
+
 git checkout master
 git merge --no-ff next
 git checkout next
 git rebase master
 git push
+
 git checkout master
-./acprep --enable-cache --universal -j16 --warn opt upload
-cp -p ~/Products/ledger/opt/ledger ~/bin
-./acprep --enable-cache --universal -j16 --warn opt make speedtest 2>&1 \
-    | tee build/last-speed.txt
-mv *.dmg* build
+$ACPREP upload
+$ACPREP make dist
+
+scp ~/Products/ledger/opt/ledger-*.tar.* jw:/srv/ftp/pub/ledger
+openssl md5 *.dmg* ~/Products/ledger/opt/ledger-*.tar.* > build/CHECKSUMS.txt
+openssl sha1 *.dmg* ~/Products/ledger/opt/ledger-*.tar.* >> build/CHECKSUMS.txt
+openssl rmd160 *.dmg* ~/Products/ledger/opt/ledger-*.tar.* >> build/CHECKSUMS.txt
+perl -i -pe 's/\/.*\///;' build/CHECKSUMS.txt
+scp build/CHECKSUMS.txt jw:/srv/ftp/pub/ledger
+
+rsync -az --delete ~/Products/ledger-proof/gcov/doc/report/ jw:/srv/ftp/pub/ledger/lcov/
+
+$ACPREP make speedtest 2>&1 | tee build/last-speed.txt
+
+mv *.dmg* ~/Products/ledger/opt/ledger-*.tar.* build
+
 git checkout next
