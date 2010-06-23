@@ -2,7 +2,7 @@
 
 set -e
 
-ACPREP=./acprep --enable-cache --universal -j16 --warn opt
+ACPREP="./acprep --universal -j16 --warn opt"
 
 (cd plan/data; git push)
 (cd plan; git commit -a -m "Update TODO files" && git push)
