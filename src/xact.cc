@@ -124,27 +124,13 @@ bool xact_base_t::finalize()
     amount_t& p(post->cost ? *post->cost : post->amount);
     if (! p.is_null()) {
       DEBUG("xact.finalize", "post must balance = " << p.reduced());
-      if (! post->cost && post->amount.has_annotation() &&
-          post->amount.annotation().price) {
-        // If the amount has no cost, but is annotated with a per-unit
-        // price, use the price times the amount as the cost
-        post->cost = (*post->amount.annotation().price *
-                      post->amount).unrounded();
-        DEBUG("xact.finalize",
-              "annotation price = " << *post->amount.annotation().price);
-        DEBUG("xact.finalize", "amount = " << post->amount);
-        DEBUG("xact.finalize", "priced cost = " << *post->cost);
-        post->add_flags(POST_COST_CALCULATED);
-        add_or_set_value(balance, post->cost->rounded().reduced());
-      } else {
-        // If the amount was a cost, it very likely has the "keep_precision"
-        // flag set, meaning commodity display precision is ignored when
-        // displaying the amount.  We never want this set for the balance,
-        // so we must clear the flag in a temporary to avoid it propagating
-        // into the balance.
-        add_or_set_value(balance, p.keep_precision() ?
-                         p.rounded().reduced() : p.reduced());
-      }
+      // If the amount was a cost, it very likely has the
+      // "keep_precision" flag set, meaning commodity display precision
+      // is ignored when displaying the amount.  We never want this set
+      // for the balance, so we must clear the flag in a temporary to
+      // avoid it propagating into the balance.
+      add_or_set_value(balance, p.keep_precision() ?
+                       p.rounded().reduced() : p.reduced());
     }
     else if (null_post) {
       throw_(std::logic_error,
