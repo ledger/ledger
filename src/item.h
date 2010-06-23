@@ -175,6 +175,10 @@ public:
 
   static bool use_effective_date;
 
+  virtual bool has_date() const {
+    return _date;
+  }
+
   virtual date_t date() const {
     assert(_date);
     if (use_effective_date)
