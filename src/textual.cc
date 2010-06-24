@@ -112,6 +112,10 @@ namespace {
 
     ~instance_t();
 
+    virtual string description() {
+      return _("textual parser");
+    }
+
     void parse();
     std::streamsize read_line(char *& line);
     bool peek_whitespace_line() {

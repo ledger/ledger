@@ -125,6 +125,10 @@ public:
     output_stream.close();
   }
 
+  virtual string description() {
+    return _("current report");
+  }
+
   void normalize_options(const string& verb);
   void normalize_period();
   void parse_query_args(const value_t& args, const string& whence);

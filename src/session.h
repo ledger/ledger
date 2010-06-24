@@ -64,6 +64,10 @@ public:
     TRACE_DTOR(session_t);
   }
 
+  virtual string description() {
+    return _("current session");
+  }
+
   void set_flush_on_next_data_file(const bool truth) {
     flush_on_next_data_file = truth;
   }

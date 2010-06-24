@@ -109,6 +109,8 @@ public:
     TRACE_DTOR(scope_t);
   }
 
+  virtual string description() = 0;
+
   virtual void define(const symbol_t::kind_t, const string&,
                       expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
@@ -191,6 +193,10 @@ public:
     TRACE_DTOR(bind_scope_t);
   }
 
+  virtual string description() {
+    return grandchild.description();
+  }
+
   virtual void define(const symbol_t::kind_t kind, const string& name,
                       expr_t::ptr_op_t def) {
     parent->define(kind, name, def);
@@ -262,6 +268,16 @@ public:
     TRACE_DTOR(symbol_scope_t);
   }
 
+  virtual string description() {
+    if (parent)
+      return parent->description();
+#if !defined(NO_ASSERTS)
+    else
+      assert(false);
+#endif
+    return empty_string;
+  }
+
   virtual void define(const symbol_t::kind_t kind, const string& name,
                       expr_t::ptr_op_t def);
 
@@ -297,6 +313,10 @@ public:
   }
   virtual ~context_scope_t() {
     TRACE_DTOR(context_scope_t);
+  }
+
+  virtual string description() {
+    return parent->description();
   }
 
   virtual value_t::type_t type_context() const {
@@ -349,6 +369,10 @@ public:
   }
   virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);
+  }
+
+  virtual string description() {
+    return context_scope_t::description();
   }
 
   void set_args(const value_t& _args) {
@@ -617,6 +641,10 @@ public:
   value_scope_t(scope_t& _parent, const value_t& _value)
     : child_scope_t(_parent), value(_value) {}
   
+  virtual string description() {
+    return parent->description();
+  }
+
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name)
   {
