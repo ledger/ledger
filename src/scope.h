@@ -605,7 +605,7 @@ call_scope_t::get<expr_t::ptr_op_t>(std::size_t index, bool) {
   return args[index].as_any<expr_t::ptr_op_t>();
 }
 
-class value_scope_t : public scope_t
+class value_scope_t : public child_scope_t
 {
   value_t value;
 
@@ -614,7 +614,8 @@ class value_scope_t : public scope_t
   }
 
 public:
-  value_scope_t(const value_t& _value) : value(_value) {}
+  value_scope_t(scope_t& _parent, const value_t& _value)
+    : child_scope_t(_parent), value(_value) {}
   
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name)
