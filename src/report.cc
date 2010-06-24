@@ -267,6 +267,11 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
     DEBUG("report.predicate", "Limit predicate   = " << HANDLER(limit_).str());
   }
 
+  if (query.has_query(query_t::QUERY_ONLY)) {
+    HANDLER(only_).on(whence, query.get_query(query_t::QUERY_ONLY));
+    DEBUG("report.predicate", "Only predicate    = " << HANDLER(only_).str());
+  }
+
   if (query.has_query(query_t::QUERY_SHOW)) {
     HANDLER(display_).on(whence, query.get_query(query_t::QUERY_SHOW));
     DEBUG("report.predicate", "Display predicate = " << HANDLER(display_).str());
