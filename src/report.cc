@@ -549,6 +549,14 @@ value_t report_t::fn_trim(call_scope_t& args)
   }
 }
 
+value_t report_t::fn_format(call_scope_t& args)
+{
+  format_t format(args.get<string>(0));
+  std::ostringstream out;
+  out << format(args);
+  return string_value(out.str());
+}
+
 value_t report_t::fn_print(call_scope_t& args)
 {
   std::ostream& out(output_stream);
@@ -1178,6 +1186,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'f':
       if (is_eq(p, "format_date"))
         return MAKE_FUNCTOR(report_t::fn_format_date);
+      else if (is_eq(p, "format"))
+        return MAKE_FUNCTOR(report_t::fn_format);
       else if (is_eq(p, "floor"))
         return MAKE_FUNCTOR(report_t::fn_floor);
       break;

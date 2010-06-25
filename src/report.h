@@ -151,6 +151,7 @@ public:
   value_t fn_is_seq(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_trim(call_scope_t& scope);
+  value_t fn_format(call_scope_t& scope);
   value_t fn_print(call_scope_t& scope);
   value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
