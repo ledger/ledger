@@ -33,6 +33,7 @@
 
 #include "expr.h"
 #include "parser.h"
+#include "scope.h"
 
 namespace ledger {
 
@@ -160,6 +161,29 @@ void expr_t::print(std::ostream& out) const
 void expr_t::dump(std::ostream& out) const
 {
   if (ptr) ptr->dump(out, 0);
+}
+
+value_t source_command(call_scope_t& args)
+{
+  std::istream * in = NULL;
+  scoped_ptr<ifstream> stream;
+
+  if (args.has(0)) {
+    stream.reset(new ifstream(path(args.get<string>(0))));
+    in = stream.get();
+  }
+
+  symbol_scope_t file_locals(args);
+
+  while (in->good() && ! in->eof()) {
+    char buf[4096];
+    in->getline(buf, 4095);
+
+    if (buf[0] != ';')
+      expr_t(buf).calc(file_locals);
+  }
+
+  return true;
 }
 
 } // namespace ledger

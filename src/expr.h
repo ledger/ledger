@@ -160,6 +160,10 @@ inline value_t expr_value(expr_t::ptr_op_t op) {
   return temp;
 }
 
+class call_scope_t;
+
+value_t source_command(call_scope_t& scope);
+
 } // namespace ledger
 
 #endif // _EXPR_H

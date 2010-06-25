@@ -1449,6 +1449,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
         return WRAP_FUNCTOR(report_statistics);
+      else if (is_eq(p, "source"))
+        return WRAP_FUNCTOR(source_command);
       break;
 
     case 'x':
