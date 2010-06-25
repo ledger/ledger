@@ -151,15 +151,21 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
 
   case IDENT: {
-    if (! left())
+    ptr_op_t definition = left();
+    if (! definition) {
+      // If no definition was pre-compiled for this identifier, look it
+      // up in the current scope.
+      definition = scope.lookup(symbol_t::FUNCTION, as_ident());
+    }
+    if (! definition)
       throw_(calc_error, _("Unknown identifier '%1'") << as_ident());
 
     // Evaluating an identifier is the same as calling its definition
     // directly, so we create an empty call_scope_t to reflect the scope for
     // this implicit call.
     call_scope_t call_args(scope, locus, depth);
-    result = left()->compile(call_args, depth + 1)
-                   ->calc(call_args, locus, depth + 1);
+    result = definition->compile(call_args, depth + 1)
+                       ->calc(call_args, locus, depth + 1);
     check_type_context(scope, result);
     break;
   }
@@ -184,28 +190,37 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
     assert(left()->kind == O_CALL);
 
-    for (ptr_op_t sym = left()->right();
-         sym;
-         sym = sym->has_right() ? sym->right() : NULL) {
+    ptr_op_t sym = left()->right();
+    if (sym->kind == O_SEQ)
+      sym = sym->left();
+
+    symbol_scope_t call_scope(call_args);
+
+    for (; sym; sym = sym->has_right() ? sym->right() : NULL) {
       ptr_op_t varname = sym;
       if (sym->kind == O_CONS)
         varname = sym->left();
 
-      if (! varname->is_ident())
+      if (! varname->is_ident()) {
         throw_(calc_error, _("Invalid function definition"));
-      else if (args_index == args_count)
-        scope.define(symbol_t::FUNCTION, varname->as_ident(),
-                     wrap_value(false));
-      else
-        scope.define(symbol_t::FUNCTION, varname->as_ident(),
-                     wrap_value(call_args[args_index++]));
+      }
+      else if (args_index == args_count) {
+        call_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+                          wrap_value(NULL_VALUE));
+      }
+      else {
+        DEBUG("expr.compile",
+              "Defining function parameter " << varname->as_ident());
+        call_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+                          wrap_value(call_args[args_index++]));
+      }
     }
 
     if (args_index < args_count)
       throw_(calc_error,
-             _("Too many arguments in function call (saw %1)") << args_count);
+             _("Too few arguments in function call (saw %1)") << args_count);
 
-    result = right()->calc(scope, locus, depth + 1);
+    result = right()->calc(call_scope, locus, depth + 1);
     break;
   }
 
@@ -244,6 +259,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     const string& name(func->as_ident());
 
     func = func->left();
+    if (! func)
+      func = scope.lookup(symbol_t::FUNCTION, name);
     if (! func)
       throw_(calc_error, _("Calling unknown function '%1'") << name);
 
