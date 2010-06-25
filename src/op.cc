@@ -226,26 +226,16 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
   case O_LOOKUP: {
     context_scope_t context_scope(scope, value_t::SCOPE);
+    bool scope_error = true;
     if (value_t obj = left()->calc(context_scope, locus, depth + 1)) {
-      if (obj.is_scope()) {
-        if (obj.as_scope() == NULL) {
-          throw_(calc_error, _("Left operand of . operator is NULL"));
-        } else {
-          scope_t& objscope(*obj.as_scope());
-          if (ptr_op_t member =
-              objscope.lookup(symbol_t::FUNCTION, right()->as_ident())) {
-            result = member->calc(objscope, NULL, depth + 1);
-            break;
-          }
-        }
+      if (obj.is_scope() && obj.as_scope() != NULL) {
+        bind_scope_t bound_scope(scope, *obj.as_scope());
+        result = right()->calc(bound_scope, locus, depth + 1);
+        scope_error = false;
       }
     }
-    if (right()->kind != IDENT)
-      throw_(calc_error,
-             _("Right operand of . operator must be an identifier"));
-    else
-      throw_(calc_error,
-             _("Failed to lookup member '%1'") << right()->as_ident());
+    if (scope_error)
+      throw_(calc_error, _("Left operand does not evaluate to an object"));
     break;
   }
 
