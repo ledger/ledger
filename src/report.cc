@@ -559,15 +559,8 @@ value_t report_t::fn_format(call_scope_t& args)
 
 value_t report_t::fn_print(call_scope_t& args)
 {
-  std::ostream& out(output_stream);
-  bool          first = true;
-  for (std::size_t i = 0; i < args.size(); i++) {
-    if (first)
-      first = false;
-    else
-      out << ' ';
-    args[i].print(out);
-  }
+  for (std::size_t i = 0; i < args.size(); i++)
+    args[i].print(output_stream);
   return true;
 }
 
