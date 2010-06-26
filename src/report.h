@@ -394,6 +394,7 @@ public:
          "   ansify_if(partial_account(options.flat), blue if color),"
          "             bold if should_bold))\n%/"
          "%$1\n%/"
+         "%(prepend_width ? \" \" * prepend_width : \"\")"
          "--------------------\n");
     });
 
@@ -451,6 +452,7 @@ public:
          "  %(!options.flat ? depth_spacer : \"\")"
          "%-(ansify_if(partial_account(options.flat), blue if color))\n"
          "%/%$1 %$2 %$3 %$4\n%/"
+         "%(prepend_width ? \" \" * prepend_width : \"\")"
          "------------ ------------ ------------ -----\n");
     });
 
@@ -469,6 +471,7 @@ public:
          "    %(!options.flat ? depth_spacer : \"\")"
          "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
          "%$1  %$2    %$3\n%/"
+         "%(prepend_width ? \" \" * prepend_width : \"\")"
          "----------------  ----------------    ---------\n");
     });
 
