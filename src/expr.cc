@@ -171,6 +171,8 @@ value_t source_command(call_scope_t& args)
   if (args.has(0)) {
     stream.reset(new ifstream(path(args.get<string>(0))));
     in = stream.get();
+  } else {
+    in = &std::cin;
   }
 
   symbol_scope_t file_locals(args);
