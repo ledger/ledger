@@ -1,6 +1,4 @@
 
-===============================================================================
-
                                  README FIRST!!!
 
 To build this code after doing a Git clone, run:
@@ -11,18 +9,9 @@ If you try to configure and build on your own, you are almost certainly going
 to run into problems.  In future, you can run this command again and again,
 and it will keep you updated to the very latest version.
 
-===============================================================================
-
-                           NOTE FOR MAC OS X USERS
-
-To build and install Ledger on the Mac requires several dependencies.  If you
-are a MacPorts user, you can install these dependencies very simply using:
-
-    $ ./acprep dependencies
-
-Once this is done, I recommend building both debug and optimized versions of
-Ledger, in a subdirectory of your source tree named 'build' (which acprep will
-manage for you, you simply need to make it):
+I further recommend building both debug and optimized versions of Ledger, in a
+subdirectory of your source tree named 'build' (which acprep will manage for
+you, you simply need to create it):
 
     $ mkdir build
     $ ./acprep opt make
@@ -34,6 +23,12 @@ available for testing and more useful bug reports.
 ===============================================================================
 
                    IF YOU HAVE CONFIGURE OR BUILD PROBLEMS
+
+To build and install Ledger requires several dependencies on various
+platforms.  You can install these dependencies very simply for most of them
+using:
+
+    $ ./acprep dependencies
 
 The first order of business if acprep update doesn't work is to find out where
 things went wrong.  So follow these steps to produce a bug report I can track
