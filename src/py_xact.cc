@@ -82,7 +82,7 @@ using namespace boost::python;
 
 void export_xact()
 {
-  class_< xact_base_t, bases<item_t> > ("TransactionBase")
+  class_< xact_base_t, bases<item_t>, noncopyable > ("TransactionBase", no_init)
     .add_property("journal",
                   make_getter(&xact_base_t::journal,
                               return_internal_reference<>()),
