@@ -145,26 +145,8 @@ void report_t::normalize_options(const string& verb)
   // using -b or -e).  Then, if no _duration_ was specified (such as monthly),
   // then ignore the period since the begin/end are the only interesting
   // details.
-  if (HANDLED(period_)) {
-    date_interval_t interval(HANDLER(period_).str());
-
-    optional<date_t> begin = interval.begin();
-    optional<date_t> end   = interval.end();
-
-    if (! HANDLED(begin_) && begin) {
-      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
-      HANDLER(limit_).on(string("?normalize"), predicate);
-    }
-    if (! HANDLED(end_) && end) {
-      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
-      HANDLER(limit_).on(string("?normalize"), predicate);
-    }
-
-    if (! interval.duration)
-      HANDLER(period_).off();
-    else if (! HANDLED(sort_all_))
-      HANDLER(sort_xacts_).on_only(string("?normalize"));
-  }
+  if (HANDLED(period_))
+    normalize_period();
 
   // If -j or -J were specified, set the appropriate format string now so as
   // to avoid option ordering issues were we to have done it during the
@@ -254,24 +236,52 @@ void report_t::normalize_options(const string& verb)
   }
 }
 
+void report_t::normalize_period()
+{
+  date_interval_t interval(HANDLER(period_).str());
+
+  optional<date_t> begin = interval.begin();
+  optional<date_t> end   = interval.end();
+
+  if (! HANDLED(begin_) && begin) {
+    string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
+    HANDLER(limit_).on(string("?normalize"), predicate);
+  }
+  if (! HANDLED(end_) && end) {
+    string predicate = "date<[" + to_iso_extended_string(*end) + "]";
+    HANDLER(limit_).on(string("?normalize"), predicate);
+  }
+
+  if (! interval.duration)
+    HANDLER(period_).off();
+  else if (! HANDLED(sort_all_))
+    HANDLER(sort_xacts_).on_only(string("?normalize"));
+}
+
 void report_t::parse_query_args(const value_t& args, const string& whence)
 {
   query_t query(args, what_to_keep());
-  if (query) {
-    HANDLER(limit_).on(whence, query.text());
 
-    DEBUG("report.predicate",
-          "Predicate = " << HANDLER(limit_).str());
+  if (query.has_query(query_t::QUERY_LIMIT)) {
+    HANDLER(limit_).on(whence, query.get_query(query_t::QUERY_LIMIT));
+    DEBUG("report.predicate", "Limit predicate   = " << HANDLER(limit_).str());
   }
 
-  if (query.tokens_remaining()) {
-    query.parse_again();
-    if (query) {
-      HANDLER(display_).on(whence, query.text());
+  if (query.has_query(query_t::QUERY_SHOW)) {
+    HANDLER(display_).on(whence, query.get_query(query_t::QUERY_SHOW));
+    DEBUG("report.predicate", "Display predicate = " << HANDLER(display_).str());
+  }
 
-      DEBUG("report.predicate",
-            "Display predicate = " << HANDLER(display_).str());
-    }
+  if (query.has_query(query_t::QUERY_BOLD)) {
+    HANDLER(bold_if_).set_expr(whence, query.get_query(query_t::QUERY_BOLD));
+    DEBUG("report.predicate", "Bolding predicate = " << HANDLER(bold_if_).str());
+  }
+
+  if (query.has_query(query_t::QUERY_FOR)) {
+    HANDLER(period_).on(whence, query.get_query(query_t::QUERY_FOR));
+    DEBUG("report.predicate", "Report period     = " << HANDLER(period_).str());
+
+    normalize_period();         // it needs normalization
   }
 }  
 
@@ -428,6 +438,15 @@ void report_t::commodities_report(post_handler_ptr handler)
   session.journal->clear_xdata();
 }
 
+value_t report_t::display_value(const value_t& val)
+{
+  value_t temp(val.strip_annotations(what_to_keep()));
+  if (HANDLED(base))
+    return temp;
+  else
+    return temp.unreduced();
+}
+
 value_t report_t::fn_amount_expr(call_scope_t& scope)
 {
   return HANDLER(amount_).expr.calc(scope);
@@ -446,6 +465,14 @@ value_t report_t::fn_display_amount(call_scope_t& scope)
 value_t report_t::fn_display_total(call_scope_t& scope)
 {
   return HANDLER(display_total_).expr.calc(scope);
+}
+
+value_t report_t::fn_should_bold(call_scope_t& scope)
+{
+  if (HANDLED(bold_if_))
+    return HANDLER(bold_if_).expr.calc(scope);
+  else
+    return false;
 }
 
 value_t report_t::fn_market(call_scope_t& args)
@@ -533,11 +560,7 @@ value_t report_t::fn_print(call_scope_t& args)
 
 value_t report_t::fn_scrub(call_scope_t& args)
 {
-  value_t temp(args.value().strip_annotations(what_to_keep()));
-  if (HANDLED(base))
-    return temp;
-  else
-    return temp.unreduced();
+  return display_value(args.value());
 }
 
 value_t report_t::fn_rounded(call_scope_t& args)
@@ -900,6 +923,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(base);
     else OPT_ALT(basis, cost);
     else OPT_(begin_);
+    else OPT(bold_if_);
     else OPT(budget);
     else OPT(by_payee);
     break;
@@ -955,6 +979,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'i':
     OPT(invert);
+    else OPT(inject_);
     break;
   case 'j':
     OPT_CH(amount_data);
@@ -1220,6 +1245,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_scrub);
       else if (is_eq(p, "strip"))
         return MAKE_FUNCTOR(report_t::fn_strip);
+      else if (is_eq(p, "should_bold"))
+        return MAKE_FUNCTOR(report_t::fn_should_bold);
       break;
 
     case 't':

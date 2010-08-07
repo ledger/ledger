@@ -602,7 +602,7 @@ inline scope_t * call_scope_t::get<scope_t *>(std::size_t index, bool) {
 template <>
 inline expr_t::ptr_op_t
 call_scope_t::get<expr_t::ptr_op_t>(std::size_t index, bool) {
-  return resolve(index, value_t::ANY).as_any<expr_t::ptr_op_t>();
+  return args[index].as_any<expr_t::ptr_op_t>();
 }
 
 class value_scope_t : public scope_t

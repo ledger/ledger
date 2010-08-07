@@ -5,7 +5,7 @@ reg -B
    Expenses:Bank:Fees                           2.73
    Liabilities:Mastercard                          
 >>>1
-09-Jun-03 Westjet               Expen:Transportati:Air   676.017377   676.017377
+09-Jun-03 Westjet               Expe:Transportatio:Air   676.017377   676.017377
                                 Expenses:Bank:Fees             2.73   678.747377
                                 Liabilities:Mastercard  -678.747377            0
 >>>2

@@ -626,7 +626,7 @@ void account_t::xdata_t::details_t::update(post_t& post,
 
   if (gather_all) {
     accounts_referenced.insert(post.account->fullname());
-    payees_referenced.insert(post.xact->payee);
+    payees_referenced.insert(post.payee());
   }
 }
 

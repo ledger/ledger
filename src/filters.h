@@ -813,19 +813,19 @@ public:
   }
 };
 
-class dow_posts : public subtotal_posts
+class day_of_week_posts : public subtotal_posts
 {
   posts_list days_of_the_week[7];
 
-  dow_posts();
+  day_of_week_posts();
 
 public:
-  dow_posts(post_handler_ptr handler, expr_t& amount_expr)
+  day_of_week_posts(post_handler_ptr handler, expr_t& amount_expr)
     : subtotal_posts(handler, amount_expr) {
-    TRACE_CTOR(dow_posts, "post_handler_ptr, bool");
+    TRACE_CTOR(day_of_week_posts, "post_handler_ptr, bool");
   }
-  virtual ~dow_posts() throw() {
-    TRACE_DTOR(dow_posts);
+  virtual ~day_of_week_posts() throw() {
+    TRACE_DTOR(day_of_week_posts);
   }
 
   virtual void flush();
@@ -882,14 +882,16 @@ class budget_posts : public generate_posts
 #define BUDGET_WRAP_VALUES 0x04
 
   uint_least8_t flags;
+  date_t        terminus;
 
   budget_posts();
 
 public:
   budget_posts(post_handler_ptr handler,
-               uint_least8_t _flags = BUDGET_BUDGETED)
-    : generate_posts(handler), flags(_flags) {
-    TRACE_CTOR(budget_posts, "post_handler_ptr, uint_least8_t");
+               date_t           _terminus,
+               uint_least8_t    _flags = BUDGET_BUDGETED)
+    : generate_posts(handler), flags(_flags), terminus(_terminus) {
+    TRACE_CTOR(budget_posts, "post_handler_ptr, date_t, uint_least8_t");
   }
   virtual ~budget_posts() throw() {
     TRACE_DTOR(budget_posts);
@@ -897,6 +899,7 @@ public:
 
   void report_budget_items(const date_t& date);
 
+  virtual void flush();
   virtual void operator()(post_t& post);
 };
 
@@ -927,6 +930,26 @@ class forecast_posts : public generate_posts
     pred.mark_uncompiled();
     item_handler<post_t>::clear();
   }
+};
+
+class inject_posts : public item_handler<post_t>
+{
+  typedef std::set<xact_t *>                       tag_injected_set;
+  typedef std::pair<account_t *, tag_injected_set> tag_mapping_pair;
+  typedef std::pair<string, tag_mapping_pair>      tags_list_pair;
+
+  std::list<tags_list_pair> tags_list;
+  temporaries_t             temps;
+
+ public:
+  inject_posts(post_handler_ptr handler, const string& tag_list,
+               account_t * master);
+
+  virtual ~inject_posts() throw() {
+    TRACE_DTOR(inject_posts);
+  }
+
+  virtual void operator()(post_t& post);
 };
 
 //////////////////////////////////////////////////////////////////////

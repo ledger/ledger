@@ -24,13 +24,13 @@ reg --empty
                                 Assets:Cash                 $-10.00            0
 08-Jan-01 January               Expenses:One:Books           $10.00       $10.00
                                 Expenses:One:Two:Books       $10.00       $20.00
-                                Expe:On:Tw:Three:Books       $10.00       $30.00
+                                Ex:One:Two:Three:Books       $10.00       $30.00
                                 Assets:Cash                 $-30.00            0
 08-Jan-01 January               Assets:Cash                       0            0
                                 Income:Books                      0            0
 08-Jan-01 January               Assets:Cash                  $30.00       $30.00
                                 Income:One:Books            $-10.00       $20.00
                                 Income:One:Two:Books        $-10.00       $10.00
-                                Inc:On:Two:Three:Books      $-10.00            0
+                                In:One:Two:Three:Books      $-10.00            0
 >>>2
 === 0

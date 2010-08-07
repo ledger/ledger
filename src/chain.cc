@@ -67,8 +67,8 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
   // future balance.
 
   if (report.budget_flags != BUDGET_NO_BUDGET) {
-    budget_posts * budget_handler = new budget_posts(handler,
-                                                     report.budget_flags);
+    budget_posts * budget_handler =
+      new budget_posts(handler, report.terminus.date(), report.budget_flags);
     budget_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(budget_handler);
 
@@ -202,8 +202,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     // period_posts is like subtotal_posts, but it subtotals according to time
     // periods rather than totalling everything.
     //
-    // dow_posts is like period_posts, except that it reports all the posts
-    // that fall on each subsequent day of the week.
+    // day_of_week_posts is like period_posts, except that it reports
+    // all the posts that fall on each subsequent day of the week.
     if (report.HANDLED(equity))
       handler.reset(new posts_as_equity(handler, expr));
     else if (report.HANDLED(subtotal))
@@ -211,7 +211,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   }
 
   if (report.HANDLED(dow))
-    handler.reset(new dow_posts(handler, expr));
+    handler.reset(new day_of_week_posts(handler, expr));
   else if (report.HANDLED(by_payee))
     handler.reset(new by_payee_posts(handler, expr));
 
@@ -257,6 +257,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   // that xact will be printed.
   if (report.HANDLED(related))
     handler.reset(new related_posts(handler, report.HANDLED(related_all)));
+
+  if (report.HANDLED(inject_))
+    handler.reset(new inject_posts(handler, report.HANDLED(inject_).str(),
+                                   report.session.journal->master));
 
   return handler;
 }

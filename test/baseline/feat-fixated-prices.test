@@ -22,3 +22,15 @@ P 1990/02/15 12:00:00 FOO $3
 90-Feb-20 Payee                 Expenses:Gas                   $300         $800
 >>>2
 === 0
+reg
+<<<
+fixed XCD $0.374531835206
+
+2008/04/08 KFC
+    Expenses:Food                          XCD 43.00
+    Assets:Cash
+
+end fixed
+>>>
+08-Apr-08 KFC                   Expenses:Food             XCD 43.00    XCD 43.00
+                                Assets:Cash              XCD -43.00            0

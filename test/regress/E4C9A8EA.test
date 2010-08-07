@@ -11,7 +11,7 @@ reg
   Expenses:Financial:Fees
 >>>1
 07-Dec-31 Cost basis for: RED.. As:In:RBC-:Account-RSP     4.00 RHT     4.00 RHT
-                                Equ:Opening-Balan:Cost  -689.87 CAD  -689.87 CAD
+                                Eq:Opening-Balanc:Cost  -689.87 CAD  -689.87 CAD
                                                                         4.00 RHT
 08-Jan-03 Sell -- RHT -- RED .. As:In:RBC-:Account-RSP    -4.00 RHT  -689.87 CAD
                                 Ex:Financi:Commissions     9.95 USD  -689.87 CAD

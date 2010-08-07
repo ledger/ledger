@@ -126,6 +126,7 @@ public:
   }
 
   void normalize_options(const string& verb);
+  void normalize_period();
   void parse_query_args(const value_t& args, const string& whence);
 
   void posts_report(post_handler_ptr handler);
@@ -134,10 +135,13 @@ public:
   void accounts_report(acct_handler_ptr handler);
   void commodities_report(post_handler_ptr handler);
 
+  value_t display_value(const value_t& val);
+
   value_t fn_amount_expr(call_scope_t& scope);
   value_t fn_total_expr(call_scope_t& scope);
   value_t fn_display_amount(call_scope_t& scope);
   value_t fn_display_total(call_scope_t& scope);
+  value_t fn_should_bold(call_scope_t& scope);
   value_t fn_market(call_scope_t& scope);
   value_t fn_get_at(call_scope_t& scope);
   value_t fn_is_seq(call_scope_t& scope);
@@ -260,6 +264,7 @@ public:
     HANDLER(group_by_).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
+    HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
     HANDLER(lot_dates).report(out);
@@ -376,9 +381,13 @@ public:
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
       on(none,
-         "%(justify(scrub(display_total), 20, 20 + prepend_width, true, color))"
+         "%(ansify_if("
+         "  justify(scrub(display_total), 20, 20 + prepend_width, true, color),"
+         "            bold if should_bold))"
          "  %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+         "%-(ansify_if("
+         "   ansify_if(partial_account(options.flat), blue if color),"
+         "             bold if should_bold))\n%/"
          "%$1\n%/"
          "--------------------\n");
     });
@@ -401,6 +410,18 @@ public:
       string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
       parent->HANDLER(limit_).on(string("--begin"), predicate);
     });
+
+  OPTION__
+  (report_t, bold_if_,
+   expr_t expr;
+   CTOR(report_t, bold_if_) {}
+   void set_expr(const optional<string>& whence, const string& str) {
+     expr = str;
+     on(whence, str);
+   }
+   DO_(args) {
+     set_expr(args.get<string>(0), args.get<string>(1));
+   });
 
   OPTION_(report_t, budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED;
@@ -616,6 +637,7 @@ public:
     });
 
   OPTION(report_t, head_);
+  OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {
       parent->HANDLER(amount_).set_expr(string("--invert"), "-amount");
@@ -804,20 +826,37 @@ public:
 
   OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
       on(none,
-         "%(ansify_if(justify(format_date(date), date_width), green "
-         "    if color & date > today))"
-         " %(ansify_if(justify(truncated(payee, payee_width), payee_width), "
-         "    bold if color & !cleared & actual))"
-         " %(ansify_if(justify(truncated(display_account, account_width, "
-         " abbrev_len), account_width), blue if color))"
-         " %(justify(scrub(display_amount), amount_width, "
-         "    3 + meta_width + date_width + payee_width + account_width"
-         "      + amount_width + prepend_width, true, color))"
-         " %(justify(scrub(display_total), total_width, "
-         "    4 + meta_width + date_width + payee_width + account_width"
-         "      + amount_width + total_width + prepend_width, true, color))\n%/"
-         "%(justify(\" \", 2 + date_width + payee_width))"
-         "%$3 %$4 %$5\n");
+         "%(ansify_if("
+         "  ansify_if(justify(format_date(date), date_width),"
+         "            green if color and date > today),"
+         "            bold if should_bold))"
+         " %(ansify_if("
+         "   ansify_if(justify(truncated(payee, payee_width), payee_width), "
+         "             bold if color and !cleared and actual),"
+         "             bold if should_bold))"
+         " %(ansify_if("
+         "   ansify_if(justify(truncated(display_account, account_width, "
+         "                               abbrev_len), account_width),"
+         "             blue if color),"
+         "             bold if should_bold))"
+         " %(ansify_if("
+         "   justify(scrub(display_amount), amount_width, "
+         "           3 + meta_width + date_width + payee_width"
+         "             + account_width + amount_width + prepend_width,"
+         "           true, color),"
+         "           bold if should_bold))"
+         " %(ansify_if("
+         "   justify(scrub(display_total), total_width, "
+         "           4 + meta_width + date_width + payee_width"
+         "             + account_width + amount_width + total_width"
+         "             + prepend_width, true, color),"
+         "           bold if should_bold))\n%/"
+         "%(justify(\" \", date_width))"
+         " %(ansify_if("
+         "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+         "                     payee_width), payee_width),"
+         "             bold if should_bold))"
+         " %$3 %$4 %$5\n");
     });
 
   OPTION(report_t, related); // -r

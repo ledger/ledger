@@ -166,15 +166,27 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 
   commodity_t * new_comm;
 
-  bool keep_price = (what_to_keep.keep_price      &&
-                     (! what_to_keep.only_actuals ||
-                      ! details.has_flags(ANNOTATION_PRICE_CALCULATED)));
-  bool keep_date  = (what_to_keep.keep_date       &&
-                     (! what_to_keep.only_actuals ||
-                      ! details.has_flags(ANNOTATION_DATE_CALCULATED)));
-  bool keep_tag   = (what_to_keep.keep_tag        &&
-                     (! what_to_keep.only_actuals ||
-                      ! details.has_flags(ANNOTATION_TAG_CALCULATED)));
+  bool keep_price =
+    ((what_to_keep.keep_price ||
+      (details.has_flags(ANNOTATION_PRICE_FIXATED) &&
+       has_flags(COMMODITY_SAW_ANN_PRICE_FLOAT) &&
+       has_flags(COMMODITY_SAW_ANN_PRICE_FIXATED))) &&
+     (! what_to_keep.only_actuals ||
+      ! details.has_flags(ANNOTATION_PRICE_CALCULATED)));
+  bool keep_date  =
+    (what_to_keep.keep_date       &&
+     (! what_to_keep.only_actuals ||
+      ! details.has_flags(ANNOTATION_DATE_CALCULATED)));
+  bool keep_tag   =
+    (what_to_keep.keep_tag        &&
+     (! what_to_keep.only_actuals ||
+      ! details.has_flags(ANNOTATION_TAG_CALCULATED)));
+
+  DEBUG("commodity.annotated.strip",
+        "Reducing commodity " << *this << std::endl
+         << "  keep price " << keep_price << " "
+         << "  keep date "  << keep_date << " "
+         << "  keep tag "   << keep_tag);
 
   if ((keep_price && details.price) ||
       (keep_date  && details.date)  ||
@@ -184,12 +196,24 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
       (referent(), annotation_t(keep_price ? details.price : none,
                                 keep_date  ? details.date  : none,
                                 keep_tag   ? details.tag   : none));
-  } else {
-    new_comm = &referent();
+
+    // Transfer over any relevant annotation flags, as they still apply.
+    if (new_comm->annotated) {
+      annotation_t& new_details(as_annotated_commodity(*new_comm).details);
+      if (keep_price)
+        new_details.add_flags(details.flags() &
+                              (ANNOTATION_PRICE_CALCULATED |
+                               ANNOTATION_PRICE_FIXATED));
+      if (keep_date)
+        new_details.add_flags(details.flags() & ANNOTATION_DATE_CALCULATED);
+      if (keep_tag)
+        new_details.add_flags(details.flags() & ANNOTATION_TAG_CALCULATED);
+    }
+
+    return *new_comm;
   }
 
-  assert(new_comm);
-  return *new_comm;
+  return referent();
 }
 
 void annotated_commodity_t::write_annotations

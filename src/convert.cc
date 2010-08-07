@@ -97,18 +97,20 @@ value_t convert_command(call_scope_t& args)
     }
       
     bool matched = false;
-    post_map_t::iterator i = post_map.find(- xact->posts.front()->amount);
-    if (i != post_map.end()) {
-      std::list<post_t *>& post_list((*i).second);
-      foreach (post_t * post, post_list) {
-        if (xact->code && post->xact->code &&
-            *xact->code == *post->xact->code) {
-          matched = true;
-          break;
-        }
-        else if (xact->actual_date() == post->actual_date()) {
-          matched = true;
-          break;
+    if (! xact->posts.front()->amount.is_null()) {
+      post_map_t::iterator i = post_map.find(- xact->posts.front()->amount);
+      if (i != post_map.end()) {
+        std::list<post_t *>& post_list((*i).second);
+        foreach (post_t * post, post_list) {
+          if (xact->code && post->xact->code &&
+              *xact->code == *post->xact->code) {
+            matched = true;
+            break;
+          }
+          else if (xact->actual_date() == post->actual_date()) {
+            matched = true;
+            break;
+          }
         }
       }
     }
