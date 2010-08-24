@@ -309,10 +309,16 @@ AC_CACHE_CHECK(
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
         [[#include <boost/iostreams/device/file_descriptor.hpp> 
-          #include <boost/iostreams/stream.hpp>]],
+          #include <boost/iostreams/stream.hpp>
+          #include <boost/version.hpp>]],
         [[namespace io = boost::iostreams; 
           typedef io::stream<io::file_descriptor_sink> ofdstream; 
-          ofdstream outstream(1);]])],
+#if BOOST_VERSION >= 104400
+          ofdstream outstream(1, io::never_close_handle);
+#else // BOOST_VERSION >= 104400
+          ofdstream outstream(1);
+#endif // BOOST_VERSION >= 104400
+        ]])],
      [boost_iostreams_cpplib_avail_cv_=true],
      [boost_iostreams_cpplib_avail_cv_=false])
    AC_LANG_POP

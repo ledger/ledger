@@ -102,7 +102,11 @@ namespace {
     else {                      // parent
       close(pfd[0]);
       typedef iostreams::stream<iostreams::file_descriptor_sink> fdstream;
+#if BOOST_VERSION >= 104400
+      *os = new fdstream(pfd[1], iostreams::never_close_handle);
+#else // BOOST_VERSION >= 104400
       *os = new fdstream(pfd[1]);
+#endif // BOOST_VERSION >= 104400
     }
     return pfd[1];
 #else

@@ -160,7 +160,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
-#include <boost/ptr_container/serialize_ptr_deque.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -194,6 +193,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
+#include <boost/ptr_container/serialize_ptr_deque.hpp>
 
 namespace boost {
 namespace serialization {
@@ -238,6 +238,10 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 
 } // namespace serialization
 } // namespace boost
+
+#else // HAVE_BOOST_SERIALIZATION
+
+#include <boost/ptr_container/ptr_deque.hpp>
 
 #endif // HAVE_BOOST_SERIALIZATION
 
