@@ -42,8 +42,10 @@ void push_sort_value(std::list<sort_value_t>& sort_values,
                      expr_t::ptr_op_t node, scope_t& scope)
 {
   if (node->kind == expr_t::op_t::O_CONS) {
-    push_sort_value(sort_values, node->left(), scope);
-    push_sort_value(sort_values, node->right(), scope);
+    while (node && node->kind == expr_t::op_t::O_CONS) {
+      push_sort_value(sort_values, node->left(), scope);
+      node = node->right();
+    }
   } else {
     bool inverted = false;
 
@@ -54,7 +56,7 @@ void push_sort_value(std::list<sort_value_t>& sort_values,
 
     sort_values.push_back(sort_value_t());
     sort_values.back().inverted = inverted;
-    sort_values.back().value    = expr_t(node).calc(scope).simplified();
+    sort_values.back().value = expr_t(node).calc(scope).simplified();
 
     if (sort_values.back().value.is_null())
       throw_(calc_error,

@@ -191,8 +191,6 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     assert(left()->kind == O_CALL);
 
     ptr_op_t sym = left()->right();
-    if (sym->kind == O_SEQ)
-      sym = sym->left();
 
     symbol_scope_t call_scope(call_args);
 
@@ -242,8 +240,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   case O_CALL: {
     call_scope_t call_args(scope, locus, depth);
     if (has_right())
-      call_args.set_args(split_cons_expr(right()->kind == O_SEQ ?
-                                         right()->left() : right()));
+      call_args.set_args(split_cons_expr(right()));
 
     ptr_op_t func = left();
     const string& name(func->as_ident());
@@ -474,6 +471,9 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 
   string symbol;
 
+  if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
+    out << '(';
+
   switch (kind) {
   case VALUE:
     as_value().dump(out, context.relaxed);
@@ -488,118 +488,94 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_NOT:
-    out << "!(";
+    out << "! ";
     if (left() && left()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_NEG:
-    out << "-(";
+    out << "- ";
     if (left() && left()->print(out, context))
       found = true;
-    out << ")";
     break;
 
   case O_ADD:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " + ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_SUB:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " - ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_MUL:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " * ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_DIV:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " / ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
 
   case O_EQ:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " == ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_LT:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " < ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_LTE:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " <= ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_GT:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " > ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_GTE:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " >= ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
 
   case O_AND:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " & ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
   case O_OR:
-    out << "(";
     if (left() && left()->print(out, context))
       found = true;
     out << " | ";
     if (has_right() && right()->print(out, context))
       found = true;
-    out << ")";
     break;
 
   case O_QUERY:
@@ -623,15 +599,13 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     break;
 
   case O_SEQ:
-    out << "(";
     found = print_seq(out, this, context);
-    out << ")";
     break;
 
   case O_DEFINE:
     if (left() && left()->print(out, context))
       found = true;
-    out << " := ";
+    out << " = ";
     if (has_right() && right()->print(out, context))
       found = true;
     break;
@@ -648,7 +622,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     if (left() && left()->print(out, context))
       found = true;
     if (has_right()) {
-      if (right()->kind == O_SEQ) {
+      if (right()->kind == O_CONS) {
         if (right()->print(out, context))
           found = true;
       } else {
@@ -675,6 +649,9 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
     assert(false);
     break;
   }
+
+  if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
+    out << ')';
 
   if (! symbol.empty()) {
     if (commodity_pool_t::current_pool->find(symbol))

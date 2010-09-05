@@ -561,6 +561,7 @@ value_t report_t::fn_print(call_scope_t& args)
 {
   for (std::size_t i = 0; i < args.size(); i++)
     args[i].print(output_stream);
+  static_cast<std::ostream&>(output_stream) << std::endl;
   return true;
 }
 

@@ -65,9 +65,6 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
 
       push_token(tok);          // let the parser see it again
       node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
-
-      if (node->has_right() && node->right()->kind == op_t::O_CONS)
-        node->set_right(node->right()->left());
     } else {
       push_token(tok);
     }
@@ -78,12 +75,6 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
     node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL)
                             .minus_flags(PARSE_SINGLE));
     tok = next_token(in, tflags, ')');
-
-    if (node && node->kind == op_t::O_CONS) {
-      ptr_op_t prev(node);
-      node = new op_t(op_t::O_SEQ);
-      node->set_left(prev);
-    }
     break;
 
   default:
@@ -437,32 +428,36 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
   ptr_op_t node(parse_querycolon_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+    ptr_op_t next;
+    while (true) {
+      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
-    if (tok.kind == token_t::COMMA || tok.kind == token_t::SEMI) {
-      bool comma_op = tok.kind == token_t::COMMA;
+      if (tok.kind == token_t::COMMA || tok.kind == token_t::SEMI) {
+        bool comma_op = tok.kind == token_t::COMMA;
 
-      ptr_op_t prev(node);
-      node = new op_t(comma_op ? op_t::O_CONS : op_t::O_SEQ);
-      node->set_left(prev);
-      node->set_right(parse_value_expr(in, tflags));
-      if (! node->right())
-        throw_(parse_error,
-               _("%1 operator not followed by argument") << tok.symbol);
+        if (! next) {
+          ptr_op_t prev(node);
+          node = new op_t(comma_op ? op_t::O_CONS : op_t::O_SEQ);
+          node->set_left(prev);
 
-      tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-    }
+          next = node;
+        }
 
-    if (tok.kind != token_t::TOK_EOF) {
-      if (tflags.has_flags(PARSE_PARTIAL))
+        token_t& ntok = next_token(in, tflags);
+        push_token(ntok);
+        if (ntok.kind == token_t::RPAREN)
+          break;
+
+        ptr_op_t chain(new op_t(comma_op ? op_t::O_CONS : op_t::O_SEQ));
+        chain->set_left(parse_querycolon_expr(in, tflags));
+
+        next->set_right(chain);
+        next = chain;
+      } else {
         push_token(tok);
-      else
-        tok.unexpected();
+        break;
+      }
     }
-  }
-  else if (! tflags.has_flags(PARSE_PARTIAL) &&
-           ! tflags.has_flags(PARSE_SINGLE)) {
-    throw_(parse_error, _("Failed to parse value expression"));
   }
 
   return node;
