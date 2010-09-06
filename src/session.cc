@@ -262,6 +262,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 's':
     OPT(strict);
     break;
+  case 't':
+    OPT(time_colon);
+    break;
   }
   return NULL;
 }

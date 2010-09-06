@@ -177,6 +177,7 @@ protected:
 #define COMMODITY_SAW_ANNOTATED          0x200
 #define COMMODITY_SAW_ANN_PRICE_FLOAT    0x400
 #define COMMODITY_SAW_ANN_PRICE_FIXATED  0x800
+#define COMMODITY_STYLE_TIME_COLON       0x1000
 
     string                     symbol;
     amount_t::precision_t      precision;
@@ -251,6 +252,7 @@ protected:
 
 public:
   static bool decimal_comma_by_default;
+  static bool time_colon_by_default;
 
   virtual ~commodity_t() {
     TRACE_DTOR(commodity_t);

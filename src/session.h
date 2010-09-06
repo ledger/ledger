@@ -89,6 +89,7 @@ public:
     HANDLER(cache_).report(out);
     HANDLER(download).report(out);
     HANDLER(decimal_comma).report(out);
+    HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(master_account_).report(out);
@@ -111,6 +112,10 @@ public:
 
   OPTION_(session_t, decimal_comma, DO() {
       commodity_t::decimal_comma_by_default = true;
+    });
+
+  OPTION_(session_t, time_colon, DO() {
+      commodity_t::time_colon_by_default = true;
     });
 
   OPTION__

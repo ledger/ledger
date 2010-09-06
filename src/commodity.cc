@@ -39,6 +39,7 @@
 namespace ledger {
 
 bool commodity_t::decimal_comma_by_default = false;
+bool commodity_t::time_colon_by_default = false;
 
 void commodity_t::history_t::add_price(commodity_t&      source,
                                        const datetime_t& date,
