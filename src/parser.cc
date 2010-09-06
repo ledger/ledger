@@ -419,32 +419,10 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 }
 
 expr_t::ptr_op_t
-expr_t::parser_t::parse_lambda_expr(std::istream& in,
-                                    const parse_flags_t& tflags) const
-{
-  ptr_op_t node(parse_querycolon_expr(in, tflags));
-
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-
-    if (tok.kind == token_t::ARROW) {
-      ptr_op_t prev(node);
-      node = new op_t(op_t::O_LAMBDA);
-      node->set_left(prev);
-      node->set_right(parse_querycolon_expr(in, tflags));
-    } else {
-      push_token(tok);
-    }
-  }
-
-  return node;
-}
-
-expr_t::ptr_op_t
 expr_t::parser_t::parse_comma_expr(std::istream& in,
                                    const parse_flags_t& tflags) const
 {
-  ptr_op_t node(parse_lambda_expr(in, tflags));
+  ptr_op_t node(parse_querycolon_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     ptr_op_t next;
@@ -466,7 +444,7 @@ expr_t::parser_t::parse_comma_expr(std::istream& in,
           break;
 
         ptr_op_t chain(new op_t(op_t::O_CONS));
-        chain->set_left(parse_lambda_expr(in, tflags));
+        chain->set_left(parse_querycolon_expr(in, tflags));
 
         next->set_right(chain);
         next = chain;
@@ -481,10 +459,32 @@ expr_t::parser_t::parse_comma_expr(std::istream& in,
 }
 
 expr_t::ptr_op_t
-expr_t::parser_t::parse_assign_expr(std::istream& in,
+expr_t::parser_t::parse_lambda_expr(std::istream& in,
                                     const parse_flags_t& tflags) const
 {
   ptr_op_t node(parse_comma_expr(in, tflags));
+
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+    token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+
+    if (tok.kind == token_t::ARROW) {
+      ptr_op_t prev(node);
+      node = new op_t(op_t::O_LAMBDA);
+      node->set_left(prev);
+      node->set_right(parse_querycolon_expr(in, tflags));
+    } else {
+      push_token(tok);
+    }
+  }
+
+  return node;
+}
+
+expr_t::ptr_op_t
+expr_t::parser_t::parse_assign_expr(std::istream& in,
+                                    const parse_flags_t& tflags) const
+{
+  ptr_op_t node(parse_lambda_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
@@ -493,7 +493,7 @@ expr_t::parser_t::parse_assign_expr(std::istream& in,
       ptr_op_t prev(node);
       node = new op_t(op_t::O_DEFINE);
       node->set_left(prev);
-      node->set_right(parse_comma_expr(in, tflags));
+      node->set_right(parse_lambda_expr(in, tflags));
     } else {
       push_token(tok);
     }
