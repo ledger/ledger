@@ -104,6 +104,7 @@ public:
 
     O_DEFINE,
     O_LOOKUP,
+    O_LAMBDA,
     O_CALL,
     O_MATCH,
 

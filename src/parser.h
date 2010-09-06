@@ -93,6 +93,12 @@ class expr_t::parser_t : public noncopyable
                          const parse_flags_t& flags) const;
   ptr_op_t parse_querycolon_expr(std::istream& in,
                                  const parse_flags_t& flags) const;
+  ptr_op_t parse_comma_expr(std::istream& in,
+                            const parse_flags_t& flags) const;
+  ptr_op_t parse_lambda_expr(std::istream& in,
+                             const parse_flags_t& flags) const;
+  ptr_op_t parse_assign_expr(std::istream& in,
+                             const parse_flags_t& flags) const;
   ptr_op_t parse_value_expr(std::istream& in,
                             const parse_flags_t& flags) const;
 

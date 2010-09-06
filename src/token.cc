@@ -269,6 +269,15 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
 
   case '-':
     in.get(c);
+    c = static_cast<char>(in.peek());
+    if (c == '>') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = ARROW;
+      length = 2;
+      break;
+    }
     kind = MINUS;
     break;
   case '+':
@@ -329,7 +338,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
       length = 2;
       break;
     }
-    kind = DEFINE;
+    kind = ASSIGN;
     break;
 
   case '<':

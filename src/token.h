@@ -56,6 +56,8 @@ struct expr_t::token_t : public noncopyable
 
     LPAREN,                     // (
     RPAREN,                     // )
+    LBRACE,                     // {
+    RBRACE,                     // }
 
     EQUAL,                      // ==
     NEQUAL,                     // !=
@@ -64,7 +66,6 @@ struct expr_t::token_t : public noncopyable
     GREATER,                    // >
     GREATEREQ,                  // >=
 
-    DEFINE,                     // :=
     ASSIGN,                     // =
     MATCH,                      // =~
     NMATCH,                     // !~
@@ -72,6 +73,7 @@ struct expr_t::token_t : public noncopyable
     PLUS,                       // +
     STAR,                       // *
     SLASH,                      // /
+    ARROW,                      // ->
     KW_DIV,                     // div
 
     EXCLAM,                     // !, not

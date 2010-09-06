@@ -108,10 +108,15 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
       scope.define(symbol_t::FUNCTION, left()->as_ident(), right());
       break;
     case O_CALL:
-      if (left()->left()->is_ident())
-        scope.define(symbol_t::FUNCTION, left()->left()->as_ident(), this);
-      else
+      if (left()->left()->is_ident()) {
+        ptr_op_t node(new op_t(op_t::O_LAMBDA));
+        node->set_left(left()->right());
+        node->set_right(right());
+
+        scope.define(symbol_t::FUNCTION, left()->left()->as_ident(), node);
+      } else {
         throw_(compile_error, _("Invalid function definition"));
+      }
       break;
     default:
       throw_(compile_error, _("Invalid function definition"));
@@ -183,16 +188,12 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
   }
 
-  case O_DEFINE: {
+  case O_LAMBDA: {
     call_scope_t&  call_args(downcast<call_scope_t>(scope));
-    std::size_t    args_count = call_args.size();
-    std::size_t    args_index = 0;
-
-    assert(left()->kind == O_CALL);
-
-    ptr_op_t sym = left()->right();
-
+    std::size_t    args_count(call_args.size());
+    std::size_t    args_index(0);
     symbol_scope_t call_scope(call_args);
+    ptr_op_t       sym(left());
 
     for (; sym; sym = sym->has_right() ? sym->right() : NULL) {
       ptr_op_t varname = sym;
@@ -618,6 +619,14 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
       found = true;
     break;
 
+  case O_LAMBDA:
+    if (left() && left()->print(out, context))
+      found = true;
+    out << " -> ";
+    if (has_right() && right()->print(out, context))
+      found = true;
+    break;
+
   case O_CALL:
     if (left() && left()->print(out, context))
       found = true;
@@ -692,6 +701,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_LOOKUP: out << "O_LOOKUP"; break;
+  case O_LAMBDA: out << "O_LAMBDA"; break;
   case O_CALL:   out << "O_CALL"; break;
   case O_MATCH:  out << "O_MATCH"; break;
 
