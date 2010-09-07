@@ -270,6 +270,41 @@ endf "}}}
 
 " Helper functions {{{1
 
+function! LedgerSetTransactionState(char)
+  " modifies or sets the state of the transaction at the cursor,
+  " removing the state alltogether if a:char is empty
+  let head = search('^\d\S\+', 'bcnW')
+  if ! head
+    return
+  endif
+
+  let parts = split(getline(head), '\s\+')
+
+  let result = []
+  while 1
+    let part = remove(parts, 0)
+    " add state after date or (code)
+    if part =~ '^\d' || part =~ '^([^)]*)$'
+      call add(result, part)
+    " replace existing state with new state
+    elseif part =~ '^[!?*]$'
+      if ! empty(a:char)
+        call add(result, a:char)
+      endif
+      break
+    " add state in front of anything else if it does not exist yet
+    else
+      if ! empty(a:char)
+        call add(result, a:char)
+      endif
+      call add(result, part)
+      break
+    end
+  endwhile
+
+  call setline(head, join(extend(result, parts)))
+endf
+
 " return length of string with fix for multibyte characters
 function! s:multibyte_strlen(text) "{{{2
    return strlen(substitute(a:text, ".", "x", "g"))
