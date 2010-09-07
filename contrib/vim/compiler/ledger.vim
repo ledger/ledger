@@ -12,13 +12,9 @@ if exists(":CompilerSet") != 2
   command -nargs=* CompilerSet setlocal <args>
 endif
 
+" default value will be set in ftplugin
 if ! exists("g:ledger_bin") || empty(g:ledger_bin) || ! executable(split(g:ledger_bin, '\s')[0])
-  if executable('ledger')
-    let g:ledger_bin = 'ledger'
-  else
-    echoerr "ledger command not found. Set g:ledger_bin or extend $PATH."
-    finish
-  endif
+  finish
 endif
 
 " %-G throws away blank lines, everything else is assumed to be part of a

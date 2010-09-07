@@ -12,7 +12,7 @@ let b:did_ftplugin = 1
 
 let b:undo_ftplugin = "setlocal ".
                     \ "foldmethod< foldtext< ".
-                    \ "include< comments< omnifunc< "
+                    \ "include< comments< omnifunc< formatprg<"
 
 " don't fill fold lines --> cleaner look
 setl fillchars="fold: "
@@ -21,6 +21,21 @@ setl foldmethod=syntax
 setl include=^!include
 setl comments=b:;
 setl omnifunc=LedgerComplete
+
+" set location of ledger binary for checking and auto-formatting
+if ! exists("g:ledger_bin") || empty(g:ledger_bin) || ! executable(split(g:ledger_bin, '\s')[0])
+  if executable('ledger')
+    let g:ledger_bin = 'ledger'
+  else
+    unlet g:ledger_bin
+    echoerr "ledger command not found. Set g:ledger_bin or extend $PATH ".
+          \ "to enable error checking and auto-formatting."
+  endif
+endif
+
+if exists("g:ledger_bin")
+  exe 'setl formatprg='.substitute(g:ledger_bin, ' ', '\\ ', 'g').'\ -f\ -\ print'
+endif
 
 " You can set a maximal number of columns the fold text (excluding amount)
 " will use by overriding g:ledger_maxwidth in your .vimrc.
