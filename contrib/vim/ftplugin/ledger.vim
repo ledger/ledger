@@ -435,6 +435,41 @@ endf "}}}
 
 " Helper functions {{{1
 
+function! s:get_transactions(...) "{{{2
+  if a:0 == 2
+    let lnum = a:1
+    let end = a:2
+  elseif a:0 == 0
+    let lnum = 1
+    let end = line('$')
+  else
+    throw "wrong number of arguments for get_transactions()"
+    return []
+  endif
+
+  " safe view / position
+  let view = winsaveview()
+  let fe = &foldenable
+  set nofoldenable
+
+  let transactions = []
+  call cursor(lnum, 0)
+  while lnum && lnum <= end
+    let trans = s:transaction.from_lnum(lnum)
+    if ! empty(trans)
+      call add(transactions, trans)
+      call cursor(trans['tail'], 0)
+    endif
+    let lnum = search('^[~[:digit:]]\S\+', 'cW')
+  endw
+
+  " restore view / position
+  let &foldenable = fe
+  call winrestview(view)
+
+  return transactions
+endf "}}}
+
 function! s:get_transaction_extents(lnum) "{{{2
   " safe view / position
   let view = winsaveview()
