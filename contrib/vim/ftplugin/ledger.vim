@@ -420,7 +420,13 @@ function! s:transaction.parse_body(...) dict "{{{2
       let tag_container = postings[-1]['tags']
     endif
 
-    if line =~ '^\s\+;\s*:'
+    if line =~ '^\s\+[^[:blank:];]'
+      " posting
+      " FIXME: comments at the eol
+      " FIXME: replaces original spacing in amount with single spaces
+      let parts = split(line, '\(\t\|\s\{2,}\)')
+      call add(postings, {'account': parts[0], 'amount': join(parts[1:])})
+    elseif line =~ '^\s\+;\s*:'
       " tags without values
       for t in s:findall(line, ':\zs[^:[:blank:]]\([^:]*[^:[:blank:]]\)\?\ze:')
         let tag_container[t] = ''
@@ -432,12 +438,6 @@ function! s:transaction.parse_body(...) dict "{{{2
         let val = matchstr(line, ':\s*\zs.*\ze\s*$')
         let tag_container[key] = val
       endif
-    elseif line =~ '^\s\+[^[:blank:];]'
-      " posting
-      " FIXME: comments at the eol
-      " FIXME: replaces original spacing in amount with single spaces
-      let parts = split(line, '\(\t\|\s\{2,}\)')
-      call add(postings, {'account': parts[0], 'amount': join(parts[1:])})
     endif
     let lnum += 1
   endw
