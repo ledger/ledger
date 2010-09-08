@@ -290,7 +290,7 @@ function! LedgerSetDate(lnum, type, ...) "{{{1
   if a:type ==? 'actual'
     let date[0] = formatted
   elseif a:type ==? 'effective'
-    if time == 0
+    if time < 0
       " remove effective date
       let date = [date[0]]
     else
