@@ -471,6 +471,11 @@ function! s:get_transactions(...) "{{{2
 endf "}}}
 
 function! s:get_transaction_extents(lnum) "{{{2
+  if ! (indent(a:lnum) || getline(a:lnum) =~ '^[~[:digit:]]\S\+')
+    " only do something if lnum is in a transaction
+    return [0, 0]
+  endif
+
   " safe view / position
   let view = winsaveview()
   let fe = &foldenable
