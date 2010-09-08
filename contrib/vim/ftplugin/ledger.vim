@@ -268,6 +268,26 @@ function! LedgerGetTags() "{{{1
   return alltags
 endf "}}}
 
+function! LedgerToggleTransactionState(lnum, ...)
+  if a:0 == 1
+    let chars = a:1
+  else
+    let chars = ' *'
+  endif
+  let trans = s:transaction.from_lnum(a:lnum)
+  if empty(trans)
+    return
+  endif
+
+  let old = has_key(trans, 'state') ? trans['state'] : ' '
+  let i = stridx(chars, old) + 1
+  let new = chars[i > len(chars) ? 0 : i]
+
+  call trans.set_state(new)
+
+  call setline(trans['head'], trans.format_head())
+endf
+
 function! LedgerSetTransactionState(lnum, char) "{{{1
   " modifies or sets the state of the transaction at the cursor,
   " removing the state alltogether if a:char is empty
@@ -276,11 +296,7 @@ function! LedgerSetTransactionState(lnum, char) "{{{1
     return
   endif
 
-  if empty(a:char) && has_key(trans, 'state')
-    call remove(trans, 'state')
-  else
-    let trans['state'] = a:char
-  endif
+  call trans.set_state(a:char)
 
   call setline(trans['head'], trans.format_head())
 endf "}}}
@@ -351,7 +367,8 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
       let trans['date'] = part
     elseif ! has_key(trans, 'code')  && part =~ '^([^)]*)$'
       let trans['code'] = part[1:-2]
-    elseif ! has_key(trans, 'state') && part =~ '^[!?*]$'
+    elseif ! has_key(trans, 'state') && part =~ '^.$'
+      " the first character by itself is assumed to be the state of the transaction.
       let trans['state'] = part
     else
       call add(description, part)
@@ -359,6 +376,14 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   endfor
   let trans['description'] = join(description)
   return trans
+endf "}}}
+
+function! s:transaction.set_state(char) dict "{{{2
+  if has_key(self, 'state') && a:char =~ '^\s*$'
+    call remove(self, 'state')
+  else
+    let self['state'] = a:char
+  endif
 endf "}}}
 
 function! s:transaction.parse_body(...) dict "{{{2
