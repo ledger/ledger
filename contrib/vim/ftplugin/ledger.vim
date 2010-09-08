@@ -268,42 +268,69 @@ function! LedgerGetTags() "{{{1
   return alltags
 endf "}}}
 
-" Helper functions {{{1
-
-function! LedgerSetTransactionState(char)
+function! LedgerSetTransactionState(lnum, char) "{{{1
   " modifies or sets the state of the transaction at the cursor,
   " removing the state alltogether if a:char is empty
-  let head = search('^\d\S\+', 'bcnW')
+endf "}}}
+
+let s:transaction = {} "{{{1
+function! s:transaction.new() dict
+  return copy(s:transaction)
+endf
+
+function! s:transaction.from_lnum(lnum) dict "{{{2
+  let head = s:get_transaction_extents(a:lnum)[0]
   if ! head
     return
   endif
 
+  let trans = copy(s:transaction)
   let parts = split(getline(head), '\s\+')
-
-  let result = []
-  while 1
-    let part = remove(parts, 0)
-    " add state after date or (code)
-    if part =~ '^\d' || part =~ '^([^)]*)$'
-      call add(result, part)
-    " replace existing state with new state
-    elseif part =~ '^[!?*]$'
-      if ! empty(a:char)
-        call add(result, a:char)
-      endif
-      break
-    " add state in front of anything else if it does not exist yet
+  let description = []
+  for part in parts
+    if     ! has_key(trans, 'date')  && part =~ '^\d'
+      let trans['date'] = part
+    elseif ! has_key(trans, 'code')  && part =~ '^([^)]*)$'
+      let trans['code'] = part[1:-2]
+    elseif ! has_key(trans, 'state') && part =~ '^[!?*]$'
+      let trans['state'] = part
     else
-      if ! empty(a:char)
-        call add(result, a:char)
-      endif
-      call add(result, part)
-      break
-    end
-  endwhile
+      call add(description, part)
+    endif
+  endfor
+  let trans['description'] = join(description)
+  return trans
+endf "}}}
 
-  call setline(head, join(extend(result, parts)))
-endf
+function! s:transaction.format_head() dict "{{{2
+  let parts = []
+  if has_key(self, 'date') | call add(parts, self['date']) | endif
+  if has_key(self, 'code') | call add(parts, '('.self['code'].')') | endif
+  if has_key(self, 'state') | call add(parts, self['state']) | endif
+  if has_key(self, 'description') | call add(parts, self['description']) | endif
+  return join(parts)
+endf "}}}
+"}}}
+
+" Helper functions {{{1
+
+function! s:get_transaction_extents(lnum) "{{{2
+  " safe view / position
+  let view = winsaveview()
+  let fe = &foldenable
+  set nofoldenable
+
+  call cursor(a:lnum, 0)
+  let head = search('^\d\S\+', 'bcnW')
+  let tail = search('^[^;[:blank:]]\S\+', 'nW')
+  let tail = tail > head ? tail - 1 : line('$')
+
+  " restore view / position
+  let &foldenable = fe
+  call winrestview(view)
+
+  return head ? [head, tail] : [0, 0]
+endf "}}}
 
 " return length of string with fix for multibyte characters
 function! s:multibyte_strlen(text) "{{{2
