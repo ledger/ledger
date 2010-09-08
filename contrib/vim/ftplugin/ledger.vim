@@ -107,7 +107,7 @@ function! LedgerFoldText() "{{{1
                           \ '\(^\s\+\|\s\+$\)', '', 'g')
 
   " number of columns foldtext can use
-  let columns = s:get_columns(0)
+  let columns = s:get_columns()
   if g:ledger_maxwidth
     let columns = min([columns, g:ledger_maxwidth])
   endif
@@ -122,9 +122,9 @@ function! LedgerFoldText() "{{{1
     let foldtext .= repeat(' ', filen - (folen%filen))
 
     let foldtext .= repeat(g:ledger_fillstring,
-                  \ s:get_columns(0)/filen)
+                  \ s:get_columns()/filen)
   else
-    let foldtext .= repeat(' ', s:get_columns(0))
+    let foldtext .= repeat(' ', s:get_columns())
   endif
 
   " we don't use slices[:5], because that messes up multibyte characters
@@ -511,19 +511,27 @@ function! s:multibyte_strlen(text) "{{{2
 endfunction "}}}
 
 " get # of visible/usable columns in current window
-function! s:get_columns(win) "{{{2
+function! s:get_columns() " {{{2
   " As long as vim doesn't provide a command natively,
   " we have to compute the available columns.
   " see :help todo.txt -> /Add argument to winwidth()/
-  " FIXME: Although this will propably never be used with debug mode enabled
-  "        this should take the signs column into account (:help sign.txt)
-  let columns = (winwidth(a:win) == 0 ? 80 : winwidth(a:win)) - &foldcolumn
+
+  let columns = (winwidth(0) == 0 ? 80 : winwidth(0)) - &foldcolumn
   if &number
     " line('w$') is the line number of the last line
     let columns -= max([len(line('w$'))+1, &numberwidth])
   endif
+
+  " are there any signs/is the sign column displayed?
+  redir => signs
+  silent execute 'sign place buffer='.string(bufnr("%"))
+  redir END
+  if signs =~# 'id='
+    let columns -= 2
+  endif
+
   return columns
-endfunction "}}}
+endf "}}}
 
 " remove spaces at start and end of string
 function! s:strip_spaces(text) "{{{2
