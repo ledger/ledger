@@ -328,7 +328,7 @@ endf
 function! s:transaction.from_lnum(lnum) dict "{{{2
   let [head, tail] = s:get_transaction_extents(a:lnum)
   if ! head
-    return
+    return {}
   endif
 
   let trans = copy(s:transaction)
@@ -342,7 +342,7 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   elseif parts[0] !~ '^\d'
     " this case is avoided in s:get_transaction_extents(),
     " but we'll check anyway.
-    return
+    return {}
   endif
 
   let description = []
