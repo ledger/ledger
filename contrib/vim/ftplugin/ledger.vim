@@ -326,14 +326,25 @@ function! s:transaction.new() dict
 endf
 
 function! s:transaction.from_lnum(lnum) dict "{{{2
-  let head = s:get_transaction_extents(a:lnum)[0]
+  let [head, tail] = s:get_transaction_extents(a:lnum)
   if ! head
     return
   endif
 
   let trans = copy(s:transaction)
   let trans['head'] = head
+  let trans['tail'] = tail
+
   let parts = split(getline(head), '\s\+')
+  if parts[0] ==# '~'
+    let trans['expr'] = join(parts[1:])
+    return trans
+  elseif parts[0] !~ '^\d'
+    " this case is avoided in s:get_transaction_extents(),
+    " but we'll check anyway.
+    return
+  endif
+
   let description = []
   for part in parts
     if     ! has_key(trans, 'date')  && part =~ '^\d'
@@ -351,6 +362,10 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
 endf "}}}
 
 function! s:transaction.format_head() dict "{{{2
+  if has_key(self, 'expr')
+    return '~ '.self['expr']
+  endif
+
   let parts = []
   if has_key(self, 'date') | call add(parts, self['date']) | endif
   if has_key(self, 'code') | call add(parts, '('.self['code'].')') | endif
@@ -369,7 +384,7 @@ function! s:get_transaction_extents(lnum) "{{{2
   set nofoldenable
 
   call cursor(a:lnum, 0)
-  let head = search('^\d\S\+', 'bcnW')
+  let head = search('^[~[:digit:]]\S\+', 'bcnW')
   let tail = search('^[^;[:blank:]]\S\+', 'nW')
   let tail = tail > head ? tail - 1 : line('$')
 
