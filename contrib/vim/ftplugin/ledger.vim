@@ -271,6 +271,18 @@ endf "}}}
 function! LedgerSetTransactionState(lnum, char) "{{{1
   " modifies or sets the state of the transaction at the cursor,
   " removing the state alltogether if a:char is empty
+  let trans = s:transaction.from_lnum(a:lnum)
+  if empty(trans)
+    return
+  endif
+
+  if empty(a:char) && has_key(trans, 'state')
+    call remove(trans, 'state')
+  else
+    let trans['state'] = a:char
+  endif
+
+  call setline(trans['head'], trans.format_head())
 endf "}}}
 
 function! LedgerSetDate(lnum, type, ...) "{{{1
@@ -305,7 +317,7 @@ function! LedgerSetDate(lnum, type, ...) "{{{1
 
   let trans['date'] = join(date, '=')
 
-  call setline(s:get_transaction_extents(a:lnum)[0], trans.format_head())
+  call setline(trans['head'], trans.format_head())
 endf "}}}
 
 let s:transaction = {} "{{{1
@@ -320,6 +332,7 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   endif
 
   let trans = copy(s:transaction)
+  let trans['head'] = head
   let parts = split(getline(head), '\s\+')
   let description = []
   for part in parts
