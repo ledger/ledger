@@ -361,6 +361,64 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   return trans
 endf "}}}
 
+function! s:transaction.parse_body(...) dict "{{{2
+  if a:0 == 2
+    let head = a:1
+    let tail = a:2
+  elseif a:0 == 0
+    let head = self['head']
+    let tail = self['tail']
+  else
+    throw "wrong number of arguments for parse_body()"
+    return []
+  endif
+
+  if ! head || tail <= head
+    return []
+  endif
+
+  let lnum = head + 1
+  let tags = {}
+  let postings = []
+  while lnum <= tail
+    let line = getline(lnum)
+
+    " where are tags to be stored?
+    if empty(postings)
+      " they belong to the transaction
+      let tag_container = tags
+    else
+      " they belong to last posting
+      if ! has_key(postings[-1], 'tags')
+        let postings[-1]['tags'] = {}
+      endif
+      let tag_container = postings[-1]['tags']
+    endif
+
+    if line =~ '^\s\+;\s*:'
+      " tags without values
+      for t in s:findall(line, ':\zs[^:[:blank:]]\([^:]*[^:[:blank:]]\)\?\ze:')
+        let tag_container[t] = ''
+      endfor
+    elseif line =~ '^\s\+;\s*[^:[:blank:]][^:]\+:'
+      " tag with value
+      let key = matchstr(line, '^\s\+;\s*\zs[^:]\+\ze:')
+      if ! empty(key)
+        let val = matchstr(line, ':\s*\zs.*\ze\s*$')
+        let tag_container[key] = val
+      endif
+    elseif line =~ '^\s\+[^[:blank:];]'
+      " posting
+      " FIXME: comments at the eol
+      " FIXME: replaces original spacing in amount with single spaces
+      let parts = split(line, '\(\t\|\s\{2,}\)')
+      call add(postings, {'account': parts[0], 'amount': join(parts[1:])})
+    endif
+    let lnum += 1
+  endw
+  return [tags, postings]
+endf "}}}
+
 function! s:transaction.format_head() dict "{{{2
   if has_key(self, 'expr')
     return '~ '.self['expr']
@@ -393,6 +451,23 @@ function! s:get_transaction_extents(lnum) "{{{2
   call winrestview(view)
 
   return head ? [head, tail] : [0, 0]
+endf "}}}
+
+function! s:findall(text, rx) " {{{2
+  " returns all the matches in a string,
+  " there will be overlapping matches according to :help match()
+  let matches = []
+
+  while 1
+    let m = matchstr(a:text, a:rx, 0, len(matches)+1)
+    if empty(m)
+      break
+    endif
+
+    call add(matches, m)
+  endw
+
+  return matches
 endf "}}}
 
 " return length of string with fix for multibyte characters
