@@ -273,6 +273,41 @@ function! LedgerSetTransactionState(lnum, char) "{{{1
   " removing the state alltogether if a:char is empty
 endf "}}}
 
+function! LedgerSetDate(lnum, type, ...) "{{{1
+  let time = a:0 == 1 ? a:1 : localtime()
+  let trans = s:transaction.from_lnum(a:lnum)
+  if empty(trans)
+    return
+  endif
+
+  let formatted = strftime('%Y/%m/%d', time)
+  if has_key(trans, 'date') && ! empty(trans['date'])
+    let date = split(trans['date'], '=')
+  else
+    let date = [formatted]
+  endif
+
+  if a:type ==? 'actual'
+    let date[0] = formatted
+  elseif a:type ==? 'effective'
+    if time == 0
+      " remove effective date
+      let date = [date[0]]
+    else
+      " set effective date
+      if len(date) >= 2
+        let date[1] = formatted
+      else
+        call add(date, formatted)
+      endif
+    endif
+  endif
+
+  let trans['date'] = join(date, '=')
+
+  call setline(s:get_transaction_extents(a:lnum)[0], trans.format_head())
+endf "}}}
+
 let s:transaction = {} "{{{1
 function! s:transaction.new() dict
   return copy(s:transaction)
