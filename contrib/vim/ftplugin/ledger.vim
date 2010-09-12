@@ -138,37 +138,7 @@ function! LedgerComplete(findstart, base) "{{{1
     let lnum = line('.')
     let line = getline('.')
     let lastcol = col('.') - 2
-    if line =~ '^\d' "{{{2 (date / payee / description)
-      let b:compl_context = 'payee'
-      return -1
-    elseif line =~ '^\s\+;' "{{{2 (metadata / tags)
-      let b:compl_context = 'meta-tag'
-      let first_possible = matchend(line, '^\s\+;')
-
-      " find first column of text to be replaced
-      let firstcol = lastcol
-      while firstcol >= 0
-        if firstcol <= first_possible
-          " Stop before the ';' don't ever include it
-          let firstcol = first_possible
-          break
-        elseif line[firstcol] =~ ':'
-          " Stop before first ':'
-          let firstcol += 1
-          break
-        endif
-
-        let firstcol -= 1
-      endwhile
-
-      " strip whitespace starting from firstcol
-      let end_of_whitespace = matchend(line, '^\s\+', firstcol)
-      if end_of_whitespace != -1
-        let firstcol = end_of_whitespace
-      endif
-
-      return firstcol
-    elseif line =~ '^\s\+' "{{{2 (account)
+    if line =~ '^\s\+[^[:blank:];]' "{{{2 (account)
       let b:compl_context = 'account'
       if matchend(line, '^\s\+\%(\S \S\|\S\)\+') <= lastcol
         " only allow completion when in or at end of account name
@@ -191,16 +161,12 @@ function! LedgerComplete(findstart, base) "{{{1
 
       let results = LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy)
       " sort by alphabet and reverse because it will get reversed one more time
-      let results = reverse(sort(results))
       if g:ledger_detailed_first
-        let results = sort(results, 's:sort_accounts_by_depth')
+        let results = reverse(sort(results, 's:sort_accounts_by_depth'))
+      else
+        let results = sort(results)
       endif
-      call add(results, a:base)
-      return reverse(results)
-    elseif b:compl_context == 'meta-tag' "{{{2
-      unlet! b:compl_context
-      let results = [a:base]
-      call extend(results, sort(s:filter_items(keys(LedgerGetTags()), a:base)))
+      call insert(results, a:base)
       return results
     else "}}}
       unlet! b:compl_context
@@ -241,31 +207,6 @@ function! LedgerGetAccountHierarchy() "{{{1
     endfor
   endfor
   return hierarchy
-endf "}}}
-
-function! LedgerGetTags() "{{{1
-  let alltags = {}
-  let metalines = s:grep_buffer('^\s\+;\s*\zs.*$')
-  for line in metalines
-    " (spaces at beginning are stripped by matchstr!)
-    if line[0] == ':'
-      " multiple tags
-      for val in split(line, ':')
-        if val !~ '^\s*$'
-          let name = s:strip_spaces(val)
-          let alltags[name] = get(alltags, name, [])
-        endif
-      endfor
-    elseif line =~ '^.*:.*$'
-      " line with tag=value
-      let name = s:strip_spaces(split(line, ':')[0])
-      let val = s:strip_spaces(join(split(line, ':')[1:], ':'))
-      let values = get(alltags, name, [])
-      call add(values, val)
-      let alltags[name] = values
-    endif
-  endfor
-  return alltags
 endf "}}}
 
 function! LedgerToggleTransactionState(lnum, ...)
