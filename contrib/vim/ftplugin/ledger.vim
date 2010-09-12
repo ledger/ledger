@@ -367,7 +367,7 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
       let trans['date'] = part
     elseif ! has_key(trans, 'code')  && part =~ '^([^)]*)$'
       let trans['code'] = part[1:-2]
-    elseif ! has_key(trans, 'state') && part =~ '^.$'
+    elseif ! has_key(trans, 'state') && part =~ '^[[:punct:]]$'
       " the first character by itself is assumed to be the state of the transaction.
       let trans['state'] = part
     else
