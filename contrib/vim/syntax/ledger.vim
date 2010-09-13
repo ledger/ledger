@@ -28,43 +28,36 @@ syntax clear
 " DATE[=EDATE] [*|!] [(CODE)] DESC <-- first line of transaction
 "   ACCOUNT AMOUNT [; NOTE]  <-- posting
 
-" region: a transaction containing postings
-syn region transNorm start=/^[[:digit:]~]/ skip=/^\s/ end=/^/
-    \ fold keepend transparent contains=transDate,Metadata,Posting
-syn match transDate /^\d\S\+/ contained
-syn match Metadata /^\s\+;.*/ contained contains=MetadataTag
-syn match Comment /^;.*$/
+syn region ledgerTransaction start=/^[[:digit:]~]/ skip=/^\s/ end=/^/
+    \ fold keepend transparent contains=ledgerTransactionDate,ledgerMetadata,ledgerPosting
+syn match ledgerTransactionDate /^\d\S\+/ contained
+syn match ledgerPosting /^\s\+[^[:blank:];][^;]*\ze\%($\|;\)/
+    \ contained transparent contains=ledgerAccount
 " every space in an account name shall be surrounded by two non-spaces
 " every account name ends with a tab, two spaces or the end of the line
-syn match Account /^\s\+\zs\%(\S \S\|\S\)\+\ze\%([ ]\{2,}\|\t\s*\|\s*$\)/ contained
-syn match Posting /^\s\+[^[:blank:];].*$/ contained transparent contains=Account,Amount
-" FIXME: add other symbols?
-let s:currency = '\([$€£¢]\|\w\+\)'
-let s:figures = '\d\+\([.,]\d\+\)*'
-let s:amount = '-\?\('.s:figures.'\s*'.s:currency.'\|'.s:currency.'\s*'.s:figures.'\)'
-exe 'syn match Amount /'.s:amount.'/ contained'
-syn match MetadataTag /:[^:]\+:/hs=s+1,he=e-1 contained
-syn match MetadataTag /;\s*\zs[^:]\+\ze:[^:]\+$/ contained
+syn match ledgerAccount /^\s\+\zs\%(\S \S\|\S\)\+\ze\%(  \|\t\|\s*$\)/ contained
 
-syn region TagStack
-    \ matchgroup=TagPush start=/^tag\>/
-    \ matchgroup=TagPop end=/^pop\>/
-    \ contains=TagHead,TagStack,transNorm
-syn match TagHead /\%(^tag\s\+\)\@<=\S.*$/ contained contains=tagKey transparent
-syn match TagKey /:[^:]\+:/hs=s+1,he=e-1 contained
-syn match TagKey /\%(^tag\s\+\)\@<=[^:]\+\ze:[^:]\+$/ contained
+syn match ledgerComment /^;.*$/
+syn region ledgerMetadata start=/;/ skip=/^\s\+;/ end=/^/
+    \ keepend contained contains=ledgerTag
+syn match ledgerTag /:[^:]\+:/hs=s+1,he=e-1 contained
+syn match ledgerTag /\%(\%(;\|^tag\)[^:]\+\)\@<=[^:]\+\ze:[^:]\+$/ contained
 
-highlight default link transDate Constant
-highlight default link Metadata Tag
-highlight default link MetadataTag Type
-highlight default link TagPop Tag
-highlight default link TagPush Tag
-highlight default link TagKey Type
-highlight default link Amount Number
-highlight default link Account Identifier
+syn region ledgerTagStack
+    \ matchgroup=ledgerTagPush start=/^tag\>/
+    \ matchgroup=ledgerTagPop end=/^pop\>/
+    \ contains=ledgerTagHead,ledgerTagStack,ledgerTransaction,ledgerComment
+syn match ledgerTagHead /\%(^tag\s\+\)\@<=\S.*$/ contained contains=ledgerTag transparent
+
+highlight default link ledgerTransactionDate Constant
+highlight default link ledgerMetadata Tag
+highlight default link ledgerTag Type
+highlight default link ledgerTagPop Tag
+highlight default link ledgerTagPush Tag
+highlight default link ledgerAccount Identifier
  
 " syncinc is easy: search for the first transaction.
 syn sync clear
-syn sync match ledgerSync grouphere transNorm "^[[:digit:]~]"
+syn sync match ledgerSync grouphere ledgerTransaction "^[[:digit:]~]"
  
 let b:current_syntax = "ledger"
