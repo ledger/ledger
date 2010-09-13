@@ -38,7 +38,8 @@ syn match ledgerPosting /^\s\+[^[:blank:];][^;]*\ze\%($\|;\)/
 syn match ledgerAccount /^\s\+\zs\%(\S \S\|\S\)\+\ze\%(  \|\t\|\s*$\)/ contained
 
 syn match ledgerComment /^;.*$/
-syn region ledgerMetadata start=/;/ skip=/^\s\+;/ end=/^/
+" comments at eol must be preceeded by at least 2 spaces / 1 tab
+syn region ledgerMetadata start=/\%(  \|\t\|^\s\+\);/ skip=/^\s\+;/ end=/^/
     \ keepend contained contains=ledgerTag
 syn match ledgerTag /:[^:]\+:/hs=s+1,he=e-1 contained
 syn match ledgerTag /\%(\%(;\|^tag\)[^:]\+\)\@<=[^:]\+\ze:[^:]\+$/ contained
