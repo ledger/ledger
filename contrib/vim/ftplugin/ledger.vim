@@ -302,7 +302,6 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
     return {}
   endif
 
-  let description = []
   for part in parts
     if     ! has_key(trans, 'date')  && part =~ '^\d'
       let trans['date'] = part
@@ -312,10 +311,12 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
       " the first character by itself is assumed to be the state of the transaction.
       let trans['state'] = part
     else
-      call add(description, part)
+      " everything after date/code or state belongs to the description
+      break
     endif
+    call remove(parts, 0)
   endfor
-  let trans['description'] = join(description)
+  let trans['description'] = join(parts)
   return trans
 endf "}}}
 
