@@ -32,7 +32,7 @@ syn region ledgerTransaction start=/^[[:digit:]~]/ skip=/^\s/ end=/^/
     \ fold keepend transparent contains=ledgerTransactionDate,ledgerMetadata,ledgerPosting
 syn match ledgerTransactionDate /^\d\S\+/ contained
 syn match ledgerPosting /^\s\+[^[:blank:];][^;]*\ze\%($\|;\)/
-    \ contained transparent contains=ledgerAccount
+    \ contained transparent contains=ledgerAccount,ledgerMetadata
 " every space in an account name shall be surrounded by two non-spaces
 " every account name ends with a tab, two spaces or the end of the line
 syn match ledgerAccount /^\s\+\zs\%(\S \S\|\S\)\+\ze\%(  \|\t\|\s*$\)/ contained
