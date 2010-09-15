@@ -316,6 +316,9 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
     endif
     call remove(parts, 0)
   endfor
+
+  " FIXME: this will break comments at the end of this 'head' line
+  " they need 2 spaces in front of the semicolon
   let trans['description'] = join(parts)
   return trans
 endf "}}}
@@ -344,11 +347,18 @@ function! s:transaction.parse_body(...) dict "{{{2
     return []
   endif
 
-  let lnum = head + 1
+  let lnum = head
   let tags = {}
   let postings = []
   while lnum <= tail
-    let line = getline(lnum)
+    let line = split(getline(lnum), '\s*\%(\t\|  \);', 1)
+
+    if line[0] =~ '^\s\+[^[:blank:];]'
+      " posting
+      " FIXME: replaces original spacing in amount with single spaces
+      let parts = split(line[0], '\%(\t\|  \)\s*')
+      call add(postings, {'account': parts[0], 'amount': join(parts[1:], '  ')})
+    end
 
     " where are tags to be stored?
     if empty(postings)
@@ -362,22 +372,17 @@ function! s:transaction.parse_body(...) dict "{{{2
       let tag_container = postings[-1]['tags']
     endif
 
-    if line =~ '^\s\+[^[:blank:];]'
-      " posting
-      " FIXME: comments at the eol
-      " FIXME: replaces original spacing in amount with single spaces
-      let parts = split(line, '\(\t\|\s\{2,}\)')
-      call add(postings, {'account': parts[0], 'amount': join(parts[1:])})
-    elseif line =~ '^\s\+;\s*:'
+    let comment = join(line[1:], '  ;')
+    if comment =~ '^\s*:'
       " tags without values
-      for t in s:findall(line, ':\zs[^:[:blank:]]\([^:]*[^:[:blank:]]\)\?\ze:')
+      for t in s:findall(comment, ':\zs[^:[:blank:]]\([^:]*[^:[:blank:]]\)\?\ze:')
         let tag_container[t] = ''
       endfor
-    elseif line =~ '^\s\+;\s*[^:[:blank:]][^:]\+:'
+    elseif comment =~ '^\s*[^:[:blank:]][^:]\+:'
       " tag with value
-      let key = matchstr(line, '^\s\+;\s*\zs[^:]\+\ze:')
+      let key = matchstr(comment, '^\s*\zs[^:]\+\ze:')
       if ! empty(key)
-        let val = matchstr(line, ':\s*\zs.*\ze\s*$')
+        let val = matchstr(comment, ':\s*\zs.*\ze\s*$')
         let tag_container[key] = val
       endif
     endif
