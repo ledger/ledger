@@ -222,7 +222,7 @@ function! LedgerToggleTransactionState(lnum, ...)
 
   let old = has_key(trans, 'state') ? trans['state'] : ' '
   let i = stridx(chars, old) + 1
-  let new = chars[i > len(chars) ? 0 : i]
+  let new = chars[i >= len(chars) ? 0 : i]
 
   call trans.set_state(new)
 
