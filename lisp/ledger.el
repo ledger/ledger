@@ -80,7 +80,7 @@
   "Interface to the Ledger command-line accounting program."
   :group 'data)
 
-(defcustom ledger-binary-path "ledger"
+(defcustom ledger-binary-path "/usr/bin/ledger"
   "Path to the ledger executable."
   :type 'file
   :group 'ledger)
