@@ -40,9 +40,10 @@ syn match ledgerAccount /^\s\+\zs\%(\S \S\|\S\)\+\ze\%(  \|\t\|\s*$\)/ contained
 syn match ledgerComment /^;.*$/
 " comments at eol must be preceeded by at least 2 spaces / 1 tab
 syn region ledgerMetadata start=/\%(  \|\t\|^\s\+\);/ skip=/^\s\+;/ end=/^/
-    \ keepend contained contains=ledgerTag
+    \ keepend contained contains=ledgerTag,ledgerTypedTag
 syn match ledgerTag /:[^:]\+:/hs=s+1,he=e-1 contained
-syn match ledgerTag /\%(\%(;\|^tag\)[^:]\+\)\@<=[^:]\+\ze:[^:]\+$/ contained
+syn match ledgerTag /\%(\%(;\|^tag\)[^:]\+\)\@<=[^:]\+:\ze[^:]\+$/ contained
+syn match ledgerTypedTag /\%(\%(;\|^tag\)[^:]\+\)\@<=[^:]\+::\ze[^:]\+$/ contained
 
 syn region ledgerTagStack
     \ matchgroup=ledgerTagPush start=/^tag\>/
@@ -52,6 +53,7 @@ syn match ledgerTagHead /\%(^tag\s\+\)\@<=\S.*$/ contained contains=ledgerTag tr
 
 highlight default link ledgerTransactionDate Constant
 highlight default link ledgerMetadata Tag
+highlight default link ledgerTypedTag Keyword
 highlight default link ledgerTag Type
 highlight default link ledgerTagPop Tag
 highlight default link ledgerTagPush Tag
