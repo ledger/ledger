@@ -6,26 +6,40 @@ STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
 CC		= gcc-mp-4.5
+ifeq ($(CC),clang)
+CXX		= clang++
+LD		= llvm-ld
+DIR_SUFFIX	= clang
+else
 CXX		= g++-mp-4.5
 LD		= gcc-mp-4.5
-CXX_VERSION	= 45
-CPPFLAGS	= -D_GLIBCXX_DEBUG=1 -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
+DIR_SUFFIX	= gcc45
+endif
+CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
+ifneq ($(CC),clang)
+CPPFLAGS       += -D_GLIBCXX_DEBUG=1
+endif
 CFLAGS		= $(CPPFLAGS) -g
 LDFLAGS		= -g
 
 BOOST_VERSION	= 1_44_0
 BOOST_SOURCE	= boost_$(BOOST_VERSION)
+BOOST_DEFINES	= define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
+ifeq ($(CC),clang)
+BOOST_TOOLSET	= clang
+else
 BOOST_TOOLSET	= darwin
-BOOST_DEFINES	= define=_GLIBCXX_DEBUG=1 define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
+BOOST_DEFINES	= define=_GLIBCXX_DEBUG=1
+endif
 #BOOST_FLAGS	= --architecture=x86 --address_model=32_64
 BOOST_FLAGS	= --toolset=$(BOOST_TOOLSET) \
 		  --build-type=complete --layout=versioned \
 		  $(BOOST_DEFINES)
-BOOST_DIR	= boost_$(BOOST_VERSION)-gcc$(CXX_VERSION)
+BOOST_DIR	= boost_$(BOOST_VERSION)-$(DIR_SUFFIX)
 BOOST_STOW	= $(STOW_ROOT)/$(BOOST_DIR)
 BOOST_BUILD	= $(PRODUCTS)/$(BOOST_DIR)
 ICU_FLAGS	= -sHAVE_ICU=1 -sICU_PATH=$(STOW_ROOT)/icu
-BOOST_ICU_DIR	= boost_$(BOOST_VERSION)-icu-gcc$(CXX_VERSION)
+BOOST_ICU_DIR	= boost_$(BOOST_VERSION)-icu-$(DIR_SUFFIX)
 BOOST_ICU_STOW	= $(STOW_ROOT)/$(BOOST_ICU_DIR)
 BOOST_ICU_BUILD = $(PRODUCTS)/$(BOOST_ICU_DIR)
 
@@ -43,7 +57,7 @@ cppunit-build:
 		     CFLAGS="$(CFLAGS)" \
 		     LDFLAGS="$(LDFLAGS)" \
 		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
-		     --prefix=$(STOW_ROOT)/cppunit-gcc$(CXX_VERSION) \
+		     --prefix=$(STOW_ROOT)/cppunit-$(DIR_SUFFIX) \
 		     --disable-doxygen --disable-dot && \
 	 make install)
 
@@ -55,7 +69,7 @@ cppunit-build:
 #		     LDFLAGS="$(LDFLAGS)" \
 #		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
 #		     --enable-static --enable-debug \
-#		     --prefix=$(STOW_ROOT)/icu-gcc$(CXX_VERSION) && \
+#		     --prefix=$(STOW_ROOT)/icu-$(DIR_SUFFIX) && \
 #	 make install)
 #
 #boost-icu-build:
@@ -66,8 +80,8 @@ cppunit-build:
 clean:
 	-rm -fr $(BOOST_STOW) $(BOOST_BUILD)
 	-rm -fr $(BOOST_ICU_STOW) $(BOOST_ICU_BUILD)
-	-rm -fr $(STOW_ROOT)/cppunit-gcc$(CXX_VERSION)
-	-rm -fr $(STOW_ROOT)/icu-gcc$(CXX_VERSION)
+	-rm -fr $(STOW_ROOT)/cppunit-$(DIR_SUFFIX)
+	-rm -fr $(STOW_ROOT)/icu-$(DIR_SUFFIX)
 	-(cd cppunit; make distclean)
 	-(cd icu/source; make distclean)
 
