@@ -138,6 +138,7 @@ function! LedgerComplete(findstart, base) "{{{1
     let lnum = line('.')
     let line = getline('.')
     let lastcol = col('.') - 2
+    let b:compl_context = ''
     if line =~ '^\s\+[^[:blank:];]' "{{{2 (account)
       let b:compl_context = 'account'
       if matchend(line, '^\s\+\%(\S \S\|\S\)\+') <= lastcol
