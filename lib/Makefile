@@ -10,10 +10,12 @@ ifeq ($(CC),clang)
 CXX		= clang++
 LD		= llvm-ld
 DIR_SUFFIX	= clang
+OPTJ            =
 else
 CXX		= g++-mp-4.5
 LD		= gcc-mp-4.5
 DIR_SUFFIX	= gcc45
+OPTJ            = #-j16
 endif
 CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
 ifneq ($(CC),clang)
@@ -22,7 +24,7 @@ endif
 CFLAGS		= $(CPPFLAGS) -g
 LDFLAGS		= -g
 
-BOOST_VERSION	= 1_44_0
+BOOST_VERSION	= 1_45_0
 BOOST_SOURCE	= boost_$(BOOST_VERSION)
 BOOST_DEFINES	= define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
 ifeq ($(CC),clang)
@@ -47,7 +49,8 @@ all: boost-build cppunit-build #icu-build boost-icu-build
 
 boost-build:
 	(cd $(BOOST_SOURCE) && \
-	bjam debug --prefix=$(BOOST_STOW) --build-dir=$(BOOST_BUILD) \
+	 sh bootstrap.sh && \
+	 ./bjam $(OPTJ) debug --prefix=$(BOOST_STOW) --build-dir=$(BOOST_BUILD) \
 	    $(BOOST_FLAGS) install)
 
 cppunit-build:
