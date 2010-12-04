@@ -185,6 +185,7 @@ namespace {
                         gregorian::date_facet> date_io_t;
 
   shared_ptr<datetime_io_t> input_datetime_io;
+  shared_ptr<datetime_io_t> timelog_datetime_io;
   shared_ptr<date_io_t>     input_date_io;
   shared_ptr<datetime_io_t> written_datetime_io;
   shared_ptr<date_io_t>     written_date_io;
@@ -318,8 +319,12 @@ datetime_t parse_datetime(const char * str)
       *p = '/';
 
   datetime_t when = input_datetime_io->parse(buf);
-  if (when.is_not_a_date_time())
-    throw_(date_error, _("Invalid date/time: %1") << str);
+  if (when.is_not_a_date_time()) {
+    when = timelog_datetime_io->parse(buf);
+    if (when.is_not_a_date_time()) {
+      throw_(date_error, _("Invalid date/time: %1") << str);
+    }
+  }
   return when;
 }
 
@@ -1770,6 +1775,7 @@ void times_initialize()
 {
   if (! is_initialized) {
     input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", true));
+    timelog_datetime_io.reset(new datetime_io_t("%m/%d/%Y %H:%M:%S", true));
 
     written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", false));
     written_date_io.reset(new date_io_t("%Y/%m/%d", false));
@@ -1790,6 +1796,7 @@ void times_shutdown()
 {
   if (is_initialized) {
     input_datetime_io.reset();
+    timelog_datetime_io.reset();
     input_date_io.reset();
     written_datetime_io.reset();
     written_date_io.reset();
