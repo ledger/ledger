@@ -33,9 +33,10 @@ The *BETA* is what I prefer people use, since I still have a chance to fix
 major bugs that you find.  Just e-mail me, or post to the mailing list,
 they'll become a part of my work list.
 
-|*CURRENT*|@git checkout master@|
-|*BETA*|@git checkout -b maint origin/maint@|
-|*RELEASE*|@git checkout v2.6.1@|
+|*RELEASE*|@git checkout v2.6.3@|
+|*CURRENT*|@git checkout maint@|
+|*BETA*|@git checkout -b master origin/master@|
+|*ALPHA*|@git checkout -b next origin/next@|
 
 There are also several topic branches which contain experimental features,
 though none of these are guaranteed to compile.  Best to chat with me on
