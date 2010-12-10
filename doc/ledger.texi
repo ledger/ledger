@@ -481,8 +481,8 @@ and exits.  This is useful for sending bug reports, to let the author
 know which version of ledger you are using.
 
 @option{--file FILE} (@option{-f FILE}) reads FILE as a ledger file.
-This command may be used multiple times.  FILE may also be a list of
-file names separated by colons.  Typically, the environment variable
+This command may be used multiple times.
+Typically, the environment variable
 @env{LEDGER_FILE} is set, rather than using this command-line option.
 
 @option{--output FILE} (@option{-o FILE}) redirects output from any
