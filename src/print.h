@@ -86,7 +86,6 @@ public:
   }
 };
 
-
 } // namespace ledger
 
 #endif // _PRINT_H
