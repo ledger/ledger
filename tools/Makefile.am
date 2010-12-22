@@ -77,6 +77,7 @@ libledger_report_la_SOURCES  =			\
 	src/convert.cc				\
 	src/draft.cc				\
 	src/emacs.cc				\
+	src/org.cc				\
 	src/xml.cc				\
 	src/print.cc				\
 	src/output.cc				\
@@ -145,6 +146,7 @@ pkginclude_HEADERS =				\
 	src/output.h				\
 	src/xml.h				\
 	src/emacs.h				\
+	src/org.h				\
 						\
 	src/global.h				\
 						\

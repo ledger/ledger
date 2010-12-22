@@ -47,6 +47,7 @@
 #include "convert.h"
 #include "xml.h"
 #include "emacs.h"
+#include "org.h"
 
 namespace ledger {
 
@@ -1427,6 +1428,15 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       }
       else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
+      }
+      break;
+
+    case 'o':
+      if (is_eq(p, "org")) {
+        return WRAP_FUNCTOR
+          (reporter<>
+           (new posts_to_org_table(*this, maybe_format(HANDLER(prepend_format_))),
+            *this, "#org"));
       }
       break;
 
