@@ -131,11 +131,11 @@ public:
     set_text(original_string ? *original_string : "<stream>");
   }
            
-  void     mark_uncompiled() {
+  virtual void mark_uncompiled() {
     compiled = false;
   }
 
-  void     recompile(scope_t& scope) {
+  void recompile(scope_t& scope) {
     compiled = false;
     compile(scope);
   }
