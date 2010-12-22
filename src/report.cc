@@ -452,6 +452,28 @@ value_t report_t::display_value(const value_t& val)
     return temp.unreduced();
 }
 
+namespace {
+  value_t top_amount(const value_t& val)
+  {
+    switch (val.type()) {
+    case value_t::BALANCE:
+      return (*val.as_balance().amounts.begin()).second;
+
+    case value_t::SEQUENCE: {
+      return top_amount(*val.as_sequence().begin());
+    }
+
+    default:
+      return val;
+    }
+  }
+}
+
+value_t report_t::fn_top_amount(call_scope_t& args)
+{
+  return top_amount(args[0]);
+}
+
 value_t report_t::fn_amount_expr(call_scope_t& scope)
 {
   return HANDLER(amount_).expr.calc(scope);
@@ -1269,6 +1291,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_display_amount);
       else if (is_eq(p, "trim"))
         return MAKE_FUNCTOR(report_t::fn_trim);
+      else if (is_eq(p, "top_amount"))
+        return MAKE_FUNCTOR(report_t::fn_top_amount);
       else if (is_eq(p, "to_boolean"))
         return MAKE_FUNCTOR(report_t::fn_to_boolean);
       else if (is_eq(p, "to_int"))
