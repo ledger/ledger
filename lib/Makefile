@@ -25,7 +25,7 @@ CFLAGS		= $(CPPFLAGS) -g
 LDFLAGS		= -g
 
 BOOST_VERSION	= 1_45_0
-BOOST_SOURCE	= boost_$(BOOST_VERSION)
+BOOST_SOURCE	= boost-release
 BOOST_DEFINES	= define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
 ifeq ($(CC),clang)
 BOOST_TOOLSET	= clang
@@ -47,7 +47,11 @@ BOOST_ICU_BUILD = $(PRODUCTS)/$(BOOST_ICU_DIR)
 
 all: boost-build cppunit-build #icu-build boost-icu-build
 
-boost-build:
+prepare-boost:
+	perl -i -pe 's/local command = \[ common\.get-invocation-command darwin : g\+\+ : \$$\(command\) \] ;/local command = [ common.get-invocation-command darwin : g++ : $(CXX) ] ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
+	perl -i -pe 's/flags darwin\.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;/flags darwin\.compile OPTIONS : -gdwarf-2 ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
+
+boost-build: prepare-boost
 	(cd $(BOOST_SOURCE) && \
 	 sh bootstrap.sh && \
 	 ./bjam $(OPTJ) debug --prefix=$(BOOST_STOW) --build-dir=$(BOOST_BUILD) \
