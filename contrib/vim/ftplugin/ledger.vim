@@ -1,6 +1,5 @@
 " Vim filetype plugin file
 " filetype: ledger
-" Version: 0.1.0
 " by Johann Klähn; Use according to the terms of the GPL>=2.
 " vim:ts=2:sw=2:sts=2:foldmethod=marker
 
