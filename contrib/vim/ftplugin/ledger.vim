@@ -293,7 +293,15 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   let trans['head'] = head
   let trans['tail'] = tail
 
-  let parts = split(getline(head), '\s\+')
+  " split off eventual comments at the end of line
+  let line = split(getline(head), '\ze\s*\%(\t\|  \);', 1)
+  if len(line) > 1
+    let trans['appendix'] = join(line[1:], '')
+  endif
+
+  " parse rest of line
+  " FIXME (minor): will not preserve spacing (see 'join(parts)')
+  let parts = split(line[0], '\s\+')
   if parts[0] ==# '~'
     let trans['expr'] = join(parts[1:])
     return trans
@@ -318,8 +326,6 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
     call remove(parts, 0)
   endfor
 
-  " FIXME: this will break comments at the end of this 'head' line
-  " they need 2 spaces in front of the semicolon
   let trans['description'] = join(parts)
   return trans
 endf "}}}
@@ -402,7 +408,11 @@ function! s:transaction.format_head() dict "{{{2
   if has_key(self, 'code') | call add(parts, '('.self['code'].')') | endif
   if has_key(self, 'state') | call add(parts, self['state']) | endif
   if has_key(self, 'description') | call add(parts, self['description']) | endif
-  return join(parts)
+
+  let line = join(parts)
+  if has_key(self, 'appendix') | let line .= self['appendix'] | endif
+
+  return line
 endf "}}}
 "}}}
 
