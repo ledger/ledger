@@ -136,22 +136,33 @@ function! LedgerComplete(findstart, base) "{{{1
   if a:findstart
     let lnum = line('.')
     let line = getline('.')
-    let lastcol = col('.') - 2
     let b:compl_context = ''
     if line =~ '^\s\+[^[:blank:];]' "{{{2 (account)
-      let b:compl_context = 'account'
-      if matchend(line, '^\s\+\%(\S \S\|\S\)\+') <= lastcol
-        " only allow completion when in or at end of account name
-        return -1
+      " only allow completion when in or at end of account name
+      if matchend(line, '^\s\+\%(\S \S\|\S\)\+') >= col('.') - 1
+        " the start of the first non-blank character
+        " (excluding virtual-transaction-marks)
+        " is the beginning of the account name
+        let b:compl_context = 'account'
+        return matchend(line, '^\s\+[\[(]\?')
       endif
-      " the start of the first non-blank character
-      " (excluding virtual-transaction-marks)
-      " is the beginning of the account name
-      return matchend(line, '^\s\+[\[(]\?')
-    else "}}}
-      return -1
-    endif
+    elseif line =~ '^\d' "{{{2 (description)
+      let pre = matchend(line, '^\d\S\+\%(([^)]*)\|[*?!]\|\s\)\+')
+      if pre < col('.') - 1
+        let b:compl_context = 'description'
+        return pre
+      endif
+    elseif line =~ '^$' "{{{2 (new line)
+      let b:compl_context = 'new'
+    endif "}}}
+    return -1
   else
+    if ! exists('b:compl_cache')
+      let b:compl_cache = s:collect_completion_data()
+      let b:compl_cache['#'] = changenr()
+    endif
+
+    let results = []
     if b:compl_context == 'account' "{{{2 (account)
       unlet! b:compl_context
       let hierarchy = split(a:base, ':')
@@ -159,7 +170,7 @@ function! LedgerComplete(findstart, base) "{{{1
         call add(hierarchy, '')
       endif
 
-      let results = LedgerFindInTree(LedgerGetAccountHierarchy(), hierarchy)
+      let results = LedgerFindInTree(b:compl_cache.accounts, hierarchy)
       " sort by alphabet and reverse because it will get reversed one more time
       if g:ledger_detailed_first
         let results = reverse(sort(results, 's:sort_accounts_by_depth'))
@@ -167,10 +178,19 @@ function! LedgerComplete(findstart, base) "{{{1
         let results = sort(results)
       endif
       call insert(results, a:base)
-      return results
-    else "}}}
+    elseif b:compl_context == 'description' "{{{2 (description)
+      let results = [a:base] + s:filter_items(b:compl_cache.descriptions, a:base)
+    elseif b:compl_context == 'new' "{{{2 (new line)
+      return [strftime('%Y/%m/%d')]
+    endif "}}}
+
+    " no completion (apart from a:base) found. update cache if file has changed
+    if len(results) <= 1 && b:compl_cache['#'] != changenr()
+      unlet b:compl_cache
+      return LedgerComplete(a:findstart, a:base)
+    else
       unlet! b:compl_context
-      return []
+      return results
     endif
   endif
 endf "}}}
@@ -192,21 +212,6 @@ function! LedgerFindInTree(tree, levels) "{{{1
     endif
   endfor
   return results
-endf "}}}
-
-function! LedgerGetAccountHierarchy() "{{{1
-  let hierarchy = {}
-  let accounts = s:grep_buffer('^\s\+\zs[^[:blank:];]\%(\S \S\|\S\)\+\ze')
-  for name in accounts
-    " remove virtual-transaction-marks
-    let name = substitute(name, '\%(^\s*[\[(]\?\|[\])]\?\s*$\)', '', 'g')
-    let last = hierarchy
-    for part in split(name, ':')
-      let last[part] = get(last, part, {})
-      let last = last[part]
-    endfor
-  endfor
-  return hierarchy
 endf "}}}
 
 function! LedgerToggleTransactionState(lnum, ...)
@@ -275,6 +280,51 @@ function! LedgerSetDate(lnum, type, ...) "{{{1
   let trans['date'] = join(date, '=')
 
   call setline(trans['head'], trans.format_head())
+endf "}}}
+
+function! s:collect_completion_data() "{{{1
+  let transactions = s:get_transactions()
+  let cache = {'descriptions': [], 'tags': {}, 'accounts': {}}
+  let accounts = []
+  for xact in transactions
+    " collect descriptions
+    if index(cache.descriptions, xact['description']) < 0
+      call add(cache.descriptions, xact['description'])
+    endif
+    let [t, postings] = xact.parse_body()
+    let tagdicts = [t]
+
+    " collect account names
+    for posting in postings
+      if has_key(posting, 'tags')
+        call add(tagdicts, posting.tags)
+      endif
+      " remove virtual-transaction-marks
+      let name = substitute(posting.account, '\%(^\s*[\[(]\?\|[\])]\?\s*$\)', '', 'g')
+      if index(accounts, name) < 0
+        call add(accounts, name)
+      endif
+    endfor
+
+    " collect tags
+    for tags in tagdicts | for [tag, val] in items(tags)
+      let values = get(cache.tags, tag, [])
+      if index(values, val) < 0
+        call add(values, val)
+      endif
+      let cache.tags[tag] = values
+    endfor | endfor
+  endfor
+
+  for account in accounts
+    let last = cache.accounts
+    for part in split(account, ':')
+      let last[part] = get(last, part, {})
+      let last = last[part]
+    endfor
+  endfor
+
+  return cache
 endf "}}}
 
 let s:transaction = {} "{{{1
@@ -527,7 +577,7 @@ endf "}}}
 
 " return only those items that start with a specified keyword
 function! s:filter_items(list, keyword) "{{{2
-  return filter(a:list, 'v:val =~ ''^\V'.substitute(a:keyword, '\\', '\\\\', 'g').'''')
+  return filter(copy(a:list), 'v:val =~ ''^\V'.substitute(a:keyword, '\\', '\\\\', 'g').'''')
 endf "}}}
 
 " return all lines matching an expression, returning only the matched part
