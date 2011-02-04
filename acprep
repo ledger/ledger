@@ -951,7 +951,10 @@ class PrepareBuild(CommandLineApp):
     def setup_for_johnw(self):
         if self.options.use_clang:
             self.boost_inc_ident = "clang"
-            self.boost_lib_ident = "29"
+            self.boost_lib_ident = "clang-darwin28"
+
+            self.log.debug("Setting Python home to /opt/local")
+            self.envvars['PYTHON_HOME'] = '/opt/local'
 
             self.log.debug('Using Clang ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
