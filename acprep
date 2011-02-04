@@ -1131,7 +1131,8 @@ class PrepareBuild(CommandLineApp):
         self.configure_args.append('--enable-pch')
 
         self.LDFLAGS.append('-fpch-deps')
-        self.CXXFLAGS.append('-Wconversion')
+        if not self.options.use_clang:
+            self.CXXFLAGS.append('-Wconversion')
         #self.CXXFLAGS.append('-Wold-style-cast')
 
         system = self.get_stdout('uname', '-s')
