@@ -13,20 +13,20 @@ using namespace ledger;
 
 struct amount_fixture {
   amount_fixture() {
-    times_initialize();
-    amount_t::initialize();
+  times_initialize();
+  amount_t::initialize();
 
-    // Cause the display precision for dollars to be initialized to 2.
-    amount_t x1("$1.00");
-    BOOST_CHECK(x1);
+  // Cause the display precision for dollars to be initialized to 2.
+  amount_t x1("$1.00");
+  BOOST_CHECK(x1);
 
-    amount_t::stream_fullstrings = true; // make reports from UnitTests accurate
+  amount_t::stream_fullstrings = true; // make reports from UnitTests accurate
   }
 
   ~amount_fixture() {
-    amount_t::stream_fullstrings = false;
-    amount_t::shutdown();
-    times_shutdown();
+  amount_t::stream_fullstrings = false;
+  amount_t::shutdown();
+  times_shutdown();
   }
 };
 
@@ -460,10 +460,14 @@ BOOST_AUTO_TEST_CASE(testCommodityComparisons)
   BOOST_CHECK(x3 <= x5);
   BOOST_CHECK(x3 < x5);
   BOOST_CHECK(x3 <= x5);
+#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! (x3 == x5));
+#endif
   BOOST_CHECK(x3 < x1);
   BOOST_CHECK(x3 < x4);
+#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! (x6 == x7));
+#endif
   BOOST_CHECK_THROW(x6 < x7, amount_error);
 
   BOOST_CHECK(x1.valid());

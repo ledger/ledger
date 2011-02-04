@@ -10,21 +10,21 @@ using namespace ledger;
 
 struct balance_fixture {
   balance_fixture() {
-    times_initialize();
-    amount_t::initialize();
+  times_initialize();
+  amount_t::initialize();
 
-    // Cause the display precision for dollars to be initialized to 2.
-    amount_t x1("$1.00");
-    BOOST_CHECK(x1);
+  // Cause the display precision for dollars to be initialized to 2.
+  amount_t x1("$1.00");
+  BOOST_CHECK(x1);
 
-    amount_t::stream_fullstrings = true; // make reports from UnitTests accurate
+  amount_t::stream_fullstrings = true; // make reports from UnitTests accurate
   }
 
   ~balance_fixture()
   {
-    amount_t::stream_fullstrings = false;
-    amount_t::shutdown();
-    times_shutdown();
+  amount_t::stream_fullstrings = false;
+  amount_t::shutdown();
+  times_shutdown();
   }
 };
 

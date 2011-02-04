@@ -11,14 +11,14 @@ using namespace ledger;
 
 struct commodity_fixture {
   commodity_fixture() {
-    times_initialize();
-    amount_t::initialize();
-    amount_t::stream_fullstrings = true;
+  times_initialize();
+  amount_t::initialize();
+  amount_t::stream_fullstrings = true;
   }
 
   ~commodity_fixture() {
-    amount_t::shutdown();
-    times_shutdown();
+  amount_t::shutdown();
+  times_shutdown();
   }
 };
 
@@ -50,7 +50,9 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
   amount_t x1("100.10 AAPL");
 
   BOOST_CHECK_THROW(x0.value(), amount_error);
+#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! x1.value());
+#endif
 
   // Commodities cannot be constructed by themselves, since a great deal
   // of their state depends on how they were seen to be used.
