@@ -18,7 +18,7 @@ else
 CXX		= g++-mp-$(GCC_VERSION)
 LD		= gcc-mp-$(GCC_VERSION)
 DIR_SUFFIX	= gcc$(subst .,,$(GCC_VERSION))
-OPTJ            = #-j16
+OPTJ            = #-j8
 endif
 CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
 ifneq ($(CC),clang)
@@ -47,7 +47,7 @@ BOOST_ICU_DIR	= boost_$(BOOST_VERSION)-icu-$(DIR_SUFFIX)
 BOOST_ICU_STOW	= $(STOW_ROOT)/$(BOOST_ICU_DIR)
 BOOST_ICU_BUILD = $(PRODUCTS)/$(BOOST_ICU_DIR)
 
-all: boost-build icu-build boost-icu-build
+all: boost-build #icu-build boost-icu-build
 
 prepare-boost:
 	perl -i -pe 's/local command = \[ common\.get-invocation-command darwin : g\+\+ : .*/local command = [ common.get-invocation-command darwin : g++ : $(CXX) ] ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
