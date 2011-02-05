@@ -36,10 +36,7 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/opt/local',
-                    '/usr/local',
-                    '/sw',
-                    '/usr' ]
+search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
 
 class BoostInfo(object):
     log          = None
@@ -497,6 +494,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--gcc45', action='store_true',
                       dest='gcc45', default=False,
                       help='Require the use of gcc 4.5')
+        op.add_option('', '--gcc46', action='store_true',
+                      dest='gcc46', default=False,
+                      help='Require the use of gcc 4.6')
+        op.add_option('', '--cpp0x', action='store_true',
+                      dest='cpp0x', default=False,
+                      help='Use C++0x extensions (requires Clang or gcc 4.6)')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -1019,13 +1022,22 @@ class PrepareBuild(CommandLineApp):
                 self.envvars['CXX'] = 'clang++'
                 self.envvars['LD']  = 'llvm-ld'
             elif (self.current_flavor == 'opt' or \
-                self.current_flavor == 'default') and \
+                  self.current_flavor == 'default') and \
                not self.options.gcc45 and \
+               not self.options.gcc46 and \
                exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
                 self.envvars['LD']  = '/usr/bin/g++-4.2'
                 self.darwin_gcc = True
+            elif exists('/opt/local/bin/g++-mp-4.6') and \
+                 not self.options.gcc45:
+                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.6'
+                #if exists('/Users/johnw/bin/gfilt'):
+                #    self.envvars['CXX'] = '/Users/johnw/bin/gfilt'
+                #else:
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.6'
+                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.6'
             elif exists('/opt/local/bin/g++-mp-4.5'):
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.5'
                 if exists('/Users/johnw/bin/gfilt'):
@@ -1054,6 +1066,9 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('--enable-doxygen')
         if self.options.enable_cache:
             self.configure_args.append('--enable-cache')
+
+        if self.options.cpp0x:
+            self.CXXFLAGS.append('-std=c++0x')
 
         if exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
@@ -1266,8 +1281,12 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
 
-        self.CXXFLAGS.append('-g')
-        self.LDFLAGS.append('-g')
+        if self.options.gcc45 or self.options.gcc46:
+            self.CXXFLAGS.append('-g2')
+            self.LDFLAGS.append('-g2')
+        else:
+            self.CXXFLAGS.append('-g')
+            self.LDFLAGS.append('-g')
 
     def setup_flavor_opt(self):
         self.CPPFLAGS.append('-DNDEBUG=1')
@@ -1276,6 +1295,11 @@ class PrepareBuild(CommandLineApp):
             self.CFLAGS.append(i)
             self.LDFLAGS.append(i)
         #if self.options.gcc45:
+        #    for i in ['-flto']:
+        #        self.CXXFLAGS.append(i)
+        #        self.CFLAGS.append(i)
+        #        self.LDFLAGS.append(i)
+        #if self.options.gcc46:
         #    for i in ['-flto']:
         #        self.CXXFLAGS.append(i)
         #        self.CFLAGS.append(i)
