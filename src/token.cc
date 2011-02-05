@@ -439,6 +439,13 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
           unexpected(expecting);
         }
       } else {
+        if (! in.good()) {
+          in.clear();
+          in.seekg(0, std::ios::end);
+          if (in.fail())
+            throw_(parse_error, _("Failed to reset input stream"));
+        }
+
         kind   = VALUE;
         value  = temp;
         length = static_cast<std::size_t>(in.tellg() - pos);
