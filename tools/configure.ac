@@ -308,7 +308,8 @@ AC_CACHE_CHECK(
    AC_LANG_PUSH(C++)
    AC_LINK_IFELSE(
      [AC_LANG_PROGRAM(
-        [[#include <boost/iostreams/device/file_descriptor.hpp> 
+        [[#define BOOST_IOSTREAMS_USE_DEPRECATED 1
+          #include <boost/iostreams/device/file_descriptor.hpp> 
           #include <boost/iostreams/stream.hpp>
           #include <boost/version.hpp>]],
         [[namespace io = boost::iostreams; 
