@@ -214,19 +214,29 @@ class BoostInfo(object):
         if system == 'centos':
             return [ 'boost-devel' ]
 
+        elif system == 'ubuntu-lucid':
+            return [ 'bjam', 'autopoint',
+                     'libboost-dev',
+                     'libboost-regex-dev',
+                     'libboost-date-time-dev',
+                     'libboost-filesystem-dev',
+                     'libboost-iostreams-dev',
+                     'libboost-python-dev' ]
+
         elif system == 'ubuntu-karmic':
-            return [ 'bjam', 'libboost1.40-dev',
-                     'libboost-regex1.40-dev',
-                     'libboost-date-time1.40-dev',
-                     'libboost-filesystem1.40-dev',
-                     'libboost-python1.40-dev' ]
+            return [ 'bjam', 'libboost-dev',
+                     'libboost-regex-dev',
+                     'libboost-date-time-dev',
+                     'libboost-filesystem-dev',
+                     'libboost-iostreams-dev',
+                     'libboost-python-dev' ]
 
         elif system == 'ubuntu-hardy':
-            return [ 'bjam', 'libboost1.35-dev',
-                     'libboost-python1.35-dev',
-                     'libboost-regex1.35-dev',
-                     'libboost-date-time1.35-dev',
-                     'libboost-filesystem1.35-dev' ]
+            return [ 'bjam', 'libboost-dev',
+                     'libboost-python-dev',
+                     'libboost-regex-dev',
+                     'libboost-date-time-dev',
+                     'libboost-filesystem-dev' ]
 
 class CommandLineApp(object):
     "Base class for building command line applications."
