@@ -36,10 +36,9 @@ elif [[ $output_only == false ]]; then
     if [[ -f /tmp/expected.$$ && -f /tmp/received.$$ ]]; then
         diff -w -U3 /tmp/expected.$$ /tmp/received.$$ && echo Test passed.
     fi
-else
-    if [[ -f /tmp/received.$$ ]]; then
-        cat /tmp/received.$$
-    fi
+
+elif [[ -f /tmp/received.$$ ]]; then
+    cat /tmp/received.$$
 fi
 
 /bin/rm -f /tmp/expected.$$ /tmp/received.$$
