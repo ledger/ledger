@@ -1011,9 +1011,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
       parse_quantity(in, quant);
 
-      if (! flags.has_flags(PARSE_NO_ANNOT) &&
-          ! quant.empty() && ! in.eof() &&
-          ((n = static_cast<char>(in.peek())) != '\n'))
+      if (! flags.has_flags(PARSE_NO_ANNOT) && ! quant.empty() &&
+          ! in.eof() && ((n = static_cast<char>(in.peek())) != '\n'))
         details.parse(in);
     }
   }

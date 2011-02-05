@@ -414,7 +414,7 @@ void report_t::accounts_report(acct_handler_ptr handler)
     chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                         /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
-    std::auto_ptr<post_splitter>
+    unique_ptr<post_splitter>
       splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
 
     splitter->set_preflush_func(accounts_title_printer(handler, *this));

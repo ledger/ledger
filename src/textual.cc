@@ -1404,7 +1404,7 @@ xact_t * instance_t::parse_xact(char *          line,
 {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
-  std::auto_ptr<xact_t> xact(new xact_t);
+  unique_ptr<xact_t> xact(new xact_t);
 
   xact->pos           = position_t();
   xact->pos->pathname = pathname;

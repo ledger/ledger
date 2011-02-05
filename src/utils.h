@@ -523,7 +523,13 @@ inline void check_for_signal() {
  */
 /*@{*/
 
+#if (__cplusplus > 199711)
+#define foreach(x, y) for (x : y)
+#define unique_ptr std::unique_ptr
+#else
 #define foreach BOOST_FOREACH
+#define unique_ptr std::auto_ptr
+#endif
 
 namespace ledger {
 

@@ -42,6 +42,7 @@ void annotation_t::parse(std::istream& in)
 {
   do {
     istream_pos_type pos = in.tellg();
+    assert(pos != -1);
 
     char buf[256];
     char c = peek_next_nonws(in);

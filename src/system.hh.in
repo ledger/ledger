@@ -149,7 +149,9 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#if !(__cplusplus > 199711)
 #include <boost/foreach.hpp>
+#endif
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/iostreams/stream.hpp>

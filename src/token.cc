@@ -393,12 +393,16 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
     // If not, rewind back to the beginning of the word to scan it
     // again.  If the result was -1, it means no identifier was scanned
     // so we don't have to rewind.
-    if (result == 0) {
+    if (result == 0 || ! in.good()) {
       in.clear();
       in.seekg(pos, std::ios::beg);
       if (in.fail())
         throw_(parse_error, _("Failed to reset input stream"));
     }
+
+    assert(in.good());
+    assert(! in.eof());
+    assert(in.tellg() != -1);
 
     // When in relaxed parsing mode, we want to migrate commodity flags
     // so that any precision specified by the user updates the current
@@ -452,6 +456,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
 
 void expr_t::token_t::rewind(std::istream& in)
 {
+  in.clear();
   in.seekg(- int(length), std::ios::cur);
   if (in.fail())
     throw_(parse_error, _("Failed to rewind input stream"));

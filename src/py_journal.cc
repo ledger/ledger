@@ -174,8 +174,7 @@ namespace {
     report_t& current_report(downcast<report_t>(*scope_t::default_scope));
     shared_ptr<collector_wrapper> coll(new collector_wrapper(journal,
                                                              current_report));
-    std::auto_ptr<journal_t> save_journal
-      (current_report.session.journal.release());
+    unique_ptr<journal_t> save_journal(current_report.session.journal.release());
     current_report.session.journal.reset(&journal);
 
     try {

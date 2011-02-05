@@ -176,7 +176,7 @@ commodity_pool_t::create(commodity_t&        comm,
   assert(details);
   assert(! mapping_key.empty());
 
-  std::auto_ptr<commodity_t> commodity
+  unique_ptr<commodity_t> commodity
     (new annotated_commodity_t(&comm, details));
 
   comm.add_flags(COMMODITY_SAW_ANNOTATED);
