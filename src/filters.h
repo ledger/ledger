@@ -411,7 +411,7 @@ class collapse_posts : public item_handler<post_t>
   xact_t *            last_xact;
   post_t *            last_post;
   temporaries_t       temps;
-  account_t&          totals_account;
+  account_t *         totals_account;
   bool                only_collapse_if_zero;
   std::list<post_t *> component_posts;
   report_t&           report;
@@ -429,12 +429,16 @@ public:
       display_predicate(_display_predicate),
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
-      totals_account(temps.create_account(_("<Total>"))),
       only_collapse_if_zero(_only_collapse_if_zero), report(_report) {
     TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
+    create_accounts();
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
+  }
+
+  void create_accounts() {
+    totals_account = &temps.create_account(_("<Total>"));
   }
 
   virtual void flush() {
@@ -457,6 +461,7 @@ public:
     last_post = NULL;
 
     temps.clear();
+    create_accounts();
     component_posts.clear();
     
     item_handler<post_t>::clear();
@@ -505,12 +510,12 @@ class display_filter_posts : public item_handler<post_t>
   bool          show_rounding;
   value_t       last_display_total;
   temporaries_t temps;
-  account_t&    rounding_account;
+  account_t *   rounding_account;
 
   display_filter_posts();
 
 public:
-  account_t&    revalued_account;
+  account_t *   revalued_account;
 
   display_filter_posts(post_handler_ptr handler,
                        report_t&        _report,
@@ -518,6 +523,11 @@ public:
 
   virtual ~display_filter_posts() {
     TRACE_DTOR(display_filter_posts);
+  }
+
+  void create_accounts() {
+    rounding_account = &temps.create_account(_("<Adjustment>"));
+    revalued_account = &temps.create_account(_("<Revalued>"));
   }
 
   bool output_rounding(post_t& post);
@@ -531,6 +541,7 @@ public:
     last_display_total = value_t();
 
     temps.clear();
+    create_accounts();
 
     item_handler<post_t>::clear();
   }
@@ -551,7 +562,7 @@ class changed_value_posts : public item_handler<post_t>
   value_t       last_total;
   value_t       repriced_total;
   temporaries_t temps;
-  account_t&    revalued_account;
+  account_t *   revalued_account;
   account_t *   gains_equity_account;
   account_t *   losses_equity_account;
 
@@ -570,6 +581,11 @@ public:
     TRACE_DTOR(changed_value_posts);
   }
 
+  void create_accounts() {
+    revalued_account = (display_filter ? display_filter->revalued_account :
+                        &temps.create_account(_("<Revalued>")));
+  }
+
   virtual void flush();
 
   void output_revaluation(post_t& post, const date_t& current);
@@ -585,6 +601,7 @@ public:
     last_total = value_t();
 
     temps.clear();
+    create_accounts();
 
     item_handler<post_t>::clear();
   }
@@ -666,7 +683,7 @@ class interval_posts : public subtotal_posts
   date_interval_t interval;
   date_interval_t last_interval;
   post_t *        last_post;
-  account_t&      empty_account;
+  account_t *     empty_account;
   bool            exact_periods;
   bool            generate_empty_posts;
 
@@ -681,14 +698,18 @@ public:
                  bool                   _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), start_interval(_interval),
       interval(start_interval), last_post(NULL),
-      empty_account(temps.create_account(_("<None>"))),
       exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
     TRACE_CTOR(interval_posts,
                "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
+    create_accounts();
   }
   virtual ~interval_posts() throw() {
     TRACE_DTOR(interval_posts);
+  }
+
+  void create_accounts() {
+    empty_account = &temps.create_account(_("<None>"));
   }
 
   void report_subtotal(const date_interval_t& interval);
@@ -707,27 +728,32 @@ public:
     last_interval = date_interval_t();
     last_post = NULL;
 
-    item_handler<post_t>::clear();
+    subtotal_posts::clear();
+    create_accounts();
   }
 };
 
 class posts_as_equity : public subtotal_posts
 {
   post_t *    last_post;
-  account_t&  equity_account;
+  account_t * equity_account;
   account_t * balance_account;
 
   posts_as_equity();
 
 public:
   posts_as_equity(post_handler_ptr _handler, expr_t& amount_expr)
-    : subtotal_posts(_handler, amount_expr),
-      equity_account(temps.create_account(_("Equity"))) {
+    : subtotal_posts(_handler, amount_expr) {
     TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
-    balance_account = equity_account.find_account(_("Opening Balances"));
+    create_accounts();
   }
   virtual ~posts_as_equity() throw() {
     TRACE_DTOR(posts_as_equity);
+  }
+
+  void create_accounts() {
+    equity_account  = &temps.create_account(_("Equity"));
+    balance_account = equity_account->find_account(_("Opening Balances"));
   }
 
   void report_subtotal();
@@ -739,7 +765,8 @@ public:
 
   virtual void clear() {
     last_post = NULL;
-    item_handler<post_t>::clear();
+    subtotal_posts::clear();
+    create_accounts();
   }
 };
 
@@ -837,7 +864,7 @@ public:
     for (int i = 0; i < 7; i++)
       days_of_the_week[i].clear();
 
-    item_handler<post_t>::clear();
+    subtotal_posts::clear();
   }
 };
 
@@ -928,7 +955,7 @@ class forecast_posts : public generate_posts
 
   virtual void clear() {
     pred.mark_uncompiled();
-    item_handler<post_t>::clear();
+    generate_posts::clear();
   }
 };
 
