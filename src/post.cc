@@ -282,11 +282,11 @@ namespace {
           master = master->parent;
 
         if (args[0].is_string()) {
-          name    = args.get<string>(0);
+          name = args.get<string>(0);
           acct = master->find_account(name, false);
         }
         else if (args[0].is_mask()) {
-          name    = args.get<mask_t>(0).str();
+          name = args.get<mask_t>(0).str();
           acct = master->find_account_re(name);
         }
         else {
@@ -298,8 +298,8 @@ namespace {
         if (! acct)
           throw_(std::runtime_error,
                  _("Could not find an account matching ") << args[0]);
-        else
-          return value_t(static_cast<scope_t *>(acct));
+
+        return value_t(static_cast<scope_t *>(acct));
       }
     }
     else if (args.type_context() == value_t::SCOPE) {
@@ -313,9 +313,9 @@ namespace {
 
   value_t get_display_account(call_scope_t& args)
   {
-    post_t& post(args.context<post_t>());
     value_t acct = get_account(args);
     if (acct.is_string()) {
+      post_t& post(args.context<post_t>());
       if (post.has_flags(POST_VIRTUAL)) {
         if (post.must_balance())
           acct = string_value(string("[") + acct.as_string() + "]");
