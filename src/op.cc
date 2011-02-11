@@ -150,6 +150,15 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
   value_t result;
 
+#if defined(DEBUG_ON)
+  if (! skip_debug && SHOW_DEBUG("expr.calc")) {
+    for (int i = 0; i < depth; i++)
+      ledger::_log_buffer << '.';
+    ledger::_log_buffer << op_context(this) <<  " => ...";
+    DEBUG("expr.calc", "");
+  }
+#endif
+
   switch (kind) {
   case VALUE:
     result = as_value();
@@ -251,6 +260,21 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       func = scope.lookup(symbol_t::FUNCTION, name);
     if (! func)
       throw_(calc_error, _("Calling unknown function '%1'") << name);
+
+#if defined(DEBUG_ON)
+    if (! skip_debug && SHOW_DEBUG("expr.calc")) {
+      for (int i = 0; i < depth; i++)
+        ledger::_log_buffer << '.';
+      ledger::_log_buffer << "    args: ";
+      if (call_args.args.is_sequence()) {
+        foreach (value_t& arg, call_args)
+          ledger::_log_buffer << arg << " ";
+      } else {
+        ledger::_log_buffer << call_args.args[0] << " ";
+      }
+      DEBUG("expr.calc", "");
+    }
+#endif
 
     if (func->is_function())
       result = func->as_function()(call_args);

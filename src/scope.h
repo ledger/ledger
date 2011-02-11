@@ -347,7 +347,13 @@ protected:
 
 class call_scope_t : public context_scope_t
 {
+#if defined(DEBUG_ON)
+public:
+#endif
   value_t        args;
+#if defined(DEBUG_ON)
+private:
+#endif
   mutable void * ptr;
 
   value_t& resolve(const std::size_t index,

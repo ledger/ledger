@@ -216,6 +216,7 @@ public:
     if (xdata_)
       if (account_t * acct = xdata_->account)
         return acct;
+    assert(account);
     return account;
   }
 
