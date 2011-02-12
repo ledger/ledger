@@ -16,5 +16,3 @@ reg --forecast-while="d<[2010/03/01]" --now=2009/11/01
 10-Jan-01 Forecast transaction  Assets                     $-500.00            0
 10-Feb-01 Forecast transaction  Expenses:Food               $500.00      $500.00
 10-Feb-01 Forecast transaction  Assets                     $-500.00            0
->>>2
-=== 0

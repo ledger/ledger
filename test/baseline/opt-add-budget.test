@@ -364,5 +364,3 @@ reg --add-budget books cards --now=2009/12/31
                                 Liabilities:Cards           $120.00     $5760.00
 09-Dec-31 End of December       Expenses:Books              $120.00     $5880.00
                                 Liabilities:Cards           $120.00     $6000.00
->>>2
-=== 0

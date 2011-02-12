@@ -281,5 +281,3 @@ reg --now=2009/03/21 --forecast-while='total < $3500' books
 12-Feb-01 Forecast transaction  Expenses:Books               $10.00     $3470.00
 12-Mar-01 Forecast transaction  Expenses:Books               $10.00     $3480.00
 12-Apr-01 Forecast transaction  Expenses:Books               $10.00     $3490.00
->>>2
-=== 0

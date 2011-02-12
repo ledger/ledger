@@ -6,5 +6,3 @@ bal --balance-format='%(account)\n' --no-total
 >>>1
 Assets:Investments:Vanguard:VMMXX
 Income:Dividends:Vanguard:VMMXX
->>>2
-=== 0

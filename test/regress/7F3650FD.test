@@ -15,7 +15,6 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 10-Dec-01
->>>2
 === 0
 period --now=2010/11/01 10/01
 <<<
@@ -34,7 +33,6 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 10-Oct-01
->>>2
 === 0
 period --now=2010/11/01 2009/10
 <<<
@@ -53,7 +51,6 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 09-Oct-01
->>>2
 === 0
 period --now=2010/11/01 2009/10/01
 <<<
@@ -72,7 +69,6 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 09-Oct-01
->>>2
 === 0
 period --now=2010/11/01 2009
 <<<
@@ -91,5 +87,3 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 09-Jan-01
->>>2
-=== 0

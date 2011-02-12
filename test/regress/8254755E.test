@@ -11,10 +11,7 @@ bal --flat food:out --now=2009/12/31
   Assets
 >>>1
               $50.00  Expenses:Food:Out
->>>2
 === 0
 bal --flat --budget food:out --now=2009/12/31
 >>>1
             $-150.00  Expenses:Food:Out
->>>2
-=== 0

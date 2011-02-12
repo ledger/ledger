@@ -126,7 +126,6 @@ reg --sort=account
 08-Sep-22 DELTA                 Liabilities:MasterCard     $-806.20    $1,224.54
 08-Sep-22 DELTA                 Liabilities:MasterCard     $-806.20      $418.34
 08-Sep-22 LIAT 1974 LIMITED     Liabilities:MasterCard     $-418.34            0
->>>2
 === 0
 reg --sort-xacts=account
 >>>1
@@ -172,5 +171,3 @@ reg --sort-xacts=account
                                 Expens:Travel:Passport      $127.00            0
 08-Dec-26 U.S. Department of .. Assets:Checking            $-127.00     $-127.00
                                 Expens:Travel:Passport      $127.00            0
->>>2
-=== 0

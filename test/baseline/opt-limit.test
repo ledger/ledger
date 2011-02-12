@@ -208,5 +208,3 @@ reg --limit='account =~ /Books/ and amount < 50'
 09-Mar-31 End of March          Expenses:Books               $30.00      $320.00
 09-Apr-01 April                 Expenses:Books               $40.00      $360.00
 09-Apr-30 End of April          Expenses:Books               $40.00      $400.00
->>>2
-=== 0

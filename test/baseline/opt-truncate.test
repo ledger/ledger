@@ -100,7 +100,6 @@ reg airfare --truncate=leading
 08-Sep-22 DELTA                 ..enses:Travel:Airfare      $806.20    $7,050.53
 08-Sep-22 DELTA                 ..enses:Travel:Airfare      $806.20    $7,856.73
 08-Sep-22 LIAT 1974 LIMITED     ..enses:Travel:Airfare      $418.34    $8,275.07
->>>2
 === 0
 reg airfare --truncate=middle
 >>>1
@@ -120,7 +119,6 @@ reg airfare --truncate=middle
 08-Sep-22 DELTA                 Expenses:T..el:Airfare      $806.20    $7,050.53
 08-Sep-22 DELTA                 Expenses:T..el:Airfare      $806.20    $7,856.73
 08-Sep-22 LIAT 1974 LIMITED     Expenses:T..el:Airfare      $418.34    $8,275.07
->>>2
 === 0
 reg airfare --truncate=trailing
 >>>1
@@ -140,5 +138,3 @@ reg airfare --truncate=trailing
 08-Sep-22 DELTA                 Expenses:Travel:Airf..      $806.20    $7,050.53
 08-Sep-22 DELTA                 Expenses:Travel:Airf..      $806.20    $7,856.73
 08-Sep-22 LIAT 1974 LIMITED     Expenses:Travel:Airf..      $418.34    $8,275.07
->>>2
-=== 0

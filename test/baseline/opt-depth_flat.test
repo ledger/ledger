@@ -20,7 +20,6 @@ bal --depth 1 --flat
     Income:One:Two:Books          $-10.00
     Income:One:Two:Three:Books          $-10.00
 >>>1
->>>2
 === 0
 bal --depth 2 --flat
 >>>1
@@ -28,7 +27,6 @@ bal --depth 2 --flat
               $10.00  Expenses:Books
 --------------------
                    0
->>>2
 === 0
 bal --depth 3 --flat
 >>>1
@@ -38,7 +36,6 @@ bal --depth 3 --flat
              $-10.00  Income:One:Books
 --------------------
                    0
->>>2
 === 0
 bal --depth 4 --flat
 >>>1
@@ -50,7 +47,6 @@ bal --depth 4 --flat
              $-10.00  Income:One:Two:Books
 --------------------
                    0
->>>2
 === 0
 bal --depth 5 --flat
 >>>1
@@ -64,5 +60,3 @@ bal --depth 5 --flat
              $-10.00  Income:One:Two:Three:Books
 --------------------
                    0
->>>2
-=== 0

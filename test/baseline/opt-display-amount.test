@@ -61,5 +61,3 @@ reg --display-amount='amount * 10' books
 08-Feb-01 End of February       Expenses:Books              $200.00      $140.00
 08-Feb-01 February              Expenses:Books              $200.00      $160.00
 08-Feb-01 End of February       Expenses:Books              $200.00      $180.00
->>>2
-=== 0

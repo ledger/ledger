@@ -100,7 +100,6 @@ reg airfare --sort=date
 08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,050.53
 08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,856.73
 08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $8,275.07
->>>2
 === 0
 reg airfare --sort=date,amount
 >>>1
@@ -120,7 +119,6 @@ reg airfare --sort=date,amount
 08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $6,662.67
 08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,468.87
 08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $8,275.07
->>>2
 === 0
 reg airfare --sort=date,-amount
 >>>1
@@ -140,7 +138,6 @@ reg airfare --sort=date,-amount
 08-Sep-22 DELTA                 Expense:Travel:Airfare      $806.20    $7,786.73
 08-Sep-22 LIAT 1974 LIMITED     Expense:Travel:Airfare      $418.34    $8,205.07
 08-Sep-22 AGNT FEE              Expense:Travel:Airfare       $70.00    $8,275.07
->>>2
 === 0
 reg airfare --sort=-date,-amount
 >>>1
@@ -160,7 +157,6 @@ reg airfare --sort=-date,-amount
 08-Feb-05 UNITED                Expense:Travel:Airfare      $238.80    $8,052.88
 08-Jan-14 cheaptickets.com      Expense:Travel:Airfare      $182.19    $8,235.07
 08-Jan-11 LIAT                  Expense:Travel:Airfare       $40.00    $8,275.07
->>>2
 === 0
 bal --sort=total
 >>>1
@@ -172,7 +168,6 @@ bal --sort=total
            $8,275.07    Airfare
 --------------------
                    0
->>>2
 === 0
 bal --sort=-total
 >>>1
@@ -184,7 +179,6 @@ bal --sort=-total
           $-8,726.04  Liabilities:MasterCard
 --------------------
                    0
->>>2
 === 0
 bal --sort=-account
 >>>1
@@ -196,7 +190,6 @@ bal --sort=-account
             $-254.00  Assets:Checking
 --------------------
                    0
->>>2
 === 0
 reg --sort=account
 >>>1
@@ -242,5 +235,3 @@ reg --sort=account
 08-Sep-22 DELTA                 Liabilities:MasterCard     $-806.20    $1,224.54
 08-Sep-22 DELTA                 Liabilities:MasterCard     $-806.20      $418.34
 08-Sep-22 LIAT 1974 LIMITED     Liabilities:MasterCard     $-418.34            0
->>>2
-=== 0

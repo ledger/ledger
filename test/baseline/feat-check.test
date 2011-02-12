@@ -14,5 +14,5 @@ check account("Assets:Checking").all(account =~ /Expense/)
 --------------------
                    0
 >>>2
-Warning: Transaction check failed: account =~ /Foo/
+Warning: Transaction check failed: (account =~ /Foo/)
 Warning: Check failed: account("Assets:Checking").all(account =~ /Expense/)

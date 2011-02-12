@@ -196,7 +196,6 @@ reg books --monthly --limit='amount > $100'
 08-Dec-01 - 08-Dec-31           Expenses:Books              $240.00      $460.00
 09-Nov-01 - 09-Nov-30           Expenses:Books              $220.00      $680.00
 09-Dec-01 - 09-Dec-31           Expenses:Books              $240.00      $920.00
->>>2
 === 0
 reg books --monthly --only='amount > $100'
 >>>1
@@ -214,7 +213,6 @@ reg books --monthly --only='amount > $100'
 09-Oct-01 - 09-Oct-31           Expenses:Books              $200.00     $2060.00
 09-Nov-01 - 09-Nov-30           Expenses:Books              $220.00     $2280.00
 09-Dec-01 - 09-Dec-31           Expenses:Books              $240.00     $2520.00
->>>2
 === 0
 reg books --monthly --display='amount > $100'
 >>>1
@@ -232,5 +230,3 @@ reg books --monthly --display='amount > $100'
 09-Oct-01 - 09-Oct-31           Expenses:Books              $200.00     $2660.00
 09-Nov-01 - 09-Nov-30           Expenses:Books              $220.00     $2880.00
 09-Dec-01 - 09-Dec-31           Expenses:Books              $240.00     $3120.00
->>>2
-=== 0

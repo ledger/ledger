@@ -317,5 +317,3 @@ reg --budget books --now=2009/12/31
 09-Dec-01 Budget transaction    Expenses:Books              $-10.00     $2640.00
 09-Dec-01 December              Expenses:Books              $120.00     $2760.00
 09-Dec-31 End of December       Expenses:Books              $120.00     $2880.00
->>>2
-=== 0

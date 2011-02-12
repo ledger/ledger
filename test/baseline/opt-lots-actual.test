@@ -13,7 +13,6 @@ D 1.0000s
   1339829c {1.86590975416s} [2006/03/14]
     248720c {10.051463493s} [2006/03/14]
                                -1388.89h
->>>2
 === 0
 reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots-actual
 >>>1
@@ -21,5 +20,3 @@ reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots-actual
                                 1588549c
                                 1588549c
                                -1388.89h
->>>2
-=== 0

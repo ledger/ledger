@@ -7,5 +7,3 @@ reg --payee='account_base + ":" + commodity'
 07-Feb-02 VMMXX:VMMXX           As:Inves:Vanguar:VMMXX  0.350 VMMXX  0.350 VMMXX
 07-Feb-02 VMMXX:$               In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
                                                                      0.350 VMMXX
->>>2
-=== 0

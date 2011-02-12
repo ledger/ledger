@@ -20,4 +20,3 @@ reg --strict
                                 Assets:Cash                 $-30.00            0
 >>>2
 Warning: "$FILE", line 10: Unknown account 'Expenses:Foodx'
-=== 0

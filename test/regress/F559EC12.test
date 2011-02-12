@@ -19,7 +19,6 @@ Element:    EXPR  flags: 0x1  min: 12  max:  0  expr: scrub(amount)
 
 --- Formatted string ---
 "20 BOOK     "
->>>2
 === 0
 format "%12(scrub(amount))"
 >>>1
@@ -41,5 +40,3 @@ Element:    EXPR  flags: 0x0  min: 12  max:  0  expr: scrub(amount)
 
 --- Formatted string ---
 "     20 BOOK"
->>>2
-=== 0

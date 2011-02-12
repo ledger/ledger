@@ -5,5 +5,3 @@ bal --sort total --flat -X '$' not '(Income|Liabilities)'
     Liabilities:MasterCard        $-200.00
 >>>1
              $200.00  Expenses:Books
->>>2
-=== 0

@@ -6,5 +6,3 @@ reg -J --plot-total-format='X %(format_date(date, "%Y-%m-%d")) Y %(quantity(scru
 >>>1
 X 2007-02-02 Y 0.35
 X 2007-02-02 Y -0.35
->>>2
-=== 0
