@@ -151,6 +151,7 @@ namespace {
     void define_directive(char * line);
     void assert_directive(char * line);
     void check_directive(char * line);
+    void comment_directive(char * line);
     void expr_directive(char * line);
     bool general_directive(char * line);
 
@@ -310,7 +311,6 @@ void instance_t::read_next_directive()
 {
   char * line;
   std::streamsize len = read_line(line);
-
   if (len == 0 || line == NULL)
     return;
 
@@ -911,6 +911,17 @@ void instance_t::check_directive(char * line)
     warning_(_("Check failed: %1") << line);
 }
 
+void instance_t::comment_directive(char * line)
+{
+  while (in.good() && ! in.eof()) {
+    if (read_line(line) > 0) {
+      std::string buf(line);
+      if (starts_with(buf, "end comment") || starts_with(buf, "end test"))
+        break;
+    }
+  }
+}
+
 void instance_t::expr_directive(char * line)
 {
   expr_t expr(line);
@@ -961,6 +972,10 @@ bool instance_t::general_directive(char * line)
       check_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "comment") == 0) {
+      comment_directive(arg);
+      return true;
+    }
     break;
 
   case 'd':
@@ -1005,6 +1020,10 @@ bool instance_t::general_directive(char * line)
   case 't':
     if (std::strcmp(p, "tag") == 0) {
       tag_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "test") == 0) {
+      comment_directive(arg);
       return true;
     }
     break;
