@@ -87,6 +87,12 @@ class RegressFile(object):
 
         return test['command'] and test
 
+    def notify_user(self, msg, test):
+        print msg
+        print "--"
+        print test['command'],
+        print "--"
+
     def run_test(self, test):
         use_stdin = False
         if test['command'].find("-f - ") != -1:
@@ -112,47 +118,47 @@ class RegressFile(object):
         success = True
         printed = False
         index   = 0
-        for line in unified_diff(test['output'], harness.readlines(p.stdout)):
-            index += 1
-            if index < 3:
-                continue
-            if not printed:
-                if success: print
-                print "Regression failure in output from %s:" % \
-                    os.path.basename(self.filename)
-                success = False
-                printed = True
-            print " ", line,
+        if test['output'] is not None:
+            for line in unified_diff(test['output'], harness.readlines(p.stdout)):
+                index += 1
+                if index < 3:
+                    continue
+                if not printed:
+                    if success: print
+                    self.notify_user("Regression failure in output from %s:" % self.filename, test)
+                    success = False
+                    printed = True
+                print " ", line,
 
         printed = False
         index   = 0
-        for line in unified_diff([re.sub('\$FILE', tempdata[1], line)
-                                  for line in test['error']],
-                                 harness.readlines(p.stderr)):
-            index += 1
-            if index < 3:
-                continue
-            if not printed:
-                if success: print
-                print "Regression failure in error output from %s:" % \
-                    os.path.basename(self.filename)
-                success = False
-                printed = True
-            print " ", line,
+        if test['error'] is not None:
+            for line in unified_diff([re.sub('\$FILE', tempdata[1], line)
+                                      for line in test['error']],
+                                     harness.readlines(p.stderr)):
+                index += 1
+                if index < 3:
+                    continue
+                if not printed:
+                    if success: print
+                    self.notify_user("Regression failure in error output from %s:" % self.filename, test)
+                    success = False
+                    printed = True
+                print " ", line,
 
-        if test['exitcode'] == p.wait():
+        if not use_stdin:
+            os.remove(tempdata[1])
+
+        if test['exitcode'] is None or test['exitcode'] == p.wait():
             if success:
                 harness.success()
             else:
                 harness.failure()
         else:
             if success: print
-            print "Regression failure in exitcode from %s: %d (expected) != %d" % \
-                (os.path.basename(self.filename), test['exitcode'], p.returncode)
+            self.notify_user("Regression failure in exit code (%d (expected) != %d) from %s:"
+                             % (test['exitcode'], p.returncode), test, self.filename)
             harness.failure()
-
-        if not use_stdin:
-            os.remove(tempdata[1])
 
     def run_tests(self):
         test = self.read_test()
