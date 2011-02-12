@@ -1,5 +1,3 @@
-reg
-<<<
 2007-01-01 Opening balances
   Assets:Cash         10.00 EUR
   Equity:Opening balances
@@ -14,7 +12,8 @@ reg
  Income:Gain
 
 P 2009-02-01 00:00:00 GBP 1.5 EUR
->>>
+
+test reg
 07-Jan-01 Opening balances      Assets:Cash               10.00 EUR    10.00 EUR
                                 Equit:Opening balances   -10.00 EUR            0
 08-Jan-01 Buy 5.00 GBP          Assets:Cash                5.00 GBP     5.00 GBP
@@ -31,3 +30,4 @@ P 2009-02-01 00:00:00 GBP 1.5 EUR
                                 Equity:Capital Gains       0.50 EUR     0.50 EUR
                                                                         5.00 GBP
                                                            -5.00 GBP {=1.40 EUR}
+end test

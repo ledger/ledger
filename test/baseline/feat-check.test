@@ -1,5 +1,3 @@
-bal
-<<<
 = /Checking/
   check account =~ /Foo/
 
@@ -8,11 +6,13 @@ bal
   Assets:Checking
 
 check account("Assets:Checking").all(account =~ /Expense/)
->>>
+
+test bal
                $-100  Assets:Checking
                 $100  Expenses:Food
 --------------------
                    0
->>>2
+__ERROR__
 Warning: Transaction check failed: (account =~ /Foo/)
 Warning: Check failed: account("Assets:Checking").all(account =~ /Expense/)
+end test

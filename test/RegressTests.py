@@ -38,52 +38,52 @@ class RegressFile(object):
         self.filename = filename
         self.fd = open(self.filename)
 
-    def is_directive(self, line):
-        return line == "<<<\n" or \
-               line == ">>>\n" or \
-               line == ">>>1\n" or \
-               line == ">>>2\n" or \
-               line.startswith("===")
-
     def transform_line(self, line):
         line = re.sub('\$sourcepath', harness.sourcepath, line)
         return line
 
-    def read_section(self):
-        lines = []
-        line = self.fd.readline()
-        while line and not self.is_directive(line):
-            lines.append(self.transform_line(line))
-            line = self.fd.readline()
-        return (lines, line)
-
-    def read_test(self, last_test = None):
+    def read_test(self):
         test = {
             'command':  None,
-            'input':    "",
-            'output':   "",
-            'error':    "",
+            'output':   None,
+            'error':    None,
             'exitcode': 0
         }
-        if last_test:
-            test['input'] = last_test['input']
+
+        in_output = False
+        in_error  = False
 
         line = self.fd.readline()
+        #print "line =", line
         while line:
-            if line == "<<<\n":
-                (test['input'], line) = self.read_section()
-            elif line == ">>>\n" or line == ">>>1\n":
-                (test['output'], line) = self.read_section()
-            elif line == ">>>2\n":
-                (test['error'], line) = self.read_section()
-            elif line.startswith("==="):
-                match = re.match('=== ([0-9]+)', line)
-                assert match
-                test['exitcode'] = int(match.group(1))
-                return test
-            else:
-                test['command'] = self.transform_line(line)
-                line = self.fd.readline()
+            if line.startswith("test "):
+                command = line[5:]
+                match = re.match('(.*) -> ([0-9]+)', command)
+                if match:
+                    test['command'] = self.transform_line(match.group(1))
+                    test['exitcode'] = int(match.group(2))
+                else:
+                    test['command'] = command
+                in_output = True
+
+            elif in_output:
+                if line.startswith("end test"):
+                    in_output = in_error = False
+                    break
+                elif in_error:
+                    if test['error'] is None:
+                        test['error'] = []
+                    test['error'].append(self.transform_line(line))
+                else:
+                    if line.startswith("__ERROR__"):
+                        in_error = True
+                    else:
+                        if test['output'] is None:
+                            test['output'] = []
+                        test['output'].append(self.transform_line(line))
+
+            line = self.fd.readline()
+            #print "line =", line
 
         return test['command'] and test
 
@@ -97,22 +97,19 @@ class RegressFile(object):
         use_stdin = False
         if test['command'].find("-f - ") != -1:
             use_stdin = True
-
-            test['command'] = '$ledger ' + test['command']
         else:
-            tempdata = tempfile.mkstemp()
-
-            os.write(tempdata[0], join(test['input'], ''))
-            os.close(tempdata[0])
-
-            test['command'] = (('$ledger -f "%s" ' % tempdata[1]) +
+            test['command'] = (('$ledger -f "%s" ' % self.filename) +
                                test['command'])
 
         p = harness.run(test['command'],
                         columns=(not re.search('--columns', test['command'])))
 
         if use_stdin:
-            p.stdin.write(join(test['input'], ''))
+            fd = open(self.filename)
+            try:
+                p.stdin.write(fd.read())
+            finally:
+                fd.close()
         p.stdin.close()
 
         success = True
@@ -125,7 +122,7 @@ class RegressFile(object):
                     continue
                 if not printed:
                     if success: print
-                    self.notify_user("Regression failure in output from %s:" % self.filename, test)
+                    self.notify_user("FAILURE in output from %s:" % self.filename, test)
                     success = False
                     printed = True
                 print " ", line,
@@ -133,7 +130,7 @@ class RegressFile(object):
         printed = False
         index   = 0
         if test['error'] is not None:
-            for line in unified_diff([re.sub('\$FILE', tempdata[1], line)
+            for line in unified_diff([re.sub('\$FILE', self.filename, line)
                                       for line in test['error']],
                                      harness.readlines(p.stderr)):
                 index += 1
@@ -141,13 +138,11 @@ class RegressFile(object):
                     continue
                 if not printed:
                     if success: print
-                    self.notify_user("Regression failure in error output from %s:" % self.filename, test)
+                    self.notify_user("FAILURE in error output from %s:"
+                                     % self.filename, test)
                     success = False
                     printed = True
                 print " ", line,
-
-        if not use_stdin:
-            os.remove(tempdata[1])
 
         if test['exitcode'] is None or test['exitcode'] == p.wait():
             if success:
@@ -156,25 +151,25 @@ class RegressFile(object):
                 harness.failure()
         else:
             if success: print
-            self.notify_user("Regression failure in exit code (%d (expected) != %d) from %s:"
-                             % (test['exitcode'], p.returncode), test, self.filename)
+            if test['exitcode']:
+                self.notify_user("FAILURE in exit code (%d != %d) from %s:"
+                                 % (test['exitcode'], p.returncode, self.filename),
+                                 test)
             harness.failure()
 
     def run_tests(self):
         test = self.read_test()
         while test:
             self.run_test(test)
-            test = self.read_test(test)
-        return harness.failed
+            test = self.read_test()
 
     def close(self):
         self.fd.close()
 
 def do_test(path):
     entry = RegressFile(path)
-    failed = entry.run_tests()
+    entry.run_tests()
     entry.close()
-    return failed
 
 if __name__ == '__main__':
     if multiproc:

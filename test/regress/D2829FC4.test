@@ -1,5 +1,3 @@
-reg --forecast 'date<[2011]' --now=2010/06/20
-<<<
 ~ Monthly since 2010/01/01
     Expenses:Bills:Rent                 $873.00
     Expenses:Household                  $200.00
@@ -14,7 +12,8 @@ reg --forecast 'date<[2011]' --now=2010/06/20
     ad738623:d317da42:0e30a690              A2079.00
     208b135f:c84cc2a7:a336b63a               A199.00
     45435ee9:2d8ee712:ee7e46b1:0f0e7e54:f5dbec59
->>>
+
+test reg --forecast 'date<[2011]' --now=2010/06/20
 10-Jun-22 c897683b              ad738:d317da4:0e30a690     A2079.00     A2079.00
                                 208b1:c84cc2a:a336b63a      A199.00     A2278.00
                                 45:2d:ee:0f0e:f5dbec59    A-2278.00            0
@@ -70,3 +69,4 @@ reg --forecast 'date<[2011]' --now=2010/06/20
 10-Dec-12 Forecast transaction  Assets:Bank:Checking        $-85.00            0
 10-Dec-26 Forecast transaction  Exp:Bill:Housecleaning       $85.00       $85.00
 10-Dec-26 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+end test

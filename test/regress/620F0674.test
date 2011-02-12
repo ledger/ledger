@@ -1,5 +1,3 @@
-reg bank --forecast "d<=[next year]" -d "d>=[this month] & d<=[next year]" --sort d --now=2010/06/20
-<<<
 ~ Monthly since 2010/01/01
     Expenses:Bills:Rent                 $873.00
     Expenses:Household                  $200.00
@@ -10,15 +8,25 @@ reg bank --forecast "d<=[next year]" -d "d>=[this month] & d<=[next year]" --sor
     Expenses:Bills:Housecleaning        $85.00
     Assets:Bank:Checking
 
-2010/06/22 c897683b
-    ad738623:d317da42:0e30a690              A2079.00
-    208b135f:c84cc2a7:a336b63a               A199.00
-    45435ee9:2d8ee712:ee7e46b1:0f0e7e54:f5dbec59
->>>
+test reg bank --forecast "d<=[next year]" -d "d>=[this month] & d<=[next year]" --sort d --now=2010/06/20
 10-Jul-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $1418.60
-10-Aug-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $2837.20
-10-Sep-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $4255.80
-10-Oct-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $5674.40
-10-Nov-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $7093.00
-10-Dec-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $8511.60
-11-Jan-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $9930.20
+10-Jul-04 Forecast transaction  Assets:Bank:Checking        $-85.00     $1333.60
+10-Jul-18 Forecast transaction  Assets:Bank:Checking        $-85.00     $1248.60
+10-Aug-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $2667.20
+10-Aug-01 Forecast transaction  Assets:Bank:Checking        $-85.00     $2582.20
+10-Aug-15 Forecast transaction  Assets:Bank:Checking        $-85.00     $2497.20
+10-Aug-29 Forecast transaction  Assets:Bank:Checking        $-85.00     $2412.20
+10-Sep-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $3830.80
+10-Sep-12 Forecast transaction  Assets:Bank:Checking        $-85.00     $3745.80
+10-Sep-26 Forecast transaction  Assets:Bank:Checking        $-85.00     $3660.80
+10-Oct-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $5079.40
+10-Oct-10 Forecast transaction  Assets:Bank:Checking        $-85.00     $4994.40
+10-Oct-24 Forecast transaction  Assets:Bank:Checking        $-85.00     $4909.40
+10-Nov-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $6328.00
+10-Nov-07 Forecast transaction  Assets:Bank:Checking        $-85.00     $6243.00
+10-Nov-21 Forecast transaction  Assets:Bank:Checking        $-85.00     $6158.00
+10-Dec-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $7576.60
+10-Dec-05 Forecast transaction  Assets:Bank:Checking        $-85.00     $7491.60
+10-Dec-19 Forecast transaction  Assets:Bank:Checking        $-85.00     $7406.60
+11-Jan-01 Forecast transaction  Assets:Bank:Checking       $1418.60     $8825.20
+end test
