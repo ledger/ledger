@@ -85,7 +85,7 @@ class RegressFile(object):
                 test['command'] = self.transform_line(line)
                 line = self.fd.readline()
 
-        return None
+        return test['command'] and test
 
     def run_test(self, test):
         use_stdin = False
@@ -180,9 +180,9 @@ if __name__ == '__main__':
         tests = [os.path.join(tests, x)
                  for x in os.listdir(tests) if x.endswith('.test')]
         if pool:
-            harness.failed = sum(pool.map(do_test, tests, 1))
+            pool.map(do_test, tests, 1)
         else:
-            harness.failed = sum(map(do_test, tests))
+            map(do_test, tests)
     else:
         entry = RegressFile(tests)
         entry.run_tests()
