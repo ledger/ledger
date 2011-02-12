@@ -529,11 +529,10 @@ string item_context(const item_t& item, const string& desc)
     return empty_string;
 
   std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
-  if (! len)
+  if (! (len > 0))
     return empty_string;
 
-  assert(len > 0);
-  assert(len < 2048);
+  assert(len < 8192);
 
   std::ostringstream out;
       
