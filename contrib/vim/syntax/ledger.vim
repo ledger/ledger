@@ -35,7 +35,7 @@ syn match ledgerPosting /^\s\+[^[:blank:];][^;]*\ze\%($\|;\)/
     \ contained transparent contains=ledgerAccount,ledgerMetadata
 " every space in an account name shall be surrounded by two non-spaces
 " every account name ends with a tab, two spaces or the end of the line
-syn match ledgerAccount /^\s\+\zs\%(\S \S\|\S\)\+\ze\%(  \|\t\|\s*$\)/ contained
+syn match ledgerAccount /^\s\+\zs\%(\S\@<= \S\|\S\)\+\ze\%(  \|\t\|\s*$\)/ contained
 
 syn match ledgerComment /^;.*$/
 " comments at eol must be preceeded by at least 2 spaces / 1 tab
