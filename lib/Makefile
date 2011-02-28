@@ -6,7 +6,7 @@ STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
 GCC_VERSION     = 4.6
-BOOST_VERSION	= 1_45_0
+BOOST_VERSION	= 1_46_0
 
 CC		= gcc-mp-$(GCC_VERSION)
 ifeq ($(CC),clang)

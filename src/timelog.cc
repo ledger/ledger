@@ -117,21 +117,22 @@ namespace {
   }
 } // unnamed namespace
 
-time_log_t::~time_log_t()
+void time_log_t::close()
 {
-  TRACE_DTOR(time_log_t);
-
   if (! time_xacts.empty()) {
     std::list<account_t *> accounts;
 
     foreach (time_xact_t& time_xact, time_xacts)
       accounts.push_back(time_xact.account);
 
-    foreach (account_t * account, accounts)
+    foreach (account_t * account, accounts) {
+      DEBUG("timelog", "Clocking out from account " << account->fullname());
       clock_out_from_timelog(time_xacts,
                              time_xact_t(none, CURRENT_TIME(), account),
                              journal, scope);
-
+      if (context_count)
+        (*context_count)++;
+    }
     assert(time_xacts.empty());
   }
 }

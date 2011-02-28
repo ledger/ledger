@@ -67,7 +67,9 @@ int main(int argc, char * argv[], char * envp[])
 
   // Initialize global Boost/C++ environment
   std::ios::sync_with_stdio(false);
+#if BOOST_VERSION < 104600
   filesystem::path::default_name_check(filesystem::portable_posix_name);
+#endif
 
   std::signal(SIGINT, sigint_handler);
 #ifndef WIN32

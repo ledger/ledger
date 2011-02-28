@@ -83,21 +83,27 @@ public:
   }
 };
 
-class time_log_t
+class time_log_t : public boost::noncopyable
 {
   std::list<time_xact_t> time_xacts;
   journal_t&             journal;
   scope_t&               scope;
 
 public:
+  std::size_t *          context_count;
+
   time_log_t(journal_t& _journal, scope_t& _scope)
-    : journal(_journal), scope(_scope) {
-    TRACE_CTOR(time_log_t, "journal_t&, scope_t&");
+    : journal(_journal), scope(_scope), context_count(NULL) {
+    TRACE_CTOR(time_log_t, "journal_t&, scope_t&, std::size&");
   }
-  ~time_log_t();
+  ~time_log_t() {
+    TRACE_DTOR(time_log_t);
+  }
 
   void clock_in(time_xact_t event);
   void clock_out(time_xact_t event);
+
+  void close();
 };
 
 } // namespace ledger

@@ -92,6 +92,12 @@ namespace ledger {
   typedef boost::filesystem::filesystem_error filesystem_error;
 }
 
+#if BOOST_FILESYSTEM_VERSION == 3
+namespace boost { namespace filesystem3 { namespace path_traits {
+template<> struct is_pathable<ledger::string> { static const bool value = true; };
+}}}
+#endif
+
 /*@}*/
 
 /**

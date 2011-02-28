@@ -68,7 +68,9 @@ namespace {
 
     parse_context_t(journal_t& _journal, scope_t& _scope)
       : journal(_journal), scope(_scope), timelog(journal, scope),
-        strict(false), count(0), errors(0), sequence(1) {}
+        strict(false), count(0), errors(0), sequence(1) {
+      timelog.context_count = &count;
+    }
 
     bool front_is_account() {
       return state_stack.front().type() == typeid(account_t *);
@@ -85,6 +87,10 @@ namespace {
         if (state.type() == typeid(account_t *))
           return boost::get<account_t *>(state);
       return NULL;
+    }
+
+    void close() {
+      timelog.close();
     }
   };
 
@@ -723,7 +729,11 @@ void instance_t::include_directive(char * line)
   mask_t glob;
 #if BOOST_VERSION >= 103700
   path   parent_path = filename.parent_path();
+#if BOOST_VERSION >= 104600
+  glob.assign_glob('^' + filename.filename().string() + '$');
+#else
   glob.assign_glob('^' + filename.filename() + '$');
+#endif
 #else // BOOST_VERSION >= 103700
   path   parent_path = filename.branch_path();
   glob.assign_glob('^' + filename.leaf() + '$');
@@ -742,7 +752,11 @@ void instance_t::include_directive(char * line)
 #endif
         {
 #if BOOST_VERSION >= 103700
+#if BOOST_VERSION >= 104600
+        string base = (*iter).path().string();
+#else
         string base = (*iter).filename();
+#endif
 #else // BOOST_VERSION >= 103700
         string base = (*iter).leaf();
 #endif // BOOST_VERSION >= 103700

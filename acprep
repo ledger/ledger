@@ -244,7 +244,7 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_45"
+    boost_version = "1_46"
 
     options = {
         'debug':    False,
