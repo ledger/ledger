@@ -1150,7 +1150,7 @@ post_t * instance_t::parse_post(char *          line,
   if (context.strict && ! post->account->has_flags(ACCOUNT_KNOWN)) {
     if (post->_state == item_t::UNCLEARED)
       warning_(_("\"%1\", line %2: Unknown account '%3'")
-               << pathname << linenum << post->account->fullname());
+               << pathname.string() << linenum << post->account->fullname());
     post->account->add_flags(ACCOUNT_KNOWN);
   }
 
@@ -1185,7 +1185,7 @@ post_t * instance_t::parse_post(char *          line,
           ! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
         if (post->_state == item_t::UNCLEARED)
           warning_(_("\"%1\", line %2: Unknown commodity '%3'")
-                   << pathname << linenum << post->amount.commodity());
+                   << pathname.string() << linenum << post->amount.commodity());
         post->amount.commodity().add_flags(COMMODITY_KNOWN);
       }
 
