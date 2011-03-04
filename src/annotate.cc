@@ -42,7 +42,7 @@ void annotation_t::parse(std::istream& in)
 {
   do {
     istream_pos_type pos = in.tellg();
-    if (pos == -1)
+    if (static_cast<int>(pos) < 0)
       return;
 
     char buf[256];

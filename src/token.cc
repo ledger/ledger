@@ -402,7 +402,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
 
     assert(in.good());
     assert(! in.eof());
-    assert(in.tellg() != -1);
+    assert(static_cast<int>(in.tellg()) != -1);
 
     // When in relaxed parsing mode, we want to migrate commodity flags
     // so that any precision specified by the user updates the current
