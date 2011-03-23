@@ -244,7 +244,8 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_46"
+    boost_version = "1_46_1"
+    boost_major   = "1_46_1"
 
     options = {
         'debug':    False,
@@ -1246,20 +1247,20 @@ class PrepareBuild(CommandLineApp):
                 self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
 
             if self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s_0-%s' % \
+                home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-sd-%s' % \
                     (self.boost_lib_ident, self.boost_version),
                 file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_version):
+                include_path = 'include/boost-%s' % self.boost_major):
                 pass
             elif self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s_0-%s' % \
+                home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-d-%s' % \
                     (self.boost_lib_ident, self.boost_version),
                 file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_version):
+                include_path = 'include/boost-%s' % self.boost_major):
                 pass
             elif self.boost_info.configure(suffix = '-d', file_suffix  = '.dylib'):
                 pass
@@ -1268,20 +1269,20 @@ class PrepareBuild(CommandLineApp):
             if self.boost_info.configure():
                 pass
             elif self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s_0-%s' % \
+                home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-s-%s' % \
                     (self.boost_lib_ident, self.boost_version),
                 file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_version):
+                include_path = 'include/boost-%s' % self.boost_major):
                 pass
             elif self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s_0-%s' % \
+                home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-%s' % \
                     (self.boost_lib_ident, self.boost_version),
                 file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_version):
+                include_path = 'include/boost-%s' % self.boost_major):
                 pass
 
     def setup_flavor_default(self):
