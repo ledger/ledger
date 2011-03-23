@@ -753,7 +753,7 @@ void instance_t::include_directive(char * line)
         {
 #if BOOST_VERSION >= 103700
 #if BOOST_VERSION >= 104600
-        string base = (*iter).path().string();
+        string base = (*iter).path().filename().string();
 #else
         string base = (*iter).filename();
 #endif
