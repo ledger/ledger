@@ -387,6 +387,7 @@ class PrepareBuild(CommandLineApp):
         self.prefix_dir        = None
         self.products_dir      = None
         self.build_dir         = self.source_dir
+        self.make_command      = None
         self.configure_args    = ['--with-included-gettext', '--enable-python']
         self.boost_info        = BoostInfo(self.log)
         self.sys_include_dirs  = []
@@ -481,6 +482,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--local', action="callback",
                       callback=self.option_local,
                       help='Build directly within the source tree (default)')
+        op.add_option('', '--make', metavar='FILE', action="callback",
+                      callback=self.option_make, type="string",
+                      help='Use custom make command')
         op.add_option('', '--no-pch', action="callback",
                       callback=self.option_no_pch,
                       help='Do not use pre-compiled headers')
@@ -1207,6 +1211,10 @@ class PrepareBuild(CommandLineApp):
         self.log.debug('Saw option --pic')
         self.CXXFLAGS.append('-fPIC')
 
+    def option_make(self, option=None, opt_str=None, value=None, parser=None):
+        self.log.debug('Saw option --make')
+        self.make_command = value
+
     def option_output(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --output')
         self.build_dir = value
@@ -1472,7 +1480,8 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.execute(*(['make'] + make_args))
+            self.execute(*([self.make_command or 'make'] +
+                           make_args))
         finally:
             os.chdir(self.source_dir)
 
