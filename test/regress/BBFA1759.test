@@ -1,6 +1,5 @@
-period june 2008
-<<<
->>>1
+
+test period june 2008
 --- Period expression tokens ---
 TOK_A_MONTH: Jun
 TOK_A_YEAR: 2008
@@ -16,5 +15,4 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 08-Jun-01
->>>2
-=== 0
+end test

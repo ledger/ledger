@@ -1,11 +1,9 @@
-reg --real
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     (Liabilities:Cards)     $10.00
     Assets:Cash
->>>1
+
+test reg --real
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
->>>2
-=== 0
+end test

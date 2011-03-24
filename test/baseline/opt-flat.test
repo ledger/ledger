@@ -1,5 +1,3 @@
-bal --flat
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -19,7 +17,8 @@ bal --flat
     Income:One:Books          $-10.00
     Income:One:Two:Books          $-10.00
     Income:One:Two:Three:Books          $-10.00
->>>1
+
+test bal --flat
               $10.00  Expenses:Books
               $10.00  Expenses:One:Books
               $10.00  Expenses:One:Two:Books
@@ -30,5 +29,4 @@ bal --flat
              $-10.00  Income:One:Two:Three:Books
 --------------------
                    0
->>>2
-=== 0
+end test

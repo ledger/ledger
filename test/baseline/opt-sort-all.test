@@ -1,5 +1,3 @@
-reg --monthly --sort=-amount
-<<<
 2008/01/11 LIAT
     Expenses:Travel:Airfare                   $40.00
     Liabilities:MasterCard                      
@@ -83,7 +81,8 @@ reg --monthly --sort=-amount
 2008/12/26 U.S. Department of State
     Expenses:Travel:Passport                 $127.00
     Assets:Checking                             
->>>1
+
+test reg --monthly --sort=-amount
 08-Jan-01 - 08-Jan-31           Expense:Travel:Airfare      $222.19      $222.19
                                 Liabilities:MasterCard     $-222.19            0
 08-Feb-01 - 08-Feb-29           Expense:Travel:Airfare      $477.60      $477.60
@@ -99,10 +98,9 @@ reg --monthly --sort=-amount
                                 Liabilities:MasterCard   $-3,925.94            0
 08-Dec-01 - 08-Dec-31           Expens:Travel:Passport      $254.00      $254.00
                                 Assets:Checking            $-254.00            0
->>>2
-=== 0
-reg --monthly --sort-all=-amount
->>>1
+end test
+
+test reg --monthly --sort-all=-amount
 08-Sep-01 - 08-Sep-30           Expense:Travel:Airfare    $3,925.94    $3,925.94
 08-Mar-01 - 08-Mar-31           Expense:Travel:Airfare    $2,463.20    $6,389.14
 08-Apr-01 - 08-Apr-30           Expense:Travel:Airfare    $1,186.14    $7,575.28
@@ -118,5 +116,4 @@ reg --monthly --sort-all=-amount
 08-Apr-01 - 08-Apr-30           Liabilities:MasterCard   $-1,186.14    $6,389.14
 08-Mar-01 - 08-Mar-31           Liabilities:MasterCard   $-2,463.20    $3,925.94
 08-Sep-01 - 08-Sep-30           Liabilities:MasterCard   $-3,925.94            0
->>>2
-=== 0
+end test

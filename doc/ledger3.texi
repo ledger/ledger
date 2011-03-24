@@ -99,7 +99,7 @@ one hundred dollars from an account within the Income hierarchy, to
 the specified expense account.  The name and meaning of these accounts
 in arbitrary, with no preferences implied, although you will find it
 useful to follow standard accounting practice (@pxref{Principles of
-accounting}}.
+accounting}).
 
 Since an amount is missing from the second posting, it is assumed to
 be the inverse of the first.  This guarantee the cardinal rule of
@@ -194,7 +194,7 @@ characters are allowed in a commodity name, except for the following:
 @item Punctuation: @samp{.,;:?!}
 @item Mathematical and logical operators: @samp{-+*/^&|=}
 @item Bracketing characters: @samp{<>[](){}}
-@item The at symbol: @samp{@}
+@item The at symbol: @samp{@@}
 @end itemize
 
 And yet, any of these may appear in a commodity name if it is
@@ -249,7 +249,7 @@ implied cost for you.  You can also make the cost explicit using a
 
 @example
 2010/05/31 Farmer's Market
-    Assets:My Larder           100 apples @ $0.200000
+    Assets:My Larder           100 apples @@ $0.200000
     Assets:Checking
 @end example
 
@@ -260,7 +260,7 @@ the final report.  You can also specify the @dfn{total cost}:
 
 @example
 2010/05/31 Farmer's Market
-    Assets:My Larder           100 apples @@ $20
+    Assets:My Larder           100 apples @@@@ $20
     Assets:Checking
 @end example
 
@@ -270,9 +270,9 @@ postings are involved:
 
 @example
 2010/05/31 Farmer's Market
-    Assets:My Larder           100 apples        @ $0.200000
-    Assets:My Larder           100 pineapples    @ $0.33
-    Assets:My Larder           100 "crab apples" @ $0.04
+    Assets:My Larder           100 apples        @@ $0.200000
+    Assets:My Larder           100 pineapples    @@ $0.33
+    Assets:My Larder           100 "crab apples" @@ $0.04
     Assets:Checking
 @end example
 
@@ -294,11 +294,11 @@ on the placement of the commodity in the transaction:
     Assets                  50 primary
 
 2010/05/31 Sample Transaction
-    Expenses               100 secondary @ 0.5 primary
+    Expenses               100 secondary @@ 0.5 primary
     Assets
 
 2010/05/31 Sample Transaction
-    Expenses               100 secondary @@ 50 primary
+    Expenses               100 secondary @@@@ 50 primary
     Assets
 @end example
 

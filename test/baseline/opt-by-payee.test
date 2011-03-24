@@ -1,5 +1,3 @@
-reg --by-payee not @End
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --by-payee not @End
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --by-payee not @End
 08-Apr-01 April                 Assets:Cash                 $-80.00      $-80.00
                                 Expenses:Books               $80.00            0
 08-Aug-01 August                Assets:Cash                $-160.00     $-160.00
@@ -216,5 +215,4 @@ reg --by-payee not @End
                                 Expenses:Books              $200.00            0
 08-Sep-01 September             Assets:Cash                $-180.00     $-180.00
                                 Expenses:Books              $180.00            0
->>>2
-=== 0
+end test

@@ -1,5 +1,3 @@
-reg --now=2010/02 --sort=date exp --budget
-<<<
 ~ monthly
   Expenses:Food    $100
   Expenses:Movies  $20
@@ -23,7 +21,8 @@ reg --now=2010/02 --sort=date exp --budget
 2009/06/05 Grocery
   Expenses:Food    $5
   Assets:Cash
->>>
+
+test reg --now=2010/02 --sort=date exp --budget
 09-Jan-01 Budget transaction    Expenses:Food                 $-101        $-101
 09-Jan-01 Budget transaction    Expenses:Movies                $-21        $-122
 09-Jan-01 Budget transaction    Expenses:Food                 $-103        $-225
@@ -109,3 +108,4 @@ reg --now=2010/02 --sort=date exp --budget
 10-Feb-01 Budget transaction    Expenses:Movies                $-20       $-5041
 10-Feb-01 Budget transaction    Expenses:Food                 $-101       $-5142
 10-Feb-01 Budget transaction    Expenses:Movies                $-21       $-5163
+end test

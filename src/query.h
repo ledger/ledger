@@ -90,6 +90,7 @@ public:
         TOK_EXPR,
 
         TOK_SHOW,
+        TOK_ONLY,
         TOK_BOLD,
         TOK_FOR,
         TOK_SINCE,
@@ -144,6 +145,7 @@ public:
         case TOK_META:    return "TOK_META";
         case TOK_EXPR:    return "TOK_EXPR";
         case TOK_SHOW:    return "TOK_SHOW";
+        case TOK_ONLY:    return "TOK_ONLY";
         case TOK_BOLD:    return "TOK_BOLD";
         case TOK_FOR:     return "TOK_FOR";
         case TOK_SINCE:   return "TOK_SINCE";
@@ -170,6 +172,7 @@ public:
         case TOK_META:    return "meta";
         case TOK_EXPR:    return "expr";
         case TOK_SHOW:    return "show";
+        case TOK_ONLY:    return "only";
         case TOK_BOLD:    return "bold";
         case TOK_FOR:     return "for";
         case TOK_SINCE:   return "since";
@@ -234,6 +237,7 @@ public:
   enum kind_t {
     QUERY_LIMIT,
     QUERY_SHOW,
+    QUERY_ONLY,
     QUERY_BOLD,
     QUERY_FOR
   };

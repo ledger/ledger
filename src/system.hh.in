@@ -149,18 +149,20 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#if !(defined(__GXX_EXPERIMENTAL_CXX0X__) && __GXX_EXPERIMENTAL_CXX0X__)
 #include <boost/foreach.hpp>
+#endif
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/write.hpp>
+#define BOOST_IOSTREAMS_USE_DEPRECATED 1
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
-#include <boost/ptr_container/serialize_ptr_deque.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
@@ -194,6 +196,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
+#include <boost/ptr_container/serialize_ptr_deque.hpp>
 
 namespace boost {
 namespace serialization {
@@ -238,6 +241,10 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 
 } // namespace serialization
 } // namespace boost
+
+#else // HAVE_BOOST_SERIALIZATION
+
+#include <boost/ptr_container/ptr_deque.hpp>
 
 #endif // HAVE_BOOST_SERIALIZATION
 

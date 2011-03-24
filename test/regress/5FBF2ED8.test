@@ -1,5 +1,3 @@
-bal -B
-<<<
 2008/01/01      * Checking balance
         Assets:Bank:Checking                            £0.00
         Equity:Opening Balances
@@ -11,10 +9,10 @@ bal -B
 2008/03/02      Salary
         Income:Employer                                         £-248.07
         Assets:Bank:Checking                            $404.82 @@ £248.07
->>>1
+
+test bal -B
              £582.07  Assets:Bank:Checking
             £-582.07  Income:Employer
 --------------------
                    0
->>>2
-=== 0
+end test

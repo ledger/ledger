@@ -1,9 +1,7 @@
-bal --sort total --flat -X '$' not '(Income|Liabilities)'
-<<<
 2004/05/27 Book Store
     Expenses:Books                 20 BOOK @ $10
     Liabilities:MasterCard        $-200.00
->>>1
+
+test bal --sort total --flat -X '$' not '(Income|Liabilities)'
              $200.00  Expenses:Books
->>>2
-=== 0
+end test

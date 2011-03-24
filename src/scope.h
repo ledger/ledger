@@ -109,6 +109,8 @@ public:
     TRACE_DTOR(scope_t);
   }
 
+  virtual string description() = 0;
+
   virtual void define(const symbol_t::kind_t, const string&,
                       expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
@@ -191,6 +193,10 @@ public:
     TRACE_DTOR(bind_scope_t);
   }
 
+  virtual string description() {
+    return grandchild.description();
+  }
+
   virtual void define(const symbol_t::kind_t kind, const string& name,
                       expr_t::ptr_op_t def) {
     parent->define(kind, name, def);
@@ -262,6 +268,16 @@ public:
     TRACE_DTOR(symbol_scope_t);
   }
 
+  virtual string description() {
+    if (parent)
+      return parent->description();
+#if !defined(NO_ASSERTS)
+    else
+      assert(false);
+#endif
+    return empty_string;
+  }
+
   virtual void define(const symbol_t::kind_t kind, const string& name,
                       expr_t::ptr_op_t def);
 
@@ -299,6 +315,10 @@ public:
     TRACE_DTOR(context_scope_t);
   }
 
+  virtual string description() {
+    return parent->description();
+  }
+
   virtual value_t::type_t type_context() const {
     return value_type_context;
   }
@@ -327,7 +347,13 @@ protected:
 
 class call_scope_t : public context_scope_t
 {
+#if defined(DEBUG_ON)
+public:
+#endif
   value_t        args;
+#if defined(DEBUG_ON)
+private:
+#endif
   mutable void * ptr;
 
   value_t& resolve(const std::size_t index,
@@ -349,6 +375,10 @@ public:
   }
   virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);
+  }
+
+  virtual string description() {
+    return context_scope_t::description();
   }
 
   void set_args(const value_t& _args) {
@@ -605,7 +635,7 @@ call_scope_t::get<expr_t::ptr_op_t>(std::size_t index, bool) {
   return args[index].as_any<expr_t::ptr_op_t>();
 }
 
-class value_scope_t : public scope_t
+class value_scope_t : public child_scope_t
 {
   value_t value;
 
@@ -614,8 +644,13 @@ class value_scope_t : public scope_t
   }
 
 public:
-  value_scope_t(const value_t& _value) : value(_value) {}
+  value_scope_t(scope_t& _parent, const value_t& _value)
+    : child_scope_t(_parent), value(_value) {}
   
+  virtual string description() {
+    return parent->description();
+  }
+
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name)
   {

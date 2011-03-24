@@ -1,0 +1,9 @@
+2010-02-05 * Flight SN2094
+    Assets:Rewards:Airmiles                        125 "M&M"
+    Income:Rewards
+
+test print
+2010/02/05 * Flight SN2094
+    Assets:Rewards:Airmiles                125 "M&M"
+    Income:Rewards
+end test

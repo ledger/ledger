@@ -112,11 +112,11 @@ public:
   }
   basic_flags_t(const T& bits) {
     TRACE_CTOR(basic_flags_t, "const T&");
-    set_flags(bits);
+    supports_flags<T, U>::set_flags(bits);
   }
   basic_flags_t(const U& bits) {
     TRACE_CTOR(basic_flags_t, "const U&");
-    set_flags(static_cast<T>(bits));
+    supports_flags<T, U>::set_flags(static_cast<T>(bits));
   }
   ~basic_flags_t() throw() {
     TRACE_DTOR(basic_flags_t);

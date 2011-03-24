@@ -1,0 +1,18 @@
+= /Checking/
+  check account =~ /Foo/
+
+2010-06-24 Sample
+  Expenses:Food    $100
+  Assets:Checking
+
+check account("Assets:Checking").all(account =~ /Expense/)
+
+test bal
+               $-100  Assets:Checking
+                $100  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: Transaction check failed: (account =~ /Foo/)
+Warning: Check failed: account("Assets:Checking").all(account =~ /Expense/)
+end test

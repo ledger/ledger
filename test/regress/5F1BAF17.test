@@ -1,5 +1,3 @@
-bal da39 --flat --sort amount --display-total amount
-<<<
 2006/02/16 b5f40e96
     da39a3ee:8d437dbf:ee2bf9bd:f61e33bf       $713.35
     Assets
@@ -107,7 +105,8 @@ bal da39 --flat --sort amount --display-total amount
 2007/07/16 557e3a00
     da39a3ee:8d437dbf:ee2bf9bd:f61e33bf       $117.80
     Assets
->>>1
+
+test bal da39 --flat --sort amount --display-total amount
               $14.00  da39a3ee:8d437dbf:ee2bf9bd:2c7a078f
               $67.36  da39a3ee:8d437dbf:ee2bf9bd:14e351e1
              $116.15  da39a3ee:8d437dbf:ee2bf9bd:d31d367b
@@ -126,5 +125,4 @@ bal da39 --flat --sort amount --display-total amount
            $2,468.00  da39a3ee:8d437dbf:ee2bf9bd:75b04b88:b3850e04
 --------------------
                    0
->>>2
-=== 0
+end test

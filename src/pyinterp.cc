@@ -137,7 +137,7 @@ void python_interpreter_t::hack_system_paths()
   int n = python::extract<int>(paths.attr("__len__")());
   for (int i = 0; i < n; i++) {
     python::extract<std::string> str(paths[i]);
-    path pathname(str);
+    path pathname(str());
     DEBUG("python.interp", "sys.path = " << pathname);
 
     if (exists(pathname / "ledger" / "__init__.py")) {
@@ -202,9 +202,15 @@ object python_interpreter_t::import_option(const string& str)
   paths.insert(0, file.parent_path().string());
   sys_dict["path"] = paths;
 
+#if BOOST_VERSION >= 104600
+  string name = file.filename().string();
+  if (contains(name, ".py"))
+    name = file.stem().string();
+#else
   string name = file.filename();
   if (contains(name, ".py"))
     name = file.stem();
+#endif
 #else // BOOST_VERSION >= 103700
   paths.insert(0, file.branch_path().string());
   sys_dict["path"] = paths;

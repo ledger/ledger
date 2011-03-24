@@ -1,5 +1,3 @@
-reg --columns=60 food and code xfer
-<<<
 2009/10/29 (XFER) Panera Bread
     Expenses:Food               $4.50
     Assets:Checking
@@ -15,8 +13,8 @@ reg --columns=60 food and code xfer
 2009/10/31 (559385768438A8D7) Panera Bread
     Expenses:Food               $4.50
     Liabilities:Credit Card
->>>1
+
+test reg --columns=60 food and code xfer
 09-Oct-29 Panera Bread    Expenses:Food      $4.50     $4.50
 09-Oct-30 Panera Bread    Expenses:Food      $4.50     $9.00
->>>2
-=== 0
+end test

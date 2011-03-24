@@ -56,6 +56,8 @@ struct expr_t::token_t : public noncopyable
 
     LPAREN,                     // (
     RPAREN,                     // )
+    LBRACE,                     // {
+    RBRACE,                     // }
 
     EQUAL,                      // ==
     NEQUAL,                     // !=
@@ -64,7 +66,6 @@ struct expr_t::token_t : public noncopyable
     GREATER,                    // >
     GREATEREQ,                  // >=
 
-    DEFINE,                     // :=
     ASSIGN,                     // =
     MATCH,                      // =~
     NMATCH,                     // !~
@@ -72,6 +73,7 @@ struct expr_t::token_t : public noncopyable
     PLUS,                       // +
     STAR,                       // *
     SLASH,                      // /
+    ARROW,                      // ->
     KW_DIV,                     // div
 
     EXCLAM,                     // !, not
@@ -94,7 +96,7 @@ struct expr_t::token_t : public noncopyable
 
   } kind;
 
-  char        symbol[3];
+  char        symbol[6];
   value_t     value;
   std::size_t length;
 
@@ -113,13 +115,10 @@ struct expr_t::token_t : public noncopyable
   }
 
   void clear() {
-    kind   = UNKNOWN;
-    length = 0;
-    value  = NULL_VALUE;
-
+    kind      = UNKNOWN;
+    length    = 0;
+    value     = NULL_VALUE;
     symbol[0] = '\0';
-    symbol[1] = '\0';
-    symbol[2] = '\0';
   }
 
   int  parse_reserved_word(std::istream& in);

@@ -186,6 +186,8 @@ test_ident:
       return token_t(token_t::TOK_META);
     else if (ident == "show")
       return token_t(token_t::TOK_SHOW);
+    else if (ident == "only")
+      return token_t(token_t::TOK_ONLY);
     else if (ident == "bold")
       return token_t(token_t::TOK_BOLD);
     else if (ident == "for")
@@ -249,6 +251,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   lexer_t::token_t tok = lexer.next_token();
   switch (tok.kind) {
   case lexer_t::token_t::TOK_SHOW:
+  case lexer_t::token_t::TOK_ONLY:
   case lexer_t::token_t::TOK_BOLD:
   case lexer_t::token_t::TOK_FOR:
   case lexer_t::token_t::TOK_SINCE:
@@ -452,8 +455,25 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
     lexer_t::token_t tok = lexer.peek_token();
     while (tok.kind != lexer_t::token_t::END_REACHED) {
       switch (tok.kind) {
-      case lexer_t::token_t::TOK_SHOW: {
+      case lexer_t::token_t::TOK_SHOW:
+      case lexer_t::token_t::TOK_ONLY:
+      case lexer_t::token_t::TOK_BOLD: {
         lexer.next_token();
+
+        kind_t kind;
+        switch (tok.kind) {
+        case lexer_t::token_t::TOK_SHOW:
+          kind = QUERY_SHOW;
+          break;
+        case lexer_t::token_t::TOK_ONLY:
+          kind = QUERY_ONLY;
+          break;
+        case lexer_t::token_t::TOK_BOLD:
+          kind = QUERY_BOLD;
+          break;
+        default:
+          break;
+        }
 
         expr_t::ptr_op_t node;
         while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
@@ -470,25 +490,7 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
         if (node)
           query_map.insert
             (query_map_t::value_type
-             (QUERY_SHOW, predicate_t(node, what_to_keep).print_to_str()));
-        break;
-      }
-
-      case lexer_t::token_t::TOK_BOLD: {
-        lexer.next_token();
-
-        expr_t::ptr_op_t node = parse_or_expr(tok_context);
-        while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
-          expr_t::ptr_op_t prev(node);
-          node = new expr_t::op_t(expr_t::op_t::O_OR);
-          node->set_left(prev);
-          node->set_right(next);
-        }
-
-        if (node)
-          query_map.insert
-            (query_map_t::value_type
-             (QUERY_BOLD, predicate_t(node, what_to_keep).print_to_str()));
+             (kind, predicate_t(node, what_to_keep).print_to_str()));
         break;
       }
 

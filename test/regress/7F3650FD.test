@@ -1,6 +1,4 @@
-period --now=2010/11/01 12/01
-<<<
->>>1
+test period --now=2010/11/01 12/01
 --- Period expression tokens ---
 TOK_DATE:  month Dec day 1
 END_REACHED: <EOF>
@@ -15,11 +13,9 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 10-Dec-01
->>>2
-=== 0
-period --now=2010/11/01 10/01
-<<<
->>>1
+end test
+
+test period --now=2010/11/01 10/01
 --- Period expression tokens ---
 TOK_DATE:  month Oct day 1
 END_REACHED: <EOF>
@@ -34,11 +30,9 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 10-Oct-01
->>>2
-=== 0
-period --now=2010/11/01 2009/10
-<<<
->>>1
+end test
+
+test period --now=2010/11/01 2009/10
 --- Period expression tokens ---
 TOK_DATE:  year 2009 month Oct
 END_REACHED: <EOF>
@@ -53,11 +47,9 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 09-Oct-01
->>>2
-=== 0
-period --now=2010/11/01 2009/10/01
-<<<
->>>1
+end test
+
+test period --now=2010/11/01 2009/10/01
 --- Period expression tokens ---
 TOK_DATE:  year 2009 month Oct day 1
 END_REACHED: <EOF>
@@ -72,11 +64,9 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 09-Oct-01
->>>2
-=== 0
-period --now=2010/11/01 2009
-<<<
->>>1
+end test
+
+test period --now=2010/11/01 2009
 --- Period expression tokens ---
 TOK_A_YEAR: 2009
 END_REACHED: <EOF>
@@ -91,5 +81,4 @@ END_REACHED: <EOF>
 
 --- Sample dates in range (max. 20) ---
  1: 09-Jan-01
->>>2
-=== 0
+end test

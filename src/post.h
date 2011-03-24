@@ -99,6 +99,16 @@ public:
     TRACE_DTOR(post_t);
   }
 
+  virtual string description() {
+    if (pos) {
+      std::ostringstream buf;
+      buf << _("posting at line %1") << pos->beg_line;
+      return buf.str();
+    } else {
+      return string(_("generated posting"));
+    }
+  }
+
   virtual bool has_tag(const string& tag,
                        bool          inherit = true) const;
   virtual bool has_tag(const mask_t&           tag_mask,
@@ -206,6 +216,7 @@ public:
     if (xdata_)
       if (account_t * acct = xdata_->account)
         return acct;
+    assert(account);
     return account;
   }
 

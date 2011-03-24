@@ -1,5 +1,3 @@
-bal checking --account=code
-<<<
 2009/10/29 (XFER) Panera Bread
     Expenses:Food               $4.50
     Assets:Checking
@@ -15,10 +13,10 @@ bal checking --account=code
 2009/10/31 (559385768438A8D7) Panera Bread
     Expenses:Food               $4.50
     Liabilities:Credit Card
->>>1
+
+test bal checking --account=code
               $20.00  DEP:Assets:Checking
               $-9.00  XFER:Assets:Checking
 --------------------
               $11.00
->>>2
-=== 0
+end test

@@ -1,5 +1,3 @@
-reg --deviation books
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --deviation books
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --deviation books
 08-Jan-01 January               Expenses:Books               $10.00            0
 08-Jan-31 End of January        Expenses:Books               $10.00            0
 08-Feb-01 February              Expenses:Books               $20.00        $6.67
@@ -240,5 +239,4 @@ reg --deviation books
 09-Nov-30 End of November       Expenses:Books              $110.00       $47.39
 09-Dec-01 December              Expenses:Books              $120.00       $56.17
 09-Dec-31 End of December       Expenses:Books              $120.00       $55.00
->>>2
-=== 0
+end test

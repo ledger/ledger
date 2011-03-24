@@ -106,7 +106,7 @@ void export_item()
 #if 0
   class_< item_t, bases<scope_t> > ("JournalItem", init<uint_least8_t>())
 #else
-  class_< item_t > ("JournalItem", init<uint_least8_t>())
+  class_< item_t, noncopyable > ("JournalItem", no_init)
 #endif
 #if 1
     .add_property("flags", &supports_flags<>::flags,

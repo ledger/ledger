@@ -1,5 +1,3 @@
-reg books --monthly --limit='amount > $100'
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,15 +189,15 @@ reg books --monthly --limit='amount > $100'
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg books --monthly --limit='amount > $100'
 08-Nov-01 - 08-Nov-30           Expenses:Books              $220.00      $220.00
 08-Dec-01 - 08-Dec-31           Expenses:Books              $240.00      $460.00
 09-Nov-01 - 09-Nov-30           Expenses:Books              $220.00      $680.00
 09-Dec-01 - 09-Dec-31           Expenses:Books              $240.00      $920.00
->>>2
-=== 0
-reg books --monthly --only='amount > $100'
->>>1
+end test
+
+test reg books --monthly --only='amount > $100'
 08-Jun-01 - 08-Jun-30           Expenses:Books              $120.00      $120.00
 08-Jul-01 - 08-Jul-31           Expenses:Books              $140.00      $260.00
 08-Aug-01 - 08-Aug-31           Expenses:Books              $160.00      $420.00
@@ -214,10 +212,9 @@ reg books --monthly --only='amount > $100'
 09-Oct-01 - 09-Oct-31           Expenses:Books              $200.00     $2060.00
 09-Nov-01 - 09-Nov-30           Expenses:Books              $220.00     $2280.00
 09-Dec-01 - 09-Dec-31           Expenses:Books              $240.00     $2520.00
->>>2
-=== 0
-reg books --monthly --display='amount > $100'
->>>1
+end test
+
+test reg books --monthly --display='amount > $100'
 08-Jun-01 - 08-Jun-30           Expenses:Books              $120.00      $420.00
 08-Jul-01 - 08-Jul-31           Expenses:Books              $140.00      $560.00
 08-Aug-01 - 08-Aug-31           Expenses:Books              $160.00      $720.00
@@ -232,5 +229,4 @@ reg books --monthly --display='amount > $100'
 09-Oct-01 - 09-Oct-31           Expenses:Books              $200.00     $2660.00
 09-Nov-01 - 09-Nov-30           Expenses:Books              $220.00     $2880.00
 09-Dec-01 - 09-Dec-31           Expenses:Books              $240.00     $3120.00
->>>2
-=== 0
+end test

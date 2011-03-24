@@ -1,5 +1,3 @@
-reg --pending
-<<<
 2008/01/01 * January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,10 +189,10 @@ reg --pending
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --pending
 08-Feb-01 February              Expenses:Books               $20.00       $20.00
                                 Assets:Cash                 $-20.00            0
 08-May-01 May                   Assets:Cash                 $-50.00      $-50.00
 08-May-31 End of May            Assets:Cash                 $-50.00     $-100.00
->>>2
-=== 0
+end test

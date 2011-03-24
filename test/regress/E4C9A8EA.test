@@ -1,5 +1,3 @@
-reg
-<<<
 2007/12/31 * Cost basis for: RED HAT INC RHT
   Assets:Investments:RBC-Broker:Account-RSP                    4 RHT
   Equity:Opening-Balances:Cost                           -689.87 CAD
@@ -9,7 +7,8 @@ reg
   Expenses:Financial:Commissions                          9.95 USD @    0.96590 CAD
   Assets:Investments:RBC-Broker:Account-RSP              72.06 CAD
   Expenses:Financial:Fees
->>>1
+
+test reg
 07-Dec-31 Cost basis for: RED.. As:In:RBC-:Account-RSP     4.00 RHT     4.00 RHT
                                 Eq:Opening-Balanc:Cost  -689.87 CAD  -689.87 CAD
                                                                         4.00 RHT
@@ -20,5 +19,4 @@ reg
                                                                         9.95 USD
                                 Expense:Financial:Fees     2.89 CAD  -614.92 CAD
                                                                         9.95 USD
->>>2
-=== 0
+end test

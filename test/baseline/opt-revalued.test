@@ -1,5 +1,3 @@
-reg --market --revalued stocks
-<<<
 2009/01/01 Sample 1a
     Assets:Brokerage:Stocks                100 S
     Assets:Brokerage:Cash                 -100 P
@@ -48,7 +46,8 @@ P 2010/03/01 00:00:00 S 8 P
     Assets:Brokerage:Cash                  100 P
 
 P 2010/04/01 00:00:00 S 16 P
->>>1
+
+test reg --market --revalued stocks
 09-Jan-01 Sample 1a             Asset:Brokerage:Stocks        200 P        200 P
 09-Feb-01 Commodities revalued  <Revalued>                    200 P        400 P
 09-Feb-01 Sample 2a             Asset:Brokerage:Stocks        400 P        800 P
@@ -62,5 +61,4 @@ P 2010/04/01 00:00:00 S 16 P
 10-Mar-01 Sample 3b             Asset:Brokerage:Stocks        800 P       3200 P
 10-Apr-01 Commodities revalued  <Revalued>                   3200 P       6400 P
 10-Apr-01 Sample 4b             Asset:Brokerage:Stocks      -1600 P       4800 P
->>>2
-=== 0
+end test

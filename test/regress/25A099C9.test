@@ -1,7 +1,5 @@
--f $sourcepath/src/amount.h reg
-<<<
->>>1
->>>2
+test -f $sourcepath/src/amount.h reg -> 7
+__ERROR__
 While parsing file "$sourcepath/src/amount.h", line 66: 
 Error: No quantity specified for amount
 While parsing file "$sourcepath/src/amount.h", line 726: 
@@ -16,4 +14,4 @@ While parsing file "$sourcepath/src/amount.h", line 750:
 Error: Invalid date/time: line std::ostream& 
 While parsing file "$sourcepath/src/amount.h", line 757: 
 Error: Invalid date/time: line std::istream& 
-=== 7
+end test

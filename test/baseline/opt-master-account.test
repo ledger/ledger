@@ -1,9 +1,8 @@
-bal --master-account=Master
-<<<
 2007/02/02 RD VMMXX
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
->>>1
+
+test bal --master-account=Master
               $-0.35
          0.350 VMMXX  Master
          0.350 VMMXX    Assets:Investments:Vanguard:VMMXX
@@ -11,5 +10,4 @@ bal --master-account=Master
 --------------------
               $-0.35
          0.350 VMMXX
->>>2
-=== 0
+end test

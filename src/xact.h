@@ -117,6 +117,16 @@ public:
     TRACE_DTOR(xact_t);
   }
 
+  virtual string description() {
+    if (pos) {
+      std::ostringstream buf;
+      buf << _("transaction at line %1") << pos->beg_line;
+      return buf.str();
+    } else {
+      return string(_("generated transaction"));
+    }
+  }
+
   virtual void add_post(post_t * post);
 
   string idstring() const;
@@ -194,6 +204,16 @@ public:
     TRACE_DTOR(auto_xact_t);
   }
 
+  virtual string description() {
+    if (pos) {
+      std::ostringstream buf;
+      buf << _("automated transaction at line %1") << pos->beg_line;
+      return buf.str();
+    } else {
+      return string(_("generated automated transaction"));
+    }
+  }
+
   virtual void parse_tags(const char * p,
                           scope_t&,
                           bool         overwrite_existing = true) {
@@ -240,6 +260,16 @@ class period_xact_t : public xact_base_t
 
   virtual ~period_xact_t() {
     TRACE_DTOR(period_xact_t);
+  }
+
+  virtual string description() {
+    if (pos) {
+      std::ostringstream buf;
+      buf << _("periodic transaction at line %1") << pos->beg_line;
+      return buf.str();
+    } else {
+      return string(_("generated periodic transaction"));
+    }
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)

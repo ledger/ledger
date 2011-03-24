@@ -1,5 +1,3 @@
-reg --unbudgeted
-<<<
 ~ monthly
     Expenses:Books          $10.00
     Assets:Cash
@@ -243,7 +241,8 @@ reg --unbudgeted
     Expenses:Books         $120.00
     Liabilities:Cards      $120.00
     Assets:Cash
->>>1
+
+test reg --unbudgeted
 08-Jan-01 January               Liabilities:Cards            $10.00       $10.00
 08-Jan-31 End of January        Liabilities:Cards            $10.00       $20.00
 08-Feb-01 February              Liabilities:Cards            $20.00       $40.00
@@ -292,5 +291,4 @@ reg --unbudgeted
 09-Nov-30 End of November       Liabilities:Cards           $110.00     $2880.00
 09-Dec-01 December              Liabilities:Cards           $120.00     $3000.00
 09-Dec-31 End of December       Liabilities:Cards           $120.00     $3120.00
->>>2
-=== 0
+end test

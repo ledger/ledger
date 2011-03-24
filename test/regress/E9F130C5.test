@@ -1,5 +1,3 @@
-bal as
-<<<
 2008/01/01 income
     assets:bank:checking  $1
     income:salary
@@ -20,11 +18,11 @@ bal as
 2008/12/31 * pay off
     liabilities:debts  $1
     assets:bank:checking
->>>1
+
+test bal as
                  $-1  assets
                   $1    bank:saving
                  $-2    cash
 --------------------
                  $-1
->>>2
-=== 0
+end test

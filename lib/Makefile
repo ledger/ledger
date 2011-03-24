@@ -5,72 +5,84 @@
 STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
-CC		= gcc-mp-4.5
-CXX		= g++-mp-4.5
-LD		= gcc-mp-4.5
-CXX_VERSION	= 45
-CPPFLAGS	= -D_GLIBCXX_DEBUG=1 -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
+GCC_VERSION     = 4.5
+BOOST_VERSION	= 1_46_1
+
+CC		= gcc-mp-$(GCC_VERSION)
+ifeq ($(CC),clang)
+CXX		= clang++
+LD		= llvm-ld
+DIR_SUFFIX	= clang
+OPTJ            =
+else
+CXX		= g++-mp-$(GCC_VERSION)
+LD		= gcc-mp-$(GCC_VERSION)
+DIR_SUFFIX	= gcc$(subst .,,$(GCC_VERSION))
+OPTJ            = #-j8
+endif
+CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
+ifneq ($(CC),clang)
+CPPFLAGS       += -D_GLIBCXX_DEBUG=1
+endif
 CFLAGS		= $(CPPFLAGS) -g
 LDFLAGS		= -g
 
-BOOST_VERSION	= 1_43_0
-BOOST_SOURCE	= boost_$(BOOST_VERSION)
+BOOST_SOURCE	= boost-release
+BOOST_DEFINES	= define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
+ifeq ($(CC),clang)
+BOOST_TOOLSET	= clang
+else
 BOOST_TOOLSET	= darwin
-BOOST_DEFINES	= define=_GLIBCXX_DEBUG=1 define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
+BOOST_DEFINES	= define=_GLIBCXX_DEBUG=1
+endif
 #BOOST_FLAGS	= --architecture=x86 --address_model=32_64
 BOOST_FLAGS	= --toolset=$(BOOST_TOOLSET) \
 		  --build-type=complete --layout=versioned \
 		  $(BOOST_DEFINES)
-BOOST_DIR	= boost_$(BOOST_VERSION)-gcc$(CXX_VERSION)
+BOOST_DIR	= boost_$(BOOST_VERSION)-$(DIR_SUFFIX)
 BOOST_STOW	= $(STOW_ROOT)/$(BOOST_DIR)
 BOOST_BUILD	= $(PRODUCTS)/$(BOOST_DIR)
-ICU_FLAGS	= -sHAVE_ICU=1 -sICU_PATH=$(STOW_ROOT)/icu
-BOOST_ICU_DIR	= boost_$(BOOST_VERSION)-icu-gcc$(CXX_VERSION)
+ICU_FLAGS	= -sHAVE_ICU=1 -sICU_PATH=$(STOW_ROOT)/icu-$(DIR_SUFFIX)
+BOOST_ICU_DIR	= boost_$(BOOST_VERSION)-icu-$(DIR_SUFFIX)
 BOOST_ICU_STOW	= $(STOW_ROOT)/$(BOOST_ICU_DIR)
 BOOST_ICU_BUILD = $(PRODUCTS)/$(BOOST_ICU_DIR)
 
-all: boost-build cppunit-build #icu-build boost-icu-build
+all: boost-build #icu-build boost-icu-build
 
-boost-build:
+prepare-boost:
+	perl -i -pe 's/local command = \[ common\.get-invocation-command darwin : g\+\+ : .*/local command = [ common.get-invocation-command darwin : g++ : $(CXX) ] ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
+	perl -i -pe 's/flags darwin\.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;/flags darwin\.compile OPTIONS : -gdwarf-2 ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
+
+boost-build: prepare-boost
 	(cd $(BOOST_SOURCE) && \
-	bjam debug --prefix=$(BOOST_STOW) --build-dir=$(BOOST_BUILD) \
+	 sh bootstrap.sh && \
+	 ./bjam $(OPTJ) debug --prefix=$(BOOST_STOW) \
+	    --build-dir=$(BOOST_BUILD) \
 	    $(BOOST_FLAGS) install)
 
-cppunit-build:
-	-(cd cppunit; make distclean)
-	(cd cppunit; sh autogen.sh; \
+icu-build:
+	-(cd icu/source; make distclean)
+	(cd icu/source; sh autogen.sh; \
 	 ./configure CPPFLAGS="$(CPPFLAGS)" \
 		     CFLAGS="$(CFLAGS)" \
 		     LDFLAGS="$(LDFLAGS)" \
 		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
-		     --prefix=$(STOW_ROOT)/cppunit-gcc$(CXX_VERSION) \
-		     --disable-doxygen --disable-dot && \
+		     --enable-static --enable-debug \
+		     --prefix=$(STOW_ROOT)/icu-$(DIR_SUFFIX) && \
 	 make install)
 
-#icu-build:
-#	-(cd icu/source; make distclean)
-#	(cd icu/source; sh autogen.sh; \
-#	 ./configure CPPFLAGS="$(CPPFLAGS)" \
-#		     CFLAGS="$(CFLAGS)" \
-#		     LDFLAGS="$(LDFLAGS)" \
-#		     CC="$(CC)" CXX="$(CXX)" LD="$(LD)" \
-#		     --enable-static --enable-debug \
-#		     --prefix=$(STOW_ROOT)/icu-gcc$(CXX_VERSION) && \
-#	 make install)
-#
-#boost-icu-build:
-#	(cd $(BOOST_SOURCE) && \
-#	bjam debug --prefix=$(BOOST_ICU_STOW) --build-dir=$(BOOST_ICU_BUILD) \
-#	    $(BOOST_FLAGS) $(ICU_FLAGS) install)
+boost-icu-build:
+	(cd $(BOOST_SOURCE) && \
+	 sh bootstrap.sh && \
+	 ./bjam $(OPTJ) debug --prefix=$(BOOST_ICU_STOW) \
+	    --build-dir=$(BOOST_ICU_BUILD) \
+	    $(BOOST_FLAGS) $(ICU_FLAGS) install)
 
 clean:
 	-rm -fr $(BOOST_STOW) $(BOOST_BUILD)
 	-rm -fr $(BOOST_ICU_STOW) $(BOOST_ICU_BUILD)
-	-rm -fr $(STOW_ROOT)/cppunit-gcc$(CXX_VERSION)
-	-rm -fr $(STOW_ROOT)/icu-gcc$(CXX_VERSION)
-	-(cd cppunit; make distclean)
+	-rm -fr $(STOW_ROOT)/icu-$(DIR_SUFFIX)
 	-(cd icu/source; make distclean)
 
 lib-clean:
-	-(cd cppunit; make distclean)
 	-(cd icu/source; make distclean)

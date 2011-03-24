@@ -72,7 +72,7 @@ enum parse_flags_enum_t {
   PARSE_NO_MIGRATE = 0x04,
   PARSE_NO_REDUCE  = 0x08,
   PARSE_NO_ASSIGN  = 0x10,
-  PARSE_NO_DATES   = 0x20,
+  PARSE_NO_ANNOT   = 0x20,
   PARSE_OP_CONTEXT = 0x40,
   PARSE_SOFT_FAIL  = 0x80
 };

@@ -1,13 +1,11 @@
-bal
-<<<
 2008/01/01 one
   test:a  1
   test:b
->>>1
+
+test bal
                    0  test
                    1    a
                   -1    b
 --------------------
                    0
->>>2
-=== 0
+end test

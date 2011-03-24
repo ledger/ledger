@@ -48,7 +48,7 @@ void set_session_context(session_t * session)
     amount_t::initialize();
 
     amount_t::parse_conversion("1.0m", "60s");
-    amount_t::parse_conversion("1.0h", "60m");
+    amount_t::parse_conversion("1.00h", "60m");
 
     value_t::initialize();
   }
@@ -129,7 +129,6 @@ std::size_t session_t::read_data(const string& master_account)
         buffer.flush();
 
         std::istringstream buf_in(buffer.str());
-
         xact_count += journal->read(buf_in, "/dev/stdin", acct);
         journal->sources.push_back(journal_t::fileinfo_t());
       } else {
@@ -137,6 +136,8 @@ std::size_t session_t::read_data(const string& master_account)
       }
     }
 
+    DEBUG("ledger.read", "xact_count [" << xact_count
+          << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
     assert(xact_count == journal->xacts.size());
 
 #if defined(HAVE_BOOST_SERIALIZATION)

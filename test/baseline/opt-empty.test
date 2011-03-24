@@ -1,5 +1,3 @@
-reg --empty
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -19,7 +17,8 @@ reg --empty
     Income:One:Books          $-10.00
     Income:One:Two:Books          $-10.00
     Income:One:Two:Three:Books          $-10.00
->>>1
+
+test reg --empty
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
 08-Jan-01 January               Expenses:One:Books           $10.00       $10.00
@@ -32,5 +31,4 @@ reg --empty
                                 Income:One:Books            $-10.00       $20.00
                                 Income:One:Two:Books        $-10.00       $10.00
                                 In:One:Two:Three:Books      $-10.00            0
->>>2
-=== 0
+end test

@@ -1,5 +1,3 @@
-reg --color --force-color
-<<<
 N $
 
 = /^Expenses:Books/
@@ -44,7 +42,8 @@ N $
     ; :MyTag:
     Assets:Bank:Checking
     ; :AnotherTag:
->>>1
+
+test reg --color --force-color
 04-May-01 Checking balance      [34mAssets:Bank:Checking  [0m    $1,000.00    $1,000.00
                                 [34mEquit:Opening Balances[0m   [31m$-1,000.00[0m            0
 04-May-03 Investment balance    [34mAssets:Brokerage      [0m      50 AAPL      50 AAPL
@@ -77,5 +76,4 @@ N $
                                                                          50 AAPL
                                 [34mAssets:Bank:Checking  [0m      [31m$-20.00[0m   [31m$-1,502.00[0m
                                                                          50 AAPL
->>>2
-=== 0
+end test

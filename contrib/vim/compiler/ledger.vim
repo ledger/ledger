@@ -12,20 +12,17 @@ if exists(":CompilerSet") != 2
   command -nargs=* CompilerSet setlocal <args>
 endif
 
-if ! exists("g:ledger_bin") || ! executable(g:ledger_bin)
-  if executable('ledger')
-    let g:ledger_bin = 'ledger'
-  else
-    echoerr "ledger command not found. Set g:ledger_bin or extend $PATH."
-    finish
-  endif
+" default value will be set in ftplugin
+if ! exists("g:ledger_bin") || empty(g:ledger_bin) || ! executable(split(g:ledger_bin, '\s')[0])
+  finish
 endif
 
 " %-G throws away blank lines, everything else is assumed to be part of a
 " multi-line error message.
 CompilerSet errorformat=%-G,%EWhile\ parsing\ file\ \"%f\"\\,\ line\ %l:%.%#,%ZError:\ %m,%C%.%#
+CompilerSet errorformat+=%tarning:\ \"%f\"\\,\ line\ %l:\ %m
 
 " unfortunately there is no 'check file' command,
 " so we will just use a query that returns no results. ever.
-exe 'CompilerSet makeprg='.g:ledger_bin.'\ -f\ %\ reg\ not\ ''.*''\ \>\ /dev/null'
+exe 'CompilerSet makeprg='.substitute(g:ledger_bin, ' ', '\\ ', 'g').'\ -f\ %\ reg\ not\ ''.*''\ \>\ /dev/null'
 

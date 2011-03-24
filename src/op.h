@@ -104,6 +104,7 @@ public:
 
     O_DEFINE,
     O_LOOKUP,
+    O_LAMBDA,
     O_CALL,
     O_MATCH,
 
@@ -266,8 +267,10 @@ public:
     ostream_pos_type * end_pos;
     bool               relaxed;
 
-    context_t(const ptr_op_t&          _expr_op    = NULL,
-              const ptr_op_t&          _op_to_find = NULL,
+    context_t() : start_pos(NULL), end_pos(NULL), relaxed(false) {}
+
+    context_t(const ptr_op_t&          _expr_op,
+              const ptr_op_t&          _op_to_find,
               ostream_pos_type * const _start_pos  = NULL,
               ostream_pos_type * const _end_pos    = NULL,
               const bool               _relaxed    = true)
@@ -280,7 +283,7 @@ public:
   void dump(std::ostream& out, const int depth = 0) const;
 
   static ptr_op_t wrap_value(const value_t& val);
-  static ptr_op_t wrap_functor(const expr_t::func_t& fobj);
+  static ptr_op_t wrap_functor(expr_t::func_t fobj);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -326,7 +329,7 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_value(const value_t& val) {
 }
 
 inline expr_t::ptr_op_t
-expr_t::op_t::wrap_functor(const expr_t::func_t& fobj) {
+expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
   ptr_op_t temp(new op_t(op_t::FUNCTION));
   temp->set_function(fobj);
   return temp;

@@ -1,5 +1,3 @@
-prices --prices-format='%(datetime) %(scrub(display_amount))\n'
-<<<
 D $1,000.00
 
 P 2009/01/01 13:30:00 AAPL $10.00
@@ -11,11 +9,11 @@ P 2009/02/01 17:30:00 AAPL $50.00
 2009/03/01 Purchase
   Assets:Brokerage       100 AAPL
   Income
->>>1
+
+test prices --prices-format='%(datetime) %(scrub(display_amount))\n'
 2009/01/01 13:30:00 $10.00
 2009/01/01 14:30:00 $20.00
 2009/01/01 15:30:00 $30.00
 2009/01/01 16:30:00 $40.00
 2009/02/01 17:30:00 $50.00
->>>2
-=== 0
+end test

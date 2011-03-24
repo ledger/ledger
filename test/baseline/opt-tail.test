@@ -1,5 +1,3 @@
-reg --tail=10 books
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --tail=10 books
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --tail=10 books
 09-Aug-01 August                Expenses:Books               $80.00     $2200.00
 09-Aug-31 End of August         Expenses:Books               $80.00     $2280.00
 09-Sep-01 September             Expenses:Books               $90.00     $2370.00
@@ -202,5 +201,4 @@ reg --tail=10 books
 09-Nov-30 End of November       Expenses:Books              $110.00     $2880.00
 09-Dec-01 December              Expenses:Books              $120.00     $3000.00
 09-Dec-31 End of December       Expenses:Books              $120.00     $3120.00
->>>2
-=== 0
+end test

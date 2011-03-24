@@ -481,8 +481,8 @@ and exits.  This is useful for sending bug reports, to let the author
 know which version of ledger you are using.
 
 @option{--file FILE} (@option{-f FILE}) reads FILE as a ledger file.
-This command may be used multiple times.  FILE may also be a list of
-file names separated by colons.  Typically, the environment variable
+This command may be used multiple times.
+Typically, the environment variable
 @env{LEDGER_FILE} is set, rather than using this command-line option.
 
 @option{--output FILE} (@option{-o FILE}) redirects output from any
@@ -492,11 +492,12 @@ output.
 @option{--init-file FILE} (@option{-i FILE}) causes FILE to be read by
 ledger before any other ledger file.  This file may not contain any
 postings, but it may contain option settings.  To specify options
-in the init file, use the same syntax as the command-line.  Here's an
-example init file:
+in the init file, use the same syntax as the command-line, but put each
+option on it's own line.  Here's an example init file:
 
 @smallexample
 --price-db ~/finance/.pricedb
+--cache /tmp/ledger-cache
 
 ; ~/.ledgerrc ends here
 @end smallexample
@@ -807,6 +808,8 @@ option settings in the file @file{~/.ledgerrc}, for example:
 
 @example
 --cache /tmp/.mycache
+--pager /bin/cat
+
 @end example
 
 @node Period expressions, Format strings, Options, Quick Reference

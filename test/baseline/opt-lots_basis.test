@@ -1,5 +1,3 @@
-reg --basis
-<<<
 C 1.00s = 100c
 C 1.00G = 100s
 
@@ -550,7 +548,8 @@ D 1.00G
 2006/04/01 Auction House
     Assets:Tajer:Items                  "Orb of Deception" 1 @ 155G
     Assets:Tajer
->>>1
+
+test reg --basis
 06-Mar-14 Opening Balances      Assets:Tajer                133.98G      133.98G
                                 Assets:Gruulmorg             24.87G      158.85G
                                 Equity:Gold                -158.85G            0
@@ -892,5 +891,4 @@ D 1.00G
                                 Assets:Tajer                -74.10G            0
 06-Apr-01 Auction House         Assets:Tajer:Items          155.00G      155.00G
                                 Assets:Tajer               -155.00G            0
->>>2
-=== 0
+end test

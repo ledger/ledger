@@ -1,5 +1,3 @@
-reg
-<<<
 Y2008
 
 01/30 A
@@ -17,7 +15,8 @@ Y2008
 03/01 D
         Bank    160
         Income
->>>1
+
+test reg
 08-Jan-30 A                     Bank                            130          130
                                 Income                         -130            0
 08-Feb-01 B                     Bank                            140          140
@@ -26,5 +25,4 @@ Y2008
                                 Income                         -150            0
 08-Mar-01 D                     Bank                            160          160
                                 Income                         -160            0
->>>2
-=== 0
+end test

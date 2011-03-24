@@ -1,5 +1,3 @@
-reg --now=2009/03/21 --forecast-while='total < $3500' books
-<<<
 ~ monthly
     Expenses:Books          $10.00
     Assets:Cash
@@ -195,7 +193,8 @@ reg --now=2009/03/21 --forecast-while='total < $3500' books
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --now=2009/03/21 --forecast-while='total < $3500' books
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
 08-Jan-31 End of January        Expenses:Books               $10.00       $20.00
 08-Feb-01 February              Expenses:Books               $20.00       $40.00
@@ -281,5 +280,4 @@ reg --now=2009/03/21 --forecast-while='total < $3500' books
 12-Feb-01 Forecast transaction  Expenses:Books               $10.00     $3470.00
 12-Mar-01 Forecast transaction  Expenses:Books               $10.00     $3480.00
 12-Apr-01 Forecast transaction  Expenses:Books               $10.00     $3490.00
->>>2
-=== 0
+end test

@@ -295,7 +295,6 @@ internal precision."))
     .value("NoMigrate", PARSE_NO_MIGRATE)
     .value("NoReduce",  PARSE_NO_REDUCE)
     .value("NoAssign",  PARSE_NO_ASSIGN)
-    .value("NoDates",   PARSE_NO_DATES)
     .value("OpContext", PARSE_OP_CONTEXT)
     .value("SoftFail",  PARSE_SOFT_FAIL)
     ;

@@ -1,12 +1,11 @@
-bal
-<<<
 D 1,000.00 USD
 
 2007-12-31 * Start of year / Opening balances.
   Account1   1000 EUR @ 1.6 USD
   Account2   -1000 EUR @ 1.5 USD
->>>1
->>>2
+
+test bal -> 1
+__ERROR__
 While parsing file "$FILE", line 5: 
 While balancing transaction from "$FILE", lines 3-5:
 > 2007-12-31 * Start of year / Opening balances.
@@ -17,4 +16,4 @@ Unbalanced remainder is:
 Amount to balance against:
         1,600.00 USD
 Error: Transaction does not balance
-=== 1
+end test

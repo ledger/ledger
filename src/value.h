@@ -901,16 +901,20 @@ public:
   }
 
   sequence_t::iterator begin() {
+    VERIFY(is_sequence());
     return as_sequence_lval().begin();
   }
   sequence_t::iterator end() {
+    VERIFY(is_sequence());
     return as_sequence_lval().end();
   }
 
   sequence_t::const_iterator begin() const {
+    VERIFY(is_sequence());
     return as_sequence().begin();
   }
   sequence_t::const_iterator end() const {
+    VERIFY(is_sequence());
     return as_sequence().end();
   }
 

@@ -1,26 +1,30 @@
-#include <system.hh>
+#define BOOST_TEST_DYN_LINK
+//#define BOOST_TEST_MODULE commodity
+#include <boost/test/unit_test.hpp>
 
-#include "t_commodity.h"
+#include <system.hh>
 
 #include "amount.h"
 #include "commodity.h"
 
 using namespace ledger;
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommodityTestCase, "math");
-
-void CommodityTestCase::setUp() {
+struct commodity_fixture {
+  commodity_fixture() {
   times_initialize();
   amount_t::initialize();
   amount_t::stream_fullstrings = true;
-}
+  }
 
-void CommodityTestCase::tearDown() {
+  ~commodity_fixture() {
   amount_t::shutdown();
   times_shutdown();
-}
+  }
+};
 
-void CommodityTestCase::testPriceHistory()
+BOOST_FIXTURE_TEST_SUITE(commodity, commodity_fixture)
+
+BOOST_AUTO_TEST_CASE(testPriceHistory)
 {
 #ifndef NOT_FOR_PYTHON
   datetime_t jan17_05;
@@ -45,8 +49,10 @@ void CommodityTestCase::testPriceHistory()
   amount_t x0;
   amount_t x1("100.10 AAPL");
 
-  assertThrow(x0.value(), amount_error);
-  assertFalse(x1.value());
+  BOOST_CHECK_THROW(x0.value(), amount_error);
+#ifndef NOT_FOR_PYTHON
+  BOOST_CHECK(! x1.value());
+#endif
 
   // Commodities cannot be constructed by themselves, since a great deal
   // of their state depends on how they were seen to be used.
@@ -74,33 +80,36 @@ void CommodityTestCase::testPriceHistory()
 
 #ifndef NOT_FOR_PYTHON
   optional<amount_t> amt = x1.value(feb28_07sbm);
-  assertTrue(amt);
-  assertEqual(amount_t("$1831.83"), *amt);
+  BOOST_CHECK(amt);
+  BOOST_CHECK_EQUAL(amount_t("$1831.83"), *amt);
 
   amt = x1.value(CURRENT_TIME());
-  assertTrue(amt);
-  assertEqual(string("$2124.12"), amt->to_string());
+  BOOST_CHECK(amt);
+  BOOST_CHECK_EQUAL(string("$2124.12"), amt->to_string());
 #ifdef INTEGER_MATH
-  assertEqual(string("$2124.12"), amt->to_fullstring());
+  BOOST_CHECK_EQUAL(string("$2124.12"), amt->to_fullstring());
 #else
-  assertEqual(string("$2124.122"), amt->to_fullstring());
+  BOOST_CHECK_EQUAL(string("$2124.122"), amt->to_fullstring());
 #endif
 
   amt = x1.value(CURRENT_TIME(), euro);
-  assertTrue(amt);
-  assertEqual(string("EUR 1366.87"), amt->rounded().to_string());
+  BOOST_CHECK(amt);
+  BOOST_CHECK_EQUAL(string("EUR 1366.87"), amt->rounded().to_string());
 
   // Add a newer Euro pricing
   aapl.add_price(jan17_07, amount_t("EUR 23.00"));
 
   amt = x1.value(CURRENT_TIME(), euro);
-  assertTrue(amt);
-  assertEqual(string("EUR 2302.30"), amt->to_string());
+  BOOST_CHECK(amt);
+  BOOST_CHECK_EQUAL(string("EUR 2302.30"), amt->to_string());
 
   amt = x1.value(CURRENT_TIME(), cad);
-  assertTrue(amt);
-  assertEqual(string("CAD 3223.22"), amt->to_string());
+  BOOST_CHECK(amt);
+  BOOST_CHECK_EQUAL(string("CAD 3223.22"), amt->to_string());
 #endif // NOT_FOR_PYTHON
 
-  assertValid(x1);
+  BOOST_CHECK(x1.valid());
 }
+
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -1,25 +1,22 @@
-reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots
-<<<
 D 1.0000s
 
 2006/03/14 Opening Balances
     Assets:Tajer                1339829c @ 1.86590975416s
     Assets:Gruulmorg             248720c @ 10.051463493s
     Equity:Gold                -5000000s
->>>1
+
+test reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots
   1339829c {1.86590975416s} [2006/03/14]
   1339829c {1.86590975416s} [2006/03/14]
     248720c {10.051463493s} [2006/03/14]
   1339829c {1.86590975416s} [2006/03/14]
     248720c {10.051463493s} [2006/03/14]
-                                -1388.9h
->>>2
-=== 0
-reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots-actual
->>>1
+                               -1388.89h
+end test
+
+test reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots-actual
                                 1339829c
                                 1588549c
                                 1588549c
-                                -1388.9h
->>>2
-=== 0
+                               -1388.89h
+end test

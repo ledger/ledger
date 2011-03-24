@@ -1,5 +1,3 @@
-bal
-<<<
 2009/01/01 Entry
     Assets:Cash                $10,000.00
     Equity:Opening Balances
@@ -27,11 +25,11 @@ bal
 2009/02/05 Entry
     Expenses:Cash
     Assets:Cash                         = ($4,000.00 + $100.00)
->>>1
+
+test bal
            $4,100.00  Assets:Cash
          $-10,000.00  Equity:Opening Balances
            $5,900.00  Expenses:Cash
 --------------------
                    0
->>>2
-=== 0
+end test

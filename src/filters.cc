@@ -465,7 +465,7 @@ void collapse_posts::report_subtotal()
     DEBUG("filters.collapse", "latest date      = " << latest_date);
 
     handle_value(/* value=      */ subtotal,
-                 /* account=    */ &totals_account,
+                 /* account=    */ totals_account,
                  /* xact=       */ &xact,
                  /* temps=      */ temps,
                  /* handler=    */ handler,
@@ -523,15 +523,15 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
                                            report_t&        _report,
                                            bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
-    show_rounding(_show_rounding),
-    rounding_account(temps.create_account(_("<Adjustment>"))),
-    revalued_account(temps.create_account(_("<Revalued>")))
+    show_rounding(_show_rounding)
 {
   TRACE_CTOR(display_filter_posts,
              "post_handler_ptr, report_t&, account_t&, bool");
 
   display_amount_expr = report.HANDLER(display_amount_).expr;
   display_total_expr  = report.HANDLER(display_total_).expr;
+
+  create_accounts();
 }
 
 bool display_filter_posts::output_rounding(post_t& post)
@@ -551,7 +551,7 @@ bool display_filter_posts::output_rounding(post_t& post)
   //  2. The --empty option was specified
   //  3. The account of the posting is <Revalued>
 
-  if (post.account == &revalued_account) {
+  if (post.account == revalued_account) {
     if (show_rounding)
       last_display_total = new_display_total;
     return true;
@@ -575,7 +575,7 @@ bool display_filter_posts::output_rounding(post_t& post)
               "rounding.diff                  = " << diff);
 
         handle_value(/* value=         */ diff,
-                     /* account=       */ &rounding_account,
+                     /* account=       */ rounding_account,
                      /* xact=          */ post.xact,
                      /* temps=         */ temps,
                      /* handler=       */ handler,
@@ -608,8 +608,6 @@ changed_value_posts::changed_value_posts
   : item_handler<post_t>(handler), report(_report),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
-    revalued_account(_display_filter ? _display_filter->revalued_account :
-                     temps.create_account(_("<Revalued>"))),
     display_filter(_display_filter)
 {
   TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool");
@@ -637,6 +635,8 @@ changed_value_posts::changed_value_posts
   losses_equity_account =
     report.session.journal->master->find_account(losses_equity_account_name);
   losses_equity_account->add_flags(ACCOUNT_GENERATED);
+
+  create_accounts();
 }
 
 void changed_value_posts::flush()
@@ -682,7 +682,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
       if (! for_accounts_report) {
         handle_value
           (/* value=         */ diff,
-           /* account=       */ &revalued_account,
+           /* account=       */ revalued_account,
            /* xact=          */ &xact,
            /* temps=         */ temps,
            /* handler=       */ handler,
@@ -954,7 +954,7 @@ void interval_posts::operator()(post_t& post)
           xact_t& null_xact = temps.create_xact();
           null_xact._date = last_interval.inclusive_end();
 
-          post_t& null_post = temps.create_post(null_xact, &empty_account);
+          post_t& null_post = temps.create_post(null_xact, empty_account);
           null_post.add_flags(POST_CALCULATED);
           null_post.amount = 0L;
 

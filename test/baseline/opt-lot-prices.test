@@ -1,5 +1,3 @@
-reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
-<<<
 C 1.00s = 100c
 C 1.00G = 100s
 
@@ -550,7 +548,8 @@ D 1.00G
 2006/04/01 Auction House
     Assets:Tajer:Items                  "Orb of Deception" 1 @ 155G
     Assets:Tajer
->>>1
+
+test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                                          133.98G
                                                                          158.85G
                                                                                0
@@ -2148,5 +2147,4 @@ D 1.00G
                                                   "Orb of Deception" 1 {155.00G}
                                                                           35.42G
                                                   "Orb of Deception" 1 {155.00G}
->>>2
-=== 0
+end test

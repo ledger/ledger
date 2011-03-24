@@ -68,7 +68,9 @@ namespace {
 
     parse_context_t(journal_t& _journal, scope_t& _scope)
       : journal(_journal), scope(_scope), timelog(journal, scope),
-        strict(false), count(0), errors(0), sequence(1) {}
+        strict(false), count(0), errors(0), sequence(1) {
+      timelog.context_count = &count;
+    }
 
     bool front_is_account() {
       return state_stack.front().type() == typeid(account_t *);
@@ -85,6 +87,10 @@ namespace {
         if (state.type() == typeid(account_t *))
           return boost::get<account_t *>(state);
       return NULL;
+    }
+
+    void close() {
+      timelog.close();
     }
   };
 
@@ -111,6 +117,10 @@ namespace {
                instance_t *     _parent        = NULL);
 
     ~instance_t();
+
+    virtual string description() {
+      return _("textual parser");
+    }
 
     void parse();
     std::streamsize read_line(char *& line);
@@ -147,6 +157,7 @@ namespace {
     void define_directive(char * line);
     void assert_directive(char * line);
     void check_directive(char * line);
+    void comment_directive(char * line);
     void expr_directive(char * line);
     bool general_directive(char * line);
 
@@ -306,7 +317,6 @@ void instance_t::read_next_directive()
 {
   char * line;
   std::streamsize len = read_line(line);
-
   if (len == 0 || line == NULL)
     return;
 
@@ -719,7 +729,11 @@ void instance_t::include_directive(char * line)
   mask_t glob;
 #if BOOST_VERSION >= 103700
   path   parent_path = filename.parent_path();
+#if BOOST_VERSION >= 104600
+  glob.assign_glob('^' + filename.filename().string() + '$');
+#else
   glob.assign_glob('^' + filename.filename() + '$');
+#endif
 #else // BOOST_VERSION >= 103700
   path   parent_path = filename.branch_path();
   glob.assign_glob('^' + filename.leaf() + '$');
@@ -738,7 +752,11 @@ void instance_t::include_directive(char * line)
 #endif
         {
 #if BOOST_VERSION >= 103700
+#if BOOST_VERSION >= 104600
+        string base = (*iter).path().filename().string();
+#else
         string base = (*iter).filename();
+#endif
 #else // BOOST_VERSION >= 103700
         string base = (*iter).leaf();
 #endif // BOOST_VERSION >= 103700
@@ -907,6 +925,17 @@ void instance_t::check_directive(char * line)
     warning_(_("Check failed: %1") << line);
 }
 
+void instance_t::comment_directive(char * line)
+{
+  while (in.good() && ! in.eof()) {
+    if (read_line(line) > 0) {
+      std::string buf(line);
+      if (starts_with(buf, "end comment") || starts_with(buf, "end test"))
+        break;
+    }
+  }
+}
+
 void instance_t::expr_directive(char * line)
 {
   expr_t expr(line);
@@ -957,6 +986,10 @@ bool instance_t::general_directive(char * line)
       check_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "comment") == 0) {
+      comment_directive(arg);
+      return true;
+    }
     break;
 
   case 'd':
@@ -1001,6 +1034,10 @@ bool instance_t::general_directive(char * line)
   case 't':
     if (std::strcmp(p, "tag") == 0) {
       tag_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "test") == 0) {
+      comment_directive(arg);
       return true;
     }
     break;
@@ -1113,7 +1150,7 @@ post_t * instance_t::parse_post(char *          line,
   if (context.strict && ! post->account->has_flags(ACCOUNT_KNOWN)) {
     if (post->_state == item_t::UNCLEARED)
       warning_(_("\"%1\", line %2: Unknown account '%3'")
-               << pathname << linenum << post->account->fullname());
+               << pathname.string() << linenum << post->account->fullname());
     post->account->add_flags(ACCOUNT_KNOWN);
   }
 
@@ -1148,7 +1185,7 @@ post_t * instance_t::parse_post(char *          line,
           ! post->amount.commodity().has_flags(COMMODITY_KNOWN)) {
         if (post->_state == item_t::UNCLEARED)
           warning_(_("\"%1\", line %2: Unknown commodity '%3'")
-                   << pathname << linenum << post->amount.commodity());
+                   << pathname.string() << linenum << post->amount.commodity());
         post->amount.commodity().add_flags(COMMODITY_KNOWN);
       }
 
@@ -1400,7 +1437,7 @@ xact_t * instance_t::parse_xact(char *          line,
 {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
-  std::auto_ptr<xact_t> xact(new xact_t);
+  unique_ptr<xact_t> xact(new xact_t);
 
   xact->pos           = position_t();
   xact->pos->pathname = pathname;

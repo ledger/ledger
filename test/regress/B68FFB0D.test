@@ -1,15 +1,13 @@
-print
-<<<
 D $1,000.00
 
 2009/01/01 Sample
    assets  134.123 FOO @ $8.88
    assets  100 BAR @ $8.88
    equity
->>>1
+
+test print
 2009/01/01 Sample
     assets                               134.123 FOO @ $8.88
     assets                                   100 BAR @ $8.88
     equity
->>>2
-=== 0
+end test

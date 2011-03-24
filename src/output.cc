@@ -90,14 +90,10 @@ void format_posts::operator()(post_t& post)
       else
         out << '\n';
 
-      value_scope_t val_scope(string_value(report_title));
-      bind_scope_t inner_scope(bound_scope, val_scope);
-      
-      format_t group_title_format;
-      group_title_format
-        .parse_format(report.HANDLER(group_title_format_).str());
+      value_scope_t val_scope(bound_scope, string_value(report_title));
+      format_t group_title_format(report.HANDLER(group_title_format_).str());
 
-      out << group_title_format(inner_scope);
+      out << group_title_format(val_scope);
 
       report_title = "";
     }
@@ -176,14 +172,10 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
       else
         out << '\n';
 
-      value_scope_t val_scope(string_value(report_title));
-      bind_scope_t inner_scope(bound_scope, val_scope);
-      
-      format_t group_title_format;
-      group_title_format
-        .parse_format(report.HANDLER(group_title_format_).str());
+      value_scope_t val_scope(bound_scope, string_value(report_title));
+      format_t group_title_format(report.HANDLER(group_title_format_).str());
 
-      out << group_title_format(inner_scope);
+      out << group_title_format(val_scope);
 
       report_title = "";
     }

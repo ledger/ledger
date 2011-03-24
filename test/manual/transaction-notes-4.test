@@ -1,5 +1,3 @@
-bal food and tag type --account='"Tags:" + tag("Type")'
-<<<
 2009/11/01 Panera Bread  ; Got something to eat
     Expenses:Food               $4.50
     Assets:Checking
@@ -17,11 +15,11 @@ bal food and tag type --account='"Tags:" + tag("Type")'
     ; This is another long note, after the metadata.
     Expenses:Food               $4.50
     Assets:Checking
->>>1
+
+test bal food and tag type --account='"Tags:" + tag("Type")'
                $9.00  Tags
                $4.50    Coffee:Expenses:Food
                $4.50    Dining:Expenses:Food
 --------------------
                $9.00
->>>2
-=== 0
+end test

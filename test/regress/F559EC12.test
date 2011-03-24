@@ -1,6 +1,4 @@
-format "%-12(scrub(amount))"
-<<<
->>>1
+test format "%-12(scrub(amount))"
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
     ; This note applies to all postings. :SecondTag:
@@ -19,10 +17,9 @@ Element:    EXPR  flags: 0x1  min: 12  max:  0  expr: scrub(amount)
 
 --- Formatted string ---
 "20 BOOK     "
->>>2
-=== 0
-format "%12(scrub(amount))"
->>>1
+end test
+
+test format "%12(scrub(amount))"
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
     ; This note applies to all postings. :SecondTag:
@@ -41,5 +38,4 @@ Element:    EXPR  flags: 0x0  min: 12  max:  0  expr: scrub(amount)
 
 --- Formatted string ---
 "     20 BOOK"
->>>2
-=== 0
+end test

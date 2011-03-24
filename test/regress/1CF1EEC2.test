@@ -1,5 +1,3 @@
-equity assets
-<<<
 2009/01/01 sample
     Assets:Super:ARF                 $1000.00
     Assets:Super:CSS                 $1000.00
@@ -17,11 +15,11 @@ equity assets
     Assets:Super:CSS                 $1000.00
     Assets:Super:CSS:Contributions   $1000.00
     Income:Opening Balances
->>>1
+
+test equity assets
 2009/03/01 Opening Balances
     Assets:Super:ARF                        $3000.00
     Assets:Super:CSS                        $3000.00
     Assets:Super:CSS:Contributions          $3000.00
     Equity:Opening Balances                $-9000.00
->>>2
-=== 0
+end test

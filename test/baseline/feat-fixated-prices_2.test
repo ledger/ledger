@@ -1,0 +1,12 @@
+fixed XCD $0.374531835206
+
+2008/04/08 KFC
+    Expenses:Food                          XCD 43.00
+    Assets:Cash
+
+end fixed
+
+test reg
+08-Apr-08 KFC                   Expenses:Food             XCD 43.00    XCD 43.00
+                                Assets:Cash              XCD -43.00            0
+end test

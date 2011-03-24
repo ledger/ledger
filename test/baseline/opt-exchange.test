@@ -1,5 +1,3 @@
-reg --exchange=' C, A '
-<<<
 2009/01/01 January 1st, 2009 (1)
     Assets:Brokerage                100 A
     Assets:Brokerage               -200 B
@@ -47,7 +45,8 @@ reg --exchange=' C, A '
 2009/01/10 January 10th, 2009
     Assets:Brokerage            $2,000.00
     Assets:Brokerage               -155 A [2009/01/06]
->>>1
+
+test reg --exchange=' C, A '
 09-Jan-01 January 1st, 2009 (1) Assets:Brokerage              100 A        100 A
                                 Assets:Brokerage              -50 A         50 A
 09-Jan-01 January 1st, 2009 (2) Assets:Brokerage              100 A        150 A
@@ -77,5 +76,4 @@ reg --exchange=' C, A '
                                 Assets:Brokerage             -200 C      -9871 C
 09-Jan-10 January 10th, 2009    Assets:Brokerage              200 C      -9671 C
                                 Assets:Brokerage             -200 C      -9871 C
->>>2
-=== 0
+end test

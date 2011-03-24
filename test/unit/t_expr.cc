@@ -1,6 +1,8 @@
-#include <system.hh>
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE expr
+#include <boost/test/unit_test.hpp>
 
-#include "t_expr.h"
+#include <system.hh>
 
 #include "expr.h"
 #include "predicate.h"
@@ -9,19 +11,17 @@
 
 using namespace ledger;
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(ValueExprTestCase, "expr");
+struct expr_fixture {
+  expr_fixture() {
+    times_initialize();
+    amount_t::initialize();
+  }
 
-void ValueExprTestCase::setUp()
-{
-  times_initialize();
-  amount_t::initialize();
-}
-
-void ValueExprTestCase::tearDown()
-{
-  amount_t::shutdown();
-  times_shutdown();
-}
+  ~expr_fixture() {
+    amount_t::shutdown();
+    times_shutdown();
+  }
+};
 
 // 1.  foo and bar
 // 2.  'foo and bar'
@@ -40,7 +40,9 @@ void ValueExprTestCase::tearDown()
 // 15. foo and bar|baz
 // 16. foo 'and bar|baz'
 
-void ValueExprTestCase::testPredicateTokenizer1()
+BOOST_FIXTURE_TEST_SUITE(expr, expr_fixture)
+
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer1)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -50,14 +52,14 @@ void ValueExprTestCase::testPredicateTokenizer1()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer2()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer2)
 {
   value_t args;
   args.push_back(string_value("foo and bar"));
@@ -65,14 +67,14 @@ void ValueExprTestCase::testPredicateTokenizer2()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer3()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
 {
   value_t args;
   args.push_back(string_value("(foo"));
@@ -82,16 +84,16 @@ void ValueExprTestCase::testPredicateTokenizer3()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer4()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
 {
   value_t args;
   args.push_back(string_value("("));
@@ -103,16 +105,16 @@ void ValueExprTestCase::testPredicateTokenizer4()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer5()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
 {
   value_t args;
   args.push_back(string_value("( foo and"));
@@ -121,16 +123,16 @@ void ValueExprTestCase::testPredicateTokenizer5()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
-  assertEqual(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer6()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
 {
   value_t args;
   args.push_back(string_value("=foo"));
@@ -140,15 +142,15 @@ void ValueExprTestCase::testPredicateTokenizer6()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer7()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer7)
 {
   value_t args;
   args.push_back(string_value("=foo and bar"));
@@ -156,13 +158,13 @@ void ValueExprTestCase::testPredicateTokenizer7()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer8()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer8)
 {
   value_t args;
   args.push_back(string_value("expr 'foo and bar'"));
@@ -170,13 +172,13 @@ void ValueExprTestCase::testPredicateTokenizer8()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
-  assertEqual(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer9()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer9)
 {
   value_t args;
   args.push_back(string_value("expr"));
@@ -185,13 +187,13 @@ void ValueExprTestCase::testPredicateTokenizer9()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer10()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
 {
   value_t args;
   args.push_back(string_value("expr"));
@@ -202,15 +204,15 @@ void ValueExprTestCase::testPredicateTokenizer10()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer11()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -222,16 +224,16 @@ void ValueExprTestCase::testPredicateTokenizer11()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer12()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -243,16 +245,16 @@ void ValueExprTestCase::testPredicateTokenizer12()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer13()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -263,16 +265,16 @@ void ValueExprTestCase::testPredicateTokenizer13()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer14()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -283,16 +285,16 @@ void ValueExprTestCase::testPredicateTokenizer14()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer15()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -302,16 +304,16 @@ void ValueExprTestCase::testPredicateTokenizer15()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
 
-void ValueExprTestCase::testPredicateTokenizer16()
+BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
 {
   value_t args;
   args.push_back(string_value("foo"));
@@ -320,11 +322,13 @@ void ValueExprTestCase::testPredicateTokenizer16()
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-  assertEqual(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
 }
+
+BOOST_AUTO_TEST_SUITE_END()

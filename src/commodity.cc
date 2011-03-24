@@ -490,42 +490,7 @@ commodity_t::operator bool() const
   return this != pool().null_commodity;
 }
 
-bool commodity_t::symbol_needs_quotes(const string& symbol)
-{
-  foreach (char ch, symbol)
-    if (std::isspace(ch) || std::isdigit(ch) || ch == '-' || ch == '.')
-      return true;
-
-  return false;
-}
-
 namespace {
-  bool is_reserved_token(const char * buf)
-  {
-    switch (buf[0]) {
-    case 'a':
-      return std::strcmp(buf, "and") == 0;
-    case 'd':
-      return std::strcmp(buf, "div") == 0;
-    case 'e':
-      return std::strcmp(buf, "else") == 0;
-    case 'f':
-      return std::strcmp(buf, "false") == 0;
-    case 'i':
-      return std::strcmp(buf, "if") == 0;
-    case 'o':
-      return std::strcmp(buf, "or") == 0;
-    case 'n':
-      return std::strcmp(buf, "not") == 0;
-    case 't':
-      return std::strcmp(buf, "true") == 0;
-    }
-    return false;
-  }
-}
-
-void commodity_t::parse_symbol(std::istream& in, string& symbol)
-{
   // Invalid commodity characters:
   //   SPACE, TAB, NEWLINE, RETURN
   //   0-9 . , ; : ? ! - + * / ^ & | =
@@ -551,6 +516,41 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   };
 
+  bool is_reserved_token(const char * buf)
+  {
+    switch (buf[0]) {
+    case 'a':
+      return std::strcmp(buf, "and") == 0;
+    case 'd':
+      return std::strcmp(buf, "div") == 0;
+    case 'e':
+      return std::strcmp(buf, "else") == 0;
+    case 'f':
+      return std::strcmp(buf, "false") == 0;
+    case 'i':
+      return std::strcmp(buf, "if") == 0;
+    case 'o':
+      return std::strcmp(buf, "or") == 0;
+    case 'n':
+      return std::strcmp(buf, "not") == 0;
+    case 't':
+      return std::strcmp(buf, "true") == 0;
+    }
+    return false;
+  }
+}
+
+bool commodity_t::symbol_needs_quotes(const string& symbol)
+{
+  foreach (char ch, symbol)
+    if (invalid_chars[static_cast<unsigned char>(ch)])
+      return true;
+
+  return false;
+}
+
+void commodity_t::parse_symbol(std::istream& in, string& symbol)
+{
   istream_pos_type pos = in.tellg();
 
   char buf[256];
@@ -564,7 +564,6 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
   } else {
     char * _p = buf;
-    c = static_cast<char>(in.peek());
     while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
       std::size_t    bytes = 0;
       std::ptrdiff_t size  = _p - buf;

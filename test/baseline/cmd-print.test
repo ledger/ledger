@@ -1,11 +1,9 @@
-print --decimal-comma
-<<<
 2008/12/31 Market
    Expenses:Food           ($10,00 + $2,50)
    Assets:Cash
->>>1
+
+test print --decimal-comma
 2008/12/31 Market
     Expenses:Food                       ($10,00 + $2,50)
     Assets:Cash
->>>2
-=== 0
+end test

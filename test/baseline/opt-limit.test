@@ -1,5 +1,3 @@
-reg --limit='account =~ /Books/ and amount < 50'
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --limit='account =~ /Books/ and amount < 50'
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --limit='account =~ /Books/ and amount < 50'
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
 08-Jan-31 End of January        Expenses:Books               $10.00       $20.00
 08-Feb-01 February              Expenses:Books               $20.00       $40.00
@@ -208,5 +207,4 @@ reg --limit='account =~ /Books/ and amount < 50'
 09-Mar-31 End of March          Expenses:Books               $30.00      $320.00
 09-Apr-01 April                 Expenses:Books               $40.00      $360.00
 09-Apr-30 End of April          Expenses:Books               $40.00      $400.00
->>>2
-=== 0
+end test

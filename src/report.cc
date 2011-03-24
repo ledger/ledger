@@ -47,6 +47,7 @@
 #include "convert.h"
 #include "xml.h"
 #include "emacs.h"
+#include "org.h"
 
 namespace ledger {
 
@@ -267,6 +268,11 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
     DEBUG("report.predicate", "Limit predicate   = " << HANDLER(limit_).str());
   }
 
+  if (query.has_query(query_t::QUERY_ONLY)) {
+    HANDLER(only_).on(whence, query.get_query(query_t::QUERY_ONLY));
+    DEBUG("report.predicate", "Only predicate    = " << HANDLER(only_).str());
+  }
+
   if (query.has_query(query_t::QUERY_SHOW)) {
     HANDLER(display_).on(whence, query.get_query(query_t::QUERY_SHOW));
     DEBUG("report.predicate", "Display predicate = " << HANDLER(display_).str());
@@ -408,7 +414,7 @@ void report_t::accounts_report(acct_handler_ptr handler)
     chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                         /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
-    std::auto_ptr<post_splitter>
+    unique_ptr<post_splitter>
       splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
 
     splitter->set_preflush_func(accounts_title_printer(handler, *this));
@@ -445,6 +451,28 @@ value_t report_t::display_value(const value_t& val)
     return temp;
   else
     return temp.unreduced();
+}
+
+namespace {
+  value_t top_amount(const value_t& val)
+  {
+    switch (val.type()) {
+    case value_t::BALANCE:
+      return (*val.as_balance().amounts.begin()).second;
+
+    case value_t::SEQUENCE: {
+      return top_amount(*val.as_sequence().begin());
+    }
+
+    default:
+      return val;
+    }
+  }
+}
+
+value_t report_t::fn_top_amount(call_scope_t& args)
+{
+  return top_amount(args[0]);
 }
 
 value_t report_t::fn_amount_expr(call_scope_t& scope)
@@ -544,17 +572,19 @@ value_t report_t::fn_trim(call_scope_t& args)
   }
 }
 
+value_t report_t::fn_format(call_scope_t& args)
+{
+  format_t format(args.get<string>(0));
+  std::ostringstream out;
+  out << format(args);
+  return string_value(out.str());
+}
+
 value_t report_t::fn_print(call_scope_t& args)
 {
-  std::ostream& out(output_stream);
-  bool          first = true;
-  for (std::size_t i = 0; i < args.size(); i++) {
-    if (first)
-      first = false;
-    else
-      out << ' ';
-    args[i].print(out);
-  }
+  for (std::size_t i = 0; i < args.size(); i++)
+    args[i].print(output_stream);
+  static_cast<std::ostream&>(output_stream) << std::endl;
   return true;
 }
 
@@ -592,9 +622,9 @@ value_t report_t::fn_truncated(call_scope_t& args)
 {
   return string_value(format_t::truncate
                       (args.get<string>(0),
-                       args.has<int>(1) &&
-                       args.get<int>(1) > 0 ? args.get<int>(1) : 0,
-                      args.has<int>(2) ? args.get<int>(2) : 0));
+                       (args.has<int>(1) &&
+                        args.get<int>(1) > 0) ? args.get<int>(1) : 0,
+                       args.has<int>(2) ? args.get<int>(2) : 0));
 }
 
 value_t report_t::fn_justify(call_scope_t& args)
@@ -1173,6 +1203,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'f':
       if (is_eq(p, "format_date"))
         return MAKE_FUNCTOR(report_t::fn_format_date);
+      else if (is_eq(p, "format"))
+        return MAKE_FUNCTOR(report_t::fn_format);
       else if (is_eq(p, "floor"))
         return MAKE_FUNCTOR(report_t::fn_floor);
       break;
@@ -1260,6 +1292,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_display_amount);
       else if (is_eq(p, "trim"))
         return MAKE_FUNCTOR(report_t::fn_trim);
+      else if (is_eq(p, "top_amount"))
+        return MAKE_FUNCTOR(report_t::fn_top_amount);
       else if (is_eq(p, "to_boolean"))
         return MAKE_FUNCTOR(report_t::fn_to_boolean);
       else if (is_eq(p, "to_int"))
@@ -1397,6 +1431,15 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       }
       break;
 
+    case 'o':
+      if (is_eq(p, "org")) {
+        return WRAP_FUNCTOR
+          (reporter<>
+           (new posts_to_org_table(*this, maybe_format(HANDLER(prepend_format_))),
+            *this, "#org"));
+      }
+      break;
+
     case 'p':
       if (*(p + 1) == '\0' || is_eq(p, "print")) {
         return WRAP_FUNCTOR
@@ -1444,6 +1487,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
         return WRAP_FUNCTOR(report_statistics);
+      else if (is_eq(p, "source"))
+        return WRAP_FUNCTOR(source_command);
       break;
 
     case 'x':

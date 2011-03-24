@@ -544,7 +544,7 @@ static inline void stream_memory_size(std::ostream& out, std::size_t size)
 static bool  logger_has_run = false;
 static ptime logger_start;
 
-bool logger_func(log_level_t level)
+void logger_func(log_level_t level)
 {
   if (! logger_has_run) {
     logger_has_run = true;
@@ -595,8 +595,6 @@ bool logger_func(log_level_t level)
   *_log_stream << ' ' << _log_buffer.str() << std::endl;
   _log_buffer.clear();
   _log_buffer.str("");
-
-  return true;
 }
 
 } // namespace ledger

@@ -125,6 +125,10 @@ public:
     output_stream.close();
   }
 
+  virtual string description() {
+    return _("current report");
+  }
+
   void normalize_options(const string& verb);
   void normalize_period();
   void parse_query_args(const value_t& args, const string& whence);
@@ -141,12 +145,14 @@ public:
   value_t fn_total_expr(call_scope_t& scope);
   value_t fn_display_amount(call_scope_t& scope);
   value_t fn_display_total(call_scope_t& scope);
+  value_t fn_top_amount(call_scope_t& val);
   value_t fn_should_bold(call_scope_t& scope);
   value_t fn_market(call_scope_t& scope);
   value_t fn_get_at(call_scope_t& scope);
   value_t fn_is_seq(call_scope_t& scope);
   value_t fn_strip(call_scope_t& scope);
   value_t fn_trim(call_scope_t& scope);
+  value_t fn_format(call_scope_t& scope);
   value_t fn_print(call_scope_t& scope);
   value_t fn_scrub(call_scope_t& scope);
   value_t fn_quantity(call_scope_t& scope);
@@ -389,6 +395,7 @@ public:
          "   ansify_if(partial_account(options.flat), blue if color),"
          "             bold if should_bold))\n%/"
          "%$1\n%/"
+         "%(prepend_width ? \" \" * prepend_width : \"\")"
          "--------------------\n");
     });
 
@@ -446,6 +453,7 @@ public:
          "  %(!options.flat ? depth_spacer : \"\")"
          "%-(ansify_if(partial_account(options.flat), blue if color))\n"
          "%/%$1 %$2 %$3 %$4\n%/"
+         "%(prepend_width ? \" \" * prepend_width : \"\")"
          "------------ ------------ ------------ -----\n");
     });
 
@@ -464,6 +472,7 @@ public:
          "    %(!options.flat ? depth_spacer : \"\")"
          "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
          "%$1  %$2    %$3\n%/"
+         "%(prepend_width ? \" \" * prepend_width : \"\")"
          "----------------  ----------------    ---------\n");
     });
 

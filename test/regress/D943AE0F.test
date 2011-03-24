@@ -1,5 +1,3 @@
-reg -V
-<<<
 D 1000.00 EUR
 
 2008/04/15 * Paid expenses back from cie.
@@ -7,9 +5,9 @@ D 1000.00 EUR
    Assets:Checking
 
 P 2008/04/20 00:00:00 CAD 1.20 EUR
->>>1
+
+test reg -V
 08-Apr-15 Paid expenses back .. Exp:Cie-Reimbursements  2200.00 EUR  2200.00 EUR
                                 Assets:Checking        -2200.00 EUR            0
 08-Apr-20 Commodities revalued  <Revalued>               200.00 EUR   200.00 EUR
->>>2
-=== 0
+end test

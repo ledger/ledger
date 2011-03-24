@@ -33,9 +33,10 @@ The *BETA* is what I prefer people use, since I still have a chance to fix
 major bugs that you find.  Just e-mail me, or post to the mailing list,
 they'll become a part of my work list.
 
-|*CURRENT*|@git checkout master@|
-|*BETA*|@git checkout -b maint origin/maint@|
-|*RELEASE*|@git checkout v2.6.1@|
+|*RELEASE*|@git checkout v2.6.3@|
+|*CURRENT*|@git checkout maint@|
+|*BETA*|@git checkout -b master origin/master@|
+|*ALPHA*|@git checkout -b next origin/next@|
 
 There are also several topic branches which contain experimental features,
 though none of these are guaranteed to compile.  Best to chat with me on
@@ -63,7 +64,6 @@ h3. For building the current master branch
 |gettext|0.17|_optional_|
 |libedit|20090111-3.0|_optional_|
 |Python|2.4|_optional_|
-|cppunit|1.12.1|_optional_, for @make check@|
 |doxygen|1.5.7.1|_optional_, for @make docs@|
 |graphviz|2.20.3|_optional_, for @make docs@|
 |texinfo|4.13|_optional_, for @make docs@|
@@ -89,7 +89,7 @@ sudo port install -f automake autoconf libtool python26
     libiconv +universal zlib +universal gmp +universal
     mpfr +universal ncurses +universal ncursesw +universal
     gettext +universal libedit +universal boost-jam
-    boost +st+python26+icu cppunit texlive doxygen graphviz
+    boost +st+python26+icu texlive doxygen graphviz
     texinfo lcov sloccount
 </pre>
 

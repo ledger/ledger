@@ -1,5 +1,3 @@
-reg --collapse food
-<<<
 2009/10/01 Test
    Expenses:Food:Dining    $10
    Expenses:Food:Tips       $1
@@ -34,7 +32,8 @@ reg --collapse food
    Expenses:Food:Dining    $10
    Expenses:Food:Tips       $1
    Assets:Cash
->>>1
+
+test reg --collapse food
 09-Oct-01 Test                  <Total>                         $11          $11
 09-Oct-02 Test                  <Total>                         $11          $22
 09-Oct-03 Test                  <Total>                         $11          $33
@@ -42,5 +41,4 @@ reg --collapse food
 09-Oct-05 Test                  <Total>                         $11          $55
 09-Oct-06 Test                  <Total>                         $11          $66
 09-Oct-07 Test                  <Total>                         $11          $77
->>>2
-=== 0
+end test

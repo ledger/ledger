@@ -1,5 +1,3 @@
-reg --columns=60 food and tag eating
-<<<
 2009/11/01 Panera Bread  ; Got something to eat
     Expenses:Food               $4.50
     Assets:Checking
@@ -17,7 +15,7 @@ reg --columns=60 food and tag eating
     ; This is another long note, after the metadata.
     Expenses:Food               $4.50
     Assets:Checking
->>>1
+
+test reg --columns=60 food and tag eating
 09-Nov-01 Panera Bread    Expenses:Food      $4.50     $4.50
->>>2
-=== 0
+end test

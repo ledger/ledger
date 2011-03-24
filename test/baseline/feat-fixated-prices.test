@@ -1,5 +1,3 @@
-reg -V gas
-<<<
 1990/01/01 Payee
     Expenses:Gas                100 GAL {=$2}
     Liabilities:MasterCard        $-200
@@ -15,22 +13,10 @@ P 1990/02/15 12:00:00 FOO $3
 1990/02/20 Payee
     Expenses:Gas                100 FOO
     Liabilities:MasterCard
->>>1
+
+test reg -V gas
 90-Jan-01 Payee                 Expenses:Gas                   $200         $200
 90-Feb-01 Payee                 Expenses:Gas                   $200         $400
 90-Feb-20 Commodities revalued  <Revalued>                     $100         $500
 90-Feb-20 Payee                 Expenses:Gas                   $300         $800
->>>2
-=== 0
-reg
-<<<
-fixed XCD $0.374531835206
-
-2008/04/08 KFC
-    Expenses:Food                          XCD 43.00
-    Assets:Cash
-
-end fixed
->>>
-08-Apr-08 KFC                   Expenses:Food             XCD 43.00    XCD 43.00
-                                Assets:Cash              XCD -43.00            0
+end test

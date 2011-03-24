@@ -1,5 +1,3 @@
-print
-<<<
 D 1.200,40 €
 
 1999/11/01 * Achat
@@ -87,7 +85,8 @@ D 1.200,40 €
 2009/09/29 Vente
    Actif:SV                 -0,0415 MFE @ 358,800 €
    Actif:SV                      14,89 €
->>>1
+
+test print
 1999/11/01 * Achat
     Actif:SSB                           125,0000 STK
     Actif:SSB                             -1672,42 $
@@ -173,5 +172,4 @@ D 1.200,40 €
 2009/09/29 Vente
     Actif:SV                             -0,0415 MFE @ 358,80 €
     Actif:SV                                 14,89 €
->>>2
-=== 0
+end test

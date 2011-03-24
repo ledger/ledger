@@ -1,5 +1,3 @@
-reg --quarterly books
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --quarterly books
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --quarterly books
 08-Jan-01 - 08-Mar-31           Expenses:Books              $120.00      $120.00
 08-Apr-01 - 08-Jun-30           Expenses:Books              $300.00      $420.00
 08-Jul-01 - 08-Sep-30           Expenses:Books              $480.00      $900.00
@@ -200,5 +199,4 @@ reg --quarterly books
 09-Apr-01 - 09-Jun-30           Expenses:Books              $300.00     $1980.00
 09-Jul-01 - 09-Sep-30           Expenses:Books              $480.00     $2460.00
 09-Oct-01 - 09-Dec-31           Expenses:Books              $660.00     $3120.00
->>>2
-=== 0
+end test

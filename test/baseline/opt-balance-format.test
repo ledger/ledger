@@ -1,10 +1,8 @@
-bal --balance-format='%(account)\n' --no-total
-<<<
 2007/02/02 RD VMMXX
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
->>>1
+
+test bal --balance-format='%(account)\n' --no-total
 Assets:Investments:Vanguard:VMMXX
 Income:Dividends:Vanguard:VMMXX
->>>2
-=== 0
+end test

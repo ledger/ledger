@@ -1,5 +1,3 @@
-reg --cleared
-<<<
 2008/01/01 * January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --cleared
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --cleared
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
 08-Feb-01 February              Expenses:Books               $20.00       $20.00
@@ -202,5 +201,4 @@ reg --cleared
 08-Apr-30 End of April          Expenses:Books               $40.00       $80.00
 08-May-01 May                   Assets:Cash                 $-50.00       $30.00
 08-May-31 End of May            Assets:Cash                 $-50.00      $-20.00
->>>2
-=== 0
+end test

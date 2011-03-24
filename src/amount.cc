@@ -998,7 +998,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
       if (! symbol.empty())
         comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
-      if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n'))
+      if (! flags.has_flags(PARSE_NO_ANNOT) &&
+          ! in.eof() && ((n = static_cast<char>(in.peek())) != '\n'))
         details.parse(in);
     }
   } else {
@@ -1010,8 +1011,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
       parse_quantity(in, quant);
 
-      if (! quant.empty() && ! in.eof() &&
-          ((n = static_cast<char>(in.peek())) != '\n'))
+      if (! flags.has_flags(PARSE_NO_ANNOT) && ! quant.empty() &&
+          ! in.eof() && ((n = static_cast<char>(in.peek())) != '\n'))
         details.parse(in);
     }
   }

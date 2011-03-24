@@ -1,12 +1,10 @@
-reg -B
-<<<
 2009/06/03 Westjet
    Expenses:Transportation:Air             C$429.80 @ 1.572865
    Expenses:Bank:Fees                           2.73
    Liabilities:Mastercard                          
->>>1
+
+test reg -B
 09-Jun-03 Westjet               Expe:Transportatio:Air   676.017377   676.017377
                                 Expenses:Bank:Fees             2.73   678.747377
                                 Liabilities:Mastercard  -678.747377            0
->>>2
-=== 0
+end test

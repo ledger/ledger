@@ -30,7 +30,6 @@ install-sh
 intl/
 ledger
 ledger.so
-lib/cppunit/
 lib/utfcpp/
 libtool
 ltmain.sh

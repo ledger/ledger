@@ -1,5 +1,3 @@
-reg --weekly --start-of-week=mon books
-<<<
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -191,7 +189,8 @@ reg --weekly --start-of-week=mon books
 2009/12/31 End of December
     Expenses:Books         $120.00
     Assets:Cash
->>>1
+
+test reg --weekly --start-of-week=mon books
 07-Dec-31 - 08-Jan-06           Expenses:Books               $10.00       $10.00
 08-Jan-28 - 08-Feb-03           Expenses:Books               $30.00       $40.00
 08-Feb-25 - 08-Mar-02           Expenses:Books               $50.00       $90.00
@@ -220,5 +219,4 @@ reg --weekly --start-of-week=mon books
 09-Oct-26 - 09-Nov-01           Expenses:Books              $210.00     $2770.00
 09-Nov-30 - 09-Dec-06           Expenses:Books              $230.00     $3000.00
 09-Dec-28 - 10-Jan-03           Expenses:Books              $120.00     $3120.00
->>>2
-=== 0
+end test

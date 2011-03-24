@@ -89,6 +89,10 @@ public:
   }
   ~account_t();
 
+  virtual string description() {
+    return string(_("account ")) + fullname();
+  }
+
   operator string() const {
     return fullname();
   }

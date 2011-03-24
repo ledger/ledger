@@ -1,5 +1,3 @@
-reg
-<<<
 2009/04/04 CS Club Sign
  Expenses:School:CS Club:Home Depot:4" Brush   2 @ $3.97
  Liabilities:Mastercard
@@ -7,12 +5,12 @@ reg
 2009/04/04 CS Club Sign
  Expenses:School:CS Club:Home Depot:4" Brush   (2 * $3.97)
  Liabilities:Mastercard
->>>1
+
+test reg
 09-Apr-04 CS Club Sign          Ex:Sc:CS:Home:4" Brush            2            2
                                 Liabilities:Mastercard       $-7.94            2
                                                                           $-7.94
 09-Apr-04 CS Club Sign          Ex:Sc:CS:Home:4" Brush        $7.94            2
                                 Liabilities:Mastercard       $-7.94            2
                                                                           $-7.94
->>>2
-=== 0
+end test

@@ -1,0 +1,30 @@
+D 1000,00 €
+
+1994/1/1 Company
+ Assets:Checking  10000 F
+ Income:Salary
+
+1998/1/1 Transfer
+ Assets:US account  200 $
+ Assets:Checking  -1000 F
+
+P 1998/12/31 $ 6 F
+
+1999/1/1 Books
+ Expenses:Books  200 $
+ Assets:US account
+
+P 2002/1/1 € 6,55957 F
+
+2002/1/1 Company
+ Assets:Checking  2000 €
+ Income:Salary
+
+test reg -X F -J Assets
+1994-01-01 10000
+1998-01-01 11000
+1998-01-01 10000
+1998-12-31 10200
+1999-01-01 9000
+2002-01-01 22119.14
+end test

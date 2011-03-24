@@ -60,8 +60,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
     case 'd':
       if (std::strcmp(buf, "div") == 0) {
         symbol[0] = '/';
-        symbol[1] = '/';
-        symbol[2] = '\0';
+        symbol[1] = '\0';
         kind = KW_DIV;
         return 1;
       }
@@ -69,9 +68,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 
     case 'e':
       if (std::strcmp(buf, "else") == 0) {
-        symbol[0] = 'L';
-        symbol[1] = 'S';
-        symbol[2] = '\0';
+        std::strcpy(symbol, "else");
         kind = KW_ELSE;
         return 1;
       }
@@ -79,6 +76,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 
     case 'f':
       if (std::strcmp(buf, "false") == 0) {
+        std::strcpy(symbol, "false");
         kind = VALUE;
         value = false;
         return 1;
@@ -115,6 +113,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
 
     case 't':
       if (std::strcmp(buf, "true") == 0) {
+        std::strcpy(symbol, "true");
         kind = VALUE;
         value = true;
         return 1;
@@ -231,6 +230,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
     break;
   }
 
+#if 0
   case '{': {
     in.get(c);
     amount_t temp;
@@ -243,6 +243,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
     value = temp;
     break;
   }
+#endif
 
   case '!':
     in.get(c);
@@ -268,6 +269,15 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
 
   case '-':
     in.get(c);
+    c = static_cast<char>(in.peek());
+    if (c == '>') {
+      in.get(c);
+      symbol[1] = c;
+      symbol[2] = '\0';
+      kind = ARROW;
+      length = 2;
+      break;
+    }
     kind = MINUS;
     break;
   case '+':
@@ -287,14 +297,6 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
   case ':':
     in.get(c);
     c = static_cast<char>(in.peek());
-    if (c == '=') {
-      in.get(c);
-      symbol[1] = c;
-      symbol[2] = '\0';
-      kind = DEFINE;
-      length = 2;
-      break;
-    }
     kind = COLON;
     break;
 
@@ -336,7 +338,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
       length = 2;
       break;
     }
-    kind = EQUAL;
+    kind = ASSIGN;
     break;
 
   case '<':
@@ -391,18 +393,23 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
     // If not, rewind back to the beginning of the word to scan it
     // again.  If the result was -1, it means no identifier was scanned
     // so we don't have to rewind.
-    if (result == 0) {
+    if (result == 0 || ! in.good()) {
       in.clear();
       in.seekg(pos, std::ios::beg);
       if (in.fail())
         throw_(parse_error, _("Failed to reset input stream"));
     }
 
+    assert(in.good());
+    assert(! in.eof());
+    assert(static_cast<int>(in.tellg()) != -1);
+
     // When in relaxed parsing mode, we want to migrate commodity flags
     // so that any precision specified by the user updates the current
     // maximum displayed precision.
     parse_flags_t parse_flags;
 
+    parse_flags.add_flags(PARSE_NO_ANNOT);
     if (pflags.has_flags(PARSE_NO_MIGRATE))
       parse_flags.add_flags(PARSE_NO_MIGRATE);
     if (pflags.has_flags(PARSE_NO_REDUCE))
@@ -432,6 +439,13 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
           unexpected(expecting);
         }
       } else {
+        if (! in.good()) {
+          in.clear();
+          in.seekg(0, std::ios::end);
+          if (in.fail())
+            throw_(parse_error, _("Failed to reset input stream"));
+        }
+
         kind   = VALUE;
         value  = temp;
         length = static_cast<std::size_t>(in.tellg() - pos);
@@ -449,6 +463,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags,
 
 void expr_t::token_t::rewind(std::istream& in)
 {
+  in.clear();
   in.seekg(- int(length), std::ios::cur);
   if (in.fail())
     throw_(parse_error, _("Failed to rewind input stream"));
