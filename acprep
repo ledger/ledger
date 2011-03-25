@@ -36,7 +36,7 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
+search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
 
 class BoostInfo(object):
     log          = None
