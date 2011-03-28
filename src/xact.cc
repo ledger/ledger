@@ -325,9 +325,18 @@ bool xact_base_t::finalize()
     DEBUG("xact.finalize", "there was a null posting");
 
     if (balance.is_balance()) {
-      bool first = true;
       const balance_t& bal(balance.as_balance());
+      typedef std::map<string, amount_t> sorted_amounts_map;
+      sorted_amounts_map samp;
       foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+        std::pair<sorted_amounts_map::iterator, bool> result =
+          samp.insert(sorted_amounts_map::value_type(pair.first->mapping_key(),
+                                                     pair.second));
+        assert(result.second);
+      }
+
+      bool first = true;
+      foreach (sorted_amounts_map::value_type& pair, samp) {
         if (first) {
           null_post->amount = pair.second.negated();
           null_post->add_flags(POST_CALCULATED);
