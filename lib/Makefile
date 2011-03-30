@@ -33,7 +33,7 @@ ifeq ($(CC),clang)
 BOOST_TOOLSET	= clang
 else
 BOOST_TOOLSET	= darwin
-BOOST_DEFINES	= define=_GLIBCXX_DEBUG=1
+BOOST_DEFINES  += define=_GLIBCXX_DEBUG=1
 endif
 #BOOST_FLAGS	= --architecture=x86 --address_model=32_64
 BOOST_FLAGS	= --toolset=$(BOOST_TOOLSET) \

@@ -816,24 +816,16 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looks like you are using MacPorts on OS X')
                 packages = [
                     'sudo', 'port', 'install', '-f',
-                    'automake',
-                    'autoconf',
-                    'libtool',
+                    'automake', 'autoconf', 'libtool',
                     'python26', '+universal',
                     'libiconv', '+universal',
                     'zlib', '+universal',
-                    'gmp' ,'+universal',
-                    'mpfr', '+universal',
-                    'ncurses', '+universal',
-                    'ncursesw', '+universal',
+                    'gmp' ,'+universal', 'mpfr', '+universal',
+                    'ncurses', '+universal', 'ncursesw', '+universal',
                     'gettext' ,'+universal',
                     'libedit' ,'+universal',
-                    #'texlive',
-                    #'doxygen',
-                    #'graphviz',
-                    'texinfo',
-                    'lcov',
-                    'sloccount'
+                    'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
+                    'lcov', 'sloccount'
                 ] + self.boost_info.dependencies('darwin')
                 self.log.info('Executing: ' + string.join(packages, ' '))
                 self.execute(*packages)

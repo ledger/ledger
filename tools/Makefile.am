@@ -413,10 +413,10 @@ unittests: check
 	    2>&1 | grep -v '^GuardMalloc:'
 	@sh $(FULLCHECK) $(top_builddir)/ExprTests$(EXEEXT)   --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
-	@sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify \
-	    2>&1 | grep -v '^GuardMalloc:'
-	@sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify \
-	    2>&1 | grep -v '^GuardMalloc:'
+#	@sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify \
+#	    2>&1 | grep -v '^GuardMalloc:'
+#	@sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify \
+#	    2>&1 | grep -v '^GuardMalloc:'
 else
 unittests: check
 	@test 1 -eq 1
