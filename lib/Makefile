@@ -36,7 +36,7 @@ BOOST_TOOLSET	= darwin
 BOOST_DEFINES  += define=_GLIBCXX_DEBUG=1
 endif
 #BOOST_FLAGS	= --architecture=x86 --address_model=32_64
-BOOST_FLAGS	= --toolset=$(BOOST_TOOLSET) \
+BOOST_FLAGS	= toolset=$(BOOST_TOOLSET) \
 		  --build-type=complete --layout=versioned \
 		  $(BOOST_DEFINES)
 BOOST_DIR	= boost_$(BOOST_VERSION)-$(DIR_SUFFIX)
