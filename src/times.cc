@@ -40,6 +40,9 @@ optional<datetime_t> epoch;
 date_time::weekdays start_of_week = gregorian::Sunday;
 
 //#define USE_BOOST_FACETS 1
+#if defined(USE_BOOST_FACETS)
+#error "Boost facets are not quite working yet"
+#endif
 
 namespace {
   template <typename T, typename InputFacetType, typename OutputFacetType>
