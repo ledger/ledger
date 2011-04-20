@@ -93,10 +93,12 @@ namespace ledger {
 }
 
 #if BOOST_FILESYSTEM_VERSION == 3
+#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
 namespace boost { namespace filesystem3 { namespace path_traits {
 template<> struct is_pathable<ledger::string> { static const bool value = true; };
 }}}
-#endif
+#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#endif // BOOST_FILESYSTEM_VERSION == 3
 
 /*@}*/
 

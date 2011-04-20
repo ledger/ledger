@@ -73,3 +73,12 @@
 /tmpcvs*/
 /tmpwrk*/
 /util_tests
+/dist/win/vc9/Debug/
+/dist/win/vc9/gen-mpir.exe
+/dist/win/vc9/gen-mpir.ilk
+/dist/win/vc9/gen-mpir.pdb
+/dist/win/vc9/ledger.ncb
+/dist/win/vc9/ledger.vcproj.*.user
+/dist/win/vc9/ledger.suo
+/dist/win/vc9/lib/Win32/Debug/
+/dist/win/vc9/system.hh

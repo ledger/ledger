@@ -96,7 +96,7 @@ class LedgerHarness:
                line == "GuardMalloc:  - Some buffer overruns may not be noticed.\n" or \
                line == "GuardMalloc:  - Applications using vector instructions (e.g., SSE or Altivec) may fail.\n" or \
                line == "GuardMalloc:  - Applications expecting word-aligned pointers may fail (such as Carbon applications)\n" or \
-               line == "GuardMalloc: GuardMalloc version 18\n":
+               line.startswith("GuardMalloc: GuardMalloc version"):
                 continue
             else:
                 lines.append(line)

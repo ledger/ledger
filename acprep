@@ -36,7 +36,7 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
+search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
 
 class BoostInfo(object):
     log          = None
@@ -236,7 +236,8 @@ class BoostInfo(object):
                      'libboost-python-dev',
                      'libboost-regex-dev',
                      'libboost-date-time-dev',
-                     'libboost-filesystem-dev' ]
+                     'libboost-filesystem-dev',
+                     'libboost-iostreams-dev' ]
 
 class CommandLineApp(object):
     "Base class for building command line applications."
@@ -815,24 +816,16 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looks like you are using MacPorts on OS X')
                 packages = [
                     'sudo', 'port', 'install', '-f',
-                    'automake',
-                    'autoconf',
-                    'libtool',
+                    'automake', 'autoconf', 'libtool',
                     'python26', '+universal',
                     'libiconv', '+universal',
                     'zlib', '+universal',
-                    'gmp' ,'+universal',
-                    'mpfr', '+universal',
-                    'ncurses', '+universal',
-                    'ncursesw', '+universal',
+                    'gmp' ,'+universal', 'mpfr', '+universal',
+                    'ncurses', '+universal', 'ncursesw', '+universal',
                     'gettext' ,'+universal',
                     'libedit' ,'+universal',
-                    #'texlive',
-                    #'doxygen',
-                    #'graphviz',
-                    'texinfo',
-                    'lcov',
-                    'sloccount'
+                    'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
+                    'lcov', 'sloccount'
                 ] + self.boost_info.dependencies('darwin')
                 self.log.info('Executing: ' + string.join(packages, ' '))
                 self.execute(*packages)
@@ -879,6 +872,7 @@ class PrepareBuild(CommandLineApp):
                             'libtool',
                             'autoconf',
                             'automake',
+                            'autopoint',
                             'zlib1g-dev',
                             'libbz2-dev',
                             'python-dev',
