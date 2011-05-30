@@ -90,7 +90,7 @@ string source_context(const path&            file,
     return _("<no source context>");
 
   assert(len > 0);
-  assert(len < 2048);
+  assert(len < 8192);
 
   std::ostringstream out;
       
