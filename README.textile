@@ -149,7 +149,7 @@ h2. Resources
 
 Now that you're up and running, here are a few resources to keep in mind:
 
-|Home page|"http://www.newartisans.com/software/ledger.html":http://www.newartisans.com/software/ledger.html|
+|Home page|"http://ledger-cli.org":http://ledger-cli.org|
 |IRC channel|"#ledger on irc.freenode.net":irc://irc.freenode.net/ledger|
 |Mailing List / Forum|"http://groups.google.com/group/ledger-cli":http://groups.google.com/group/ledger-cli|
 |GitHub project page|"http://github.com/jwiegley/ledger":http://github.com/jwiegley/ledger|
