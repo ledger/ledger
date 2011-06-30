@@ -1397,13 +1397,12 @@ void inject_posts::operator()(post_t& post)
 {
   foreach (tags_list_pair& pair, tags_list) {
     optional<value_t> tag_value = post.get_tag(pair.first, false);
+    // When checking if the transaction has the tag, only inject once
+    // per transaction.
     if (! tag_value &&
-        pair.second.second.find(post.xact) == pair.second.second.end()) {
-      // When checking if the transaction has the tag, only inject once
-      // per transaction.
+        pair.second.second.find(post.xact) == pair.second.second.end() &&
+        (tag_value = post.xact->get_tag(pair.first)))
       pair.second.second.insert(post.xact);
-      tag_value = post.xact->get_tag(pair.first);
-    }
 
     if (tag_value) {
       xact_t& xact = temps.copy_xact(*post.xact);
