@@ -536,11 +536,13 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
       }
 
       default:
-        break;
+        goto done;
       }
 
       tok = lexer.peek_token();
     }
+  done:
+    ;
   }
 
   return limiter;
