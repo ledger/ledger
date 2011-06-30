@@ -433,7 +433,9 @@ dropped."
 
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
-  "A mode for editing ledger data files."
+  "A mode for editing ledger data files.
+
+\\{ledger-mode-map}"
   (set (make-local-variable 'comment-start) " ; ")
   (set (make-local-variable 'comment-end) "")
   (set (make-local-variable 'indent-tabs-mode) nil)
@@ -632,8 +634,7 @@ dropped."
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
-(define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
-  "A mode for reconciling ledger entries."
+(defvar ledger-reconcile-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [(control ?m)] 'ledger-reconcile-visit)
     (define-key map [return] 'ledger-reconcile-visit)
@@ -647,7 +648,12 @@ dropped."
     (define-key map [?p] 'previous-line)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q] 'ledger-reconcile-quit)
-    (use-local-map map)))
+    map))
+
+(define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
+  "A mode for reconciling ledger entries.
+
+\\{ledger-reconcile-mode-map}")
 
 ;; Context sensitivity
 
@@ -807,8 +813,7 @@ specified line, returns nil."
 
 (defvar ledger-report-mode-abbrev-table)
 
-(define-derived-mode ledger-report-mode text-mode "Ledger-Report"
-  "A mode for viewing ledger reports."
+(defvar ledger-report-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [? ] 'scroll-up)
     (define-key map [backspace] 'scroll-down)
@@ -825,7 +830,10 @@ specified line, returns nil."
       'ledger-report-kill)
     (define-key map [(control ?c) (control ?l) (control ?e)]
       'ledger-report-edit)
-    (use-local-map map)))
+    map))
+
+(define-derived-mode ledger-report-mode text-mode "Ledger-Report"
+  "A mode for viewing ledger reports.")
 
 (defun ledger-report-read-name ()
   "Read the name of a ledger report to use, with completion.
@@ -1201,7 +1209,7 @@ the default."
 ;; A sample function for $ users
 
 (defun ledger-next-amount (&optional end)
-  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
+  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
