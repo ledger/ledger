@@ -97,6 +97,7 @@ public:
   virtual void clear() {
     posts_map.clear();
     post_chain->clear();
+    item_handler<post_t>::clear();
   }
 };
 
@@ -365,6 +366,7 @@ public:
 
   virtual void clear() {
     temps.clear();
+    comms.clear();
     last_xact = NULL;
     
     item_handler<post_t>::clear();
