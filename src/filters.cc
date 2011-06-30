@@ -1381,9 +1381,9 @@ inject_posts::inject_posts(post_handler_ptr handler,
   for (char * q = std::strtok(buf.get(), ",");
        q;
        q = std::strtok(NULL, ",")) {
-
     std::list<string> account_names;
     split_string(q, ':', account_names);
+
     account_t * account =
       create_temp_account_from_path(account_names, temps, master);
     account->add_flags(ACCOUNT_GENERATED);
