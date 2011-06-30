@@ -1373,7 +1373,7 @@ inject_posts::inject_posts(post_handler_ptr handler,
                            account_t *      master)
   : item_handler<post_t>(handler)
 {
-  TRACE_CTOR(inject_posts, "post_handler_ptr, string");
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
 
   scoped_array<char> buf(new char[tag_list.length() + 1]);
   std::strcpy(buf.get(), tag_list.c_str());
