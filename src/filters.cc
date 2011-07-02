@@ -460,6 +460,7 @@ void collapse_posts::report_subtotal()
     xact.payee     = last_xact->payee;
     xact._date     = (is_valid(earliest_date) ?
                       earliest_date : last_xact->_date);
+
     DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
