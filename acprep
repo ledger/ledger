@@ -245,8 +245,8 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_46_1"
-    boost_major   = "1_46_1"
+    boost_version = "1_47_0"
+    boost_major   = "1_47"
 
     options = {
         'debug':    False,
@@ -1252,7 +1252,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-sd-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1260,7 +1260,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-d-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1274,7 +1274,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-s-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1282,7 +1282,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
