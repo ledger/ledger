@@ -1721,11 +1721,13 @@ string value_t::label(optional<type_t> the_type) const
   return _("<invalid>");
 }
 
-void value_t::print(std::ostream&       out,
+void value_t::print(std::ostream&       _out,
                     const int           first_width,
                     const int           latter_width,
                     const uint_least8_t flags) const
 {
+  std::ostringstream out;
+
   if (first_width > 0 &&
       (! is_amount() || as_amount().is_zero()) &&
       ! is_balance() && ! is_string()) {
@@ -1821,6 +1823,8 @@ void value_t::print(std::ostream&       out,
     add_error_context(_("While printing %1:") << *this);
     throw_(value_error, _("Cannot print %1") << label());
   }
+
+  _out << out.str();
 }
 
 void value_t::dump(std::ostream& out, const bool relaxed) const
