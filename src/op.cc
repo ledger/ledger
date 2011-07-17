@@ -421,10 +421,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
   }
 
-  case LAST:
   default:
-    assert(false);
-    break;
+    throw_(calc_error, _("Unexpected expr node '%1'") << op_context(this));
   }
 
 #if defined(DEBUG_ON)
