@@ -164,6 +164,11 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     result = as_value();
     break;
 
+  case O_DEFINE:
+    //result = left()->calc(scope, locus, depth + 1);
+    result = NULL_VALUE;
+    break;
+
   case IDENT: {
     ptr_op_t definition = left();
     if (! definition) {
