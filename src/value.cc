@@ -333,7 +333,7 @@ value_t& value_t::operator+=(const value_t& val)
         for (; i != end(); i++, j++)
           *i += *j;
       } else {
-        add_error_context(_("While adding %1 to %2:") << *this << val);
+        add_error_context(_("While adding %1 to %2:") << val << *this);
         throw_(value_error, _("Cannot add sequences of different lengths"));
       }
     } else {
@@ -446,7 +446,7 @@ value_t& value_t::operator+=(const value_t& val)
     break;
   }
 
-  add_error_context(_("While adding %1 to %2:") << *this << val);
+  add_error_context(_("While adding %1 to %2:") << val << *this);
   throw_(value_error, _("Cannot add %1 to %2") << val.label() << label());
 
   return *this;
@@ -465,7 +465,7 @@ value_t& value_t::operator-=(const value_t& val)
         for (; i != end(); i++, j++)
           *i -= *j;
       } else {
-        add_error_context(_("While subtracting %1 to %2:") << *this << val);
+        add_error_context(_("While subtracting %1 from %2:") << val << *this);
         throw_(value_error, _("Cannot subtract sequences of different lengths"));
       }
     } else {
@@ -588,7 +588,7 @@ value_t& value_t::operator-=(const value_t& val)
     break;
   }
 
-  add_error_context(_("While subtracting %1 from %2:") << *this << val);
+  add_error_context(_("While subtracting %1 from %2:") << val << *this);
   throw_(value_error, _("Cannot subtract %1 from %2") << val.label() << label());
 
   return *this;
@@ -670,7 +670,7 @@ value_t& value_t::operator*=(const value_t& val)
     break;
   }
 
-  add_error_context(_("While multiplying %1 with %2:") << *this << val);
+  add_error_context(_("While multiplying %1 with %2:") << val << *this);
   throw_(value_error, _("Cannot multiply %1 with %2") << label() << val.label());
 
   return *this;
@@ -748,7 +748,7 @@ value_t& value_t::operator/=(const value_t& val)
     break;
   }
 
-  add_error_context(_("While dividing %1 by %2:") << *this << val);
+  add_error_context(_("While dividing %1 by %2:") << val << *this);
   throw_(value_error, _("Cannot divide %1 by %2") << label() << val.label());
 
   return *this;
@@ -834,7 +834,7 @@ bool value_t::is_equal_to(const value_t& val) const
     break;
   }
 
-  add_error_context(_("While comparing equality of %1 to %2:") << *this << val);
+  add_error_context(_("While comparing equality of %1 and %2:") << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -1263,8 +1263,8 @@ void value_t::in_place_cast(type_t cast_type)
   }
 
   add_error_context(_("While converting %1:") << *this);
-  throw_(value_error,
-         _("Cannot convert %1 to %2") << label() << label(cast_type));
+  throw_(value_error, _("Cannot convert %1 to %2")
+         << label() << label(cast_type));
 }
 
 void value_t::in_place_negate()
