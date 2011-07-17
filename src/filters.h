@@ -506,9 +506,9 @@ class display_filter_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
+  report_t&     report;
   expr_t        display_amount_expr;
   expr_t        display_total_expr;
-  report_t&     report;
   bool          show_rounding;
   value_t       last_display_total;
   temporaries_t temps;
@@ -554,9 +554,9 @@ class changed_value_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
+  report_t&     report;
   expr_t        total_expr;
   expr_t        display_total_expr;
-  report_t&     report;
   bool          changed_values_only;
   bool          for_accounts_report;
   bool          show_unrealized;

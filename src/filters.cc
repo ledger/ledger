@@ -524,14 +524,11 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
                                            report_t&        _report,
                                            bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
+    display_amount_expr(report.HANDLER(display_amount_).expr),
+    display_total_expr(report.HANDLER(display_total_).expr),
     show_rounding(_show_rounding)
 {
-  TRACE_CTOR(display_filter_posts,
-             "post_handler_ptr, report_t&, account_t&, bool");
-
-  display_amount_expr = report.HANDLER(display_amount_).expr;
-  display_total_expr  = report.HANDLER(display_total_).expr;
-
+  TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
   create_accounts();
 }
 
@@ -607,17 +604,17 @@ changed_value_posts::changed_value_posts
    bool                   _show_unrealized,
    display_filter_posts * _display_filter)
   : item_handler<post_t>(handler), report(_report),
+    total_expr(report.HANDLED(revalued_total_) ?
+               report.HANDLER(revalued_total_).expr :
+               report.HANDLER(display_total_).expr),
+    display_total_expr(report.HANDLER(display_total_).expr),
+    changed_values_only(report.HANDLED(revalued_only)),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
     display_filter(_display_filter)
 {
-  TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool");
-
-  total_expr          = (report.HANDLED(revalued_total_) ?
-                         report.HANDLER(revalued_total_).expr :
-                         report.HANDLER(display_total_).expr);
-  display_total_expr  = report.HANDLER(display_total_).expr;
-  changed_values_only = report.HANDLED(revalued_only);
+  TRACE_CTOR(changed_value_posts,
+             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
 
   string gains_equity_account_name;
   if (report.HANDLED(unrealized_gains_))
