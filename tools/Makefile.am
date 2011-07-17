@@ -119,6 +119,7 @@ pkginclude_HEADERS =				\
 	src/query.h				\
 	src/format.h				\
 	src/option.h				\
+	src/series.h				\
 						\
 	src/item.h				\
 	src/post.h				\
