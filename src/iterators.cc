@@ -52,6 +52,23 @@ xact_t * xacts_iterator::operator()()
     return NULL;
 }
 
+void xacts_riterator::reset(journal_t& journal)
+{
+  xacts_i   = journal.xacts.end();
+  xacts_end = journal.xacts.begin();
+  xacts_uninitialized = false;
+}
+
+xact_t * xacts_riterator::operator()()
+{
+  if (xacts_i != xacts_end)
+    return *xacts_i--;
+  else
+    return NULL;
+}
+
+
+
 void journal_posts_iterator::reset(journal_t& journal)
 {
   xacts.reset(journal);

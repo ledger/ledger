@@ -249,7 +249,7 @@ xact_t * draft_t::insert(journal_t& journal)
 
   std::auto_ptr<xact_t> added(new xact_t);
 
-  xacts_iterator xi(journal);
+  xacts_riterator xi(journal);
   if (xact_t * xact = lookup_probable_account(tmpl->payee_mask.str(), xi).first) {
     DEBUG("draft.xact", "Found payee by lookup: transaction on line "
           << xact->pos->beg_line);
