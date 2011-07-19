@@ -116,6 +116,32 @@ public:
   xact_t * operator()();
 };
 
+class xacts_riterator : public xacts_iterator
+{
+public:
+  xacts_list::iterator xacts_i;
+  xacts_list::iterator xacts_end;
+
+  bool xacts_uninitialized;
+
+  xacts_riterator() : xacts_uninitialized(true) {
+    TRACE_CTOR(xacts_riterator, "");
+  }
+  xacts_riterator(journal_t& journal) : xacts_uninitialized(true) {
+    TRACE_CTOR(xacts_riterator, "journal_t&");
+    reset(journal);
+  }
+  virtual ~xacts_riterator() throw() {
+    TRACE_DTOR(xacts_riterator);
+  }
+
+  void reset(journal_t& journal);
+
+  xact_t * operator()();
+};
+
+
+
 class journal_posts_iterator : public posts_iterator
 {
   xacts_iterator     xacts;
