@@ -146,14 +146,28 @@ public:
   }
 };
 
-class posts_iterator;
-
+template <typename Iterator>
 class pass_down_posts : public item_handler<post_t>
 {
   pass_down_posts();
 
 public:
-  pass_down_posts(post_handler_ptr handler, posts_iterator& iter);
+  pass_down_posts(post_handler_ptr handler, Iterator& iter)
+    : item_handler<post_t>(handler) {
+    TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
+
+    while (post_t * post = *iter++) {
+      try {
+        item_handler<post_t>::operator()(*post);
+      }
+      catch (const std::exception&) {
+        add_error_context(item_context(*post, _("While handling posting")));
+        throw;
+      }
+    }
+
+    item_handler<post_t>::flush();
+  }
 
   virtual ~pass_down_posts() {
     TRACE_DTOR(pass_down_posts);
@@ -986,8 +1000,7 @@ class inject_posts : public item_handler<post_t>
 // Account filters
 //
 
-class accounts_iterator;
-
+template <typename Iterator>
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
@@ -997,9 +1010,24 @@ class pass_down_accounts : public item_handler<account_t>
 
 public:
   pass_down_accounts(acct_handler_ptr             handler,
-                     accounts_iterator&           iter,
+                     Iterator&                    iter,
                      const optional<predicate_t>& _pred    = none,
-                     const optional<scope_t&>&    _context = none);
+                     const optional<scope_t&>&    _context = none)
+    : item_handler<account_t>(handler), pred(_pred), context(_context) {
+    TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
+
+    while (account_t * account = *iter++) {
+      if (! pred) {
+        item_handler<account_t>::operator()(*account);
+      } else {
+        bind_scope_t bound_scope(*context, *account);
+        if ((*pred)(bound_scope))
+          item_handler<account_t>::operator()(*account);
+      }
+    }
+
+    item_handler<account_t>::flush();
+  }
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

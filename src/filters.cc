@@ -83,25 +83,6 @@ void post_splitter::operator()(post_t& post)
   }
 }
 
-pass_down_posts::pass_down_posts(post_handler_ptr handler,
-                                 posts_iterator&  iter)
-  : item_handler<post_t>(handler)
-{
-  TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
-
-  for (post_t * post = iter(); post; post = iter()) {
-    try {
-      item_handler<post_t>::operator()(*post);
-    }
-    catch (const std::exception&) {
-      add_error_context(item_context(*post, _("While handling posting")));
-      throw;
-    }
-  }
-
-  item_handler<post_t>::flush();
-}
-
 void truncate_xacts::flush()
 {
   if (! posts.size())
@@ -1417,27 +1398,6 @@ void inject_posts::operator()(post_t& post)
   }
 
   item_handler<post_t>::operator()(post);
-}
-
-pass_down_accounts::pass_down_accounts(acct_handler_ptr             handler,
-                                       accounts_iterator&           iter,
-                                       const optional<predicate_t>& _pred,
-                                       const optional<scope_t&>&    _context)
-  : item_handler<account_t>(handler), pred(_pred), context(_context)
-{
-  TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
-
-  for (account_t * account = iter(); account; account = iter()) {
-    if (! pred) {
-      item_handler<account_t>::operator()(*account);
-    } else {
-      bind_scope_t bound_scope(*context, *account);
-      if ((*pred)(bound_scope))
-        item_handler<account_t>::operator()(*account);
-    }
-  }
-
-  item_handler<account_t>::flush();
 }
 
 } // namespace ledger

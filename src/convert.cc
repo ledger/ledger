@@ -62,10 +62,10 @@ value_t convert_command(call_scope_t& args)
   post_map_t post_map;
 
   xacts_iterator journal_iter(journal);
-  while (xact_t * xact = journal_iter()) {
+  while (xact_t * xact = *journal_iter++) {
     post_t * post = NULL;
     xact_posts_iterator xact_iter(*xact);
-    while ((post = xact_iter()) != NULL) {
+    while ((post = *xact_iter++) != NULL) {
       if (post->account == bucket)
         break;
     }
@@ -137,7 +137,7 @@ value_t convert_command(call_scope_t& args)
       }
       else {
         xact_posts_iterator xact_iter(*xact);
-        while (post_t * post = xact_iter())
+        while (post_t * post = *xact_iter++)
           formatter(*post);
       }
     }

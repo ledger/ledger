@@ -191,7 +191,7 @@ namespace {
       coll->chain =
         chain_post_handlers(post_handler_ptr(coll->posts_collector),
                             coll->report);
-      pass_down_posts(coll->chain, walker);
+      pass_down_posts<journal_posts_iterator>(coll->chain, walker);
     }
     catch (...) {
       current_report.session.journal.release();

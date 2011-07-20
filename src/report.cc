@@ -318,7 +318,7 @@ void report_t::posts_report(post_handler_ptr handler)
   handler = chain_pre_post_handlers(handler, *this);
 
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts(handler, walker);
+  pass_down_posts<journal_posts_iterator>(handler, walker);
 
   if (! HANDLED(group_by_))
     posts_flusher(handler, *this)(value_t());
@@ -334,7 +334,7 @@ void report_t::generate_report(post_handler_ptr handler)
      HANDLED(head_) ?
      static_cast<unsigned int>(HANDLER(head_).value.to_long()) : 50);
 
-  pass_down_posts(handler, walker);
+  pass_down_posts<generate_posts_iterator>(handler, walker);
 }
 
 void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
@@ -342,7 +342,7 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
   handler = chain_handlers(handler, *this);
 
   xact_posts_iterator walker(xact);
-  pass_down_posts(handler, walker);
+  pass_down_posts<xact_posts_iterator>(handler, walker);
 
   xact.clear_xdata();
 }
@@ -382,25 +382,34 @@ namespace {
       report.HANDLER(display_total_).expr.mark_uncompiled();
       report.HANDLER(revalued_total_).expr.mark_uncompiled();
 
-      scoped_ptr<accounts_iterator> iter;
-      if (! report.HANDLED(sort_)) {
-        iter.reset(new basic_accounts_iterator(*report.session.journal->master));
-      } else {
-        expr_t sort_expr(report.HANDLER(sort_).str());
-        sort_expr.set_context(&report);
-        iter.reset(new sorted_accounts_iterator(*report.session.journal->master,
-                                                sort_expr, report.HANDLED(flat)));
-      }
-
       if (report.HANDLED(display_)) {
         DEBUG("report.predicate",
               "Display predicate = " << report.HANDLER(display_).str());
-        pass_down_accounts(handler, *iter.get(),
-                           predicate_t(report.HANDLER(display_).str(),
-                                       report.what_to_keep()),
-                           report);
+        if (! report.HANDLED(sort_)) {
+          basic_accounts_iterator iter(*report.session.journal->master);
+          pass_down_accounts<basic_accounts_iterator>
+            (handler, iter, predicate_t(report.HANDLER(display_).str(),
+                                        report.what_to_keep()), report);
+        } else {
+          expr_t sort_expr(report.HANDLER(sort_).str());
+          sort_expr.set_context(&report);
+          sorted_accounts_iterator iter(*report.session.journal->master,
+                                        sort_expr, report.HANDLED(flat));
+          pass_down_accounts<sorted_accounts_iterator>
+            (handler, iter, predicate_t(report.HANDLER(display_).str(),
+                                        report.what_to_keep()), report);
+        }
       } else {
-        pass_down_accounts(handler, *iter.get());
+        if (! report.HANDLED(sort_)) {
+          basic_accounts_iterator iter(*report.session.journal->master);
+          pass_down_accounts<basic_accounts_iterator>(handler, iter);
+        } else {
+          expr_t sort_expr(report.HANDLER(sort_).str());
+          sort_expr.set_context(&report);
+          sorted_accounts_iterator iter(*report.session.journal->master,
+                                        sort_expr, report.HANDLED(flat));
+          pass_down_accounts<sorted_accounts_iterator>(handler, iter);
+        }
       }
 
       report.session.journal->clear_xdata();
@@ -428,7 +437,7 @@ void report_t::accounts_report(acct_handler_ptr handler)
   // objects created within it during the call to pass_down_posts, which will
   // be needed later by the pass_down_accounts.
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts(chain, walker);
+  pass_down_posts<journal_posts_iterator>(chain, walker);
 
   if (! HANDLED(group_by_))
     accounts_flusher(handler, *this)(value_t());
@@ -439,7 +448,7 @@ void report_t::commodities_report(post_handler_ptr handler)
   handler = chain_handlers(handler, *this);
 
   posts_commodities_iterator walker(*session.journal.get());
-  pass_down_posts(handler, walker);
+  pass_down_posts<posts_commodities_iterator>(handler, walker);
 
   session.journal->clear_xdata();
 }
