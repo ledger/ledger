@@ -121,14 +121,10 @@ value_t convert_command(call_scope_t& args)
     }
     else {
       if (xact->posts.front()->account == NULL) {
-        xacts_iterator xi;
-        xi.xacts_i   = current_xacts.begin();
-        xi.xacts_end = current_xacts.end();
-        xi.xacts_uninitialized = false;
-
         // jww (2010-03-07): Bind this logic to an option: --auto-match
         if (account_t * acct =
-            lookup_probable_account(xact->payee, xi, bucket).second)
+            lookup_probable_account(xact->payee, current_xacts.rbegin(),
+                                    current_xacts.rend(), bucket).second)
           xact->posts.front()->account = acct;
         else
           xact->posts.front()->account = unknown;

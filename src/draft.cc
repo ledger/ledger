@@ -245,12 +245,12 @@ xact_t * draft_t::insert(journal_t& journal)
   if (tmpl->payee_mask.empty())
     throw std::runtime_error(_("'xact' command requires at least a payee"));
 
-  xact_t * matching = NULL;
-
+  xact_t *              matching = NULL;
   std::auto_ptr<xact_t> added(new xact_t);
 
-  xacts_iterator xi(journal);
-  if (xact_t * xact = lookup_probable_account(tmpl->payee_mask.str(), xi).first) {
+  if (xact_t * xact =
+      lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),
+                              journal.xacts.rend()).first) {
     DEBUG("draft.xact", "Found payee by lookup: transaction on line "
           << xact->pos->beg_line);
     matching = xact;
