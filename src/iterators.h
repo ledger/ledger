@@ -87,17 +87,12 @@ class xact_posts_iterator
   bool posts_uninitialized;
 
 public:
-  xact_posts_iterator() : posts_uninitialized(true) {
-    TRACE_CTOR(xact_posts_iterator, "");
-  }
+  xact_posts_iterator() : posts_uninitialized(true) {}
   xact_posts_iterator(xact_t& xact)
     : posts_uninitialized(true) {
-    TRACE_CTOR(xact_posts_iterator, "xact_t&");
     reset(xact);
   }
-  ~xact_posts_iterator() throw() {
-    TRACE_DTOR(xact_posts_iterator);
-  }
+  ~xact_posts_iterator() throw() {}
 
   void reset(xact_t& xact) {
     posts_i   = xact.posts.begin();
@@ -126,21 +121,15 @@ public:
 
   bool xacts_uninitialized;
 
-  xacts_iterator() : xacts_uninitialized(true) {
-    TRACE_CTOR(xacts_iterator, "");
-  }
+  xacts_iterator() : xacts_uninitialized(true) {}
   xacts_iterator(journal_t& journal) : xacts_uninitialized(false) {
-    TRACE_CTOR(xacts_iterator, "journal_t&");
     reset(journal);
   }
   xacts_iterator(xacts_list::iterator beg,
                  xacts_list::iterator end) : xacts_uninitialized(false) {
-    TRACE_CTOR(xacts_iterator, "xacts_list::iterator, xacts_list::iterator");
     reset(beg, end);
   }
-  ~xacts_iterator() throw() {
-    TRACE_DTOR(xacts_iterator);
-  }
+  ~xacts_iterator() throw() {}
 
   void reset(journal_t& journal);
 
@@ -161,16 +150,11 @@ class journal_posts_iterator
   xact_posts_iterator posts;
 
 public:
-  journal_posts_iterator() {
-    TRACE_CTOR(journal_posts_iterator, "");
-  }
+  journal_posts_iterator() {}
   journal_posts_iterator(journal_t& journal) {
-    TRACE_CTOR(journal_posts_iterator, "journal_t&");
     reset(journal);
   }
-  ~journal_posts_iterator() throw() {
-    TRACE_DTOR(journal_posts_iterator);
-  }
+  ~journal_posts_iterator() throw() {}
 
   void reset(journal_t& journal);
 
@@ -189,16 +173,11 @@ protected:
   xacts_list              xact_temps;
 
 public:
-  posts_commodities_iterator() {
-    TRACE_CTOR(posts_commodities_iterator, "");
-  }
+  posts_commodities_iterator() {}
   posts_commodities_iterator(journal_t& journal) {
-    TRACE_CTOR(posts_commodities_iterator, "journal_t&");
     reset(journal);
   }
-  ~posts_commodities_iterator() throw() {
-    TRACE_DTOR(posts_commodities_iterator);
-  }
+  ~posts_commodities_iterator() throw() {}
 
   void reset(journal_t& journal);
 
@@ -213,17 +192,12 @@ class basic_accounts_iterator
   std::list<accounts_map::const_iterator> accounts_end;
 
 public:
-  basic_accounts_iterator() {
-    TRACE_CTOR(basic_accounts_iterator, "");
-  }
+  basic_accounts_iterator() {}
   basic_accounts_iterator(account_t& account) {
-    TRACE_CTOR(basic_accounts_iterator, "account_t&");
     push_back(account);
     increment();
   }
-  ~basic_accounts_iterator() throw() {
-    TRACE_DTOR(basic_accounts_iterator);
-  }
+  ~basic_accounts_iterator() throw() {}
 
   void increment();
 
@@ -251,13 +225,10 @@ public:
   sorted_accounts_iterator(account_t& account,
                            const expr_t& _sort_cmp, bool _flatten_all)
     : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
-    TRACE_CTOR(sorted_accounts_iterator, "const expr_t&, bool, account_t&");
     push_back(account);
     increment();
   }
-  ~sorted_accounts_iterator() throw() {
-    TRACE_DTOR(sorted_accounts_iterator);
-  }
+  ~sorted_accounts_iterator() throw() {}
 
   void increment();
 
