@@ -141,10 +141,10 @@ function! LedgerComplete(findstart, base) "{{{1
       " only allow completion when in or at end of account name
       if matchend(line, '^\s\+\%(\S \S\|\S\)\+') >= col('.') - 1
         " the start of the first non-blank character
-        " (excluding virtual-transaction-marks)
+        " (excluding virtual-transaction and 'cleared' marks)
         " is the beginning of the account name
         let b:compl_context = 'account'
-        return matchend(line, '^\s\+[\[(]\?')
+        return matchend(line, '^\s\+[*!]\?\s*[\[(]\?')
       endif
     elseif line =~ '^\d' "{{{2 (description)
       let pre = matchend(line, '^\d\S\+\%(([^)]*)\|[*?!]\|\s\)\+')
@@ -411,9 +411,14 @@ function! s:transaction.parse_body(...) dict "{{{2
 
     if line[0] =~ '^\s\+[^[:blank:];]'
       " posting
-      " FIXME: replaces original spacing in amount with single spaces
-      let parts = split(line[0], '\%(\t\|  \)\s*')
-      call add(postings, {'account': parts[0], 'amount': join(parts[1:], '  ')})
+      let [state, rest] = matchlist(line[0], '^\s\+\([*!]\?\)\s*\(.*\)$')[1:2]
+      if rest =~ '\t\|  '
+        let [account, amount] = matchlist(rest, '^\(.\{-}\)\%(\t\|  \)\s*\(.\{-}\)\s*$')[1:2]
+      else
+        let amount = ''
+        let account = matchstr(rest, '^\s*\zs.\{-}\ze\s*$')
+      endif
+      call add(postings, {'account': account, 'amount': amount, 'state': state})
     end
 
     " where are tags to be stored?
