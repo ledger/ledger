@@ -252,7 +252,7 @@ function! LedgerToggleTransactionState(lnum, ...)
     let chars = ' *'
   endif
   let trans = s:transaction.from_lnum(a:lnum)
-  if empty(trans)
+  if empty(trans) || has_key(trans, 'expr')
     return
   endif
 
@@ -269,7 +269,7 @@ function! LedgerSetTransactionState(lnum, char) "{{{1
   " modifies or sets the state of the transaction at the cursor,
   " removing the state alltogether if a:char is empty
   let trans = s:transaction.from_lnum(a:lnum)
-  if empty(trans)
+  if empty(trans) || has_key(trans, 'expr')
     return
   endif
 
@@ -281,7 +281,7 @@ endf "}}}
 function! LedgerSetDate(lnum, type, ...) "{{{1
   let time = a:0 == 1 ? a:1 : localtime()
   let trans = s:transaction.from_lnum(a:lnum)
-  if empty(trans)
+  if empty(trans) || has_key(trans, 'expr')
     return
   endif
 
@@ -319,7 +319,7 @@ function! s:collect_completion_data() "{{{1
   let accounts = []
   for xact in transactions
     " collect descriptions
-    if index(cache.descriptions, xact['description']) < 0
+    if has_key(xact, 'description') && index(cache.descriptions, xact['description']) < 0
       call add(cache.descriptions, xact['description'])
     endif
     let [t, postings] = xact.parse_body()
@@ -384,6 +384,9 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   let parts = split(line[0], '\s\+')
   if parts[0] ==# '~'
     let trans['expr'] = join(parts[1:])
+    return trans
+  elseif parts[0] ==# '='
+    let trans['auto'] = join(parts[1:])
     return trans
   elseif parts[0] !~ '^\d'
     " this case is avoided in s:get_transaction_extents(),
@@ -486,6 +489,8 @@ endf "}}}
 function! s:transaction.format_head() dict "{{{2
   if has_key(self, 'expr')
     return '~ '.self['expr']
+  elseif has_key(self, 'auto')
+    return '= '.self['auto']
   endif
 
   let parts = []
@@ -528,7 +533,7 @@ function! s:get_transactions(...) "{{{2
       call add(transactions, trans)
       call cursor(trans['tail'], 0)
     endif
-    let lnum = search('^[~[:digit:]]\S\+', 'cW')
+    let lnum = search('^[~=[:digit:]]', 'cW')
   endw
 
   " restore view / position
@@ -539,7 +544,7 @@ function! s:get_transactions(...) "{{{2
 endf "}}}
 
 function! s:get_transaction_extents(lnum) "{{{2
-  if ! (indent(a:lnum) || getline(a:lnum) =~ '^[~[:digit:]]\S\+')
+  if ! (indent(a:lnum) || getline(a:lnum) =~ '^[~=[:digit:]]')
     " only do something if lnum is in a transaction
     return [0, 0]
   endif
@@ -550,7 +555,7 @@ function! s:get_transaction_extents(lnum) "{{{2
   set nofoldenable
 
   call cursor(a:lnum, 0)
-  let head = search('^[~[:digit:]]\S\+', 'bcnW')
+  let head = search('^[~=[:digit:]]', 'bcnW')
   let tail = search('^[^;[:blank:]]\S\+', 'nW')
   let tail = tail > head ? tail - 1 : line('$')
 
