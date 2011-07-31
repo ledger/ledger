@@ -69,7 +69,17 @@ endif
 "   A
 " }}}
 if !exists('g:ledger_detailed_first')
-  let g:ledger_detailed_first = 0
+  let g:ledger_detailed_first = 1
+endif
+
+" only display exact matches (no parent accounts etc.)
+if !exists('g:ledger_exact_only')
+  let g:ledger_exact_only = 0
+endif
+
+" display original text / account name as completion
+if !exists('g:ledger_include_original')
+  let g:ledger_include_original = 0
 endif
 
 let s:rx_amount = '\('.
@@ -161,31 +171,51 @@ function! LedgerComplete(findstart, base) "{{{1
       let b:compl_cache = s:collect_completion_data()
       let b:compl_cache['#'] = changenr()
     endif
+    let update_cache = 0
 
     let results = []
     if b:compl_context == 'account' "{{{2 (account)
-      unlet! b:compl_context
       let hierarchy = split(a:base, ':')
       if a:base =~ ':$'
         call add(hierarchy, '')
       endif
 
       let results = LedgerFindInTree(b:compl_cache.accounts, hierarchy)
-      " sort by alphabet and reverse because it will get reversed one more time
+      let exacts = filter(copy(results), 'v:val[1]')
+
+      if len(exacts) < 1
+        " update cache if we have no exact matches
+        let update_cache = 1
+      endif
+
+      if g:ledger_exact_only
+        let results = exacts
+      endif
+
+      call map(results, 'v:val[0]')
+
       if g:ledger_detailed_first
         let results = reverse(sort(results, 's:sort_accounts_by_depth'))
       else
         let results = sort(results)
       endif
-      call insert(results, a:base)
     elseif b:compl_context == 'description' "{{{2 (description)
-      let results = [a:base] + s:filter_items(b:compl_cache.descriptions, a:base)
+      let results = s:filter_items(b:compl_cache.descriptions, a:base)
+
+      if len(results) < 1
+        let update_cache = 1
+      endif
     elseif b:compl_context == 'new' "{{{2 (new line)
       return [strftime('%Y/%m/%d')]
     endif "}}}
 
+
+    if g:ledger_include_original
+      call insert(results, a:base)
+    endif
+
     " no completion (apart from a:base) found. update cache if file has changed
-    if len(results) <= 1 && b:compl_cache['#'] != changenr()
+    if update_cache && b:compl_cache['#'] != changenr()
       unlet b:compl_cache
       return LedgerComplete(a:findstart, a:base)
     else
@@ -203,11 +233,12 @@ function! LedgerFindInTree(tree, levels) "{{{1
   let currentlvl = a:levels[0]
   let nextlvls = a:levels[1:]
   let branches = s:filter_items(keys(a:tree), currentlvl)
+  let exact = empty(nextlvls)
   for branch in branches
-    call add(results, branch)
-    if !empty(nextlvls)
-      for result in LedgerFindInTree(a:tree[branch], nextlvls)
-        call add(results, branch.':'.result)
+    call add(results, [branch, exact])
+    if ! empty(nextlvls)
+      for [result, exact] in LedgerFindInTree(a:tree[branch], nextlvls)
+        call add(results, [branch.':'.result, exact])
       endfor
     endif
   endfor
