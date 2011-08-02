@@ -436,7 +436,7 @@ dropped."
   "A mode for editing ledger data files.
 
 \\{ledger-mode-map}"
-  (set (make-local-variable 'comment-start) " ; ")
+  (set (make-local-variable 'comment-start) "; ")
   (set (make-local-variable 'comment-end) "")
   (set (make-local-variable 'indent-tabs-mode) nil)
 
