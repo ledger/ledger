@@ -53,4 +53,30 @@
 
 (provide 'ledger)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ledger-create-test ()
+  (interactive)
+  (save-restriction
+    (org-narrow-to-subtree)
+    (save-excursion
+      (let (text beg)
+        (goto-char (point-min))
+        (forward-line 1)
+        (setq beg (point))
+        (search-forward ":PROPERTIES:")
+        (goto-char (line-beginning-position))
+        (setq text (buffer-substring-no-properties beg (point)))
+        (goto-char (point-min))
+        (re-search-forward ":ID:\\s-+\\([^-]+\\)")
+        (find-file-other-window
+         (format "~/src/ledger/test/regress/%s.test" (match-string 1)))
+        (sit-for 0)
+        (insert text)
+        (goto-char (point-min))
+        (while (not (eobp))
+          (goto-char (line-beginning-position))
+          (delete-char 3)
+          (forward-line 1))))))
+
 ;;; ledger.el ends here
