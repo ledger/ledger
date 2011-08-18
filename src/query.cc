@@ -127,7 +127,6 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     // fall through...
   default: {
     string ident;
-    string::const_iterator beg = arg_i;
     for (; arg_i != arg_end; ++arg_i) {
       switch (*arg_i) {
       case '\0':

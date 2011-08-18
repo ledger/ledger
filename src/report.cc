@@ -657,7 +657,8 @@ value_t report_t::fn_quoted(call_scope_t& args)
   std::ostringstream out;
 
   out << '"';
-  foreach (const char ch, args.get<string>(0)) {
+  string arg(args.get<string>(0));
+  foreach (const char ch, arg) {
     if (ch == '"')
       out << "\\\"";
     else
@@ -672,7 +673,8 @@ value_t report_t::fn_join(call_scope_t& args)
 {
   std::ostringstream out;
 
-  foreach (const char ch, args.get<string>(0)) {
+  string arg(args.get<string>(0));
+  foreach (const char ch, arg) {
     if (ch != '\n')
       out << ch;
     else

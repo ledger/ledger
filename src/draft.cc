@@ -66,16 +66,6 @@ void draft_t::xact_template_t::dump(std::ostream& out) const
         << _("<Posting copied from last related transaction>")
         << std::endl;
   } else {
-    bool has_only_from = true;
-    bool has_only_to   = true;
-
-    foreach (const post_template_t& post, posts) {
-      if (post.from)
-        has_only_to = false;
-      else
-        has_only_from = false;
-    }
-
     foreach (const post_template_t& post, posts) {
       straccstream accum;
       out << std::endl

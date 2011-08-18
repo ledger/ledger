@@ -1165,11 +1165,7 @@ post_t * instance_t::parse_post(char *          line,
 
   // Parse the optional amount
 
-  bool saw_amount = false;
-
   if (next && *next && (*next != ';' && *next != '=')) {
-    saw_amount = true;
-
     beg = next - line;
     ptristream stream(next, len - beg);
 
@@ -1569,6 +1565,7 @@ xact_t * instance_t::parse_xact(char *          line,
     }
   }
 
+#if 0
   if (xact->_state == item_t::UNCLEARED) {
     item_t::state_t result = item_t::CLEARED;
 
@@ -1582,6 +1579,7 @@ xact_t * instance_t::parse_xact(char *          line,
       }
     }
   }
+#endif
 
   xact->pos->end_pos  = curr_pos;
   xact->pos->end_line = linenum;

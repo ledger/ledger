@@ -916,8 +916,6 @@ void interval_posts::report_subtotal(const date_interval_t& interval)
 
 void interval_posts::operator()(post_t& post)
 {
-  date_t date = post.date();
-
   if (! interval.find_period(post.date()))
     return;
 
