@@ -130,7 +130,7 @@ public:
                      const optional<string>& original_string = none) {
     set_text(original_string ? *original_string : "<stream>");
   }
-           
+
   virtual void mark_uncompiled() {
     compiled = false;
   }

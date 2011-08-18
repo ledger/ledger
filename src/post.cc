@@ -115,7 +115,7 @@ date_t post_t::actual_date() const
     return xact->date();
   }
   return *_date;
-}  
+}
 
 optional<date_t> post_t::effective_date() const
 {
@@ -341,7 +341,7 @@ namespace {
   value_t get_value_date(post_t& post) {
     if (post.has_xdata()) {
       post_t::xdata_t& xdata(post.xdata());
-      if (! xdata.value_date.is_not_a_date()) 
+      if (! xdata.value_date.is_not_a_date())
         return xdata.value_date;
     }
     return post.date();

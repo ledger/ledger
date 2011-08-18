@@ -444,7 +444,7 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     return point;
   }
   return none;
-}    
+}
 
 optional<price_point_t>
 commodity_t::check_for_updated_price(const optional<price_point_t>& point,
@@ -758,7 +758,7 @@ void to_xml(std::ostream& out, const commodity_t& comm,
   out << '"';
 
   x.close_attrs();
-  
+
   {
     push_xml y(out, "symbol");
     out << y.guard(comm.symbol());

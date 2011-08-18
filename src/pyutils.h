@@ -173,7 +173,7 @@ namespace boost { namespace python {
           arg_to_python(T const& x)                     \
             : python::handle<>(expr) {}                 \
       };                                                \
-    } 
+    }
 
 // Specialize argument and return value converters for T using expr
 # define BOOST_PYTHON_TO_PYTHON_BY_VALUE(T, expr, pytype)  \

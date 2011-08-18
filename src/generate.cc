@@ -271,14 +271,14 @@ void generate_posts_iterator::generate_date(std::ostream& out)
   out.width(4);
   out.fill('0');
   out << year_gen();
-  
+
   out.width(1);
   out << '/';
 
   out.width(2);
   out.fill('0');
   out << mon_gen();
-  
+
   out.width(1);
   out << '/';
 

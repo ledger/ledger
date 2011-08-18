@@ -152,7 +152,7 @@ namespace {
       if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
         throw_(amount_error,
                _("Cannot output amount to a floating-point representation"));
-        
+
       DEBUG("amount.convert", "mpfr_print = " << buf
             << " (precision " << precision
             << ", zeros_prec " << zeros_prec << ")");

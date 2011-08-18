@@ -298,7 +298,7 @@ commodity_pool_t::exchange(const amount_t&             amount,
     annotation.add_flags(ANNOTATION_DATE_CALCULATED);
   if (tag)
     annotation.add_flags(ANNOTATION_TAG_CALCULATED);
-  
+
   breakdown.amount = amount_t(amount, annotation);
 
   DEBUG("commodity.prices.add",

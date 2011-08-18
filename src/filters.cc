@@ -53,7 +53,7 @@ void post_splitter::flush()
 {
   foreach (value_to_posts_map::value_type& pair, posts_map) {
     preflush_func(pair.first);
-    
+
     foreach (post_t * post, pair.second)
       (*post_chain)(*post);
 
@@ -415,7 +415,7 @@ void collapse_posts::report_subtotal()
     bind_scope_t bound_scope(report, *post);
     if (only_predicate(bound_scope) && display_predicate(bound_scope))
       displayed_count++;
-  }  
+  }
 
   if (displayed_count == 1) {
     item_handler<post_t>::operator()(*last_post);
@@ -734,7 +734,7 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
     case value_t::DATE:
     default:
       assert(false);
-      break; 
+      break;
     }
 
     bind_scope_t inner_scope(report, temp);

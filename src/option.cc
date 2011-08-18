@@ -89,7 +89,7 @@ namespace {
     catch (const std::exception&) {
       if (name[0] == '-')
         add_error_context(_("While parsing option '%1'") << name);
-          
+
       else
         add_error_context(_("While parsing environent variable '%1'") << name);
       throw;
@@ -156,7 +156,7 @@ namespace {
     op_bool_char_tuple(expr_t::ptr_op_t _op, bool _truth, char _ch)
       : op(_op), truth(_truth), ch(_ch) {}
   };
-}    
+}
 
 strings_list process_arguments(strings_list args, scope_t& scope)
 {

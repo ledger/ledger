@@ -535,7 +535,7 @@ string item_context(const item_t& item, const string& desc)
   assert(len < 8192);
 
   std::ostringstream out;
-      
+
   if (item.pos->pathname == path("/dev/stdin")) {
     out << desc << _(" from standard input:");
     return out.str();

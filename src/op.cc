@@ -438,7 +438,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   return result;
 
   }
-  catch (const std::exception&) { 
+  catch (const std::exception&) {
     if (locus && ! *locus)
       *locus = this;
     throw;

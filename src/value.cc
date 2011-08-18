@@ -760,7 +760,7 @@ bool value_t::is_equal_to(const value_t& val) const
   switch (type()) {
   case VOID:
     return val.type() == VOID;
-    
+
   case BOOLEAN:
     if (val.is_boolean())
       return as_boolean() == val.as_boolean();

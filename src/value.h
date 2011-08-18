@@ -139,7 +139,7 @@ private:
             scope_t *,          // SCOPE
             boost::any          // ANY
             > data;
-    
+
     type_t type;
 
     /**

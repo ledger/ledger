@@ -56,7 +56,7 @@ namespace {
                                         datetime_t& moment) {
     return balance.value(moment, in_terms_of);
   }
-  
+
   boost::optional<amount_t>
   py_commodity_amount_0(const balance_t& balance) {
     return balance.commodity_amount();

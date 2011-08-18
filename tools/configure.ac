@@ -66,7 +66,7 @@ AC_ARG_ENABLE(doxygen,
 AM_CONDITIONAL(USE_DOXYGEN, test x$doxygen = xtrue)
 
 AC_ARG_ENABLE(cache,
-  [  --enable-cache           Enable use of the --cache option],
+  [  --enable-cache          Enable use of the --cache option],
   [case "${enableval}" in
     yes) cache=true ;;
     no)  cache=false ;;
@@ -76,7 +76,7 @@ AC_ARG_ENABLE(cache,
 AM_CONDITIONAL(USE_CACHE_OPTION, test x$cache = xtrue)
 
 AC_ARG_ENABLE(python,
-  [  --enable-python          Turn on Python support (experimental)],
+  [  --enable-python         Turn on Python support (experimental)],
   [case "${enableval}" in
     yes) python=true ;;
     no)  python=false ;;

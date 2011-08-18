@@ -45,7 +45,7 @@ account_t::~account_t()
     if (! pair.second->has_flags(ACCOUNT_TEMP) ||
         has_flags(ACCOUNT_TEMP)) {
       checked_delete(pair.second);
-    }      
+    }
   }
 }
 

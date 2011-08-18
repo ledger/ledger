@@ -92,7 +92,7 @@ lookup_probable_account(const string& ident,
     if ((CURRENT_DATE() - xact->date()).days() > 700)
       continue;
 #endif
-    
+
     // An exact match is worth a score of 100 and terminates the search
     if (ident == xact->payee) {
       DEBUG("lookup", "  we have an exact match, score = 100");

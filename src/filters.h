@@ -73,10 +73,10 @@ public:
   post_splitter(post_handler_ptr _post_chain,
                 report_t&        _report,
                 expr_t           _group_by_expr)
-    : post_chain(_post_chain), report(_report), 
+    : post_chain(_post_chain), report(_report),
       group_by_expr(_group_by_expr) {
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
-	preflush_func = bind(&post_splitter::print_title, this, _1);
+        preflush_func = bind(&post_splitter::print_title, this, _1);
   }
   virtual ~post_splitter() {
     TRACE_DTOR(post_splitter);
@@ -310,7 +310,7 @@ public:
   virtual void clear() {
     sorter.clear();
     last_xact = NULL;
-    
+
     item_handler<post_t>::clear();
   }
 };
@@ -382,7 +382,7 @@ public:
     temps.clear();
     comms.clear();
     last_xact = NULL;
-    
+
     item_handler<post_t>::clear();
   }
 };
@@ -458,7 +458,7 @@ public:
   }
 
   virtual void flush() {
-    report_subtotal(); 
+    report_subtotal();
     item_handler<post_t>::flush();
   }
 
@@ -479,7 +479,7 @@ public:
     temps.clear();
     create_accounts();
     component_posts.clear();
-    
+
     item_handler<post_t>::clear();
   }
 };

@@ -646,7 +646,7 @@ class value_scope_t : public child_scope_t
 public:
   value_scope_t(scope_t& _parent, const value_t& _value)
     : child_scope_t(_parent), value(_value) {}
-  
+
   virtual string description() {
     return parent->description();
   }

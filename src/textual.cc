@@ -129,7 +129,7 @@ namespace {
               (in.peek() == ' ' || in.peek() == '\t'));
     }
 
-    void read_next_directive(); 
+    void read_next_directive();
 
 #if defined(TIMELOG_SUPPORT)
     void clock_in_directive(char * line, bool capitalized);
@@ -270,7 +270,7 @@ void instance_t::parse()
       string err_context = error_context();
       if (! err_context.empty())
         std::cerr << err_context << std::endl;
-    
+
       if (! current_context.empty())
         std::cerr << current_context << std::endl;
 
@@ -442,7 +442,7 @@ void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
 }
 
 void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
-{  
+{
   string datetime(line, 2, 19);
 
   char * p = skip_ws(line + 22);
@@ -546,7 +546,7 @@ void instance_t::automated_xact_directive(char * line)
   try {
     query_t          query;
     keep_details_t   keeper(true, true, true);
-    expr_t::ptr_op_t expr = 
+    expr_t::ptr_op_t expr =
       query.parse_args(string_value(skip_ws(line + 1)).to_sequence(),
                        keeper, false, true);
 
@@ -831,7 +831,7 @@ void instance_t::alias_directive(char * line)
 
 void instance_t::fixed_directive(char * line)
 {
-  if (optional<std::pair<commodity_t *, price_point_t> > price_point = 
+  if (optional<std::pair<commodity_t *, price_point_t> > price_point =
       commodity_pool_t::current_pool->parse_price_directive(trim_ws(line),
                                                             true)) {
     context.state_stack.push_front(fixed_rate_t(price_point->first,

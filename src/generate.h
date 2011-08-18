@@ -106,7 +106,7 @@ public:
   virtual ~generate_posts_iterator() throw() {
     TRACE_DTOR(generate_posts_iterator);
   }
-  
+
   virtual void increment();
 
 protected:

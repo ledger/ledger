@@ -95,7 +95,7 @@ value_t convert_command(call_scope_t& args)
       foreach (post_t * post, xact->posts)
         post->amount.in_place_negate();
     }
-      
+
     bool matched = false;
     if (! xact->posts.front()->amount.is_null()) {
       post_map_t::iterator i = post_map.find(- xact->posts.front()->amount);

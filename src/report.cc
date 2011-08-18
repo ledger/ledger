@@ -289,7 +289,7 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
 
     normalize_period();         // it needs normalization
   }
-}  
+}
 
 namespace {
   struct posts_flusher

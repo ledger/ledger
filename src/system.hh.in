@@ -205,7 +205,7 @@ namespace serialization {
 template <class Archive>
 void serialize(Archive& ar, boost::filesystem::path& p, const unsigned int)
 {
-  std::string s; 
+  std::string s;
   if (Archive::is_saving::value)
     s = p.string();
 

@@ -280,7 +280,7 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str)
   else
     return none;
 }
-  
+
 optional<date_time::months_of_year>
 string_to_month_of_year(const std::string& str)
 {

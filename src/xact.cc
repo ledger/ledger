@@ -192,7 +192,7 @@ bool xact_base_t::finalize()
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
 
       balance_t::amounts_map::const_iterator a = bal.amounts.begin();
-    
+
       const amount_t * x = &(*a++).second;
       const amount_t * y = &(*a++).second;
 
@@ -418,7 +418,7 @@ bool xact_base_t::verify()
 
     amount_t& p(post->cost ? *post->cost : post->amount);
     assert(! p.is_null());
-      
+
     // If the amount was a cost, it very likely has the "keep_precision" flag
     // set, meaning commodity display precision is ignored when displaying the
     // amount.  We never want this set for the balance, so we must clear the
@@ -609,7 +609,7 @@ namespace {
           .match(post.reported_account()->fullname());
       else
         break;
-      
+
     case expr_t::op_t::O_NOT:
       return ! post_pred(op->left(), post);
 

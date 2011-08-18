@@ -376,7 +376,7 @@ public:
 #if defined(DEBUG_ON)
              , const int indent = 0
 #endif
-             ) const;    
+             ) const;
 
   optional<price_point_t>
   check_for_updated_price(const optional<price_point_t>& point,

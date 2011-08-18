@@ -68,7 +68,7 @@ class xact_t;
 // --- The details of #1 and #2 together represent the ItemHandler.
 //
 // 3. Mode of the report.  Currently there are four modes:
-// 
+//
 //    a. Posting or commodity iteration.  In this mode, all the journal's
 //       xacts, the postings of a specific xact, or all the journal's
 //       commodities are walked.  In the first two cases, it's the underlying
@@ -86,7 +86,7 @@ class xact_t;
 //    c. Write journal.  In this mode, a single function is called that output
 //       the journal object as a textual file.  #2 is used to print out each
 //       posting in the journal.
-// 
+//
 //    d. Dump binary file.  This is just like 'c', except that it dumps out a
 //       binary file and #2 is completely ignored.
 //
