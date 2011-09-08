@@ -13,12 +13,12 @@ ifeq ($(CC),clang)
 CXX		= clang++
 LD		= llvm-ld
 DIR_SUFFIX	= clang
-OPTJ            =
+OPTJ		=
 else
 CXX		= g++-mp-$(GCC_VERSION)
 LD		= gcc-mp-$(GCC_VERSION)
 DIR_SUFFIX	= gcc$(subst .,,$(GCC_VERSION))
-OPTJ            = #-j8
+OPTJ		= #-j8
 endif
 CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
 ifneq ($(CC),clang)
