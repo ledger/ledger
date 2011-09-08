@@ -5,7 +5,7 @@
 STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
-GCC_VERSION     = 4.5
+GCC_VERSION	= 4.6
 BOOST_VERSION	= 1_47_0
 
 CC		= gcc-mp-$(GCC_VERSION)
@@ -36,9 +36,8 @@ BOOST_TOOLSET	= darwin
 BOOST_DEFINES  += define=_GLIBCXX_DEBUG=1
 endif
 #BOOST_FLAGS	= --architecture=x86 --address_model=32_64
-BOOST_FLAGS	= toolset=$(BOOST_TOOLSET) \
-		  --build-type=complete --layout=versioned \
-		  $(BOOST_DEFINES)
+BOOST_FLAGS	= toolset=$(BOOST_TOOLSET) --layout=versioned \
+		  link=shared threading=single $(BOOST_DEFINES)
 BOOST_DIR	= boost_$(BOOST_VERSION)-$(DIR_SUFFIX)
 BOOST_STOW	= $(STOW_ROOT)/$(BOOST_DIR)
 BOOST_BUILD	= $(PRODUCTS)/$(BOOST_DIR)
@@ -56,7 +55,7 @@ prepare-boost:
 boost-build: prepare-boost
 	(cd $(BOOST_SOURCE) && \
 	 sh bootstrap.sh && \
-	 ./bjam $(OPTJ) debug --prefix=$(BOOST_STOW) \
+	 ./b2 $(OPTJ) debug --prefix=$(BOOST_STOW) \
 	    --build-dir=$(BOOST_BUILD) \
 	    $(BOOST_FLAGS) install)
 
