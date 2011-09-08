@@ -1296,7 +1296,9 @@ class PrepareBuild(CommandLineApp):
 
         if self.options.gcc45 or self.options.gcc46:
             self.CXXFLAGS.append('-g2')
+            self.CXXFLAGS.append('-ggdb')
             self.LDFLAGS.append('-g2')
+            self.LDFLAGS.append('-ggdb')
         else:
             self.CXXFLAGS.append('-g')
             self.LDFLAGS.append('-g')
