@@ -1,3 +1,0 @@
-@c -*-texinfo-*-
-
-@chapter Report Queries

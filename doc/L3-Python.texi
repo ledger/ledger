@@ -1,3 +1,0 @@
-@c -*-texinfo-*-
-@node Extending with Python, , Journal File Format, Top
-@chapter Extending with Python

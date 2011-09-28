@@ -1,4 +1,0 @@
-@c -*-texinfo-*-
-
-@node Principles of Accounting, Keeping a Journal, Introduction to Ledger, Top
-@chapter Principles of Accounting
