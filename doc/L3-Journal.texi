@@ -1,0 +1,323 @@
+@c -*-texinfo-*-
+The most important part of accounting is keeping a good journal.  If you
+have a good journal, tools can be written to work whatever mathematical
+tricks you need to better understand your spending patterns.  Without a
+good journal, no tool, however smart, can help you.
+
+The @ledgerprog@ program aims at making journal transactions as simple as
+possible.  Since it is a command-line tool, it does not provide a user
+interface for keeping a journal.  If you like, you may use GnuCash to
+maintain your journal, in which case @ledgerprog@ will read
+GnuCash's data files directly.  In that case, read the GnuCash manual
+now, and skip to the next chapter.
+
+If you are not using GnuCash, but a text editor to maintain your
+journal, read on.  @ledgerprog@ has been designed to make data transactions as
+simple as possible, by keeping the journal format easy, and also by
+automagically determining as much information as possible based on the
+nature of your transactions.
+
+For example, you do not need to tell @ledgerprog@ about the accounts you
+use.  Any time @ledgerprog@ sees a posting involving an account it knows
+nothing about, it will create it@footnote{This also means if you
+misspell an account it will end up getting counted separately from what
+you intended.  The provided Emacs major mode provides for automatically
+filling in account names.}.  If you use a commodity that is new to
+@ledgerprog@, it will create that commodity, and determine its display
+characteristics (placement of the symbol before or after the amount,
+display precision, etc) based on how you used the commodity in the
+posting.
+
+@section The Most Basic Entry
+
+Here is the Pacific Bell example from above, given as a @ledgerprog@
+posting, with the additional of a check number:
+
+@smallexample
+9/29 (1023) Pacific Bell
+    Expenses:Utilities:Phone                   $23.00
+    Assets:Checking                           $-23.00
+@end smallexample
+
+As you can see, it is very similar to what would be written on paper,
+minus the computed balance totals, and adding in account names that work
+better with @ledgerprog@'s scheme of things.  In fact, since
+@ledgerprog@ is smart about many things, you don't need to specify the
+balanced amount, if it is the same as the first line:
+
+@smallexample
+9/29 (1023) Pacific Bell
+    Expenses:Utilities:Phone                   $23.00
+    Assets:Checking
+@end smallexample
+
+For this transaction, @ledgerprog@ will figure out that $-23.00 must come from
+@samp{Assets:Checking} in order to balance the transaction.
+
+Also note the structure of the account entries.  There is an implied
+hierarchy established by separating with colons.  See
+(@pxref{Structuring Your Accounts}) for details and suggestions regarding
+your accounts.
+
+
+
+@strong{The format is very flexible and it isn't necessary that you
+indent and space out things exactly as shown. The only requirements are
+that the start of the transaction (the date typically) is at the
+beginning of the first line of the transaction, and the accounts are
+indented by at least one space.  If you omit the leading spaces in the
+account lines @ledgerprog@ will not count the transaction and will not
+give an error.  There must be at least two spaces, or a tab, between the
+amount and the account.  If you do not have adequate separation between
+the amount and the account @ledgerprog@ will give an error and stop
+calculating}
+
+@section Commodities
+
+@ledgerprog@ is agnostic when it comes to how you value your accounts.
+Dollars, Euros, Pounds, Francs, etc. are just ``commodities''.  Holdings
+in stocks, bonds, mutual funds and other financial instrument can be
+label using whatever is convenient for you (stock ticker symbols are
+suggested for publicly traded assets).@footnote{you can track ANYTHING,
+even time. As long as it cannot be created or destroyed inside your
+accounting system.}
+
+This is fundamentally different than many common accounting packages,
+which assume the same currency throughout all of your accounts.  This
+means if you typically operate in Euros, but travel to the US and has
+some expenses, you would have to do the currency conversion BEFORE you
+made the entry into your financial system.  With ledger this is not
+required.  In the same journal you can have entries in any or all
+commodities you actually hold.  You can use the reporting capabilities
+to convert all commodities to a single commodity for reporting purposes
+without ever changing the underlying entry.
+
+For example, the following entries reflect transaction made for a
+business trip to Europe from the US:
+
+@smallexample
+2011/09/23   Cash in Munich
+    Assets:Cash  50.00 Euros
+    Assets:Checking  $-66.00
+
+2011/09/24  Dinner in Munich
+    Expenses:Business:Travel  35.00 Euro
+    Assets:Cash
+@end smallexample
+
+This says that $66.00 came out of checking and turned into 50 Euros. The
+implied exchange rate was $1.32.  Then 35 Euros was spent on Dinner in Munich.
+
+
+
+@section Structuring your Accounts
+
+There really are no requirements for how you do this, but to preserve
+your sanity we suggest some very basic structure to your accounting
+system.
+
+At the highest level you have five sorts of accounts: Expenses, Assets,
+Income, Liabilities and Equity.  Briefly, you can think of these as places money goes,
+places money sits, places money comes from and money you owe.
+
+Starting the structure off this way will make it simpler for you to get
+answers to the questions you really need to ask about your finances.
+
+@section Transaction Notes and Tags
+@ledgerprog@ 3.0 supports entry and transaction ``notes'', which may  
+contain new metadata and tag markers.  Here's an example:
+
+@smallexample
+   2004/05/27 (100) Credit card company
+       ; This is an entry note!
+       ; Sample: Value
+       Liabilities:MasterCard         $20.00
+       ; This is a transaction note!
+       ; Sample: Another Value
+       ; :MyTag:
+       Assets:Bank:Checking
+       ; :AnotherTag:
+@end smallexample
+
+An indented paragraph starting with `;' is parsed as a persistent note  
+for its preceding category.  These notes will get printed back to you  
+with the ``print'' command.  They are accessible to value expressions  
+using the ``note'' variable.
+
+Further, any occurrence of ``:foo:'' in a note will cause a metadata tag  
+for "foo" to be registered for that entry.  You can then search for  
+such transactions using:
+
+@smallexample
+   ledger reg %foo
+   ldeger reg tag foo
+@end smallexample
+
+Also, if any word in the note ends (but does not start) with a colon,  
+the remainder of that line will be taken to be the metadata value for  
+that tag.  That is:
+
+@smallexample
+   ; :foo:bar:baz:  <-- These are three tags
+   ; name: value    <-- this is a tag with a value
+@end smallexample
+
+Tags with value can be searched for just like tags.  In addition, you  
+can further limit your tag search by looking for only those tags that  
+have specific values:
+
+@smallexample
+   ledger reg %name=value
+   ledger reg tag name=value
+@end smallexample
+
+The group-by and sort functions also support tags:
+@smallexample
+ledger --group-by "tag('foo')" bal 
+@end smallexample
+Will produce a balalnce summary of all transanction with tag `foo' group by transactions wiht the same value for `foo'.
+
+@smallexample
+ledger reg --sort "tag('foo')" %foo
+@end smallexample
+Produces a register view with the transaction have tag `foo' sorted by the tags value.
+
+Comments that occur before an entry, or which starts at column  
+zero, are always ignored and are neither searched nor printed back.
+
+
+
+@node File format,  , Value expressions, Quick Reference
+@section File format
+
+The ledger file format is quite simple, but also very flexible.  It
+supports many options, though typically the user can ignore most of
+them.  They are summarized below.
+
+The initial character of each line determines what the line means, and
+how it should be interpreted.  Allowable initial characters are:
+
+@table @code
+@item NUMBER
+A line beginning with a number denotes a transaction.  It may be followed
+by any number of lines, each beginning with whitespace, to denote the
+transaction's account postings.  The format of the first line is:
+
+@example
+DATE[=EDATE] [*|!] [(CODE)] DESC
+@end example
+
+If @samp{*} appears after the date (with optional effective date), it
+indicates the transaction is ``cleared'', which can mean whatever the user
+wants it to mean.  If @samp{!} appears after the date, it indicates d
+the transaction is ``pending''; i.e., tentatively cleared from the user's
+point of view, but not yet actually cleared.  If a @samp{CODE} appears
+in parentheses, it may be used to indicate a check number, or the type
+of the posting.  Following these is the payee, or a description of
+the posting.
+
+The format of each following posting is:
+
+@example
+  ACCOUNT  AMOUNT  [; NOTE]
+@end example
+
+The @samp{ACCOUNT} may be surrounded by parentheses if it is a virtual
+postings, or square brackets if it is a virtual postings that
+must balance.  The @samp{AMOUNT} can be followed by a per-unit
+posting cost, by specifying @samp{@@ AMOUNT}, or a complete
+posting cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
+specify an actual and/or effective date for the posting by using
+the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
+@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
+
+@item =
+An automated transaction.  A value expression must appear after the equal
+sign.
+
+After this initial line there should be a set of one or more
+postings, just as if it were normal transaction.  If the amounts of the
+postings have no commodity, they will be applied as modifiers to
+whichever real posting is matched by the value expression.
+
+@item ~
+A period transaction.  A period expression must appear after the tilde.
+
+After this initial line there should be a set of one or more
+postings, just as if it were normal transaction.
+
+@item !
+A line beginning with an exclamation mark denotes a command directive.
+It must be immediately followed by the command word.  The supported
+commands are:
+
+@table @samp
+@item !include
+Include the stated journal file.
+
+@item !account
+The account name is given is taken to be the parent of all
+postings that follow, until @samp{!end} is seen.
+
+@item !end
+Ends an account block.
+@end table
+
+@item ;
+A line beginning with a colon indicates a comment, and is
+ignored. Comments will not be returned in a ``print'' response.
+@item indented ; 
+If the semi colon is indented and occurs inside a transaction, it is
+parsed as a persistent note for its preceding category.  These notes or
+tags can be used to augment to reporting and filtering capabilities of
+@ledgerprog.
+@item Y
+If a line begins with a capital Y, it denotes the year used for all
+subsequent transactions that give a date without a year.  The year should
+appear immediately after the Y, for example: @samp{Y2004}.  This is
+useful at the beginning of a file, to specify the year for that file.
+If all transactions specify a year, however, this command has no effect.
+
+@item P
+Specifies a historical price for a commodity.  These are usually found
+in a pricing history file (see the @option{-Q} option).  The syntax
+is:
+@example
+P DATE SYMBOL PRICE
+@end example
+
+@item N SYMBOL
+Indicates that pricing information is to be ignored for a given
+symbol, nor will quotes ever be downloaded for that symbol.  Useful
+with a home currency, such as the dollar ($).  It is recommended that
+these pricing options be set in the price database file, which
+defaults to @file{~/.pricedb}.  The syntax for this command is:
+@example
+N SYMBOL
+@end example
+
+@item D AMOUNT
+Specifies the default commodity to use, by specifying an amount in the
+expected format.  The @command{transaction} command will use this commodity
+as the default when none other can be determined.  This command may be
+used multiple times, to set the default flags for different
+commodities; whichever is seen last is used as the default commodity.
+For example, to set US dollars as the default commodity, while also
+setting the thousands flag and decimal flag for that commodity, use:
+@example
+D $1,000.00
+@end example
+
+@item C AMOUNT1 = AMOUNT2
+Specifies a commodity conversion, where the first amount is given to
+be equivalent to the second amount.  The first amount should use the
+decimal precision desired during reporting:
+@example
+C 1.00 Kb = 1024 bytes
+@end example
+
+@item i, o, b, h
+These four relate to timeclock support, which permits @ledgerprog@ to read
+timelog files.  See the timeclock's documentation for more info on the
+syntax of its timelog files.
+@end table

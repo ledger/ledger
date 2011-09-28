@@ -1,0 +1,161 @@
+@c -*-texinfo-*-
+
+@ledgerprog@ is an accounting tool with the moxie to exist.  It provides no
+bells or whistles, and returns the user to the days before user
+interfaces were even a twinkling in their father's CRT.
+
+What it does offer is a double-entry accounting journal with all the
+flexibility and muscle of its modern day cousins, without any of the
+fat.  Think of it as the Bran Muffin of accounting tools.
+
+To use it, you need to start keeping a journal.  This is the basis of
+all accounting, and if you haven't started yet, now is the time to
+learn.  The little booklet that comes with your checkbook is a journal,
+so we'll describe double-entry accounting in terms of that.
+
+A checkbook journal records debits (subtractions, or withdrawals) and
+credits (additions, or deposits) with reference to a single account:
+the checking account.  Where the money comes from, and where it goes
+to, are described in the payee field, where you write the person or
+company's name.  The ultimate aim of keeping a checkbook journal is to
+know how much money is available to spend.  That's really the aim of
+all journals.
+
+What computers add is the ability to walk through these postings,
+and tell you things about your spending habits; to let you devise
+budgets and get control over your spending; to squirrel away money
+into virtual savings account without having to physically move money
+around; etc.  As you keep your journal, you are recording information
+about your life and habits, and sometimes that information can start
+telling you things you aren't aware of.  Such is the aim of all good
+accounting tools.
+
+The next step up from a checkbook journal, is a journal that keeps track
+of all your accounts, not just checking.  In such a journal, you record
+not only who gets paid---in the case of a debit---but where the money
+came from.  In a checkbook journal, its assumed that all the money
+comes from your checking account.  But in a general journal, you write
+posting two-lines: the source account and target account.
+@emph{There must always be a debit from at least one account for every
+credit made to another account}.  This is what is meant by
+``double-entry'' accounting: the journal must always balance to zero,
+with an equal number of debits and credits.
+
+
+For example, let's say you have a checking account and a brokerage
+account, and you can write checks from both of them.  Rather than keep
+two checkbooks, you decide to use one journal for both.  In this general
+journal you need to record a payment to Pacific Bell for your monthly
+phone bill, and a transfer (via check) from your brokerage account to
+your checking account.  The Pacific Bell bill is $23.00, let's say, and
+you want to pay it from your checking account.  In the general journal
+you need to say where the money came from, in addition to where it's
+going to.  These transactions might look like this:
+
+@smallexample
+9/29        Pacific Bell                $23.00     $23.00
+            Checking                   $-23.00          0
+9/30        Checking                   $100.00    $100.00
+      (123) Brokerage                 $-100.00          0
+@end smallexample
+
+The posting must balance to $0: $23 went to Pacific Bell, $23 came from
+Checking.  The next entry shows check number 123 written against your
+brokerage account, transfering money to your checking account.  There is
+nothing left over to be accounted for, since the money has simply moved
+from one account to another in both cases.  This is the basis of
+double-entry accounting: money never pops in or out of existence; it is
+always a posting from one account to another.
+
+Keeping a general journal is the same as keeping two separate journals:
+One for Pacific Bell and one for Checking.  In that case, each time a
+payment is written into one, you write a corresponding withdrawal into
+the other.  This makes it easier to write in a ``running balance'',
+since you don't have to look back at the last time the account was
+referenced---but it also means having a lot of journal books, if you
+deal with multiple accounts.
+
+Here is a good place for an aside on the use of the word `account'.
+Most private people consider an account to be something that holds money
+at an institution for them.  @ledgerprog@ uses a more general definition
+of the word.  An account is anywhere money can go.  Other finance
+programs use ``categories'', @ledgerprog@ uses accounts. So, for
+example, if you buy some groceries at Trader Joe's then more groceries
+at Whole Foods Markets you might assign the transactions like this
+@smallexample
+2011/03/15   Trader Joe's
+      Expenses:Groceries   $100.00
+      Assets:Checking
+2011/03/15   Whole Food Market
+      Expenses:Groceries   $75.00
+      Assets:Checking
+@end smallexample
+In both cases the money goes to the ``Groceries'' account, even though
+the payees were different.  You can set up your accounts in any way you
+choose.
+
+Enter the beauty of computerized accounting.  The purpose of the
+@ledgerprog@ program is to make general journal accounting simple, by keeping
+track of the balances for you.  Your only job is to enter the
+postings.  If a posting does not balance, @ledgerprog@ displays an
+error and indicates the incorrect posting.@footnote{In some
+special cases, it automatically balances this transaction for you.}
+
+In summary, there are two aspects of @ledgerprog@ use: updating the journal
+data file, and using the @ledgerprog@ tool to view the summarized result of
+your transactions.
+
+And just for the sake of example---as a starting point for those who
+want to dive in head-first---here are the journal transactions from above,
+formatted as the @ledgerprog program wishes to see them:
+
+@smallexample
+2004/09/29 Pacific Bell
+     Expenses:Pacific Bell              $23.00
+     Assets:Checking
+@end smallexample
+
+The account balances and registers in this file, if saved as
+@file{ledger.dat}, could be reported using:
+
+@example
+$ ledger -f ledger.dat balance
+$ ledger -f ledger.dat register checking
+$ ledger -f ledger.dat register bell
+@end example
+
+An important difference between @ledgerprog@ and other finance packages is
+that journal will never alter your input file.  You can create and edit
+that file in any way you prefer, but journal is only for analyzing the
+data, not for altering it.
+
+@section More introduction
+
+
+@section Building the program
+
+@ledgerprog@ is written in ANSI C++, and should compile on any platform.  It
+depends on the GNU multiprecision integer library (libgmp), and the
+Perl regular expression library (libpcre).  It was developed using GNU
+make and gcc 3.3, on a PowerBook running OS/X.
+
+To build and install once you have these libraries on your system,
+enter these commands:
+
+@example
+./configure && make install
+@end example
+
+@section Getting help
+
+If you need help on how to use @ledgerprog, or run into problems, you can
+join the @ledgerprog@ mailing list at the following Web address:
+
+@example
+http://groups.google.com/group/ledger-cli
+@end example
+
+You can also find help at the @samp{#ledger} channel on the IRC server
+@samp{irc.freenode.net}.
+
+@node Quick Reference, Ledger Tutorial, Introduction, Top
