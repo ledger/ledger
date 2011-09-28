@@ -1,4 +1,7 @@
 @c -*-texinfo-*-
+
+@chapter Keeping a Journal
+
 The most important part of accounting is keeping a good journal.  If you
 have a good journal, tools can be written to work whatever mathematical
 tricks you need to better understand your spending patterns.  Without a

@@ -69,28 +69,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @insertcopying
 @end ifnottex
 
-
-@chapter Introduction
-
-@include Introduction3.texi
-
-@chapter Principles of accounting
-@include Principles3.texi
-@chapter Keeping a journal
-@include Journal3.texi
-@chapter Basic reporting commands
-
-@chapter Command-line syntax
-@include Syntax3.texi
-@chapter Journal data format
-@include JournalFormat3.texi
-
-@chapter Report queries
-
-@chapter Value expressions
-
-@chapter Format strings
-
-@chapter Extending with Python
+@c each chapter is in an idividual texi file included here
+@include L3-Introduction.texi
+@include L3-Principles.texi
+@include L3-Journal.texi
+@include L3-Reporting.texi
+@include L3-Syntax.texi
+@include L3-JournalFormat.texi
+@include L3-Reporting.texi
+@include L3-ValueExpressions.texi
+@include L3-FormatStrings.texi
+@include L3-Python.texi
 
 @bye

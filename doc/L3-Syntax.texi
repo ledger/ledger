@@ -1,5 +1,6 @@
 @c -*-texinfo-*-
 
+@chapter Command-line Syntax
 @section Cookbook
 
 @subsection Invoking Ledger

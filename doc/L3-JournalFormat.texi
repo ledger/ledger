@@ -1,3 +1,6 @@
+@c -*-texinfo-*-
+
+@chapter @ledgerprog@ Journal File Format
 
 This chapter offers a complete description of the journal data format,
 suitable for implementors in other languages to follow.  For users,

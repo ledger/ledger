@@ -1,4 +1,5 @@
 @c -*-texinfo-*-
+@chapter Introduction
 
 @ledgerprog@ is an accounting tool with the moxie to exist.  It provides no
 bells or whistles, and returns the user to the days before user
