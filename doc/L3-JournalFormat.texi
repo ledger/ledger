@@ -1,11 +1,11 @@
 @c -*-texinfo-*-
-
-@chapter @ledgerprog@ Journal File Format
+@node Journal File Format,Extending with Python, Format Strings,  Top
+@chapter LEDGER Journal File Format
 
 This chapter offers a complete description of the journal data format,
 suitable for implementors in other languages to follow.  For users,
 the chapter on keeping a journal is less extensive, but more typical
-of common usage (@pxref{Keeping a journal}).
+of common usage (@pxref{Keeping a Journal}).
 
 Data is collected in the form of @dfn{transactions} which occur in one
 or more @dfn{journal files}.  Each transaction, in turn, is made up of
@@ -25,7 +25,7 @@ one hundred dollars from an account within the Income hierarchy, to
 the specified expense account.  The name and meaning of these accounts
 in arbitrary, with no preferences implied, although you will find it
 useful to follow standard accounting practice (@pxref{Principles of
-accounting}).
+Accounting}).
 
 Since an amount is missing from the second posting, it is assumed to
 be the inverse of the first.  This guarantee the cardinal rule of
@@ -123,7 +123,7 @@ characters are allowed in a commodity name, except for the following:
 @item Numerical digits
 @item Punctuation: @samp{.,;:?!}
 @item Mathematical and logical operators: @samp{-+*/^&|=}
-@item Bracketing characters: @samp{<>[](){}}
+@item Bracketing characters: @samp{<>[]()}@{@}
 @item The at symbol: @samp{@@}
 @end itemize
 
