@@ -41,10 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @finalout
 @end iftex
 
-@macro ledgerprog
-  @sc{ledger}
-@end macro
-
 
 @titlepage
 @title LEDGER: Command-Line Accounting
@@ -52,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @end titlepage
 
 @direntry
-* Ledger: (ledger).           Command-Line Accounting
+* Ledger3: (ledger).           Command-Line Accounting
 @end direntry
 
 @contents
@@ -60,15 +56,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @ifnottex
 @node Top, Copying, (dir), (dir)
 @top Overview
-LEDGER is an accounting tool with the moxie to exist.  It provides no
-bells or whistles, and returns the user to the days before user
-interfaces were even a twinkling in their father's CRT.
+LEDGER is a command line accounting tool that provides double-entry
+accounting based on a text journal.  It provides no bells or whistles,
+and returns the user to the days before user interfaces were even a
+twinkling in their father's CRT.
 @c @insertcopying
 @end ifnottex
 
 @menu
 * Copying::                     
 * Introduction to Ledger::      
+* Ledger Tutorial ::            
 * Principles of Accounting::    
 * Keeping a Journal::           
 * Command-line Syntax::         
@@ -83,9 +81,16 @@ interfaces were even a twinkling in their father's CRT.
 @chapter Copying
 @insertcopying
 
-@node Introduction to Ledger, Principles of Accounting, Copying, Top
+@node Introduction to Ledger, Ledger Tutorial , Copying, Top
 @chapter Introduction to Ledger
+@menu
+* Fat-free Accounting::         
+* Building the Program::        
+* Getting Help::                
+@end menu
 
+@node Fat-free Accounting, Building the Program, Introduction to Ledger, Introduction to Ledger
+@section Fat-free Accounting
 LEDGER is an accounting tool with the moxie to exist.  It provides no
 bells or whistles, and returns the user to the days before user
 interfaces were even a twinkling in their father's CRT.
@@ -97,7 +102,9 @@ fat.  Think of it as the Bran Muffin of accounting tools.
 To use it, you need to start keeping a journal.  This is the basis of
 all accounting, and if you haven't started yet, now is the time to
 learn.  The little booklet that comes with your checkbook is a journal,
-so we'll describe double-entry accounting in terms of that.
+so we'll describe double-entry accounting in terms of that.  If you use
+another GUI accounting program like GNUCash, the vast majority of its
+functionality is geared towards helping you keep a journal.
 
 A checkbook journal records debits (subtractions, or withdrawals) and
 credits (additions, or deposits) with reference to a single account:
@@ -183,7 +190,7 @@ choose.
 Enter the beauty of computerized accounting.  The purpose of the
 LEDGER program is to make general journal accounting simple, by keeping
 track of the balances for you.  Your only job is to enter the
-postings.  If a posting does not balance, LEDGER displays an
+postings.  If an individual posting does not balance, LEDGER displays an
 error and indicates the incorrect posting.@footnote{In some
 special cases, it automatically balances this transaction for you.}
 
@@ -215,14 +222,8 @@ that journal will never alter your input file.  You can create and edit
 that file in any way you prefer, but journal is only for analyzing the
 data, not for altering it.
 
-@section More introduction
 
-@menu
-* Building the Program::        
-* Getting Help::                
-@end menu
-
-@node Building the Program, Getting Help, Introduction to Ledger, Introduction to Ledger
+@node Building the Program, Getting Help, Fat-free Accounting, Introduction to Ledger
 @section Building the program
 
 LEDGER is written in ANSI C++, and should compile on any platform.  It
@@ -250,8 +251,21 @@ http://groups.google.com/group/ledger-cli
 You can also find help at the @samp{#ledger} channel on the IRC server
 @samp{irc.freenode.net}.
 
+@node Ledger Tutorial , Principles of Accounting, Introduction to Ledger, Top
+@chapter Ledger Tutorial
 
-@node Principles of Accounting, Keeping a Journal, Introduction to Ledger, Top
+@menu
+* Start a Journal::             
+* Run Some Reports::            
+@end menu
+
+@node Start a Journal, Run Some Reports, Ledger Tutorial , Ledger Tutorial
+@section Start a Journal File
+
+@node Run Some Reports,  , Start a Journal, Ledger Tutorial
+@section Run a Few Reports
+
+@node Principles of Accounting, Keeping a Journal, Ledger Tutorial , Top
 @chapter Principles of Accounting
 
 @node Keeping a Journal, Command-line Syntax, Principles of Accounting, Top
@@ -288,15 +302,15 @@ posting.
 
 @menu
 * Most Basic Entry::            
-* Commodities::                 
+* Currency and Commodities::    
 * Structuring Your Accounts::   
 * Transaction Notes and Tags::  
+* Advanced Transactions::       
 * File Format::                 
 * Archiving Previous Years ::   
-* Ledger Tutorial ::            
 @end menu
 
-@node Most Basic Entry, Commodities, Keeping a Journal, Keeping a Journal
+@node Most Basic Entry, Currency and Commodities, Keeping a Journal, Keeping a Journal
 @section The Most Basic Entry
 
 Here is the Pacific Bell example from above, given as a LEDGER
@@ -324,9 +338,7 @@ For this transaction, LEDGER will figure out that $-23.00 must come from
 @samp{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
-hierarchy established by separating with colons.  See
-(@pxref{Structuring Your Accounts}) for details and suggestions regarding
-your accounts.
+hierarchy established by separating with colons (see @pxref{Structuring Your Accounts}).
 
 
 
@@ -341,20 +353,23 @@ amount and the account.  If you do not have adequate separation between
 the amount and the account LEDGER will give an error and stop
 calculating}
 
-@node Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
-@section Commodities
+@node Currency and Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
+@section Currency and Commodities
 
 LEDGER is agnostic when it comes to how you value your accounts.
-Dollars, Euros, Pounds, Francs, etc. are just ``commodities''.  Holdings
-in stocks, bonds, mutual funds and other financial instrument can be
-label using whatever is convenient for you (stock ticker symbols are
-suggested for publicly traded assets).@footnote{you can track ANYTHING,
-even time. As long as it cannot be created or destroyed inside your
-accounting system.}
+Dollars, Euros, Pounds, Francs, Shares etc. are just ``commodities''.
+Holdings in stocks, bonds, mutual funds and other financial instruments
+can be label using whatever is convenient for you (stock ticker symbols
+are suggested for publicly traded assets).@footnote{you can track
+ANYTHING, even time. As long as it cannot be created or destroyed inside
+your accounting system.}
+
+For the rest of this manual, we will only use the word ``commodities''
+when refering to the units on a transaction value.
 
 This is fundamentally different than many common accounting packages,
 which assume the same currency throughout all of your accounts.  This
-means if you typically operate in Euros, but travel to the US and has
+means if you typically operate in Euros, but travel to the US and have
 some expenses, you would have to do the currency conversion BEFORE you
 made the entry into your financial system.  With ledger this is not
 required.  In the same journal you can have entries in any or all
@@ -366,35 +381,73 @@ For example, the following entries reflect transaction made for a
 business trip to Europe from the US:
 
 @smallexample
-2011/09/23   Cash in Munich
-    Assets:Cash  50.00 Euros
-    Assets:Checking  $-66.00
+2011/09/23 Cash in Munich
+    Assets:Cash                               E50.00
+    Assets:Checking                          $-66.00
 
-2011/09/24  Dinner in Munich
-    Expenses:Business:Travel  35.00 Euro
+2011/09/24 Dinner in Munich
+    Expenses:Business:Travel                  E35.00
     Assets:Cash
 @end smallexample
 
 This says that $66.00 came out of checking and turned into 50 Euros. The
-implied exchange rate was $1.32.  Then 35 Euros was spent on Dinner in Munich.
+implied exchange rate was $1.32.  Then 35.00 Euros was spent on Dinner in Munich.
 
+Running a ledger balance report shows:
+@smallexample
+macbook-2:$ ledger -f example.dat bal 
+             $-66.00
+              E15.00  Assets
+              E15.00    Cash
+             $-66.00    Checking
+              E35.00  Expenses:Business:Travel
+--------------------
+             $-66.00
+              E50.00
+@end smallexample
 
-@node Structuring Your Accounts, Transaction Notes and Tags, Commodities, Keeping a Journal
+The top two lines show my current assets as $-66.00 in checking (in this
+very short example I didn't establish opening an opening balance for the
+checking account) and E15.00.  After spending on dinner i have E15.00 in
+my wallet.  The bottom line balances to zero, but is shown in two lines
+since we haven't told ledger to convert commodities.
+
+@node Structuring Your Accounts, Transaction Notes and Tags, Currency and Commodities, Keeping a Journal
 @section Structuring your Accounts
 
 There really are no requirements for how you do this, but to preserve
 your sanity we suggest some very basic structure to your accounting
 system.
 
-At the highest level you have five sorts of accounts: Expenses, Assets,
-Income, Liabilities and Equity.  Briefly, you can think of these as places money goes,
-places money sits, places money comes from and money you owe.
+At the highest level you have five sorts of accounts:
+@enumerate
+@item 
+Expenses, where money goes
+@item 
+Assets, where money sits
+@item
+Income, where moeny comes from
+@item
+Liabilities, money you owe
+@item 
+Equity, the real value of your property. 
+@end enumerate
 
 Starting the structure off this way will make it simpler for you to get
 answers to the questions you really need to ask about your finances.
 
-@node Transaction Notes and Tags, File Format, Structuring Your Accounts, Keeping a Journal
+Beneath these top level accounts you can have any level of detail you
+desire.  If you want to keep specific track of how much you spend on
+burgers and fries, you could have the following:
+
+@smallexample
+Expenses:Food:Hamburgers and Fries
+@end smallexample
+
+
+@node Transaction Notes and Tags, Advanced Transactions, Structuring Your Accounts, Keeping a Journal
 @section Transaction Notes and Tags
+
 LEDGER 3.0 supports entry and transaction ``notes'', which may  
 contain new metadata and tag markers.  Here's an example:
 
@@ -421,7 +474,7 @@ such transactions using:
 
 @smallexample
    ledger reg %foo
-   ldeger reg tag foo
+   ledger reg tag foo
 @end smallexample
 
 Also, if any word in the note ends (but does not start) with a colon,  
@@ -446,20 +499,172 @@ The group-by and sort functions also support tags:
 @smallexample
 ledger --group-by "tag('foo')" bal 
 @end smallexample
-Will produce a balance summary of all transanction with tag `foo' group by transactions wiht the same value for `foo'.
+Will produce a balance summary of all transanction with tag `foo' group
+by transactions wiht the same value for `foo'.
 
 @smallexample
 ledger reg --sort "tag('foo')" %foo
 @end smallexample
-Produces a register view with the transaction have tag `foo' sorted by the tags value.
+Produces a register view with the transaction have tag `foo' sorted by
+the tags value.
 
-Comments that occur before an entry, or which starts at column  
-zero, are always ignored and are neither searched nor printed back.
+Comments that occur before an entry, or which starts at column zero, are
+always ignored and are neither searched nor printed back.
+
+@node Advanced Transactions, File Format, Transaction Notes and Tags, Keeping a Journal
+@section Advanced Transactions
+@menu
+* Multiple Account Transactions::  
+* Virtual Transactions::        
+* Automatic Transactions::      
+@end menu
+
+@node Multiple Account Transactions, Virtual Transactions, Advanced Transactions, Advanced Transactions
+@subsection Multiple Account Transactions
+
+Often times a transaction needs to be split across several accounts.  This is trivially simple in a LEDGER journal:
+
+@smallexample
+2011/09/15 * Deposit Acme Bytepumps Monthly Paycheck
+    Income:Taxable:Acme Bytepumps Inc.     $-2500.00
+    Assets:Brokerage:Checking                $175.00
+    Assets:Investments:401K Deferred         $250.00
+    Expenses:Tax:Medicare                     $36.25
+    Expenses:Tax:Federal Tax                 $200.00
+    Expenses:Tax:State Tax                    $20.00
+    Expenses:Insurance:Life                   $18.75
+    Assets:Credit Union:Joint Checking     
+@end smallexample
+
+This is an example of a paycheck entry.  THe money comes OUT of your
+income account, and is spent into several other accounts.  The last line
+doesn't require an amount, as ledger will automatically balance the
+transaction (it will be $1800 into the Joint Checking account)
 
 
+@node Virtual Transactions, Automatic Transactions, Multiple Account Transactions, Advanced Transactions
+@subsection Virtual Transactions
 
-@node File Format, Archiving Previous Years , Transaction Notes and Tags, Keeping a Journal
-@section File format
+
+A virtual posting is when you, in your mind, see money as moving
+to a certain place, when in reality that money has not moved at all.
+There are several scenarios in which this type of tracking comes in
+handy, and each of them will be discussed in detail.
+
+To enter a virtual posting, surround the account name in
+parentheses.  This form of usage does not need to balance.  However,
+if you want to ensure the virtual posting balances with other
+virtual postings in the same transaction, use square brackets.  For
+example:
+
+@smallexample
+10/2 Paycheck
+    Assets:Checking                        $1000.00
+    Income:Salary                         $-1000.00
+    (Debt:Alimony)                          $200.00
+@end smallexample
+
+In this example, after receiving a paycheck an alimony debt is
+increased---even though no money has moved around yet.
+
+@smallexample
+10/2  Paycheck
+    Assets:Checking                        $1000.00
+    Income:Salary                         $-1000.00
+    [Savings:Trip]                          $200.00
+    [Assets:Checking]                      $-200.00
+@end smallexample
+
+In this example, $200 has been deducted from checking toward savings
+for a trip.  It will appear as though the money has been moved from
+the account into @samp{Savings:Trip}, although no money has actually
+moved anywhere.
+
+When balances are displayed, virtual postings will be factored in.
+To view balances without any virtual balances factored in, using the
+@option{-R} flag, for ``reality''.
+
+
+@node Automatic Transactions,  , Virtual Transactions, Advanced Transactions
+@subsection Automatic Transactions
+
+As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
+It is similar to tithing for Jews and Christians, or to Zakát for
+Muslims.  The exact details of computing Huqúqu'lláh are somewhat
+complex, but if you have further interest, please consult the Web.
+
+Ledger makes this otherwise difficult law very easy.  Just set up an
+automated posting at the top of your ledger file:
+
+@smallexample
+; This automated transaction will compute Huqúqu'lláh based on this
+; journal's postings.  Any that match will affect the
+; Liabilities:Huququ'llah account by 19% of the value of that posting.
+
+= /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
+  (Liabilities:Huququ'llah)               0.19
+@end smallexample
+
+This automated posting works by looking at each posting in the
+ledger file.  If any match the given value expression, 19% of the
+posting's value is applied to the @samp{Liabilities:Huququ'llah}
+account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
+added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
+$190 is subtracted.  The ultimate balance of Huqúqu'lláh reflects how
+much is owed in order to fulfill one's obligation to Huqúqu'lláh.
+When ready to pay, just write a check to cover the amount shown in
+@samp{Liabilities:Huququ'llah}.  That transaction would look like:
+
+@smallexample
+2003/01/01 (101) Baha'i Huqúqu'lláh Trust
+    Liabilities:Huququ'llah          $1,000.00
+    Assets:Checking
+@end smallexample
+
+That's it.  To see how much Huqúq is currently owed based on your
+ledger transactions, use:
+
+@example
+ledger balance Liabilities:Huquq
+@end example
+
+This works fine, but omits one aspect of the law: that Huquq is only
+due once the liability exceeds the value of 19 mithqáls of gold (which
+is roughly 2.22 ounces).  So what we want is for the liability to
+appear in the balance report only when it exceeds the present day
+value of 2.22 ounces of gold.  This can be accomplished using the
+command:
+
+@smallexample
+ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
+@end smallexample
+
+With this command, the current price for gold is downloaded, and the
+Huqúqu'lláh is reported only if its value exceeds that of 2.22 ounces
+of gold.  If you wish the liability to be reflected in the parent
+subtotal either way, use this instead:
+
+@smallexample
+ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
+@end smallexample
+
+In some cases, you may wish to refer to the account of whichever
+posting matched your automated transaction's value expression.  To do
+this, use the special account name @samp{$account}:
+
+@smallexample
+= /^Some:Long:Account:Name/
+  [$account]  -0.10
+  [Savings]    0.10
+@end smallexample
+
+This example causes 10% of the matching account's total to be deferred
+to the @samp{Savings} account---as a balanced virtual posting,
+which may be excluded from reports by using @option{--real}.
+
+
+@node File Format, Archiving Previous Years , Advanced Transactions, Keeping a Journal
+@section File Format for Users
 
 The ledger file format is quite simple, but also very flexible.  It
 supports many options, though typically the user can ignore most of
@@ -494,13 +699,13 @@ The format of each following posting is:
 @end example
 
 The @samp{ACCOUNT} may be surrounded by parentheses if it is a virtual
-postings, or square brackets if it is a virtual postings that
+posting, or square brackets if it is a virtual posting that
 must balance.  The @samp{AMOUNT} can be followed by a per-unit
 posting cost, by specifying @samp{@@ AMOUNT}, or a complete
 posting cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
-@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.
+@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.(See @pxref{Virtual Transactions})
 
 @item =
 An automated transaction.  A value expression must appear after the equal
@@ -509,7 +714,7 @@ sign.
 After this initial line there should be a set of one or more
 postings, just as if it were normal transaction.  If the amounts of the
 postings have no commodity, they will be applied as modifiers to
-whichever real posting is matched by the value expression.
+whichever real posting is matched by the value expression(See @pxref{Automatic Transactions}).
 
 @item ~
 A period transaction.  A period expression must appear after the tilde.
@@ -593,11 +798,67 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Archiving Previous Years , Ledger Tutorial , File Format, Keeping a Journal
+
+@node Archiving Previous Years ,  , File Format, Keeping a Journal
 @section Archiving Previous Years
 
-@node Ledger Tutorial ,  , Archiving Previous Years , Keeping a Journal
-@section Ledger Tutorial
+
+After a while, your journal can get to be pretty large.  While this will
+not slow down LEDGER---it's designed to process journals very
+quickly---things can start to feel ``messy''; and it's a universal
+complaint that when finances feel messy, people avoid them.
+
+Thus, archiving the data from previous years into their own files can
+offer a sense of completion, and freedom from the past.  But how to best
+accomplish this with the ledger program?  There are two commands that
+make it very simple: @command{print}, and @command{equity}.
+
+Let's take an example file, with data ranging from year 2000 until 2004.
+We want to archive years 2000 and 2001 to their own file, leaving just
+2003 and 2004 in the current file.  So, use @command{print} to output
+all the earlier transactions to a file called @file{ledger-old.dat}:
+
+@smallexample
+ledger -f ledger.dat -b 2000 -e 2001 print > ledger-old.dat
+@end smallexample
+
+To delete older data from the current ledger file, use @command{print}
+again, this time specifying year 2002 as the starting date:
+
+@example
+ledger -f ledger.dat -b 2002 print > x
+mv x ledger.dat
+@end example
+
+However, now the current file contains @emph{only} postings from 2002
+onward, which will not yield accurate present-day balances, because the
+net income from previous years is no longer being tallied.  To
+compensate for this, we must append an equity report for the old ledger
+at the beginning of the new one:
+
+@example
+ledger -f ledger-old.dat equity > equity.dat
+cat equity.dat ledger.dat > x
+mv x ledger.dat
+rm equity.dat
+@end example
+
+Now the balances reported from @file{ledger.dat} are identical to what
+they were before the data was split.
+
+How often should you split your ledger?  You never need to, if you
+don't want to.  Even eighty years of data will not slow down ledger
+much---and that's just using present day hardware!  Or, you can keep
+the previous and current year in one file, and each year before that
+in its own file.  It's really up to you, and how you want to organize
+your finances.  For those who also keep an accurate paper trail, it
+might be useful to archive the older years to their own files, then
+burn those files to a CD to keep with the paper records---along with
+any electronic statements received during the year.  In the arena of
+organization, just keep in mind this maxim: Do whatever keeps you
+doing it.
+
+
 
 
 @node Command-line Syntax, Basic Reporting Commands, Keeping a Journal, Top
@@ -1667,7 +1928,7 @@ same format string is used for all postings.
 
 
 @node Journal File Format, Extending with Python, Format Strings, Top
-@chapter LEDGER Journal File Format
+@chapter Journal File Format for Developers
 
 This chapter offers a complete description of the journal data format,
 suitable for implementors in other languages to follow.  For users,
