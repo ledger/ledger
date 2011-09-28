@@ -1,7 +1,8 @@
 @c -*-texinfo-*-
-@chapter Introduction
+@node Introduction to Ledger, Principles of Accounting, ,Top
+@chapter Introduction to Ledger
 
-@ledgerprog@ is an accounting tool with the moxie to exist.  It provides no
+LEDGER is an accounting tool with the moxie to exist.  It provides no
 bells or whistles, and returns the user to the days before user
 interfaces were even a twinkling in their father's CRT.
 
@@ -78,9 +79,9 @@ deal with multiple accounts.
 
 Here is a good place for an aside on the use of the word `account'.
 Most private people consider an account to be something that holds money
-at an institution for them.  @ledgerprog@ uses a more general definition
+at an institution for them.  LEDGER uses a more general definition
 of the word.  An account is anywhere money can go.  Other finance
-programs use ``categories'', @ledgerprog@ uses accounts. So, for
+programs use ``categories'', LEDGER uses accounts. So, for
 example, if you buy some groceries at Trader Joe's then more groceries
 at Whole Foods Markets you might assign the transactions like this
 @smallexample
@@ -96,19 +97,19 @@ the payees were different.  You can set up your accounts in any way you
 choose.
 
 Enter the beauty of computerized accounting.  The purpose of the
-@ledgerprog@ program is to make general journal accounting simple, by keeping
+LEDGER program is to make general journal accounting simple, by keeping
 track of the balances for you.  Your only job is to enter the
-postings.  If a posting does not balance, @ledgerprog@ displays an
+postings.  If a posting does not balance, LEDGER displays an
 error and indicates the incorrect posting.@footnote{In some
 special cases, it automatically balances this transaction for you.}
 
-In summary, there are two aspects of @ledgerprog@ use: updating the journal
-data file, and using the @ledgerprog@ tool to view the summarized result of
+In summary, there are two aspects of LEDGER use: updating the journal
+data file, and using the LEDGER tool to view the summarized result of
 your transactions.
 
 And just for the sake of example---as a starting point for those who
 want to dive in head-first---here are the journal transactions from above,
-formatted as the @ledgerprog program wishes to see them:
+formatted as the LEDGER program wishes to see them:
 
 @smallexample
 2004/09/29 Pacific Bell
@@ -125,7 +126,7 @@ $ ledger -f ledger.dat register checking
 $ ledger -f ledger.dat register bell
 @end example
 
-An important difference between @ledgerprog@ and other finance packages is
+An important difference between LEDGER and other finance packages is
 that journal will never alter your input file.  You can create and edit
 that file in any way you prefer, but journal is only for analyzing the
 data, not for altering it.
@@ -135,7 +136,7 @@ data, not for altering it.
 
 @section Building the program
 
-@ledgerprog@ is written in ANSI C++, and should compile on any platform.  It
+LEDGER is written in ANSI C++, and should compile on any platform.  It
 depends on the GNU multiprecision integer library (libgmp), and the
 Perl regular expression library (libpcre).  It was developed using GNU
 make and gcc 3.3, on a PowerBook running OS/X.
@@ -149,8 +150,8 @@ enter these commands:
 
 @section Getting help
 
-If you need help on how to use @ledgerprog, or run into problems, you can
-join the @ledgerprog@ mailing list at the following Web address:
+If you need help on how to use LEDGER, or run into problems, you can
+join the LEDGER mailing list at the following Web address:
 
 @example
 http://groups.google.com/group/ledger-cli
@@ -159,4 +160,3 @@ http://groups.google.com/group/ledger-cli
 You can also find help at the @samp{#ledger} channel on the IRC server
 @samp{irc.freenode.net}.
 
-@node Quick Reference, Ledger Tutorial, Introduction, Top

@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 @titlepage
-@title @ledgerprog: Command-Line Accounting
+@title LEDGER: Command-Line Accounting
 @author John Wiegley
 @end titlepage
 
@@ -69,16 +69,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @insertcopying
 @end ifnottex
 
+@menu 
+* Introduction to Ledger::
+* Principles of Accounting::
+* Keeping a Journal::
+* Command-line Syntax::
+* Basic Reporting Commands::
+* Value Expressions::
+* Format Strings::
+* Journal File Format::
+* Extending with Python::
+@end menu
+
+
 @c each chapter is in an idividual texi file included here
 @include L3-Introduction.texi
 @include L3-Principles.texi
 @include L3-Journal.texi
-@include L3-Reporting.texi
 @include L3-Syntax.texi
-@include L3-JournalFormat.texi
 @include L3-Reporting.texi
 @include L3-ValueExpressions.texi
 @include L3-FormatStrings.texi
+@include L3-JournalFormat.texi
 @include L3-Python.texi
 
 @bye

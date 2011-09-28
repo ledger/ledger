@@ -1,6 +1,17 @@
 @c -*-texinfo-*-
-
+@node Command-line Syntax, Basic Reporting Commands, File Format, Top
 @chapter Command-line Syntax
+
+
+@menu
+* Cookbook::                    
+* Quick Reference::             
+* Commands::                    
+* Options::                     
+* Period Expressions::          
+@end menu
+
+@node Cookbook, Quick Reference, Command-line Syntax, Command-line Syntax
 @section Cookbook
 
 @subsection Invoking Ledger
@@ -25,14 +36,14 @@ ledger register NFCUChecking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
   (Liabilities:Tithe Owed)    -1.0
 @end example
 
-
+@node Quick Reference, Commands, Cookbook, Command-line Syntax
 @section Quick Reference
 
-This chapter describes @ledgerprog's features and serves as a quick
+This chapter describes LEDGER's features and serves as a quick
 reference. You may wish to survey this to get an overview before diving
 in to the @ref{Ledger Tutorial} and more detailed examples that follow.
 
-@ledgerprog@ has a very simple command-line interface, named---enticingly
+LEDGER has a very simple command-line interface, named---enticingly
 enough---@command{ledger}.  It supports a few reporting commands, and
 a large number of options for refining the output from those commands.
 The basic syntax of any ledger command is:
@@ -63,16 +74,8 @@ There are many, many command options available with the
 However, none of them are required to use the basic reporting
 commands.
 
-@menu
-* Commands::                    
-* Options::                     
-* Period expressions::          
-* Format strings::              
-* Value expressions::           
-* File format::                 
-@end menu
 
-@node Commands, Options, Quick Reference, Quick Reference
+@node Commands, Options, Quick Reference, Command-line Syntax
 @section Commands
 
 @subsection balance
@@ -99,14 +102,14 @@ always be the same as the current balance of that account.
 
 If you have Gnuplot installed, you may plot the amount or running
 total of any register by using the script @file{report}, which is
-included in the @ledgerprog@ distribution.  The only requirement is that you
+included in the LEDGER distribution.  The only requirement is that you
 add either @option{-j} or @option{-J} to your register command, in
 order to plot either the amount or total column, respectively.
 
 @subsection print
 
 The @command{print} command prints out ledger transactions in a textual
-format that can be parsed by @ledgerprog@.  They will be properly formatted,
+format that can be parsed by LEDGER.  They will be properly formatted,
 and output in the most economic form possible.  The ``print'' command
 also takes a list of optional regexps, which will cause only those
 postings which match in some way to be printed.
@@ -152,7 +155,7 @@ directly by Emacs Lisp.  The format of the sexp is:
 
 The @command{equity} command prints out accounts balances as if they
 were transactions.  This makes it easy to establish the starting balances
-for an account, such as when @ref{Archiving previous years}.
+for an account, such as when @ref{Archiving Previous Years}.
 
 @subsection prices
 
@@ -163,7 +166,7 @@ deviation from that average.
 
 There is also a @command{pricesdb} command which outputs the same
 information as @command{prices}, but does in a format that can be
-parsed by @ledgerprog@.
+parsed by LEDGER.
 
 @subsection xact
 
@@ -199,7 +202,7 @@ This produces the following output:
 
 It works by finding a past posting matching the regular expression
 @samp{viva}, and assuming that any accounts or amounts specified will
-be similar to that earlier posting.  If @ledgerprog@ does not succeed in
+be similar to that earlier posting.  If LEDGER does not succeed in
 generating a new transaction, an error is printed and the exit code is set
 to @samp{1}.
 
@@ -220,7 +223,7 @@ ledger xact 4/9 viva food $11.50 tips $8 cash
 ledger xact 4/9 viva dining "DM 11.50"
 @end example
 
-@node Options, Period expressions, Commands, Quick Reference
+@node Options, Period Expressions, Commands, Command-line Syntax
 @section Options
 
 With all of the reports, command-line options are useful to modify the
@@ -285,7 +288,7 @@ finished a binary copy will be written to the specified cache, to
 speed up the loading time of subsequent queries.  This filename can
 also be given using the environment variable @env{LEDGER_CACHE}, or by
 putting the option into your init file.  The @option{--no-cache}
-option causes @ledgerprog@ to always ignore the binary cache.
+option causes LEDGER to always ignore the binary cache.
 
 @option{--account NAME} (@option{-a NAME}) specifies the default
 account which QIF file postings are assumed to relate to.
@@ -315,7 +318,7 @@ period separately, making it easy to see weekly, monthly, quarterly,
 etc., posting totals.  A period string can even specify the
 beginning and end of the report range, using simple terms like ``last
 june'' or ``next month''.  For more using period expressions, see
-@ref{Period expressions}.
+@ref{Period Expressions}.
 
 @option{--period-sort EXPR} sorts the postings within each
 reporting period using the value expression @var{EXPR}.  This is most
@@ -375,7 +378,7 @@ meet your budget.  @option{--add-budget} also shows unbudgeted
 postings, while @option{--unbudgeted} shows only those.
 @option{--forecast} is a related option that projects your budget into
 the future, showing how it will affect future balances.
-@xref{Budgeting and forecasting}.
+@xref{Budgeting and Forecasting}.
 
 @option{--limit EXPR} (@option{-l EXPR}) limits which postings
 take part in the calculations of a report.
@@ -384,7 +387,7 @@ take part in the calculations of a report.
 used to calculate the ``value'' column in the @command{register}
 report, the amount used to calculate account totals in the
 @command{balance} report, and the values printed in the
-@command{equity} report.  @xref{Value expressions}.
+@command{equity} report.  @xref{Value Expressions}.
 
 @option{--total EXPR} (@option{-T EXPR}) sets the value expression
 used for the ``totals'' column in the @command{register} and
@@ -429,7 +432,7 @@ the values determined using the value expression @var{EXPR}.  For
 example, using @option{-S -UT} in the balance report will sort account
 balances from greatest to least, using the absolute value of the
 total.  For more on how to use value expressions, see @ref{Value
-expressions}.
+Expressions}.
 
 @option{--wide} (@option{-w}) causes the default @command{register}
 report to assume 132 columns instead of 80.
@@ -442,7 +445,7 @@ negative amount is given, it will invert the meaning of the flag
 (instead of the first five transactions being printed, for example, it
 would print all but the first five).
 
-@option{--pager} tells @ledgerprog@ to pass its output to the given pager
+@option{--pager} tells LEDGER to pass its output to the given pager
 program---very useful when the output is especially long.  This
 behavior can be made the default by setting the @env{LEDGER_PAGER}
 environment variable.
@@ -497,11 +500,11 @@ restricted to the reporting range (using @option{-d}).
 format used by reports.  The default uses a date like 2004/08/01,
 which represents the default date format of @samp{%Y/%m/%d}.  To
 change the way dates are printed in general, the easiest way is to put
-@option{--date-format FORMAT} in the @ledgerprog@ initialization file
+@option{--date-format FORMAT} in the LEDGER initialization file
 @file{~/.ledgerrc} (or the file referred to by @env{LEDGER_INIT}).
 
 @option{--format STR} (@option{-F STR}) sets the reporting format for
-whatever report ledger is about to make.  @xref{Format strings}.
+whatever report ledger is about to make.  @xref{Format Strings}.
 There are also specific format commands for each report type:
 
 @itemize
@@ -585,8 +588,8 @@ option settings in the file @file{~/.ledgerrc}, for example:
 
 @end example
 
-@node Period expressions, Format strings, Options, Quick Reference
-@section Period expressions
+@node Period Expressions, Format Strings, Options, Command-line Syntax
+@section Period Expressions
 
 A period expression indicates a span of time, or a reporting interval,
 or both.  The full syntax is:
@@ -671,375 +674,4 @@ until nov
 last oct
 weekly last august
 @end example
-
-@node Format strings, Value expressions, Period expressions, Quick Reference
-@section Format strings
-
-Format strings may be used to change the output format of reports.
-They are specified by passing a formatting string to the
-@option{--format} (@option{-F}) option.  Within that string,
-constructs are allowed which make it possible to display the various
-parts of an account or posting in custom ways.
-
-Within a format strings, a substitution is specified using a percent
-character (@samp{%}).  The basic format of all substitutions is:
-
-@example
-%[-][MIN WIDTH][.MAX WIDTH]EXPR
-@end example
-
-If the optional minus sign (@samp{-}) follows the percent character,
-whatever is substituted will be left justified.  The default is right
-justified.  If a minimum width is given next, the substituted text
-will be at least that wide, perhaps wider.  If a period and a maximum
-width is given, the substituted text will never be wider than this,
-and will be truncated to fit.  Here are some examples:
-
-@example
-%-P     a transaction's payee, left justified
-%20P    The same, right justified, at least 20 chars wide
-%.20P   The same, no more than 20 chars wide
-%-.20P  Left justified, maximum twenty chars wide
-@end example
-
-The expression following the format constraints can be a single
-letter, or an expression enclosed in parentheses or brackets.  The
-allowable expressions are:
-
-@table @code
-@item %
-Inserts a percent sign.
-
-@item t
-Inserts the results of the value expression specified by @option{-t}.
-If @option{-t} was not specified, the current report style's value
-expression is used.
-
-@item T
-Inserts the results of the value expression specified by @option{-T}.
-If @option{-T} was not specified, the current report style's value
-expression is used.
-
-@item |
-Inserts a single space.  This is useful if a width is specified, for
-inserting a certain number of spaces.
-
-@item _
-Inserts a space for each level of an account's depth.  That is, if an
-account has two parents, this construct will insert two spaces.  If a
-minimum width is specified, that much space is inserted for each level
-of depth.  Thus @samp{%5_}, for an account with four parents, will
-insert twenty spaces.
-
-@item (EXPR)
-Inserts the amount resulting from the value expression given in
-parentheses.  To insert five times the total value of an account, for
-example, one could say @samp{%12(5*O)}.  Note: It's important to put
-the five first in that expression, so that the commodity doesn't get
-stripped from the total.
-
-@item [DATEFMT]
-Inserts the result of formatting a posting's date with a date
-format string, exactly like those supported by @code{strftime}.  For
-example: @samp{%[%Y/%m/%d %H:%M:%S]}.
-
-@item S
-Insert the pathname of the file from which the transaction's data was read.
-
-@item B
-Inserts the beginning character position of that transaction within the file.
-
-@item b
-Inserts the beginning line of that transaction within the file.
-
-@item E
-Inserts the ending character position of that transaction within the file.
-
-@item e
-Inserts the ending line of that transaction within the file.
-
-@item D
-By default, this is the same as @samp{%[%Y/%m%/d]}.  The date format
-used can be changed at any time with the @option{-y} flag, however.
-Using @samp{%D} gives the user more control over the way dates are
-output.
-
-@item d
-This is the same as the @samp{%D} option, unless the transaction has an
-effective date, in which case it prints
-@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.
-
-@item X
-If a posting has been cleared, this inserts @samp{*} followed by a
-space; otherwise nothing is inserted.
-
-@item Y
-This is the same as @samp{%X}, except that it only displays a state
-character if all of the member postings have the same state.
-
-@item C
-Inserts the checking number for a transaction, in parentheses, followed by
-a space; if none was specified, nothing is inserted.
-
-@item P
-Inserts the payee related to a posting.
-
-@item a
-Inserts the optimal short name for an account.  This is normally used
-in balance reports.  It prints a parent account's name if that name
-has not been printed yet, otherwise it just prints the account's name.
-
-@item A
-Inserts the full name of an account.
-
-@item W
-This is the same as @samp{%A}, except that it first displays the
-posting's state @emph{if the transaction's posting states are not
-all the same}, followed by the full account name.  This is offered as
-a printing optimization, so that combined with @samp{%Y}, only the
-minimum amount of state detail is printed.
-
-@item o
-Inserts the ``optimized'' form of a posting's amount.  This is
-used by the print report.  In some cases, this inserts nothing; in
-others, it inserts the posting amount and its cost.  It's use is
-not recommend unless you are modifying the print report.
-
-@item n
-Inserts the note associated with a posting, preceded by two spaces
-and a semi-colon, if it exists.  Thus, no none becomes an empty
-string, while the note @samp{foo} is substituted as @samp{ ; foo}.
-
-@item N
-Inserts the note associated with a posting, if one exists.
-
-@item /
-The @samp{%/} construct is special.  It separates a format string
-between what is printed for the first posting of a transaction, and
-what is printed for all subsequent postings.  If not used, the
-same format string is used for all postings.
-@end table
-
-@node Value expressions, File format, Format strings, Quick Reference
-@section Value expressions
-
-Value expressions are an expression language used by @ledgerprog@ to
-calculate values used by the program for many different purposes:
-
-@enumerate
-@item
-The values displayed in reports
-@item
-For predicates (where truth is anything non-zero), to determine which
-postings are calculated (@option{-l}) or displayed (@option{-d}).
-@item
-For sorting criteria, to yield the sort key.
-@item
-In the matching criteria used by automated postings.
-@end enumerate
-
-Value expressions support most simple math and logic operators, in
-addition to a set of one letter functions and variables.  A function's
-argument is whatever follows it.  The following is a display predicate
-that I use with the @command{balance} command:
-
-@example
-ledger -d /^Liabilities/?T<0:UT>100 balance
-@end example
-
-The effect is that account totals are displayed only if: 1) A
-Liabilities account has a total less than zero; or 2) the absolute
-value of the account's total exceeds 100 units of whatever commodity
-contains.  If it contains multiple commodities, only one of them must
-exceed 100 units.
-
-Display predicates are also very handy with register reports, to
-constrain which transactions are printed.  For example, the following
-command shows only transactions from the beginning of the current month,
-while still calculating the running balance based on all transactions:
-
-@example
-ledger -d "d>[this month]" register checking
-@end example
-
-This advantage to this command's complexity is that it prints the
-running total in terms of all transactions in the register.  The following,
-simpler command is similar, but totals only the displayed
-postings:
-
-@example
-ledger -b "this month" register checking
-@end example
-
-@subsection Variables
-
-Below are the one letter variables available in any value expression.
-For the register and print commands, these variables relate to
-individual postings, and sometimes the account affected by a
-posting.  For the balance command, these variables relate to
-accounts---often with a subtle difference in meaning.  The use of each
-variable for both is specified.
-
-@table @code
-@item t
-This maps to whatever the user specified with @option{-t}.  In a
-register report, @option{-t} changes the value column; in a balance
-report, it has no meaning by default.  If @option{-t} was not
-specified, the current report style's value expression is used.
-
-@item T
-This maps to whatever the user specified with @option{-T}.  In a
-register report, @option{-T} changes the totals column; in a balance
-report, this is the value given for each account.  If @option{-T} was
-not specified, the current report style's value expression is used.
-
-@item m
-This is always the present moment/date.
-@end table
-
-@subsubsection Posting/account details
-
-@table @code
-@item d
-A posting's date, as the number of seconds past the epoch.  This
-is always ``today'' for an account.
-
-@item a
-The posting's amount; the balance of an account, without
-considering children.
-
-@item b
-The cost of a posting; the cost of an account, without its
-children.
-
-@item v
-The market value of a posting, or an account without its children.
-
-@item g
-The net gain (market value minus cost basis), for a posting or an
-account without its children.  It is the same as @samp{v-b}.
-
-@item l
-The depth (``level'') of an account.  If an account has one parent,
-it's depth is one.
-
-@item n
-The index of a posting, or the count of postings affecting an
-account.
-
-@item X
-1 if a posting's transaction has been cleared, 0 otherwise.
-
-@item R
-1 if a posting is not virtual, 0 otherwise.
-
-@item Z
-1 if a posting is not automated, 0 otherwise.
-@end table
-
-@subsubsection Calculated totals
-
-@table @code
-@item O
-The total of all postings seen so far, or the total of an account
-and all its children.
-
-@item N
-The total count of postings affecting an account and all its
-children.
-
-@item B
-The total cost of all postings seen so far; the total cost of an
-account and all its children.
-
-@item V
-The market value of all postings seen so far, or of an account and
-all its children.
-
-@item G
-The total net gain (market value minus cost basis), for a series of
-postings, or an account and its children.  It is the same as
-@samp{V-B}.
-@end table
-
-@subsection Functions
-
-The available one letter functions are:
-
-@table @code
-@item -
-Negates the argument.
-
-@item U
-The absolute (unsigned) value of the argument.
-
-@item S
-Strips the commodity from the argument.
-
-@item A
-The arithmetic mean of the argument; @samp{Ax} is the same as
-@samp{x/n}.
-
-@item P
-The present market value of the argument.  The syntax @samp{P(x,d)} is
-supported, which yields the market value at time @samp{d}.  If no date
-is given, then the current moment is used.
-@end table
-
-@subsection Operators
-
-The binary and ternary operators, in order of precedence, are:
-
-@enumerate
-@item @samp{* /}
-@item @samp{+ -}
-@item @samp{! < > =}
-@item @samp{& | ?:}
-@end enumerate
-
-@subsection Complex expressions
-
-More complicated expressions are possible using:
-
-@table @code
-@item NUM
-A plain integer represents a commodity-less amount.
-
-@item @{AMOUNT@}
-An amount in braces can be any kind of amount supported by ledger,
-with or without a commodity.  Use this for decimal values.
-
-@item /REGEXP/
-@item W/REGEXP/
-A regular expression that matches against an account's full name.  If
-a posting, this will match against the account affected by the
-posting.
-
-@item //REGEXP/
-@item p/REGEXP/
-A regular expression that matches against a transaction's payee name.
-
-@item ///REGEXP/
-@item w/REGEXP/
-A regular expression that matches against an account's base name.  If
-a posting, this will match against the account affected by the
-posting.
-
-@item c/REGEXP/
-A regular expression that matches against the transaction code (the text
-that occurs between parentheses before the payee name).
-
-@item e/REGEXP/
-A regular expression that matches against a posting's note, or
-comment field.
-
-@item (EXPR)
-A sub-expression is nested in parenthesis.  This can be useful passing
-more complicated arguments to functions, or for overriding the natural
-precedence order of operators.
-
-@item [DATE]
-Useful specifying a date in plain terms.  For example, you could say
-@samp{[2004/06/01]}.
-@end table
 

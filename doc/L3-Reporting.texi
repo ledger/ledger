@@ -1,3 +1,11 @@
 @c -*-texinfo-*-
 
+@node Basic Reporting Commands, Value Expressions, Command-line Syntax, Top
 @chapter Basic Reporting Commands
+
+@menu
+* Budgeting and Forecasting::   
+@end menu
+
+@node Budgeting and Forecasting, , ,Basic Reporting Commands
+@section Budgeting and Forecasting

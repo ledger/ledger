@@ -1,5 +1,6 @@
 @c -*-texinfo-*-
 
+@node Keeping a Journal, Most Basic Entry, Principles of Accounting, Top
 @chapter Keeping a Journal
 
 The most important part of accounting is keeping a good journal.  If you
@@ -7,33 +8,44 @@ have a good journal, tools can be written to work whatever mathematical
 tricks you need to better understand your spending patterns.  Without a
 good journal, no tool, however smart, can help you.
 
-The @ledgerprog@ program aims at making journal transactions as simple as
+The LEDGER program aims at making journal transactions as simple as
 possible.  Since it is a command-line tool, it does not provide a user
 interface for keeping a journal.  If you like, you may use GnuCash to
-maintain your journal, in which case @ledgerprog@ will read
+maintain your journal, in which case LEDGER will read
 GnuCash's data files directly.  In that case, read the GnuCash manual
 now, and skip to the next chapter.
 
 If you are not using GnuCash, but a text editor to maintain your
-journal, read on.  @ledgerprog@ has been designed to make data transactions as
+journal, read on.  LEDGER has been designed to make data transactions as
 simple as possible, by keeping the journal format easy, and also by
 automagically determining as much information as possible based on the
 nature of your transactions.
 
-For example, you do not need to tell @ledgerprog@ about the accounts you
-use.  Any time @ledgerprog@ sees a posting involving an account it knows
+For example, you do not need to tell LEDGER about the accounts you
+use.  Any time LEDGER sees a posting involving an account it knows
 nothing about, it will create it@footnote{This also means if you
 misspell an account it will end up getting counted separately from what
 you intended.  The provided Emacs major mode provides for automatically
 filling in account names.}.  If you use a commodity that is new to
-@ledgerprog@, it will create that commodity, and determine its display
+LEDGER, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
 display precision, etc) based on how you used the commodity in the
 posting.
 
+@menu
+* Most Basic Entry::            
+* Commodities::                 
+* Structuring Your Accounts::   
+* Transaction Notes and Tags::  
+* File Format::                 
+* Archiving Previous Years ::   
+* Ledger Tutorial ::            
+@end menu
+
+@node Most Basic Entry, Commodities, Keeping a Journal, Keeping a Journal
 @section The Most Basic Entry
 
-Here is the Pacific Bell example from above, given as a @ledgerprog@
+Here is the Pacific Bell example from above, given as a LEDGER
 posting, with the additional of a check number:
 
 @smallexample
@@ -44,8 +56,8 @@ posting, with the additional of a check number:
 
 As you can see, it is very similar to what would be written on paper,
 minus the computed balance totals, and adding in account names that work
-better with @ledgerprog@'s scheme of things.  In fact, since
-@ledgerprog@ is smart about many things, you don't need to specify the
+better with LEDGER's scheme of things.  In fact, since
+LEDGER is smart about many things, you don't need to specify the
 balanced amount, if it is the same as the first line:
 
 @smallexample
@@ -54,7 +66,7 @@ balanced amount, if it is the same as the first line:
     Assets:Checking
 @end smallexample
 
-For this transaction, @ledgerprog@ will figure out that $-23.00 must come from
+For this transaction, LEDGER will figure out that $-23.00 must come from
 @samp{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
@@ -69,15 +81,16 @@ indent and space out things exactly as shown. The only requirements are
 that the start of the transaction (the date typically) is at the
 beginning of the first line of the transaction, and the accounts are
 indented by at least one space.  If you omit the leading spaces in the
-account lines @ledgerprog@ will not count the transaction and will not
+account lines LEDGER will not count the transaction and will not
 give an error.  There must be at least two spaces, or a tab, between the
 amount and the account.  If you do not have adequate separation between
-the amount and the account @ledgerprog@ will give an error and stop
+the amount and the account LEDGER will give an error and stop
 calculating}
 
+@node Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
 @section Commodities
 
-@ledgerprog@ is agnostic when it comes to how you value your accounts.
+LEDGER is agnostic when it comes to how you value your accounts.
 Dollars, Euros, Pounds, Francs, etc. are just ``commodities''.  Holdings
 in stocks, bonds, mutual funds and other financial instrument can be
 label using whatever is convenient for you (stock ticker symbols are
@@ -112,7 +125,7 @@ This says that $66.00 came out of checking and turned into 50 Euros. The
 implied exchange rate was $1.32.  Then 35 Euros was spent on Dinner in Munich.
 
 
-
+@node Structuring Your Accounts, Transaction Notes and Tags , Commodities ,Keeping a Journal
 @section Structuring your Accounts
 
 There really are no requirements for how you do this, but to preserve
@@ -126,8 +139,9 @@ places money sits, places money comes from and money you owe.
 Starting the structure off this way will make it simpler for you to get
 answers to the questions you really need to ask about your finances.
 
+@node Transaction Notes and Tags, File Format, Structuring Your Accounts, Keeping a Journal
 @section Transaction Notes and Tags
-@ledgerprog@ 3.0 supports entry and transaction ``notes'', which may  
+LEDGER 3.0 supports entry and transaction ``notes'', which may  
 contain new metadata and tag markers.  Here's an example:
 
 @smallexample
@@ -178,7 +192,7 @@ The group-by and sort functions also support tags:
 @smallexample
 ledger --group-by "tag('foo')" bal 
 @end smallexample
-Will produce a balalnce summary of all transanction with tag `foo' group by transactions wiht the same value for `foo'.
+Will produce a balance summary of all transanction with tag `foo' group by transactions wiht the same value for `foo'.
 
 @smallexample
 ledger reg --sort "tag('foo')" %foo
@@ -190,7 +204,7 @@ zero, are always ignored and are neither searched nor printed back.
 
 
 
-@node File format,  , Value expressions, Quick Reference
+@node File Format, Command-line Syntax ,Transaction Notes and Tags, Keeping a Journal
 @section File format
 
 The ledger file format is quite simple, but also very flexible.  It
@@ -273,7 +287,7 @@ ignored. Comments will not be returned in a ``print'' response.
 If the semi colon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
 tags can be used to augment to reporting and filtering capabilities of
-@ledgerprog.
+LEDGER.
 @item Y
 If a line begins with a capital Y, it denotes the year used for all
 subsequent transactions that give a date without a year.  The year should
@@ -320,7 +334,13 @@ C 1.00 Kb = 1024 bytes
 @end example
 
 @item i, o, b, h
-These four relate to timeclock support, which permits @ledgerprog@ to read
+These four relate to timeclock support, which permits LEDGER to read
 timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
+
+@node Archiving Previous Years , , ,Keeping a Journal
+@section Archiving Previous Years
+
+@node Ledger Tutorial , , ,Keeping a Journal
+@section Ledger Tutorial
