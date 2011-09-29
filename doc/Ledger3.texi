@@ -266,10 +266,11 @@ You can also find help at the @samp{#ledger} channel on the IRC server
 @section Start a Journal File
 
 A journal is a record of your financial transactions and will be central
-to using LEDGER.  For now we just want to get a teast
-of what ledger can do.  An example journal is included with the source
-code distribution, called @file{drewr.dat} (it is copied in @pxref{Example Data File}).
-Copy it someplace convenient and open up a terminal window in that directory.
+to using LEDGER.  For now we just want to get a taste of what LEDGER can
+do.  An example journal is included with the source code distribution,
+called @file{drewr3.dat} (it is copied in @pxref{Example Data File}).
+Copy it someplace convenient and open up a terminal window in that
+directory.
 
 If you would rather start with your own journal right away please skip
 to @xref{Keeping a Journal}.
