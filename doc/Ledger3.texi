@@ -71,6 +71,7 @@ twinkling in their father's CRT.
 * Keeping a Journal::           
 * Command-line Syntax::         
 * Basic Reporting Commands::    
+* Budgeting and Forecasting::   
 * Value Expressions::           
 * Format Strings::              
 * Journal File Format::         
@@ -749,6 +750,11 @@ which may be excluded from reports by using @option{--real}.
 @node Periodic Transactions,  , Automatic Transactions, Advanced Transactions
 @subsection Periodic Transactions
 
+A periodic transaction starts with a ~ followed by a period expression.
+Periodic transactions are used for budgeting and forecasting only, they
+have no effect withouth the @samp{--budget} option specified.
+
+See @ref{Budgeting and Forecasting} for exmaples and details.
 
 @node File Format, Archiving Previous Years , Advanced Transactions, Keeping a Journal
 @section File Format for Users
@@ -1523,7 +1529,7 @@ weekly last august
 @end example
 
 
-@node Basic Reporting Commands, Value Expressions, Command-line Syntax, Top
+@node Basic Reporting Commands, Budgeting and Forecasting, Command-line Syntax, Top
 @chapter Basic Reporting Commands
 @menu
 * balance::                     
@@ -1535,7 +1541,6 @@ weekly last august
 * equity::                      
 * prices::                      
 * xact::                        
-* Budgeting and Forecasting::   
 @end menu
 
 @node balance, register, Basic Reporting Commands, Basic Reporting Commands
@@ -1636,7 +1641,7 @@ There is also a @command{pricesdb} command which outputs the same
 information as @command{prices}, but does in a format that can be
 parsed by LEDGER.
 
-@node xact, Budgeting and Forecasting, prices, Basic Reporting Commands
+@node xact,  , prices, Basic Reporting Commands
 @section xact
 
 The @command{xact} commands simplifies the creation of new transactions.
@@ -1697,11 +1702,11 @@ ledger xact 4/9 viva dining "DM 11.50"
 * Budgeting and Forecasting::   
 @end menu
 
-@node Budgeting and Forecasting,  , xact, Basic Reporting Commands
-@section Budgeting and Forecasting
+@node Budgeting and Forecasting, Value Expressions, Basic Reporting Commands, Top
+@chapter Budgeting and Forecasting
 
 
-@node Value Expressions, Format Strings, Basic Reporting Commands, Top
+@node Value Expressions, Format Strings, Budgeting and Forecasting, Top
 @chapter Value Expressions
 
 Value expressions are an expression language used by LEDGER to
