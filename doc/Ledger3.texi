@@ -75,6 +75,8 @@ twinkling in their father's CRT.
 * Format Strings::              
 * Journal File Format::         
 * Extending with Python::       
+* Example Data File::           
+* Miscellaneous Notes::         
 @end menu
 
 @node Copying, Introduction to Ledger, Top, Top
@@ -262,8 +264,47 @@ You can also find help at the @samp{#ledger} channel on the IRC server
 @node Start a Journal, Run Some Reports, Ledger Tutorial , Ledger Tutorial
 @section Start a Journal File
 
+A journal is a record of your financial transactions and will be central
+to using LEDGER.  For now we just want to get a teast
+of what ledger can do.  An example journal is included with the source
+code distribution, called @file{drewr.dat} (it is copied in @pxref{Example Data File}).
+Copy it someplace convenient and open up a terminal window in that directory.
+
+If you would rather start with your own journal right away please skip
+to @xref{Keeping a Journal}.
+
 @node Run Some Reports,  , Start a Journal, Ledger Tutorial
 @section Run a Few Reports
+@subsection Balance Report
+
+Run this command:
+@smallexample
+ledger -f drewr.dat balance
+@end smallexample
+
+LEDGER will generate:
+@smallexample
+         $ -3,804.00  Assets
+          $ 1,396.00    Checking
+             $ 30.00      Business
+         $ -5,200.00    Savings
+         $ -1,000.00  Equity:Opening Balances
+          $ 6,654.00  Expenses
+          $ 5,500.00    Auto
+             $ 20.00    Books
+            $ 300.00    Escrow
+            $ 334.00    Food:Groceries
+            $ 500.00    Interest:Mortgage
+         $ -2,030.00  Income
+         $ -2,000.00    Salary
+            $ -30.00    Sales
+            $ -63.60  Liabilities
+            $ -20.00    MasterCard
+            $ 200.00    Mortgage:Principal
+           $ -243.60    Tithe
+--------------------
+           $ -243.60
+@end smallexample
 
 @node Principles of Accounting, Keeping a Journal, Ledger Tutorial , Top
 @chapter Principles of Accounting
@@ -304,7 +345,6 @@ posting.
 * Most Basic Entry::            
 * Currency and Commodities::    
 * Structuring Your Accounts::   
-* Transaction Notes and Tags::  
 * Advanced Transactions::       
 * File Format::                 
 * Archiving Previous Years ::   
@@ -412,7 +452,7 @@ checking account) and E15.00.  After spending on dinner i have E15.00 in
 my wallet.  The bottom line balances to zero, but is shown in two lines
 since we haven't told ledger to convert commodities.
 
-@node Structuring Your Accounts, Transaction Notes and Tags, Currency and Commodities, Keeping a Journal
+@node Structuring Your Accounts, Advanced Transactions, Currency and Commodities, Keeping a Journal
 @section Structuring your Accounts
 
 There really are no requirements for how you do this, but to preserve
@@ -445,8 +485,20 @@ Expenses:Food:Hamburgers and Fries
 @end smallexample
 
 
-@node Transaction Notes and Tags, Advanced Transactions, Structuring Your Accounts, Keeping a Journal
-@section Transaction Notes and Tags
+
+
+@node Advanced Transactions, File Format, Structuring Your Accounts, Keeping a Journal
+@section Advanced Transactions
+@menu
+* Transaction Notes and Tags::  
+* Multiple Account Transactions::  
+* Virtual Transactions::        
+* Automatic Transactions::      
+* Periodic Transactions::       
+@end menu
+
+@node Transaction Notes and Tags, Multiple Account Transactions, Advanced Transactions, Advanced Transactions
+@subsection Transaction Notes and Tags
 
 LEDGER 3.0 supports entry and transaction ``notes'', which may  
 contain new metadata and tag markers.  Here's an example:
@@ -511,15 +563,47 @@ the tags value.
 Comments that occur before an entry, or which starts at column zero, are
 always ignored and are neither searched nor printed back.
 
-@node Advanced Transactions, File Format, Transaction Notes and Tags, Keeping a Journal
-@section Advanced Transactions
-@menu
-* Multiple Account Transactions::  
-* Virtual Transactions::        
-* Automatic Transactions::      
-@end menu
+If a posting comment is a date (with brackets), it modifies the date for that posting:
+@smallexample
+2010/02/01 Sample
+  Assets:Bank  $400.00
+  Income:Check  $-400.00 ; [2010/01/01]
+@end smallexample
+You can use metadata to override the payee field for individual postings within a transaction: (source)
 
-@node Multiple Account Transactions, Virtual Transactions, Advanced Transactions, Advanced Transactions
+@smallexample 
+2010/06/17 Sample
+  Assets:Bank  $400.00
+  Income:Check1  $-100.00 ; Payee: Person One
+  Income:Check2  $-100.00 ; Payee: Person Two
+  Income:Check3  $-100.00 ; Payee: Person Three
+  Income:Check4  $-100.00 ; Payee: Person Four
+@end smallexample
+Metadata are normally strings, but you can create metadata of other types:
+
+@smallexample 
+2010/06/17 Sample
+  Assets:Bank  $400.00
+  Income:Check1  $-100.00
+  ; Date:: [2010/09/01]
+  ; Amount:: $100.00
+@end smallexample
+(Note that this Date tag is not the same as the posting date.)
+
+There are now tag/pop directives, to apply metadata to a range of transactions (and their postings). For example, if you wanted a conceptual "page" of transactions relating to business trip to Chicago, you could do this:
+
+@smallexample
+ tag Location: Chicago
+ tag Purpose: Business
+
+ ... transactions go here
+
+ pop
+ pop
+@end smallexample
+It would be as if you'd applied "; Location: Chicago", etc., to every transaction.
+
+@node Multiple Account Transactions, Virtual Transactions, Transaction Notes and Tags, Advanced Transactions
 @subsection Multiple Account Transactions
 
 Often times a transaction needs to be split across several accounts.  This is trivially simple in a LEDGER journal:
@@ -585,7 +669,7 @@ To view balances without any virtual balances factored in, using the
 @option{-R} flag, for ``reality''.
 
 
-@node Automatic Transactions,  , Virtual Transactions, Advanced Transactions
+@node Automatic Transactions, Periodic Transactions, Virtual Transactions, Advanced Transactions
 @subsection Automatic Transactions
 
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
@@ -662,6 +746,9 @@ This example causes 10% of the matching account's total to be deferred
 to the @samp{Savings} account---as a balanced virtual posting,
 which may be excluded from reports by using @option{--real}.
 
+@node Periodic Transactions,  , Automatic Transactions, Advanced Transactions
+@subsection Periodic Transactions
+
 
 @node File Format, Archiving Previous Years , Advanced Transactions, Keeping a Journal
 @section File Format for Users
@@ -705,7 +792,7 @@ posting cost, by specifying @samp{@@ AMOUNT}, or a complete
 posting cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
-@samp{[ACTUAL_DATE=EFFECtIVE_DATE]}.(See @pxref{Virtual Transactions})
+@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual Transactions})
 
 @item =
 An automated transaction.  A value expression must appear after the equal
@@ -868,7 +955,6 @@ doing it.
 @menu
 * Cookbook::                    
 * Quick Reference::             
-* Commands::                    
 * Options::                     
 * Period Expressions::          
 @end menu
@@ -898,7 +984,7 @@ ledger register NFCUChecking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
   (Liabilities:Tithe Owed)    -1.0
 @end example
 
-@node Quick Reference, Commands, Cookbook, Command-line Syntax
+@node Quick Reference, Options, Cookbook, Command-line Syntax
 @section Quick Reference
 
 This chapter describes LEDGER's features and serves as a quick
@@ -937,155 +1023,7 @@ However, none of them are required to use the basic reporting
 commands.
 
 
-@node Commands, Options, Quick Reference, Command-line Syntax
-@section Commands
-
-@subsection balance
-
-The @command{balance} command reports the current balance of all
-accounts.  It accepts a list of optional regexps, which confine the
-balance report to the matching accounts.  If an account contains
-multiple types of commodities, each commodity's total is reported
-separately.
-
-@subsection register
-
-The @command{register} command displays all the postings occurring
-in a single account, line by line.  The account regexp must be
-specified as the only argument to this command.  If any regexps occur
-after the required account name, the register will contain only those
-postings that match.  Very useful for hunting down a particular
-posting.
-
-The output from @command{register} is very close to what a typical
-checkbook, or single-account ledger, would look like.  It also shows a
-running balance.  The final running balance of any register should
-always be the same as the current balance of that account.
-
-If you have Gnuplot installed, you may plot the amount or running
-total of any register by using the script @file{report}, which is
-included in the LEDGER distribution.  The only requirement is that you
-add either @option{-j} or @option{-J} to your register command, in
-order to plot either the amount or total column, respectively.
-
-@subsection print
-
-The @command{print} command prints out ledger transactions in a textual
-format that can be parsed by LEDGER.  They will be properly formatted,
-and output in the most economic form possible.  The ``print'' command
-also takes a list of optional regexps, which will cause only those
-postings which match in some way to be printed.
-
-The @command{print} command can be a handy way to clean up a ledger
-file whose formatting has gotten out of hand.
-
-@subsection output
-
-The @command{output} command is very similar to the @command{print}
-command, except that it attempts to replicate the specified ledger
-file exactly.  The format of the command is:
-
-@example
-ledger -f FILENAME output FILENAME
-@end example
-
-Where @file{FILENAME} is the name of the ledger file to output.  The
-reason for specifying this command is that only transactions contained
-within that file will be output, and not an included transactions (as can
-happen with the @command{print} command).
-
-@subsection xml
-
-The @command{xml} command outputs results similar to what
-@command{print} and @command{register} display, but as an XML form.
-This data can then be read in and processed.  Use the
-@option{--totals} option to include the running total with each
-posting.
-
-@subsection emacs
-
-The @command{emacs} command outputs results in a form that can be read
-directly by Emacs Lisp.  The format of the sexp is:
-
-@example
-((BEG-POS CLEARED DATE CODE PAYEE
-  (ACCOUNT AMOUNT)...)  ; list of postings
- ...)                   ; list of transactions
-@end example
-
-@subsection equity
-
-The @command{equity} command prints out accounts balances as if they
-were transactions.  This makes it easy to establish the starting balances
-for an account, such as when @ref{Archiving Previous Years}.
-
-@subsection prices
-
-The @command{prices} command displays the price history for matching
-commodities.  The @option{-A} flag is useful with this report, to
-display the running average price, or @option{-D} to show each price's
-deviation from that average.
-
-There is also a @command{pricesdb} command which outputs the same
-information as @command{prices}, but does in a format that can be
-parsed by LEDGER.
-
-@subsection xact
-
-The @command{xact} commands simplifies the creation of new transactions.
-It works on the principle that 80% of all postings are variants of
-earlier postings.  Here's how it works:
-
-Say you currently have this posting in your ledger file:
-
-@smallexample
-2004/03/15 * Viva Italiano
-    Expenses:Food                       $12.45
-    Expenses:Tips                        $2.55
-    Liabilities:MasterCard             $-15.00
-@end smallexample
-
-Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva
-Italiano} again.  The exact amounts are different, but the overall
-form is the same.  With the @command{xact} command you can type:
-
-@example
-ledger xact 2004/4/9 viva food 11 tips 2.50
-@end example
-
-This produces the following output:
-
-@smallexample
-2004/04/09 Viva Italiano
-    Expenses:Food                       $11.00
-    Expenses:Tips                        $2.50
-    Liabilities:MasterCard             $-13.50
-@end smallexample
-
-It works by finding a past posting matching the regular expression
-@samp{viva}, and assuming that any accounts or amounts specified will
-be similar to that earlier posting.  If LEDGER does not succeed in
-generating a new transaction, an error is printed and the exit code is set
-to @samp{1}.
-
-There is a shell script in the distribution's @file{scripts} directory
-called @file{xact}, which simplifies the task of adding a new transaction
-to your ledger.  It launches @command{vi} to confirm that the transaction
-looks appropriate.
-
-Here are a few more examples of the @command{xact} command, assuming
-the above journal transaction:
-
-@example
-ledger xact 4/9 viva 11.50
-ledger xact 4/9 viva 11.50 checking # (from `checking')
-ledger xact 4/9 viva food 11.50 tips 8
-ledger xact 4/9 viva food 11.50 tips 8 cash
-ledger xact 4/9 viva food $11.50 tips $8 cash
-ledger xact 4/9 viva dining "DM 11.50"
-@end example
-
-@node Options, Period Expressions, Commands, Command-line Syntax
+@node Options, Period Expressions, Quick Reference, Command-line Syntax
 @section Options
 
 With all of the reports, command-line options are useful to modify the
@@ -1199,10 +1137,10 @@ date).
 transaction has not been marked ``cleared'' (i.e., if there is no asterix to
 the right of the date).
 
-@option{--real} (@option{-R}) displays only real postings, not
-virtual.  (A virtual posting is indicated by surrounding the
-account name with parentheses or brackets; see the section on using
-virtual postings for more information).
+@option{--real} (@option{-R}) displays only real postings, not virtual.
+(A virtual posting is indicated by surrounding the account name with
+parentheses or brackets; see @ref{Virtual Transactions} for more
+information).
 
 @option{--actual} (@option{-L}) displays only actual postings, and
 not those created due to automated postings.
@@ -1255,7 +1193,54 @@ report, the amount used to calculate account totals in the
 used for the ``totals'' column in the @command{register} and
 @command{balance} reports.
 
-@subsection Output customization
+@menu
+* Search Terms::                
+* Output Customization::        
+@end menu
+
+@node Search Terms, Output Customization, Options, Options
+@subsection Search Terms
+
+Valid LEDGER invocations look like:
+@smallexample
+ ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
+@end smallexample
+
+Where @samp{COMMAND} is any command verb (@pxref{Basic Reporting Commands}), @samp{OPTIONS} can occur
+anywhere, and @samp{SEARCH-TERM} is one or more of the following:
+
+@smallexample
+ word              search for any account containing 'word'
+ TERM and TERM     boolean AND between terms
+ TERM or TERM      boolean OR between terms
+ not TERM          invert the meaning of the term
+ payee word        search for any payee containing 'word'
+ @@word             shorthand for 'payee word'
+ desc word         alternate for 'payee word'
+ note word         search for any note containing 'word'
+ &word             shorthand for 'note word'
+ tag word          search for any metadata tag containing 'word'
+ tag word=value    search for any metadata tag containing 'word'
+                   whose value contains 'value'
+ %word             shorthand for 'tag word'
+ %word=value       shorthand for 'tag word=value'
+ meta word         alternate for 'tag word'
+ meta word=value   alternate for 'tag word=value'
+ expr 'EXPR'       apply the given value expression as a predicate
+ '=EXPR'           shorthand for 'expr EXPR'
+ \( TERMS \)     group terms; useful if using and/or/not
+@end smallexample
+
+So, to list all transaction that charged to ``ffod'' but not ``dining'' for any payee other than ``chang'' the following three commands would be equivalent:
+
+@smallexample
+ ledger reg food not dining @@chang
+ ledger reg food and not dining and not payee chang
+ ledger reg food not dining expr 'payee =~ /chang/'
+@end smallexample
+
+@node Output Customization,  , Search Terms, Options
+@subsection Output Customization
 
 These options affect only the output, but not which postings are
 used to create it:
@@ -1540,12 +1525,179 @@ weekly last august
 
 @node Basic Reporting Commands, Value Expressions, Command-line Syntax, Top
 @chapter Basic Reporting Commands
+@menu
+* balance::                     
+* register::                    
+* print::                       
+* output::                      
+* xml::                         
+* emacs::                       
+* equity::                      
+* prices::                      
+* xact::                        
+* Budgeting and Forecasting::   
+@end menu
+
+@node balance, register, Basic Reporting Commands, Basic Reporting Commands
+@section balance
+
+The @command{balance} command reports the current balance of all
+accounts.  It accepts a list of optional regexps, which confine the
+balance report to the matching accounts.  If an account contains
+multiple types of commodities, each commodity's total is reported
+separately.
+
+@node register, print, balance, Basic Reporting Commands
+@section register
+
+The @command{register} command displays all the postings occurring
+in a single account, line by line.  The account regexp must be
+specified as the only argument to this command.  If any regexps occur
+after the required account name, the register will contain only those
+postings that match.  Very useful for hunting down a particular
+posting.
+
+The output from @command{register} is very close to what a typical
+checkbook, or single-account ledger, would look like.  It also shows a
+running balance.  The final running balance of any register should
+always be the same as the current balance of that account.
+
+If you have Gnuplot installed, you may plot the amount or running
+total of any register by using the script @file{report}, which is
+included in the LEDGER distribution.  The only requirement is that you
+add either @option{-j} or @option{-J} to your register command, in
+order to plot either the amount or total column, respectively.
+
+@node print, output, register, Basic Reporting Commands
+@section print
+
+The @command{print} command prints out ledger transactions in a textual
+format that can be parsed by LEDGER.  They will be properly formatted,
+and output in the most economic form possible.  The ``print'' command
+also takes a list of optional regexps, which will cause only those
+postings which match in some way to be printed.
+
+The @command{print} command can be a handy way to clean up a ledger
+file whose formatting has gotten out of hand.
+
+@node output, xml, print, Basic Reporting Commands
+@section output
+
+The @command{output} command is very similar to the @command{print}
+command, except that it attempts to replicate the specified ledger
+file exactly.  The format of the command is:
+
+@example
+ledger -f FILENAME output FILENAME
+@end example
+
+Where @file{FILENAME} is the name of the ledger file to output.  The
+reason for specifying this command is that only transactions contained
+within that file will be output, and not an included transactions (as can
+happen with the @command{print} command).
+
+@node xml, emacs, output, Basic Reporting Commands
+@section xml
+
+The @command{xml} command outputs results similar to what
+@command{print} and @command{register} display, but as an XML form.
+This data can then be read in and processed.  Use the
+@option{--totals} option to include the running total with each
+posting.
+
+@node emacs, equity, xml, Basic Reporting Commands
+@section emacs
+
+The @command{emacs} command outputs results in a form that can be read
+directly by Emacs Lisp.  The format of the sexp is:
+
+@example
+((BEG-POS CLEARED DATE CODE PAYEE
+  (ACCOUNT AMOUNT)...)  ; list of postings
+ ...)                   ; list of transactions
+@end example
+
+@node equity, prices, emacs, Basic Reporting Commands
+@section equity
+
+The @command{equity} command prints out accounts balances as if they
+were transactions.  This makes it easy to establish the starting balances
+for an account, such as when @ref{Archiving Previous Years}.
+
+@node prices, xact, equity, Basic Reporting Commands
+@section prices
+
+The @command{prices} command displays the price history for matching
+commodities.  The @option{-A} flag is useful with this report, to
+display the running average price, or @option{-D} to show each price's
+deviation from that average.
+
+There is also a @command{pricesdb} command which outputs the same
+information as @command{prices}, but does in a format that can be
+parsed by LEDGER.
+
+@node xact, Budgeting and Forecasting, prices, Basic Reporting Commands
+@section xact
+
+The @command{xact} commands simplifies the creation of new transactions.
+It works on the principle that 80% of all postings are variants of
+earlier postings.  Here's how it works:
+
+Say you currently have this posting in your ledger file:
+
+@smallexample
+2004/03/15 * Viva Italiano
+    Expenses:Food                       $12.45
+    Expenses:Tips                        $2.55
+    Liabilities:MasterCard             $-15.00
+@end smallexample
+
+Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva
+Italiano} again.  The exact amounts are different, but the overall
+form is the same.  With the @command{xact} command you can type:
+
+@example
+ledger xact 2004/4/9 viva food 11 tips 2.50
+@end example
+
+This produces the following output:
+
+@smallexample
+2004/04/09 Viva Italiano
+    Expenses:Food                       $11.00
+    Expenses:Tips                        $2.50
+    Liabilities:MasterCard             $-13.50
+@end smallexample
+
+It works by finding a past posting matching the regular expression
+@samp{viva}, and assuming that any accounts or amounts specified will
+be similar to that earlier posting.  If LEDGER does not succeed in
+generating a new transaction, an error is printed and the exit code is set
+to @samp{1}.
+
+There is a shell script in the distribution's @file{scripts} directory
+called @file{xact}, which simplifies the task of adding a new transaction
+to your ledger.  It launches @command{vi} to confirm that the transaction
+looks appropriate.
+
+Here are a few more examples of the @command{xact} command, assuming
+the above journal transaction:
+
+@example
+ledger xact 4/9 viva 11.50
+ledger xact 4/9 viva 11.50 checking # (from `checking')
+ledger xact 4/9 viva food 11.50 tips 8
+ledger xact 4/9 viva food 11.50 tips 8 cash
+ledger xact 4/9 viva food $11.50 tips $8 cash
+ledger xact 4/9 viva dining "DM 11.50"
+@end example
+
 
 @menu
 * Budgeting and Forecasting::   
 @end menu
 
-@node Budgeting and Forecasting,  , Basic Reporting Commands, Basic Reporting Commands
+@node Budgeting and Forecasting,  , xact, Basic Reporting Commands
 @section Budgeting and Forecasting
 
 
@@ -2169,7 +2321,410 @@ considered a primary.  In fact, when Ledger goes about ensures that
 all transactions balance to zero, it only ever asks this of primary
 commodities.
 
-@node Extending with Python,  , Journal File Format, Top
+@node Extending with Python, Example Data File, Journal File Format, Top
 @chapter Extending with Python
+
+@node Example Data File, Miscellaneous Notes, Extending with Python, Top
+@appendix Example Journal File: drewr.dat
+ The following journal file is included with the source distribution of
+ ledger.  It is called @file{drewr.dat} and exhibits many ledger
+ features, include automatic and virtual transactions, 
+@example
+; -*- ledger -*-
+
+= account =~ /^Income/
+  (Liabilities:Tithe)                    0.12
+
+~ Monthly
+  Assets:Checking                     $500.00
+  Income:Salary
+
+2003/12/01 * Checking balance
+  Assets:Checking                   $1,000.00
+  Equity:Opening Balances
+
+2003/12/20 Organic Co-op
+  Expenses:Food:Groceries             $ 37.50  ; [=2004/01/01]
+  Expenses:Food:Groceries             $ 37.50  ; [=2004/02/01]
+  Expenses:Food:Groceries             $ 37.50  ; [=2004/03/01]
+  Expenses:Food:Groceries             $ 37.50  ; [=2004/04/01]
+  Expenses:Food:Groceries             $ 37.50  ; [=2004/05/01]
+  Expenses:Food:Groceries             $ 37.50  ; [=2004/06/01]
+  Assets:Checking                   $ -225.00
+
+2003/12/28=2004/01/01 Acme Mortgage
+  Liabilities:Mortgage:Principal    $  200.00
+  Expenses:Interest:Mortgage        $  500.00
+  Expenses:Escrow                   $  300.00
+  Assets:Checking                  $ -1000.00
+
+2004/01/02 Grocery Store
+  Expenses:Food:Groceries             $ 65.00
+  Assets:Checking
+
+2004/01/05 Employer
+  Assets:Checking                   $ 2000.00
+  Income:Salary
+
+2004/01/14 Bank
+  ; Regular monthly savings transfer
+  Assets:Savings                     $ 300.00
+  Assets:Checking
+
+2004/01/19 Grocery Store
+  Expenses:Food:Groceries             $ 44.00
+  Assets:Checking
+
+2004/01/25 Bank
+  ; Transfer to cover car purchase
+  Assets:Checking                  $ 5,500.00
+  Assets:Savings
+  ; :nobudget:
+
+2004/01/25 Tom's Used Cars
+  Expenses:Auto                    $ 5,500.00
+  ; :nobudget:
+  Assets:Checking
+
+2004/01/27 Book Store
+  Expenses:Books                       $20.00
+  Liabilities:MasterCard
+
+2004/02/01 Sale
+  Assets:Checking:Business            $ 30.00
+  Income:Sales
+
+@end example
+
+@node Miscellaneous Notes,  , Example Data File, Top
+@appendix Miscellaneous Notes
+
+Various notes from the discussion list that I haven't incorporated in to the main body of the documentation.
+
+@menu
+* Commodity Pricing Problem::   
+@end menu
+
+@node Commodity Pricing Problem,  , Miscellaneous Notes, Miscellaneous Notes
+@section  Commodity Pricing Problem
+
+Sun, 26 Dec 2010 04:13:04 -0800
+
+One of the things which stalled Ledger development recently is that I'd never
+found a truly satisfying way to handle the "commodity pricing problem".  That
+is, the current day value of a commodity can mean different things to
+different people, depending on the accounts involved, the commodities, the
+nature of the transactions, etc.
+
+After experimenting with several different concepts and syntaxes, I found none
+of them were either satisfying or general enough.  My one attempt at providing
+"fixated prices" was too specific, and too inelegant for many usage patterns.
+
+This morning, however, I think I've finally cracked this nut; and in a way
+which fits harmoniously into the Ledger architecture as if it were meant to be
+there all along...
+
+Here's how the new scheme will work: When a user specifies '-V', or '-X COMM',
+they are requesting that some or all of the commodities in their Ledger file
+be valuated as of today (or whatever --now is set to).  But what does such a
+valuation mean?  This meaning shall be governed by the presence of a "VALUE"
+metadata property, whose content is an expression used to compute that value.
+
+If no VALUE property is specified, each posting is assumed to have a default,
+as if you'd specified a global, automated transaction as follows:
+
+@smallexample
+  = expr true
+    ; VALUE:: market(amount, date, exchange)
+@end smallexample
+This definition emulates the present day behavior of -V and -X (in the case of
+-X, the requested commodity is passed via the string 'exchange' above).
+
+One thing many people have wanted to do is to fixate the valuation of old
+European currencies in terms of the Euro after a certain date:
+
+@smallexample
+  = expr commodity == "DM"
+    ; VALUE:: date < [Jun 2008] ? market(amount, date, exchange) : 1.44 EUR
+@end smallexample
+
+This says: If --now is some old date, use market prices as they were at that
+time; but if --now is past June 2008, use a fixed price for converting Deutsch
+Mark to Euro.
+
+Or how about never re-valuating commodities used in Expenses, since they
+cannot have a different future value:
+
+@smallexample
+  = /^Expenses:/
+    ; VALUE:: market(amount, post.date, exchange)
+@end smallexample
+
+This says the future valuation is the same as the valuation at the time of
+posting.  post.date equals the posting's date, while just 'date' is the value
+of --now (defaults to today).
+
+Or how about valuating miles based on a reimbursement rate during a specific
+time period:
+
+
+@smallexample
+  = expr commodity == "miles" and date >= [2007] and date < [2008]
+    ; VALUE:: market($1.05, date, exchange)
+@end smallexample
+
+In this case, miles driven in 2007 will always be valuated at $1.05 each.  If
+you use -X EUR to expressly request all amounts in Euro, Ledger shall convert
+$1.05 to Euro by whatever means are appropriate for dollars.
+
+Note that you can have a valuation expression specific to a particular posting
+or transaction, by overriding these general defaults using specific metadata:
+
+@smallexample
+
+  2010-12-26 Example
+      Expenses:Food                $20
+      ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
+      ; the user asks for with -V or -X
+      ; VALUE:: 30 DM
+      Assets:Cash
+@end smallexample
+
+This example demonstrates that your VALUE expression should be as symbolic as
+possible, using terms like 'amount' and 'date', rather than specific amounts
+and dates.  Also, you should pass the amount along to the function 'market' so
+it can be further revalued if the user has asked for a specific currency.
+
+Or, if it better suits your accounting, you can be less symbolic, which allows
+you to report most everything in EUR if you use -X EUR, except for certain
+accounts or postings which should always be valuated in another currency.  For
+example:
+
+@smallexample
+  = /^Assets:Brokerage:CAD$/
+    ; Always report the value of commodities in this account in terms of
+    ; present day dollars, despite what was asked for on the command-line
+    ; VALUE:: market(amount, date, '$')
+@end smallexample
+
+I think this scheme, of using predicated value expressions which can be
+generalized in automated transactions, and made specific via transaction and
+posting-based metadata, provides sufficient flexibility to express most of the
+use cases which have occurred on this topic.
+
+
+Ledger presently has no way of handling such things as FIFO and LIFO.
+
+If you specify an unadorned commodity name, like AAPL, it will balance
+against itself.  If --lots are not being displayed, then it will appear
+to balance against any lot of AAPL.
+
+If you specify an adorned commodity, like AAPL @{$10.00@}, it will also
+balance against itself, and against any AAPL if --lots is not specified.
+But if you do specify --lot-prices, for example, then it will balance
+against that specific price for AAPL.
+
+I may, for the sake of reporting *only*, be able to implement some sort
+of guessing strategy, based on the order in which transactions appear in
+the data file...  But I'll have to think about this a lot more, and it
+would be a 3.1 thing.
+
+> b) I don't see how this VALUE property can differentiate between -V
+> and -B.  Does this imply that you want to get rid of the -B option and
+> simply let users define what VALUE they get with -V?  If so, I think
+> this would be a bad idea... I really like the ability to see different
+> valuation methods using command line options (i.e. -B for cost basis
+> and -V for market value).  (Incidentally, while I initially liked your
+> example of using the posting date for Expenses, I later realized that
+> I sometimes use -V to see what my expenses (in a foreign currency)
+> would have been if I bought everything at today's exchange rate.)
+
+-V and -B are entirely unrelated.  Perhaps I could support a BASIS
+property setting, for customizing -B in the same way VALUE
+customizes -V...
+
+> c) I never fully understood what -X does exactly but afaik -X is a
+> special version of -V.  However, I believe that -X should _only_ do
+> conversion.  This would allow -X to be combined with other options,
+> such as -X and -V.  Example: let's say I bought 10 shares for 10.00
+> GBP and they are now worth 15.00.  Because my main assets are in EUR,
+> I want to see what those shares are worth in EUR.  Since I'm
+> conservative I want to see the cost basis, i.e. I want to use -B and
+> -X EUR together. (This actually works today but I'm told this is an
+> accident and won't work in all cases.)
+
+-V asks for the present day value of all commodities, and lets Ledger
+pick the target commodity based on its own hueristics.  -X is the same
+as -V, except that it overrides those hueristics and forces the target
+commodity.  (Although, as you've seen, the VALUE property could now
+countermand that).
+
+There are reasons why -X can't be applied to any report.  Mainly it has
+to do with rounding.  For example, let's say I have 10 postings that
+each trade 1 DM, and the value of 1 DM is 0.001 EUR.  If I add all
+10 DM and then apply -X, I get 0.01 EUR.  But if I apply -X to each
+1 DM and *then* total them, I get 0.00 EUR.
+
+This becomes very important to Ledger because -X is applied to totals,
+not just to individual amounts.  I'm going to have to use some magic
+internally to avoid this problem with the VALUE property (in most, but
+not all, cases).
+
+And so, -X gets applied after, when the posting-origin of the
+commodities has been lost -- required information if a basis cost
+calculation is to be deferred.
+
+The alternative would involve ever-growing lists of individual amounts,
+which would slow many parts of Ledger from O(N) to O(N^2).  Plus, it
+still wouldn't solve the rounding problem.
+
+
+> Ledger presently has no way of handling such things as FIFO and LIFO.
+
+Yeah, I know... but I think it's a feature that ledger should
+eventually get (obviously not for 3.0).
+
+> If you specify an adorned commodity, like AAPL @{$10.00@}, it will also
+> balance against itself, and against any AAPL if --lots is not specified.
+> But if you do specify --lot-prices, for example, then it will balance
+> against that specific price for AAPL.
+> 
+> I may, for the sake of reporting *only*, be able to implement some sort
+> of guessing strategy, based on the order in which transactions appear in
+> the data file...
+
+Why for reporting only?  It seems to me that ledger has all the
+information to do FIFO and LIFO properly (i.e. to remove the right
+commodities from the list).  Let's take this example:
+
+@smallexample
+
+2011-01-01 * Buy AAA
+    Assets:Shares                             5 AAA @ 10.00 EUR
+    Assets:Cash
+
+2011-01-03 * Buy AAA
+    Assets:Shares                             2 AAA @ 10.00 EUR
+    Assets:Cash
+
+2011-01-11 * Buy AAA
+    Assets:Shares                             5 AAA @ 12.00 EUR
+    Assets:Cash
+
+2011-01-21 * Buy AAA
+    Assets:Shares                             5 AAA @ 13.00 EUR
+    Assets:Cash
+@end smallexample
+
+So we end up with (ledger --lots):
+
+@smallexample
+5 AAA @{10.00 EUR@} [2011/01/01]
+2 AAA @{10.00 EUR@} [2011/01/03]
+5 AAA @{12.00 EUR@} [2011/01/11]
+5 AAA @{13.00 EUR@} [2011/01/21]  Assets:Shares
+@end smallexample
+
+So if I sell 6 shares now, according to FIFO, I would do:
+
+@smallexample
+2011-02-01 * Sell AAA
+    Assets:Shares                          -5 AAA @{10.00 EUR@} [2011/01/01] @ 
+13.50 EUR
+    Assets:Shares                          -1 AAA @{10.00 EUR@} [2011/01/03] @ 
+13.50 EUR
+    Assets:Cash
+@end smallexample
+
+ledger --lots:
+
+@smallexample
+1 AAA @{10.00 EUR@} [2011/01/03]
+5 AAA @{12.00 EUR@} [2011/01/11]
+5 AAA @{13.00 EUR@} [2011/01/21]  Assets:Shares
+@end smallexample
+
+According to LIFO, I would do this instead:
+
+@smallexample
+2011-02-01 * Sell AAA
+    Assets:Shares                          -5 AAA @{13.00 EUR@} [2011/01/21] @ 
+13.50 EUR
+    Assets:Shares                          -1 AAA @{12.00 EUR@} [2011/01/11] @ 
+13.50 EUR
+    Assets:Cash
+@end smallexample
+
+In other words, you can manually do FIFO and LIFO with ledger already.
+However, it would be great if ledger would make this easier, e.g. that
+you could specify:
+
+@smallexample
+ 2011-02-01 * Sell AAA
+    Assets:Shares                          -6 AAA @{FIFO@} @ 13.50 EUR
+    Assets:Cash
+@end smallexample
+
+and ledger would iterate through all AAA commodities and take out the
+right ones (after all, it knows the date and price).
+
+The only thing I don't think is possible with ledger at the moment is
+average cost.  I'm also not sure how --lot-dates should behave for
+average cost.
+
+> There are reasons why -X can't be applied to any report.  Mainly it has
+> to do with rounding.  For example, let's say I have 10 postings that
+> each trade 1 DM, and the value of 1 DM is 0.001 EUR.  If I add all
+> 10 DM and then apply -X, I get 0.01 EUR.  But if I apply -X to each
+> 1 DM and *then* total them, I get 0.00 EUR.
+
+Thanks for the explanation... what I was thinking of is that ledger
+would just produce a report according to -V or -B or whatever and
+*then* convert it with -X.  I use a shell script to do this for now:
+
+@smallexample
+GBP2EUR="117/100"
+
+eurgbp=$(ledger -f $FILE -p "until $YEAR-$NEXT_MONTH-01" -B bal "^assets" 
+"^liabilities" | egrep " (EUR|GBP)$" | tail -n 2)
+eur=$(echo "$eurgbp" | grep "EUR" | sed 's/ EUR//')
+gbp=$(echo "$eurgbp" | grep "GBP" | sed 's/ GBP//')
+eur=$(echo "$eur" | sed 's/\..*//')
+gbp=$(echo "$gbp" | sed 's/\..*//')
+gbpineur=$(($gbp*$GBP2EUR))
+echo "      " $(($eur + $gbpineur)) "   EUR   Total"
+@end smallexample
+
+I'm kinda surprised that you no longer think it's a good idea to split
+-X from -V.  Last time I brought this up on IRC, you thought it was a
+good idea:
+
+@smallexample
+10:44 < johnw> I think having -H, in addition to -X, may make what you want
+ to see both natural and simple
+10:45 < johnw> you'd use -H for income/expense accounts, and -X for
+ assets/liabilities
+10:45 < johnw> -H = historical values
+10:45 < johnw> -X = current exchange values
+10:45 < tbm> so what's the difference between -X and -V again?
+10:45 < johnw> -V is an automated version of -X
+10:45 < johnw> it tries to figure out what the reported commodity should be
+10:45 < johnw> we may then need an automated version of -H, to complete the
+ reflection
+10:46 < johnw> btw, this is just an inside-out version of my "final"
+ feature :)
+10:46 < tbm> why not change the meaning of -X to _only do conversion_?  And
+ then you could combine -X with -B, -V or -H
+10:46 < johnw> instead of having it be syntactic, we're moving the semantic
+ difference to a difference in options
+10:46 < johnw> oh HMM
+10:46 < johnw> -X with -B, -V and -I
+10:46 < johnw> (and -O, incidentally)
+10:46 < johnw> O = amount, B = cost, V = market value, I = price
+10:47 < johnw> that's really an excellent suggestion
+10:48 < johnw> i'd still need a flag to mean "historical" vs "current"
+10:48 < johnw> as well as "target commodity" (-X)
+@end smallexample
+
 
 @bye

@@ -1,9 +1,9 @@
 ; -*- ledger -*-
 
-= account =~ /^Income/
+= /^Income/
   (Liabilities:Tithe)                    0.12
 
-~ Monthly
+~ monthly in 2004
   Assets:Checking                     $500.00
   Income:Salary
 
