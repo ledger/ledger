@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @titlepage
 @title LEDGER: Command-Line Accounting
+@subtitle For Version 3.0 of LEDGER
+@subtitle Draft Manual 2011-10-03
 @author John Wiegley
 @end titlepage
 
@@ -453,14 +455,14 @@ $ ledger -f drewr3.dat cleared
 @section Command Line Quick Reference
 
 @menu
-* Reporting Commands::          
-* Basic Options::               
-* Report Filtering::            
-* Output Customization::        
-* Commodity Reporting::         
+* Reporting Commands Quick Reference::  
+* Basic Options Quick Reference::  
+* Report Filtering Quick Reference::  
+* Output Customization Quick Reference::  
+* Commodity Reporting Quick Reference::  
 @end menu
 
-@node Reporting Commands, Basic Options, Command Line Quick Reference, Command Line Quick Reference
+@node Reporting Commands Quick Reference, Basic Options Quick Reference, Command Line Quick Reference, Command Line Quick Reference
 @subsection Reporting Commands
 @multitable @columnfractions .2 .8
 @item @strong{Report} @tab @strong{Description}
@@ -476,7 +478,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{xact} @tab  Used to generate transactions based on previous postings
 @end multitable
 
-@node Basic Options, Report Filtering, Reporting Commands, Command Line Quick Reference
+@node Basic Options Quick Reference, Report Filtering Quick Reference, Reporting Commands Quick Reference, Command Line Quick Reference
 @subsection Basic Options
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
@@ -489,7 +491,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{-a NAME} @tab @code{--account NAME} @tab specify default account name for QIF file postings
 @end multitable
  
-@node Report Filtering, Output Customization, Basic Options, Command Line Quick Reference
+@node Report Filtering Quick Reference, Output Customization Quick Reference, Basic Options Quick Reference, Command Line Quick Reference
 @subsection Report Filtering
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
@@ -512,7 +514,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{-T EXPR} @tab @code{--total} @tab Change the value expression used for ``totals'' column in register and balance reports
 @end multitable
 
-@node Output Customization, Commodity Reporting, Report Filtering, Command Line Quick Reference
+@node Output Customization Quick Reference, Commodity Reporting Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
 @subsection Output Customization
 @multitable @columnfractions .15 .4 .45
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
@@ -548,7 +550,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{-w register} @tab @code{--wide-register-format STR} @tab
 @end multitable
 
-@node Commodity Reporting,  , Output Customization, Command Line Quick Reference
+@node Commodity Reporting Quick Reference,  , Output Customization Quick Reference, Command Line Quick Reference
 @subsection Commodity Reporting
 
 @multitable @columnfractions .1 .25 .65
@@ -1651,7 +1653,7 @@ ledger bal rent food movies payee freddie
 @end smallexample
 @noindent or
 @smallexample
-ledger bal rent food movies @freddie
+ledger bal rent food movies @@freddie
 @end smallexample
 
 There are many, many command options available with the
