@@ -403,6 +403,18 @@ $ ledger -f drewr3.dat balance Groceries
             $ 334.00  Expenses:Food:Groceries
 @end smallexample
 
+@noindent  If you would like to find transaction to only a certain payee use @samp{payee} or @@:
+@smallexample
+$ ledger -f drewr3.dat register payee "Organic"
+10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
+                                Expense:Food:Groceries      $ 37.50      $ 75.00
+                                Expense:Food:Groceries      $ 37.50     $ 112.50
+                                Expense:Food:Groceries      $ 37.50     $ 150.00
+                                Expense:Food:Groceries      $ 37.50     $ 187.50
+                                Expense:Food:Groceries      $ 37.50     $ 225.00
+                                Assets:Checking           $ -225.00            0
+@end smallexample
+
 @node Cleared Report,  , Register Report, Run Some Reports
 @subsection Cleared Report
 
@@ -1630,12 +1642,16 @@ meaning, described below.
 
 The regular expressions arguments always match the account name that a
 posting refers to.  To match on the payee of the transaction instead,
-precede the regular expression with @samp{--}.  For example, the
+precede the regular expression with @samp{payee} or @@.  For example, the
 following balance command reports account totals for rent, food and
 movies, but only those whose payee matches Freddie:
 
 @smallexample
-ledger bal rent food movies -- freddie
+ledger bal rent food movies payee freddie
+@end smallexample
+@noindent or
+@smallexample
+ledger bal rent food movies @freddie
 @end smallexample
 
 There are many, many command options available with the
