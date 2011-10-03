@@ -3,19 +3,19 @@
 = /^Income/
   (Liabilities:Tithe)                    0.12
 
-~ Monthly
-  Assets:Checking                     $500.00
-  Income:Salary
+;~ Monthly
+;  Assets:Checking                     $500.00
+;  Income:Salary
 
-~ Monthly
-   Expenses:Food  $100
-   Assets
+;~ Monthly
+;   Expenses:Food  $100
+;   Assets
 
 2010/12/01 * Checking balance
   Assets:Checking                   $1,000.00
   Equity:Opening Balances
 
-2010/12/20 Organic Co-op
+2010/12/20 * Organic Co-op
   Expenses:Food:Groceries             $ 37.50  ; [=2011/01/01]
   Expenses:Food:Groceries             $ 37.50  ; [=2011/02/01]
   Expenses:Food:Groceries             $ 37.50  ; [=2011/03/01]
