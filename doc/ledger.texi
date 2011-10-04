@@ -1305,8 +1305,9 @@ The format of each following posting is:
   ACCOUNT  AMOUNT  [; NOTE]
 @end example
 
-The @samp{ACCOUNT} may be surrounded by parentheses if it is a virtual
-postings, or square brackets if it is a virtual postings that
+Note that there must be at least two spaces between @samp{ACCOUNT} and
+@samp{AMOUNT}.  The @samp{ACCOUNT} may be surrounded by parentheses if it
+is a virtual posting or square brackets if it is a virtual posting that
 must balance.  The @samp{AMOUNT} can be followed by a per-unit
 posting cost, by specifying @samp{@@ AMOUNT}, or a complete
 posting cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
