@@ -43,9 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 @titlepage
-@title LEDGER: Command-Line Accounting
-@subtitle For Version 3.0 of LEDGER
-@subtitle Draft Manual 2011-10-03
+@title Ledger: Command-Line Accounting
+@subtitle For Version 3.0 of Ledger
+@subtitle Draft Manual 2011-10-04
 @author John Wiegley
 @end titlepage
 
@@ -58,7 +58,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @ifnottex
 @node Top, Copying, (dir), (dir)
 @top Overview
-LEDGER is a command line accounting tool that provides double-entry
+Ledger is a command line accounting tool that provides double-entry
 accounting based on a text journal.  It provides no bells or whistles,
 and returns the user to the days before user interfaces were even a
 twinkling in their father's CRT.
@@ -96,7 +96,7 @@ twinkling in their father's CRT.
 
 @node Fat-free Accounting, Building the Program, Introduction to Ledger, Introduction to Ledger
 @section Fat-free Accounting
-LEDGER is an accounting tool with the moxie to exist.  It provides no
+Ledger is an accounting tool with the moxie to exist.  It provides no
 bells or whistles, and returns the user to the days before user
 interfaces were even a twinkling in their father's CRT.
 
@@ -175,9 +175,9 @@ deal with multiple accounts.
 
 Here is a good place for an aside on the use of the word `account'.
 Most private people consider an account to be something that holds money
-at an institution for them.  LEDGER uses a more general definition
+at an institution for them.  Ledger uses a more general definition
 of the word.  An account is anywhere money can go.  Other finance
-programs use ``categories'', LEDGER uses accounts. So, for
+programs use ``categories'', Ledger uses accounts. So, for
 example, if you buy some groceries at Trader Joe's then more groceries
 at Whole Foods Markets you might assign the transactions like this
 @smallexample
@@ -193,19 +193,19 @@ the payees were different.  You can set up your accounts in any way you
 choose.
 
 Enter the beauty of computerized accounting.  The purpose of the
-LEDGER program is to make general journal accounting simple, by keeping
+Ledger program is to make general journal accounting simple, by keeping
 track of the balances for you.  Your only job is to enter the
-postings.  If an individual posting does not balance, LEDGER displays an
+postings.  If an individual posting does not balance, Ledger displays an
 error and indicates the incorrect posting.@footnote{In some
 special cases, it automatically balances this transaction for you.}
 
-In summary, there are two aspects of LEDGER use: updating the journal
-data file, and using the LEDGER tool to view the summarized result of
+In summary, there are two aspects of Ledger use: updating the journal
+data file, and using the Ledger tool to view the summarized result of
 your transactions.
 
 And just for the sake of example---as a starting point for those who
 want to dive in head-first---here are the journal transactions from above,
-formatted as the LEDGER program wishes to see them:
+formatted as the Ledger program wishes to see them:
 
 @smallexample
 2004/09/29 Pacific Bell
@@ -222,7 +222,7 @@ $ ledger -f ledger.dat register checking
 $ ledger -f ledger.dat register Bell
 @end smallexample
 
-An important difference between LEDGER and other finance packages is
+An important difference between Ledger and other finance packages is
 that journal will never alter your input file.  You can create and edit
 that file in any way you prefer, but journal is only for analyzing the
 data, not for altering it.
@@ -231,7 +231,7 @@ data, not for altering it.
 @node Building the Program, Getting Help, Fat-free Accounting, Introduction to Ledger
 @section Building the program
 
-LEDGER is written in ANSI C++, and should compile on any platform.  It
+Ledger is written in ANSI C++, and should compile on any platform.  It
 depends on the GNU multiprecision integer library (libgmp), and the
 Perl regular expression library (libpcre).  It was developed using GNU
 make and gcc 3.3, on a PowerBook running OS/X.
@@ -246,8 +246,8 @@ enter these commands:
 @node Getting Help,  , Building the Program, Introduction to Ledger
 @section Getting help
 
-If you need help on how to use LEDGER, or run into problems, you can
-join the LEDGER mailing list at the following Web address:
+If you need help on how to use Ledger, or run into problems, you can
+join the Ledger mailing list at the following Web address:
 
 @smallexample
 http://groups.google.com/group/ledger-cli
@@ -269,7 +269,7 @@ You can also find help at the @samp{#ledger} channel on the IRC server
 @section Start a Journal File
 
 A journal is a record of your financial transactions and will be central
-to using LEDGER.  For now we just want to get a taste of what LEDGER can
+to using Ledger.  For now we just want to get a taste of what Ledger can
 do.  An example journal is included with the source code distribution,
 called @file{drewr3.dat} (@pxref{Example Data File}).
 Copy it someplace convenient and open up a terminal window in that
@@ -296,7 +296,7 @@ To find the balances of all of your accounts, run this command:
 ledger -f drewr3.dat balance
 @end smallexample
 
-LEDGER will generate:
+Ledger will generate:
 
 @smallexample
          $ -3,804.00  Assets
@@ -348,7 +348,7 @@ To show all transactions and a running total:
 ledger -f drewr3.dat register
 @end smallexample
 
-LEDGER will generate:
+Ledger will generate:
 
 @smallexample
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
@@ -575,26 +575,26 @@ have a good journal, tools can be written to work whatever mathematical
 tricks you need to better understand your spending patterns.  Without a
 good journal, no tool, however smart, can help you.
 
-The LEDGER program aims at making journal transactions as simple as
+The Ledger program aims at making journal transactions as simple as
 possible.  Since it is a command-line tool, it does not provide a user
 interface for keeping a journal.  If you like, you may use GnuCash to
-maintain your journal, in which case LEDGER will read
+maintain your journal, in which case Ledger will read
 GnuCash's data files directly.  In that case, read the GnuCash manual
 now, and skip to the next chapter.
 
 If you are not using GnuCash, but a text editor to maintain your
-journal, read on.  LEDGER has been designed to make data transactions as
+journal, read on.  Ledger has been designed to make data transactions as
 simple as possible, by keeping the journal format easy, and also by
 automagically determining as much information as possible based on the
 nature of your transactions.
 
-For example, you do not need to tell LEDGER about the accounts you
-use.  Any time LEDGER sees a posting involving an account it knows
+For example, you do not need to tell Ledger about the accounts you
+use.  Any time Ledger sees a posting involving an account it knows
 nothing about, it will create it@footnote{This also means if you
 misspell an account it will end up getting counted separately from what
 you intended.  The provided Emacs major mode provides for automatically
 filling in account names.}.  If you use a commodity that is new to
-LEDGER, it will create that commodity, and determine its display
+Ledger, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
 display precision, etc) based on how you used the commodity in the
 posting.
@@ -611,7 +611,7 @@ posting.
 @node Most Basic Entry, Currency and Commodities, Keeping a Journal, Keeping a Journal
 @section The Most Basic Entry
 
-Here is the Pacific Bell example from above, given as a LEDGER
+Here is the Pacific Bell example from above, given as a Ledger
 posting, with the additional of a check number:
 
 @smallexample
@@ -622,8 +622,8 @@ posting, with the additional of a check number:
 
 As you can see, it is very similar to what would be written on paper,
 minus the computed balance totals, and adding in account names that work
-better with LEDGER's scheme of things.  In fact, since
-LEDGER is smart about many things, you don't need to specify the
+better with Ledger's scheme of things.  In fact, since
+Ledger is smart about many things, you don't need to specify the
 balanced amount, if it is the same as the first line:
 
 @smallexample
@@ -632,7 +632,7 @@ balanced amount, if it is the same as the first line:
     Assets:Checking
 @end smallexample
 
-For this transaction, LEDGER will figure out that $-23.00 must come from
+For this transaction, Ledger will figure out that $-23.00 must come from
 @samp{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
@@ -645,16 +645,16 @@ indent and space out things exactly as shown. The only requirements are
 that the start of the transaction (the date typically) is at the
 beginning of the first line of the transaction, and the accounts are
 indented by at least one space.  If you omit the leading spaces in the
-account lines LEDGER will not count the transaction and will not
+account lines Ledger will not count the transaction and will not
 give an error.  There must be at least two spaces, or a tab, between the
 amount and the account.  If you do not have adequate separation between
-the amount and the account LEDGER will give an error and stop
+the amount and the account Ledger will give an error and stop
 calculating}
 
 @node Currency and Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
 @section Currency and Commodities
 
-LEDGER is agnostic when it comes to how you value your accounts.
+Ledger is agnostic when it comes to how you value your accounts.
 Dollars, Euros, Pounds, Francs, Shares etc. are just ``commodities''.
 Holdings in stocks, bonds, mutual funds and other financial instruments
 can be labelled using whatever is convenient for you (stock ticker
@@ -761,7 +761,7 @@ Expenses:Food:Hamburgers and Fries
 @node Transaction Notes and Tags, Multiple Account Transactions, Advanced Transactions, Advanced Transactions
 @subsection Transaction Notes and Tags
 
-LEDGER 3.0 supports entry and transaction ``notes'', which may  
+Ledger 3.0 supports entry and transaction ``notes'', which may  
 contain new metadata and tag markers.  Here's an example:
 
 @smallexample
@@ -867,7 +867,7 @@ It would be as if you'd applied "; Location: Chicago", etc., to every transactio
 @node Multiple Account Transactions, Virtual Transactions, Transaction Notes and Tags, Advanced Transactions
 @subsection Multiple Account Transactions
 
-Often times a transaction needs to be split across several accounts.  This is trivially simple in a LEDGER journal:
+Often times a transaction needs to be split across several accounts.  This is trivially simple in a Ledger journal:
 
 @smallexample
 2011/09/15 * Deposit Acme Bytepumps Monthly Paycheck
@@ -1495,7 +1495,7 @@ ignored. Comments will not be returned in a ``print'' response.
 If the semi colon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
 tags can be used to augment to reporting and filtering capabilities of
-LEDGER.
+Ledger.
 @item Y
 If a line begins with a capital Y, it denotes the year used for all
 subsequent transactions that give a date without a year.  The year should
@@ -1542,7 +1542,7 @@ C 1.00 Kb = 1024 bytes
 @end smallexample
 
 @item i, o, b, h
-These four relate to timeclock support, which permits LEDGER to read
+These four relate to timeclock support, which permits Ledger to read
 timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
@@ -1553,7 +1553,7 @@ syntax of its timelog files.
 
 
 After a while, your journal can get to be pretty large.  While this will
-not slow down LEDGER---it's designed to process journals very
+not slow down Ledger---it's designed to process journals very
 quickly---things can start to feel ``messy''; and it's a universal
 complaint that when finances feel messy, people avoid them.
 
@@ -1623,11 +1623,11 @@ doing it.
 @node Basic Usage, Detailed Options Description, Command-line Syntax, Command-line Syntax
 @section Basic Usage
 
-This chapter describes LEDGER's features and options. You may wish to
+This chapter describes Ledger's features and options. You may wish to
 survey this to get an overview before diving in to the @ref{Ledger
 Tutorial} and more detailed examples that follow.
 
-LEDGER has a very simple command-line interface, named---enticingly
+Ledger has a very simple command-line interface, named---enticingly
 enough---@command{ledger}.  It supports a few reporting commands, and
 a large number of options for refining the output from those commands.
 The basic syntax of any ledger command is:
@@ -1702,7 +1702,7 @@ know which version of ledger you are using.
 @option{--file FILE} (@option{-f FILE}) reads FILE as a ledger file.
 This command may be used multiple times.
 Typically, the environment variable
-@env{LEDGER_FILE} is set, rather than using this command-line option.
+@env{Ledger_FILE} is set, rather than using this command-line option.
 
 @option{--output FILE} (@option{-o FILE}) redirects output from any
 command to @var{FILE}.  By default, all output goes to standard
@@ -1726,12 +1726,12 @@ precedence over settings in the init file.
 
 @option{--cache FILE} identifies FILE as the default binary cache
 file.  That is, if the ledger files to be read are specified using the
-environment variable @env{LEDGER_FILE}, then whenever a command is
+environment variable @env{Ledger_FILE}, then whenever a command is
 finished a binary copy will be written to the specified cache, to
 speed up the loading time of subsequent queries.  This filename can
-also be given using the environment variable @env{LEDGER_CACHE}, or by
+also be given using the environment variable @env{Ledger_CACHE}, or by
 putting the option into your init file.  The @option{--no-cache}
-option causes LEDGER to always ignore the binary cache.
+option causes Ledger to always ignore the binary cache.
 
 @option{--account NAME} (@option{-a NAME}) specifies the default
 account which QIF file postings are assumed to relate to.
@@ -1846,7 +1846,7 @@ used for the ``totals'' column in the @command{register} and
 @node Search Terms, Output Customization, Detailed Options Description, Detailed Options Description
 @subsection Search Terms
 
-Valid LEDGER invocations look like:
+Valid Ledger invocations look like:
 @smallexample
  ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
 @end smallexample
@@ -1937,9 +1937,9 @@ negative amount is given, it will invert the meaning of the flag
 (instead of the first five transactions being printed, for example, it
 would print all but the first five).
 
-@option{--pager} tells LEDGER to pass its output to the given pager
+@option{--pager} tells Ledger to pass its output to the given pager
 program---very useful when the output is especially long.  This
-behavior can be made the default by setting the @env{LEDGER_PAGER}
+behavior can be made the default by setting the @env{Ledger_PAGER}
 environment variable.
 
 @option{--average} (@option{-A}) reports the average posting
@@ -1992,8 +1992,8 @@ restricted to the reporting range (using @option{-d}).
 format used by reports.  The default uses a date like 2004/08/01,
 which represents the default date format of @samp{%Y/%m/%d}.  To
 change the way dates are printed in general, the easiest way is to put
-@option{--date-format FORMAT} in the LEDGER initialization file
-@file{~/.ledgerrc} (or the file referred to by @env{LEDGER_INIT}).
+@option{--date-format FORMAT} in the Ledger initialization file
+@file{~/.ledgerrc} (or the file referred to by @env{Ledger_INIT}).
 
 @option{--format STR} (@option{-F STR}) sets the reporting format for
 whatever report ledger is about to make.  @xref{Format Strings}.
@@ -2040,7 +2040,7 @@ and expecting that script to return a value understood by ledger.  A
 sample implementation of a @command{getquote} script, implemented in
 Perl, is provided in the distribution.  Downloaded quote price are
 then appended to the price database, usually specified using the
-environment variable @env{LEDGER_PRICE_DB}.
+environment variable @env{Ledger_PRICE_DB}.
 
 There are several different ways that ledger can report the totals it
 displays.  The most flexible way to adjust them is by using value
@@ -2068,7 +2068,7 @@ a price history.
 
 Every option to ledger may be set using an environment variable.  If
 an option has a long name such @option{--this-option}, setting the
-environment variable @env{LEDGER_THIS_OPTION} will have the same
+environment variable @env{Ledger_THIS_OPTION} will have the same
 affect as specifying that option on the command-line.  Options on the
 command-line always take precedence over environment variable
 settings, however.
@@ -2210,7 +2210,7 @@ always be the same as the current balance of that account.
 
 If you have Gnuplot installed, you may plot the amount or running
 total of any register by using the script @file{report}, which is
-included in the LEDGER distribution.  The only requirement is that you
+included in the Ledger distribution.  The only requirement is that you
 add either @option{-j} or @option{-J} to your register command, in
 order to plot either the amount or total column, respectively.
 
@@ -2218,7 +2218,7 @@ order to plot either the amount or total column, respectively.
 @section print
 
 The @command{print} command prints out ledger transactions in a textual
-format that can be parsed by LEDGER.  They will be properly formatted,
+format that can be parsed by Ledger.  They will be properly formatted,
 and output in the most economic form possible.  The ``print'' command
 also takes a list of optional regexps, which will cause only those
 postings which match in some way to be printed.
@@ -2280,7 +2280,7 @@ deviation from that average.
 
 There is also a @command{pricesdb} command which outputs the same
 information as @command{prices}, but does in a format that can be
-parsed by LEDGER.
+parsed by Ledger.
 
 @node xact,  , prices, Basic Reporting Commands
 @section xact
@@ -2317,7 +2317,7 @@ This produces the following output:
 
 It works by finding a past posting matching the regular expression
 @samp{viva}, and assuming that any accounts or amounts specified will
-be similar to that earlier posting.  If LEDGER does not succeed in
+be similar to that earlier posting.  If Ledger does not succeed in
 generating a new transaction, an error is printed and the exit code is set
 to @samp{1}.
 
@@ -2350,7 +2350,7 @@ ledger xact 4/9 viva dining "DM 11.50"
 @node Value Expressions, Format Strings, Budgeting and Forecasting, Top
 @chapter Value Expressions
 
-Value expressions are an expression language used by LEDGER to
+Value expressions are an expression language used by Ledger to
 calculate values used by the program for many different purposes:
 
 @enumerate
