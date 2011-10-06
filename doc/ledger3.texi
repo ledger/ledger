@@ -2346,6 +2346,99 @@ ledger xact 4/9 viva dining "DM 11.50"
 @node Budgeting and Forecasting, Value Expressions, Basic Reporting Commands, Top
 @chapter Budgeting and Forecasting
 
+@menu
+* Budgeting::                   
+* Forecasting::                 
+@end menu
+
+@node Budgeting, Forecasting, Budgeting and Forecasting, Budgeting and Forecasting
+@section Budgeting
+
+Keeping a budget allows you to pay closer attention to your income and
+expenses, by reporting how far your actual financial activity is from
+your expectations.
+
+To start keeping a budget, put some periodic transactions
+(@pxref{Periodic Transactions}) at the top of your ledger file.  A
+period transaction is almost identical to a regular transaction, except
+that it begins with a tilde and has a period expression in place of a
+payee.  For example:
+
+@smallexample
+~ Monthly
+  Expenses:Rent               $500.00
+  Expenses:Food               $450.00
+  Expenses:Auto:Gas           $120.00
+  Expenses:Insurance          $150.00
+  Expenses:Phone              $125.00
+  Expenses:Utilities          $100.00
+  Expenses:Movies              $50.00
+  Expenses                    $200.00  ; all other expenses
+  Assets
+
+~ Yearly
+  Expenses:Auto:Repair        $500.00
+  Assets
+@end smallexample
+
+These two period transactions give the usual monthly expenses, as well as
+one typical yearly expense.  For help on finding out what your average
+monthly expense is for any category, use a command like:
+
+@example
+ledger -p "this year" --monthly --average --subtotal balance ^expenses
+@end example
+
+The reported totals are the current year's average for each account.
+
+Once these period transactions are defined, creating a budget report is as
+easy as adding @option{--budget} to the command-line.  For example, a
+typical monthly expense report would be:
+
+@example
+ledger --monthly register ^expenses
+@end example
+
+To see the same report balanced against your budget, use:
+
+@example
+ledger --budget --monthly register ^expenses
+@end example
+
+A budget report includes only those accounts that appear in the
+budget.  To see all expenses balanced against the budget, use
+@option{--add-budget}.  You can even see only the unbudgeted expenses
+using @option{--unbudgeted}:
+
+@example
+ledger --unbudgeted --monthly register ^expenses
+@end example
+
+You can also use these flags with the @command{balance} command.
+
+@node Forecasting,  , Budgeting, Budgeting and Forecasting
+@section Forecasting
+
+Sometimes it's useful to know what your finances will look like in the
+future, such as determining when an account will reach zero.  Ledger
+makes this easy to do, using the same period transactions as are used for
+budgeting.  An example forecast report can be generated with:
+
+@example
+ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
+@end example
+
+This report continues outputting postings until the running total
+is greater than $-500.00.  A final posting is always output, to
+show you what the total afterwards would be.
+
+Forecasting can also be used with the balance report, but by date
+only, and not against the running total:
+
+@example
+ledger --forecast "d<[2010]" bal ^assets ^liabilities
+@end example
+
 
 @node Value Expressions, Format Strings, Budgeting and Forecasting, Top
 @chapter Value Expressions
