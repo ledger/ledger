@@ -580,7 +580,837 @@ $ ledger -f drewr3.dat cleared
 @end multitable
 
 @node Principles of Accounting, Keeping a Journal, Ledger Tutorial , Top
-@chapter Principles of Accounting
+@chapter Principles of Accounting with Ledger
+
+
+@menu
+* Accounting with Ledger::      
+* Stating where money goes::    
+* Assets and Liabilities::      
+* Typical queries::             
+* Commodities and Currencies::  
+* Accounts and Inventories::    
+* Understanding Equity::        
+* Dealing with Petty Cash::     
+* Working with multiple funds and accounts::  
+@end menu
+
+
+@node Accounting with Ledger, Stating where money goes, Principles of Accounting, Principles of Accounting
+@section Accounting with Ledger
+
+Accounting is simply tracking your money.  It can range from nothing,
+and just waiting for automatic overdraft protection to kick in, or not,
+to a full blown double entry accounting system.  Ledger accomplishes the
+latter.  With ledger you can handle your personal finances or you
+businesses.  Double-entry accounting scales.  
+
+
+@node Stating where money goes, Assets and Liabilities, Accounting with Ledger, Principles of Accounting
+@section Stating where money goes
+
+Accountants will talk of ``credits'' and ``debits'', but the meaning
+is often different from the layman's understanding.  To avoid
+confusion, Ledger uses only subtractions and additions, although the
+underlying intent is the same as standard accounting principles.
+
+Recall that every posting will involve two or more accounts.
+Money is transferred from one or more accounts to one or more other
+accounts.  To record the posting, an amount is @emph{subtracted}
+from the source accounts, and @emph{added} to the target accounts.
+
+In order to write a Ledger transaction correctly, you must determine where
+the money comes from and where it goes to.  For example, when you are
+paid a salary, you must add money to your bank account and also
+subtract it from an income account:
+
+@smallexample
+9/29  My Employer
+    Assets:Checking                           $500.00
+    Income:Salary                            $-500.00
+@end smallexample
+
+Why is the Income a negative figure?  When you look at the balance
+totals for your ledger, you may be surprised to see that Expenses are
+a positive figure, and Income is a negative figure.  It may take some
+getting used to, but to properly use a general ledger you must think
+in terms of how money moves.  Rather than Ledger ``fixing'' the minus
+signs, let's understand why they are there.
+
+When you earn money, the money has to come from somewhere.  Let's call
+that somewhere ``society''.  In order for society to give you an
+income, you must take money away (withdraw) from society in order to
+put it into (make a payment to) your bank.  When you then spend that
+money, it leaves your bank account (a withdrawal) and goes back to
+society (a payment).  This is why Income will appear negative---it
+reflects the money you have drawn from society---and why Expenses will
+be positive---it is the amount you've given back.  These additions and
+subtractions will always cancel each other out in the end, because you
+don't have the ability to create new money: it must always come from
+somewhere, and in the end must always leave.  This is the beginning of
+economy, after which the explanation gets terribly difficult.
+
+Based on that explanation, here's another way to look at your balance
+report: every negative figure means that that account or person or
+place has less money now than when you started your ledger; and every
+positive figure means that that account or person or place has more
+money now than when you started your ledger.  Make sense?
+
+@node Assets and Liabilities, Typical queries, Stating where money goes, Principles of Accounting
+@section Assets and Liabilities
+
+Assets are money that you have, and Liabilities are money that you
+owe.  ``Liabilities'' is just a more inclusive name for Debts.
+
+An Asset is typically increased by transferring money from an Income
+account, such as when you get paid.  Here is a typical transaction:
+
+@smallexample
+2004/09/29  My Employer
+    Assets:Checking               $500.00
+    Income:Salary
+@end smallexample
+
+Money, here, comes from an Income account belonging to ``My
+Employer'', and is transferred to your checking account.  The money is
+now yours, which makes it an Asset.
+
+Liabilities track money owed to others.  This can happen when you
+borrow money to buy something, or if you owe someone money.  Here is
+an example of increasing a MasterCard liability by spending money with
+it:
+
+@smallexample
+2004/09/30  Restaurant
+    Expenses:Dining                $25.00
+    Liabilities:MasterCard
+@end smallexample
+
+The Dining account balance now shows $25 spent on Dining, and a
+corresponding $25 owed on the MasterCard---and therefore shown as
+$-25.00.  The MasterCard liability shows up as negative because it
+offsets the value of your assets.
+
+The combined total of your Assets and Liabilities is your net worth.
+So to see your current net worth, use this command:
+
+@example
+ledger balance ^assets ^liabilities
+@end example
+
+Relatedly, your Income accounts show up negative, because they
+transfer money @emph{from} an account in order to increase your
+assets.  Your Expenses show up positive because that is where the
+money went to.  The combined total of Income and Expenses is your cash
+flow.  A positive cash flow means you are spending more than you make,
+since income is always a negative figure.  To see your current cash
+flow, use this command:
+
+@example
+ledger balance ^income ^expenses
+@end example
+
+Another common question to ask of your expenses is: How much do I
+spend each month on X?  Ledger provides a simple way of displaying
+monthly totals for any account.  Here is an example that summarizes
+your monthly automobile expenses:
+
+@example
+ledger -M register expenses:auto
+@end example
+
+This assumes, of course, that you use account names like
+@samp{Expenses:Auto:Gas} and @samp{Expenses:Auto:Repair}.
+
+@menu
+* Tracking reimbursable expenses::  
+@end menu
+
+@node Tracking reimbursable expenses,  , Assets and Liabilities, Assets and Liabilities
+@subsection Tracking reimbursable expenses
+
+Sometimes you will want to spend money on behalf of someone else,
+which will eventually get repaid.  Since the money is still ``yours'',
+it is really an asset.  And since the expenditure was for someone
+else, you don't want it contaminating your Expenses reports.  You will
+need to keep an account for tracking reimbursements.
+
+This is fairly easy to do in ledger.  When spending the money, spend
+it @emph{to} your Assets:Reimbursements, using a different account for
+each person or business that you spend money for.  For example:
+
+@smallexample
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard
+@end smallexample
+
+This shows $100.00 spent on a MasterCard at Circuit City, with the
+expense was made on behalf of Company XYZ.  Later, when Company XYZ
+pays the amount back, the money will transfer from that reimbursement
+account back to a regular asset account:
+
+@smallexample
+2004/09/29  Company XYZ
+    Assets:Checking                       $100.00
+    Assets:Reimbursements:Company XYZ
+@end smallexample
+
+This deposits the money owed from Company XYZ into a checking account,
+presumably because they paid the amount back with a check.
+
+But what to do if you run your own business, and you want to keep
+track of expenses made on your own behalf, while still tracking
+everything in a single ledger file?  This is more complex, because you
+need to track two separate things: 1) The fact that the money should
+be reimbursed to you, and 2) What the expense account was, so that you
+can later determine where your company is spending its money.
+
+This kind of posting is best handled with mirrored postings in
+two different files, one for your personal accounts, and one for your
+company accounts.  But keeping them in one file involves the same
+kinds of postings, so those are what is shown here.  First, the
+personal transaction, which shows the need for reimbursement:
+
+@smallexample
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard
+@end smallexample
+
+This is the same as above, except that you own Company XYZ, and are
+keeping track of its expenses in the same ledger file.  This transaction
+should be immediately followed by an equivalent transaction, which shows the
+kind of expense, and also notes the fact that $100.00 is now payable
+to you:
+
+@smallexample
+2004/09/29  Circuit City
+    Company XYZ:Expenses:Computer:Software      $100.00
+    Company XYZ:Accounts Payable:Your Name
+@end smallexample
+
+This second transaction shows that Company XYZ has just spent $100.00 on
+software, and that this $100.00 came from Your Name, which must be
+paid back.
+
+These two transactions can also be merged, to make things a little clearer.
+Note that all amounts must be specified now:
+
+@smallexample
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ         $100.00
+    Liabilities:MasterCard                   $-100.00
+    Company XYZ:Expenses:Computer:Software    $100.00
+    Company XYZ:Accounts Payable:Your Name   $-100.00
+@end smallexample
+
+To ``pay back'' the reimbursement, just reverse the order of
+everything, except this time drawing the money from a company asset,
+paying it to accounts payable, and then drawing it again from the
+reimbursement account, and paying it to your personal asset account.
+It's easier shown than said:
+
+@smallexample
+2004/10/15  Company XYZ
+    Assets:Checking                           $100.00
+    Assets:Reimbursements:Company XYZ        $-100.00
+    Company XYZ:Accounts Payable:Your Name    $100.00
+    Company XYZ:Assets:Checking              $-100.00
+@end smallexample
+
+And now the reimbursements account is paid off, accounts payable is
+paid off, and $100.00 has been effectively transferred from the
+company's checking account to your personal checking account.  The
+money simply ``waited''---in both @samp{Assets:Reimbursements:Company
+XYZ}, and @samp{Company XYZ:Accounts Payable:Your Name}---until such
+time as it could be paid off.
+
+The value of tracking expenses from both sides like that is that you
+do not contaminate your personal expense report with expenses made on
+behalf of others, while at the same time making it possible to
+generate accurate reports of your company's expenditures.  It is more
+verbose than just paying for things with your personal assets, but it
+gives you a very accurate information trail.
+
+The advantage to keep these doubled transactions together is that they
+always stay in sync.  The advantage to keeping them apart is that it
+clarifies the transfer's point of view.  To keep the postings in
+separate files, just separate the two transactions that were joined above.
+For example, for both the expense and the pay-back shown above, the
+following four transactions would be created.  Two in your personal ledger
+file:
+
+@smallexample
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard               $-100.00
+
+2004/10/15  Company XYZ
+    Assets:Checking                       $100.00
+    Assets:Reimbursements:Company XYZ    $-100.00
+@end smallexample
+
+And two in your company ledger file:
+
+@smallexample
+!account Company XYZ
+
+2004/09/29  Circuit City
+    Expenses:Computer:Software            $100.00
+    Accounts Payable:Your Name           $-100.00
+
+2004/10/15  Company XYZ
+    Accounts Payable:Your Name            $100.00
+    Assets:Checking                      $-100.00
+
+!end
+@end smallexample
+
+(Note: The @samp{!account} above means that all accounts mentioned in
+the file are children of that account.  In this case it means that all
+activity in the file relates to Company XYZ).
+
+After creating these transactions, you will always know that $100.00 was
+spent using your MasterCard on behalf of Company XYZ, and that Company
+XYZ spent the money on computer software and paid it back about two
+weeks later.
+
+@node Typical queries, Commodities and Currencies, Assets and Liabilities, Principles of Accounting
+@section Typical queries
+
+A query such as the following shows all expenses since last
+October, sorted by total:
+
+@example
+ledger -b "last oct" -s -S T bal ^expenses
+@end example
+
+From left to right the options mean: Show transactions since October, 2003;
+show all sub-accounts; sort by the absolute value of the total; and
+report the balance for all expenses.
+
+@menu
+* Reporting monthly expenses::  
+* Visualizing with Gnuplot::    
+@end menu
+
+@node Reporting monthly expenses, Visualizing with Gnuplot, Typical queries, Typical queries
+@subsection Reporting monthly expenses
+
+The following query makes it easy to see monthly expenses, with each
+month's expenses sorted by the amount:
+
+@example
+ledger -M --period-sort t reg ^expenses
+@end example
+
+Now, you might wonder where the money came from to pay for these
+things.  To see that report, add @option{-r}, which shows the
+``related account'' postings:
+
+@example
+ledger -M --period-sort t -r reg ^expenses
+@end example
+
+But maybe this prints too much information.  You might just want to
+see how much you're spending with your MasterCard.  That kind of query
+requires the use of a display predicate, since the postings
+calculated must match @samp{^expenses}, while the postings
+displayed must match @samp{mastercard}.  The command would be:
+
+@example
+ledger -M -r -d /mastercard/ reg ^expenses
+@end example
+
+This query says: Report monthly subtotals; report the ``related
+account'' postings; display only related postings whose
+account matches @samp{mastercard}, and base the calculation on
+postings matching @samp{^expenses}.
+
+This works just as well for report the overall total, too:
+
+@example
+ledger -s -r -d /mastercard/ reg ^expenses
+@end example
+
+The @option{-s} option subtotals all postings, just as @option{-M}
+subtotaled by the month.  The running total in both cases is off,
+however, since a display expression is being used.
+
+@node Visualizing with Gnuplot,  , Reporting monthly expenses, Typical queries
+@subsection Visualizing with Gnuplot
+
+If you have @command{Gnuplot} installed, you can graph any of the
+above register reports.  The script to do this is included in the
+ledger distribution, and is named @file{scripts/report}.  Install
+@file{report} anywhere along your @env{PATH}, and then use
+@command{report} instead of @command{ledger} when doing a register
+report.  The only thing to keep in mind is that you must specify
+@option{-j} or @option{-J} to indicate whether Gnuplot should plot the
+amount, or the running total.  For example, this command plots total
+monthly expenses made on your MasterCard.
+
+@example
+report -j -M -r -d /mastercard/ reg ^expenses
+@end example
+
+The @command{report} script is a very simple Bourne shell script, that
+passes a set of scripted commands to Gnuplot.  Feel free to modify the
+script to your liking, since you may prefer histograms to line plots,
+for example.
+
+@menu
+* Typical plots::               
+@end menu
+
+@node Typical plots,  , Visualizing with Gnuplot, Visualizing with Gnuplot
+@subsubsection Typical plots
+
+Here are some useful plots:
+
+@smallexample
+report -j -M reg ^expenses         # monthly expenses
+report -J reg checking             # checking account balance
+report -J reg ^income ^expenses    # cash flow report
+
+# net worth report, ignoring non-$ postings
+
+report -J -l "Ua>=@{\$0.01@}" reg ^assets ^liab
+
+# net worth report starting last February.  the use of a display
+# predicate (-d) is needed, otherwise the balance will start at
+# zero, and thus the y-axis will not reflect the true balance
+
+report -J -l "Ua>=@{\$0.01@}" -d "d>=[last feb]" reg ^assets ^liab
+@end smallexample
+
+The last report uses both a calculation predicate (@option{-l}) and a
+display predicate (@option{-d}).  The calculation predicates limits
+the report to postings whose amount is greater than $1 (which can
+only happen if the posting amount is in dollars).  The display
+predicate limits the transactions @emph{displayed} to just those since last
+February, even those transactions from before then will be computed as part
+of the balance.
+
+
+@node Commodities and Currencies, Accounts and Inventories, Typical queries, Principles of Accounting
+@section Commodities and Currencies
+
+Ledger makes no assumptions about the commodities you use; it only
+requires that you specify a commodity.  The commodity may be any
+non-numeric string that does not contain a period, comma, forward
+slash or at-sign.  It may appear before or after the amount, although
+it is assumed that symbols appearing before the amount refer to
+currencies, while non-joined symbols appearing after the amount refer
+to commodities.  Here are some valid currency and commodity
+specifiers:
+
+@example
+$20.00         ; currency: twenty US dollars
+40 AAPL        ; commodity: 40 shares of Apple stock
+60 DM          ; currency: 60 Deutsch Mark
+£50            ; currency: 50 British pounds
+50 EUR         ; currency: 50 Euros (or use appropriate symbol)
+@end example
+
+Ledger will examine the first use of any commodity to determine how
+that commodity should be printed on reports.  It pays attention to
+whether the name of commodity was separated from the amount, whether
+it came before or after, the precision used in specifying the amount,
+whether thousand marks were used, etc.  This is done so that printing
+the commodity looks the same as the way you use it.
+
+An account may contain multiple commodities, in which case it will
+have separate totals for each.  For example, if your brokerage account
+contains both cash, gold, and several stock quantities, the balance
+might look like:
+
+@smallexample
+  $200.00
+100.00 AU
+  AAPL 40
+ BORL 100
+ FEQTX 50  Assets:Brokerage
+@end smallexample
+
+This balance report shows how much of each commodity is in your
+brokerage account.
+
+Sometimes, you will want to know the current street value of your
+balance, and not the commodity totals.  For this to happen, you must
+specify what the current price is for each commodity.  The price can
+be any commodity, in which case the balance will be computed in terms
+of that commodity.  The usual way to specify prices is with a price
+history file, which might look like this:
+
+@smallexample
+P 2004/06/21 02:18:01 FEQTX $22.49
+P 2004/06/21 02:18:01 BORL $6.20
+P 2004/06/21 02:18:02 AAPL $32.91
+P 2004/06/21 02:18:02 AU $400.00
+@end smallexample
+
+Specify the price history to use with the @option{--price-db} option,
+with the @option{-V} option to report in terms of current market
+value:
+
+@example
+ledger --price-db prices.db -V balance brokerage
+@end example
+
+The balance for your brokerage account will be reported in US dollars,
+since the prices database uses that currency.
+
+@smallexample
+$40880.00  Assets:Brokerage
+@end smallexample
+
+You can convert from any commodity to any other commodity.  Let's say
+you had $5000 in your checking account, and for whatever reason you
+wanted to know many ounces of gold that would buy, in terms of the
+current price of gold:
+
+@example
+ledger -T "@{1 AU@}*(O/P@{1 AU@})" balance checking
+@end example
+
+Although the total expression appears complex, it is simply saying
+that the reported total should be in multiples of AU units, where the
+quantity is the account total divided by the price of one AU.  Without
+the initial multiplication, the reported total would still use the
+dollars commodity, since multiplying or dividing amounts always keeps
+the left value's commodity.  The result of this command might be:
+
+@smallexample
+14.01 AU  Assets:Checking
+@end smallexample
+
+@menu
+* Commodity Price Histories::   
+* Commodity equivalencies::     
+@end menu
+
+@node Commodity Price Histories, Commodity equivalencies, Commodities and Currencies, Commodities and Currencies
+@subsection Commodity price histories
+
+Whenever a commodity is purchased using a different commodity (such as
+a share of common stock using dollars), it establishes a price for
+that commodity on that day.  It is also possible, by recording price
+details in a ledger file, to specify other prices for commodities at
+any given time.  Such price transactions might look like those below:
+
+@smallexample
+P 2004/06/21 02:17:58 TWCUX $27.76
+P 2004/06/21 02:17:59 AGTHX $25.41
+P 2004/06/21 02:18:00 OPTFX $39.31
+P 2004/06/21 02:18:01 FEQTX $22.49
+P 2004/06/21 02:18:02 AAPL $32.91
+@end smallexample
+
+By default, ledger will not consider commodity prices when generating
+its various reports.  It will always report balances in terms of the
+commodity total, rather than the current value of those commodities.
+To enable pricing reports, use one of the commodity reporting options.
+
+@node Commodity equivalencies,  , Commodity Price Histories, Commodities and Currencies
+@subsection Commodity equivalencies
+
+Sometimes a commodity has several forms which are all equivalent.  An
+example of this is time.  Whether tracked in terms of minutes, hours
+or days, it should be possible to convert between the various forms.
+Doing this requires the use of commodity equivalencies.
+
+For example, you might have the following two postings, one which
+transfers an hour of time into a @samp{Billable} account, and another
+which decreases the same account by ten minutes.  The resulting report
+will indicate that fifty minutes remain:
+
+@smallexample
+2005/10/01 Work done for company
+    Billable:Client                 1h
+    Project:XYZ
+    
+2005/10/02 Return ten minutes to the project
+    Project:XYZ                    10m
+    Billable:Client
+@end smallexample
+
+Reporting the balance for this ledger file produces:
+
+@smallexample
+       50.0m  Billable:Client
+      -50.0m  Project:XYZ
+@end smallexample
+
+This example works because ledger already knows how to handle seconds,
+minutes and hours, as part of its time tracking support.  Defining
+other equivalencies is simple.  The following is an example that
+creates data equivalencies, helpful for tracking bytes, kilobytes,
+megabytes, and more:
+
+@smallexample
+C 1.00 Kb = 1024 b
+C 1.00 Mb = 1024 Kb
+C 1.00 Gb = 1024 Mb
+C 1.00 Tb = 1024 Gb
+@end smallexample
+
+Each of these definitions correlates a commodity (such as @samp{Kb})
+and a default precision, with a certain quantity of another commodity.
+In the above example, kilobytes are reporetd with two decimal places
+of precision and each kilobyte is equal to 1024 bytes.
+
+Equivalency chains can be as long as desired.  Whenever a commodity
+would report as a decimal amount (less than @samp{1.00}), the next
+smallest commodity is used.  If a commodity could be reported in terms
+of a higher commodity without resulting to a partial fraction, then
+the larger commodity is used.
+
+@node Accounts and Inventories, Understanding Equity, Commodities and Currencies, Principles of Accounting
+@section Accounts and Inventories
+
+Since Ledger's accounts and commodity system is so flexible, you can
+have accounts that don't really exist, and use commodities that no one
+else recognizes.  For example, let's say you are buying and selling
+various items in EverQuest, and want to keep track of them using a
+ledger.  Just add items of whatever quantity you wish into your
+EverQuest account:
+
+@smallexample
+9/29  Get some stuff at the Inn
+    Places:Black's Tavern                   -3 Apples
+    Places:Black's Tavern                   -5 Steaks
+    EverQuest:Inventory
+@end smallexample
+
+Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
+amounts are negative, because you are taking @emph{from} Black's
+Tavern in order to add to your Inventory account.  Note that you don't
+have to use @samp{Places:Black's Tavern} as the source account.  You
+could use @samp{EverQuest:System} to represent the fact that you
+acquired them online.  The only purpose for choosing one kind of
+source account over another is for generate more informative reports
+later on.  The more you know, the better analysis you can perform.
+
+If you later sell some of these items to another player, the transaction
+would look like:
+
+@smallexample
+10/2  Sturm Brightblade
+    EverQuest:Inventory                     -2 Steaks
+    EverQuest:Inventory                     15 Gold
+@end smallexample
+
+Now you've turned 2 steaks into 15 gold, courtesy of your customer,
+Sturm Brightblade.
+
+@node Understanding Equity, Dealing with Petty Cash, Accounts and Inventories, Principles of Accounting
+@section Understanding Equity
+
+The most confusing transaction in any ledger will be your equity account---
+because starting balances can't come out of nowhere.
+
+When you first start your ledger, you will likely already have money
+in some of your accounts.  Let's say there's $100 in your checking
+account; then add a transaction to your ledger to reflect this amount.
+Where will money come from?  The answer: your equity.
+
+@smallexample
+10/2  Opening Balance
+    Assets:Checking                         $100.00
+    Equity:Opening Balances
+@end smallexample
+
+But what is equity?  You may have heard of equity when people talked
+about house mortgages, as ``the part of the house that you own''.
+Basically, equity is like the value of something.  If you own a car
+worth $5000, then you have $5000 in equity in that car.  In order to
+turn that car (a commodity) into a cash flow, or a credit to your bank
+account, you will have to debit the equity by selling it.
+
+When you start a ledger, you are probably already worth something.
+Your net worth is your current equity.  By transferring the money in
+the ledger from your equity to your bank accounts, you are crediting
+the ledger account based on your prior equity.  That is why, when you
+look at the balance report, you will see a large negative number for
+Equity that never changes: Because that is what you were worth (what
+you debited from yourself in order to start the ledger) before the
+money started moving around.  If the total positive value of your
+assets is greater than the absolute value of your starting equity, it
+means you are making money.
+
+Clear as mud?  Keep thinking about it.  Until you figure it out, put
+@samp{-Equity} at the end of your balance command, to remove the
+confusing figure from the total.
+
+@node Dealing with Petty Cash, Working with multiple funds and accounts, Understanding Equity, Principles of Accounting
+@section Dealing with Petty Cash
+
+Something that stops many people from keeping a ledger at all is the
+insanity of tracking small cash expenses.  They rarely generate a
+receipt, and there are often a lot of small postings, rather than
+a few large ones, as with checks.
+
+One solution is: don't bother.  Move your spending to a debit card,
+but in general ignore cash.  Once you withdraw it from the ATM, mark
+it as already spent to an @samp{Expenses:Cash} category:
+
+@smallexample
+2004/03/15 ATM
+    Expenses:Cash                      $100.00
+    Assets:Checking
+@end smallexample
+
+If at some point you make a large cash expense that you want to track,
+just ``move'' the amount of the expense from @samp{Expenses:Cash} into
+the target account:
+
+@smallexample
+2004/03/20 Somebody
+    Expenses:Food                       $65.00
+    Expenses:Cash
+@end smallexample
+
+This way, you can still track large cash expenses, while ignoring all
+of the smaller ones.
+
+@node Working with multiple funds and accounts,  , Dealing with Petty Cash, Principles of Accounting
+@section Working with multiple funds and accounts
+
+There are situations when the accounts you're tracking are different
+between your clients and the financial institutions where money is
+kept.  An example of this is working as the treasurer for a religious
+institution.  From the secular point of view, you might be working
+with three different accounts:
+
+@itemize
+@item Checking
+@item Savings
+@item Credit Card
+@end itemize
+
+From a religious point of view, the community expects to divide its
+resources into multiple ``funds'', from which it makes purchases or
+reserves resources for later:
+
+@itemize
+@item School fund
+@item Building fund
+@item Community fund
+@end itemize
+
+The problem with this kind of setup is that when you spend money, it
+comes from two or more places at once: the account and the fund.  And
+yet, the correlation of amounts between funds and accounts is rarely
+one-to-one.  What if the school fund has @samp{$500.00}, but
+@samp{$400.00} of that comes from Checking, and @samp{$100.00} from
+Savings?
+
+Traditional finance packages require that the money reside in only one
+place.  But there are really two ``views'' of the data: from the
+account point of view and from the fund point of view -- yet both sets
+should reflect the same overall expenses and cash flow.  It's simply
+where the money resides that differs.
+
+This situation can be handled one of two ways.  The first is using
+virtual postings to represent the fact that money is moving to and
+from two kind of accounts at the same time:
+
+@smallexample
+2004/03/20 Contributions
+    Assets:Checking                    $500.00
+    Income:Donations
+
+2004/03/25 Distribution of donations
+    [Funds:School]                     $300.00
+    [Funds:Building]                   $200.00
+    [Assets:Checking]                 $-500.00
+@end smallexample
+
+The use of square brackets in the second transaction ensures that the
+virtual postings balance to zero.  Now money can be spent directly
+from a fund at the same time as money is drawn from a physical
+account:
+
+@smallexample
+2004/03/25 Payment for books (paid from Checking)
+    Expenses:Books                    $100.00
+    Assets:Checking                  $-100.00
+    (Funds:School)                   $-100.00
+@end smallexample
+
+When reports are generated, by default they'll appear in terms of the
+funds.  In this case, you will likely want to mask out your
+@samp{Assets} account, because otherwise the balance won't make much
+sense:
+
+@example
+ledger bal -^Assets
+@end example
+
+If the @option{--real} option is used, the report will be in terms of
+the real accounts:
+
+@example
+ledger --real bal
+@end example
+
+If more asset accounts are needed as the source of a posting, just
+list them as you would normally, for example:
+
+@smallexample
+2004/03/25 Payment for books (paid from Checking)
+    Expenses:Books                    $100.00
+    Assets:Checking                   $-50.00
+    Liabilities:Credit Card           $-50.00
+    (Funds:School)                   $-100.00
+@end smallexample
+
+The second way of tracking funds is to use transaction codes.  In this
+respect the codes become like virtual accounts that embrace the entire
+set of postings.  Basically, we are associating a transaction with a
+fund by setting its code.  Here are two transactions that desposit money
+into, and spend money from, the @samp{Funds:School} fund:
+
+@smallexample
+2004/03/25 (Funds:School) Donations
+    Assets:Checking                   $100.00
+    Income:Donations
+
+2004/04/25 (Funds:School) Payment for books
+    Expenses:Books                     $50.00
+    Assets:Checking
+@end smallexample
+
+Note how the accounts now relate only to the real accounts, and any
+balance or registers reports will reflect this.  That the transactions
+relate to a particular fund is kept only in the code.
+
+How does this become a fund report?  By using the
+@option{--code-as-payee} option, you can generate a register report
+where the payee for each posting shows the code.  Alone, this is
+not terribly interesting; but when combined with the
+@option{--by-payee} option, you will now see account subtotals for any
+postings related to a specific fund.  So, to see the current
+monetary balances of all funds, the command would be:
+
+@smallexample
+ledger --code-as-payee -P reg ^Assets
+@end smallexample
+
+Or to see a particular funds expenses, the @samp{School} fund in this
+case:
+
+@smallexample
+ledger --code-as-payee -P reg ^Expenses -- School
+@end smallexample
+
+Both approaches yield different kinds of flexibility, depending on how
+you prefer to think of your funds: as virtual accounts, or as tags
+associated with particular transactions.  Your own tastes will decide which
+is best for your situation.
+
 
 @node Keeping a Journal, Command-line Syntax, Principles of Accounting, Top
 @chapter Keeping a Journal
