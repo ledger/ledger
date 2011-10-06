@@ -459,6 +459,7 @@ $ ledger -f drewr3.dat cleared
 * Basic Options Quick Reference::  
 * Report Filtering Quick Reference::  
 * Output Customization Quick Reference::  
+* Grouping Options::            
 * Commodity Reporting Quick Reference::  
 @end menu
 
@@ -514,7 +515,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{-T EXPR} @tab @code{--total} @tab Change the value expression used for ``totals'' column in register and balance reports
 @end multitable
 
-@node Output Customization Quick Reference, Commodity Reporting Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
+@node Output Customization Quick Reference, Grouping Options, Report Filtering Quick Reference, Command Line Quick Reference
 @subsection Output Customization
 @multitable @columnfractions .15 .4 .45
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
@@ -550,7 +551,21 @@ $ ledger -f drewr3.dat cleared
 @item @code{-w register} @tab @code{--wide-register-format STR} @tab
 @end multitable
 
-@node Commodity Reporting Quick Reference,  , Output Customization Quick Reference, Command Line Quick Reference
+@node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
+@subsection Grouping Options
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{-P} @tab @code{--by-payee} @tab Group postings by common payee names
+@item @code{-D} @tab @code{--daily} @tab  Group postings by day
+@item @code{-W} @tab @code{--weekly} @tab Group postings by week
+@item @code{-M} @tab @code{--Monthly} @tab Group postings by month
+@item @code{} @tab @code{--quarterly} @tab  Group postings by quarter
+@item @code{-Y} @tab @code{--yearly} @tab  Group postings by year
+@item @code{-dow} @tab @code{} @tab  Group by day of weeks
+@item @code{-s} @tab @code{--subtotal} @tab Group posting together, similar to balance report
+@end multitable
+
+@node Commodity Reporting Quick Reference,  , Grouping Options, Command Line Quick Reference
 @subsection Commodity Reporting
 
 @multitable @columnfractions .1 .25 .65
