@@ -140,7 +140,7 @@ void export_xact()
 
   class_< period_xact_t, bases<xact_base_t> > ("PeriodicTransaction")
     .def(init<string>())
-    
+
     .add_property("period",
                   make_getter(&period_xact_t::period),
                   make_setter(&period_xact_t::period))

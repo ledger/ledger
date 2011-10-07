@@ -173,7 +173,7 @@ void export_post()
     .def("xdata", py_xdata,
          return_internal_reference<>())
 
-    .def("add_to_value", &post_t::add_to_value)
+    //.def("add_to_value", &post_t::add_to_value)
     .def("set_reported_account", &post_t::set_reported_account)
 
     .def("reported_account", py_reported_account,

@@ -271,14 +271,14 @@ void generate_posts_iterator::generate_date(std::ostream& out)
   out.width(4);
   out.fill('0');
   out << year_gen();
-  
+
   out.width(1);
   out << '/';
 
   out.width(2);
   out.fill('0');
   out << mon_gen();
-  
+
   out.width(1);
   out << '/';
 
@@ -350,9 +350,10 @@ void generate_posts_iterator::generate_xact(std::ostream& out)
   out << '\n';
 }
 
-post_t * generate_posts_iterator::operator()()
+void generate_posts_iterator::increment()
 {
-  post_t * post = posts();
+  post_t * post = *posts++;
+
   if (post == NULL && quantity > 0) {
     std::ostringstream buf;
     generate_xact(buf);
@@ -364,7 +365,7 @@ post_t * generate_posts_iterator::operator()()
       if (session.journal->parse(in, session) != 0) {
         VERIFY(session.journal->xacts.back()->valid());
         posts.reset(*session.journal->xacts.back());
-        post = posts();
+        post = *posts++;
       }
     }
     catch (std::exception&) {
@@ -382,7 +383,8 @@ post_t * generate_posts_iterator::operator()()
 
     quantity--;
   }
-  return post;
+
+  m_node = post;
 }
 
 } // namespace ledger

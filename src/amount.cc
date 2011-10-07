@@ -152,7 +152,7 @@ namespace {
       if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
         throw_(amount_error,
                _("Cannot output amount to a floating-point representation"));
-        
+
       DEBUG("amount.convert", "mpfr_print = " << buf
             << " (precision " << precision
             << ", zeros_prec " << zeros_prec << ")");
@@ -1049,16 +1049,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   // Create the commodity if has not already been seen, and update the
   // precision if something greater was used for the quantity.
 
-  bool newly_created = false;
-
   if (symbol.empty()) {
     commodity_ = NULL;
   } else {
     commodity_ = commodity_pool_t::current_pool->find(symbol);
-    if (! commodity_) {
+    if (! commodity_)
       commodity_ = commodity_pool_t::current_pool->create(symbol);
-      newly_created = true;
-    }
     assert(commodity_);
 
     if (details)

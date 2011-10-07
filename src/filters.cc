@@ -53,7 +53,7 @@ void post_splitter::flush()
 {
   foreach (value_to_posts_map::value_type& pair, posts_map) {
     preflush_func(pair.first);
-    
+
     foreach (post_t * post, pair.second)
       (*post_chain)(*post);
 
@@ -81,25 +81,6 @@ void post_splitter::operator()(post_t& post)
       (*inserted.first).second.push_back(&post);
     }
   }
-}
-
-pass_down_posts::pass_down_posts(post_handler_ptr handler,
-                                 posts_iterator&  iter)
-  : item_handler<post_t>(handler)
-{
-  TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
-
-  for (post_t * post = iter(); post; post = iter()) {
-    try {
-      item_handler<post_t>::operator()(*post);
-    }
-    catch (const std::exception&) {
-      add_error_context(item_context(*post, _("While handling posting")));
-      throw;
-    }
-  }
-
-  item_handler<post_t>::flush();
 }
 
 void truncate_xacts::flush()
@@ -434,7 +415,7 @@ void collapse_posts::report_subtotal()
     bind_scope_t bound_scope(report, *post);
     if (only_predicate(bound_scope) && display_predicate(bound_scope))
       displayed_count++;
-  }  
+  }
 
   if (displayed_count == 1) {
     item_handler<post_t>::operator()(*last_post);
@@ -460,6 +441,7 @@ void collapse_posts::report_subtotal()
     xact.payee     = last_xact->payee;
     xact._date     = (is_valid(earliest_date) ?
                       earliest_date : last_xact->_date);
+
     DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
@@ -523,14 +505,11 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
                                            report_t&        _report,
                                            bool             _show_rounding)
   : item_handler<post_t>(handler), report(_report),
+    display_amount_expr(report.HANDLER(display_amount_).expr),
+    display_total_expr(report.HANDLER(display_total_).expr),
     show_rounding(_show_rounding)
 {
-  TRACE_CTOR(display_filter_posts,
-             "post_handler_ptr, report_t&, account_t&, bool");
-
-  display_amount_expr = report.HANDLER(display_amount_).expr;
-  display_total_expr  = report.HANDLER(display_total_).expr;
-
+  TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
   create_accounts();
 }
 
@@ -606,17 +585,17 @@ changed_value_posts::changed_value_posts
    bool                   _show_unrealized,
    display_filter_posts * _display_filter)
   : item_handler<post_t>(handler), report(_report),
+    total_expr(report.HANDLED(revalued_total_) ?
+               report.HANDLER(revalued_total_).expr :
+               report.HANDLER(display_total_).expr),
+    display_total_expr(report.HANDLER(display_total_).expr),
+    changed_values_only(report.HANDLED(revalued_only)),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
     display_filter(_display_filter)
 {
-  TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool");
-
-  total_expr          = (report.HANDLED(revalued_total_) ?
-                         report.HANDLER(revalued_total_).expr :
-                         report.HANDLER(display_total_).expr);
-  display_total_expr  = report.HANDLER(display_total_).expr;
-  changed_values_only = report.HANDLED(revalued_only);
+  TRACE_CTOR(changed_value_posts,
+             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
 
   string gains_equity_account_name;
   if (report.HANDLED(unrealized_gains_))
@@ -755,7 +734,7 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
     case value_t::DATE:
     default:
       assert(false);
-      break; 
+      break;
     }
 
     bind_scope_t inner_scope(report, temp);
@@ -937,8 +916,6 @@ void interval_posts::report_subtotal(const date_interval_t& interval)
 
 void interval_posts::operator()(post_t& post)
 {
-  date_t date = post.date();
-
   if (! interval.find_period(post.date()))
     return;
 
@@ -1373,7 +1350,7 @@ inject_posts::inject_posts(post_handler_ptr handler,
                            account_t *      master)
   : item_handler<post_t>(handler)
 {
-  TRACE_CTOR(inject_posts, "post_handler_ptr, string");
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
 
   scoped_array<char> buf(new char[tag_list.length() + 1]);
   std::strcpy(buf.get(), tag_list.c_str());
@@ -1381,9 +1358,9 @@ inject_posts::inject_posts(post_handler_ptr handler,
   for (char * q = std::strtok(buf.get(), ",");
        q;
        q = std::strtok(NULL, ",")) {
-
     std::list<string> account_names;
     split_string(q, ':', account_names);
+
     account_t * account =
       create_temp_account_from_path(account_names, temps, master);
     account->add_flags(ACCOUNT_GENERATED);
@@ -1397,13 +1374,12 @@ void inject_posts::operator()(post_t& post)
 {
   foreach (tags_list_pair& pair, tags_list) {
     optional<value_t> tag_value = post.get_tag(pair.first, false);
+    // When checking if the transaction has the tag, only inject once
+    // per transaction.
     if (! tag_value &&
-        pair.second.second.find(post.xact) == pair.second.second.end()) {
-      // When checking if the transaction has the tag, only inject once
-      // per transaction.
+        pair.second.second.find(post.xact) == pair.second.second.end() &&
+        (tag_value = post.xact->get_tag(pair.first)))
       pair.second.second.insert(post.xact);
-      tag_value = post.xact->get_tag(pair.first);
-    }
 
     if (tag_value) {
       xact_t& xact = temps.copy_xact(*post.xact);
@@ -1420,27 +1396,6 @@ void inject_posts::operator()(post_t& post)
   }
 
   item_handler<post_t>::operator()(post);
-}
-
-pass_down_accounts::pass_down_accounts(acct_handler_ptr             handler,
-                                       accounts_iterator&           iter,
-                                       const optional<predicate_t>& _pred,
-                                       const optional<scope_t&>&    _context)
-  : item_handler<account_t>(handler), pred(_pred), context(_context)
-{
-  TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
-
-  for (account_t * account = iter(); account; account = iter()) {
-    if (! pred) {
-      item_handler<account_t>::operator()(*account);
-    } else {
-      bind_scope_t bound_scope(*context, *account);
-      if ((*pred)(bound_scope))
-        item_handler<account_t>::operator()(*account);
-    }
-  }
-
-  item_handler<account_t>::flush();
 }
 
 } // namespace ledger

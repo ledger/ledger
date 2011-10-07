@@ -280,7 +280,7 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str)
   else
     return none;
 }
-  
+
 optional<date_time::months_of_year>
 string_to_month_of_year(const std::string& str)
 {
@@ -709,12 +709,9 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       when += gregorian::years(amount * adjust);
       break;
     case lexer_t::token_t::TOK_QUARTER:
-    case lexer_t::token_t::TOK_QUARTERS: {
-      date_t temp =
-        date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
+    case lexer_t::token_t::TOK_QUARTERS:
       when += gregorian::months(amount * 3 * adjust);
       break;
-    }
     case lexer_t::token_t::TOK_MONTH:
     case lexer_t::token_t::TOK_MONTHS:
       when += gregorian::months(amount * adjust);

@@ -209,10 +209,12 @@ public:
 
 #define CTOR(type, name)                                \
   name ## option_t() : option_t<type>(#name)
+#define CTOR_(type, name, base)                         \
+  name ## option_t() : option_t<type>(#name), base
 #define DECL1(type, name, vartype, var, value)          \
   vartype var ;                                         \
   name ## option_t() : option_t<type>(#name), var(value)
-  
+
 #define DO()      virtual void handler_thunk(call_scope_t&)
 #define DO_(var)  virtual void handler_thunk(call_scope_t& var)
 

@@ -60,9 +60,10 @@ namespace {
 }
 
 std::pair<xact_t *, account_t *>
-lookup_probable_account(const string&   ident,
-                        xacts_iterator& iter_func,
-                        account_t *     ref_account)
+lookup_probable_account(const string& ident,
+                        xacts_list::reverse_iterator iter,
+                        xacts_list::reverse_iterator end,
+                        account_t * ref_account)
 {
   scorecard_t scores;
 
@@ -83,14 +84,15 @@ lookup_probable_account(const string&   ident,
           "  with reference account: " << ref_account->fullname());
 #endif
 
-  while (xact_t * xact = iter_func()) {
+  xact_t * xact;
+  while (iter != end && (xact = *iter++) != NULL) {
 #if 0
     // Only consider transactions from the last two years (jww (2010-03-07):
     // make this an option)
     if ((CURRENT_DATE() - xact->date()).days() > 700)
       continue;
 #endif
-    
+
     // An exact match is worth a score of 100 and terminates the search
     if (ident == xact->payee) {
       DEBUG("lookup", "  we have an exact match, score = 100");

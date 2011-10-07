@@ -203,7 +203,7 @@ struct date_duration_t
   }
   ~date_duration_t() throw() {
     TRACE_DTOR(date_duration_t);
-  }      
+  }
 
   date_t add(const date_t& date) const {
     switch (quantum) {
@@ -431,7 +431,7 @@ public:
       out << "from" << range_begin->to_string();
     if (range_end)
       out << " to" << range_end->to_string();
-    
+
     return out.str();
   }
 

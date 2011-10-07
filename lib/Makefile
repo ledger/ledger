@@ -5,8 +5,8 @@
 STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
-GCC_VERSION     = 4.6
-BOOST_VERSION	= 1_46_1
+GCC_VERSION     = 4.5
+BOOST_VERSION	= 1_47_0
 
 CC		= gcc-mp-$(GCC_VERSION)
 ifeq ($(CC),clang)
@@ -51,7 +51,7 @@ all: boost-build #icu-build boost-icu-build
 
 prepare-boost:
 	perl -i -pe 's/local command = \[ common\.get-invocation-command darwin : g\+\+ : .*/local command = [ common.get-invocation-command darwin : g++ : $(CXX) ] ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
-	perl -i -pe 's/flags darwin\.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;/flags darwin\.compile OPTIONS : -gdwarf-2 ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
+	perl -i -pe 's/flags darwin\.compile OPTIONS : -no-cpp-precomp -gdwarf-2 (-fexceptions )?;/flags darwin\.compile OPTIONS : -gdwarf-2 \1;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
 
 boost-build: prepare-boost
 	(cd $(BOOST_SOURCE) && \

@@ -61,7 +61,7 @@ public:
   xact_base_t() : item_t(), journal(NULL) {
     TRACE_CTOR(xact_base_t, "");
   }
-  xact_base_t(const xact_base_t& e);  
+  xact_base_t(const xact_base_t& e);
 
   virtual ~xact_base_t();
 

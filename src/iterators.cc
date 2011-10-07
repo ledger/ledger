@@ -41,37 +41,38 @@ void xacts_iterator::reset(journal_t& journal)
 {
   xacts_i   = journal.xacts.begin();
   xacts_end = journal.xacts.end();
+
   xacts_uninitialized = false;
+
+  increment();
 }
 
-xact_t * xacts_iterator::operator()()
+void xacts_iterator::increment()
 {
   if (xacts_i != xacts_end)
-    return *xacts_i++;
+    m_node = *xacts_i++;
   else
-    return NULL;
+    m_node = NULL;
 }
 
 void journal_posts_iterator::reset(journal_t& journal)
 {
   xacts.reset(journal);
-
-  xact_t * xact = xacts();
-  if (xact != NULL)
-    posts.reset(*xact);
+  increment();
 }
 
-post_t * journal_posts_iterator::operator()()
+void journal_posts_iterator::increment()
 {
-  post_t * post = posts();
-  if (post == NULL) {
-    xact_t * xact = xacts();
-    if (xact != NULL) {
-      posts.reset(*xact);
-      post = posts();
-    }
+  if (post_t * post = *posts++) {
+    m_node = post;
   }
-  return post;
+  else if (xact_t * xact = *xacts++) {
+    posts.reset(*xact);
+    m_node = *posts++;
+  }
+  else {
+    m_node = NULL;
+  }
 }
 
 void posts_commodities_iterator::reset(journal_t& journal)
@@ -80,7 +81,7 @@ void posts_commodities_iterator::reset(journal_t& journal)
 
   std::set<commodity_t *> commodities;
 
-  for (post_t * post = journal_posts(); post; post = journal_posts()) {
+  while (const post_t * post = *journal_posts++) {
     commodity_t& comm(post->amount.commodity());
     if (comm.flags() & COMMODITY_NOMARKET)
       continue;
@@ -136,47 +137,44 @@ void posts_commodities_iterator::reset(journal_t& journal)
     }
   }
 
-  xacts.xacts_i   = xact_temps.begin();
-  xacts.xacts_end = xact_temps.end();
+  xacts.reset(xact_temps.begin(), xact_temps.end());
 
-  xacts.xacts_uninitialized = false;
-
-  xact_t * xact = xacts();
-  if (xact != NULL)
-    posts.reset(*xact);
+  increment();
 }
 
-post_t * posts_commodities_iterator::operator()()
+void posts_commodities_iterator::increment()
 {
-  post_t * post = posts();
-  if (post == NULL) {
-    xact_t * xact = xacts();
-    if (xact != NULL) {
-      posts.reset(*xact);
-      post = posts();
-    }
+  if (post_t * post = *posts++) {
+    m_node = post;
   }
-  return post;
+  else if (xact_t * xact = *xacts++) {
+    posts.reset(*xact);
+    m_node = *posts++;
+  }
+  else {
+    m_node = NULL;
+  }
 }
 
-account_t * basic_accounts_iterator::operator()()
+void basic_accounts_iterator::increment()
 {
-  while (! accounts_i.empty() &&
-         accounts_i.back() == accounts_end.back()) {
+  while (! accounts_i.empty() && accounts_i.back() == accounts_end.back()) {
     accounts_i.pop_back();
     accounts_end.pop_back();
   }
-  if (accounts_i.empty())
-    return NULL;
 
-  account_t * account = (*(accounts_i.back()++)).second;
-  assert(account);
+  if (accounts_i.empty()) {
+    m_node = NULL;
+  } else {
+    account_t * account = (*(accounts_i.back()++)).second;
+    assert(account);
 
-  // If this account has children, queue them up to be iterated next.
-  if (! account->accounts.empty())
-    push_back(*account);
+    // If this account has children, queue them up to be iterated next.
+    if (! account->accounts.empty())
+      push_back(*account);
 
-  return account;
+    m_node = account;
+  }
 }
 
 void sorted_accounts_iterator::push_back(account_t& account)
@@ -231,7 +229,7 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
 #endif
 }
 
-account_t * sorted_accounts_iterator::operator()()
+void sorted_accounts_iterator::increment()
 {
   while (! sorted_accounts_i.empty() &&
          sorted_accounts_i.back() == sorted_accounts_end.back()) {
@@ -240,19 +238,22 @@ account_t * sorted_accounts_iterator::operator()()
     assert(! accounts_list.empty());
     accounts_list.pop_back();
   }
-  if (sorted_accounts_i.empty())
-    return NULL;
 
-  account_t * account = *sorted_accounts_i.back()++;
-  assert(account);
+  if (sorted_accounts_i.empty()) {
+    m_node = NULL;
+  } else {
+    account_t * account = *sorted_accounts_i.back()++;
+    assert(account);
 
-  // If this account has children, queue them up to be iterated next.
-  if (! flatten_all && ! account->accounts.empty())
-    push_back(*account);
+    // If this account has children, queue them up to be iterated next.
+    if (! flatten_all && ! account->accounts.empty())
+      push_back(*account);
 
-  // Make sure the sorting value gets recalculated for this account
-  account->xdata().drop_flags(ACCOUNT_EXT_SORT_CALC);
-  return account;
+    // Make sure the sorting value gets recalculated for this account
+    account->xdata().drop_flags(ACCOUNT_EXT_SORT_CALC);
+
+    m_node = account;
+  }
 }
 
 } // namespace ledger

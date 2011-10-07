@@ -73,10 +73,10 @@ public:
   post_splitter(post_handler_ptr _post_chain,
                 report_t&        _report,
                 expr_t           _group_by_expr)
-    : post_chain(_post_chain), report(_report), 
+    : post_chain(_post_chain), report(_report),
       group_by_expr(_group_by_expr) {
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
-	preflush_func = bind(&post_splitter::print_title, this, _1);
+        preflush_func = bind(&post_splitter::print_title, this, _1);
   }
   virtual ~post_splitter() {
     TRACE_DTOR(post_splitter);
@@ -97,6 +97,7 @@ public:
   virtual void clear() {
     posts_map.clear();
     post_chain->clear();
+    item_handler<post_t>::clear();
   }
 };
 
@@ -145,14 +146,28 @@ public:
   }
 };
 
-class posts_iterator;
-
+template <typename Iterator>
 class pass_down_posts : public item_handler<post_t>
 {
   pass_down_posts();
 
 public:
-  pass_down_posts(post_handler_ptr handler, posts_iterator& iter);
+  pass_down_posts(post_handler_ptr handler, Iterator& iter)
+    : item_handler<post_t>(handler) {
+    TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
+
+    while (post_t * post = *iter++) {
+      try {
+        item_handler<post_t>::operator()(*post);
+      }
+      catch (const std::exception&) {
+        add_error_context(item_context(*post, _("While handling posting")));
+        throw;
+      }
+    }
+
+    item_handler<post_t>::flush();
+  }
 
   virtual ~pass_down_posts() {
     TRACE_DTOR(pass_down_posts);
@@ -295,7 +310,7 @@ public:
   virtual void clear() {
     sorter.clear();
     last_xact = NULL;
-    
+
     item_handler<post_t>::clear();
   }
 };
@@ -365,8 +380,9 @@ public:
 
   virtual void clear() {
     temps.clear();
+    comms.clear();
     last_xact = NULL;
-    
+
     item_handler<post_t>::clear();
   }
 };
@@ -442,7 +458,7 @@ public:
   }
 
   virtual void flush() {
-    report_subtotal(); 
+    report_subtotal();
     item_handler<post_t>::flush();
   }
 
@@ -463,7 +479,7 @@ public:
     temps.clear();
     create_accounts();
     component_posts.clear();
-    
+
     item_handler<post_t>::clear();
   }
 };
@@ -504,9 +520,9 @@ class display_filter_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
+  report_t&     report;
   expr_t        display_amount_expr;
   expr_t        display_total_expr;
-  report_t&     report;
   bool          show_rounding;
   value_t       last_display_total;
   temporaries_t temps;
@@ -552,9 +568,9 @@ class changed_value_posts : public item_handler<post_t>
   // This filter requires that calc_posts be used at some point
   // later in the chain.
 
+  report_t&     report;
   expr_t        total_expr;
   expr_t        display_total_expr;
-  report_t&     report;
   bool          changed_values_only;
   bool          for_accounts_report;
   bool          show_unrealized;
@@ -984,8 +1000,7 @@ class inject_posts : public item_handler<post_t>
 // Account filters
 //
 
-class accounts_iterator;
-
+template <typename Iterator>
 class pass_down_accounts : public item_handler<account_t>
 {
   pass_down_accounts();
@@ -995,9 +1010,24 @@ class pass_down_accounts : public item_handler<account_t>
 
 public:
   pass_down_accounts(acct_handler_ptr             handler,
-                     accounts_iterator&           iter,
+                     Iterator&                    iter,
                      const optional<predicate_t>& _pred    = none,
-                     const optional<scope_t&>&    _context = none);
+                     const optional<scope_t&>&    _context = none)
+    : item_handler<account_t>(handler), pred(_pred), context(_context) {
+    TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
+
+    while (account_t * account = *iter++) {
+      if (! pred) {
+        item_handler<account_t>::operator()(*account);
+      } else {
+        bind_scope_t bound_scope(*context, *account);
+        if ((*pred)(bound_scope))
+          item_handler<account_t>::operator()(*account);
+      }
+    }
+
+    item_handler<account_t>::flush();
+  }
 
   virtual ~pass_down_accounts() {
     TRACE_DTOR(pass_down_accounts);

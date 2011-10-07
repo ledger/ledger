@@ -138,9 +138,9 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
                             report.HANDLED(tail_) ?
                             report.HANDLER(tail_).value.to_int() : 0));
 
-    // changed_value_posts adds virtual posts to the list to account for changes
-    // in market value of commodities, which otherwise would affect the running
-    // total unpredictably.
+    // display_filter_posts adds virtual posts to the list to account
+    // for changes in value of commodities, which otherwise would affect
+    // the running total unpredictably.
     display_filter = new display_filter_posts(handler, report,
                                               report.HANDLED(revalued) &&
                                               ! report.HANDLED(no_rounding));

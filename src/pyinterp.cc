@@ -126,7 +126,7 @@ void python_interpreter_t::initialize()
 void python_interpreter_t::hack_system_paths()
 {
   // Hack ledger.__path__ so it points to a real location
-  python::object sys_module = python::import("sys"); 
+  python::object sys_module = python::import("sys");
   python::object sys_dict   = sys_module.attr("__dict__");
 
   python::list paths(sys_dict["path"]);
@@ -177,7 +177,7 @@ object python_interpreter_t::import_into_main(const string& str)
     if (! mod)
       throw_(std::runtime_error,
              _("Failed to import Python module %1") << str);
- 
+
     // Import all top-level entries directly into the main namespace
     main_nspace.update(mod.attr("__dict__"));
 
@@ -193,7 +193,7 @@ object python_interpreter_t::import_option(const string& str)
 {
   path file(str);
 
-  python::object sys_module = python::import("sys"); 
+  python::object sys_module = python::import("sys");
   python::object sys_dict   = sys_module.attr("__dict__");
 
   python::list paths(sys_dict["path"]);
@@ -312,7 +312,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     delete[] argv;
     throw;
   }
-  
+
   for (std::size_t i = 0; i < args.size() + 1; i++)
     delete[] argv[i];
   delete[] argv;
@@ -445,7 +445,7 @@ namespace {
     }
   }
 }
-  
+
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 {
   try {

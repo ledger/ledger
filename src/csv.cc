@@ -289,7 +289,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
       amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
     post->assigned_amount = amt;
   }
-  
+
   xact->add_post(post.release());
 
   return xact.release();

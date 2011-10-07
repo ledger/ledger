@@ -127,7 +127,6 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
     // fall through...
   default: {
     string ident;
-    string::const_iterator beg = arg_i;
     for (; arg_i != arg_end; ++arg_i) {
       switch (*arg_i) {
       case '\0':
@@ -296,7 +295,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
         if (tok.kind != lexer_t::token_t::TERM)
           throw_(parse_error,
                  _("Metadata equality operator not followed by term"));
-        
+
         expr_t::ptr_op_t arg2 = new expr_t::op_t(expr_t::op_t::VALUE);
         assert(tok.value);
         arg2->set_value(mask_t(*tok.value));
@@ -310,7 +309,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       }
       break;
     }
-      
+
     default: {
       node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
@@ -536,11 +535,13 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
       }
 
       default:
-        break;
+        goto done;
       }
 
       tok = lexer.peek_token();
     }
+  done:
+    ;
   }
 
   return limiter;

@@ -6,6 +6,22 @@ Then include the following line in your .vimrc  or in ~/.vim/filetype.vim
 You can also use a modeline like this in every ledger file
   vim:filetype=ledger
 
+Tips and useful commands
+======================================================================
+ • Try account-completion (as explained below)
+ • :call LedgerSetDate(line('.'), 'effective')
+   will set today's date as the effective date of the current
+   transaction. You can use also 'actual' in place of 'effective'
+   or pass in a different date measured as seconds since 1st Jan 1970.
+ • :call LedgerSetTransactionState(line('.'), '*')
+   sets the state of the current transaction to '*'. You can
+   use this in custom mappings.
+ • :call LedgerToggleTransactionState(line('.'), ' *?!')
+   will toggle through the provided transaction states.
+   You can map this to double-clicking for example:
+   noremap <silent><buffer> <2-LeftMouse>
+   \ :call LedgerToggleTransactionState(line('.'), ' *?!')<CR>
+
 Configuration
 ======================================================================
 Include the following let-statements somewhere in your .vimrc
@@ -35,7 +51,7 @@ to modify the behaviour of the ledger filetype.
 
 Completion
 ======================================================================
-Omni completion is implemented for account names and tags.
+Omni completion is currently implemented for account names only.
 
 Accounts
 ----------------------------------------------------------------------
@@ -52,38 +68,11 @@ When you want to complete on a virtual transaction,
 it's currently best to keep the cursor in front of the closing bracket.
 Of course you can insert the closing bracket after calling the completion, too.
 
-Tags
-----------------------------------------------------------------------
-The support for completing tags is pretty basic right now
-but it's useful to keep the spelling of your tags consistent.
-You can call the completion after the ';' to get a list of all tags.
-When you have a list of tags (:like: :this:) you can call
-the completion too and everything up to the last ':' (excluding whitespace)
-will be considered the beginning of the tag to search for.
-
-Revision history (major changes)
-======================================================================
- 2009-06-23 & 2009-06-25
-             J. Klähn: Omni-Completion for account names and tags
- 2009-06-17  J. Klähn: Highlight account text
-             Updated documentation and added fillstring option.
- 2009-06-15  J. Klähn: Split into multiple files
- 2009-06-12  J. Klähn: Use all available columns for foldtext
-             Also rewrote foldtext generation.
- 2009-03-25  J. Klähn: Allow Metadata
-             in transactions and postings (Ledger 3.0)
-             Also fixed alignment for multi-byte-characters
- 2009-01-28  S.Karrmann: minor fixes
- 2009-01-27  third version by S.Karrmann.
-             better extraction of the amount of the posting
-             decimal separator can be one of '.' and ','.
- 2005-02-05  first version (partly copied from ledger.vim 0.0.1)
-
 License
 ======================================================================
-Copyright 2009 by Johann Klähn
-Copyright 2009 by Stefan Karrmann
-Copyright 2005 by Wolfgang Oertl
+Copyright 2011-2009 by Johann Klähn
+Copyright      2009 by Stefan Karrmann
+Copyright      2005 by Wolfgang Oertl
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

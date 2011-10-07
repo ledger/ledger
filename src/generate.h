@@ -48,7 +48,9 @@ namespace ledger {
 
 class session_t;
 
-class generate_posts_iterator : public posts_iterator
+class generate_posts_iterator
+  : public iterator_facade_base<generate_posts_iterator, post_t *,
+                                boost::forward_traversal_tag>
 {
   session_t&   session;
   unsigned int seed;
@@ -104,8 +106,8 @@ public:
   virtual ~generate_posts_iterator() throw() {
     TRACE_DTOR(generate_posts_iterator);
   }
-  
-  virtual post_t * operator()();
+
+  virtual void increment();
 
 protected:
   void   generate_string(std::ostream& out, int len, bool only_alpha = false);

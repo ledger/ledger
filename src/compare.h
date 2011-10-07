@@ -58,7 +58,7 @@ class compare_items
   expr_t sort_order;
 
   compare_items();
-  
+
 public:
   compare_items(const compare_items& other) : sort_order(other.sort_order) {
     TRACE_CTOR(compare_items, "copy");

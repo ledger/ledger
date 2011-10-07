@@ -99,7 +99,7 @@ class ptristream : public std::istream
 protected:
   ptrinbuf buf;
 
-public: 
+public:
   ptristream(char * ptr, std::size_t len = 0)
     : std::istream(0), buf(ptr, len) {
     rdbuf(&buf);

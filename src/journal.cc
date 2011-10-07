@@ -74,7 +74,7 @@ journal_t::~journal_t()
 
   foreach (period_xact_t * xact, period_xacts)
     checked_delete(xact);
-  
+
   checked_delete(master);
 }
 

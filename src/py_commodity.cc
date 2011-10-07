@@ -181,7 +181,7 @@ namespace {
                       const datetime_t& date, const amount_t& price) {
     commodity.add_price(date, price);
   }
-    
+
   void py_add_price_3(commodity_t& commodity, const datetime_t& date,
                       const amount_t& price, const bool reflexive) {
     commodity.add_price(date, price, reflexive);

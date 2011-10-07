@@ -245,8 +245,8 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_46_1"
-    boost_major   = "1_46_1"
+    boost_version = "1_47_0"
+    boost_major   = "1_47"
 
     options = {
         'debug':    False,
@@ -338,7 +338,7 @@ class CommandLineApp(object):
             self.log.setLevel(logging.DEBUG)
         elif self.options.verbose:
             self.log.setLevel(logging.INFO)
-        
+
         exit_code = 0
         try:
             # We could just call main() and catch a TypeError, but that would
@@ -928,7 +928,7 @@ class PrepareBuild(CommandLineApp):
     def setup_system_directories(self):
         boost_include = self.boost_info.include_directory()
         boost_library = self.boost_info.library_directory()
-        
+
         if re.match('/opt/local', self.boost_info.home_path):
             self.log.debug("Setting Python home to /opt/local based on Boost's location")
             self.envvars['PYTHON_HOME'] = '/opt/local'
@@ -1252,7 +1252,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-sd-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1260,7 +1260,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-d-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1274,7 +1274,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-s-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1282,7 +1282,7 @@ class PrepareBuild(CommandLineApp):
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-%s' % \
-                    (self.boost_lib_ident, self.boost_version),
+                    (self.boost_lib_ident, self.boost_major),
                 file_suffix  = '.dylib',
                 include_path = 'include/boost-%s' % self.boost_major):
                 pass
@@ -1518,7 +1518,7 @@ class PrepareBuild(CommandLineApp):
             match = re.search('/opt/local/lib/(.+?)\.dylib', line)
             if not match:
                 continue
-            
+
             lib  = match.group(0)
             base = basename(lib)
 
@@ -1587,7 +1587,7 @@ class PrepareBuild(CommandLineApp):
 
     def phase_distcheck(self, *args):
         self.log.info('Executing phase: distcheck')
-        
+
         self.configure_flavor('default', False)
 
         environ, conf_args = self.configure_environment()
@@ -1621,7 +1621,7 @@ class PrepareBuild(CommandLineApp):
                      '%s/' % self.source_dir, '%s/' % source_copy_dir)
 
         self.source_dir = source_copy_dir
-        
+
     def phase_proof(self, *args):
         self.log.info('Executing phase: proof')
 
@@ -1633,15 +1633,15 @@ class PrepareBuild(CommandLineApp):
         self.configure_flavor('opt', reset=False)
         self.log.info('=== Testing opt ===')
         self.phase_make('fullcheck')
-        
+
         self.configure_flavor('gcov', reset=False)
         self.log.info('=== Testing gcov ===')
         self.phase_make('check')
-        
+
         self.configure_flavor('debug', reset=False)
         self.log.info('=== Testing debug ===')
         self.phase_make('fullcheck')
-        
+
         self.configure_flavor('default', reset=False)
         self.log.info('=== Testing default ===')
         self.phase_make('fullcheck')
@@ -1654,14 +1654,14 @@ class PrepareBuild(CommandLineApp):
         self.log.info('Executing phase: makeall')
 
         self.configure_flavor('opt', reset)
-        
+
         system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
         if exists(system_hh_gch):
             os.remove(system_hh_gch)
 
         self.log.info('=== Building opt ===')
         self.phase_make(*args)
-        
+
         self.configure_flavor('gcov', reset)
 
         system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
@@ -1670,7 +1670,7 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info('=== Building gcov ===')
         self.phase_make(*args)
-        
+
         system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
         if exists(system_hh_gch):
             os.remove(system_hh_gch)
@@ -1686,7 +1686,7 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info('=== Building debug ===')
         self.phase_make(*args)
-        
+
         self.configure_flavor('default', reset)
 
     #########################################################################
@@ -1696,7 +1696,7 @@ class PrepareBuild(CommandLineApp):
     def phase_help(self, *args):
         self.option_parser.print_help()
 
-        print """ 
+        print """
 Of the optional ARGS, the first is an optional build FLAVOR, with the default
 being 'debug':
 
