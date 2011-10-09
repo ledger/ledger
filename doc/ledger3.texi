@@ -549,6 +549,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{} @tab @code{--equity-format STR} @tab
 @item @code{} @tab @code{--prices-format STR} @tab
 @item @code{-w register} @tab @code{--wide-register-format STR} @tab
+@item @code{} @tab @code{--anon} @tab  Print the ledger register with anonymized accounts and payees, usefule for filing bug reports
 @end multitable
 
 @node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
