@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+import re
+import sys
+
+def scan_path(path):
+    bug = uuid = None
+    with open(path, 'r') as fd:
+        for line in fd:
+            match = re.match('\*', line)
+            if match:
+                bug = uuid = None
+
+            match = re.search('\[\[bug:([0-9]+)\]\[#[0-9]+\]\]', line)
+            if match:
+                bug = match.group(1)
+            elif bug:
+                match = re.search(':ID:\s+(.+?)\s*$', line)
+                if match:
+                    uuid = match.group(1)
+                    print "UPDATE bugs SET cf_uuid='%s' WHERE bug_id=%s;" % (uuid, bug)
+
+scan_path('/Users/johnw/src/ledger/plan/TODO')
+scan_path('/Users/johnw/src/ledger/plan/TODO-3.0')
+scan_path('/Users/johnw/src/ledger/plan/TODO-2.6.2')
+scan_path('/Users/johnw/src/ledger/plan/TODO-2.6.1')
+
+### genuuid ends here
