@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-05 22:09 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-12 15:13 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -475,7 +475,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{emacs} @tab Produce emacs lisp output
 @item @code{equity} @tab Print account balances as transactions
 @item @code{prices} @tab Print price history for matching commodities
-@item @code{pricesdb} @tab Print price history for matching commodities in ledger readable format
+@item @code{pricedb} @tab Print price history for matching commodities in ledger readable format
 @item @code{xact} @tab  Used to generate transactions based on previous postings
 @end multitable
 
@@ -3124,7 +3124,7 @@ commodities.  The @option{-A} flag is useful with this report, to
 display the running average price, or @option{-D} to show each price's
 deviation from that average.
 
-There is also a @command{pricesdb} command which outputs the same
+There is also a @command{pricedb} command which outputs the same
 information as @command{prices}, but does in a format that can be
 parsed by Ledger.
 
