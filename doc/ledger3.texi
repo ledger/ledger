@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-19 20:27 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-19 20:36 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -3206,6 +3206,16 @@ ledger xact 4/9 viva food $11.50 tips $8 cash
 ledger xact 4/9 viva dining "DM 11.50"
 @end smallexample
 
+@node payees
+@section payees
+The @command{payees} reports all of the unique payees in the journal
+
+@node accounts
+@section accounts
+
+The @command{accounts} reports all of the accounts in the journal.
+Following the command with a regular expression will limit the output to
+accounts matching the regex.
 
 @menu
 * Budgeting and Forecasting::   
