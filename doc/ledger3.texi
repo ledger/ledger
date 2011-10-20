@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-12 15:13 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-19 20:20 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -1496,6 +1496,28 @@ give an error.  There must be at least two spaces, or a tab, between the
 amount and the account.  If you do not have adequate separation between
 the amount and the account Ledger will give an error and stop
 calculating}
+
+@menu
+* Checking Balances::           
+@end menu
+
+@node Checking Balances,  , Most Basic Entry, Most Basic Entry
+@subsection Checking balances
+
+
+Ledger 3.0 has a new feature for confirming  
+known past balances.  Here's an example entry:
+
+@smallexample
+   2008/11/26 (Interest) EXTND INS SWEEP ACCT(FDIC-INS)
+       * Assets:Brokerage                 $0.07 = $970.64
+       Income:Interest                   $-0.07
+@end smallexample
+
+What this says is that as of 11/26/08 (bank perspective), the
+Assets:Brokerage account was known to equal $970.64.  It @strong{must}
+equal this amount at this point in the Ledger file, or there will be a
+balancing error.
 
 @node Currency and Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
 @section Currency and Commodities
@@ -4014,5 +4036,26 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 = /Tithe/
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
+
+@subsection --balance-format
+On Apr 29, 2010, at 7:58 AM, Peter Ross wrote:
+
+> All I've found is an email which mentions using %(account), but no
+> other information.
+
+> Is there any documentation anywhere?
+
+Not yet.  Essentialy the new format is %[-][MAX][.MIN](VALEXPR).  But it can get a little crazy due to its flexibility, so that the default balance format looks like this:
+
+         "%(justify(scrub(display_total), 20, -1, true, color))"
+         "  %(!options.flat ? depth_spacer : \"\")"
+         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+         "%$1\n%/"
+         "--------------------\n"
+
+Just imagine the strings concatenated.
+
+John 
+
 
 @bye
