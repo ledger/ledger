@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-19 20:20 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-19 20:27 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -3540,17 +3540,25 @@ Useful specifying a date in plain terms.  For example, you could say
 @node Format Strings, Journal File Format, Value Expressions, Top
 @chapter Format Strings
 
+@menu
+* Basics::                      
+* Format Expressions::          
+* --balance-format::            
+@end menu
+
+@node Basics, Format Expressions, Format Strings, Format Strings
+@section Format String Basics
 Format strings may be used to change the output format of reports.
 They are specified by passing a formatting string to the
 @option{--format} (@option{-F}) option.  Within that string,
 constructs are allowed which make it possible to display the various
 parts of an account or posting in custom ways.
 
-Within a format strings, a substitution is specified using a percent
+Within a format string, a substitution is specified using a percent
 character (@samp{%}).  The basic format of all substitutions is:
 
 @smallexample
-%[-][MIN WIDTH][.MAX WIDTH]EXPR
+%[-][MIN WIDTH][.MAX WIDTH](VALEXPR)
 @end smallexample
 
 If the optional minus sign (@samp{-}) follows the percent character,
@@ -3568,7 +3576,12 @@ and will be truncated to fit.  Here are some examples:
 @end smallexample
 
 The expression following the format constraints can be a single
-letter, or an expression enclosed in parentheses or brackets.  The
+letter, or an expression enclosed in parentheses or brackets. 
+
+@node Format Expressions, --balance-format, Basics, Format Strings
+@section Format Expressions
+
+ The
 allowable expressions are:
 
 @table @code
@@ -3684,6 +3697,19 @@ between what is printed for the first posting of a transaction, and
 what is printed for all subsequent postings.  If not used, the
 same format string is used for all postings.
 @end table
+
+@node --balance-format,  , Format Expressions, Format Strings
+@section --balance-format
+
+As an example of how flexible the --format strings can be, the default balance format looks like this:
+
+@smallexample
+         "%(justify(scrub(display_total), 20, -1, true, color))''
+         "  %(!options.flat ? depth_spacer : \"\")"
+         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+         "%$1\n%/"
+         "--------------------\n"
+@end smallexample
 
 
 @node Journal File Format, Extending with Python, Format Strings, Top
@@ -4037,25 +4063,7 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
 
-@subsection --balance-format
-On Apr 29, 2010, at 7:58 AM, Peter Ross wrote:
 
-> All I've found is an email which mentions using %(account), but no
-> other information.
-
-> Is there any documentation anywhere?
-
-Not yet.  Essentialy the new format is %[-][MAX][.MIN](VALEXPR).  But it can get a little crazy due to its flexibility, so that the default balance format looks like this:
-
-         "%(justify(scrub(display_total), 20, -1, true, color))"
-         "  %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-         "%$1\n%/"
-         "--------------------\n"
-
-Just imagine the strings concatenated.
-
-John 
 
 
 @bye
