@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-19 20:36 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-21 21:33 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -3050,6 +3050,8 @@ weekly last august
 * equity::                      
 * prices::                      
 * xact::                        
+* payees::                      
+* accounts::                    
 @end menu
 
 @node balance, register, Basic Reporting Commands, Basic Reporting Commands
@@ -3150,7 +3152,7 @@ There is also a @command{pricedb} command which outputs the same
 information as @command{prices}, but does in a format that can be
 parsed by Ledger.
 
-@node xact,  , prices, Basic Reporting Commands
+@node xact, payees, prices, Basic Reporting Commands
 @section xact
 
 The @command{xact} commands simplifies the creation of new transactions.
@@ -3206,11 +3208,11 @@ ledger xact 4/9 viva food $11.50 tips $8 cash
 ledger xact 4/9 viva dining "DM 11.50"
 @end smallexample
 
-@node payees
+@node payees, accounts, xact, Basic Reporting Commands
 @section payees
-The @command{payees} reports all of the unique payees in the journal
+The @command{payees} reports all of the unique payees in the journal.
 
-@node accounts
+@node accounts,  , payees, Basic Reporting Commands
 @section accounts
 
 The @command{accounts} reports all of the accounts in the journal.
