@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-21 21:33 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-22 09:48 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -2570,7 +2570,7 @@ know which version of ledger you are using.
 @option{--file FILE} (@option{-f FILE}) reads FILE as a ledger file.
 This command may be used multiple times.
 Typically, the environment variable
-@env{Ledger_FILE} is set, rather than using this command-line option.
+@env{LEDGER_FILE} is set, rather than using this command-line option.
 
 @option{--output FILE} (@option{-o FILE}) redirects output from any
 command to @var{FILE}.  By default, all output goes to standard
@@ -2594,10 +2594,10 @@ precedence over settings in the init file.
 
 @option{--cache FILE} identifies FILE as the default binary cache
 file.  That is, if the ledger files to be read are specified using the
-environment variable @env{Ledger_FILE}, then whenever a command is
+environment variable @env{LEDGER_FILE}, then whenever a command is
 finished a binary copy will be written to the specified cache, to
 speed up the loading time of subsequent queries.  This filename can
-also be given using the environment variable @env{Ledger_CACHE}, or by
+also be given using the environment variable @env{LEDGER_CACHE}, or by
 putting the option into your init file.  The @option{--no-cache}
 option causes Ledger to always ignore the binary cache.
 
@@ -2807,7 +2807,7 @@ would print all but the first five).
 
 @option{--pager} tells Ledger to pass its output to the given pager
 program---very useful when the output is especially long.  This
-behavior can be made the default by setting the @env{Ledger_PAGER}
+behavior can be made the default by setting the @env{LEDGER_PAGER}
 environment variable.
 
 @option{--average} (@option{-A}) reports the average posting
@@ -2861,7 +2861,7 @@ format used by reports.  The default uses a date like 2004/08/01,
 which represents the default date format of @samp{%Y/%m/%d}.  To
 change the way dates are printed in general, the easiest way is to put
 @option{--date-format FORMAT} in the Ledger initialization file
-@file{~/.ledgerrc} (or the file referred to by @env{Ledger_INIT}).
+@file{~/.ledgerrc} (or the file referred to by @env{LEDGER_INIT}).
 
 @option{--format STR} (@option{-F STR}) sets the reporting format for
 whatever report ledger is about to make.  @xref{Format Strings}.
@@ -2908,7 +2908,7 @@ and expecting that script to return a value understood by ledger.  A
 sample implementation of a @command{getquote} script, implemented in
 Perl, is provided in the distribution.  Downloaded quote price are
 then appended to the price database, usually specified using the
-environment variable @env{Ledger_PRICE_DB}.
+environment variable @env{LEDGER_PRICE_DB}.
 
 There are several different ways that ledger can report the totals it
 displays.  The most flexible way to adjust them is by using value
@@ -2936,7 +2936,7 @@ a price history.
 
 Every option to ledger may be set using an environment variable.  If
 an option has a long name such @option{--this-option}, setting the
-environment variable @env{Ledger_THIS_OPTION} will have the same
+environment variable @env{LEDGER_THIS_OPTION} will have the same
 affect as specifying that option on the command-line.  Options on the
 command-line always take precedence over environment variable
 settings, however.
@@ -3052,6 +3052,16 @@ weekly last august
 * xact::                        
 * payees::                      
 * accounts::                    
+* csv::                         
+* convert::                     
+* commodities::                 
+* entry::                       
+* echo::                        
+* org::                         
+* pricemap::                    
+* reload::                      
+* source::                      
+* precommands::                 
 @end menu
 
 @node balance, register, Basic Reporting Commands, Basic Reporting Commands
@@ -3212,12 +3222,54 @@ ledger xact 4/9 viva dining "DM 11.50"
 @section payees
 The @command{payees} reports all of the unique payees in the journal.
 
-@node accounts,  , payees, Basic Reporting Commands
+@node accounts, csv, payees, Basic Reporting Commands
 @section accounts
 
 The @command{accounts} reports all of the accounts in the journal.
 Following the command with a regular expression will limit the output to
 accounts matching the regex.
+
+@node csv, convert, accounts, Basic Reporting Commands
+@section csv
+
+
+@node convert, commodities, csv, Basic Reporting Commands
+@section convert
+
+@node commodities, entry, convert, Basic Reporting Commands
+@section commodities
+
+@node entry, echo, commodities, Basic Reporting Commands
+@section entry
+
+@node echo, org, entry, Basic Reporting Commands
+@section echo
+
+@node org, pricemap, echo, Basic Reporting Commands
+@section org
+
+@node pricemap, reload, org, Basic Reporting Commands
+@section pricemap
+
+@node reload, source, pricemap, Basic Reporting Commands
+@section reload
+
+@node source, precommands, reload, Basic Reporting Commands
+@section source
+
+@node precommands,  , source, Basic Reporting Commands
+@section Pre-Commands
+@table @code
+@item args
+@item eval
+@item expr
+@item format
+@item generate
+@item parse
+@item period
+@item query
+@item template
+@end table
 
 @menu
 * Budgeting and Forecasting::   
@@ -3556,6 +3608,7 @@ Useful specifying a date in plain terms.  For example, you could say
 * Basics::                      
 * Format Expressions::          
 * --balance-format::            
+* New formatting codes::        
 @end menu
 
 @node Basics, Format Expressions, Format Strings, Format Strings
@@ -3710,7 +3763,7 @@ what is printed for all subsequent postings.  If not used, the
 same format string is used for all postings.
 @end table
 
-@node --balance-format,  , Format Expressions, Format Strings
+@node --balance-format, New formatting codes, Format Expressions, Format Strings
 @section --balance-format
 
 As an example of how flexible the --format strings can be, the default balance format looks like this:
@@ -3723,6 +3776,151 @@ As an example of how flexible the --format strings can be, the default balance f
          "--------------------\n"
 @end smallexample
 
+@node New formatting codes,  , --balance-format, Format Strings
+@section New Formatting Codes
+
+@menu
+* Field Widths::                
+* Colors::                      
+* Quantities and Calculations::  
+* Dates::                       
+* Text Formatting::             
+* Misc::                        
+@end menu
+
+@node Field Widths, Colors, New formatting codes, New formatting codes
+@subsection Field Widths
+@table @code
+@item date_width
+@item payee_width
+@item account_width
+@item amount_width
+@item total_width
+@end table
+
+@node Colors, Quantities and Calculations, Field Widths, New formatting codes
+@subsection Colors
+@table @code
+@item red 
+@item green 
+@item yellow 
+@item blue 
+@item magenta 
+@item cyan 
+@item white 
+@item bold 
+@item underline 
+@item blink
+@end table
+
+
+
+@node Quantities and Calculations, Dates, Colors, New formatting codes
+@subsection Quantities and Calcuations
+
+
+
+@table @code
+@item amount_expr
+@item abs --> U
+@item commodity
+@item display_amount  --> t
+@item display_total --> T
+@item floor
+@item get_at
+@item is_seq
+@item market --> P
+@item percent
+@item price
+@item quantity
+@item rounded
+@item truncated
+@item total_expr
+@item t --> display_amount
+@item top_amount
+@item tp_boolean
+@item to_int
+@item to_amount
+@item to_balance
+@item T -->  display_total
+@item unrounded
+@end table
+ 
+@node Dates, Text Formatting, Quantities and Calculations, New formatting codes
+@subsection Dates
+
+@table @code
+@item date
+@item format_date
+@item now  --> d m
+@item today
+@item to_datetime
+@item to_date
+@item value_date
+@end table
+
+@node Text Formatting, Misc, Dates, New formatting codes
+@subsection Text Formatting
+
+@table @code
+@item ansify_if
+@item justify
+@item join
+@item quoted
+@item scrub
+@item strip --> S
+@item should_bold
+@end table
+
+@node Misc,  , Text Formatting, New formatting codes
+@subsection Miscellaneous
+@table @code
+@item amount_expr
+@item ansify_if
+@item abs --> U
+@item commodity
+@item display_amount  --> t
+@item display_total --> T
+@item date
+@item format_date
+@item format
+@item floor
+@item get_at
+@item is_seq
+@item justify
+@item join
+@item market --> P
+@item null
+@item now  --> d m
+@item options
+@item post
+@item percent
+@item price
+@item print
+@item quoted
+@item quantity
+@item rounded
+@item scrub
+@item strip --> S
+@item should_bold
+@item truncated
+@item total_expr
+@item today
+@item t --> display_amount
+@item top_amount
+@item tp_boolean
+@item to_int
+@item to_datetime
+@item to_date
+@item to_amount
+@item to_balance
+@item to_spring
+@item to_mask
+@item to_sequence
+@item T -->  display_total
+@item unrounded
+@item value_date
+@end table
 
 @node Journal File Format, Extending with Python, Format Strings, Top
 @chapter Journal File Format for Developers
