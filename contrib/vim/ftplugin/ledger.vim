@@ -69,7 +69,17 @@ endif
 "   A
 " }}}
 if !exists('g:ledger_detailed_first')
-  let g:ledger_detailed_first = 0
+  let g:ledger_detailed_first = 1
+endif
+
+" only display exact matches (no parent accounts etc.)
+if !exists('g:ledger_exact_only')
+  let g:ledger_exact_only = 0
+endif
+
+" display original text / account name as completion
+if !exists('g:ledger_include_original')
+  let g:ledger_include_original = 0
 endif
 
 let s:rx_amount = '\('.
@@ -141,10 +151,10 @@ function! LedgerComplete(findstart, base) "{{{1
       " only allow completion when in or at end of account name
       if matchend(line, '^\s\+\%(\S \S\|\S\)\+') >= col('.') - 1
         " the start of the first non-blank character
-        " (excluding virtual-transaction-marks)
+        " (excluding virtual-transaction and 'cleared' marks)
         " is the beginning of the account name
         let b:compl_context = 'account'
-        return matchend(line, '^\s\+[\[(]\?')
+        return matchend(line, '^\s\+[*!]\?\s*[\[(]\?')
       endif
     elseif line =~ '^\d' "{{{2 (description)
       let pre = matchend(line, '^\d\S\+\%(([^)]*)\|[*?!]\|\s\)\+')
@@ -161,31 +171,51 @@ function! LedgerComplete(findstart, base) "{{{1
       let b:compl_cache = s:collect_completion_data()
       let b:compl_cache['#'] = changenr()
     endif
+    let update_cache = 0
 
     let results = []
     if b:compl_context == 'account' "{{{2 (account)
-      unlet! b:compl_context
       let hierarchy = split(a:base, ':')
       if a:base =~ ':$'
         call add(hierarchy, '')
       endif
 
       let results = LedgerFindInTree(b:compl_cache.accounts, hierarchy)
-      " sort by alphabet and reverse because it will get reversed one more time
+      let exacts = filter(copy(results), 'v:val[1]')
+
+      if len(exacts) < 1
+        " update cache if we have no exact matches
+        let update_cache = 1
+      endif
+
+      if g:ledger_exact_only
+        let results = exacts
+      endif
+
+      call map(results, 'v:val[0]')
+
       if g:ledger_detailed_first
         let results = reverse(sort(results, 's:sort_accounts_by_depth'))
       else
         let results = sort(results)
       endif
-      call insert(results, a:base)
     elseif b:compl_context == 'description' "{{{2 (description)
-      let results = [a:base] + s:filter_items(b:compl_cache.descriptions, a:base)
+      let results = s:filter_items(b:compl_cache.descriptions, a:base)
+
+      if len(results) < 1
+        let update_cache = 1
+      endif
     elseif b:compl_context == 'new' "{{{2 (new line)
       return [strftime('%Y/%m/%d')]
     endif "}}}
 
+
+    if g:ledger_include_original
+      call insert(results, a:base)
+    endif
+
     " no completion (apart from a:base) found. update cache if file has changed
-    if len(results) <= 1 && b:compl_cache['#'] != changenr()
+    if update_cache && b:compl_cache['#'] != changenr()
       unlet b:compl_cache
       return LedgerComplete(a:findstart, a:base)
     else
@@ -203,11 +233,12 @@ function! LedgerFindInTree(tree, levels) "{{{1
   let currentlvl = a:levels[0]
   let nextlvls = a:levels[1:]
   let branches = s:filter_items(keys(a:tree), currentlvl)
+  let exact = empty(nextlvls)
   for branch in branches
-    call add(results, branch)
-    if !empty(nextlvls)
-      for result in LedgerFindInTree(a:tree[branch], nextlvls)
-        call add(results, branch.':'.result)
+    call add(results, [branch, exact])
+    if ! empty(nextlvls)
+      for [result, exact] in LedgerFindInTree(a:tree[branch], nextlvls)
+        call add(results, [branch.':'.result, exact])
       endfor
     endif
   endfor
@@ -221,7 +252,7 @@ function! LedgerToggleTransactionState(lnum, ...)
     let chars = ' *'
   endif
   let trans = s:transaction.from_lnum(a:lnum)
-  if empty(trans)
+  if empty(trans) || has_key(trans, 'expr')
     return
   endif
 
@@ -238,7 +269,7 @@ function! LedgerSetTransactionState(lnum, char) "{{{1
   " modifies or sets the state of the transaction at the cursor,
   " removing the state alltogether if a:char is empty
   let trans = s:transaction.from_lnum(a:lnum)
-  if empty(trans)
+  if empty(trans) || has_key(trans, 'expr')
     return
   endif
 
@@ -250,7 +281,7 @@ endf "}}}
 function! LedgerSetDate(lnum, type, ...) "{{{1
   let time = a:0 == 1 ? a:1 : localtime()
   let trans = s:transaction.from_lnum(a:lnum)
-  if empty(trans)
+  if empty(trans) || has_key(trans, 'expr')
     return
   endif
 
@@ -288,7 +319,7 @@ function! s:collect_completion_data() "{{{1
   let accounts = []
   for xact in transactions
     " collect descriptions
-    if index(cache.descriptions, xact['description']) < 0
+    if has_key(xact, 'description') && index(cache.descriptions, xact['description']) < 0
       call add(cache.descriptions, xact['description'])
     endif
     let [t, postings] = xact.parse_body()
@@ -354,6 +385,9 @@ function! s:transaction.from_lnum(lnum) dict "{{{2
   if parts[0] ==# '~'
     let trans['expr'] = join(parts[1:])
     return trans
+  elseif parts[0] ==# '='
+    let trans['auto'] = join(parts[1:])
+    return trans
   elseif parts[0] !~ '^\d'
     " this case is avoided in s:get_transaction_extents(),
     " but we'll check anyway.
@@ -411,9 +445,14 @@ function! s:transaction.parse_body(...) dict "{{{2
 
     if line[0] =~ '^\s\+[^[:blank:];]'
       " posting
-      " FIXME: replaces original spacing in amount with single spaces
-      let parts = split(line[0], '\%(\t\|  \)\s*')
-      call add(postings, {'account': parts[0], 'amount': join(parts[1:], '  ')})
+      let [state, rest] = matchlist(line[0], '^\s\+\([*!]\?\)\s*\(.*\)$')[1:2]
+      if rest =~ '\t\|  '
+        let [account, amount] = matchlist(rest, '^\(.\{-}\)\%(\t\|  \)\s*\(.\{-}\)\s*$')[1:2]
+      else
+        let amount = ''
+        let account = matchstr(rest, '^\s*\zs.\{-}\ze\s*$')
+      endif
+      call add(postings, {'account': account, 'amount': amount, 'state': state})
     end
 
     " where are tags to be stored?
@@ -450,6 +489,8 @@ endf "}}}
 function! s:transaction.format_head() dict "{{{2
   if has_key(self, 'expr')
     return '~ '.self['expr']
+  elseif has_key(self, 'auto')
+    return '= '.self['auto']
   endif
 
   let parts = []
@@ -492,7 +533,7 @@ function! s:get_transactions(...) "{{{2
       call add(transactions, trans)
       call cursor(trans['tail'], 0)
     endif
-    let lnum = search('^[~[:digit:]]\S\+', 'cW')
+    let lnum = search('^[~=[:digit:]]', 'cW')
   endw
 
   " restore view / position
@@ -503,7 +544,7 @@ function! s:get_transactions(...) "{{{2
 endf "}}}
 
 function! s:get_transaction_extents(lnum) "{{{2
-  if ! (indent(a:lnum) || getline(a:lnum) =~ '^[~[:digit:]]\S\+')
+  if ! (indent(a:lnum) || getline(a:lnum) =~ '^[~=[:digit:]]')
     " only do something if lnum is in a transaction
     return [0, 0]
   endif
@@ -514,7 +555,7 @@ function! s:get_transaction_extents(lnum) "{{{2
   set nofoldenable
 
   call cursor(a:lnum, 0)
-  let head = search('^[~[:digit:]]\S\+', 'bcnW')
+  let head = search('^[~=[:digit:]]', 'bcnW')
   let tail = search('^[^;[:blank:]]\S\+', 'nW')
   let tail = tail > head ? tail - 1 : line('$')
 
