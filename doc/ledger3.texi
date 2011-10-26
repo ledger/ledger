@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-22 09:48 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-26 15:20 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -72,7 +72,7 @@ twinkling in their father's CRT.
 * Principles of Accounting::    
 * Keeping a Journal::           
 * Command-line Syntax::         
-* Basic Reporting Commands::    
+* Reporting Commands::          
 * Budgeting and Forecasting::   
 * Value Expressions::           
 * Format Strings::              
@@ -2478,7 +2478,7 @@ doing it.
 
 
 
-@node Command-line Syntax, Basic Reporting Commands, Keeping a Journal, Top
+@node Command-line Syntax, Reporting Commands, Keeping a Journal, Top
 @chapter Command-line Syntax
 
 
@@ -2719,7 +2719,7 @@ Valid Ledger invocations look like:
  ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
 @end smallexample
 
-Where @samp{COMMAND} is any command verb (@pxref{Basic Reporting Commands}), @samp{OPTIONS} can occur
+Where @samp{COMMAND} is any command verb (@pxref{Reporting Commands}), @samp{OPTIONS} can occur
 anywhere, and @samp{SEARCH-TERM} is one or more of the following:
 
 @smallexample
@@ -3038,43 +3038,48 @@ weekly last august
 @end smallexample
 
 
-@node Basic Reporting Commands, Budgeting and Forecasting, Command-line Syntax, Top
-@chapter Basic Reporting Commands
+@node Reporting Commands, Budgeting and Forecasting, Command-line Syntax, Top
+@chapter Reporting Commands
 @menu
-* balance::                     
-* register::                    
-* print::                       
-* output::                      
-* xml::                         
-* emacs::                       
-* equity::                      
-* prices::                      
-* xact::                        
-* payees::                      
-* accounts::                    
-* csv::                         
-* convert::                     
-* commodities::                 
-* entry::                       
-* echo::                        
-* org::                         
-* pricemap::                    
-* reload::                      
-* source::                      
-* precommands::                 
+* Primary Financial Reports::   
+* Reports in other formats::    
+* Reports about your Journals::  
+* Developer Commands::          
 @end menu
 
-@node balance, register, Basic Reporting Commands, Basic Reporting Commands
-@section balance
+@node Primary Financial Reports, Reports in other formats, Reporting Commands, Reporting Commands
+@section Primary Financial Reports
+
+@menu
+* balance::                     
+* equity::                      
+* register::                    
+* print::                       
+@end menu
+
+@node balance, equity, Primary Financial Reports, Primary Financial Reports
+@subsection balance
 
 The @command{balance} command reports the current balance of all
 accounts.  It accepts a list of optional regexps, which confine the
 balance report to the matching accounts.  If an account contains
 multiple types of commodities, each commodity's total is reported
 separately.
+@node equity, register, balance, Primary Financial Reports
+@subsection equity
 
-@node register, print, balance, Basic Reporting Commands
-@section register
+The @command{equity} command prints out accounts balances as if they
+were transactions.  This makes it easy to establish the starting balances
+for an account, such as when @ref{Archiving Previous Years}.
+
+
+@menu
+* register::                    
+* print::                       
+@end menu
+
+@node register, print, equity, Primary Financial Reports
+@subsection register
 
 The @command{register} command displays all the postings occurring
 in a single account, line by line.  The account regexp must be
@@ -3094,8 +3099,8 @@ included in the Ledger distribution.  The only requirement is that you
 add either @option{-j} or @option{-J} to your register command, in
 order to plot either the amount or total column, respectively.
 
-@node print, output, register, Basic Reporting Commands
-@section print
+@node print,  , register, Primary Financial Reports
+@subsection print
 
 The @command{print} command prints out ledger transactions in a textual
 format that can be parsed by Ledger.  They will be properly formatted,
@@ -3106,33 +3111,22 @@ postings which match in some way to be printed.
 The @command{print} command can be a handy way to clean up a ledger
 file whose formatting has gotten out of hand.
 
-@node output, xml, print, Basic Reporting Commands
-@section output
+@node Reports in other formats, Reports about your Journals, Primary Financial Reports, Reporting Commands
+@section Reports in other formats
+@menu
+* csv::                         
+* emacs::                       
+* org::                         
+* pricemap::                    
+* xml::                         
+* prices and pricedb::          
+@end menu
 
-The @command{output} command is very similar to the @command{print}
-command, except that it attempts to replicate the specified ledger
-file exactly.  The format of the command is:
+@node csv, emacs, Reports in other formats, Reports in other formats
+@subsection csv
 
-@smallexample
-ledger -f FILENAME output FILENAME
-@end smallexample
-
-Where @file{FILENAME} is the name of the ledger file to output.  The
-reason for specifying this command is that only transactions contained
-within that file will be output, and not an included transactions (as can
-happen with the @command{print} command).
-
-@node xml, emacs, output, Basic Reporting Commands
-@section xml
-
-The @command{xml} command outputs results similar to what
-@command{print} and @command{register} display, but as an XML form.
-This data can then be read in and processed.  Use the
-@option{--totals} option to include the running total with each
-posting.
-
-@node emacs, equity, xml, Basic Reporting Commands
-@section emacs
+@node emacs, org, csv, Reports in other formats
+@subsection emacs
 
 The @command{emacs} command outputs results in a form that can be read
 directly by Emacs Lisp.  The format of the sexp is:
@@ -3143,15 +3137,169 @@ directly by Emacs Lisp.  The format of the sexp is:
  ...)                   ; list of transactions
 @end smallexample
 
-@node equity, prices, emacs, Basic Reporting Commands
-@section equity
+@node org, pricemap, emacs, Reports in other formats
+@subsection org
+The @code{org} command produces a journal file suitable for use in the
+emacs org mode.  More details on using org mode can be found at
+@url{http://www.orgmode.org}.
 
-The @command{equity} command prints out accounts balances as if they
-were transactions.  This makes it easy to establish the starting balances
-for an account, such as when @ref{Archiving Previous Years}.
+@node pricemap, xml, org, Reports in other formats
+@subsection pricemap
 
-@node prices, xact, equity, Basic Reporting Commands
-@section prices
+@node xml, prices and pricedb, pricemap, Reports in other formats
+@subsection xml
+
+By default, Ledger uses a human-readable data format, and displays its
+reports in a manner meant to be read on screen.  For the purpose of
+writing tools which use Ledger, however, it is possible to read and
+display data using XML.  This section documents that format.
+
+The general format used for Ledger data is:
+
+@smallexample
+<?xml version="1.0"?>
+<ledger>
+  <xact>...</xact>
+  <xact>...</xact>
+  <xact>...</xact>...
+</ledger>
+@end smallexample
+
+The data stream is enclosed in a @samp{ledger} tag, which contains a
+series of one or more transactions.  Each @samp{xact} describes the transaction
+and contains a series of one or more postings:
+
+@smallexample
+<xact>
+  <en:date>2004/03/01</en:date>
+  <en:cleared/>
+  <en:code>100</en:code>
+  <en:payee>John Wiegley</en:payee>
+  <en:postings>
+    <posting>...</posting>
+    <posting>...</posting>
+    <posting>...</posting>...
+  </en:postings>
+</xact>
+@end smallexample
+
+The date format for @samp{en:date} is always @samp{YYYY/MM/DD}.  The
+@samp{en:cleared} tag is optional, and indicates whether the
+posting has been cleared or not.  There is also an
+@samp{en:pending} tag, for marking pending postings.  The
+@samp{en:code} and @samp{en:payee} tags both contain whatever text the
+user wishes.
+
+After the initial transaction data, there must follow a set of postings
+marked with @samp{en:postings}.  Typically these postings will
+all balance each other, but if not they will be automatically balanced
+into an account named @samp{<Unknown>}.
+
+Within the @samp{en:postings} tag is a series of one or more
+@samp{posting}'s, which have the following form:
+
+@smallexample
+<posting>
+  <tr:account>Expenses:Computer:Hardware</tr:account>
+  <tr:amount>
+    <value type="amount">
+      <amount>
+        <commodity flags="PT">$</commodity>
+        <quantity>90.00</quantity>
+      </amount>
+    </value>
+  </tr:amount>
+</posting>
+@end smallexample
+
+This is a basic posting.  It may also be begin with
+@samp{tr:virtual} and/or @samp{tr:generated} tags, to indicate virtual
+and auto-generated postings.  Then follows the @samp{tr:account}
+tag, which contains the full name of the account the posting is
+related to.  Colons separate parent from child in an account name.
+
+Lastly follows the amount of the posting, indicated by
+@samp{tr:amount}.  Within this tag is a @samp{value} tag, of which
+there are four different kinds, each with its own format:
+
+@enumerate
+@item boolean
+@item integer
+@item amount
+@item balance
+@end enumerate
+
+The format of a boolean value is @samp{true} or @samp{false}
+surrounded by a @samp{boolean} tag, for example:
+
+@smallexample
+<boolean>true</boolean>
+@end smallexample
+
+The format of an integer value is the numerical value surrounded by an
+@samp{integer} tag, for example:
+
+@smallexample
+<integer>12036</integer>
+@end smallexample
+
+The format of an amount contains two members, the commodity and the
+quantity.  The commodity can have a set of flags that indicate how to
+display it.  The meaning of the flags (all of which are optional) are:
+
+@table @strong
+@item P
+The commodity is prefixed to the value.
+@item S
+The commodity is separated from the value by a space.
+@item T
+Thousands markers are used to display the amount.
+@item E
+The format of the amount is European, with period used as a thousands
+marker, and comma used as the decimal point.
+@end table
+
+The actual quantity for an amount is an integer of arbitrary size.
+Ledger uses the GNU multi-precision math library to handle such
+values.  The XML format assumes the reader to be equally capable.
+Here is an example amount:
+
+@smallexample
+<value type="amount">
+  <amount>
+    <commodity flags="PT">$</commodity>
+    <quantity>90.00</quantity>
+  </amount>
+</value>
+@end smallexample
+
+Lastly, a balance value contains a series of amounts, each with a
+different commodity.  Unlike the name, such a value does need to
+balance.  It is called a balance because it sums several amounts.  For
+example:
+
+@smallexample
+<value type="balance">
+  <balance>
+    <amount>
+      <commodity flags="PT">$</commodity>
+      <quantity>90.00</quantity>
+    </amount>
+    <amount>
+      <commodity flags="TE">DM</commodity>
+      <quantity>200.00</quantity>
+    </amount>
+  </balance>
+</value>
+@end smallexample
+
+That is the extent of the XML data format used by Ledger.  It will
+output such data if the @command{xml} command is used, and can read
+the same data.
+
+
+@node prices and pricedb,  , xml, Reports in other formats
+@subsection prices and pricedb
 
 The @command{prices} command displays the price history for matching
 commodities.  The @option{-A} flag is useful with this report, to
@@ -3159,15 +3307,44 @@ display the running average price, or @option{-D} to show each price's
 deviation from that average.
 
 There is also a @command{pricedb} command which outputs the same
-information as @command{prices}, but does in a format that can be
-parsed by Ledger.
+information as @command{prices}, but does in a format that can be parsed
+by Ledger.  This is useful for generating and tidying up pricedb
+databasefiles.
 
-@node xact, payees, prices, Basic Reporting Commands
-@section xact
 
-The @command{xact} commands simplifies the creation of new transactions.
-It works on the principle that 80% of all postings are variants of
-earlier postings.  Here's how it works:
+@node Reports about your Journals, Developer Commands, Reports in other formats, Reporting Commands
+@section Reports about your Journals
+
+@menu
+* accounts::                    
+* convert::                     
+* commodities::                 
+* entry and xact::              
+* payees::                      
+@end menu
+
+@node accounts, convert, Reports about your Journals, Reports about your Journals
+@subsection accounts
+
+The @command{accounts} reports all of the accounts in the journal.
+Following the command with a regular expression will limit the output to
+accounts matching the regex.
+
+
+@node convert, commodities, accounts, Reports about your Journals
+@subsection convert
+
+@node commodities, entry and xact, convert, Reports about your Journals
+@subsection commodities
+Report all commodities present in the journals under consideration.
+
+
+@node entry and xact, payees, commodities, Reports about your Journals
+@subsection entry and xact
+
+The @code{entry} and @command{xact} commands simplify the creation of
+new transactions.  It works on the principle that 80% of all postings
+are variants of earlier postings.  Here's how it works:
 
 Say you currently have this posting in your ledger file:
 
@@ -3183,7 +3360,7 @@ Italiano} again.  The exact amounts are different, but the overall
 form is the same.  With the @command{xact} command you can type:
 
 @smallexample
-ledger xact 2004/4/9 viva food 11 tips 2.50
+ledger entry 2004/4/9 viva food 11 tips 2.50
 @end smallexample
 
 This produces the following output:
@@ -3201,64 +3378,60 @@ be similar to that earlier posting.  If Ledger does not succeed in
 generating a new transaction, an error is printed and the exit code is set
 to @samp{1}.
 
-There is a shell script in the distribution's @file{scripts} directory
-called @file{xact}, which simplifies the task of adding a new transaction
-to your ledger.  It launches @command{vi} to confirm that the transaction
-looks appropriate.
-
 Here are a few more examples of the @command{xact} command, assuming
 the above journal transaction:
 
 @smallexample
-ledger xact 4/9 viva 11.50
-ledger xact 4/9 viva 11.50 checking # (from `checking')
-ledger xact 4/9 viva food 11.50 tips 8
+ledger entry 4/9 viva 11.50
+ledger entry 4/9 viva 11.50 checking # (from `checking')
+ledger entry 4/9 viva food 11.50 tips 8
 ledger xact 4/9 viva food 11.50 tips 8 cash
 ledger xact 4/9 viva food $11.50 tips $8 cash
 ledger xact 4/9 viva dining "DM 11.50"
 @end smallexample
 
-@node payees, accounts, xact, Basic Reporting Commands
-@section payees
-The @command{payees} reports all of the unique payees in the journal.
+@command{xact} is identical to @command{entry} and is provide for
+backwards compatibility with Ledger 2.X.
 
-@node accounts, csv, payees, Basic Reporting Commands
-@section accounts
+@node payees,  , entry and xact, Reports about your Journals
+@subsection payees
+The @command{payees} reports all of the unique payees in the journal. To filter the payes displayed you must use the @@ prefix:
+@smallexample
+macbook-2:$ ledger payees '@@Tar.+t'
+El Dorade Restaraunt
+My Big Fat Greek Restaraunt
+Target
+macbook-2:$
+@end smallexample 
 
-The @command{accounts} reports all of the accounts in the journal.
-Following the command with a regular expression will limit the output to
-accounts matching the regex.
-
-@node csv, convert, accounts, Basic Reporting Commands
-@section csv
 
 
-@node convert, commodities, csv, Basic Reporting Commands
-@section convert
 
-@node commodities, entry, convert, Basic Reporting Commands
-@section commodities
+@node Developer Commands,  , Reports about your Journals, Reporting Commands
+@section Developer Commands
+@menu
+* echo::                        
+* reload::                      
+* source::                      
+* Pre-commands::                
+@end menu
 
-@node entry, echo, commodities, Basic Reporting Commands
-@section entry
+@node echo, reload, Developer Commands, Developer Commands
+@subsection echo
+This command simply echos its argument back to the output.
 
-@node echo, org, entry, Basic Reporting Commands
-@section echo
 
-@node org, pricemap, echo, Basic Reporting Commands
-@section org
+@node reload, source, echo, Developer Commands
+@subsection reload
+Forces ledger to reload any journal files.  This function exists to
+support external programs controlling a running ledger process and does
+nothing for a command line user.
 
-@node pricemap, reload, org, Basic Reporting Commands
-@section pricemap
+@node source, Pre-commands, reload, Developer Commands
+@subsection source
 
-@node reload, source, pricemap, Basic Reporting Commands
-@section reload
-
-@node source, precommands, reload, Basic Reporting Commands
-@section source
-
-@node precommands,  , source, Basic Reporting Commands
-@section Pre-Commands
+@node Pre-commands,  , source, Developer Commands
+@subsection Pre-Commands
 @table @code
 @item args
 @item eval
@@ -3271,11 +3444,12 @@ accounts matching the regex.
 @item template
 @end table
 
+
 @menu
 * Budgeting and Forecasting::   
 @end menu
 
-@node Budgeting and Forecasting, Value Expressions, Basic Reporting Commands, Top
+@node Budgeting and Forecasting, Value Expressions, Reporting Commands, Top
 @chapter Budgeting and Forecasting
 
 @menu
@@ -3769,7 +3943,7 @@ same format string is used for all postings.
 As an example of how flexible the --format strings can be, the default balance format looks like this:
 
 @smallexample
-         "%(justify(scrub(display_total), 20, -1, true, color))''
+         "%(justify(scrub(display_total), 20, -1, true, color))"
          "  %(!options.flat ? depth_spacer : \"\")"
          "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
          "%$1\n%/"
@@ -3790,28 +3964,25 @@ As an example of how flexible the --format strings can be, the default balance f
 
 @node Field Widths, Colors, New formatting codes, New formatting codes
 @subsection Field Widths
-@table @code
-@item date_width
-@item payee_width
-@item account_width
-@item amount_width
-@item total_width
-@end table
+@multitable @columnfractions .3 .2 .5
+@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
+@item @code{date_width}
+@item @code{payee_width}
+@item @code{account_width}
+@item @code{amount_width}
+@item @code{total_width}
+@end multitable
 
 @node Colors, Quantities and Calculations, Field Widths, New formatting codes
 @subsection Colors
-@table @code
-@item red 
-@item green 
-@item yellow 
-@item blue 
-@item magenta 
-@item cyan 
-@item white 
-@item bold 
-@item underline 
-@item blink
-@end table
+
+The character based formatting ledger can do is limited to the ANSI terminal character colors and font highlight in a normal TTY seesion.  
+@multitable @columnfractions .3 .3 .3
+@item @code{red} @tab @code{magenta} @tab @code{bold}
+@item @code{green } @tab @code{cyan} @tab @code{underline}
+@item @code{yellow } @tab @code{white} @tab @code{blink}
+@item @code{blue } 
+@end multitable
 
 
 
@@ -3820,107 +3991,118 @@ As an example of how flexible the --format strings can be, the default balance f
 
 
 
-@table @code
-@item amount_expr
-@item abs --> U
-@item commodity
-@item display_amount  --> t
-@item display_total --> T
-@item floor
-@item get_at
-@item is_seq
-@item market --> P
-@item percent
-@item price
-@item quantity
-@item rounded
-@item truncated
-@item total_expr
-@item t --> display_amount
-@item top_amount
-@item tp_boolean
-@item to_int
-@item to_amount
-@item to_balance
-@item T -->  display_total
-@item unrounded
-@end table
- 
+@multitable @columnfractions .3 .2 .5
+@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
+@item @code{amount_expr } @tab @code{} @tab 
+@item @code{abs} @tab @code{U} @tab 
+@item @code{commodity } @tab @code{} @tab 
+@item @code{display_amount } @tab @code{t} @tab
+@item @code{display_total } @tab @code{T} @tab 
+@item @code{floor } @tab @code{} @tab 
+@item @code{get_at } @tab @code{} @tab 
+@item @code{is_seq } @tab @code{} @tab 
+@item @code{market } @tab @code{P} @tab 
+@item @code{percent } @tab @code{} @tab 
+@item @code{price } @tab @code{} @tab 
+@item @code{quantity } @tab @code{} @tab 
+@item @code{rounded } @tab @code{} @tab 
+@item @code{truncated } @tab @code{} @tab 
+@item @code{total_expr } @tab @code{} @tab 
+@item @code{top_amount } @tab @code{} @tab 
+@item @code{to_boolean } @tab @code{} @tab 
+@item @code{to_int } @tab @code{} @tab 
+@item @code{to_amount } @tab @code{} @tab 
+@item @code{to_balance } @tab @code{} @tab 
+@item @code{unrounded } @tab @code{} @tab 
+@end multitable
+      
 @node Dates, Text Formatting, Quantities and Calculations, New formatting codes
 @subsection Dates
 
-@table @code
-@item date
-@item format_date
-@item now  --> d m
-@item today
-@item to_datetime
-@item to_date
-@item value_date
-@end table
+@multitable @columnfractions .3 .2 .5
+@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
+@item @code{date } @tab @code{} @tab 
+@item @code{format_date } @tab @code{} @tab 
+@item @code{now } @tab @code{} @tab   --> d m
+@item @code{today } @tab @code{} @tab 
+@item @code{to_datetime } @tab @code{} @tab 
+@item @code{to_date } @tab @code{} @tab 
+@item @code{value_date } @tab @code{} @tab 
+@end multitable
 
 @node Text Formatting, Misc, Dates, New formatting codes
 @subsection Text Formatting
-
+@subsubsection Summary
+@multitable @columnfractions .6 .4
+@item @strong{Function}  @tab @strong{Description}
+@item @code{ansify_if(str,color) } @tab Colorize the string
+@item @code{justify(str, fwidth, lwidth, right, colorize) }  @tab Right or left justify the string.
+@item @code{join(str) } @tab Remove line feeds from the input string.  Mainly used internaally for org-mode output 
+@item @code{quoted(str) } @tab Returns @code{"<str>"}. 
+@item @code{strip } @tab @code{Removes additional annotations from values.}
+@item @code{scrub } @tab @code{S} 
+@item @code{should_bold } @tab @code{} 
+@end multitable
+@subsubsection Detailed Descriptions
 @table @code
-@item ansify_if
-@item justify
-@item join
-@item quoted
-@item scrub
-@item strip --> S
-@item should_bold
+@item ansify_if(value, color)
+Surrounds the string representing value with ANSI codes to give it @code{color} on an TTY display.  Has no effect if directed to a file.
+@item justify(value, first_width, latter_width, right_justify, colorize)  
+Right or left justify the string representing @code{value}.  The width of the field in the first line is given by @code{first_width}.  For subsequent lines the width is given by @code{latterwidth}.  If @code{latter_width=-1}, then @code{first_width} is use for all lines.  If @code{right_justify=true} then the field is right justify within the width of the field. If it is @code{false}, then the field is left justified and padded to the full width of the field.  If @code{colorize} is true then ledger will hone color settings.
+@item join(str)
+Replaces line feeds in str with @code{\n}.
+@item quoted(str)
+Return str surounded by double quotes, @code{"<str>"}.
+@item strip(value)
+Values can have numerous annotations, such as effective dates and lot prices.  @code{strip} removes these annotations.
 @end table
-
 @node Misc,  , Text Formatting, New formatting codes
 @subsection Miscellaneous
-@table @code
-@item amount_expr
-@item ansify_if
-@item abs --> U
-@item commodity
-@item display_amount  --> t
-@item display_total --> T
-@item date
-@item format_date
-@item format
-@item floor
-@item get_at
-@item is_seq
-@item justify
-@item join
-@item market --> P
-@item null
-@item now  --> d m
-@item options
-@item post
-@item percent
-@item price
-@item print
-@item quoted
-@item quantity
-@item rounded
-@item scrub
-@item strip --> S
-@item should_bold
-@item truncated
-@item total_expr
-@item today
-@item t --> display_amount
-@item top_amount
-@item tp_boolean
-@item to_int
-@item to_datetime
-@item to_date
-@item to_amount
-@item to_balance
-@item to_spring
-@item to_mask
-@item to_sequence
-@item T -->  display_total
-@item unrounded
-@item value_date
-@end table
+@multitable @columnfractions .3 .2 .5
+@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
+@item @code{amount_expr } @tab @code{} @tab 
+@item @code{abs } @tab @code{} @tab  --> U
+@item @code{commodity } @tab @code{} @tab 
+@item @code{display_amount } @tab @code{} @tab   --> t
+@item @code{display_total } @tab @code{} @tab  --> T
+@item @code{date } @tab @code{} @tab 
+@item @code{format_date } @tab @code{} @tab 
+@item @code{format } @tab @code{} @tab 
+@item @code{floor } @tab @code{} @tab 
+@item @code{get_at } @tab @code{} @tab 
+@item @code{is_seq } @tab @code{} @tab 
+@item @code{justify } @tab @code{} @tab 
+@item @code{join } @tab @code{} @tab 
+@item @code{market --> P } @tab @code{} @tab 
+@item @code{null } @tab @code{} @tab 
+@item @code{now  --> d m } @tab @code{} @tab 
+@item @code{options } @tab @code{} @tab 
+@item @code{post } @tab @code{} @tab 
+@item @code{percent } @tab @code{} @tab 
+@item @code{price } @tab @code{} @tab 
+@item @code{print } @tab @code{} @tab 
+@item @code{quoted } @tab @code{} @tab 
+@item @code{quantity } @tab @code{} @tab 
+@item @code{rounded } @tab @code{} @tab 
+@item @code{scrub } @tab @code{} @tab 
+@item @code{strip --> S } @tab @code{} @tab 
+@item @code{should_bold } @tab @code{} @tab 
+@item @code{truncated } @tab @code{} @tab 
+@item @code{total_expr } @tab @code{} @tab 
+@item @code{today } @tab @code{} @tab 
+@item @code{top_amount } @tab @code{} @tab 
+@item @code{to_boolean } @tab @code{} @tab 
+@item @code{to_int } @tab @code{} @tab 
+@item @code{to_datetime } @tab @code{} @tab 
+@item @code{to_date } @tab @code{} @tab 
+@item @code{to_amount } @tab @code{} @tab 
+@item @code{to_balance } @tab @code{} @tab 
+@item @code{to_spring } @tab @code{} @tab 
+@item @code{to_mask } @tab @code{} @tab 
+@item @code{to_sequence } @tab @code{} @tab 
+@item @code{unrounded } @tab @code{} @tab 
+@item @code{value_date } @tab @code{} @tab 
+@end multitable
 
 @node Journal File Format, Extending with Python, Format Strings, Top
 @chapter Journal File Format for Developers
