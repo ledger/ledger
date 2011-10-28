@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-26 15:20 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-27 21:55 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -535,7 +535,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{-A} @tab @code{--average} @tab Reports average posting value
 @item @code{-D} @tab @code{--deviation} @tab Reports each posting deviation from the average
 @item @code{-%} @tab @code{--percentage} @tab Show subtotals in the balance report as percentages
-@item @code{} @tab @code{--totals} @tab Include running total in the @code{xml} report
+@c @item @code{} @tab @code{--totals} @tab Include running total in the @code{xml} report
 @item @code{-j} @tab @code{--amount-data} @tab Show only date and value column
 @item @code{-J} @tab @code{--total-data} @tab Show only dates and totals
 @item @code{-d EXPR} @tab @code{--display EXPR} @tab Limit only the display of certain postings
@@ -1749,7 +1749,7 @@ Often times a transaction needs to be split across several accounts.  This is tr
     Assets:Credit Union:Joint Checking     
 @end smallexample
 
-This is an example of a paycheck entry.  THe money comes OUT of your
+This is an example of a paycheck entry.  The money comes @strong{out} of your
 income account, and is spent into several other accounts.  The last line
 doesn't require an amount, as ledger will automatically balance the
 transaction (it will be $1800 into the Joint Checking account)
@@ -2820,8 +2820,8 @@ deviation from the average.  It is only meaningful in the
 @option{--percentage} (@option{-%}) shows account subtotals in the
 @command{balance} report as percentages of the parent account.
 
-@option{--totals} include running total information in the
-@command{xml} report.
+@c @option{--totals} include running total information in the
+@c @command{xml} report.
 
 @option{--amount-data} (@option{-j}) changes the @command{register}
 report so that it outputs nothing but the date and the value column,
