@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-27 21:55 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-10-29 11:28 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -3142,6 +3142,312 @@ directly by Emacs Lisp.  The format of the sexp is:
 The @code{org} command produces a journal file suitable for use in the
 emacs org mode.  More details on using org mode can be found at
 @url{http://www.orgmode.org}.
+
+Org mode has a sub-system known as babel which allows for literate
+programming.  This allows you to mix text and code within the same
+document and automatically execute code which may generate results which
+will then appear in the text.
+
+One of the languages supported by org+babel is ledger so that you can
+have ledger commands embedded in a text file and have the output of
+ledger commands also appear in the text file.  The output can be
+updated whenever any new ledger entries are added.
+
+For instance, the following org mode text document snippet illustrates a
+very naive but still useful of the org+babel system:
+
+@smallexample
+* A simple test of ledger in an org file
+The following are some entries and I have requested that ledger be run
+to generate a balance on the accounts.  I could have asked for a
+register or, in fact, anything at all the ledger can do through command
+line options.
+
+#+begin_src ledger :cmdline -s bal :results value
+2010/01/01 * Starting balance
+ assets:bank:savings  £1300.00
+ income:starting balances
+2010/07/22 * Got paid
+ assets:bank:chequing  £1000.00
+ income:salary
+2010/07/23 Rent
+ expenses:rent  £500.00
+ assets:bank:chequing
+#+end_src
+
+#+results:
+:            £1800.00  assets:bank
+:             £500.00    chequing
+:            £1300.00    savings
+:             £500.00  expenses:rent
+:           £-2300.00  income
+:           £-1000.00    salary
+:           £-1300.00    starting balances
+@end smallexample
+
+Typing @command{C-c C-c} anywhere in the ``ledger source code block''
+will invoke ledger on the contents of that block and generate a
+``results'' block.  The results block can appear anywhere in the file
+but, by default, will appear immediately below the source code block.
+
+You can combine multiple source code blocks before executing ledger and
+do all kinds of other wonderful things with Babel (and org).
+
+
+@subsubsection Using Ledger for Accounting in Org-mode with Babel
+
+Using Babel, it is possible to record financial transactions
+conveniently in an org file and subsequently generate the financial
+reports required.
+
+@unnumberedsubsubsec Getting Started
+
+With a recent version of org (7.01+), Ledger support is provided. To use
+it, enable Ledger support. Check the Babel documentation on Worg for
+instructions on how to achieve this but I currently do this directly as
+follows:
+@smallexample
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((ledger . t)         ;this is the important one for this tutorial
+  ))
+@end smallexample
+Once Ledger support in Babel has been enabled, we can use proceed to
+include Ledger entries within an org file. There are three ways (at
+least) in which these can be included:
+
+@enumerate
+@item    
+         place all Ledger entries within one source block and execute
+         this block with different arguments to generate the appropriate
+         reports;
+@item    
+         place Ledger entries in more than one source block and use the
+         noweb literary programming approach, supported by babel, to
+         combine these into one block elsewhere in the file for
+         processing by Ledger; and,
+@item    
+         place Ledger entries in different source blocks and use
+         tangling to generate a Ledger file which you can subsequently
+         process using Ledger directly.
+@end enumerate
+
+The first two are described in more detail in this short tutorial. 
+
+@unnumberedsubsubsec Embedded Ledger example with single source block
+
+The easiest, albeit possibly less useful, way in which to use Ledger
+within an org file is to use a single source block to record all Ledger
+entries. The following is an example source block:
+@smallexample
+#+srcname: allinone
+#+begin_src ledger
+2010/01/01 * Starting balance
+  assets:bank:savings  £1300.00
+  income:starting balances
+2010/07/22 * Got paid
+  assets:bank:chequing  £1000.00
+  income:salary
+2010/07/23 Rent
+  expenses:rent  £500.00
+  assets:bank:chequing
+2010/07/24 Food
+  expenses:food  £150.00
+  assets:bank:chequing
+2010/07/31 * Interest on bank savings
+  assets:bank:savings  £3.53
+  income:interest
+2010/07/31 * Transfer savings
+  assets:bank:savings  £250.00
+  assets:bank:chequing
+2010/08/01 got paid again
+  assets:bank:chequing  £1000.00
+  income:salary
+#+end_src
+@end smallexample
+In this example, we have combined both expenses and income into one set
+of Ledger entries. We can now generate register and balance reports (as
+well as many other types of reports) using babel to invoke Ledger with
+specific arguments. The arguments are passed to Ledger using the
+:cmdline header argument. In the code block above, there is no such
+argument so the system takes the default. For Ledger code blocks, the
+default :cmdline argument is bal and the result of evaluating this code
+block (@command{C-c C-c}) would be:
+@smallexample
+#+results: allinone()
+:            £2653.53  assets
+:             £650.00  expenses
+:           £-3303.53  income
+@end smallexample
+If, instead, you wished to generate a register of all the transactions,
+you would change the #+begin_src line for the code block to include the
+required command line option:
+@smallexample
+#+begin_src ledger :cmdline reg
+@end smallexample
+Evaluating the code block again would generate a different report.
+
+Having to change the actual directive on the code block and re-evaluate
+makes it difficult to have more than one view of your transactions and
+financial state. Eventually, babel will support passing arguments to
+#+call evaluations of code blocks but this support is missing
+currently. Instead, we can use the concepts of literary programming, as
+implemented by the noweb features of babel, to help us.
+
+@unnumberedsubsubsec Multiple Ledger source blocks with noweb
+
+The noweb feature of babel allows us to expand references to other code
+blocks within a code block. For Ledger, this can be used to group
+transactions according to type, say, and then bring various sets of
+transactions together to generate reports.
+
+Using the same transactions used above, we could consider splitting
+these into expenses and income, as follows:
+@unnumberedsubsubsec Income Entries
+
+The first set of entries relates to income, either monthly pay or
+interest, all typically going into one of my bank accounts. Here, I have
+placed several entries, but we could have had each entry in a separate
+src block. Note that all code blocks you wish to refer to later must
+have the :noweb yes babel header argument specified.
+@smallexample
+#+srcname: income
+#+begin_src ledger :noweb yes
+2010/01/01 * Starting balance
+  assets:bank:savings  £1300.00
+  income:starting balances
+2010/07/22 * Got paid
+  assets:bank:chequing  £1000.00
+  income:salary
+2010/07/31 * Interest on bank savings
+  assets:bank:savings  £3.53
+  income:interest
+2010/07/31 * Transfer savings
+  assets:bank:savings  £250.00
+  assets:bank:chequing
+2010/08/01 got paid again
+  assets:bank:chequing  £1000.00
+  income:salary
+#+end_src
+@end smallexample
+@unnumberedsubsubsec Expenses
+
+The following entries relate to personal expenses, such as rent and
+food. Again, these have all been placed in a single src block but could
+have been done individually.
+@smallexample
+#+srcname: expenses
+#+begin_src ledger :noweb yes
+2010/07/23 Rent
+  expenses:rent  £500.00
+  assets:bank:chequing
+2010/07/24 Food
+  expenses:food  £150.00
+  assets:bank:chequing
+#+end_src
+@end smallexample
+
+@unnumberedsubsubsec Financial Summaries
+
+Given the ledger entries defined above in the income and expenses code
+blocks, we can now refer to these using the noweb expansion directives,
+<<name>>. We can now define different code blocks to generate specific
+reports for those transactions. Below are two examples, one to generate
+a balance report and one to generate a register report of all
+transactions.
+@unnumberedsubsubsec An overall balance summary
+
+The overall balance of your account and expenditure with a breakdown
+according to category is specified by passing the :cmdline bal argument
+to Ledger. This code block can now be evaluated (C-c C-c) and the
+results generated by incorporating the transactions referred to by the
+<<income>> and <<expenses>>= lines.
+@smallexample
+#+srcname: balance
+#+begin_src ledger :cmdline bal :noweb yes
+<<income>>
+<<expenses>>
+#+end_src
+
+#+results: balance
+:            £2653.53  assets
+:             £650.00  expenses
+:           £-3303.53  income
+@end smallexample
+
+If you want a more detailed breakdown of where your money is and where
+it has been spent, you can specify the -s flag (i.e. :cmdline -s bal) to
+tell Ledger to include sub-accounts in the report.
+
+@smallexample
+#+begin_src ledger :cmdline -s bal :noweb yes
+<<income>>
+<<expenses>>
+#+end_src
+
+#+results:
+:           £2653.53  assets:bank
+:           £1100.00    chequing
+:           £1553.53    savings
+:            £650.00  expenses
+:            £150.00    food
+:            £500.00    rent
+:          £-3303.53  income
+:             £-3.53    interest
+:          £-2000.00    salary
+:          £-1300.00    starting balances
+@end smallexample
+@unnumberedsubsubsec Generating a monthly register
+
+You can also generate a monthly register (the reg command) by executing
+the following src block. This presents a summary of transactions for
+each monthly period (the -M argument) with a running total in the final
+column (which should be 0 at the end if all the entries are correct).
+
+@smallexample
+#+srcname: monthlyregister
+#+begin_src ledger :cmdline -M reg :noweb yes
+<<income>>
+<<expenses>>
+#+end_src
+
+#+results: monthlyregister
+:2010/01/01 - 2010/01/31         assets:bank:savings       £1300.00    £1300.00
+:                                in:starting balances     £-1300.00            0
+:2010/07/01 - 2010/07/31         assets:bank:chequing       £100.00     £100.00
+:                                assets:bank:savings        £253.53     £353.53
+:                                expenses:food              £150.00     £503.53
+:                                expenses:rent              £500.00    £1003.53
+:                                income:interest             £-3.53    £1000.00
+:                                income:salary            £-1000.00            0
+:2010/08/01 - 2010/08/01         assets:bank:chequing      £1000.00    £1000.00
+:                                income:salary            £-1000.00            0
+@end smallexample
+
+We could also generate a monthly report on our assets showing how these
+are increasing (or decreasing!). In this case, the final column will be
+the running total of the assets in our ledger.
+
+@smallexample
+#+srcname: monthlyassetsregister
+#+begin_src ledger :cmdline -M reg assets :noweb yes
+<<income>>
+<<expenses>>
+#+end_src
+
+#+results: monthlyassetsregister
+: 2010/01/01 - 2010/01/31         assets:bank:savings       £1300.00    £1300.00
+: 2010/07/01 - 2010/07/31         assets:bank:chequing       £100.00    £1400.00
+:                                 assets:bank:savings        £253.53    £1653.53
+: 2010/08/01 - 2010/08/01         assets:bank:chequing      £1000.00    £2653.53
+@end smallexample
+
+@unnumberedsubsubsec Summary
+
+This short tutorial shows how Ledger entries can be embedded in a org
+file and manipulated using Babel. However, only simple Ledger features
+have been illustrated; please refer to the Ledger documentation for
+examples of more complex integrations with a ledger.
 
 @node pricemap, xml, org, Reports in other formats
 @subsection pricemap
