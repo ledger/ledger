@@ -59,7 +59,7 @@ while (my $fundLine = <LEDGER_FUNDS>) {
     unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\d\.\,]+)/;
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
-  $account =~ s/^\s*Funds:Restricted://;    $account =~ s/\s+$//;
+  $account =~ s/^\s+Funds:Restricted://;    $account =~ s/\s+$//;
   $funds{$account}{ending} = $amount;
 }
 close LEDGER_FUNDS;
@@ -77,56 +77,24 @@ while (my $fundLine = <LEDGER_FUNDS>) {
     unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\d\.\,]+)/;
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
-  $account =~ s/^\s*Funds:Restricted://;    $account =~ s/\s+$//;
+  $account =~ s/^\s+Funds:Restricted://;    $account =~ s/\s+$//;
   $funds{$account}{starting} = $amount;
 }
 close LEDGER_FUNDS;
-
 
 foreach my $fund (keys %funds) {
   $funds{$fund}{starting} = $ZERO if not defined $funds{$fund}{starting};
 }
 
-@ledgerOptions = (@mainLedgerOptions,
-                  '--wide-register-format', "%-.70A %22.108t\n",  '-w', '-s',
-                  '-b', $startDate, '-e', $endDate, 'reg');
-
-foreach my $type ('Income', 'Expenses') {
-  foreach my $fund (keys %funds) {
-    open(LEDGER_INCOME, "-|", $LEDGER_CMD, @ledgerOptions, "^${type}:$fund")
-      or die "Unable to run $LEDGER_CMD for funds: $!";
-      $funds{$fund}{$type} = $ZERO;
-    while (my $line = <LEDGER_INCOME>) {
-      die "Unable to parse output line from $type line command: $line"
-        unless $line =~ /^\s*([^\$]+)\s+\$\s*\s*([\-\d\.\,]+)/;
-      my($account, $amount) = ($1, $2);
-      $amount = ParseNumber($amount);
-      $funds{$fund}{$type} += $amount;
-    }
-    close LEDGER_INCOME;
-  }
-}
-
-my($totStart, $totEnd) = ($ZERO, $ZERO);
+my $format = "%-${ACCT_WIDTH}.${ACCT_WIDTH}s       \$%11.2f       \$%11.2f\n";
+my($totDeb, $totCred) = ($ZERO, $ZERO);
 
 foreach my $fund (sort keys %funds) {
   print "Fund: $fund\n";
-  print "      Balance as of $startDate: ", sprintf("\$%15.2f\n\n", $funds{$fund}{starting});
-  print "      Income during period:     ", sprintf("\$%15.2f\n", $funds{$fund}{Income});
-  print "      Expenses during period:   ", sprintf("\$%15.2f\n\n", $funds{$fund}{Expenses});
-  print "      Balance as of $endDate: ", sprintf("\$%15.2f\n", $funds{$fund}{ending});
+  print "      Balance as of $startDate: ", sprintf("\$%11.2f\n", $funds{$fund}{starting});
+  print "      Balance as of $endDate: ", sprintf("\$%11.2f\n", $funds{$fund}{ending});
   print "\n\n";
-  # Santity check:
-  if ($funds{$fund}{ending} !=
-      ( ($funds{$fund}{starting} - $funds{$fund}{Income}) - $funds{$fund}{Expenses})) {
-    print "$fund FAILED SANITY CHECK\n\n\n";
-    die "$fund FAILED SANITY CHECK";
-  }
-  $totStart += $funds{$fund}{starting};
-  $totEnd += $funds{$fund}{ending};
 }
-print "\n\n\nTotal Restricted Funds as of $startDate: ", sprintf("\$%15.2f\n", $totStart);
-print "\nTotal Restricted Funds as of $endDate: ", sprintf("\$%15.2f\n", $totEnd);
 ###############################################################################
 #
 # Local variables:
