@@ -114,9 +114,15 @@ foreach my $fund (sort keys %funds) {
   print "Fund: $fund\n";
   print "      Balance as of $startDate: ", sprintf("\$%11.2f\n\n", $funds{$fund}{starting});
   print "      Income during period:     ", sprintf("\$%11.2f\n", $funds{$fund}{Income});
-  print "      Expenses during period:     ", sprintf("\$%11.2f\n", $funds{$fund}{Expenses});
+  print "      Expenses during period:    ", sprintf("\$%11.2f\n\n", $funds{$fund}{Expenses});
   print "      Balance as of $endDate: ", sprintf("\$%11.2f\n", $funds{$fund}{ending});
   print "\n\n";
+  # Santity check:
+  if ($funds{$fund}{ending} ==
+      ($funds{$fund}{starting} + $funds{$fund}{Income} + $funds{$fund}{Expenses})) {
+    print "$fund FAILED SANITY CHECK\n\n\n";
+    die "$fund FAILED SANITY CHECK";
+  }
 }
 ###############################################################################
 #
