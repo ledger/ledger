@@ -107,23 +107,26 @@ foreach my $type ('Income', 'Expenses') {
   }
 }
 
-my $format = "%-${ACCT_WIDTH}.${ACCT_WIDTH}s       \$%11.2f       \$%11.2f\n";
-my($totDeb, $totCred) = ($ZERO, $ZERO);
+my($totStart, $totEnd) = ($ZERO, $ZERO);
 
 foreach my $fund (sort keys %funds) {
   print "Fund: $fund\n";
-  print "      Balance as of $startDate: ", sprintf("\$%11.2f\n\n", $funds{$fund}{starting});
-  print "      Income during period:     ", sprintf("\$%11.2f\n", $funds{$fund}{Income});
-  print "      Expenses during period:    ", sprintf("\$%11.2f\n\n", $funds{$fund}{Expenses});
-  print "      Balance as of $endDate: ", sprintf("\$%11.2f\n", $funds{$fund}{ending});
+  print "      Balance as of $startDate: ", sprintf("\$%15.2f\n\n", $funds{$fund}{starting});
+  print "      Income during period:     ", sprintf("\$%15.2f\n", $funds{$fund}{Income});
+  print "      Expenses during period:   ", sprintf("\$%15.2f\n\n", $funds{$fund}{Expenses});
+  print "      Balance as of $endDate: ", sprintf("\$%15.2f\n", $funds{$fund}{ending});
   print "\n\n";
   # Santity check:
-  if ($funds{$fund}{ending} ==
-      ($funds{$fund}{starting} + $funds{$fund}{Income} + $funds{$fund}{Expenses})) {
+  if ($funds{$fund}{ending} !=
+      ( ($funds{$fund}{starting} - $funds{$fund}{Income}) - $funds{$fund}{Expenses})) {
     print "$fund FAILED SANITY CHECK\n\n\n";
     die "$fund FAILED SANITY CHECK";
   }
+  $totStart += $funds{$fund}{starting};
+  $totEnd += $funds{$fund}{ending};
 }
+print "\n\n\nTotal Restricted Funds as of $startDate: ", sprintf("\$%15.2f\n", $totStart);
+print "\nTotal Restricted Funds as of $endDate: ", sprintf("\$%15.2f\n", $totEnd);
 ###############################################################################
 #
 # Local variables:
