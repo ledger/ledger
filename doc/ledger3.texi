@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-10-29 11:28 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-11-03 20:19 (cpearls)>
 @author John Wiegley
 @end titlepage
 
@@ -508,7 +508,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{-r} @tab @code{--related} @tab Display related postings
 @item @code{} @tab @code{--budget} @tab Display how close your postings meet your budget
 @item @code{} @tab @code{--add-budget} @tab Shows unbudgeted postings
-@item @code{} @tab @code{--unbedgeted} @tab Shows only unbudgeted postings
+@item @code{} @tab @code{--unbudgeted} @tab Shows only unbudgeted postings
 @item @code{} @tab @code{--forecast} @tab Project balances into the future
 @item @code{-l EXPR} @tab @code{--limit EXPR} @tab Limits postings in calculations
 @item @code{-t EXPR} @tab @code{--amount} @tab Change value expression reported in register report
@@ -534,7 +534,7 @@ $ ledger -f drewr3.dat cleared
 @item @code{} @tab @code{--pager prog} @tab Direct output @code{prog} pager program
 @item @code{-A} @tab @code{--average} @tab Reports average posting value
 @item @code{-D} @tab @code{--deviation} @tab Reports each posting deviation from the average
-@item @code{-%} @tab @code{--percentage} @tab Show subtotals in the balance report as percentages
+@item @code{-%} @tab @code{--percent} @tab Show subtotals in the balance report as percentages
 @c @item @code{} @tab @code{--totals} @tab Include running total in the @code{xml} report
 @item @code{-j} @tab @code{--amount-data} @tab Show only date and value column
 @item @code{-J} @tab @code{--total-data} @tab Show only dates and totals
@@ -2817,7 +2817,7 @@ value.
 deviation from the average.  It is only meaningful in the
 @command{register} and @command{prices} reports.
 
-@option{--percentage} (@option{-%}) shows account subtotals in the
+@option{--percent} (@option{-%}) shows account subtotals in the
 @command{balance} report as percentages of the parent account.
 
 @c @option{--totals} include running total information in the
