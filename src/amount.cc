@@ -115,7 +115,7 @@ namespace {
                       mpq_t                         quant,
                       amount_t::precision_t         precision,
                       int                           zeros_prec = -1,
-                      mpfr_rnd_t                    rnd        = MPFR_RNDN,
+                      mpfr_rnd_t                    rnd        = GMP_RNDN,
                       const optional<commodity_t&>& comm       = none)
   {
     char * buf = NULL;
@@ -670,7 +670,7 @@ void amount_t::in_place_floor()
   _dup();
 
   std::ostringstream out;
-  stream_out_mpq(out, MP(quantity), precision_t(0), -1, MPFR_RNDZ);
+  stream_out_mpq(out, MP(quantity), precision_t(0), -1, GMP_RNDZ);
 
   mpq_set_str(MP(quantity), out.str().c_str(), 10);
 }
@@ -845,8 +845,8 @@ double amount_t::to_double() const
   if (! quantity)
     throw_(amount_error, _("Cannot convert an uninitialized amount to a double"));
 
-  mpfr_set_q(tempf, MP(quantity), MPFR_RNDN);
-  return mpfr_get_d(tempf, MPFR_RNDN);
+  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
+  return mpfr_get_d(tempf, GMP_RNDN);
 }
 
 long amount_t::to_long() const
@@ -854,14 +854,14 @@ long amount_t::to_long() const
   if (! quantity)
     throw_(amount_error, _("Cannot convert an uninitialized amount to a long"));
 
-  mpfr_set_q(tempf, MP(quantity), MPFR_RNDN);
-  return mpfr_get_si(tempf, MPFR_RNDN);
+  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
+  return mpfr_get_si(tempf, GMP_RNDN);
 }
 
 bool amount_t::fits_in_long() const
 {
-  mpfr_set_q(tempf, MP(quantity), MPFR_RNDN);
-  return mpfr_fits_slong_p(tempf, MPFR_RNDN);
+  mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
+  return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }
 
 commodity_t& amount_t::commodity() const
@@ -1240,7 +1240,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const
   }
 
   stream_out_mpq(out, MP(quantity), display_precision(),
-                 comm ? commodity().precision() : 0, MPFR_RNDN, comm);
+                 comm ? commodity().precision() : 0, GMP_RNDN, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
