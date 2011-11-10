@@ -36,7 +36,8 @@
 
 namespace ledger {
 
-query_t::lexer_t::token_t query_t::lexer_t::next_token()
+query_t::lexer_t::token_t
+query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
 {
   if (token_cache.kind != token_t::UNKNOWN) {
     token_t tok = token_cache;
@@ -108,8 +109,16 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
       return next_token();
   goto resume;
 
-  case '(': ++arg_i; return token_t(token_t::LPAREN);
-  case ')': ++arg_i; return token_t(token_t::RPAREN);
+  case '(':
+    ++arg_i;
+    if (tok_context == token_t::TOK_EXPR)
+      consume_whitespace = true;
+    return token_t(token_t::LPAREN);
+  case ')':
+    ++arg_i;
+    if (tok_context == token_t::TOK_EXPR)
+      consume_whitespace = false;
+    return token_t(token_t::RPAREN);
   case '&': ++arg_i; return token_t(token_t::TOK_AND);
   case '|': ++arg_i; return token_t(token_t::TOK_OR);
   case '!': ++arg_i; return token_t(token_t::TOK_NOT);
@@ -118,7 +127,7 @@ query_t::lexer_t::token_t query_t::lexer_t::next_token()
   case '%': ++arg_i; return token_t(token_t::TOK_META);
   case '=':
     ++arg_i;
-    consume_next_arg = true;
+    consume_next = true;
     return token_t(token_t::TOK_EQ);
 
   case '\\':
@@ -247,7 +256,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
 {
   expr_t::ptr_op_t node;
 
-  lexer_t::token_t tok = lexer.next_token();
+  lexer_t::token_t tok = lexer.next_token(tok_context);
   switch (tok.kind) {
   case lexer_t::token_t::TOK_SHOW:
   case lexer_t::token_t::TOK_ONLY:

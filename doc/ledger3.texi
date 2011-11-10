@@ -4529,7 +4529,7 @@ associated commodity.  This commodity can appear before or after the
 amount, and may or may not be separated from it by a space.  Most
 characters are allowed in a commodity name, except for the following:
 
-@itemize
+@itemize @bullet
 @item Any kind of whitespace
 @item Numerical digits
 @item Punctuation: @samp{.,;:?!}
@@ -4555,18 +4555,17 @@ in the same form as parsed.  If you specify dollar amounts using
 @samp{$100.000}.  You may even use decimal commas, such as
 @samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.
 
-These display characteristics become associated with the commodity,
-with the result being that all amounts of the same commodity are
-reported consistently.  Where this is most noticeable is the
-@dfn{display precision}, which is determined by the most precise value
-seen for a given commodity.  In most cases.
+These display characteristics become associated with the commodity, with
+the result being that all amounts of the same commodity are reported
+consistently.  Where this is most noticeable is the @dfn{display
+precision}, which is determined by the most precise value seen for a
+given commodity---in most cases.
 
-Ledger makes a distinction by @dfn{observed amounts} and unobserved
+Ledger makes a distinction between @dfn{observed amounts} and unobserved
 amounts.  An observed amount is critiqued by Ledger to determine how
-amounts using that commodity should be displayed; unobserved amounts
-are significant in their value only---no matter how they are
-specified, it does not change how other amounts in that commodity will
-be displayed.
+amounts using that commodity should be displayed; unobserved amounts are
+significant in their value only---no matter how they are specified, it
+does not change how other amounts in that commodity will be displayed.
 
 An example of this is found in cost expressions, covered next.
 

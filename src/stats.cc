@@ -89,7 +89,8 @@ value_t report_statistics(call_scope_t& args)
   out << " (";
   out.precision(2);
   out << (double(statistics.posts_count)/
-          double((statistics.latest_post - statistics.earliest_post).days())) << _(" per day)") << std::endl;
+          double((statistics.latest_post - statistics.earliest_post).days()))
+      << _(" per day)") << std::endl;
 
   out << _("  Uncleared postings:     ");
   out.width(6);

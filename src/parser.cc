@@ -74,7 +74,7 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
   case token_t::LPAREN:
     node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL)
                             .minus_flags(PARSE_SINGLE));
-    tok = next_token(in, tflags, ')');
+    tok = next_token(in, tflags, token_t::RPAREN);
     break;
 
   default:
@@ -367,7 +367,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
         throw_(parse_error,
                _("%1 operator not followed by argument") << tok.symbol);
 
-      next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT), ':');
+      next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT), token_t::COLON);
       prev = node->right();
       ptr_op_t subnode = new op_t(op_t::O_COLON);
       subnode->set_left(prev);

@@ -115,6 +115,7 @@ namespace {
                       mpq_t                         quant,
                       amount_t::precision_t         precision,
                       int                           zeros_prec = -1,
+                      mpfr_rnd_t                    rnd        = GMP_RNDN,
                       const optional<commodity_t&>& comm       = none)
   {
     char * buf = NULL;
@@ -135,7 +136,7 @@ namespace {
       DEBUG("amount.convert", "num prec = " << num_prec);
 
       mpfr_set_prec(tempfnum, num_prec);
-      mpfr_set_z(tempfnum, mpq_numref(quant), GMP_RNDN);
+      mpfr_set_z(tempfnum, mpq_numref(quant), rnd);
 
       mp_prec_t den_prec = mpz_sizeinbase(mpq_denref(quant), 2);
       den_prec += amount_t::extend_by_digits*64;
@@ -144,10 +145,10 @@ namespace {
       DEBUG("amount.convert", "den prec = " << den_prec);
 
       mpfr_set_prec(tempfden, den_prec);
-      mpfr_set_z(tempfden, mpq_denref(quant), GMP_RNDN);
+      mpfr_set_z(tempfden, mpq_denref(quant), rnd);
 
       mpfr_set_prec(tempfb, num_prec + den_prec);
-      mpfr_div(tempfb, tempfnum, tempfden, GMP_RNDN);
+      mpfr_div(tempfb, tempfnum, tempfden, rnd);
 
       if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
         throw_(amount_error,
@@ -669,7 +670,7 @@ void amount_t::in_place_floor()
   _dup();
 
   std::ostringstream out;
-  stream_out_mpq(out, MP(quantity), precision_t(0));
+  stream_out_mpq(out, MP(quantity), precision_t(0), -1, GMP_RNDZ);
 
   mpq_set_str(MP(quantity), out.str().c_str(), 10);
 }
@@ -1239,7 +1240,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const
   }
 
   stream_out_mpq(out, MP(quantity), display_precision(),
-                 comm ? commodity().precision() : 0, comm);
+                 comm ? commodity().precision() : 0, GMP_RNDN, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

@@ -123,12 +123,15 @@ struct expr_t::token_t : public noncopyable
 
   int  parse_reserved_word(std::istream& in);
   void parse_ident(std::istream& in);
-  void next(std::istream& in, const parse_flags_t& flags,
-            const char expecting = '\0');
+  void next(std::istream& in, const parse_flags_t& flags);
   void rewind(std::istream& in);
   void unexpected(const char wanted = '\0');
-  void expected(const char wanted, char c = '\0');
+  void expected(const char wanted, const char c = '\0');
+  void expected(const kind_t wanted);
 };
+
+std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind);
+std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token);
 
 } // namespace ledger
 

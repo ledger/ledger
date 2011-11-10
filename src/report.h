@@ -160,6 +160,8 @@ public:
   value_t fn_unrounded(call_scope_t& scope);
   value_t fn_truncated(call_scope_t& scope);
   value_t fn_floor(call_scope_t& scope);
+  value_t fn_round(call_scope_t& scope);
+  value_t fn_unround(call_scope_t& scope);
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
@@ -768,7 +770,7 @@ public:
       parent->HANDLER(total_)
         .set_expr(string("--percent"),
                   "((is_account&parent&parent.total)?"
-                  "  percent(scrub(total), scrub(parent.total)):0");
+                  "  percent(scrub(total), scrub(parent.total)):0)");
     });
 
   OPTION__

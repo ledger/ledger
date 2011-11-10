@@ -622,6 +622,16 @@ value_t report_t::fn_floor(call_scope_t& args)
   return args[0].floored();
 }
 
+value_t report_t::fn_round(call_scope_t& args)
+{
+  return args[0].rounded();
+}
+
+value_t report_t::fn_unround(call_scope_t& args)
+{
+  return args[0].unrounded();
+}
+
 value_t report_t::fn_abs(call_scope_t& args)
 {
   return args[0].abs();
@@ -1281,6 +1291,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_rounded);
       else if (is_eq(p, "red"))
         return WRAP_FUNCTOR(fn_red);
+      else if (is_eq(p, "round"))
+        return MAKE_FUNCTOR(report_t::fn_round);
       break;
 
     case 's':
@@ -1333,6 +1345,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'u':
       if (is_eq(p, "underline"))
         return WRAP_FUNCTOR(fn_underline);
+      else if (is_eq(p, "unround"))
+        return MAKE_FUNCTOR(report_t::fn_unround);
       else if (is_eq(p, "unrounded"))
         return MAKE_FUNCTOR(report_t::fn_unrounded);
       break;

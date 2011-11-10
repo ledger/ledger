@@ -101,6 +101,7 @@ it's usually fairly obvious where things have gone astray.
       exact same Python as the Ledger executable.  In particular I see this
       bug on OS X systems where boost_python is linked against the default
       Python, while Ledger is linked against the version provided by MacPorts.
+      Or vice versa.
 
       Solution: Use one or the other.  If you prefer the system Python, run
       "port deactivate -f python26", to get MacPorts' version out of the way.
