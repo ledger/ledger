@@ -49,15 +49,15 @@ namespace ledger {
 
 class expr_t : public expr_base_t<value_t>
 {
-  struct token_t;
-  class  parser_t;
-
+  class parser_t;
   typedef expr_base_t<value_t> base_type;
 
 public:
+  struct token_t;
   class op_t;
   typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
+
 protected:
   ptr_op_t ptr;
 
