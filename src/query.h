@@ -227,9 +227,9 @@ public:
       assert(token_cache.kind == token_t::UNKNOWN);
       token_cache = tok;
     }
-    token_t peek_token() {
+    token_t peek_token(token_t::kind_t tok_context = token_t::UNKNOWN) {
       if (token_cache.kind == token_t::UNKNOWN)
-        token_cache = next_token();
+        token_cache = next_token(tok_context);
       return token_cache;
     }
   };
