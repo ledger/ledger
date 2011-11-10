@@ -229,7 +229,6 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
   }
 
-#if 0
   case '{': {
     in.get(c);
     amount_t temp;
@@ -242,7 +241,6 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     value = temp;
     break;
   }
-#endif
 
   case '!':
     in.get(c);
@@ -426,7 +424,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
           throw_(parse_error, _("Failed to reset input stream"));
 
         c = static_cast<char>(in.peek());
-        if (std::isdigit(c) || c == '.')
+        if (! std::isalpha(c))
           expected('\0', c);
 
         parse_ident(in);
