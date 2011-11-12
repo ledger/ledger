@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-03 20:19 (cpearls)>
+@subtitle Draft Manual Time-stamp: <2011-11-11 22:27 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -4460,7 +4460,7 @@ amount of the first posting is typically positive.  Consider:
 
 @emph{Note:} It is important to note that there must be at least two spaces between
 the end of the post and the beginning of the amount (including and
-commdity designator).
+commodity designator).
 
 @section Specifying amounts
 
