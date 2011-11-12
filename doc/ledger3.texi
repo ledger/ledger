@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-11 22:56 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-11 23:08 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -78,6 +78,7 @@ twinkling in their father's CRT.
 * Format Strings::              
 * Journal File Format::         
 * Extending with Python::       
+* Major Changes from version 2.6::  
 * Example Data File::           
 * Miscellaneous Notes::         
 @end menu
@@ -4649,8 +4650,10 @@ commodities.
 
 @node Extending with Python, Example Data File, Journal File Format, Top
 @chapter Extending with Python
+@node Major Changes from version 2.6, Example Data File, Extending with Python, Top
+@chapter Major Changes from version 2.6
 
-@node Example Data File, Miscellaneous Notes, Extending with Python, Top
+@node Example Data File, Miscellaneous Notes, Major Changes from version 2.6, Top
 @appendix Example Journal File: drewr.dat
  The following journal file is included with the source distribution of
  ledger.  It is called @file{drewr.dat} and exhibits many ledger
