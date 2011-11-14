@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 16:13 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 16:32 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -620,11 +620,12 @@ and just waiting for automatic overdraft protection to kick in, or not,
 to a full blown double entry accounting system.  Ledger accomplishes the
 latter.  With ledger you can handle your personal finances or you
 businesses.  Double-entry accounting scales.  
-
+@cindex double-entry accounting
 
 @node Stating where money goes, Assets and Liabilities, Accounting with Ledger, Principles of Accounting
 @section Stating where money goes
 
+@cindex credits and debits
 Accountants will talk of ``credits'' and ``debits'', but the meaning
 is often different from the layman's understanding.  To avoid
 confusion, Ledger uses only subtractions and additions, although the
@@ -645,6 +646,9 @@ subtract it from an income account:
     Assets:Checking                           $500.00
     Income:Salary                            $-500.00
 @end smallexample
+
+@cindex income is negative
+@cindex why is income negative
 
 Why is the Income a negative figure?  When you look at the balance
 totals for your ledger, you may be surprised to see that Expenses are
@@ -1462,6 +1466,7 @@ posting.
 
 @menu
 * Most Basic Entry::            
+* Starting up::                 
 * Currency and Commodities::    
 * Structuring Your Accounts::   
 * Advanced Transactions::       
@@ -1469,7 +1474,7 @@ posting.
 * Archiving Previous Years ::   
 @end menu
 
-@node Most Basic Entry, Currency and Commodities, Keeping a Journal, Keeping a Journal
+@node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
 @section The Most Basic Entry
 
 Here is the Pacific Bell example from above, given as a Ledger
@@ -1536,7 +1541,42 @@ Assets:Brokerage account was known to equal $970.64.  It @strong{must}
 equal this amount at this point in the Ledger file, or there will be a
 balancing error.
 
-@node Currency and Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
+@node Starting up, Currency and Commodities, Most Basic Entry, Keeping a Journal
+@section Starting up
+
+@cindex initial equity
+@cindex beginning ledger
+
+Unless you have arrived from another planet, you already have a
+financial state.  You need to capture that financial state so the ledger
+has a starting point.
+
+At some convenient point in time you new the balances and outstanding
+obligation of every financial account you have.  Those amounts form the
+basis of the opening entry for ledger. For example if you chose the
+beginning of 2011 as the date to start tracking finances with ledger,
+your opening balance entry could look like this:
+
+@cindex opening balance
+@smallexample
+2011/01/01 * Opening Balance
+      Assets:Joint Checking                   $800.14
+      Assets:Other Checking                    $63.44
+      Assets:Savings                         $2805.54
+      Assets:Investments:401K:Deferred         100.0000 VIFSX @ $80.5227
+      Assets:Investments:401K:Matching          50.0000 VIFSX @ $83.7015
+      Assets:Investments:IRA                   250.0000 VTHRX @ $20.5324
+      Liabilities:Mortgage                $-175634.88
+      Liabilities:Car Loan                  $-3494.26
+      Liabilities:Visa                      -$1762.44
+      Equity:Opening Balances
+@end smallexample
+
+There is nothing special about the name ``Opening Balances'' as the
+payee of the account name, anything convenient that you understand will
+work.
+
+@node Currency and Commodities, Structuring Your Accounts, Starting up, Keeping a Journal
 @section Currency and Commodities
 
 @cindex currency
