@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-11 23:08 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 15:03 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -543,6 +543,7 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{-D} @tab @code{--deviation} @tab Reports each posting deviation from the average
 @item @code{-%} @tab @code{--percent} @tab Show subtotals in the balance report as percentages
 @c @item @code{} @tab @code{--totals} @tab Include running total in the @code{xml} report
+@item @code{} @tab @code{--pivot TAG} @tab produce a pivot table of the tag type specified
 @item @code{-j} @tab @code{--amount-data} @tab Show only date and value column
 @item @code{-J} @tab @code{--total-data} @tab Show only dates and totals
 @item @code{-d EXPR} @tab @code{--display EXPR} @tab Limit only the display of certain postings
@@ -2742,7 +2743,7 @@ anywhere, and @samp{SEARCH-TERM} is one or more of the following:
  \( TERMS \)     group terms; useful if using and/or/not
 @end smallexample
 
-So, to list all transaction that charged to ``ffod'' but not ``dining'' for any payee other than ``chang'' the following three commands would be equivalent:
+So, to list all transaction that charged to ``food'' but not ``dining'' for any payee other than ``chang'' the following three commands would be equivalent:
 
 @smallexample
  ledger reg food not dining @@chang
@@ -2791,6 +2792,9 @@ example, using @option{-S -UT} in the balance report will sort account
 balances from greatest to least, using the absolute value of the
 total.  For more on how to use value expressions, see @ref{Value
 Expressions}.
+
+@option{--pivot TAG} produces a pivot table around the tag provided.
+This requires meta data using valued tags.
 
 @option{--wide} (@option{-w}) causes the default @command{register}
 report to assume 132 columns instead of 80.
