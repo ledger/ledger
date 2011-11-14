@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 15:03 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 16:13 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -81,6 +81,8 @@ twinkling in their father's CRT.
 * Major Changes from version 2.6::  
 * Example Data File::           
 * Miscellaneous Notes::         
+* Concept Index::               
+* Command Index::               
 @end menu
 
 @node Copying, Introduction to Ledger, Top, Top
@@ -120,6 +122,7 @@ company's name.  The ultimate aim of keeping a checkbook journal is to
 know how much money is available to spend.  That's really the aim of
 all journals.
 
+@cindex postings
 What computers add is the ability to walk through these postings,
 and tell you things about your spending habits; to let you devise
 budgets and get control over your spending; to squirrel away money
@@ -174,6 +177,8 @@ since you don't have to look back at the last time the account was
 referenced---but it also means having a lot of journal books, if you
 deal with multiple accounts.
 
+@cindex account, meaning of
+@cindex meaning of account
 Here is a good place for an aside on the use of the word `account'.
 Most private people consider an account to be something that holds money
 at an institution for them.  Ledger uses a more general definition
@@ -268,7 +273,7 @@ You can also find help at the @samp{#ledger} channel on the IRC server
 
 @node Start a Journal, Run Some Reports, Ledger Tutorial , Ledger Tutorial
 @section Start a Journal File
-
+@cindex Journals
 A journal is a record of your financial transactions and will be central
 to using Ledger.  For now we just want to get a taste of what Ledger can
 do.  An example journal is included with the source code distribution,
@@ -291,7 +296,8 @@ to @xref{Keeping a Journal}.
 
 @node Balance Report, Register Report, Run Some Reports, Run Some Reports
 @subsection Balance Report
-
+@cindex balance report
+@findex balance
 To find the balances of all of your accounts, run this command:
 
 @smallexample
@@ -344,7 +350,8 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 
 @node Register Report, Cleared Report, Balance Report, Run Some Reports
 @subsection Register Report
-
+@cindex register report
+@findex register
 To show all transactions and a running total:
 @smallexample
 ledger -f drewr3.dat register
@@ -1493,7 +1500,8 @@ Also note the structure of the account entries.  There is an implied
 hierarchy established by separating with colons (see @pxref{Structuring Your Accounts}).
 
 
-
+@cindex spaces in postings
+@cindex posting format details
 @strong{The format is very flexible and it isn't necessary that you
 indent and space out things exactly as shown. The only requirements are
 that the start of the transaction (the date typically) is at the
@@ -1513,9 +1521,10 @@ calculating}
 @subsection Checking balances
 
 
-Ledger 3.0 has a new feature for confirming  
-known past balances.  Here's an example entry:
-
+Ledger 3.0 has a new feature for confirming known past balances.  Here's
+an example entry:
+@cindex forcing a balance
+@cindex balance verifications
 @smallexample
    2008/11/26 (Interest) EXTND INS SWEEP ACCT(FDIC-INS)
        * Assets:Brokerage                 $0.07 = $970.64
@@ -1530,6 +1539,8 @@ balancing error.
 @node Currency and Commodities, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
 @section Currency and Commodities
 
+@cindex currency
+@cindex commodity
 Ledger is agnostic when it comes to how you value your accounts.
 Dollars, Euros, Pounds, Francs, Shares etc. are just ``commodities''.
 Holdings in stocks, bonds, mutual funds and other financial instruments
@@ -1591,6 +1602,8 @@ since we haven't told ledger to convert commodities.
 @node Structuring Your Accounts, Advanced Transactions, Currency and Commodities, Keeping a Journal
 @section Structuring your Accounts
 
+@cindex accounts, naming
+@cindex naming accounts
 There really are no requirements for how you do this, but to preserve
 your sanity we suggest some very basic structure to your accounting
 system.
@@ -1639,6 +1652,8 @@ Expenses:Food:Hamburgers and Fries
 
 Ledger 3.0 supports entry and transaction ``notes'', which may  
 contain new metadata and tag markers.  Here's an example:
+@cindex metadata
+@cindex tags
 
 @smallexample
    2004/05/27 (100) Credit card company
@@ -1660,12 +1675,16 @@ using the ``note'' variable.
 Further, any occurrence of ``:foo:'' in a note will cause a metadata tag  
 for "foo" to be registered for that entry.  You can then search for  
 such transactions using:
-
+@findex %
+@cindex tags
 @smallexample
    ledger reg %foo
    ledger reg tag foo
 @end smallexample
 
+@cindex setting the value of a tag
+@cindex value tags
+ 
 Also, if any word in the note ends (but does not start) with a colon,  
 the remainder of that line will be taken to be the metadata value for  
 that tag.  That is:
@@ -1674,7 +1693,8 @@ that tag.  That is:
    ; :foo:bar:baz:  <-- These are three tags
    ; name: value    <-- this is a tag with a value
 @end smallexample
-
+@cindex searching for tags
+@cindex tags, searching for
 Tags with value can be searched for just like tags.  In addition, you  
 can further limit your tag search by looking for only those tags that  
 have specific values:
@@ -1683,7 +1703,7 @@ have specific values:
    ledger reg %name=value
    ledger reg tag name=value
 @end smallexample
-
+@findex --group-by tag
 The group-by and sort functions also support tags:
 @smallexample
 ledger --group-by "tag('foo')" bal 
@@ -1707,7 +1727,8 @@ If a posting comment is a date (with brackets), it modifies the date for that po
   Income:Check  $-400.00 ; [2010/01/01]
 @end smallexample
 You can use metadata to override the payee field for individual postings within a transaction: (source)
-
+@cindex overriding payee using metadata
+@cindex metadata, overiding payee
 @smallexample 
 2010/06/17 Sample
   Assets:Bank  $400.00
@@ -1727,7 +1748,12 @@ Metadata are normally strings, but you can create metadata of other types:
 @end smallexample
 (Note that this Date tag is not the same as the posting date.)
 
-There are now tag/pop directives, to apply metadata to a range of transactions (and their postings). For example, if you wanted a conceptual "page" of transactions relating to business trip to Chicago, you could do this:
+@cindex tags, pop
+@cindex tags, applying to several transactions.
+There are now tag/pop directives, to apply metadata to a range of
+transactions (and their postings). For example, if you wanted a
+conceptual ``page'' of transactions relating to business trip to
+Chicago, you could do this:
 
 @smallexample
  tag Location: Chicago
@@ -1743,8 +1769,11 @@ It would be as if you'd applied "; Location: Chicago", etc., to every transactio
 @node Multiple Account Transactions, Virtual Transactions, Transaction Notes and Tags, Advanced Transactions
 @subsection Multiple Account Transactions
 
-Often times a transaction needs to be split across several accounts.  This is trivially simple in a Ledger journal:
+Often times a transaction needs to be split across several accounts.
+This is trivially simple in a Ledger journal:
 
+@cindex splitting transactions across accounts
+@cindex transactions, splitting across accounts
 @smallexample
 2011/09/15 * Deposit Acme Bytepumps Monthly Paycheck
     Income:Taxable:Acme Bytepumps Inc.     $-2500.00
@@ -1896,11 +1925,14 @@ tested.
 
 But, wait! There's more!
 
+@cindex Tax Bracket automation
+@cindex value expressions in automatic transactions
+
 In the short example above we calculated the taxes due for income within
 a certain bracket.  But in reality this calculation is more difficult.
-There are different rate for difference marginal incomes and those taxes
-are not easily descirbe by a simple multiplicative coefficient.
-Automated transaction can use value expressions in there posting to
+There are different rates for different marginal incomes and those taxes
+are not easily descirbed by a simple multiplicative coefficient.
+Automated transactions can use value expressions in their postings to
 determine the ammounts.  So to expand the example above for a three tax
 bracket system we could enter:
 
@@ -4464,7 +4496,7 @@ the end of the post and the beginning of the amount (including and
 commodity designator).
 
 @section Specifying amounts
-
+@cindex amounts
 The heart of a journal is the amounts it records, and this fact is
 reflected in the diversity of amount expressions allowed.  All of them
 are covered here, though it must be said that sometimes, there are
@@ -4479,7 +4511,7 @@ In the simplest form, bare decimal numbers are accepted:
     Assets:Checking        1000.00
     Income:Salary
 @end smallexample
-
+@cindex uncommoditized amounts
 Such amounts may only use an optional period for a decimal point.
 These are referred to as @dfn{integer amounts} or @dfn{uncommoditized
 amounts}.  In most ways they are similar to @dfn{commoditized
@@ -4652,8 +4684,9 @@ considered a primary.  In fact, when Ledger goes about ensures that
 all transactions balance to zero, it only ever asks this of primary
 commodities.
 
-@node Extending with Python, Example Data File, Journal File Format, Top
+@node Extending with Python, Major Changes from version 2.6, Journal File Format, Top
 @chapter Extending with Python
+
 @node Major Changes from version 2.6, Example Data File, Extending with Python, Top
 @chapter Major Changes from version 2.6
 
@@ -4729,7 +4762,7 @@ commodities.
 
 @end smallexample
 
-@node Miscellaneous Notes,  , Example Data File, Top
+@node Miscellaneous Notes, Concept Index, Example Data File, Top
 @appendix Miscellaneous Notes
 
 Various notes from the discussion list that I haven't incorporated in to the main body of the documentation.
@@ -4763,7 +4796,14 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
 
+@node Concept Index, Command Index, Miscellaneous Notes, Top
+@unnumbered Concept Index
 
+@printindex cp
 
+@node Command Index,  , Concept Index, Top
+@unnumbered Command Index
+
+@printindex fn
 
 @bye
