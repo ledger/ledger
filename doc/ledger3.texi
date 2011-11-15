@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 19:03 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 20:19 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1502,7 +1502,8 @@ For this transaction, Ledger will figure out that $-23.00 must come from
 @samp{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
-hierarchy established by separating with colons (see @pxref{Structuring Your Accounts}).
+hierarchy established by separating with colons (see @pxref{Structuring
+Your Accounts}).
 
 
 @cindex spaces in postings
@@ -1519,94 +1520,9 @@ the amount and the account Ledger will give an error and stop
 calculating}
 
 @menu
-* Checking Balances::           
+* Checking Balances and Reconciliations::  
 * Effective Dates::             
 @end menu
-
-@node Checking Balances, Effective Dates, Most Basic Entry, Most Basic Entry
-@subsection Checking balances
-
-
-Ledger 3.0 has a new feature for confirming known past balances.  Here's
-an example entry:
-@cindex forcing a balance
-@cindex balance verifications
-@smallexample
-   2008/11/26 (Interest) EXTND INS SWEEP ACCT(FDIC-INS)
-       * Assets:Brokerage                 $0.07 = $970.64
-       Income:Interest                   $-0.07
-@end smallexample
-
-What this says is that as of 11/26/08 (bank perspective), the
-Assets:Brokerage account was known to equal $970.64.  It @strong{must}
-equal this amount at this point in the Ledger file, or there will be a
-balancing error.
-
-@node Effective Dates,  , Checking Balances, Most Basic Entry
-@subsection Effective Dates
-@cindex effective dates
-
-In the real world transactions do not take place instantaneously.
-Purchases can take several days to post to a bank account. And you may
-pay ahead for something that you want to distribute cost for.  With
-Ledger you can control every aspect of the timing of a transaction.
-
-Say you're in business.  If you bill a customer, you can enter
-something like
-@cindex effective date of invoice
-@smallexample
-2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
-  Assets:Accounts Receivable            $100.00
-  Income: Client name
-@end smallexample
-Then, when you receive the payment, you change it to
-
-@smallexample
-2008/01/01=2008/01/15 Client invoice ;  actual date money received
-  Assets:Accounts Receivable            $100.00
-  Income: Client name
-@end smallexample
-and add something like
-
-@smallexample
-2008/01/15 Client payment
-  Assets:Checking                       $100.00
-  Assets:Accounts Receivable
-@end smallexample
-Now
-
-@smallexample
-  ledger --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
-@end smallexample
-gives you your accrued income in the first two weeks of the year, and
-@smallexample
-  ledger --effective --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
-@end smallexample
-gives you your cash basis income in the same two weeks.
-
-ANother use is distributing costs out in time. As an example, suppose
-you just prepaid into a local vegetable co-op that sustains you through
-the winter.  It cost $225 to join the program, so you write a check.
-You don't want your October grocery budgetto be blown because you bought
-food ahead, however.  What you really want is for the money to be evenly
-distributed over the next six months so that your monthly budgets
-gradually take a hit for the vegetables you'll pick up from the co-op,
-even though you've already paid for them.
-
-@smallexample
-2008/10/16 * (2090) Bountiful Blessings Farm
-    Expenses:Food:Groceries                  $ 37.50  ; [=2008/10/01]
-    Expenses:Food:Groceries                  $ 37.50  ; [=2008/11/01]
-    Expenses:Food:Groceries                  $ 37.50  ; [=2008/12/01]
-    Expenses:Food:Groceries                  $ 37.50  ; [=2009/01/01]
-    Expenses:Food:Groceries                  $ 37.50  ; [=2009/02/01]
-    Expenses:Food:Groceries                  $ 37.50  ; [=2009/03/01]
-    Assets:Checking 
-@end smallexample
-
-This entry accomplishes this.  Every month until you'll start with an
-automatic $37.50 deficit like you should, while your checking account
-really knows that it debited $225 this month.
 
 @node Starting up, Currency and Commodities, Most Basic Entry, Keeping a Journal
 @section Starting up
@@ -1725,6 +1641,8 @@ be enclosed in double quotes:
         Actif:SG PEE STK  215.796 "Arcancia Equilibre 455"
         Actif:SG PEE STK  $-10742.54  
 @end smallexample
+
+
 
 @node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
@@ -1855,9 +1773,10 @@ Expenses:Food:Hamburgers and Fries
 * Multiple Account Transactions::  
 * Virtual Transactions::        
 * Automatic Transactions::      
+* Checking Balances and Reconciliations::  
+* Effective Dates::             
 * Periodic Transactions::       
 * Recording Commodity Lot Prices::  
-* Commodity Pricing Problem::   
 @end menu
 
 @node Transaction Notes and Tags, Multiple Account Transactions, Advanced Transactions, Advanced Transactions
@@ -2048,7 +1967,7 @@ To view balances without any virtual balances factored in, using the
 @option{-R} flag, for ``reality''.
 
 
-@node Automatic Transactions, Periodic Transactions, Virtual Transactions, Advanced Transactions
+@node Automatic Transactions, Checking Balances and Reconciliations, Virtual Transactions, Advanced Transactions
 @subsection Automatic Transactions
 
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
@@ -2158,8 +2077,108 @@ bracket system we could enter:
   (Expenses:Tax)  ($13500.00 + .20 * (amount-$100000.00))
 @end smallexample
 
+@node Checking Balances and Reconciliations, Effective Dates, Automatic Transactions, Advanced Transactions
+@subsection Forcing balances and Reconciling Accounts
 
-@node Periodic Transactions, Recording Commodity Lot Prices, Automatic Transactions, Advanced Transactions
+
+Ledger has a feature for ensuring known past balances.  Here's
+an example entry:
+@cindex forcing a balance
+@cindex balance verifications
+@smallexample
+   2008/11/26 (Interest) EXTND INS SWEEP ACCT(FDIC-INS)
+       * Assets:Brokerage                 $0.07 = $970.64
+       Income:Interest                   $-0.07
+@end smallexample
+
+What this says is that as of 11/26/08 (bank perspective), the
+Assets:Brokerage account was known to equal $970.64.  It @strong{must}
+equal this amount at this point in the Ledger file, or there will be a
+balancing error.
+
+If you reconcile bank statements you can enter the reconciliation and
+link to a file (if you have it)
+@cindex statement reconciliation
+@cindex reconcile statements
+
+@smallexample
+2009/12/01 Foo
+    Assets:Checking    $10.00
+    Equity
+
+2009/12/10 Reconciled statement dated 2009/12/08
+    ; Link: [[file:statements/checking/2009-12.pdf][2009-12.pdf]]
+    [Assets:Checking]    = $10.00
+@end smallexample
+
+@node Effective Dates, Periodic Transactions, Checking Balances and Reconciliations, Advanced Transactions
+@subsection Effective Dates
+@cindex effective dates
+
+In the real world transactions do not take place instantaneously.
+Purchases can take several days to post to a bank account. And you may
+pay ahead for something that you want to distribute cost for.  With
+Ledger you can control every aspect of the timing of a transaction.
+
+Say you're in business.  If you bill a customer, you can enter
+something like
+@cindex effective date of invoice
+@smallexample
+2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
+  Assets:Accounts Receivable            $100.00
+  Income: Client name
+@end smallexample
+@noindent Then, when you receive the payment, you change it to
+
+@smallexample
+2008/01/01=2008/01/15 Client invoice ;  actual date money received
+  Assets:Accounts Receivable            $100.00
+  Income: Client name
+@end smallexample
+@noindent and add something like
+
+@smallexample
+2008/01/15 Client payment
+  Assets:Checking                       $100.00
+  Assets:Accounts Receivable
+@end smallexample
+Now
+
+@smallexample
+  ledger --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+@end smallexample
+@noindent gives you your accrued income in the first two weeks of the year, and
+@smallexample
+  ledger --effective --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+@end smallexample
+@noindent gives you your cash basis income in the same two weeks.
+
+Another use is distributing costs out in time. As an example, suppose
+you just prepaid into a local vegetable co-op that sustains you through
+the winter.  It cost $225 to join the program, so you write a check.
+You don't want your October grocery budget to be blown because you bought
+food ahead, however.  What you really want is for the money to be evenly
+distributed over the next six months so that your monthly budgets
+gradually take a hit for the vegetables you'll pick up from the co-op,
+even though you've already paid for them.
+
+@smallexample
+2008/10/16 * (2090) Bountiful Blessings Farm
+    Expenses:Food:Groceries                  $ 37.50  ; [=2008/10/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2008/11/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2008/12/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2009/01/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2009/02/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2009/03/01]
+    Assets:Checking 
+@end smallexample
+
+This entry accomplishes this.  Every month until you'll start with an
+automatic $37.50 deficit like you should, while your checking account
+really knows that it debited $225 this month.
+
+
+@node Periodic Transactions, Recording Commodity Lot Prices, Effective Dates, Advanced Transactions
 @subsection Periodic Transactions
 
 A periodic transaction starts with a ~ followed by a period expression.
@@ -2168,7 +2187,7 @@ have no effect withouth the @samp{--budget} option specified.
 
 See @ref{Budgeting and Forecasting} for examples and details.
 
-@node Recording Commodity Lot Prices, Commodity Pricing Problem, Periodic Transactions, Advanced Transactions
+@node Recording Commodity Lot Prices,  , Periodic Transactions, Advanced Transactions
 @subsection Recording Commodity Lot Prices
 
 If you are tracking investments it is often necessary to keep track of
@@ -2214,324 +2233,6 @@ $ ledger balance --lot-prices Assets:Broker
     1 ACME @{$100.00@}  Assets:Broker
 @end smallexample
 
-@node Commodity Pricing Problem,  , Recording Commodity Lot Prices, Advanced Transactions
-@subsection  Commodity Valuation
-
-[THIS SUBSECTION COULD BELONG IN REPORTING SECTION, OR MAYBE EVEN SPLIT BETWEEN THE TWO]
-
-
-Often you will be more interested in the value of your entire holdings, in
-your preferred currency.  It might be nice to know you hold 10,000 shares
-of PENNY, but you are more interested in whether or not that is worth
-$1000.00 or $10,000.00.  However, the current day value of a commodity can
-mean different things to different people, depending on the accounts
-involved, the commodities, the nature of the transactions, etc.
-
-When you specify @samp{-V}, or @samp{-X COMM}, you are requesting that
-some or all of the commodities be valuated as of today (or whatever
-@samp{--now} is set to).  But what does such a valuation mean?  This
-meaning is governed by the presence of a @samp{VALUE} metadata
-property, whose content is an expression used to compute that value.
-
-If no VALUE property is specified, each posting is assumed to have a default,
-as if you'd specified a global, automated transaction as follows:
-
-@smallexample
-  = expr true
-    ; VALUE:: market(amount, date, exchange)
-@end smallexample
-This definition emulates the present day behavior of -V and -X (in the case of
--X, the requested commodity is passed via the string 'exchange' above).
-
-One thing many people have wanted to do is to fixate the valuation of old
-European currencies in terms of the Euro after a certain date:
-
-@smallexample
-  = expr commodity == "DM"
-    ; VALUE:: date < [Jun 2008] ? market(amount, date, exchange) : 1.44 EUR
-@end smallexample
-
-This says: If --now is some old date, use market prices as they were at that
-time; but if --now is past June 2008, use a fixed price for converting Deutsch
-Mark to Euro.
-
-Or how about never re-valuating commodities used in Expenses, since they
-cannot have a different future value:
-
-@smallexample
-  = /^Expenses:/
-    ; VALUE:: market(amount, post.date, exchange)
-@end smallexample
-
-This says the future valuation is the same as the valuation at the time of
-posting.  post.date equals the posting's date, while just 'date' is the value
-of --now (defaults to today).
-
-Or how about valuating miles based on a reimbursement rate during a specific
-time period:
-
-
-@smallexample
-  = expr commodity == "miles" and date >= [2007] and date < [2008]
-    ; VALUE:: market($1.05, date, exchange)
-@end smallexample
-
-In this case, miles driven in 2007 will always be valuated at $1.05 each.  If
-you use -X EUR to expressly request all amounts in Euro, Ledger shall convert
-$1.05 to Euro by whatever means are appropriate for dollars.
-
-Note that you can have a valuation expression specific to a particular posting
-or transaction, by overriding these general defaults using specific metadata:
-
-@smallexample
-
-  2010-12-26 Example
-      Expenses:Food                $20
-      ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
-      ; the user asks for with -V or -X
-      ; VALUE:: 30 DM
-      Assets:Cash
-@end smallexample
-
-This example demonstrates that your VALUE expression should be as symbolic as
-possible, using terms like 'amount' and 'date', rather than specific amounts
-and dates.  Also, you should pass the amount along to the function 'market' so
-it can be further revalued if the user has asked for a specific currency.
-
-Or, if it better suits your accounting, you can be less symbolic, which allows
-you to report most everything in EUR if you use -X EUR, except for certain
-accounts or postings which should always be valuated in another currency.  For
-example:
-
-@smallexample
-  = /^Assets:Brokerage:CAD$/
-    ; Always report the value of commodities in this account in 
-    ; terms of present day dollars, despite what was asked for 
-    ; on the command-line VALUE:: market(amount, date, '$')
-@end smallexample
-
-I think this scheme, of using predicated value expressions which can be
-generalized in automated transactions, and made specific via transaction and
-posting-based metadata, provides sufficient flexibility to express most of the
-use cases which have occurred on this topic.
-
-
-Ledger presently has no way of handling such things as FIFO and LIFO.
-
-If you specify an unadorned commodity name, like AAPL, it will balance
-against itself.  If --lots are not being displayed, then it will appear
-to balance against any lot of AAPL.
-
-If you specify an adorned commodity, like AAPL @{$10.00@}, it will also
-balance against itself, and against any AAPL if --lots is not specified.
-But if you do specify --lot-prices, for example, then it will balance
-against that specific price for AAPL.
-
-I may, for the sake of reporting *only*, be able to implement some sort
-of guessing strategy, based on the order in which transactions appear in
-the data file...  But I'll have to think about this a lot more, and it
-would be a 3.1 thing.
-
-@smallexample
-> b) I don't see how this VALUE property can differentiate between -V
-> and -B.  Does this imply that you want to get rid of the -B option and
-> simply let users define what VALUE they get with -V?  If so, I think
-> this would be a bad idea... I really like the ability to see different
-> valuation methods using command line options (i.e. -B for cost basis
-> and -V for market value).  (Incidentally, while I initially liked your
-> example of using the posting date for Expenses, I later realized that
-> I sometimes use -V to see what my expenses (in a foreign currency)
-> would have been if I bought everything at today's exchange rate.)
-@end smallexample
--V and -B are entirely unrelated.  Perhaps I could support a BASIS
-property setting, for customizing -B in the same way VALUE
-customizes -V...
-
-@smallexample
-> c) I never fully understood what -X does exactly but afaik -X is a
-> special version of -V.  However, I believe that -X should _only_ do
-> conversion.  This would allow -X to be combined with other options,
-> such as -X and -V.  Example: let's say I bought 10 shares for 10.00
-> GBP and they are now worth 15.00.  Because my main assets are in EUR,
-> I want to see what those shares are worth in EUR.  Since I'm
-> conservative I want to see the cost basis, i.e. I want to use -B and
-> -X EUR together. (This actually works today but I'm told this is an
-> accident and won't work in all cases.)
-@end smallexample
--V asks for the present day value of all commodities, and lets Ledger
-pick the target commodity based on its own hueristics.  -X is the same
-as -V, except that it overrides those hueristics and forces the target
-commodity.  (Although, as you've seen, the VALUE property could now
-countermand that).
-
-There are reasons why -X can't be applied to any report.  Mainly it has
-to do with rounding.  For example, let's say I have 10 postings that
-each trade 1 DM, and the value of 1 DM is 0.001 EUR.  If I add all
-10 DM and then apply -X, I get 0.01 EUR.  But if I apply -X to each
-1 DM and *then* total them, I get 0.00 EUR.
-
-This becomes very important to Ledger because -X is applied to totals,
-not just to individual amounts.  I'm going to have to use some magic
-internally to avoid this problem with the VALUE property (in most, but
-not all, cases).
-
-And so, -X gets applied after, when the posting-origin of the
-commodities has been lost -- required information if a basis cost
-calculation is to be deferred.
-
-The alternative would involve ever-growing lists of individual amounts,
-which would slow many parts of Ledger from O(N) to O(N^2).  Plus, it
-still wouldn't solve the rounding problem.
-
-
-> Ledger presently has no way of handling such things as FIFO and LIFO.
-
-Yeah, I know... but I think it's a feature that ledger should
-eventually get (obviously not for 3.0).
-
-@smallexample
-> If you specify an adorned commodity, like AAPL @{$10.00@}, it will also
-> balance against itself, and against any AAPL if --lots is not specified.
-> But if you do specify --lot-prices, for example, then it will balance
-> against that specific price for AAPL.
-> 
-> I may, for the sake of reporting *only*, be able to implement some sort
-> of guessing strategy, based on the order in which transactions appear in
-> the data file...
-@end smallexample
-Why for reporting only?  It seems to me that ledger has all the
-information to do FIFO and LIFO properly (i.e. to remove the right
-commodities from the list).  Let's take this example:
-
-@smallexample
-
-2011-01-01 * Buy AAA
-    Assets:Shares                             5 AAA @ 10.00 EUR
-    Assets:Cash
-
-2011-01-03 * Buy AAA
-    Assets:Shares                             2 AAA @ 10.00 EUR
-    Assets:Cash
-
-2011-01-11 * Buy AAA
-    Assets:Shares                             5 AAA @ 12.00 EUR
-    Assets:Cash
-
-2011-01-21 * Buy AAA
-    Assets:Shares                             5 AAA @ 13.00 EUR
-    Assets:Cash
-@end smallexample
-
-So we end up with (ledger --lots):
-
-@smallexample
-5 AAA @{10.00 EUR@} [2011/01/01]
-2 AAA @{10.00 EUR@} [2011/01/03]
-5 AAA @{12.00 EUR@} [2011/01/11]
-5 AAA @{13.00 EUR@} [2011/01/21]  Assets:Shares
-@end smallexample
-
-So if I sell 6 shares now, according to FIFO, I would do:
-
-@smallexample
-2011-02-01 * Sell AAA
-    Assets:Shares                          -5 AAA @{10.00 EUR@} [2011/01/01] @ 
-13.50 EUR
-    Assets:Shares                          -1 AAA @{10.00 EUR@} [2011/01/03] @ 
-13.50 EUR
-    Assets:Cash
-@end smallexample
-
-ledger --lots:
-
-@smallexample
-1 AAA @{10.00 EUR@} [2011/01/03]
-5 AAA @{12.00 EUR@} [2011/01/11]
-5 AAA @{13.00 EUR@} [2011/01/21]  Assets:Shares
-@end smallexample
-
-According to LIFO, I would do this instead:
-
-@smallexample
-2011-02-01 * Sell AAA
-    Assets:Shares                          -5 AAA @{13.00 EUR@} [2011/01/21] @ 
-13.50 EUR
-    Assets:Shares                          -1 AAA @{12.00 EUR@} [2011/01/11] @ 
-13.50 EUR
-    Assets:Cash
-@end smallexample
-
-In other words, you can manually do FIFO and LIFO with ledger already.
-However, it would be great if ledger would make this easier, e.g. that
-you could specify:
-
-@smallexample
- 2011-02-01 * Sell AAA
-    Assets:Shares                          -6 AAA @{FIFO@} @ 13.50 EUR
-    Assets:Cash
-@end smallexample
-
-and ledger would iterate through all AAA commodities and take out the
-right ones (after all, it knows the date and price).
-
-The only thing I don't think is possible with ledger at the moment is
-average cost.  I'm also not sure how --lot-dates should behave for
-average cost.
-
-@smallexample
-> There are reasons why -X can't be applied to any report.  Mainly it has
-> to do with rounding.  For example, let's say I have 10 postings that
-> each trade 1 DM, and the value of 1 DM is 0.001 EUR.  If I add all
-> 10 DM and then apply -X, I get 0.01 EUR.  But if I apply -X to each
-> 1 DM and *then* total them, I get 0.00 EUR.
-@end smallexample
-Thanks for the explanation... what I was thinking of is that ledger
-would just produce a report according to -V or -B or whatever and
-*then* convert it with -X.  I use a shell script to do this for now:
-
-@smallexample
-GBP2EUR="117/100"
-
-eurgbp=$(ledger -f $FILE -p "until $YEAR-$NEXT_MONTH-01" -B bal "^assets" 
-"^liabilities" | egrep " (EUR|GBP)$" | tail -n 2)
-eur=$(echo "$eurgbp" | grep "EUR" | sed 's/ EUR//')
-gbp=$(echo "$eurgbp" | grep "GBP" | sed 's/ GBP//')
-eur=$(echo "$eur" | sed 's/\..*//')
-gbp=$(echo "$gbp" | sed 's/\..*//')
-gbpineur=$(($gbp*$GBP2EUR))
-echo "      " $(($eur + $gbpineur)) "   EUR   Total"
-@end smallexample
-
-I'm kinda surprised that you no longer think it's a good idea to split
--X from -V.  Last time I brought this up on IRC, you thought it was a
-good idea:
-
-@smallexample
-10:44 < johnw> I think having -H, in addition to -X, may make what you want
- to see both natural and simple
-10:45 < johnw> you'd use -H for income/expense accounts, and -X for
- assets/liabilities
-10:45 < johnw> -H = historical values
-10:45 < johnw> -X = current exchange values
-10:45 < tbm> so what's the difference between -X and -V again?
-10:45 < johnw> -V is an automated version of -X
-10:45 < johnw> it tries to figure out what the reported commodity should be
-10:45 < johnw> we may then need an automated version of -H, to complete the
- reflection
-10:46 < johnw> btw, this is just an inside-out version of my "final"
- feature :)
-10:46 < tbm> why not change the meaning of -X to _only do conversion_?  And
- then you could combine -X with -B, -V or -H
-10:46 < johnw> instead of having it be syntactic, we're moving the semantic
- difference to a difference in options
-10:46 < johnw> oh HMM
-10:46 < johnw> -X with -B, -V and -I
-10:46 < johnw> (and -O, incidentally)
-10:46 < johnw> O = amount, B = cost, V = market value, I = price
-10:47 < johnw> that's really an excellent suggestion
-10:48 < johnw> i'd still need a flag to mean "historical" vs "current"
-10:48 < johnw> as well as "target commodity" (-X)
-@end smallexample
 
 @node File Format, Archiving Previous Years , Advanced Transactions, Keeping a Journal
 @section File Format for Users
@@ -3178,6 +2879,118 @@ Reports the net gain/loss for all commodities in the report that have
 a price history.
 @end table
 
+
+Often you will be more interested in the value of your entire holdings, in
+your preferred currency.  It might be nice to know you hold 10,000 shares
+of PENNY, but you are more interested in whether or not that is worth
+$1000.00 or $10,000.00.  However, the current day value of a commodity can
+mean different things to different people, depending on the accounts
+involved, the commodities, the nature of the transactions, etc.
+
+When you specify @samp{-V}, or @samp{-X COMM}, you are requesting that
+some or all of the commodities be valuated as of today (or whatever
+@samp{--now} is set to).  But what does such a valuation mean?  This
+meaning is governed by the presence of a @samp{VALUE} metadata
+property, whose content is an expression used to compute that value.
+
+If no VALUE property is specified, each posting is assumed to have a default,
+as if you'd specified a global, automated transaction as follows:
+
+@smallexample
+  = expr true
+    ; VALUE:: market(amount, date, exchange)
+@end smallexample
+This definition emulates the present day behavior of @samp{-V} and @samp{-X} (in the
+case of @samp{-X}, the requested commodity is passed via the string 'exchange'
+above).
+
+@cindex Euro conversion
+One thing many people have wanted to do is to fixate the valuation of
+old European currencies in terms of the Euro after a certain date:
+
+
+@smallexample
+  = expr commodity == "DM"
+    ; VALUE:: date < [Jun 2008] ? market(amount, date, exchange) : 1.44 EUR
+@end smallexample
+
+This says: If @samp{--now} is some old date, use market prices as they
+were at that time; but if @samp{--now} is past June 2008, use a fixed
+price for converting Deutsch Mark to Euro.
+
+Or how about never re-valuating commodities used in Expenses, since they
+cannot have a different future value:
+
+@smallexample
+  = /^Expenses:/
+    ; VALUE:: market(amount, post.date, exchange)
+@end smallexample
+
+This says the future valuation is the same as the valuation at the time
+of posting.  post.date equals the posting's date, while just 'date' is
+the value of @samp{--now} (defaults to today).
+
+Or how about valuating miles based on a reimbursement rate during a
+specific time period:
+
+
+@smallexample
+  = expr commodity == "miles" and date >= [2007] and date < [2008]
+    ; VALUE:: market($1.05, date, exchange)
+@end smallexample
+
+In this case, miles driven in 2007 will always be valuated at $1.05
+each.  If you use @samp{-X EUR} to expressly request all amounts in
+Euro, Ledger shall convert $1.05 to Euro by whatever means are
+appropriate for dollars.
+
+Note that you can have a valuation expression specific to a particular
+posting or transaction, by overriding these general defaults using
+specific metadata:
+
+@smallexample
+
+  2010-12-26 Example
+      Expenses:Food                $20
+      ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
+      ; the user asks for with -V or -X
+      ; VALUE:: 30 DM
+      Assets:Cash
+@end smallexample
+
+This example demonstrates that your VALUE expression should be as
+symbolic as possible, using terms like 'amount' and 'date', rather than
+specific amounts and dates.  Also, you should pass the amount along to
+the function 'market' so it can be further revalued if the user has
+asked for a specific currency.
+
+Or, if it better suits your accounting, you can be less symbolic, which
+allows you to report most everything in EUR if you use -X EUR, except
+for certain accounts or postings which should always be valuated in
+another currency.  For example:
+
+@smallexample
+  = /^Assets:Brokerage:CAD$/
+    ; Always report the value of commodities in this account in 
+    ; terms of present day dollars, despite what was asked for 
+    ; on the command-line VALUE:: market(amount, date, '$')
+@end smallexample
+
+@cindex FIFO/LIFO
+@cindex LIFO/FIFO
+Ledger presently has no way of handling such things as FIFO and LIFO.
+
+If you specify an unadorned commodity name, like AAPL, it will balance
+against itself.  If @samp{--lots} are not being displayed, then it will
+appear to balance against any lot of AAPL.
+
+@cindex adorned commodity
+If you specify an adorned commodity, like AAPL @{$10.00@}, it will also
+balance against itself, and against any AAPL if @samp{--lots} is not
+specified.  But if you do specify @samp{--lot-prices}, for example, then
+it will balance against that specific price for AAPL.
+
+
 @node Environment Variables,  , Commodity Reporting, Detailed Options Description
 @subsection Environment variables
 
@@ -3356,6 +3169,7 @@ postings which match in some way to be printed.
 
 The @command{print} command can be a handy way to clean up a ledger
 file whose formatting has gotten out of hand.
+
 
 @node Reports in other formats, Reports about your Journals, Primary Financial Reports, Reporting Commands
 @section Reports in other formats
