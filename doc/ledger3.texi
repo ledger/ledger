@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 18:13 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 18:45 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1704,6 +1704,43 @@ very short example I didn't establish opening an opening balance for the
 checking account) and E15.00.  After spending on dinner i have E15.00 in
 my wallet.  The bottom line balances to zero, but is shown in two lines
 since we haven't told ledger to convert commodities.
+
+@menu
+* Buying and Selling Stock::    
+@end menu
+
+@node Buying and Selling Stock,  , Currency and Commodities, Currency and Commodities
+@subsection Buying and Selling Stock
+@cindex buying stock
+
+Buying stock is a typical example that many will use that involves
+multiple commodities in the same transaction.  The type of the share
+(AAPL for Apple Inc.)  and the share purchase price in the currency unit
+you made the purcase in ($ for AAPL). Yes, the typical convention is as follows:
+
+@smallexample
+   2004/05/01 Stock purchase
+       Assets:Broker                    50 AAPL @@ $30.00
+       Expenses:Broker:Commissions       $19.95
+       Assets:Broker                 $-1,500.00
+@end smallexample
+This assumes you have a brokerage account that is capable of managed  
+both liquid and commodity assets.  Now, on the day of the sale:
+@smallexample
+   2005/08/01 Stock sale
+       Assets:Broker                   -50 APPL @{$30.00@} @@ $50.00
+       Expenses:Broker:Commissions       $19.95
+       Income:Capital Gains          $-1,000.00
+       Assets:Broker                  $2,500.00
+@end smallexample
+
+You can, of course, elide the amount of the last posting.  It is there
+for clarity's sake.
+
+The @{$30.00@} is a lot price.  You can also use a lot date,
+[2004/05/01], or both, in case you have several lots of the same
+price/date and your taxation model is based on longest-held-first.
+
 
 
 @node Structuring Your Accounts, Advanced Transactions, Currency and Commodities, Keeping a Journal
