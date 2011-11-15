@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 18:45 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 18:52 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1706,10 +1706,26 @@ my wallet.  The bottom line balances to zero, but is shown in two lines
 since we haven't told ledger to convert commodities.
 
 @menu
+* Naming Commodities::          
 * Buying and Selling Stock::    
 @end menu
 
-@node Buying and Selling Stock,  , Currency and Commodities, Currency and Commodities
+@node Naming Commodities, Buying and Selling Stock, Currency and Commodities, Currency and Commodities
+@subsection Naming Commodities
+Commodity names can have any character, including whitespace.  However,
+if you include whitespace or numeric characters the commodity name must
+be enclosed in double quotes:
+@smallexample
+1999/06/09 !  Achat
+        Actif:SG PEE STK  49.957 "Arcancia Equilibre 454"
+        Actif:SG PEE STK  $-234.90
+
+2000/12/08 !  Achat
+        Actif:SG PEE STK  215.796 "Arcancia Equilibre 455"
+        Actif:SG PEE STK  $-10742.54  
+@end smallexample
+
+@node Buying and Selling Stock,  , Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
 @cindex buying stock
 
