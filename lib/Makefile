@@ -6,7 +6,7 @@ STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
 GCC_VERSION	= 4.6
-BOOST_VERSION	= 1_47_0
+BOOST_VERSION	= 1_48_0
 
 CC		= gcc-mp-$(GCC_VERSION)
 ifeq ($(CC),clang)
@@ -21,9 +21,9 @@ DIR_SUFFIX	= gcc$(subst .,,$(GCC_VERSION))
 OPTJ		= #-j8
 endif
 CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
-ifneq ($(CC),clang)
-CPPFLAGS       += -D_GLIBCXX_DEBUG=1
-endif
+#ifneq ($(CC),clang)
+#CPPFLAGS       += -D_GLIBCXX_DEBUG=1
+#endif
 CFLAGS		= $(CPPFLAGS) -g2 -ggdb
 LDFLAGS		= -g2 -ggdb
 
@@ -33,7 +33,7 @@ ifeq ($(CC),clang)
 BOOST_TOOLSET	= clang
 else
 BOOST_TOOLSET	= darwin
-BOOST_DEFINES  += define=_GLIBCXX_DEBUG=1
+#BOOST_DEFINES  += define=_GLIBCXX_DEBUG=1
 endif
 #BOOST_FLAGS	= --architecture=x86 --address_model=32_64
 BOOST_FLAGS	= toolset=$(BOOST_TOOLSET) --layout=versioned \
@@ -56,8 +56,7 @@ boost-build: prepare-boost
 	(cd $(BOOST_SOURCE) && \
 	 sh bootstrap.sh && \
 	 ./b2 $(OPTJ) debug --prefix=$(BOOST_STOW) \
-	    --build-dir=$(BOOST_BUILD) \
-	    $(BOOST_FLAGS) install)
+	    --build-dir=$(BOOST_BUILD) $(BOOST_FLAGS) install)
 
 icu-build:
 	-(cd icu/source; make distclean)
