@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 16:32 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 18:13 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1520,9 +1520,10 @@ calculating}
 
 @menu
 * Checking Balances::           
+* Effective Dates::             
 @end menu
 
-@node Checking Balances,  , Most Basic Entry, Most Basic Entry
+@node Checking Balances, Effective Dates, Most Basic Entry, Most Basic Entry
 @subsection Checking balances
 
 
@@ -1540,6 +1541,72 @@ What this says is that as of 11/26/08 (bank perspective), the
 Assets:Brokerage account was known to equal $970.64.  It @strong{must}
 equal this amount at this point in the Ledger file, or there will be a
 balancing error.
+
+@node Effective Dates,  , Checking Balances, Most Basic Entry
+@subsection Effective Dates
+@cindex effective dates
+
+In the real world transactions do not take place instantaneously.
+Purchases can take several days to post to a bank account. And you may
+pay ahead for something that you want to distribute cost for.  With
+Ledger you can control every aspect of the timing of a transaction.
+
+Say you're in business.  If you bill a customer, you can enter
+something like
+@cindex effective date of invoice
+@smallexample
+2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
+  Assets:Accounts Receivable            $100.00
+  Income: Client name
+@end smallexample
+Then, when you receive the payment, you change it to
+
+@smallexample
+2008/01/01=2008/01/15 Client invoice ;  actual date money received
+  Assets:Accounts Receivable            $100.00
+  Income: Client name
+@end smallexample
+and add something like
+
+@smallexample
+2008/01/15 Client payment
+  Assets:Checking                       $100.00
+  Assets:Accounts Receivable
+@end smallexample
+Now
+
+@smallexample
+  ledger --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+@end smallexample
+gives you your accrued income in the first two weeks of the year, and
+@smallexample
+  ledger --effective --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+@end smallexample
+gives you your cash basis income in the same two weeks.
+
+ANother use is distributing costs out in time. As an example, suppose
+you just prepaid into a local vegetable co-op that sustains you through
+the winter.  It cost $225 to join the program, so you write a check.
+You don't want your October grocery budgetto be blown because you bought
+food ahead, however.  What you really want is for the money to be evenly
+distributed over the next six months so that your monthly budgets
+gradually take a hit for the vegetables you'll pick up from the co-op,
+even though you've already paid for them.
+
+@smallexample
+2008/10/16 * (2090) Bountiful Blessings Farm
+    Expenses:Food:Groceries                  $ 37.50  ; [=2008/10/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2008/11/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2008/12/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2009/01/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2009/02/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2009/03/01]
+    Assets:Checking 
+@end smallexample
+
+This entry accomplishes this.  Every month until you'll start with an
+automatic $37.50 deficit like you should, while your checking account
+really knows that it debited $225 this month.
 
 @node Starting up, Currency and Commodities, Most Basic Entry, Keeping a Journal
 @section Starting up
@@ -1574,7 +1641,7 @@ your opening balance entry could look like this:
 
 There is nothing special about the name ``Opening Balances'' as the
 payee of the account name, anything convenient that you understand will
-work.
+work. 
 
 @node Currency and Commodities, Structuring Your Accounts, Starting up, Keeping a Journal
 @section Currency and Commodities
