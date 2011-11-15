@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 18:52 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-14 19:03 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1708,6 +1708,7 @@ since we haven't told ledger to convert commodities.
 @menu
 * Naming Commodities::          
 * Buying and Selling Stock::    
+* Fixing Lot Prices::           
 @end menu
 
 @node Naming Commodities, Buying and Selling Stock, Currency and Commodities, Currency and Commodities
@@ -1725,7 +1726,7 @@ be enclosed in double quotes:
         Actif:SG PEE STK  $-10742.54  
 @end smallexample
 
-@node Buying and Selling Stock,  , Naming Commodities, Currency and Commodities
+@node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
 @cindex buying stock
 
@@ -1757,7 +1758,59 @@ The @{$30.00@} is a lot price.  You can also use a lot date,
 [2004/05/01], or both, in case you have several lots of the same
 price/date and your taxation model is based on longest-held-first.
 
+@node Fixing Lot Prices,  , Buying and Selling Stock, Currency and Commodities
+@subsection Fixing Lot Prices
+@cindex fixing lot prices
+@cindex consumable commodity pricing
+Commodites that you keep in order to sell them at a later time have a
+variable value that fluctuates with the market prices.  Commodities that
+you consume should not fluctuate in value, but stay at the lot price
+they were purchased at.  As an extension of ``lot pricing'', you can fix
+the per-unit price of a commodity.
 
+For example, say you buy 10 gallons of gas at $1.20.  In future
+``value'' reports, you don't want these gallons reported in terms of
+today's price, but rather the price when you bought it.  At the same
+time, you also want other kinds of commodities -- like stocks --
+reported in terms of today's price.
+
+This is supported as follows:
+@smallexample
+     2009/01/01 Shell
+         Expenses:Gasoline             11 GAL @{=$2.299@}
+         Assets:Checking
+@end smallexample
+
+This transaction actually introduces a new commodity, ``GAL @{=$2.29@}'',  
+whose market value disregards any future changes in the price of  
+gasoline.
+
+If you do not want price fixing, you can specify this same transaction
+in one of two ways, both equivalent (note the lack of the equal sing
+from the transaction above):
+
+@smallexample
+     2009/01/01 Shell
+         Expenses:Gasoline             11 GAL @{$2.299@}
+         Assets:Checking
+
+     2009/01/01 Shell
+         Expenses:Gasoline             11 GAL @@ $2.299
+         Assets:Checking
+@end smallexample
+There is no difference in meaning between these two forms.  Why do  
+both exist, you ask?  To support things like this:
+@smallexample
+     2009/01/01 Shell
+         Expenses:Gasoline             11 GAL @{=$2.299@} @@ $2.30
+         Assets:Checking
+@end smallexample
+
+This transaction says that you bought 11 gallons priced at $2.29 per  
+gallon at a @strong{cost to you} of $2.30 per gallon.  Ledger auto-generates  
+a balance posting in this case to Equity:Capital Losses to reflect the  
+11 cent difference, which is then balanced by Assets:Checking because  
+its amount is null. 
 
 @node Structuring Your Accounts, Advanced Transactions, Currency and Commodities, Keeping a Journal
 @section Structuring your Accounts
