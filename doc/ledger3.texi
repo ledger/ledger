@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-14 20:19 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-15 13:51 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1472,6 +1472,7 @@ posting.
 * Advanced Transactions::       
 * File Format::                 
 * Archiving Previous Years ::   
+* Using emacs::                 
 @end menu
 
 @node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
@@ -2370,7 +2371,7 @@ syntax of its timelog files.
 @end table
 
 
-@node Archiving Previous Years ,  , File Format, Keeping a Journal
+@node Archiving Previous Years , Using emacs, File Format, Keeping a Journal
 @section Archiving Previous Years
 
 
@@ -2429,7 +2430,204 @@ any electronic statements received during the year.  In the arena of
 organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
+@node Using emacs,  , Archiving Previous Years , Keeping a Journal
+@section Using emacs to Maintain Your Journal
+@cindex emacs
 
+@menu
+* running ledger-mode::         
+* Working with entries::        
+* Reconciling accounts::        
+* Generating Reports::          
+@end menu
+
+@node running ledger-mode, Working with entries, Using emacs, Using emacs
+@subsection Running ledger-mode
+
+Journal files are simple free text files easily modifed by any text
+editor.  A special mode for emacs is included with the source
+distribution.
+
+@cindex emacs .emacs file
+To use the emacs mopy, copy the several lisp files from the source lisp
+directory your your @file{site-lisp} directoy and add the following line
+to your @file{.emacs} (or equivalent, @file{~/Aquamacs/Preferences.el}
+for Aquamacs on Mac OS X)
+@smallexample
+(load "ledger")
+@end smallexample
+
+To trigger ledger mode when you visit a journal file, the first line of
+each of your journal files should be:
+@smallexample
+; -*-ledger-*-
+@end smallexample
+To enter ledger-mode on a new file, type M-x ledger-mode.
+ 
+Once you have loaded a Journal file into emacs, you have several
+commands available to make entering, clearing and reconciling
+transactions and producing reports:
+
+@cindex emacs commands
+@table @code
+@item C-i  or <TAB>
+auto complete entry
+@item C-c C-a       
+add a new entry, based on previous entries
+@item C-c C-e       
+toggle cleared status of an entire entry
+@item C-c C-c
+toggle cleared status of an individual posting
+@item C-c C-y       
+set default year for entry mode
+@item C-c C-m       
+set default month for entry mode
+@item C-c C-r       
+reconcile uncleared entries related to an account
+@item C-c C-d
+delete the current entry
+@item C-c C-s
+sort all entries in the journal by date. Drop comments outside of entries
+@item C-c C-o C-r   
+run a ledger report
+@item C-C C-o C-g   
+goto the ledger report buffer
+@item C-c C-o C-e   
+edit the defined ledger reports
+@item C-c C-o C-s   
+save a report definition based on the current report
+@item C-c C-o C-a   
+rerun a ledger report
+@item C-c C-o C-k   
+kill the ledger report buffer
+@end table
+
+@menu
+* Working with entries::        
+* Reconciling accounts::        
+* Generating Reports::          
+@end menu
+
+@node Working with entries, Reconciling accounts, running ledger-mode, Using emacs
+@subsection Working with entries
+@menu
+* Manual Entry Support::        
+* Automagically Adding new entries::  
+* Clearing Transactions::       
+@end menu
+
+@node Manual Entry Support, Automagically Adding new entries, Working with entries, Working with entries
+@subsubsection Manual Entry Support
+
+@cindex <TAB> completion
+@cindex autocompletion
+@cindex misspelled accounts treated as new
+
+In most financial programs, some sort of autocompletion is avaiable to
+save typing and improve accuracy. Ledger doesn't leave you hanging,
+@code{ledger-mode} provides tab completion on all portions of an entry.
+Type a portion of the payee and hit <TAB>, and @code{ledger-mode} will
+suggest a completion.  When filling in the account type the first few
+letters followed by a <TAB> and the account will be filled in.  For
+example typing @samp{Ex<TAB>Au<TAB>F<TAB>} would yield
+@samp{Expenses:Auto:Fuel} if you had previously used that account in
+this journal. If there are more than one account with similar starting,
+hitting <TAB> multiple times will iterate through them. This is a good
+habit to get in to prevent misspellings of accounts. Remember Ledger
+does not validate the names of payees or account so a misspelled account
+will be interpreted as a new account by ledger.
+
+
+@node Automagically Adding new entries, Clearing Transactions, Manual Entry Support, Working with entries
+@subsubsection Automagically Adding new entries
+@cindex new transactions in emacs
+@cindex emacs, adding new transactions
+@code{C-c C-a} will run the @code{ledger entry} command (@pxref{entry
+and xact}) from within emacs.  When typed, the minibuffer will appear
+with the current year and month, waiting for you to enter the day and
+the payee.  Ledger will generate a new entry based on the most recent
+entry for that payee, using the amount and accounts from that
+transaction.  If you have a new amount simply type the amount after the
+payee.  For example, if your journal  contains an entry 
+@smallexample
+2011/11/25   Viva Italiano 
+     Expenses:Food  $12.45
+     Expenses:Tips  $2.55
+     Liabilities:MasterCard  $-15.00
+@end smallexample 
+@noindent and you type @samp{C-c C-a}, the mini-buffer will appear showing the
+current year and month.  If you complete the minibuffer entry by typing
+@smallexample
+Entry: 2011/11/28 viva food 34 tip 7 <enter>
+@end smallexample
+@noindent emacs will add the following entry to your journal:
+@smallexample
+2011/11/30 Viva Italiano 
+    Expenses:Food                             $34.00
+    Expenses:Tips                              $7.00
+    Liabilities:MasterCard
+@end smallexample
+@noindent  Notice that the entry will appear at the correct place in the journal
+ordered by date, not necessarily at the bottom of the file.
+@node Clearing Transactions,  , Automagically Adding new entries, Working with entries
+@subsubsection Clearing Transactions and Postings
+@cindex clearing transactions in emacs
+@cindex emacs, clear transaction
+@code{C-c C-e} will place an asterisk after the date in the current
+transaction.  The tells ledger the transaction has been cleared through
+your bank (or whatever else you want the concept to mean)
+@smallexample
+2011/11/25   Viva Italiano 
+     Expenses:Food  $12.45
+     Expenses:Tips  $2.55
+     Liabilities:MasterCard  $-15.00
+@end smallexample
+@noindent becomes
+@smallexample
+2011/11/25 * Viva Italiano 
+     Expenses:Food  $12.45
+     Expenses:Tips  $2.55
+     Liabilities:MasterCard  $-15.00
+@end smallexample
+
+If, for some reason you need to clear a specific posting in the
+transaction you can type @samp{C-c C-c} and the posting at point will be
+toggled.
+
+@node Reconciling accounts, Generating Reports, Working with entries, Using emacs
+@subsection Reconciling accounts
+
+In the reconcile buffer, use SPACE to toggle the cleared status of a
+transaction, C-x C-s to save changes (to the ledger file as well).
+
+@node Generating Reports,  , Reconciling accounts, Using emacs
+@subsection Generating Reports
+
+The ledger reports command asks the user to select a report to run then
+creates a report buffer containing the results of running the associated
+command line.  Its' behavior is modified by a prefix argument which,
+when given, causes the generated command line that will be used to
+create the report to be presented for editing before the report is
+actually run.  Arbitrary unnamed command lines can be run by specifying
+an empty name for the report.  The command line used can later be named
+and saved for future use as a named report from the generated reports
+buffer.
+
+In a report buffer, the following keys are available:
+@table @code
+@item  (space)  
+scroll up
+@item  e        
+edit the defined ledger reports
+@item  s        
+save a report definition based on the current report
+@item  q        
+quit the report (return to ledger buffer)
+@item  r        
+redo the report
+@item  k        
+kill the report buffer
+@end table
 
 
 @node Command-line Syntax, Reporting Commands, Keeping a Journal, Top
@@ -2880,21 +3078,23 @@ a price history.
 @end table
 
 
-Often you will be more interested in the value of your entire holdings, in
-your preferred currency.  It might be nice to know you hold 10,000 shares
-of PENNY, but you are more interested in whether or not that is worth
-$1000.00 or $10,000.00.  However, the current day value of a commodity can
-mean different things to different people, depending on the accounts
-involved, the commodities, the nature of the transactions, etc.
+Often you will be more interested in the value of your entire holdings,
+in your preferred currency.  It might be nice to know you hold 10,000
+shares of PENNY, but you are more interested in whether or not that is
+worth $1000.00 or $10,000.00.  However, the current day value of a
+commodity can mean different things to different people, depending on
+the accounts involved, the commodities, the nature of the transactions,
+etc.
 
 When you specify @samp{-V}, or @samp{-X COMM}, you are requesting that
 some or all of the commodities be valuated as of today (or whatever
 @samp{--now} is set to).  But what does such a valuation mean?  This
-meaning is governed by the presence of a @samp{VALUE} metadata
-property, whose content is an expression used to compute that value.
+meaning is governed by the presence of a @samp{VALUE} metadata property,
+whose content is an expression used to compute that value.
 
-If no VALUE property is specified, each posting is assumed to have a default,
-as if you'd specified a global, automated transaction as follows:
+If no VALUE property is specified, each posting is assumed to have a
+default, as if you'd specified a global, automated transaction as
+follows:
 
 @smallexample
   = expr true
@@ -2949,7 +3149,6 @@ posting or transaction, by overriding these general defaults using
 specific metadata:
 
 @smallexample
-
   2010-12-26 Example
       Expenses:Food                $20
       ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what

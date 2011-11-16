@@ -227,7 +227,7 @@ Return the difference in the format of a time value."
          (if (looking-at "Error: ")
              (error (buffer-string))
            (buffer-string)))
-       "\n"))))
+       "\n "))))
 
 (defun ledger-current-entry-bounds ()
   (save-excursion
@@ -582,7 +582,7 @@ dropped."
          (items
           (with-temp-buffer
             (let ((exit-code
-                   (ledger-run-ledger buf "--uncleared" "emacs" account)))
+                   (ledger-run-ledger buf "--uncleared --real" "emacs" account)))
               (when (= 0 exit-code)
                 (goto-char (point-min))
                 (unless (eobp)
