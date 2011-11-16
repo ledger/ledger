@@ -254,8 +254,8 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_47_0"
-    boost_major   = "1_47"
+    boost_version = "1_48_0"
+    boost_major   = "1_48"
 
     options = {
         'debug':    False,
@@ -1281,8 +1281,9 @@ class PrepareBuild(CommandLineApp):
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
             if self.options.use_glibcxx_debug and not self.options.use_clang:
-                self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
-                self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
+                #self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
+                #self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
+                pass
 
             if self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
