@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-16 22:34 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-18 22:35 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -2638,6 +2638,7 @@ kill the report buffer
 @menu
 * Introduction::                
 * Balance Reports::             
+* Advanced Reports::            
 @end menu
 
 @node Introduction, Balance Reports, Building Reports, Building Reports
@@ -2650,7 +2651,7 @@ show you the basics of combining varous options and commands.  In the next
 chapters you will find details about the specific commands and
 options.
 
-@node Balance Reports,  , Introduction, Building Reports
+@node Balance Reports, Advanced Reports, Introduction, Building Reports
 @section Balance Reports
 @menu
 * Controlling the Accounts and Payees::  
@@ -2743,6 +2744,124 @@ morepossibilities.
 These examples all use the default formatting for the balance
 report. Customizing the formatting can easily allowing to see only what
 you want, or interface Ledger with other programs.
+
+@node Advanced Reports,  , Balance Reports, Building Reports
+@section Advanced Reports
+
+@menu
+* Asset Allocation::            
+@end menu
+
+@node Asset Allocation,  , Advanced Reports, Advanced Reports
+@subsection Asset Allocation
+A very popular method of managing portfolios is to control the
+percent allocation of assets by certain categories.  The mix of
+categories and the weights applied to them vary by investing
+philosophy, but most follow a similar pattern.  Tracking asset
+allocation in ledger is not difficult but does require some additional
+effort to describe how the various assets you own contribute to the
+asset classes you want to track.
+
+In our simple example we assume you want to apportion you assets into
+the general categories of domestic and international equities (stocks)
+and a combined category of bonds and cash.  For illustrative purposes we
+will use several publicly available mutual funds from Vanguard.  the
+three funds we will track are the Vanguard 500 IDX FD Signal (VIFSX),
+the Vanguard Target Retirement 2030 (VTHRX), and the Vanguard Short Term
+Federal Fund (VSGBX).  Each of these funds allocates assets to different
+categories of the investment universe and in different proportions.
+When you buy a share of VTHRX, that share is partially invested in
+equities, and partially invested in bonds and cash.  Below is the asset
+allocation for each of the instruments listed above:
+
+@multitable @columnfractions .2 .2 .3 .3
+@item @tab Domestic @tab Global  @tab
+@item Symbol @tab Equity @tab Equity @tab  bonds/cash
+@item VIFSX @tab 100% @tab @tab
+@item VTHRX @tab 24.0%  @tab 56.3%  @tab 19.7%
+@item VSGBX @tab @tab @tab 100%
+@end multitable
+
+These numbers are available from the prospectus of any publicly
+available mutual fund.  Of course a single stock issue is 100% equity
+and a single bond issue is 100% bonds.
+
+We track purchases of specific investments using the symbol of that
+investment as its commodity.  How do we tell Ledger that a share of
+VTHRX is 24% Global equity etc.?  Enter automatic transactions and
+virtual accounts.
+
+At the top of our ledger we enter automatic transactions that describe
+these proportions to Ledger.  In the same entries we set up virtual
+accounts that let us separate these abstract calculations from our
+actual balances.
+
+For the three instruments listed above, those automatic transactions
+would look like:
+@smallexample
+;
+; automatic calculations for asset allocation tracking
+;  
+= expr ( commodity == 'VIFSX' )
+  (Allocation:Equities:Domestic)                 1.000
+
+= expr ( commodity == 'VTHRX' )
+      (Allocation:Equities:Global)               0.240
+      (Allocation:Equities:Domestic)             0.563
+      (Allocation:Bonds/Cash)                    0.197
+
+= expr ( commodity == 'VBMFX')
+      (Allocation:Bonds/Cash)                    1.000
+@end smallexample
+
+How do these work? First the `=' sign at the beginning of the line tells
+ledger this is an automatic transaction to be applied when the condition
+following the `=' is true.  After the `=' sign is a value expression
+(@pxref{Value Expressions}) that returns true any time a posting
+contains the commodity of interest.
+
+The following line gives the proportions (not percentages) of each unit
+of commodity that belongs to each asset class.  Whenever Ledger sees a
+buy or sell of a particular commodity it will credit or debit these
+virtual accounts with that proportion of the number of shares moved.
+
+Now that Ledger understands how to distribute the commodities amongst
+the various asset classes how do we get a report that tells us our
+current allocation?  Using the balance command and some tricky formatting!
+@smallexample
+ledger bal Allocation --current --format "\
+               %-17((depth_spacer)+(partial_account))\
+               %10(percent(market(display_total), market(parent.total)))\
+               %16(market(display_total))\n" 
+@end smallexample
+
+Which yields:
+
+@smallexample
+Allocation          100.00%      $100000.00
+  Bonds/Cash         38.94%       $38940.00
+  Equities           61.06%       $61060.00
+    Domestic         95.31%       $58196.29
+    Global            4.69%        $2863.71
+@end smallexample
+Let's look at the Ledger invocation a bit closer.  The command above is
+split into lines for clarity.  The first line is very vanilla Ledger
+asking for the current balances of the account in the ``Allocation''
+tree, using a special formatter.
+
+@cindex depth_spacer
+@findex depth_spacer
+@findex display_total
+@findex parent.total
+The magic is in the formatter.  The second line simply tells Ledger to
+print the partial account name indented by its depth in the tree.  The
+third line is where we calculate and display the percentages.  The
+@code{display_total} command give the values of the total calculated for
+the account in this line.  The @code{parent.total} command gives the
+total for the next level up in the tree.  @code{percent} format their
+ratio as a percentage.  The fourth line tells ledger to display the
+current market value of the the line.
+
 
 
 
