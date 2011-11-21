@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-18 22:35 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-21 15:26 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -3644,17 +3644,174 @@ commands.
 @node Detailed Options Description, Period Expressions, Basic Usage, Command-line Syntax
 @section Detailed Option Description
 
-With all of the reports, command-line options are useful to modify the
-output generated.  The basic form for most commands is:
+@menu
+* Global Options::              
+* Report Options::              
+* Session Options::             
+* Report Filtering::            
+* Search Terms::                
+* Output Customization::        
+* Commodity Reporting::         
+* Environment Variables::       
+@end menu
 
-@smallexample
-ledger [OPTIONS] COMMAND [REGEXPS...] [-- [REGEXPS...]]
-@end smallexample
 
-The @var{OPTIONS} and @var{REGEXPS} expressions are both optional.
-You could just use @samp{ledger balance}, without any options---which
-prints a summary of all accounts.  But for more specific reporting, or
-to change the appearance of the output, options are needed.
+@node Global Options, Report Options, Detailed Options Description, Detailed Options Description
+@subsection Global Options
+@option{args_only}
+@option{debug}
+@option{full_help}
+@option{help_calc}
+@option{help_comm}
+@option{help_disp}
+@option{help}
+@option{init_file}
+@option{options}
+@option{script}
+@option{trace}
+@option{verbose}
+@option{verify}
+@option{version}
+
+@node Report Options, Session Options, Global Options, Detailed Options Description
+@subsection Report Options
+
+@option{abbrev_len}
+@option{account}
+@option{account_width}
+@option{actual_dates}
+@option{actual}
+@option{add_budget}
+@option{amount_data}
+@option{amount}
+@option{amount_width}
+@option{anon}
+@option{average}
+@option{balance_format}
+@option{base}
+@option{basis}
+@option{begin}
+@option{bold_if}
+@option{budget_format}
+@option{budget}
+@option{by_payee}
+@option{cleared_format}
+@option{cleared}
+@option{collapse_if_zero}
+@option{collapse}
+@option{color}
+@option{columns}
+@option{count}
+@option{csv_format}
+@option{current}
+@option{daily}
+@option{date_format}
+@option{date}
+@option{date_width}
+@option{datetime_format}
+@option{depth}
+@option{deviation}
+@option{display_amount}
+@option{display}
+@option{display_total}
+@option{dow}
+@option{effective}
+@option{empty}
+@option{end}
+@option{equity}
+@option{exact}
+@option{exchange}
+@option{flat}
+@option{force_color}
+@option{force_pager}
+@option{forecast_while}
+@option{forecast_years}
+@option{format}
+@option{gain}
+@option{generated}
+@option{group_by}
+@option{group_title_format}
+@option{head}
+@option{inject}
+@option{invert}
+@option{limit}
+@option{lot_dates}
+@option{lot_prices}
+@option{lot_tags}
+@option{lots_actual}
+@option{lots}
+@option{market}
+@option{meta}
+@option{meta_width}
+@option{monthly}
+@option{no_color}
+@option{no_rounding}
+@option{no_titles}
+@option{no_total}
+@option{now}
+@option{only}
+@option{output}
+@option{pager}
+@option{payee}
+@option{payee_width}
+@option{pending}
+@option{percent}
+@option{period}
+@option{pivot}
+@option{plot_amount_format}
+@option{plot_total_format}
+@option{prepend_format}
+@option{prepend_width}
+@option{pricedb_format}
+@option{price}
+@option{prices_format}
+@option{quantity}
+@option{quarterly}
+@option{raw}
+@option{real}
+@option{register_format}
+@option{related_all}
+@option{related}
+@option{revalued_only}
+@option{revalued_total}
+@option{revalued}
+@option{seed}
+@option{sort_all}
+@option{sort}
+@option{sort_xacts}
+@option{start_of_week}
+@option{subtotal}
+@option{tail}
+@option{total_data}
+@option{total}
+@option{total_width}
+@option{truncate}
+@option{unbudgeted}
+@option{uncleared}
+@option{unrealized_gains}
+@option{unrealized_losses}
+@option{unrealized}
+@option{unround}
+@option{weekly}
+@option{wide}
+@option{yearly}
+
+@node Session Options, Report Filtering, Report Options, Detailed Options Description
+@subsection Session Options
+@option{cache}
+@option{decimal_comma}
+@option{download}
+@option{file}
+@option{input_date_format}
+@option{master_account}
+@option{price_db}
+@option{price_exp}
+@option{strict}
+
+
+
+
+
 
 @subsection Basic options
 
@@ -3699,6 +3856,7 @@ precedence over settings in the init file.
 @option{--account NAME} (@option{-a NAME}) specifies the default
 account which QIF file postings are assumed to relate to.
 
+@node Report Filtering, Search Terms, Session Options, Detailed Options Description
 @subsection Report filtering
 
 These options change which postings affect the outcome of a
@@ -3799,14 +3957,7 @@ report, the amount used to calculate account totals in the
 used for the ``totals'' column in the @command{register} and
 @command{balance} reports.
 
-@menu
-* Search Terms::                
-* Output Customization::        
-* Commodity Reporting::         
-* Environment Variables::       
-@end menu
-
-@node Search Terms, Output Customization, Detailed Options Description, Detailed Options Description
+@node Search Terms, Output Customization, Report Filtering, Detailed Options Description
 @subsection Search Terms
 
 Valid Ledger invocations look like:
@@ -4398,9 +4549,12 @@ ledger -b "this month" register checking
 
 @menu
 * Variables::                   
+* Functions::                   
+* Operators::                   
+* Complex Expressions::         
 @end menu
 
-@node Variables,  , Value Expressions, Value Expressions
+@node Variables, Functions, Value Expressions, Value Expressions
 @section Variables
 
 Below are the one letter variables available in any value expression.
@@ -4492,6 +4646,7 @@ postings, or an account and its children.  It is the same as
 @samp{V-B}.
 @end table
 
+@node Functions, Operators, Variables, Value Expressions
 @section Functions
 
 The available one letter functions are:
@@ -4516,6 +4671,7 @@ supported, which yields the market value at time @samp{d}.  If no date
 is given, then the current moment is used.
 @end table
 
+@node Operators, Complex Expressions, Functions, Value Expressions
 @section Operators
 
 The binary and ternary operators, in order of precedence, are:
@@ -4527,6 +4683,42 @@ The binary and ternary operators, in order of precedence, are:
 @item @samp{& | ?:}
 @end enumerate
 
+@menu
+* Unary Operators::             
+* Binary Operators::            
+@end menu
+
+@node Unary Operators, Binary Operators, Operators, Operators
+@subsection Unary Operators
+
+@code{not}
+@code{neg}
+
+@node Binary Operators,  , Unary Operators, Operators
+@subsection Binary Operators
+
+@code{==} 	
+@code{<} 	
+@code{<=} 	
+@code{>}	
+@code{>=} 	
+@code{and}
+@code{or} 	
+@code{+} 	
+@code{-} 	
+@code{*} 	
+@code{/} 	
+@code{QUERY} 	
+@code{COLON} 	
+@code{CONS} 	
+@code{SEQ} 	
+@code{DEFINE} 	
+@code{LOOKUP} 	
+@code{LAMBDA} 	
+@code{CALL} 	
+@code{MATCH} 
+
+@node Complex Expressions,  , Operators, Value Expressions
 @section Complex expressions
 
 More complicated expressions are possible using:
