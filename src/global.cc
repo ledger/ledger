@@ -75,7 +75,7 @@ global_scope_t::global_scope_t(char ** envp)
   //
   //  1. environment variables (LEDGER_<option>)
   //  2. initialization file (~/.ledgerrc)
-  //  3. command-line (--option or -o)
+  //  3. command-line (--option or -o) (called from main.cc)
   //
   // Before processing command-line options, we must notify the session object
   // that such options are beginning, since options like -f cause a complete
