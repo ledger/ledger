@@ -39,7 +39,7 @@
  *
  * @ingroup util
  *
- * @brief General utility facilities used by Ledger
+ * @brief General utility facilities used by Ledger 3.0
  */
 #ifndef _UTILS_H
 #define _UTILS_H
@@ -557,12 +557,18 @@ inline const string& either_or(const string& first,
   return first.empty() ? second : first;
 }
 
+/**
+ * @brief Returns point to next non-whitespace character
+ */
 inline char * skip_ws(char * ptr) {
   while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
     ptr++;
   return ptr;
 }
 
+/**
+ * @brief Trims whitespace inplace from the beginning and end of string. 
+ */
 inline char * trim_ws(char * ptr) {
   std::size_t len = std::strlen(ptr);
   int i = int(len) - 1;
@@ -571,6 +577,14 @@ inline char * trim_ws(char * ptr) {
   return skip_ws(ptr);
 }
 
+/**
+ * @brief Return a pointer to the next logical element in the string
+ *
+ *  next_element returns a pointer the beginning of the next logical
+ *  element in the string.  It also marks the end of the previous
+ *  element with a \0
+ *   
+ */
 inline char * next_element(char * buf, bool variable = false) {
   for (char * p = buf; *p; p++) {
     if (! (*p == ' ' || *p == '\t'))
@@ -584,7 +598,10 @@ inline char * next_element(char * buf, bool variable = false) {
       *p = '\0';
       return skip_ws(p + 1);
     }
-    else if (*(p + 1) == ' ') {
+    // two spaces in a row signals a break between logical entities.
+    // need to catch space followed by a null to prevent single space
+    // staying with payee
+    else if (*(p + 1) == ' ' || *(p + 1) == '\0') { 
       *p = '\0';
       return skip_ws(p + 2);
     }

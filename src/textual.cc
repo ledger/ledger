@@ -845,7 +845,6 @@ void instance_t::payee_mapping_directive(char * line)
 {
   char * payee = skip_ws(line);
   char * regex = next_element(payee, true);
-
   if (regex)
     context.journal.payee_mappings.push_back
       (payee_mapping_t(mask_t(regex), payee));
@@ -1483,8 +1482,15 @@ xact_t * instance_t::parse_xact(char *          line,
   // Parse the description text
 
   if (next && *next) {
+    // next already contains the payee.  next_element should mark the
+    // end /0 and move the pointer to the next non-whitespace
+    // character.
     char * p = next_element(next, true);
+
+    // iterate through all of the payees.  If this payees matches
+    // assign it to the xact
     foreach (payee_mapping_t& value, context.journal.payee_mappings) {
+      // match must be paying attention to trailing spaces.
       if (value.first.match(next)) {
         xact->payee = value.second;
         break;
