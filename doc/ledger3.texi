@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-21 15:26 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-22 09:00 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1467,6 +1467,7 @@ posting.
 
 @menu
 * Most Basic Entry::            
+* Commenting on your journal::  
 * Starting up::                 
 * Currency and Commodities::    
 * Structuring Your Accounts::   
@@ -1476,7 +1477,7 @@ posting.
 * Using emacs::                 
 @end menu
 
-@node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
+@node Most Basic Entry, Commenting on your journal, Keeping a Journal, Keeping a Journal
 @section The Most Basic Entry
 
 Here is the Pacific Bell example from above, given as a Ledger
@@ -1521,12 +1522,20 @@ amount and the account.  If you do not have adequate separation between
 the amount and the account Ledger will give an error and stop
 calculating}
 
+
 @menu
-* Checking Balances and Reconciliations::  
-* Effective Dates::             
+* Comments::                    
 @end menu
 
-@node Starting up, Currency and Commodities, Most Basic Entry, Keeping a Journal
+@node Commenting on your journal, Starting up, Most Basic Entry, Keeping a Journal
+@section Commenting on your Journal
+@cindex comment characters
+Comments are generally started using a ';'.  However, in order to
+increase compatibility with other text manipulation programs and methods
+three additional comment characters are valid if used at the beginning
+of a line: @code{#}, @code{|}, and @code{*}.
+
+@node Starting up, Currency and Commodities, Commenting on your journal, Keeping a Journal
 @section Starting up
 
 @cindex initial equity
@@ -5143,18 +5152,46 @@ amount of the first posting is typically positive.  Consider:
     Assets:Checking
 @end smallexample
 
-@emph{Note:} It is important to note that there must be at least two spaces between
-the end of the post and the beginning of the amount (including and
-commodity designator).
+@menu
+* Comments and metadata::       
+* Specifying Amounts::          
+@end menu
 
-@section Specifying amounts
+@node Comments and metadata, Specifying Amounts, Journal File Format, Journal File Format
+@section Comments and metadata
+@menu
+* Comments::                    
+* Metadata::                    
+@end menu
+
+@node Comments, Metadata, Comments and metadata, Comments and metadata
+@subsection Comments
+Comments are generally started using a ';'.  However, in order to
+increase compatibility with other text manipulation programs and methods
+three additional comment characters are valid if used at the beginning
+of a line: @code{#}, @code{|}, and @code{*}.
+@node Metadata,  , Comments, Comments and metadata
+@subsection Metadat
+
+@node Specifying Amounts,  , Comments and metadata, Journal File Format
+@section Specifying Amounts
 @cindex amounts
 The heart of a journal is the amounts it records, and this fact is
 reflected in the diversity of amount expressions allowed.  All of them
 are covered here, though it must be said that sometimes, there are
 multiple ways to achieve a desired result.
 
-@subsection Integer amounts
+@emph{Note:} It is important to note that there must be at least two spaces between
+the end of the post and the beginning of the amount (including and
+commodity designator).
+
+@menu
+* Integer Amounts::             
+* Commoditized Amounts::        
+@end menu
+
+@node Integer Amounts, Commoditized Amounts, Specifying Amounts, Specifying Amounts
+@subsection Integer Amounts
 
 In the simplest form, bare decimal numbers are accepted:
 
@@ -5207,7 +5244,8 @@ called @dfn{full precision}, as opposed to commoditized amounts, which
 always look to their commodity to know what precision they should
 round to, and so use @dfn{commodity precision}.
 
-@subsection Commoditized amounts
+@node Commoditized Amounts,  , Integer Amounts, Specifying Amounts
+@subsection Commoditized Amounts
 
 A @dfn{commoditized amount} is an integer amount which has an
 associated commodity.  This commodity can appear before or after the
