@@ -576,7 +576,7 @@ void instance_t::automated_xact_directive(char * line)
           item = ae.get();
 
         // This is a trailing note, and possibly a metadata info tag
-        item->append_note(p + 1, context.scope, true);
+        item->append_note(trim_ws(p + 1), context.scope, true);
         item->pos->end_pos = curr_pos;
         item->pos->end_line++;
 
@@ -1368,7 +1368,7 @@ post_t * instance_t::parse_post(char *          line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    post->append_note(++next, context.scope, true);
+    post->append_note(trim_ws(++next), context.scope, true);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
           << "Parsed a posting note");
@@ -1506,7 +1506,7 @@ xact_t * instance_t::parse_xact(char *          line,
   // Parse the xact note
 
   if (next && *next == ';')
-    xact->append_note(++next, context.scope, false);
+    xact->append_note(trim_ws(++next), context.scope, false);
 
   TRACE_STOP(xact_text, 1);
 
@@ -1533,7 +1533,7 @@ xact_t * instance_t::parse_xact(char *          line,
 
     if (*p == ';') {
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, context.scope, true);
+      item->append_note(trim_ws(p + 1), context.scope, true);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
     }
