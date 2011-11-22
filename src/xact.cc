@@ -643,6 +643,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
 
   bool needs_further_verification = false;
 
+  //iterate through the posts from the incoming real transaction
   foreach (post_t * initial_post, initial_posts) {
     if (initial_post->has_flags(ITEM_GENERATED))
       continue;
@@ -679,6 +680,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     } else {
       matches_predicate = predicate(*initial_post);
     }
+
+    // the real posting matches the predicate for this auto_xact
     if (matches_predicate) {
       bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
@@ -704,7 +707,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
           }
         }
       }
-
+      // iterate through the posts in the (this) automatic transaction
       foreach (post_t * post, posts) {
         amount_t post_amount;
         if (post->amount.is_null()) {
@@ -725,6 +728,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
           post_amount = post->amount;
         }
 
+	// this determines whether or not the autotransaction scales
+	// the real posting or just enters a commoditized value
+	// (post_amount comes from this)
         amount_t amt;
         if (! post_amount.commodity())
           amt = initial_post->amount * post_amount;
@@ -770,6 +776,14 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
         // the automated xact's one.
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
+        
+        // a cleared transaction implies all of it postings have been
+        // cleared CPE 2011/11/22
+	if (xact.state() == item_t::CLEARED){
+          DEBUG("xact.extend.cleared", "CLEARED");
+	  new_post->set_state(item_t::CLEARED);
+	}
+
         new_post->add_flags(ITEM_GENERATED);
 
         xact.add_post(new_post);
