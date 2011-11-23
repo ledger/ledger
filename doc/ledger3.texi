@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-22 10:39 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-23 13:15 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1529,11 +1529,28 @@ calculating}
 
 @node Commenting on your journal, Starting up, Most Basic Entry, Keeping a Journal
 @section Commenting on your Journal
-@cindex comment characters
+@cindex comments, characters
 Comments are generally started using a ';'.  However, in order to
 increase compatibility with other text manipulation programs and methods
 three additional comment characters are valid if used at the beginning
-of a line: @code{#}, @code{|}, and @code{*}.
+of a line: @code{#}, @code{|}, and @code{*} and @code{%}.
+@cindex block comments
+@cindex comments, block
+Block comments can be made by use @code{@!comment} ... @code{@!end comment}
+
+@smallexample
+
+; This is a single line comment,
+#  and this,
+%   and this,
+|    and this,
+*     and this.
+
+!comment
+    This is a block comment with
+    multipl lines
+!end comment
+@end smallexample
 
 @node Starting up, Currency and Commodities, Commenting on your journal, Keeping a Journal
 @section Starting up
@@ -2247,11 +2264,20 @@ $ ledger balance --lot-prices Assets:Broker
 
 @node File Format, Archiving Previous Years , Advanced Transactions, Keeping a Journal
 @section File Format for Users
+@menu
+* File Format Intro::           
+* Transaction and Comments::    
+* Command Directives::          
+@end menu
 
+@node File Format Intro, Transaction and Comments, File Format, File Format
+@subsection Introduction
 The ledger file format is quite simple, but also very flexible.  It
 supports many options, though typically the user can ignore most of
 them.  They are summarized below.
 
+@node Transaction and Comments, Command Directives, File Format Intro, File Format
+@subsection Transactions and Comments
 The initial character of each line determines what the line means, and
 how it should be interpreted.  Allowable initial characters are:
 
@@ -2304,32 +2330,46 @@ A period transaction.  A period expression must appear after the tilde.
 After this initial line there should be a set of one or more
 postings, just as if it were normal transaction.
 
-@item !
-A line beginning with an exclamation mark denotes a command directive.
-It must be immediately followed by the command word.  The supported
-commands are:
-
-@table @samp
-@item !include
-Include the stated journal file.
-
-@item !account
-The account name is given is taken to be the parent of all
-postings that follow, until @samp{!end} is seen.
-
-@item !end
-Ends an account block.
-@end table
-
-@item ;
-A line beginning with a colon indicates a comment, and is
-ignored. Comments will not be returned in a ``print'' response.
+@item ; # % | *
+A line beginning with a colon, pound, percent, bar or asterisk indicates
+a comment, and is ignored. Comments will not be returned in a ``print''
+response.
 @item indented ; 
 If the semi colon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
 tags can be used to augment to reporting and filtering capabilities of
 Ledger.
-@item Y
+@end table
+
+@node Command Directives,  , Transaction and Comments, File Format
+@subsection Command Directives
+
+@table @code
+@item ! @@
+A line beginning with an exclamation mark or an @@ sign denotes a
+command directive.  It must be immediately followed by the command word.
+The supported commands are:
+
+@item !include or @@include
+Include the stated journal file.
+
+@item !account or @@account
+The account name is given is taken to be the parent of all
+postings that follow, until @samp{!end} is seen.
+
+@item !end or @@end
+Ends an account block.
+
+@end table
+
+The following single letter commands may be at the beginning of a line
+alone, for backwards compatibility with older Ledger versions.
+
+@table @code
+@item A
+If a line begins with a capital A, it specifiec the default account to be
+used for unbalanced transactions, for example @samp{A Assets:Checking}
+@item Y @@year
 If a line begins with a capital Y, it denotes the year used for all
 subsequent transactions that give a date without a year.  The year should
 appear immediately after the Y, for example: @samp{Y2004}.  This is
@@ -2374,10 +2414,27 @@ decimal precision desired during reporting:
 C 1.00 Kb = 1024 bytes
 @end smallexample
 
-@item i, o, b, h
+@item I, i, O, o, b, h
 These four relate to timeclock support, which permits Ledger to read
 timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
+
+@item account
+@item alias
+@item assert
+@item bucket
+@item capture
+@item check
+@item comment
+@item define
+@item end
+@item expr
+@item fixed
+@item include
+@item payee
+@item tag
+@item test
+
 @end table
 
 
