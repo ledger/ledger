@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-22 09:00 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-22 10:39 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1541,8 +1541,8 @@ of a line: @code{#}, @code{|}, and @code{*}.
 @cindex initial equity
 @cindex beginning ledger
 
-Unless you have arrived from another planet, you already have a
-financial state.  You need to capture that financial state so the ledger
+Unless you have recntly arrived from another planet, you already have a
+financial state.  You need to capture that financial state so that Ledger
 has a starting point.
 
 At some convenient point in time you new the balances and outstanding
