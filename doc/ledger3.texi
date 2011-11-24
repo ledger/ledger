@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-23 13:15 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-23 22:59 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -2211,7 +2211,7 @@ really knows that it debited $225 this month.
 
 A periodic transaction starts with a ~ followed by a period expression.
 Periodic transactions are used for budgeting and forecasting only, they
-have no effect withouth the @samp{--budget} option specified.
+have no effect without the @samp{--budget} option specified.
 
 See @ref{Budgeting and Forecasting} for examples and details.
 
@@ -2315,6 +2315,14 @@ specify an actual and/or effective date for the posting by using
 the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
 @samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual Transactions})
 
+@item P
+Specifies a historical price for a commodity.  These are usually found
+in a pricing history file (see the @option{-Q} option).  The syntax
+is:
+@smallexample
+P DATE SYMBOL PRICE
+@end smallexample
+
 @item =
 An automated transaction.  A value expression must appear after the equal
 sign.
@@ -2337,7 +2345,7 @@ response.
 @item indented ; 
 If the semi colon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
-tags can be used to augment to reporting and filtering capabilities of
+tags can be used to augment the reporting and filtering capabilities of
 Ledger.
 @end table
 
@@ -2347,42 +2355,209 @@ Ledger.
 @table @code
 @item ! @@
 A line beginning with an exclamation mark or an @@ sign denotes a
-command directive.  It must be immediately followed by the command word.
+command directive.  It must be immediately followed by a command word.
 The supported commands are:
 
-@item !include or @@include
-Include the stated journal file.
 
-@item !account or @@account
-The account name is given is taken to be the parent of all
-postings that follow, until @samp{!end} is seen.
+@item account
+@c instance_t::master_account_directive
+Sets the base for all account following the directive.  Ledger supports
+a hierarchical tree of accounts.  It may be convenient to keep two
+``root accounts''.  For example you may be tracking your personal
+finances adn your business finances.  In order to keep them seperate you
+could preface all personal accounts with @code{personal:} and all
+business account with @code{business:}.  You can easily split out large
+groups of transaction without manually editing them using the account
+directive.  For example:
+@smallexample
 
-@item !end or @@end
-Ends an account block.
+@@account Personal
+2011/11/15  Supermarket
+    Expenses:Groceries
+    Assets:Checking
+
+@end smallexample
+
+Would result in all postings going into
+@code{Personal:Expenses:Groceries} and @code{Personal:Assets:hecking}
+until and @code{@@end account} directive was found.
+@item alias
+@c instance_t::alias_directive
+Define an alias for an account name.  If you have a deeply nested tree
+of accounts, it may be convenient to define an alias, for example:
+@smallexample
+
+@@alias Dining=Expenses:Entertainment:Dining
+@@alias Checking=Assets:Credit Union:Joint Checking Account
+
+2011/11/28 YummyPalace 
+   Dining        $10.00
+   Checking
+
+@end smallexample
+
+The aliases are only in effect for transactions read in after the alias
+is defined and are effected by @code{@@account} directives that precede
+tham.
+@item assert
+@c instance_t::assert_directive
+An assertion can throw an eror if a condition is not met during Ledger's run. 
+
+@smallexample
+
+@@assert <VALUE EXPRESSION BOOLEAN RESULT>
+
+@end smallexample
+
+
+@item bucket
+@c instance_t::default_account_directive
+Defines the default account to use for balancing transactions.
+Normally, each transaction has at least two postings, which must balance
+to zero.  Ledger allows you to leave one posting with no ammount and
+automatically calculate balance the transaction in the posting.  The
+@code{@@bucket} allows you to fill in all postings and automatically
+generate an additional posting to the bucket account balancing the
+transaction.  The following example set the @code{Assets:Checking} as
+the bucket:
+@smallexample
+
+@@bucket Assets:Checking
+2011/01/25 Tom's Used Cars
+  Expenses:Auto                    $ 5,500.00
+
+2011/01/27 Book Store
+  Expenses:Books                       $20.00
+
+2011/12/01 Sale
+  Assets:Checking:Business            $ 30.00
+
+@end smallexample
+
+@item capture
+@c instance_t::account_mapping_directive
+Directs Ledger to replace any account matching a regex with the given
+account. For example:
+
+@smallexample
+@@capture  Expenses:Deductible:Medical  Medical
+@end smallexample
+
+Would cause any posting with @code{Medical} in it's name to be replaced with
+@code{Expenses:Deductible:Medical}.
+
+
+Ledger will display the mapped payees in @code{print} and
+@code{register} reports.
+
+@item check
+@c instance_t::check_directive
+A check can issue a warning if a condition is not met during Ledger's run. 
+
+@smallexample
+
+@@check <VALUE EXPRESSION BOOLEAN RESULT>
+
+@end smallexample
+@item comment
+@c instance_t::comment_directive
+Start a block comment, closed by @code{@@end comment}.
+@item define
+@c instance_t::define_directive
+@item end
+@c instance_t::end_directive
+@item expr
+@c instance_t::expr_directive
+@item fixed
+@c instance_t::fixed_directive
+@item include
+@c instance_t::include_directive
+Include the stated file as if it were part of the current file.
+@item payee
+@c instance_t::payee_mapping_directive
+Directs Ledger to replace any payee matching a regex with the given
+payee.  You may download transactions from your bank that you want to be
+shortened or altered.  For example, the the payee for the grocery store
+near me is only one character different than the payee if I buy gasoline
+at the grocery story.  I can enter payee mappings that make this very clear:
+
+@smallexample
+@@payee  Supermarket Gas  Supermarket 4
+@@payee  Supermarket Groceries  Supermarket 1
+@end smallexample
+
+Ledger will display the mapped payees in @code{print} and
+@code{register} reports.
+@item tag
+@c instance_t::tag_directive
+Allows you to designate a block of transactions and assign the same tag to all.  Tags can have values and may be nested.
+@smallexample
+@@tag hastag
+@@tag nestedtag: true
+2011/01/25 Tom's Used Cars
+  Expenses:Auto                    $ 5,500.00
+  ; :nobudget:
+  Assets:Checking
+
+2011/01/27 Book Store
+  Expenses:Books                       $20.00
+  Liabilities:MasterCard
+
+@@end tag nestedtag
+
+2011/12/01 Sale
+  Assets:Checking:Business            $ 30.00
+  Income:Sales
+@@end tag hastag
+@end smallexample
+
+@noindent is the equivalent of
+
+@smallexample
+2011/01/25 Tom's Used Cars
+  :hastag:
+  nestedtag: true
+  Expenses:Auto                    $ 5,500.00
+  ; :nobudget:
+  Assets:Checking
+
+2011/01/27 Book Store
+  :hastag:
+  nestedtag: true
+  Expenses:Books                       $20.00
+  Liabilities:MasterCard
+
+2011/12/01 Sale
+  :hastag:
+  Assets:Checking:Business            $ 30.00
+  Income:Sales
+@end smallexample
+
+Note that anything following "@code{@@end tag}" is ignored.  placeing the
+name of the tag that is being closed is a simple way to keep track.
+
+@item test
+@c instance_t::comment_directive
+@item year
+@c instance_t::year_directive
+Denotes the year used for all subsequent transactions that give a date
+without a year.  The year should appear immediately after the Y, for
+example: @samp{@@year 2004}.  This is useful at the beginning of a file, to
+specify the year for that file.  If all transactions specify a year,
+however, this command has no effect.
 
 @end table
 
 The following single letter commands may be at the beginning of a line
 alone, for backwards compatibility with older Ledger versions.
 
+
 @table @code
 @item A
-If a line begins with a capital A, it specifiec the default account to be
-used for unbalanced transactions, for example @samp{A Assets:Checking}
-@item Y @@year
-If a line begins with a capital Y, it denotes the year used for all
-subsequent transactions that give a date without a year.  The year should
-appear immediately after the Y, for example: @samp{Y2004}.  This is
-useful at the beginning of a file, to specify the year for that file.
-If all transactions specify a year, however, this command has no effect.
+See @code{@@bucket}
+@item Y 
+See @code{@@year}
 
-@item P
-Specifies a historical price for a commodity.  These are usually found
-in a pricing history file (see the @option{-Q} option).  The syntax
-is:
-@smallexample
-P DATE SYMBOL PRICE
-@end smallexample
 
 @item N SYMBOL
 Indicates that pricing information is to be ignored for a given
@@ -2418,25 +2593,7 @@ C 1.00 Kb = 1024 bytes
 These four relate to timeclock support, which permits Ledger to read
 timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
-
-@item account
-@item alias
-@item assert
-@item bucket
-@item capture
-@item check
-@item comment
-@item define
-@item end
-@item expr
-@item fixed
-@item include
-@item payee
-@item tag
-@item test
-
 @end table
-
 
 @node Archiving Previous Years , Using emacs, File Format, Keeping a Journal
 @section Archiving Previous Years
