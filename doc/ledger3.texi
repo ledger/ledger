@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-23 22:59 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-24 21:36 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -4719,7 +4719,7 @@ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @end example
 
 
-@node Value Expressions, Format Strings, Budgeting and Forecasting, Top
+l@node Value Expressions, Format Strings, Budgeting and Forecasting, Top
 @chapter Value Expressions
 
 Value expressions are an expression language used by Ledger to
