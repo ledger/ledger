@@ -226,7 +226,7 @@ Return the difference in the format of a time value."
          (if (looking-at "Error: ")
              (error (buffer-string))
            (buffer-string)))
-       "\n "))))
+       "\n"))))
 
 (defun ledger-current-entry-bounds ()
   (save-excursion
