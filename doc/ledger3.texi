@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-24 21:36 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-27 21:12 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -3881,156 +3881,441 @@ commands.
 
 @node Global Options, Report Options, Detailed Options Description, Detailed Options Description
 @subsection Global Options
+
+FIX THIS ENTRY 
+
 @option{args_only}
+FIX THIS ENTRY
+
 @option{debug}
+FIX THIS ENTRY
+
 @option{full_help}
+FIX THIS ENTRY
+
 @option{help_calc}
+FIX THIS ENTRY
+
 @option{help_comm}
+FIX THIS ENTRY
+
 @option{help_disp}
+FIX THIS ENTRY
+
 @option{help}
+FIX THIS ENTRY
+
 @option{init_file}
+FIX THIS ENTRY
+
 @option{options}
+FIX THIS ENTRY
+
 @option{script}
+FIX THIS ENTRY
+
 @option{trace}
+FIX THIS ENTRY
+
 @option{verbose}
+FIX THIS ENTRY
+
 @option{verify}
+FIX THIS ENTRY
+
 @option{version}
 
 @node Report Options, Session Options, Global Options, Detailed Options Description
 @subsection Report Options
 
+FIX THIS ENTRY
+
 @option{abbrev_len}
+FIX THIS ENTRY
+
 @option{account}
+FIX THIS ENTRY
+
 @option{account_width}
+FIX THIS ENTRY
+
 @option{actual_dates}
+FIX THIS ENTRY
+
 @option{actual}
+FIX THIS ENTRY
+
 @option{add_budget}
+FIX THIS ENTRY
+
 @option{amount_data}
+FIX THIS ENTRY
+
 @option{amount}
+FIX THIS ENTRY
+
 @option{amount_width}
+FIX THIS ENTRY
+
 @option{anon}
+FIX THIS ENTRY
+
 @option{average}
+FIX THIS ENTRY
+
 @option{balance_format}
+FIX THIS ENTRY
+
 @option{base}
+FIX THIS ENTRY
+
 @option{basis}
+FIX THIS ENTRY
+
 @option{begin}
+FIX THIS ENTRY
+
 @option{bold_if}
+FIX THIS ENTRY
+
 @option{budget_format}
+FIX THIS ENTRY
+
 @option{budget}
+FIX THIS ENTRY
+
 @option{by_payee}
+FIX THIS ENTRY
+
 @option{cleared_format}
+FIX THIS ENTRY
+
 @option{cleared}
+FIX THIS ENTRY
+
 @option{collapse_if_zero}
+FIX THIS ENTRY
+
 @option{collapse}
+FIX THIS ENTRY
+
 @option{color}
+FIX THIS ENTRY
+
 @option{columns}
+FIX THIS ENTRY
+
 @option{count}
+FIX THIS ENTRY
+
 @option{csv_format}
+FIX THIS ENTRY
+
 @option{current}
+FIX THIS ENTRY
+
 @option{daily}
+FIX THIS ENTRY
+
 @option{date_format}
+FIX THIS ENTRY
+
 @option{date}
+FIX THIS ENTRY
+
 @option{date_width}
+FIX THIS ENTRY
+
 @option{datetime_format}
+FIX THIS ENTRY
+
 @option{depth}
+FIX THIS ENTRY
+
 @option{deviation}
+FIX THIS ENTRY
+
 @option{display_amount}
+FIX THIS ENTRY
+
 @option{display}
+FIX THIS ENTRY
+
 @option{display_total}
+FIX THIS ENTRY
+
 @option{dow}
+FIX THIS ENTRY
+
 @option{effective}
+FIX THIS ENTRY
+
 @option{empty}
+FIX THIS ENTRY
+
 @option{end}
+FIX THIS ENTRY
+
 @option{equity}
+FIX THIS ENTRY
+
 @option{exact}
+FIX THIS ENTRY
+
 @option{exchange}
+FIX THIS ENTRY
+
 @option{flat}
+FIX THIS ENTRY
+
 @option{force_color}
+FIX THIS ENTRY
+
 @option{force_pager}
+FIX THIS ENTRY
+
 @option{forecast_while}
+FIX THIS ENTRY
+
 @option{forecast_years}
+FIX THIS ENTRY
+
 @option{format}
+FIX THIS ENTRY
+
 @option{gain}
+FIX THIS ENTRY
+
 @option{generated}
+FIX THIS ENTRY
+
 @option{group_by}
+FIX THIS ENTRY
+
 @option{group_title_format}
+FIX THIS ENTRY
+
 @option{head}
+FIX THIS ENTRY
+
 @option{inject}
+FIX THIS ENTRY
+
 @option{invert}
+FIX THIS ENTRY
+
 @option{limit}
+FIX THIS ENTRY
+
 @option{lot_dates}
+FIX THIS ENTRY
+
 @option{lot_prices}
+FIX THIS ENTRY
+
 @option{lot_tags}
+FIX THIS ENTRY
+
 @option{lots_actual}
+FIX THIS ENTRY
+
 @option{lots}
+FIX THIS ENTRY
+
 @option{market}
+FIX THIS ENTRY
+
 @option{meta}
+FIX THIS ENTRY
+
 @option{meta_width}
+FIX THIS ENTRY
+
 @option{monthly}
+FIX THIS ENTRY
+
 @option{no_color}
+FIX THIS ENTRY
+
 @option{no_rounding}
+FIX THIS ENTRY
+
 @option{no_titles}
+FIX THIS ENTRY
+
 @option{no_total}
+FIX THIS ENTRY
+
 @option{now}
+FIX THIS ENTRY
+
 @option{only}
+FIX THIS ENTRY
+
 @option{output}
+FIX THIS ENTRY
+
 @option{pager}
+FIX THIS ENTRY
+
 @option{payee}
+FIX THIS ENTRY
+
 @option{payee_width}
+FIX THIS ENTRY
+
 @option{pending}
+FIX THIS ENTRY
+
 @option{percent}
+FIX THIS ENTRY
+
 @option{period}
+FIX THIS ENTRY
+
 @option{pivot}
+FIX THIS ENTRY
+
 @option{plot_amount_format}
+FIX THIS ENTRY
+
 @option{plot_total_format}
+FIX THIS ENTRY
+
 @option{prepend_format}
+FIX THIS ENTRY
+
 @option{prepend_width}
+FIX THIS ENTRY
+
 @option{pricedb_format}
+FIX THIS ENTRY
+
 @option{price}
+FIX THIS ENTRY
+
 @option{prices_format}
+FIX THIS ENTRY
+
 @option{quantity}
+FIX THIS ENTRY
+
 @option{quarterly}
+FIX THIS ENTRY
+
 @option{raw}
+FIX THIS ENTRY
+
 @option{real}
+FIX THIS ENTRY
+
 @option{register_format}
+FIX THIS ENTRY
+
 @option{related_all}
+FIX THIS ENTRY
+
 @option{related}
+FIX THIS ENTRY
+
 @option{revalued_only}
+FIX THIS ENTRY
+
 @option{revalued_total}
+FIX THIS ENTRY
+
 @option{revalued}
+FIX THIS ENTRY
+
 @option{seed}
+FIX THIS ENTRY
+
 @option{sort_all}
+FIX THIS ENTRY
+
 @option{sort}
+FIX THIS ENTRY
+
 @option{sort_xacts}
+FIX THIS ENTRY
+
 @option{start_of_week}
+FIX THIS ENTRY
+
 @option{subtotal}
+FIX THIS ENTRY
+
 @option{tail}
+FIX THIS ENTRY
+
 @option{total_data}
+FIX THIS ENTRY
+
 @option{total}
+FIX THIS ENTRY
+
 @option{total_width}
+FIX THIS ENTRY
+
 @option{truncate}
+FIX THIS ENTRY
+
 @option{unbudgeted}
+FIX THIS ENTRY
+
 @option{uncleared}
+FIX THIS ENTRY
+
 @option{unrealized_gains}
+FIX THIS ENTRY
+
 @option{unrealized_losses}
+FIX THIS ENTRY
+
 @option{unrealized}
+FIX THIS ENTRY
+
 @option{unround}
+FIX THIS ENTRY
+
 @option{weekly}
+FIX THIS ENTRY
+
 @option{wide}
+FIX THIS ENTRY
+
 @option{yearly}
 
 @node Session Options, Report Filtering, Report Options, Detailed Options Description
 @subsection Session Options
-@option{cache}
-@option{decimal_comma}
-@option{download}
-@option{file}
-@option{input_date_format}
-@option{master_account}
-@option{price_db}
-@option{price_exp}
-@option{strict}
+FIX THIS ENTRY
 
+@option{cache}
+FIX THIS ENTRY
+
+@option{decimal_comma}
+FIX THIS ENTRY
+
+@option{download}
+FIX THIS ENTRY
+
+@option{file}
+FIX THIS ENTRY
+
+@option{input_date_format}
+FIX THIS ENTRY
+
+@option{master_account}
+FIX THIS ENTRY
+
+@option{price_db}
+FIX THIS ENTRY
+
+@option{price_exp}
+FIX THIS ENTRY
+
+@option{strict}
+FIX THIS ENTRY
 
 
 
