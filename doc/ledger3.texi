@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-27 21:12 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-28 15:28 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -3868,6 +3868,7 @@ commands.
 @section Detailed Option Description
 
 @menu
+* Scope of Ledger Options::     
 * Global Options::              
 * Report Options::              
 * Session Options::             
@@ -3878,57 +3879,206 @@ commands.
 * Environment Variables::       
 @end menu
 
+@node Scope of Ledger Options, Global Options, Detailed Options Description, Detailed Options Description
+@subsection Scope of Ledger Options
 
-@node Global Options, Report Options, Detailed Options Description, Detailed Options Description
+Options for Ledger report affec tthree separate scopes of operation:
+Global, Session, and Report.  In practice there is very little
+defference between these scopes.  Ledger 3.0 contains provisions for
+GUIs, which would make use of the different scopes by keeping an
+instance of Ledger running in the background and running multiple
+sessions with multiple reports per session.
+
+@node Global Options, Report Options, Scope of Ledger Options, Detailed Options Description
 @subsection Global Options
 
-FIX THIS ENTRY 
+@option{--args_only} Ignore all environment and init-file settings and
+use only command-line arguments to control Ledger.  Usefule for debugs
+or testing small Journal files not assoviated with you main financial
+database.
 
-@option{args_only}
-FIX THIS ENTRY
-
-@option{debug}
-FIX THIS ENTRY
+@option{debug "argument"} If Ledger has been built with debug options this will provide extra data during the run.  The following are the avilable arguments to debug: @code{
+account.display
+accounts.sorted
+amount.convert
+amount.is_zero
+amount.parse
+amount.price
+amount.truncate
+amount.unround
+amounts.commodities
+amounts.refs
+archive.journal
+auto.columns
+budget.generate
+commodity.annotated.strip
+commodity.annotations
+commodity.compare
+commodity.download
+commodity.prices.add
+commodity.prices.find
+convert.csv
+csv.mappings
+csv.parse
+draft.xact
+expr.calc
+expr.calc.when
+expr.compile
+filters.changed_value
+filters.changed_value.rounding
+filters.collapse
+filters.forecast
+filters.revalued
+format.abbrev
+format.expr
+generate.post
+generate.post.string
+item.meta
+ledger.read
+ledger.validate
+lookup
+lookup.account
+mask.match
+memory.counts
+memory.counts.live
+memory.debug
+op.cons
+op.memory
+option.args
+option.names
+org.next_amount
+org.next_total
+parser.error
+pool.commodities
+post.assign
+python.init
+python.interp
+query.mask
+report.predicate
+scope.symbols
+textual.include
+textual.parse
+timelog
+times.epoch
+times.interval
+times.parse
+value.sort
+value.storage.refcount
+xact.extend
+xact.extend.cleared
+xact.extend.fail
+xact.finalize}
 
 @option{full_help}
-FIX THIS ENTRY
+Displays the man page for ledger.
 
 @option{help_calc}
-FIX THIS ENTRY
+Displays the man page for ledger.
 
 @option{help_comm}
-FIX THIS ENTRY
+Displays the man page for ledger.
 
 @option{help_disp}
-FIX THIS ENTRY
+Displays the man page for ledger.
 
 @option{help}
-FIX THIS ENTRY
+Displays the man page for ledger.
 
-@option{init_file}
-FIX THIS ENTRY
+@option{init_file PATH_TO_INIT_FILE}
+Specifies the location of the init file @file{.ledgerrc}
 
 @option{options}
-FIX THIS ENTRY
+Display the options in effect for this Ledger invocation, along with their values and the source of those values, for example:
+@smallexample
+14:15:02 > ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat  
+===============================================================================
+[Global scope options]
 
-@option{script}
-FIX THIS ENTRY
+[Session scope options]
+                  --file = ~/ledger/test/input/drewr3.dat            -f
+              --price-db = ~/FinanceData/PriceDB                     $price-db
 
-@option{trace}
-FIX THIS ENTRY
+[Report scope options]
+               --cleared                                             --cleared
+                 --color                                             ?normalize
+           --date-format = %Y/%m/%d                                  $date-format
+                 --limit = cleared                                   --cleared
+         --prepend-width = 0                                         ?normalize
+            --meta-width = 0                                         ?normalize
+            --date-width = 10                                        ?normalize
+           --payee-width = 21                                        ?normalize
+         --account-width = 21                                        ?normalize
+          --amount-width = 12                                        ?normalize
+           --total-width = 12                                        ?normalize
+===============================================================================
+            $ 775.00  Assets:Checking
+         $ -1,000.00  Equity:Opening Balances
+            $ 225.00  Expenses:Food:Groceries
+--------------------
+                   0
+
+@end smallexample
+
+@option{script PATH_TO_SCRIPT}
+Excute a ledger script.
+
+@option{trace INTEGER_TRACE_LEVEL}
+Enable tracing.  The integer specifies the level of trace desired:   LOG_OFF = 0,
+  LOG_CRIT,
+  LOG_FATAL,
+  LOG_ASSERT,
+  LOG_ERROR,
+  LOG_VERIFY,
+  LOG_WARN,
+  LOG_INFO,
+  LOG_EXCEPT,
+  LOG_DEBUG,
+  LOG_TRACE,
+  LOG_ALL
 
 @option{verbose}
-FIX THIS ENTRY
+Print detail information on the execution of Ledger.
 
 @option{verify}
 FIX THIS ENTRY
 
 @option{version}
 
+@node Session Options, Report Filtering, Report Options, Detailed Options Description
+@subsection Session Options
+
+@option{cache}
+FIX THIS ENTRY
+
+@option{decimal_comma}
+Direct Ledger to parse journals using the European standard comma as decimal separator, vice a period.
+
+@option{download}
+Direct Ledger to download prices using the getquote script.
+
+@option{file}
+Specify the input file for this invocation.
+
+@option{input_date_format}
+Specify the date format for journal entries.
+
+@option{master_account}
+FIX THIS ENTRY
+
+@option{price_db}
+Specify the price entry data file.
+
+@option{price_exp INTEGER_MINUTES} Set the expected freshness of price
+quotes, in min- utes. That is, if the last known quote for any commodity
+is older than this value—and if ‘--download’ is being used—then the
+Internet will be consulted again for a newer price. Otherwise, the old
+price is still considered to be fresh enough.
+
+@option{strict}
+FIX THIS ENTRY
+
 @node Report Options, Session Options, Global Options, Detailed Options Description
 @subsection Report Options
-
-FIX THIS ENTRY
 
 @option{abbrev_len}
 FIX THIS ENTRY
@@ -4286,36 +4436,6 @@ FIX THIS ENTRY
 
 @option{yearly}
 
-@node Session Options, Report Filtering, Report Options, Detailed Options Description
-@subsection Session Options
-FIX THIS ENTRY
-
-@option{cache}
-FIX THIS ENTRY
-
-@option{decimal_comma}
-FIX THIS ENTRY
-
-@option{download}
-FIX THIS ENTRY
-
-@option{file}
-FIX THIS ENTRY
-
-@option{input_date_format}
-FIX THIS ENTRY
-
-@option{master_account}
-FIX THIS ENTRY
-
-@option{price_db}
-FIX THIS ENTRY
-
-@option{price_exp}
-FIX THIS ENTRY
-
-@option{strict}
-FIX THIS ENTRY
 
 
 
@@ -5004,7 +5124,7 @@ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @end example
 
 
-l@node Value Expressions, Format Strings, Budgeting and Forecasting, Top
+@node Value Expressions, Format Strings, Budgeting and Forecasting, Top
 @chapter Value Expressions
 
 Value expressions are an expression language used by Ledger to
