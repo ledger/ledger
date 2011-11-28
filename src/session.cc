@@ -96,7 +96,6 @@ std::size_t session_t::read_data(const string& master_account)
   optional<path> price_db_path;
   if (HANDLED(price_db_))
     price_db_path = resolve_path(HANDLER(price_db_).str());
-
 #if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;
   if (HANDLED(cache_) && master_account.empty())
@@ -145,7 +144,6 @@ std::size_t session_t::read_data(const string& master_account)
       cache->save(*journal.get());
   }
 #endif // HAVE_BOOST_SERIALIZATION
-
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
 
@@ -236,9 +234,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'Z':
     OPT_CH(price_exp_);
     break;
-  case 'c':
-    OPT(cache_);
-    break;
+    //  case 'c':
+    //OPT(cache_);
+    //break;
   case 'd':
     OPT(download); // -Q
     else OPT(decimal_comma);
