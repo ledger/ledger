@@ -420,6 +420,27 @@ expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
     return expr_t::func_t();
 }
 
+void global_scope_t::visit_info_page() const
+{
+#ifndef WIN32
+  int pid = fork();
+  if (pid < 0) {
+    throw std::logic_error(_("Failed to fork child process"));
+  }
+  else if (pid == 0) {  // child
+    execlp("info", "info", "ledger3", NULL);
+
+    // We should never, ever reach here
+    perror("execlp: info");
+    exit(1);
+  }
+
+  int status = -1;
+  wait(&status);
+#endif
+  exit(0);                      // parent
+}
+
 void global_scope_t::visit_man_page() const
 {
 #ifndef WIN32

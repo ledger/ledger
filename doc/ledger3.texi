@@ -45,12 +45,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-28 15:28 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-28 22:21 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
 @direntry
-* Ledger3: (ledger).           Command-Line Accounting
+* Ledger3: (ledger3).           Command-Line Accounting
 @end direntry
 
 @contents

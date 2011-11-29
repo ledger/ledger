@@ -129,9 +129,10 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);
 
+  void visit_info_page() const;
   void visit_man_page() const;
 
-  OPTION_(global_scope_t, full_help, DO() { parent->visit_man_page(); }); // -H
+  OPTION_(global_scope_t, full_help, DO() { parent->visit_info_page(); }); 
   OPTION_(global_scope_t, help,      DO() { parent->visit_man_page(); }); // -h
   OPTION_(global_scope_t, help_calc, DO() { parent->visit_man_page(); });
   OPTION_(global_scope_t, help_comm, DO() { parent->visit_man_page(); });
