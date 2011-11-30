@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-28 22:21 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-11-30 16:33 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -89,6 +89,9 @@ twinkling in their father's CRT.
 @node Copying, Introduction to Ledger, Top, Top
 @chapter Copying
 @insertcopying
+
+This license can also be obtained from the commandline by executing
+@code{ledger --license}
 
 @node Introduction to Ledger, Ledger Tutorial , Copying, Top
 @chapter Introduction to Ledger
@@ -252,9 +255,21 @@ enter these commands:
 
 @node Getting Help,  , Building the Program, Introduction to Ledger
 @section Getting help
+Ledger has a complete online help system based on GNU Info.  This manual
+can be searched directly fromthe command line using the following
+options:
+@option{ledger --help} bring up this entire manual in your tty.
 
-If you need help on how to use Ledger, or run into problems, you can
-join the Ledger mailing list at the following Web address:
+@option{ledger --help-info} brings up help on how to use the info system.
+
+@option{ledger --help-comm  concept} search the manual index and bring up pages associated with `concept'.
+
+@option{ledger --help-calc} brings up the value expressions chapter of the manual
+
+@option{ledger --help-disp} brings up the Format Strings chapter of the manual.
+
+ If you need help on how to use Ledger, or run into problems,
+you can join the Ledger mailing list at the following Web address:
 
 @smallexample
 http://groups.google.com/group/ledger-cli
