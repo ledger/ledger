@@ -484,9 +484,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--clang', action='store_true',
                       dest='use_clang', default=False,
                       help='Use the Clang C++ compiler')
-        op.add_option('', '--glibcxx-debug', action='store_true',
-                      dest='use_glibcxx_debug', default=False,
-                      help='Define _GLIBCXX_DEBUG=1 during compilation')
+        #op.add_option('', '--glibcxx-debug', action='store_true',
+        #              dest='use_glibcxx_debug', default=False,
+        #              help='Define _GLIBCXX_DEBUG=1 during compilation')
         op.add_option('', '--help', action="callback",
                       callback=self.option_help,
                       help='Show this help text')
@@ -523,9 +523,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--gcc46', action='store_true',
                       dest='gcc46', default=False,
                       help='Require the use of gcc 4.6')
+        op.add_option('', '--gcc47', action='store_true',
+                      dest='gcc47', default=False,
+                      help='Require the use of gcc 4.7')
         op.add_option('', '--cpp0x', action='store_true',
                       dest='cpp0x', default=False,
-                      help='Use C++0x extensions (requires Clang or gcc 4.6)')
+                      help='Use C++0x extensions (requires Clang or gcc 4.6/7)')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -709,9 +712,9 @@ class PrepareBuild(CommandLineApp):
         self.log.info("Build directory          => " + self.build_directory())
         self.log.info("Need to run configure    => " +
                       str(self.need_to_run_configure()))
-        self.log.info("Use _GLIBCXX_DEBUG       => " +
-                      str(self.options.use_glibcxx_debug
-                          and not self.options.use_clang))
+        #self.log.info("Use _GLIBCXX_DEBUG       => " +
+        #              str(self.options.use_glibcxx_debug
+        #                  and not self.options.use_clang))
         self.log.info("Use pre-compiled headers => " +
                       str('--enable-pch' in conf_args))
 
@@ -1025,8 +1028,8 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Using Boost ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
 
-        if self.boost_lib_ident != "xgcc42":
-            self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
+        #if self.boost_lib_ident != "xgcc42":
+        #    self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
 
         if self.current_flavor == 'debug':
             if exists('/usr/local/stow/icu-%s/include' % self.boost_inc_ident):
@@ -1077,26 +1080,31 @@ class PrepareBuild(CommandLineApp):
                   self.current_flavor == 'default') and \
                not self.options.gcc45 and \
                not self.options.gcc46 and \
+               not self.options.gcc47 and \
                exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
                 self.envvars['LD']  = '/usr/bin/g++-4.2'
                 self.darwin_gcc = True
+            elif exists('/usr/local/bin/g++-mp-4.7') and \
+                 self.options.gcc47:
+                self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.7'
+                self.envvars['CXX'] = '/usr/local/bin/g++-mp-4.7'
+                self.envvars['LD']  = '/usr/local/bin/g++-mp-4.7'
+            elif exists('/opt/local/bin/g++-mp-4.7') and \
+                 self.options.gcc47:
+                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.7'
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.7'
+                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.7'
             elif exists('/opt/local/bin/g++-mp-4.6') and \
                  self.options.gcc46:
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.6'
-                #if exists('/Users/johnw/bin/gfilt'):
-                #    self.envvars['CXX'] = '/Users/johnw/bin/gfilt'
-                #else:
                 self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.6'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.6'
             elif exists('/opt/local/bin/g++-mp-4.5') and \
                 self.options.gcc45:
                 self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.5'
-                if exists('/Users/johnw/bin/gfilt'):
-                    self.envvars['CXX'] = '/Users/johnw/bin/gfilt'
-                else:
-                    self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.5'
+                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.5'
                 self.envvars['LD']  = '/opt/local/bin/g++-mp-4.5'
             elif exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
@@ -1280,10 +1288,10 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
-            if self.options.use_glibcxx_debug and not self.options.use_clang:
-                #self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
-                #self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
-                pass
+            #if self.options.use_glibcxx_debug and not self.options.use_clang:
+            #    self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
+            #    self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
+            #    pass
 
             if self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
@@ -1331,7 +1339,7 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
 
-        if self.options.gcc45 or self.options.gcc46:
+        if self.options.gcc45 or self.options.gcc46 or self.options.gcc47:
             self.CXXFLAGS.append('-g2')
             self.CXXFLAGS.append('-ggdb')
             self.LDFLAGS.append('-g2')
@@ -1352,6 +1360,11 @@ class PrepareBuild(CommandLineApp):
         #        self.CFLAGS.append(i)
         #        self.LDFLAGS.append(i)
         #if self.options.gcc46:
+        #    for i in ['-flto']:
+        #        self.CXXFLAGS.append(i)
+        #        self.CFLAGS.append(i)
+        #        self.LDFLAGS.append(i)
+        #if self.options.gcc47:
         #    for i in ['-flto']:
         #        self.CXXFLAGS.append(i)
         #        self.CFLAGS.append(i)

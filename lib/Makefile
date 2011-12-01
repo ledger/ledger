@@ -20,7 +20,7 @@ LD		= gcc-mp-$(GCC_VERSION)
 DIR_SUFFIX	= gcc$(subst .,,$(GCC_VERSION))
 OPTJ		= #-j8
 endif
-CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
+#CPPFLAGS	= -D_GLIBCXX_FULLY_DYNAMIC_STRING=1
 #ifneq ($(CC),clang)
 #CPPFLAGS       += -D_GLIBCXX_DEBUG=1
 #endif
@@ -28,7 +28,7 @@ CFLAGS		= $(CPPFLAGS) -g2 -ggdb
 LDFLAGS		= -g2 -ggdb
 
 BOOST_SOURCE	= boost-release
-BOOST_DEFINES	= define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
+#BOOST_DEFINES	= define=_GLIBCXX_FULLY_DYNAMIC_STRING=1
 ifeq ($(CC),clang)
 BOOST_TOOLSET	= clang
 else
