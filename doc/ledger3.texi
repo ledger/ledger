@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-11-30 16:33 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-12-01 08:37 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1923,21 +1923,21 @@ Metadata are normally strings, but you can create metadata of other types:
 @end smallexample
 (Note that this Date tag is not the same as the posting date.)
 
-@cindex tags, pop
+@cindex @@tag directive
 @cindex tags, applying to several transactions.
-There are now tag/pop directives, to apply metadata to a range of
-transactions (and their postings). For example, if you wanted a
+You apply a tag or tags to a group of transactions by surrounding them with a @code{@@tag ... @@end tag} block.
+For example, if you wanted a
 conceptual ``page'' of transactions relating to business trip to
 Chicago, you could do this:
 
 @smallexample
- tag Location: Chicago
- tag Purpose: Business
+ @@tag Location: Chicago
+ @@tag Purpose: Business
 
  ... transactions go here
 
- pop
- pop
+ @@end tag 
+ @@end tag
 @end smallexample
 It would be as if you'd applied "; Location: Chicago", etc., to every transaction.
 
