@@ -233,7 +233,7 @@ void SHA1::Input(	const unsigned char	*message_array,
 void SHA1::Input(	const char	*message_array,
 					unsigned 	length)
 {
-	Input((unsigned char *) message_array, length);
+	Input(reinterpret_cast<unsigned char *>(const_cast<char *>(message_array)), length);
 }
 
 /*	
@@ -359,7 +359,7 @@ SHA1& SHA1::operator<<(const unsigned char *message_array)
  */
 SHA1& SHA1::operator<<(const char message_element)
 {
-	Input((unsigned char *) &message_element, 1);
+	Input(reinterpret_cast<unsigned char *>(const_cast<char *>(&message_element)), 1);
 
 	return *this;
 }
