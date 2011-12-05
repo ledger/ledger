@@ -26,6 +26,7 @@ use warnings;
 
 use Math::BigFloat;
 use Date::Manip;
+use File::Temp qw/tempfile/;
 
 my $LEDGER_CMD = "/usr/bin/ledger";
 
@@ -37,9 +38,10 @@ sub ParseNumber($) {
 }
 
 sub LedgerAcctToFilename($) {
-  $_[0] =~ s/ /-/g;
-  $_[0] =~ s/:/-/g;
-  returen $_[0];
+  my $x = $_[0];
+  $x =~ s/ /-/g;
+  $x =~ s/:/-/g;
+  return $x;
 }
 
 Math::BigFloat->precision(-2);
@@ -83,36 +85,40 @@ foreach my $acct (@accounts) {
                          { name => 'receipts', query => 'a>0' }) {
     my $fileNameBase = $acctFilename . '-' . $typeData->{name};
 
+    open(TEXT_OUT, ">", "$fileNameBase.txt") or die "unable to open $fileNameBase.txt: $!";
+    open(CSV_OUT, ">", "$fileNameBase.csv") or die "unable to open $fileNameBase.csv: $!";
+
     print TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
     print CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
     print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"', "\n";
+
     my @entryLedgerOpts = ('-l', $typeData->{query},
                            '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'print', $acct);
 
     open(ENTRY_DATA, "-|", $LEDGER_CMD, @entryLedgerOpts)
       or die "Unable to run $LEDGER_CMD @entryLedgerOpts: $!";
 
-    my $tempFile = "tmp$$";
+    my($tempFH, $tempFile) = tempfile("cashreportsXXXXXXXX", TMPDIR => 1);
 
-    open(ENTRY_OUT, ">", $tempFile) or die "Unable to write $tempFile: $!";
-
-    while (my $line = <ENTRY_DATA>) { print ENTRY_OUT $line; }
+    while (my $line = <ENTRY_DATA>) { print $tempFH $line; }
     close(ENTRY_DATA); die "Error reading ledger output for entries: $!" unless $? == 0;
-    close(ENTRY_OUT); die "Error writing ledger output for entries to temp file, $tempFile: $!" unless $? == 0;
+    $tempFH->close() or die "Error writing ledger output for entries to temp file, $tempFile: $!";
+
+    goto SKIP_REGISTER_COMMANDS if (-z $tempFile);
 
     my @txtRegLedgerOpts = ('-f', $tempFile, '--wide-register-format',
                             "%D  %-.70P  %-.10C  %-.80A  %18t\n%/%68|%15|%-.80A  %18t\n", '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
     my @csvRegLedgerOpts = ('-f', $tempFile, '--wide-register-format',
-                            '"%D","%C","%P",%A","%t"\n%/|"","","","%A","%t"\n"', '-w', '--sort', 'd',
+                            '"%D","%C","%P",%A","%t"\n%/"","","","%A","%t"\n', '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
+
 
     open(TXT_DATA, "-|", $LEDGER_CMD, @txtRegLedgerOpts)
       or die "unable to run ledger command for $fileNameBase.txt: $!";
 
     while (my $line = <TXT_DATA>) { print TEXT_OUT $line; }
-    close(TXT_DATA); die "Error read from txt ledger command $!" unless $? == 0;
     close(TEXT_OUT); die "Error read write text out to $fileNameBase.txt: $!" unless $? == 0;
 
     open(CSV_DATA, "-|", $LEDGER_CMD, @csvRegLedgerOpts)
@@ -120,7 +126,11 @@ foreach my $acct (@accounts) {
 
     while (my $line = <CSV_DATA>) { print CSV_OUT $line; }
     close(CSV_DATA); die "Error read from csv ledger command $!" unless $? == 0;
+
+  SKIP_REGISTER_COMMANDS:
+    close(TXT_DATA); die "Error read from txt ledger command $!" unless $? == 0;
     close(CSV_OUT); die "Error read write csv out to $fileNameBase.csv: $!" unless $? == 0;
+    unlink($tempFile);
   }
 }
 ###############################################################################
