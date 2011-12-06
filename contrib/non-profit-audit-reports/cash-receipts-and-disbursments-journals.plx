@@ -111,7 +111,7 @@ foreach my $acct (@accounts) {
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
     my @csvRegLedgerOpts = ('-f', $tempFile, '--wide-register-format',
-                            '"%D","%C","%P",%A","%t"\n%/"","","","%A","%t"\n', '-w', '--sort', 'd',
+                            '\n"%D","%C","%P","%A","%t"\n%/"","","","%A","%t"\n', '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
 
