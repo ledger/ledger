@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-12-01 08:37 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-12-07 10:56 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -4065,7 +4065,7 @@ FIX THIS ENTRY
 @option{cache}
 FIX THIS ENTRY
 
-@option{decimal_comma}
+@option{decimal-comma}
 Direct Ledger to parse journals using the European standard comma as decimal separator, vice a period.
 
 @option{download}
@@ -4074,16 +4074,16 @@ Direct Ledger to download prices using the getquote script.
 @option{file}
 Specify the input file for this invocation.
 
-@option{input_date_format}
+@option{input-date-format}
 Specify the date format for journal entries.
 
-@option{master_account}
+@option{master-account}
 FIX THIS ENTRY
 
-@option{price_db}
+@option{price-db}
 Specify the price entry data file.
 
-@option{price_exp INTEGER_MINUTES} Set the expected freshness of price
+@option{price-exp INTEGER_MINUTES} Set the expected freshness of price
 quotes, in min- utes. That is, if the last known quote for any commodity
 is older than this value—and if ‘--download’ is being used—then the
 Internet will be consulted again for a newer price. Otherwise, the old
@@ -4095,31 +4095,31 @@ FIX THIS ENTRY
 @node Report Options, Session Options, Global Options, Detailed Options Description
 @subsection Report Options
 
-@option{abbrev_len}
+@option{abbrev-len}
 FIX THIS ENTRY
 
 @option{account}
 FIX THIS ENTRY
 
-@option{account_width}
+@option{account-width}
 FIX THIS ENTRY
 
-@option{actual_dates}
+@option{actual-dates}
 FIX THIS ENTRY
 
 @option{actual}
 FIX THIS ENTRY
 
-@option{add_budget}
+@option{add-budget}
 FIX THIS ENTRY
 
-@option{amount_data}
+@option{amount-data}
 FIX THIS ENTRY
 
 @option{amount}
 FIX THIS ENTRY
 
-@option{amount_width}
+@option{amount-width}
 FIX THIS ENTRY
 
 @option{anon}
@@ -4128,7 +4128,7 @@ FIX THIS ENTRY
 @option{average}
 FIX THIS ENTRY
 
-@option{balance_format}
+@option{balance-format}
 FIX THIS ENTRY
 
 @option{base}
@@ -4140,25 +4140,25 @@ FIX THIS ENTRY
 @option{begin}
 FIX THIS ENTRY
 
-@option{bold_if}
+@option{bold-if}
 FIX THIS ENTRY
 
-@option{budget_format}
+@option{budget-format}
 FIX THIS ENTRY
 
 @option{budget}
 FIX THIS ENTRY
 
-@option{by_payee}
+@option{by-payee}
 FIX THIS ENTRY
 
-@option{cleared_format}
+@option{cleared-format}
 FIX THIS ENTRY
 
 @option{cleared}
 FIX THIS ENTRY
 
-@option{collapse_if_zero}
+@option{collapse-if-zero}
 FIX THIS ENTRY
 
 @option{collapse}
@@ -4173,7 +4173,7 @@ FIX THIS ENTRY
 @option{count}
 FIX THIS ENTRY
 
-@option{csv_format}
+@option{csv-format}
 FIX THIS ENTRY
 
 @option{current}
@@ -4182,16 +4182,16 @@ FIX THIS ENTRY
 @option{daily}
 FIX THIS ENTRY
 
-@option{date_format}
+@option{date-format}
 FIX THIS ENTRY
 
 @option{date}
 FIX THIS ENTRY
 
-@option{date_width}
+@option{date-width}
 FIX THIS ENTRY
 
-@option{datetime_format}
+@option{datetime-format}
 FIX THIS ENTRY
 
 @option{depth}
@@ -4200,13 +4200,13 @@ FIX THIS ENTRY
 @option{deviation}
 FIX THIS ENTRY
 
-@option{display_amount}
+@option{display-amount}
 FIX THIS ENTRY
 
 @option{display}
 FIX THIS ENTRY
 
-@option{display_total}
+@option{display-total}
 FIX THIS ENTRY
 
 @option{dow}
@@ -4233,16 +4233,16 @@ FIX THIS ENTRY
 @option{flat}
 FIX THIS ENTRY
 
-@option{force_color}
+@option{force-color}
 FIX THIS ENTRY
 
-@option{force_pager}
+@option{force-pager}
 FIX THIS ENTRY
 
-@option{forecast_while}
+@option{forecast-while}
 FIX THIS ENTRY
 
-@option{forecast_years}
+@option{forecast-years}
 FIX THIS ENTRY
 
 @option{format}
@@ -4254,10 +4254,10 @@ FIX THIS ENTRY
 @option{generated}
 FIX THIS ENTRY
 
-@option{group_by}
+@option{group-by}
 FIX THIS ENTRY
 
-@option{group_title_format}
+@option{group-title-format}
 FIX THIS ENTRY
 
 @option{head}
@@ -4272,16 +4272,16 @@ FIX THIS ENTRY
 @option{limit}
 FIX THIS ENTRY
 
-@option{lot_dates}
+@option{lot-dates}
 FIX THIS ENTRY
 
-@option{lot_prices}
+@option{lot-prices}
 FIX THIS ENTRY
 
-@option{lot_tags}
+@option{lot-tags}
 FIX THIS ENTRY
 
-@option{lots_actual}
+@option{lots-actual}
 FIX THIS ENTRY
 
 @option{lots}
@@ -4293,22 +4293,22 @@ FIX THIS ENTRY
 @option{meta}
 FIX THIS ENTRY
 
-@option{meta_width}
+@option{meta-width}
 FIX THIS ENTRY
 
 @option{monthly}
 FIX THIS ENTRY
 
-@option{no_color}
+@option{no-color}
 FIX THIS ENTRY
 
-@option{no_rounding}
+@option{no-rounding}
 FIX THIS ENTRY
 
-@option{no_titles}
+@option{no-titles}
 FIX THIS ENTRY
 
-@option{no_total}
+@option{no-total}
 FIX THIS ENTRY
 
 @option{now}
@@ -4326,7 +4326,7 @@ FIX THIS ENTRY
 @option{payee}
 FIX THIS ENTRY
 
-@option{payee_width}
+@option{payee-width}
 FIX THIS ENTRY
 
 @option{pending}
@@ -4341,25 +4341,25 @@ FIX THIS ENTRY
 @option{pivot}
 FIX THIS ENTRY
 
-@option{plot_amount_format}
+@option{plot-amount-format}
 FIX THIS ENTRY
 
-@option{plot_total_format}
+@option{plot-total-format}
 FIX THIS ENTRY
 
-@option{prepend_format}
+@option{prepend-format}
 FIX THIS ENTRY
 
-@option{prepend_width}
+@option{prepend-width}
 FIX THIS ENTRY
 
-@option{pricedb_format}
+@option{pricedb-format}
 FIX THIS ENTRY
 
 @option{price}
 FIX THIS ENTRY
 
-@option{prices_format}
+@option{prices-format}
 FIX THIS ENTRY
 
 @option{quantity}
@@ -4374,19 +4374,19 @@ FIX THIS ENTRY
 @option{real}
 FIX THIS ENTRY
 
-@option{register_format}
+@option{register-format}
 FIX THIS ENTRY
 
-@option{related_all}
+@option{related-all}
 FIX THIS ENTRY
 
 @option{related}
 FIX THIS ENTRY
 
-@option{revalued_only}
+@option{revalued-only}
 FIX THIS ENTRY
 
-@option{revalued_total}
+@option{revalued-total}
 FIX THIS ENTRY
 
 @option{revalued}
@@ -4395,17 +4395,17 @@ FIX THIS ENTRY
 @option{seed}
 FIX THIS ENTRY
 
-@option{sort_all}
+@option{sort-all}
 FIX THIS ENTRY
 
 @option{sort}
 FIX THIS ENTRY
 
-@option{sort_xacts}
+@option{sort-xacts}
 FIX THIS ENTRY
 
-@option{start_of_week}
-FIX THIS ENTRY
+@option{start-of-week}
+Tell ledger to use a particular day of the week to start its ``weekly'' summary. @code{--start-of-week=1}  specifies Monday as the start of the week.
 
 @option{subtotal}
 FIX THIS ENTRY
@@ -4413,13 +4413,13 @@ FIX THIS ENTRY
 @option{tail}
 FIX THIS ENTRY
 
-@option{total_data}
+@option{total-data}
 FIX THIS ENTRY
 
 @option{total}
 FIX THIS ENTRY
 
-@option{total_width}
+@option{total-width}
 FIX THIS ENTRY
 
 @option{truncate}
@@ -4431,10 +4431,10 @@ FIX THIS ENTRY
 @option{uncleared}
 FIX THIS ENTRY
 
-@option{unrealized_gains}
+@option{unrealized-gains}
 FIX THIS ENTRY
 
-@option{unrealized_losses}
+@option{unrealized-losses}
 FIX THIS ENTRY
 
 @option{unrealized}
