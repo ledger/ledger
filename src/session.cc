@@ -38,6 +38,7 @@
 #include "iterators.h"
 #include "filters.h"
 #include "archive.h"
+#include "quotes.h"
 
 namespace ledger {
 
@@ -98,8 +99,10 @@ std::size_t session_t::read_data(const string& master_account)
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
   optional<path> getquote_path;
-  if (HANDLED(getquote_))
+  if (HANDLED(getquote_)){
     getquote_path = resolve_path(HANDLER(getquote_).str());
+    quote_loader_t *ql=quote_loader_t::instance(resolve_path(HANDLER(getquote_).str()));
+  }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;

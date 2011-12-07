@@ -260,13 +260,13 @@ void export_commodity()
     .add_property("quote_leeway",
                   make_getter(&commodity_pool_t::quote_leeway),
                   make_setter(&commodity_pool_t::quote_leeway))
-    .add_property("get_quotes",
+    /*    .add_property("get_quotes",
                   make_getter(&commodity_pool_t::get_quotes),
                   make_setter(&commodity_pool_t::get_quotes))
     .add_property("get_commodity_quote",
                   make_getter(&commodity_pool_t::get_commodity_quote),
                   make_setter(&commodity_pool_t::get_commodity_quote))
-
+    */
     .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
 
     .def("create", py_create_1,

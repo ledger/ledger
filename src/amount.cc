@@ -769,11 +769,12 @@ amount_t::value(const optional<datetime_t>&   moment,
         if (point)
           point = commodity().check_for_updated_price(point, moment, comm);
       }
-
+      DEBUG("commodity.download", "amount.cc point= " << point->price.to_string() << " " << to_simple_string(point->when));
       if (point) {
         amount_t price(point->price);
         price.multiply(*this, true);
         price.in_place_round();
+        DEBUG("commodity.download", "returning price= " << this->to_string() << " " <<price.to_string());
         return price;
       }
     }
