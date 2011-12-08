@@ -4,6 +4,8 @@
 *.l[oa]
 *.pyc
 *~
+.project
+.cproject
 .DS_Store
 .timestamp
 /*.tar.bz2

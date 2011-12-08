@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 #include "amount.h"
 #include "commodity.h"
@@ -37,76 +38,6 @@
 #include "quotes.h"
 
 namespace ledger {
-
-  optional<price_point_t>
-  commodity_quote_from_script(commodity_t& commodity,
-			      const optional<commodity_t&>& exchange_commodity)
-  {
-    DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
-#if defined(DEBUG_ON)
-    if (exchange_commodity)
-      DEBUG("commodity.download",
-	    "  in terms of commodity " << exchange_commodity->symbol());
-#endif
-    
-    char buf[256];
-    buf[0] = '\0';
-    
-    string getquote_cmd("getquote \"");
-    getquote_cmd += commodity.symbol();
-    getquote_cmd += "\" \"";
-    if (exchange_commodity)
-      getquote_cmd += exchange_commodity->symbol();
-    getquote_cmd += "\"";
-    
-    DEBUG("commodity.download", "invoking command: " << getquote_cmd);
-    
-    bool success = true;
-#ifndef WIN32
-    if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
-      if (std::feof(fp) || ! std::fgets(buf, 255, fp))
-	success = false;
-      if (pclose(fp) != 0)
-	success = false;
-    } else {
-      success = false;
-    }
-    
-    if (success && buf[0]) {
-      if (char * p = std::strchr(buf, '\n')) *p = '\0';
-      DEBUG("commodity.download", "downloaded quote: " << buf);
-      
-      if (optional<std::pair<commodity_t *, price_point_t> > point =
-	  commodity_pool_t::current_pool->parse_price_directive(buf)) {
-	if (commodity_pool_t::current_pool->price_db) {
-#if defined(__GNUG__) && __GNUG__ < 3
-	  ofstream database(*commodity_pool_t::current_pool->price_db,
-			    ios::out | ios::app);
-#else
-	  ofstream database(*commodity_pool_t::current_pool->price_db,
-			    std::ios_base::out | std::ios_base::app);
-#endif
-	  database << "P "
-		   << format_datetime(point->second.when, FMT_WRITTEN)
-		   << " " << commodity.symbol()
-		   << " " << point->second.price
-		   << std::endl;
-	}
-	return point->second;
-      }
-    } else {
-      DEBUG("commodity.download",
-	    "Failed to download price for '" << commodity.symbol() <<
-	    "' (command: \"getquote " << commodity.symbol() <<
-	    " " << (exchange_commodity ?
-		    exchange_commodity->symbol() : "''") << "\")");
-      
-      // Don't try to download this commodity again.
-      commodity.add_flags(COMMODITY_NOMARKET);
-    }
-#endif
-    return none;
-  }
 
   quote_loader_t* quote_loader_t::instance_p=NULL;
 
@@ -118,13 +49,13 @@ namespace ledger {
 
   quote_loader_t* quote_loader_t::instance(path script_path)
   {
-    if(!instance_p){ 
+    if(!instance_p){
       instance_p= new quote_loader_t;
-      instance_p->script=script_path; 
+      instance_p->script=script_path;
       DEBUG("commodity.getquote", "Created quote_loader_t " << script_path.string());
     }
     return instance_p;
-  }    
+  }
 
   path quote_loader_t::get_path(){
     return instance_p->script;
@@ -136,14 +67,82 @@ namespace ledger {
 
 
   optional<price_point_t> quote_loader_t::get_quote(commodity_t& commodity,
-					  const optional<commodity_t& > & exchange_commodity)
+		  const optional<commodity_t& > & exchange_commodity)
   {
     price_point_t p;
-    p.when = TRUE_CURRENT_TIME();
-    p.price = amount_t("$100.0");
-    DEBUG("commodity.download",
-	  "Download price for '" << commodity.symbol()<< "' in terms of '" << exchange_commodity->symbol() << "' at " << to_simple_string(p.when));
-    return p;
+     return commodity_quote_from_script(commodity, exchange_commodity);
   }
-  
+
+  optional<price_point_t> quote_loader_t::commodity_quote_from_script(commodity_t& commodity,
+		  const optional<commodity_t&>& exchange_commodity)
+    {
+      DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
+  #if defined(DEBUG_ON)
+      if (exchange_commodity)
+        DEBUG("commodity.download",
+  	    "  in terms of commodity " << exchange_commodity->symbol());
+  #endif
+
+      char buf[256];
+      buf[0] = '\0';
+
+      string getquote_cmd(script.string());
+      getquote_cmd += " \"";
+      getquote_cmd += commodity.symbol();
+      getquote_cmd += "\" \"";
+      if (exchange_commodity)
+        getquote_cmd += exchange_commodity->symbol();
+      getquote_cmd += "\"";
+
+      DEBUG("commodity.download", "invoking command: " << getquote_cmd);
+
+      bool success = true;
+
+  #ifndef WIN32
+      if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
+        if (std::feof(fp) || ! std::fgets(buf, 255, fp))
+        	success = false;
+        if (pclose(fp) != 0)
+        	success = false;
+      } else {
+        success = false;
+      }
+
+      if (success && buf[0]) {
+        if (char * p = std::strchr(buf, '\n')) *p = '\0';
+        DEBUG("commodity.download", "downloaded quote: " << buf);
+
+        if (optional<std::pair<commodity_t *, price_point_t> > point =
+        		commodity_pool_t::current_pool->parse_price_directive(buf)) {
+        			if (commodity_pool_t::current_pool->price_db) {
+  #if defined(__GNUG__) && __GNUG__ < 3
+        				ofstream database(*commodity_pool_t::current_pool->price_db,
+        						ios::out | ios::app);
+  #else
+        				ofstream database(*commodity_pool_t::current_pool->price_db,
+        						std::ios_base::out | std::ios_base::app);
+  #endif
+        				database << "P "
+        						<< format_datetime(point->second.when, FMT_WRITTEN)
+        						<< " " << commodity.symbol()
+        						<< " " << point->second.price
+        						<< std::endl;
+        			}
+        			commodity.add_flags(COMMODITY_NOMARKET); //use the NOMARKET flag to prevent further
+        													 //downloads if the returned price is stale.
+        			return point->second;
+        	}
+      	  } else {
+      		  DEBUG("commodity.download",
+      				  "Failed to download price for '" << commodity.symbol() <<
+      				  "' (command: \"getquote " << commodity.symbol() <<
+      				  " " << (exchange_commodity ?
+      						  exchange_commodity->symbol() : "''") << "\")");
+
+      		  // Don't try to download this commodity again.
+      		  commodity.add_flags(COMMODITY_NOMARKET);
+      	  }
+  #endif
+     return none;
+    }
 } // namespace ledger

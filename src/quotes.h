@@ -44,13 +44,10 @@
 
 namespace ledger {
 
-  optional<price_point_t>
-    commodity_quote_from_script(commodity_t& commodity,
-				const optional<commodity_t&>& exchange_commodity);
 
 /** @brief singleton class to retrieve commodity quotes from an external source
  */
- class quote_loader_t 
+ class quote_loader_t
  {
  public:
    static quote_loader_t* instance();
@@ -62,10 +59,16 @@ namespace ledger {
   optional<price_point_t>
      get_quote(commodity_t& commodity,
 	       const optional<commodity_t&>& exchange_commodity);
+  optional<price_point_t>
+
+  commodity_quote_from_script(commodity_t& commodity,
+				const optional<commodity_t&>& exchange_commodity);
+
+
  private:
-   path script;	
-   quote_loader_t(){}; 
-  
+   path script;
+   quote_loader_t(){};
+
    quote_loader_t(quote_loader_t const &){};
    quote_loader_t& operator=(quote_loader_t const &){};
    static quote_loader_t* instance_p;

@@ -460,7 +460,6 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
       if (moment) {
         seconds_diff = (*moment - point->when).total_seconds();
         DEBUG("commodity.download", "moment = " << *moment);
-        DEBUG("commodity.download", "when = " << to_simple_string(point->when)); 
         DEBUG("commodity.download", "slip.moment = " << seconds_diff);
       } else {
         seconds_diff = (TRUE_CURRENT_TIME() - point->when).total_seconds();
@@ -477,11 +476,9 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
             "attempting to download a more current quote...");
       if (optional<price_point_t> quote =
           quote_loader_t::instance()->get_quote(*this, in_terms_of)) {
-	DEBUG("commodity.download", "got new price "<< quote->price.to_string());
         if (! in_terms_of ||
             (quote->price.has_commodity() &&
              quote->price.commodity() == *in_terms_of)){
-	  DEBUG("commodity.download", "adding quote "<< quote->price.to_string());
           this->add_price(quote->when, quote->price);
           return quote;
 	}
