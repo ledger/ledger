@@ -189,13 +189,14 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
     is_precommand = true;
 
   // If it is not a pre-command, then parse the user's ledger data at this
-  // time if not done alreday (i.e., if not at a REPL).  Then patch up the
-  // report options based on the command verb.
+  // time if not done already (i.e., if not at a REPL).  Then patch up the
+  // session and report options based on the command verb.
 
   if (! is_precommand) {
     if (! at_repl)
       session().read_journal_files();
 
+    session().normalize_options(verb);
     report().normalize_options(verb);
 
     if (! bool(command = look_for_command(bound_scope, verb)))
@@ -422,7 +423,7 @@ expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
 
 
 void global_scope_t::visit_info(const string& info_file,
-				const string& node, 
+				const string& node,
 				bool use_index) const
 {
 #ifndef WIN32
@@ -430,10 +431,10 @@ void global_scope_t::visit_info(const string& info_file,
   if (pid < 0) {
     throw std::logic_error(_("Failed to fork child process"));
   }
-  else if (pid == 0) { 
+  else if (pid == 0) {
     char * arg2 = const_cast <char *> ( "--index-search" );
     char * arg3 = const_cast <char *> ( node.c_str() );
-    
+
     char * args[5];
     args[0] = const_cast <char *> ( "info" );
     args[1] = const_cast <char *> ( info_file.c_str() );
@@ -441,7 +442,7 @@ void global_scope_t::visit_info(const string& info_file,
     if ( use_index ) {
       args[2] = const_cast <char *> ( "--index-search" );
       args[3] = const_cast <char *> ( node.c_str() );
-      args[4] = NULL; 
+      args[4] = NULL;
     } else {
       if( node.length()<1 ){// 0 length node name means go to the top
 			    // node.  Info doesn't respct "Top", even

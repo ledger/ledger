@@ -68,6 +68,8 @@ public:
     return _("current session");
   }
 
+  void normalize_options(const string& verb);
+
   void set_flush_on_next_data_file(const bool truth) {
     flush_on_next_data_file = truth;
   }

@@ -65,15 +65,7 @@ namespace ledger {
     instance_p->script=getquote_path;
   }
 
-
   optional<price_point_t> quote_loader_t::get_quote(commodity_t& commodity,
-		  const optional<commodity_t& > & exchange_commodity)
-  {
-    price_point_t p;
-     return commodity_quote_from_script(commodity, exchange_commodity);
-  }
-
-  optional<price_point_t> quote_loader_t::commodity_quote_from_script(commodity_t& commodity,
 		  const optional<commodity_t&>& exchange_commodity)
     {
       DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
@@ -99,6 +91,7 @@ namespace ledger {
       bool success = true;
 
   #ifndef WIN32
+      INFO("Downloading price information for "<< commodity.symbol());
       if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
         if (std::feof(fp) || ! std::fgets(buf, 255, fp))
         	success = false;

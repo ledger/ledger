@@ -233,6 +233,18 @@ value_t session_t::fn_lot_tag(call_scope_t& args)
     return NULL_VALUE;
 }
 
+void session_t::normalize_options(const string& verb){
+	if(HANDLED(download)){
+		DEBUG("option.normalize", "normalizing download option");
+		if(!HANDLED(getquote_)){
+			throw_(std::runtime_error, _("--download specified without --getquote"));
+		}
+		if(HANDLED(price_exp_)){
+			throw_(std::runtime_error, _("--download specified without --price-exp"));
+		}
+	}
+}
+
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {

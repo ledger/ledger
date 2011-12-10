@@ -40,6 +40,8 @@ namespace {
 
   op_bool_tuple find_option(scope_t& scope, const string& name)
   {
+	  //options on command line use dashes, this replaces - with _
+	  //to generate the option name internally
     char buf[128];
     char * p = buf;
     foreach (char ch, name) {
@@ -186,7 +188,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       DEBUG("option.args", "  it's an option string");
 
       string       opt_name;
-      const char * name  = (*i).c_str() + 2;
+      const char * name  = (*i).c_str() + 2; //skip the '--'
       const char * value = NULL;
 
       if (const char * p = std::strchr(name, '=')) {

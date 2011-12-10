@@ -59,11 +59,6 @@ namespace ledger {
   optional<price_point_t>
      get_quote(commodity_t& commodity,
 	       const optional<commodity_t&>& exchange_commodity);
-  optional<price_point_t>
-
-  commodity_quote_from_script(commodity_t& commodity,
-				const optional<commodity_t&>& exchange_commodity);
-
 
  private:
    path script;
