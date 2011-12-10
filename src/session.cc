@@ -38,6 +38,7 @@
 #include "iterators.h"
 #include "filters.h"
 #include "archive.h"
+#include "quotes.h"
 
 namespace ledger {
 
@@ -96,6 +97,13 @@ std::size_t session_t::read_data(const string& master_account)
   optional<path> price_db_path;
   if (HANDLED(price_db_))
     price_db_path = resolve_path(HANDLER(price_db_).str());
+
+  optional<path> getquote_path;
+  if (HANDLED(getquote_)){
+    getquote_path = resolve_path(HANDLER(getquote_).str());
+    quote_loader_t *ql=quote_loader_t::instance(resolve_path(HANDLER(getquote_).str()));
+  }
+
 #if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;
   if (HANDLED(cache_) && master_account.empty())
@@ -225,6 +233,18 @@ value_t session_t::fn_lot_tag(call_scope_t& args)
     return NULL_VALUE;
 }
 
+void session_t::normalize_options(const string& verb){
+	if(HANDLED(download)){
+		DEBUG("option.normalize", "normalizing download option");
+		if(!HANDLED(getquote_)){
+			throw_(std::runtime_error, _("--download specified without --getquote"));
+		}
+		if(HANDLED(price_exp_)){
+			throw_(std::runtime_error, _("--download specified without --price-exp"));
+		}
+	}
+}
+
 option_t<session_t> * session_t::lookup_option(const char * p)
 {
   switch (*p) {
@@ -246,6 +266,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'i':
     OPT(input_date_format_);
+    break;
+  case 'g':
+    OPT(getquote_);
     break;
   case 'l':
     OPT_ALT(price_exp_, leeway_);

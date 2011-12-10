@@ -356,14 +356,14 @@ public:
     if (! base->varied_history)
       base->varied_history = varied_history_t();
     base->varied_history->add_price(*this, date, price, reflexive);
-    DEBUG("commodity.prices.find", "Price added, clearing price_map");
-    base->price_map.clear();    // a price was added, invalid the map
+    DEBUG("commodity.prices.find", "Price added for " << base->symbol << " at " << price << " on "<< to_simple_string(date) << ", clearing price_map");
+    base->price_map.clear();    // a price was added, invalidate the map
   }
   bool remove_price(const datetime_t& date, commodity_t& commodity) {
     if (base->varied_history) {
       base->varied_history->remove_price(date, commodity);
       DEBUG("commodity.prices.find", "Price removed, clearing price_map");
-      base->price_map.clear();  // a price was added, invalid the map
+      base->price_map.clear();  // a price was removed, invalidate the map
     }
     return false;
   }

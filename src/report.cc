@@ -101,6 +101,8 @@ void report_t::normalize_options(const string& verb)
       start_of_week = *weekday;
   }
 
+
+
   long meta_width = -1;
 
   if (! HANDLED(prepend_format_) && HANDLED(meta_)) {
