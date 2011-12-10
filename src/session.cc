@@ -239,7 +239,7 @@ void session_t::normalize_options(const string& verb){
 		if(!HANDLED(getquote_)){
 			throw_(std::runtime_error, _("--download specified without --getquote"));
 		}
-		if(HANDLED(price_exp_)){
+		if(!HANDLED(price_exp_)){
 			throw_(std::runtime_error, _("--download specified without --price-exp"));
 		}
 	}
