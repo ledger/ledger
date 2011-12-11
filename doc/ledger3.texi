@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-12-07 10:57 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-12-10 21:10 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -90,7 +90,7 @@ twinkling in their father's CRT.
 @chapter Copying
 @insertcopying
 
-This license can also be obtained from the commandline by executing
+This license can also be obtained from the command-line by executing
 @code{ledger --license}
 
 @node Introduction to Ledger, Ledger Tutorial , Copying, Top
@@ -167,7 +167,7 @@ going to.  These transactions might look like this:
 
 The posting must balance to $0: $23 went to Pacific Bell, $23 came from
 Checking.  The next entry shows check number 123 written against your
-brokerage account, transfering money to your checking account.  There is
+brokerage account, transferring money to your checking account.  There is
 nothing left over to be accounted for, since the money has simply moved
 from one account to another in both cases.  This is the basis of
 double-entry accounting: money never pops in or out of existence; it is
@@ -242,7 +242,7 @@ data, not for altering it.
 @section Building the program
 
 Ledger is written in ANSI C++, and should compile on any platform.  It
-depends on the GNU multiprecision integer library (libgmp), and the
+depends on the GNU multiple precision arithmetic library (libgmp), and the
 Perl regular expression library (libpcre).  It was developed using GNU
 make and gcc 3.3, on a PowerBook running OS/X.
 
@@ -256,7 +256,7 @@ enter these commands:
 @node Getting Help,  , Building the Program, Introduction to Ledger
 @section Getting help
 Ledger has a complete online help system based on GNU Info.  This manual
-can be searched directly fromthe command line using the following
+can be searched directly from the command line using the following
 options:
 @option{ledger --help} bring up this entire manual in your tty.
 
@@ -503,7 +503,7 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{print} @tab  Print transaction in a ledger readable format
 @item @code{output} @tab  Similar to print without included transactions
 @item @code{xml} @tab Produce XML output of the register command
-@item @code{emacs} @tab Produce emacs lisp output
+@item @code{emacs} @tab Produce Emacs lisp output
 @item @code{equity} @tab Print account balances as transactions
 @item @code{prices} @tab Print price history for matching commodities
 @item @code{pricedb} @tab Print price history for matching commodities in ledger readable format
@@ -528,7 +528,7 @@ cannot display any currency symbols other than dollar signs ($).
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
 @item @code{-c} @tab @code{--current} @tab Display transaction on or before the current date
 @item @code{-b DATE} @tab @code{--begin DATE} @tab Begin reports on or after @code{DATE}
-@item @code{-e DATE} @tab @code{--end DATE} @tab Limits end date od transactions for report
+@item @code{-e DATE} @tab @code{--end DATE} @tab Limits end date of transactions for report
 @item @code{-p STR} @tab @code{--period} @tab Set report period to STR
 @item @code{ } @tab @code{--period-sort} @tab Sort postings within each period
 @item @code{-C} @tab @code{--cleared} @tab Display only cleared postings
@@ -537,8 +537,8 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{-L} @tab @code{--actual} @tab Displays only actual postings, not automated
 @item @code{-r} @tab @code{--related} @tab Display related postings
 @item @code{} @tab @code{--budget} @tab Display how close your postings meet your budget
-@item @code{} @tab @code{--add-budget} @tab Shows unbudgeted postings
-@item @code{} @tab @code{--unbudgeted} @tab Shows only unbudgeted postings
+@item @code{} @tab @code{--add-budget} @tab Shows un-budgeted postings
+@item @code{} @tab @code{--unbudgeted} @tab Shows only un-budgeted postings
 @item @code{} @tab @code{--forecast} @tab Project balances into the future
 @item @code{-l EXPR} @tab @code{--limit EXPR} @tab Limits postings in calculations
 @item @code{-t EXPR} @tab @code{--amount} @tab Change value expression reported in register report
@@ -580,7 +580,7 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{} @tab @code{--equity-format STR} @tab
 @item @code{} @tab @code{--prices-format STR} @tab
 @item @code{-w register} @tab @code{--wide-register-format STR} @tab
-@item @code{} @tab @code{--anon} @tab  Print the ledger register with anonymized accounts and payees, usefule for filing bug reports
+@item @code{} @tab @code{--anon} @tab  Print the ledger register with anonymized accounts and payees, useful for filing bug reports
 @end multitable
 
 @node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
@@ -602,9 +602,10 @@ cannot display any currency symbols other than dollar signs ($).
 
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{} @tab @code{--price-db FILE} @tab Use @file{FILE} for retrieving downloaded commodity prices
+@item @code{} @tab @code{--price-db FILE} @tab Use @file{FILE} for retrieving stored commodity prices
 @item @code{-L MINS} @tab @code{--price-exp MINS} @tab Set expected freshness of prices in minutes
 @item @code{-Q} @tab @code{--download} @tab Download quotes using @code{getquote}
+@item @code{} @tab @code{--getquote} @tab Sets path to a user defined script to download commodity prices.
 @item @code{-O} @tab @code{--quantity} @tab  Report commodity totals without conversion
 @item @code{-B} @tab @code{--basis} @tab Report cost basis
 @item @code{-V} @tab @code{--market} @tab Report last known market value
@@ -734,7 +735,7 @@ So to see your current net worth, use this command:
 ledger balance ^assets ^liabilities
 @end example
 
-Relatedly, your Income accounts show up negative, because they
+In a similar vein, your Income accounts show up negative, because they
 transfer money @emph{from} an account in order to increase your
 assets.  Your Expenses show up positive because that is where the
 money went to.  The combined total of Income and Expenses is your cash
@@ -1194,7 +1195,7 @@ C 1.00 Tb = 1024 Gb
 
 Each of these definitions correlates a commodity (such as @samp{Kb})
 and a default precision, with a certain quantity of another commodity.
-In the above example, kilobytes are reporetd with two decimal places
+In the above example, kilobytes are reported with two decimal places
 of precision and each kilobyte is equal to 1024 bytes.
 
 Equivalency chains can be as long as desired.  Whenever a commodity
@@ -1406,7 +1407,7 @@ list them as you would normally, for example:
 The second way of tracking funds is to use transaction codes.  In this
 respect the codes become like virtual accounts that embrace the entire
 set of postings.  Basically, we are associating a transaction with a
-fund by setting its code.  Here are two transactions that desposit money
+fund by setting its code.  Here are two transactions that deposit money
 into, and spend money from, the @samp{Funds:School} fund:
 
 @smallexample
@@ -1489,7 +1490,7 @@ posting.
 * Advanced Transactions::       
 * File Format::                 
 * Archiving Previous Years ::   
-* Using emacs::                 
+* Using Emacs::                 
 @end menu
 
 @node Most Basic Entry, Commenting on your journal, Keeping a Journal, Keeping a Journal
@@ -1573,7 +1574,7 @@ Block comments can be made by use @code{@!comment} ... @code{@!end comment}
 @cindex initial equity
 @cindex beginning ledger
 
-Unless you have recntly arrived from another planet, you already have a
+Unless you have recently arrived from another planet, you already have a
 financial state.  You need to capture that financial state so that Ledger
 has a starting point.
 
@@ -1610,13 +1611,13 @@ work.
 Ledger is agnostic when it comes to how you value your accounts.
 Dollars, Euros, Pounds, Francs, Shares etc. are just ``commodities''.
 Holdings in stocks, bonds, mutual funds and other financial instruments
-can be labelled using whatever is convenient for you (stock ticker
+can be labeled using whatever is convenient for you (stock ticker
 symbols are suggested for publicly traded assets).@footnote{you can
-track ANYTHING, even time or distance travelled. As long as it cannot be
+track ANYTHING, even time or distance traveled. As long as it cannot be
 created or destroyed inside your accounting system.}
 
 For the rest of this manual, we will only use the word ``commodities''
-when refering to the units on a transaction value.
+when referring to the units on a transaction value.
 
 This is fundamentally different than many common accounting packages,
 which assume the same currency throughout all of your accounts.  This
@@ -1672,8 +1673,8 @@ since we haven't told ledger to convert commodities.
 
 @node Naming Commodities, Buying and Selling Stock, Currency and Commodities, Currency and Commodities
 @subsection Naming Commodities
-Commodity names can have any character, including whitespace.  However,
-if you include whitespace or numeric characters the commodity name must
+Commodity names can have any character, including white-space.  However,
+if you include white-space or numeric characters the commodity name must
 be enclosed in double quotes:
 @smallexample
 1999/06/09 !  Achat
@@ -1694,7 +1695,7 @@ be enclosed in double quotes:
 Buying stock is a typical example that many will use that involves
 multiple commodities in the same transaction.  The type of the share
 (AAPL for Apple Inc.)  and the share purchase price in the currency unit
-you made the purcase in ($ for AAPL). Yes, the typical convention is as follows:
+you made the purchase in ($ for AAPL). Yes, the typical convention is as follows:
 
 @smallexample
    2004/05/01 Stock purchase
@@ -1723,7 +1724,7 @@ price/date and your taxation model is based on longest-held-first.
 @subsection Fixing Lot Prices
 @cindex fixing lot prices
 @cindex consumable commodity pricing
-Commodites that you keep in order to sell them at a later time have a
+Commodities that you keep in order to sell them at a later time have a
 variable value that fluctuates with the market prices.  Commodities that
 you consume should not fluctuate in value, but stay at the lot price
 they were purchased at.  As an extension of ``lot pricing'', you can fix
@@ -1789,7 +1790,7 @@ Expenses: where money goes
 @item 
 Assets: where money sits
 @item
-Income: where moeny comes from
+Income: where money comes from
 @item
 Liabilities: money you owe
 @item 
@@ -1826,8 +1827,8 @@ Expenses:Food:Hamburgers and Fries
 @subsection Transaction Notes and Tags
 
 Ledger 3.0 supports entry and transaction ``notes'', which may  
-contain new metadata and tag markers.  Here's an example:
-@cindex metadata
+contain new meta-data and tag markers.  Here's an example:
+@cindex meta-data
 @cindex tags
 
 @smallexample
@@ -1847,7 +1848,7 @@ for its preceding category.  These notes will get printed back to you
 with the ``print'' command.  They are accessible to value expressions  
 using the ``note'' variable.
 
-Further, any occurrence of ``:foo:'' in a note will cause a metadata tag  
+Further, any occurrence of ``:foo:'' in a note will cause a meta-data tag  
 for "foo" to be registered for that entry.  You can then search for  
 such transactions using:
 @findex %
@@ -1861,7 +1862,7 @@ such transactions using:
 @cindex value tags
  
 Also, if any word in the note ends (but does not start) with a colon,  
-the remainder of that line will be taken to be the metadata value for  
+the remainder of that line will be taken to be the meta-data value for  
 that tag.  That is:
 
 @smallexample
@@ -1883,8 +1884,8 @@ The group-by and sort functions also support tags:
 @smallexample
 ledger --group-by "tag('foo')" bal 
 @end smallexample
-Will produce a balance summary of all transanction with tag `foo' group
-by transactions wiht the same value for `foo'.
+Will produce a balance summary of all transaction with tag `foo' group
+by transactions with the same value for `foo'.
 
 @smallexample
 ledger reg --sort "tag('foo')" %foo
@@ -1901,9 +1902,9 @@ If a posting comment is a date (with brackets), it modifies the date for that po
   Assets:Bank  $400.00
   Income:Check  $-400.00 ; [2010/01/01]
 @end smallexample
-You can use metadata to override the payee field for individual postings within a transaction: (source)
-@cindex overriding payee using metadata
-@cindex metadata, overiding payee
+You can use meta-data to override the payee field for individual postings within a transaction: (source)
+@cindex overriding payee using meta-data
+@cindex meta-data, overriding payee
 @smallexample 
 2010/06/17 Sample
   Assets:Bank  $400.00
@@ -1912,7 +1913,7 @@ You can use metadata to override the payee field for individual postings within 
   Income:Check3  $-100.00 ; Payee: Person Three
   Income:Check4  $-100.00 ; Payee: Person Four
 @end smallexample
-Metadata are normally strings, but you can create metadata of other types:
+Meta-data are normally strings, but you can create meta-data of other types:
 
 @smallexample 
 2010/06/17 Sample
@@ -2053,7 +2054,7 @@ ledger transactions, use:
 ledger balance Liabilities:Huquq
 @end smallexample
 
-This works fine, but omits one aspect of the law: that Huquq is only
+This works fine, but omits one aspect of the law: that Huqúq is only
 due once the liability exceeds the value of 19 mithqáls of gold (which
 is roughly 2.22 ounces).  So what we want is for the liability to
 appear in the balance report only when it exceeds the present day
@@ -2089,7 +2090,7 @@ which may be excluded from reports by using @option{--real}.
 
 Automated transactions can use the full range of value expressions in
 their predicate.  If you wanted to specify a transaction only occur to
-certain accounts that meet cetain value criteria you could specify:
+certain accounts that meet certain value criteria you could specify:
 
 @smallexample
 = /Employees:.*:Payroll$/ and expr (amount >= $1000 and amount < $10000)
@@ -2106,9 +2107,9 @@ But, wait! There's more!
 In the short example above we calculated the taxes due for income within
 a certain bracket.  But in reality this calculation is more difficult.
 There are different rates for different marginal incomes and those taxes
-are not easily descirbed by a simple multiplicative coefficient.
+are not easily described by a simple multiplicative coefficient.
 Automated transactions can use value expressions in their postings to
-determine the ammounts.  So to expand the example above for a three tax
+determine the amounts.  So to expand the example above for a three tax
 bracket system we could enter:
 
 @smallexample
@@ -2127,7 +2128,7 @@ bracket system we could enter:
 Ledger has a feature for ensuring known past balances.  Here's
 an example entry:
 @cindex forcing a balance
-@cindex balance verifications
+@cindex balance verification
 @smallexample
    2008/11/26 (Interest) EXTND INS SWEEP ACCT(FDIC-INS)
        * Assets:Brokerage                 $0.07 = $970.64
@@ -2299,7 +2300,7 @@ how it should be interpreted.  Allowable initial characters are:
 @table @code
 @item NUMBER
 A line beginning with a number denotes a transaction.  It may be followed
-by any number of lines, each beginning with whitespace, to denote the
+by any number of lines, each beginning with white-space, to denote the
 transaction's account postings.  The format of the first line is:
 
 @smallexample
@@ -2374,12 +2375,12 @@ command directive.  It must be immediately followed by a command word.
 The supported commands are:
 
 
-@item account
+@item @@account
 @c instance_t::master_account_directive
-Sets the base for all account following the directive.  Ledger supports
+Sets the root for all accounts following the directive.  Ledger supports
 a hierarchical tree of accounts.  It may be convenient to keep two
 ``root accounts''.  For example you may be tracking your personal
-finances adn your business finances.  In order to keep them seperate you
+finances and your business finances.  In order to keep them separate you
 could preface all personal accounts with @code{personal:} and all
 business account with @code{business:}.  You can easily split out large
 groups of transaction without manually editing them using the account
@@ -2395,8 +2396,9 @@ directive.  For example:
 
 Would result in all postings going into
 @code{Personal:Expenses:Groceries} and @code{Personal:Assets:hecking}
-until and @code{@@end account} directive was found.
-@item alias
+until and @code{@@end account}  directive was found.
+
+@item @@alias
 @c instance_t::alias_directive
 Define an alias for an account name.  If you have a deeply nested tree
 of accounts, it may be convenient to define an alias, for example:
@@ -2413,10 +2415,10 @@ of accounts, it may be convenient to define an alias, for example:
 
 The aliases are only in effect for transactions read in after the alias
 is defined and are effected by @code{@@account} directives that precede
-tham.
-@item assert
+them.
+@item @@assert
 @c instance_t::assert_directive
-An assertion can throw an eror if a condition is not met during Ledger's run. 
+An assertion can throw an error if a condition is not met during Ledger's run. 
 
 @smallexample
 
@@ -2425,11 +2427,11 @@ An assertion can throw an eror if a condition is not met during Ledger's run.
 @end smallexample
 
 
-@item bucket
+@item @@bucket
 @c instance_t::default_account_directive
 Defines the default account to use for balancing transactions.
 Normally, each transaction has at least two postings, which must balance
-to zero.  Ledger allows you to leave one posting with no ammount and
+to zero.  Ledger allows you to leave one posting with no amount and
 automatically calculate balance the transaction in the posting.  The
 @code{@@bucket} allows you to fill in all postings and automatically
 generate an additional posting to the bucket account balancing the
@@ -2449,7 +2451,7 @@ the bucket:
 
 @end smallexample
 
-@item capture
+@item @@capture
 @c instance_t::account_mapping_directive
 Directs Ledger to replace any account matching a regex with the given
 account. For example:
@@ -2465,8 +2467,8 @@ Would cause any posting with @code{Medical} in it's name to be replaced with
 Ledger will display the mapped payees in @code{print} and
 @code{register} reports.
 
-@item check
-@c instance_t::check_directive
+@item @@check
+@c instance_t::check_directive in textual.cc
 A check can issue a warning if a condition is not met during Ledger's run. 
 
 @smallexample
@@ -2474,22 +2476,36 @@ A check can issue a warning if a condition is not met during Ledger's run.
 @@check <VALUE EXPRESSION BOOLEAN RESULT>
 
 @end smallexample
-@item comment
-@c instance_t::comment_directive
+@item @@comment
+@c instance_t::comment_directive in textual.cc
 Start a block comment, closed by @code{@@end comment}.
-@item define
-@c instance_t::define_directive
-@item end
-@c instance_t::end_directive
-@item expr
-@c instance_t::expr_directive
-@item fixed
-@c instance_t::fixed_directive
-@item include
-@c instance_t::include_directive
+@item @@define
+@c instance_t::define_directive in textual.cc
+Allows you to define value expression for future use. For example:
+@smallexample
+@@define var_name=$100
+
+2011/12/01 Test
+   Expenses  (var_name*4)
+   Assets
+@end smallexample
+
+The posting will have a cost of $400.
+@item @@end
+@c instance_t::end_directive in textual.cc
+Closes block commands like @code{@@tag} or @code{@@comment}.
+@item @@expr
+@c instance_t::expr_directive in textual.cc
+
+@item @@fixed
+@c instance_t::fixed_directive in textual.cc
+
+@item @@include
+@c instance_t::include_directive in textual.cc
 Include the stated file as if it were part of the current file.
-@item payee
-@c instance_t::payee_mapping_directive
+
+@item @@payee
+@c instance_t::payee_mapping_directive in textual.cc
 Directs Ledger to replace any payee matching a regex with the given
 payee.  You may download transactions from your bank that you want to be
 shortened or altered.  For example, the the payee for the grocery store
@@ -2503,8 +2519,9 @@ at the grocery story.  I can enter payee mappings that make this very clear:
 
 Ledger will display the mapped payees in @code{print} and
 @code{register} reports.
-@item tag
-@c instance_t::tag_directive
+
+@item @@tag
+@c instance_t::tag_directive in textual.cc
 Allows you to designate a block of transactions and assign the same tag to all.  Tags can have values and may be nested.
 @smallexample
 @@tag hastag
@@ -2548,13 +2565,15 @@ Allows you to designate a block of transactions and assign the same tag to all. 
   Income:Sales
 @end smallexample
 
-Note that anything following "@code{@@end tag}" is ignored.  placeing the
+Note that anything following "@code{@@end tag}" is ignored.  placing the
 name of the tag that is being closed is a simple way to keep track.
 
-@item test
-@c instance_t::comment_directive
-@item year
-@c instance_t::year_directive
+@item @@test
+@c instance_t::comment_directive in textual.cc
+This is a synonym for @code{@@comment} and must be closed by and @code{@@end} tag.
+
+@item @@year
+@c instance_t::year_directive in textual.cc
 Denotes the year used for all subsequent transactions that give a date
 without a year.  The year should appear immediately after the Y, for
 example: @samp{@@year 2004}.  This is useful at the beginning of a file, to
@@ -2610,7 +2629,7 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Archiving Previous Years , Using emacs, File Format, Keeping a Journal
+@node Archiving Previous Years , Using Emacs, File Format, Keeping a Journal
 @section Archiving Previous Years
 
 
@@ -2669,9 +2688,9 @@ any electronic statements received during the year.  In the arena of
 organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
-@node Using emacs,  , Archiving Previous Years , Keeping a Journal
-@section Using emacs to Maintain Your Journal
-@cindex emacs
+@node Using Emacs,  , Archiving Previous Years , Keeping a Journal
+@section Using Emacs to Maintain Your Journal
+@cindex Emacs
 
 @menu
 * running ledger-mode::         
@@ -2680,16 +2699,16 @@ doing it.
 * Generating Reports::          
 @end menu
 
-@node running ledger-mode, Working with entries, Using emacs, Using emacs
+@node running ledger-mode, Working with entries, Using Emacs, Using Emacs
 @subsection Running ledger-mode
 
-Journal files are simple free text files easily modifed by any text
-editor.  A special mode for emacs is included with the source
+Journal files are simple free text files easily modified by any text
+editor.  A special mode for Emacs is included with the source
 distribution.
 
-@cindex emacs .emacs file
-To use the emacs mopy, copy the several lisp files from the source lisp
-directory your your @file{site-lisp} directoy and add the following line
+@cindex Emacs .emacs file
+To use the Emacs mode, copy the several lisp files from the source lisp
+directory your your @file{site-lisp} directory and add the following line
 to your @file{.emacs} (or equivalent, @file{~/Aquamacs/Preferences.el}
 for Aquamacs on Mac OS X)
 @smallexample
@@ -2703,11 +2722,11 @@ each of your journal files should be:
 @end smallexample
 To enter ledger-mode on a new file, type M-x ledger-mode.
  
-Once you have loaded a Journal file into emacs, you have several
+Once you have loaded a Journal file into Emacs, you have several
 commands available to make entering, clearing and reconciling
 transactions and producing reports:
 
-@cindex emacs commands
+@cindex Emacs commands
 @table @code
 @item C-i  or <TAB>
 auto complete entry
@@ -2730,7 +2749,7 @@ sort all entries in the journal by date. Drop comments outside of entries
 @item C-c C-o C-r   
 run a ledger report
 @item C-C C-o C-g   
-goto the ledger report buffer
+go to the ledger report buffer
 @item C-c C-o C-e   
 edit the defined ledger reports
 @item C-c C-o C-s   
@@ -2747,7 +2766,7 @@ kill the ledger report buffer
 * Generating Reports::          
 @end menu
 
-@node Working with entries, Reconciling accounts, running ledger-mode, Using emacs
+@node Working with entries, Reconciling accounts, running ledger-mode, Using Emacs
 @subsection Working with entries
 @menu
 * Manual Entry Support::        
@@ -2759,10 +2778,10 @@ kill the ledger report buffer
 @subsubsection Manual Entry Support
 
 @cindex <TAB> completion
-@cindex autocompletion
+@cindex auto-completion
 @cindex misspelled accounts treated as new
 
-In most financial programs, some sort of autocompletion is avaiable to
+In most financial programs, some sort of auto-completion is available to
 save typing and improve accuracy. Ledger doesn't leave you hanging,
 @code{ledger-mode} provides tab completion on all portions of an entry.
 Type a portion of the payee and hit <TAB>, and @code{ledger-mode} will
@@ -2779,10 +2798,10 @@ will be interpreted as a new account by ledger.
 
 @node Automagically Adding new entries, Clearing Transactions, Manual Entry Support, Working with entries
 @subsubsection Automagically Adding new entries
-@cindex new transactions in emacs
-@cindex emacs, adding new transactions
+@cindex new transactions in Emacs
+@cindex Emacs, adding new transactions
 @code{C-c C-a} will run the @code{ledger entry} command (@pxref{entry
-and xact}) from within emacs.  When typed, the minibuffer will appear
+and xact}) from within Emacs.  When typed, the mini-buffer will appear
 with the current year and month, waiting for you to enter the day and
 the payee.  Ledger will generate a new entry based on the most recent
 entry for that payee, using the amount and accounts from that
@@ -2795,11 +2814,11 @@ payee.  For example, if your journal  contains an entry
      Liabilities:MasterCard  $-15.00
 @end smallexample 
 @noindent and you type @samp{C-c C-a}, the mini-buffer will appear showing the
-current year and month.  If you complete the minibuffer entry by typing
+current year and month.  If you complete the mini-buffer entry by typing
 @smallexample
 Entry: 2011/11/28 viva food 34 tip 7 <enter>
 @end smallexample
-@noindent emacs will add the following entry to your journal:
+@noindent Emacs will add the following entry to your journal:
 @smallexample
 2011/11/30 Viva Italiano 
     Expenses:Food                             $34.00
@@ -2810,8 +2829,8 @@ Entry: 2011/11/28 viva food 34 tip 7 <enter>
 ordered by date, not necessarily at the bottom of the file.
 @node Clearing Transactions,  , Automagically Adding new entries, Working with entries
 @subsubsection Clearing Transactions and Postings
-@cindex clearing transactions in emacs
-@cindex emacs, clear transaction
+@cindex clearing transactions in Emacs
+@cindex Emacs, clear transaction
 @code{C-c C-e} will place an asterisk after the date in the current
 transaction.  The tells ledger the transaction has been cleared through
 your bank (or whatever else you want the concept to mean)
@@ -2833,13 +2852,13 @@ If, for some reason you need to clear a specific posting in the
 transaction you can type @samp{C-c C-c} and the posting at point will be
 toggled.
 
-@node Reconciling accounts, Generating Reports, Working with entries, Using emacs
+@node Reconciling accounts, Generating Reports, Working with entries, Using Emacs
 @subsection Reconciling accounts
 
 In the reconcile buffer, use SPACE to toggle the cleared status of a
 transaction, C-x C-s to save changes (to the ledger file as well).
 
-@node Generating Reports,  , Reconciling accounts, Using emacs
+@node Generating Reports,  , Reconciling accounts, Using Emacs
 @subsection Generating Reports
 
 The ledger reports command asks the user to select a report to run then
@@ -2883,9 +2902,9 @@ kill the report buffer
 @section Introduction
 The power of Ledger comes from the incredible flexibility in its
 reporting commands, combined with formatting commands.  Some options
-control what is included in the calculations, and formatting controlls
+control what is included in the calculations, and formatting controls
 how it is displayed.  The combinations are infinite. This chapter will
-show you the basics of combining varous options and commands.  In the next
+show you the basics of combining various options and commands.  In the next
 chapters you will find details about the specific commands and
 options.
 
@@ -2975,7 +2994,7 @@ account on a particular payee, the following are equivalent:
 example is the first example of the very power expression language
 available to shape reports.  The first example may be easier to
 remember, but learning to use the second will open up far
-morepossibilities.
+more possibilities.
 
 @node Controlling formatting,  , Controlling the Accounts and Payees, Balance Reports
 @subsection Controlling Formatting
@@ -3181,21 +3200,21 @@ file whose formatting has gotten out of hand.
 @section Reports in other formats
 @menu
 * csv::                         
-* emacs::                       
+* Emacs::                       
 * org::                         
 * pricemap::                    
 * xml::                         
 * prices and pricedb::          
 @end menu
 
-@node csv, emacs, Reports in other formats, Reports in other formats
+@node csv, Emacs, Reports in other formats, Reports in other formats
 @subsection csv
 
-@node emacs, org, csv, Reports in other formats
-@subsection emacs
+@node Emacs, org, csv, Reports in other formats
+@subsection Emacs
 
 The @command{emacs} command outputs results in a form that can be read
-directly by Emacs Lisp.  The format of the sexp is:
+directly by Emacs Lisp.  The format of the @code{sexp} is:
 
 @smallexample
 ((BEG-POS CLEARED DATE CODE PAYEE
@@ -3203,10 +3222,10 @@ directly by Emacs Lisp.  The format of the sexp is:
  ...)                   ; list of transactions
 @end smallexample
 
-@node org, pricemap, emacs, Reports in other formats
+@node org, pricemap, Emacs, Reports in other formats
 @subsection org
 The @code{org} command produces a journal file suitable for use in the
-emacs org mode.  More details on using org mode can be found at
+Emacs org mode.  More details on using org mode can be found at
 @url{http://www.orgmode.org}.
 
 Org mode has a sub-system known as babel which allows for literate
@@ -3513,7 +3532,7 @@ the running total of the assets in our ledger.
 This short tutorial shows how Ledger entries can be embedded in a org
 file and manipulated using Babel. However, only simple Ledger features
 have been illustrated; please refer to the Ledger documentation for
-examples of more complex integrations with a ledger.
+examples of more complex operations with a ledger.
 
 @node pricemap, xml, org, Reports in other formats
 @subsection pricemap
@@ -3601,7 +3620,7 @@ there are four different kinds, each with its own format:
 @item balance
 @end enumerate
 
-The format of a boolean value is @samp{true} or @samp{false}
+The format of a Boolean value is @samp{true} or @samp{false}
 surrounded by a @samp{boolean} tag, for example:
 
 @smallexample
@@ -3632,7 +3651,7 @@ marker, and comma used as the decimal point.
 @end table
 
 The actual quantity for an amount is an integer of arbitrary size.
-Ledger uses the GNU multi-precision math library to handle such
+Ledger uses the GNU multiple precision arithmetic library to handle such
 values.  The XML format assumes the reader to be equally capable.
 Here is an example amount:
 
@@ -3681,7 +3700,7 @@ deviation from that average.
 There is also a @command{pricedb} command which outputs the same
 information as @command{prices}, but does in a format that can be parsed
 by Ledger.  This is useful for generating and tidying up pricedb
-databasefiles.
+database files.
 
 
 @node Reports about your Journals, Developer Commands, Reports in other formats, Reporting Commands
@@ -3767,7 +3786,7 @@ backwards compatibility with Ledger 2.X.
 
 @node payees,  , entry and xact, Reports about your Journals
 @subsection payees
-The @command{payees} reports all of the unique payees in the journal. To filter the payes displayed you must use the @@ prefix:
+The @command{payees} reports all of the unique payees in the journal. To filter the payees displayed you must use the @@ prefix:
 @smallexample
 macbook-2:$ ledger payees '@@Tar.+t'
 El Dorade Restaraunt
@@ -3885,8 +3904,8 @@ commands.
 @menu
 * Scope of Ledger Options::     
 * Global Options::              
-* Report Options::              
 * Session Options::             
+* Report Options::              
 * Report Filtering::            
 * Search Terms::                
 * Output Customization::        
@@ -3897,22 +3916,22 @@ commands.
 @node Scope of Ledger Options, Global Options, Detailed Options Description, Detailed Options Description
 @subsection Scope of Ledger Options
 
-Options for Ledger report affec tthree separate scopes of operation:
+Options for Ledger report affect three separate scopes of operation:
 Global, Session, and Report.  In practice there is very little
-defference between these scopes.  Ledger 3.0 contains provisions for
+difference between these scopes.  Ledger 3.0 contains provisions for
 GUIs, which would make use of the different scopes by keeping an
 instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
-@node Global Options, Report Options, Scope of Ledger Options, Detailed Options Description
+@node Global Options, Session Options, Scope of Ledger Options, Detailed Options Description
 @subsection Global Options
 
 @option{--args_only} Ignore all environment and init-file settings and
-use only command-line arguments to control Ledger.  Usefule for debugs
-or testing small Journal files not assoviated with you main financial
+use only command-line arguments to control Ledger.  Useful for debugs
+or testing small Journal files not associated with you main financial
 database.
 
-@option{debug "argument"} If Ledger has been built with debug options this will provide extra data during the run.  The following are the avilable arguments to debug: @code{
+@option{debug "argument"} If Ledger has been built with debug options this will provide extra data during the run.  The following are the available arguments to debug: @code{
 account.display
 accounts.sorted
 amount.convert
@@ -4035,7 +4054,7 @@ Display the options in effect for this Ledger invocation, along with their value
 @end smallexample
 
 @option{script PATH_TO_SCRIPT}
-Excute a ledger script.
+Execute a ledger script.
 
 @option{trace INTEGER_TRACE_LEVEL}
 Enable tracing.  The integer specifies the level of trace desired:   LOG_OFF = 0,
@@ -4059,7 +4078,7 @@ FIX THIS ENTRY
 
 @option{version}
 
-@node Session Options, Report Filtering, Report Options, Detailed Options Description
+@node Session Options, Report Options, Global Options, Detailed Options Description
 @subsection Session Options
 
 @option{cache}
@@ -4069,11 +4088,14 @@ FIX THIS ENTRY
 Direct Ledger to parse journals using the European standard comma as decimal separator, vice a period.
 
 @option{download}
-Direct Ledger to download prices using the getquote script.
+Direct Ledger to download prices using the script defined in @code{--getquote}.
 
 @option{file}
 Specify the input file for this invocation.
 
+@cindex getquote
+@cindex download prices 
+@option{getquote} Tells ledger where to find the user defined script to download prices information.  
 @option{input-date-format}
 Specify the date format for journal entries.
 
@@ -4084,15 +4106,15 @@ FIX THIS ENTRY
 Specify the price entry data file.
 
 @option{price-exp INTEGER_MINUTES} Set the expected freshness of price
-quotes, in min- utes. That is, if the last known quote for any commodity
-is older than this value—and if ‘--download’ is being used—then the
+quotes, in minutes. That is, if the last known quote for any commodity
+is older than this value, and if ‘--download’ is being used, then the
 Internet will be consulted again for a newer price. Otherwise, the old
 price is still considered to be fresh enough.
 
 @option{strict}
 FIX THIS ENTRY
 
-@node Report Options, Session Options, Global Options, Detailed Options Description
+@node Report Options, Report Filtering, Session Options, Detailed Options Description
 @subsection Report Options
 
 @option{abbrev-len}
@@ -4499,7 +4521,7 @@ precedence over settings in the init file.
 @option{--account NAME} (@option{-a NAME}) specifies the default
 account which QIF file postings are assumed to relate to.
 
-@node Report Filtering, Search Terms, Session Options, Detailed Options Description
+@node Report Filtering, Search Terms, Report Options, Detailed Options Description
 @subsection Report filtering
 
 These options change which postings affect the outcome of a
@@ -4524,7 +4546,7 @@ to @var{STR}.  This will subtotal all matching transactions within each
 period separately, making it easy to see weekly, monthly, quarterly,
 etc., posting totals.  A period string can even specify the
 beginning and end of the report range, using simple terms like ``last
-june'' or ``next month''.  For more using period expressions, see
+June'' or ``next month''.  For more using period expressions, see
 @ref{Period Expressions}.
 
 @option{--period-sort EXPR} sorts the postings within each
@@ -4537,11 +4559,11 @@ ledger -M --period-sort -At reg ^Expenses
 @end smallexample
 
 @option{--cleared} (@option{-C}) displays only postings whose transaction
-has been marked ``cleared'' (by placing an asterix to the right of the
+has been marked ``cleared'' (by placing an asterisk to the right of the
 date).
 
 @option{--uncleared} (@option{-U}) displays only postings whose
-transaction has not been marked ``cleared'' (i.e., if there is no asterix to
+transaction has not been marked ``cleared'' (i.e., if there is no asterisk to
 the right of the date).
 
 @option{--real} (@option{-R}) displays only real postings, not virtual.
@@ -4581,7 +4603,7 @@ posting that matched:
 @end smallexample
 
 @option{--budget} is useful for displaying how close your postings
-meet your budget.  @option{--add-budget} also shows unbudgeted
+meet your budget.  @option{--add-budget} also shows un-budgeted
 postings, while @option{--unbudgeted} shows only those.
 @option{--forecast} is a related option that projects your budget into
 the future, showing how it will affect future balances.
@@ -4776,9 +4798,9 @@ There are also specific format commands for each report type:
 These options affect how commodity values are displayed:
 
 @option{--price-db FILE} sets the file that is used for recording
-downloaded commodity prices.  It is always read on startup, to
+downloaded commodity prices.  It is always read on start up, to
 determine historical prices.  Other settings can be placed in this
-file manually, to prevent downloading quotes for a specific, for
+file manually, to prevent downloading quotes for a specific commodity, for
 example.  This is done by adding a line like the following:
 
 @smallexample
@@ -4787,12 +4809,15 @@ N $
 N h
 @end smallexample
 
+Note: Ledger NEVER write output to files.  You are responsible for
+updated the price-db file.  The best way is to have your price download
+script maintain this file.
+
 @option{--price-exp MINS} (@option{-L MINS}) sets the expected
-freshness of price quotes, in minutes.  That is, if the last known
-quote for any commodity is older than this value---and if
-@option{--download} is being used---then the Internet will be
-consulted again for a newer price.  Otherwise, the old price is still
-considered to be fresh enough.
+freshness of price quotes, in minutes.  That is, if the last known quote
+for any commodity is older than this value---and if @option{--download}
+is being used---then the Internet will be consulted again for a newer
+price.  Otherwise, the old price is still considered to be fresh enough.
 
 @option{--download} (@option{-Q}) causes quotes to be automagically
 downloaded, as needed, by running a script named @command{getquote}
@@ -4816,7 +4841,7 @@ Reports commodity totals (this is the default)
 Reports the cost basis for all postings.
 
 @item -V, --market
-Reports the last known market value for all commodities.
+Use the last known value for commodities to calculate final values.
 
 @item -G --gain
 Reports the net gain/loss for all commodities in the report that have
@@ -4835,7 +4860,7 @@ etc.
 When you specify @samp{-V}, or @samp{-X COMM}, you are requesting that
 some or all of the commodities be valuated as of today (or whatever
 @samp{--now} is set to).  But what does such a valuation mean?  This
-meaning is governed by the presence of a @samp{VALUE} metadata property,
+meaning is governed by the presence of a @samp{VALUE} meta-data property,
 whose content is an expression used to compute that value.
 
 If no VALUE property is specified, each posting is assumed to have a
@@ -4892,7 +4917,7 @@ appropriate for dollars.
 
 Note that you can have a valuation expression specific to a particular
 posting or transaction, by overriding these general defaults using
-specific metadata:
+specific meta-data:
 
 @smallexample
   2010-12-26 Example
@@ -5018,7 +5043,7 @@ last week
 The beginning and ending can be given at the same time, if it spans a
 single period.  In that case, just use @var{SPEC} by itself.  In that
 case, the period @samp{oct}, for example, will cover all the days in
-october.  The possible forms are:
+October.  The possible forms are:
 
 @smallexample
 <SPEC>
@@ -5106,7 +5131,7 @@ ledger --budget --monthly register ^expenses
 
 A budget report includes only those accounts that appear in the
 budget.  To see all expenses balanced against the budget, use
-@option{--add-budget}.  You can even see only the unbudgeted expenses
+@option{--add-budget}.  You can even see only the un-budgeted expenses
 using @option{--unbudgeted}:
 
 @example
@@ -5610,7 +5635,7 @@ As an example of how flexible the --format strings can be, the default balance f
 @node Colors, Quantities and Calculations, Field Widths, New formatting codes
 @subsection Colors
 
-The character based formatting ledger can do is limited to the ANSI terminal character colors and font highlight in a normal TTY seesion.  
+The character based formatting ledger can do is limited to the ANSI terminal character colors and font highlight in a normal TTY session.  
 @multitable @columnfractions .3 .3 .3
 @item @code{red} @tab @code{magenta} @tab @code{bold}
 @item @code{green } @tab @code{cyan} @tab @code{underline}
@@ -5621,7 +5646,7 @@ The character based formatting ledger can do is limited to the ANSI terminal cha
 
 
 @node Quantities and Calculations, Dates, Colors, New formatting codes
-@subsection Quantities and Calcuations
+@subsection Quantities and Calculations
 
 
 
@@ -5671,7 +5696,7 @@ The character based formatting ledger can do is limited to the ANSI terminal cha
 @item @strong{Function}  @tab @strong{Description}
 @item @code{ansify_if(str,color) } @tab Colorize the string
 @item @code{justify(str, fwidth, lwidth, right, colorize) }  @tab Right or left justify the string.
-@item @code{join(str) } @tab Remove line feeds from the input string.  Mainly used internaally for org-mode output 
+@item @code{join(str) } @tab Remove line feeds from the input string.  Mainly used internally for org-mode output 
 @item @code{quoted(str) } @tab Returns @code{"<str>"}. 
 @item @code{strip } @tab @code{Removes additional annotations from values.}
 @item @code{scrub } @tab @code{S} 
@@ -5680,15 +5705,24 @@ The character based formatting ledger can do is limited to the ANSI terminal cha
 @subsubsection Detailed Descriptions
 @table @code
 @item ansify_if(value, color)
-Surrounds the string representing value with ANSI codes to give it @code{color} on an TTY display.  Has no effect if directed to a file.
+Surrounds the string representing value with ANSI codes to give it
+@code{color} on an TTY display.  Has no effect if directed to a file.
 @item justify(value, first_width, latter_width, right_justify, colorize)  
-Right or left justify the string representing @code{value}.  The width of the field in the first line is given by @code{first_width}.  For subsequent lines the width is given by @code{latterwidth}.  If @code{latter_width=-1}, then @code{first_width} is use for all lines.  If @code{right_justify=true} then the field is right justify within the width of the field. If it is @code{false}, then the field is left justified and padded to the full width of the field.  If @code{colorize} is true then ledger will hone color settings.
+Right or left justify the string representing @code{value}.  The width
+of the field in the first line is given by @code{first_width}.  For
+subsequent lines the width is given by @code{latterwidth}.  If
+@code{latter_width=-1}, then @code{first_width} is use for all lines.
+If @code{right_justify=true} then the field is right justify within the
+width of the field. If it is @code{false}, then the field is left
+justified and padded to the full width of the field.  If @code{colorize}
+is true then ledger will honor color settings.
 @item join(str)
 Replaces line feeds in str with @code{\n}.
 @item quoted(str)
-Return str surounded by double quotes, @code{"<str>"}.
+Return str surrounded by double quotes, @code{"<str>"}.
 @item strip(value)
-Values can have numerous annotations, such as effective dates and lot prices.  @code{strip} removes these annotations.
+Values can have numerous annotations, such as effective dates and lot
+prices.  @code{strip} removes these annotations.
 @end table
 @node Misc,  , Text Formatting, New formatting codes
 @subsection Miscellaneous
@@ -5696,6 +5730,7 @@ Values can have numerous annotations, such as effective dates and lot prices.  @
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
 @item @code{amount_expr } @tab @code{} @tab 
 @item @code{abs } @tab @code{} @tab  --> U
+@item @code{code} @tab @code{} @tab returns the transaction code, the string between the parenthesis after the date.
 @item @code{commodity } @tab @code{} @tab 
 @item @code{display_amount } @tab @code{} @tab   --> t
 @item @code{display_total } @tab @code{} @tab  --> T
@@ -5742,7 +5777,7 @@ Values can have numerous annotations, such as effective dates and lot prices.  @
 @chapter Journal File Format for Developers
 
 This chapter offers a complete description of the journal data format,
-suitable for implementors in other languages to follow.  For users,
+suitable for implementers in other languages to follow.  For users,
 the chapter on keeping a journal is less extensive, but more typical
 of common usage (@pxref{Keeping a Journal}).
 
@@ -5787,27 +5822,27 @@ amount of the first posting is typically positive.  Consider:
 @end smallexample
 
 @menu
-* Comments and metadata::       
+* Comments and meta-data::      
 * Specifying Amounts::          
 @end menu
 
-@node Comments and metadata, Specifying Amounts, Journal File Format, Journal File Format
-@section Comments and metadata
+@node Comments and meta-data, Specifying Amounts, Journal File Format, Journal File Format
+@section Comments and meta-data
 @menu
 * Comments::                    
-* Metadata::                    
+* Meta-data::                   
 @end menu
 
-@node Comments, Metadata, Comments and metadata, Comments and metadata
+@node Comments, Meta-data, Comments and meta-data, Comments and meta-data
 @subsection Comments
 Comments are generally started using a ';'.  However, in order to
 increase compatibility with other text manipulation programs and methods
 three additional comment characters are valid if used at the beginning
 of a line: @code{#}, @code{|}, and @code{*}.
-@node Metadata,  , Comments, Comments and metadata
-@subsection Metadat
+@node Meta-data,  , Comments, Comments and meta-data
+@subsection Matador
 
-@node Specifying Amounts,  , Comments and metadata, Journal File Format
+@node Specifying Amounts,  , Comments and meta-data, Journal File Format
 @section Specifying Amounts
 @cindex amounts
 The heart of a journal is the amounts it records, and this fact is
@@ -5815,9 +5850,9 @@ reflected in the diversity of amount expressions allowed.  All of them
 are covered here, though it must be said that sometimes, there are
 multiple ways to achieve a desired result.
 
-@emph{Note:} It is important to note that there must be at least two spaces between
-the end of the post and the beginning of the amount (including and
-commodity designator).
+@emph{Note:} It is important to note that there must be at least two
+spaces between the end of the post and the beginning of the amount
+(including a commodity designator).
 
 @menu
 * Integer Amounts::             
@@ -5838,7 +5873,7 @@ In the simplest form, bare decimal numbers are accepted:
 Such amounts may only use an optional period for a decimal point.
 These are referred to as @dfn{integer amounts} or @dfn{uncommoditized
 amounts}.  In most ways they are similar to @dfn{commoditized
-amounts}, but for one signficant difference: They always display in
+amounts}, but for one significant difference: They always display in
 reports with @dfn{full precision}.  More on this in a moment.  For
 now, a word must be said about how Ledger stores numbers.
 
@@ -5887,7 +5922,7 @@ amount, and may or may not be separated from it by a space.  Most
 characters are allowed in a commodity name, except for the following:
 
 @itemize @bullet
-@item Any kind of whitespace
+@item Any kind of white-space
 @item Numerical digits
 @item Punctuation: @samp{.,;:?!}
 @item Mathematical and logical operators: @samp{-+*/^&|=}
