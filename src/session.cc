@@ -136,7 +136,7 @@ std::size_t session_t::read_data(const string& master_account)
         buffer.flush();
 
         std::istringstream buf_in(buffer.str());
-        xact_count += journal->read(buf_in, "/dev/stdin", acct);
+        xact_count += journal->read(buf_in, "", acct);
         journal->sources.push_back(journal_t::fileinfo_t());
       } else {
         xact_count += journal->read(pathname, acct);
