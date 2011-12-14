@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-12-10 21:10 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-12-13 15:17 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -3721,9 +3721,49 @@ The @command{accounts} reports all of the accounts in the journal.
 Following the command with a regular expression will limit the output to
 accounts matching the regex.
 
-
+@cindex csv conversion
+@cindex reading csv
+@cindex comma separated variable file reading
 @node convert, commodities, accounts, Reports about your Journals
 @subsection convert
+Convert reads your Ledger journal then parses a comma separated value
+(csv) file into Ledger transactions.  Many banks offer csv file
+downloads.  Unfortunately the file formats, aside form the commas, are
+all different.  The ledger convert command tried to help as much as it
+can.
+@menu
+* Preparing CSV files::         
+@end menu
+
+@node Preparing CSV files,  , convert, convert
+@subsubsection Preparing CSV files for conversion
+Your banks csv files will have field in different orders from other
+banks, so there must be a way to tell Ledger what to expect.  Insert a
+line at the beginning of the csv file that describes the fields to Ledger.
+
+For example, this is a portion of a csv file downloaded from a credit
+union in the United States:
+@smallexample
+
+Account Name: VALUFIRST CHECKING
+Account Number: 71
+Date Range: 11/13/2011 - 12/13/2011
+
+Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Check Number,Fees
+767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
+767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
+683342,12/13/2011,"Visa Checking","NetFlix Date 12/12/11 000326585896 5968",-21.85,,00001649.87,,
+639668,12/13/2011,"Withdrawal","ID: 1741472662 CO: XXAA.COM PAYMNT",-236.65,,00001671.72,,
+1113648,12/12/2011,"Withdrawal","Tuscan IT #00037657",-29.73,,00001908.37,,
+@end smallexample
+
+Unfortunately, as it stands Ledger cannot read it, but you can.  Ledger
+expects the first line to contain a description of the fields on each
+line of the file.  The fields ledger can recognize are called
+``@code{date}'' ``@code{posted}'', ``@code{code}'', ``@code{payee} or
+@code{desc}'', ``@code{amount}'', ``@code{cost}'', ``@code{total}'', and
+``@code{note}''.
+
 
 @node commodities, entry and xact, convert, Reports about your Journals
 @subsection commodities
@@ -3804,6 +3844,7 @@ macbook-2:$
 * echo::                        
 * reload::                      
 * source::                      
+* Debug Options::               
 * Pre-commands::                
 @end menu
 
@@ -3818,13 +3859,96 @@ Forces ledger to reload any journal files.  This function exists to
 support external programs controlling a running ledger process and does
 nothing for a command line user.
 
-@node source, Pre-commands, reload, Developer Commands
+@node source, Debug Options, reload, Developer Commands
 @subsection source
+The @code{source} command take a journal file as an argument and parses
+it checking for errors, no other reports are generated, and no other
+arguments are necessary.  Ledger will reteurn success if no errors are
+found.
 
-@node Pre-commands,  , source, Developer Commands
+@node Debug Options, Pre-commands, source, Developer Commands
+@subsection Debug Options
+
+These options are primarily for Ledger developers, but may be of some
+use to a user trying something new.
+
+  @option{--args-only} ignore init
+files and environment variables for the ledger run.
+
+@option{--verify} enable additional assertions during run-time. This
+causes a significant slowdown.  When combined with @option{--debug}
+ledger will produce memory trace information.
+
+@option{--debug "argument"} If Ledger has been built with debug options
+this will provide extra data during the run.  The following are the
+available arguments to debug:
+
+@multitable @columnfractions .32 .43 .27
+@item @code{account.display}             @tab @code{expr.calc.when}                   @tab @code{org.next_amount}        
+@item @code{accounts.sorted}             @tab @code{expr.compile}                     @tab @code{org.next_total}         
+@item @code{amount.convert}              @tab @code{filters.changed_value}            @tab @code{parser.error}           
+@item @code{amount.is_zero}              @tab @code{filters.changed_value.rounding}   @tab @code{pool.commodities}       
+@item @code{amount.parse}                @tab @code{filters.collapse}                 @tab @code{post.assign}            
+@item @code{amount.price}                @tab @code{filters.forecast}                 @tab @code{python.init}            
+@item @code{amount.truncate}             @tab @code{filters.revalued}                 @tab @code{python.interp}          
+@item @code{amount.unround}              @tab @code{format.abbrev}                    @tab @code{query.mask}             
+@item @code{amounts.commodities}         @tab @code{format.expr}                      @tab @code{report.predicate}       
+@item @code{amounts.refs}                @tab @code{generate.post}                    @tab @code{scope.symbols}          
+@item @code{archive.journal}             @tab @code{generate.post.string}             @tab @code{textual.include}        
+@item @code{auto.columns}                @tab @code{item.meta}                        @tab @code{textual.parse}          
+@item @code{budget.generate}             @tab @code{ledger.read}                      @tab @code{timelog}                
+@item @code{commodity.annotated.strip}   @tab @code{ledger.validate}                  @tab @code{times.epoch}            
+@item @code{commodity.annotations}       @tab @code{lookup}                           @tab @code{times.interval}         
+@item @code{commodity.compare}           @tab @code{lookup.account}                   @tab @code{times.parse}            
+@item @code{commodity.download}          @tab @code{mask.match}                       @tab @code{value.sort}             
+@item @code{commodity.prices.add}        @tab @code{memory.counts}                    @tab @code{value.storage.refcount} 
+@item @code{commodity.prices.find}       @tab @code{memory.counts.live}               @tab @code{xact.extend}            
+@item @code{convert.csv}                 @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}    
+@item @code{csv.mappings}                @tab @code{op.cons}                          @tab @code{xact.extend.fail}       
+@item @code{csv.parse}                   @tab @code{op.memory}                        @tab @code{xact.finalize}         
+@item @code{draft.xact}                  @tab @code{option.args}                           
+@item @code{expr.calc}                   @tab @code{option.names}                          
+@end multitable 
+
+@option{--trace INTEGER_TRACE_LEVEL}
+Enable tracing.  The integer specifies the level of trace desired:   
+@multitable @columnfractions .3 .7
+@item @code{LOG_OFF} @tab 0
+@item @code{LOG_CRIT} @tab 1
+@item @code{LOG_FATAL} @tab 2
+@item @code{LOG_ASSERT} @tab 3
+@item @code{LOG_ERROR} @tab 4
+@item @code{LOG_VERIFY} @tab 5
+@item @code{LOG_WARN} @tab 6
+@item @code{LOG_INFO} @tab 7
+@item @code{LOG_EXCEPT} @tab 8
+@item @code{LOG_DEBUG} @tab 9
+@item @code{LOG_TRACE} @tab 10
+@item @code{LOG_ALL} @tab 11
+@end multitable
+
+@option{--verbose}
+Print detailed information on the execution of Ledger.
+
+@option{--version}
+Print version information and exit.
+
+@node Pre-commands,  , Debug Options, Developer Commands
 @subsection Pre-Commands
+Pre-commands are useful when you aren't sure how a command or option will work.
 @table @code
 @item args
+evaluate the given arguments against the following model transaction:
+@smallexample
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @@ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+@end smallexample
 @item eval
 evaluate the given value expression against the model transaction
 @item expr "LIMIT EXPRESSION"
@@ -3835,7 +3959,63 @@ Print details of how ledger uses the given formatting description and apply it a
 @item parse <VALUE EXPR>
 Print details of how ledger uses the given value expression description and apply it against a model transaction.
 @item period
+evaluate the given period and report how leodger interprets it:
+@smallexample
+20:22:21 ~/ledger (next)> ledger period "this year"
+--- Period expression tokens ---
+TOK_THIS: this
+TOK_YEAR: year
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2011
+
+--- After stabilization ---
+   range: in year 2011
+   start: 11-Jan-01
+  finish: 12-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Jan-01
+@end smallexample
 @item query
+evaluate the given query and report how leodger interprets it against the model transaction:
+
+@smallexample
+20:25:42 ~/ledger (next)> ledger query "/Book/"
+--- Input arguments ---
+("/Book/")
+
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+(account =~ /Book/)
+
+--- Text as parsed ---
+(account =~ /Book/)
+
+--- Expression tree ---
+0x7fd639c0da40    O_MATCH (1)
+0x7fd639c10170     IDENT: account (1)
+0x7fd639c10780     VALUE: /Book/ (1)
+
+--- Compiled tree ---
+0x7fd639c10520    O_MATCH (1)
+0x7fd639c0d6c0     IDENT: account (1)
+0x7fd639c0d680      FUNCTION (1)
+0x7fd639c10780     VALUE: /Book/ (1)
+
+--- Calculated value ---
+true
+@end smallexample
 @item template
 @end table
 
@@ -3926,102 +4106,31 @@ sessions with multiple reports per session.
 @node Global Options, Session Options, Scope of Ledger Options, Detailed Options Description
 @subsection Global Options
 
-@option{--args_only} Ignore all environment and init-file settings and
+@option{--args-only} Ignore all environment and init-file settings and
 use only command-line arguments to control Ledger.  Useful for debugs
 or testing small Journal files not associated with you main financial
 database.
 
-@option{debug "argument"} If Ledger has been built with debug options this will provide extra data during the run.  The following are the available arguments to debug: @code{
-account.display
-accounts.sorted
-amount.convert
-amount.is_zero
-amount.parse
-amount.price
-amount.truncate
-amount.unround
-amounts.commodities
-amounts.refs
-archive.journal
-auto.columns
-budget.generate
-commodity.annotated.strip
-commodity.annotations
-commodity.compare
-commodity.download
-commodity.prices.add
-commodity.prices.find
-convert.csv
-csv.mappings
-csv.parse
-draft.xact
-expr.calc
-expr.calc.when
-expr.compile
-filters.changed_value
-filters.changed_value.rounding
-filters.collapse
-filters.forecast
-filters.revalued
-format.abbrev
-format.expr
-generate.post
-generate.post.string
-item.meta
-ledger.read
-ledger.validate
-lookup
-lookup.account
-mask.match
-memory.counts
-memory.counts.live
-memory.debug
-op.cons
-op.memory
-option.args
-option.names
-org.next_amount
-org.next_total
-parser.error
-pool.commodities
-post.assign
-python.init
-python.interp
-query.mask
-report.predicate
-scope.symbols
-textual.include
-textual.parse
-timelog
-times.epoch
-times.interval
-times.parse
-value.sort
-value.storage.refcount
-xact.extend
-xact.extend.cleared
-xact.extend.fail
-xact.finalize}
 
-@option{full_help}
+@option{--full-help}
 Displays the man page for ledger.
 
-@option{help_calc}
+@option{--help-calc}
 Displays the man page for ledger.
 
-@option{help_comm}
+@option{--help-comm}
 Displays the man page for ledger.
 
-@option{help_disp}
+@option{--help-disp}
 Displays the man page for ledger.
 
-@option{help}
+@option{--help}
 Displays the man page for ledger.
 
-@option{init_file PATH_TO_INIT_FILE}
+@option{--init-file PATH/TO/INIT/FILE}
 Specifies the location of the init file @file{.ledgerrc}
 
-@option{options}
+@option{--options}
 Display the options in effect for this Ledger invocation, along with their values and the source of those values, for example:
 @smallexample
 14:15:02 > ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat  
@@ -4053,65 +4162,62 @@ Display the options in effect for this Ledger invocation, along with their value
 
 @end smallexample
 
-@option{script PATH_TO_SCRIPT}
+@option{--script PATH/TO/SCRIPT}
 Execute a ledger script.
-
-@option{trace INTEGER_TRACE_LEVEL}
-Enable tracing.  The integer specifies the level of trace desired:   LOG_OFF = 0,
-  LOG_CRIT,
-  LOG_FATAL,
-  LOG_ASSERT,
-  LOG_ERROR,
-  LOG_VERIFY,
-  LOG_WARN,
-  LOG_INFO,
-  LOG_EXCEPT,
-  LOG_DEBUG,
-  LOG_TRACE,
-  LOG_ALL
-
-@option{verbose}
-Print detail information on the execution of Ledger.
-
-@option{verify}
-FIX THIS ENTRY
-
-@option{version}
-
 @node Session Options, Report Options, Global Options, Detailed Options Description
 @subsection Session Options
 
-@option{cache}
-FIX THIS ENTRY
-
-@option{decimal-comma}
+@option{--decimal-comma}
 Direct Ledger to parse journals using the European standard comma as decimal separator, vice a period.
 
-@option{download}
+@option{--download}
 Direct Ledger to download prices using the script defined in @code{--getquote}.
 
-@option{file}
+@option{--file}
 Specify the input file for this invocation.
 
 @cindex getquote
 @cindex download prices 
-@option{getquote} Tells ledger where to find the user defined script to download prices information.  
-@option{input-date-format}
+@option{--getquote} Tells ledger where to find the user defined script to download prices information.  
+@option{--input-date-format}
 Specify the date format for journal entries.
 
-@option{master-account}
-FIX THIS ENTRY
+@option{--master-account ARGUMENT}
+Prepends all account names with the argument.
+@smallexample
+21:51:39 ~/ledger (next)> ledger -f test/input/drewr3.dat bal --master-account HUMBUG
+                   0  HUMBUG
+         $ -3,804.00    Assets
+          $ 1,396.00      Checking
+             $ 30.00        Business
+         $ -5,200.00      Savings
+             $ 20.00    Books
+         $ -1,000.00    Equity:Opening Balances
+          $ 6,634.00    Expenses
+         $ 11,000.00      Auto
+             $ 20.00      Books
+            $ 300.00      Escrow
+            $ 334.00      Food:Groceries
+            $ 500.00      Interest:Mortgage
+         $ -5,520.00      ssets:Checking
+         $ -2,030.00    Income
+         $ -2,000.00      Salary
+            $ -30.00      Sales
+            $ 180.00    Liabilities
+            $ -20.00      MasterCard
+            $ 200.00      Mortgage:Principal
+@end smallexample
 
-@option{price-db}
+@option{--price-db}
 Specify the price entry data file.
 
-@option{price-exp INTEGER_MINUTES} Set the expected freshness of price
+@option{--price-exp INTEGER_MINUTES} Set the expected freshness of price
 quotes, in minutes. That is, if the last known quote for any commodity
 is older than this value, and if ‘--download’ is being used, then the
 Internet will be consulted again for a newer price. Otherwise, the old
 price is still considered to be fresh enough.
 
-@option{strict}
+@option{--strict}
 FIX THIS ENTRY
 
 @node Report Options, Report Filtering, Session Options, Detailed Options Description
@@ -4193,7 +4299,7 @@ FIX THIS ENTRY
 FIX THIS ENTRY
 
 @option{count}
-FIX THIS ENTRY
+Direct ledger to report the number of items when appended to the commodites, accounts or payees command.
 
 @option{csv-format}
 FIX THIS ENTRY
