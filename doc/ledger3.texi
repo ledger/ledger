@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-12-14 09:58 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-12-14 22:02 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -1535,7 +1535,7 @@ There are several forms of comments within a transaction, for example:
 
 @noindent  The first comment is global and Ledger will not attach it to any specific
 transactions.  The comments within the transaction must all start with `;'s and are
-preserved as part of the transaction.  The `:'s indicate metadata and tags 
+preserved as part of the transaction.  The `:'s indicate meta-data and tags 
 (@pxref{Transaction Notes and Tags}).
 
 @node Currency and Commodities, Advanced Transactions, Commenting on your journal, Keeping a Journal
@@ -2900,6 +2900,12 @@ available to shape reports.  The first example may be easier to
 remember, but learning to use the second will open up far
 more possibilities.
 
+If you want to exclude specific accounts from the report, you can exclude multiple accounts with
+parentheses: 
+@smallexample
+ledger -s bal Expenses and not \(Expenses:Drinks or Expenses:Candy or Expenses:Gifts\)
+@end smallexample
+
 @node Controlling formatting,  , Controlling the Accounts and Payees, Balance Reports
 @subsection Controlling Formatting
 These examples all use the default formatting for the balance
@@ -4119,7 +4125,6 @@ commands.
 @section Detailed Option Description
 
 @menu
-* Scope of Ledger Options::     
 * Global Options::              
 * Session Options::             
 * Report Options::              
@@ -4130,8 +4135,8 @@ commands.
 * Environment Variables::       
 @end menu
 
-@node Scope of Ledger Options, Global Options, Detailed Options Description, Detailed Options Description
-@subsection Scope of Ledger Options
+@node Global Options, Session Options, Detailed Options Description, Detailed Options Description
+@subsection Global Options
 
 Options for Ledger report affect three separate scopes of operation:
 Global, Session, and Report.  In practice there is very little
@@ -4140,8 +4145,6 @@ GUIs, which would make use of the different scopes by keeping an
 instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
-@node Global Options, Session Options, Scope of Ledger Options, Detailed Options Description
-@subsection Global Options
 
 @option{--args-only} Ignore all environment and init-file settings and
 use only command-line arguments to control Ledger.  Useful for debugs
@@ -4149,22 +4152,22 @@ or testing small Journal files not associated with you main financial
 database.
 
 
-@option{--full-help}
-Displays the man page for ledger.
+@option{--help}
+Displays the info page for ledger.
 
 @option{--help-calc}
-Displays the man page for ledger.
+Displays the Value Expression chapter in the info ledger.
 
-@option{--help-comm}
-Displays the man page for ledger.
+@option{--help-comm <ARG>}
+Search the info index for @code{<ARG>}.
 
 @option{--help-disp}
-Displays the man page for ledger.
+Displays the Format String chapter in the info ledger.
 
-@option{--help}
-Displays the man page for ledger.
+@option{--help-info}
+Displays the info page for the info reader.
 
-@option{--init-file PATH/TO/INIT/FILE}
+@option{--init-file <PATH>}
 Specifies the location of the init file @file{.ledgerrc}
 
 @option{--options}
@@ -4198,11 +4201,22 @@ Display the options in effect for this Ledger invocation, along with their value
                    0
 
 @end smallexample
+@noindent For the `source' column, a value starting with a `@code{-}' or
+`@code{--}' indicated the source was a command line argument.  It the
+entry starts with a `@code{$}', the source was an environment
+variable. If the source is `@code{?normalize}' the value was set
+internally by ledger, in a function called @code{normalize_options}.
 
-@option{--script PATH/TO/SCRIPT}
-Execute a ledger script.
+@option{--script <PATH>} Execute a ledger script.
 @node Session Options, Report Options, Global Options, Detailed Options Description
 @subsection Session Options
+
+Options for Ledger report affect three separate scopes of operation:
+Global, Session, and Report.  In practice there is very little
+difference between these scopes.  Ledger 3.0 contains provisions for
+GUIs, which would make use of the different scopes by keeping an
+instance of Ledger running in the background and running multiple
+sessions with multiple reports per session.
 
 @option{--decimal-comma}
 Direct Ledger to parse journals using the European standard comma as decimal separator, vice a period.
@@ -4210,16 +4224,23 @@ Direct Ledger to parse journals using the European standard comma as decimal sep
 @option{--download}
 Direct Ledger to download prices using the script defined in @code{--getquote}.
 
-@option{--file}
-Specify the input file for this invocation.
+@option{--file <PATH>}
+Specify the input file path for this invocation.
 
 @cindex getquote
 @cindex download prices 
-@option{--getquote} Tells ledger where to find the user defined script to download prices information.  
-@option{--input-date-format}
-Specify the date format for journal entries.
+@option{--getquote <PATH>} Tells ledger where to find the user defined script to download prices information.  
+@option{--input-date-format <DATE-FORMAT>}
+Specify the input date format for journal entries. For example, 
+@smallexample
+ledger convert Export.csv --input-date-format "%m/%d/%Y"
+@end smallexample
 
-@option{--master-account ARGUMENT}
+Would convert the @file{Export.csv} file to ledger format, assuming the
+the dates in the CSV file are like 12/23/2009 (@pxref{Date and Time Format Codes}).
+
+
+@option{--master-account <ARGUMENT>}
 Prepends all account names with the argument.
 @smallexample
 21:51:39 ~/ledger (next)> ledger -f test/input/drewr3.dat bal --master-account HUMBUG
@@ -4245,8 +4266,8 @@ Prepends all account names with the argument.
             $ 200.00      Mortgage:Principal
 @end smallexample
 
-@option{--price-db}
-Specify the price entry data file.
+@option{--price-db <PATH>}
+Specify the location of the price entry data file.
 
 @option{--price-exp INTEGER_MINUTES} Set the expected freshness of price
 quotes, in minutes. That is, if the last known quote for any commodity
@@ -4254,104 +4275,163 @@ is older than this value, and if ‘--download’ is being used, then the
 Internet will be consulted again for a newer price. Otherwise, the old
 price is still considered to be fresh enough.
 
-@option{--strict}
-FIX THIS ENTRY
+@option{--strict} Ledger normally silently accepts any account or
+commodity in a posting, even if you have misspelled a common used one.
+The option @code{--strict} changes that behavior.  While running
+@code{--strict}, Ledger interprets all cleared transactions as correct,
+and if it finds a new account or commodity (same as a misspelled
+commodity or account) it will issue a warning giving you the file and
+line number of the problem.
 
 @node Report Options, Report Filtering, Session Options, Detailed Options Description
 @subsection Report Options
+Options for Ledger report affect three separate scopes of operation:
+Global, Session, and Report.  In practice there is very little
+difference between these scopes.  Ledger 3.0 contains provisions for
+GUIs, which would make use of the different scopes by keeping an
+instance of Ledger running in the background and running multiple
+sessions with multiple reports per session.
+@option{--abbrev-len <INT>} Sets the minimum
+length an account can be abbreviated to if it doesn't fit inside the
+@code{account-width}.  If @code{abbrev-len} is zero, then the account
+name will be truncated on the right. If @code{abbrev-len} is greater
+than @code{account-width} then the account will be truncated on the
+left, with no shortening of the account names in order to fit into the
+desired width.
 
-@option{abbrev-len}
-FIX THIS ENTRY
+@option{--account <STR>} Prepend @code{<STR>} to all accounts
+reported. That is, the option @code{--account Personal} would tack
+@code{Personal:} to the beginning of every account reported in a balance
+report or register report.
 
-@option{account}
-FIX THIS ENTRY
+@option{--account-width <INT>}
+Set the width of the account column in the @code{register} report to @code{N} characters.
 
-@option{account-width}
-FIX THIS ENTRY
+@option{--actual-dates}
+Show actual dates of transactions (@pxref{Effective Dates}). Also @code{-L}.
 
-@option{actual-dates}
-FIX THIS ENTRY
+@option{--actual}
+Report only real transactions, with no automated or virtual transactions used.
 
-@option{actual}
-FIX THIS ENTRY
+@option{--add-budget}
+Show only unbudgeted postings.
 
-@option{add-budget}
-FIX THIS ENTRY
+@option{--amount-data} On a register report print only the dates and
+amount of postings.  Useful for graphing and spreadsheet applications.
 
-@option{amount-data}
-FIX THIS ENTRY
 
-@option{amount}
-FIX THIS ENTRY
+@option{--amount <EXPR>} Apply the given value expression to the posting
+amount (@pxref{Value Expressions}). Using @code{--amount} you can apply
+an arbitrary transformation to the postings.
 
-@option{amount-width}
-FIX THIS ENTRY
+@option{--amount-width <INT>}
+Set the width in characters of the amount column in the register report.
 
-@option{anon}
-FIX THIS ENTRY
+@option{--anon}
+anonymizes registry output, mostly for sending in bug reports.
 
-@option{average}
-FIX THIS ENTRY
+@option{--average}
+Print average values over the number of transactions instead of running totals.  
 
-@option{balance-format}
-FIX THIS ENTRY
+@option{--balance-format <STR>}
+specifies the format to use for the @code{balance} report (@pxref{Format Strings}).  The default is:
+@smallexample
+               "%(justify(scrub(display_total), 20, -1, true, color))"
+               "  %(!options.flat ? depth_spacer : \"\")"
+               "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+               "%$1\n%/"
+               "--------------------\n"
+
+@end smallexample
 
 @option{base}
 FIX THIS ENTRY
 
-@option{basis}
-FIX THIS ENTRY
+@option{--basis}
+Report the cost basis on all posting
 
-@option{begin}
-FIX THIS ENTRY
+@option{--begin <DATE>}
+Specify the start date of all calculations.  Transactions before that date will be ignored.
 
-@option{bold-if}
-FIX THIS ENTRY
+@option{--bold-if <EXPR>}
+print the entire line in bold if the given value expression is true (@pxref{Value Expressions}).
+@smallexample
+ledger reg Expenses --begin Dec --bold-if "amount > 100"
+@end smallexample
+@noindent list all transactions since the beginning of December and bold any posting greater than $100
 
-@option{budget-format}
-FIX THIS ENTRY
+@option{--budget-format FORMAT_STRING}
+specifies the format to use for the @code{budget} report (@pxref{Format Strings}).  The default is:
+@smallexample
+        "%(justify(scrub(display_total), 20, -1, true, color))"
+        "  %(!options.flat ? depth_spacer : \"\")"
+        "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+        "%$1\n%/"
+        "--------------------\n"
+@end smallexample
 
-@option{budget}
-FIX THIS ENTRY
+@option{--budget} only display budgeted items. In a register report this
+displays transaction in the budget, in a balance report this displays
+accounts in the budget (@pxref{Budgeting and Forecasting}).
 
-@option{by-payee}
-FIX THIS ENTRY
+@option{--by-payee <REGEXP>}
+group the register report by payee.
 
-@option{cleared-format}
-FIX THIS ENTRY
+@option{--cleared-format FORMAT_STRING}
+specifies the format to use for the @code{cleared} report (@pxref{Format Strings}).  The default is:
+@smallexample
+        "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
+        " true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
+        " 36 + prepend_width, true, color))"
+        "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+        "    %(!options.flat ? depth_spacer : \"\")"
+        "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+        "%$1  %$2    %$3\n%/"
+        "%(prepend_width ? \" \" * prepend_width : \"\")"
+        "----------------    ----------------    ---------\n"
+@end smallexample
 
-@option{cleared}
-FIX THIS ENTRY
+@option{--cleared}
+consider only transaction that have been cleared for display and calculation.
 
-@option{collapse-if-zero}
-FIX THIS ENTRY
 
-@option{collapse}
-FIX THIS ENTRY
 
-@option{color}
-FIX THIS ENTRY
+@option{--collapse}
+By default ledger prints all account in an account tree. With @code{--collapse} it print only the top level account specified.
+@option{--collapse-if-zero}
+Collapses the account display only if it has a zero balance.
+@option{--color}
+use color is the tty supports it.
 
-@option{columns}
-FIX THIS ENTRY
+@option{--columns <INT>}
+specify the width of the register report in characters.
 
-@option{count}
+@option{--count}
 Direct ledger to report the number of items when appended to the commodities, accounts or payees command.
 
-@option{csv-format}
-FIX THIS ENTRY
+@option{--csv-format}
+specifies the format to use for the @code{csv} report (@pxref{Format Strings}).  The default is:
+@smallexample
+         "%(quoted(date)),"
+         "%(quoted(code)),"
+         "%(quoted(payee)),"
+         "%(quoted(display_account)),"
+         "%(quoted(commodity)),"
+         "%(quoted(quantity(scrub(display_amount)))),"
+         "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+         "%(quoted(join(note | xact.note)))\n"
+@end smallexample
+@option{--current}
+Shorthand for @code{--limit "date <= today"}
 
-@option{current}
-FIX THIS ENTRY
+@option{--daily}
+Shorthand for @code{--period "daily"}
 
-@option{daily}
-FIX THIS ENTRY
+@option{--date-format DATE-FORMAT}
+specifies format ledger should use to print dates (@pxref{Date and Time Format Codes}).
 
-@option{date-format}
-FIX THIS ENTRY
-
-@option{date}
-FIX THIS ENTRY
+@option{--date <EXPR>}
+transforms teh date of the transaction using @code{EXPR}
 
 @option{date-width}
 FIX THIS ENTRY
@@ -5585,6 +5665,7 @@ Useful specifying a date in plain terms.  For example, you could say
 * Format Expressions::          
 * --balance-format::            
 * New formatting codes::        
+* Date and Time Format Codes::  
 @end menu
 
 @node Basics, Format Expressions, Format Strings, Format Strings
@@ -5752,7 +5833,7 @@ As an example of how flexible the --format strings can be, the default balance f
          "--------------------\n"
 @end smallexample
 
-@node New formatting codes,  , --balance-format, Format Strings
+@node New formatting codes, Date and Time Format Codes, --balance-format, Format Strings
 @section New Formatting Codes
 
 @menu
@@ -5915,6 +5996,87 @@ prices.  @code{strip} removes these annotations.
 @item @code{unrounded } @tab @code{} @tab 
 @item @code{value_date } @tab @code{} @tab 
 @end multitable
+
+@node Date and Time Format Codes,  , New formatting codes, Format Strings
+@section Date and Time Format Codes
+Date and time format are specified as strings of single letter codes
+preceded by percent signs.  Any separator, or no separator can be
+specified.
+@subsection Dates
+Dates are formed from a combination of day, month and year codes, in
+whatever order you prefer:
+
+@option{%Y} is keyword for four digit year
+
+@option{%y} is keyword for two digit year
+
+@option{%m} is keyword for two digit month
+
+@option{%d} is keyword for two digit date
+
+@noindent So @code{"%Y%m%d"}  yields @code{20111214} which provides a date that is simple to sort.
+
+@subsection Weekdays
+
+You can have additional weekday information in your date with @code{%A}
+as
+
+@option{%m-%d-%Y %A}   yields  @code{02-10-2010 Wednesday}
+
+@option{%A %m-%d-%Y}    yields  @code{Wednesday 02-10-2010}
+
+@noindent These are options you can select for weekday
+
+@option{%a} weekday, abbreviated Wed
+
+@option{%A} weekday, full Wednesday
+
+@option{%d} day of the month (dd), zero padded 10
+
+@option{%e} day of the month (dd) 10
+
+@option{%j} day of year, zero padded 000-366
+
+@option{%u} day of week starting with Monday (1), i.e. @code{mtwtfss} 3
+
+@option{%w} day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
+
+@subsection Month
+
+You can have additional month information in your date with @code{%B} as
+
+
+@option{%m-%d-%Y %B}   yields  @code{ 02-10-2010 Februrary}
+
+@option{%B %m-%d-%Y}   yields  @code{February 02-10-2010}
+
+@noindent These are options you can select for month
+
+@option{%m} @code{mm} month as two digits
+
+@option{%b} @code{Mon}, locale’s abbreviated Feb
+
+@option{%B} locale’s full month, variable length February
+
+
+@subsection Miscellaneous Date Codes
+Additional date format parameters which can be used :
+
+@option{%U} week number Sunday as first day of week 01–53
+
+@option{%W} week number Monday as first day of week 01–53
+
+@option{%V} week of the year 01–53
+
+@option{%C} @code{cc} century 00–99
+
+@option{%D} yields  @code{mm/dd/yy 02/10/10}
+
+@option{%x} locale’s date representation @code{02/10/2010} for the U.S.
+
+@option{%F} yields  @code{%Y-%m-%d 2010-02-10}
+
+
 
 @node Journal File Format, Extending with Python, Format Strings, Top
 @chapter Journal File Format for Developers
@@ -6263,6 +6425,7 @@ commodities.
   Income:Sales
 
 @end smallexample
+
 
 @node Miscellaneous Notes, Concept Index, Example Data File, Top
 @appendix Miscellaneous Notes
