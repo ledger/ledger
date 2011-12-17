@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
-@subtitle Draft Manual Time-stamp: <2011-12-14 22:02 (cpearls)> 
+@subtitle Draft Manual Time-stamp: <2011-12-16 21:23 (cpearls)> 
 @author John Wiegley
 @end titlepage
 
@@ -2064,7 +2064,7 @@ link to a file (if you have it)
 
 In the real world transactions do not take place instantaneously.
 Purchases can take several days to post to a bank account. And you may
-pay ahead for something that you want to distribute cost for.  With
+pay ahead for something for which you want to distribute costs.  With
 Ledger you can control every aspect of the timing of a transaction.
 
 Say you're in business.  If you bill a customer, you can enter
@@ -3869,7 +3869,8 @@ backwards compatibility with Ledger 2.X.
 
 @node payees,  , entry and xact, Reports about your Journals
 @subsection payees
-The @command{payees} reports all of the unique payees in the journal. To filter the payees displayed you must use the @@ prefix:
+The @command{payees} reports all of the unique payees in the journal. To
+filter the payees displayed you must use the @@ prefix:
 @smallexample
 macbook-2:$ ledger payees '@@Tar.+t'
 El Dorade Restaraunt
@@ -4344,8 +4345,8 @@ specifies the format to use for the @code{balance} report (@pxref{Format Strings
 
 @end smallexample
 
-@option{base}
-FIX THIS ENTRY
+@option{--base}
+ASK JOHN
 
 @option{--basis}
 Report the cost basis on all posting
@@ -4360,7 +4361,7 @@ ledger reg Expenses --begin Dec --bold-if "amount > 100"
 @end smallexample
 @noindent list all transactions since the beginning of December and bold any posting greater than $100
 
-@option{--budget-format FORMAT_STRING}
+@option{--budget-format <FORMAT_STRING>}
 specifies the format to use for the @code{budget} report (@pxref{Format Strings}).  The default is:
 @smallexample
         "%(justify(scrub(display_total), 20, -1, true, color))"
@@ -4377,7 +4378,7 @@ accounts in the budget (@pxref{Budgeting and Forecasting}).
 @option{--by-payee <REGEXP>}
 group the register report by payee.
 
-@option{--cleared-format FORMAT_STRING}
+@option{--cleared-format <FORMAT_STRING>}
 specifies the format to use for the @code{cleared} report (@pxref{Format Strings}).  The default is:
 @smallexample
         "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
@@ -4427,62 +4428,72 @@ Shorthand for @code{--limit "date <= today"}
 @option{--daily}
 Shorthand for @code{--period "daily"}
 
-@option{--date-format DATE-FORMAT}
+@option{--date-format <DATE-FORMAT>}
 specifies format ledger should use to print dates (@pxref{Date and Time Format Codes}).
 
 @option{--date <EXPR>}
-transforms teh date of the transaction using @code{EXPR}
+transforms the date of the transaction using @code{EXPR}
 
-@option{date-width}
-FIX THIS ENTRY
+@option{--date-width <INT>}
+specifies the width, in characters, of the date column in the register report.
 
-@option{datetime-format}
-FIX THIS ENTRY
+@option{--datetime-format}
+ASK JOHN
 
-@option{depth}
-FIX THIS ENTRY
+@option{--depth <INT>} limit the depth of the account tree.  In a balance
+report, for example, a @code{--depth 2} statement will print balances
+only for account with two levels, i.e. @code{Expenses:Entertainment} but
+not @code{Expenses:entertainemnt:Dining}. This is a display predicate,
+which means it only affects display, not the total calculations.
 
-@option{deviation}
-FIX THIS ENTRY
+@option{--deviation}
+ reports each posting’s deviation from the average. It is only mean-
+ingful in the register and prices reports.
 
-@option{display-amount}
-FIX THIS ENTRY
+@option{--display-amount <EXPR>}
+apply a transform to the @strong{displayed} amount.  This occurs after calculations occur.
 
-@option{display}
-FIX THIS ENTRY
+@option{--display <BOOLEAN_EXPR>}
+display lines that satisfy the expression given.
 
-@option{display-total}
-FIX THIS ENTRY
+@option{--display-total <EXPR>}
+apply a transform to the @strong{displayed} total.  This occurs after calculations occur.
 
-@option{dow}
-FIX THIS ENTRY
+@option{--dow}
+group transactions by the day of the week.
+@smallexample
+ledger reg Expenses --dow --collapse
+@end smallexample
+@noindent will print all Expenses totalled for each day of the week. 
 
-@option{effective}
-FIX THIS ENTRY
+@option{--effective}
+use effective dates for all calculations (@pxref{Effective Dates}).
 
-@option{empty}
-FIX THIS ENTRY
+@option{--empty}
+include empty accounts in the report.
 
-@option{end}
-FIX THIS ENTRY
+@option{--end <DATE>}
+specify the end date for transaction to be considered in the report.
 
-@option{equity}
-FIX THIS ENTRY
+@option{--equity} related to the @code{equity} command (@pxref{The
+equity Command}).  Gives current account balances in the form of a
+register report.
 
-@option{exact}
-FIX THIS ENTRY
+@option{--exact}
+ASK JOHN
 
-@option{exchange}
-FIX THIS ENTRY
+@option{--exchange <COMMODITY>}
+display values in terms of the given commodity.  The latest available price is used.
 
-@option{flat}
-FIX THIS ENTRY
+@option{--flat}
+force the full names of accounts to be used inthe balance report. The balance report will not use an indented tree.
 
-@option{force-color}
-FIX THIS ENTRY
+@option{--force-color} output tty color codes even if the tty doesn't
+support them.  Ueful for TTY that don't advertise their capabilities
+correctly.
 
-@option{force-pager}
-FIX THIS ENTRY
+@option{--force-pager}
+force Ledger to paginate its output.
 
 @option{forecast-while}
 FIX THIS ENTRY
@@ -4490,34 +4501,49 @@ FIX THIS ENTRY
 @option{forecast-years}
 FIX THIS ENTRY
 
-@option{format}
-FIX THIS ENTRY
+@option{--format <FORMAT STRING>}
+use the given format string to print output.  
 
-@option{gain}
-FIX THIS ENTRY
+@option{--gain}
+report on gains using the latest available prices .
 
 @option{generated}
-FIX THIS ENTRY
+ASK JOHN
 
-@option{group-by}
-FIX THIS ENTRY
+@option{--group-by <EXPR>} group transaction together in the register
+report.  EXPR can be anything, although most common would be
+@code{"payee"} or @code{"commodity"}.  The @code{tags()} function is
+also useful here.
 
-@option{group-title-format}
-FIX THIS ENTRY
+@option{--group-title-format}
+sets the format for the headers that separate reports section of a grouped report.  Only has effect with a @code{--group-by} register report.
+@smallexample
+ledger reg Expenses --group-by "payee" --group-title-format "------------------------ %-20(value) ---------------------\n"
+------------------------ 7-Eleven             ---------------------
+2011/08/13 7-Eleven              Expenses:Auto:Misc          $ 5.80       $ 5.80
 
-@option{head}
-FIX THIS ENTRY
+------------------------ AAA Dues             ---------------------
+2011/06/02 AAA Dues              Expenses:Auto:Misc        $ 215.00     $ 215.00
 
-@option{inject}
-FIX THIS ENTRY
+------------------------ ABC Towing and Wrecking ---------------------
+2011/03/17 ABC Towing and Wrec.. Expenses:Auto:Hobbies      $ 48.20      $ 48.20
+...
+@end smallexample
 
-@option{invert}
-FIX THIS ENTRY
 
-@option{limit}
-FIX THIS ENTRY
+@option{--head <INT>}
+Print the first INT entries. Opposite of @code{--tail}.
 
-@option{lot-dates}
+@option{--inject}
+See email from John W.
+
+@option{--invert}
+Change the sign of all reported values.
+
+@option{--limit <EXPR>}
+Only transactions that satisfy the expression will be considered in the calculation.
+
+@option{--lot-dates}
 FIX THIS ENTRY
 
 @option{lot-prices}
@@ -4649,13 +4675,13 @@ FIX THIS ENTRY
 @option{sort-xacts}
 FIX THIS ENTRY
 
-@option{start-of-week}
+@option{--start-of-week <INT>}
 Tell ledger to use a particular day of the week to start its ``weekly'' summary. @code{--start-of-week=1}  specifies Monday as the start of the week.
 
 @option{subtotal}
 FIX THIS ENTRY
 
-@option{tail}
+@option{--tail <INT>}
 FIX THIS ENTRY
 
 @option{total-data}
@@ -4688,14 +4714,14 @@ FIX THIS ENTRY
 @option{unround}
 FIX THIS ENTRY
 
-@option{weekly}
-FIX THIS ENTRY
+@option{--weekly}
+synonymn for @code{--period "weekly"}
 
-@option{wide}
-FIX THIS ENTRY
+@option{--wide}
+lets the register report use 132 columns.  Identical to @code{--columns "132"}
 
 @option{yearly}
-
+synonymn for @code{--period "yearly"}
 
 
 
