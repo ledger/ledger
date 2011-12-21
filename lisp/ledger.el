@@ -1316,6 +1316,24 @@ end of a ledger file which is included in some other file."
       (expand-file-name ledger-master-file)
     (buffer-file-name)))
 
+(easy-menu-define ledger-menu ledger-mode-map 
+  "Ledger menu"
+  '("Ledger"
+    ["New entry" ledger-add-entry t]
+    ["Toggle cleared status of current entry" ledger-toggle-current-entry t]
+    ["Set default year for entry" ledger-set-year t]
+    ["Set default month for entry" ledger-set-month t]
+    "--"
+    ["Reconcile uncleared entries for account" ledger-reconcile t]
+    "--"
+    "Reports"
+    ["Run a report" ledger-report t]
+    ["Go to report buffer" ledger-report-goto t]
+    ["Edit defined reports" ledger-report-edit t]
+    ["Save report definition" ledger-report-save t]
+    ["Re-run ledger report" ledger-report-redo t]
+    ["Kill report buffer" ledger-report-kill t]))
+
 (provide 'ledger)
 
 ;;; ledger.el ends here
