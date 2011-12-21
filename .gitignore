@@ -1,6 +1,7 @@
 *.[oa]
 *.backup
 *.elc
+*.gcov
 *.l[oa]
 *.pyc
 *~
