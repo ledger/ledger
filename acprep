@@ -925,8 +925,12 @@ class PrepareBuild(CommandLineApp):
                             'lcov',
                             'sloccount'
                         ] + self.boost_info.dependencies('ubuntu-oeneric')
-                    self.log.info('Executing: ' + string.join(packages, ' '))
-                    self.execute(*packages)
+                    else:
+                        self.log.info('I do not recognize your version of Ubuntu!')
+                        packages = None
+                    if packages:
+                        self.log.info('Executing: ' + string.join(packages, ' '))
+                        self.execute(*packages)
 
             if exists('/etc/redhat-release'):
                 release = open('/etc/redhat-release')
