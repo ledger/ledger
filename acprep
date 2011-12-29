@@ -901,8 +901,8 @@ class PrepareBuild(CommandLineApp):
                             'lcov',
                             'sloccount'
                         ] + self.boost_info.dependencies('ubuntu-hardy')
-                    elif re.search('oeneric', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Oeneric')
+                    elif re.search('oneiric', info):
+                        self.log.info('Looks like you are using APT on Ubuntu Oneiric')
                         packages = [
                             'sudo', 'apt-get', 'install',
                             'build-essential',
@@ -924,7 +924,7 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ] + self.boost_info.dependencies('ubuntu-oeneric')
+                        ] + self.boost_info.dependencies('ubuntu-oneiric')
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
