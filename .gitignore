@@ -5,6 +5,9 @@
 *.l[oa]
 *.pyc
 *~
+.project
+.cproject
+.DS_Store
 .timestamp
 /*.tar.bz2
 /*.tar.gz
@@ -36,7 +39,10 @@
 /depcomp
 /doc/*.aux
 /doc/*.cp
+/doc/*.cps
 /doc/*.fn
+/doc/*.fns
+/doc/*.info
 /doc/*.ky
 /doc/*.log
 /doc/*.pdf

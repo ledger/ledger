@@ -446,8 +446,8 @@ public:
          "           12 + 1 + 12 + 1 + 12, true, color))"
          " %(ansify_if("
          "   justify((get_at(total_expr, 1) ? "
-         "            (100% * scrub(get_at(total_expr, 0))) / "
-         "             -scrub(get_at(total_expr, 1)) : 0), "
+         "            (100% * quantity(scrub(get_at(total_expr, 0)))) / "
+         "             -quantity(scrub(get_at(total_expr, 1))) : 0), "
          "           5, -1, true, false),"
          "   magenta if (color and get_at(total_expr, 1) and "
          "               (abs(quantity(scrub(get_at(total_expr, 0))) / "
@@ -475,7 +475,7 @@ public:
          "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
          "%$1  %$2    %$3\n%/"
          "%(prepend_width ? \" \" * prepend_width : \"\")"
-         "----------------  ----------------    ---------\n");
+         "----------------    ----------------    ---------\n");
     });
 
   OPTION(report_t, color);

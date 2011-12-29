@@ -132,8 +132,7 @@ text that should replace the format specifier."
     ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 bold)
     ;;("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([*].+?\\)\\(\\(       ;\\|  ;\\|$\\)\\)"
     ;; 2 font-lock-type-face)
-    ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?[^*:
-        ]+?:[^]);
+    ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?\\([^*;]\\)+?\\(:\\|\\s-\\)[^]);
         ]+?\\([])]\\)?\\)\\(    \\|  \\|$\\)"
      2 font-lock-keyword-face)
     ("^\\([~=].+\\)" 1 font-lock-function-name-face)
@@ -582,7 +581,7 @@ dropped."
          (items
           (with-temp-buffer
             (let ((exit-code
-                   (ledger-run-ledger buf "--uncleared" "emacs" account)))
+                   (ledger-run-ledger buf "--uncleared --real" "emacs" account)))
               (when (= 0 exit-code)
                 (goto-char (point-min))
                 (unless (eobp)

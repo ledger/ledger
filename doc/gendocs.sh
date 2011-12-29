@@ -1,5 +1,5 @@
 #!/bin/bash
-echo ++++++++++++++++++++++++++
+echo "===================================== Making Info..."
 makeinfo ledger3.texi
-echo ==========================
+echo "===================================== Making PDF..."
 texi2pdf ledger3.texi

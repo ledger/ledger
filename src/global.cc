@@ -75,7 +75,7 @@ global_scope_t::global_scope_t(char ** envp)
   //
   //  1. environment variables (LEDGER_<option>)
   //  2. initialization file (~/.ledgerrc)
-  //  3. command-line (--option or -o)
+  //  3. command-line (--option or -o) (called from main.cc)
   //
   // Before processing command-line options, we must notify the session object
   // that such options are beginning, since options like -f cause a complete
@@ -189,13 +189,14 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
     is_precommand = true;
 
   // If it is not a pre-command, then parse the user's ledger data at this
-  // time if not done alreday (i.e., if not at a REPL).  Then patch up the
-  // report options based on the command verb.
+  // time if not done already (i.e., if not at a REPL).  Then patch up the
+  // session and report options based on the command verb.
 
   if (! is_precommand) {
     if (! at_repl)
       session().read_journal_files();
 
+    session().normalize_options(verb);
     report().normalize_options(verb);
 
     if (! bool(command = look_for_command(bound_scope, verb)))
@@ -287,18 +288,18 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   case 'd':
     OPT(debug_);
     break;
-  case 'f':
-    OPT(full_help);
-    break;
   case 'h':
     OPT_(help);
     else OPT(help_calc);
-    else OPT(help_comm);
+    else OPT(help_comm_);
     else OPT(help_disp);
+    else OPT(help_info);
     break;
   case 'i':
     OPT(init_file_);
     break;
+  case 'l':
+    OPT(license);
   case 'o':
     OPT(options);
     break;
@@ -418,6 +419,56 @@ expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
     return def->as_function();
   else
     return expr_t::func_t();
+}
+
+
+void global_scope_t::visit_info(const string& info_file,
+				const string& node,
+				bool use_index) const
+{
+#ifndef WIN32
+  int pid = fork();
+  if (pid < 0) {
+    throw std::logic_error(_("Failed to fork child process"));
+  }
+  else if (pid == 0) {
+    char * arg2 = const_cast <char *> ( "--index-search" );
+    char * arg3 = const_cast <char *> ( node.c_str() );
+
+    char * args[5];
+    args[0] = const_cast <char *> ( "info" );
+    args[1] = const_cast <char *> ( info_file.c_str() );
+
+    if ( use_index ) {
+      args[2] = const_cast <char *> ( "--index-search" );
+      args[3] = const_cast <char *> ( node.c_str() );
+      args[4] = NULL;
+    } else {
+      if( node.length()<1 ){// 0 length node name means go to the top
+			    // node.  Info doesn't respct "Top", even
+			    // thought that is the default first node.
+			    // If you leave an empty string in the
+			    // argument it isn't clear where it goes.
+			    // So, if there is no specific chapter
+			    // requested (use_index=false and no node)
+			    // just pass the info file name and bedone
+			    // with it.
+	args[2]=NULL;
+      } else {
+	args[2] = const_cast <char *> ( node.c_str() );
+	args[3] = NULL;
+      }
+    }
+    execvp("info", args);
+    // We should never, ever reach here
+    perror("execlp: info");
+    exit(1);
+  }
+
+  int status = -1;
+  wait(&status);
+#endif
+  exit(0);                      // parent
 }
 
 void global_scope_t::visit_man_page() const

@@ -160,6 +160,7 @@ namespace {
     void comment_directive(char * line);
     void expr_directive(char * line);
     bool general_directive(char * line);
+    bool recheck_line(char * line);
 
     post_t * parse_post(char *          line,
                         std::streamsize len,
@@ -324,16 +325,17 @@ void instance_t::read_next_directive()
   case '\0':
     assert(false);              // shouldn't ever reach here
     break;
-
   case ' ':
   case '\t': {
-    break;
+    if(recheck_line(line)){
+      break;
+    }
   }
-
   case ';':                     // comments
   case '#':
   case '*':
   case '|':
+  case '%':
     break;
 
   case '-':                     // option setting
@@ -359,9 +361,10 @@ void instance_t::read_next_directive()
     period_xact_directive(line);
     break;
 
-  case '@':
+  case '@':                     // command directive
   case '!':
-    line++;
+    line++;                     // this actually increments the char*,
+				// not the line
     // fall through...
   default:                      // some other directive
     if (! general_directive(line)) {
@@ -404,12 +407,27 @@ void instance_t::read_next_directive()
       case 'Y':                 // set the current year
         year_directive(line);
         break;
+      default:
+        throw parse_error(_("Problem line detected.") );
       }
     }
     break;
   }
 }
 
+/*
+ * \brief Throw an error if the line has content but starts with
+ * whitespace outside of a xact
+ */
+bool instance_t::recheck_line(char * line)
+{
+  char * n=trim_ws(line);
+  if (strlen(n)>0){
+    throw parse_error(_("Line begins with whitespace"));
+  }
+  return true;
+}
+  
 #if defined(TIMELOG_SUPPORT)
 
 void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
@@ -576,7 +594,7 @@ void instance_t::automated_xact_directive(char * line)
           item = ae.get();
 
         // This is a trailing note, and possibly a metadata info tag
-        item->append_note(p + 1, context.scope, true);
+        item->append_note(trim_ws(p + 1), context.scope, true);
         item->pos->end_pos = curr_pos;
         item->pos->end_line++;
 
@@ -845,7 +863,6 @@ void instance_t::payee_mapping_directive(char * line)
 {
   char * payee = skip_ws(line);
   char * regex = next_element(payee, true);
-
   if (regex)
     context.journal.payee_mappings.push_back
       (payee_mapping_t(mask_t(regex), payee));
@@ -949,7 +966,8 @@ bool instance_t::general_directive(char * line)
   std::strcpy(buf, line);
 
   char * p   = buf;
-  char * arg = next_element(buf);
+  char * arg = next_element(buf); // this also puts a null at the end
+				  // of the current element
 
   if (*p == '@' || *p == '!')
     p++;
@@ -1369,7 +1387,7 @@ post_t * instance_t::parse_post(char *          line,
   // Parse the optional note
 
   if (next && *next == ';') {
-    post->append_note(++next, context.scope, true);
+    post->append_note(trim_ws(++next), context.scope, true);
     next = line + len;
     DEBUG("textual.parse", "line " << linenum << ": "
           << "Parsed a posting note");
@@ -1483,8 +1501,15 @@ xact_t * instance_t::parse_xact(char *          line,
   // Parse the description text
 
   if (next && *next) {
+    // next already contains the payee.  next_element should mark the
+    // end /0 and move the pointer to the next non-whitespace
+    // character.
     char * p = next_element(next, true);
+
+    // iterate through all of the payees.  If this payees matches
+    // assign it to the xact
     foreach (payee_mapping_t& value, context.journal.payee_mappings) {
+      // match must be paying attention to trailing spaces.
       if (value.first.match(next)) {
         xact->payee = value.second;
         break;
@@ -1500,7 +1525,7 @@ xact_t * instance_t::parse_xact(char *          line,
   // Parse the xact note
 
   if (next && *next == ';')
-    xact->append_note(++next, context.scope, false);
+    xact->append_note(trim_ws(++next), context.scope, false);
 
   TRACE_STOP(xact_text, 1);
 
@@ -1527,7 +1552,7 @@ xact_t * instance_t::parse_xact(char *          line,
 
     if (*p == ';') {
       // This is a trailing note, and possibly a metadata info tag
-      item->append_note(p + 1, context.scope, true);
+      item->append_note(trim_ws(p + 1), context.scope, true);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
     }

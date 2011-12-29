@@ -41,8 +41,15 @@ namespace ledger {
 void format_emacs_posts::write_xact(xact_t& xact)
 {
   if (xact.pos)
-    out << "\"" << xact.pos->pathname << "\" "
-        << xact.pos->beg_line << " ";
+    //  This was
+
+    //  out << "\"" << xact.pos->pathname << "\" "
+
+    // xact.pos->pathname is from the position_t base class and is
+    // from the Boost libraries.  The Boost path class appears to
+    // quote the string when it is turned into a string literal. This
+    // is not documented. Bug in Boost?
+    out  << xact.pos->pathname << " " << xact.pos->beg_line << " ";
   else
     out << "\"\" " << -1 << " ";
 

@@ -815,6 +815,10 @@ path resolve_path(const path& pathname)
   if (temp.string()[0] == '~')
     temp = expand_path(temp);
   temp.normalize();
+
+  if (! exists(temp))
+    throw_(std::runtime_error,
+           _("Cannot read '%1'") << pathname);
   return temp;
 }
 

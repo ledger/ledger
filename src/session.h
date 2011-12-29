@@ -68,6 +68,8 @@ public:
     return _("current session");
   }
 
+  void normalize_options(const string& verb);
+
   void set_flush_on_next_data_file(const bool truth) {
     flush_on_next_data_file = truth;
   }
@@ -86,7 +88,7 @@ public:
 
   void report_options(std::ostream& out)
   {
-    HANDLER(cache_).report(out);
+    //HANDLER(cache_).report(out);
     HANDLER(download).report(out);
     HANDLER(decimal_comma).report(out);
     HANDLER(file_).report(out);
@@ -95,6 +97,7 @@ public:
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
+    HANDLER(getquote_).report(out);
   }
 
   option_t<session_t> * lookup_option(const char * p);
@@ -106,7 +109,7 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, cache_);
+  //OPTION(session_t, cache_);
   OPTION(session_t, download); // -Q
 
   OPTION_(session_t, decimal_comma, DO() {
@@ -142,6 +145,7 @@ public:
   OPTION(session_t, master_account_);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
+  OPTION(session_t, getquote_);
 };
 
 /**
