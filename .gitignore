@@ -83,3 +83,6 @@
 /dist/win/vc9/ledger.suo
 /dist/win/vc9/lib/Win32/Debug/
 /dist/win/vc9/system.hh
+/doc/ledger.1.html
+/doc/ledger.html
+/doc/ledger3.html
