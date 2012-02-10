@@ -484,9 +484,6 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--clang', action='store_true',
                       dest='use_clang', default=False,
                       help='Use the Clang C++ compiler')
-        #op.add_option('', '--glibcxx-debug', action='store_true',
-        #              dest='use_glibcxx_debug', default=False,
-        #              help='Define _GLIBCXX_DEBUG=1 during compilation')
         op.add_option('', '--help', action="callback",
                       callback=self.option_help,
                       help='Show this help text')
@@ -712,9 +709,6 @@ class PrepareBuild(CommandLineApp):
         self.log.info("Build directory          => " + self.build_directory())
         self.log.info("Need to run configure    => " +
                       str(self.need_to_run_configure()))
-        #self.log.info("Use _GLIBCXX_DEBUG       => " +
-        #              str(self.options.use_glibcxx_debug
-        #                  and not self.options.use_clang))
         self.log.info("Use pre-compiled headers => " +
                       str('--enable-pch' in conf_args))
 
@@ -1032,9 +1026,6 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Using Boost ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
 
-        #if self.boost_lib_ident != "xgcc42":
-        #    self.CPPFLAGS.append('-D_GLIBCXX_FULLY_DYNAMIC_STRING=1')
-
         if self.current_flavor == 'debug':
             if exists('/usr/local/stow/icu-%s/include' % self.boost_inc_ident):
                 self.sys_include_dirs.insert(
@@ -1044,8 +1035,6 @@ class PrepareBuild(CommandLineApp):
 
             self.configure_args.append('--disable-shared')
 
-            if not self.options.use_clang:
-                self.options.use_glibcxx_debug = True
         elif self.current_flavor == 'gcov':
             self.configure_args.append('--disable-shared')
         else:
@@ -1292,11 +1281,6 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
-            #if self.options.use_glibcxx_debug and not self.options.use_clang:
-            #    self.log.debug('We are using GLIBCXX_DEBUG, so setting up flags')
-            #    self.CPPFLAGS.append('-D_GLIBCXX_DEBUG=1')
-            #    pass
-
             if self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
