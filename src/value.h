@@ -112,7 +112,6 @@ public:
     ANY                         // a pointer to an arbitrary object
   };
 
-private:
   class storage_t
   {
     friend class value_t;
@@ -244,6 +243,7 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
   };
 
+private:
   /**
    * The actual data for each value_t is kept in reference counted storage.
    * Data is modified using a copy-on-write policy.
