@@ -568,7 +568,8 @@ dropped."
       (let ((where (get-text-property (point) 'where))
             (face  (get-text-property (point) 'face)))
         (if (and (eq face 'bold)
-                 (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin")))
+                 (or (equal (car where) "<stdin>")
+                     (equal (car where) "/dev/stdin")))
             (with-current-buffer ledger-buf
               (goto-char (cdr where))
               (ledger-toggle-current 'cleared))))
@@ -581,7 +582,8 @@ dropped."
          (items
           (with-temp-buffer
             (let ((exit-code
-                   (ledger-run-ledger buf "--uncleared --real" "emacs" account)))
+                   (ledger-run-ledger buf "--uncleared" "--real"
+                                      "emacs" account)))
               (when (= 0 exit-code)
                 (goto-char (point-min))
                 (unless (eobp)
