@@ -77,6 +77,7 @@ namespace {
     amount.parse(str, flags);
   }
 
+#if 0
   void py_print(amount_t& amount, object out) {
     if (PyFile_Check(out.ptr())) {
       pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
@@ -86,6 +87,7 @@ namespace {
                       _("Argument to amount.print_(file) is not a file object"));
     }
   }
+#endif
 
   annotation_t& py_amount_annotation(amount_t& amount) {
     return amount.annotation();

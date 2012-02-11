@@ -68,6 +68,7 @@ namespace {
     return balance.commodity_amount(commodity);
   }
 
+#if 0
   void py_print(balance_t& balance, object out) {
     if (PyFile_Check(out.ptr())) {
       pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
@@ -77,6 +78,7 @@ namespace {
                       _("Argument to balance.print_(file) is not a file object"));
     }
   }
+#endif
 
   long balance_len(balance_t& bal) {
     return bal.amounts.size();

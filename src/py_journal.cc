@@ -48,15 +48,18 @@ using namespace boost::python;
 
 namespace {
 
+#if 0
   account_t& py_account_master(journal_t& journal) {
     return *journal.master;
   }
+#endif
 
   long xacts_len(journal_t& journal)
   {
     return journal.xacts.size();
   }
 
+#if 0
   xact_t& xacts_getitem(journal_t& journal, long i)
   {
     static long last_index = 0;
@@ -119,6 +122,7 @@ namespace {
 
     return *(*elem).second;
   }
+#endif
 
   account_t * py_find_account_1(journal_t& journal, const string& name)
   {

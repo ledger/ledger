@@ -66,12 +66,14 @@ namespace {
 
 } // unnamed namespace
 
+#if 0
 #define EXC_TRANSLATOR(type)                            \
   void exc_translate_ ## type(const type& err) {        \
     PyErr_SetString(PyExc_ArithmeticError, err.what()); \
   }
 
 //EXC_TRANSLATOR(item_error)
+#endif
 
 void export_item()
 {
