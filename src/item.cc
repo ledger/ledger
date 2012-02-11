@@ -193,7 +193,7 @@ void item_t::parse_tags(const char * p,
       }
     }
     else if (first && q[len - 1] == ':') { // a metadata setting
-      int index = 1;
+      std::size_t index = 1;
       if (q[len - 2] == ':') {
         by_value = true;
         index    = 2;
