@@ -96,10 +96,8 @@ namespace {
 value_t parse_command(call_scope_t& args)
 {
   string arg = join_args(args);
-  if (arg.empty()) {
+  if (arg.empty())
     throw std::logic_error(_("Usage: parse TEXT"));
-    return 1L;
-  }
 
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
@@ -145,10 +143,8 @@ value_t eval_command(call_scope_t& args)
 value_t format_command(call_scope_t& args)
 {
   string arg = join_args(args);
-  if (arg.empty()) {
+  if (arg.empty())
     throw std::logic_error(_("Usage: format TEXT"));
-    return 1L;
-  }
 
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
@@ -174,10 +170,8 @@ value_t format_command(call_scope_t& args)
 value_t period_command(call_scope_t& args)
 {
   string arg = join_args(args);
-  if (arg.empty()) {
+  if (arg.empty())
     throw std::logic_error(_("Usage: period TEXT"));
-    return 1L;
-  }
 
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
