@@ -598,7 +598,6 @@ namespace {
     switch (op->kind) {
     case expr_t::op_t::VALUE:
       return op->as_value().to_boolean();
-      break;
 
     case expr_t::op_t::O_MATCH:
       if (op->left()->kind == expr_t::op_t::IDENT &&

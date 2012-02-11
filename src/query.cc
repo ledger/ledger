@@ -213,7 +213,6 @@ test_ident:
     }
     else
       return token_t(token_t::TERM, ident);
-    break;
   }
   }
 

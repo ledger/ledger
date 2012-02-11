@@ -404,7 +404,6 @@ value_t& value_t::operator+=(const value_t& val)
         as_amount_lval() += val.as_long();
         return *this;
       }
-      break;
 
     case AMOUNT:
       if (as_amount().commodity() != val.as_amount().commodity()) {
@@ -414,7 +413,6 @@ value_t& value_t::operator+=(const value_t& val)
         as_amount_lval() += val.as_amount();
         return *this;
       }
-      break;
 
     case BALANCE:
       in_place_cast(BALANCE);
@@ -539,7 +537,6 @@ value_t& value_t::operator-=(const value_t& val)
         in_place_simplify();
         return *this;
       }
-      break;
 
     case AMOUNT:
       if (as_amount().commodity() != val.as_amount().commodity()) {
@@ -552,7 +549,6 @@ value_t& value_t::operator-=(const value_t& val)
         in_place_simplify();
         return *this;
       }
-      break;
 
     case BALANCE:
       in_place_cast(BALANCE);
@@ -944,7 +940,6 @@ bool value_t::is_less_than(const value_t& val) const
         return true;
       else
         return false;
-      break;
     }
     default:
       break;
@@ -1061,7 +1056,6 @@ bool value_t::is_greater_than(const value_t& val) const
         return false;
       else
         return true;
-      break;
     }
     default:
       break;
