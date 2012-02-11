@@ -163,7 +163,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
   post->set_state(item_t::CLEARED);
   post->account = NULL;
 
-  int      n = 0;
+  std::vector<int>::size_type n = 0;
   amount_t amt;
   string   total;
 
