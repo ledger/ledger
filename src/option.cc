@@ -219,7 +219,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
 
       std::list<op_bool_char_tuple> option_queue;
 
-      int x = 1;
+      std::string::size_type x = 1;
       for (char c = (*i)[x]; c != '\0'; x++, c = (*i)[x]) {
         op_bool_tuple opt(find_option(scope, c));
         if (! opt.first)
