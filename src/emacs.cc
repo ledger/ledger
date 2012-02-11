@@ -89,14 +89,14 @@ void format_emacs_posts::operator()(post_t& post)
         << post.amount << "\"";
 
     switch (post.state()) {
+    case item_t::UNCLEARED:
+      out << " nil";
+      break;
     case item_t::CLEARED:
       out << " t";
       break;
     case item_t::PENDING:
       out << " pending";
-      break;
-    default:
-      out << " nil";
       break;
     }
 
