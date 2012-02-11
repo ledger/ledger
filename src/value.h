@@ -775,16 +775,17 @@ public:
    * its underlying type, where possible.  If not possible, an
    * exception is thrown.
    */
-  bool       to_boolean() const;
-  int        to_int() const;
-  long       to_long() const;
-  datetime_t to_datetime() const;
-  date_t     to_date() const;
-  amount_t   to_amount() const;
-  balance_t  to_balance() const;
-  string     to_string() const;
-  mask_t     to_mask() const;
-  sequence_t to_sequence() const;
+  bool        to_boolean() const;
+  int         to_int() const;
+  long        to_long() const;
+  std::size_t to_size_t() const { return static_cast<std::size_t>(to_long()); }
+  datetime_t  to_datetime() const;
+  date_t      to_date() const;
+  amount_t    to_amount() const;
+  balance_t   to_balance() const;
+  string      to_string() const;
+  mask_t      to_mask() const;
+  sequence_t  to_sequence() const;
 
   /**
    * Dynamic typing conversion methods.
