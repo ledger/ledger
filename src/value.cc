@@ -965,6 +965,7 @@ bool value_t::is_less_than(const value_t& val) const
 bool value_t::is_greater_than(const value_t& val) const
 {
   switch (type()) {
+  case BOOLEAN:
     if (val.is_boolean()) {
       if (as_boolean()) {
         if (! val.as_boolean())
