@@ -100,7 +100,7 @@ string source_context(const path&            file,
   scoped_array<char> buf(new char[static_cast<std::size_t>(len) + 1]);
   in.read(buf.get(), static_cast<std::streamsize>(len));
   assert(in.gcount() == static_cast<std::streamsize>(len));
-  buf[static_cast<std::size_t>(len)] = '\0';
+  buf[static_cast<std::ptrdiff_t>(len)] = '\0';
 
   bool first = true;
   for (char * p = std::strtok(buf.get(), "\n");
