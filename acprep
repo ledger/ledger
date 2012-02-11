@@ -1066,9 +1066,18 @@ class PrepareBuild(CommandLineApp):
 
         elif system == 'Darwin':
             if self.options.use_clang:
-                self.envvars['CC']  = 'clang'
-                self.envvars['CXX'] = 'clang++'
-                self.envvars['LD']  = 'llvm-ld'
+                if exists('/opt/local/bin/clang++-mp-3.1'):
+                    self.envvars['CC']  = '/opt/local/bin/clang-mp-3.1'
+                    self.envvars['CXX'] = '/opt/local/bin/clang++-mp-3.1'
+                    self.envvars['LD']  = '/opt/local/bin/clang++-mp-3.1'
+                elif exists('/usr/local/bin/clang++'):
+                    self.envvars['CC']  = '/usr/local/bin/clang'
+                    self.envvars['CXX'] = '/usr/local/bin/clang++'
+                    self.envvars['LD']  = '/usr/local/bin/clang++'
+                else:
+                    self.envvars['CC']  = 'clang'
+                    self.envvars['CXX'] = 'clang++'
+                    self.envvars['LD']  = 'llvm-ld'
             elif (self.current_flavor == 'opt' or \
                   self.current_flavor == 'default') and \
                not self.options.gcc45 and \
@@ -1187,6 +1196,16 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-fpch-deps')
         if not self.options.use_clang:
             self.CXXFLAGS.append('-Wconversion')
+        else:
+            self.CXXFLAGS.append('-Weverything')
+            self.CXXFLAGS.append('-Wno-padded')
+            self.CXXFLAGS.append('-Wno-weak-vtables')
+            self.CXXFLAGS.append('-Wno-exit-time-destructors')
+            self.CXXFLAGS.append('-Wno-global-constructors')
+            self.CXXFLAGS.append('-Wno-switch-enum')
+            self.CXXFLAGS.append('-Wno-missing-prototypes')
+            self.CXXFLAGS.append('-Wno-missing-noreturn')
+            self.CXXFLAGS.append('-fno-limit-debug-info')
         #self.CXXFLAGS.append('-Wold-style-cast')
 
         system = self.get_stdout('uname', '-s')
