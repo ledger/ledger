@@ -552,14 +552,14 @@ void SHA1::PadMessage()
 	/*
 	 *	Store the message length as the last 8 octets
 	 */
-	Message_Block[56] = static_cast<char>((Length_High >> 24) & 0xFF);
-	Message_Block[57] = static_cast<char>((Length_High >> 16) & 0xFF);
-	Message_Block[58] = static_cast<char>((Length_High >> 8) & 0xFF);
-	Message_Block[59] = static_cast<char>((Length_High) & 0xFF);
-	Message_Block[60] = static_cast<char>((Length_Low >> 24) & 0xFF);
-	Message_Block[61] = static_cast<char>((Length_Low >> 16) & 0xFF);
-	Message_Block[62] = static_cast<char>((Length_Low >> 8) & 0xFF);
-	Message_Block[63] = static_cast<char>((Length_Low) & 0xFF);
+	Message_Block[56] = static_cast<unsigned char>((Length_High >> 24) & 0xFF);
+	Message_Block[57] = static_cast<unsigned char>((Length_High >> 16) & 0xFF);
+	Message_Block[58] = static_cast<unsigned char>((Length_High >> 8) & 0xFF);
+	Message_Block[59] = static_cast<unsigned char>((Length_High) & 0xFF);
+	Message_Block[60] = static_cast<unsigned char>((Length_Low >> 24) & 0xFF);
+	Message_Block[61] = static_cast<unsigned char>((Length_Low >> 16) & 0xFF);
+	Message_Block[62] = static_cast<unsigned char>((Length_Low >> 8) & 0xFF);
+	Message_Block[63] = static_cast<unsigned char>((Length_Low) & 0xFF);
 
 	ProcessMessageBlock();
 }
