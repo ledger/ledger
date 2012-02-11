@@ -170,7 +170,7 @@ protected:
     if (num == 0)
       return EOF;
 
-    memmove (buffer+pbSize, PyString_AsString(line), num);
+    memmove(buffer+pbSize, PyString_AsString(line), static_cast<size_t>(num));
 
     // reset buffer pointers
     setg (buffer+(pbSize-numPutback),   // beginning of putback area
