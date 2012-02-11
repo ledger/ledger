@@ -366,7 +366,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
 
   case O_COLON:
-    assert(! "We should never calculate an O_COLON operator");
+    assert("We should never calculate an O_COLON operator" == NULL);
     break;
 
   case O_CONS:

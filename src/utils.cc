@@ -189,7 +189,7 @@ static void trace_delete_func(void * ptr, const char * which)
   if (i == live_memory->end()) {
     i = freed_memory->find(ptr);
     if (i != freed_memory->end())
-      VERIFY(! "Freeing a block of memory twice");
+      VERIFY("Freeing a block of memory twice" == NULL);
 #if 0
     // There can be memory allocated by Boost or the standard library, which
     // was allocated before memory tracing got turned on, that the system

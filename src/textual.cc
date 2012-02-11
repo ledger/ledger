@@ -783,7 +783,7 @@ void instance_t::master_account_directive(char * line)
     context.state_stack.push_front(acct);
 #if !defined(NO_ASSERTS)
   else
-    assert(! "Failed to create account");
+    assert("Failed to create account" == NULL);
 #endif
 }
 

@@ -558,7 +558,7 @@ std::size_t post_t::xact_id() const
       return id;
     id++;
   }
-  assert(! "Failed to find posting within its transaction");
+  assert("Failed to find posting within its transaction" == NULL);
   return 0;
 }
 
@@ -570,7 +570,7 @@ std::size_t post_t::account_id() const
       return id;
     id++;
   }
-  assert(! "Failed to find posting within its transaction");
+  assert("Failed to find posting within its transaction" == NULL);
   return 0;
 }
 
