@@ -41,9 +41,6 @@
  * None of these header files (with the exception of acconf.h, when
  * configure is re-run) are expected to change.
  */
-#ifndef _SYSTEM_HH
-#define _SYSTEM_HH
-
 #include "config.h"
 
 #if defined(__GNUG__) && __GNUG__ < 3
@@ -261,5 +258,3 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #endif // HAVE_BOOST_PYTHON
-
-#endif // _SYSTEM_HH
