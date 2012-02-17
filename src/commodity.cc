@@ -124,7 +124,7 @@ commodity_t::history_t::find_price(const optional<datetime_t>& moment,
 #define DEBUG_INDENT(cat, indent)               \
   do {                                          \
     if (SHOW_DEBUG(cat))                        \
-      for (int i = 0; i < indent; i++)          \
+      for (int _i = 0; _i < indent; _i++)       \
         ledger::_log_buffer << "  ";            \
   } while (false)
 #else
