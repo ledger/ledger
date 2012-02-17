@@ -209,8 +209,8 @@ void draft_t::parse_args(const value_t& args)
         tmpl->posts.back().account_mask && ! tmpl->posts.back().amount)
       tmpl->posts.back().from = true;
 
-    foreach (xact_template_t::post_template_t& post, tmpl->posts) {
-      if (post.from)
+    foreach (xact_template_t::post_template_t& post_tmpl, tmpl->posts) {
+      if (post_tmpl.from)
         has_only_to = false;
       else
         has_only_from = false;
