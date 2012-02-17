@@ -204,7 +204,7 @@ public:
     dump(out);
     return out.str();
   }
-  string preview_to_str(scope_t& scope) const {
+  string preview_to_str(scope_t&) const {
     std::ostringstream out;
     preview(out);
     return out.str();
