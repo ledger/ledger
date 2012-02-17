@@ -902,13 +902,13 @@ void subtotal_posts::operator()(post_t& post)
     post.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS);
 }
 
-void interval_posts::report_subtotal(const date_interval_t& interval)
+void interval_posts::report_subtotal(const date_interval_t& ival)
 {
-  if (last_post && interval) {
+  if (last_post && ival) {
     if (exact_periods)
       subtotal_posts::report_subtotal();
     else
-      subtotal_posts::report_subtotal(NULL, interval);
+      subtotal_posts::report_subtotal(NULL, ival);
   }
 
   last_post = NULL;
