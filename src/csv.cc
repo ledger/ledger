@@ -40,27 +40,27 @@
 
 namespace ledger {
 
-string csv_reader::read_field(std::istream& in)
+string csv_reader::read_field(std::istream& sin)
 {
   string field;
 
   char c;
-  if (in.peek() == '"' || in.peek() == '|') {
-    in.get(c);
+  if (sin.peek() == '"' || sin.peek() == '|') {
+    sin.get(c);
     char x;
-    while (in.good() && ! in.eof()) {
-      in.get(x);
+    while (sin.good() && ! sin.eof()) {
+      sin.get(x);
       if (x == '\\') {
-        in.get(x);
+        sin.get(x);
       }
-      else if (x == '"' && in.peek() == '"') {
-        in.get(x);
+      else if (x == '"' && sin.peek() == '"') {
+        sin.get(x);
       }
       else if (x == c) {
         if (x == '|')
-          in.unget();
-        else if (in.peek() == ',')
-          in.get(c);
+          sin.unget();
+        else if (sin.peek() == ',')
+          sin.get(c);
         break;
       }
       if (x != '\0')
@@ -68,8 +68,8 @@ string csv_reader::read_field(std::istream& in)
     }
   }
   else {
-    while (in.good() && ! in.eof()) {
-      in.get(c);
+    while (sin.good() && ! sin.eof()) {
+      sin.get(c);
       if (c == ',')
         break;
       if (c != '\0')
