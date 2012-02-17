@@ -338,13 +338,13 @@ void report_commodities::operator()(post_t& post)
   if (comm.has_annotation()) {
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
     if (ann_comm.details.price) {
-      std::map<commodity_t *, std::size_t>::iterator i =
+      std::map<commodity_t *, std::size_t>::iterator ii =
         commodities.find(&ann_comm.details.price->commodity());
-      if (i == commodities.end())
+      if (ii == commodities.end())
         commodities.insert
           (commodities_pair(&ann_comm.details.price->commodity(), 1));
       else
-        (*i).second++;
+        (*ii).second++;
     }
   }
 
