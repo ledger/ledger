@@ -148,9 +148,9 @@ void item_t::parse_tags(const char * p,
           std::strncpy(buf, b + 1, e - b - 1);
           buf[e - b - 1] = '\0';
 
-          if (char * p = std::strchr(buf, '=')) {
-            *p++ = '\0';
-            _date_eff = parse_date(p);
+          if (char * pp = std::strchr(buf, '=')) {
+            *pp++ = '\0';
+            _date_eff = parse_date(pp);
           }
           if (buf[0])
             _date = parse_date(buf);
