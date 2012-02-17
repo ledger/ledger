@@ -68,7 +68,7 @@ protected:
   // write multiple characters
   virtual std::streamsize xsputn (const char* s, std::streamsize num) {
     char * buf = new char[num + 1];
-    std::strncpy(buf, s, num);
+    std::strncpy(buf, s, static_cast<std::size_t>(num));
     buf[num] = '\0';
     if (PyFile_WriteString(buf, reinterpret_cast<PyObject *>(fo)) < 0)
       num = 0;
@@ -148,7 +148,7 @@ protected:
      * - but at most size of putback area
      */
     size_t numPutback;
-    numPutback = gptr() - eback();
+    numPutback = static_cast<size_t>(gptr() - eback());
     if (numPutback > pbSize) {
       numPutback = pbSize;
     }

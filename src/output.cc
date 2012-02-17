@@ -52,13 +52,14 @@ format_posts::format_posts(report_t&               _report,
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
-    first_line_format.parse_format(string(f, 0, p - f));
+    first_line_format.parse_format
+      (string(f, 0, static_cast<std::string::size_type>(p - f)));
     const char * n = p + 2;
-    if (const char * p = std::strstr(n, "%/")) {
-      next_lines_format.parse_format(string(n, 0, p - n),
-                                     first_line_format);
-      between_format.parse_format(string(p + 2),
-                                  first_line_format);
+    if (const char * pp = std::strstr(n, "%/")) {
+      next_lines_format.parse_format
+        (string(n, 0, static_cast<std::string::size_type>(pp - n)),
+         first_line_format);
+      between_format.parse_format(string(pp + 2), first_line_format);
     } else {
       next_lines_format.parse_format(string(n), first_line_format);
     }
@@ -99,7 +100,7 @@ void format_posts::operator()(post_t& post)
     }
 
     if (prepend_format) {
-      out.width(prepend_width);
+      out.width(static_cast<std::streamsize>(prepend_width));
       out << prepend_format(bound_scope);
     }
 
@@ -135,11 +136,14 @@ format_accounts::format_accounts(report_t&               _report,
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
-    account_line_format.parse_format(string(f, 0, p - f));
+    account_line_format.parse_format
+      (string(f, 0, static_cast<std::string::size_type>(p - f)));
     const char * n = p + 2;
-    if (const char * p = std::strstr(n, "%/")) {
-      total_line_format.parse_format(string(n, 0, p - n), account_line_format);
-      separator_format.parse_format(string(p + 2), account_line_format);
+    if (const char * pp = std::strstr(n, "%/")) {
+      total_line_format.parse_format
+        (string(n, 0, static_cast<std::string::size_type>(pp - n)),
+         account_line_format);
+      separator_format.parse_format(string(pp + 2), account_line_format);
     } else {
       total_line_format.parse_format(n, account_line_format);
     }
@@ -181,7 +185,7 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat)
     }
 
     if (prepend_format) {
-      out.width(prepend_width);
+      out.width(static_cast<std::streamsize>(prepend_width));
       out << prepend_format(bound_scope);
     }
 
@@ -256,7 +260,8 @@ void format_accounts::flush()
     out << separator_format(bound_scope);
 
     if (prepend_format) {
-      static_cast<std::ostream&>(report.output_stream).width(prepend_width);
+      static_cast<std::ostream&>(report.output_stream)
+        .width(static_cast<std::streamsize>(prepend_width));
       static_cast<std::ostream&>(report.output_stream)
         << prepend_format(bound_scope);
     }

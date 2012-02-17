@@ -156,7 +156,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
     std::size_t num = 0;
     while (*p && std::isdigit(*p)) {
       num *= 10;
-      num += *p++ - '0';
+      num += static_cast<std::size_t>(*p++ - '0');
     }
     current->min_width = num;
 
@@ -165,7 +165,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
       num = 0;
       while (*p && std::isdigit(*p)) {
         num *= 10;
-        num += *p++ - '0';
+        num += static_cast<std::size_t>(*p++ - '0');
       }
       current->max_width = num;
       if (current->min_width == 0)
@@ -188,10 +188,10 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
                         *p != 'D' && *p != 'E' && *p != 'F'))
         throw_(format_error, _("%$ field reference must be a digit from 1-9"));
 
-      unsigned int index     = std::isdigit(*p) ? *p - '0' : (*p - 'A' + 10);
-      element_t *  tmpl_elem = tmpl->elements.get();
+      int         index     = std::isdigit(*p) ? *p - '0' : (*p - 'A' + 10);
+      element_t * tmpl_elem = tmpl->elements.get();
 
-      for (unsigned int i = 1; i < index && tmpl_elem; i++) {
+      for (int i = 1; i < index && tmpl_elem; i++) {
         tmpl_elem = tmpl_elem->next.get();
         while (tmpl_elem && tmpl_elem->type != element_t::EXPR)
           tmpl_elem = tmpl_elem->next.get();
@@ -335,7 +335,7 @@ string format_t::real_calc(scope_t& scope)
     switch (elem->type) {
     case element_t::STRING:
       if (elem->min_width > 0)
-        out.width(elem->min_width);
+        out.width(static_cast<std::streamsize>(elem->min_width));
       out << boost::get<string>(elem->data);
       break;
 

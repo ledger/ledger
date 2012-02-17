@@ -129,7 +129,8 @@ namespace {
       // Convert the rational number to a floating-point, extending the
       // floating-point to a large enough size to get a precise answer.
 
-      mp_prec_t num_prec = mpz_sizeinbase(mpq_numref(quant), 2);
+      mp_prec_t num_prec =
+        static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_numref(quant), 2));
       num_prec += amount_t::extend_by_digits*64;
       if (num_prec < MPFR_PREC_MIN)
         num_prec = MPFR_PREC_MIN;
@@ -138,7 +139,8 @@ namespace {
       mpfr_set_prec(tempfnum, num_prec);
       mpfr_set_z(tempfnum, mpq_numref(quant), rnd);
 
-      mp_prec_t den_prec = mpz_sizeinbase(mpq_denref(quant), 2);
+      mp_prec_t den_prec =
+        static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_denref(quant), 2));
       den_prec += amount_t::extend_by_digits*64;
       if (den_prec < MPFR_PREC_MIN)
         den_prec = MPFR_PREC_MIN;
@@ -168,9 +170,11 @@ namespace {
           }
         }
         if (point > 0) {
-          while (--index >= (point + 1 + zeros_prec) && buf[index] == '0')
+          while (--index >= (point + 1 + static_cast<std::size_t>(zeros_prec)) &&
+                 buf[index] == '0')
             buf[index] = '\0';
-          if (index >= (point + zeros_prec) && buf[index] == '.')
+          if (index >= (point + static_cast<std::size_t>(zeros_prec)) &&
+              buf[index] == '.')
             buf[index] = '\0';
         }
       }

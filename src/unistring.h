@@ -92,8 +92,9 @@ public:
 
     if (this_len)
       utf8::unchecked::utf32to8
-        (utf32chars.begin() + begin,
-         utf32chars.begin() + begin +
+        (utf32chars.begin() + static_cast<std::string::difference_type>(begin),
+         utf32chars.begin() + static_cast<std::string::difference_type>(begin) +
+         static_cast<std::string::difference_type>
          (len ? (len > this_len ? this_len : len) : this_len),
          std::back_inserter(utf8result));
 

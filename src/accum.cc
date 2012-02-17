@@ -39,7 +39,7 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
 {
   if (index == 0) {
     // The first item received is the format string
-    str = std::string(s, num);
+    str = std::string(s, static_cast<std::string::size_type>(num));
   }
   else {
     std::ostringstream buf;
@@ -53,7 +53,7 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
         if (*q && *q != '%' && std::isdigit(*q) &&
             std::string::size_type(*q - '0') == index) {
           p++;
-          buf << std::string(s, num);
+          buf << std::string(s, static_cast<std::string::size_type>(num));
           matched = true;
         } else {
           buf << *p;
@@ -63,7 +63,7 @@ std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
       }
     }
     if (! matched)
-      buf << std::string(s, num);
+      buf << std::string(s, static_cast<std::string::size_type>(num));
 
     str = buf.str();
   }

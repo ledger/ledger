@@ -98,8 +98,9 @@ namespace {
     string leader = buf.str();
     out << leader;
 
-    std::size_t columns = (report.HANDLED(columns_) ?
-                           report.HANDLER(columns_).value.to_long() : 80);
+    std::size_t columns =
+      (report.HANDLED(columns_) ?
+       static_cast<std::size_t>(report.HANDLER(columns_).value.to_long()) : 80);
 
     if (xact.note)
       print_note(out, *xact.note, columns, unistring(leader).length());
@@ -152,17 +153,18 @@ namespace {
 
       std::size_t account_width =
         (report.HANDLER(account_width_).specified ?
-         report.HANDLER(account_width_).value.to_long() : 36);
+         static_cast<std::size_t>(report.HANDLER(account_width_).value.to_long()) : 36);
 
       if (account_width < name.length())
         account_width = name.length();
 
       if (! post->has_flags(POST_CALCULATED) || report.HANDLED(generated)) {
         out << name.extract();
-        int slip = (static_cast<int>(account_width) -
-                    static_cast<int>(name.length()));
+        std::string::size_type slip =
+          (static_cast<std::string::size_type>(account_width) -
+           static_cast<std::string::size_type>(name.length()));
         if (slip > 0) {
-          out.width(slip);
+          out.width(static_cast<std::streamsize>(slip));
           out << ' ';
         }
 
@@ -185,8 +187,10 @@ namespace {
 
         string trimmed_amt(amt);
         trim_left(trimmed_amt);
-        int amt_slip = (static_cast<int>(amt.length()) -
-                        static_cast<int>(trimmed_amt.length()));
+        std::string::size_type amt_slip =
+          (static_cast<std::string::size_type>(amt.length()) -
+           static_cast<std::string::size_type>(trimmed_amt.length()));
+
         if (slip + amt_slip < 2)
           amtbuf << string(2 - (slip + amt_slip), ' ');
         amtbuf << amt;

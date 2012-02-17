@@ -1079,7 +1079,7 @@ post_t * instance_t::parse_post(char *          line,
 
   char buf[MAX_LINE + 1];
   std::strcpy(buf, line);
-  std::size_t beg = 0;
+  std::streamsize beg = 0;
 
   try {
 
@@ -1135,7 +1135,7 @@ post_t * instance_t::parse_post(char *          line,
     p++; e--;
   }
 
-  string name(p, e - p);
+  string name(p, static_cast<std::string::size_type>(e - p));
   DEBUG("textual.parse", "line " << linenum << ": "
         << "Parsed account name " << name);
 
@@ -1166,8 +1166,8 @@ post_t * instance_t::parse_post(char *          line,
   // Parse the optional amount
 
   if (next && *next && (*next != ';' && *next != '=')) {
-    beg = next - line;
-    ptristream stream(next, len - beg);
+    beg = static_cast<std::streamsize>(next - line);
+    ptristream stream(next, static_cast<std::size_t>(len - beg));
 
     if (*next != '(')           // indicates a value expression
       post->amount.parse(stream, PARSE_NO_REDUCE);
@@ -1223,7 +1223,7 @@ post_t * instance_t::parse_post(char *          line,
                 << "And it's for a total price");
         }
 
-        beg = ++next - line;
+        beg = static_cast<std::streamsize>(++next - line);
 
         p = skip_ws(next);
         if (*p) {
@@ -1237,8 +1237,8 @@ post_t * instance_t::parse_post(char *          line,
               throw parse_error(_("Posting is missing a cost amount"));
           }
 
-          beg = p - line;
-          ptristream cstream(p, len - beg);
+          beg = static_cast<std::streamsize>(p - line);
+          ptristream cstream(p, static_cast<std::size_t>(len - beg));
 
           if (*p != '(')                // indicates a value expression
             post->cost->parse(cstream, PARSE_NO_MIGRATE);
@@ -1288,14 +1288,14 @@ post_t * instance_t::parse_post(char *          line,
     DEBUG("textual.parse", "line " << linenum << ": "
           << "Found a balance assignment indicator");
 
-    beg = ++next - line;
+    beg = static_cast<std::streamsize>(++next - line);
 
     p = skip_ws(next);
     if (*p) {
       post->assigned_amount = amount_t();
 
-      beg = p - line;
-      ptristream stream(p, len - beg);
+      beg = static_cast<std::streamsize>(p - line);
+      ptristream stream(p, static_cast<std::size_t>(len - beg));
 
       if (*p != '(')            // indicates a value expression
         post->assigned_amount->parse(stream, PARSE_NO_MIGRATE);
@@ -1398,7 +1398,8 @@ post_t * instance_t::parse_post(char *          line,
   }
   catch (const std::exception&) {
     add_error_context(_("While parsing posting:"));
-    add_error_context(line_context(buf, beg, len));
+    add_error_context(line_context(buf, static_cast<std::string::size_type>(beg),
+                                   static_cast<std::string::size_type>(len)));
     throw;
   }
 }

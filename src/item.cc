@@ -145,7 +145,7 @@ void item_t::parse_tags(const char * p,
           (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
         if (const char * e = std::strchr(p, ']')) {
           char buf[256];
-          std::strncpy(buf, b + 1, e - b - 1);
+          std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
           buf[e - b - 1] = '\0';
 
           if (char * pp = std::strchr(buf, '=')) {

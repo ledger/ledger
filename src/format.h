@@ -100,7 +100,7 @@ class format_t : public expr_base_t<string>
         out << std::right;
 
       if (elem->min_width > 0)
-        out.width(elem->min_width);
+        out.width(static_cast<std::streamsize>(elem->min_width));
     }
 
     void dump(std::ostream& out) const;

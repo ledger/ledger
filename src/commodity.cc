@@ -567,7 +567,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
       std::size_t    bytes = 0;
       std::ptrdiff_t size  = _p - buf;
-      unsigned char  d     = c;
+      unsigned char  d     = static_cast<unsigned char>(c);
 
       // Check for the start of a UTF-8 multi-byte encoded string
       if (d >= 192 && d <= 223 && size < 254)
@@ -627,7 +627,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
     char * q = std::strchr(p + 1, '"');
     if (! q)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
-    symbol = string(p + 1, 0, q - p - 1);
+    symbol = string(p + 1, 0, static_cast<std::string::size_type>(q - p - 1));
     p = q + 2;
   } else {
     char * q = next_element(p);

@@ -270,9 +270,9 @@ namespace {
     if (args.has(0)) {
       if (args[0].is_long()) {
         if (args.get<long>(0) > 2)
-          name = format_t::truncate(account.fullname(),
-                                    args.get<long>(0) - 2,
-                                    2 /* account_abbrev_length */);
+          name = format_t::truncate
+            (account.fullname(), static_cast<std::size_t>(args.get<long>(0) - 2),
+             /* account_abbrev_length= */ 2);
         else
           name = account.fullname();
       } else {

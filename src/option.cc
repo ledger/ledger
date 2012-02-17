@@ -133,7 +133,7 @@ void process_environment(const char ** envp, const string& tag,
 
       if (*q == '=') {
         try {
-          string value = string(*p, q - *p);
+          string value = string(*p, static_cast<std::string::size_type>(q - *p));
           if (! value.empty())
             process_option(string("$") + buf, string(buf), scope, q + 1, value);
         }
@@ -190,7 +190,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
       const char * value = NULL;
 
       if (const char * p = std::strchr(name, '=')) {
-        opt_name = string(name, p - name);
+        opt_name = string(name, static_cast<std::string::size_type>(p - name));
         value = ++p;
         DEBUG("option.args", "  read option value from option: " << value);
       } else {

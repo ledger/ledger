@@ -171,7 +171,7 @@ namespace {
     const char * b = str.c_str();
     for (const char * p = b; *p; p++) {
       if (*p == ch) {
-        strings.push_back(string(b, p - b));
+        strings.push_back(string(b, static_cast<std::string::size_type>(p - b)));
         b = p + 1;
       }
     }
