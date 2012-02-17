@@ -1210,6 +1210,7 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-Wno-switch-enum')
             self.CXXFLAGS.append('-Wno-missing-prototypes')
             self.CXXFLAGS.append('-Wno-missing-noreturn')
+            self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
             self.CXXFLAGS.append('-fno-limit-debug-info')
         #self.CXXFLAGS.append('-Wold-style-cast')
 
