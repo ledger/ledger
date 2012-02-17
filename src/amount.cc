@@ -705,21 +705,21 @@ void amount_t::in_place_unreduce()
   if (! quantity)
     throw_(amount_error, _("Cannot unreduce an uninitialized amount"));
 
-  amount_t      temp    = *this;
+  amount_t      tmp     = *this;
   commodity_t * comm    = commodity_;
   bool          shifted = false;
 
   while (comm && comm->larger()) {
-    amount_t next_temp = temp / comm->larger()->number();
+    amount_t next_temp = tmp / comm->larger()->number();
     if (next_temp.abs() < amount_t(1L))
       break;
-    temp = next_temp;
+    tmp  = next_temp;
     comm = comm->larger()->commodity_;
     shifted = true;
   }
 
   if (shifted) {
-    *this      = temp;
+    *this      = tmp;
     commodity_ = comm;
   }
 }
