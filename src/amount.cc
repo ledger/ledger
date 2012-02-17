@@ -1179,9 +1179,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     mpq_div(MP(new_quantity.get()), MP(new_quantity.get()), tempq);
 
     IF_DEBUG("amount.parse") {
-      char * buf = mpq_get_str(NULL, 10, MP(new_quantity.get()));
-      DEBUG("amount.parse", "Rational parsed = " << buf);
-      std::free(buf);
+      char * amt_buf = mpq_get_str(NULL, 10, MP(new_quantity.get()));
+      DEBUG("amount.parse", "Rational parsed = " << amt_buf);
+      std::free(amt_buf);
     }
   } else {
     mpq_set_str(MP(new_quantity.get()), quant.c_str(), 10);
