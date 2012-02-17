@@ -203,11 +203,11 @@ public:
         checked_delete(this);
     }
 
-    friend inline void intrusive_ptr_add_ref(value_t::storage_t * storage) {
-      storage->acquire();
+    friend inline void intrusive_ptr_add_ref(value_t::storage_t * storage_ptr) {
+      storage_ptr->acquire();
     }
-    friend inline void intrusive_ptr_release(value_t::storage_t * storage) {
-      storage->release();
+    friend inline void intrusive_ptr_release(value_t::storage_t * storage_ptr) {
+      storage_ptr->release();
     }
 
     void destroy() {
