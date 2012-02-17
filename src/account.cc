@@ -49,28 +49,28 @@ account_t::~account_t()
   }
 }
 
-account_t * account_t::find_account(const string& name,
+account_t * account_t::find_account(const string& acct_name,
                                     const bool    auto_create)
 {
-  accounts_map::const_iterator i = accounts.find(name);
+  accounts_map::const_iterator i = accounts.find(acct_name);
   if (i != accounts.end())
     return (*i).second;
 
   char buf[8192];
 
-  string::size_type sep = name.find(':');
+  string::size_type sep = acct_name.find(':');
   assert(sep < 256|| sep == string::npos);
 
   const char * first, * rest;
   if (sep == string::npos) {
-    first = name.c_str();
+    first = acct_name.c_str();
     rest  = NULL;
   } else {
-    std::strncpy(buf, name.c_str(), sep);
+    std::strncpy(buf, acct_name.c_str(), sep);
     buf[sep] = '\0';
 
     first = buf;
-    rest  = name.c_str() + sep + 1;
+    rest  = acct_name.c_str() + sep + 1;
   }
 
   account_t * account;
