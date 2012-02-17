@@ -126,29 +126,29 @@ namespace {
 
       out << "    ";
 
-      std::ostringstream buf;
+      std::ostringstream pbuf;
 
       if (xact.state() == item_t::UNCLEARED)
-        buf << (post->state() == item_t::CLEARED ? "* " :
+        pbuf << (post->state() == item_t::CLEARED ? "* " :
                 (post->state() == item_t::PENDING ? "! " : ""));
 
       if (post->has_flags(POST_VIRTUAL)) {
         if (post->has_flags(POST_MUST_BALANCE))
-          buf << '[';
+          pbuf << '[';
         else
-          buf << '(';
+          pbuf << '(';
       }
 
-      buf << post->account->fullname();
+      pbuf << post->account->fullname();
 
       if (post->has_flags(POST_VIRTUAL)) {
         if (post->has_flags(POST_MUST_BALANCE))
-          buf << ']';
+          pbuf << ']';
         else
-          buf << ')';
+          pbuf << ')';
       }
 
-      unistring name(buf.str());
+      unistring name(pbuf.str());
 
       std::size_t account_width =
         (report.HANDLER(account_width_).specified ?
@@ -208,7 +208,7 @@ namespace {
 
         account_width += unistring(trailer).length();
       } else {
-        out << buf.str();
+        out << pbuf.str();
       }
 
       if (post->note)
