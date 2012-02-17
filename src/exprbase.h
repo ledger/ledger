@@ -121,9 +121,10 @@ public:
     compiled = false;
   }
 
-  void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(str);
-    return parse(stream, flags, str);
+  void parse(const string& expr_str,
+             const parse_flags_t& flags = PARSE_DEFAULT) {
+    std::istringstream stream(expr_str);
+    return parse(stream, flags, expr_str);
   }
   virtual void parse(std::istream&,
                      const parse_flags_t& = PARSE_DEFAULT,
