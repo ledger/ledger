@@ -1392,7 +1392,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
            (new format_accounts(*this, report_format(HANDLER(balance_format_)),
                                 maybe_format(HANDLER(prepend_format_)),
-                                HANDLER(prepend_width_).value.to_long()),
+                                HANDLER(prepend_width_).value.to_size_t()),
             *this, "#balance"));
       }
       else if (is_eq(p, "budget")) {
@@ -1406,7 +1406,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
            (new format_accounts(*this, report_format(HANDLER(budget_format_)),
                                 maybe_format(HANDLER(prepend_format_)),
-                                HANDLER(prepend_width_).value.to_long()),
+                                HANDLER(prepend_width_).value.to_size_t()),
             *this, "#budget"));
       }
       break;
@@ -1417,7 +1417,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<>
            (new format_posts(*this, report_format(HANDLER(csv_format_)),
                              maybe_format(HANDLER(prepend_format_)),
-                             HANDLER(prepend_width_).value.to_long()),
+                             HANDLER(prepend_width_).value.to_size_t()),
             *this, "#csv"));
       }
       else if (is_eq(p, "cleared")) {
@@ -1427,7 +1427,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
            (new format_accounts(*this, report_format(HANDLER(cleared_format_)),
                                 maybe_format(HANDLER(prepend_format_)),
-                                HANDLER(prepend_width_).value.to_long()),
+                                HANDLER(prepend_width_).value.to_size_t()),
             *this, "#cleared"));
       }
       else if (is_eq(p, "convert")) {
@@ -1475,7 +1475,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
            (new format_posts(*this, report_format(HANDLER(prices_format_)),
                              maybe_format(HANDLER(prepend_format_)),
-                             HANDLER(prepend_width_).value.to_long()),
+                             HANDLER(prepend_width_).value.to_size_t()),
             *this, "#prices"));
       }
       else if (is_eq(p, "pricedb")) {
@@ -1483,7 +1483,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
            (new format_posts(*this, report_format(HANDLER(pricedb_format_)),
                              maybe_format(HANDLER(prepend_format_)),
-                             HANDLER(prepend_width_).value.to_long()),
+                             HANDLER(prepend_width_).value.to_size_t()),
             *this, "#pricedb"));
       }
       else if (is_eq(p, "pricemap")) {
@@ -1501,7 +1501,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
           (reporter<>
            (new format_posts(*this, report_format(HANDLER(register_format_)),
                              maybe_format(HANDLER(prepend_format_)),
-                             HANDLER(prepend_width_).value.to_long()),
+                             HANDLER(prepend_width_).value.to_size_t()),
             *this, "#register"));
       }
       else if (is_eq(p, "reload")) {
