@@ -223,8 +223,8 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
 
 #if defined(DEBUG_ON)
   if (SHOW_DEBUG("accounts.sorted")) {
-    foreach (account_t * account, deque)
-      DEBUG("accounts.sorted", "Account: " << account->fullname());
+    foreach (account_t * acct, deque)
+      DEBUG("accounts.sorted", "Account: " << acct->fullname());
   }
 #endif
 }
