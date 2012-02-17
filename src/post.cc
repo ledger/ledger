@@ -722,11 +722,11 @@ void to_xml(std::ostream& out, const post_t& post)
       if (pair.second.first) {
         push_xml z(out, "variable");
         {
-          push_xml z(out, "key");
+          push_xml w(out, "key");
           out << y.guard(pair.first);
         }
         {
-          push_xml z(out, "value");
+          push_xml w(out, "value");
           to_xml(out, *pair.second.first);
         }
       } else {
