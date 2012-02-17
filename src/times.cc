@@ -611,9 +611,9 @@ class date_parser_t
     {
       TRACE_CTOR(date_parser_t::lexer_t, "");
     }
-    lexer_t(const lexer_t& lexer)
-      : begin(lexer.begin), end(lexer.end),
-        token_cache(lexer.token_cache)
+    lexer_t(const lexer_t& other)
+      : begin(other.begin), end(other.end),
+        token_cache(other.token_cache)
     {
       TRACE_CTOR(date_parser_t::lexer_t, "copy");
     }
