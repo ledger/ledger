@@ -641,10 +641,10 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
   }
 }
 
-void post_t::set_reported_account(account_t * account)
+void post_t::set_reported_account(account_t * acct)
 {
-  xdata().account = account;
-  account->xdata().reported_posts.push_back(this);
+  xdata().account = acct;
+  acct->xdata().reported_posts.push_back(this);
 }
 
 void to_xml(std::ostream& out, const post_t& post)
