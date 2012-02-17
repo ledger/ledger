@@ -98,9 +98,8 @@ void draft_t::parse_args(const value_t& args)
 
   tmpl = xact_template_t();
 
-  optional<date_time::weekdays>      weekday;
-  xact_template_t::post_template_t * post = NULL;
-
+  optional<date_time::weekdays>       weekday;
+  xact_template_t::post_template_t *  post  = NULL;
   value_t::sequence_t::const_iterator begin = args.begin();
   value_t::sequence_t::const_iterator end   = args.end();
 
