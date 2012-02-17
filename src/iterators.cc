@@ -190,9 +190,9 @@ void sorted_accounts_iterator::push_back(account_t& account)
 
 #if defined(DEBUG_ON)
     if (SHOW_DEBUG("accounts.sorted")) {
-      foreach (account_t * account, accounts_list.back())
+      foreach (account_t * acct, accounts_list.back())
         DEBUG("accounts.sorted",
-              "Account (flat): " << account->fullname());
+              "Account (flat): " << acct->fullname());
     }
 #endif
   } else {
