@@ -92,8 +92,7 @@ namespace {
 #endif // USE_BOOST_FACETS
     }
 
-    T parse(const char * str) {
-    }
+    T parse(const char *) {}
 
     std::string format(const T& when) {
 #if defined(USE_BOOST_FACETS)
