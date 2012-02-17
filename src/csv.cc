@@ -80,17 +80,17 @@ string csv_reader::read_field(std::istream& sin)
   return field;
 }
 
-char * csv_reader::next_line(std::istream& in)
+char * csv_reader::next_line(std::istream& sin)
 {
   static char linebuf[MAX_LINE + 1];
 
-  while (in.good() && ! in.eof() && in.peek() == '#')
-    in.getline(linebuf, MAX_LINE);
+  while (sin.good() && ! sin.eof() && sin.peek() == '#')
+    sin.getline(linebuf, MAX_LINE);
 
-  if (! in.good() || in.eof())
+  if (! sin.good() || sin.eof())
     return NULL;
 
-  in.getline(linebuf, MAX_LINE);
+  sin.getline(linebuf, MAX_LINE);
 
   return linebuf;
 }
