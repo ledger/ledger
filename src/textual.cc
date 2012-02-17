@@ -1614,7 +1614,7 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind,
 
 std::size_t journal_t::parse(std::istream& in,
                              scope_t&      scope,
-                             account_t *   master,
+                             account_t *   master_account,
                              const path *  original_file,
                              bool          strict)
 {
@@ -1622,8 +1622,9 @@ std::size_t journal_t::parse(std::istream& in,
 
   parse_context_t context(*this, scope);
   context.strict = strict;
-  if (master || this->master)
-    context.state_stack.push_front(master ? master : this->master);
+  if (master_account || this->master)
+    context.state_stack.push_front(master_account ?
+                                   master_account : this->master);
 
   instance_t instance(context, in, original_file);
   instance.parse();
