@@ -269,8 +269,8 @@ protected:
         what_to_keep(_what_to_keep) {
       TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool");
     }
-    parser_t(const parser_t& parser)
-      : args(parser.args), lexer(parser.lexer) {
+    parser_t(const parser_t& other)
+      : args(other.args), lexer(other.lexer) {
       TRACE_CTOR(query_t::parser_t, "copy");
     }
     ~parser_t() throw() {
