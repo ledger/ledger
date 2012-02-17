@@ -95,9 +95,9 @@ char * csv_reader::next_line(std::istream& sin)
   return linebuf;
 }
 
-void csv_reader::read_index(std::istream& in)
+void csv_reader::read_index(std::istream& sin)
 {
-  char * line = next_line(in);
+  char * line = next_line(sin);
   if (! line)
     return;
 
