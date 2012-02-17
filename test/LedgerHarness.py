@@ -92,13 +92,7 @@ class LedgerHarness:
     def readlines(self, fd):
         lines = []
         for line in fd.readlines():
-            if line == "GuardMalloc: Allocations will be placed on byte boundaries.\n" or \
-               line == "GuardMalloc:  - Some buffer overruns may not be noticed.\n" or \
-               line == "GuardMalloc:  - Applications using vector instructions (e.g., SSE or Altivec) may fail.\n" or \
-               line == "GuardMalloc:  - Applications expecting word-aligned pointers may fail (such as Carbon applications)\n" or \
-               line.startswith("GuardMalloc: GuardMalloc version"):
-                continue
-            else:
+            if not line.startswith("GuardMalloc"):
                 lines.append(line)
         return lines
 
