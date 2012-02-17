@@ -178,7 +178,7 @@ std::size_t journal_t::read(std::istream& in,
 }
 
 std::size_t journal_t::read(const path& pathname,
-                            account_t * master,
+                            account_t * master_account,
                             scope_t *   scope)
 {
   path filename = resolve_path(pathname);
@@ -188,7 +188,7 @@ std::size_t journal_t::read(const path& pathname,
            _("Cannot read journal file '%1'") << filename);
 
   ifstream stream(filename);
-  std::size_t count = read(stream, filename, master, scope);
+  std::size_t count = read(stream, filename, master_account, scope);
   if (count > 0)
     sources.push_back(fileinfo_t(filename));
   return count;
