@@ -1628,6 +1628,7 @@ std::size_t journal_t::parse(std::istream& in,
 
   instance_t instance(context, in, original_file);
   instance.parse();
+  context.close();
 
   TRACE_STOP(parsing_total, 1);
 
