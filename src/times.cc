@@ -544,9 +544,6 @@ class date_parser_t
         case TOK_WEEKS:     return "weeks";
         case TOK_DAYS:      return "days";
         case END_REACHED:   return "<EOF>";
-        default:
-          assert(false);
-          return empty_string;
         }
 
         return out.str();
@@ -593,9 +590,6 @@ class date_parser_t
         case TOK_WEEKS:     out << "TOK_WEEKS"; break;
         case TOK_DAYS:      out << "TOK_DAYS"; break;
         case END_REACHED:   out << "END_REACHED"; break;
-        default:
-          assert(false);
-          break;
         }
       }
 
@@ -1253,9 +1247,6 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip)
     break;
   case date_duration_t::DAYS:
     result = date;
-    break;
-  default:
-    assert(false);
     break;
   }
   return result;

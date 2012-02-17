@@ -373,10 +373,6 @@ string format_t::real_calc(scope_t& scope)
       }
       break;
     }
-
-    default:
-      assert(false);
-      break;
     }
 
     if (elem->max_width > 0 || elem->min_width > 0) {

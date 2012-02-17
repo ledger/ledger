@@ -1080,10 +1080,6 @@ void transfer_details::operator()(post_t& post)
     case SET_PAYEE:
       xact.payee = substitute.to_string();
       break;
-
-    default:
-      assert(false);
-      break;
     }
   }
 

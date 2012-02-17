@@ -580,10 +580,6 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
 
   case expr_t::token_t::TOK_EOF:   out << "<end of input>"; break;
   case expr_t::token_t::UNKNOWN:   out << "<unknown>"; break;
-
-  default:
-    assert(false);
-    break;
   }
 
   return out;

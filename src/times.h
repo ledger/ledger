@@ -217,8 +217,6 @@ struct date_duration_t
       return date + gregorian::months(length * 3);
     case YEARS:
       return date + gregorian::years(length);
-    default:
-      assert(false); return date_t();
     }
   }
 
@@ -234,8 +232,6 @@ struct date_duration_t
       return date - gregorian::months(length * 3);
     case YEARS:
       return date - gregorian::years(length);
-    default:
-      assert(false); return date_t();
     }
   }
 
@@ -250,9 +246,6 @@ struct date_duration_t
     case MONTHS:   out << "month"; break;
     case QUARTERS: out << "quarter"; break;
     case YEARS:    out << "year"; break;
-    default:
-      assert(false);
-      break;
     }
 
     if (length > 1)

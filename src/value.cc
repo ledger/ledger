@@ -118,8 +118,6 @@ value_t::operator bool() const
     return as_scope() != NULL;
   case ANY:
     return ! as_any().empty();
-  default:
-    break;
   }
 
   add_error_context(_("While taking boolean value of %1:") << *this);
@@ -1668,11 +1666,8 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
     return as_amount().strip_annotations(what_to_keep);
   case BALANCE:
     return as_balance().strip_annotations(what_to_keep);
-
-  default:
-    assert(false);
-    break;
   }
+
   assert(false);
   return NULL_VALUE;
 }
@@ -1707,10 +1702,6 @@ string value_t::label(optional<type_t> the_type) const
       return _("an expr");
     else
       return _("an object");
-    break;
-  default:
-    assert(false);
-    break;
   }
   assert(false);
   return _("<invalid>");
@@ -1813,10 +1804,6 @@ void value_t::print(std::ostream&       _out,
       out << "<#OBJECT>";
     }
     break;
-
-  default:
-    add_error_context(_("While printing %1:") << *this);
-    throw_(value_error, _("Cannot print %1") << label());
   }
 
   _out << out.str();
@@ -1905,10 +1892,6 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
     out << ')';
     break;
   }
-
-  default:
-    assert(false);
-    break;
   }
 }
 
@@ -2003,7 +1986,6 @@ void to_xml(std::ostream& out, const value_t& value)
 
   case value_t::SCOPE:
   case value_t::ANY:
-  default:
     assert(false);
     break;
   }

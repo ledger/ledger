@@ -185,7 +185,6 @@ public:
           return "<TERM>";
 
         case UNKNOWN:
-        default:
           assert(false);
           return "<UNKNOWN>";
         }
