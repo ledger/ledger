@@ -76,6 +76,7 @@ namespace {
     return *(*elem).second;
   }
 
+#if 0
   account_t * py_find_account_1(journal_t& journal, const string& name)
   {
     return journal.find_account(name);
@@ -86,6 +87,7 @@ namespace {
   {
     return journal.find_account(name, auto_create);
   }
+#endif
 
   account_t::xdata_t& py_xdata(account_t& account) {
     return account.xdata();
