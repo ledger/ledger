@@ -316,89 +316,89 @@ namespace {
 }
 
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
-                                   const string& name)
+                                   const string& fn_name)
 {
   if (kind != symbol_t::FUNCTION)
     return NULL;
 
-  switch (name[0]) {
+  switch (fn_name[0]) {
   case 'a':
-    if (name[1] == '\0' || name == "amount")
+    if (fn_name[1] == '\0' || fn_name == "amount")
       return WRAP_FUNCTOR(get_wrapper<&get_amount>);
-    else if (name == "account")
+    else if (fn_name == "account")
       return WRAP_FUNCTOR(&get_account);
-    else if (name == "account_base")
+    else if (fn_name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
-    else if (name == "addr")
+    else if (fn_name == "addr")
       return WRAP_FUNCTOR(get_wrapper<&get_addr>);
-    else if (name == "any")
+    else if (fn_name == "any")
       return WRAP_FUNCTOR(&fn_any);
-    else if (name == "all")
+    else if (fn_name == "all")
       return WRAP_FUNCTOR(&fn_all);
     break;
 
   case 'c':
-    if (name == "count")
+    if (fn_name == "count")
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (name == "cost")
+    else if (fn_name == "cost")
       return WRAP_FUNCTOR(get_wrapper<&get_cost>);
     break;
 
   case 'd':
-    if (name == "depth")
+    if (fn_name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    else if (name == "depth_spacer")
+    else if (fn_name == "depth_spacer")
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
     break;
 
   case 'i':
-    if (name == "is_account")
+    if (fn_name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&get_true>);
-    else if (name == "is_index")
+    else if (fn_name == "is_index")
       return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 'l':
-    if (name == "latest_cleared")
+    if (fn_name == "latest_cleared")
       return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
-    else if (name[1] == '\0')
+    else if (fn_name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     break;
 
   case 'n':
-    if (name[1] == '\0')
+    if (fn_name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 'p':
-    if (name == "partial_account")
+    if (fn_name == "partial_account")
       return WRAP_FUNCTOR(get_partial_name);
-    else if (name == "parent")
+    else if (fn_name == "parent")
       return WRAP_FUNCTOR(get_wrapper<&get_parent>);
     break;
 
   case 's':
-    if (name == "subcount")
+    if (fn_name == "subcount")
       return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
     break;
 
   case 't':
-    if (name == "total")
+    if (fn_name == "total")
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
 
   case 'u':
-    if (name == "use_direct_amount")
+    if (fn_name == "use_direct_amount")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
     break;
 
   case 'N':
-    if (name[1] == '\0')
+    if (fn_name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
     break;
 
   case 'O':
-    if (name[1] == '\0')
+    if (fn_name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
   }
