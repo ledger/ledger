@@ -39,4 +39,4 @@ ledger_proof() {
 }
 
 ledger_proof ${1:-$HOME/src/ledger} \
-    ${2:-$HOME/Products) ${3:-$HOME/Library/Logs}
+    ${2:-$HOME/Products} ${3:-$HOME/Library/Logs}
