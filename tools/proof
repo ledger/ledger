@@ -2,40 +2,41 @@
 
 set -e
 
-cd ~/src/ledger
+ledger_proof() {
+    SRC="$1"
+    DEST="$2"
+    LOGDIR="$3"
 
-VERSION=$(git describe --all --long)
+    cd "$SRC"
+    VERSION=$(git describe --all --long)
 
-if [[ -f ~/Products/last-proofed && \
-      $(< ~/Products/last-proofed) = $VERSION ]]; then
-    echo "No need to run tools/proof again"
-    exit 0
-fi
-
-rm -fr ~/Products/ledger-proof
-
-#time nice -n 20 \
-#    ./acprep --enable-doxygen --universal -j16 --gcc46 --warn proof 2>&1 | \
-#    tee ~/Desktop/proof.log
-time nice -n 20 \
-    ./acprep --universal -j16 --gcc46 --warn proof 2>&1 | \
-    tee ~/Desktop/proof.log
-
-if egrep -q '(ERROR|CRITICAL)' ~/Desktop/proof.log; then
-    if [[ "$1" = "--alert" ]]; then
-        notify "Ledger proof build FAILED"
-    else
-        echo "Ledger proof build FAILED"
-        exit 1
+    if [[ -f $DEST/last-proofed && $(< $DEST/last-proofed) = $VERSION ]]; then
+        echo "No need to run tools/proof again"
+        exit 0
     fi
-else
-    echo $VERSION > ~/Products/last-proofed
-    mv ~/Desktop/proof.log /tmp
 
-    cd ~/Products/ledger-proof/debug; make docs
-    cd ~/Products/ledger-proof/gcov;  make report
+    rm -fr $DEST/ledger-proof
 
-    echo "Ledger proof build succeeded"
-fi
+    time nice -n 20 \
+        ./acprep  --enable-doxygen --universal -j16 --gcc46 --warn proof 2>&1 | \
+        tee $LOGDIR/ledger-proof.log
 
-exit 0
+    if egrep -q '(ERROR|CRITICAL)' $LOGDIR/ledger-proof.log; then
+        if [[ "$1" = "--alert" ]]; then
+            notify "Ledger proof build FAILED"
+        else
+            echo "Ledger proof build FAILED"
+            exit 1
+        fi
+    else
+        echo $VERSION > $DEST/last-proofed
+
+        cd $DEST/ledger-proof/debug; make docs
+        cd $DEST/ledger-proof/gcov;  make report
+
+        echo "Ledger proof build succeeded"
+    fi
+}
+
+ledger_proof ${1:-$HOME/src/ledger} \
+    ${2:-$HOME/Products) ${3:-$HOME/Library/Logs}
