@@ -50,7 +50,7 @@ namespace {
         expr_t::ptr_op_t value_op;
         if (next->kind == expr_t::op_t::O_CONS) {
           value_op = next->left();
-          next     = next->right();
+          next     = next->has_right() ? next->right() : NULL;
         } else {
           value_op = next;
           next     = NULL;
@@ -78,10 +78,12 @@ namespace {
 
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 {
+  scope_t * scope_ptr = &scope;
+
   if (is_ident()) {
     DEBUG("expr.compile", "lookup: " << as_ident());
 
-    if (ptr_op_t def = scope.lookup(symbol_t::FUNCTION, as_ident())) {
+    if (ptr_op_t def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident())) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
@@ -91,21 +93,26 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
         def->dump(*_log_stream, 0);
       }
 #endif // defined(DEBUG_ON)
-      return copy(def);
+     return copy(def);
     }
     else if (left()) {
       return copy();
     }
     return this;
   }
-
-  if (kind < TERMINALS)
+  else if (is_scope()) {
+    shared_ptr<scope_t> subscope(new symbol_scope_t(scope));
+    DEBUG("expr.compile", "creating scope");
+    set_scope(subscope);
+    scope_ptr = subscope.get();
+  }
+  else if (kind < TERMINALS) {
     return this;
-
-  if (kind == O_DEFINE) {
+  }
+  else if (kind == O_DEFINE) {
     switch (left()->kind) {
     case IDENT:
-      scope.define(symbol_t::FUNCTION, left()->as_ident(), right());
+      scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), right());
       break;
     case O_CALL:
       if (left()->left()->is_ident()) {
@@ -113,7 +120,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
         node->set_left(left()->right());
         node->set_right(right());
 
-        scope.define(symbol_t::FUNCTION, left()->left()->as_ident(), node);
+        scope_ptr->define(symbol_t::FUNCTION, left()->left()->as_ident(),
+                          node);
       } else {
         throw_(compile_error, _("Invalid function definition"));
       }
@@ -121,13 +129,13 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
     default:
       throw_(compile_error, _("Invalid function definition"));
     }
-    return wrap_value(value_t());
+    return wrap_value(NULL_VALUE);
   }
 
-  ptr_op_t lhs(left()->compile(scope, depth));
+  ptr_op_t lhs(left()->compile(*scope_ptr, depth));
   ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
                (kind == O_LOOKUP ? right() :
-                right()->compile(scope, depth)) : NULL);
+                right()->compile(*scope_ptr, depth)) : NULL);
 
   if (lhs == left() && (! rhs || rhs == right()))
     return this;
@@ -136,22 +144,19 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 
   // Reduce constants immediately if possible
   if ((! lhs || lhs->is_value()) && (! rhs || rhs->is_value()))
-    return wrap_value(intermediate->calc(scope, NULL, depth));
+    return wrap_value(intermediate->calc(*scope_ptr, NULL, depth));
 
   return intermediate;
 }
 
 value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 {
-#if defined(DEBUG_ON)
-  bool skip_debug = false;
-#endif
   try {
 
   value_t result;
 
 #if defined(DEBUG_ON)
-  if (! skip_debug && SHOW_DEBUG("expr.calc")) {
+  if (SHOW_DEBUG("expr.calc")) {
     for (int i = 0; i < depth; i++)
       ledger::_log_buffer << '.';
     ledger::_log_buffer << op_context(this) <<  " => ...";
@@ -196,11 +201,17 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     call_scope_t call_args(scope, locus, depth);
     result = as_function()(call_args);
     check_type_context(scope, result);
-#if defined(DEBUG_ON)
-    skip_debug = true;
-#endif
     break;
   }
+
+  case SCOPE:
+    if (is_scope_unset()) {
+      symbol_scope_t subscope(scope);
+      result = left()->calc(subscope, locus, depth + 1);
+    } else {
+      result = left()->calc(*as_scope(), locus, depth + 1);
+    }
+    break;
 
   case O_LAMBDA: {
     call_scope_t&  call_args(downcast<call_scope_t>(scope));
@@ -267,7 +278,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
       throw_(calc_error, _("Calling unknown function '%1'") << name);
 
 #if defined(DEBUG_ON)
-    if (! skip_debug && SHOW_DEBUG("expr.calc")) {
+    if (SHOW_DEBUG("expr.calc")) {
       for (int i = 0; i < depth; i++)
         ledger::_log_buffer << '.';
       ledger::_log_buffer << "    args: ";
@@ -382,7 +393,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
         ptr_op_t value_op;
         if (next->kind == O_CONS) {
           value_op = next->left();
-          next     = next->right();
+          next     = next->has_right() ? next->right() : NULL;
         } else {
           value_op = next;
           next     = NULL;
@@ -395,14 +406,13 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
 
   case O_SEQ: {
-    symbol_scope_t seq_scope(scope);
-
-    // An O_SEQ is very similar to an O_CONS except that only the last result
-    // value in the series is kept.  O_CONS builds up a list.
+    // An O_SEQ is very similar to an O_CONS except that only the last
+    // result value in the series is kept.  O_CONS builds up a list.
     //
-    // Another feature of O_SEQ is that it pushes a new symbol scope onto the
-    // stack.
-    result = left()->calc(seq_scope, locus, depth + 1);
+    // Another feature of O_SEQ is that it pushes a new symbol scope
+    // onto the stack.  We evaluate the left side here to catch any
+    // side-effects, such as definitions in the case of 'x = 1; x'.
+    result = left()->calc(scope, locus, depth + 1);
 
     if (has_right()) {
       ptr_op_t next = right();
@@ -415,7 +425,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
           value_op = next;
           next     = NULL;
         }
-        result = value_op->calc(seq_scope, locus, depth + 1);
+        result = value_op->calc(scope, locus, depth + 1);
       }
     }
     break;
@@ -426,7 +436,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   }
 
 #if defined(DEBUG_ON)
-  if (! skip_debug && SHOW_DEBUG("expr.calc")) {
+  if (SHOW_DEBUG("expr.calc")) {
     for (int i = 0; i < depth; i++)
       ledger::_log_buffer << '.';
     ledger::_log_buffer << op_context(this) <<  " => ";
@@ -476,9 +486,8 @@ namespace {
 
     if (op->has_right()) {
       out << "; ";
-
-      if (op->right()->kind == expr_t::op_t::O_CONS)
-        found = print_cons(out, op->right(), context);
+      if (op->right()->kind == expr_t::op_t::O_SEQ)
+        found = print_seq(out, op->right(), context);
       else if (op->right()->print(out, context))
         found = true;
     }
@@ -513,6 +522,11 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
 
   case FUNCTION:
     out << "<FUNCTION>";
+    break;
+
+  case SCOPE:
+    if (left() && left()->print(out, context))
+      found = true;
     break;
 
   case O_NOT:
@@ -625,7 +639,6 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
   case O_CONS:
     found = print_cons(out, this, context);
     break;
-
   case O_SEQ:
     found = print_seq(out, this, context);
     break;
@@ -726,6 +739,14 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     out << "FUNCTION";
     break;
 
+  case SCOPE:
+    out << "SCOPE: ";
+    if (is_scope_unset())
+      out << "null";
+    else
+      out << as_scope().get();
+    break;
+
   case O_DEFINE: out << "O_DEFINE"; break;
   case O_LOOKUP: out << "O_LOOKUP"; break;
   case O_LAMBDA: out << "O_LAMBDA"; break;
@@ -765,7 +786,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   // An identifier is a special non-terminal, in that its left() can
   // hold the compiled definition of the identifier.
-  if (kind > TERMINALS || is_ident()) {
+  if (kind > TERMINALS || is_ident() || is_scope()) {
     if (left()) {
       left()->dump(out, depth + 1);
       if (kind > UNARY_OPERATORS && has_right())

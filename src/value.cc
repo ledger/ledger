@@ -1727,7 +1727,7 @@ void value_t::print(std::ostream&       _out,
 
   switch (type()) {
   case VOID:
-    out << "";
+    out << "(null)";
     break;
 
   case BOOLEAN:

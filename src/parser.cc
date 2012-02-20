@@ -434,7 +434,6 @@ expr_t::parser_t::parse_comma_expr(std::istream& in,
           ptr_op_t prev(node);
           node = new op_t(op_t::O_CONS);
           node->set_left(prev);
-
           next = node;
         }
 
@@ -493,7 +492,9 @@ expr_t::parser_t::parse_assign_expr(std::istream& in,
       ptr_op_t prev(node);
       node = new op_t(op_t::O_DEFINE);
       node->set_left(prev);
-      node->set_right(parse_lambda_expr(in, tflags));
+      ptr_op_t scope(new op_t(op_t::SCOPE));
+      scope->set_left(parse_lambda_expr(in, tflags));
+      node->set_right(scope);
     } else {
       push_token(tok);
     }
@@ -509,24 +510,24 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
   ptr_op_t node(parse_assign_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    ptr_op_t next;
+    ptr_op_t chain;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-
       if (tok.kind == token_t::SEMI) {
-        if (! next) {
-          ptr_op_t prev(node);
-          node = new op_t(op_t::O_SEQ);
-          node->set_left(prev);
-
-          next = node;
+        ptr_op_t seq(new op_t(op_t::O_SEQ));
+        if (! chain) {
+          seq->set_left(node);
+          ptr_op_t scope(new op_t(op_t::SCOPE));
+          scope->set_left(seq);
+          node = scope;
+        } else {
+          seq->set_left(chain->right());
+          ptr_op_t scope(new op_t(op_t::SCOPE));
+          scope->set_left(seq);
+          chain->set_right(scope);
         }
-
-        ptr_op_t chain(new op_t(op_t::O_SEQ));
-        chain->set_left(parse_assign_expr(in, tflags));
-
-        next->set_right(chain);
-        next = chain;
+        seq->set_right(parse_assign_expr(in, tflags));
+        chain = seq;
       } else {
         push_token(tok);
         break;
