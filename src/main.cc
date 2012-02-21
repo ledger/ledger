@@ -86,7 +86,6 @@ int main(int argc, char * argv[], char * envp[])
     // Create the session object, which maintains nearly all state relating to
     // this invocation of Ledger; and register all known journal parsers.
     global_scope.reset(new global_scope_t(envp));
-
     global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
@@ -96,7 +95,6 @@ int main(int argc, char * argv[], char * envp[])
 
     // Look for options and a command verb in the command-line arguments
     bind_scope_t bound_scope(*global_scope.get(), global_scope->report());
-
     args = global_scope->read_command_arguments(bound_scope, args);
 
     if (global_scope->HANDLED(script_)) {
@@ -112,8 +110,8 @@ int main(int argc, char * argv[], char * envp[])
 
         char * p = skip_ws(line);
         if (*p && *p != '#')
-          status = global_scope->execute_command_wrapper(split_arguments(p),
-                                                         true);
+          status =
+            global_scope->execute_command_wrapper(split_arguments(p), true);
       }
     }
     else if (! args.empty()) {
