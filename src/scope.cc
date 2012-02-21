@@ -88,8 +88,7 @@ value_t& call_scope_t::resolve(const std::size_t index,
     value = as_expr(value)->calc(scope, locus, depth);
     if (required && ! value.is_type(context))
       throw_(calc_error, _("Expected %1 for argument %2, but received %3")
-             << value.label(context) << index
-             << value.label());
+             << value.label(context) << index << value.label());
   }
   return value;
 }
