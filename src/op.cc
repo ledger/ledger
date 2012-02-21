@@ -78,11 +78,19 @@ namespace {
 
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 {
-  scope_t * scope_ptr = &scope;
+  scope_t *        scope_ptr = &scope;
+  expr_t::ptr_op_t result;
+
+#if defined(DEBUG_ON)
+  if (SHOW_DEBUG("expr.compile")) {
+    for (int i = 0; i < depth; i++)
+      ledger::_log_buffer << '.';
+    DEBUG("expr.compile", "");
+  }
+#endif
 
   if (is_ident()) {
-    DEBUG("expr.compile", "Lookup: " << as_ident());
-
+    DEBUG("expr.compile", "Lookup: " << as_ident() << " in " << scope_ptr);
     if (ptr_op_t def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident())) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
@@ -93,12 +101,14 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
         def->dump(*_log_stream, 0);
       }
 #endif // defined(DEBUG_ON)
-      return copy(def);
+      result = copy(def);
     }
     else if (left()) {
-      return copy();
+      result = copy();
     }
-    return this;
+    else {
+      result = this;
+    }
   }
   else if (is_scope()) {
     shared_ptr<scope_t> subscope(new symbol_scope_t(scope));
@@ -106,19 +116,28 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
     scope_ptr = subscope.get();
   }
   else if (kind < TERMINALS) {
-    return this;
+    result = this;
   }
   else if (kind == O_DEFINE) {
     switch (left()->kind) {
-    case IDENT:
-      scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), right());
+    case IDENT: {
+      ptr_op_t node(right()->compile(*scope_ptr, depth + 1));
+
+      DEBUG("expr.compile",
+            "Defining " << left()->as_ident() << " in " << scope_ptr);
+      scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), node);
       break;
+    }
 
     case O_CALL:
       if (left()->left()->is_ident()) {
         ptr_op_t node(new op_t(op_t::O_LAMBDA));
         node->set_left(left()->right());
         node->set_right(right());
+        node = node->compile(*scope_ptr, depth + 1);
+
+        DEBUG("expr.compile",
+              "Defining " << left()->left()->as_ident() << " in " << scope_ptr);
         scope_ptr->define(symbol_t::FUNCTION, left()->left()->as_ident(),
                           node);
         break;
@@ -128,23 +147,37 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
     default:
       throw_(compile_error, _("Invalid function definition"));
     }
+    result = wrap_value(NULL_VALUE);
   }
 
-  ptr_op_t lhs(left()->compile(*scope_ptr, depth));
-  ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
-               (kind == O_LOOKUP ? right() :
-                right()->compile(*scope_ptr, depth)) : NULL);
+  if (! result) {
+    ptr_op_t lhs(left()->compile(*scope_ptr, depth + 1));
+    ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
+                 (kind == O_LOOKUP ? right() :
+                  right()->compile(*scope_ptr, depth + 1)) : NULL);
 
-  if (lhs == left() && (! rhs || rhs == right()))
-    return this;
+    if (lhs == left() && (! rhs || rhs == right())) {
+      result = this;
+    } else {
+      ptr_op_t intermediate(copy(lhs, rhs));
 
-  ptr_op_t intermediate(copy(lhs, rhs));
+      // Reduce constants immediately if possible
+      if ((! lhs || lhs->is_value()) && (! rhs || rhs->is_value()))
+        result = wrap_value(intermediate->calc(*scope_ptr, NULL, depth + 1));
+      else
+        result = intermediate;
+    }
+  }
 
-  // Reduce constants immediately if possible
-  if ((! lhs || lhs->is_value()) && (! rhs || rhs->is_value()))
-    return wrap_value(intermediate->calc(*scope_ptr, NULL, depth + 1));
+#if defined(DEBUG_ON)
+  if (SHOW_DEBUG("expr.compile")) {
+    for (int i = 0; i < depth; i++)
+      ledger::_log_buffer << '.';
+    DEBUG("expr.compile", "");
+  }
+#endif
 
-  return intermediate;
+  return result;
 }
 
 value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)

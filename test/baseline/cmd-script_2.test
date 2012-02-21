@@ -1,0 +1,3 @@
+test eval 'x=total_expr;x=x/count;x=amount_expr-x*count;x'
+0
+end test

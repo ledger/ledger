@@ -517,14 +517,10 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
         ptr_op_t seq(new op_t(op_t::O_SEQ));
         if (! chain) {
           seq->set_left(node);
-          ptr_op_t scope(new op_t(op_t::SCOPE));
-          scope->set_left(seq);
-          node = scope;
+          node = seq;
         } else {
           seq->set_left(chain->right());
-          ptr_op_t scope(new op_t(op_t::SCOPE));
-          scope->set_left(seq);
-          chain->set_right(scope);
+          chain->set_right(seq);
         }
         seq->set_right(parse_assign_expr(in, tflags));
         chain = seq;

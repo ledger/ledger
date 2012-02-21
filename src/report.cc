@@ -1559,6 +1559,10 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "query"))
         return WRAP_FUNCTOR(query_command);
       break;
+    case 's':
+      if (is_eq(p, "script"))
+        return WRAP_FUNCTOR(source_command);
+      break;
     case 't':
       if (is_eq(p, "template"))
         return WRAP_FUNCTOR(template_command);

@@ -1,0 +1,3 @@
+test eval 'foo(w, u)=(z=w+u;z*2); (a=1 + 1; foo(10, 15))'
+50
+end test
