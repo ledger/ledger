@@ -40,7 +40,8 @@ scope_t * scope_t::default_scope = NULL;
 void symbol_scope_t::define(const symbol_t::kind_t kind,
                             const string& name, expr_t::ptr_op_t def)
 {
-  DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
+  DEBUG("scope.symbols",
+        "Defining '" << name << "' = " << def << " in " << this);
 
   if (! symbols)
     symbols = symbol_map();
@@ -64,9 +65,12 @@ expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
                                         const string& name)
 {
   if (symbols) {
+    DEBUG("scope.symbols", "Looking for '" << name << "' in " << this);
     symbol_map::const_iterator i = symbols->find(symbol_t(kind, name));
-    if (i != symbols->end())
+    if (i != symbols->end()) {
+      DEBUG("scope.symbols", "Found '" << name << "' in " << this);
       return (*i).second;
+    }
   }
   return child_scope_t::lookup(kind, name);
 }

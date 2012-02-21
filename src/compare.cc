@@ -44,7 +44,7 @@ void push_sort_value(std::list<sort_value_t>& sort_values,
   if (node->kind == expr_t::op_t::O_CONS) {
     while (node && node->kind == expr_t::op_t::O_CONS) {
       push_sort_value(sort_values, node->left(), scope);
-      node = node->right();
+      node = node->has_right() ? node->right() : NULL;
     }
   } else {
     bool inverted = false;

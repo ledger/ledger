@@ -225,7 +225,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
         expr_t::ptr_op_t colorize_op;
         if (op->kind == expr_t::op_t::O_CONS) {
           amount_op   = op->left();
-          colorize_op = op->right();
+          colorize_op = op->has_right() ? op->right() : NULL;
         } else {
           amount_op = op;
         }
