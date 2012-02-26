@@ -132,7 +132,6 @@ void csv_reader::read_index(std::istream& sin)
 
 xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 {
- restart:
   char * line = next_line(in);
   if (! line || index.empty())
     return NULL;
@@ -165,82 +164,83 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
   std::vector<int>::size_type n = 0;
   amount_t amt;
-  string   total;
+  string total;
+  string field;
 
-  while (instr.good() && ! instr.eof()) {
-    string field = read_field(instr);
+  try {
+    while (instr.good() && ! instr.eof()) {
+      field = read_field(instr);
 
-    switch (index[n]) {
-    case FIELD_DATE:
-      if (field.empty())
-        goto restart;
-      try {
+      switch (index[n]) {
+      case FIELD_DATE:
         xact->_date = parse_date(field);
-      }
-      catch (date_error&) {
-        goto restart;
-      }
-      break;
+        break;
 
-    case FIELD_DATE_EFF:
-      xact->_date_eff = parse_date(field);
-      break;
+      case FIELD_DATE_EFF:
+        xact->_date_eff = parse_date(field);
+        break;
 
-    case FIELD_CODE:
-      if (! field.empty())
-        xact->code = field;
-      break;
+      case FIELD_CODE:
+        if (! field.empty())
+          xact->code = field;
+        break;
 
-    case FIELD_PAYEE: {
-      bool found = false;
-      foreach (payee_mapping_t& value, journal.payee_mappings) {
-        DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
-        if (value.first.match(field)) {
-          xact->payee = value.second;
-          found = true;
-          break;
+      case FIELD_PAYEE: {
+        bool found = false;
+        foreach (payee_mapping_t& value, journal.payee_mappings) {
+          DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
+          if (value.first.match(field)) {
+            xact->payee = value.second;
+            found = true;
+            break;
+          }
         }
+        if (! found)
+          xact->payee = field;
+        break;
       }
-      if (! found)
-        xact->payee = field;
-      break;
+
+      case FIELD_AMOUNT: {
+        std::istringstream amount_str(field);
+        amt.parse(amount_str, PARSE_NO_REDUCE);
+        if (! amt.has_commodity() &&
+            commodity_pool_t::current_pool->default_commodity)
+          amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+        post->amount = amt;
+        break;
+      }
+
+      case FIELD_COST: {
+        std::istringstream amount_str(field);
+        amt.parse(amount_str, PARSE_NO_REDUCE);
+        if (! amt.has_commodity() &&
+            commodity_pool_t::current_pool->default_commodity)
+          amt.set_commodity
+            (*commodity_pool_t::current_pool->default_commodity);
+        post->cost = amt;
+        break;
+      }
+
+      case FIELD_TOTAL:
+        total = field;
+        break;
+
+      case FIELD_NOTE:
+        xact->note = field;
+        break;
+
+      case FIELD_UNKNOWN:
+        if (! names[n].empty() && ! field.empty())
+          xact->set_tag(names[n], string_value(field));
+        break;
+      }
+      n++;
     }
-
-    case FIELD_AMOUNT: {
-      std::istringstream amount_str(field);
-      amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (! amt.has_commodity() &&
-          commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-      post->amount = amt;
-      break;
-    }
-
-    case FIELD_COST: {
-      std::istringstream amount_str(field);
-      amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (! amt.has_commodity() &&
-          commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity
-          (*commodity_pool_t::current_pool->default_commodity);
-      post->cost = amt;
-      break;
-    }
-
-    case FIELD_TOTAL:
-      total = field;
-      break;
-
-    case FIELD_NOTE:
-      xact->note = field;
-      break;
-
-    case FIELD_UNKNOWN:
-      if (! names[n].empty() && ! field.empty())
-        xact->set_tag(names[n], string_value(field));
-      break;
-    }
-    n++;
+  }
+  catch (const std::exception&) {
+    add_error_context(_("While parsing CSV field:"));
+    add_error_context(line_context(field));
+    throw;
   }
 
 #if 0
