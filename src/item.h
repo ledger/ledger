@@ -100,9 +100,10 @@ private:
 class item_t : public supports_flags<uint_least16_t>, public scope_t
 {
 public:
-#define ITEM_NORMAL     0x00    // no flags at all, a basic posting
-#define ITEM_GENERATED  0x01    // posting was not found in a journal
-#define ITEM_TEMP       0x02    // posting is a managed temporary
+#define ITEM_NORMAL            0x00 // no flags at all, a basic posting
+#define ITEM_GENERATED         0x01 // posting was not found in a journal
+#define ITEM_TEMP              0x02 // posting is a managed temporary
+#define ITEM_NOTE_ON_NEXT_LINE 0x04 // did we see a note on the next line?
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
@@ -117,7 +118,8 @@ public:
   optional<string_map> metadata;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note)
+    : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED),
+      note(_note)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }

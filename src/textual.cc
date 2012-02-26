@@ -577,6 +577,7 @@ void instance_t::automated_xact_directive(char * line)
 
         // This is a trailing note, and possibly a metadata info tag
         item->append_note(p + 1, context.scope, true);
+        item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = curr_pos;
         item->pos->end_line++;
 
@@ -1529,6 +1530,7 @@ xact_t * instance_t::parse_xact(char *          line,
     if (*p == ';') {
       // This is a trailing note, and possibly a metadata info tag
       item->append_note(p + 1, context.scope, true);
+      item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
       item->pos->end_pos = curr_pos;
       item->pos->end_line++;
     }

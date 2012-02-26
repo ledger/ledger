@@ -43,12 +43,15 @@ namespace ledger {
 namespace {
   void print_note(std::ostream&     out,
                   const string&     note,
+                  const bool        note_on_next_line,
                   const std::size_t columns,
                   const std::size_t prior_width)
   {
-    // The 4 is for four leading spaces at the beginning of the posting, and
-    // the 3 is for two spaces and a semi-colon before the note.
-    if (columns > 0 && note.length() > columns - (prior_width + 3))
+    // The 3 is for two spaces and a semi-colon before the note.
+    if (note_on_next_line ||
+        (columns > 0 &&
+         (columns <= prior_width + 3 ||
+          note.length() > columns - (prior_width + 3))))
       out << "\n    ;";
     else
       out << "  ;";
@@ -103,7 +106,8 @@ namespace {
        static_cast<std::size_t>(report.HANDLER(columns_).value.to_long()) : 80);
 
     if (xact.note)
-      print_note(out, *xact.note, columns, unistring(leader).length());
+      print_note(out, *xact.note, xact.has_flags(ITEM_NOTE_ON_NEXT_LINE),
+                 columns, unistring(leader).length());
     out << '\n';
 
     if (xact.metadata) {
@@ -226,7 +230,8 @@ namespace {
       }
 
       if (post->note)
-        print_note(out, *post->note, columns, 4 + account_width);
+        print_note(out, *post->note, post->has_flags(ITEM_NOTE_ON_NEXT_LINE),
+                   columns, 4 + account_width);
       out << '\n';
     }
   }
