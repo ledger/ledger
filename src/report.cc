@@ -966,6 +966,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(amount_data);
     else OPT(anon);
     else OPT_ALT(color, ansi);
+    else OPT(auto_match);
     else OPT(average);
     else OPT(account_width_);
     else OPT(amount_width_);

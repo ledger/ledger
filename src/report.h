@@ -229,6 +229,7 @@ public:
     HANDLER(amount_).report(out);
     HANDLER(amount_data).report(out);
     HANDLER(anon).report(out);
+    HANDLER(auto_match).report(out);
     HANDLER(average).report(out);
     HANDLER(balance_format_).report(out);
     HANDLER(base).report(out);
@@ -381,6 +382,7 @@ public:
 
   OPTION(report_t, amount_data); // -j
   OPTION(report_t, anon);
+  OPTION(report_t, auto_match);
 
   OPTION_(report_t, average, DO() { // -A
       parent->HANDLER(display_total_)
