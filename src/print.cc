@@ -119,7 +119,12 @@ namespace {
       }
     }
 
+    std::size_t count = xact.posts.size();
+    std::size_t index = 0;
+
     foreach (post_t * post, xact.posts) {
+      index++;
+
       if (! report.HANDLED(generated) &&
           (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
            ! post->has_flags(POST_ANONYMIZED)))
@@ -163,17 +168,15 @@ namespace {
         std::string::size_type slip =
           (static_cast<std::string::size_type>(account_width) -
            static_cast<std::string::size_type>(name.length()));
-        if (slip > 0) {
-          out.width(static_cast<std::streamsize>(slip));
-          out << ' ';
-        }
-
-        std::ostringstream amtbuf;
 
         string amt;
         if (post->amount_expr) {
           amt = post->amount_expr->text();
-        } else {
+        }
+        else if (! (count == 2 && index == 2 &&
+                    (*xact.posts.begin())->amount.commodity() ==
+                    post->amount.commodity() &&
+                    ! (*xact.posts.begin())->cost && ! post->cost)) {
           int amount_width =
             (report.HANDLER(amount_width_).specified ?
              report.HANDLER(amount_width_).value.to_int() : 12);
@@ -191,6 +194,7 @@ namespace {
           (static_cast<std::string::size_type>(amt.length()) -
            static_cast<std::string::size_type>(trimmed_amt.length()));
 
+        std::ostringstream amtbuf;
         if (slip + amt_slip < 2)
           amtbuf << string(2 - (slip + amt_slip), ' ');
         amtbuf << amt;
@@ -208,9 +212,15 @@ namespace {
           amtbuf << " = " << *post->assigned_amount;
 
         string trailer = amtbuf.str();
-        out << trailer;
+        if (! trailer.empty()) {
+          if (slip > 0) {
+            out.width(static_cast<std::streamsize>(slip));
+            out << ' ';
+          }
+          out << trailer;
 
-        account_width += unistring(trailer).length();
+          account_width += unistring(trailer).length();
+        }
       } else {
         out << pbuf.str();
       }
