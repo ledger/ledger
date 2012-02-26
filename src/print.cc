@@ -176,11 +176,14 @@ namespace {
         string amt;
         if (post->amount_expr) {
           amt = post->amount_expr->text();
-        }
-        else if (! (count == 2 && index == 2 &&
+        } else
+#if 0
+          if (! (count == 2 && index == 2 &&
                     (*xact.posts.begin())->amount.commodity() ==
                     post->amount.commodity() &&
-                    ! (*xact.posts.begin())->cost && ! post->cost)) {
+                    ! (*xact.posts.begin())->cost && ! post->cost))
+#endif
+          {
           int amount_width =
             (report.HANDLER(amount_width_).specified ?
              report.HANDLER(amount_width_).value.to_int() : 12);
