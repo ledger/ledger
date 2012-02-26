@@ -70,10 +70,12 @@ string csv_reader::read_field(std::istream& sin)
   else {
     while (sin.good() && ! sin.eof()) {
       sin.get(c);
-      if (c == ',')
-        break;
-      if (c != '\0')
-        field += c;
+      if (sin.good()) {
+        if (c == ',')
+          break;
+        if (c != '\0')
+          field += c;
+      }
     }
   }
   trim(field);
@@ -82,8 +84,6 @@ string csv_reader::read_field(std::istream& sin)
 
 char * csv_reader::next_line(std::istream& sin)
 {
-  static char linebuf[MAX_LINE + 1];
-
   while (sin.good() && ! sin.eof() && sin.peek() == '#')
     sin.getline(linebuf, MAX_LINE);
 
@@ -130,11 +130,13 @@ void csv_reader::read_index(std::istream& sin)
   }
 }
 
-xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
+xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
+                               bool rich_data)
 {
   char * line = next_line(in);
   if (! line || index.empty())
     return NULL;
+  linenum++;
 
   std::istringstream instr(line);
 
@@ -144,20 +146,18 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
   xact->set_state(item_t::CLEARED);
 
   xact->pos           = position_t();
-  xact->pos->pathname = "jww (2010-03-05): unknown";
+  xact->pos->pathname = pathname;
   xact->pos->beg_pos  = in.tellg();
-  xact->pos->beg_line = 0;
-  xact->pos->sequence = 0;
+  xact->pos->beg_line = linenum;
+  xact->pos->sequence = sequence++;
 
   post->xact = xact.get();
 
-#if 0
   post->pos           = position_t();
   post->pos->pathname = pathname;
-  post->pos->beg_pos  = line_beg_pos;
+  post->pos->beg_pos  = in.tellg();
   post->pos->beg_line = linenum;
-  post->pos->sequence = context.sequence++;
-#endif
+  post->pos->sequence = sequence++;
 
   post->set_state(item_t::CLEARED);
   post->account = NULL;
@@ -167,88 +167,80 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
   string total;
   string field;
 
-  try {
-    while (instr.good() && ! instr.eof()) {
-      field = read_field(instr);
+  while (instr.good() && ! instr.eof()) {
+    field = read_field(instr);
 
-      switch (index[n]) {
-      case FIELD_DATE:
-        xact->_date = parse_date(field);
-        break;
+    switch (index[n]) {
+    case FIELD_DATE:
+      xact->_date = parse_date(field);
+      break;
 
-      case FIELD_DATE_EFF:
-        xact->_date_eff = parse_date(field);
-        break;
+    case FIELD_DATE_EFF:
+      xact->_date_eff = parse_date(field);
+      break;
 
-      case FIELD_CODE:
-        if (! field.empty())
-          xact->code = field;
-        break;
+    case FIELD_CODE:
+      if (! field.empty())
+        xact->code = field;
+      break;
 
-      case FIELD_PAYEE: {
-        bool found = false;
-        foreach (payee_mapping_t& value, journal.payee_mappings) {
-          DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
-          if (value.first.match(field)) {
-            xact->payee = value.second;
-            found = true;
-            break;
-          }
+    case FIELD_PAYEE: {
+      bool found = false;
+      foreach (payee_mapping_t& value, journal.payee_mappings) {
+        DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
+        if (value.first.match(field)) {
+          xact->payee = value.second;
+          found = true;
+          break;
         }
-        if (! found)
-          xact->payee = field;
-        break;
       }
-
-      case FIELD_AMOUNT: {
-        std::istringstream amount_str(field);
-        amt.parse(amount_str, PARSE_NO_REDUCE);
-        if (! amt.has_commodity() &&
-            commodity_pool_t::current_pool->default_commodity)
-          amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-        post->amount = amt;
-        break;
-      }
-
-      case FIELD_COST: {
-        std::istringstream amount_str(field);
-        amt.parse(amount_str, PARSE_NO_REDUCE);
-        if (! amt.has_commodity() &&
-            commodity_pool_t::current_pool->default_commodity)
-          amt.set_commodity
-            (*commodity_pool_t::current_pool->default_commodity);
-        post->cost = amt;
-        break;
-      }
-
-      case FIELD_TOTAL:
-        total = field;
-        break;
-
-      case FIELD_NOTE:
-        xact->note = field;
-        break;
-
-      case FIELD_UNKNOWN:
-        if (! names[n].empty() && ! field.empty())
-          xact->set_tag(names[n], string_value(field));
-        break;
-      }
-      n++;
+      if (! found)
+        xact->payee = field;
+      break;
     }
-  }
-  catch (const std::exception&) {
-    add_error_context(_("While parsing CSV field:"));
-    add_error_context(line_context(field));
-    throw;
+
+    case FIELD_AMOUNT: {
+      std::istringstream amount_str(field);
+      amt.parse(amount_str, PARSE_NO_REDUCE);
+      if (! amt.has_commodity() &&
+          commodity_pool_t::current_pool->default_commodity)
+        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+      post->amount = amt;
+      break;
+    }
+
+    case FIELD_COST: {
+      std::istringstream amount_str(field);
+      amt.parse(amount_str, PARSE_NO_REDUCE);
+      if (! amt.has_commodity() &&
+          commodity_pool_t::current_pool->default_commodity)
+        amt.set_commodity
+          (*commodity_pool_t::current_pool->default_commodity);
+      post->cost = amt;
+      break;
+    }
+
+    case FIELD_TOTAL:
+      total = field;
+      break;
+
+    case FIELD_NOTE:
+      xact->note = field;
+      break;
+
+    case FIELD_UNKNOWN:
+      if (! names[n].empty() && ! field.empty())
+        xact->set_tag(names[n], string_value(field));
+      break;
+    }
+    n++;
   }
 
-#if 0
-  xact->set_tag(_("Imported"),
-                string(format_date(CURRENT_DATE(), FMT_WRITTEN)));
-  xact->set_tag(_("Original"), string(line));
-  xact->set_tag(_("SHA1"), string(sha1sum(line)));
-#endif
+  if (rich_data) {
+    xact->set_tag(_("Imported"),
+                  string_value(format_date(CURRENT_DATE(), FMT_WRITTEN)));
+    xact->set_tag(_("CSV"), string_value(line));
+  }
 
   // Translate the account name, if we have enough information to do so
 
@@ -267,13 +259,11 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket)
 
   post->xact = xact.get();
 
-#if 0
   post->pos           = position_t();
   post->pos->pathname = pathname;
-  post->pos->beg_pos  = line_beg_pos;
+  post->pos->beg_pos  = in.tellg();
   post->pos->beg_line = linenum;
-  post->pos->sequence = context.sequence++;
-#endif
+  post->pos->sequence = sequence++;
 
   post->set_state(item_t::CLEARED);
   post->account = bucket;

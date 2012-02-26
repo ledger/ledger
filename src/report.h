@@ -313,6 +313,7 @@ public:
     HANDLER(revalued).report(out);
     HANDLER(revalued_only).report(out);
     HANDLER(revalued_total_).report(out);
+    HANDLER(rich_data).report(out);
     HANDLER(seed_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
@@ -892,6 +893,8 @@ public:
    DO_(args) {
      set_expr(args.get<string>(0), args.get<string>(1));
    });
+
+  OPTION(report_t, rich_data);
 
   OPTION(report_t, seed_);
 

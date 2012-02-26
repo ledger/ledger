@@ -52,9 +52,13 @@ class account_t;
 
 class csv_reader
 {
-  static const std::size_t MAX_LINE = 1024;
+  static const std::size_t MAX_LINE = 4096;
 
   std::istream& in;
+  path          pathname;
+  char          linebuf[MAX_LINE];
+  std::size_t   linenum;
+  std::size_t   sequence;
 
   enum headers_t {
     FIELD_DATE = 0,
@@ -80,13 +84,11 @@ class csv_reader
 
   std::vector<int>    index;
   std::vector<string> names;
-  std::vector<string> fields;
-
-  typedef std::map<string, string> string_map;
 
 public:
-  csv_reader(std::istream& _in)
-    : in(_in),
+  csv_reader(std::istream& _in, const path& _pathname)
+    : in(_in), pathname(_pathname),
+      linenum(0), sequence(0),
       date_mask("date"),
       date_eff_mask("posted( ?date)?"),
       code_mask("code"),
@@ -98,11 +100,30 @@ public:
     read_index(in);
   }
 
+  void   read_index(std::istream& in);
   string read_field(std::istream& in);
   char * next_line(std::istream& in);
-  void read_index(std::istream& in);
 
-  xact_t * read_xact(journal_t& journal, account_t * bucket);
+  xact_t * read_xact(journal_t& journal, account_t * bucket, bool rich_data);
+
+  const char * get_last_line() const {
+    return linebuf;
+  }
+
+  path get_pathname() const {
+    return pathname;
+  }
+  std::size_t get_linenum() const {
+    return linenum;
+  }
+
+  void reset() {
+    pathname.clear();
+    index.clear();
+    names.clear();
+    linenum = 0;
+    sequence = 0;
+  }
 };
 
 } // namespace ledger

@@ -50,8 +50,8 @@ void debug_assert(const string& reason,
                   std::size_t   line)
 {
   std::ostringstream buf;
-  buf << "Assertion failed in \"" << file << "\", line " << line
-      << ": " << func << ": " << reason;
+  buf << "Assertion failed in " << file_context(file, line)
+      << func << ": " << reason;
   throw assertion_failed(buf.str());
 }
 

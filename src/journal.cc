@@ -107,6 +107,17 @@ account_t * journal_t::find_account_re(const string& regexp)
 
 bool journal_t::add_xact(xact_t * xact)
 {
+  if (optional<value_t> ref = xact->get_tag(_("SHA1"))) {
+    std::pair<checksum_map_t::iterator, bool> result
+      = checksum_map.insert(checksum_map_t::value_type(ref->to_string(), xact));
+    if (! result.second) {
+      throw_(std::runtime_error,
+             _("Found duplicated transaction with SHA1: ")
+             << ref->to_string());
+      return false;
+    }
+  }
+
   xact->journal = this;
 
   if (! xact->finalize()) {

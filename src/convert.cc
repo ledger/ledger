@@ -56,72 +56,41 @@ value_t convert_command(call_scope_t& args)
   account_t * bucket  = journal.master->find_account(bucket_name);
   account_t * unknown = journal.master->find_account(_("Expenses:Unknown"));
 
-  // Make an amounts mapping for the account under consideration
-
-  typedef std::map<value_t, std::list<post_t *> > post_map_t;
-  post_map_t post_map;
-
-  xacts_iterator journal_iter(journal);
-  while (xact_t * xact = *journal_iter++) {
-    post_t * post = NULL;
-    xact_posts_iterator xact_iter(*xact);
-    while ((post = *xact_iter++) != NULL) {
-      if (post->account == bucket)
-        break;
-    }
-    if (post) {
-      post_map_t::iterator i = post_map.find(post->amount);
-      if (i == post_map.end()) {
-        std::list<post_t *> post_list;
-        post_list.push_back(post);
-        post_map.insert(post_map_t::value_type(post->amount, post_list));
-      } else {
-        (*i).second.push_back(post);
-      }
-    }
-  }
-
   // Create a flat list
   xacts_list current_xacts(journal.xacts_begin(), journal.xacts_end());
 
   // Read in the series of transactions from the CSV file
 
   print_xacts formatter(report);
-  ifstream    data(path(args.get<string>(0)));
-  csv_reader  reader(data);
+  path        csv_file_path(args.get<string>(0));
+  ifstream    data(csv_file_path);
+  csv_reader  reader(data, csv_file_path);
 
-  while (xact_t * xact = reader.read_xact(journal, bucket)) {
-    if (report.HANDLED(invert)) {
-      foreach (post_t * post, xact->posts)
-        post->amount.in_place_negate();
-    }
-
-    bool matched = false;
-    if (! xact->posts.front()->amount.is_null()) {
-      post_map_t::iterator i = post_map.find(- xact->posts.front()->amount);
-      if (i != post_map.end()) {
-        std::list<post_t *>& post_list((*i).second);
-        foreach (post_t * post, post_list) {
-          if (xact->code && post->xact->code &&
-              *xact->code == *post->xact->code) {
-            matched = true;
-            break;
-          }
-          else if (xact->actual_date() == post->actual_date()) {
-            matched = true;
-            break;
-          }
-        }
+  try {
+    while (xact_t * xact = reader.read_xact(journal, bucket,
+                                            report.HANDLED(rich_data))) {
+      if (report.HANDLED(invert)) {
+        foreach (post_t * post, xact->posts)
+          post->amount.in_place_negate();
       }
-    }
 
-    if (matched) {
-      DEBUG("convert.csv", "Ignored xact with code: " << *xact->code);
-      checked_delete(xact);     // ignore it
-    }
-    else {
+      string ref = (xact->has_tag(_("SHA1")) ?
+                    xact->get_tag(_("SHA1"))->to_string() :
+                    sha1sum(reader.get_last_line()));
+
+      checksum_map_t::const_iterator entry = journal.checksum_map.find(ref);
+      if (entry != journal.checksum_map.end()) {
+        INFO(file_context(reader.get_pathname(),
+                          reader.get_linenum())
+             << "Ignoring known SHA1 " << ref);
+        checked_delete(xact);     // ignore it
+        continue;
+      }
+
+      if (report.HANDLED(rich_data) && ! xact->has_tag(_("SHA1")))
+        xact->set_tag(_("SHA1"), string_value(ref));
+
       if (xact->posts.front()->account == NULL) {
-        // jww (2010-03-07): Bind this logic to an option: --auto-match
         if (account_t * acct =
             (report.HANDLED(auto_match) ?
              lookup_probable_account(xact->payee, current_xacts.rbegin(),
@@ -143,8 +112,16 @@ value_t convert_command(call_scope_t& args)
           formatter(*post);
       }
     }
+    formatter.flush();
   }
-  formatter.flush();
+  catch (const std::exception&) {
+    add_error_context(_("While parsing file %1")
+                      << file_context(reader.get_pathname(),
+                                      reader.get_linenum()));
+    add_error_context(_("While parsing CSV line:"));
+    add_error_context(line_context(reader.get_last_line()));
+    throw;
+  }
 
   // If not, transform the payee according to regexps
 

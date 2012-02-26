@@ -72,7 +72,7 @@ bool item_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-  optional<value_t> item_t::get_tag(const string& tag, bool) const
+optional<value_t> item_t::get_tag(const string& tag, bool) const
 {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {

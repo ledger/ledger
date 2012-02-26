@@ -63,6 +63,7 @@ typedef std::pair<mask_t, string>      payee_mapping_t;
 typedef std::list<payee_mapping_t>     payee_mappings_t;
 typedef std::pair<mask_t, account_t *> account_mapping_t;
 typedef std::list<account_mapping_t>   account_mappings_t;
+typedef std::map<string, xact_t *>     checksum_map_t;
 
 class journal_t : public noncopyable
 {
@@ -117,6 +118,7 @@ public:
   std::list<fileinfo_t> sources;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
+  checksum_map_t        checksum_map;
   bool                  was_loaded;
 
   journal_t();
@@ -198,6 +200,7 @@ private:
     ar & sources;
     ar & payee_mappings;
     ar & account_mappings;
+    ar & checksum_map;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
