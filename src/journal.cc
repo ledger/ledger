@@ -196,7 +196,7 @@ std::size_t journal_t::read(const path& pathname,
 
   if (! exists(filename))
     throw_(std::runtime_error,
-           _("Cannot read journal file '%1'") << filename);
+           _("Cannot read journal file %1") << filename);
 
   ifstream stream(filename);
   std::size_t count = read(stream, filename, master_account, scope);
