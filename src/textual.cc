@@ -140,18 +140,23 @@ namespace {
     bool general_directive(char * line);
 
     void account_directive(char * line);
-    void account_alias_directive(char * line);
-    void account_payee_directive(char * line);
+    void account_alias_directive(account_t * account, string alias);
+    void account_payee_directive(account_t * account, string payee);
+    void account_default_directive(account_t * account);
+
+    void default_account_directive(char * line);
+    void alias_directive(char * line);
 
     void payee_directive(char * line);
-    void payee_alias_directive(char * line);
+    void payee_alias_directive(const string& payee, string alias);
 
     void commodity_directive(char * line);
-#if 0
-    void commodity_alias_directive(char * line);
-    void commodity_format_directive(char * line);
-    void commodity_nomarket_directive(char * line);
-#endif
+    void commodity_alias_directive(commodity_t& comm, string alias);
+    void commodity_format_directive(commodity_t& comm, string format);
+    void commodity_nomarket_directive(commodity_t& comm);
+    void commodity_default_directive(commodity_t& comm);
+
+    void default_commodity_directive(char * line);
 
     void apply_directive(char * line);
     void apply_account_directive(char * line);
@@ -167,16 +172,13 @@ namespace {
     void price_conversion_directive(char * line);
     void nomarket_directive(char * line);
 
-    void default_account_directive(char * line);
-    void default_commodity_directive(char * line);
-
     void include_directive(char * line);
     void option_directive(char * line);
-    void define_directive(char * line);
-    void expr_directive(char * line);
+    void comment_directive(char * line);
+
+    void eval_directive(char * line);
     void assert_directive(char * line);
     void check_directive(char * line);
-    void comment_directive(char * line);
 
     post_t * parse_post(char *          line,
                         std::streamsize len,
@@ -598,7 +600,8 @@ void instance_t::automated_xact_directive(char * line)
                (remlen > 6 && *p == 'c' &&
                 std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
                (remlen > 5 && *p == 'e' &&
-                std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
+                ((std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4])) ||
+                 (std::strncmp(p, "eval", 4) == 0 && std::isspace(p[4]))))) {
         const char c = *p;
         p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
         if (! ae->check_exprs)
@@ -861,17 +864,89 @@ void instance_t::end_apply_directive(char * kind)
 
 void instance_t::account_directive(char * line)
 {
+  istream_pos_type beg_pos     = line_beg_pos;
+  std::size_t      beg_linenum = linenum;
+
   char * p = skip_ws(line);
-  //account_t * account =
-  context.journal.register_account(p, NULL,
-                                   file_context(pathname, linenum),
-                                   context.top_account());
+  account_t * account =
+    context.journal.register_account(p, NULL, file_context(pathname, linenum),
+                                     context.top_account());
+  std::auto_ptr<auto_xact_t> ae;
+
+  while (peek_whitespace_line()) {
+    read_line(line);
+    char * q = skip_ws(line);
+    if (! *q)
+      break;
+
+    char * b = next_element(q);
+    string keyword(q);
+    if (keyword == "alias") {
+      account_alias_directive(account, b);
+    }
+    else if (keyword == "payee") {
+      account_payee_directive(account, b);
+    }
+    else if (keyword == "default") {
+      account_default_directive(account);
+    }
+    else if (keyword == "assert" || keyword == "check") {
+      keep_details_t keeper(true, true, true);
+      expr_t         expr(string("account == \"") + account->fullname() + "\"");
+      predicate_t    pred(expr.get_op(), keeper);
+
+      if (! ae.get()) {
+        ae.reset(new auto_xact_t(pred));
+
+        ae->pos           = position_t();
+        ae->pos->pathname = pathname;
+        ae->pos->beg_pos  = beg_pos;
+        ae->pos->beg_line = beg_linenum;
+        ae->pos->sequence = context.sequence++;
+        ae->check_exprs   = auto_xact_t::check_expr_list();
+      }
+
+      ae->check_exprs->push_back
+        (auto_xact_t::check_expr_pair(expr_t(b),
+                                      keyword == "assert" ?
+                                      auto_xact_t::EXPR_ASSERTION :
+                                      auto_xact_t::EXPR_CHECK));
+    }
+    else if (keyword == "eval" || keyword == "expr") {
+      bind_scope_t bound_scope(context.scope, *account);
+      expr_t(b).calc(bound_scope);
+    }
+    else if (keyword == "note") {
+      account->note = b;
+    }
+  }
+
+  if (ae.get()) {
+    context.journal.auto_xacts.push_back(ae.get());
+
+    ae->journal       = &context.journal;
+    ae->pos->end_pos  = in.tellg();
+    ae->pos->end_line = linenum;
+
+    ae.release();
+  }
 }
 
-void instance_t::account_alias_directive(char * line)
+void instance_t::account_alias_directive(account_t * account, string alias)
 {
-  char * b = skip_ws(line);
-#if 0
+  // Once we have an alias name (alias) and the target account
+  // (account), add a reference to the account in the `account_aliases'
+  // map, which is used by the post parser to resolve alias references.
+  trim(alias);
+  std::pair<accounts_map::iterator, bool> result
+    = context.journal
+        .account_aliases.insert(accounts_map::value_type(alias, account));
+  assert(result.second);
+}
+
+void instance_t::alias_directive(char * line)
+{
+  char * b = next_element(line);
   if (char * e = std::strchr(b, '=')) {
     char * z = e - 1;
     while (std::isspace(*z))
@@ -879,51 +954,45 @@ void instance_t::account_alias_directive(char * line)
     *e++ = '\0';
     e = skip_ws(e);
 
-    // Once we have an alias name (b) and the target account
-    // name (e), add a reference to the account in the
-    // `account_aliases' map, which is used by the post
-    // parser to resolve alias references.
-    account_t * acct = context.top_account()->find_account(e);
-    std::pair<accounts_map::iterator, bool> result
-      = account_aliases.insert(accounts_map::value_type(b, acct));
-    assert(result.second);
+    account_alias_directive(context.top_account()->find_account(e), b);
   }
-#endif
 }
 
-void instance_t::account_payee_directive(char * line)
+void instance_t::account_payee_directive(account_t * account, string payee)
 {
+  trim(payee);
+  context.journal.payees_for_unknown_accounts
+    .push_back(account_mapping_t(mask_t(payee), account));
+}
+
+void instance_t::account_default_directive(account_t * account)
+{
+  context.journal.bucket = account;
 }
 
 void instance_t::payee_directive(char * line)
 {
-  context.journal.register_payee(line, NULL, file_context(pathname, linenum));
-}
-
-void instance_t::payee_alias_directive(char * line)
-{
-  char * payee = skip_ws(line);
-  char * regex = next_element(payee, true);
-
-  if (regex)
-    context.journal.payee_mappings.push_back
-      (payee_mapping_t(mask_t(regex), payee));
+  string payee = context.journal
+    .register_payee(line, NULL, file_context(pathname, linenum));
 
   while (peek_whitespace_line()) {
-#if defined(NO_ASSERTS)
     read_line(line);
-#else
-    std::streamsize len = read_line(line);
-    assert(len > 0);
-#endif
-
-    regex = skip_ws(line);
-    if (! *regex)
+    char * p = skip_ws(line);
+    if (! *p)
       break;
 
-    context.journal.payee_mappings.push_back
-      (payee_mapping_t(mask_t(regex), payee));
+    char * b = next_element(p);
+    string keyword(p);
+    if (keyword == "alias")
+      payee_alias_directive(payee, b);
   }
+}
+
+void instance_t::payee_alias_directive(const string& payee, string alias)
+{
+  trim(alias);
+  context.journal.payee_mappings
+    .push_back(payee_mapping_t(mask_t(alias), payee));
 }
 
 void instance_t::commodity_directive(char * line)
@@ -933,53 +1002,65 @@ void instance_t::commodity_directive(char * line)
   commodity_t::parse_symbol(p, symbol);
 
   if (commodity_t * commodity =
-      commodity_pool_t::current_pool->find_or_create(symbol))
+      commodity_pool_t::current_pool->find_or_create(symbol)) {
     context.journal.register_commodity(*commodity, 0,
                                        file_context(pathname, linenum));
-}
 
-#if 0
-void instance_t::commodity_alias_directive(char * line)
-{
-}
+    while (peek_whitespace_line()) {
+      read_line(line);
+      char * q = skip_ws(line);
+      if (! *q)
+        break;
 
-void instance_t::commodity_nomarket_directive(char * line)
-{
-}
-
-void instance_t::account_mapping_directive(char * line)
-{
-  char * account_name = skip_ws(line);
-  char * payee_regex  = next_element(account_name, true);
-
-  if (payee_regex)
-    context.journal.account_mappings.push_back
-      (account_mapping_t(mask_t(payee_regex),
-                         context.top_account()->find_account(account_name)));
-
-  while (peek_whitespace_line()) {
-#if defined(NO_ASSERTS)
-    read_line(line);
-#else
-    std::streamsize len = read_line(line);
-    assert(len > 0);
-#endif
-
-    payee_regex = skip_ws(line);
-    if (! *payee_regex)
-      break;
-
-    context.journal.account_mappings.push_back
-      (account_mapping_t(mask_t(payee_regex),
-                         context.top_account()->find_account(account_name)));
+      char * b = next_element(q);
+      string keyword(q);
+      if (keyword == "alias")
+        commodity_alias_directive(*commodity, b);
+      else if (keyword == "format")
+        commodity_format_directive(*commodity, b);
+      else if (keyword == "nomarket")
+        commodity_nomarket_directive(*commodity);
+      else if (keyword == "default")
+        commodity_default_directive(*commodity);
+    }
   }
 }
-#endif
 
-void instance_t::define_directive(char * line)
+void instance_t::commodity_alias_directive(commodity_t&, string)
 {
-  expr_t def(skip_ws(line));
-  def.compile(context.scope);   // causes definitions to be established
+#if 0
+  trim(alias);
+  std::pair<commodity_pool_t::commodities_map::iterator, bool> result
+    = commodity_pool_t::current_pool->commodities.insert
+    (commodity_pool_t::commodities_map::value_type(alias, &comm));
+  if (! result.second)
+    throw_(parse_error,
+           _("Cannot use existing commodity name as an alias: %1") << alias);
+#endif
+}
+
+void instance_t::commodity_format_directive(commodity_t&, string format)
+{
+  trim(format);
+  amount_t amt;
+  amt.parse(format);
+  VERIFY(amt.valid());
+}
+
+void instance_t::commodity_nomarket_directive(commodity_t& comm)
+{
+  comm.add_flags(COMMODITY_NOMARKET);
+}
+
+void instance_t::commodity_default_directive(commodity_t& comm)
+{
+  commodity_pool_t::current_pool->default_commodity = &comm;
+}
+
+void instance_t::eval_directive(char * line)
+{
+  expr_t expr(line);
+  expr.calc(context.scope);
 }
 
 void instance_t::assert_directive(char * line)
@@ -1008,12 +1089,6 @@ void instance_t::comment_directive(char * line)
   }
 }
 
-void instance_t::expr_directive(char * line)
-{
-  expr_t expr(line);
-  expr.calc(context.scope);
-}
-
 bool instance_t::general_directive(char * line)
 {
   char buf[8192];
@@ -1030,6 +1105,10 @@ bool instance_t::general_directive(char * line)
   case 'a':
     if (std::strcmp(p, "account") == 0) {
       account_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "alias") == 0) {
+      alias_directive(arg);
       return true;
     }
     else if (std::strcmp(p, "apply") == 0) {
@@ -1066,7 +1145,7 @@ bool instance_t::general_directive(char * line)
 
   case 'd':
     if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
-      define_directive(arg);
+      eval_directive(arg);
       return true;
     }
     break;
@@ -1076,8 +1155,8 @@ bool instance_t::general_directive(char * line)
       end_apply_directive(arg);
       return true;
     }
-    else if (std::strcmp(p, "expr") == 0) {
-      expr_directive(arg);
+    else if (std::strcmp(p, "expr") == 0 || std::strcmp(p, "eval") == 0) {
+      eval_directive(arg);
       return true;
     }
     break;
@@ -1189,7 +1268,7 @@ post_t * instance_t::parse_post(char *          line,
     p++; e--;
   }
 
-  string name(p, static_cast<std::string::size_type>(e - p));
+  string name(p, static_cast<string::size_type>(e - p));
   DEBUG("textual.parse", "line " << linenum << ": "
         << "Parsed account name " << name);
 
@@ -1429,8 +1508,8 @@ post_t * instance_t::parse_post(char *          line,
   }
   catch (const std::exception&) {
     add_error_context(_("While parsing posting:"));
-    add_error_context(line_context(buf, static_cast<std::string::size_type>(beg),
-                                   static_cast<std::string::size_type>(len)));
+    add_error_context(line_context(buf, static_cast<string::size_type>(beg),
+                                   static_cast<string::size_type>(len)));
     throw;
   }
 }
