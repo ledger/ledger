@@ -1047,6 +1047,8 @@ void instance_t::commodity_alias_directive(commodity_t&, string)
 
 void instance_t::commodity_format_directive(commodity_t&, string format)
 {
+  // jww (2012-02-27): A format specified this way should turn off
+  // observational formatting.
   trim(format);
   amount_t amt;
   amt.parse(format);
