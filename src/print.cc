@@ -180,6 +180,8 @@ namespace {
           amt = post->amount_expr->text();
         } else
 #if 0
+          // jww (2012-02-27): Disabled for now because it's not
+          // outputted valid transactions in every case
           if (! (count == 2 && index == 2 &&
                     (*xact.posts.begin())->amount.commodity() ==
                     post->amount.commodity() &&
