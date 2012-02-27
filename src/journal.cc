@@ -36,6 +36,7 @@
 #include "commodity.h"
 #include "pool.h"
 #include "xact.h"
+#include "post.h"
 #include "account.h"
 
 namespace ledger {
@@ -80,9 +81,15 @@ journal_t::~journal_t()
 
 void journal_t::initialize()
 {
-  master     = new account_t;
-  bucket     = NULL;
-  was_loaded = false;
+  master            = new account_t;
+  bucket            = NULL;
+  fixed_accounts    = false;
+  fixed_payees      = false;
+  fixed_commodities = false;
+  fixed_metadata    = false;
+  was_loaded        = false;
+  force_checking    = false;
+  checking_style    = CHECK_PERMISSIVE;
 }
 
 void journal_t::add_account(account_t * acct)
@@ -105,19 +112,147 @@ account_t * journal_t::find_account_re(const string& regexp)
   return master->find_account_re(regexp);
 }
 
-bool journal_t::add_xact(xact_t * xact)
+account_t * journal_t::register_account(const string& name, post_t * post,
+                                        const string& location,
+                                        account_t * master_account)
 {
-  if (optional<value_t> ref = xact->get_tag(_("SHA1"))) {
-    std::pair<checksum_map_t::iterator, bool> result
-      = checksum_map.insert(checksum_map_t::value_type(ref->to_string(), xact));
-    if (! result.second) {
-      throw_(std::runtime_error,
-             _("Found duplicated transaction with SHA1: ")
-             << ref->to_string());
-      return false;
+  account_t * result = NULL;
+
+  if (account_aliases.size() > 0) {
+    accounts_map::const_iterator i = account_aliases.find(name);
+    if (i != account_aliases.end())
+      result = (*i).second;
+  }
+
+  if (! result)
+    result = master_account->find_account(name);
+
+  if (! result->has_flags(ACCOUNT_KNOWN)) {
+    if (! post) {
+      if (force_checking)
+        fixed_accounts = true;
+      result->add_flags(ACCOUNT_KNOWN);
+    }
+    else if (! fixed_accounts && post->_state != item_t::UNCLEARED) {
+      result->add_flags(ACCOUNT_KNOWN);
+    }
+    else if (checking_style == CHECK_WARNING) {
+      warning_(_("%1Unknown account '%2'") << location
+               << result->fullname());
+    }
+    else if (checking_style == CHECK_ERROR) {
+      throw_(parse_error, _("Unknown account '%1'") << result->fullname());
     }
   }
 
+  if (result->name == _("Unknown")) {
+    foreach (account_mapping_t& value, payees_for_unknown_accounts) {
+      if (value.first.match(post->xact->payee)) {
+        result = value.second;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+string journal_t::register_payee(const string& name, xact_t * xact,
+                                 const string& location)
+{
+#if 0
+  std::set<string>::iterator i = known_payees.find(name);
+
+  if (i == known_payees.end()) {
+    if (! xact) {
+      if (force_checking)
+        fixed_payees = true;
+      known_payees.insert(name);
+    }
+    else if (! fixed_payees && xact->_state != item_t::UNCLEARED) {
+      known_payees.insert(name);
+    }
+    else if (checking_style == CHECK_WARNING) {
+      warning_(_("%1Unknown payee '%2'") << location << name);
+    }
+    else if (checking_style == CHECK_ERROR) {
+      throw_(parse_error, _("Unknown payee '%1'") << name);
+    }
+  }
+#endif
+
+#if 0
+    foreach (payee_mapping_t& value, context.journal.payee_mappings) {
+      if (value.first.match(next)) {
+        xact->payee = value.second;
+        break;
+      }
+    }
+    if (xact->payee.empty())
+      xact->payee = next;
+#else
+  return name;
+#endif
+}
+
+void journal_t::register_commodity(commodity_t& comm,
+                                   variant<int, xact_t *, post_t *> context,
+                                   const string& location)
+{
+  if (! comm.has_flags(COMMODITY_KNOWN)) {
+    if (context.which() == 0) {
+      if (force_checking)
+        fixed_commodities = true;
+      comm.add_flags(COMMODITY_KNOWN);
+    }
+    else if (! fixed_commodities &&
+             ((context.which() == 1 &&
+               boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
+             (context.which() == 2 &&
+               boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
+      comm.add_flags(COMMODITY_KNOWN);
+    }
+    else if (checking_style == CHECK_WARNING) {
+      warning_(_("%1Unknown commodity '%2'") << location << comm);
+    }
+    else if (checking_style == CHECK_ERROR) {
+      throw_(parse_error, _("Unknown commodity '%1'") << comm);
+    }
+  }
+}
+
+#if 0
+void journal_t::register_metadata(const string& key, const string& value,
+                                  variant<int, xact_t *, post_t *> context,
+                                  const string& location)
+{
+  std::set<string>::iterator i = known_tags.find(key);
+
+  if (i == known_tags.end()) {
+    if (context.which() == 0) {
+      if (force_checking)
+        fixed_metadata = true;
+      known_tags.insert(key);
+    }
+    else if (! fixed_metadata &&
+             ((context.which() == 1 &&
+               boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
+             (context.which() == 2 &&
+               boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
+      known_tags.insert(key);
+    }
+    else if (checking_style == CHECK_WARNING) {
+      warning_(_("%1Unknown metadata tag '%2'") << location << key);
+    }
+    else if (checking_style == CHECK_ERROR) {
+      throw_(parse_error, _("Unknown metadata tag '%1'") << key);
+    }
+  }
+}
+#endif
+
+bool journal_t::add_xact(xact_t * xact)
+{
   xact->journal = this;
 
   if (! xact->finalize()) {
@@ -187,10 +322,7 @@ std::size_t journal_t::read(std::istream& in,
              _("No default scope in which to read journal file '%1'")
              << pathname);
 
-    value_t strict = expr_t("strict").calc(*scope);
-
-    count = parse(in, *scope, master_alt ? master_alt : master,
-                  &pathname, strict.to_boolean());
+    count = parse(in, *scope, master_alt ? master_alt : master, &pathname);
   }
   catch (...) {
     clear_xdata();

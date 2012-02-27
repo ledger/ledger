@@ -91,7 +91,10 @@ public:
     HANDLER(decimal_comma).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
+    HANDLER(explicit).report(out);
     HANDLER(master_account_).report(out);
+    HANDLER(pedantic).report(out);
+    HANDLER(permissive).report(out);
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
@@ -139,7 +142,10 @@ public:
       set_input_date_format(args.get<string>(1).c_str());
     });
 
+  OPTION(session_t, explicit);
   OPTION(session_t, master_account_);
+  OPTION(session_t, pedantic);
+  OPTION(session_t, permissive);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
 };

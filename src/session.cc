@@ -97,6 +97,16 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLED(price_db_))
     price_db_path = resolve_path(HANDLER(price_db_).str());
 
+  if (HANDLED(explicit))
+    journal->force_checking = true;
+
+  if (HANDLED(permissive))
+    journal->checking_style = journal_t::CHECK_PERMISSIVE;
+  else if (HANDLED(pedantic))
+    journal->checking_style = journal_t::CHECK_ERROR;
+  else if (HANDLED(strict))
+    journal->checking_style = journal_t::CHECK_WARNING;
+
 #if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;
   if (HANDLED(cache_) && master_account.empty())
@@ -251,6 +261,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_ALT(price_exp_, leeway_);
+    else OPT(explicit);
     break;
   case 'm':
     OPT(master_account_);
@@ -258,6 +269,8 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'p':
     OPT(price_db_);
     else OPT(price_exp_);
+    else OPT(pedantic);
+    else OPT(permissive);
     break;
   case 's':
     OPT(strict);

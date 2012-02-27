@@ -48,10 +48,12 @@
 
 namespace ledger {
 
+class commodity_t;
 class xact_base_t;
 class xact_t;
 class auto_xact_t;
 class period_xact_t;
+class post_t;
 class account_t;
 class scope_t;
 
@@ -59,11 +61,12 @@ typedef std::list<xact_t *>        xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 
-typedef std::pair<mask_t, string>      payee_mapping_t;
-typedef std::list<payee_mapping_t>     payee_mappings_t;
-typedef std::pair<mask_t, account_t *> account_mapping_t;
-typedef std::list<account_mapping_t>   account_mappings_t;
-typedef std::map<string, xact_t *>     checksum_map_t;
+typedef std::pair<mask_t, string>           payee_mapping_t;
+typedef std::list<payee_mapping_t>          payee_mappings_t;
+typedef std::pair<mask_t, account_t *>      account_mapping_t;
+typedef std::list<account_mapping_t>        account_mappings_t;
+typedef std::map<const string, account_t *> accounts_map;
+typedef std::map<string, xact_t *>          checksum_map_t;
 
 class journal_t : public noncopyable
 {
@@ -116,10 +119,25 @@ public:
   auto_xacts_list       auto_xacts;
   period_xacts_list     period_xacts;
   std::list<fileinfo_t> sources;
+  std::set<string>      known_payees;
+  std::set<string>      known_tags;
+  bool                  fixed_accounts;
+  bool                  fixed_payees;
+  bool                  fixed_commodities;
+  bool                  fixed_metadata;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
+  accounts_map          account_aliases;
+  account_mappings_t    payees_for_unknown_accounts;
   checksum_map_t        checksum_map;
   bool                  was_loaded;
+  bool                  force_checking;
+
+  enum checking_style_t {
+    CHECK_PERMISSIVE,
+    CHECK_WARNING,
+    CHECK_ERROR
+  } checking_style;
 
   journal_t();
   journal_t(const path& pathname);
@@ -141,6 +159,20 @@ public:
   bool        remove_account(account_t * acct);
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
+
+  account_t * register_account(const string& name, post_t * post,
+                               const string& location,
+                               account_t * master = NULL);
+  string      register_payee(const string& name, xact_t * xact,
+                             const string& location);
+  void        register_commodity(commodity_t& comm,
+                                 variant<int, xact_t *, post_t *> context,
+                                 const string& location);
+#if 0
+  void        register_metadata(const string& key, const string& value,
+                                variant<int, xact_t *, post_t *> context,
+                                const string& location);
+#endif
 
   bool add_xact(xact_t * xact);
   void extend_xact(xact_base_t * xact);
@@ -176,8 +208,7 @@ public:
   std::size_t parse(std::istream& in,
                     scope_t&      session_scope,
                     account_t *   master        = NULL,
-                    const path *  original_file = NULL,
-                    bool          strict        = false);
+                    const path *  original_file = NULL);
 
   bool has_xdata();
   void clear_xdata();
