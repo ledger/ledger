@@ -136,21 +136,23 @@ account_t * journal_t::register_account(const string& name, post_t * post,
     }
   }
 
-  if (! result->has_flags(ACCOUNT_KNOWN)) {
-    if (! post) {
-      if (force_checking)
-        fixed_accounts = true;
-      result->add_flags(ACCOUNT_KNOWN);
-    }
-    else if (! fixed_accounts && post->_state != item_t::UNCLEARED) {
-      result->add_flags(ACCOUNT_KNOWN);
-    }
-    else if (checking_style == CHECK_WARNING) {
-      warning_(_("%1Unknown account '%2'") << location
-               << result->fullname());
-    }
-    else if (checking_style == CHECK_ERROR) {
-      throw_(parse_error, _("Unknown account '%1'") << result->fullname());
+  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+    if (! result->has_flags(ACCOUNT_KNOWN)) {
+      if (! post) {
+        if (force_checking)
+          fixed_accounts = true;
+        result->add_flags(ACCOUNT_KNOWN);
+      }
+      else if (! fixed_accounts && post->_state != item_t::UNCLEARED) {
+        result->add_flags(ACCOUNT_KNOWN);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        warning_(_("%1Unknown account '%2'") << location
+                 << result->fullname());
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown account '%1'") << result->fullname());
+      }
     }
   }
 
@@ -197,24 +199,26 @@ void journal_t::register_commodity(commodity_t& comm,
                                    variant<int, xact_t *, post_t *> context,
                                    const string& location)
 {
-  if (! comm.has_flags(COMMODITY_KNOWN)) {
-    if (context.which() == 0) {
-      if (force_checking)
-        fixed_commodities = true;
-      comm.add_flags(COMMODITY_KNOWN);
-    }
-    else if (! fixed_commodities &&
-             ((context.which() == 1 &&
-               boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
-             (context.which() == 2 &&
-               boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
-      comm.add_flags(COMMODITY_KNOWN);
-    }
-    else if (checking_style == CHECK_WARNING) {
-      warning_(_("%1Unknown commodity '%2'") << location << comm);
-    }
-    else if (checking_style == CHECK_ERROR) {
-      throw_(parse_error, _("Unknown commodity '%1'") << comm);
+  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+    if (! comm.has_flags(COMMODITY_KNOWN)) {
+      if (context.which() == 0) {
+        if (force_checking)
+          fixed_commodities = true;
+        comm.add_flags(COMMODITY_KNOWN);
+      }
+      else if (! fixed_commodities &&
+               ((context.which() == 1 &&
+                 boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
+                (context.which() == 2 &&
+                 boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
+        comm.add_flags(COMMODITY_KNOWN);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        warning_(_("%1Unknown commodity '%2'") << location << comm);
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown commodity '%1'") << comm);
+      }
     }
   }
 }
@@ -254,26 +258,28 @@ void journal_t::register_metadata(const string& key, const value_t& value,
                                   variant<int, xact_t *, post_t *> context,
                                   const string& location)
 {
-  std::set<string>::iterator i = known_tags.find(key);
+  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+    std::set<string>::iterator i = known_tags.find(key);
 
-  if (i == known_tags.end()) {
-    if (context.which() == 0) {
-      if (force_checking)
-        fixed_metadata = true;
-      known_tags.insert(key);
-    }
-    else if (! fixed_metadata &&
-             ((context.which() == 1 &&
-               boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
-             (context.which() == 2 &&
-               boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
-      known_tags.insert(key);
-    }
-    else if (checking_style == CHECK_WARNING) {
-      warning_(_("%1Unknown metadata tag '%2'") << location << key);
-    }
-    else if (checking_style == CHECK_ERROR) {
-      throw_(parse_error, _("Unknown metadata tag '%1'") << key);
+    if (i == known_tags.end()) {
+      if (context.which() == 0) {
+        if (force_checking)
+          fixed_metadata = true;
+        known_tags.insert(key);
+      }
+      else if (! fixed_metadata &&
+               ((context.which() == 1 &&
+                 boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
+                (context.which() == 2 &&
+                 boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
+        known_tags.insert(key);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        warning_(_("%1Unknown metadata tag '%2'") << location << key);
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown metadata tag '%1'") << key);
+      }
     }
   }
 

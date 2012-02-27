@@ -565,7 +565,6 @@ bool xact_t::valid() const
 }
 
 namespace {
-
   bool post_pred(expr_t::ptr_op_t op, post_t& post)
   {
     switch (op->kind) {
@@ -581,6 +580,9 @@ namespace {
           .match(post.reported_account()->fullname());
       else
         break;
+
+    case expr_t::op_t::O_EQ:
+      return post_pred(op->left(), post) == post_pred(op->right(), post);
 
     case expr_t::op_t::O_NOT:
       return ! post_pred(op->left(), post);
@@ -604,8 +606,7 @@ namespace {
     throw_(calc_error, _("Unhandled operator"));
     return false;
   }
-
-} // unnamed namespace
+}
 
 void auto_xact_t::extend_xact(xact_base_t& xact)
 {
