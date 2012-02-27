@@ -1,3 +1,9 @@
+--explicit
+--pedantic
+
+commodity $
+    format $1,000.00
+
 account Assets:Cash
     assert abs(amount) <= 20
     check commodity == '$'
@@ -5,9 +11,6 @@ account Assets:Cash
 account Expenses:Food
     alias food
     payee KFC
-
-commodity $
-    format $1,000.00
 
 2012-02-27 KFC
     Expenses:Unknown                          $20.00
@@ -17,7 +20,7 @@ commodity $
     food                                      $20.00
     Assets:Cash
 
-test reg --strict
+test reg
 12-Feb-27 KFC                   Expenses:Food                $20.00       $20.00
                                 Assets:Cash                 $-20.00            0
 12-Feb-28 KFC                   Expenses:Food                $20.00       $20.00
