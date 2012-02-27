@@ -123,7 +123,9 @@ namespace {
       }
     }
 
+#if 0
     std::size_t count = xact.posts.size();
+#endif
     std::size_t index = 0;
 
     foreach (post_t * post, xact.posts) {
