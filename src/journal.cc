@@ -123,9 +123,17 @@ account_t * journal_t::register_account(const string& name, post_t * post,
     if (i != account_aliases.end())
       result = (*i).second;
   }
-
   if (! result)
     result = master_account->find_account(name);
+
+  if (result->name == _("Unknown")) {
+    foreach (account_mapping_t& value, payees_for_unknown_accounts) {
+      if (value.first.match(post->xact->payee)) {
+        result = value.second;
+        break;
+      }
+    }
+  }
 
   if (! result->has_flags(ACCOUNT_KNOWN)) {
     if (! post) {
@@ -142,15 +150,6 @@ account_t * journal_t::register_account(const string& name, post_t * post,
     }
     else if (checking_style == CHECK_ERROR) {
       throw_(parse_error, _("Unknown account '%1'") << result->fullname());
-    }
-  }
-
-  if (result->name == _("Unknown")) {
-    foreach (account_mapping_t& value, payees_for_unknown_accounts) {
-      if (value.first.match(post->xact->payee)) {
-        result = value.second;
-        break;
-      }
     }
   }
 
