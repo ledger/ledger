@@ -993,7 +993,8 @@ void instance_t::check_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(context.scope).to_boolean())
-    warning_(_("Check failed: %1") << line);
+    warning_(_("%1Check failed: %2")
+             << file_context(pathname, linenum) << line);
 }
 
 void instance_t::comment_directive(char * line)
@@ -1575,7 +1576,8 @@ xact_t * instance_t::parse_xact(char *          line,
         if (c == 'a') {
           throw_(parse_error, _("Transaction assertion failed: %1") << p);
         } else {
-          warning_(_("Transaction check failed: %1") << p);
+          warning_(_("%1Transaction check failed: %2")
+                   << file_context(pathname, linenum) << p);
         }
       }
     }
