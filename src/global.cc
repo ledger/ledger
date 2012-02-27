@@ -68,7 +68,7 @@ global_scope_t::global_scope_t(char ** envp)
   // a GUI were calling into Ledger it would have one session object per
   // open document, with a separate report_t object for each report it
   // generated.
-  report_stack.push_front(new report_t(session()));
+  report_stack.push_front(new report_t(*session_ptr));
   scope_t::default_scope = &report();
 
   // Read the user's options, in the following order:
