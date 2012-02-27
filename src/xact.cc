@@ -619,6 +619,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
     if (initial_post->has_flags(ITEM_GENERATED))
       continue;
 
+    bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
+
     bool matches_predicate = false;
     if (try_quick_match) {
       try {
@@ -646,14 +648,13 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
         DEBUG("xact.extend.fail",
               "The quick matcher failed, going back to regular eval");
         try_quick_match   = false;
-        matches_predicate = predicate(*initial_post);
+        matches_predicate = predicate(bound_scope);
       }
     } else {
-      matches_predicate = predicate(*initial_post);
+      matches_predicate = predicate(bound_scope);
     }
-    if (matches_predicate) {
-      bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
+    if (matches_predicate) {
       if (deferred_notes) {
         foreach (deferred_tag_data_t& data, *deferred_notes) {
           if (data.apply_to_post == NULL)
@@ -661,6 +662,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
                                      data.overwrite_existing);
         }
       }
+
       if (check_exprs) {
         foreach (check_expr_pair& pair, *check_exprs) {
           if (pair.second == auto_xact_t::EXPR_GENERAL) {
