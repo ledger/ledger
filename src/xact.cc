@@ -467,29 +467,9 @@ void xact_t::add_post(post_t * post)
   xact_base_t::add_post(post);
 }
 
-string xact_t::idstring() const
-{
-  std::ostringstream buf;
-  buf << format_date(*_date, FMT_WRITTEN);
-  buf << payee;
-  magnitude().number().print(buf);
-  return buf.str();
-}
-
-string xact_t::id() const
-{
-  return sha1sum(idstring());
-}
-
 namespace {
   value_t get_magnitude(xact_t& xact) {
     return xact.magnitude();
-  }
-  value_t get_idstring(xact_t& xact) {
-    return string_value(xact.idstring());
-  }
-  value_t get_id(xact_t& xact) {
-    return string_value(xact.id());
   }
 
   value_t get_code(xact_t& xact) {
@@ -552,13 +532,6 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
   case 'c':
     if (name == "code")
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
-    break;
-
-  case 'i':
-    if (name == "id")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    else if (name == "idstring")
-      return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
     break;
 
   case 'm':

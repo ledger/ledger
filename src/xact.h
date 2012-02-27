@@ -129,9 +129,6 @@ public:
 
   virtual void add_post(post_t * post);
 
-  string idstring() const;
-  string id() const;
-
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
 

@@ -186,12 +186,6 @@ namespace {
   value_t get_magnitude(post_t& post) {
     return post.xact->magnitude();
   }
-  value_t get_idstring(post_t& post) {
-    return string_value(post.xact->idstring());
-  }
-  value_t get_id(post_t& post) {
-    return string_value(post.xact->id());
-  }
 
   value_t get_amount(post_t& post) {
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
@@ -459,10 +453,6 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'i':
     if (name == "index")
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (name == "id")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    else if (name == "idstring")
-      return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
     break;
 
   case 'm':

@@ -340,6 +340,12 @@ namespace {
   value_t get_seq(item_t& item) {
     return item.pos ? long(item.pos->sequence) : 0L;
   }
+  value_t get_id(item_t& item) {
+    if (optional<value_t> ref = item.get_tag(_("UUID")))
+      return *ref;
+    else
+      return item.pos ? long(item.pos->sequence) : 0L;
+  }
 
   value_t get_addr(item_t& item) {
     return long(&item);
@@ -447,6 +453,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'i':
     if (name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    else if (name == "id")
+      return WRAP_FUNCTOR(get_wrapper<&get_id>);
     break;
 
   case 'm':
@@ -481,6 +489,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'u':
     if (name == "uncleared")
       return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
+    else if (name == "uuid")
+      return WRAP_FUNCTOR(get_wrapper<&get_id>);
     break;
 
   case 'v':

@@ -126,6 +126,23 @@ bool journal_t::add_xact(xact_t * xact)
   }
 
   extend_xact(xact);
+
+  // If a transaction with this UUID has already been seen, simply do
+  // not add this one to the journal.  However, all automated checks
+  // will have been performed by extend_xact, so asserts can still be
+  // applied to it.
+  if (optional<value_t> ref = xact->get_tag(_("UUID"))) {
+    std::pair<checksum_map_t::iterator, bool> result
+      = checksum_map.insert(checksum_map_t::value_type(ref->to_string(), xact));
+    if (! result.second) {
+      // jww (2012-02-27): Confirm that the xact in
+      // (*result.first).second is exact match in its significant
+      // details to xact.
+      xact->journal = NULL;
+      return false;
+    }
+  }
+
   xacts.push_back(xact);
 
   return true;
