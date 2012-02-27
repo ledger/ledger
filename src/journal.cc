@@ -89,6 +89,7 @@ void journal_t::initialize()
   fixed_metadata    = false;
   was_loaded        = false;
   force_checking    = false;
+  check_payees      = false;
   checking_style    = CHECK_PERMISSIVE;
 }
 
@@ -160,26 +161,27 @@ string journal_t::register_payee(const string& name, xact_t *, const string&)
 {
   string payee;
 
-#if 0
-  std::set<string>::iterator i = known_payees.find(name);
+  if (check_payees &&
+      (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR)) {
+    std::set<string>::iterator i = known_payees.find(name);
 
-  if (i == known_payees.end()) {
-    if (! xact) {
-      if (force_checking)
-        fixed_payees = true;
-      known_payees.insert(name);
-    }
-    else if (! fixed_payees && xact->_state != item_t::UNCLEARED) {
-      known_payees.insert(name);
-    }
-    else if (checking_style == CHECK_WARNING) {
-      warning_(_("%1Unknown payee '%2'") << location << name);
-    }
-    else if (checking_style == CHECK_ERROR) {
-      throw_(parse_error, _("Unknown payee '%1'") << name);
+    if (i == known_payees.end()) {
+      if (! xact) {
+        if (force_checking)
+          fixed_payees = true;
+        known_payees.insert(name);
+      }
+      else if (! fixed_payees && xact->_state != item_t::UNCLEARED) {
+        known_payees.insert(name);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        warning_(_("%1Unknown payee '%2'") << location << name);
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown payee '%1'") << name);
+      }
     }
   }
-#endif
 
   foreach (payee_mapping_t& value, payee_mappings) {
     if (value.first.match(name)) {

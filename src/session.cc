@@ -99,6 +99,8 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (HANDLED(explicit))
     journal->force_checking = true;
+  if (HANDLED(check_payees))
+    journal->check_payees = true;
 
   if (HANDLED(permissive))
     journal->checking_style = journal_t::CHECK_PERMISSIVE;
@@ -248,6 +250,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'c':
     OPT(cache_);
+    else OPT(check_payees);
     break;
   case 'd':
     OPT(download); // -Q

@@ -134,6 +134,7 @@ public:
   tag_check_exprs_map   tag_check_exprs;
   bool                  was_loaded;
   bool                  force_checking;
+  bool                  check_payees;
 
   enum checking_style_t {
     CHECK_PERMISSIVE,

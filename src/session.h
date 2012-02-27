@@ -87,6 +87,7 @@ public:
   void report_options(std::ostream& out)
   {
     HANDLER(cache_).report(out);
+    HANDLER(check_payees).report(out);
     HANDLER(download).report(out);
     HANDLER(decimal_comma).report(out);
     HANDLER(file_).report(out);
@@ -110,6 +111,7 @@ public:
    */
 
   OPTION(session_t, cache_);
+  OPTION(session_t, check_payees);
   OPTION(session_t, download); // -Q
 
   OPTION_(session_t, decimal_comma, DO() {
