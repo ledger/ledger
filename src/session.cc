@@ -256,6 +256,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     OPT(download); // -Q
     else OPT(decimal_comma);
     break;
+  case 'e':
+    OPT(explicit);
+    break;
   case 'f':
     OPT_(file_); // -f
     break;
@@ -264,7 +267,6 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_ALT(price_exp_, leeway_);
-    else OPT(explicit);
     break;
   case 'm':
     OPT(master_account_);
