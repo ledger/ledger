@@ -156,9 +156,10 @@ account_t * journal_t::register_account(const string& name, post_t * post,
   return result;
 }
 
-string journal_t::register_payee(const string& name, xact_t * xact,
-                                 const string& location)
+string journal_t::register_payee(const string& name, xact_t *, const string&)
 {
+  string payee;
+
 #if 0
   std::set<string>::iterator i = known_payees.find(name);
 
@@ -180,18 +181,14 @@ string journal_t::register_payee(const string& name, xact_t * xact,
   }
 #endif
 
-#if 0
-    foreach (payee_mapping_t& value, context.journal.payee_mappings) {
-      if (value.first.match(next)) {
-        xact->payee = value.second;
-        break;
-      }
+  foreach (payee_mapping_t& value, payee_mappings) {
+    if (value.first.match(name)) {
+      payee = value.second;
+      break;
     }
-    if (xact->payee.empty())
-      xact->payee = next;
-#else
-  return name;
-#endif
+  }
+
+  return payee.empty() ? name : payee;
 }
 
 void journal_t::register_commodity(commodity_t& comm,
