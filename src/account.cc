@@ -243,6 +243,10 @@ namespace {
     return long(account.depth);
   }
 
+  value_t get_note(account_t& account) {
+    return account.note ? string_value(*account.note) : NULL_VALUE;
+  }
+
   value_t ignore(account_t&) {
     return false;
   }
@@ -368,6 +372,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'n':
     if (fn_name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
+    else if (fn_name == "note")
+      return WRAP_FUNCTOR(get_wrapper<&get_note>);
     break;
 
   case 'p':
