@@ -915,6 +915,8 @@ void instance_t::account_directive(char * line)
                                  expr_t::EXPR_CHECK));
     }
     else if (keyword == "eval" || keyword == "expr") {
+      // jww (2012-02-27): Make account into symbol scopes so that this
+      // can be used to override definitions within the account.
       bind_scope_t bound_scope(context.scope, *account);
       expr_t(b).calc(bound_scope);
     }
