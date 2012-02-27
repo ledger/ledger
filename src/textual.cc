@@ -1026,6 +1026,8 @@ void instance_t::commodity_directive(char * line)
         commodity_nomarket_directive(*commodity);
       else if (keyword == "default")
         commodity_default_directive(*commodity);
+      else if (keyword == "note")
+        commodity->set_note(string(b));
     }
   }
 }
