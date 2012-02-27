@@ -664,12 +664,12 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
       }
 
       if (check_exprs) {
-        foreach (check_expr_pair& pair, *check_exprs) {
-          if (pair.second == auto_xact_t::EXPR_GENERAL) {
+        foreach (expr_t::check_expr_pair& pair, *check_exprs) {
+          if (pair.second == expr_t::EXPR_GENERAL) {
             pair.first.calc(bound_scope);
           }
           else if (! pair.first.calc(bound_scope).to_boolean()) {
-            if (pair.second == auto_xact_t::EXPR_ASSERTION)
+            if (pair.second == expr_t::EXPR_ASSERTION)
               throw_(parse_error,
                      _("Transaction assertion failed: %1") << pair.first);
             else

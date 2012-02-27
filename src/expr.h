@@ -58,6 +58,15 @@ public:
   typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
+  enum check_expr_kind_t {
+    EXPR_GENERAL,
+    EXPR_ASSERTION,
+    EXPR_CHECK
+  };
+
+  typedef std::pair<expr_t, check_expr_kind_t> check_expr_pair;
+  typedef std::list<check_expr_pair>           check_expr_list;
+
 protected:
   ptr_op_t ptr;
 

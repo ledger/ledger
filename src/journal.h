@@ -45,10 +45,10 @@
 #include "utils.h"
 #include "times.h"
 #include "mask.h"
+#include "expr.h"
 
 namespace ledger {
 
-class commodity_t;
 class xact_base_t;
 class xact_t;
 class auto_xact_t;
@@ -57,16 +57,17 @@ class post_t;
 class account_t;
 class scope_t;
 
-typedef std::list<xact_t *>        xacts_list;
-typedef std::list<auto_xact_t *>   auto_xacts_list;
-typedef std::list<period_xact_t *> period_xacts_list;
-
-typedef std::pair<mask_t, string>           payee_mapping_t;
-typedef std::list<payee_mapping_t>          payee_mappings_t;
-typedef std::pair<mask_t, account_t *>      account_mapping_t;
-typedef std::list<account_mapping_t>        account_mappings_t;
-typedef std::map<const string, account_t *> accounts_map;
-typedef std::map<string, xact_t *>          checksum_map_t;
+typedef std::list<xact_t *>                    xacts_list;
+typedef std::list<auto_xact_t *>               auto_xacts_list;
+typedef std::list<period_xact_t *>             period_xacts_list;
+typedef std::pair<mask_t, string>              payee_mapping_t;
+typedef std::list<payee_mapping_t>             payee_mappings_t;
+typedef std::pair<mask_t, account_t *>         account_mapping_t;
+typedef std::list<account_mapping_t>           account_mappings_t;
+typedef std::map<const string, account_t *>    accounts_map;
+typedef std::map<string, xact_t *>             checksum_map_t;
+typedef std::multimap<string,
+                      expr_t::check_expr_pair> tag_check_exprs_map;
 
 class journal_t : public noncopyable
 {
@@ -130,6 +131,7 @@ public:
   accounts_map          account_aliases;
   account_mappings_t    payees_for_unknown_accounts;
   checksum_map_t        checksum_map;
+  tag_check_exprs_map   tag_check_exprs;
   bool                  was_loaded;
   bool                  force_checking;
 
@@ -168,11 +170,9 @@ public:
   void        register_commodity(commodity_t& comm,
                                  variant<int, xact_t *, post_t *> context,
                                  const string& location);
-#if 0
-  void        register_metadata(const string& key, const string& value,
+  void        register_metadata(const string& key, const value_t& value,
                                 variant<int, xact_t *, post_t *> context,
                                 const string& location);
-#endif
 
   bool add_xact(xact_t * xact);
   void extend_xact(xact_base_t * xact);

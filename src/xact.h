@@ -152,21 +152,11 @@ private:
 class auto_xact_t : public xact_base_t
 {
 public:
-  predicate_t predicate;
-  bool        try_quick_match;
-
+  predicate_t            predicate;
+  bool                   try_quick_match;
   std::map<string, bool> memoized_results;
 
-  enum xact_expr_kind_t {
-    EXPR_GENERAL,
-    EXPR_ASSERTION,
-    EXPR_CHECK
-  };
-
-  typedef std::pair<expr_t, xact_expr_kind_t> check_expr_pair;
-  typedef std::list<check_expr_pair>          check_expr_list;
-
-  optional<check_expr_list> check_exprs;
+  optional<expr_t::check_expr_list> check_exprs;
 
   struct deferred_tag_data_t {
     string   tag_data;

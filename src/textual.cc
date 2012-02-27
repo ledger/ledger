@@ -158,6 +158,8 @@ namespace {
 
     void default_commodity_directive(char * line);
 
+    void tag_directive(char * line);
+
     void apply_directive(char * line);
     void apply_account_directive(char * line);
     void apply_tag_directive(char * line);
@@ -605,14 +607,14 @@ void instance_t::automated_xact_directive(char * line)
         const char c = *p;
         p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
         if (! ae->check_exprs)
-          ae->check_exprs = auto_xact_t::check_expr_list();
+          ae->check_exprs = expr_t::check_expr_list();
         ae->check_exprs->push_back
-          (auto_xact_t::check_expr_pair(expr_t(p),
-                                        c == 'a' ?
-                                        auto_xact_t::EXPR_ASSERTION :
-                                        (c == 'c' ?
-                                         auto_xact_t::EXPR_CHECK :
-                                         auto_xact_t::EXPR_GENERAL)));
+          (expr_t::check_expr_pair(expr_t(p),
+                                   c == 'a' ?
+                                   expr_t::EXPR_ASSERTION :
+                                   (c == 'c' ?
+                                    expr_t::EXPR_CHECK :
+                                    expr_t::EXPR_GENERAL)));
       }
       else {
         reveal_context = false;
@@ -903,14 +905,14 @@ void instance_t::account_directive(char * line)
         ae->pos->beg_pos  = beg_pos;
         ae->pos->beg_line = beg_linenum;
         ae->pos->sequence = context.sequence++;
-        ae->check_exprs   = auto_xact_t::check_expr_list();
+        ae->check_exprs   = expr_t::check_expr_list();
       }
 
       ae->check_exprs->push_back
-        (auto_xact_t::check_expr_pair(expr_t(b),
-                                      keyword == "assert" ?
-                                      auto_xact_t::EXPR_ASSERTION :
-                                      auto_xact_t::EXPR_CHECK));
+        (expr_t::check_expr_pair(expr_t(b),
+                                 keyword == "assert" ?
+                                 expr_t::EXPR_ASSERTION :
+                                 expr_t::EXPR_CHECK));
     }
     else if (keyword == "eval" || keyword == "expr") {
       bind_scope_t bound_scope(context.scope, *account);
@@ -1057,6 +1059,32 @@ void instance_t::commodity_default_directive(commodity_t& comm)
   commodity_pool_t::current_pool->default_commodity = &comm;
 }
 
+void instance_t::tag_directive(char * line)
+{
+  char * p = skip_ws(line);
+  context.journal.register_metadata(p, NULL_VALUE, 0,
+                                    file_context(pathname, linenum));
+
+  while (peek_whitespace_line()) {
+    read_line(line);
+    char * q = skip_ws(line);
+    if (! *q)
+      break;
+
+    char * b = next_element(q);
+    string keyword(q);
+    if (keyword == "assert" || keyword == "check") {
+      context.journal.tag_check_exprs.insert
+        (tag_check_exprs_map::value_type
+         (string(p),
+          expr_t::check_expr_pair(expr_t(b),
+                                  keyword == "assert" ?
+                                  expr_t::EXPR_ASSERTION :
+                                  expr_t::EXPR_CHECK)));
+    }
+  }
+}
+
 void instance_t::eval_directive(char * line)
 {
   expr_t expr(line);
@@ -1176,7 +1204,11 @@ bool instance_t::general_directive(char * line)
     break;
 
   case 't':
-    if (std::strcmp(p, "test") == 0) {
+    if (std::strcmp(p, "tag") == 0) {
+      tag_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "test") == 0) {
       comment_directive(arg);
       return true;
     }

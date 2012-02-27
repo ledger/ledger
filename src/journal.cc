@@ -217,8 +217,38 @@ void journal_t::register_commodity(commodity_t& comm,
   }
 }
 
-#if 0
-void journal_t::register_metadata(const string& key, const string& value,
+namespace {
+  void check_metadata(journal_t& journal,
+                      const string& key, const value_t& value,
+                      variant<int, xact_t *, post_t *> context,
+                      const string& location)
+  {
+    std::pair<tag_check_exprs_map::iterator,
+              tag_check_exprs_map::iterator> range =
+      journal.tag_check_exprs.equal_range(key);
+
+    for (tag_check_exprs_map::iterator i = range.first;
+         i != range.second;
+         ++i) {
+      value_scope_t val_scope
+        (context.which() == 1 ?
+         static_cast<scope_t&>(*boost::get<xact_t *>(context)) :
+         static_cast<scope_t&>(*boost::get<post_t *>(context)), value);
+
+      if (! (*i).second.first.calc(val_scope).to_boolean()) {
+        if ((*i).second.second == expr_t::EXPR_ASSERTION)
+          throw_(parse_error,
+                 _("Metadata assertion failed for (%1: %2): %3")
+                 << key << value << (*i).second.first);
+        else
+          warning_(_("%1Metadata check failed for (%2: %3): %4")
+                   << location << key << value << (*i).second.first);
+      }
+    }
+  }
+}
+
+void journal_t::register_metadata(const string& key, const value_t& value,
                                   variant<int, xact_t *, post_t *> context,
                                   const string& location)
 {
@@ -244,8 +274,34 @@ void journal_t::register_metadata(const string& key, const string& value,
       throw_(parse_error, _("Unknown metadata tag '%1'") << key);
     }
   }
+
+  if (! value.is_null())
+    check_metadata(*this, key, value, context, location);
 }
-#endif
+
+namespace {
+  void check_all_metadata(journal_t& journal,
+                          variant<int, xact_t *, post_t *> context)
+  {
+    xact_t * xact = context.which() == 1 ? boost::get<xact_t *>(context) : NULL;
+    post_t * post = context.which() == 2 ? boost::get<post_t *>(context) : NULL;
+
+    if ((xact || post) && xact ? xact->metadata : post->metadata) {
+      foreach (const item_t::string_map::value_type& pair,
+               xact ? *xact->metadata : *post->metadata) {
+        const string& key(pair.first);
+
+        // jww (2012-02-27): We really need to know the parsing context,
+        // both here and for the call to warning_ in
+        // xact_t::extend_xact.
+        if (optional<value_t> value = pair.second.first)
+          journal.register_metadata(key, *value, context, "");
+        else
+          journal.register_metadata(key, NULL_VALUE, context, "");
+      }
+    }
+  }
+}
 
 bool journal_t::add_xact(xact_t * xact)
 {
@@ -257,6 +313,10 @@ bool journal_t::add_xact(xact_t * xact)
   }
 
   extend_xact(xact);
+
+  check_all_metadata(*this, xact);
+  foreach (post_t * post, xact->posts)
+    check_all_metadata(*this, post);
 
   // If a transaction with this UUID has already been seen, simply do
   // not add this one to the journal.  However, all automated checks
