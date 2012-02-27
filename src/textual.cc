@@ -849,16 +849,16 @@ void instance_t::apply_year_directive(char * line)
 void instance_t::end_apply_directive(char * kind)
 {
   char * b = next_element(kind);
-  string name(b ? b : "account");
+  string name(b ? b : " ");
 
   if (context.apply_stack.size() <= 1)
     throw_(std::runtime_error,
-           _("'end %1' found, but no enclosing '%2' directive")
+           _("'end apply%1' found, but no enclosing 'apply%2' directive")
            << name << name);
 
-  if (name != context.apply_stack.front().label)
+  if (name != " " && name != context.apply_stack.front().label)
     throw_(std::runtime_error,
-           _("'end %1' directive does not match 'apply %2' directive")
+           _("'end apply%1' directive does not match 'apply %2' directive")
            << name << context.apply_stack.front().label);
 
   context.apply_stack.pop_front();
