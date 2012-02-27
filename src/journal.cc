@@ -159,7 +159,8 @@ account_t * journal_t::register_account(const string& name, post_t * post,
   return result;
 }
 
-string journal_t::register_payee(const string& name, xact_t *, const string&)
+string journal_t::register_payee(const string& name, xact_t * xact,
+                                 const string& location)
 {
   string payee;
 
