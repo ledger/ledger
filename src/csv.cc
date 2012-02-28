@@ -109,8 +109,8 @@ void csv_reader::read_index(std::istream& sin)
 
     if (date_mask.match(field))
       index.push_back(FIELD_DATE);
-    else if (date_eff_mask.match(field))
-      index.push_back(FIELD_DATE_EFF);
+    else if (date_aux_mask.match(field))
+      index.push_back(FIELD_DATE_AUX);
     else if (code_mask.match(field))
       index.push_back(FIELD_CODE);
     else if (payee_mask.match(field))
@@ -175,8 +175,8 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
       xact->_date = parse_date(field);
       break;
 
-    case FIELD_DATE_EFF:
-      xact->_date_eff = parse_date(field);
+    case FIELD_DATE_AUX:
+      xact->_date_aux = parse_date(field);
       break;
 
     case FIELD_CODE:

@@ -1603,7 +1603,7 @@ xact_t * instance_t::parse_xact(char *          line,
 
   if (char * p = std::strchr(line, '=')) {
     *p++ = '\0';
-    xact->_date_eff = parse_date(p);
+    xact->_date_aux = parse_date(p);
   }
   xact->_date = parse_date(line);
 

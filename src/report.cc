@@ -76,8 +76,7 @@ void report_t::normalize_options(const string& verb)
       HANDLER(pager_).off();
   }
 
-  item_t::use_effective_date = (HANDLED(effective) &&
-                                ! HANDLED(actual_dates));
+  item_t::use_aux_date = (HANDLED(aux_date) && ! HANDLED(primary_date));
 
   commodity_pool_t::current_pool->keep_base  = HANDLED(base);
   commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);
@@ -960,10 +959,10 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(abbrev_len_);
     else OPT_(account_);
     else OPT(actual);
-    else OPT(actual_dates);
     else OPT(add_budget);
     else OPT(amount_);
     else OPT(amount_data);
+    else OPT_ALT(primary_date, actual_dates);
     else OPT(anon);
     else OPT_ALT(color, ansi);
     else OPT(auto_match);
@@ -1005,12 +1004,12 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(date_width_);
     break;
   case 'e':
-    OPT(effective);
-    else OPT(empty);
+    OPT(empty);
     else OPT_(end_);
     else OPT(equity);
     else OPT(exact);
     else OPT(exchange_);
+    else OPT_ALT(aux_date, effective);
     break;
   case 'f':
     OPT(flat);

@@ -62,7 +62,7 @@ class csv_reader
 
   enum headers_t {
     FIELD_DATE = 0,
-    FIELD_DATE_EFF,
+    FIELD_DATE_AUX,
     FIELD_CODE,
     FIELD_PAYEE,
     FIELD_AMOUNT,
@@ -74,7 +74,7 @@ class csv_reader
   };
 
   mask_t date_mask;
-  mask_t date_eff_mask;
+  mask_t date_aux_mask;
   mask_t code_mask;
   mask_t payee_mask;
   mask_t amount_mask;
@@ -90,7 +90,7 @@ public:
     : in(_in), pathname(_pathname),
       linenum(0), sequence(0),
       date_mask("date"),
-      date_eff_mask("posted( ?date)?"),
+      date_aux_mask("posted( ?date)?"),
       code_mask("code"),
       payee_mask("(payee|desc(ription)?|title)"),
       amount_mask("amount"),

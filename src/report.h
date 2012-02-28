@@ -224,12 +224,12 @@ public:
     HANDLER(abbrev_len_).report(out);
     HANDLER(account_).report(out);
     HANDLER(actual).report(out);
-    HANDLER(actual_dates).report(out);
     HANDLER(add_budget).report(out);
     HANDLER(amount_).report(out);
     HANDLER(amount_data).report(out);
     HANDLER(anon).report(out);
     HANDLER(auto_match).report(out);
+    HANDLER(aux_date).report(out);
     HANDLER(average).report(out);
     HANDLER(balance_format_).report(out);
     HANDLER(base).report(out);
@@ -256,7 +256,6 @@ public:
     HANDLER(display_amount_).report(out);
     HANDLER(display_total_).report(out);
     HANDLER(dow).report(out);
-    HANDLER(effective).report(out);
     HANDLER(empty).report(out);
     HANDLER(end_).report(out);
     HANDLER(equity).report(out);
@@ -303,6 +302,7 @@ public:
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
+    HANDLER(primary_date).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
     HANDLER(raw).report(out);
@@ -360,8 +360,6 @@ public:
   OPTION_(report_t, actual, DO() { // -L
       parent->HANDLER(limit_).on(string("--actual"), "actual");
     });
-
-  OPTION(report_t, actual_dates);
 
   OPTION_(report_t, add_budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED | BUDGET_UNBUDGETED;
@@ -571,7 +569,7 @@ public:
    });
 
   OPTION(report_t, dow);
-  OPTION(report_t, effective);
+  OPTION(report_t, aux_date);
   OPTION(report_t, empty); // -E
 
   OPTION_(report_t, end_, DO_(args) { // -e
@@ -821,6 +819,8 @@ public:
       on(none,
          "P %(datetime) %(display_account) %(scrub(display_amount))\n");
     });
+
+  OPTION(report_t, primary_date);
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();

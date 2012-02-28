@@ -69,9 +69,9 @@ generate_posts_iterator::generate_posts_iterator
   generate_date(next_date_buf);
   next_date = parse_date(next_date_buf.str());
 
-  std::ostringstream next_eff_date_buf;
-  generate_date(next_eff_date_buf);
-  next_eff_date = parse_date(next_eff_date_buf.str());
+  std::ostringstream next_aux_date_buf;
+  generate_date(next_aux_date_buf);
+  next_aux_date = parse_date(next_aux_date_buf.str());
 
 }
 
@@ -326,8 +326,8 @@ void generate_posts_iterator::generate_xact(std::ostream& out)
   next_date += gregorian::days(six_gen());
   if (truth_gen()) {
     out << '=';
-    out << format_date(next_eff_date, FMT_WRITTEN);
-    next_eff_date += gregorian::days(six_gen());
+    out << format_date(next_aux_date, FMT_WRITTEN);
+    next_aux_date += gregorian::days(six_gen());
   }
   out << ' ';
 

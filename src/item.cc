@@ -35,7 +35,7 @@
 
 namespace ledger {
 
-bool item_t::use_effective_date = false;
+bool item_t::use_aux_date = false;
 
 bool item_t::has_tag(const string& tag, bool) const
 {
@@ -150,7 +150,7 @@ void item_t::parse_tags(const char * p,
 
           if (char * pp = std::strchr(buf, '=')) {
             *pp++ = '\0';
-            _date_eff = parse_date(pp);
+            _date_aux = parse_date(pp);
           }
           if (buf[0])
             _date = parse_date(buf);
@@ -239,12 +239,12 @@ namespace {
   value_t get_date(item_t& item) {
     return item.date();
   }
-  value_t get_actual_date(item_t& item) {
-    return item.actual_date();
+  value_t get_primary_date(item_t& item) {
+    return item.primary_date();
   }
-  value_t get_effective_date(item_t& item) {
-    if (optional<date_t> effective = item.effective_date())
-      return *effective;
+  value_t get_aux_date(item_t& item) {
+    if (optional<date_t> aux_date = item.aux_date())
+      return *aux_date;
     return NULL_VALUE;
   }
   value_t get_note(item_t& item) {
@@ -403,9 +403,11 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
     if (name == "actual")
       return WRAP_FUNCTOR(get_wrapper<&get_actual>);
     else if (name == "actual_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_actual_date>);
+      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
     else if (name == "addr")
       return WRAP_FUNCTOR(get_wrapper<&get_addr>);
+    else if (name == "auxiliary_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
     break;
 
   case 'b':
@@ -435,7 +437,7 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
     else if (name == "end_pos")
       return WRAP_FUNCTOR(get_wrapper<&get_end_pos>);
     else if (name == "effective_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_effective_date>);
+      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
     break;
 
   case 'f':
@@ -472,6 +474,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     else if (name == "parent")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    else if (name == "primary_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
     break;
 
   case 's':

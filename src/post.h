@@ -123,8 +123,8 @@ public:
 
   virtual date_t value_date() const;
   virtual date_t date() const;
-  virtual date_t actual_date() const;
-  virtual optional<date_t> effective_date() const;
+  virtual date_t primary_date() const;
+  virtual optional<date_t> aux_date() const;
 
   string payee() const;
 
@@ -230,7 +230,7 @@ public:
   {
     bool operator()(const post_t * left, const post_t * right) const {
       gregorian::date_duration duration =
-        left->actual_date() - right->actual_date();
+        left->primary_date() - right->primary_date();
       if (duration.days() == 0) {
         return ((left->pos ? left->pos->sequence : 0) <
                 (right->pos ? right->pos->sequence : 0));

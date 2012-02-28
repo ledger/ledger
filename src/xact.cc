@@ -794,9 +794,9 @@ void to_xml(std::ostream& out, const xact_t& xact)
     push_xml y(out, "date");
     to_xml(out, *xact._date, false);
   }
-  if (xact._date_eff) {
-    push_xml y(out, "effective-date");
-    to_xml(out, *xact._date_eff, false);
+  if (xact._date_aux) {
+    push_xml y(out, "aux-date");
+    to_xml(out, *xact._date_aux, false);
   }
 
   if (xact.code) {

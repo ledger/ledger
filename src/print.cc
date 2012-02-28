@@ -112,11 +112,11 @@ namespace {
 
     std::ostringstream buf;
 
-    buf << format_date(item_t::use_effective_date ?
-                       xact.date() : xact.actual_date(),
+    buf << format_date(item_t::use_aux_date ?
+                       xact.date() : xact.primary_date(),
                        format_type, format);
-    if (! item_t::use_effective_date && xact.effective_date())
-      buf << '=' << format_date(*xact.effective_date(),
+    if (! item_t::use_aux_date && xact.aux_date())
+      buf << '=' << format_date(*xact.aux_date(),
                                 format_type, format);
     buf << ' ';
 

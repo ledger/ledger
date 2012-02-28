@@ -160,7 +160,7 @@ void export_post()
     .def("get_tag", py_get_tag_2m)
 
     .def("date", &post_t::date)
-    .def("effective_date", &post_t::effective_date)
+    .def("auxiliary_date", &post_t::aux_date)
 
     .def("must_balance", &post_t::must_balance)
 

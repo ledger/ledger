@@ -57,7 +57,7 @@ class generate_posts_iterator
   std::size_t  quantity;
   bool         allow_invalid;
   date_t       next_date;
-  date_t       next_eff_date;
+  date_t       next_aux_date;
 
   mt19937 rnd_gen;
 

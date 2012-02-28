@@ -91,11 +91,11 @@ date_t post_t::date() const
   if (xdata_ && is_valid(xdata_->date))
     return xdata_->date;
 
-  if (item_t::use_effective_date) {
-    if (_date_eff)
-      return *_date_eff;
-    else if (xact && xact->_date_eff)
-      return *xact->_date_eff;
+  if (item_t::use_aux_date) {
+    if (_date_aux)
+      return *_date_aux;
+    else if (xact && xact->_date_aux)
+      return *xact->_date_aux;
   }
 
   if (! _date) {
@@ -105,7 +105,7 @@ date_t post_t::date() const
   return *_date;
 }
 
-date_t post_t::actual_date() const
+date_t post_t::primary_date() const
 {
   if (xdata_ && is_valid(xdata_->date))
     return xdata_->date;
@@ -117,11 +117,11 @@ date_t post_t::actual_date() const
   return *_date;
 }
 
-optional<date_t> post_t::effective_date() const
+optional<date_t> post_t::aux_date() const
 {
-  optional<date_t> date = item_t::effective_date();
+  optional<date_t> date = item_t::aux_date();
   if (! date && xact)
-    return xact->effective_date();
+    return xact->aux_date();
   return date;
 }
 
@@ -657,9 +657,9 @@ void to_xml(std::ostream& out, const post_t& post)
     push_xml y(out, "date");
     to_xml(out, *post._date, false);
   }
-  if (post._date_eff) {
-    push_xml y(out, "effective-date");
-    to_xml(out, *post._date_eff, false);
+  if (post._date_aux) {
+    push_xml y(out, "aux-date");
+    to_xml(out, *post._date_aux, false);
   }
 
   if (post.account) {

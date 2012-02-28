@@ -112,7 +112,7 @@ public:
 
   state_t              _state;
   optional<date_t>     _date;
-  optional<date_t>     _date_eff;
+  optional<date_t>     _date_aux;
   optional<string>     note;
   optional<position_t> pos;
   optional<string_map> metadata;
@@ -138,7 +138,7 @@ public:
     set_state(item.state());
 
     _date     = item._date;
-    _date_eff = item._date_eff;
+    _date_aux = item._date_aux;
     note      = item.note;
     pos       = item.pos;
     metadata  = item.metadata;
@@ -175,7 +175,7 @@ public:
                            scope_t&     scope,
                            bool         overwrite_existing = true);
 
-  static bool use_effective_date;
+  static bool use_aux_date;
 
   virtual bool has_date() const {
     return _date;
@@ -183,17 +183,17 @@ public:
 
   virtual date_t date() const {
     assert(_date);
-    if (use_effective_date)
-      if (optional<date_t> effective = effective_date())
-        return *effective;
+    if (use_aux_date)
+      if (optional<date_t> aux = aux_date())
+        return *aux;
     return *_date;
   }
-  virtual date_t actual_date() const {
+  virtual date_t primary_date() const {
     assert(_date);
     return *_date;
   }
-  virtual optional<date_t> effective_date() const {
-    return _date_eff;
+  virtual optional<date_t> aux_date() const {
+    return _date_aux;
   }
 
   void set_state(state_t new_state) {
@@ -220,7 +220,7 @@ private:
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & _state;
     ar & _date;
-    ar & _date_eff;
+    ar & _date_aux;
     ar & note;
     ar & pos;
     ar & metadata;
