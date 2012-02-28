@@ -916,11 +916,24 @@ void interval_posts::report_subtotal(const date_interval_t& ival)
 
 void interval_posts::operator()(post_t& post)
 {
-  if (! interval.find_period(post.date()))
+  DEBUG("filters.interval", "Considering post with amount " << post.amount);
+#if defined(DEBUG_ON)
+  DEBUG("filters.interval", "interval is:");
+  debug_interval(interval);
+#endif
+  if (! interval.find_period(post.date())) {
+    DEBUG("filters.interval", "Post does not fall within period");
     return;
+  }
 
   if (interval.duration) {
-    if (last_interval && interval != last_interval) {
+    DEBUG("filters.interval", "There is an interval duration");
+    if (interval != last_interval) {
+#if defined(DEBUG_ON)
+      DEBUG("filters.interval", "interval != last_interval, so reporting");
+      DEBUG("filters.interval", "last_interval is:");
+      debug_interval(last_interval);
+#endif
       report_subtotal(last_interval);
 
       if (generate_empty_posts) {
@@ -942,13 +955,14 @@ void interval_posts::operator()(post_t& post)
         }
         assert(last_interval <= interval);
       } else {
+        DEBUG("filters.interval", "Setting last_interval = interval");
         last_interval = interval;
       }
-    } else {
-      last_interval = interval;
     }
+    DEBUG("filters.interval", "Calling subtotal_posts::operator()");
     subtotal_posts::operator()(post);
   } else {
+    DEBUG("filters.interval", "There is no interval duration");
     item_handler<post_t>::operator()(post);
   }
 

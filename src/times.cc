@@ -1397,8 +1397,17 @@ bool date_interval_t::find_period(const date_t& date)
   DEBUG("times.interval", "date        = " << date);
   DEBUG("times.interval", "scan        = " << scan);
   DEBUG("times.interval", "end_of_scan = " << end_of_scan);
+#if defined(DEBUG_ON)
+  if (finish)
+    DEBUG("times.interval", "finish      = " << *finish);
+  else
+    DEBUG("times.interval", "finish is not set");
+#endif
 
   while (date >= scan && (! finish || scan < *finish)) {
+    DEBUG("times.interval", "date        = " << date);
+    DEBUG("times.interval", "end_of_scan = " << end_of_scan);
+
     if (date < end_of_scan) {
       start           = scan;
       end_of_duration = end_of_scan;
@@ -1415,6 +1424,8 @@ bool date_interval_t::find_period(const date_t& date)
     scan        = duration->add(scan);
     end_of_scan = duration->add(scan);
   }
+
+  DEBUG("times.interval", "false: failed scan");
 
   return false;
 }

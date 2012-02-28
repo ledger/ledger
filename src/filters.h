@@ -728,21 +728,44 @@ public:
     empty_account = &temps.create_account(_("<None>"));
   }
 
-  void report_subtotal(const date_interval_t& interval);
+  void report_subtotal(const date_interval_t& ival);
+
+#if defined(DEBUG_ON)
+  void debug_interval(const date_interval_t& ival) {
+    if (ival.start)
+      DEBUG("filters.interval", "start  = " << *ival.start);
+    else
+      DEBUG("filters.interval", "no start");
+
+    if (ival.finish)
+      DEBUG("filters.interval", "finish = " << *ival.finish);
+    else
+      DEBUG("filters.interval", "no finish");
+  }
+#endif
 
   virtual void flush() {
     if (last_post && interval.duration) {
-      if (last_interval && interval != last_interval)
+      DEBUG("filters.interval", "There is a last_post and an interval.duration");
+      if (interval != last_interval) {
+#if defined(DEBUG_ON)
+        DEBUG("filters.interval", "interval != last_interval, so reporting");
+        DEBUG("filters.interval", "interval is:");
+        debug_interval(interval);
+        DEBUG("filters.interval", "last_interval is:");
+        debug_interval(last_interval);
+#endif
         report_subtotal(last_interval);
+      }
       subtotal_posts::flush();
     }
   }
   virtual void operator()(post_t& post);
 
   virtual void clear() {
-    interval = start_interval;
+    interval      = start_interval;
     last_interval = date_interval_t();
-    last_post = NULL;
+    last_post     = NULL;
 
     subtotal_posts::clear();
     create_accounts();
