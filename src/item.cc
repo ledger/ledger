@@ -406,7 +406,7 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
     else if (name == "addr")
       return WRAP_FUNCTOR(get_wrapper<&get_addr>);
-    else if (name == "auxiliary_date")
+    else if (name == "aux_date")
       return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
     break;
 
