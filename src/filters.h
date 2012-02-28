@@ -732,8 +732,8 @@ public:
 
   virtual void flush() {
     if (last_post && interval.duration) {
-      if (interval.is_valid())
-        report_subtotal(interval);
+      if (last_interval && interval != last_interval)
+        report_subtotal(last_interval);
       subtotal_posts::flush();
     }
   }

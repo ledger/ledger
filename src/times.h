@@ -553,6 +553,10 @@ public:
     return (start == other.start &&
             (! start || *start == *other.start));
   }
+  bool operator<(const date_interval_t& other) const {
+    return (start == other.start &&
+            (! start || *start < *other.start));
+  }
 
   operator bool() const {
     return is_valid();

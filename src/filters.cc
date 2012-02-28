@@ -924,7 +924,7 @@ void interval_posts::operator()(post_t& post)
       report_subtotal(last_interval);
 
       if (generate_empty_posts) {
-        for (++last_interval; interval != last_interval; ++last_interval) {
+        for (++last_interval; last_interval < interval; ++last_interval) {
           // Generate a null posting, so the intervening periods can be
           // seen when -E is used, or if the calculated amount ends up being
           // non-zero
@@ -940,7 +940,7 @@ void interval_posts::operator()(post_t& post)
 
           report_subtotal(last_interval);
         }
-        assert(interval == last_interval);
+        assert(last_interval <= interval);
       } else {
         last_interval = interval;
       }
