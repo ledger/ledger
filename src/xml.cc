@@ -52,6 +52,7 @@ namespace {
       out << "\">\n";
 
       out << "<name>" << acct->name << "</name>\n";
+      out << "<fullname>" << acct->fullname() << "</fullname>\n";
       value_t total = acct->amount();
       if (! total.is_null()) {
         out << "<amount>\n";
