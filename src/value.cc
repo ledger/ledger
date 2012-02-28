@@ -869,7 +869,7 @@ bool value_t::is_less_than(const value_t& val) const
     case INTEGER:
       return as_long() < val.as_long();
     case AMOUNT:
-      return val.as_amount() >= as_long();
+      return val.as_amount() > as_long();
     default:
       break;
     }
@@ -990,7 +990,7 @@ bool value_t::is_greater_than(const value_t& val) const
     case INTEGER:
       return as_long() > val.as_long();
     case AMOUNT:
-      return val.as_amount() > as_long();
+      return val.as_amount() < as_long();
     default:
       break;
     }
