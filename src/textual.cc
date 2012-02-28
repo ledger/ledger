@@ -1565,9 +1565,12 @@ bool instance_t::parse_posts(account_t *  account,
     std::streamsize len = read_line(line);
     assert(len > 0);
 
-    if (post_t * post = parse_post(line, len, account, NULL, defer_expr)) {
-      xact.add_post(post);
-      added = true;
+    char * p = skip_ws(line);
+    if (*p != ';') {
+      if (post_t * post = parse_post(line, len, account, NULL, defer_expr)) {
+        xact.add_post(post);
+        added = true;
+      }
     }
   }
 
