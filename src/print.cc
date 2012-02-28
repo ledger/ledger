@@ -41,6 +41,36 @@
 namespace ledger {
 
 namespace {
+  bool post_has_simple_amount(const post_t& post)
+  {
+    // Is the amount the result of a computation, i.e., it wasn't
+    // explicit specified by the user?
+    if (post.has_flags(POST_CALCULATED))
+      return false;
+
+    // Is the amount still empty?  This shouldn't be true by this point,
+    // but we check anyway for safety.
+    if (post.amount.is_null())
+      return false;
+
+    // Is the amount a complex expression.  If so, the first 'if' should
+    // have triggered.
+    if (post.amount_expr)
+      return false;
+
+    // Is there a balance assignment?  If so, don't elide the amount as
+    // that can change the semantics.
+    if (post.assigned_amount)
+      return false;
+
+    // Does it have an explicitly specified cost (i.e., one that wasn't
+    // calculated for the user)?  If so, don't elide the amount!
+    if (post.cost && ! post.has_flags(POST_COST_CALCULATED))
+      return false;
+
+    return true;
+  }
+
   void print_note(std::ostream&     out,
                   const string&     note,
                   const bool        note_on_next_line,
@@ -123,9 +153,7 @@ namespace {
       }
     }
 
-#if 0
     std::size_t count = xact.posts.size();
-#endif
     std::size_t index = 0;
 
     foreach (post_t * post, xact.posts) {
@@ -178,16 +206,18 @@ namespace {
         string amt;
         if (post->amount_expr) {
           amt = post->amount_expr->text();
-        } else
-#if 0
-          // jww (2012-02-27): Disabled for now because it's not
-          // outputted valid transactions in every case
-          if (! (count == 2 && index == 2 &&
-                    (*xact.posts.begin())->amount.commodity() ==
-                    post->amount.commodity() &&
-                    ! (*xact.posts.begin())->cost && ! post->cost))
-#endif
-          {
+        }
+        else if (count == 2 && index == 2 &&
+                 post_has_simple_amount(*post) &&
+                 post_has_simple_amount(*(*xact.posts.begin())) &&
+                 ((*xact.posts.begin())->amount.commodity() ==
+                  post->amount.commodity())) {
+          // If there are two postings and they both simple amount, and
+          // they are both of the same commodity, don't bother printing
+          // the second amount as it's always just an inverse of the
+          // first.
+        }
+        else {
           int amount_width =
             (report.HANDLER(amount_width_).specified ?
              report.HANDLER(amount_width_).value.to_int() : 12);
