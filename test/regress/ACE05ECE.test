@@ -1,0 +1,6 @@
+i 2011/07/20 17:00:00 Hello  Work project
+o 2011/07/21 01:00:00 Hello
+
+test reg Hello
+11-Jul-20 Work project          (Hello)                       8.00h        8.00h
+end test

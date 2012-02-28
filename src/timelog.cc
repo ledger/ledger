@@ -89,7 +89,7 @@ namespace {
       event.note = out_event.note;
 
     std::auto_ptr<xact_t> curr(new xact_t);
-    curr->_date = out_event.checkin.date();
+    curr->_date = event.checkin.date();
     curr->code  = out_event.desc; // if it wasn't used above
     curr->payee = event.desc;
     curr->pos   = event.position;
