@@ -603,7 +603,12 @@ void logger_func(log_level_t level)
 
 namespace ledger {
 
-optional<std::string> _log_category;
+optional<std::string>     _log_category;
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+optional<boost::u32regex> _log_category_re;
+#else
+optional<boost::regex>    _log_category_re;
+#endif
 
 struct __maybe_enable_debugging {
   __maybe_enable_debugging() {

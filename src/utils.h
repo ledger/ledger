@@ -338,10 +338,32 @@ extern uint8_t _trace_level;
 
 #if defined(DEBUG_ON)
 
-extern optional<std::string> _log_category;
+extern optional<std::string>       _log_category;
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+  extern optional<boost::u32regex> _log_category_re;
+#else
+  extern optional<boost::regex>    _log_category_re;
+#endif
 
 inline bool category_matches(const char * cat) {
-  return _log_category && starts_with(cat, *_log_category);
+  if (_log_category) {
+    if (! _log_category_re) {
+      _log_category_re =
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+        boost::make_u32regex(_log_category->c_str(),
+                             boost::regex::perl | boost::regex::icase);
+#else
+        boost::make_regex(_log_category->c_str(),
+                          boost::regex::perl | boost::regex::icase);
+#endif
+    }
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+    return boost::u32regex_search(cat, *_log_category_re);
+#else
+    return boost::regex_search(cat, *_log_category_re);
+#endif
+  }
+  return false;
 }
 
 #define SHOW_DEBUG(cat) \
