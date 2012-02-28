@@ -904,69 +904,104 @@ void subtotal_posts::operator()(post_t& post)
 
 void interval_posts::report_subtotal(const date_interval_t& ival)
 {
-  if (last_post && ival) {
-    if (exact_periods)
-      subtotal_posts::report_subtotal();
-    else
-      subtotal_posts::report_subtotal(NULL, ival);
-  }
+  if (exact_periods)
+    subtotal_posts::report_subtotal();
+  else
+    subtotal_posts::report_subtotal(NULL, ival);
+}
 
-  last_post = NULL;
+namespace {
+  struct sort_posts_by_date {
+    bool operator()(post_t * left, post_t * right) const {
+      return left->date() < right->date();
+    }
+  };
 }
 
 void interval_posts::operator()(post_t& post)
 {
-  DEBUG("filters.interval", "Considering post with amount " << post.amount);
-#if defined(DEBUG_ON)
-  DEBUG("filters.interval", "interval is:");
-  debug_interval(interval);
-#endif
-  if (! interval.find_period(post.date())) {
-    DEBUG("filters.interval", "Post does not fall within period");
+  // If there is a duration (such as weekly), we must generate the
+  // report in two passes.  Otherwise, we only have to check whether the
+  // post falls within the reporting period.
+
+  if (interval.duration) {
+    all_posts.push_back(&post);
+  }
+  else if (interval.find_period(post.date()))
+    item_handler<post_t>::operator()(post);
+}
+
+void interval_posts::flush()
+{
+  if (! interval.duration) {
+    item_handler<post_t>::flush();
     return;
   }
 
-  if (interval.duration) {
-    DEBUG("filters.interval", "There is an interval duration");
-    if (interval != last_interval) {
+  // Sort all the postings we saw by date ascending
+  std::stable_sort(all_posts.begin(), all_posts.end(),
+                   sort_posts_by_date());
+
+  // Determine the beginning interval by using the earliest post
+  if (! interval.find_period(all_posts.front()->date()))
+    throw_(std::logic_error, _("Failed to find period for interval report"));
+
+  // Walk the interval forward reporting all posts within each one
+  // before moving on, until we reach the end of all_posts
+  bool saw_posts = false;
+  for (std::deque<post_t *>::iterator i = all_posts.begin();
+       i != all_posts.end(); ) {
+    post_t * post(*i);
+
+    DEBUG("filters.interval",
+          "Considering post " << post->date() << " = " << post->amount);
 #if defined(DEBUG_ON)
-      DEBUG("filters.interval", "interval != last_interval, so reporting");
-      DEBUG("filters.interval", "last_interval is:");
-      debug_interval(last_interval);
+    DEBUG("filters.interval", "interval is:");
+    debug_interval(interval);
 #endif
-      report_subtotal(last_interval);
+    assert(! interval.finish || post->date() < *interval.finish);
 
-      if (generate_empty_posts) {
-        for (++last_interval; last_interval < interval; ++last_interval) {
-          // Generate a null posting, so the intervening periods can be
-          // seen when -E is used, or if the calculated amount ends up being
-          // non-zero
-          xact_t& null_xact = temps.create_xact();
-          null_xact._date = last_interval.inclusive_end();
-
-          post_t& null_post = temps.create_post(null_xact, empty_account);
-          null_post.add_flags(POST_CALCULATED);
-          null_post.amount = 0L;
-
-          last_post = &null_post;
-          subtotal_posts::operator()(null_post);
-
-          report_subtotal(last_interval);
-        }
-        assert(last_interval <= interval);
-      } else {
-        DEBUG("filters.interval", "Setting last_interval = interval");
-        last_interval = interval;
+    if (interval.within_period(post->date())) {
+      DEBUG("filters.interval", "Calling subtotal_posts::operator()");
+      subtotal_posts::operator()(*post);
+      ++i;
+      saw_posts = true;
+    } else {
+      if (saw_posts) {
+        DEBUG("filters.interval",
+              "Calling subtotal_posts::report_subtotal()");
+        report_subtotal(interval);
+        saw_posts = false;
       }
+      else if (generate_empty_posts) {
+        // Generate a null posting, so the intervening periods can be
+        // seen when -E is used, or if the calculated amount ends up
+        // being non-zero
+        xact_t& null_xact = temps.create_xact();
+        null_xact._date = interval.inclusive_end();
+
+        post_t& null_post = temps.create_post(null_xact, empty_account);
+        null_post.add_flags(POST_CALCULATED);
+        null_post.amount = 0L;
+
+        subtotal_posts::operator()(null_post);
+        report_subtotal(interval);
+      }
+
+      DEBUG("filters.interval", "Advancing interval");
+      ++interval;
     }
-    DEBUG("filters.interval", "Calling subtotal_posts::operator()");
-    subtotal_posts::operator()(post);
-  } else {
-    DEBUG("filters.interval", "There is no interval duration");
-    item_handler<post_t>::operator()(post);
   }
 
-  last_post = &post;
+  // If the last postings weren't reported, do so now.
+  if (saw_posts) {
+    DEBUG("filters.interval",
+          "Calling subtotal_posts::report_subtotal() at end");
+    report_subtotal(interval);
+  }
+    
+  // Tell our parent class to flush
+  subtotal_posts::flush();
 }
 
 void posts_as_equity::report_subtotal()

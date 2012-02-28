@@ -1305,7 +1305,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
         date_interval_t next_interval(*this);
         ++next_interval;
 
-        if (next_interval.start && *next_interval.start < *date) {
+        if (next_interval.start && *next_interval.start <= *date) {
           *this = next_interval;
         } else {
           end_of_duration = none;
@@ -1355,7 +1355,8 @@ void date_interval_t::stabilize(const optional<date_t>& date)
   }
 }
 
-bool date_interval_t::find_period(const date_t& date)
+bool date_interval_t::find_period(const date_t& date,
+                                  const bool    allow_shift)
 {
   stabilize(date);
 
@@ -1405,9 +1406,6 @@ bool date_interval_t::find_period(const date_t& date)
 #endif
 
   while (date >= scan && (! finish || scan < *finish)) {
-    DEBUG("times.interval", "date        = " << date);
-    DEBUG("times.interval", "end_of_scan = " << end_of_scan);
-
     if (date < end_of_scan) {
       start           = scan;
       end_of_duration = end_of_scan;
@@ -1420,9 +1418,15 @@ bool date_interval_t::find_period(const date_t& date)
 
       return true;
     }
+    else if (! allow_shift) {
+      break;
+    }
 
     scan        = duration->add(scan);
     end_of_scan = duration->add(scan);
+
+    DEBUG("times.interval", "scan        = " << scan);
+    DEBUG("times.interval", "end_of_scan = " << end_of_scan);
   }
 
   DEBUG("times.interval", "false: failed scan");

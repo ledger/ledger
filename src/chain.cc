@@ -217,13 +217,11 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
 
   // interval_posts groups posts together based on a time period, such as
   // weekly or monthly.
-  if (report.HANDLED(period_)) {
+  if (report.HANDLED(period_))
     handler.reset(new interval_posts(handler, expr,
                                      report.HANDLER(period_).str(),
                                      report.HANDLED(exact),
                                      report.HANDLED(empty)));
-    handler.reset(new sort_posts(handler, "date"));
-  }
 
   if (report.HANDLED(date_))
     handler.reset(new transfer_details(handler, transfer_details::SET_DATE,

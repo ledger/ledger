@@ -578,10 +578,14 @@ public:
     return start;
   }
 
-  /** Find the current or next period containing date.  Returns true if the
-      date_interval_t object has been altered to reflect the interval
-      containing date, or false if no such period can be found. */
-  bool find_period(const date_t& date = CURRENT_DATE());
+  /** Find the current or next period containing date.  Returns false if
+      no such period can be found.  If allow_shift is true, the default,
+      then the interval may be shifted in time to find the period. */
+  bool find_period(const date_t& date        = CURRENT_DATE(),
+                   const bool    allow_shift = true);
+  bool within_period(const date_t& date = CURRENT_DATE()) {
+    return find_period(date, false);
+  }
 
   optional<date_t> inclusive_end() const {
     if (end_of_duration)

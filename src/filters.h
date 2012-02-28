@@ -655,11 +655,11 @@ protected:
   typedef std::pair<string, acct_value_t> values_pair;
 
 protected:
-  expr_t&             amount_expr;
-  values_map          values;
-  optional<string>    date_format;
-  temporaries_t       temps;
-  std::list<post_t *> component_posts;
+  expr_t&              amount_expr;
+  values_map           values;
+  optional<string>     date_format;
+  temporaries_t        temps;
+  std::deque<post_t *> component_posts;
 
 public:
   subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr,
@@ -697,11 +697,11 @@ class interval_posts : public subtotal_posts
 {
   date_interval_t start_interval;
   date_interval_t interval;
-  date_interval_t last_interval;
-  post_t *        last_post;
   account_t *     empty_account;
   bool            exact_periods;
   bool            generate_empty_posts;
+
+  std::deque<post_t *> all_posts;
 
   interval_posts();
 
@@ -713,8 +713,7 @@ public:
                  bool                   _exact_periods        = false,
                  bool                   _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), start_interval(_interval),
-      interval(start_interval), last_post(NULL),
-      exact_periods(_exact_periods),
+      interval(start_interval), exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
     TRACE_CTOR(interval_posts,
                "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
@@ -744,28 +743,11 @@ public:
   }
 #endif
 
-  virtual void flush() {
-    if (last_post && interval.duration) {
-      DEBUG("filters.interval", "There is a last_post and an interval.duration");
-      if (interval != last_interval) {
-#if defined(DEBUG_ON)
-        DEBUG("filters.interval", "interval != last_interval, so reporting");
-        DEBUG("filters.interval", "interval is:");
-        debug_interval(interval);
-        DEBUG("filters.interval", "last_interval is:");
-        debug_interval(last_interval);
-#endif
-        report_subtotal(last_interval);
-      }
-      subtotal_posts::flush();
-    }
-  }
   virtual void operator()(post_t& post);
+  virtual void flush();
 
   virtual void clear() {
-    interval      = start_interval;
-    last_interval = date_interval_t();
-    last_post     = NULL;
+    interval  = start_interval;
 
     subtotal_posts::clear();
     create_accounts();
