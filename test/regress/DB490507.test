@@ -1,0 +1,25 @@
+2001/11/07=2001/11/04 * Autoroutes du Sud de la France
+    Dépense:Vacances:Voyage  ;          14F Tlse-Montauban, 8F Montauban-Caussade, 8F Caussade-Montauban, 14F Montauban-Tlse
+    Actif:Courant:BnpCc                        -6,71 €
+
+2008/01/20 * La Poste
+    Equity
+    Actif:Courant:LaPosteLivretA         10,00 €
+
+2008/01/20 * La Poste
+    Revenu:Invest:Exonéré
+    Actif:Courant:LaPosteLivretA         25,24 € = 35,24 €
+
+test print --decimal-comma --columns=999
+2001/11/07=2001/11/04 * Autoroutes du Sud de la France
+    Dépense:Vacances:Voyage  ;          14F Tlse-Montauban, 8F Montauban-Caussade, 8F Caussade-Montauban, 14F Montauban-Tlse
+    Actif:Courant:BnpCc                      -6,71 €
+
+2008/01/20 * La Poste
+    Equity
+    Actif:Courant:LaPosteLivretA             10,00 €
+
+2008/01/20 * La Poste
+    Revenu:Invest:Exonéré
+    Actif:Courant:LaPosteLivretA             25,24 € = 35,24 €
+end test
