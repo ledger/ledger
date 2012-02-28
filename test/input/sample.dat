@@ -33,7 +33,7 @@ N $
     Русский язык:Активы:Русский язык:Русский язык         $1000.00
     Income:Salary
 
-tag foo
+apply tag foo
 
 2004/05/27 Book Store
     Expenses:Books                                    $20.00
@@ -41,7 +41,7 @@ tag foo
     Expenses:Docs                                     $30.00
     Liabilities:MasterCard
 
-end tag
+end apply tag
 
 2004/05/27 (100) Credit card company
     ; This is an xact note!
@@ -52,3 +52,5 @@ end tag
     ; :MyTag:
     Assets:Bank:Checking
     ; :AnotherTag:
+
+;;; sample.dat ends here
