@@ -338,13 +338,10 @@ namespace {
   }
 
   value_t get_seq(item_t& item) {
-    return item.pos ? long(item.pos->sequence) : 0L;
+    return long(item.seq());
   }
   value_t get_id(item_t& item) {
-    if (optional<value_t> ref = item.get_tag(_("UUID")))
-      return *ref;
-    else
-      return item.pos ? long(item.pos->sequence) : 0L;
+    return string_value(item.id());
   }
 
   value_t get_addr(item_t& item) {

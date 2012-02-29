@@ -132,6 +132,9 @@ void export_post()
   class_< post_t, bases<item_t> > ("Posting")
     //.def(init<account_t *>())
 
+    .def("id", &post_t::id)
+    .def("seq", &post_t::seq)
+
     .add_property("xact",
                   make_getter(&post_t::xact,
                               return_internal_reference<>()),

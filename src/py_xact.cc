@@ -107,6 +107,9 @@ void export_xact()
     ;
 
   class_< xact_t, bases<xact_base_t> > ("Transaction")
+    .def("id", &xact_t::id)
+    .def("seq", &xact_t::seq)
+
     .add_property("code",
                   make_getter(&xact_t::code),
                   make_setter(&xact_t::code))
@@ -117,8 +120,6 @@ void export_xact()
     .def("add_post", &xact_t::add_post, with_custodian_and_ward<1, 2>())
 
     .def("magnitude", &xact_t::magnitude)
-    .def("idstring", &xact_t::idstring)
-    .def("id", &xact_t::id)
 
     .def("lookup", &xact_t::lookup)
 

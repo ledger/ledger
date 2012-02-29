@@ -151,6 +151,19 @@ public:
     return ! (*this == xact);
   }
 
+  string id() const {
+    if (optional<value_t> ref = get_tag(_("UUID"))) {
+      return ref->to_string();
+    } else {
+      std::ostringstream buf;
+      buf << seq();
+      return buf.str();
+    }
+  }
+  std::size_t seq() const {
+    return pos ? pos->sequence : 0L;
+  }
+
   virtual bool has_tag(const string& tag,
                        bool          inherit = true) const;
   virtual bool has_tag(const mask_t&           tag_mask,
