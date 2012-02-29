@@ -1422,7 +1422,7 @@ indented by at least one space.  If you omit the leading spaces in the
 account lines Ledger will generate an error.  There must be at least two
 spaces, or a tab, between the amount and the account.  If you do not
 have adequate separation between the amount and the account Ledger will
-give an error and stop calculating}
+give an error and stop calculating.}
 
 
 @node Starting up, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
