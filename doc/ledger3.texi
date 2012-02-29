@@ -639,7 +639,7 @@ cannot display any currency symbols other than dollar signs ($).
 Accounting is simply tracking your money.  It can range from nothing,
 and just waiting for automatic overdraft protection to kick in, or not,
 to a full blown double entry accounting system.  Ledger accomplishes the
-latter.  With ledger you can handle your personal finances or you
+latter.  With ledger you can handle your personal finances or your
 businesses.  Double-entry accounting scales.  
 @cindex double-entry accounting
 
