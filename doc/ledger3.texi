@@ -639,7 +639,7 @@ cannot display any currency symbols other than dollar signs ($).
 Accounting is simply tracking your money.  It can range from nothing,
 and just waiting for automatic overdraft protection to kick in, or not,
 to a full blown double entry accounting system.  Ledger accomplishes the
-latter.  With ledger you can handle your personal finances or you
+latter.  With ledger you can handle your personal finances or your
 businesses.  Double-entry accounting scales.  
 @cindex double-entry accounting
 
@@ -1422,7 +1422,7 @@ indented by at least one space.  If you omit the leading spaces in the
 account lines Ledger will generate an error.  There must be at least two
 spaces, or a tab, between the amount and the account.  If you do not
 have adequate separation between the amount and the account Ledger will
-give an error and stop calculating}
+give an error and stop calculating.}
 
 
 @node Starting up, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
