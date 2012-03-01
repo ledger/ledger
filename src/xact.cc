@@ -35,6 +35,7 @@
 #include "post.h"
 #include "account.h"
 #include "journal.h"
+#include "context.h"
 #include "pool.h"
 
 namespace ledger {
@@ -608,7 +609,7 @@ namespace {
   }
 }
 
-void auto_xact_t::extend_xact(xact_base_t& xact)
+void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -674,7 +675,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
               throw_(parse_error,
                      _("Transaction assertion failed: %1") << pair.first);
             else
-              warning_(_("Transaction check failed: %1") << pair.first);
+              context.warning(STR(_("Transaction check failed: %1")
+                                  << pair.first));
           }
         }
       }

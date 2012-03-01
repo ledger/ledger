@@ -86,10 +86,16 @@ public:
 extern straccstream       _accum;
 extern std::ostringstream _accum_buffer;
 
+inline string str_helper_func() {
+  string buf = _accum_buffer.str();
+  _accum_buffer.clear();
+  _accum_buffer.str("");
+  return buf;
+}
+
 #define STR(msg)                                \
   ((_accum_buffer << ACCUM(_accum << msg)),     \
-   _accum.clear(),                              \
-   _accum_buffer.str())
+   _accum.clear(), str_helper_func())
 
 } // namespace ledger
 

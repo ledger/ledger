@@ -135,10 +135,12 @@ namespace {
     return journal.find_account(name, auto_create);
   }
 
+#if 0
   std::size_t py_read(journal_t& journal, const string& pathname)
   {
-    return journal.read(pathname);
+    return journal.read(context_stack);
   }
+#endif
 
   struct collector_wrapper
   {
@@ -264,9 +266,10 @@ void export_journal()
     ;
 
   class_< journal_t, boost::noncopyable > ("Journal")
+#if 0
     .def(init<path>())
     .def(init<string>())
-
+#endif
     .add_property("master",
                   make_getter(&journal_t::master,
                               return_internal_reference<1,
@@ -311,9 +314,9 @@ void export_journal()
          (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
     .def("sources", python::range<return_internal_reference<> >
          (&journal_t::sources_begin, &journal_t::sources_end))
-
+#if 0
     .def("read", py_read)
-
+#endif
     .def("has_xdata", &journal_t::has_xdata)
     .def("clear_xdata", &journal_t::clear_xdata)
 

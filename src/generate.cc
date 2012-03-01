@@ -360,9 +360,15 @@ void generate_posts_iterator::increment()
 
     DEBUG("generate.post", "The post we intend to parse:\n" << buf.str());
 
-    std::istringstream in(buf.str());
     try {
-      if (session.journal->parse(in, session) != 0) {
+      shared_ptr<std::istringstream> in(new std::istringstream(buf.str()));
+
+      parse_context_stack_t parsing_context;
+      parsing_context.push(in);
+      parsing_context.get_current().journal = session.journal.get();
+      parsing_context.get_current().scope   = &session;
+
+      if (session.journal->read(parsing_context) != 0) {
         VERIFY(session.journal->xacts.back()->valid());
         posts.reset(*session.journal->xacts.back());
         post = *posts++;

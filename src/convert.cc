@@ -63,12 +63,16 @@ value_t convert_command(call_scope_t& args)
 
   print_xacts formatter(report);
   path        csv_file_path(args.get<string>(0));
-  ifstream    data(csv_file_path);
-  csv_reader  reader(data, csv_file_path);
+
+  report.session.parsing_context.push(csv_file_path);
+  parse_context_t& context(report.session.parsing_context.get_current());
+  context.journal = &journal;
+  context.master  = bucket;
+
+  csv_reader reader(context);
 
   try {
-    while (xact_t * xact = reader.read_xact(journal, bucket,
-                                            report.HANDLED(rich_data))) {
+    while (xact_t * xact = reader.read_xact(report.HANDLED(rich_data))) {
       if (report.HANDLED(invert)) {
         foreach (post_t * post, xact->posts)
           post->amount.in_place_negate();

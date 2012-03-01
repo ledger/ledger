@@ -194,18 +194,19 @@ object python_interpreter_t::import_option(const string& str)
   if (! is_initialized)
     initialize();
 
-  path file(str);
-  string name(str);
-
   python::object sys_module = python::import("sys");
   python::object sys_dict   = sys_module.attr("__dict__");
 
+  path         file(str);
+  string       name(str);
   python::list paths(sys_dict["path"]);
 
   if (contains(str, ".py")) {
 #if BOOST_VERSION >= 103700
-    path& cwd(get_parsing_context().current_directory);
-    paths.insert(0, filesystem::absolute(file, cwd).parent_path().string());
+    path& cwd(parsing_context.get_current().current_directory);
+    path parent(filesystem::absolute(file, cwd).parent_path());
+    DEBUG("python.interp", "Adding " << parent << " to PYTHONPATH");
+    paths.insert(0, parent.string());
     sys_dict["path"] = paths;
 
 #if BOOST_VERSION >= 104600
@@ -220,7 +221,24 @@ object python_interpreter_t::import_option(const string& str)
 #endif // BOOST_VERSION >= 103700
   }
 
-  return python::import(python::str(name.c_str()));
+  try {
+    if (contains(str, ".py")) {
+      import_into_main(name);
+    } else {
+      object obj = python::import(python::str(name.c_str()));
+      main_nspace[name.c_str()] = obj;
+      return obj;
+    }
+  }
+  catch (const error_already_set&) {
+    PyErr_Print();
+    throw_(std::runtime_error, _("Python failed to import: %1") << str);
+  }
+  catch (...) {
+    throw;
+  }
+
+  return object();
 }
 
 object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
@@ -348,13 +366,13 @@ value_t python_interpreter_t::server_command(call_scope_t& args)
     functor_t func(main_function, "main");
     try {
       func(args);
+      return true;
     }
     catch (const error_already_set&) {
       PyErr_Print();
       throw_(std::runtime_error,
              _("Error while invoking ledger.server's main() function"));
     }
-    return true;
   } else {
       throw_(std::runtime_error,
              _("The ledger.server module is missing its main() function!"));
@@ -455,6 +473,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 
     if (! PyCallable_Check(func.ptr())) {
       extract<value_t> val(func);
+      DEBUG("python.interp", "Value of Python '" << name << "': " << val);
       std::signal(SIGINT, sigint_handler);
       if (val.check())
         return val();
@@ -476,6 +495,8 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
         value_t result;
         if (xval.check()) {
           result = xval();
+          DEBUG("python.interp",
+                "Return from Python '" << name << "': " << result);
           Py_DECREF(val);
         } else {
           Py_DECREF(val);

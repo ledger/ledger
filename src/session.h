@@ -44,6 +44,7 @@
 
 #include "account.h"
 #include "journal.h"
+#include "context.h"
 #include "option.h"
 #include "commodity.h"
 
@@ -57,7 +58,9 @@ class session_t : public symbol_scope_t
 
 public:
   bool flush_on_next_data_file;
+
   std::auto_ptr<journal_t> journal;
+  parse_context_stack_t    parsing_context;
 
   explicit session_t();
   virtual ~session_t() {

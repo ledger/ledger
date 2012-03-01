@@ -49,6 +49,7 @@ namespace ledger {
 
 class post_t;
 class journal_t;
+class parse_context_t;
 
 typedef std::list<post_t *> posts_list;
 
@@ -209,7 +210,7 @@ public:
     deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
   }
 
-  virtual void extend_xact(xact_base_t& xact);
+  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

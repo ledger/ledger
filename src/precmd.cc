@@ -83,8 +83,14 @@ namespace {
       out << _("--- Context is first posting of the following transaction ---")
           << std::endl << str << std::endl;
       {
-        std::istringstream in(str);
-        report.session.journal->parse(in, report.session);
+        shared_ptr<std::istringstream> in(new std::istringstream(str));
+
+        parse_context_stack_t parsing_context;
+        parsing_context.push(in);
+        parsing_context.get_current().journal = report.session.journal.get();
+        parsing_context.get_current().scope   = &report.session;
+
+        report.session.journal->read(parsing_context);
         report.session.journal->clear_xdata();
       }
     }

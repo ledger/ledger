@@ -50,6 +50,7 @@ namespace ledger {
 
 class account_t;
 class journal_t;
+class parse_context_t;
 
 class time_xact_t
 {
@@ -86,15 +87,11 @@ public:
 class time_log_t : public boost::noncopyable
 {
   std::list<time_xact_t> time_xacts;
-  journal_t&             journal;
-  scope_t&               scope;
+  parse_context_t&       context;
 
 public:
-  std::size_t *          context_count;
-
-  time_log_t(journal_t& _journal, scope_t& _scope)
-    : journal(_journal), scope(_scope), context_count(NULL) {
-    TRACE_CTOR(time_log_t, "journal_t&, scope_t&, std::size&");
+  time_log_t(parse_context_t& _context) : context(_context) {
+    TRACE_CTOR(time_log_t, "parse_context_t&");
   }
   ~time_log_t() {
     TRACE_DTOR(time_log_t);

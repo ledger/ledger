@@ -55,7 +55,8 @@ class auto_xact_t;
 class period_xact_t;
 class post_t;
 class account_t;
-class scope_t;
+class parse_context_t;
+class parse_context_stack_t;
 
 typedef std::list<xact_t *>                    xacts_list;
 typedef std::list<auto_xact_t *>               auto_xacts_list;
@@ -132,6 +133,7 @@ public:
   account_mappings_t    payees_for_unknown_accounts;
   checksum_map_t        checksum_map;
   tag_check_exprs_map   tag_check_exprs;
+  parse_context_t *     current_context;
   bool                  was_loaded;
   bool                  force_checking;
   bool                  check_payees;
@@ -143,8 +145,10 @@ public:
   } checking_style;
 
   journal_t();
+#if 0
   journal_t(const path& pathname);
   journal_t(const string& str);
+#endif
   ~journal_t();
 
   void initialize();
@@ -162,16 +166,12 @@ public:
   account_t * find_account_re(const string& regexp);
 
   account_t * register_account(const string& name, post_t * post,
-                               const string& location,
                                account_t * master = NULL);
-  string      register_payee(const string& name, xact_t * xact,
-                             const string& location);
+  string      register_payee(const string& name, xact_t * xact);
   void        register_commodity(commodity_t& comm,
-                                 variant<int, xact_t *, post_t *> context,
-                                 const string& location);
+                                 variant<int, xact_t *, post_t *> context);
   void        register_metadata(const string& key, const value_t& value,
-                                variant<int, xact_t *, post_t *> context,
-                                const string& location);
+                                variant<int, xact_t *, post_t *> context);
 
   bool add_xact(xact_t * xact);
   void extend_xact(xact_base_t * xact);
@@ -196,23 +196,15 @@ public:
     return period_xacts.end();
   }
 
-  std::size_t read(std::istream& in,
-                   const path&   pathname,
-                   account_t *   master = NULL,
-                   scope_t *     scope  = NULL);
-  std::size_t read(const path&   pathname,
-                   account_t *   master = NULL,
-                   scope_t *     scope  = NULL);
-
-  std::size_t parse(std::istream& in,
-                    scope_t&      session_scope,
-                    account_t *   master        = NULL,
-                    const path *  original_file = NULL);
+  std::size_t read(parse_context_stack_t& context);
 
   bool has_xdata();
   void clear_xdata();
 
   bool valid() const;
+
+private:
+  std::size_t read_textual(parse_context_stack_t& context);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

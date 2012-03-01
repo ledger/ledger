@@ -664,7 +664,7 @@ public:
     if (name == "value")
       return MAKE_FUNCTOR(value_scope_t::get_value);
 
-    return NULL;
+    return child_scope_t::lookup(kind, name);
   }
 };
 

@@ -120,8 +120,17 @@ std::size_t session_t::read_data(const string& master_account)
 #endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
-        if (journal->read(*price_db_path) > 0)
-          throw_(parse_error, _("Transactions not allowed in price history file"));
+        parsing_context.push(*price_db_path);
+        parsing_context.get_current().journal = journal.get();
+        try {
+          if (journal->read(parsing_context) > 0)
+            throw_(parse_error, _("Transactions not allowed in price history file"));
+        }
+        catch (...) {
+          parsing_context.pop();
+          throw;
+        }
+        parsing_context.pop();
       }
     }
 
@@ -140,12 +149,22 @@ std::size_t session_t::read_data(const string& master_account)
         }
         buffer.flush();
 
-        std::istringstream buf_in(buffer.str());
-        xact_count += journal->read(buf_in, "/dev/stdin", acct);
-        journal->sources.push_back(journal_t::fileinfo_t());
+        shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+        parsing_context.push(stream);
       } else {
-        xact_count += journal->read(pathname, acct);
+        parsing_context.push(pathname);
       }
+
+      parsing_context.get_current().journal = journal.get();
+      parsing_context.get_current().master  = acct;
+      try {
+        xact_count += journal->read(parsing_context);
+      }
+      catch (...) {
+        parsing_context.pop();
+        throw;
+      }
+      parsing_context.pop();
     }
 
     DEBUG("ledger.read", "xact_count [" << xact_count

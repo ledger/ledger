@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "journal.h"
+#include "context.h"
 #include "amount.h"
 #include "commodity.h"
 #include "pool.h"
@@ -47,6 +48,7 @@ journal_t::journal_t()
   initialize();
 }
 
+#if 0
 journal_t::journal_t(const path& pathname)
 {
   TRACE_CTOR(journal_t, "path");
@@ -60,6 +62,7 @@ journal_t::journal_t(const string& str)
   initialize();
   read(str);
 }
+#endif
 
 journal_t::~journal_t()
 {
@@ -87,6 +90,7 @@ void journal_t::initialize()
   fixed_payees      = false;
   fixed_commodities = false;
   fixed_metadata    = false;
+  current_context   = NULL;
   was_loaded        = false;
   force_checking    = false;
   check_payees      = false;
@@ -114,7 +118,6 @@ account_t * journal_t::find_account_re(const string& regexp)
 }
 
 account_t * journal_t::register_account(const string& name, post_t * post,
-                                        const string& location,
                                         account_t * master_account)
 {
   account_t * result = NULL;
@@ -147,8 +150,8 @@ account_t * journal_t::register_account(const string& name, post_t * post,
         result->add_flags(ACCOUNT_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
-        warning_(_("%1Unknown account '%2'") << location
-                 << result->fullname());
+        current_context->warning(STR(_("Unknown account '%1'")
+                                     << result->fullname()));
       }
       else if (checking_style == CHECK_ERROR) {
         throw_(parse_error, _("Unknown account '%1'") << result->fullname());
@@ -159,8 +162,7 @@ account_t * journal_t::register_account(const string& name, post_t * post,
   return result;
 }
 
-string journal_t::register_payee(const string& name, xact_t * xact,
-                                 const string& location)
+string journal_t::register_payee(const string& name, xact_t * xact)
 {
   string payee;
 
@@ -178,7 +180,7 @@ string journal_t::register_payee(const string& name, xact_t * xact,
         known_payees.insert(name);
       }
       else if (checking_style == CHECK_WARNING) {
-        warning_(_("%1Unknown payee '%2'") << location << name);
+        current_context->warning(STR(_("Unknown payee '%1'") << name));
       }
       else if (checking_style == CHECK_ERROR) {
         throw_(parse_error, _("Unknown payee '%1'") << name);
@@ -197,8 +199,7 @@ string journal_t::register_payee(const string& name, xact_t * xact,
 }
 
 void journal_t::register_commodity(commodity_t& comm,
-                                   variant<int, xact_t *, post_t *> context,
-                                   const string& location)
+                                   variant<int, xact_t *, post_t *> context)
 {
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     if (! comm.has_flags(COMMODITY_KNOWN)) {
@@ -215,7 +216,7 @@ void journal_t::register_commodity(commodity_t& comm,
         comm.add_flags(COMMODITY_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
-        warning_(_("%1Unknown commodity '%2'") << location << comm);
+        current_context->warning(STR(_("Unknown commodity '%1'") << comm));
       }
       else if (checking_style == CHECK_ERROR) {
         throw_(parse_error, _("Unknown commodity '%1'") << comm);
@@ -224,40 +225,8 @@ void journal_t::register_commodity(commodity_t& comm,
   }
 }
 
-namespace {
-  void check_metadata(journal_t& journal,
-                      const string& key, const value_t& value,
-                      variant<int, xact_t *, post_t *> context,
-                      const string& location)
-  {
-    std::pair<tag_check_exprs_map::iterator,
-              tag_check_exprs_map::iterator> range =
-      journal.tag_check_exprs.equal_range(key);
-
-    for (tag_check_exprs_map::iterator i = range.first;
-         i != range.second;
-         ++i) {
-      value_scope_t val_scope
-        (context.which() == 1 ?
-         static_cast<scope_t&>(*boost::get<xact_t *>(context)) :
-         static_cast<scope_t&>(*boost::get<post_t *>(context)), value);
-
-      if (! (*i).second.first.calc(val_scope).to_boolean()) {
-        if ((*i).second.second == expr_t::EXPR_ASSERTION)
-          throw_(parse_error,
-                 _("Metadata assertion failed for (%1: %2): %3")
-                 << key << value << (*i).second.first);
-        else
-          warning_(_("%1Metadata check failed for (%2: %3): %4")
-                   << location << key << value << (*i).second.first);
-      }
-    }
-  }
-}
-
 void journal_t::register_metadata(const string& key, const value_t& value,
-                                  variant<int, xact_t *, post_t *> context,
-                                  const string& location)
+                                  variant<int, xact_t *, post_t *> context)
 {
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     std::set<string>::iterator i = known_tags.find(key);
@@ -276,7 +245,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
         known_tags.insert(key);
       }
       else if (checking_style == CHECK_WARNING) {
-        warning_(_("%1Unknown metadata tag '%2'") << location << key);
+        current_context->warning(STR(_("Unknown metadata tag '%1'") << key));
       }
       else if (checking_style == CHECK_ERROR) {
         throw_(parse_error, _("Unknown metadata tag '%1'") << key);
@@ -284,8 +253,33 @@ void journal_t::register_metadata(const string& key, const value_t& value,
     }
   }
 
-  if (! value.is_null())
-    check_metadata(*this, key, value, context, location);
+  if (! value.is_null()) {
+    std::pair<tag_check_exprs_map::iterator,
+              tag_check_exprs_map::iterator> range =
+      tag_check_exprs.equal_range(key);
+
+    for (tag_check_exprs_map::iterator i = range.first;
+         i != range.second;
+         ++i) {
+      bind_scope_t bound_scope
+        (*current_context->scope,
+         context.which() == 1 ?
+         static_cast<scope_t&>(*boost::get<xact_t *>(context)) :
+         static_cast<scope_t&>(*boost::get<post_t *>(context)));
+      value_scope_t val_scope(bound_scope, value);
+
+      if (! (*i).second.first.calc(val_scope).to_boolean()) {
+        if ((*i).second.second == expr_t::EXPR_ASSERTION)
+          throw_(parse_error,
+                 _("Metadata assertion failed for (%1: %2): %3")
+                 << key << value << (*i).second.first);
+        else
+          current_context->warning
+            (STR(_("Metadata check failed for (%1: %2): %3")
+                 << key << value << (*i).second.first));
+      }
+    }
+  }
 }
 
 namespace {
@@ -300,13 +294,10 @@ namespace {
                xact ? *xact->metadata : *post->metadata) {
         const string& key(pair.first);
 
-        // jww (2012-02-27): We really need to know the parsing context,
-        // both here and for the call to warning_ in
-        // xact_t::extend_xact.
         if (optional<value_t> value = pair.second.first)
-          journal.register_metadata(key, *value, context, "");
+          journal.register_metadata(key, *value, context);
         else
-          journal.register_metadata(key, NULL_VALUE, context, "");
+          journal.register_metadata(key, NULL_VALUE, context);
       }
     }
   }
@@ -351,7 +342,7 @@ bool journal_t::add_xact(xact_t * xact)
 void journal_t::extend_xact(xact_base_t * xact)
 {
   foreach (auto_xact_t * auto_xact, auto_xacts)
-    auto_xact->extend_xact(*xact);
+    auto_xact->extend_xact(*xact, *current_context);
 }
 
 bool journal_t::remove_xact(xact_t * xact)
@@ -372,25 +363,36 @@ bool journal_t::remove_xact(xact_t * xact)
   return true;
 }
 
-std::size_t journal_t::read(std::istream& in,
-                            const path&   pathname,
-                            account_t *   master_alt,
-                            scope_t *     scope)
+std::size_t journal_t::read(parse_context_stack_t& context)
 {
   std::size_t count = 0;
   try {
-    if (! scope)
-      scope = scope_t::default_scope;
+    parse_context_t& current(context.get_current());
+    current_context = &current;
 
-    if (! scope)
+    current.count = 0;
+    if (! current.scope)
+      current.scope = scope_t::default_scope;
+
+    if (! current.scope)
       throw_(std::runtime_error,
              _("No default scope in which to read journal file '%1'")
-             << pathname);
+             << current.pathname);
 
-    count = parse(in, *scope, master_alt ? master_alt : master, &pathname);
+    if (! current.master)
+      current.master = master;
+
+    count = read_textual(context);
+    if (count > 0) {
+      if (! current.pathname.empty())
+        sources.push_back(fileinfo_t(current.pathname));
+      else
+        sources.push_back(fileinfo_t());
+    }
   }
   catch (...) {
     clear_xdata();
+    current_context = NULL;
     throw;
   }
 
@@ -399,23 +401,6 @@ std::size_t journal_t::read(std::istream& in,
   // posting amounts.
   clear_xdata();
 
-  return count;
-}
-
-std::size_t journal_t::read(const path& pathname,
-                            account_t * master_account,
-                            scope_t *   scope)
-{
-  path filename = resolve_path(pathname);
-
-  if (! exists(filename))
-    throw_(std::runtime_error,
-           _("Cannot read journal file %1") << filename);
-
-  ifstream stream(filename);
-  std::size_t count = read(stream, filename, master_account, scope);
-  if (count > 0)
-    sources.push_back(fileinfo_t(filename));
   return count;
 }
 

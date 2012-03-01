@@ -40,27 +40,27 @@
 
 namespace ledger {
 
-string csv_reader::read_field(std::istream& sin)
+string csv_reader::read_field(std::istream& in)
 {
   string field;
 
   char c;
-  if (sin.peek() == '"' || sin.peek() == '|') {
-    sin.get(c);
+  if (in.peek() == '"' || in.peek() == '|') {
+    in.get(c);
     char x;
-    while (sin.good() && ! sin.eof()) {
-      sin.get(x);
+    while (in.good() && ! in.eof()) {
+      in.get(x);
       if (x == '\\') {
-        sin.get(x);
+        in.get(x);
       }
-      else if (x == '"' && sin.peek() == '"') {
-        sin.get(x);
+      else if (x == '"' && in.peek() == '"') {
+        in.get(x);
       }
       else if (x == c) {
         if (x == '|')
-          sin.unget();
-        else if (sin.peek() == ',')
-          sin.get(c);
+          in.unget();
+        else if (in.peek() == ',')
+          in.get(c);
         break;
       }
       if (x != '\0')
@@ -68,9 +68,9 @@ string csv_reader::read_field(std::istream& sin)
     }
   }
   else {
-    while (sin.good() && ! sin.eof()) {
-      sin.get(c);
-      if (sin.good()) {
+    while (in.good() && ! in.eof()) {
+      in.get(c);
+      if (in.good()) {
         if (c == ',')
           break;
         if (c != '\0')
@@ -82,22 +82,22 @@ string csv_reader::read_field(std::istream& sin)
   return field;
 }
 
-char * csv_reader::next_line(std::istream& sin)
+char * csv_reader::next_line(std::istream& in)
 {
-  while (sin.good() && ! sin.eof() && sin.peek() == '#')
-    sin.getline(linebuf, MAX_LINE);
+  while (in.good() && ! in.eof() && in.peek() == '#')
+    in.getline(context.linebuf, parse_context_t::MAX_LINE);
 
-  if (! sin.good() || sin.eof())
+  if (! in.good() || in.eof())
     return NULL;
 
-  sin.getline(linebuf, MAX_LINE);
+  in.getline(context.linebuf, parse_context_t::MAX_LINE);
 
-  return linebuf;
+  return context.linebuf;
 }
 
-void csv_reader::read_index(std::istream& sin)
+void csv_reader::read_index(std::istream& in)
 {
-  char * line = next_line(sin);
+  char * line = next_line(in);
   if (! line)
     return;
 
@@ -130,13 +130,12 @@ void csv_reader::read_index(std::istream& sin)
   }
 }
 
-xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
-                               bool rich_data)
+xact_t * csv_reader::read_xact(bool rich_data)
 {
-  char * line = next_line(in);
+  char * line = next_line(*context.stream.get());
   if (! line || index.empty())
     return NULL;
-  linenum++;
+  context.linenum++;
 
   std::istringstream instr(line);
 
@@ -146,18 +145,18 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
   xact->set_state(item_t::CLEARED);
 
   xact->pos           = position_t();
-  xact->pos->pathname = pathname;
-  xact->pos->beg_pos  = in.tellg();
-  xact->pos->beg_line = linenum;
-  xact->pos->sequence = sequence++;
+  xact->pos->pathname = context.pathname;
+  xact->pos->beg_pos  = context.stream->tellg();
+  xact->pos->beg_line = context.linenum;
+  xact->pos->sequence = context.sequence++;
 
   post->xact = xact.get();
 
   post->pos           = position_t();
-  post->pos->pathname = pathname;
-  post->pos->beg_pos  = in.tellg();
-  post->pos->beg_line = linenum;
-  post->pos->sequence = sequence++;
+  post->pos->pathname = context.pathname;
+  post->pos->beg_pos  = context.stream->tellg();
+  post->pos->beg_line = context.linenum;
+  post->pos->sequence = context.sequence++;
 
   post->set_state(item_t::CLEARED);
   post->account = NULL;
@@ -186,7 +185,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
 
     case FIELD_PAYEE: {
       bool found = false;
-      foreach (payee_mapping_t& value, journal.payee_mappings) {
+      foreach (payee_mapping_t& value, context.journal->payee_mappings) {
         DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
         if (value.first.match(field)) {
           xact->payee = value.second;
@@ -244,7 +243,7 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
 
   // Translate the account name, if we have enough information to do so
 
-  foreach (account_mapping_t& value, journal.account_mappings) {
+  foreach (account_mapping_t& value, context.journal->account_mappings) {
     if (value.first.match(xact->payee)) {
       post->account = value.second;
       break;
@@ -260,13 +259,13 @@ xact_t * csv_reader::read_xact(journal_t& journal, account_t * bucket,
   post->xact = xact.get();
 
   post->pos           = position_t();
-  post->pos->pathname = pathname;
-  post->pos->beg_pos  = in.tellg();
-  post->pos->beg_line = linenum;
-  post->pos->sequence = sequence++;
+  post->pos->pathname = context.pathname;
+  post->pos->beg_pos  = context.stream->tellg();
+  post->pos->beg_line = context.linenum;
+  post->pos->sequence = context.sequence++;
 
   post->set_state(item_t::CLEARED);
-  post->account = bucket;
+  post->account = context.master;
 
   if (! amt.is_null())
     post->amount = - amt;

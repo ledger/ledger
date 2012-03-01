@@ -36,14 +36,14 @@
 #include "post.h"
 #include "account.h"
 #include "journal.h"
+#include "context.h"
 
 namespace ledger {
 
 namespace {
   void clock_out_from_timelog(std::list<time_xact_t>& time_xacts,
                               time_xact_t             out_event,
-                              journal_t&              journal,
-                              scope_t&                scope)
+                              parse_context_t&        context)
   {
     time_xact_t event;
 
@@ -95,7 +95,7 @@ namespace {
     curr->pos   = event.position;
 
     if (! event.note.empty())
-      curr->append_note(event.note.c_str(), scope);
+      curr->append_note(event.note.c_str(), *context.scope);
 
     char buf[32];
     std::sprintf(buf, "%lds", long((out_event.checkin - event.checkin)
@@ -110,7 +110,7 @@ namespace {
     curr->add_post(post);
     event.account->add_post(post);
 
-    if (! journal.add_xact(curr.get()))
+    if (! context.journal->add_xact(curr.get()))
       throw parse_error(_("Failed to record 'out' timelog transaction"));
     else
       curr.release();
@@ -129,9 +129,8 @@ void time_log_t::close()
       DEBUG("timelog", "Clocking out from account " << account->fullname());
       clock_out_from_timelog(time_xacts,
                              time_xact_t(none, CURRENT_TIME(), account),
-                             journal, scope);
-      if (context_count)
-        (*context_count)++;
+                             context);
+      context.count++;
     }
     assert(time_xacts.empty());
   }
@@ -154,7 +153,7 @@ void time_log_t::clock_out(time_xact_t event)
   if (time_xacts.empty())
     throw std::logic_error(_("Timelog check-out event without a check-in"));
 
-  clock_out_from_timelog(time_xacts, event, journal, scope);
+  clock_out_from_timelog(time_xacts, event, context);
 }
 
 } // namespace ledger

@@ -43,6 +43,7 @@
 #define _CSV_H
 
 #include "value.h"
+#include "context.h"
 
 namespace ledger {
 
@@ -52,13 +53,7 @@ class account_t;
 
 class csv_reader
 {
-  static const std::size_t MAX_LINE = 4096;
-
-  std::istream& in;
-  path          pathname;
-  char          linebuf[MAX_LINE];
-  std::size_t   linenum;
-  std::size_t   sequence;
+  parse_context_t context;
 
   enum headers_t {
     FIELD_DATE = 0,
@@ -86,9 +81,8 @@ class csv_reader
   std::vector<string> names;
 
 public:
-  csv_reader(std::istream& _in, const path& _pathname)
-    : in(_in), pathname(_pathname),
-      linenum(0), sequence(0),
+  csv_reader(parse_context_t& _context)
+    : context(_context),
       date_mask("date"),
       date_aux_mask("posted( ?date)?"),
       code_mask("code"),
@@ -97,32 +91,23 @@ public:
       cost_mask("cost"),
       total_mask("total"),
       note_mask("note") {
-    read_index(in);
+    read_index(*context.stream.get());
   }
 
   void   read_index(std::istream& in);
   string read_field(std::istream& in);
   char * next_line(std::istream& in);
 
-  xact_t * read_xact(journal_t& journal, account_t * bucket, bool rich_data);
+  xact_t * read_xact(bool rich_data);
 
   const char * get_last_line() const {
-    return linebuf;
+    return context.linebuf;
   }
-
   path get_pathname() const {
-    return pathname;
+    return context.pathname;
   }
   std::size_t get_linenum() const {
-    return linenum;
-  }
-
-  void reset() {
-    pathname.clear();
-    index.clear();
-    names.clear();
-    linenum = 0;
-    sequence = 0;
+    return context.linenum;
   }
 };
 

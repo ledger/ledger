@@ -113,7 +113,7 @@ namespace {
     if (i == pool.commodities.end()) {
       PyErr_SetString(PyExc_ValueError,
                       (string("Could not find commodity ") + symbol).c_str());
-      throw boost::python::error_already_set();
+      throw_error_already_set();
     }
     return (*i).second;
   }

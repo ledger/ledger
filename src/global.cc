@@ -112,9 +112,12 @@ void global_scope_t::read_init()
     if (exists(init_file)) {
       TRACE_START(init, 1, "Read initialization file");
 
-      ifstream init(init_file);
+      parse_context_stack_t parsing_context;
+      parsing_context.push(init_file);
+      parsing_context.get_current().journal = session().journal.get();
+      parsing_context.get_current().scope   = &report();
 
-      if (session().journal->read(init_file, NULL, &report()) > 0 ||
+      if (session().journal->read(parsing_context) > 0 ||
           session().journal->auto_xacts.size() > 0 ||
           session().journal->period_xacts.size() > 0) {
         throw_(parse_error, _("Transactions found in initialization file '%1'")
