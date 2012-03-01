@@ -67,10 +67,8 @@ void draft_t::xact_template_t::dump(std::ostream& out) const
         << std::endl;
   } else {
     foreach (const post_template_t& post, posts) {
-      straccstream accum;
       out << std::endl
-          << ACCUM(accum << _("[Posting \"%1\"]")
-                   << (post.from ? _("from") : _("to")))
+          << STR(_("[Posting \"%1\"]") << (post.from ? _("from") : _("to")))
           << std::endl;
 
       if (post.account_mask)

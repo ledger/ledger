@@ -83,6 +83,14 @@ public:
 
 #define ACCUM(obj) (static_cast<const straccstream&>(obj).str())
 
+extern straccstream       _accum;
+extern std::ostringstream _accum_buffer;
+
+#define STR(msg)                                \
+  ((_accum_buffer << ACCUM(_accum << msg)),     \
+   _accum.clear(),                              \
+   _accum_buffer.str())
+
 } // namespace ledger
 
 #endif // _ACCUM_H

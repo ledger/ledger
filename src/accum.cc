@@ -35,6 +35,9 @@
 
 namespace ledger {
 
+straccstream       _accum;
+std::ostringstream _accum_buffer;
+
 std::streamsize straccbuf::xsputn(const char * s, std::streamsize num)
 {
   if (index == 0) {
