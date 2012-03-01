@@ -147,7 +147,7 @@ void export_value()
     .def(init<balance_t>())
     .def(init<mask_t>())
     .def(init<std::string>())
-    // jww (2009-11-02): Need to support conversion eof value_t::sequence_t
+    // jww (2009-11-02): Need to support conversion of value_t::sequence_t
     //.def(init<value_t::sequence_t>())
     .def(init<value_t>())
 

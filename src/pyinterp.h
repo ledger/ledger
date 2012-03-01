@@ -41,8 +41,9 @@ namespace ledger {
 class python_interpreter_t : public session_t
 {
 public:
-  python::dict main_nspace;
-  bool is_initialized;
+  python::object main_module;
+  python::dict   main_nspace;
+  bool           is_initialized;
 
   python_interpreter_t()
     : session_t(), main_nspace(), is_initialized(false) {

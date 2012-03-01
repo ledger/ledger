@@ -34,6 +34,7 @@ class LedgerHarness:
     failed     = 0
     verify     = False
     gmalloc    = False
+    python     = False
 
     def __init__(self, argv):
         if not os.path.isfile(argv[1]):
@@ -49,6 +50,9 @@ class LedgerHarness:
         self.failed     = 0
         self.verify     = '--verify' in argv
         self.gmalloc    = '--gmalloc' in argv
+        self.python     = '--python' in argv
+
+        os.chdir(self.sourcepath)
 
     def run(self, command, verify=None, gmalloc=None, columns=True):
         env = os.environ.copy()

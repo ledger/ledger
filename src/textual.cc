@@ -40,6 +40,9 @@
 #include "query.h"
 #include "pstream.h"
 #include "pool.h"
+#if defined(HAVE_BOOST_PYTHON)
+#include "pyinterp.h"
+#endif
 
 #define TIMELOG_SUPPORT 1
 #if defined(TIMELOG_SUPPORT)
@@ -104,6 +107,10 @@ namespace {
       return (in.good() && ! in.eof() &&
               (in.peek() == ' ' || in.peek() == '\t'));
     }
+    bool peek_blank_line() {
+      return (in.good() && ! in.eof() &&
+              (in.peek() == '\n' || in.peek() == '\r'));
+    }
 
     void read_next_directive();
 
@@ -156,6 +163,10 @@ namespace {
     void eval_directive(char * line);
     void assert_directive(char * line);
     void check_directive(char * line);
+
+#if defined(HAVE_BOOST_PYTHON)
+    void python_directive(char * line);
+#endif
 
     post_t * parse_post(char *          line,
                         std::streamsize len,
@@ -1094,6 +1105,48 @@ void instance_t::comment_directive(char * line)
   }
 }
 
+#if defined(HAVE_BOOST_PYTHON)
+void instance_t::python_directive(char * line)
+{
+  std::ostringstream script;
+
+  if (line)
+    script << skip_ws(line) << '\n';
+
+  std::size_t indent = 0;
+
+  while (peek_whitespace_line() || peek_blank_line()) {
+    if (read_line(line) > 0) {
+      if (! indent) {
+        const char * p = line;
+        while (*p && std::isspace(*p)) {
+          ++indent;
+          ++p;
+        }
+      }
+
+      const char * p = line;
+      for (std::size_t i = 0; i < indent; i++) {
+        if (std::isspace(*p))
+          ++p;
+        else
+          break;
+      }
+
+      if (*p)
+        script << p << '\n';
+    }
+  }
+
+  if (! python_session->is_initialized)
+    python_session->initialize();
+
+  python_session->main_nspace["journal"] =
+    python::object(python::ptr(context.journal));
+  python_session->eval(script.str(), python_interpreter_t::PY_EVAL_MULTI);
+}
+#endif // HAVE_BOOST_PYTHON
+
 bool instance_t::general_directive(char * line)
 {
   char buf[8192];
@@ -1176,6 +1229,15 @@ bool instance_t::general_directive(char * line)
   case 'p':
     if (std::strcmp(p, "payee") == 0) {
       payee_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "python") == 0) {
+#if defined(HAVE_BOOST_PYTHON)
+      python_directive(arg);
+#else
+      throw_(parse_error,
+             _("'python' directive seen, but Python support is missing"));
+#endif
       return true;
     }
     break;

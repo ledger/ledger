@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "account.h"
 #include "xact.h"
 #include "post.h"
@@ -103,7 +104,7 @@ void python_interpreter_t::initialize()
 
     hack_system_paths();
 
-    object main_module = python::import("__main__");
+    main_module = python::import("__main__");
     if (! main_module)
       throw_(std::runtime_error,
              _("Python failed to initialize (couldn't find __main__)"));
@@ -446,28 +447,56 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 }
 
 namespace {
-  void append_value(list& lst, const value_t& value)
+  object convert_value_to_python(const value_t& val)
   {
-    if (value.is_scope()) {
-      const scope_t * scope = value.as_scope();
-      if (const post_t * post = dynamic_cast<const post_t *>(scope))
-        lst.append(ptr(post));
-      else if (const xact_t * xact = dynamic_cast<const xact_t *>(scope))
-        lst.append(ptr(xact));
-      else if (const account_t * account =
-               dynamic_cast<const account_t *>(scope))
-        lst.append(ptr(account));
-      else if (const period_xact_t * period_xact =
-               dynamic_cast<const period_xact_t *>(scope))
-        lst.append(ptr(period_xact));
-      else if (const auto_xact_t * auto_xact =
-               dynamic_cast<const auto_xact_t *>(scope))
-        lst.append(ptr(auto_xact));
-      else
-        throw_(std::logic_error,
-               _("Cannot downcast scoped object to specific type"));
-    } else {
-      lst.append(value);
+    switch (val.type()) {
+    case value_t::VOID:         // a null value (i.e., uninitialized)
+      return object();
+    case value_t::BOOLEAN:      // a boolean
+      return object(val.to_boolean());
+    case value_t::DATETIME:     // a date and time (Boost posix_time)
+      return object(val.to_datetime());
+    case value_t::DATE:         // a date (Boost gregorian::date)
+      return object(val.to_date());
+    case value_t::INTEGER:      // a signed integer value
+      return object(val.to_long());
+    case value_t::AMOUNT:       // a ledger::amount_t
+      return object(val.as_amount());
+    case value_t::BALANCE:      // a ledger::balance_t
+      return object(val.as_balance());
+    case value_t::STRING:       // a string object
+      return object(handle<>(borrowed(str_to_py_unicode(val.as_string()))));
+    case value_t::MASK:         // a regular expression mask
+      return object(handle<>(borrowed(str_to_py_unicode(val.as_mask().str()))));
+    case value_t::SEQUENCE: {   // a vector of value_t objects
+      list arglist;
+      foreach (const value_t& elem, val.as_sequence())
+        arglist.append(elem);
+      return arglist;
+    }
+    case value_t::SCOPE:        // a pointer to a scope
+      if (const scope_t * scope = val.as_scope()) {
+        if (const post_t * post = dynamic_cast<const post_t *>(scope))
+          return object(ptr(post));
+        else if (const xact_t * xact = dynamic_cast<const xact_t *>(scope))
+          return object(ptr(xact));
+        else if (const account_t * account =
+                 dynamic_cast<const account_t *>(scope))
+          return object(ptr(account));
+        else if (const period_xact_t * period_xact =
+                 dynamic_cast<const period_xact_t *>(scope))
+          return object(ptr(period_xact));
+        else if (const auto_xact_t * auto_xact =
+                 dynamic_cast<const auto_xact_t *>(scope))
+          return object(ptr(auto_xact));
+        else
+          throw_(std::logic_error,
+                 _("Cannot downcast scoped object to specific type"));
+      }
+      return object();
+    case value_t::ANY:          // a pointer to an arbitrary object
+      assert("Attempted to convert an Value.ANY object to Python" == NULL);
+      return object();
     }
   }
 }
@@ -491,9 +520,9 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       // rather than a sequence of arguments?
       if (args.value().is_sequence())
         foreach (const value_t& value, args.value().as_sequence())
-          append_value(arglist, value);
+          arglist.append(convert_value_to_python(value));
       else
-        append_value(arglist, args.value());
+        arglist.append(convert_value_to_python(args.value()));
 
       if (PyObject * val =
           PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {

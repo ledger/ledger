@@ -358,8 +358,14 @@ RegressTests_SOURCES = test/RegressTests.py
 
 EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
+if HAVE_BOOST_PYTHON
+TEST_PYTHON_FLAGS = --python
+else
+TEST_PYTHON_FLAGS = 
+endif
+
 RegressTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 BaselineTests_SOURCES = test/RegressTests.py
@@ -367,7 +373,7 @@ BaselineTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/baseline
 
 BaselineTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 ManualTests_SOURCES = test/RegressTests.py
@@ -375,7 +381,7 @@ ManualTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/manual
 
 ManualTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -390,13 +396,13 @@ test/input/mondo.dat: test/input/standard.dat
 	done
 
 ConfirmTests: $(srcdir)/test/ConfirmTests.py
-	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/input \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/input $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 CheckTests_SOURCES = test/CheckTests.py
