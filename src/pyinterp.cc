@@ -206,7 +206,11 @@ object python_interpreter_t::import_option(const string& str)
   if (contains(str, ".py")) {
 #if BOOST_VERSION >= 103700
     path& cwd(parsing_context.get_current().current_directory);
+#if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
     path parent(filesystem::absolute(file, cwd).parent_path());
+#else
+    path parent(filesystem::complete(file, cwd).parent_path());
+#endif
     DEBUG("python.interp", "Adding " << parent << " to PYTHONPATH");
     paths.insert(0, parent.string());
     sys_dict["path"] = paths;

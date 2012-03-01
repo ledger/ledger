@@ -110,7 +110,11 @@ inline parse_context_t open_for_reading(const path& pathname,
     throw_(std::runtime_error,
            _("Cannot read journal file %1") << filename);
 
+#if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
   path parent(filesystem::absolute(pathname, cwd).parent_path());
+#else
+  path parent(filesystem::complete(pathname, cwd).parent_path());
+#endif
   shared_ptr<std::istream> stream(new ifstream(filename));
   parse_context_t context(stream, parent);
   context.pathname = filename;
