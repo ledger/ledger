@@ -39,7 +39,6 @@
 #include "query.h"
 #include "pstream.h"
 #include "pool.h"
-#include "session.h"
 
 #define TIMELOG_SUPPORT 1
 #if defined(TIMELOG_SUPPORT)
