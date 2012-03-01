@@ -467,7 +467,7 @@ namespace {
     case value_t::STRING:       // a string object
       return object(handle<>(borrowed(str_to_py_unicode(val.as_string()))));
     case value_t::MASK:         // a regular expression mask
-      return object(handle<>(borrowed(str_to_py_unicode(val.as_mask().str()))));
+      return object(val);
     case value_t::SEQUENCE: {   // a vector of value_t objects
       list arglist;
       foreach (const value_t& elem, val.as_sequence())
@@ -495,8 +495,7 @@ namespace {
       }
       return object();
     case value_t::ANY:          // a pointer to an arbitrary object
-      assert("Attempted to convert an Value.ANY object to Python" == NULL);
-      return object();
+      return object(val);
     }
   }
 }
@@ -535,8 +534,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
           Py_DECREF(val);
         } else {
           Py_DECREF(val);
-          throw_(calc_error,
-                 _("Could not evaluate Python variable '%1'") << name);
+          return NULL_VALUE;
         }
         std::signal(SIGINT, sigint_handler);
         return result;

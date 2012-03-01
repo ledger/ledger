@@ -1251,6 +1251,16 @@ void value_t::in_place_cast(type_t cast_type)
     }
     break;
 
+  case MASK:
+    switch (cast_type) {
+    case STRING:
+      set_string(as_mask().str());
+      return;
+    default:
+      break;
+    }
+    break;
+
   default:
     break;
   }
