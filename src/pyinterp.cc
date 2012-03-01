@@ -191,32 +191,34 @@ object python_interpreter_t::import_into_main(const string& str)
 
 object python_interpreter_t::import_option(const string& str)
 {
+  if (! is_initialized)
+    initialize();
+
   path file(str);
+  string name(str);
 
   python::object sys_module = python::import("sys");
   python::object sys_dict   = sys_module.attr("__dict__");
 
   python::list paths(sys_dict["path"]);
 
+  if (contains(str, ".py")) {
 #if BOOST_VERSION >= 103700
-  paths.insert(0, file.parent_path().string());
-  sys_dict["path"] = paths;
+    path& cwd(get_parsing_context().current_directory);
+    paths.insert(0, filesystem::absolute(file, cwd).parent_path().string());
+    sys_dict["path"] = paths;
 
 #if BOOST_VERSION >= 104600
-  string name = file.filename().string();
-  if (contains(name, ".py"))
     name = file.stem().string();
 #else
-  string name = file.filename();
-  if (contains(name, ".py"))
     name = file.stem();
 #endif
 #else // BOOST_VERSION >= 103700
-  paths.insert(0, file.branch_path().string());
-  sys_dict["path"] = paths;
-
-  string name = file.leaf();
+    paths.insert(0, file.branch_path().string());
+    sys_dict["path"] = paths;
+    name = file.leaf();
 #endif // BOOST_VERSION >= 103700
+  }
 
   return python::import(python::str(name.c_str()));
 }
