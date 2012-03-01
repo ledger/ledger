@@ -740,6 +740,7 @@ void instance_t::include_directive(char * line)
           try {
             instance_t instance(context_stack,
                                 context_stack.get_current(), this);
+            instance.apply_stack.push_front(application_t("account", master));
             instance.parse();
           }
           catch (...) {
