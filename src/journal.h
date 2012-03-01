@@ -156,8 +156,6 @@ public:
     return sources.end();
   }
 
-  // These four methods are delegated to the current session, since all
-  // accounts processed are gathered together at the session level.
   void        add_account(account_t * acct);
   bool        remove_account(account_t * acct);
   account_t * find_account(const string& name, bool auto_create = true);
