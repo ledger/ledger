@@ -321,7 +321,7 @@ all_py_tests_sources = \
 test/python/%.py: test/unit/%.cc test/convert.py
 	$(PYTHON) $(srcdir)/test/convert.py $< $@
 
-test/python/UnitTests.py: $(all_py_tests_sources)
+test/python/ConvertedTests.py: $(all_py_tests_sources)
 	@echo "from unittest import TextTestRunner, TestSuite" > $@
 	@for file in $$(ls $(srcdir)/test/unit/*.cc); do \
 	    base=$$(basename $$file); \
@@ -346,7 +346,7 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: test/PyUnitTests.py test/python/UnitTests.py
+PyUnitTests: test/PyUnitTests.py test/python/ConvertedTests.py
 	@cat $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%python%/$(ESC_python)/" \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
