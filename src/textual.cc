@@ -1746,7 +1746,7 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
   TRACE_FINISH(parsing_total, 1);
 
   if (context_stack.get_current().errors > 0)
-    throw static_cast<int>(context_stack.get_current().errors);
+    throw error_count(context_stack.get_current().errors);
 
   return context_stack.get_current().count;
 }

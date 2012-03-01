@@ -263,7 +263,7 @@ internal precision."))
 
     .add_property("commodity",
                   make_function(&amount_t::commodity,
-                                return_value_policy<reference_existing_object>()),
+                                return_internal_reference<>()),
                   make_function(&amount_t::set_commodity,
                                 with_custodian_and_ward<1, 2>()))
     .def("has_commodity", &amount_t::has_commodity)

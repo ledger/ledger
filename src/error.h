@@ -101,6 +101,12 @@ string source_context(const path&            file,
   virtual ~name() throw() {}                                    \
   }
 
+struct error_count {
+  std::size_t count;
+  explicit error_count(std::size_t _count) : count(_count) {}
+  const char * what() const { return ""; }
+};
+
 } // namespace ledger
 
 #endif // _ERROR_H

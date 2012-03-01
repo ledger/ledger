@@ -76,6 +76,12 @@ namespace {
     return **elem;
   }
 
+  string py_xact_to_string(xact_t&)
+  {
+    // jww (2012-03-01): TODO
+    return empty_string;
+  }
+
 } // unnamed namespace
 
 using namespace boost::python;
@@ -109,6 +115,8 @@ void export_xact()
   class_< xact_t, bases<xact_base_t> > ("Transaction")
     .def("id", &xact_t::id)
     .def("seq", &xact_t::seq)
+
+    .def("__str__", py_xact_to_string)
 
     .add_property("code",
                   make_getter(&xact_t::code),

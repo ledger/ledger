@@ -226,6 +226,7 @@ libledger_python_la_SOURCES =			\
 	src/py_expr.cc				\
 	src/py_format.cc			\
 	src/py_item.cc				\
+	src/py_session.cc			\
 	src/py_journal.cc			\
 	src/py_post.cc				\
 	src/py_times.cc				\

@@ -89,8 +89,10 @@ std::size_t session_t::read_data(const string& master_account)
 
   std::size_t xact_count = 0;
 
-  account_t * acct = journal->master;
-  if (! master_account.empty())
+  account_t * acct;
+  if (master_account.empty())
+    acct = journal->master;
+  else
     acct = journal->find_account(master_account);
 
   optional<path> price_db_path;
@@ -185,7 +187,7 @@ std::size_t session_t::read_data(const string& master_account)
   return journal->xacts.size();
 }
 
-void session_t::read_journal_files()
+journal_t * session_t::read_journal_files()
 {
   INFO_START(journal, "Read journal file");
 
@@ -203,6 +205,37 @@ void session_t::read_journal_files()
 #if defined(DEBUG_ON)
   INFO("Found " << count << " transactions");
 #endif
+
+  return journal.get();
+}
+
+journal_t * session_t::read_journal(const path& pathname)
+{
+  HANDLER(file_).data_files.clear();
+  HANDLER(file_).data_files.push_back(pathname);
+
+  return read_journal_files();
+}
+
+journal_t * session_t::read_journal_from_string(const string& data)
+{
+  HANDLER(file_).data_files.clear();
+
+  shared_ptr<std::istream> stream(new std::istringstream(data));
+  parsing_context.push(stream);
+
+  parsing_context.get_current().journal = journal.get();
+  parsing_context.get_current().master  = journal->master;
+  try {
+    journal->read(parsing_context);
+  }
+  catch (...) {
+    parsing_context.pop();
+    throw;
+  }
+  parsing_context.pop();
+
+  return journal.get();
 }
 
 void session_t::close_journal_files()

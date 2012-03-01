@@ -612,8 +612,7 @@ optional<boost::regex>    _log_category_re;
 
 struct __maybe_enable_debugging {
   __maybe_enable_debugging() {
-    const char * p = std::getenv("LEDGER_DEBUG");
-    if (p != NULL) {
+    if (const char * p = std::getenv("LEDGER_DEBUG")) {
       _log_level    = LOG_DEBUG;
       _log_category = p;
     }

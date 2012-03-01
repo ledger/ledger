@@ -51,6 +51,7 @@ void export_commodity();
 void export_expr();
 void export_format();
 void export_item();
+void export_session();
 void export_journal();
 void export_post();
 void export_times();
@@ -72,6 +73,7 @@ void initialize_for_python()
   export_item();
   export_post();
   export_xact();
+  export_session();
   export_journal();
 }
 

@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import exceptions
-import operator
 
 from ledger import *
-from StringIO import *
-from datetime import *
 
 class JournalTestCase(unittest.TestCase):
-    def setUp(self):
-        pass
-
     def tearDown(self):
-        pass
+        session.close_journal_files()
 
-    def test_(self):
-        pass
+    def testBasicRead(self):
+        journal = read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food      $21.34
+    Assets:Cash
+""")
+        self.assertEqual(type(journal), Journal)
+
+        for xact in journal:
+            self.assertEqual(xact.payee, "KFC")
+
+        for post in journal.query("food"):
+            self.assertEqual(str(post.account), "Expenses:Food")
+            self.assertEqual(post.amount, Amount("$21.34"))
  
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(JournalTestCase)

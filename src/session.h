@@ -75,9 +75,11 @@ public:
     flush_on_next_data_file = truth;
   }
 
+  journal_t * read_journal(const path& pathname);
+  journal_t * read_journal_from_string(const string& data);
   std::size_t read_data(const string& master_account = "");
 
-  void read_journal_files();
+  journal_t * read_journal_files();
   void close_journal_files();
 
   value_t fn_account(call_scope_t& scope);

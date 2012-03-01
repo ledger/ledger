@@ -257,4 +257,6 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 #include <boost/python/module_init.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include <boost/iterator/indirect_iterator.hpp>
+
 #endif // HAVE_BOOST_PYTHON

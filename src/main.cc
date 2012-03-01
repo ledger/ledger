@@ -191,9 +191,10 @@ int main(int argc, char * argv[], char * envp[])
       std::cerr << "Exception during initialization: " << err.what()
                 << std::endl;
   }
-  catch (int _status) {
-    status = _status;           // used for a "quick" exit, and is used only
-                                // if help text (such as --help) was displayed
+  catch (const error_count& errors) {
+    // used for a "quick" exit, and is used only if help text (such as
+    // --help) was displayed
+    status = static_cast<int>(errors.count);
   }
 
   // If memory verification is being performed (which can be very slow), clean
