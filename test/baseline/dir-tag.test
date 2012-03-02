@@ -17,5 +17,5 @@ test reg
 12-Feb-28 KFC                   food                         $20.00       $20.00
                                 Assets:Cash                 $-20.00            0
 __ERROR__
-Warning: "/Users/johnw/Projects/ledger/test/baseline/dir-tag.test", line 8: Metadata check failed for (Happy: Summer): (value == "Valley")
+Warning: "$sourcepath/test/baseline/dir-tag.test", line 8: Metadata check failed for (Happy: Summer): (value == "Valley")
 end test
