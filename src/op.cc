@@ -272,10 +272,16 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     if (has_right())
       call_args.set_args(split_cons_expr(right()));
 
-    if (func->is_function())
-      result = func->as_function()(call_args);
-    else
-      result = func->calc(call_args, locus, depth + 1);
+    try {
+      if (func->is_function())
+        result = func->as_function()(call_args);
+      else
+        result = func->calc(call_args, locus, depth + 1);
+    }
+    catch (const std::exception&) {
+      add_error_context(_("While calling function '%1':" << name));
+      throw;
+    }
 
     check_type_context(scope, result);
     break;
@@ -308,7 +314,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
     if (args_index < args_count)
       throw_(calc_error,
-             _("Too few arguments in function call (saw %1)") << args_count);
+             _("Too few arguments in function call (saw %1, wanted %2)")
+             << args_count << args_index);
 
     result = right()->calc(call_scope, locus, depth + 1);
     break;
