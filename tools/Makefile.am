@@ -402,7 +402,7 @@ ConfirmTests: $(srcdir)/test/ConfirmTests.py
 GenerateTests_SOURCES = test/GenerateTests.py
 
 GenerateTests: $(srcdir)/test/GenerateTests.py
-	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/GenerateTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) 1 ${1:-20} \"\$$@\"" > $@
 	chmod 755 $@
 
 CheckTests_SOURCES = test/CheckTests.py
