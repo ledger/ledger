@@ -555,11 +555,6 @@ class PrepareBuild(CommandLineApp):
                       help='Enable full warning flags')
 
     def main(self, *args):
-        if self.options.python:
-            self.configure_args.append('--enable-python')
-        if self.options.no_python:
-            self.configure_args.remove('--enable-python')
-
         if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
             self.current_flavor = args[0]
             args = args[1:]
@@ -1126,6 +1121,10 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('--enable-doxygen')
         if self.options.enable_cache:
             self.configure_args.append('--enable-cache')
+        if self.options.python:
+            self.configure_args.append('--enable-python')
+        if self.options.no_python:
+            self.configure_args.remove('--enable-python')
 
         if self.options.cpp0x:
             self.CXXFLAGS.append('-std=c++0x')
