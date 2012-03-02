@@ -153,8 +153,6 @@ public:
         case TERM:        return string("TERM(") + *value + ")";
         case END_REACHED: return "END_REACHED";
         }
-        assert(false);
-        return empty_string;
       }
 
       string symbol() const {
