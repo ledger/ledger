@@ -741,9 +741,12 @@ void instance_t::include_directive(char * line)
         string base = (*iter).leaf();
 #endif // BOOST_VERSION >= 103700
         if (glob.match(base)) {
-          journal_t * journal = context.journal;
-          account_t * master  = context.master;
-          scope_t *   scope   = context.scope;
+          journal_t *  journal  = context.journal;
+          account_t *  master   = context.master;
+          scope_t *    scope    = context.scope;
+          std::size_t& errors   = context.errors;
+          std::size_t& count    = context.count;
+          std::size_t& sequence = context.sequence;
 
           context_stack.push(*iter);
 
@@ -757,9 +760,18 @@ void instance_t::include_directive(char * line)
             instance.parse();
           }
           catch (...) {
+            errors   += context_stack.get_current().errors;
+            count    += context_stack.get_current().count;
+            sequence += context_stack.get_current().sequence;
+
             context_stack.pop();
             throw;
           }
+
+          errors   += context_stack.get_current().errors;
+          count    += context_stack.get_current().count;
+          sequence += context_stack.get_current().sequence;
+
           context_stack.pop();
 
           files_found = true;
