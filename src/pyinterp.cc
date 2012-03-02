@@ -419,10 +419,19 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
     }
     break;
 
-  case symbol_t::OPTION:
+  case symbol_t::OPTION: {
     if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
       return MAKE_OPT_HANDLER(python_interpreter_t, handler);
+
+    string option_name(string("option_") + name);
+    if (is_initialized && main_nspace.has_key(option_name.c_str())) {
+      DEBUG("python.interp", "Python lookup option: " << option_name);
+
+      if (python::object obj = main_nspace.get(option_name.c_str()))
+        return WRAP_FUNCTOR(functor_t(obj, option_name));
+    }
     break;
+  }
 
   case symbol_t::PRECOMMAND: {
     const char * p = name.c_str();

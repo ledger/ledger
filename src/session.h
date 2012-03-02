@@ -65,6 +65,7 @@ public:
   explicit session_t();
   virtual ~session_t() {
     TRACE_DTOR(session_t);
+    parsing_context.pop();
   }
 
   virtual string description() {

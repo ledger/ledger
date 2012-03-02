@@ -89,7 +89,6 @@ namespace {
     catch (const std::exception&) {
       if (name[0] == '-')
         add_error_context(_("While parsing option '%1'") << name);
-
       else
         add_error_context(_("While parsing environent variable '%1'") << name);
       throw;

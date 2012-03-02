@@ -1,0 +1,14 @@
+python
+    def option_pyfirst(context):
+        print "In --pyfirst (from %s)" % context
+
+    def option_pysecond(context, val):
+        print "In --pysecond=%s (from %s)" % (val, context)
+
+--pyfirst
+--pysecond Hey
+
+test reg
+In --pyfirst (from $sourcepath/test/baseline/feat-option_py.test)
+In --pysecond=Hey (from $sourcepath/test/baseline/feat-option_py.test)
+end test

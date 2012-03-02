@@ -71,6 +71,10 @@ public:
   std::size_t      count;
   std::size_t      sequence;
 
+  explicit parse_context_t(const path& cwd)
+    : current_directory(cwd), master(NULL), scope(NULL),
+      linenum(0), errors(0), count(0), sequence(1) {}
+
   explicit parse_context_t(shared_ptr<std::istream> _stream,
                            const path& cwd)
     : stream(_stream), current_directory(cwd), master(NULL),
@@ -126,6 +130,9 @@ class parse_context_stack_t
   std::list<parse_context_t> parsing_context;
 
 public:
+  void push() {
+    parsing_context.push_front(parse_context_t(filesystem::current_path()));
+  }
   void push(shared_ptr<std::istream> stream,
             const path& cwd = filesystem::current_path()) {
     parsing_context.push_front(parse_context_t(stream, cwd));

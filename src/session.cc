@@ -68,6 +68,8 @@ session_t::session_t()
     HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
   else
     HANDLER(price_db_).on(none, path("./.pricedb").string());
+
+  parsing_context.push();
 }
 
 std::size_t session_t::read_data(const string& master_account)

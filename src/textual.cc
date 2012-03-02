@@ -508,8 +508,9 @@ void instance_t::option_directive(char * line)
       *p++ = '\0';
   }
 
-  if (! process_option(context.pathname.string(), line + 2,
-                       *context.scope, p, line))
+  path abs_path(filesystem::absolute(context.pathname,
+                                     context.current_directory));
+  if (! process_option(abs_path.string(), line + 2, *context.scope, p, line))
     throw_(option_error, _("Illegal option --%1") << line + 2);
 }
 
