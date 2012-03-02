@@ -18,7 +18,7 @@ ledger_proof() {
     rm -fr $DEST/ledger-proof
 
     time nice -n 20 \
-        ./acprep  --enable-doxygen --universal -j16 --gcc46 --warn proof 2>&1 | \
+        ./acprep  --enable-doxygen --universal -j16 --clang proof 2>&1 | \
         tee $LOGDIR/ledger-proof.log
 
     if egrep -q '(ERROR|CRITICAL)' $LOGDIR/ledger-proof.log; then
