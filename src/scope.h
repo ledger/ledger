@@ -201,9 +201,7 @@ public:
 
   virtual void define(const symbol_t::kind_t kind, const string& name,
                       expr_t::ptr_op_t def) {
-#if 0
     parent->define(kind, name, def);
-#endif
     grandchild.define(kind, name, def);
   }
 
