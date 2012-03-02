@@ -1156,8 +1156,8 @@ void instance_t::python_directive(char * line)
   if (! python_session->is_initialized)
     python_session->initialize();
 
-  python_session->main_nspace["journal"] =
-    python::object(python::ptr(context.journal));
+  python_session->main_module->define_global
+    ("journal", python::object(python::ptr(context.journal)));
   python_session->eval(script.str(), python_interpreter_t::PY_EVAL_MULTI);
 }
 #endif // HAVE_BOOST_PYTHON

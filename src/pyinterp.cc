@@ -84,16 +84,56 @@ struct python_run
 
   python_run(python_interpreter_t * intepreter,
              const string& str, int input_mode)
-    : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
-                                            intepreter->main_nspace.ptr(),
-                                            intepreter->main_nspace.ptr())))) {}
+    : result
+      (handle<>
+       (borrowed
+        (PyRun_String(str.c_str(), input_mode,
+                      intepreter->main_module->module_globals.ptr(),
+                      intepreter->main_module->module_globals.ptr())))) {}
   operator object() {
     return result;
   }
 };
 
+python_module_t::python_module_t(const string& name)
+  : scope_t(), module_name(name), module_globals()
+{
+  import_module(name);
+}
+
+python_module_t::python_module_t(const string& name, python::object obj)
+  : scope_t(), module_name(name), module_globals()
+{
+  module_object  = obj;
+  module_globals = extract<dict>(module_object.attr("__dict__"));
+}
+
+void python_module_t::import_module(const string& name, bool import_direct)
+{
+  object mod = python::import(name.c_str());
+  if (! mod)
+    throw_(std::runtime_error,
+           _("Module import failed (couldn't find %1)") << name);
+
+  dict globals = extract<dict>(mod.attr("__dict__"));
+  if (! globals)
+    throw_(std::runtime_error,
+           _("Module import failed (couldn't find %1)") << name);
+
+  if (! import_direct) {
+    module_object  = mod;
+    module_globals = globals;
+  } else {
+    // Import all top-level entries directly into the namespace
+    module_globals.update(mod.attr("__dict__"));
+  }
+}
+
 void python_interpreter_t::initialize()
 {
+  if (is_initialized)
+    return;
+
   TRACE_START(python_init, 1, "Initialized Python");
 
   try {
@@ -104,15 +144,7 @@ void python_interpreter_t::initialize()
 
     hack_system_paths();
 
-    main_module = python::import("__main__");
-    if (! main_module)
-      throw_(std::runtime_error,
-             _("Python failed to initialize (couldn't find __main__)"));
-
-    main_nspace = extract<dict>(main_module.attr("__dict__"));
-    if (! main_nspace)
-      throw_(std::runtime_error,
-             _("Python failed to initialize (couldn't find __dict__)"));
+    main_module = import_module("__main__");
 
     python::detail::init_module("ledger", &initialize_for_python);
 
@@ -170,28 +202,6 @@ void python_interpreter_t::hack_system_paths()
 #endif
 }
 
-object python_interpreter_t::import_into_main(const string& str)
-{
-  if (! is_initialized)
-    initialize();
-
-  try {
-    object mod = python::import(str.c_str());
-    if (! mod)
-      throw_(std::runtime_error,
-             _("Failed to import Python module %1") << str);
-
-    // Import all top-level entries directly into the main namespace
-    main_nspace.update(mod.attr("__dict__"));
-
-    return mod;
-  }
-  catch (const error_already_set&) {
-    PyErr_Print();
-  }
-  return object();
-}
-
 object python_interpreter_t::import_option(const string& str)
 {
   if (! is_initialized)
@@ -229,13 +239,10 @@ object python_interpreter_t::import_option(const string& str)
   }
 
   try {
-    if (contains(str, ".py")) {
-      import_into_main(name);
-    } else {
-      object obj = python::import(python::str(name.c_str()));
-      main_nspace[name.c_str()] = obj;
-      return obj;
-    }
+    if (contains(str, ".py"))
+      main_module->import_module(name, true);
+    else
+      import_module(str);
   }
   catch (const error_already_set&) {
     PyErr_Print();
@@ -399,6 +406,40 @@ python_interpreter_t::lookup_option(const char * p)
   return NULL;
 }
 
+expr_t::ptr_op_t python_module_t::lookup(const symbol_t::kind_t kind,
+                                         const string& name)
+{
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    DEBUG("python.interp", "Python lookup: " << name);
+    if (module_globals.has_key(name.c_str())) {
+      if (python::object obj = module_globals.get(name.c_str())) {
+        if (PyModule_Check(obj.ptr())) {
+          shared_ptr<python_module_t> mod;
+          python_module_map_t::iterator i =
+            python_session->modules_map.find(obj.ptr());
+          if (i == python_session->modules_map.end()) {
+            mod.reset(new python_module_t(name, obj));
+            python_session->modules_map.insert
+              (python_module_map_t::value_type(obj.ptr(), mod));
+          } else {
+            mod = (*i).second;
+          }
+          return expr_t::op_t::wrap_value(scope_value(mod.get()));
+        } else {
+          return WRAP_FUNCTOR(python_interpreter_t::functor_t(obj, name));
+        }
+      }
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  return NULL;
+}
+
 expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
                                               const string& name)
 {
@@ -408,28 +449,16 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 
   switch (kind) {
   case symbol_t::FUNCTION:
-    if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
-      return MAKE_OPT_FUNCTOR(python_interpreter_t, handler);
-
-    if (is_initialized && main_nspace.has_key(name.c_str())) {
-      DEBUG("python.interp", "Python lookup: " << name);
-
-      if (python::object obj = main_nspace.get(name.c_str()))
-        return WRAP_FUNCTOR(functor_t(obj, name));
-    }
+    if (is_initialized)
+      return main_module->lookup(kind, name);
     break;
 
   case symbol_t::OPTION: {
     if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
       return MAKE_OPT_HANDLER(python_interpreter_t, handler);
 
-    string option_name(string("option_") + name);
-    if (is_initialized && main_nspace.has_key(option_name.c_str())) {
-      DEBUG("python.interp", "Python lookup option: " << option_name);
-
-      if (python::object obj = main_nspace.get(option_name.c_str()))
-        return WRAP_FUNCTOR(functor_t(obj, option_name));
-    }
+    if (is_initialized)
+      return main_module->lookup(symbol_t::FUNCTION, string("option_") + name);
     break;
   }
 
