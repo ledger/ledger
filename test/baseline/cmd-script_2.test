@@ -1,3 +1,0 @@
-test eval 'total_expr=$100;amount_expr=$15;x=total_expr;x=x/5;x=amount_expr-x*5;x'
-$-85
-end test

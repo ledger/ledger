@@ -1,0 +1,23 @@
+python
+    def print_type(val):
+        print type(val), val
+
+eval print_type(true)
+eval print_type([2010/08/10])
+eval print_type(10)
+eval print_type($10.00)
+eval print_type($10.00 + CAD 30)
+eval print_type("Hello!")
+eval print_type(/Hello!/)
+;eval print_type((1, 2, 3))
+
+test reg
+<type 'bool'> True
+<type 'datetime.date'> 2010-08-10
+<class 'ledger.Amount'> 10
+<class 'ledger.Amount'> $10.00
+<class 'ledger.Balance'> $10.00
+CAD 30
+<type 'unicode'> Hello!
+<class 'ledger.Value'> Hello!
+end test
