@@ -415,9 +415,6 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     try {
       amount_t temp;
       if (! temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
-        // If the amount had no commodity, it must be an unambiguous
-        // variable reference
-
         in.clear();
         in.seekg(pos, std::ios::beg);
         if (in.fail())
