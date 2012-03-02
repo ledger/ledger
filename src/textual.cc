@@ -743,11 +743,13 @@ void instance_t::include_directive(char * line)
         if (glob.match(base)) {
           journal_t * journal = context.journal;
           account_t * master  = context.master;
+          account_t * scope   = context.scope;
 
           context_stack.push(*iter);
 
           context_stack.get_current().journal = journal;
           context_stack.get_current().master  = master;
+          context_stack.get_current().scope   = scope;
           try {
             instance_t instance(context_stack,
                                 context_stack.get_current(), this);
