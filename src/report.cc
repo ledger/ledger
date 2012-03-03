@@ -1021,7 +1021,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(head_, first_);
     break;
   case 'g':
-    OPT(gain);
+    OPT_ALT(gain, change);
     else OPT(group_by_);
     else OPT(group_title_format_);
     else OPT(generated);
