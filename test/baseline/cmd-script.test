@@ -10,3 +10,8 @@ end test
 test eval 'total_expr=$100;amount_expr=$15;x=total_expr;x=x/5;x=amount_expr-x*5;x'
 $-85
 end test
+
+test eval 'foo = x, y, z -> print(x, y, z); foo(1, 2, 3)'
+123
+1
+end test

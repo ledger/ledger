@@ -227,15 +227,17 @@ private:
 };
 
 template <typename T>
-T * search_scope(scope_t * ptr)
+T * search_scope(scope_t * ptr, bool prefer_direct_parents = false)
 {
   if (T * sought = dynamic_cast<T *>(ptr))
     return sought;
 
   if (bind_scope_t * scope = dynamic_cast<bind_scope_t *>(ptr)) {
-    if (T * sought = search_scope<T>(&scope->grandchild))
+    if (T * sought = search_scope<T>(prefer_direct_parents ?
+                                     scope->parent : &scope->grandchild))
       return sought;
-    return search_scope<T>(scope->parent);
+    return search_scope<T>(prefer_direct_parents ?
+                           &scope->grandchild : scope->parent);
   }
   else if (child_scope_t * child_scope = dynamic_cast<child_scope_t *>(ptr)) {
     return search_scope<T>(child_scope->parent);
@@ -244,9 +246,21 @@ T * search_scope(scope_t * ptr)
 }
 
 template <typename T>
-inline T& find_scope(child_scope_t& scope, bool skip_this = true)
+inline T& find_scope(child_scope_t& scope, bool skip_this = true,
+                     bool prefer_direct_parents = false)
 {
-  if (T * sought = search_scope<T>(skip_this ? scope.parent : &scope))
+  if (T * sought = search_scope<T>(skip_this ? scope.parent : &scope,
+                                   prefer_direct_parents))
+    return *sought;
+
+  throw_(std::runtime_error, _("Could not find scope"));
+  return reinterpret_cast<T&>(scope); // never executed
+}
+
+template <typename T>
+inline T& find_scope(scope_t& scope, bool prefer_direct_parents = false)
+{
+  if (T * sought = search_scope<T>(&scope, prefer_direct_parents))
     return *sought;
 
   throw_(std::runtime_error, _("Could not find scope"));

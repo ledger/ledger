@@ -288,7 +288,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
   }
 
   case O_LAMBDA: {
-    call_scope_t&  call_args(downcast<call_scope_t>(scope));
+    call_scope_t&  call_args(find_scope<call_scope_t>(scope, true));
     std::size_t    args_count(call_args.size());
     std::size_t    args_index(0);
     symbol_scope_t call_scope(call_args);

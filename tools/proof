@@ -15,12 +15,12 @@ ledger_proof() {
         exit 0
     fi
 
-    rm -fr $DEST/ledger-proof
+    sudo rm -fr $DEST/ledger-proof
     time nice -n 20 \
         ./acprep --debug --enable-doxygen --universal --clang -j16 proof 2>&1 | \
         tee $LOGDIR/ledger-proof.log
 
-    rm -fr $DEST/ledger-proof
+    sudo rm -fr $DEST/ledger-proof
     time nice -n 20 \
         ./acprep --debug --enable-doxygen --universal --python --clang -j16 proof 2>&1 | \
         tee -a $LOGDIR/ledger-proof.log
