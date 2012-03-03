@@ -1046,7 +1046,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(tail_, last_);
     break;
   case 'm':
-    OPT(market);
+    OPT_ALT(market, value);
     else OPT(monthly);
     else OPT(meta_);
     else OPT(meta_width_);
