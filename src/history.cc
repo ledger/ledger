@@ -85,19 +85,50 @@ void commodity_history_t::remove_price(const commodity_t& source,
 }
 
 optional<price_point_t>
-commodity_history_t::find_price(const commodity_t&            source,
-                                const datetime_t&             moment,
-                                const optional<datetime_t>&   oldest,
-                                const optional<commodity_t&>& target)
+commodity_history_t::find_price(const commodity_t&          source,
+                                const datetime_t&           moment,
+                                const optional<datetime_t>& oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
-  // jww (2012-03-04): What to do when target is null?  In that case,
-  // should we just return whatever is the most recent price for that
-  // commodity?
-  vertex_descriptor tv = vertex(*target->graph_index(), price_graph);
 
   // Filter out edges which came into being after the reference time
+  FGraph fg(price_graph,
+            recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+            (get(edge_weight, price_graph), pricemap, ratiomap,
+             moment, oldest));
+  
+  datetime_t most_recent = moment;
+  amount_t   price;
 
+  graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
+  for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
+    std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
+    Graph::edge_descriptor edge = edgePair.first;
+
+    const price_point_t& point(get(pricemap, edge));
+
+    if (price.is_null() || point.when > most_recent) {
+      most_recent = point.when;
+      price       = point.price;
+    }
+  }
+
+  if (price.is_null())
+    return none;
+  else
+    return price_point_t(most_recent, price);
+}
+
+optional<price_point_t>
+commodity_history_t::find_price(const commodity_t&          source,
+                                const commodity_t&          target,
+                                const datetime_t&           moment,
+                                const optional<datetime_t>& oldest)
+{
+  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
+
+  // Filter out edges which came into being after the reference time
   FGraph fg(price_graph,
             recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
             (get(edge_weight, price_graph), pricemap, ratiomap,
@@ -118,6 +149,8 @@ commodity_history_t::find_price(const commodity_t&            source,
   datetime_t least_recent = moment;
   amount_t price;
 
+  FNameMap ptrs = get(vertex_name, fg);
+
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; 
        u != v;
@@ -128,70 +161,73 @@ commodity_history_t::find_price(const commodity_t&            source,
 
     const price_point_t& point(get(pricemap, edge));
 
+    const commodity_t * last_source = &source;
+
+    bool first_run = false;
     if (price.is_null()) {
       least_recent = point.when;
       price        = point.price;
+      first_run    = true;
     }
-    else if (point.when < least_recent)
+    else if (point.when < least_recent) {
       least_recent = point.when;
+    }
 
-    // jww (2012-03-04): TODO
-    //price *= point.price;
+    DEBUG("history.find", "u commodity = " << get(ptrs, u)->symbol());
+    DEBUG("history.find", "v commodity = " << get(ptrs, v)->symbol());
+    DEBUG("history.find", "last source = " << last_source->symbol());
+
+    // Determine which direction we are converting in
+    amount_t pprice(point.price);
+    DEBUG("history.find", "pprice    = " << pprice);
+
+    DEBUG("history.find", "price was = " << price);
+    if (! first_run) {
+      if (pprice.commodity() == *last_source)
+        price *= pprice.inverted();
+      else
+        price *= pprice;
+    }
+    else if (price.commodity() == *last_source) {
+      price = price.inverted();
+    }
+    DEBUG("history.find", "price is  = " << price);
+
+    if (*last_source == *get(ptrs, v))
+      last_source = get(ptrs, u);
+    else
+      last_source = get(ptrs, v);
   }
 
-  return price_point_t(least_recent, price);
+  price.set_commodity(const_cast<commodity_t&>(target));
+  DEBUG("history.find", "final price is = " << price);
+
+  if (price.is_null())
+    return none;
+  else
+    return price_point_t(least_recent, price);
 }
 
+void commodity_history_t::print_map(std::ostream& out,
+                                    const optional<datetime_t>& moment)
+{
 #if 0
-  print_vertices(fg, f_commmap);
-  print_edges(fg, f_commmap);
-  print_graph(fg, f_commmap);
+  dynamic_properties p;
+  p.property("label", get(edge_weight, price_graph));
+  p.property("weight", get(edge_weight, price_graph));
+  p.property("node_id", get(vertex_index, price_graph));
 
-  graph_traits<FGraph>::vertex_iterator f_vi, f_vend;
-  for(tie(f_vi, f_vend) = vertices(fg); f_vi != f_vend; ++f_vi)
-    std::cerr << get(f_commmap, *f_vi) << " is in the filtered graph"
-              << std::endl;
-
-  for (tie(f_vi, f_vend) = vertices(fg); f_vi != f_vend; ++f_vi) {
-    std::cerr << "distance(" << get(f_commmap, *f_vi) << ") = "
-              << distanceMap[*f_vi] << ", ";
-    std::cerr << "parent(" << get(f_commmap, *f_vi) << ") = "
-              << get(f_commmap, predecessorMap[*f_vi])
-              << std::endl;
-  }
-
-  // Write shortest path
-  FCommMap f_commmap = get(vertex_comm, fg);
-
-  std::cerr << "Shortest path from CAD to EUR:" << std::endl;
-  for (PathType::reverse_iterator pathIterator = path.rbegin();
-       pathIterator != path.rend();
-       ++pathIterator)
-  {
-    std::cerr << get(f_commmap, source(*pathIterator, fg))
-              << " -> " << get(f_commmap, target(*pathIterator, fg))
-              << " = " << get(edge_weight, fg, *pathIterator)
-              << std::endl;
-  }
-  std::cerr << std::endl;
-
-  std::cerr << "Distance: " << distanceMap[vd4] << std::endl;
-#endif
-
-#if 0
-  #include <boost/graph/graphviz.hpp>
-
-  // Writing graph to file
-  {
-    std::ofstream f("test.dot");
-
-    dynamic_properties p;
-    p.property("label", get(edge_weight, g));
-    p.property("weight", get(edge_weight, g));
-    p.property("node_id", get(vertex_comm, g));
-    write_graphviz(f,g,p);
-    f.close();
+  if (moment) {
+    // Filter out edges which came into being after the reference time
+    FGraph fg(price_graph,
+              recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+              (get(edge_weight, price_graph), pricemap, ratiomap,
+               *moment));
+    write_graphviz(out, fg, p);
+  } else {
+    write_graphviz(out, price_graph, p);
   }
 #endif
+}
 
 } // namespace ledger

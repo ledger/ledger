@@ -96,7 +96,9 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     target = *pool().default_commodity;
 
   optional<price_point_t> point =
-    pool().commodity_price_history.find_price(*this, when, oldest, target);
+    target ?
+    pool().commodity_price_history.find_price(*this, *target, when, oldest) :
+    pool().commodity_price_history.find_price(*this, when, oldest);
 
   if (pair) {
     if (base->price_map.size() > base_t::max_price_map_size) {

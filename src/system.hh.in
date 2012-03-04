@@ -157,7 +157,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/graph/graph_utility.hpp>
+#include <boost/graph/graphviz.hpp>
 
 #include <boost/intrusive_ptr.hpp>
 

@@ -83,18 +83,20 @@ public:
       reftime(_reftime), oldest(_oldest) { }
 
   template <typename Edge>
-  bool operator()(const Edge& e) const {
+  bool operator()(const Edge& e) const
+  {
     const price_map_t& prices(get(ratios, e));
+    if (prices.empty())
+      return false;
+
     price_map_t::const_iterator low = prices.upper_bound(reftime);
-    if (prices.empty() ||
-        (low != prices.end() && low == prices.begin())) {
+    if (low != prices.end() && low == prices.begin()) {
       return false;
     } else {
-      if (low == prices.end())
-        --low;
+      --low;
       assert(((*low).first <= reftime));
 
-      if (oldest && (*low).first <= *oldest)
+      if (oldest && (*low).first < *oldest)
         return false;
 
       long secs = (reftime - (*low).first).total_seconds();
@@ -175,8 +177,16 @@ public:
   optional<price_point_t>
   find_price(const commodity_t&            source,
              const datetime_t&             moment,
-             const optional<datetime_t>&   oldest    = none,
-             const optional<commodity_t&>& commodity = none);
+             const optional<datetime_t>&   oldest = none);
+
+  optional<price_point_t>
+  find_price(const commodity_t&            source,
+             const commodity_t&            target,
+             const datetime_t&             moment,
+             const optional<datetime_t>&   oldest = none);
+
+  void print_map(std::ostream& out,
+                 const optional<datetime_t>& moment = none);
 };
 
 } // namespace ledger
