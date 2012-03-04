@@ -60,42 +60,52 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity)
 }
 
 optional<price_point_t>
-commodity_t::find_price(const optional<commodity_t&>& target = none,
-                        const optional<datetime_t>&   moment = none,
-                        const optional<datetime_t>&   oldest = none) const
+commodity_t::find_price(const optional<commodity_t&>& commodity,
+                        const optional<datetime_t>&   moment,
+                        const optional<datetime_t>&   oldest) const
 {
-  pair = base_t::time_and_commodity_t
-    (base_t::optional_time_pair_t(moment, oldest),
-     commodity ? &(*commodity) : NULL);
-  DEBUG_INDENT("commodity.prices.find", indent);
-  DEBUG("commodity.prices.find", "looking for memoized args: "
-        << (moment ? format_datetime(*moment) : "NONE") << ", "
-        << (oldest ? format_datetime(*oldest) : "NONE") << ", "
-        << (commodity ? commodity->symbol() : "NONE"));
+  optional<base_t::time_and_commodity_t> pair =
+    base_t::time_and_commodity_t(base_t::optional_time_pair_t(moment, oldest),
+                                 commodity ? &(*commodity) : NULL);
 
-  base_t::memoized_price_map::iterator i = base->price_map.find(*pair);
-  if (i != base->price_map.end()) {
-    DEBUG_INDENT("commodity.prices.find", indent);
-    DEBUG("commodity.prices.find", "found! returning: "
-          << ((*i).second ? (*i).second->price : amount_t(0L)));
-    return (*i).second;
+  DEBUG("commodity.prices.find", "looking for memoized args: "
+        << (moment    ? format_datetime(*moment) : "NONE") << ", "
+        << (oldest    ? format_datetime(*oldest) : "NONE") << ", "
+        << (commodity ? commodity->symbol()      : "NONE"));
+  {
+    base_t::memoized_price_map::iterator i = base->price_map.find(*pair);
+    if (i != base->price_map.end()) {
+      DEBUG("commodity.prices.find", "found! returning: "
+            << ((*i).second ? (*i).second->price : amount_t(0L)));
+      return (*i).second;
+    }
   }
 
+  datetime_t when;
+  if (moment)
+    when = *moment;
+  else if (epoch)
+    when = *epoch;
+  else
+    when = CURRENT_TIME();
+
+  optional<commodity_t&> target;
+  if (commodity)
+    target = commodity;
+  else if (pool().default_commodity)
+    target = *pool().default_commodity;
+
   optional<price_point_t> point =
-    pool().commodity_price_history.find_price
-    (*this, commodity, moment ? *moment : epoch, oldest);
+    pool().commodity_price_history.find_price(*this, when, oldest, target);
 
   if (pair) {
     if (base->price_map.size() > base_t::max_price_map_size) {
-      DEBUG_INDENT("commodity.prices.find", indent);
       DEBUG("commodity.prices.find",
             "price map has grown too large, clearing it by half");
-
       for (std::size_t i = 0; i < base_t::max_price_map_size >> 1; i++)
         base->price_map.erase(base->price_map.begin());
     }
 
-    DEBUG_INDENT("commodity.prices.find", indent);
     DEBUG("commodity.prices.find",
           "remembered: " << (point ? point->price : amount_t(0L)));
     base->price_map.insert

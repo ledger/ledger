@@ -42,20 +42,22 @@ struct f_max : public std::binary_function<T, T, bool> {
 
 namespace ledger {
 
-void commodity_history_t::add_commodity(const commodity_t& comm)
+void commodity_history_t::add_commodity(commodity_t& comm)
 {
-  const vertex_descriptor vert = add_vertex(&comm, price_graph);
-  put(indexmap, vert, reinterpret_cast<std::size_t>(&comm));
+  if (! comm.graph_index()) {
+    std::size_t index = num_vertices(price_graph);
+    comm.set_graph_index(index);
+    const vertex_descriptor vert = add_vertex(&comm, price_graph);
+    put(indexmap, vert, index);
+  }
 }
 
 void commodity_history_t::add_price(const commodity_t& source,
                                     const datetime_t&  when,
                                     const amount_t&    price)
 {
-  vertex_descriptor sv =
-    vertex(reinterpret_cast<std::size_t>(&source), price_graph);
-  vertex_descriptor tv =
-    vertex(reinterpret_cast<std::size_t>(&price.commodity()), price_graph);
+  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  vertex_descriptor tv = vertex(*price.commodity().graph_index(), price_graph);
 
   std::pair<edge_descriptor, bool> e1 = add_edge(sv, tv, 0, price_graph);
   price_map_t& prices(get(ratiomap, e1.first));
@@ -72,10 +74,8 @@ void commodity_history_t::remove_price(const commodity_t& source,
                                        const commodity_t& target,
                                        const datetime_t&  date)
 {
-  vertex_descriptor sv =
-    vertex(reinterpret_cast<std::size_t>(&source), price_graph);
-  vertex_descriptor tv =
-    vertex(reinterpret_cast<std::size_t>(&target), price_graph);
+  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
   std::pair<edge_descriptor, bool> e1 = add_edge(sv, tv, 0, price_graph);
   price_map_t& prices(get(ratiomap, e1.first));
@@ -90,10 +90,11 @@ commodity_history_t::find_price(const commodity_t&            source,
                                 const optional<datetime_t>&   oldest,
                                 const optional<commodity_t&>& target)
 {
-  vertex_descriptor sv =
-    vertex(reinterpret_cast<std::size_t>(&source), price_graph);
-  vertex_descriptor tv =
-    vertex(reinterpret_cast<std::size_t>(&*target), price_graph);
+  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  // jww (2012-03-04): What to do when target is null?  In that case,
+  // should we just return whatever is the most recent price for that
+  // commodity?
+  vertex_descriptor tv = vertex(*target->graph_index(), price_graph);
 
   // Filter out edges which came into being after the reference time
 

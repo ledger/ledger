@@ -106,12 +106,13 @@ protected:
 #define COMMODITY_SAW_ANN_PRICE_FLOAT    0x400
 #define COMMODITY_SAW_ANN_PRICE_FIXATED  0x800
 
-    string                     symbol;
-    amount_t::precision_t      precision;
-    optional<string>           name;
-    optional<string>           note;
-    optional<amount_t>         smaller;
-    optional<amount_t>         larger;
+    string                symbol;
+    optional<std::size_t> graph_index;
+    amount_t::precision_t precision;
+    optional<string>      name;
+    optional<string>      note;
+    optional<amount_t>    smaller;
+    optional<amount_t>    larger;
 
     typedef std::pair<optional<datetime_t>,
                       optional<datetime_t> > optional_time_pair_t;
@@ -123,15 +124,13 @@ protected:
     static const std::size_t   max_price_map_size = 16;
     mutable memoized_price_map price_map;
 
-    mutable bool               searched;
-
   public:
     explicit base_t(const string& _symbol)
       : supports_flags<uint_least16_t>
         (commodity_t::decimal_comma_by_default ?
          static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA) :
          static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
-        symbol(_symbol), precision(0), searched(false) {
+        symbol(_symbol), precision(0) {
       TRACE_CTOR(base_t, "const string&");
     }
     virtual ~base_t() {
@@ -224,6 +223,13 @@ public:
       return *mapping_key_;
     else
       return base_symbol();
+  }
+
+  optional<std::size_t> graph_index() const {;
+    return base->graph_index;
+  }
+  void set_graph_index(const optional<std::size_t>& arg = none) {
+    base->graph_index = arg;
   }
 
   optional<string> name() const {

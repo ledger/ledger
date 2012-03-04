@@ -223,15 +223,6 @@ commodity_t * commodity_pool_t::find_or_create(commodity_t&        comm,
   return create(comm, details, name);
 }
 
-optional<price_point_t>
-commodity_pool_t::find_price(const commodity_t&            source,
-                             const optional<commodity_t&>& commodity,
-                             const optional<datetime_t>&   moment,
-                             const optional<datetime_t>&   oldest) const
-{
-  return commodity_price_history.find_price(source, commodity, moment, oldest);
-}
-
 void commodity_pool_t::exchange(commodity_t&      commodity,
                                 const amount_t&   per_unit_cost,
                                 const datetime_t& moment)

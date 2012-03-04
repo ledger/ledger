@@ -163,7 +163,7 @@ public:
       pricemap(get(edge_price_point, price_graph)),
       ratiomap(get(edge_price_ratio, price_graph)) {}
 
-  void add_commodity(const commodity_t& comm);
+  void add_commodity(commodity_t& comm);
 
   void add_price(const commodity_t& source,
                  const datetime_t&  when,
