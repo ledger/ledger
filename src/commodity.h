@@ -85,78 +85,6 @@ class commodity_t
   : public delegates_flags<uint_least16_t>,
     public equality_comparable1<commodity_t, noncopyable>
 {
-public:
-  typedef std::map<const datetime_t, amount_t> history_map;
-
-  struct history_t
-  {
-    history_map prices;
-
-    void add_price(commodity_t&      source,
-                   const datetime_t& date,
-                   const amount_t&   price,
-                   const bool        reflexive = true);
-    bool remove_price(const datetime_t& date);
-
-    optional<price_point_t>
-    find_price(const optional<datetime_t>&   moment = none,
-               const optional<datetime_t>&   oldest = none
-#if defined(DEBUG_ON)
-               , const int indent = 0
-#endif
-               ) const;
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-  private:
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & prices;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
-  };
-
-  typedef std::map<commodity_t *, history_t> history_by_commodity_map;
-
-  struct varied_history_t
-  {
-    history_by_commodity_map histories;
-
-    void add_price(commodity_t&      source,
-                   const datetime_t& date,
-                   const amount_t&   price,
-                   const bool        reflexive = true);
-    bool remove_price(const datetime_t& date, commodity_t& commodity);
-
-    optional<price_point_t>
-    find_price(const commodity_t&            source,
-               const optional<commodity_t&>& commodity = none,
-               const optional<datetime_t>&   moment    = none,
-               const optional<datetime_t>&   oldest    = none
-#if defined(DEBUG_ON)
-               , const int indent = 0
-#endif
-               ) const;
-
-    optional<history_t&>
-    history(const optional<commodity_t&>& commodity = none);
-
-#if defined(HAVE_BOOST_SERIALIZATION)
-  private:
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & histories;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
-  };
-
 protected:
   friend class commodity_pool_t;
   friend class annotated_commodity_t;
@@ -182,7 +110,6 @@ protected:
     amount_t::precision_t      precision;
     optional<string>           name;
     optional<string>           note;
-    optional<varied_history_t> varied_history;
     optional<amount_t>         smaller;
     optional<amount_t>         larger;
 
@@ -228,7 +155,6 @@ protected:
       ar & precision;
       ar & name;
       ar & note;
-      ar & varied_history;
       ar & smaller;
       ar & larger;
     }
@@ -335,48 +261,14 @@ public:
     base->larger = arg;
   }
 
-  optional<varied_history_t&> varied_history() {
-    if (base->varied_history)
-      return *base->varied_history;
-    return none;
-  }
-  optional<const varied_history_t&> varied_history() const {
-    if (base->varied_history)
-      return *base->varied_history;
-    return none;
-  }
-
-  optional<history_t&> history(const optional<commodity_t&>& commodity);
-
-  // These methods provide a transparent pass-through to the underlying
-  // base->varied_history object.
-
   void add_price(const datetime_t& date, const amount_t& price,
-                 const bool reflexive = true) {
-    if (! base->varied_history)
-      base->varied_history = varied_history_t();
-    base->varied_history->add_price(*this, date, price, reflexive);
-    DEBUG("commodity.prices.find", "Price added, clearing price_map");
-    base->price_map.clear();    // a price was added, invalid the map
-  }
-  bool remove_price(const datetime_t& date, commodity_t& commodity) {
-    if (base->varied_history) {
-      base->varied_history->remove_price(date, commodity);
-      DEBUG("commodity.prices.find", "Price removed, clearing price_map");
-      base->price_map.clear();  // a price was added, invalid the map
-    }
-    return false;
-  }
+                 const bool reflexive = true);
+  void remove_price(const datetime_t& date, commodity_t& commodity);
 
   optional<price_point_t>
   find_price(const optional<commodity_t&>& commodity = none,
              const optional<datetime_t>&   moment    = none,
-             const optional<datetime_t>&   oldest    = none,
-             const bool                    nested    = false
-#if defined(DEBUG_ON)
-             , const int indent = 0
-#endif
-             ) const;
+             const optional<datetime_t>&   oldest    = none) const;
 
   optional<price_point_t>
   check_for_updated_price(const optional<price_point_t>& point,

@@ -46,6 +46,8 @@
 #ifndef _POOL_H
 #define _POOL_H
 
+#include "history.h"
+
 namespace ledger {
 
 struct cost_breakdown_t
@@ -66,15 +68,16 @@ public:
    */
   typedef std::map<string, commodity_t *> commodities_map;
 
-  commodities_map commodities;
-  commodity_t *   null_commodity;
-  commodity_t *   default_commodity;
+  commodities_map     commodities;
+  commodity_history_t commodity_price_history;
+  commodity_t *       null_commodity;
+  commodity_t *       default_commodity;
 
-  bool            keep_base;        // --base
+  bool                keep_base;        // --base
 
-  optional<path>  price_db;         // --price-db=
-  long            quote_leeway;     // --leeway=
-  bool            get_quotes;       // --download
+  optional<path>      price_db;         // --price-db=
+  long                quote_leeway;     // --leeway=
+  bool                get_quotes;       // --download
 
   static shared_ptr<commodity_pool_t> current_pool;
 
@@ -130,12 +133,6 @@ public:
   parse_price_expression(const std::string&          str,
                          const bool                  add_prices = true,
                          const optional<datetime_t>& moment     = none);
-
-  // Output the commodity price map for a given date as a DOT file
-
-  void print_pricemap(std::ostream&               out,
-                      const keep_details_t&       keep,
-                      const optional<datetime_t>& moment = none);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

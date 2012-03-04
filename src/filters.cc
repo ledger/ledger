@@ -754,6 +754,8 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
     // fall through...
 
   case value_t::BALANCE: {
+#if 0
+    // jww (2012-03-04): TODO
     commodity_t::history_map all_prices;
 
     foreach (const balance_t::amounts_map::value_type& amt_comm,
@@ -797,6 +799,7 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
       output_revaluation(post, price.first);
       last_total = repriced_total;
     }
+#endif
     break;
   }
   default:

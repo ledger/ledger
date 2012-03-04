@@ -90,6 +90,8 @@ void posts_commodities_iterator::reset(journal_t& journal)
 
   std::map<string, xact_t *> xacts_by_commodity;
 
+#if 0
+  // jww (2012-03-04): TODO
   foreach (commodity_t * comm, commodities) {
     if (optional<commodity_t::varied_history_t&> history =
         comm->varied_history()) {
@@ -136,6 +138,7 @@ void posts_commodities_iterator::reset(journal_t& journal)
       }
     }
   }
+#endif
 
   xacts.reset(xact_temps.begin(), xact_temps.end());
 

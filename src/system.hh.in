@@ -138,37 +138,52 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/bind.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/date_time/gregorian/gregorian_io.hpp>
+
 #include <boost/filesystem/convenience.hpp>
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+
 #if !(defined(__GXX_EXPERIMENTAL_CXX0X__) && __GXX_EXPERIMENTAL_CXX0X__)
 #include <boost/foreach.hpp>
 #endif
 #include <boost/function.hpp>
+
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/filtered_graph.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/graph_utility.hpp>
+
 #include <boost/intrusive_ptr.hpp>
+
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/write.hpp>
 #define BOOST_IOSTREAMS_USE_DEPRECATED 1
 #include <boost/iostreams/device/file_descriptor.hpp>
+
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/transform_iterator.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
+
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
+
 #if defined(HAVE_BOOST_REGEX_UNICODE)
 #include <boost/regex/icu.hpp>
 #else
 #include <boost/regex.hpp>
+
 #endif // HAVE_BOOST_REGEX_UNICODE
 #include <boost/variant.hpp>
 #include <boost/version.hpp>

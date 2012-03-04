@@ -878,11 +878,12 @@ value_t report_t::echo_command(call_scope_t& args)
 value_t report_t::pricemap_command(call_scope_t& args)
 {
   std::ostream& out(output_stream);
-
+#if 0
+  // jww (2012-03-04): TODO
   commodity_pool_t::current_pool->print_pricemap
     (out, what_to_keep(), args.has<string>(0) ?
      optional<datetime_t>(datetime_t(parse_date(args.get<string>(0)))) : none);
-
+#endif
   return true;
 }
 
@@ -913,6 +914,11 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'G':
     OPT_CH(gain);
     break;
+#if 0
+  case 'H':
+    OPT_CH(historical);
+    break;
+#endif
   case 'I':
     OPT_CH(price);
     break;
