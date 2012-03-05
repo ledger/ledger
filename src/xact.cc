@@ -331,12 +331,19 @@ bool xact_base_t::finalize()
 
     if (balance.is_balance()) {
       const balance_t& bal(balance.as_balance());
-      typedef std::map<string, amount_t> sorted_amounts_map;
+#if 1
+      typedef std::map<std::pair<string, annotation_t>,
+                       amount_t> sorted_amounts_map;
       sorted_amounts_map samp;
       foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
         std::pair<sorted_amounts_map::iterator, bool> result =
-          samp.insert(sorted_amounts_map::value_type(pair.first->mapping_key(),
-                                                     pair.second));
+          samp.insert(sorted_amounts_map::value_type
+                      (sorted_amounts_map::key_type
+                       (pair.first->symbol(),
+                        pair.first->has_annotation() ?
+                        as_annotated_commodity(*pair.first).details :
+                        annotation_t()),
+                       pair.second));
         assert(result.second);
       }
 
@@ -353,6 +360,21 @@ bool xact_base_t::finalize()
           add_post(p);
         }
       }
+#else
+      bool first = true;
+      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+        if (first) {
+          null_post->amount = pair.second.negated();
+          null_post->add_flags(POST_CALCULATED);
+          first = false;
+        } else {
+          post_t * p = new post_t(null_post->account, pair.second.negated(),
+                                  ITEM_GENERATED | POST_CALCULATED);
+          p->set_state(null_post->state());
+          add_post(p);
+        }
+      }
+#endif
     }
     else if (balance.is_amount()) {
       null_post->amount = balance.as_amount().negated();
