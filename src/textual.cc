@@ -1031,17 +1031,10 @@ void instance_t::commodity_directive(char * line)
   }
 }
 
-void instance_t::commodity_alias_directive(commodity_t&, string)
+void instance_t::commodity_alias_directive(commodity_t& comm, string alias)
 {
-#if 0
   trim(alias);
-  std::pair<commodity_pool_t::commodities_map::iterator, bool> result
-    = commodity_pool_t::current_pool->commodities.insert
-    (commodity_pool_t::commodities_map::value_type(alias, &comm));
-  if (! result.second)
-    throw_(parse_error,
-           _("Cannot use existing commodity name as an alias: %1") << alias);
-#endif
+  commodity_pool_t::current_pool->alias(alias, comm);
 }
 
 void instance_t::commodity_format_directive(commodity_t&, string format)

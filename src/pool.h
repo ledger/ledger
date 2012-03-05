@@ -47,6 +47,7 @@
 #define _POOL_H
 
 #include "history.h"
+#include "annotate.h"
 
 namespace ledger {
 
@@ -66,51 +67,48 @@ public:
    * explicitly by calling the create methods of commodity_pool_t, or
    * implicitly by parsing a commoditized amount.
    */
-  typedef std::map<string, commodity_t *> commodities_map;
+  typedef std::map<string, shared_ptr<commodity_t> > commodities_map;
+  typedef std::map<std::pair<string, annotation_t>,
+                   shared_ptr<annotated_commodity_t> > annotated_commodities_map;
 
-  commodities_map     commodities;
-  commodity_history_t commodity_price_history;
-  commodity_t *       null_commodity;
-  commodity_t *       default_commodity;
+  commodities_map           commodities;
+  annotated_commodities_map annotated_commodities;
+  commodity_history_t       commodity_price_history;
+  commodity_t *             null_commodity;
+  commodity_t *             default_commodity;
 
-  bool                keep_base;        // --base
-
-  optional<path>      price_db;         // --price-db=
-  long                quote_leeway;     // --leeway=
-  bool                get_quotes;       // --download
-
-  static shared_ptr<commodity_pool_t> current_pool;
+  bool           keep_base;     // --base
+  optional<path> price_db;      // --price-db= 
+  long           quote_leeway;  // --leeway= 
+  bool           get_quotes;    // --download
 
   function<optional<price_point_t>
            (commodity_t& commodity, const optional<commodity_t&>& in_terms_of)>
       get_commodity_quote;
 
+  static shared_ptr<commodity_pool_t> current_pool;
+
   explicit commodity_pool_t();
 
   virtual ~commodity_pool_t() {
     TRACE_DTOR(commodity_pool_t);
-    foreach (commodities_map::value_type& pair, commodities)
-      checked_delete(pair.second);
   }
-
-  string make_qualified_name(const commodity_t&  comm,
-                             const annotation_t& details);
 
   commodity_t * create(const string& symbol);
   commodity_t * find(const string& name);
   commodity_t * find_or_create(const string& symbol);
+  commodity_t * alias(const string& name, commodity_t& referent);
 
-  commodity_t * create(const string& symbol, const annotation_t& details);
-  commodity_t * find(const string& symbol, const annotation_t& details);
+  commodity_t * create(const string& symbol,
+                       const annotation_t& details);
+  commodity_t * find(const string& symbol,
+                     const annotation_t& details);
   commodity_t * find_or_create(const string& symbol,
                                const annotation_t& details);
+  commodity_t * find_or_create(commodity_t& comm, const annotation_t& details);
 
-  commodity_t * create(commodity_t&        comm,
-                       const annotation_t& details,
-                       const string&       mapping_key);
-
-  commodity_t * find_or_create(commodity_t&        comm,
-                               const annotation_t& details);
+  annotated_commodity_t * create(commodity_t& comm,
+                                 const annotation_t& details);
 
   // Exchange one commodity for another, while recording the factored price.
 
@@ -144,6 +142,7 @@ private:
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & current_pool;
     ar & commodities;
+    ar & annotated_commodities;
     ar & null_commodity;
     ar & default_commodity;
     ar & keep_base;

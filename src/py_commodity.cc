@@ -115,7 +115,7 @@ namespace {
                       (string("Could not find commodity ") + symbol).c_str());
       throw_error_already_set();
     }
-    return (*i).second;
+    return (*i).second.get();
   }
 
   python::list py_pool_keys(commodity_pool_t& pool) {
@@ -168,13 +168,15 @@ namespace {
   py_pool_commodities_values_begin(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.begin(),
-       bind(&commodity_pool_t::commodities_map::value_type::second, _1));
+       bind(&shared_ptr<commodity_t>::get,
+            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
   commodities_map_seconds_iterator
   py_pool_commodities_values_end(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.end(),
-       bind(&commodity_pool_t::commodities_map::value_type::second, _1));
+       bind(&shared_ptr<commodity_t>::get,
+            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
 
   void py_add_price_2(commodity_t& commodity,
@@ -267,8 +269,6 @@ void export_commodity()
                   make_getter(&commodity_pool_t::get_commodity_quote),
                   make_setter(&commodity_pool_t::get_commodity_quote))
 
-    .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
-
     .def("create", py_create_1, return_internal_reference<>())
     .def("create", py_create_2, return_internal_reference<>())
 
@@ -359,7 +359,6 @@ void export_commodity()
 
     .add_property("base_symbol", &commodity_t::base_symbol)
     .add_property("symbol", &commodity_t::symbol)
-    .add_property("mapping_key", &commodity_t::mapping_key)
 
     .add_property("name", &commodity_t::name, &commodity_t::set_name)
     .add_property("note", &commodity_t::note, &commodity_t::set_note)

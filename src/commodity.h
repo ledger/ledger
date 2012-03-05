@@ -164,7 +164,6 @@ protected:
 
   commodity_pool_t * parent_;
   optional<string>   qualified_symbol;
-  optional<string>   mapping_key_;
   bool               annotated;
 
   explicit commodity_t(commodity_pool_t *        _parent,
@@ -216,13 +215,6 @@ public:
   }
   string symbol() const {
     return qualified_symbol ? *qualified_symbol : base_symbol();
-  }
-
-  string mapping_key() const {
-    if (mapping_key_)
-      return *mapping_key_;
-    else
-      return base_symbol();
   }
 
   optional<std::size_t> graph_index() const {;
@@ -325,7 +317,6 @@ private:
     ar & base;
     ar & parent_;
     ar & qualified_symbol;
-    ar & mapping_key_;
     ar & annotated;
   }
 #endif // HAVE_BOOST_SERIALIZATION
