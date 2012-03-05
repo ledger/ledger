@@ -1,7 +1,7 @@
 #!/bin/sh
 
 VALGRIND=''
-if [ -x /usr/bin/valgrind ]; then
+if [ -x /usr/bin/valgrind -o -x /opt/local/bin/valgrind ]; then
   VALGRIND=valgrind
 fi
 
