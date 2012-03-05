@@ -55,7 +55,7 @@ class format_t : public expr_base_t<string>, public noncopyable
 {
   typedef expr_base_t<string> base_type;
 
-  struct element_t : public supports_flags<>
+  struct element_t : public supports_flags<>, public noncopyable
   {
 #define ELEMENT_ALIGN_LEFT 0x01
 
@@ -65,7 +65,7 @@ class format_t : public expr_base_t<string>, public noncopyable
     std::size_t                  min_width;
     std::size_t                  max_width;
     variant<string, expr_t>      data;
-    shared_ptr<struct element_t> next;
+    scoped_ptr<struct element_t> next;
 
     element_t() throw()
       : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
@@ -82,7 +82,6 @@ class format_t : public expr_base_t<string>, public noncopyable
         min_width = elem.min_width;
         max_width = elem.max_width;
         data      = elem.data;
-        next      = elem.next;
       }
       return *this;
     }
@@ -104,7 +103,7 @@ class format_t : public expr_base_t<string>, public noncopyable
     void dump(std::ostream& out) const;
   };
 
-  shared_ptr<element_t> elements;
+  scoped_ptr<element_t> elements;
 
 public:
   static enum elision_style_t {
