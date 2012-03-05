@@ -55,6 +55,8 @@ xact_base_t::~xact_base_t()
       // If the posting is a temporary, it will be destructed when the
       // temporary is.
       assert(! post->has_flags(ITEM_TEMP));
+
+      post->account->remove_post(post);
       checked_delete(post);
     }
   }
