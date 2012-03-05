@@ -527,7 +527,7 @@ void instance_t::automated_xact_directive(char * line)
       query.parse_args(string_value(skip_ws(line + 1)).to_sequence(),
                        keeper, false, true);
 
-    std::auto_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper)));
+    unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper)));
     ae->pos           = position_t();
     ae->pos->pathname = context.pathname;
     ae->pos->beg_pos  = context.line_beg_pos;
@@ -621,7 +621,7 @@ void instance_t::period_xact_directive(char * line)
 
   try {
 
-  std::auto_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
+  unique_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
   pe->pos           = position_t();
   pe->pos->pathname = context.pathname;
   pe->pos->beg_pos  = context.line_beg_pos;
@@ -665,7 +665,7 @@ void instance_t::xact_directive(char * line, std::streamsize len)
   TRACE_START(xacts, 1, "Time spent handling transactions:");
 
   if (xact_t * xact = parse_xact(line, len, top_account())) {
-    std::auto_ptr<xact_t> manager(xact);
+    unique_ptr<xact_t> manager(xact);
 
     if (context.journal->add_xact(xact)) {
       manager.release();        // it's owned by the journal now
@@ -874,7 +874,7 @@ void instance_t::account_directive(char * line)
   char * p = skip_ws(line);
   account_t * account =
     context.journal->register_account(p, NULL, top_account());
-  std::auto_ptr<auto_xact_t> ae;
+  unique_ptr<auto_xact_t> ae;
 
   while (peek_whitespace_line()) {
     read_line(line);
@@ -1287,7 +1287,7 @@ post_t * instance_t::parse_post(char *          line,
 {
   TRACE_START(post_details, 1, "Time spent parsing postings:");
 
-  std::auto_ptr<post_t> post(new post_t);
+  unique_ptr<post_t> post(new post_t);
 
   post->xact          = xact;   // this could be NULL
   post->pos           = position_t();

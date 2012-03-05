@@ -233,7 +233,7 @@ xact_t * draft_t::insert(journal_t& journal)
     throw std::runtime_error(_("'xact' command requires at least a payee"));
 
   xact_t *              matching = NULL;
-  std::auto_ptr<xact_t> added(new xact_t);
+  unique_ptr<xact_t> added(new xact_t);
 
   if (xact_t * xact =
       lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),
@@ -316,7 +316,7 @@ xact_t * draft_t::insert(journal_t& journal)
     }
 
     foreach (xact_template_t::post_template_t& post, tmpl->posts) {
-      std::auto_ptr<post_t> new_post;
+      unique_ptr<post_t> new_post;
 
       commodity_t * found_commodity = NULL;
 

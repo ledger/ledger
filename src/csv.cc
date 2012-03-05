@@ -139,8 +139,8 @@ xact_t * csv_reader::read_xact(bool rich_data)
 
   std::istringstream instr(line);
 
-  std::auto_ptr<xact_t> xact(new xact_t);
-  std::auto_ptr<post_t> post(new post_t);
+  unique_ptr<xact_t> xact(new xact_t);
+  unique_ptr<post_t> post(new post_t);
 
   xact->set_state(item_t::CLEARED);
 

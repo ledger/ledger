@@ -80,7 +80,7 @@ int main(int argc, char * argv[], char * envp[])
   ::textdomain("ledger");
 #endif
 
-  std::auto_ptr<global_scope_t> global_scope;
+  unique_ptr<global_scope_t> global_scope;
 
   try {
     // Create the session object, which maintains nearly all state relating to

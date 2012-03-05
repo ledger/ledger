@@ -309,7 +309,7 @@ void report_t::posts_report(post_handler_ptr handler)
 {
   handler = chain_post_handlers(handler, *this);
   if (HANDLED(group_by_)) {
-    std::auto_ptr<post_splitter>
+    unique_ptr<post_splitter>
       splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
     splitter->set_postflush_func(posts_flusher(handler, *this));
     handler = post_handler_ptr(splitter.release());

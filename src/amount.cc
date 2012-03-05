@@ -1027,12 +1027,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   }
 
   // Allocate memory for the amount's quantity value.  We have to
-  // monitor the allocation in an auto_ptr because this function gets
+  // monitor the allocation in a unique_ptr because this function gets
   // called sometimes from amount_t's constructor; and if there is an
   // exeception thrown by any of the function calls after this point,
   // the destructor will never be called and the memory never freed.
 
-  std::auto_ptr<bigint_t> new_quantity;
+  unique_ptr<bigint_t> new_quantity;
 
   if (quantity) {
     if (quantity->refc > 1)

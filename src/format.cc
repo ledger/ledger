@@ -125,7 +125,7 @@ namespace {
 format_t::element_t * format_t::parse_elements(const string& fmt,
                                                const optional<format_t&>& tmpl)
 {
-  std::auto_ptr<element_t> result;
+  unique_ptr<element_t> result;
 
   element_t * current = NULL;
 
