@@ -1019,7 +1019,7 @@ class reporter
   string    whence;
 
 public:
-  reporter(item_handler<Type> * _handler,
+  reporter(shared_ptr<item_handler<Type> > _handler,
            report_t& _report, const string& _whence)
     : handler(_handler), report(_report), whence(_whence) {}
 
