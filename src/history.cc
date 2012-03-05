@@ -67,6 +67,9 @@ void commodity_history_t::add_price(const commodity_t& source,
   if (! result.second) {
     // There is already an entry for this moment, so update it
     (*result.first).second = price;
+  } else {
+    last_reftime = none;        // invalidate the FGraph cache
+    last_oldest  = none;
   }
 }
 
@@ -82,28 +85,74 @@ void commodity_history_t::remove_price(const commodity_t& source,
 
   // jww (2012-03-04): If it fails, should we give a warning?
   prices.erase(date);
+
+  last_reftime = none;          // invalidate the FGraph cache
+  last_oldest  = none;
 }
 
-optional<price_point_t>
-commodity_history_t::find_price(const commodity_t&          source,
-                                const datetime_t&           moment,
-                                const optional<datetime_t>& oldest)
+void commodity_history_t::map_prices(function<void(datetime_t,
+                                                   const amount_t&)> fn,
+                                     const commodity_t&          source,
+                                     const datetime_t&           moment,
+                                     const optional<datetime_t>& _oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
-  // Filter out edges which came into being after the reference time
-  FGraph fg(price_graph,
-            recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
-            (get(edge_weight, price_graph), pricemap, ratiomap,
-             moment, oldest));
-  
-  datetime_t most_recent = moment;
-  amount_t   price;
+  reftime = moment;
+  oldest  = _oldest;
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
   for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
     Graph::edge_descriptor edge = edgePair.first;
+
+    const price_map_t& prices(get(ratiomap, edge));
+
+    foreach (const price_map_t::value_type& pair, prices) {
+      const datetime_t& when(pair.first);
+
+      if ((! _oldest || when >= *_oldest) && when <= moment) {
+        if (pair.second.commodity() == source) {
+          amount_t price(pair.second);
+          price.in_place_invert();
+          if (source == *get(namemap, sv))
+            price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
+          else
+            price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+        }
+        fn(when, pair.second);
+      }
+    }
+  }
+}
+
+optional<price_point_t>
+commodity_history_t::find_price(const commodity_t&          source,
+                                const datetime_t&           moment,
+                                const optional<datetime_t>& _oldest)
+{
+  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+
+  DEBUG("history.find", "sv commodity = " << get(namemap, sv)->symbol());
+#if defined(DEBUG_ON)
+  if (source.has_flags(COMMODITY_PRIMARY))
+    DEBUG("history.find", "sv commodity is primary");
+#endif
+  DEBUG("history.find", "tv commodity = none ");
+
+  datetime_t most_recent = moment;
+  amount_t   price;
+
+  reftime = moment;
+  oldest  = _oldest;
+
+  graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
+  for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
+    std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
+    Graph::edge_descriptor edge = edgePair.first;
+
+    DEBUG("history.find", "u commodity = " << get(namemap, sv)->symbol());
+    DEBUG("history.find", "v commodity = " << get(namemap, *f_vi)->symbol());
 
     const price_point_t& point(get(pricemap, edge));
 
@@ -111,34 +160,52 @@ commodity_history_t::find_price(const commodity_t&          source,
       most_recent = point.when;
       price       = point.price;
     }
+
+    DEBUG("history.find", "price was = " << price.unrounded());
+
+    if (price.commodity() == source) {
+      price.in_place_invert();
+      if (source == *get(namemap, sv))
+        price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
+      else
+        price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+    }
+
+    DEBUG("history.find", "price is  = " << price.unrounded());
   }
 
-  if (price.is_null())
+  last_reftime = reftime;       // invalidate the FGraph cache
+  last_oldest  = oldest;
+
+  if (price.is_null()) {
+    DEBUG("history.find", "there is no final price");
     return none;
-  else
+  } else {
+    DEBUG("history.find", "final price is = " << price.unrounded());
     return price_point_t(most_recent, price);
+  }
 }
 
 optional<price_point_t>
 commodity_history_t::find_price(const commodity_t&          source,
                                 const commodity_t&          target,
                                 const datetime_t&           moment,
-                                const optional<datetime_t>& oldest)
+                                const optional<datetime_t>& _oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
-  // Filter out edges which came into being after the reference time
-  FGraph fg(price_graph,
-            recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
-            (get(edge_weight, price_graph), pricemap, ratiomap,
-             moment, oldest));
-  
+  DEBUG("history.find", "sv commodity = " << get(namemap, sv)->symbol());
+  DEBUG("history.find", "tv commodity = " << get(namemap, tv)->symbol());
+
   std::vector<vertex_descriptor> predecessors(num_vertices(fg));
   std::vector<long>              distances(num_vertices(fg));
   
   PredecessorMap predecessorMap(&predecessors[0]);
   DistanceMap    distanceMap(&distances[0]);
+
+  reftime = moment;
+  oldest  = _oldest;
 
   dijkstra_shortest_paths(fg, /* start= */ sv,
                           predecessor_map(predecessorMap)
@@ -149,7 +216,7 @@ commodity_history_t::find_price(const commodity_t&          source,
   datetime_t least_recent = moment;
   amount_t price;
 
-  FNameMap ptrs = get(vertex_name, fg);
+  const commodity_t * last_target = &target;
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; 
@@ -161,73 +228,85 @@ commodity_history_t::find_price(const commodity_t&          source,
 
     const price_point_t& point(get(pricemap, edge));
 
-    const commodity_t * last_source = &source;
-
     bool first_run = false;
     if (price.is_null()) {
       least_recent = point.when;
-      price        = point.price;
       first_run    = true;
     }
     else if (point.when < least_recent) {
       least_recent = point.when;
     }
 
-    DEBUG("history.find", "u commodity = " << get(ptrs, u)->symbol());
-    DEBUG("history.find", "v commodity = " << get(ptrs, v)->symbol());
-    DEBUG("history.find", "last source = " << last_source->symbol());
+    DEBUG("history.find", "u commodity = " << get(namemap, u)->symbol());
+    DEBUG("history.find", "v commodity = " << get(namemap, v)->symbol());
+    DEBUG("history.find", "last target = " << last_target->symbol());
 
     // Determine which direction we are converting in
     amount_t pprice(point.price);
-    DEBUG("history.find", "pprice    = " << pprice);
+    DEBUG("history.find", "pprice    = " << pprice.unrounded());
 
-    DEBUG("history.find", "price was = " << price);
     if (! first_run) {
-      if (pprice.commodity() == *last_source)
+      DEBUG("history.find", "price was = " << price.unrounded());
+      if (pprice.commodity() != *last_target)
         price *= pprice.inverted();
       else
         price *= pprice;
     }
-    else if (price.commodity() == *last_source) {
-      price = price.inverted();
+    else if (pprice.commodity() != *last_target) {
+      price = pprice.inverted();
     }
-    DEBUG("history.find", "price is  = " << price);
+    else {
+      price = pprice;
+    }
+    DEBUG("history.find", "price is  = " << price.unrounded());
 
-    if (*last_source == *get(ptrs, v))
-      last_source = get(ptrs, u);
+    if (*last_target == *get(namemap, v))
+      last_target = get(namemap, u);
     else
-      last_source = get(ptrs, v);
+      last_target = get(namemap, v);
+
+    DEBUG("history.find", "last target now = " << last_target->symbol());
   }
 
-  price.set_commodity(const_cast<commodity_t&>(target));
-  DEBUG("history.find", "final price is = " << price);
+  last_reftime = reftime;       // invalidate the FGraph cache
+  last_oldest  = oldest;
 
-  if (price.is_null())
+  if (price.is_null()) {
+    DEBUG("history.find", "there is no final price");
     return none;
-  else
+  } else {
+    price.set_commodity(const_cast<commodity_t&>(target));
+    DEBUG("history.find", "final price is = " << price.unrounded());
+
     return price_point_t(least_recent, price);
+  }
 }
+
+template <class Name>
+class label_writer {
+public:
+  label_writer(Name _name) : name(_name) {}
+
+  template <class VertexOrEdge>
+  void operator()(std::ostream& out, const VertexOrEdge& v) const {
+    out << "[label=\"" << name[v]->symbol() << "\"]";
+  }
+
+private:
+  Name name;
+};
 
 void commodity_history_t::print_map(std::ostream& out,
                                     const optional<datetime_t>& moment)
 {
-#if 0
-  dynamic_properties p;
-  p.property("label", get(edge_weight, price_graph));
-  p.property("weight", get(edge_weight, price_graph));
-  p.property("node_id", get(vertex_index, price_graph));
-
   if (moment) {
-    // Filter out edges which came into being after the reference time
-    FGraph fg(price_graph,
-              recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
-              (get(edge_weight, price_graph), pricemap, ratiomap,
-               *moment));
-    write_graphviz(out, fg, p);
+    reftime = *moment;
+    write_graphviz(out, fg, label_writer<FNameMap>(namemap));
+    last_reftime = reftime;
   } else {
-    write_graphviz(out, price_graph, p);
+    write_graphviz(out, price_graph,
+                   label_writer<NameMap>(get(vertex_name, price_graph)));
   }
-#endif
 }
 
 } // namespace ledger

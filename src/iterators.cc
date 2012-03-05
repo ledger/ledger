@@ -75,6 +75,55 @@ void journal_posts_iterator::increment()
   }
 }
 
+namespace {
+  struct create_price_xact {
+    account_t *    account;
+    temporaries_t& temps;
+    xacts_list&    xact_temps;
+
+    std::map<string, xact_t *> xacts_by_commodity;
+
+    create_price_xact(account_t * _account, temporaries_t& _temps,
+                      xacts_list& _xact_temps)
+      : account(_account), temps(_temps), xact_temps(_xact_temps) {}
+
+    void operator()(datetime_t& date, const amount_t& price) {
+      xact_t * xact;
+      string   symbol = price.commodity().symbol();
+
+      std::map<string, xact_t *>::iterator i =
+        xacts_by_commodity.find(symbol);
+      if (i != xacts_by_commodity.end()) {
+        xact = (*i).second;
+      } else {
+        xact = &temps.create_xact();
+        xact_temps.push_back(xact);
+        xact->payee = symbol;
+        xact->_date = date.date();
+        xacts_by_commodity.insert
+          (std::pair<string, xact_t *>(symbol, xact));
+      }
+
+      bool post_already_exists = false;
+
+      foreach (post_t * post, xact->posts) {
+        if (post->date() == date.date() && post->amount == price) {
+          post_already_exists = true;
+          break;
+        }
+      }
+
+      if (! post_already_exists) {
+        post_t& temp = temps.create_post(*xact, account);
+        temp._date  = date.date();
+        temp.amount = price;
+
+        temp.xdata().datetime = date;
+      }
+    }
+  };
+}
+
 void posts_commodities_iterator::reset(journal_t& journal)
 {
   journal_posts.reset(journal);
@@ -88,57 +137,10 @@ void posts_commodities_iterator::reset(journal_t& journal)
     commodities.insert(&comm);
   }
 
-  std::map<string, xact_t *> xacts_by_commodity;
-
-#if 0
-  // jww (2012-03-04): TODO
-  foreach (commodity_t * comm, commodities) {
-    if (optional<commodity_t::varied_history_t&> history =
-        comm->varied_history()) {
-      account_t * account = journal.master->find_account(comm->symbol());
-
-      foreach (commodity_t::history_by_commodity_map::value_type& pair,
-               history->histories) {
-        foreach (commodity_t::history_map::value_type& hpair,
-                 pair.second.prices) {
-          xact_t * xact;
-          string   symbol = hpair.second.commodity().symbol();
-
-          std::map<string, xact_t *>::iterator i =
-            xacts_by_commodity.find(symbol);
-          if (i != xacts_by_commodity.end()) {
-            xact = (*i).second;
-          } else {
-            xact = &temps.create_xact();
-            xact_temps.push_back(xact);
-            xact->payee = symbol;
-            xact->_date = hpair.first.date();
-            xacts_by_commodity.insert
-              (std::pair<string, xact_t *>(symbol, xact));
-          }
-
-          bool post_already_exists = false;
-
-          foreach (post_t * post, xact->posts) {
-            if (post->_date  == hpair.first.date() &&
-                post->amount == hpair.second) {
-              post_already_exists = true;
-              break;
-            }
-          }
-
-          if (! post_already_exists) {
-            post_t& temp = temps.create_post(*xact, account);
-            temp._date  = hpair.first.date();
-            temp.amount = hpair.second;
-
-            temp.xdata().datetime = hpair.first;
-          }
-        }
-      }
-    }
-  }
-#endif
+  foreach (commodity_t * comm, commodities)
+    comm->map_prices
+      (create_price_xact(journal.master->find_account(comm->symbol()),
+                         temps, xact_temps));
 
   xacts.reset(xact_temps.begin(), xact_temps.end());
 

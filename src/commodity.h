@@ -271,6 +271,10 @@ public:
                  const bool reflexive = true);
   void remove_price(const datetime_t& date, commodity_t& commodity);
 
+  void map_prices(function<void(datetime_t, const amount_t&)> fn,
+                  const optional<datetime_t>& moment  = none,
+                  const optional<datetime_t>& _oldest = none);
+
   optional<price_point_t>
   find_price(const optional<commodity_t&>& commodity = none,
              const optional<datetime_t>&   moment    = none,

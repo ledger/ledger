@@ -70,36 +70,50 @@ public:
   PricePointMap price_point;
   PriceRatioMap ratios;
 
-  datetime_t           reftime;
-  optional<datetime_t> oldest;
+  datetime_t *           reftime;
+  optional<datetime_t> * last_reftime;
+  optional<datetime_t> * oldest;
+  optional<datetime_t> * last_oldest;
 
   recent_edge_weight() { }
-  recent_edge_weight(EdgeWeightMap _weight,
-                     PricePointMap _price_point,
-                     PriceRatioMap _ratios,
-                     datetime_t    _reftime,
-                     const optional<datetime_t>& _oldest = none)
+  recent_edge_weight(EdgeWeightMap          _weight,
+                     PricePointMap          _price_point,
+                     PriceRatioMap          _ratios,
+                     datetime_t *           _reftime,
+                     optional<datetime_t> * _last_reftime,
+                     optional<datetime_t> * _oldest,
+                     optional<datetime_t> * _last_oldest)
     : weight(_weight), price_point(_price_point), ratios(_ratios),
-      reftime(_reftime), oldest(_oldest) { }
+      reftime(_reftime), last_reftime(_last_reftime),
+      oldest(_oldest), last_oldest(_last_oldest) { }
 
   template <typename Edge>
   bool operator()(const Edge& e) const
   {
-    const price_map_t& prices(get(ratios, e));
-    if (prices.empty())
-      return false;
+    if (*last_reftime && *reftime == **last_reftime &&
+        *oldest == *last_oldest)
+      return get(weight, e) != std::numeric_limits<std::size_t>::max();
 
-    price_map_t::const_iterator low = prices.upper_bound(reftime);
+    const price_map_t& prices(get(ratios, e));
+    if (prices.empty()) {
+      put(weight, e, std::numeric_limits<std::size_t>::max());
+      return false;
+    }
+
+    price_map_t::const_iterator low = prices.upper_bound(*reftime);
     if (low != prices.end() && low == prices.begin()) {
+      put(weight, e, std::numeric_limits<std::size_t>::max());
       return false;
     } else {
       --low;
-      assert(((*low).first <= reftime));
+      assert(((*low).first <= *reftime));
 
-      if (oldest && (*low).first < *oldest)
+      if (*oldest && (*low).first < **oldest) {
+        put(weight, e, std::numeric_limits<std::size_t>::max());
         return false;
+      }
 
-      long secs = (reftime - (*low).first).total_seconds();
+      long secs = (*reftime - (*low).first).total_seconds();
       assert(secs >= 0);
 
       put(weight, e, secs);
@@ -160,10 +174,24 @@ public:
                                                    PriceRatioMap> > FGraph;
   typedef property_map<FGraph, vertex_name_t>::type FNameMap;
 
+  FGraph   fg;
+  FNameMap namemap;
+
+  // jww (2012-03-05): Prevents threading
+  mutable datetime_t           reftime;
+  mutable optional<datetime_t> last_reftime;
+  mutable optional<datetime_t> oldest;
+  mutable optional<datetime_t> last_oldest;
+
   commodity_history_t()
     : indexmap(get(vertex_index, price_graph)),
       pricemap(get(edge_price_point, price_graph)),
-      ratiomap(get(edge_price_ratio, price_graph)) {}
+      ratiomap(get(edge_price_ratio, price_graph)),
+      fg(price_graph,
+         recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+         (get(edge_weight, price_graph), pricemap, ratiomap,
+          &reftime, &last_reftime, &oldest, &last_oldest)),
+      namemap(get(vertex_name, fg)) {}
 
   void add_commodity(commodity_t& comm);
 
@@ -173,6 +201,11 @@ public:
   void remove_price(const commodity_t& source,
                     const commodity_t& target,
                     const datetime_t&  date);
+
+  void map_prices(function<void(datetime_t, const amount_t&)> fn,
+                  const commodity_t&          source,
+                  const datetime_t&           moment,
+                  const optional<datetime_t>& _oldest = none);
 
   optional<price_point_t>
   find_price(const commodity_t&            source,

@@ -605,16 +605,13 @@ void amount_t::in_place_negate()
   }
 }
 
-amount_t amount_t::inverted() const
+void amount_t::in_place_invert()
 {
   if (! quantity)
     throw_(amount_error, _("Cannot invert an uninitialized amount"));
 
-  amount_t t(*this);
-  t._dup();
-  mpq_inv(MP(t.quantity), MP(t.quantity));
-
-  return t;
+  _dup();
+  mpq_inv(MP(quantity), MP(quantity));
 }
 
 void amount_t::in_place_round()

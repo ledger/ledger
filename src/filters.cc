@@ -37,6 +37,7 @@
 #include "report.h"
 #include "compare.h"
 #include "pool.h"
+#include "history.h"
 
 namespace ledger {
 
@@ -688,6 +689,27 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
   }
 }
 
+namespace {
+  struct create_price_xact {
+    post_t&       post;
+    const date_t& current;
+    price_map_t&  all_prices;
+
+    create_price_xact(post_t& _post, const date_t& _current,
+                      price_map_t& _all_prices)
+      : post(_post), current(_current), all_prices(_all_prices) {}
+
+    void operator()(datetime_t& date, const amount_t& price) {
+      if (date.date() > post.value_date() && date.date() < current) {
+        DEBUG("filters.revalued",
+              post.value_date() << " < " << date << " < " << current);
+        DEBUG("filters.revalued", "inserting " << price << " at " << date);
+        all_prices.insert(price_map_t::value_type(date, price));
+      }
+    }
+  };
+}
+
 void changed_value_posts::output_intermediate_prices(post_t&       post,
                                                      const date_t& current)
 {
@@ -754,38 +776,17 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
     // fall through...
 
   case value_t::BALANCE: {
-#if 0
-    // jww (2012-03-04): TODO
-    commodity_t::history_map all_prices;
+    price_map_t all_prices;
 
     foreach (const balance_t::amounts_map::value_type& amt_comm,
-             display_total.as_balance().amounts) {
-      if (optional<commodity_t::varied_history_t&> hist =
-          amt_comm.first->varied_history()) {
-        foreach
-          (const commodity_t::history_by_commodity_map::value_type& comm_hist,
-           hist->histories) {
-          foreach (const commodity_t::history_map::value_type& price,
-                   comm_hist.second.prices) {
-            if (price.first.date() > post.value_date() &&
-                price.first.date() < current) {
-              DEBUG("filters.revalued", post.value_date() << " < "
-                    << price.first.date() << " < " << current);
-              DEBUG("filters.revalued", "inserting "
-                    << price.second << " at " << price.first.date());
-              all_prices.insert(price);
-            }
-          }
-        }
-      }
-    }
+             display_total.as_balance().amounts)
+      amt_comm.first->map_prices(create_price_xact(post, current, all_prices));
 
     // Choose the last price from each day as the price to use
     typedef std::map<const date_t, bool> date_map;
     date_map pricing_dates;
 
-    BOOST_REVERSE_FOREACH
-      (const commodity_t::history_map::value_type& price, all_prices) {
+    BOOST_REVERSE_FOREACH(const price_map_t::value_type& price, all_prices) {
       // This insert will fail if a later price has already been inserted
       // for that date.
       DEBUG("filters.revalued",
@@ -799,7 +800,6 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
       output_revaluation(post, price.first);
       last_total = repriced_total;
     }
-#endif
     break;
   }
   default:

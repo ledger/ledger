@@ -327,7 +327,12 @@ public:
     return *this;
   }
 
-  amount_t inverted() const;
+  amount_t inverted() const {
+    amount_t temp(*this);
+    temp.in_place_invert();
+    return temp;
+  }
+  void in_place_invert();
 
   /** Yields an amount whose display precision when output is truncated
       to the display precision of its commodity.  This is normally the
