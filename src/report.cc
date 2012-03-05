@@ -1382,24 +1382,37 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       return MAKE_OPT_HANDLER(report_t, handler);
     break;
 
+#define POSTS_REPORT(formatter)                                 \
+    WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this, \
+                            string("#") + p));
+
+    // Can't use WRAP_FUNCTOR here because the template arguments
+    // confuse the parser
+#define POSTS_REPORT_(method, formatter)                                \
+    expr_t::op_t::wrap_functor                                          \
+    (reporter<post_t, post_handler_ptr, method>                         \
+      (post_handler_ptr(formatter), *this, string("#") + p));
+
+#define ACCOUNTS_REPORT(formatter)                                      \
+    expr_t::op_t::wrap_functor(reporter<account_t, acct_handler_ptr,    \
+                               &report_t::accounts_report>              \
+                               (acct_handler_ptr(formatter), *this,     \
+                                string("#") + p));
+
   case symbol_t::COMMAND:
     switch (*p) {
     case 'a':
       if (is_eq(p, "accounts")) {
-        return WRAP_FUNCTOR(reporter<>(post_handler_ptr(new report_accounts(*this)),
-                                       *this, "#accounts"));
+        return POSTS_REPORT(new report_accounts(*this));
       }
       break;
 
     case 'b':
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
-        return expr_t::op_t::wrap_functor
-          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-           (acct_handler_ptr(new format_accounts
-                             (*this, report_format(HANDLER(balance_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#balance"));
+        return ACCOUNTS_REPORT(new format_accounts
+                               (*this, report_format(HANDLER(balance_format_)),
+                                maybe_format(HANDLER(prepend_format_)),
+                                HANDLER(prepend_width_).value.to_size_t()));
       }
       else if (is_eq(p, "budget")) {
         HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
@@ -1408,72 +1421,46 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         if (! (budget_flags & ~BUDGET_WRAP_VALUES))
           budget_flags |= BUDGET_BUDGETED;
 
-#if 0
-#define POSTS_REPORT(formatter)
-        return WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this,
-                                       string("#") + p));
-
-#define ACCOUNTS_REPORT(formatter)
-        return WRAP_FUNCTOR(reporter<account_t, acct_handler_ptr,
-                            &report_t::accounts_report>
-                            (acct_handler_ptr(formatter), *this,
-                             string("#") + p));
-#endif
-
-        return expr_t::op_t::wrap_functor
-          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-           (acct_handler_ptr(new format_accounts
-                             (*this, report_format(HANDLER(budget_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#budget"));
+        return ACCOUNTS_REPORT(new format_accounts
+                               (*this, report_format(HANDLER(budget_format_)),
+                                maybe_format(HANDLER(prepend_format_)),
+                                HANDLER(prepend_width_).value.to_size_t()));
       }
       break;
 
     case 'c':
       if (is_eq(p, "csv")) {
-        return WRAP_FUNCTOR
-          (reporter<>
-           (post_handler_ptr(new format_posts
-                             (*this, report_format(HANDLER(csv_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#csv"));
+        return POSTS_REPORT(new format_posts
+                            (*this, report_format(HANDLER(csv_format_)),
+                             maybe_format(HANDLER(prepend_format_)),
+                             HANDLER(prepend_width_).value.to_size_t()));
       }
       else if (is_eq(p, "cleared")) {
         HANDLER(amount_).set_expr(string("#cleared"),
                                   "(amount, cleared ? amount : 0)");
-        return expr_t::op_t::wrap_functor
-          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-           (acct_handler_ptr(new format_accounts
-                             (*this, report_format(HANDLER(cleared_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#cleared"));
+        return ACCOUNTS_REPORT(new format_accounts
+                               (*this, report_format(HANDLER(cleared_format_)),
+                                maybe_format(HANDLER(prepend_format_)),
+                                HANDLER(prepend_width_).value.to_size_t()));
       }
       else if (is_eq(p, "convert")) {
         return WRAP_FUNCTOR(convert_command);
       }
       else if (is_eq(p, "commodities")) {
-        return WRAP_FUNCTOR(reporter<>
-                            (post_handler_ptr(new report_commodities(*this)),
-                             *this, "#commodities"));
+        return POSTS_REPORT(new report_commodities(*this));
       }
       break;
 
     case 'e':
       if (is_eq(p, "equity")) {
         HANDLER(generated).on_only(string("#equity"));
-        return WRAP_FUNCTOR(reporter<>(post_handler_ptr(new print_xacts(*this)),
-                             *this, "#equity"));
+        return POSTS_REPORT(new print_xacts(*this));
       }
       else if (is_eq(p, "entry")) {
         return WRAP_FUNCTOR(xact_command);
       }
       else if (is_eq(p, "emacs")) {
-        return WRAP_FUNCTOR
-          (reporter<>(post_handler_ptr(new format_emacs_posts(output_stream)),
-                      *this, "#emacs"));
+        return POSTS_REPORT(new format_emacs_posts(output_stream));
       }
       else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
@@ -1482,56 +1469,43 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'o':
       if (is_eq(p, "org")) {
-        return WRAP_FUNCTOR
-          (reporter<>
-           (post_handler_ptr(new posts_to_org_table
-                             (*this, maybe_format(HANDLER(prepend_format_)))),
-            *this, "#org"));
+        return POSTS_REPORT(new posts_to_org_table
+                            (*this, maybe_format(HANDLER(prepend_format_))));
       }
       break;
 
     case 'p':
       if (*(p + 1) == '\0' || is_eq(p, "print")) {
-        return WRAP_FUNCTOR
-          (reporter<>(post_handler_ptr(new print_xacts(*this, HANDLED(raw))),
-                      *this, "#print"));
+        return POSTS_REPORT(new print_xacts(*this, HANDLED(raw)));
       }
       else if (is_eq(p, "prices")) {
-        return expr_t::op_t::wrap_functor
-          (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-           (post_handler_ptr(new format_posts
+        return POSTS_REPORT_(&report_t::commodities_report,
+                             new format_posts
                              (*this, report_format(HANDLER(prices_format_)),
                               maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#prices"));
+                              HANDLER(prepend_width_).value.to_size_t()));
       }
       else if (is_eq(p, "pricedb")) {
-        return expr_t::op_t::wrap_functor
-          (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-           (post_handler_ptr(new format_posts
+        return POSTS_REPORT_(&report_t::commodities_report,
+                             new format_posts
                              (*this, report_format(HANDLER(pricedb_format_)),
                               maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#pricedb"));
+                              HANDLER(prepend_width_).value.to_size_t()));
       }
       else if (is_eq(p, "pricemap")) {
         return MAKE_FUNCTOR(report_t::pricemap_command);
       }
       else if (is_eq(p, "payees")) {
-        return WRAP_FUNCTOR(reporter<>(post_handler_ptr(new report_payees(*this)),
-                                       *this, "#payees"));
+        return POSTS_REPORT(new report_payees(*this));
       }
       break;
 
     case 'r':
       if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register")) {
-        return WRAP_FUNCTOR
-          (reporter<>
-           (post_handler_ptr(new format_posts
-                             (*this, report_format(HANDLER(register_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t())),
-            *this, "#register"));
+        return POSTS_REPORT(new format_posts
+                            (*this, report_format(HANDLER(register_format_)),
+                             maybe_format(HANDLER(prepend_format_)),
+                             HANDLER(prepend_width_).value.to_size_t()));
       }
       else if (is_eq(p, "reload")) {
         return MAKE_FUNCTOR(report_t::reload_command);
@@ -1549,8 +1523,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "xml"))
-        return WRAP_FUNCTOR(reporter<>(post_handler_ptr(new format_xml(*this)),
-                                       *this, "#xml"));
+        return POSTS_REPORT(new format_xml(*this));
       break;
     }
     break;
@@ -1572,11 +1545,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(format_command);
       break;
     case 'g':
-      if (is_eq(p, "generate")) {
-        return expr_t::op_t::wrap_functor
-          (reporter<post_t, post_handler_ptr, &report_t::generate_report>
-           (post_handler_ptr(new print_xacts(*this)), *this, "#generate"));
-      }
+      if (is_eq(p, "generate"))
+        return POSTS_REPORT_(&report_t::generate_report,
+                             new print_xacts(*this));
       break;
     case 'p':
       if (is_eq(p, "parse"))
