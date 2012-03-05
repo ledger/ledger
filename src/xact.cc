@@ -274,6 +274,8 @@ bool xact_base_t::finalize()
 
       if (post->amount.has_annotation() && post->amount.annotation().price) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
+          DEBUG("xact.finalize", "breakdown.basis_cost = " << breakdown.basis_cost);
+          DEBUG("xact.finalize", "breakdown.final_cost = " << breakdown.final_cost);
           if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             gain_loss.in_place_round();
