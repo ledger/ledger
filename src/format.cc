@@ -45,8 +45,7 @@ format_t::element_t::element_t(const element_t& elem)
     type(elem.type),
     min_width(elem.min_width),
     max_width(elem.max_width),
-    data(elem.data),
-    next(elem.next ? new element_t(*elem.next) : NULL)
+    data(elem.data)
 {
   TRACE_CTOR(element_t, "copy");
 }
