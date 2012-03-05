@@ -89,6 +89,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
   }
 #endif
 
+  assert(kind < LAST);
+
   if (is_ident()) {
     DEBUG("expr.compile", "Lookup: " << as_ident() << " in " << scope_ptr);
     if (ptr_op_t def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident())) {
