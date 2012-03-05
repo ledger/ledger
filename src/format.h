@@ -51,7 +51,7 @@ class unistring;
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
-class format_t : public expr_base_t<string>
+class format_t : public expr_base_t<string>, public noncopyable
 {
   typedef expr_base_t<string> base_type;
 
@@ -65,14 +65,12 @@ class format_t : public expr_base_t<string>
     std::size_t                  min_width;
     std::size_t                  max_width;
     variant<string, expr_t>      data;
-    scoped_ptr<struct element_t> next;
+    shared_ptr<struct element_t> next;
 
     element_t() throw()
       : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
     }
-    element_t(const element_t& elem);
-
     ~element_t() throw() {
       TRACE_DTOR(element_t);
     }
@@ -84,6 +82,7 @@ class format_t : public expr_base_t<string>
         min_width = elem.min_width;
         max_width = elem.max_width;
         data      = elem.data;
+        next      = elem.next;
       }
       return *this;
     }
@@ -105,7 +104,7 @@ class format_t : public expr_base_t<string>
     void dump(std::ostream& out) const;
   };
 
-  scoped_ptr<element_t> elements;
+  shared_ptr<element_t> elements;
 
 public:
   static enum elision_style_t {

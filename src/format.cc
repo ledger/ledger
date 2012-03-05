@@ -40,16 +40,6 @@ namespace ledger {
 format_t::elision_style_t format_t::default_style         = TRUNCATE_TRAILING;
 bool                      format_t::default_style_changed = false;
 
-format_t::element_t::element_t(const element_t& elem)
-  : supports_flags<>(),
-    type(elem.type),
-    min_width(elem.min_width),
-    max_width(elem.max_width),
-    data(elem.data)
-{
-  TRACE_CTOR(element_t, "copy");
-}
-
 void format_t::element_t::dump(std::ostream& out) const
 {
   out << "Element: ";
@@ -426,7 +416,6 @@ string format_t::real_calc(scope_t& scope)
     case element_t::EXPR: {
       expr_t& expr(boost::get<expr_t>(elem->data));
       try {
-
         expr.compile(scope);
 
         value_t value;
