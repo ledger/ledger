@@ -90,18 +90,30 @@ public:
   template <typename Edge>
   bool operator()(const Edge& e) const
   {
+    DEBUG("history.find", "  reftime      = " << *reftime);
+    if (*last_reftime)
+      DEBUG("history.find", "  last_reftime = " << **last_reftime);
+    if (*oldest)
+      DEBUG("history.find", "  oldest       = " << **oldest);
+    if (*last_oldest)
+      DEBUG("history.find", "  last_oldest  = " << **last_oldest);
+
     if (*last_reftime && *reftime == **last_reftime &&
-        *oldest == *last_oldest)
+        *oldest == *last_oldest) {
+      DEBUG("history.find", "  using previous reftime");
       return get(weight, e) != std::numeric_limits<std::size_t>::max();
+    }
 
     const price_map_t& prices(get(ratios, e));
     if (prices.empty()) {
+      DEBUG("history.find", "  prices map is empty for this edge");
       put(weight, e, std::numeric_limits<std::size_t>::max());
       return false;
     }
 
     price_map_t::const_iterator low = prices.upper_bound(*reftime);
     if (low != prices.end() && low == prices.begin()) {
+      DEBUG("history.find", "  don't use this edge");
       put(weight, e, std::numeric_limits<std::size_t>::max());
       return false;
     } else {
@@ -109,6 +121,7 @@ public:
       assert(((*low).first <= *reftime));
 
       if (*oldest && (*low).first < **oldest) {
+        DEBUG("history.find", "  edge is out of range");
         put(weight, e, std::numeric_limits<std::size_t>::max());
         return false;
       }
@@ -119,6 +132,8 @@ public:
       put(weight, e, secs);
       put(price_point, e, price_point_t((*low).first, (*low).second));
 
+      DEBUG("history.find", "  using edge at price point "
+            << (*low).first << " " << (*low).second);
       return true;
     }
   }

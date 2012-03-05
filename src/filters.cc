@@ -690,22 +690,14 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
 }
 
 namespace {
-  struct create_price_xact {
-    post_t&       post;
-    const date_t& current;
-    price_map_t&  all_prices;
+  struct insert_prices_in_map {
+    price_map_t& all_prices;
 
-    create_price_xact(post_t& _post, const date_t& _current,
-                      price_map_t& _all_prices)
-      : post(_post), current(_current), all_prices(_all_prices) {}
+    insert_prices_in_map(price_map_t& _all_prices)
+      : all_prices(_all_prices) {}
 
     void operator()(datetime_t& date, const amount_t& price) {
-      if (date.date() > post.value_date() && date.date() < current) {
-        DEBUG("filters.revalued",
-              post.value_date() << " < " << date << " < " << current);
-        DEBUG("filters.revalued", "inserting " << price << " at " << date);
-        all_prices.insert(price_map_t::value_type(date, price));
-      }
+      all_prices.insert(price_map_t::value_type(date, price));
     }
   };
 }
@@ -780,7 +772,9 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
 
     foreach (const balance_t::amounts_map::value_type& amt_comm,
              display_total.as_balance().amounts)
-      amt_comm.first->map_prices(create_price_xact(post, current, all_prices));
+      amt_comm.first->map_prices(insert_prices_in_map(all_prices),
+                                 datetime_t(current),
+                                 datetime_t(post.value_date()));
 
     // Choose the last price from each day as the price to use
     typedef std::map<const date_t, bool> date_map;
