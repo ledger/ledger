@@ -71,11 +71,10 @@ class format_t : public expr_base_t<string>
       : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
     }
+    element_t(const element_t& elem);
+
     ~element_t() throw() {
       TRACE_DTOR(element_t);
-    }
-    element_t(const element_t& elem) : supports_flags<>() {
-      *this = elem;
     }
 
     element_t& operator=(const element_t& elem) {

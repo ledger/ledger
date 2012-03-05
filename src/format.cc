@@ -40,6 +40,17 @@ namespace ledger {
 format_t::elision_style_t format_t::default_style         = TRUNCATE_TRAILING;
 bool                      format_t::default_style_changed = false;
 
+format_t::element_t::element_t(const element_t& elem)
+  : supports_flags<>(),
+    type(elem.type),
+    min_width(elem.min_width),
+    max_width(elem.max_width),
+    data(elem.data),
+    next(elem.next ? new element_t(*elem.next) : NULL)
+{
+  TRACE_CTOR(element_t, "copy");
+}
+
 void format_t::element_t::dump(std::ostream& out) const
 {
   out << "Element: ";
