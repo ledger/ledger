@@ -79,6 +79,7 @@ struct annotation_t : public supports_flags<>,
     return price || date || tag;
   }
 
+  bool operator<(const annotation_t& rhs) const;
   bool operator==(const annotation_t& rhs) const {
     return (price == rhs.price &&
             date  == rhs.date &&

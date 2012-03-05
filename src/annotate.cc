@@ -38,6 +38,34 @@
 
 namespace ledger {
 
+bool annotation_t::operator<(const annotation_t& rhs) const
+{
+  if (! price && rhs.price) return true;
+  if (price && ! rhs.price) return false;
+  if (! date && rhs.date)   return true;
+  if (date && ! rhs.date)   return false;
+  if (! tag && rhs.tag)     return true;
+  if (tag && ! rhs.tag)     return false;
+
+  if (price) {
+    if (price->commodity().symbol() < rhs.price->commodity().symbol())
+      return true;
+    if (price->commodity().symbol() > rhs.price->commodity().symbol())
+      return false;
+    if (*price < *rhs.price) return true;
+    if (*price > *rhs.price) return false;
+  }
+  if (date) {
+    if (*date < *rhs.date)   return true;
+    if (*date > *rhs.date)   return false;
+  }
+  if (tag) {
+    if (*tag < *rhs.tag)     return true;
+    if (*tag > *rhs.tag)     return false;
+  }
+  return false;
+}
+
 void annotation_t::parse(std::istream& in)
 {
   do {
