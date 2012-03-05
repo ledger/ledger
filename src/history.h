@@ -98,11 +98,13 @@ public:
     if (*last_oldest)
       DEBUG("history.find", "  last_oldest  = " << **last_oldest);
 
+#if 0
     if (*last_reftime && *reftime == **last_reftime &&
         *oldest == *last_oldest) {
       DEBUG("history.find", "  using previous reftime");
       return get(weight, e) != std::numeric_limits<std::size_t>::max();
     }
+#endif
 
     const price_map_t& prices(get(ratios, e));
     if (prices.empty()) {
@@ -189,9 +191,6 @@ public:
                                                    PriceRatioMap> > FGraph;
   typedef property_map<FGraph, vertex_name_t>::type FNameMap;
 
-  FGraph   fg;
-  FNameMap namemap;
-
   // jww (2012-03-05): Prevents threading
   mutable datetime_t           reftime;
   mutable optional<datetime_t> last_reftime;
@@ -201,12 +200,7 @@ public:
   commodity_history_t()
     : indexmap(get(vertex_index, price_graph)),
       pricemap(get(edge_price_point, price_graph)),
-      ratiomap(get(edge_price_ratio, price_graph)),
-      fg(price_graph,
-         recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
-         (get(edge_weight, price_graph), pricemap, ratiomap,
-          &reftime, &last_reftime, &oldest, &last_oldest)),
-      namemap(get(vertex_name, fg)) {}
+      ratiomap(get(edge_price_ratio, price_graph)) {}
 
   void add_commodity(commodity_t& comm);
 

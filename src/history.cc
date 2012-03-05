@@ -101,6 +101,13 @@ void commodity_history_t::map_prices(function<void(datetime_t,
   reftime = moment;
   oldest  = _oldest;
 
+  FGraph fg(price_graph,
+            recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+            (get(edge_weight, price_graph), pricemap, ratiomap,
+             &reftime, &last_reftime, &oldest, &last_oldest));
+
+  FNameMap namemap(get(vertex_name, fg));
+
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
   for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
@@ -133,6 +140,16 @@ commodity_history_t::find_price(const commodity_t&          source,
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
+  reftime = moment;
+  oldest  = _oldest;
+
+  FGraph fg(price_graph,
+            recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+            (get(edge_weight, price_graph), pricemap, ratiomap,
+             &reftime, &last_reftime, &oldest, &last_oldest));
+
+  FNameMap namemap(get(vertex_name, fg));
+
   DEBUG("history.find", "sv commodity = " << get(namemap, sv)->symbol());
 #if defined(DEBUG_ON)
   if (source.has_flags(COMMODITY_PRIMARY))
@@ -142,9 +159,6 @@ commodity_history_t::find_price(const commodity_t&          source,
 
   datetime_t most_recent = moment;
   amount_t   price;
-
-  reftime = moment;
-  oldest  = _oldest;
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
   for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
@@ -195,6 +209,16 @@ commodity_history_t::find_price(const commodity_t&          source,
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
+  reftime = moment;
+  oldest  = _oldest;
+
+  FGraph fg(price_graph,
+            recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+            (get(edge_weight, price_graph), pricemap, ratiomap,
+             &reftime, &last_reftime, &oldest, &last_oldest));
+
+  FNameMap namemap(get(vertex_name, fg));
+
   DEBUG("history.find", "sv commodity = " << get(namemap, sv)->symbol());
   DEBUG("history.find", "tv commodity = " << get(namemap, tv)->symbol());
 
@@ -203,9 +227,6 @@ commodity_history_t::find_price(const commodity_t&          source,
   
   PredecessorMap predecessorMap(&predecessors[0]);
   DistanceMap    distanceMap(&distances[0]);
-
-  reftime = moment;
-  oldest  = _oldest;
 
   dijkstra_shortest_paths(fg, /* start= */ sv,
                           predecessor_map(predecessorMap)
@@ -301,8 +322,17 @@ void commodity_history_t::print_map(std::ostream& out,
 {
   if (moment) {
     reftime = *moment;
-    write_graphviz(out, fg, label_writer<FNameMap>(namemap));
+    oldest  = none;
+
+    FGraph fg(price_graph,
+              recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+              (get(edge_weight, price_graph), pricemap, ratiomap,
+               &reftime, &last_reftime, &oldest, &last_oldest));
+
+    write_graphviz(out, fg, label_writer<FNameMap>(get(vertex_name, fg)));
+
     last_reftime = reftime;
+    last_oldest  = none;
   } else {
     write_graphviz(out, price_graph,
                    label_writer<NameMap>(get(vertex_name, price_graph)));
