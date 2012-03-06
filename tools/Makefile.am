@@ -8,7 +8,6 @@ DISTCLEANFILES	= .timestamp
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
 	libledger_data.la			\
-	libledger_expr.la			\
 	libledger_math.la			\
 	libledger_util.la
 
@@ -28,6 +27,14 @@ libledger_util_la_CPPFLAGS = $(lib_cppflags)
 libledger_util_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_math_la_SOURCES  =			\
+	src/format.cc				\
+	src/query.cc				\
+	src/scope.cc				\
+	src/expr.cc				\
+	src/op.cc				\
+	src/parser.cc				\
+	src/token.cc				\
+	src/value.cc                            \
 	src/balance.cc				\
 	src/quotes.cc				\
 	src/history.cc				\
@@ -39,22 +46,8 @@ libledger_math_la_SOURCES  =			\
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
 libledger_math_la_LDFLAGS  = -release $(LIBVERSION)
 
-libledger_expr_la_SOURCES  =			\
-	src/option.cc				\
-	src/format.cc				\
-	src/query.cc				\
-	src/predicate.cc			\
-	src/scope.cc				\
-	src/expr.cc				\
-	src/op.cc				\
-	src/parser.cc				\
-	src/token.cc				\
-	src/value.cc
-
-libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS   = -release $(LIBVERSION)
-
 libledger_data_la_SOURCES   =			\
+	src/option.cc				\
 	src/lookup.cc				\
 	src/compare.cc				\
 	src/iterators.cc			\
@@ -204,7 +197,6 @@ DISTCLEANFILES += ledger.elc timeclock.elc
 
 all_sources	= $(libledger_util_la_SOURCES)		\
 		  $(libledger_math_la_SOURCES)		\
-		  $(libledger_expr_la_SOURCES)		\
 		  $(libledger_data_la_SOURCES)		\
 		  $(libledger_report_la_SOURCES)	\
 		  $(libledger_python_la_SOURCES)	\
@@ -259,8 +251,7 @@ TESTS = RegressTests BaselineTests ManualTests ConfirmTests \
 if HAVE_BOOST_TEST
 TESTS +=	    \
 	UtilTests   \
-	MathTests   \
-	ExprTests
+	MathTests
 #	DataTests   \
 #	ReportTests
 endif
@@ -285,6 +276,7 @@ UtilTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 UtilTests_LDADD	   = libledger_util.la $(TESTLIBS)
 
 MathTests_SOURCES =		 \
+	test/unit/t_expr.cc      \
 	test/unit/t_commodity.cc \
 	test/unit/t_amount.cc	 \
 	test/unit/t_balance.cc
@@ -292,16 +284,10 @@ MathTests_SOURCES =		 \
 MathTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 MathTests_LDADD	   = libledger_math.la $(UtilTests_LDADD)
 
-ExprTests_SOURCES =		 \
-	test/unit/t_expr.cc
-
-ExprTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-ExprTests_LDADD	   = libledger_expr.la $(MathTests_LDADD)
-
 DataTests_SOURCES =
 
 DataTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-DataTests_LDADD	   = libledger_data.la $(ExprTests_LDADD)
+DataTests_LDADD	   = libledger_data.la $(MathTests_LDADD)
 
 ReportTests_SOURCES =
 
@@ -311,7 +297,6 @@ ReportTests_LDADD    = libledger_report.la $(DataTests_LDADD)
 all_tests_sources =				\
 	$(UtilTests_SOURCES)			\
 	$(MathTests_SOURCES)			\
-	$(ExprTests_SOURCES)			\
 	$(DataTests_SOURCES)			\
 	$(ReportTests_SOURCES)
 
@@ -420,8 +405,6 @@ unittests: check
 	@sh $(FULLCHECK) $(top_builddir)/UtilTests$(EXEEXT)   --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
 	@sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify \
-	    2>&1 | grep -v '^GuardMalloc:'
-	@sh $(FULLCHECK) $(top_builddir)/ExprTests$(EXEEXT)   --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
 #	@sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify \
 #	    2>&1 | grep -v '^GuardMalloc:'

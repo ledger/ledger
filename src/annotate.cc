@@ -33,6 +33,7 @@
 
 #include "amount.h"
 #include "commodity.h"
+#include "expr.h"
 #include "annotate.h"
 #include "pool.h"
 
@@ -46,6 +47,9 @@ bool annotation_t::operator<(const annotation_t& rhs) const
   if (date && ! rhs.date)   return false;
   if (! tag && rhs.tag)     return true;
   if (tag && ! rhs.tag)     return false;
+
+  if (! value_expr && rhs.value_expr) return true;
+  if (value_expr && ! rhs.value_expr) return false;
 
   if (price) {
     if (price->commodity().symbol() < rhs.price->commodity().symbol())
@@ -62,6 +66,10 @@ bool annotation_t::operator<(const annotation_t& rhs) const
   if (tag) {
     if (*tag < *rhs.tag)     return true;
     if (*tag > *rhs.tag)     return false;
+  }
+  if (value_expr) {
+    if (value_expr->text() < rhs.value_expr->text()) return true;
+    if (value_expr->text() > rhs.value_expr->text()) return false;
   }
   return false;
 }
@@ -112,17 +120,41 @@ void annotation_t::parse(std::istream& in)
       date = parse_date(buf);
     }
     else if (c == '(') {
-      if (tag)
-        throw_(amount_error, _("Commodity specifies more than one tag"));
-
       in.get(c);
-      READ_INTO(in, buf, 255, c, c != ')');
-      if (c == ')')
-        in.get(c);
-      else
-        throw_(amount_error, _("Commodity tag lacks closing parenthesis"));
+      c = static_cast<char>(in.peek());
+      if (c == '(') {
+        if (value_expr)
+          throw_(amount_error,
+                 _("Commodity specifies more than one valuation expresion"));
 
-      tag = buf;
+        in.get(c);
+        READ_INTO(in, buf, 255, c, c != ')');
+        if (c == ')') {
+          in.get(c);
+          c = static_cast<char>(in.peek());
+          if (c == ')')
+            in.get(c);
+          else
+            throw_(amount_error,
+                   _("Commodity valuation expression lacks closing parentheses"));
+        } else {
+          throw_(amount_error,
+                 _("Commodity valuation expression lacks closing parentheses"));
+        }
+
+        value_expr = expr_t(buf);
+      } else {
+        if (tag)
+          throw_(amount_error, _("Commodity specifies more than one tag"));
+
+        READ_INTO(in, buf, 255, c, c != ')');
+        if (c == ')')
+          in.get(c);
+        else
+          throw_(amount_error, _("Commodity tag lacks closing parenthesis"));
+
+        tag = buf;
+      }
     }
     else {
       in.clear();
@@ -156,6 +188,10 @@ void annotation_t::print(std::ostream& out, bool keep_base,
   if (tag &&
       (! no_computed_annotations || ! has_flags(ANNOTATION_TAG_CALCULATED)))
     out << " (" << *tag << ')';
+
+  if (value_expr && (! no_computed_annotations ||
+                     ! has_flags(ANNOTATION_VALUE_EXPR_CALCULATED)))
+    out << " ((" << *value_expr << "))";
 }
 
 bool keep_details_t::keep_all(const commodity_t& comm) const
@@ -220,12 +256,14 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 
   if ((keep_price && details.price) ||
       (keep_date  && details.date)  ||
-      (keep_tag   && details.tag))
+      (keep_tag   && details.tag)   ||
+      details.value_expr)
   {
     new_comm = pool().find_or_create
       (referent(), annotation_t(keep_price ? details.price : none,
                                 keep_date  ? details.date  : none,
-                                keep_tag   ? details.tag   : none));
+                                keep_tag   ? details.tag   : none,
+                                details.value_expr));
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {
@@ -238,6 +276,8 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
         new_details.add_flags(details.flags() & ANNOTATION_DATE_CALCULATED);
       if (keep_tag)
         new_details.add_flags(details.flags() & ANNOTATION_TAG_CALCULATED);
+      if (details.value_expr)
+        new_details.add_flags(details.flags() & ANNOTATION_VALUE_EXPR_CALCULATED);
     }
 
     return *new_comm;

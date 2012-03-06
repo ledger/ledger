@@ -46,29 +46,38 @@
 #ifndef _ANNOTATE_H
 #define _ANNOTATE_H
 
+#include "expr.h"
+
 namespace ledger {
 
 struct annotation_t : public supports_flags<>,
                       public equality_comparable<annotation_t>
 {
-#define ANNOTATION_PRICE_CALCULATED 0x01
-#define ANNOTATION_PRICE_FIXATED    0x02
-#define ANNOTATION_DATE_CALCULATED  0x04
-#define ANNOTATION_TAG_CALCULATED   0x08
+#define ANNOTATION_PRICE_CALCULATED      0x01
+#define ANNOTATION_PRICE_FIXATED         0x02
+#define ANNOTATION_DATE_CALCULATED       0x04
+#define ANNOTATION_TAG_CALCULATED        0x08
+#define ANNOTATION_VALUE_EXPR_CALCULATED 0x10
 
   optional<amount_t> price;
   optional<date_t>   date;
   optional<string>   tag;
+  optional<expr_t>   value_expr;
 
-  explicit annotation_t(const optional<amount_t>& _price = none,
-                        const optional<date_t>&   _date  = none,
-                        const optional<string>&   _tag   = none)
-    : supports_flags<>(), price(_price), date(_date), tag(_tag) {
-    TRACE_CTOR(annotation_t, "const optional<amount_t>& + date_t + string");
+  explicit annotation_t(const optional<amount_t>& _price      = none,
+                        const optional<date_t>&   _date       = none,
+                        const optional<string>&   _tag        = none,
+                        const optional<expr_t>&   _value_expr = none)
+    : supports_flags<>(), price(_price), date(_date), tag(_tag),
+      value_expr(_value_expr) {
+    TRACE_CTOR(annotation_t,
+               "const optional<amount_t>& + date_t + string + expr_t");
   }
   annotation_t(const annotation_t& other)
     : supports_flags<>(other.flags()),
-      price(other.price), date(other.date), tag(other.tag) {
+      price(other.price), date(other.date), tag(other.tag),
+      value_expr(other.value_expr)
+  {
     TRACE_CTOR(annotation_t, "copy");
   }
   ~annotation_t() {
@@ -76,14 +85,15 @@ struct annotation_t : public supports_flags<>,
   }
 
   operator bool() const {
-    return price || date || tag;
+    return price || date || tag || value_expr;
   }
 
   bool operator<(const annotation_t& rhs) const;
   bool operator==(const annotation_t& rhs) const {
-    return (price == rhs.price &&
-            date  == rhs.date &&
-            tag   == rhs.tag);
+    return (price      == rhs.price &&
+            date       == rhs.date  &&
+            tag        == rhs.tag   &&
+            value_expr == rhs.value_expr);
   }
 
   void parse(std::istream& in);
@@ -132,6 +142,12 @@ inline void to_xml(std::ostream& out, const annotation_t& details)
   {
     push_xml y(out, "tag");
     out << y.guard(*details.tag);
+  }
+
+  if (details.value_expr)
+  {
+    push_xml y(out, "value-expr");
+    out << y.guard(details.value_expr->text());
   }
 }
 

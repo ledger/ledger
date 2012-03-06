@@ -58,6 +58,9 @@ public:
   typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
+  friend void intrusive_ptr_add_ref(const op_t * op);
+  friend void intrusive_ptr_release(const op_t * op);
+
   enum check_expr_kind_t {
     EXPR_GENERAL,
     EXPR_ASSERTION,
