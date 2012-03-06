@@ -80,6 +80,9 @@ struct symbol_t
   bool operator<(const symbol_t& sym) const {
     return kind < sym.kind || name < sym.name;
   }
+  bool operator==(const symbol_t& sym) const {
+    return kind == sym.kind || name == sym.name;
+  }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
