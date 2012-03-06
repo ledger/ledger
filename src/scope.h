@@ -70,8 +70,7 @@ struct symbol_t
     TRACE_CTOR(symbol_t, "symbol_t::kind_t, string");
   }
   symbol_t(const symbol_t& sym)
-    : kind(sym.kind), name(sym.name),
-      definition(sym.definition) {
+    : kind(sym.kind), name(sym.name), definition(sym.definition) {
     TRACE_CTOR(symbol_t, "copy");
   }
   ~symbol_t() throw() {
