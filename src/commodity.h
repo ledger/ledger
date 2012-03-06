@@ -268,9 +268,9 @@ public:
                   const optional<datetime_t>& _oldest = none);
 
   optional<price_point_t>
-  find_price(const optional<commodity_t&>& commodity = none,
-             const optional<datetime_t>&   moment    = none,
-             const optional<datetime_t>&   oldest    = none) const;
+  virtual find_price(const optional<commodity_t&>& commodity = none,
+                     const optional<datetime_t>&   moment    = none,
+                     const optional<datetime_t>&   oldest    = none) const;
 
   optional<price_point_t>
   check_for_updated_price(const optional<price_point_t>& point,
