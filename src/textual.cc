@@ -164,9 +164,8 @@ namespace {
     void assert_directive(char * line);
     void check_directive(char * line);
 
-#if defined(HAVE_BOOST_PYTHON)
+    void import_directive(char * line);
     void python_directive(char * line);
-#endif
 
     post_t * parse_post(char *          line,
                         std::streamsize len,
@@ -1114,6 +1113,14 @@ void instance_t::comment_directive(char * line)
 }
 
 #if defined(HAVE_BOOST_PYTHON)
+
+void instance_t::import_directive(char * line)
+{
+  string module_name(line);
+  trim(module_name);
+  python_session->import_option(module_name);
+}
+
 void instance_t::python_directive(char * line)
 {
   std::ostringstream script;
@@ -1153,6 +1160,21 @@ void instance_t::python_directive(char * line)
     ("journal", python::object(python::ptr(context.journal)));
   python_session->eval(script.str(), python_interpreter_t::PY_EVAL_MULTI);
 }
+
+#else
+
+void instance_t::import_directive(char *)
+{
+  throw_(parse_error,
+         _("'python' directive seen, but Python support is missing"));
+}
+
+void instance_t::python_directive(char *)
+{
+  throw_(parse_error,
+         _("'import' directive seen, but Python support is missing"));
+}
+
 #endif // HAVE_BOOST_PYTHON
 
 bool instance_t::general_directive(char * line)
@@ -1232,6 +1254,10 @@ bool instance_t::general_directive(char * line)
       include_directive(arg);
       return true;
     }
+    else if (std::strcmp(p, "import") == 0) {
+      import_directive(arg);
+      return true;
+    }
     break;
 
   case 'p':
@@ -1240,12 +1266,7 @@ bool instance_t::general_directive(char * line)
       return true;
     }
     else if (std::strcmp(p, "python") == 0) {
-#if defined(HAVE_BOOST_PYTHON)
       python_directive(arg);
-#else
-      throw_(parse_error,
-             _("'python' directive seen, but Python support is missing"));
-#endif
       return true;
     }
     break;
