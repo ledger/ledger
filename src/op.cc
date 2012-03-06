@@ -262,13 +262,18 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
   case O_CALL: {
     ptr_op_t func = left();
-    const string& name(func->as_ident());
+    string   name;
 
-    func = func->left();
-    if (! func)
-      func = scope.lookup(symbol_t::FUNCTION, name);
-    if (! func)
-      throw_(calc_error, _("Calling unknown function '%1'") << name);
+    if (func->is_ident()) {
+      name = func->as_ident();
+      func = func->left();
+      if (! func)
+        func = scope.lookup(symbol_t::FUNCTION, name);
+      if (! func)
+        throw_(calc_error, _("Calling unknown function '%1'") << name);
+    } else {
+      name = "<lambda>";
+    }
 
     call_scope_t call_args(scope, locus, depth + 1);
     if (has_right())
