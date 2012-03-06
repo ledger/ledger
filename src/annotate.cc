@@ -34,6 +34,7 @@
 #include "amount.h"
 #include "commodity.h"
 #include "expr.h"
+#include "scope.h"
 #include "annotate.h"
 #include "pool.h"
 
@@ -221,6 +222,69 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
   return true;
 }
 
+optional<price_point_t>
+annotated_commodity_t::find_price(const optional<commodity_t&>& commodity,
+                                  const optional<datetime_t>&   moment,
+                                  const optional<datetime_t>&   oldest) const
+{
+  DEBUG("commodity.price.find",
+        "annotated_commodity_t::find_price(" << symbol() << ")");
+
+  datetime_t when;
+  if (moment)
+    when = *moment;
+  else if (epoch)
+    when = *epoch;
+  else
+    when = CURRENT_TIME();
+
+  DEBUG("commodity.price.find", "reference time: " << when);
+
+  optional<commodity_t&> target;
+  if (commodity)
+    target = commodity;
+
+  if (details.price) {
+    DEBUG("commodity.price.find", "price annotation: " << *details.price);
+
+    if (details.has_flags(ANNOTATION_PRICE_FIXATED)) {
+      DEBUG("commodity.price.find",
+            "amount_t::value: fixated price =  " << *details.price);
+      return price_point_t(when, *details.price);
+    }
+    else if (! target) {
+      DEBUG("commodity.price.find", "setting target commodity from price");
+      target = details.price->commodity();
+    }
+  }
+
+#if defined(DEBUG_ON)
+  if (target)
+    DEBUG("commodity.price.find", "target commodity: " << target->symbol());
+#endif
+
+  if (details.value_expr) {
+#if defined(DEBUG_ON)
+    if (SHOW_DEBUG("commodity.price.find")) {
+      ledger::_log_buffer << "valuation expr: ";
+      details.value_expr->dump(ledger::_log_buffer);
+      DEBUG("commodity.price.find", "");
+    }
+#endif
+    call_scope_t call_args(*scope_t::default_scope);
+
+    call_args.push_back(string_value(base_symbol()));
+    call_args.push_back(when);
+    if (commodity)
+      call_args.push_back(string_value(commodity->symbol()));
+
+    return price_point_t(when, const_cast<expr_t&>(*details.value_expr)
+                         .calc(call_args).to_amount());
+  }
+
+  return commodity_t::find_price(commodity, moment, oldest);
+}
+
 commodity_t&
 annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 {
@@ -262,8 +326,7 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
     new_comm = pool().find_or_create
       (referent(), annotation_t(keep_price ? details.price : none,
                                 keep_date  ? details.date  : none,
-                                keep_tag   ? details.tag   : none,
-                                details.value_expr));
+                                keep_tag   ? details.tag   : none));
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {
@@ -276,8 +339,6 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
         new_details.add_flags(details.flags() & ANNOTATION_DATE_CALCULATED);
       if (keep_tag)
         new_details.add_flags(details.flags() & ANNOTATION_TAG_CALCULATED);
-      if (details.value_expr)
-        new_details.add_flags(details.flags() & ANNOTATION_VALUE_EXPR_CALCULATED);
     }
 
     return *new_comm;

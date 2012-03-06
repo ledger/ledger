@@ -247,6 +247,11 @@ public:
     return *ptr;
   }
 
+  optional<price_point_t>
+  virtual find_price(const optional<commodity_t&>& commodity = none,
+                     const optional<datetime_t>&   moment    = none,
+                     const optional<datetime_t>&   oldest    = none) const;
+
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
   virtual void write_annotations(std::ostream& out,
                                  bool no_computed_annotations = false) const;
