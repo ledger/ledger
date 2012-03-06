@@ -731,13 +731,13 @@ amount_t::value(const optional<datetime_t>&   moment,
 {
   if (quantity) {
 #if defined(DEBUG_ON)
-    DEBUG("commodity.prices.find",
+    DEBUG("commodity.price.find",
           "amount_t::value of " << commodity().symbol());
     if (moment)
-      DEBUG("commodity.prices.find",
-            "amount_t::value: moment =  " << *moment);
+      DEBUG("commodity.price.find",
+            "amount_t::value: moment = " << *moment);
     if (in_terms_of)
-      DEBUG("commodity.prices.find",
+      DEBUG("commodity.price.find",
             "amount_t::value: in_terms_of = " << in_terms_of->symbol());
 #endif
     if (has_commodity() &&

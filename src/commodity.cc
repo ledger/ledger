@@ -89,6 +89,8 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
                         const optional<datetime_t>&   moment,
                         const optional<datetime_t>&   oldest) const
 {
+  DEBUG("commodity.price.find", "commodity_t::find_price(" << symbol() << ")");
+
   optional<commodity_t&> target;
   if (commodity)
     target = commodity;
@@ -102,14 +104,14 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     base_t::time_and_commodity_t(base_t::optional_time_pair_t(moment, oldest),
                                  commodity ? &(*commodity) : NULL);
 
-  DEBUG("history.find", "looking for memoized args: "
+  DEBUG("commodity.price.find", "looking for memoized args: "
         << (moment    ? format_datetime(*moment) : "NONE") << ", "
         << (oldest    ? format_datetime(*oldest) : "NONE") << ", "
         << (commodity ? commodity->symbol()      : "NONE"));
   {
     base_t::memoized_price_map::iterator i = base->price_map.find(*pair);
     if (i != base->price_map.end()) {
-      DEBUG("history.find", "found! returning: "
+      DEBUG("commodity.price.find", "found! returning: "
             << ((*i).second ? (*i).second->price : amount_t(0L)));
       return (*i).second;
     }
