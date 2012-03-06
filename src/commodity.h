@@ -47,6 +47,8 @@
 #ifndef _COMMODITY_H
 #define _COMMODITY_H
 
+#include "expr.h"
+
 namespace ledger {
 
 struct keep_details_t;
@@ -113,6 +115,7 @@ protected:
     optional<string>      note;
     optional<amount_t>    smaller;
     optional<amount_t>    larger;
+    optional<expr_t>      value_expr;
 
     typedef std::pair<optional<datetime_t>,
                       optional<datetime_t> > optional_time_pair_t;
@@ -259,6 +262,13 @@ public:
     base->larger = arg;
   }
 
+  virtual optional<expr_t> value_expr() const {
+    return base->value_expr;
+  }
+  void set_value_expr(const optional<expr_t>& expr = none) {
+    base->value_expr = expr;
+  }
+
   void add_price(const datetime_t& date, const amount_t& price,
                  const bool reflexive = true);
   void remove_price(const datetime_t& date, commodity_t& commodity);
@@ -266,6 +276,10 @@ public:
   void map_prices(function<void(datetime_t, const amount_t&)> fn,
                   const optional<datetime_t>& moment  = none,
                   const optional<datetime_t>& _oldest = none);
+
+  optional<price_point_t>
+  find_price_from_expr(expr_t& expr, const optional<commodity_t&>& commodity,
+                       const datetime_t& moment) const;
 
   optional<price_point_t>
   virtual find_price(const optional<commodity_t&>& commodity = none,

@@ -34,7 +34,6 @@
 #include "amount.h"
 #include "commodity.h"
 #include "expr.h"
-#include "scope.h"
 #include "annotate.h"
 #include "pool.h"
 
@@ -263,24 +262,9 @@ annotated_commodity_t::find_price(const optional<commodity_t&>& commodity,
     DEBUG("commodity.price.find", "target commodity: " << target->symbol());
 #endif
 
-  if (details.value_expr) {
-#if defined(DEBUG_ON)
-    if (SHOW_DEBUG("commodity.price.find")) {
-      ledger::_log_buffer << "valuation expr: ";
-      details.value_expr->dump(ledger::_log_buffer);
-      DEBUG("commodity.price.find", "");
-    }
-#endif
-    call_scope_t call_args(*scope_t::default_scope);
-
-    call_args.push_back(string_value(base_symbol()));
-    call_args.push_back(when);
-    if (commodity)
-      call_args.push_back(string_value(commodity->symbol()));
-
-    return price_point_t(when, const_cast<expr_t&>(*details.value_expr)
-                         .calc(call_args).to_amount());
-  }
+  if (details.value_expr)
+    return find_price_from_expr(const_cast<expr_t&>(*details.value_expr),
+                                commodity, when);
 
   return commodity_t::find_price(commodity, moment, oldest);
 }

@@ -247,6 +247,12 @@ public:
     return *ptr;
   }
 
+  virtual optional<expr_t> value_expr() const {
+    if (details.value_expr)
+      return details.value_expr;
+    return commodity_t::value_expr();
+  }
+
   optional<price_point_t>
   virtual find_price(const optional<commodity_t&>& commodity = none,
                      const optional<datetime_t>&   moment    = none,

@@ -134,6 +134,7 @@ namespace {
 
     void commodity_directive(char * line);
     void commodity_alias_directive(commodity_t& comm, string alias);
+    void commodity_value_directive(commodity_t& comm, string expr_str);
     void commodity_format_directive(commodity_t& comm, string format);
     void commodity_nomarket_directive(commodity_t& comm);
     void commodity_default_directive(commodity_t& comm);
@@ -1018,6 +1019,8 @@ void instance_t::commodity_directive(char * line)
       string keyword(q);
       if (keyword == "alias")
         commodity_alias_directive(*commodity, b);
+      else if (keyword == "value")
+        commodity_value_directive(*commodity, b);
       else if (keyword == "format")
         commodity_format_directive(*commodity, b);
       else if (keyword == "nomarket")
@@ -1034,6 +1037,11 @@ void instance_t::commodity_alias_directive(commodity_t& comm, string alias)
 {
   trim(alias);
   commodity_pool_t::current_pool->alias(alias, comm);
+}
+
+void instance_t::commodity_value_directive(commodity_t& comm, string expr_str)
+{
+  comm.set_value_expr(expr_t(expr_str));
 }
 
 void instance_t::commodity_format_directive(commodity_t&, string format)

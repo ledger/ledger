@@ -35,6 +35,7 @@
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
+#include "scope.h"
 
 namespace ledger {
 
@@ -85,6 +86,28 @@ void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
 }
 
 optional<price_point_t>
+commodity_t::find_price_from_expr(expr_t& expr,
+                                  const optional<commodity_t&>& commodity,
+                                  const datetime_t& moment) const
+{
+#if defined(DEBUG_ON)
+  if (SHOW_DEBUG("commodity.price.find")) {
+    ledger::_log_buffer << "valuation expr: ";
+    expr.dump(ledger::_log_buffer);
+    DEBUG("commodity.price.find", "");
+  }
+#endif
+  call_scope_t call_args(*scope_t::default_scope);
+
+  call_args.push_back(string_value(base_symbol()));
+  call_args.push_back(moment);
+  if (commodity)
+    call_args.push_back(string_value(commodity->symbol()));
+
+  return price_point_t(moment, expr.calc(call_args).to_amount());
+}
+
+optional<price_point_t>
 commodity_t::find_price(const optional<commodity_t&>& commodity,
                         const optional<datetime_t>&   moment,
                         const optional<datetime_t>&   oldest) const
@@ -124,6 +147,9 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     when = *epoch;
   else
     when = CURRENT_TIME();
+
+  if (base->value_expr)
+    return find_price_from_expr(*base->value_expr, commodity, when);
 
   optional<price_point_t> point =
     target ?

@@ -1,0 +1,24 @@
+commodity $
+    value 10 EUR
+
+commodity USD
+    alias FOO
+    value 25 EUR
+
+2012-03-06 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+
+2012-03-08 KFC
+    Expenses:Food            USD 750,00
+    Assets:Cash
+
+2012-03-10 KFC
+    Expenses:Food            USD 750,00
+    Assets:Cash
+
+test reg food -X EUR --now=2012-03-15
+12-Mar-06 KFC                   Expenses:Food               200 EUR      200 EUR
+12-Mar-08 KFC                   Expenses:Food             18750 EUR    18950 EUR
+12-Mar-10 KFC                   Expenses:Food             18750 EUR    37700 EUR
+end test
