@@ -1,0 +1,13 @@
+2012-01-01 Opening Balance
+    Assets:Checking     $100
+    Equity
+
+2012-01-01 Reconciliation
+    [Assets:Checking]    = $100
+
+test balance
+                $100  Assets:Checking
+               $-100  Equity
+--------------------
+                   0
+end test
