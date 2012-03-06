@@ -113,7 +113,7 @@ public:
     return ! str.empty();
   }
 
-  virtual string text() {
+  virtual string text() const throw() {
     return str;
   }
   void set_text(const string& txt) {
