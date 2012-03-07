@@ -779,6 +779,14 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
           journal->register_account(account->fullname(), new_post,
                                     journal->master);
 
+        if (deferred_notes) {
+          foreach (deferred_tag_data_t& data, *deferred_notes) {
+            if (! data.apply_to_post || data.apply_to_post == post)
+              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
+                                   data.overwrite_existing);
+          }
+        }
+
         extend_post(*new_post, *journal);
 
         xact.add_post(new_post);
@@ -786,14 +794,6 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 
         if (new_post->must_balance())
           needs_further_verification = true;
-
-        if (deferred_notes) {
-          foreach (deferred_tag_data_t& data, *deferred_notes) {
-            if (data.apply_to_post == post)
-              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
-                                   data.overwrite_existing);
-          }
-        }
       }
     }
   }
