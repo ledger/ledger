@@ -71,22 +71,22 @@ namespace {
 
   class instance_t : public noncopyable, public scope_t
   {
-
   public:
-    parse_context_stack_t& context_stack;
-    parse_context_t&       context;
-    std::istream&          in;
-    instance_t *           parent;
-
+    parse_context_stack_t&   context_stack;
+    parse_context_t&         context;
+    std::istream&            in;
+    instance_t *             parent;
     std::list<application_t> apply_stack;
 #if defined(TIMELOG_SUPPORT)
-    time_log_t timelog;
+    time_log_t               timelog;
 #endif
 
     instance_t(parse_context_stack_t& _context_stack,
-               parse_context_t& _context, instance_t * _parent = NULL)
+               parse_context_t&       _context,
+               instance_t *           _parent = NULL)
       : context_stack(_context_stack), context(_context),
-        in(*context.stream.get()), parent(_parent), timelog(context) {}
+        in(*context.stream.get()), parent(_parent),
+        timelog(context) {}
 
     virtual string description() {
       return _("textual parser");
