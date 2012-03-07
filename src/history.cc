@@ -67,9 +67,6 @@ void commodity_history_t::add_price(const commodity_t& source,
   if (! result.second) {
     // There is already an entry for this moment, so update it
     (*result.first).second = price;
-  } else {
-    last_reftime = none;        // invalidate the FGraph cache
-    last_oldest  = none;
   }
 }
 
@@ -85,26 +82,20 @@ void commodity_history_t::remove_price(const commodity_t& source,
 
   // jww (2012-03-04): If it fails, should we give a warning?
   prices.erase(date);
-
-  last_reftime = none;          // invalidate the FGraph cache
-  last_oldest  = none;
 }
 
 void commodity_history_t::map_prices(function<void(datetime_t,
                                                    const amount_t&)> fn,
                                      const commodity_t&          source,
                                      const datetime_t&           moment,
-                                     const optional<datetime_t>& _oldest)
+                                     const optional<datetime_t>& oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
-
-  reftime = moment;
-  oldest  = _oldest;
 
   FGraph fg(price_graph,
             recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
             (get(edge_weight, price_graph), pricemap, ratiomap,
-             &reftime, &last_reftime, &oldest, &last_oldest));
+             moment, oldest));
 
   FNameMap namemap(get(vertex_name, fg));
 
@@ -118,7 +109,7 @@ void commodity_history_t::map_prices(function<void(datetime_t,
     foreach (const price_map_t::value_type& pair, prices) {
       const datetime_t& when(pair.first);
 
-      if ((! _oldest || when >= *_oldest) && when <= moment) {
+      if ((! oldest || when >= *oldest) && when <= moment) {
         if (pair.second.commodity() == source) {
           amount_t price(pair.second);
           price.in_place_invert();
@@ -136,17 +127,14 @@ void commodity_history_t::map_prices(function<void(datetime_t,
 optional<price_point_t>
 commodity_history_t::find_price(const commodity_t&          source,
                                 const datetime_t&           moment,
-                                const optional<datetime_t>& _oldest)
+                                const optional<datetime_t>& oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
-
-  reftime = moment;
-  oldest  = _oldest;
 
   FGraph fg(price_graph,
             recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
             (get(edge_weight, price_graph), pricemap, ratiomap,
-             &reftime, &last_reftime, &oldest, &last_oldest));
+             moment, oldest));
 
   FNameMap namemap(get(vertex_name, fg));
 
@@ -188,9 +176,6 @@ commodity_history_t::find_price(const commodity_t&          source,
     DEBUG("history.find", "price is  = " << price.unrounded());
   }
 
-  last_reftime = reftime;       // invalidate the FGraph cache
-  last_oldest  = oldest;
-
   if (price.is_null()) {
     DEBUG("history.find", "there is no final price");
     return none;
@@ -204,18 +189,15 @@ optional<price_point_t>
 commodity_history_t::find_price(const commodity_t&          source,
                                 const commodity_t&          target,
                                 const datetime_t&           moment,
-                                const optional<datetime_t>& _oldest)
+                                const optional<datetime_t>& oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
-  reftime = moment;
-  oldest  = _oldest;
-
   FGraph fg(price_graph,
             recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
             (get(edge_weight, price_graph), pricemap, ratiomap,
-             &reftime, &last_reftime, &oldest, &last_oldest));
+             moment, oldest));
 
   FNameMap namemap(get(vertex_name, fg));
 
@@ -289,9 +271,6 @@ commodity_history_t::find_price(const commodity_t&          source,
     DEBUG("history.find", "last target now = " << last_target->symbol());
   }
 
-  last_reftime = reftime;       // invalidate the FGraph cache
-  last_oldest  = oldest;
-
   if (price.is_null()) {
     DEBUG("history.find", "there is no final price");
     return none;
@@ -321,18 +300,10 @@ void commodity_history_t::print_map(std::ostream& out,
                                     const optional<datetime_t>& moment)
 {
   if (moment) {
-    reftime = *moment;
-    oldest  = none;
-
     FGraph fg(price_graph,
               recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
-              (get(edge_weight, price_graph), pricemap, ratiomap,
-               &reftime, &last_reftime, &oldest, &last_oldest));
-
+              (get(edge_weight, price_graph), pricemap, ratiomap, *moment));
     write_graphviz(out, fg, label_writer<FNameMap>(get(vertex_name, fg)));
-
-    last_reftime = reftime;
-    last_oldest  = none;
   } else {
     write_graphviz(out, price_graph,
                    label_writer<NameMap>(get(vertex_name, price_graph)));
