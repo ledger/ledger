@@ -353,8 +353,8 @@ inline bool category_matches(const char * cat) {
         boost::make_u32regex(_log_category->c_str(),
                              boost::regex::perl | boost::regex::icase);
 #else
-        boost::make_regex(_log_category->c_str(),
-                          boost::regex::perl | boost::regex::icase);
+        boost::regex(_log_category->c_str(),
+                     boost::regex::perl | boost::regex::icase);
 #endif
     }
 #if defined(HAVE_BOOST_REGEX_UNICODE)
