@@ -240,6 +240,15 @@ namespace {
       return post.amount;
   }
 
+  value_t get_price(post_t& post) {
+    if (post.amount.is_null())
+      return 0L;
+    if (post.amount.has_annotation() && post.amount.annotation().price)
+      return *post.amount.price();
+    else
+      return get_cost(post);
+  }
+
   value_t get_total(post_t& post) {
     if (post.xdata_ && ! post.xdata_->total.is_null())
       return post.xdata_->total;
@@ -475,6 +484,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     else if (name == "primary")
       return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
+    else if (name == "price")
+      return WRAP_FUNCTOR(get_wrapper<&get_price>);
     else if (name == "parent")
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
     break;
