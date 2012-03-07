@@ -775,9 +775,10 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
         new_post->add_flags(ITEM_GENERATED);
+        new_post->account =
+          journal->register_account(account->fullname(), new_post,
+                                    journal->master);
 
-        // jww (2012-02-27): Do account directive assertions get applied
-        // to postings generated from automated transactions?
         xact.add_post(new_post);
         new_post->account->add_post(new_post);
 
