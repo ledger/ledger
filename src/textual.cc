@@ -107,10 +107,12 @@ namespace {
       return (in.good() && ! in.eof() &&
               (in.peek() == ' ' || in.peek() == '\t'));
     }
+#if defined(HAVE_BOOST_PYTHON)
     bool peek_blank_line() {
       return (in.good() && ! in.eof() &&
               (in.peek() == '\n' || in.peek() == '\r'));
     }
+#endif
 
     void read_next_directive();
 
@@ -943,9 +945,11 @@ void instance_t::account_alias_directive(account_t * account, string alias)
   // (account), add a reference to the account in the `account_aliases'
   // map, which is used by the post parser to resolve alias references.
   trim(alias);
-  std::pair<accounts_map::iterator, bool> result
-    = context.journal
-    ->account_aliases.insert(accounts_map::value_type(alias, account));
+#if defined(DEBUG_ON)
+  std::pair<accounts_map::iterator, bool> result =
+#endif
+    context.journal->account_aliases.insert
+      (accounts_map::value_type(alias, account));
   assert(result.second);
 }
 

@@ -120,11 +120,13 @@ namespace {
   {
     char * buf = NULL;
     try {
+#if defined(DEBUG_ON)
       IF_DEBUG("amount.convert") {
         char * tbuf = mpq_get_str(NULL, 10, quant);
         DEBUG("amount.convert", "Rational to convert = " << tbuf);
         std::free(tbuf);
       }
+#endif
 
       // Convert the rational number to a floating-point, extending the
       // floating-point to a large enough size to get a precise answer.

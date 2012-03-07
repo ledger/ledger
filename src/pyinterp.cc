@@ -535,6 +535,7 @@ namespace {
     case value_t::ANY:          // a pointer to an arbitrary object
       return object(val);
     }
+    return object();
   }
 }
 

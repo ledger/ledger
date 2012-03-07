@@ -336,7 +336,9 @@ bool xact_base_t::finalize()
                        amount_t> sorted_amounts_map;
       sorted_amounts_map samp;
       foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+#if defined(DEBUG_ON)
         std::pair<sorted_amounts_map::iterator, bool> result =
+#endif
           samp.insert(sorted_amounts_map::value_type
                       (sorted_amounts_map::key_type
                        (pair.first->symbol(),

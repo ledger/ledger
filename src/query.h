@@ -186,6 +186,7 @@ public:
           assert(false);
           return "<UNKNOWN>";
         }
+        return "<ERROR>";
       }
 
       void unexpected();

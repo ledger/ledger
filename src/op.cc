@@ -38,6 +38,16 @@
 
 namespace ledger {
 
+void intrusive_ptr_add_ref(const expr_t::op_t * op)
+{
+  op->acquire();
+}
+
+void intrusive_ptr_release(const expr_t::op_t * op)
+{
+  op->release();
+}
+
 namespace {
   value_t split_cons_expr(expr_t::ptr_op_t op)
   {

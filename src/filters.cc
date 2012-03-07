@@ -833,10 +833,17 @@ void subtotal_posts::report_subtotal(const char *                     spec_fmt,
     foreach (post_t * post, component_posts) {
       date_t date       = post->date();
       date_t value_date = post->value_date();
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
       if (! range_start || date < *range_start)
         range_start = date;
       if (! range_finish || value_date > *range_finish)
         range_finish = value_date;
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+#pragma GCC diagnostic pop
+#endif
     }
   }
   component_posts.clear();
@@ -880,8 +887,10 @@ void subtotal_posts::operator()(post_t& post)
   if (i == values.end()) {
     value_t temp;
     post.add_to_value(temp, amount_expr);
-    std::pair<values_map::iterator, bool> result
-      = values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
+#if defined(DEBUG_ON)
+    std::pair<values_map::iterator, bool> result =
+#endif
+      values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
     assert(result.second);
   } else {
     post.add_to_value((*i).second.value, amount_expr);

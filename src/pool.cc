@@ -70,9 +70,11 @@ commodity_t * commodity_pool_t::create(const string& symbol)
   DEBUG("pool.commodities",
         "Creating commodity '" << commodity->symbol() << "'");
 
-  std::pair<commodities_map::iterator, bool> result
-    = commodities.insert(commodities_map::value_type
-                         (commodity->base_symbol(), commodity));
+#if defined(DEBUG_ON)
+  std::pair<commodities_map::iterator, bool> result =
+#endif
+    commodities.insert(commodities_map::value_type
+                       (commodity->base_symbol(), commodity));
   assert(result.second);
 
   commodity_price_history.add_commodity(*commodity.get());
@@ -211,10 +213,12 @@ commodity_pool_t::create(commodity_t&        comm,
         << "symbol " << commodity->symbol()
         << std::endl << details);
 
-  std::pair<annotated_commodities_map::iterator, bool> result
-    = annotated_commodities.insert(annotated_commodities_map::value_type
-                                   (annotated_commodities_map::key_type
-                                    (comm.symbol(), details), commodity));
+#if defined(DEBUG_ON)
+  std::pair<annotated_commodities_map::iterator, bool> result =
+#endif
+    annotated_commodities.insert(annotated_commodities_map::value_type
+                                 (annotated_commodities_map::key_type
+                                  (comm.symbol(), details), commodity));
   assert(result.second);
 
   return commodity.get();

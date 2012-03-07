@@ -260,12 +260,8 @@ private:
       checked_delete(this);
   }
 
-  friend inline void intrusive_ptr_add_ref(const op_t * op) {
-    op->acquire();
-  }
-  friend inline void intrusive_ptr_release(const op_t * op) {
-    op->release();
-  }
+  friend void intrusive_ptr_add_ref(const op_t * op);
+  friend void intrusive_ptr_release(const op_t * op);
 
   ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
     ptr_op_t node(new_node(kind, _left, _right));

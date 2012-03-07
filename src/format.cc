@@ -221,8 +221,10 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
                          static_cast<int>(current->max_width) : -1);
               else if (keyword == "left")
                 expr << (current->has_flags(ELEMENT_ALIGN_LEFT) ? "false" : "true");
+#if defined(DEBUG_ON)
               else
                 assert("Unrecognized format substitution keyword" == NULL);
+#endif
             } else {
               expr << *ptr++;
             }
