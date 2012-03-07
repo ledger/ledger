@@ -136,6 +136,17 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+class empty_scope_t : public scope_t
+{
+public:
+  virtual string description() {
+    return _("<empty>");
+  }
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) {
+    return NULL;
+  }
+};
+
 class child_scope_t : public noncopyable, public scope_t
 {
 public:
