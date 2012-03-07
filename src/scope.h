@@ -241,6 +241,8 @@ private:
 template <typename T>
 T * search_scope(scope_t * ptr, bool prefer_direct_parents = false)
 {
+  DEBUG("scope.search", "Searching scope " << ptr->description());
+
   if (T * sought = dynamic_cast<T *>(ptr))
     return sought;
 
