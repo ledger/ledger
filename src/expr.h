@@ -194,6 +194,7 @@ public:
   string term;
   string base_expr;
   string merge_operator;
+
   std::list<string> exprs;
 
   merged_expr_t(const string& _term, const string& expr,
