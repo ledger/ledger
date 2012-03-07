@@ -122,14 +122,21 @@ account_t * journal_t::register_account(const string& name, post_t * post,
 {
   account_t * result = NULL;
 
+  // If there any account aliases, substitute before creating an account
+  // object.
   if (account_aliases.size() > 0) {
     accounts_map::const_iterator i = account_aliases.find(name);
     if (i != account_aliases.end())
       result = (*i).second;
   }
+
+  // Create the account object and associate it with the journal; this
+  // is registering the account.
   if (! result)
     result = master_account->find_account(name);
 
+  // If the account name being registered is "Unknown", check whether
+  // the payee indicates an account that should be used.
   if (result->name == _("Unknown")) {
     foreach (account_mapping_t& value, payees_for_unknown_accounts) {
       if (value.first.match(post->xact->payee)) {
@@ -139,6 +146,8 @@ account_t * journal_t::register_account(const string& name, post_t * post,
     }
   }
 
+  // Now that we have an account, make certain that the account is
+  // "known", if the user has requested validation of that fact.
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     if (! result->has_flags(ACCOUNT_KNOWN)) {
       if (! post) {
