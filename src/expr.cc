@@ -163,6 +163,47 @@ void expr_t::dump(std::ostream& out) const
   if (ptr) ptr->dump(out, 0);
 }
 
+bool merged_expr_t::check_for_single_identifier(const string& expr)
+{
+  bool single_identifier = true;
+  for (const char * p = expr.c_str(); *p; ++p)
+    if (! std::isalnum(*p) || *p == '_') {
+      single_identifier = false;
+      break;
+    }
+
+  if (single_identifier) {
+    set_base_expr(expr);
+    exprs.clear();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void merged_expr_t::compile(scope_t& scope)
+{
+  if (exprs.empty()) {
+    parse(base_expr);
+  } else {
+    std::ostringstream buf;
+
+    buf << "__tmp_" << term << "=(" << term << "=(" << base_expr << ")";
+    foreach (const string& expr, exprs) {
+      if (merge_operator == ";")
+        buf << merge_operator << term << "=" << expr;
+      else
+        buf << merge_operator << "(" << expr << ")";
+    }
+    buf << ";" << term << ");__tmp_" << term;
+
+    DEBUG("expr.merged.compile", "Compiled expr: " << buf.str());
+    parse(buf.str());
+  }
+
+  expr_t::compile(scope);
+}
+
 value_t source_command(call_scope_t& args)
 {
   std::istream * in = NULL;

@@ -172,8 +172,68 @@ inline value_t expr_value(expr_t::ptr_op_t op) {
   return temp;
 }
 
-class call_scope_t;
+// A merged expression allows one to set an expression term, "foo", and
+// a base expression, "bar", and then merge in later expressions that
+// utilize foo.  For example:
+//
+//    foo: bar
+//  merge: foo * 10
+//  merge: foo + 20
+//
+// When this expression is finally compiled, the base and merged
+// elements are written into this:
+//
+//   __tmp=(foo=bar; foo=foo*10; foo=foo+20);__tmp
+//
+// This allows users to select flags like -O, -B or -I at any time, and
+// also combine flags such as -V and -A.
 
+class merged_expr_t : public expr_t
+{
+public:
+  string term;
+  string base_expr;
+  string merge_operator;
+  std::list<string> exprs;
+
+  merged_expr_t(const string& _term, const string& expr,
+                const string& merge_op = ";")
+    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
+    TRACE_CTOR(merged_expr_t, "string, string, string");
+  }
+
+  virtual ~merged_expr_t() {
+    TRACE_DTOR(merged_expr_t);
+  }
+
+  void set_term(const string& _term) {
+    term = _term;
+  }
+  void set_base_expr(const string& expr) {
+    base_expr = expr;
+  }
+  void set_merge_operator(const string& merge_op) {
+    merge_operator = merge_op;
+  }
+
+  bool check_for_single_identifier(const string& expr);
+
+  void prepend(const string& expr) {
+    if (! check_for_single_identifier(expr))
+      exprs.push_front(expr);
+  }
+  void append(const string& expr) {
+    if (! check_for_single_identifier(expr))
+      exprs.push_back(expr);
+  }
+  void remove(const string& expr) {
+    exprs.remove(expr);
+  }
+
+  virtual void compile(scope_t& scope);
+};
+
+class call_scope_t;
 value_t source_command(call_scope_t& scope);
 
 } // namespace ledger
