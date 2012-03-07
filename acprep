@@ -36,7 +36,7 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
+search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
 
 class BoostInfo(object):
     log          = None
@@ -52,21 +52,6 @@ class BoostInfo(object):
 
     def configure(self, suffix = None, file_suffix = None, home_path = None,
                   include_path = None, library_path = None):
-        path = library_path or self.library_path
-        if not isabs(path):
-            path = join(home_path or self.home_path, path)
-        if not exists(path) or not isdir(path) or \
-           not self.check_for_boost_regex_lib(path, suffix or self.suffix,
-                                              file_suffix or self.file_suffix):
-            return False
-
-        path = include_path or self.include_path
-        if not isabs(path):
-            path = join(home_path or self.home_path, path)
-        if not exists(path) or not isdir(path) or \
-           not self.check_for_boost_regex_hpp(path):
-            return False
-
         self.log.debug('Configuring Boost details')
         if suffix:
             self.log.debug('Setting Boost suffix to => ' + suffix)
@@ -83,6 +68,21 @@ class BoostInfo(object):
         if library_path:
             self.log.debug('Setting Boost lib directory to => ' + library_path)
             self.library_path = library_path
+
+        path = library_path or self.library_path
+        if not isabs(path):
+            path = join(home_path or self.home_path, path)
+        if not exists(path) or not isdir(path) or \
+           not self.check_for_boost_regex_lib(path, suffix or self.suffix,
+                                              file_suffix or self.file_suffix):
+            return False
+
+        path = include_path or self.include_path
+        if not isabs(path):
+            path = join(home_path or self.home_path, path)
+        if not exists(path) or not isdir(path) or \
+           not self.check_for_boost_regex_hpp(path):
+            return False
 
         self.configured = True
 
@@ -254,8 +254,8 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_48_0"
-    boost_major   = "1_48"
+    boost_version = "1_49_0"
+    boost_major   = "1_49"
 
     options = {
         'debug':    False,
@@ -1305,15 +1305,7 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
-            if self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s-%s' % \
-                    (self.boost_version, self.boost_inc_ident),
-                suffix       = '-%s-sd-%s' % \
-                    (self.boost_lib_ident, self.boost_major),
-                file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_major):
-                pass
-            elif self.boost_info.configure(
+            if not self.options.use_clang and self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-d-%s' % \
@@ -1326,14 +1318,6 @@ class PrepareBuild(CommandLineApp):
 
         else:
             if self.boost_info.configure():
-                pass
-            elif self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s-%s' % \
-                    (self.boost_version, self.boost_inc_ident),
-                suffix       = '-%s-s-%s' % \
-                    (self.boost_lib_ident, self.boost_major),
-                file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_major):
                 pass
             elif self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
