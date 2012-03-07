@@ -144,8 +144,7 @@ public:
   explicit child_scope_t() : parent(NULL) {
     TRACE_CTOR(child_scope_t, "");
   }
-  explicit child_scope_t(scope_t& _parent)
-    : parent(&_parent) {
+  explicit child_scope_t(scope_t& _parent) : parent(&_parent) {
     TRACE_CTOR(child_scope_t, "scope_t&");
   }
   virtual ~child_scope_t() {
@@ -276,7 +275,7 @@ class symbol_scope_t : public child_scope_t
   optional<symbol_map> symbols;
 
 public:
-  explicit symbol_scope_t() {
+  explicit symbol_scope_t() : child_scope_t() {
     TRACE_CTOR(symbol_scope_t, "");
   }
   explicit symbol_scope_t(scope_t& _parent) : child_scope_t(_parent) {
@@ -388,8 +387,7 @@ public:
     : context_scope_t(_parent, _parent.type_context(),
                       _parent.type_required()),
       ptr(NULL), locus(_locus), depth(_depth) {
-    TRACE_CTOR(call_scope_t,
-               "scope_t&, value_t::type_t, bool, expr_t::ptr_op_t *, int");
+    TRACE_CTOR(call_scope_t, "scope_t&, expr_t::ptr_op_t *, const int");
   }
   virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);

@@ -82,6 +82,7 @@ public:
   void pop_report() {
     assert(! report_stack.empty());
     report_stack.pop_front();
+
     // There should always be the "default report" waiting on the stack.
     assert(! report_stack.empty());
     scope_t::default_scope = &report();

@@ -53,8 +53,8 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
     assert(i != symbols->end());
     symbols->erase(i);
 
-    result = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def),
-                                                    def));
+    result = symbols->insert(symbol_map::value_type
+                             (symbol_t(kind, name, def), def));
     if (! result.second)
       throw_(compile_error,
              _("Redefinition of '%1' in the same scope") << name);

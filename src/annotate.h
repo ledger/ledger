@@ -97,7 +97,6 @@ struct annotation_t : public supports_flags<>,
   }
 
   void parse(std::istream& in);
-
   void print(std::ostream& out, bool keep_base = false,
              bool no_computed_annotations = false) const;
 
