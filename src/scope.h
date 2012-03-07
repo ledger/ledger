@@ -404,10 +404,6 @@ public:
     TRACE_DTOR(call_scope_t);
   }
 
-  virtual string description() {
-    return context_scope_t::description();
-  }
-
   void set_args(const value_t& _args) {
     args = _args;
   }
