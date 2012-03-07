@@ -322,10 +322,12 @@ bool journal_t::add_xact(xact_t * xact)
   }
 
   extend_xact(xact);
-
   check_all_metadata(*this, xact);
-  foreach (post_t * post, xact->posts)
+
+  foreach (post_t * post, xact->posts) {
+    extend_post(*post, *this);
     check_all_metadata(*this, post);
+  }
 
   // If a transaction with this UUID has already been seen, simply do
   // not add this one to the journal.  However, all automated checks

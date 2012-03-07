@@ -127,16 +127,17 @@ public:
   bool                  fixed_payees;
   bool                  fixed_commodities;
   bool                  fixed_metadata;
+  bool                  was_loaded;
+  bool                  force_checking;
+  bool                  check_payees;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
   accounts_map          account_aliases;
   account_mappings_t    payees_for_unknown_accounts;
   checksum_map_t        checksum_map;
   tag_check_exprs_map   tag_check_exprs;
+  optional<expr_t>      value_expr;
   parse_context_t *     current_context;
-  bool                  was_loaded;
-  bool                  force_checking;
-  bool                  check_payees;
 
   enum checking_style_t {
     CHECK_PERMISSIVE,

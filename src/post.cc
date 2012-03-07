@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "format.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -636,6 +637,43 @@ void post_t::set_reported_account(account_t * acct)
 {
   xdata().account = acct;
   acct->xdata().reported_posts.push_back(this);
+}
+
+void extend_post(post_t& post, journal_t& journal)
+{
+  commodity_t& comm(post.amount.commodity());
+
+  annotation_t * details =
+    (comm.has_annotation() ?
+     &as_annotated_commodity(comm).details : NULL);
+
+  if (! details || ! details->value_expr) {
+    optional<expr_t> value_expr;
+
+    if (optional<value_t> data = post.get_tag(_("Value")))
+      value_expr = expr_t(data->to_string());
+
+    if (! value_expr)
+      value_expr = post.account->value_expr;
+
+    if (! value_expr)
+      value_expr = post.amount.commodity().value_expr();
+
+    if (! value_expr)
+      value_expr = journal.value_expr;
+
+    if (value_expr) {
+      if (! details) {
+        annotation_t new_details;
+        new_details.value_expr = value_expr;
+        commodity_t * new_comm =
+          commodity_pool_t::current_pool->find_or_create(comm, new_details);
+        post.amount.set_commodity(*new_comm);
+      } else {
+        details->value_expr = value_expr;
+      }
+    }
+  }
 }
 
 void to_xml(std::ostream& out, const post_t& post)

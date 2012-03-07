@@ -126,6 +126,7 @@ namespace {
     void account_directive(char * line);
     void account_alias_directive(account_t * account, string alias);
     void account_payee_directive(account_t * account, string payee);
+    void account_value_directive(account_t * account, string expr_str);
     void account_default_directive(account_t * account);
 
     void default_account_directive(char * line);
@@ -166,6 +167,7 @@ namespace {
     void eval_directive(char * line);
     void assert_directive(char * line);
     void check_directive(char * line);
+    void value_directive(char * line);
 
     void import_directive(char * line);
     void python_directive(char * line);
@@ -887,6 +889,9 @@ void instance_t::account_directive(char * line)
     else if (keyword == "payee") {
       account_payee_directive(account, b);
     }
+    else if (keyword == "value") {
+      account_value_directive(account, b);
+    }
     else if (keyword == "default") {
       account_default_directive(account);
     }
@@ -972,6 +977,11 @@ void instance_t::account_payee_directive(account_t * account, string payee)
 void instance_t::account_default_directive(account_t * account)
 {
   context.journal->bucket = account;
+}
+
+void instance_t::account_value_directive(account_t * account, string expr_str)
+{
+  account->value_expr = expr_t(expr_str);
 }
 
 void instance_t::payee_directive(char * line)
@@ -1106,6 +1116,11 @@ void instance_t::check_directive(char * line)
   expr_t expr(line);
   if (! expr.calc(*context.scope).to_boolean())
     context.warning(STR(_("Check failed: %1") << line));
+}
+
+void instance_t::value_directive(char * line)
+{
+  context.journal->value_expr = expr_t(line);
 }
 
 void instance_t::comment_directive(char * line)
@@ -1285,6 +1300,13 @@ bool instance_t::general_directive(char * line)
     }
     else if (std::strcmp(p, "test") == 0) {
       comment_directive(arg);
+      return true;
+    }
+    break;
+
+  case 'v':
+    if (std::strcmp(p, "value") == 0) {
+      value_directive(arg);
       return true;
     }
     break;

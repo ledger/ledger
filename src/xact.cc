@@ -779,6 +779,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
           journal->register_account(account->fullname(), new_post,
                                     journal->master);
 
+        extend_post(*new_post, *journal);
+
         xact.add_post(new_post);
         new_post->account->add_post(new_post);
 

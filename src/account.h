@@ -67,6 +67,7 @@ public:
   unsigned short   depth;
   accounts_map     accounts;
   posts_list       posts;
+  optional<expr_t> value_expr;
 
   mutable string   _fullname;
 
