@@ -115,7 +115,6 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   predicate_t            only_predicate;
   display_filter_posts * display_filter = NULL;
 
-  assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
 
