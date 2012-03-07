@@ -86,7 +86,8 @@ namespace {
   }
 }
 
-expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
+expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
+                                       scope_t * param_scope)
 {
   scope_t *        scope_ptr = &scope;
   expr_t::ptr_op_t result;
@@ -103,7 +104,12 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
 
   if (is_ident()) {
     DEBUG("expr.compile", "Lookup: " << as_ident() << " in " << scope_ptr);
-    if (ptr_op_t def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident())) {
+    ptr_op_t def;
+    if (param_scope)
+      def = param_scope->lookup(symbol_t::FUNCTION, as_ident());
+    if (! def)
+      def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
+    if (def) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
@@ -133,7 +139,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
   else if (kind == O_DEFINE) {
     switch (left()->kind) {
     case IDENT: {
-      ptr_op_t node(right()->compile(*scope_ptr, depth + 1));
+      ptr_op_t node(right()->compile(*scope_ptr, depth + 1, param_scope));
 
       DEBUG("expr.compile",
             "Defining " << left()->as_ident() << " in " << scope_ptr);
@@ -146,12 +152,28 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
         ptr_op_t node(new op_t(op_t::O_LAMBDA));
         node->set_left(left()->right());
         node->set_right(right());
-        node = node->compile(*scope_ptr, depth + 1);
+
+        empty_scope_t empty_scope;
+        symbol_scope_t params(param_scope ? *param_scope : empty_scope);
+        for (ptr_op_t sym = node->left();
+             sym;
+             sym = sym->has_right() ? sym->right() : NULL) {
+          ptr_op_t varname = sym->kind == O_CONS ? sym->left() : sym;
+          if (! varname->is_ident()) {
+            throw_(calc_error, _("Invalid function definition"));
+          } else {
+            DEBUG("expr.compile",
+                  "Defining function parameter " << varname->as_ident());
+            params.define(symbol_t::FUNCTION, varname->as_ident(),
+                          new op_t(op_t::PLUG));
+          }
+        }
+
+        node = node->compile(*scope_ptr, depth + 1, &params);
 
         DEBUG("expr.compile",
               "Defining " << left()->left()->as_ident() << " in " << scope_ptr);
-        scope_ptr->define(symbol_t::FUNCTION, left()->left()->as_ident(),
-                          node);
+        scope_ptr->define(symbol_t::FUNCTION, left()->left()->as_ident(), node);
         break;
       }
       // fall through...
@@ -163,10 +185,10 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth)
   }
 
   if (! result) {
-    ptr_op_t lhs(left()->compile(*scope_ptr, depth + 1));
+    ptr_op_t lhs(left()->compile(*scope_ptr, depth + 1, param_scope));
     ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
                  (kind == O_LOOKUP ? right() :
-                  right()->compile(*scope_ptr, depth + 1)) : NULL);
+                  right()->compile(*scope_ptr, depth + 1, param_scope)) : NULL);
 
     if (lhs == left() && (! rhs || rhs == right())) {
       result = this;
@@ -220,7 +242,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     ptr_op_t definition = left();
     // If no definition was pre-compiled for this identifier, look it up
     // in the current scope.
-    if (! definition) {
+    if (! definition || definition->kind == PLUG) {
       DEBUG("scope.symbols", "Looking for IDENT '" << as_ident() << "'");
       definition = scope.lookup(symbol_t::FUNCTION, as_ident());
     }
@@ -308,7 +330,8 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     call_scope_t&  call_args(find_scope<call_scope_t>(scope, true));
     std::size_t    args_count(call_args.size());
     std::size_t    args_index(0);
-    symbol_scope_t call_scope(call_args);
+    empty_scope_t  empty_scope;
+    symbol_scope_t args_scope(empty_scope);
 
     for (ptr_op_t sym = left();
          sym;
@@ -318,13 +341,15 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
         throw_(calc_error, _("Invalid function definition"));
       }
       else if (args_index == args_count) {
-        call_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+        DEBUG("expr.compile", "Defining function argument as null: "
+              << varname->as_ident());
+        args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
                           wrap_value(NULL_VALUE));
       }
       else {
-        DEBUG("expr.compile",
-              "Defining function parameter " << varname->as_ident());
-        call_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+        DEBUG("expr.compile", "Defining function argument from call_args: "
+              << varname->as_ident());
+        args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
                           wrap_value(call_args[args_index++]));
       }
     }
@@ -334,7 +359,13 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
              _("Too few arguments in function call (saw %1, wanted %2)")
              << args_count << args_index);
 
-    result = right()->calc(call_scope, locus, depth + 1);
+    if (right()->is_scope()) {
+      bind_scope_t outer_scope(scope, *right()->as_scope());
+      bind_scope_t bound_scope(outer_scope, args_scope);
+      result = right()->left()->calc(bound_scope, locus, depth + 1);
+    } else {
+      result = right()->calc(args_scope, locus, depth + 1);
+    }
     break;
   }
 
@@ -758,6 +789,10 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
     out << " ";
 
   switch (kind) {
+  case PLUG:
+    out << "PLUG";
+    break;
+
   case VALUE:
     out << "VALUE: ";
     as_value().dump(out);

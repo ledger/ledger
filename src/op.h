@@ -69,6 +69,7 @@ private:
 public:
   enum kind_t {
     // Constants
+    PLUG,
     VALUE,
     IDENT,
 
@@ -274,7 +275,8 @@ public:
   static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
                            ptr_op_t _right = NULL);
 
-  ptr_op_t compile(scope_t& scope, const int depth = 0);
+  ptr_op_t compile(scope_t& scope, const int depth = 0,
+                   scope_t * param_scope = NULL);
   value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
                 const int depth = 0);
 
