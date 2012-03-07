@@ -89,8 +89,9 @@ namespace {
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
                                        scope_t * param_scope)
 {
-  scope_t *        scope_ptr = &scope;
-  expr_t::ptr_op_t result;
+  scope_t *           scope_ptr = &scope;
+  unique_ptr<scope_t> bound_scope;
+  expr_t::ptr_op_t    result;
 
 #if defined(DEBUG_ON)
   if (SHOW_DEBUG("expr.compile")) {
@@ -129,9 +130,10 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
     }
   }
   else if (is_scope()) {
-    shared_ptr<scope_t> subscope(new symbol_scope_t(scope));
+    shared_ptr<scope_t> subscope(new symbol_scope_t(*scope_t::empty_scope));
     set_scope(subscope);
-    scope_ptr = subscope.get();
+    bound_scope.reset(new bind_scope_t(*scope_ptr, *subscope.get()));
+    scope_ptr = bound_scope.get();
   }
   else if (kind < TERMINALS) {
     result = this;
@@ -153,8 +155,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
         node->set_left(left()->right());
         node->set_right(right());
 
-        empty_scope_t empty_scope;
-        symbol_scope_t params(param_scope ? *param_scope : empty_scope);
+        symbol_scope_t params(param_scope ?
+                              *param_scope : *scope_t::empty_scope);
         for (ptr_op_t sym = node->left();
              sym;
              sym = sym->has_right() ? sym->right() : NULL) {
@@ -330,8 +332,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     call_scope_t&  call_args(find_scope<call_scope_t>(scope, true));
     std::size_t    args_count(call_args.size());
     std::size_t    args_index(0);
-    empty_scope_t  empty_scope;
-    symbol_scope_t args_scope(empty_scope);
+    symbol_scope_t args_scope(*scope_t::empty_scope);
 
     for (ptr_op_t sym = left();
          sym;

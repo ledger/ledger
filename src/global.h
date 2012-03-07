@@ -50,6 +50,7 @@ class global_scope_t : public noncopyable, public scope_t
 {
   shared_ptr<session_t> session_ptr;
   ptr_list<report_t>    report_stack;
+  empty_scope_t         empty_scope;
 
 public:
   global_scope_t(char ** envp);

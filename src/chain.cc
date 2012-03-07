@@ -118,6 +118,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
 
+  report.HANDLER(total_).expr.set_context(&report);
+  report.HANDLER(display_amount_).expr.set_context(&report);
+  report.HANDLER(display_total_).expr.set_context(&report);
+
   if (! for_accounts_report) {
     // Make sure only forecast postings which match are allowed through
     if (report.HANDLED(forecast_while_)) {

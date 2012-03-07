@@ -99,10 +99,13 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+class empty_scope_t;
+
 class scope_t
 {
 public:
-  static scope_t * default_scope;
+  static scope_t *       default_scope;
+  static empty_scope_t * empty_scope;
 
   explicit scope_t() {
     TRACE_CTOR(scope_t, "");

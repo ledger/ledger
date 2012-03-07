@@ -366,12 +366,9 @@ public:
 
   OPTION__
   (report_t, amount_, // -t
-   expr_t expr;
-   CTOR(report_t, amount_) {
-     set_expr(none, "amount");
-   }
+   DECL1(report_t, amount_, merged_expr_t, expr, ("amount_expr", "amount")) {}
    void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
+     expr.append(str);
      on(whence, str);
    }
    DO_(args) {
@@ -384,7 +381,7 @@ public:
 
   OPTION_(report_t, average, DO() { // -A
       parent->HANDLER(display_total_)
-        .set_expr(string("--average"), "count>0?(total_expr/count):0");
+        .set_expr(string("--average"), "count>0?(display_total/count):0");
     });
 
   OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
@@ -405,7 +402,7 @@ public:
 
   OPTION_(report_t, basis, DO() { // -B
       parent->HANDLER(revalued).on_only(string("--basis"));
-      parent->HANDLER(amount_).set_expr(string("--basis"), "rounded(cost)");
+      parent->HANDLER(amount_).expr.set_base_expr("rounded(cost)");
     });
 
   OPTION_(report_t, begin_, DO_(args) { // -b
@@ -438,20 +435,20 @@ public:
 
   OPTION__(report_t, budget_format_, CTOR(report_t, budget_format_) {
       on(none,
-         "%(justify(scrub(get_at(total_expr, 0)), 12, -1, true, color))"
-         " %(justify(-scrub(get_at(total_expr, 1)), 12, "
+         "%(justify(scrub(get_at(display_total, 0)), 12, -1, true, color))"
+         " %(justify(-scrub(get_at(display_total, 1)), 12, "
          "           12 + 1 + 12, true, color))"
-         " %(justify(scrub(get_at(total_expr, 1) + "
-         "                 get_at(total_expr, 0)), 12, "
+         " %(justify(scrub(get_at(display_total, 1) + "
+         "                 get_at(display_total, 0)), 12, "
          "           12 + 1 + 12 + 1 + 12, true, color))"
          " %(ansify_if("
-         "   justify((get_at(total_expr, 1) ? "
-         "            (100% * scrub(get_at(total_expr, 0))) / "
-         "             -scrub(get_at(total_expr, 1)) : 0), "
+         "   justify((get_at(display_total, 1) ? "
+         "            (100% * scrub(get_at(display_total, 0))) / "
+         "             -scrub(get_at(display_total, 1)) : 0), "
          "           5, -1, true, false),"
-         "   magenta if (color and get_at(total_expr, 1) and "
-         "               (abs(quantity(scrub(get_at(total_expr, 0))) / "
-         "                    quantity(scrub(get_at(total_expr, 1)))) >= 1))))"
+         "   magenta if (color and get_at(display_total, 1) and "
+         "               (abs(quantity(scrub(get_at(display_total, 0))) / "
+         "                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
          "  %(!options.flat ? depth_spacer : \"\")"
          "%-(ansify_if(partial_account(options.flat), blue if color))\n"
          "%/%$1 %$2 %$3 %$4\n%/"
@@ -467,8 +464,8 @@ public:
 
   OPTION__(report_t, cleared_format_, CTOR(report_t, cleared_format_) {
       on(none,
-         "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
-         " true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
+         "%(justify(scrub(get_at(display_total, 0)), 16, 16 + prepend_width, "
+         " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
          " 36 + prepend_width, true, color))"
          "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
          "    %(!options.flat ? depth_spacer : \"\")"
@@ -524,7 +521,7 @@ public:
 
   OPTION_(report_t, deviation, DO() {
       parent->HANDLER(display_total_)
-        .set_expr(string("--deviation"), "amount_expr-total_expr/count");
+        .set_expr(string("--deviation"), "display_amount-display_total");
     });
 
   OPTION__
@@ -541,12 +538,10 @@ public:
 
   OPTION__
   (report_t, display_amount_,
-   expr_t expr;
-   CTOR(report_t, display_amount_) {
-     set_expr(none, "amount_expr");
-   }
+   DECL1(report_t, display_amount_, merged_expr_t, expr,
+         ("display_amount", "amount_expr")) {}
    void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
+     expr.append(str);
      on(whence, str);
    }
    DO_(args) {
@@ -555,12 +550,10 @@ public:
 
   OPTION__
   (report_t, display_total_,
-   expr_t expr;
-   CTOR(report_t, display_total_) {
-     set_expr(none, "total_expr");
-   }
+   DECL1(report_t, display_total_, merged_expr_t, expr,
+         ("display_total", "total_expr")) {}
    void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
+     expr.append(str);
      on(whence, str);
    }
    DO_(args) {
@@ -608,7 +601,10 @@ public:
 
   OPTION_(report_t, gain, DO() { // -G
       parent->HANDLER(revalued).on_only(string("--gain"));
-      parent->HANDLER(amount_).set_expr(string("--gain"), "(amount, cost)");
+
+      parent->HANDLER(amount_).expr.set_base_expr("(amount, cost)");
+      parent->HANDLER(total_).expr.set_base_expr("total");
+
       // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.
       parent->HANDLER(display_amount_)
@@ -676,10 +672,10 @@ public:
       parent->HANDLER(revalued).on_only(string("--market"));
       parent->HANDLER(display_amount_)
         .set_expr(string("--market"),
-                  "market(amount_expr, value_date, exchange)");
+                  "market(display_amount, value_date, exchange)");
       parent->HANDLER(display_total_)
         .set_expr(string("--market"),
-                  "market(total_expr, value_date, exchange)");
+                  "market(display_total, value_date, exchange)");
     });
 
   OPTION(report_t, meta_);
@@ -802,10 +798,7 @@ public:
     });
 
   OPTION_(report_t, price, DO() { // -I
-      parent->HANDLER(display_amount_)
-        .set_expr(string("--price"), "price(amount_expr)");
-      parent->HANDLER(display_total_)
-        .set_expr(string("--price"), "price(total_expr)");
+      parent->HANDLER(amount_).expr.set_base_expr("price");
     });
 
   OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
@@ -823,8 +816,8 @@ public:
 
   OPTION_(report_t, quantity, DO() { // -O
       parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).set_expr(string("--quantity"), "amount");
-      parent->HANDLER(total_).set_expr(string("--quantity"), "total");
+      parent->HANDLER(amount_).expr.set_base_expr("amount");
+      parent->HANDLER(total_).expr.set_base_expr("total");
     });
 
   OPTION_(report_t, quarterly, DO() {
@@ -919,12 +912,9 @@ public:
 
   OPTION__
   (report_t, total_, // -T
-   expr_t expr;
-   CTOR(report_t, total_) {
-     set_expr(none, "total");
-   }
+   DECL1(report_t, total_, merged_expr_t, expr, ("total_expr", "total")) {}
    void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
+     expr.append(str);
      on(whence, str);
    }
    DO_(args) {
@@ -961,9 +951,9 @@ public:
   OPTION(report_t, unrealized_losses_);
 
   OPTION_(report_t, unround, DO() {
-      parent->HANDLER(display_amount_)
+      parent->HANDLER(amount_)
         .set_expr(string("--unround"), "unrounded(amount_expr)");
-      parent->HANDLER(display_total_)
+      parent->HANDLER(total_)
         .set_expr(string("--unround"), "unrounded(total_expr)");
     });
 

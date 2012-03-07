@@ -65,14 +65,14 @@ protected:
   value_to_posts_map         posts_map;
   post_handler_ptr           post_chain;
   report_t&                  report;
-  expr_t                     group_by_expr;
+  expr_t&                    group_by_expr;
   custom_flusher_t           preflush_func;
   optional<custom_flusher_t> postflush_func;
 
 public:
   post_splitter(post_handler_ptr _post_chain,
                 report_t&        _report,
-                expr_t           _group_by_expr)
+                expr_t&          _group_by_expr)
     : post_chain(_post_chain), report(_report),
       group_by_expr(_group_by_expr) {
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
@@ -521,8 +521,8 @@ class display_filter_posts : public item_handler<post_t>
   // later in the chain.
 
   report_t&     report;
-  expr_t        display_amount_expr;
-  expr_t        display_total_expr;
+  expr_t&       display_amount_expr;
+  expr_t&       display_total_expr;
   bool          show_rounding;
   value_t       last_display_total;
   temporaries_t temps;
@@ -569,8 +569,8 @@ class changed_value_posts : public item_handler<post_t>
   // later in the chain.
 
   report_t&     report;
-  expr_t        total_expr;
-  expr_t        display_total_expr;
+  expr_t&       total_expr;
+  expr_t&       display_total_expr;
   bool          changed_values_only;
   bool          for_accounts_report;
   bool          show_unrealized;

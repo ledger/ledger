@@ -70,6 +70,7 @@ global_scope_t::global_scope_t(char ** envp)
   // generated.
   report_stack.push_front(new report_t(*session_ptr));
   scope_t::default_scope = &report();
+  scope_t::empty_scope   = &empty_scope;
 
   // Read the user's options, in the following order:
   //
