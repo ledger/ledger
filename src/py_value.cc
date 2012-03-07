@@ -266,8 +266,7 @@ void export_value()
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
 
-    .def("value", &value_t::value, value_overloads())
-    .def("price", &value_t::price)
+    //.def("value", &value_t::value, value_overloads())
     .def("exchange_commodities", &value_t::exchange_commodities,
          exchange_commodities_overloads())
 

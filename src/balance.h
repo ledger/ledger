@@ -387,8 +387,6 @@ public:
   value(const optional<datetime_t>&   moment      = none,
         const optional<commodity_t&>& in_terms_of = none) const;
 
-  balance_t price() const;
-
   /**
    * Truth tests.  An balance may be truth test in two ways:
    *

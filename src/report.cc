@@ -731,11 +731,6 @@ value_t report_t::fn_percent(call_scope_t& args)
           (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
 }
 
-value_t report_t::fn_price(call_scope_t& args)
-{
-  return args[0].price();
-}
-
 value_t report_t::fn_commodity(call_scope_t& args)
 {
   return string_value(args.get<amount_t>(0).commodity().symbol());
@@ -1278,8 +1273,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(fn_false);
       else if (is_eq(p, "percent"))
         return MAKE_FUNCTOR(report_t::fn_percent);
-      else if (is_eq(p, "price"))
-        return MAKE_FUNCTOR(report_t::fn_price);
       else if (is_eq(p, "print"))
         return MAKE_FUNCTOR(report_t::fn_print);
       break;

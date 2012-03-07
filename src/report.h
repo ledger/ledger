@@ -169,7 +169,6 @@ public:
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_percent(call_scope_t& scope);
-  value_t fn_price(call_scope_t& scope);
   value_t fn_commodity(call_scope_t& scope);
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_price(call_scope_t& scope);
