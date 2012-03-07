@@ -407,7 +407,7 @@ public:
   value(const optional<datetime_t>& moment        = none,
         const optional<commodity_t&>& in_terms_of = none) const;
 
-  amount_t price() const;
+  optional<amount_t> price() const;
 
   /*@}*/
 

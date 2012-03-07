@@ -787,7 +787,7 @@ amount_t::value(const optional<datetime_t>&   moment,
   return none;
 }
 
-amount_t amount_t::price() const
+optional<amount_t> amount_t::price() const
 {
   if (has_annotation() && annotation().price) {
     amount_t tmp(*annotation().price);
@@ -795,7 +795,7 @@ amount_t amount_t::price() const
     DEBUG("amount.price", "Returning price of " << *this << " = " << tmp);
     return tmp;
   }
-  return *this;
+  return none;
 }
 
 
