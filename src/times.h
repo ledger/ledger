@@ -218,7 +218,9 @@ struct date_duration_t
     case YEARS:
       return date + gregorian::years(length);
     }
+#if !defined(__clang__)
     return date_t();
+#endif
   }
 
   date_t subtract(const date_t& date) const {
@@ -234,7 +236,9 @@ struct date_duration_t
     case YEARS:
       return date - gregorian::years(length);
     }
+#if !defined(__clang__)
     return date_t();
+#endif
   }
 
   string to_string() const {

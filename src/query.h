@@ -186,7 +186,9 @@ public:
           assert(false);
           return "<UNKNOWN>";
         }
+#if !defined(__clang__)
         return "<ERROR>";
+#endif
       }
 
       void unexpected();

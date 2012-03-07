@@ -535,7 +535,9 @@ namespace {
     case value_t::ANY:          // a pointer to an arbitrary object
       return object(val);
     }
+#if !defined(__clang__)
     return object();
+#endif
   }
 }
 
