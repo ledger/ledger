@@ -355,13 +355,6 @@ expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
   return temp;
 }
 
-inline expr_t::ptr_op_t
-expr_t::op_t::wrap_scope(shared_ptr<scope_t> sobj) {
-  ptr_op_t temp(new op_t(op_t::SCOPE));
-  temp->set_scope(sobj);
-  return temp;
-}
-
 #define MAKE_FUNCTOR(x) expr_t::op_t::wrap_functor(bind(&x, this, _1))
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
 
