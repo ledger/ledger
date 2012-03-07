@@ -75,7 +75,9 @@ commodity_t * commodity_pool_t::create(const string& symbol)
 #endif
     commodities.insert(commodities_map::value_type
                        (commodity->base_symbol(), commodity));
+#if defined(DEBUG_ON)
   assert(result.second);
+#endif
 
   commodity_price_history.add_commodity(*commodity.get());
 
@@ -219,7 +221,9 @@ commodity_pool_t::create(commodity_t&        comm,
     annotated_commodities.insert(annotated_commodities_map::value_type
                                  (annotated_commodities_map::key_type
                                   (comm.symbol(), details), commodity));
+#if defined(DEBUG_ON)
   assert(result.second);
+#endif
 
   return commodity.get();
 }

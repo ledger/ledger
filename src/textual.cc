@@ -950,7 +950,9 @@ void instance_t::account_alias_directive(account_t * account, string alias)
 #endif
     context.journal->account_aliases.insert
       (accounts_map::value_type(alias, account));
+#if defined(DEBUG_ON)
   assert(result.second);
+#endif
 }
 
 void instance_t::alias_directive(char * line)

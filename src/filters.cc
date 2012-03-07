@@ -891,7 +891,9 @@ void subtotal_posts::operator()(post_t& post)
     std::pair<values_map::iterator, bool> result =
 #endif
       values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
+#if defined(DEBUG_ON)
     assert(result.second);
+#endif
   } else {
     post.add_to_value((*i).second.value, amount_expr);
   }

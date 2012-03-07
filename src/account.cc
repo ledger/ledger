@@ -93,7 +93,9 @@ account_t * account_t::find_account(const string& acct_name,
     std::pair<accounts_map::iterator, bool> result =
 #endif
       accounts.insert(accounts_map::value_type(first, account));
+#if defined(DEBUG_ON)
     assert(result.second);
+#endif
   } else {
     account = (*i).second;
   }

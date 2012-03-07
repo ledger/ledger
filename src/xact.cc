@@ -346,7 +346,9 @@ bool xact_base_t::finalize()
                         as_annotated_commodity(*pair.first).details :
                         annotation_t()),
                        pair.second));
+#if defined(DEBUG_ON)
         assert(result.second);
+#endif
       }
 
       bool first = true;
