@@ -818,7 +818,7 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
 
   // An identifier is a special non-terminal, in that its left() can
   // hold the compiled definition of the identifier.
-  if (kind > TERMINALS || is_scope()) {
+  if (kind > TERMINALS || is_scope() || is_ident()) {
     if (left()) {
       left()->dump(out, depth + 1);
       if (kind > UNARY_OPERATORS && has_right())
