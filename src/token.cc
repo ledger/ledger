@@ -421,7 +421,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
           throw_(parse_error, _("Failed to reset input stream"));
 
         c = static_cast<char>(in.peek());
-        if (! std::isalpha(c))
+        if (! std::isalpha(c) && c != '_')
           expected('\0', c);
 
         parse_ident(in);
