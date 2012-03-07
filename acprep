@@ -1010,7 +1010,8 @@ class PrepareBuild(CommandLineApp):
             self.boost_inc_ident = "clang"
             self.boost_lib_ident = "clang-darwin28"
 
-            self.log.debug("Setting Python home to /opt/local")
+            global search_prefixes
+            search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
 
             self.log.debug('Using Clang ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
@@ -1319,7 +1320,7 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif self.boost_info.configure(
+            elif not self.options.use_clang and self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-%s' % \
