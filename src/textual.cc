@@ -559,11 +559,6 @@ void instance_t::automated_xact_directive(char * line)
         item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = context.curr_pos;
         item->pos->end_line++;
-
-        // If there was no last_post yet, then deferred notes get applied to
-        // the matched posting.  Other notes get applied to the auto-generated
-        // posting.
-        ae->deferred_notes->back().apply_to_post = last_post;
       }
       else if ((remlen > 7 && *p == 'a' &&
                 std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
@@ -591,7 +586,7 @@ void instance_t::automated_xact_directive(char * line)
             parse_post(p, len - (p - line), top_account(), NULL, true)) {
           reveal_context = true;
           ae->add_post(post);
-          last_post = post;
+          ae->active_post = last_post = post;
         }
         reveal_context = true;
       }

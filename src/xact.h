@@ -173,17 +173,19 @@ public:
   typedef std::list<deferred_tag_data_t> deferred_notes_list;
 
   optional<deferred_notes_list> deferred_notes;
+  post_t * active_post;
 
-  auto_xact_t() : try_quick_match(true) {
+  auto_xact_t() : try_quick_match(true), active_post(NULL) {
     TRACE_CTOR(auto_xact_t, "");
   }
   auto_xact_t(const auto_xact_t& other)
     : xact_base_t(), predicate(other.predicate),
-      try_quick_match(other.try_quick_match) {
+      try_quick_match(other.try_quick_match),
+      active_post(other.active_post) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
   auto_xact_t(const predicate_t& _predicate)
-    : predicate(_predicate), try_quick_match(true)
+    : predicate(_predicate), try_quick_match(true), active_post(NULL)
   {
     TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
@@ -202,12 +204,12 @@ public:
     }
   }
 
-  virtual void parse_tags(const char * p,
-                          scope_t&,
-                          bool         overwrite_existing = true) {
+  virtual void parse_tags(const char * p, scope_t&,
+                          bool overwrite_existing = true) {
     if (! deferred_notes)
       deferred_notes = deferred_notes_list();
     deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
+    deferred_notes->back().apply_to_post = active_post;
   }
 
   virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
