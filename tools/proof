@@ -43,15 +43,13 @@ EOF
         cd $DEST/ledger-proof/debug; make docs
         cd $DEST/ledger-proof/gcov;  make report
 
-        cat <<EOF | mutt -a $LOGDIR/ledger-proof.log \
-            -s '[ledger] Proof build succeeded' johnw@newartisans.com
+        cat <<EOF | mutt -s '[ledger] Proof build succeeded' johnw@newartisans.com
 Ledger proof build succeeded! at commit $VERSION.
 EOF
         echo "Ledger proof build succeeded"
     fi
 }
 
-ledger_proof ${1:-$HOME/src/ledger} \
-    ${2:-$HOME/Products} ${3:-$HOME/Library/Logs}
+ledger_proof ${1:-$HOME/src/ledger} ${2:-$HOME/Products} ${3:-$HOME/Library/Logs}
 
 exit 0
