@@ -189,22 +189,16 @@ void item_t::parse_tags(const char * p,
       tag = string(q, len - index);
 
       string_map::iterator i;
-      const string::size_type plen = std::strlen(p);
-      const char * v = p + (q - p) + (len - index) + 1;
-      while (*v == '\0' && v < p + plen)
-        ++v;
-
-      if (v < p + plen) {
-        string field(v);
-        if (by_value) {
-          bind_scope_t bound_scope(scope, *this);
-          i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
-        } else {
-          i = set_tag(tag, string_value(field), overwrite_existing);
-        }
-        (*i).second.second = true;
-        break;
+      string field(p + len + index);
+      trim(field);
+      if (by_value) {
+        bind_scope_t bound_scope(scope, *this);
+        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
+      } else {
+        i = set_tag(tag, string_value(field), overwrite_existing);
       }
+      (*i).second.second = true;
+      break;
     }
     first = false;
   }
