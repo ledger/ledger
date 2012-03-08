@@ -517,11 +517,21 @@ value_t report_t::fn_market(call_scope_t& args)
                                  args.get<datetime_t>(1) :
                                  optional<datetime_t>());
   value_t result;
+  value_t arg0 = args[0];
+
+  if (arg0.is_string()) {
+    amount_t tmp(1L);
+    commodity_t * commodity =
+      commodity_pool_t::current_pool->find_or_create(arg0.as_string());
+    tmp.set_commodity(*commodity);
+    arg0 = tmp;
+  }
+
   if (args.has<string>(2))
-    result = args[0].exchange_commodities(args.get<string>(2),
-                                          /* add_prices= */ false, moment);
+    result = arg0.exchange_commodities(args.get<string>(2),
+                                       /* add_prices= */ false, moment);
   else
-    result = args[0].value(moment);
+    result = arg0.value(moment);
 
   if (! result.is_null())
     return result;
