@@ -280,6 +280,9 @@ public:
   value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
                 const int depth = 0);
 
+  value_t call(const value_t& args, scope_t& scope,
+               ptr_op_t * locus = NULL, const int depth = 0);
+
   struct context_t
   {
     ptr_op_t           expr_op;
@@ -306,6 +309,11 @@ public:
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(expr_t::func_t fobj);
   static ptr_op_t wrap_scope(shared_ptr<scope_t> sobj);
+
+private:
+  value_t calc_call(scope_t& scope, ptr_op_t * locus, const int depth);
+  value_t calc_cons(scope_t& scope, ptr_op_t * locus, const int depth);
+  value_t calc_seq(scope_t& scope, ptr_op_t * locus, const int depth);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

@@ -15,3 +15,7 @@ test eval 'foo = x, y, z -> print(x, y, z); foo(1, 2, 3)'
 123
 1
 end test
+
+test eval 'foo(x,y)=y(1, 2, 3);foo(amount_expr, (s,d,t -> t))'
+3
+end test

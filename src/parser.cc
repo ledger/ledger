@@ -87,9 +87,6 @@ expr_t::parser_t::parse_call_expr(std::istream& in,
         node->set_left(prev);
         push_token(tok);        // let the parser see the '(' again
         node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
-        if (! node->right())
-          throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
       } else {
         push_token(tok);
         break;
