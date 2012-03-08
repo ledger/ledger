@@ -645,6 +645,14 @@ public:
     });
 
   OPTION(report_t, head_);
+
+  OPTION_(report_t, historical, DO() { // -H
+      parent->HANDLER(amount_)
+        .set_expr(string("--historical"),
+                  "nail_down(amount_expr, (s,d,t -> market(s,value_date,t)))");
+    });
+
+
   OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {

@@ -924,11 +924,9 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'G':
     OPT_CH(gain);
     break;
-#if 0
   case 'H':
     OPT_CH(historical);
     break;
-#endif
   case 'I':
     OPT_CH(price);
     break;
@@ -1044,6 +1042,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'h':
     OPT(head_);
+    else OPT(historical);
     break;
   case 'i':
     OPT(invert);
