@@ -485,7 +485,9 @@ expr_t::parser_t::parse_lambda_expr(std::istream& in,
       ptr_op_t prev(node);
       node = new op_t(op_t::O_LAMBDA);
       node->set_left(prev);
-      node->set_right(parse_querycolon_expr(in, tflags));
+      ptr_op_t scope(new op_t(op_t::SCOPE));
+      scope->set_left(parse_querycolon_expr(in, tflags));
+      node->set_right(scope);
     } else {
       push_token(tok);
     }

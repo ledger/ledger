@@ -155,23 +155,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
         node->set_left(left()->right());
         node->set_right(right());
 
-        symbol_scope_t params(param_scope ?
-                              *param_scope : *scope_t::empty_scope);
-        for (ptr_op_t sym = node->left();
-             sym;
-             sym = sym->has_right() ? sym->right() : NULL) {
-          ptr_op_t varname = sym->kind == O_CONS ? sym->left() : sym;
-          if (! varname->is_ident()) {
-            throw_(calc_error, _("Invalid function definition"));
-          } else {
-            DEBUG("expr.compile",
-                  "Defining function parameter " << varname->as_ident());
-            params.define(symbol_t::FUNCTION, varname->as_ident(),
-                          new op_t(op_t::PLUG));
-          }
-        }
-
-        node = node->compile(*scope_ptr, depth + 1, &params);
+        node = node->compile(*scope_ptr, depth + 1, param_scope);
 
         DEBUG("expr.compile",
               "Defining " << left()->left()->as_ident() << " in " << scope_ptr);
@@ -184,6 +168,30 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
       throw_(compile_error, _("Invalid function definition"));
     }
     result = wrap_value(NULL_VALUE);
+  }
+  else if (kind == O_LAMBDA) {
+    symbol_scope_t params(param_scope ? *param_scope : *scope_t::empty_scope);
+
+    for (ptr_op_t sym = left();
+         sym;
+         sym = sym->has_right() ? sym->right() : NULL) {
+      ptr_op_t varname = sym->kind == O_CONS ? sym->left() : sym;
+
+      if (! varname->is_ident()) {
+        throw_(calc_error, _("Invalid function or lambda parameter"));
+      } else {
+        DEBUG("expr.compile",
+              "Defining function parameter " << varname->as_ident());
+        params.define(symbol_t::FUNCTION, varname->as_ident(),
+                      new op_t(PLUG));
+      }
+    }
+
+    ptr_op_t rhs(right()->compile(*scope_ptr, depth + 1, &params));
+    if (rhs == right())
+      result = this;
+    else
+      result = copy(left(), rhs);
   }
 
   if (! result) {
