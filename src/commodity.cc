@@ -97,14 +97,20 @@ commodity_t::find_price_from_expr(expr_t& expr,
     DEBUG("commodity.price.find", "");
   }
 #endif
-  call_scope_t call_args(*scope_t::default_scope);
+  value_t result(expr.calc(*scope_t::default_scope));
 
-  call_args.push_back(string_value(base_symbol()));
-  call_args.push_back(moment);
-  if (commodity)
-    call_args.push_back(string_value(commodity->symbol()));
+  if (is_expr(result)) {
+    value_t call_args;
 
-  return price_point_t(moment, expr.calc(call_args).to_amount());
+    call_args.push_back(string_value(base_symbol()));
+    call_args.push_back(moment);
+    if (commodity)
+      call_args.push_back(string_value(commodity->symbol()));
+
+    result = as_expr(result)->call(call_args, *scope_t::default_scope);
+  }
+
+  return price_point_t(moment, result.to_amount());
 }
 
 optional<price_point_t>
