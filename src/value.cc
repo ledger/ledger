@@ -1266,8 +1266,8 @@ void value_t::in_place_cast(type_t cast_type)
   }
 
   add_error_context(_("While converting %1:") << *this);
-  throw_(value_error, _("Cannot convert %1 to %2")
-         << label() << label(cast_type));
+  throw_(value_error,
+         _("Cannot convert %1 to %2") << label() << label(cast_type));
 }
 
 void value_t::in_place_negate()
