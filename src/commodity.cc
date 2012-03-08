@@ -217,6 +217,15 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
   return point;
 }
 
+commodity_t& commodity_t::nail_down(const expr_t& expr)
+{
+  annotation_t new_details;
+  new_details.value_expr = expr;
+  commodity_t * new_comm =
+    commodity_pool_t::current_pool->find_or_create(symbol(), new_details);
+  return *new_comm;
+}
+
 commodity_t::operator bool() const
 {
   return this != pool().null_commodity;

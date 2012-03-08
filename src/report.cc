@@ -736,6 +736,24 @@ value_t report_t::fn_commodity(call_scope_t& args)
   return string_value(args.get<amount_t>(0).commodity().symbol());
 }
 
+value_t report_t::fn_nail_down(call_scope_t& args)
+{
+  value_t arg0(args[0]);
+  switch (arg0.type()) {
+  case value_t::AMOUNT: {
+    amount_t tmp(arg0.as_amount());
+    if (tmp.has_commodity())
+      tmp.set_commodity(tmp.commodity()
+                        .nail_down(args[1].as_any<expr_t::ptr_op_t>()));
+    return tmp;
+  }
+
+  default:
+    throw_(std::runtime_error, _("Attempting to nail down %1")
+           << args[0].label());
+  }
+}
+
 value_t report_t::fn_lot_date(call_scope_t& args)
 {
   if (args[0].has_annotation()) {
@@ -1261,6 +1279,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(fn_null);
       else if (is_eq(p, "now"))
         return MAKE_FUNCTOR(report_t::fn_now);
+      else if (is_eq(p, "nail_down"))
+        return MAKE_FUNCTOR(report_t::fn_nail_down);
       break;
 
     case 'o':

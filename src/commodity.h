@@ -291,6 +291,8 @@ public:
                           const optional<datetime_t>&    moment,
                           const optional<commodity_t&>&  in_terms_of);
 
+  commodity_t& nail_down(const expr_t& expr);
+
   // Methods related to parsing, reading, writing, etc., the commodity
   // itself.
 
