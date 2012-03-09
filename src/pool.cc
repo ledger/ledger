@@ -67,14 +67,12 @@ commodity_t * commodity_pool_t::create(const string& symbol)
     *commodity->qualified_symbol += "\"";
   }
 
-  DEBUG("pool.commodities",
-        "Creating commodity '" << commodity->symbol() << "'");
+  DEBUG("pool.commodities", "Creating commodity '" << symbol << "'");
 
 #if defined(DEBUG_ON)
   std::pair<commodities_map::iterator, bool> result =
 #endif
-    commodities.insert(commodities_map::value_type
-                       (commodity->base_symbol(), commodity));
+    commodities.insert(commodities_map::value_type(symbol, commodity));
 #if defined(DEBUG_ON)
   assert(result.second);
 #endif
