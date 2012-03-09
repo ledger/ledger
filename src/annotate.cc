@@ -122,7 +122,12 @@ void annotation_t::parse(std::istream& in)
     else if (c == '(') {
       in.get(c);
       c = static_cast<char>(in.peek());
-      if (c == '(') {
+      if (c == '@') {
+        in.clear();
+        in.seekg(pos, std::ios::beg);
+        break;
+      }
+      else if (c == '(') {
         if (value_expr)
           throw_(amount_error,
                  _("Commodity specifies more than one valuation expresion"));

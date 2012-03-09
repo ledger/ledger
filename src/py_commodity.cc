@@ -96,14 +96,15 @@ namespace {
     pool.exchange(commodity, per_unit_cost, moment);
   }
 
-  cost_breakdown_t py_exchange_5(commodity_pool_t&                  pool,
+  cost_breakdown_t py_exchange_7(commodity_pool_t&                  pool,
                                  const amount_t&                    amount,
                                  const amount_t&                    cost,
                                  const bool                         is_per_unit,
+                                 const bool                         add_prices,
                                  const boost::optional<datetime_t>& moment,
                                  const boost::optional<string>&     tag)
   {
-    return pool.exchange(amount, cost, is_per_unit, moment, tag);
+    return pool.exchange(amount, cost, is_per_unit, add_prices, moment, tag);
   }
 
   commodity_t * py_pool_getitem(commodity_pool_t& pool, const string& symbol)
@@ -280,7 +281,7 @@ void export_commodity()
 
     .def("exchange", py_exchange_2, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_3, with_custodian_and_ward<1, 2>())
-    .def("exchange", py_exchange_5)
+    .def("exchange", py_exchange_7)
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,

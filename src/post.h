@@ -58,7 +58,8 @@ public:
 #define POST_COST_CALCULATED 0x0080 // posting's cost was calculated
 #define POST_COST_IN_FULL    0x0100 // cost specified using @@
 #define POST_COST_FIXATED    0x0200 // cost is fixed using = indicator
-#define POST_ANONYMIZED      0x0400 // a temporary, anonymous posting
+#define POST_COST_VIRTUAL    0x0400 // cost is virtualized: (@)
+#define POST_ANONYMIZED      0x0800 // a temporary, anonymous posting
 
   xact_t *           xact;      // only set for posts of regular xacts
   account_t *        account;

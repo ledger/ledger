@@ -119,6 +119,7 @@ public:
   cost_breakdown_t exchange(const amount_t&             amount,
                             const amount_t&             cost,
                             const bool                  is_per_unit = false,
+                            const bool                  add_price   = true,
                             const optional<datetime_t>& moment     = none,
                             const optional<string>&     tag        = none);
 

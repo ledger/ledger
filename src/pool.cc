@@ -246,6 +246,7 @@ cost_breakdown_t
 commodity_pool_t::exchange(const amount_t&             amount,
                            const amount_t&             cost,
                            const bool                  is_per_unit,
+                           const bool                  add_price,
                            const optional<datetime_t>& moment,
                            const optional<string>&     tag)
 {

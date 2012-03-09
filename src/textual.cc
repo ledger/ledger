@@ -1447,18 +1447,25 @@ post_t * instance_t::parse_post(char *          line,
 
       // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
 
-      if (*next == '@') {
+      if (*next == '@' || (*next == '(' && *(next + 1) == '@')) {
         DEBUG("textual.parse", "line " << context.linenum << ": "
               << "Found a price indicator");
 
-        bool per_unit = true;
+        if (*next == '(') {
+          post->add_flags(POST_COST_VIRTUAL);
+          ++next;
+        }
 
+        bool per_unit = true;
         if (*++next == '@') {
           per_unit = false;
           post->add_flags(POST_COST_IN_FULL);
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "And it's for a total price");
         }
+
+        if (post->has_flags(POST_COST_VIRTUAL) && *(next + 1) == ')')
+          ++next;
 
         beg = static_cast<std::streamsize>(++next - line);
 

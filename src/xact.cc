@@ -269,7 +269,7 @@ bool xact_base_t::finalize()
 
       cost_breakdown_t breakdown =
         commodity_pool_t::current_pool->exchange
-        (post->amount, *post->cost, false,
+        (post->amount, *post->cost, false, ! post->has_flags(POST_COST_VIRTUAL),
          datetime_t(date(), time_duration(0, 0, 0, 0)));
 
       if (post->amount.has_annotation() && post->amount.annotation().price) {
