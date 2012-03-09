@@ -867,10 +867,15 @@ bool amount_t::fits_in_long() const
   return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }
 
-commodity_t& amount_t::commodity() const
+commodity_t * amount_t::commodity_ptr() const
 {
   return (has_commodity() ?
-          *commodity_ : *commodity_pool_t::current_pool->null_commodity);
+          commodity_ : commodity_pool_t::current_pool->null_commodity);
+}
+
+commodity_t& amount_t::commodity() const
+{
+  return *commodity_ptr();
 }
 
 bool amount_t::has_commodity() const

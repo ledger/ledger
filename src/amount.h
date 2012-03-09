@@ -533,6 +533,7 @@ public:
       number() returns a commodity-less version of an amount.  This is
       useful for accessing just the numeric portion of an amount.
   */
+  commodity_t * commodity_ptr() const;
   commodity_t& commodity() const;
 
   bool has_commodity() const;
