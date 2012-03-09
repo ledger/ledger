@@ -37,6 +37,59 @@
 
 namespace ledger {
 
+expr_t::expr_t() : base_type()
+{
+  TRACE_CTOR(expr_t, "");
+}
+
+expr_t::expr_t(const expr_t& other) : base_type(other), ptr(other.ptr)
+{
+  TRACE_CTOR(expr_t, "copy");
+}
+expr_t::expr_t(ptr_op_t _ptr, scope_t * _context)
+  : base_type(_context), ptr(_ptr)
+{
+  TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *");
+}
+
+expr_t::expr_t(const string& _str, const parse_flags_t& flags)
+  : base_type()
+{
+  TRACE_CTOR(expr_t, "string, parse_flags_t");
+  if (! _str.empty())
+    parse(_str, flags);
+}
+
+expr_t::expr_t(std::istream& in, const parse_flags_t& flags)
+  : base_type()
+{
+  TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
+  parse(in, flags);
+}
+
+expr_t::~expr_t() {
+  TRACE_DTOR(expr_t);
+}
+
+expr_t& expr_t::operator=(const expr_t& _expr)
+{
+  if (this != &_expr) {
+    base_type::operator=(_expr);
+    ptr = _expr.ptr;
+  }
+  return *this;
+}
+
+expr_t::operator bool() const throw()
+{
+  return ptr.get() != NULL;
+}
+
+expr_t::ptr_op_t expr_t::get_op() throw()
+{
+  return ptr;
+}
+
 void expr_t::parse(std::istream& in, const parse_flags_t& flags,
                    const optional<string>& original_string)
 {
@@ -202,6 +255,24 @@ void merged_expr_t::compile(scope_t& scope)
   }
 
   expr_t::compile(scope);
+}
+
+expr_t::ptr_op_t as_expr(const value_t& val)
+{
+  VERIFY(val.is_any());
+  return val.as_any<expr_t::ptr_op_t>();
+}
+
+void set_expr(value_t& val, expr_t::ptr_op_t op)
+{
+  val.set_any(op);
+}
+
+value_t expr_value(expr_t::ptr_op_t op)
+{
+  value_t temp;
+  temp.set_any(op);
+  return temp;
 }
 
 value_t source_command(call_scope_t& args)

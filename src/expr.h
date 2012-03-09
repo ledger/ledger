@@ -58,9 +58,6 @@ public:
   typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
-  friend void intrusive_ptr_add_ref(const op_t * op);
-  friend void intrusive_ptr_release(const op_t * op);
-
   enum check_expr_kind_t {
     EXPR_GENERAL,
     EXPR_ASSERTION,
@@ -74,49 +71,20 @@ protected:
   ptr_op_t ptr;
 
 public:
-  expr_t() : base_type() {
-    TRACE_CTOR(expr_t, "");
-  }
-  expr_t(const expr_t& other)
-    : base_type(other), ptr(other.ptr) {
-    TRACE_CTOR(expr_t, "copy");
-  }
-  expr_t(ptr_op_t _ptr, scope_t * _context = NULL)
-    : base_type(_context), ptr(_ptr) {
-    TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *");
-  }
+  expr_t();
+  expr_t(const expr_t& other);
+  expr_t(ptr_op_t _ptr, scope_t * _context = NULL);
 
-  expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT)
-    : base_type() {
-    TRACE_CTOR(expr_t, "string, parse_flags_t");
-    if (! _str.empty())
-      parse(_str, flags);
-  }
-  expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT)
-    : base_type() {
-    TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
-    parse(in, flags);
-  }
+  expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT);
+  expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
 
-  virtual ~expr_t() {
-    TRACE_DTOR(expr_t);
-  }
+  virtual ~expr_t();
 
-  expr_t& operator=(const expr_t& _expr) {
-    if (this != &_expr) {
-      base_type::operator=(_expr);
-      ptr = _expr.ptr;
-    }
-    return *this;
-  }
+  expr_t& operator=(const expr_t& _expr);
 
-  virtual operator bool() const throw() {
-    return ptr.get() != NULL;
-  }
+  virtual operator bool() const throw();
 
-  ptr_op_t get_op() throw() {
-    return ptr;
-  }
+  ptr_op_t get_op() throw();
 
   void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
@@ -159,18 +127,10 @@ private:
 inline bool is_expr(const value_t& val) {
   return val.is_any() && val.as_any().type() == typeid(expr_t::ptr_op_t);
 }
-inline expr_t::ptr_op_t as_expr(const value_t& val) {
-  VERIFY(val.is_any());
-  return val.as_any<expr_t::ptr_op_t>();
-}
-inline void set_expr(value_t& val, expr_t::ptr_op_t op) {
-  val.set_any(op);
-}
-inline value_t expr_value(expr_t::ptr_op_t op) {
-  value_t temp;
-  temp.set_any(op);
-  return temp;
-}
+
+expr_t::ptr_op_t as_expr(const value_t& val);
+void             set_expr(value_t& val, expr_t::ptr_op_t op);
+value_t          expr_value(expr_t::ptr_op_t op);
 
 // A merged expression allows one to set an expression term, "foo", and
 // a base expression, "bar", and then merge in later expressions that
