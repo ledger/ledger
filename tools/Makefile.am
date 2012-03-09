@@ -420,10 +420,10 @@ fullcheck: unittests
 	@$(top_builddir)/ManualTests   --verify
 	@$(top_builddir)/ConfirmTests  --verify
 	@$(top_builddir)/GenerateTests 20 --verify
-	@$(top_builddir)/RegressTests  --gmalloc
-	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/ManualTests   --gmalloc
-	@$(top_builddir)/ConfirmTests  --gmalloc
+#	@$(top_builddir)/RegressTests  --gmalloc
+#	@$(top_builddir)/BaselineTests --gmalloc
+#	@$(top_builddir)/ManualTests   --gmalloc
+#	@$(top_builddir)/ConfirmTests  --gmalloc
 	@$(top_builddir)/GenerateTests 10000
 #	@$(top_builddir)/GenerateTests --gmalloc
 
