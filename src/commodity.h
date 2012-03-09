@@ -117,11 +117,9 @@ protected:
     optional<amount_t>    larger;
     optional<expr_t>      value_expr;
 
-    typedef std::pair<optional<datetime_t>,
-                      optional<datetime_t> > optional_time_pair_t;
-    typedef std::pair<optional_time_pair_t,
-                      commodity_t *> time_and_commodity_t;
-    typedef std::map<time_and_commodity_t,
+    typedef tuple<optional<datetime_t>,
+                  optional<datetime_t>, commodity_t *> memoized_price_entry;
+    typedef std::map<memoized_price_entry,
                      optional<price_point_t> > memoized_price_map;
 
     static const std::size_t   max_price_map_size = 16;

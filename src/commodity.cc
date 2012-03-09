@@ -129,16 +129,16 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
   if (target && *this == *target)
     return none;
 
-  optional<base_t::time_and_commodity_t> pair =
-    base_t::time_and_commodity_t(base_t::optional_time_pair_t(moment, oldest),
-                                 commodity ? &(*commodity) : NULL);
+  optional<base_t::memoized_price_entry>
+    entry(base_t::memoized_price_entry(moment, oldest,
+                                       commodity ? &(*commodity) : NULL));
 
   DEBUG("commodity.price.find", "looking for memoized args: "
         << (moment    ? format_datetime(*moment) : "NONE") << ", "
         << (oldest    ? format_datetime(*oldest) : "NONE") << ", "
         << (commodity ? commodity->symbol()      : "NONE"));
   {
-    base_t::memoized_price_map::iterator i = base->price_map.find(*pair);
+    base_t::memoized_price_map::iterator i = base->price_map.find(*entry);
     if (i != base->price_map.end()) {
       DEBUG("commodity.price.find", "found! returning: "
             << ((*i).second ? (*i).second->price : amount_t(0L)));
@@ -162,7 +162,7 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
     pool().commodity_price_history.find_price(*this, *target, when, oldest) :
     pool().commodity_price_history.find_price(*this, when, oldest);
 
-  if (pair) {
+  if (entry) {
     if (base->price_map.size() > base_t::max_price_map_size) {
       DEBUG("history.find",
             "price map has grown too large, clearing it by half");
@@ -172,9 +172,9 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
 
     DEBUG("history.find",
           "remembered: " << (point ? point->price : amount_t(0L)));
-    base->price_map.insert
-      (base_t::memoized_price_map::value_type(*pair, point));
+    base->price_map.insert(base_t::memoized_price_map::value_type(*entry, point));
   }
+
   return point;
 }
 

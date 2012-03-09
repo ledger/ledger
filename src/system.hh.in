@@ -183,8 +183,11 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/regex/icu.hpp>
 #else
 #include <boost/regex.hpp>
-
 #endif // HAVE_BOOST_REGEX_UNICODE
+
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+
 #include <boost/variant.hpp>
 #include <boost/version.hpp>
 
