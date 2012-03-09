@@ -1003,6 +1003,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_(begin_);
     else OPT(bold_if_);
     else OPT(budget);
+    else OPT(budget_format_);
     else OPT(by_payee);
     break;
   case 'c':
