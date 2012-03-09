@@ -148,14 +148,14 @@ class RegressFile(object):
             if success:
                 harness.success()
             else:
-                harness.failure()
+                harness.failure(os.path.basename(self.filename))
         else:
             if success: print
             if test['exitcode']:
                 self.notify_user("FAILURE in exit code (%d != %d) from %s:"
                                  % (test['exitcode'], p.returncode, self.filename),
                                  test)
-            harness.failure()
+            harness.failure(os.path.basename(self.filename))
 
     def run_tests(self):
         test = self.read_test()
