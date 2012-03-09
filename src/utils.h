@@ -278,6 +278,16 @@ extern string empty_string;
 
 strings_list split_arguments(const char * line);
 
+inline string to_string(long num) {
+  std::ostringstream buf;
+  buf << num;
+  return buf.str();
+}
+
+inline string operator+(const char * left, const string& right) {
+  return string(left) + right;
+}
+
 } // namespace ledger
 
 /*@}*/
