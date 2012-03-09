@@ -268,6 +268,15 @@ value_t session_t::fn_max(call_scope_t& args)
   return args[1] > args[0] ? args[1] : args[0];
 }
 
+value_t session_t::fn_int(call_scope_t& args)
+{
+  return args[0].to_long();
+}
+value_t session_t::fn_str(call_scope_t& args)
+{
+  return string_value(args[0].to_string());
+}
+
 value_t session_t::fn_lot_price(call_scope_t& args)
 {
   amount_t amt(args.get<amount_t>(1, false));
@@ -360,11 +369,21 @@ expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(session_t::fn_lot_tag);
       break;
 
+    case 'i':
+      if (is_eq(p, "int"))
+        return MAKE_FUNCTOR(session_t::fn_int);
+      break;
+
     case 'm':
       if (is_eq(p, "min"))
         return MAKE_FUNCTOR(session_t::fn_min);
       else if (is_eq(p, "max"))
         return MAKE_FUNCTOR(session_t::fn_max);
+      break;
+
+    case 's':
+      if (is_eq(p, "str"))
+        return MAKE_FUNCTOR(session_t::fn_str);
       break;
 
     default:
