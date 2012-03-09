@@ -61,9 +61,9 @@ protected:
   option_t& operator=(const option_t&);
 
 public:
-  T *          parent;
-  value_t      value;
-  bool         wants_arg;
+  T *    parent;
+  string value;
+  bool   wants_arg;
 
   option_t(const char * _name, const char _ch = '\0')
     : name(_name), name_len(std::strlen(name)), ch(_ch),
@@ -94,7 +94,8 @@ public:
       out << std::right << desc();
       if (wants_arg) {
         out << " = ";
-        value.print(out, 42);
+        out.width(42);
+        out << value;
       } else {
         out.width(45);
         out << ' ';
@@ -123,43 +124,49 @@ public:
     return handled;
   }
 
-  string& str() {
-    assert(handled);
-    if (! value)
-      throw_(std::runtime_error, _("No argument provided for %1") << desc());
-    return value.as_string_lval();
-  }
-
   string str() const {
     assert(handled);
-    if (! value)
+    if (value.empty())
       throw_(std::runtime_error, _("No argument provided for %1") << desc());
-    return value.as_string();
+    return value;
   }
 
-  void on_only(const optional<string>& whence) {
+  void on(const char * whence) {
+    on(string(whence));
+  }
+  void on(const optional<string>& whence) {
+    handler_thunk(whence);
+
     handled = true;
     source  = whence;
   }
-  void on(const optional<string>& whence, const string& str) {
-    on_with(whence, string_value(str));
+
+  void on(const char * whence, const string& str) {
+    on(string(whence), str);
   }
-  virtual void on_with(const optional<string>& whence,
-                       const value_t& val) {
+  void on(const optional<string>& whence, const string& str) {
+    string before = value;
+
+    handler_thunk(whence, str);
+
+    if (value == before)
+      value = str;
+
     handled = true;
-    value   = val;
     source  = whence;
   }
 
   void off() {
     handled = false;
-    value   = value_t();
+    value   = "";
     source  = none;
   }
 
-  virtual void handler_thunk(call_scope_t&) {}
+  virtual void handler_thunk(const optional<string>& whence) {}
+  virtual void handler_thunk(const optional<string>& whence,
+                             const string& str) {}
 
-  virtual void handler(call_scope_t& args) {
+  value_t handler(call_scope_t& args) {
     if (wants_arg) {
       if (args.size() < 2)
         throw_(std::runtime_error, _("No argument provided for %1") << desc());
@@ -167,7 +174,7 @@ public:
         throw_(std::runtime_error, _("To many arguments provided for %1") << desc());
       else if (! args[0].is_string())
         throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
-      on_with(args.get<string>(0), args[1]);
+      on(args.get<string>(0), args.get<string>(1));
     }
     else if (args.size() < 1) {
       throw_(std::runtime_error, _("No argument provided for %1") << desc());
@@ -176,27 +183,18 @@ public:
       throw_(std::runtime_error, _("Context argument for %1 not a string") << desc());
     }
     else {
-      on_only(args.get<string>(0));
+      on(args.get<string>(0));
     }
-
-    handler_thunk(args);
-  }
-
-  virtual value_t handler_wrapper(call_scope_t& args) {
-    handler(args);
     return true;
   }
 
   virtual value_t operator()(call_scope_t& args) {
     if (! args.empty()) {
       args.push_front(string_value("?expr"));
-      return handler_wrapper(args);
+      return handler(args);
     }
     else if (wants_arg) {
-      if (handled)
-        return value;
-      else
-        return NULL_VALUE;
+      return string_value(value);
     }
     else {
       return handled;
@@ -215,15 +213,16 @@ public:
   vartype var ;                                         \
   name ## option_t() : option_t<type>(#name), var value
 
-#define DO()      virtual void handler_thunk(call_scope_t&)
-#define DO_(var)  virtual void handler_thunk(call_scope_t& var)
+#define DO()      virtual void handler_thunk(const optional<string>& whence)
+#define DO_(var)  virtual void handler_thunk(const optional<string>& whence, \
+                                             const string& var)
 
 #define END(name) name ## handler
 
 #define COPY_OPT(name, other) name ## handler(other.name ## handler)
 
 #define MAKE_OPT_HANDLER(type, x)                                       \
-  expr_t::op_t::wrap_functor(bind(&option_t<type>::handler_wrapper, x, _1))
+  expr_t::op_t::wrap_functor(bind(&option_t<type>::handler, x, _1))
 
 #define MAKE_OPT_FUNCTOR(type, x)                                       \
   expr_t::op_t::wrap_functor(bind(&option_t<type>::operator(), x, _1))
@@ -283,6 +282,10 @@ inline bool is_eq(const char * p, const char * n) {
     body                                                \
   }                                                     \
   END(name)
+
+#define OTHER(name)                             \
+  parent->HANDLER(name).parent = parent;        \
+  parent->HANDLER(name)
 
 bool process_option(const string& whence, const string& name, scope_t& scope,
                     const char * arg, const string& varname);

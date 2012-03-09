@@ -522,7 +522,7 @@ value_t xact_command(call_scope_t& args)
   xact_t * new_xact = draft.insert(*report.session.journal.get());
 
   // Only consider actual postings for the "xact" command
-  report.HANDLER(limit_).on(string("#xact"), "actual");
+  report.HANDLER(limit_).on("#xact", "actual");
 
   if (new_xact)
     report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);

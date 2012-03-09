@@ -59,7 +59,7 @@ void report_t::normalize_options(const string& verb)
 #ifdef HAVE_ISATTY
   if (! HANDLED(force_color)) {
     if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
-      HANDLER(color).on_only(string("?normalize"));
+      HANDLER(color).on("?normalize");
     if (HANDLED(color) && ! isatty(STDOUT_FILENO))
       HANDLER(color).off();
   }
@@ -83,7 +83,7 @@ void report_t::normalize_options(const string& verb)
 
   if (session.HANDLED(price_exp_))
     commodity_pool_t::current_pool->quote_leeway =
-      session.HANDLER(price_exp_).value.as_long();
+      lexical_cast<long>(session.HANDLER(price_exp_).value) * 3600L;
 
   if (session.HANDLED(price_db_))
     commodity_pool_t::current_pool->price_db = session.HANDLER(price_db_).str();
@@ -106,39 +106,35 @@ void report_t::normalize_options(const string& verb)
     if (! HANDLED(meta_width_)) {
       string::size_type i = HANDLER(meta_).str().find(':');
       if (i != string::npos) {
-        HANDLED(meta_width_).on_with
-          (string("?normalize"),
-           lexical_cast<long>(string(HANDLER(meta_).str(), i + 1)));
-        HANDLED(meta_).on(string("?normalize"),
+        HANDLED(meta_width_).on("?normalize",
+                                string(HANDLER(meta_).str(), i + 1));
+        HANDLED(meta_).on("?normalize",
                           string(HANDLER(meta_).str(), 0, i));
       }
     }
     if (HANDLED(meta_width_)) {
-      HANDLER(prepend_format_).on
-        (string("?normalize"),
-         string("%(justify(truncated(tag(\"") +
-         HANDLER(meta_).str() + "\"), " +
-         HANDLED(meta_width_).value.to_string() + " - 1), " +
-         HANDLED(meta_width_).value.to_string() + "))");
-      meta_width = HANDLED(meta_width_).value.to_long();
+      HANDLER(prepend_format_)
+        .on("?normalize", string("%(justify(truncated(tag(\"") +
+            HANDLER(meta_).str() + "\"), " +
+            HANDLED(meta_width_).value + " - 1), " +
+            HANDLED(meta_width_).value + "))");
+      meta_width = lexical_cast<long>(HANDLED(meta_width_).value);
     } else {
-      HANDLER(prepend_format_).on(string("?normalize"), string("%(tag(\"") +
-                                  HANDLER(meta_).str() + "\"))");
+      HANDLER(prepend_format_)
+        .on("?normalize", string("%(tag(\"") + HANDLER(meta_).str() + "\"))");
     }
   }
-  if (! HANDLED(prepend_width_))
-    HANDLER(prepend_width_).on_with(string("?normalize"), static_cast<long>(0));
 
   if (verb == "print" || verb == "xact" || verb == "dump") {
-    HANDLER(related).on_only(string("?normalize"));
-    HANDLER(related_all).on_only(string("?normalize"));
+    HANDLER(related_all).parent = this;
+    HANDLER(related_all).on("?normalize");
   }
   else if (verb == "equity") {
-    HANDLER(equity).on_only(string("?normalize"));
+    HANDLER(equity).on("?normalize");
   }
 
   if (verb[0] != 'b' && verb[0] != 'r')
-    HANDLER(base).on_only(string("?normalize"));
+    HANDLER(base).on("?normalize");
 
   // If a time period was specified with -p, check whether it also gave a
   // begin and/or end to the report period (though these can be overridden
@@ -152,12 +148,10 @@ void report_t::normalize_options(const string& verb)
   // to avoid option ordering issues were we to have done it during the
   // initial parsing of the options.
   if (HANDLED(amount_data)) {
-    HANDLER(format_)
-      .on_with(string("?normalize"), HANDLER(plot_amount_format_).value);
+    HANDLER(format_).on("?normalize", HANDLER(plot_amount_format_).value);
   }
   else if (HANDLED(total_data)) {
-    HANDLER(format_)
-      .on_with(string("?normalize"), HANDLER(plot_total_format_).value);
+    HANDLER(format_).on("?normalize", HANDLER(plot_total_format_).value);
   }
 
   // If the --exchange (-X) option was used, parse out any final price
@@ -170,7 +164,7 @@ void report_t::normalize_options(const string& verb)
 
   long cols = 0;
   if (HANDLED(columns_))
-    cols = HANDLER(columns_).value.to_long();
+    cols = lexical_cast<long>(HANDLER(columns_).value);
   else if (const char * columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
   else
@@ -182,23 +176,20 @@ void report_t::normalize_options(const string& verb)
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);
 
-    if (! HANDLER(date_width_).specified)
-      HANDLER(date_width_)
-        .on_with(none, static_cast<long>(format_date(CURRENT_DATE(),
-                                                     FMT_PRINTED).length()));
-
-    long date_width    = HANDLER(date_width_).value.to_long();
-    long payee_width   = (HANDLER(payee_width_).specified ?
-                          HANDLER(payee_width_).value.to_long() :
-                          int(double(cols) * 0.263157));
-    long account_width = (HANDLER(account_width_).specified ?
-                          HANDLER(account_width_).value.to_long() :
-                          int(double(cols) * 0.302631));
-    long amount_width  = (HANDLER(amount_width_).specified ?
-                          HANDLER(amount_width_).value.to_long() :
-                          int(double(cols) * 0.157894));
-    long total_width   = (HANDLER(total_width_).specified ?
-                          HANDLER(total_width_).value.to_long() :
+    long date_width    = (HANDLED(date_width_) ?
+                          lexical_cast<long>(HANDLER(date_width_).str()) :
+                          format_date(CURRENT_DATE(),FMT_PRINTED).length());
+    long payee_width   = (HANDLED(payee_width_) ?
+                          lexical_cast<long>(HANDLER(payee_width_).str()) :
+                          long(double(cols) * 0.263157));
+    long account_width = (HANDLED(account_width_) ?
+                          lexical_cast<long>(HANDLER(account_width_).str()) :
+                          long(double(cols) * 0.302631));
+    long amount_width  = (HANDLED(amount_width_) ?
+                          lexical_cast<long>(HANDLER(amount_width_).str()) :
+                          long(double(cols) * 0.157894));
+    long total_width   = (HANDLED(total_width_) ?
+                          lexical_cast<long>(HANDLER(total_width_).str()) :
                           amount_width);
 
     DEBUG("auto.columns", "date_width    = " << date_width);
@@ -207,11 +198,11 @@ void report_t::normalize_options(const string& verb)
     DEBUG("auto.columns", "amount_width  = " << amount_width);
     DEBUG("auto.columns", "total_width   = " << total_width);
 
-    if (! HANDLER(date_width_).specified &&
-        ! HANDLER(payee_width_).specified &&
-        ! HANDLER(account_width_).specified &&
-        ! HANDLER(amount_width_).specified &&
-        ! HANDLER(total_width_).specified) {
+    if (! HANDLED(date_width_) &&
+        ! HANDLED(payee_width_) &&
+        ! HANDLED(account_width_) &&
+        ! HANDLED(amount_width_) &&
+        ! HANDLED(total_width_)) {
       long total = (4 /* the spaces between */ + date_width + payee_width +
                     account_width + amount_width + total_width);
       if (total > cols) {
@@ -222,17 +213,19 @@ void report_t::normalize_options(const string& verb)
     }
 
     if (! HANDLED(meta_width_))
-      HANDLER(meta_width_).on_with(string("?normalize"), 0L);
-    if (! HANDLER(date_width_).specified)
-      HANDLER(date_width_).on_with(string("?normalize"), date_width);
-    if (! HANDLER(payee_width_).specified)
-      HANDLER(payee_width_).on_with(string("?normalize"), payee_width);
-    if (! HANDLER(account_width_).specified)
-      HANDLER(account_width_).on_with(string("?normalize"), account_width);
-    if (! HANDLER(amount_width_).specified)
-      HANDLER(amount_width_).on_with(string("?normalize"), amount_width);
-    if (! HANDLER(total_width_).specified)
-      HANDLER(total_width_).on_with(string("?normalize"), total_width);
+      HANDLER(meta_width_).value    = "0";
+    if (! HANDLED(prepend_width_))
+      HANDLER(prepend_width_).value = "0";
+    if (! HANDLED(date_width_))
+      HANDLER(date_width_).value    = to_string(date_width);
+    if (! HANDLED(payee_width_))
+      HANDLER(payee_width_).value   = to_string(payee_width);
+    if (! HANDLED(account_width_))
+      HANDLER(account_width_).value = to_string(account_width);
+    if (! HANDLED(amount_width_))
+      HANDLER(amount_width_).value  = to_string(amount_width);
+    if (! HANDLED(total_width_))
+      HANDLER(total_width_).value   = to_string(total_width);
   }
 }
 
@@ -255,7 +248,7 @@ void report_t::normalize_period()
   if (! interval.duration)
     HANDLER(period_).off();
   else if (! HANDLED(sort_all_))
-    HANDLER(sort_xacts_).on_only(string("?normalize"));
+    HANDLER(sort_xacts_).on("?normalize");
 }
 
 void report_t::parse_query_args(const value_t& args, const string& whence)
@@ -278,7 +271,7 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
   }
 
   if (query.has_query(query_t::QUERY_BOLD)) {
-    HANDLER(bold_if_).set_expr(whence, query.get_query(query_t::QUERY_BOLD));
+    HANDLER(bold_if_).on(whence, query.get_query(query_t::QUERY_BOLD));
     DEBUG("report.predicate", "Bolding predicate = " << HANDLER(bold_if_).str());
   }
 
@@ -329,9 +322,9 @@ void report_t::generate_report(post_handler_ptr handler)
 
   generate_posts_iterator walker
     (session, HANDLED(seed_) ?
-     static_cast<unsigned int>(HANDLER(seed_).value.to_long()) : 0,
+     lexical_cast<unsigned int>(HANDLER(seed_).str()) : 0,
      HANDLED(head_) ?
-     static_cast<unsigned int>(HANDLER(head_).value.to_long()) : 50);
+     lexical_cast<unsigned int>(HANDLER(head_).str()) : 50);
 
   pass_down_posts<generate_posts_iterator>(handler, walker);
 }
@@ -527,16 +520,17 @@ value_t report_t::fn_market(call_scope_t& args)
     arg0 = tmp;
   }
 
+  string target_commodity;
   if (args.has<string>(2))
-    result = arg0.exchange_commodities(args.get<string>(2),
+    target_commodity = args.get<string>(2);
+
+  if (! target_commodity.empty())
+    result = arg0.exchange_commodities(target_commodity,
                                        /* add_prices= */ false, moment);
   else
     result = arg0.value(moment);
 
-  if (! result.is_null())
-    return result;
-
-  return args[0];
+  return ! result.is_null() ? result : arg0;
 }
 
 value_t report_t::fn_get_at(call_scope_t& args)
@@ -1245,7 +1239,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "display_total"))
         return MAKE_FUNCTOR(report_t::fn_display_total);
       else if (is_eq(p, "date"))
-        return MAKE_FUNCTOR(report_t::fn_now);
+        return MAKE_FUNCTOR(report_t::fn_today);
       break;
 
     case 'f':
@@ -1404,85 +1398,98 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       return MAKE_OPT_HANDLER(report_t, handler);
     break;
 
-#define POSTS_REPORT(formatter)                                 \
+#define POSTS_REPORTER(formatter)                               \
     WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this, \
-                            string("#") + p));
+                            string("#") + p))
 
     // Can't use WRAP_FUNCTOR here because the template arguments
     // confuse the parser
-#define POSTS_REPORT_(method, formatter)                                \
-    expr_t::op_t::wrap_functor                                          \
-    (reporter<post_t, post_handler_ptr, method>                         \
-      (post_handler_ptr(formatter), *this, string("#") + p));
+#define POSTS_REPORTER_(method, formatter)                      \
+    expr_t::op_t::wrap_functor                                  \
+    (reporter<post_t, post_handler_ptr, method>                 \
+      (post_handler_ptr(formatter), *this, string("#") + p))
 
-#define ACCOUNTS_REPORT(formatter)                                      \
+#define FORMATTED_POSTS_REPORTER(format)                                \
+    POSTS_REPORTER                                                      \
+      (new format_posts                                                 \
+       (*this, report_format(HANDLER(format)),                          \
+        maybe_format(HANDLER(prepend_format_)),                         \
+        HANDLED(prepend_width_) ?                                       \
+        lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+
+#define FORMATTED_COMMODITIES_REPORTER(format)                          \
+    POSTS_REPORTER_                                                     \
+      (&report_t::commodities_report,                                   \
+       new format_posts                                                 \
+       (*this, report_format(HANDLER(format)),                          \
+        maybe_format(HANDLER(prepend_format_)),                         \
+        HANDLED(prepend_width_) ?                                       \
+        lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+
+#define ACCOUNTS_REPORTER(formatter)                                    \
     expr_t::op_t::wrap_functor(reporter<account_t, acct_handler_ptr,    \
                                &report_t::accounts_report>              \
                                (acct_handler_ptr(formatter), *this,     \
-                                string("#") + p));
+                                string("#") + p))
+
+#define FORMATTED_ACCOUNTS_REPORTER(format)                             \
+    ACCOUNTS_REPORTER                                                   \
+      (new format_accounts                                              \
+       (*this, report_format(HANDLER(format)),                          \
+        maybe_format(HANDLER(prepend_format_)),                         \
+        HANDLED(prepend_width_) ?                                       \
+        lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
 
   case symbol_t::COMMAND:
     switch (*p) {
     case 'a':
       if (is_eq(p, "accounts")) {
-        return POSTS_REPORT(new report_accounts(*this));
+        return POSTS_REPORTER(new report_accounts(*this));
       }
       break;
 
     case 'b':
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
-        return ACCOUNTS_REPORT(new format_accounts
-                               (*this, report_format(HANDLER(balance_format_)),
-                                maybe_format(HANDLER(prepend_format_)),
-                                HANDLER(prepend_width_).value.to_size_t()));
+        return FORMATTED_ACCOUNTS_REPORTER(balance_format_);
       }
       else if (is_eq(p, "budget")) {
-        HANDLER(amount_).set_expr(string("#budget"), "(amount, 0)");
+        HANDLER(amount_).on(string("#budget"), "(amount, 0)");
 
         budget_flags |= BUDGET_WRAP_VALUES;
         if (! (budget_flags & ~BUDGET_WRAP_VALUES))
           budget_flags |= BUDGET_BUDGETED;
 
-        return ACCOUNTS_REPORT(new format_accounts
-                               (*this, report_format(HANDLER(budget_format_)),
-                                maybe_format(HANDLER(prepend_format_)),
-                                HANDLER(prepend_width_).value.to_size_t()));
+        return FORMATTED_ACCOUNTS_REPORTER(budget_format_);
       }
       break;
 
     case 'c':
       if (is_eq(p, "csv")) {
-        return POSTS_REPORT(new format_posts
-                            (*this, report_format(HANDLER(csv_format_)),
-                             maybe_format(HANDLER(prepend_format_)),
-                             HANDLER(prepend_width_).value.to_size_t()));
+        return FORMATTED_POSTS_REPORTER(csv_format_);
       }
       else if (is_eq(p, "cleared")) {
-        HANDLER(amount_).set_expr(string("#cleared"),
-                                  "(amount, cleared ? amount : 0)");
-        return ACCOUNTS_REPORT(new format_accounts
-                               (*this, report_format(HANDLER(cleared_format_)),
-                                maybe_format(HANDLER(prepend_format_)),
-                                HANDLER(prepend_width_).value.to_size_t()));
+        HANDLER(amount_).on(string("#cleared"),
+                            "(amount, cleared ? amount : 0)");
+        return FORMATTED_ACCOUNTS_REPORTER(cleared_format_);
       }
       else if (is_eq(p, "convert")) {
         return WRAP_FUNCTOR(convert_command);
       }
       else if (is_eq(p, "commodities")) {
-        return POSTS_REPORT(new report_commodities(*this));
+        return POSTS_REPORTER(new report_commodities(*this));
       }
       break;
 
     case 'e':
       if (is_eq(p, "equity")) {
-        HANDLER(generated).on_only(string("#equity"));
-        return POSTS_REPORT(new print_xacts(*this));
+        HANDLER(generated).on("#equity");
+        return POSTS_REPORTER(new print_xacts(*this));
       }
       else if (is_eq(p, "entry")) {
         return WRAP_FUNCTOR(xact_command);
       }
       else if (is_eq(p, "emacs")) {
-        return POSTS_REPORT(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(output_stream));
       }
       else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
@@ -1491,43 +1498,32 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'o':
       if (is_eq(p, "org")) {
-        return POSTS_REPORT(new posts_to_org_table
+        return POSTS_REPORTER(new posts_to_org_table
                             (*this, maybe_format(HANDLER(prepend_format_))));
       }
       break;
 
     case 'p':
       if (*(p + 1) == '\0' || is_eq(p, "print")) {
-        return POSTS_REPORT(new print_xacts(*this, HANDLED(raw)));
+        return POSTS_REPORTER(new print_xacts(*this, HANDLED(raw)));
       }
       else if (is_eq(p, "prices")) {
-        return POSTS_REPORT_(&report_t::commodities_report,
-                             new format_posts
-                             (*this, report_format(HANDLER(prices_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t()));
+        return FORMATTED_COMMODITIES_REPORTER(prices_format_);
       }
       else if (is_eq(p, "pricedb")) {
-        return POSTS_REPORT_(&report_t::commodities_report,
-                             new format_posts
-                             (*this, report_format(HANDLER(pricedb_format_)),
-                              maybe_format(HANDLER(prepend_format_)),
-                              HANDLER(prepend_width_).value.to_size_t()));
+        return FORMATTED_COMMODITIES_REPORTER(pricedb_format_);
       }
       else if (is_eq(p, "pricemap")) {
         return MAKE_FUNCTOR(report_t::pricemap_command);
       }
       else if (is_eq(p, "payees")) {
-        return POSTS_REPORT(new report_payees(*this));
+        return POSTS_REPORTER(new report_payees(*this));
       }
       break;
 
     case 'r':
       if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register")) {
-        return POSTS_REPORT(new format_posts
-                            (*this, report_format(HANDLER(register_format_)),
-                             maybe_format(HANDLER(prepend_format_)),
-                             HANDLER(prepend_width_).value.to_size_t()));
+        return FORMATTED_POSTS_REPORTER(register_format_);
       }
       else if (is_eq(p, "reload")) {
         return MAKE_FUNCTOR(report_t::reload_command);
@@ -1545,7 +1541,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "xml"))
-        return POSTS_REPORT(new format_xml(*this));
+        return POSTS_REPORTER(new format_xml(*this));
       break;
     }
     break;
@@ -1568,8 +1564,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       break;
     case 'g':
       if (is_eq(p, "generate"))
-        return POSTS_REPORT_(&report_t::generate_report,
-                             new print_xacts(*this));
+        return POSTS_REPORTER_(&report_t::generate_report,
+                               new print_xacts(*this));
       break;
     case 'p':
       if (is_eq(p, "parse"))

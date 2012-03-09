@@ -128,28 +128,24 @@ public:
 
   OPTION__
   (session_t, price_exp_, // -Z
-   CTOR(session_t, price_exp_) { value = 24L * 3600L; }
-   DO_(args) {
-     value = args.get<long>(1) * 60L;
-   });
+   CTOR(session_t, price_exp_) { value = "24"; });
 
   OPTION__
   (session_t, file_, // -f
    std::list<path> data_files;
    CTOR(session_t, file_) {}
-   DO_(args) {
-     assert(args.size() == 2);
+   DO_(str) {
      if (parent->flush_on_next_data_file) {
        data_files.clear();
        parent->flush_on_next_data_file = false;
      }
-     data_files.push_back(args.get<string>(1));
+     data_files.push_back(str);
    });
 
-  OPTION_(session_t, input_date_format_, DO_(args) {
-      // This changes static variables inside times.h, which affects the basic
-      // date parser.
-      set_input_date_format(args.get<string>(1).c_str());
+  OPTION_(session_t, input_date_format_, DO_(str) {
+      // This changes static variables inside times.h, which affects the
+      // basic date parser.
+      set_input_date_format(str.c_str());
     });
 
   OPTION(session_t, explicit);

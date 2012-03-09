@@ -133,7 +133,7 @@ namespace {
 
     std::size_t columns =
       (report.HANDLED(columns_) ?
-       static_cast<std::size_t>(report.HANDLER(columns_).value.to_long()) : 80);
+       lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
 
     if (xact.note)
       print_note(out, *xact.note, xact.has_flags(ITEM_NOTE_ON_NEXT_LINE),
@@ -191,8 +191,8 @@ namespace {
       unistring name(pbuf.str());
 
       std::size_t account_width =
-        (report.HANDLER(account_width_).specified ?
-         static_cast<std::size_t>(report.HANDLER(account_width_).value.to_long()) : 36);
+        (report.HANDLED(account_width_) ?
+         lexical_cast<std::size_t>(report.HANDLER(account_width_).str()) : 36);
 
       if (account_width < name.length())
         account_width = name.length();
@@ -218,13 +218,14 @@ namespace {
           // first.
         }
         else {
-          int amount_width =
-            (report.HANDLER(amount_width_).specified ?
-             report.HANDLER(amount_width_).value.to_int() : 12);
+          std::size_t amount_width =
+            (report.HANDLED(amount_width_) ?
+             lexical_cast<std::size_t>(report.HANDLER(amount_width_).str()) :
+             12);
 
           std::ostringstream amt_str;
-          value_t(post->amount).print(amt_str, amount_width, -1,
-                                      AMOUNT_PRINT_RIGHT_JUSTIFY |
+          value_t(post->amount).print(amt_str, static_cast<int>(amount_width),
+                                      -1, AMOUNT_PRINT_RIGHT_JUSTIFY |
                                       AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
           amt = amt_str.str();
         }

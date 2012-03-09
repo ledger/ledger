@@ -88,10 +88,9 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
                            predicate_t(report.HANDLER(forecast_while_).str(),
                                        report.what_to_keep()),
                            report,
-                           report.HANDLED(forecast_years_) ?
-                             static_cast<std::size_t>
-                               (report.HANDLER(forecast_years_).value.to_long()) :
-                             5UL);
+                           (report.HANDLED(forecast_years_) ?
+                            lexical_cast<std::size_t>
+                            (report.HANDLER(forecast_years_).value) : 5UL));
     forecast_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(forecast_handler);
 
@@ -137,9 +136,9 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
       handler.reset
         (new truncate_xacts(handler,
                             report.HANDLED(head_) ?
-                            report.HANDLER(head_).value.to_int() : 0,
+                            lexical_cast<int>(report.HANDLER(head_).value) : 0,
                             report.HANDLED(tail_) ?
-                            report.HANDLER(tail_).value.to_int() : 0));
+                            lexical_cast<int>(report.HANDLER(tail_).value) : 0));
 
     // display_filter_posts adds virtual posts to the list to account
     // for changes in value of commodities, which otherwise would affect
