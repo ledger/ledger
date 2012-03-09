@@ -60,79 +60,12 @@ namespace ledger {
 
 typedef std::map<datetime_t, amount_t> price_map_t;
 
-template <typename EdgeWeightMap,
-          typename PricePointMap,
-          typename PriceRatioMap>
-class recent_edge_weight
-{
-public:
-  EdgeWeightMap weight;
-  PricePointMap price_point;
-  PriceRatioMap ratios;
-
-  datetime_t           reftime;
-  optional<datetime_t> oldest;
-
-  recent_edge_weight() { }
-  recent_edge_weight(EdgeWeightMap _weight,
-                     PricePointMap _price_point,
-                     PriceRatioMap _ratios,
-                     datetime_t    _reftime,
-                     const optional<datetime_t>& _oldest = none)
-    : weight(_weight), price_point(_price_point), ratios(_ratios),
-      reftime(_reftime), oldest(_oldest) { }
-
-  template <typename Edge>
-  bool operator()(const Edge& e) const
-  {
-#if defined(DEBUG_ON)
-    DEBUG("history.find", "  reftime      = " << reftime);
-    if (oldest) {
-      DEBUG("history.find", "  oldest       = " << *oldest);
-    }
-#endif
-
-    const price_map_t& prices(get(ratios, e));
-    if (prices.empty()) {
-      DEBUG("history.find", "  prices map is empty for this edge");
-      put(weight, e, std::numeric_limits<std::size_t>::max());
-      return false;
-    }
-
-    price_map_t::const_iterator low = prices.upper_bound(reftime);
-    if (low != prices.end() && low == prices.begin()) {
-      DEBUG("history.find", "  don't use this edge");
-      put(weight, e, std::numeric_limits<std::size_t>::max());
-      return false;
-    } else {
-      --low;
-      assert(((*low).first <= reftime));
-
-      if (oldest && (*low).first < *oldest) {
-        DEBUG("history.find", "  edge is out of range");
-        put(weight, e, std::numeric_limits<std::size_t>::max());
-        return false;
-      }
-
-      long secs = (reftime - (*low).first).total_seconds();
-      assert(secs >= 0);
-
-      put(weight, e, secs);
-      put(price_point, e, price_point_t((*low).first, (*low).second));
-
-      DEBUG("history.find", "  using edge at price point "
-            << (*low).first << " " << (*low).second);
-      return true;
-    }
-  }
-};
-
 class commodity_history_t : public noncopyable
 {
 public:
   typedef adjacency_list
-    <setS,                      // Store all edges as a set
-     setS,                      // Store all vertices in a set
+    <vecS,                      // Store all edges in a vector
+     vecS,                      // Store all vertices in a vector
      undirectedS,               // Relations are both ways
 
     // All vertices are commodities
@@ -156,31 +89,16 @@ public:
   typedef graph_traits<Graph>::vertex_descriptor vertex_descriptor;
   typedef graph_traits<Graph>::edge_descriptor   edge_descriptor;
 
-  typedef property_map<Graph, vertex_name_t>::type  NameMap;
-  typedef property_map<Graph, vertex_index_t>::type IndexMap;
-
+  typedef property_map<Graph, vertex_name_t>::type      NameMap;
   typedef property_map<Graph, edge_weight_t>::type      EdgeWeightMap;
   typedef property_map<Graph, edge_price_point_t>::type PricePointMap;
   typedef property_map<Graph, edge_price_ratio_t>::type PriceRatioMap;
 
-  IndexMap      indexmap;
   PricePointMap pricemap;
   PriceRatioMap ratiomap;
 
-  typedef filtered_graph<Graph, recent_edge_weight<EdgeWeightMap,
-                                                   PricePointMap,
-                                                   PriceRatioMap> > FGraph;
-
-  typedef property_map<FGraph, vertex_name_t>::type FNameMap;
-  typedef property_map<FGraph, vertex_index_t>::type FIndexMap;
-  typedef iterator_property_map<vertex_descriptor*, FIndexMap,
-                                vertex_descriptor,
-                                vertex_descriptor&> FPredecessorMap;
-  typedef iterator_property_map<long*, FIndexMap, long, long&> FDistanceMap;
-
   commodity_history_t()
-    : indexmap(get(vertex_index, price_graph)),
-      pricemap(get(edge_price_point, price_graph)),
+    : pricemap(get(edge_price_point, price_graph)),
       ratiomap(get(edge_price_ratio, price_graph)) {}
 
   void add_commodity(commodity_t& comm);
