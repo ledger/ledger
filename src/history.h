@@ -156,13 +156,8 @@ public:
   typedef graph_traits<Graph>::vertex_descriptor vertex_descriptor;
   typedef graph_traits<Graph>::edge_descriptor   edge_descriptor;
 
-  typedef property_map<Graph, vertex_index_t>::type IndexMap;
   typedef property_map<Graph, vertex_name_t>::type  NameMap;
-
-  typedef iterator_property_map<vertex_descriptor*, IndexMap,
-                                vertex_descriptor,
-                                vertex_descriptor&> PredecessorMap;
-  typedef iterator_property_map<long*, IndexMap, long, long&> DistanceMap;
+  typedef property_map<Graph, vertex_index_t>::type IndexMap;
 
   typedef property_map<Graph, edge_weight_t>::type      EdgeWeightMap;
   typedef property_map<Graph, edge_price_point_t>::type PricePointMap;
@@ -175,7 +170,13 @@ public:
   typedef filtered_graph<Graph, recent_edge_weight<EdgeWeightMap,
                                                    PricePointMap,
                                                    PriceRatioMap> > FGraph;
+
   typedef property_map<FGraph, vertex_name_t>::type FNameMap;
+  typedef property_map<FGraph, vertex_index_t>::type FIndexMap;
+  typedef iterator_property_map<vertex_descriptor*, FIndexMap,
+                                vertex_descriptor,
+                                vertex_descriptor&> FPredecessorMap;
+  typedef iterator_property_map<long*, FIndexMap, long, long&> FDistanceMap;
 
   commodity_history_t()
     : indexmap(get(vertex_index, price_graph)),

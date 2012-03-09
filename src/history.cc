@@ -204,11 +204,13 @@ commodity_history_t::find_price(const commodity_t&          source,
   DEBUG("history.find", "sv commodity = " << get(namemap, sv)->symbol());
   DEBUG("history.find", "tv commodity = " << get(namemap, tv)->symbol());
 
-  std::vector<vertex_descriptor> predecessors(num_vertices(fg));
-  std::vector<long>              distances(num_vertices(fg));
-  
-  PredecessorMap predecessorMap(&predecessors[0]);
-  DistanceMap    distanceMap(&distances[0]);
+  std::size_t                    vector_len(num_vertices(fg));
+  std::vector<vertex_descriptor> predecessors(vector_len);
+  std::vector<long>              distances(vector_len);
+
+  FIndexMap       indexMap(get(vertex_index, fg));
+  FPredecessorMap predecessorMap(&predecessors[0], indexMap);
+  FDistanceMap    distanceMap(&distances[0], indexMap);
 
   dijkstra_shortest_paths(fg, /* start= */ sv,
                           predecessor_map(predecessorMap)
@@ -217,9 +219,14 @@ commodity_history_t::find_price(const commodity_t&          source,
 
   // Extract the shortest path and performance the calculations
   datetime_t least_recent = moment;
-  amount_t price;
+  amount_t   price;
 
   const commodity_t * last_target = &target;
+
+  typedef tuple<const commodity_t *, const commodity_t *,
+                const price_point_t *> results_tuple;
+  std::vector<results_tuple> results;
+  bool results_reversed = false;
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; 
@@ -229,7 +236,23 @@ commodity_history_t::find_price(const commodity_t&          source,
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(u, v, fg);
     Graph::edge_descriptor edge = edgePair.first;
 
+    const commodity_t *  u_comm = get(namemap, u);
+    const commodity_t *  v_comm = get(namemap, v);
     const price_point_t& point(get(pricemap, edge));
+
+    if (v == tv && u_comm != last_target && v_comm != last_target)
+      results_reversed = true;
+
+    results.push_back(results_tuple(u_comm, v_comm, &point));
+  }
+
+  if (results_reversed)
+    std::reverse(results.begin(), results.end());
+
+  foreach (const results_tuple& edge, results) {
+    const commodity_t *  u_comm = edge.get<0>();
+    const commodity_t *  v_comm = edge.get<1>();
+    const price_point_t& point(*edge.get<2>());
 
     bool first_run = false;
     if (price.is_null()) {
@@ -240,8 +263,8 @@ commodity_history_t::find_price(const commodity_t&          source,
       least_recent = point.when;
     }
 
-    DEBUG("history.find", "u commodity = " << get(namemap, u)->symbol());
-    DEBUG("history.find", "v commodity = " << get(namemap, v)->symbol());
+    DEBUG("history.find", "u commodity = " << u_comm->symbol());
+    DEBUG("history.find", "v commodity = " << v_comm->symbol());
     DEBUG("history.find", "last target = " << last_target->symbol());
 
     // Determine which direction we are converting in
@@ -250,12 +273,12 @@ commodity_history_t::find_price(const commodity_t&          source,
 
     if (! first_run) {
       DEBUG("history.find", "price was = " << price.unrounded());
-      if (pprice.commodity() != *last_target)
+      if (pprice.commodity_ptr() != last_target)
         price *= pprice.inverted();
       else
         price *= pprice;
     }
-    else if (pprice.commodity() != *last_target) {
+    else if (pprice.commodity_ptr() != last_target) {
       price = pprice.inverted();
     }
     else {
@@ -263,10 +286,10 @@ commodity_history_t::find_price(const commodity_t&          source,
     }
     DEBUG("history.find", "price is  = " << price.unrounded());
 
-    if (*last_target == *get(namemap, v))
-      last_target = get(namemap, u);
+    if (last_target == v_comm)
+      last_target = u_comm;
     else
-      last_target = get(namemap, v);
+      last_target = v_comm;
 
     DEBUG("history.find", "last target now = " << last_target->symbol());
   }
