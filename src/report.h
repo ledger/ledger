@@ -632,6 +632,7 @@ public:
   OPTION(report_t, head_);
 
   OPTION_(report_t, historical, DO() { // -H
+      OTHER(market).on(whence);
       OTHER(amount_)
         .on(whence, "nail_down(amount_expr, "
             "market(amount_expr, value_date, exchange))");
