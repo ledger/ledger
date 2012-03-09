@@ -1407,16 +1407,21 @@ value_t value_t::value(const optional<datetime_t>&   moment,
     return NULL_VALUE;
 
   case AMOUNT:
-    if (optional<amount_t> val =
-        as_amount().value(moment, in_terms_of))
+    if (optional<amount_t> val = as_amount().value(moment, in_terms_of))
       return *val;
     return NULL_VALUE;
 
   case BALANCE:
-    if (optional<balance_t> bal =
-        as_balance().value(moment, in_terms_of))
+    if (optional<balance_t> bal = as_balance().value(moment, in_terms_of))
       return *bal;
     return NULL_VALUE;
+
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.value(moment, in_terms_of));
+    return temp;
+  }
 
   default:
     break;
