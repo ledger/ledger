@@ -141,7 +141,6 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   OPTION__
   (global_scope_t, init_file_, // -i
-
    CTOR(global_scope_t, init_file_) {
      if (const char * home_var = std::getenv("HOME"))
        on(none, (path(home_var) / ".ledgerrc").string());
