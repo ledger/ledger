@@ -93,7 +93,9 @@ struct annotation_t : public supports_flags<>,
     return (price      == rhs.price &&
             date       == rhs.date  &&
             tag        == rhs.tag   &&
-            value_expr == rhs.value_expr);
+            (value_expr && rhs.value_expr ?
+             value_expr->text() == rhs.value_expr->text() :
+             value_expr == rhs.value_expr));
   }
 
   void parse(std::istream& in);
