@@ -743,12 +743,20 @@ value_t report_t::fn_commodity(call_scope_t& args)
 value_t report_t::fn_nail_down(call_scope_t& args)
 {
   value_t arg0(args[0]);
+  value_t arg1(args[1]);
+
   switch (arg0.type()) {
   case value_t::AMOUNT: {
     amount_t tmp(arg0.as_amount());
-    if (tmp.has_commodity())
-      tmp.set_commodity(tmp.commodity()
-                        .nail_down(args[1].as_any<expr_t::ptr_op_t>()));
+    if (tmp.has_commodity() && ! arg1.is_null()) {
+      expr_t value_expr(is_expr(arg1) ?
+                        as_expr(arg1) : expr_t::op_t::wrap_value(arg1 / arg0));
+      std::ostringstream buf;
+      value_expr.print(buf);
+      value_expr.set_text(buf.str());
+
+      tmp.set_commodity(tmp.commodity().nail_down(value_expr));
+    }
     return tmp;
   }
 
