@@ -61,6 +61,7 @@ public:
 
   unique_ptr<journal_t> journal;
   parse_context_stack_t parsing_context;
+  optional<expr_t>      value_expr;
 
   explicit session_t();
   virtual ~session_t() {
@@ -107,6 +108,7 @@ public:
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
+    HANDLER(value_expr).report(out);
   }
 
   option_t<session_t> * lookup_option(const char * p);
@@ -154,6 +156,7 @@ public:
   OPTION(session_t, permissive);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
+  OPTION(session_t, value_expr);
 };
 
 /**
