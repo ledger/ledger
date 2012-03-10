@@ -149,6 +149,8 @@ class RegressFile(object):
                 harness.success()
             else:
                 harness.failure(os.path.basename(self.filename))
+                print "STDERR:"
+                print p.stderr.read()
         else:
             if success: print
             if test['exitcode']:

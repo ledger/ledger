@@ -1,0 +1,43 @@
+P 2012-03-01 EUR $2
+P 2012-03-01 GBP $2
+
+2012-03-05 KFC
+    Expenses:Food                10 EUR
+    Assets:Cash
+
+2012-03-10 KFC
+    Expenses:Food                10 GBP
+    Assets:Cash
+
+test reg food
+12-Mar-05 KFC                   Expenses:Food                10 EUR       10 EUR
+12-Mar-10 KFC                   Expenses:Food                10 GBP       10 EUR
+                                                                          10 GBP
+end test
+
+test reg food -V
+12-Mar-05 KFC                   Expenses:Food                   $20          $20
+12-Mar-10 KFC                   Expenses:Food                   $20          $40
+end test
+
+test reg food -X '$'
+12-Mar-05 KFC                   Expenses:Food                   $20          $20
+12-Mar-10 KFC                   Expenses:Food                   $20          $40
+end test
+
+test reg food -X '$,GBP'
+12-Mar-05 KFC                   Expenses:Food                   $20          $20
+12-Mar-10 KFC                   Expenses:Food                10 GBP          $20
+                                                                          10 GBP
+end test
+
+test reg food -X '$!,GBP'
+12-Mar-05 KFC                   Expenses:Food                   $20          $20
+12-Mar-10 KFC                   Expenses:Food                   $20          $40
+end test
+
+test reg food -X '$,EUR'
+12-Mar-05 KFC                   Expenses:Food                10 EUR       10 EUR
+12-Mar-10 KFC                   Expenses:Food                   $20          $20
+                                                                          10 EUR
+end test

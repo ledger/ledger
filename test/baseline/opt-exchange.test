@@ -53,6 +53,63 @@ test reg --exchange=' C, A '
                                 Assets:Brokerage              -75 A         75 A
 09-Jan-01 January 1st, 2009 (3) Assets:Brokerage              100 A        175 A
                                 Assets:Brokerage             -100 A         75 A
+09-Jan-02 Commodities revalued  <Revalued>                    225 A
+                                                            -1800 C        300 A
+                                                                         -1800 C
+09-Jan-02 January 2nd, 2009     Assets:Brokerage              500 C        300 A
+                                                                         -1300 C
+                                Assets:Brokerage             -500 C        300 A
+                                                                         -1800 C
+09-Jan-03 January 3rd, 2009     Assets:Brokerage              600 C        300 A
+                                                                         -1200 C
+                                Assets:Brokerage             -600 C        300 A
+                                                                         -1800 C
+09-Jan-04 January 4th, 2009     Assets:Brokerage              300 A        600 A
+                                                                         -1800 C
+                                Assets:Brokerage            -2400 C        600 A
+                                                                         -4200 C
+09-Jan-05 January 5th, 2009     Assets:Brokerage             1280 C        600 A
+                                                                         -2920 C
+                                Assets:Brokerage            -1280 C        600 A
+                                                                         -4200 C
+09-Jan-06 Commodities revalued  <Revalued>                   2040 C        600 A
+                                                                         -2160 C
+09-Jan-06 January 6th, 2009     Assets:Brokerage              155 A        755 A
+                                                                         -2160 C
+                                Assets:Brokerage             -186 C        755 A
+                                                                         -2346 C
+09-Jan-07 Commodities revalued  <Revalued>                    -86 C        755 A
+                                                                         -2432 C
+09-Jan-07 January 7th, 2009     Assets:Brokerage              155 A        910 A
+                                                                         -2432 C
+                                Assets:Brokerage             -200 C        910 A
+                                                                         -2632 C
+09-Jan-08 Commodities revalued  <Revalued>                  -5613 C        910 A
+                                                                         -8245 C
+09-Jan-08 January 8th, 2009     Assets:Brokerage              155 A       1065 A
+                                                                         -8245 C
+                                Assets:Brokerage             -200 C       1065 A
+                                                                         -8445 C
+09-Jan-09 Commodities revalued  <Revalued>                  -2800 C       1065 A
+                                                                        -11245 C
+09-Jan-09 January 9th, 2009     Assets:Brokerage              200 C       1065 A
+                                                                        -11045 C
+                                Assets:Brokerage             -155 A        910 A
+                                                                        -11045 C
+09-Jan-10 January 10th, 2009    Assets:Brokerage              200 C        910 A
+                                                                        -10845 C
+                                Assets:Brokerage             -155 A        755 A
+                                                                        -10845 C
+end test
+
+
+test reg --exchange=' C!, A '
+09-Jan-01 January 1st, 2009 (1) Assets:Brokerage              100 A        100 A
+                                Assets:Brokerage              -50 A         50 A
+09-Jan-01 January 1st, 2009 (2) Assets:Brokerage              100 A        150 A
+                                Assets:Brokerage              -75 A         75 A
+09-Jan-01 January 1st, 2009 (3) Assets:Brokerage              100 A        175 A
+                                Assets:Brokerage             -100 A         75 A
 09-Jan-02 Commodities revalued  <Revalued>                        0        600 C
 09-Jan-02 January 2nd, 2009     Assets:Brokerage              500 C       1100 C
                                 Assets:Brokerage             -500 C        600 C

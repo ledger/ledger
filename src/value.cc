@@ -1436,21 +1436,96 @@ value_t value_t::exchange_commodities(const std::string&          commodities,
                                       const bool                  add_prices,
                                       const optional<datetime_t>& moment)
 {
-  scoped_array<char> buf(new char[commodities.length() + 1]);
+  if (type() == SEQUENCE) {
+    value_t temp;
+    foreach (value_t& value, as_sequence_lval())
+      temp.push_back(value.exchange_commodities(commodities, add_prices, moment));
+    return temp;
+  }
 
-  std::strcpy(buf.get(), commodities.c_str());
+  // If we are repricing to just a single commodity, with no price
+  // expression, skip the expensive logic below.
+  if (commodities.find(',') == string::npos &&
+      commodities.find('=') == string::npos)
+    return value(moment, *commodity_pool_t::current_pool->find_or_create(commodities));
 
-  for (char * p = std::strtok(buf.get(), ",");
-       p;
-       p = std::strtok(NULL, ",")) {
-    if (commodity_t * commodity =
-        commodity_pool_t::current_pool->parse_price_expression(p, add_prices,
-                                                               moment)) {
-      value_t result = value(moment, *commodity);
-      if (! result.is_null())
-        return result;
+  std::vector<commodity_t *> comms;
+  std::vector<bool>          force;
+
+  typedef tokenizer<char_separator<char> > tokenizer;
+  tokenizer tokens(commodities, char_separator<char>(","));
+
+  foreach (const string& name, tokens) {
+    string::size_type name_len = name.length();
+
+    if (commodity_t * commodity = commodity_pool_t::current_pool
+        ->parse_price_expression(name[name_len - 1] == '!' ?
+                                 string(name, 0, name_len - 1) :
+                                 name, add_prices, moment)) {
+      DEBUG("commodity.exchange", "Pricing for commodity: " << commodity->symbol());
+      comms.push_back(&commodity->referent());
+      force.push_back(name[name_len - 1] == '!');
     }
   }
+
+  int index = 0;
+  foreach (commodity_t * comm, comms) {
+    switch (type()) {
+    case AMOUNT:
+      DEBUG("commodity.exchange", "We have an amount: " << as_amount_lval());
+      if (! force[index] &&
+          std::find(comms.begin(), comms.end(),
+                    &as_amount_lval().commodity().referent()) != comms.end())
+        break;
+
+      DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
+      if (optional<amount_t> val = as_amount_lval().value(moment, *comm)) {
+        DEBUG("commodity.exchange", "Re-priced amount is: " << *val);
+        return *val;
+      }
+      DEBUG("commodity.exchange", "Was unable to find a price");
+      break;
+
+    case BALANCE: {
+      balance_t temp;
+      bool repriced = false;
+
+      DEBUG("commodity.exchange", "We have a balance: " << as_balance_lval());
+      foreach (const balance_t::amounts_map::value_type& pair,
+               as_balance_lval().amounts) {
+        DEBUG("commodity.exchange", "We have a balance amount of commodity: "
+              << pair.first->symbol() << " == "
+              << pair.second.commodity().symbol());
+        if (! force[index] &&
+            std::find(comms.begin(), comms.end(),
+                      &pair.first->referent()) != comms.end()) {
+          temp += pair.second;
+        } else {
+          DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
+          if (optional<amount_t> val = pair.second.value(moment, *comm)) {
+            DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
+            temp += *val;
+            repriced = true;
+          } else {
+            DEBUG("commodity.exchange", "Was unable to find price");
+            temp += pair.second;
+          }
+        }
+      }
+
+      if (repriced) {
+        DEBUG("commodity.exchange", "Re-priced balance is: " << temp);
+        return temp;
+      }
+    }
+
+    default:
+      break;
+    }
+
+    ++index;
+  }
+
   return *this;
 }
 
