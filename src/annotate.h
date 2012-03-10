@@ -55,9 +55,10 @@ struct annotation_t : public supports_flags<>,
 {
 #define ANNOTATION_PRICE_CALCULATED      0x01
 #define ANNOTATION_PRICE_FIXATED         0x02
-#define ANNOTATION_DATE_CALCULATED       0x04
-#define ANNOTATION_TAG_CALCULATED        0x08
-#define ANNOTATION_VALUE_EXPR_CALCULATED 0x10
+#define ANNOTATION_PRICE_NOT_PER_UNIT    0x04
+#define ANNOTATION_DATE_CALCULATED       0x08
+#define ANNOTATION_TAG_CALCULATED        0x10
+#define ANNOTATION_VALUE_EXPR_CALCULATED 0x20
 
   optional<amount_t> price;
   optional<date_t>   date;

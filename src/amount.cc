@@ -1065,10 +1065,6 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     if (! commodity_)
       commodity_ = commodity_pool_t::current_pool->create(symbol);
     assert(commodity_);
-
-    if (details)
-      commodity_ =
-        commodity_pool_t::current_pool->find_or_create(*commodity_, details);
   }
 
   // Quickly scan through and verify the correctness of the amount's use of
@@ -1203,6 +1199,14 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   if (! flags.has_flags(PARSE_NO_REDUCE))
     in_place_reduce();          // will not throw an exception
+
+  if (commodity_ && details) {
+    if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+      assert(details.price);
+      *details.price /= this->abs();
+    }
+    set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
+  }
 
   VERIFY(valid());
 

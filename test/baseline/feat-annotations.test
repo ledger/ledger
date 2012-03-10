@@ -1,0 +1,37 @@
+2012-03-09 KFC
+    Expenses:Food                10 CHIK @ $50
+    Assets:Cash
+
+2012-03-09 KFC
+    Assets:Cash                  $75
+    Expenses:Food                -10 CHIK {{$50}} @ $75
+    Equity:Capital Gains         $-25
+
+2012-03-09 KFC
+    Expenses:Food                10 CHIK
+    Assets:Cash                  $-50
+
+2012-03-09 KFC
+    Assets:Cash                  $75
+    Expenses:Food                -10 CHIK {{$50}}
+    Equity:Capital Gains         $-25
+
+test print
+2012/03/09 KFC
+    Expenses:Food                            10 CHIK @ $50
+    Assets:Cash
+
+2012/03/09 KFC
+    Assets:Cash                                  $75
+    Expenses:Food                       -10 CHIK {$5} @ $75
+    Equity:Capital Gains                        $-25
+
+2012/03/09 KFC
+    Expenses:Food                            10 CHIK
+    Assets:Cash                                 $-50
+
+2012/03/09 KFC
+    Assets:Cash                                  $75
+    Expenses:Food                       -10 CHIK {$5}
+    Equity:Capital Gains                        $-25
+end test

@@ -88,6 +88,12 @@ void annotation_t::parse(std::istream& in)
         throw_(amount_error, _("Commodity specifies more than one price"));
 
       in.get(c);
+      c = static_cast<char>(in.peek());
+      if (c == '{') {
+        in.get(c);
+        add_flags(ANNOTATION_PRICE_NOT_PER_UNIT);
+      }
+
       c = peek_next_nonws(in);
       if (c == '=') {
         in.get(c);
@@ -95,10 +101,18 @@ void annotation_t::parse(std::istream& in)
       }
 
       READ_INTO(in, buf, 255, c, c != '}');
-      if (c == '}')
+      if (c == '}') {
         in.get(c);
-      else
-        throw_(amount_error, _("Commodity price lacks closing brace"));
+        if (has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+          c = static_cast<char>(in.peek());
+          if (c != '}')
+            throw_(amount_error, _("Commodity lot price lacks double closing brace"));
+          else
+            in.get(c);
+        }
+      } else {
+        throw_(amount_error, _("Commodity lot price lacks closing brace"));
+      }
 
       amount_t temp;
       temp.parse(buf, PARSE_NO_MIGRATE);
