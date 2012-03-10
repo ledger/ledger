@@ -108,7 +108,7 @@ public:
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
-    HANDLER(value_expr).report(out);
+    HANDLER(value_expr_).report(out);
   }
 
   option_t<session_t> * lookup_option(const char * p);
@@ -156,7 +156,7 @@ public:
   OPTION(session_t, permissive);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
-  OPTION(session_t, value_expr);
+  OPTION(session_t, value_expr_);
 };
 
 /**

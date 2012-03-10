@@ -112,8 +112,8 @@ std::size_t session_t::read_data(const string& master_account)
     journal->checking_style = journal_t::CHECK_ERROR;
   else if (HANDLED(strict))
     journal->checking_style = journal_t::CHECK_WARNING;
-  else if (HANDLED(value_expr))
-    journal->value_expr     = HANDLER(value_expr).str();
+  else if (HANDLED(value_expr_))
+    journal->value_expr     = HANDLER(value_expr_).str();
 
 #if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;
@@ -344,6 +344,9 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 's':
     OPT(strict);
+    break;
+  case 'v':
+    OPT(value_expr_);
     break;
   }
   return NULL;
