@@ -80,12 +80,12 @@ int main(int argc, char * argv[], char * envp[])
   ::textdomain("ledger");
 #endif
 
-  unique_ptr<global_scope_t> global_scope;
+  global_scope_t * global_scope = NULL;
 
   try {
     // Create the session object, which maintains nearly all state relating to
     // this invocation of Ledger; and register all known journal parsers.
-    global_scope.reset(new global_scope_t(envp));
+    global_scope = new global_scope_t(envp);
     global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
@@ -94,7 +94,7 @@ int main(int argc, char * argv[], char * envp[])
       args.push_back(argv[i]);
 
     // Look for options and a command verb in the command-line arguments
-    bind_scope_t bound_scope(*global_scope.get(), global_scope->report());
+    bind_scope_t bound_scope(*global_scope, global_scope->report());
     args = global_scope->read_command_arguments(bound_scope, args);
 
     if (global_scope->HANDLED(script_)) {
@@ -185,7 +185,7 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
   catch (const std::exception& err) {
-    if (global_scope.get())
+    if (global_scope)
       global_scope->report_error(err);
     else
       std::cerr << "Exception during initialization: " << err.what()
@@ -202,15 +202,14 @@ int main(int argc, char * argv[], char * envp[])
   // then shutting down the memory tracing subsystem.  Otherwise, let it all
   // leak because we're about to exit anyway.
   IF_VERIFY() {
-    global_scope.reset();
+    checked_delete(global_scope);
 
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
 #if defined(VERIFY_ON)
     shutdown_memory_tracing();
 #endif
   } else {
-    global_scope.release();     // let it leak!
-    INFO("Ledger ended");
+    INFO("Ledger ended");       // let global_scope leak!
   }
 
   // Return the final status to the operating system, either 1 for error or 0
