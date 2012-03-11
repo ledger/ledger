@@ -209,6 +209,7 @@ int main(int argc, char * argv[], char * envp[])
     shutdown_memory_tracing();
 #endif
   } else {
+    global_scope.release();     // let it leak!
     INFO("Ledger ended");
   }
 
