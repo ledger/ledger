@@ -553,9 +553,6 @@ void logger_func(log_level_t level)
 #if defined(VERIFY_ON)
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
-#else
-    IF_VERIFY()
-      *_log_stream << "   TIME" << std::endl;
 #endif
   }
 
