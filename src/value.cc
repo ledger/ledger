@@ -724,7 +724,7 @@ value_t& value_t::operator/=(const value_t& val)
       return *this;
     case AMOUNT:
       if (as_balance().single_amount()) {
-        in_place_simplify();
+        in_place_cast(AMOUNT);
         as_amount_lval() /= val.as_amount();
         return *this;
       }

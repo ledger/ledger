@@ -794,6 +794,29 @@ value_t report_t::fn_nail_down(call_scope_t& args)
     return tmp;
   }
 
+  case value_t::BALANCE: {
+    balance_t tmp;
+    foreach (const balance_t::amounts_map::value_type& pair,
+             arg0.as_balance_lval().amounts) {
+      call_scope_t inner_args(*args.parent);
+      inner_args.push_back(pair.second);
+      inner_args.push_back(arg1);
+      tmp += fn_nail_down(inner_args).as_amount();
+    }
+    return tmp;
+  }
+
+  case value_t::SEQUENCE: {
+    value_t tmp;
+    foreach (value_t& value, arg0.as_sequence_lval()) {
+      call_scope_t inner_args(*args.parent);
+      inner_args.push_back(value);
+      inner_args.push_back(arg1);
+      tmp.push_back(fn_nail_down(inner_args));
+    }
+    return tmp;
+  }
+
   default:
     throw_(std::runtime_error, _("Attempting to nail down %1")
            << args[0].label());
