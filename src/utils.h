@@ -171,7 +171,7 @@ void report_memory(std::ostream& out, bool report_all = false);
 #else // ! VERIFY_ON
 
 #define VERIFY(x)
-#define DO_VERIFY() true
+#define DO_VERIFY() false
 #define TRACE_CTOR(cls, args)
 #define TRACE_DTOR(cls)
 
