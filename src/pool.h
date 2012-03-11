@@ -83,13 +83,12 @@ public:
   bool           get_quotes;    // --download
 
   function<optional<price_point_t>
-           (commodity_t& commodity, const optional<commodity_t&>& in_terms_of)>
+           (commodity_t& commodity, const commodity_t * in_terms_of)>
       get_commodity_quote;
 
   static shared_ptr<commodity_pool_t> current_pool;
 
   explicit commodity_pool_t();
-
   virtual ~commodity_pool_t() {
     TRACE_DTOR(commodity_pool_t);
   }

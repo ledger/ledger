@@ -2,16 +2,16 @@ test -f $sourcepath/src/amount.h reg -> 7
 __ERROR__
 While parsing file "$sourcepath/src/amount.h", line 66: 
 Error: No quantity specified for amount
-While parsing file "$sourcepath/src/amount.h", line 732: 
+While parsing file "$sourcepath/src/amount.h", line 734: 
 Error: Invalid date/time: line amount_t amoun
-While parsing file "$sourcepath/src/amount.h", line 738: 
+While parsing file "$sourcepath/src/amount.h", line 740: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 744: 
+While parsing file "$sourcepath/src/amount.h", line 746: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 750: 
+While parsing file "$sourcepath/src/amount.h", line 752: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 756: 
+While parsing file "$sourcepath/src/amount.h", line 758: 
 Error: Invalid date/time: line std::ostream& 
-While parsing file "$sourcepath/src/amount.h", line 763: 
+While parsing file "$sourcepath/src/amount.h", line 765: 
 Error: Invalid date/time: line std::istream& 
 end test

@@ -256,9 +256,9 @@ public:
   }
 
   optional<price_point_t>
-  virtual find_price(const optional<commodity_t&>& commodity = none,
-                     const optional<datetime_t>&   moment    = none,
-                     const optional<datetime_t>&   oldest    = none) const;
+  virtual find_price(const commodity_t * commodity = NULL,
+                     const datetime_t&   moment    = datetime_t(),
+                     const datetime_t&   oldest    = datetime_t()) const;
 
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
   virtual void write_annotations(std::ostream& out,

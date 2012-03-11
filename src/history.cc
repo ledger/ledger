@@ -52,15 +52,15 @@ public:
   PricePointMap price_point;
   PriceRatioMap ratios;
 
-  datetime_t           reftime;
-  optional<datetime_t> oldest;
+  datetime_t reftime;
+  datetime_t oldest;
 
   recent_edge_weight() { }
-  recent_edge_weight(EdgeWeightMap _weight,
-                     PricePointMap _price_point,
-                     PriceRatioMap _ratios,
-                     datetime_t    _reftime,
-                     const optional<datetime_t>& _oldest = none)
+  recent_edge_weight(EdgeWeightMap     _weight,
+                     PricePointMap     _price_point,
+                     PriceRatioMap     _ratios,
+                     const datetime_t& _reftime,
+                     const datetime_t& _oldest = datetime_t())
     : weight(_weight), price_point(_price_point), ratios(_ratios),
       reftime(_reftime), oldest(_oldest) { }
 
@@ -69,8 +69,8 @@ public:
   {
 #if defined(DEBUG_ON)
     DEBUG("history.find", "  reftime      = " << reftime);
-    if (oldest) {
-      DEBUG("history.find", "  oldest       = " << *oldest);
+    if (! oldest.is_not_a_date_time()) {
+      DEBUG("history.find", "  oldest       = " << oldest);
     }
 #endif
 
@@ -88,7 +88,7 @@ public:
       --low;
       assert(((*low).first <= reftime));
 
-      if (oldest && (*low).first < *oldest) {
+      if (! oldest.is_not_a_date_time() && (*low).first < oldest) {
         DEBUG("history.find", "  edge is out of range");
         return false;
       }
@@ -170,9 +170,9 @@ void commodity_history_t::remove_price(const commodity_t& source,
 
 void commodity_history_t::map_prices(function<void(datetime_t,
                                                    const amount_t&)> fn,
-                                     const commodity_t&          source,
-                                     const datetime_t&           moment,
-                                     const optional<datetime_t>& oldest)
+                                     const commodity_t& source,
+                                     const datetime_t&  moment,
+                                     const datetime_t&  oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
@@ -193,7 +193,7 @@ void commodity_history_t::map_prices(function<void(datetime_t,
     foreach (const price_map_t::value_type& pair, prices) {
       const datetime_t& when(pair.first);
 
-      if ((! oldest || when >= *oldest) && when <= moment) {
+      if ((oldest.is_not_a_date_time() || when >= oldest) && when <= moment) {
         if (pair.second.commodity() == source) {
           amount_t price(pair.second);
           price.in_place_invert();
@@ -209,9 +209,9 @@ void commodity_history_t::map_prices(function<void(datetime_t,
 }
 
 optional<price_point_t>
-commodity_history_t::find_price(const commodity_t&          source,
-                                const datetime_t&           moment,
-                                const optional<datetime_t>& oldest)
+commodity_history_t::find_price(const commodity_t& source,
+                                const datetime_t&  moment,
+                                const datetime_t&  oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
@@ -270,10 +270,10 @@ commodity_history_t::find_price(const commodity_t&          source,
 }
 
 optional<price_point_t>
-commodity_history_t::find_price(const commodity_t&          source,
-                                const commodity_t&          target,
-                                const datetime_t&           moment,
-                                const optional<datetime_t>& oldest)
+commodity_history_t::find_price(const commodity_t& source,
+                                const commodity_t& target,
+                                const datetime_t&  moment,
+                                const datetime_t&  oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
@@ -402,17 +402,16 @@ private:
   Name name;
 };
 
-void commodity_history_t::print_map(std::ostream& out,
-                                    const optional<datetime_t>& moment)
+void commodity_history_t::print_map(std::ostream& out, const datetime_t& moment)
 {
-  if (moment) {
-    FGraph fg(price_graph,
-              recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
-              (get(edge_weight, price_graph), pricemap, ratiomap, *moment));
-    write_graphviz(out, fg, label_writer<FNameMap>(get(vertex_name, fg)));
-  } else {
+  if (moment.is_not_a_date_time()) {
     write_graphviz(out, price_graph,
                    label_writer<NameMap>(get(vertex_name, price_graph)));
+  } else {
+    FGraph fg(price_graph,
+              recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>
+              (get(edge_weight, price_graph), pricemap, ratiomap, moment));
+    write_graphviz(out, fg, label_writer<FNameMap>(get(vertex_name, fg)));
   }
 }
 

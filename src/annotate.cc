@@ -241,16 +241,16 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
 }
 
 optional<price_point_t>
-annotated_commodity_t::find_price(const optional<commodity_t&>& commodity,
-                                  const optional<datetime_t>&   moment,
-                                  const optional<datetime_t>&   oldest) const
+annotated_commodity_t::find_price(const commodity_t * commodity,
+                                  const datetime_t&   moment,
+                                  const datetime_t&   oldest) const
 {
   DEBUG("commodity.price.find",
         "annotated_commodity_t::find_price(" << symbol() << ")");
 
   datetime_t when;
-  if (moment)
-    when = *moment;
+  if (! moment.is_not_a_date_time())
+    when = moment;
   else if (epoch)
     when = *epoch;
   else
@@ -258,7 +258,7 @@ annotated_commodity_t::find_price(const optional<commodity_t&>& commodity,
 
   DEBUG("commodity.price.find", "reference time: " << when);
 
-  optional<commodity_t&> target;
+  const commodity_t * target = NULL;
   if (commodity)
     target = commodity;
 
@@ -272,7 +272,7 @@ annotated_commodity_t::find_price(const optional<commodity_t&>& commodity,
     }
     else if (! target) {
       DEBUG("commodity.price.find", "setting target commodity from price");
-      target = details.price->commodity();
+      target = details.price->commodity_ptr();
     }
   }
 
@@ -285,7 +285,7 @@ annotated_commodity_t::find_price(const optional<commodity_t&>& commodity,
     return find_price_from_expr(const_cast<expr_t&>(*details.value_expr),
                                 commodity, when);
 
-  return commodity_t::find_price(commodity, moment, oldest);
+  return commodity_t::find_price(target, moment, oldest);
 }
 
 commodity_t&

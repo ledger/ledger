@@ -477,12 +477,12 @@ public:
   void    in_place_unreduce();  // exists for efficiency's sake
 
   // Return the "market value" of a given value at a specific time.
-  value_t value(const optional<datetime_t>&   moment       = none,
-                const optional<commodity_t&>& in_terms_of  = none) const;
+  value_t value(const datetime_t&   moment      = datetime_t(),
+                const commodity_t * in_terms_of = NULL) const;
 
-  value_t exchange_commodities(const std::string&          commodities,
-                               const bool                  add_prices = false,
-                               const optional<datetime_t>& moment     = none);
+  value_t exchange_commodities(const std::string& commodities,
+                               const bool         add_prices = false,
+                               const datetime_t&  moment     = datetime_t());
 
   /**
    * Truth tests.

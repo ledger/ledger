@@ -532,11 +532,12 @@ value_t report_t::fn_should_bold(call_scope_t& scope)
 
 value_t report_t::fn_market(call_scope_t& args)
 {
-  optional<datetime_t> moment = (args.has<datetime_t>(1) ?
-                                 args.get<datetime_t>(1) :
-                                 optional<datetime_t>());
   value_t result;
   value_t arg0 = args[0];
+
+  datetime_t moment;
+  if (args.has<datetime_t>(1))
+    moment = args.get<datetime_t>(1);
 
   if (arg0.is_string()) {
     amount_t tmp(1L);
@@ -962,7 +963,7 @@ value_t report_t::pricemap_command(call_scope_t& args)
   std::ostream& out(output_stream);
   commodity_pool_t::current_pool->commodity_price_history.print_map
     (out, args.has<string>(0) ?
-     optional<datetime_t>(datetime_t(parse_date(args.get<string>(0)))) : none);
+     datetime_t(parse_date(args.get<string>(0))) : datetime_t());
   return true;
 }
 

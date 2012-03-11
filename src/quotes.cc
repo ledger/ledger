@@ -40,7 +40,7 @@ namespace ledger {
 
 optional<price_point_t>
 commodity_quote_from_script(commodity_t& commodity,
-                            const optional<commodity_t&>& exchange_commodity)
+                            const commodity_t * exchange_commodity)
 {
   DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
 #if defined(DEBUG_ON)

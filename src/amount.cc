@@ -728,16 +728,16 @@ void amount_t::in_place_unreduce()
 }
 
 optional<amount_t>
-amount_t::value(const optional<datetime_t>&   moment,
-                const optional<commodity_t&>& in_terms_of) const
+amount_t::value(const datetime_t&   moment,
+                const commodity_t * in_terms_of) const
 {
   if (quantity) {
 #if defined(DEBUG_ON)
     DEBUG("commodity.price.find",
           "amount_t::value of " << commodity().symbol());
-    if (moment)
+    if (! moment.is_not_a_date_time())
       DEBUG("commodity.price.find",
-            "amount_t::value: moment = " << *moment);
+            "amount_t::value: moment = " << moment);
     if (in_terms_of)
       DEBUG("commodity.price.find",
             "amount_t::value: in_terms_of = " << in_terms_of->symbol());
@@ -745,7 +745,7 @@ amount_t::value(const optional<datetime_t>&   moment,
     if (has_commodity() &&
         (in_terms_of || ! commodity().has_flags(COMMODITY_PRIMARY))) {
       optional<price_point_t> point;
-      optional<commodity_t&>  comm(in_terms_of);
+      const commodity_t * comm(in_terms_of);
 
       if (has_annotation() && annotation().price) {
         if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
@@ -755,7 +755,7 @@ amount_t::value(const optional<datetime_t>&   moment,
                 "amount_t::value: fixated price =  " << point->price);
         }
         else if (! comm) {
-          comm = annotation().price->commodity();
+          comm = annotation().price->commodity_ptr();
         }
       }
 
@@ -869,13 +869,8 @@ bool amount_t::fits_in_long() const
 
 commodity_t * amount_t::commodity_ptr() const
 {
-  return (has_commodity() ?
+  return (commodity_ ?
           commodity_ : commodity_pool_t::current_pool->null_commodity);
-}
-
-commodity_t& amount_t::commodity() const
-{
-  return *commodity_ptr();
 }
 
 bool amount_t::has_commodity() const

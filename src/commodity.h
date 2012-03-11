@@ -117,12 +117,12 @@ protected:
     optional<amount_t>    larger;
     optional<expr_t>      value_expr;
 
-    typedef tuple<optional<datetime_t>,
-                  optional<datetime_t>, commodity_t *> memoized_price_entry;
+    typedef tuple<datetime_t, datetime_t,
+                  const commodity_t *> memoized_price_entry;
     typedef std::map<memoized_price_entry,
                      optional<price_point_t> > memoized_price_map;
 
-    static const std::size_t   max_price_map_size = 16;
+    static const std::size_t   max_price_map_size = 8;
     mutable memoized_price_map price_map;
 
   public:
@@ -272,22 +272,22 @@ public:
   void remove_price(const datetime_t& date, commodity_t& commodity);
 
   void map_prices(function<void(datetime_t, const amount_t&)> fn,
-                  const optional<datetime_t>& moment  = none,
-                  const optional<datetime_t>& _oldest = none);
+                  const datetime_t& moment  = datetime_t(),
+                  const datetime_t& _oldest = datetime_t());
 
   optional<price_point_t>
-  find_price_from_expr(expr_t& expr, const optional<commodity_t&>& commodity,
+  find_price_from_expr(expr_t& expr, const commodity_t * commodity,
                        const datetime_t& moment) const;
 
   optional<price_point_t>
-  virtual find_price(const optional<commodity_t&>& commodity = none,
-                     const optional<datetime_t>&   moment    = none,
-                     const optional<datetime_t>&   oldest    = none) const;
+  virtual find_price(const commodity_t * commodity = NULL,
+                     const datetime_t&   moment    = datetime_t(),
+                     const datetime_t&   oldest    = datetime_t()) const;
 
   optional<price_point_t>
   check_for_updated_price(const optional<price_point_t>& point,
-                          const optional<datetime_t>&    moment,
-                          const optional<commodity_t&>&  in_terms_of);
+                          const datetime_t&   moment,
+                          const commodity_t * in_terms_of);
 
   commodity_t& nail_down(const expr_t& expr);
 

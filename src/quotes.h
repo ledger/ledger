@@ -46,7 +46,7 @@ namespace ledger {
 
 optional<price_point_t>
 commodity_quote_from_script(commodity_t& commodity,
-                            const optional<commodity_t&>& exchange_commodity);
+                            const commodity_t * exchange_commodity);
 
 } // namespace ledger
 

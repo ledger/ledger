@@ -1399,8 +1399,8 @@ bool value_t::is_zero() const
   return false;
 }
 
-value_t value_t::value(const optional<datetime_t>&   moment,
-                       const optional<commodity_t&>& in_terms_of) const
+value_t value_t::value(const datetime_t&   moment,
+                       const commodity_t * in_terms_of) const
 {
   switch (type()) {
   case INTEGER:
@@ -1432,9 +1432,9 @@ value_t value_t::value(const optional<datetime_t>&   moment,
   return NULL_VALUE;
 }
 
-value_t value_t::exchange_commodities(const std::string&          commodities,
-                                      const bool                  add_prices,
-                                      const optional<datetime_t>& moment)
+value_t value_t::exchange_commodities(const std::string& commodities,
+                                      const bool         add_prices,
+                                      const datetime_t&  moment)
 {
   if (type() == SEQUENCE) {
     value_t temp;
@@ -1447,7 +1447,7 @@ value_t value_t::exchange_commodities(const std::string&          commodities,
   // expression, skip the expensive logic below.
   if (commodities.find(',') == string::npos &&
       commodities.find('=') == string::npos)
-    return value(moment, *commodity_pool_t::current_pool->find_or_create(commodities));
+    return value(moment, commodity_pool_t::current_pool->find_or_create(commodities));
 
   std::vector<commodity_t *> comms;
   std::vector<bool>          force;
@@ -1479,7 +1479,7 @@ value_t value_t::exchange_commodities(const std::string&          commodities,
         break;
 
       DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-      if (optional<amount_t> val = as_amount_lval().value(moment, *comm)) {
+      if (optional<amount_t> val = as_amount_lval().value(moment, comm)) {
         DEBUG("commodity.exchange", "Re-priced amount is: " << *val);
         return *val;
       }
@@ -1502,7 +1502,7 @@ value_t value_t::exchange_commodities(const std::string&          commodities,
           temp += pair.second;
         } else {
           DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-          if (optional<amount_t> val = pair.second.value(moment, *comm)) {
+          if (optional<amount_t> val = pair.second.value(moment, comm)) {
             DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
             temp += *val;
             repriced = true;

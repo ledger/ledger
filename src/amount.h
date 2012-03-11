@@ -404,8 +404,8 @@ public:
       $100.00.
   */
   optional<amount_t>
-  value(const optional<datetime_t>& moment        = none,
-        const optional<commodity_t&>& in_terms_of = none) const;
+  value(const datetime_t& moment        = datetime_t(),
+        const commodity_t * in_terms_of = NULL) const;
 
   optional<amount_t> price() const;
 
@@ -534,7 +534,9 @@ public:
       useful for accessing just the numeric portion of an amount.
   */
   commodity_t * commodity_ptr() const;
-  commodity_t& commodity() const;
+  commodity_t& commodity() const {
+    return *commodity_ptr();
+  }
 
   bool has_commodity() const;
   void set_commodity(commodity_t& comm) {

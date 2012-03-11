@@ -48,12 +48,12 @@ namespace {
     return amount.value(CURRENT_TIME());
   }
   boost::optional<amount_t> py_value_1(const amount_t& amount,
-                                       commodity_t& in_terms_of) {
+                                       const commodity_t * in_terms_of) {
     return amount.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<amount_t> py_value_2(const amount_t& amount,
-                                       commodity_t& in_terms_of,
-                                       datetime_t& moment) {
+                                       const commodity_t * in_terms_of,
+                                       const datetime_t& moment) {
     return amount.value(moment, in_terms_of);
   }
 

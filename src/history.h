@@ -111,23 +111,22 @@ public:
                     const datetime_t&  date);
 
   void map_prices(function<void(datetime_t, const amount_t&)> fn,
-                  const commodity_t&          source,
-                  const datetime_t&           moment,
-                  const optional<datetime_t>& _oldest = none);
+                  const commodity_t& source,
+                  const datetime_t&  moment,
+                  const datetime_t&  _oldest = datetime_t());
 
   optional<price_point_t>
-  find_price(const commodity_t&            source,
-             const datetime_t&             moment,
-             const optional<datetime_t>&   oldest = none);
+  find_price(const commodity_t& source,
+             const datetime_t&  moment,
+             const datetime_t&  oldest = datetime_t());
 
   optional<price_point_t>
-  find_price(const commodity_t&            source,
-             const commodity_t&            target,
-             const datetime_t&             moment,
-             const optional<datetime_t>&   oldest = none);
+  find_price(const commodity_t& source,
+             const commodity_t& target,
+             const datetime_t&  moment,
+             const datetime_t&  oldest = datetime_t());
 
-  void print_map(std::ostream& out,
-                 const optional<datetime_t>& moment = none);
+  void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
 };
 
 } // namespace ledger

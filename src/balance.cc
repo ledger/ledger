@@ -185,8 +185,8 @@ balance_t& balance_t::operator/=(const amount_t& amt)
 }
 
 optional<balance_t>
-balance_t::value(const optional<datetime_t>&   moment,
-                 const optional<commodity_t&>& in_terms_of) const
+balance_t::value(const datetime_t&   moment,
+                 const commodity_t * in_terms_of) const
 {
   balance_t temp;
   bool      resolved = false;

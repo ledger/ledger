@@ -71,12 +71,12 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity)
 }
 
 void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
-                             const optional<datetime_t>& moment,
-                             const optional<datetime_t>& _oldest)
+                             const datetime_t& moment,
+                             const datetime_t& _oldest)
 {
   datetime_t when;
-  if (moment)
-    when = *moment;
+  if (! moment.is_not_a_date_time())
+    when = moment;
   else if (epoch)
     when = *epoch;
   else
@@ -86,8 +86,7 @@ void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
 }
 
 optional<price_point_t>
-commodity_t::find_price_from_expr(expr_t& expr,
-                                  const optional<commodity_t&>& commodity,
+commodity_t::find_price_from_expr(expr_t& expr, const commodity_t * commodity,
                                   const datetime_t& moment) const
 {
 #if defined(DEBUG_ON)
@@ -114,31 +113,30 @@ commodity_t::find_price_from_expr(expr_t& expr,
 }
 
 optional<price_point_t>
-commodity_t::find_price(const optional<commodity_t&>& commodity,
-                        const optional<datetime_t>&   moment,
-                        const optional<datetime_t>&   oldest) const
+commodity_t::find_price(const commodity_t * commodity,
+                        const datetime_t&   moment,
+                        const datetime_t&   oldest) const
 {
   DEBUG("commodity.price.find", "commodity_t::find_price(" << symbol() << ")");
 
-  optional<commodity_t&> target;
+  const commodity_t * target = NULL;
   if (commodity)
     target = commodity;
   else if (pool().default_commodity)
-    target = *pool().default_commodity;
+    target = &*pool().default_commodity;
 
-  if (target && *this == *target)
+  if (target && this == target)
     return none;
 
-  optional<base_t::memoized_price_entry>
-    entry(base_t::memoized_price_entry(moment, oldest,
-                                       commodity ? &(*commodity) : NULL));
+  base_t::memoized_price_entry entry(moment, oldest,
+                                     commodity ? commodity : NULL);
 
   DEBUG("commodity.price.find", "looking for memoized args: "
-        << (moment    ? format_datetime(*moment) : "NONE") << ", "
-        << (oldest    ? format_datetime(*oldest) : "NONE") << ", "
+        << (! moment.is_not_a_date_time() ? format_datetime(moment) : "NONE") << ", "
+        << (! oldest.is_not_a_date_time() ? format_datetime(oldest) : "NONE") << ", "
         << (commodity ? commodity->symbol()      : "NONE"));
   {
-    base_t::memoized_price_map::iterator i = base->price_map.find(*entry);
+    base_t::memoized_price_map::iterator i = base->price_map.find(entry);
     if (i != base->price_map.end()) {
       DEBUG("commodity.price.find", "found! returning: "
             << ((*i).second ? (*i).second->price : amount_t(0L)));
@@ -147,8 +145,8 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
   }
 
   datetime_t when;
-  if (moment)
-    when = *moment;
+  if (! moment.is_not_a_date_time())
+    when = moment;
   else if (epoch)
     when = *epoch;
   else
@@ -157,40 +155,40 @@ commodity_t::find_price(const optional<commodity_t&>& commodity,
   if (base->value_expr)
     return find_price_from_expr(*base->value_expr, commodity, when);
 
-  optional<price_point_t> point =
-    target ?
-    pool().commodity_price_history.find_price(*this, *target, when, oldest) :
-    pool().commodity_price_history.find_price(*this, when, oldest);
+  optional<price_point_t>
+    point(target ?
+          pool().commodity_price_history.find_price(*this, *target,
+                                                    when, oldest) :
+          pool().commodity_price_history.find_price(*this, when, oldest));
 
-  if (entry) {
-    if (base->price_map.size() > base_t::max_price_map_size) {
-      DEBUG("history.find",
-            "price map has grown too large, clearing it by half");
-      for (std::size_t i = 0; i < base_t::max_price_map_size >> 1; i++)
-        base->price_map.erase(base->price_map.begin());
-    }
-
+  // Record this price point in the memoization map
+  if (base->price_map.size() > base_t::max_price_map_size) {
     DEBUG("history.find",
-          "remembered: " << (point ? point->price : amount_t(0L)));
-    base->price_map.insert(base_t::memoized_price_map::value_type(*entry, point));
+          "price map has grown too large, clearing it by half");
+    for (std::size_t i = 0; i < base_t::max_price_map_size >> 1; i++)
+      base->price_map.erase(base->price_map.begin());
   }
+
+  DEBUG("history.find",
+        "remembered: " << (point ? point->price : amount_t(0L)));
+  base->price_map.insert(base_t::memoized_price_map::value_type(entry, point));
 
   return point;
 }
 
 optional<price_point_t>
 commodity_t::check_for_updated_price(const optional<price_point_t>& point,
-                                     const optional<datetime_t>&    moment,
-                                     const optional<commodity_t&>&  in_terms_of)
+                                     const datetime_t&   moment,
+                                     const commodity_t*  in_terms_of)
 {
   if (pool().get_quotes && ! has_flags(COMMODITY_NOMARKET)) {
     bool exceeds_leeway = true;
 
     if (point) {
       time_duration_t::sec_type seconds_diff;
-      if (moment) {
-        seconds_diff = (*moment - point->when).total_seconds();
-        DEBUG("commodity.download", "moment = " << *moment);
+      if (! moment.is_not_a_date_time()) {
+        seconds_diff = (moment - point->when).total_seconds();
+        DEBUG("commodity.download", "moment = " << moment);
         DEBUG("commodity.download", "slip.moment = " << seconds_diff);
       } else {
         seconds_diff = (TRUE_CURRENT_TIME() - point->when).total_seconds();
@@ -209,7 +207,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
           pool().get_commodity_quote(*this, in_terms_of)) {
         if (! in_terms_of ||
             (quote->price.has_commodity() &&
-             quote->price.commodity() == *in_terms_of))
+             quote->price.commodity_ptr() == in_terms_of))
           return quote;
       }
     }
