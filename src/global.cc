@@ -193,7 +193,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
     is_precommand = true;
 
   // If it is not a pre-command, then parse the user's ledger data at this
-  // time if not done alreday (i.e., if not at a REPL).  Then patch up the
+  // time if not done already (i.e., if not at a REPL).  Then patch up the
   // report options based on the command verb.
 
   if (! is_precommand) {
