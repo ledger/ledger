@@ -50,8 +50,9 @@ class post_t;
 class account_t;
 
 template <typename T>
-struct item_handler : public noncopyable
+class item_handler : public noncopyable
 {
+protected:
   shared_ptr<item_handler> handler;
 
 public:

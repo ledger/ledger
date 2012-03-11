@@ -372,6 +372,7 @@ public:
   }
   virtual ~anonymize_posts() {
     TRACE_DTOR(anonymize_posts);
+    handler.reset();
   }
 
   void render_commodity(amount_t& amt);
@@ -451,6 +452,7 @@ public:
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
+    handler.reset();
   }
 
   void create_accounts() {
@@ -539,6 +541,7 @@ public:
 
   virtual ~display_filter_posts() {
     TRACE_DTOR(display_filter_posts);
+    handler.reset();
   }
 
   void create_accounts() {
@@ -595,6 +598,7 @@ public:
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
+    handler.reset();
   }
 
   void create_accounts() {
@@ -671,6 +675,7 @@ public:
   }
   virtual ~subtotal_posts() {
     TRACE_DTOR(subtotal_posts);
+    handler.reset();
   }
 
   void report_subtotal(const char * spec_fmt = NULL,
@@ -849,6 +854,7 @@ public:
   }
   virtual ~transfer_details() {
     TRACE_DTOR(transfer_details);
+    handler.reset();
   }
 
   virtual void operator()(post_t& post);
@@ -908,6 +914,7 @@ public:
 
   virtual ~generate_posts() {
     TRACE_DTOR(generate_posts);
+    handler.reset();
   }
 
   void add_period_xacts(period_xacts_list& period_xacts);
@@ -995,6 +1002,7 @@ class inject_posts : public item_handler<post_t>
 
   virtual ~inject_posts() throw() {
     TRACE_DTOR(inject_posts);
+    handler.reset();
   }
 
   virtual void operator()(post_t& post);

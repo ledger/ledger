@@ -169,8 +169,8 @@ protected:
   journal_posts_iterator  journal_posts;
   xacts_iterator          xacts;
   xact_posts_iterator     posts;
-  temporaries_t           temps;
   xacts_list              xact_temps;
+  temporaries_t           temps;
 
 public:
   posts_commodities_iterator() {}
