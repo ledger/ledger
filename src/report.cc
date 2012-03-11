@@ -539,13 +539,20 @@ value_t report_t::fn_get_at(call_scope_t& args)
   if (index == 0) {
     if (! args[0].is_sequence())
       return args[0];
-  } else {
-    if (! args[0].is_sequence())
-      throw_(std::runtime_error,
-             _("Attempting to get argument at index %1 from %2")
-             << index << args[0].label());
   }
-  return args[0].as_sequence()[index];
+  else if (! args[0].is_sequence()) {
+    throw_(std::runtime_error,
+           _("Attempting to get argument at index %1 from %2")
+           << index << args[0].label());
+  }
+
+  value_t::sequence_t& seq(args[0].as_sequence_lval());
+  if (index >= seq.size())
+    throw_(std::runtime_error,
+           _("Attempting to get index %1 from %2 with %3 elements")
+           << index << args[0].label() << seq.size());
+
+  return seq[index];
 }
 
 value_t report_t::fn_is_seq(call_scope_t& scope)
