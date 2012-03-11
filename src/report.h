@@ -273,6 +273,7 @@ public:
     HANDLER(group_by_).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
+    HANDLER(immediate).report(out);
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
@@ -704,6 +705,7 @@ public:
             "market(amount_expr, value_date, exchange))");
     });
 
+  OPTION(report_t, immediate);
   OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {

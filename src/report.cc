@@ -162,6 +162,11 @@ void report_t::normalize_options(const string& verb)
                                      terminus);
   }
 
+  if (HANDLED(immediate) && HANDLED(market)) {
+    HANDLER(amount_)
+      .on("?normalize", "market(amount_expr, value_date, exchange)");
+  }
+
   long cols = 0;
   if (HANDLED(columns_))
     cols = lexical_cast<long>(HANDLER(columns_).value);
@@ -1080,6 +1085,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'i':
     OPT(invert);
     else OPT(inject_);
+    else OPT(immediate);
     break;
   case 'j':
     OPT_CH(amount_data);
