@@ -783,7 +783,8 @@ value_t report_t::fn_nail_down(call_scope_t& args)
     amount_t tmp(arg0.as_amount());
     if (tmp.has_commodity() && ! arg1.is_null()) {
       expr_t value_expr(is_expr(arg1) ?
-                        as_expr(arg1) : expr_t::op_t::wrap_value(arg1 / arg0));
+                        as_expr(arg1) :
+                        expr_t::op_t::wrap_value(arg1.unrounded() / arg0));
       std::ostringstream buf;
       value_expr.print(buf);
       value_expr.set_text(buf.str());
