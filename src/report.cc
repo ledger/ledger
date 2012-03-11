@@ -1075,7 +1075,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT_(limit_);
     else OPT(lot_dates);
     else OPT(lot_prices);
-    else OPT_ALT(lot_tags, lot_notes);
+    else OPT_ALT(lot_notes, lot_tags);
     else OPT(lots);
     else OPT(lots_actual);
     else OPT_ALT(tail_, last_);
