@@ -1228,7 +1228,7 @@ void value_t::in_place_cast(type_t cast_type)
   case STRING:
     switch (cast_type) {
     case INTEGER: {
-      if (all(as_string(), is_digit())) {
+      if (all(as_string(), is_any_of("-0123456789"))) {
         set_long(lexical_cast<long>(as_string()));
         return;
       }
