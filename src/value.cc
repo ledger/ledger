@@ -1468,7 +1468,7 @@ value_t value_t::exchange_commodities(const std::string& commodities,
     }
   }
 
-  int index = 0;
+  std::size_t index = 0;
   foreach (commodity_t * comm, comms) {
     switch (type()) {
     case AMOUNT:

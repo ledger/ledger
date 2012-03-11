@@ -195,7 +195,8 @@ void report_t::normalize_options(const string& verb)
 
     long date_width    = (HANDLED(date_width_) ?
                           lexical_cast<long>(HANDLER(date_width_).str()) :
-                          format_date(CURRENT_DATE(),FMT_PRINTED).length());
+                          static_cast<long>
+                          (format_date(CURRENT_DATE(),FMT_PRINTED).length()));
     long payee_width   = (HANDLED(payee_width_) ?
                           lexical_cast<long>(HANDLER(payee_width_).str()) :
                           long(double(cols) * 0.263157));
@@ -825,6 +826,7 @@ value_t report_t::fn_nail_down(call_scope_t& args)
     throw_(std::runtime_error, _("Attempting to nail down %1")
            << args[0].label());
   }
+  return arg0;
 }
 
 value_t report_t::fn_lot_date(call_scope_t& args)

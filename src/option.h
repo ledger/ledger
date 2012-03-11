@@ -162,9 +162,8 @@ public:
     source  = none;
   }
 
-  virtual void handler_thunk(const optional<string>& whence) {}
-  virtual void handler_thunk(const optional<string>& whence,
-                             const string& str) {}
+  virtual void handler_thunk(const optional<string>&) {}
+  virtual void handler_thunk(const optional<string>&, const string&) {}
 
   value_t handler(call_scope_t& args) {
     if (wants_arg) {
