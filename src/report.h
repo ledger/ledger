@@ -215,7 +215,7 @@ public:
     bool lots = HANDLED(lots) || HANDLED(lots_actual);
     return keep_details_t(lots || HANDLED(lot_prices),
                           lots || HANDLED(lot_dates),
-                          lots || HANDLED(lot_tags),
+                          lots || HANDLED(lot_notes),
                           HANDLED(lots_actual));
   }
 
@@ -250,6 +250,7 @@ public:
     HANDLER(date_).report(out);
     HANDLER(date_format_).report(out);
     HANDLER(datetime_format_).report(out);
+    HANDLER(dc).report(out);
     HANDLER(depth_).report(out);
     HANDLER(deviation).report(out);
     HANDLER(display_).report(out);
@@ -277,7 +278,7 @@ public:
     HANDLER(limit_).report(out);
     HANDLER(lot_dates).report(out);
     HANDLER(lot_prices).report(out);
-    HANDLER(lot_tags).report(out);
+    HANDLER(lot_notes).report(out);
     HANDLER(lots).report(out);
     HANDLER(lots_actual).report(out);
     HANDLER(market).report(out);
@@ -518,6 +519,73 @@ public:
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
+  OPTION_(report_t, dc, DO() {
+      OTHER(amount_).expr.set_base_expr
+        ("(amount > 0 ? amount : 0, amount < 0 ? amount : 0)");
+
+      OTHER(register_format_)
+        .on(none,
+            "%(ansify_if("
+            "  ansify_if(justify(format_date(date), int(date_width)),"
+            "            green if color and date > today),"
+            "            bold if should_bold))"
+            " %(ansify_if("
+            "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+            "             bold if color and !cleared and actual),"
+            "             bold if should_bold))"
+            " %(ansify_if("
+            "   ansify_if(justify(truncated(display_account, int(account_width), "
+            "                               abbrev_len), int(account_width)),"
+            "             blue if color),"
+            "             bold if should_bold))"
+            " %(ansify_if("
+            "   justify(scrub(abs(get_at(display_amount, 0))), int(amount_width), "
+            "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+            "             + int(account_width) + int(amount_width) + int(prepend_width),"
+            "           true, color),"
+            "           bold if should_bold))"
+            " %(ansify_if("
+            "   justify(scrub(abs(get_at(display_amount, 1))), int(amount_width), "
+            "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+            "             + int(account_width) + int(amount_width) + int(amount_width) + int(prepend_width),"
+            "           true, color),"
+            "           bold if should_bold))"
+            " %(ansify_if("
+            "   justify(scrub(get_at(display_total, 0) + get_at(display_total, 1)), int(total_width), "
+            "           5 + int(meta_width) + int(date_width) + int(payee_width)"
+            "             + int(account_width) + int(amount_width) + int(amount_width) + int(total_width)"
+            "             + int(prepend_width), true, color),"
+            "           bold if should_bold))\n%/"
+            "%(justify(\" \", int(date_width)))"
+            " %(ansify_if("
+            "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+            "                     int(payee_width)), int(payee_width)),"
+            "             bold if should_bold))"
+            " %$3 %$4 %$5 %$6\n");
+
+      OTHER(balance_format_)
+        .on(none,
+            "%(ansify_if("
+            "  justify(scrub(abs(get_at(display_total, 0))), 14,"
+            "          14 + int(prepend_width), true, color),"
+            "            bold if should_bold)) "
+            "%(ansify_if("
+            "  justify(scrub(abs(get_at(display_total, 1))), 14,"
+            "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
+            "            bold if should_bold)) "
+            "%(ansify_if("
+            "  justify(scrub(get_at(display_total, 0) + get_at(display_total, 1)), 14,"
+            "          14 + 2 + int(prepend_width) + int(total_width) + int(total_width), true, color),"
+            "            bold if should_bold))"
+            "  %(!options.flat ? depth_spacer : \"\")"
+            "%-(ansify_if("
+            "   ansify_if(partial_account(options.flat), blue if color),"
+            "             bold if should_bold))\n%/"
+            "%$1 %$2 %$3\n%/"
+            "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+            "--------------------------------------------\n");
+  });
+
   OPTION_(report_t, depth_, DO_(str) {
       OTHER(display_).on(whence, string("depth<=") + str);
     });
@@ -590,9 +658,7 @@ public:
 
   OPTION_(report_t, gain, DO() { // -G
       OTHER(revalued).on(whence);
-
       OTHER(amount_).expr.set_base_expr("(amount, cost)");
-      OTHER(total_).expr.set_base_expr("total");
 
       // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.
@@ -653,7 +719,7 @@ public:
 
   OPTION(report_t, lot_dates);
   OPTION(report_t, lot_prices);
-  OPTION(report_t, lot_tags);
+  OPTION(report_t, lot_notes);
   OPTION(report_t, lots);
   OPTION(report_t, lots_actual);
 

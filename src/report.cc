@@ -204,10 +204,22 @@ void report_t::normalize_options(const string& verb)
         ! HANDLED(amount_width_) &&
         ! HANDLED(total_width_)) {
       long total = (4 /* the spaces between */ + date_width + payee_width +
-                    account_width + amount_width + total_width);
-      if (total > cols) {
+                    account_width + amount_width + total_width +
+                    (HANDLED(dc) ? 1 + amount_width : 0));
+      while (total > cols && account_width > 5 && payee_width > 5) {
         DEBUG("auto.columns", "adjusting account down");
-        account_width -= total - cols;
+        if (total > cols) {
+          --account_width;
+          --total;
+          if (total > cols) {
+            --account_width;
+            --total;
+          }
+        }
+        if (total > cols) {
+          --payee_width;
+          --total;
+        }
         DEBUG("auto.columns", "account_width now = " << account_width);
       }
     }
@@ -1029,6 +1041,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(date_);
     else OPT(date_format_);
     else OPT(datetime_format_);
+    else OPT(dc);
     else OPT(depth_);
     else OPT(deviation);
     else OPT_(display_);
