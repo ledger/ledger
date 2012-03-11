@@ -537,13 +537,13 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t * locus,
   ptr_op_t func = left();
   string   name = func->is_ident() ? func->as_ident() : "<value expr>";
 
+  func = find_definition(func, scope, locus, depth);
+
+  call_scope_t call_args(scope, locus, depth + 1);
+  if (has_right())
+    call_args.set_args(split_cons_expr(right()));
+
   try {
-    func = find_definition(func, scope, locus, depth);
-
-    call_scope_t call_args(scope, locus, depth + 1);
-    if (has_right())
-      call_args.set_args(split_cons_expr(right()));
-
     if (func->is_function()) {
       return func->as_function()(call_args);
     } else {
@@ -552,7 +552,8 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t * locus,
     }
   }
   catch (const std::exception&) {
-    add_error_context(_("While calling function '%1':" << name));
+    add_error_context(_("While calling function '%1 %2':" << name
+                        << call_args.args));
     throw;
   }
 }
