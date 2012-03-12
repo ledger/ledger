@@ -469,8 +469,20 @@ void report_t::commodities_report(post_handler_ptr handler)
 {
   handler = chain_handlers(handler, *this);
 
-  posts_commodities_iterator walker(*session.journal.get());
-  pass_down_posts<posts_commodities_iterator>(handler, walker);
+  posts_commodities_iterator * walker(new posts_commodities_iterator(*session.journal.get()));
+  try {
+    pass_down_posts<posts_commodities_iterator>(handler, *walker);
+  }
+  catch (...) {
+#if defined(VERIFY_ON)
+    IF_VERIFY() {
+      // If --verify was used, clean up the posts_commodities_iterator.
+      // Otherwise, just leak like a sieve.
+      checked_delete(walker);
+    }
+#endif
+    throw;
+  }
 
   session.journal->clear_xdata();
 }
