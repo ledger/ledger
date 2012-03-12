@@ -1732,7 +1732,30 @@ xact_t * instance_t::parse_xact(char *          line,
   // Parse the description text
 
   if (next && *next) {
-    char * p = next_element(next, true);
+    char * p = next;
+    std::size_t spaces = 0;
+    std::size_t tabs = 0;
+    while (*p) {
+      if (*p == ' ') {
+        ++spaces;
+      }
+      else if (*p == '\t') {
+        ++tabs;
+      }
+      else if (*p == ';' && (tabs > 0 || spaces > 1)) {
+        char *q = p - 1;
+        while (q > next && std::isspace(*q))
+          --q;
+        if (q > next)
+          *(q + 1) = '\0';
+        break;
+      }
+      else {
+        spaces = 0;
+        tabs = 0;
+      }
+      ++p;
+    }
     xact->payee = context.journal->register_payee(next, xact.get());
     next = p;
   } else {
