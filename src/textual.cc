@@ -284,20 +284,23 @@ std::streamsize instance_t::read_line(char *& line)
   std::streamsize len = in.gcount();
 
   if (len > 0) {
-    if (context.linenum == 0 && utf8::is_bom(context.linebuf))
-      line = &context.linebuf[3];
-    else
-      line = context.linebuf;
-
-    if (line[len - 1] == '\r')  // strip Windows CRLF down to LF
-      line[--len] = '\0';
-
     context.linenum++;
 
     context.curr_pos  = context.line_beg_pos;
     context.curr_pos += len;
 
-    return len - 1;             // LF is being silently dropped
+    if (context.linenum == 0 && utf8::is_bom(context.linebuf)) {
+      line = &context.linebuf[3];
+      len -= 3;
+    } else {
+      line = context.linebuf;
+    }
+
+    --len;
+    while (len > 0 && std::isspace(line[len - 1])) // strip trailing whitespace
+      line[--len] = '\0';
+
+    return len;
   }
   return 0;
 }
@@ -542,7 +545,6 @@ void instance_t::automated_xact_directive(char * line)
 
     while (peek_whitespace_line()) {
       std::streamsize len = read_line(line);
-
       char * p = skip_ws(line);
       if (! *p)
         break;
@@ -1660,8 +1662,6 @@ bool instance_t::parse_posts(account_t *  account,
   while (peek_whitespace_line()) {
     char * line;
     std::streamsize len = read_line(line);
-    assert(len > 0);
-
     char * p = skip_ws(line);
     if (*p != ';') {
       if (post_t * post = parse_post(line, len, account, NULL, defer_expr)) {
@@ -1754,7 +1754,6 @@ xact_t * instance_t::parse_xact(char *          line,
 
   while (peek_whitespace_line()) {
     len = read_line(line);
-
     char * p = skip_ws(line);
     if (! *p)
       break;
