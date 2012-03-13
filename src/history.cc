@@ -306,23 +306,34 @@ commodity_history_t::find_price(const commodity_t& source,
 
   const commodity_t * last_target = &target;
 
+#if defined(REVERSE_PREDECESSOR_MAP)
   typedef tuple<const commodity_t *, const commodity_t *,
                 const price_point_t *> results_tuple;
   std::vector<results_tuple> results;
   bool results_reversed = false;
+#endif
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; 
        u != v;
        v = u, u = predecessorMap[v])
   {
-    std::pair<Graph::edge_descriptor, bool> edgePair = edge(u, v, fg);
-    Graph::edge_descriptor edge = edgePair.first;
+    std::pair<Graph::edge_descriptor, bool> edgePair_uv = edge(u, v, fg);
+    std::pair<Graph::edge_descriptor, bool> edgePair_vu = edge(v, u, fg);
 
-    const commodity_t *  u_comm = get(namemap, u);
-    const commodity_t *  v_comm = get(namemap, v);
-    const price_point_t& point(get(pricemap, edge));
+    Graph::edge_descriptor edge_uv = edgePair_uv.first;
+    Graph::edge_descriptor edge_vu = edgePair_vu.first;
 
+    const price_point_t& point_uv(get(pricemap, edge_uv));
+    const price_point_t& point_vu(get(pricemap, edge_vu));
+
+    const price_point_t& point(point_vu.when > point_uv.when ?
+                               point_vu : point_uv);
+
+    const commodity_t * u_comm = get(namemap, u);
+    const commodity_t * v_comm = get(namemap, v);
+
+#if defined(REVERSE_PREDECESSOR_MAP)
     if (v == tv && u_comm != last_target && v_comm != last_target)
       results_reversed = true;
 
@@ -336,6 +347,9 @@ commodity_history_t::find_price(const commodity_t& source,
     const commodity_t *  u_comm = edge.get<0>();
     const commodity_t *  v_comm = edge.get<1>();
     const price_point_t& point(*edge.get<2>());
+#else
+    assert(u_comm == last_target || v_comm == last_target);
+#endif
 
     bool first_run = false;
     if (price.is_null()) {
