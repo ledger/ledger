@@ -1224,6 +1224,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(total_data);
     else OPT(truncate_);
     else OPT(total_width_);
+    else OPT(time_report);
     break;
   case 'u':
     OPT(unbudgeted);

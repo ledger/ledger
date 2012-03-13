@@ -324,6 +324,7 @@ public:
     HANDLER(start_of_week_).report(out);
     HANDLER(subtotal).report(out);
     HANDLER(tail_).report(out);
+    HANDLER(time_report).report(out);
     HANDLER(total_).report(out);
     HANDLER(total_data).report(out);
     HANDLER(truncate_).report(out);
@@ -946,6 +947,25 @@ public:
   OPTION(report_t, start_of_week_);
   OPTION(report_t, subtotal); // -s
   OPTION(report_t, tail_);
+
+  OPTION_(report_t, time_report, DO() {
+      OTHER(balance_format_)
+        .on(none,
+            "%(justify(earliest_checkin ? "
+            "          format_datetime(earliest_checkin) : \"\", 19, -1, true))  "
+            "%(justify(latest_checkout ? "
+            "          format_datetime(latest_checkout) : \"\", 19, -1, true))  "
+            "%(ansify_if("
+            "  justify(scrub(display_total), 8,"
+            "          8 + 4 + 19 * 2, true, color), bold if should_bold))"
+            "  %(!options.flat ? depth_spacer : \"\")"
+            "%-(ansify_if("
+            "   ansify_if(partial_account(options.flat), blue if color),"
+            "             bold if should_bold))\n%/"
+            "%$1  %$2  %$3\n%/"
+            "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+            "--------------------------------------------------\n");
+    });
 
   OPTION__
   (report_t, total_, // -T
