@@ -284,6 +284,12 @@ inline string to_string(long num) {
   return buf.str();
 }
 
+inline string to_string(std::size_t num) {
+  std::ostringstream buf;
+  buf << num;
+  return buf.str();
+}
+
 inline string operator+(const char * left, const string& right) {
   return string(left) + right;
 }
