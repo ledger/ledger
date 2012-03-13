@@ -43,22 +43,6 @@
 namespace ledger {
 
 namespace {
-  string join_args(call_scope_t& args)
-  {
-    std::ostringstream buf;
-    bool first = true;
-
-    for (std::size_t i = 0; i < args.size(); i++) {
-      if (first)
-        first = false;
-      else
-        buf << ' ';
-      buf << args[i];
-    }
-
-    return buf.str();
-  }
-
   post_t * get_sample_xact(report_t& report)
   {
     {

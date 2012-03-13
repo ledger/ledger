@@ -658,6 +658,21 @@ call_scope_t::get<expr_t::ptr_op_t>(std::size_t index, bool) {
   return args[index].as_any<expr_t::ptr_op_t>();
 }
 
+inline string join_args(call_scope_t& args) {
+  std::ostringstream buf;
+  bool first = true;
+
+  for (std::size_t i = 0; i < args.size(); i++) {
+    if (first)
+      first = false;
+    else
+      buf << ' ';
+    buf << args[i];
+  }
+
+  return buf.str();
+}
+
 class value_scope_t : public child_scope_t
 {
   value_t value;
