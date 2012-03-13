@@ -132,7 +132,7 @@ public:
     TRACE_DTOR(item_t);
   }
 
-  void copy_details(const item_t& item)
+  virtual void copy_details(const item_t& item)
   {
     set_flags(item.flags());
     set_state(item.state());

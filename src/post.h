@@ -95,6 +95,7 @@ public:
       xdata_(post.xdata_)
   {
     TRACE_CTOR(post_t, "copy");
+    copy_details(post);
   }
   virtual ~post_t() {
     TRACE_DTOR(post_t);
@@ -140,6 +141,12 @@ public:
 
   std::size_t xact_id() const;
   std::size_t account_id() const;
+
+  virtual void copy_details(const item_t& item) {
+    const post_t& post(dynamic_cast<const post_t&>(item));
+    xdata_ = post.xdata_;
+    item_t::copy_details(item);
+  }
 
   bool valid() const;
 
