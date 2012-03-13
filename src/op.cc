@@ -48,31 +48,31 @@ void intrusive_ptr_release(const expr_t::op_t * op)
   op->release();
 }
 
-namespace {
-  value_t split_cons_expr(expr_t::ptr_op_t op)
-  {
-    if (op->kind == expr_t::op_t::O_CONS) {
-      value_t seq;
-      seq.push_back(expr_value(op->left()));
+value_t split_cons_expr(expr_t::ptr_op_t op)
+{
+  if (op->kind == expr_t::op_t::O_CONS) {
+    value_t seq;
+    seq.push_back(expr_value(op->left()));
 
-      expr_t::ptr_op_t next = op->right();
-      while (next) {
-        expr_t::ptr_op_t value_op;
-        if (next->kind == expr_t::op_t::O_CONS) {
-          value_op = next->left();
-          next     = next->has_right() ? next->right() : NULL;
-        } else {
-          value_op = next;
-          next     = NULL;
-        }
-        seq.push_back(expr_value(value_op));
+    expr_t::ptr_op_t next = op->right();
+    while (next) {
+      expr_t::ptr_op_t value_op;
+      if (next->kind == expr_t::op_t::O_CONS) {
+        value_op = next->left();
+        next     = next->has_right() ? next->right() : NULL;
+      } else {
+        value_op = next;
+        next     = NULL;
       }
-      return seq;
-    } else {
-      return expr_value(op);
+      seq.push_back(expr_value(value_op));
     }
+    return seq;
+  } else {
+    return expr_value(op);
   }
+}
 
+namespace {
   inline void check_type_context(scope_t& scope, value_t& result)
   {
     if (scope.type_required() &&

@@ -371,6 +371,8 @@ expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
 string op_context(const expr_t::ptr_op_t op,
                   const expr_t::ptr_op_t locus = NULL);
 
+value_t split_cons_expr(expr_t::ptr_op_t op);
+
 } // namespace ledger
 
 #endif // _OP_H
