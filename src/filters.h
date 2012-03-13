@@ -156,7 +156,7 @@ public:
     : item_handler<post_t>(handler) {
     TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
 
-    while (post_t * post = *iter++) {
+    while (post_t * post = *iter) {
       try {
         item_handler<post_t>::operator()(*post);
       }
@@ -164,6 +164,7 @@ public:
         add_error_context(item_context(*post, _("While handling posting")));
         throw;
       }
+      iter.increment();
     }
 
     item_handler<post_t>::flush();
