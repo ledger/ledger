@@ -290,6 +290,26 @@ namespace {
     return account.self_details().latest_cleared_post;
   }
 
+  value_t get_earliest(account_t& account)
+  {
+    return account.self_details().earliest_post;
+  }
+  value_t get_earliest_checkin(account_t& account)
+  {
+    return (! account.self_details().earliest_checkin.is_not_a_date_time() ?
+            value_t(account.self_details().earliest_checkin) : NULL_VALUE);
+  }
+
+  value_t get_latest(account_t& account)
+  {
+    return account.self_details().latest_post;
+  }
+  value_t get_latest_checkout(account_t& account)
+  {
+    return (! account.self_details().latest_checkout.is_not_a_date_time() ?
+            value_t(account.self_details().latest_checkout) : NULL_VALUE);
+  }
+
   template <value_t (*Func)(account_t&)>
   value_t get_wrapper(call_scope_t& args) {
     return (*Func)(args.context<account_t>());
@@ -362,6 +382,13 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
     break;
 
+  case 'e':
+    if (fn_name == "earliest")
+      return WRAP_FUNCTOR(get_wrapper<&get_earliest>);
+    else if (fn_name == "earliest_checkin")
+      return WRAP_FUNCTOR(get_wrapper<&get_earliest_checkin>);
+    break;
+
   case 'i':
     if (fn_name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&get_true>);
@@ -370,10 +397,14 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'l':
-    if (fn_name == "latest_cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
-    else if (fn_name[1] == '\0')
+    if (fn_name[1] == '\0')
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
+    else if (fn_name == "latest_cleared")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
+    else if (fn_name == "latest")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
+    else if (fn_name == "latest_checkout")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout>);
     break;
 
   case 'n':
@@ -625,6 +656,14 @@ void account_t::xdata_t::details_t::update(post_t& post,
     earliest_post = post.date();
   if (! is_valid(latest_post) || post.date() > latest_post)
     latest_post = post.date();
+
+  if (post.checkin && (earliest_checkin.is_not_a_date_time() ||
+                       *post.checkin < earliest_checkin))
+    earliest_checkin = *post.checkin;
+
+  if (post.checkout && (latest_checkout.is_not_a_date_time() ||
+                        *post.checkout > latest_checkout))
+    latest_checkout = *post.checkout;
 
   if (post.state() == item_t::CLEARED) {
     posts_cleared_count++;

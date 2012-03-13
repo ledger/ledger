@@ -170,6 +170,9 @@ public:
       date_t             latest_post;
       date_t             latest_cleared_post;
 
+      datetime_t         earliest_checkin;
+      datetime_t         latest_checkout;
+
       std::set<path>     filenames;
       std::set<string>   accounts_referenced;
       std::set<string>   payees_referenced;
