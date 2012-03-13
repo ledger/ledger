@@ -92,11 +92,30 @@ namespace {
       return _("textual parser");
     }
 
+    template <typename T>
+    void get_applications(std::vector<T>& result) {
+      foreach (application_t& state, apply_stack) {
+        if (state.value.type() == typeid(T))
+          result.push_back(boost::get<T>(state.value));
+      }
+      if (parent)
+        parent->get_applications<T>(result);
+    }
+
+    template <typename T>
+    optional<T> get_application() {
+      foreach (application_t& state, apply_stack) {
+        if (state.value.type() == typeid(T))
+          return boost::get<T>(state.value);
+      }
+      return parent ? parent->get_application<T>() : none;
+    }
+
     account_t * top_account() {
-      foreach (application_t& state, apply_stack)
-        if (state.value.type() == typeid(account_t *))
-          return boost::get<account_t *>(state.value);
-      return NULL;
+      if (optional<account_t *> acct = get_application<account_t *>())
+        return *acct;
+      else
+        return NULL;
     }
 
     void parse();
@@ -744,11 +763,14 @@ void instance_t::include_directive(char * line)
 #endif // BOOST_VERSION >= 103700
         if (glob.match(base)) {
           journal_t *  journal  = context.journal;
-          account_t *  master   = context.master;
+          account_t *  master   = top_account();
           scope_t *    scope    = context.scope;
           std::size_t& errors   = context.errors;
           std::size_t& count    = context.count;
           std::size_t& sequence = context.sequence;
+
+          DEBUG("textual.include", "Including: " << *iter);
+          DEBUG("textual.include", "Master account: " << master->fullname());
 
           context_stack.push(*iter);
 
@@ -848,15 +870,21 @@ void instance_t::apply_year_directive(char * line)
 
 void instance_t::end_apply_directive(char * kind)
 {
-  char * b = next_element(kind);
-  string name(b ? b : " ");
+  char * b = kind ? next_element(kind) : NULL;
+  string name(b ? b : "");
 
-  if (apply_stack.size() <= 1)
-    throw_(std::runtime_error,
-           _("'end apply %1' found, but no enclosing 'apply %2' directive")
-           << name << name);
+  if (apply_stack.size() <= 1) {
+    if (name.empty()) {
+      throw_(std::runtime_error,
+             _("'end' or 'end apply' found, but no enclosing 'apply' directive"));
+    } else {
+      throw_(std::runtime_error,
+             _("'end apply %1' found, but no enclosing 'apply' directive")
+             << name);
+    }
+  }
 
-  if (name != " " && name != apply_stack.front().label)
+  if (! name.empty() && name != apply_stack.front().label)
     throw_(std::runtime_error,
            _("'end apply %1' directive does not match 'apply %2' directive")
            << name << apply_stack.front().label);
@@ -1425,15 +1453,14 @@ post_t * instance_t::parse_post(char *          line,
       context.journal->register_commodity(post->amount.commodity(), post.get());
 
       if (! post->amount.has_annotation()) {
-        foreach (application_t& state, apply_stack) {
-          if (state.value.type() == typeid(fixed_rate_t)) {
-            fixed_rate_t& rate(boost::get<fixed_rate_t>(state.value));
-            if (*rate.first == post->amount.commodity()) {
-              annotation_t details(rate.second);
-              details.add_flags(ANNOTATION_PRICE_FIXATED);
-              post->amount.annotate(details);
-              break;
-            }
+        std::vector<fixed_rate_t> rates;
+        get_applications<fixed_rate_t>(rates);
+        foreach (fixed_rate_t& rate, rates) {
+          if (*rate.first == post->amount.commodity()) {
+            annotation_t details(rate.second);
+            details.add_flags(ANNOTATION_PRICE_FIXATED);
+            post->amount.annotate(details);
+            break;
           }
         }
       }
@@ -1631,12 +1658,10 @@ post_t * instance_t::parse_post(char *          line,
   post->pos->end_pos  = context.curr_pos;
   post->pos->end_line = context.linenum;
 
-  if (! apply_stack.empty()) {
-    foreach (const application_t& state, apply_stack)
-      if (state.value.type() == typeid(string))
-        post->parse_tags(boost::get<string>(state.value).c_str(),
-                         *context.scope, true);
-  }
+  std::vector<string> tags;
+  get_applications<string>(tags);
+  foreach (string& tag, tags)
+    post->parse_tags(tag.c_str(), *context.scope, true);
 
   TRACE_STOP(post_details, 1);
 
@@ -1849,12 +1874,10 @@ xact_t * instance_t::parse_xact(char *          line,
   xact->pos->end_pos  = context.curr_pos;
   xact->pos->end_line = context.linenum;
 
-  if (! apply_stack.empty()) {
-    foreach (const application_t& state, apply_stack)
-      if (state.value.type() == typeid(string))
-        xact->parse_tags(boost::get<string>(state.value).c_str(),
-                         *context.scope, false);
-  }
+  std::vector<string> tags;
+  get_applications<string>(tags);
+  foreach (string& tag, tags)
+    xact->parse_tags(tag.c_str(), *context.scope, false);
 
   TRACE_STOP(xact_details, 1);
 
