@@ -41,6 +41,7 @@
 #include "iterators.h"
 #include "filters.h"
 #include "precmd.h"
+#include "select.h"
 #include "stats.h"
 #include "generate.h"
 #include "draft.h"
@@ -1633,6 +1634,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(report_statistics);
       else if (is_eq(p, "source"))
         return WRAP_FUNCTOR(source_command);
+      else if (is_eq(p, "select"))
+        return WRAP_FUNCTOR(select_command);
       break;
 
     case 'x':

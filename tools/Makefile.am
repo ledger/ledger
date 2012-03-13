@@ -79,6 +79,7 @@ libledger_report_la_SOURCES  =			\
 	src/chain.cc				\
 	src/filters.cc				\
 	src/report.cc				\
+	src/select.cc				\
 	src/session.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
@@ -128,6 +129,7 @@ pkginclude_HEADERS =				\
 	src/lookup.h				\
 						\
 	src/session.h				\
+	src/select.h				\
 	src/report.h				\
 	src/filters.h				\
 	src/chain.h				\
