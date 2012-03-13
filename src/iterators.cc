@@ -76,16 +76,19 @@ void journal_posts_iterator::increment()
 }
 
 namespace {
-  struct create_price_xact {
+  struct create_price_xact
+  {
+    journal_t&     journal;
     account_t *    account;
     temporaries_t& temps;
     xacts_list&    xact_temps;
 
     std::map<string, xact_t *> xacts_by_commodity;
 
-    create_price_xact(account_t * _account, temporaries_t& _temps,
-                      xacts_list& _xact_temps)
-      : account(_account), temps(_temps), xact_temps(_xact_temps) {}
+    create_price_xact(journal_t& _journal, account_t * _account,
+                      temporaries_t& _temps, xacts_list& _xact_temps)
+      : journal(_journal), account(_account), temps(_temps),
+        xact_temps(_xact_temps) {}
 
     void operator()(datetime_t& date, const amount_t& price) {
       xact_t * xact;
@@ -102,6 +105,7 @@ namespace {
         xact->_date = date.date();
         xacts_by_commodity.insert
           (std::pair<string, xact_t *>(symbol, xact));
+        xact->journal = &journal;
       }
 
       bool post_already_exists = false;
@@ -139,7 +143,7 @@ void posts_commodities_iterator::reset(journal_t& journal)
 
   foreach (commodity_t * comm, commodities)
     comm->map_prices
-      (create_price_xact(journal.master->find_account(comm->symbol()),
+      (create_price_xact(journal, journal.master->find_account(comm->symbol()),
                          temps, xact_temps));
 
   xacts.reset(xact_temps.begin(), xact_temps.end());
