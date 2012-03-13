@@ -263,6 +263,8 @@ void anonymize_posts::operator()(post_t& post)
 
     xact.payee = to_hex(message_digest);
     xact.note  = none;
+  } else {
+    xact.journal = post.xact->journal;
   }
 
   std::list<string> account_names;
