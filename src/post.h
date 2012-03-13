@@ -61,13 +61,15 @@ public:
 #define POST_COST_VIRTUAL    0x0400 // cost is virtualized: (@)
 #define POST_ANONYMIZED      0x0800 // a temporary, anonymous posting
 
-  xact_t *           xact;      // only set for posts of regular xacts
-  account_t *        account;
+  xact_t *    xact;             // only set for posts of regular xacts
+  account_t * account;
 
-  amount_t           amount;    // can be null until finalization
-  optional<expr_t>   amount_expr;
-  optional<amount_t> cost;
-  optional<amount_t> assigned_amount;
+  amount_t             amount;  // can be null until finalization
+  optional<expr_t>     amount_expr;
+  optional<amount_t>   cost;
+  optional<amount_t>   assigned_amount;
+  optional<datetime_t> checkin;
+  optional<datetime_t> checkout;
 
   post_t(account_t * _account = NULL,
          flags_t     _flags   = ITEM_NORMAL)

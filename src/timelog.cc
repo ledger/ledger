@@ -76,6 +76,11 @@ namespace {
           (_("Timelog check-out event does not match any current check-ins"));
     }
 
+    if (event.checkin.is_not_a_date_time())
+        throw parse_error(_("Timelog check-in has no corresponding check-out"));
+    if (out_event.checkin.is_not_a_date_time())
+        throw parse_error(_("Timelog check-out has no corresponding check-in"));
+
     if (out_event.checkin < event.checkin)
       throw parse_error
         (_("Timelog check-out date less than corresponding check-in"));
@@ -107,6 +112,8 @@ namespace {
     post_t * post = new post_t(event.account, amt, POST_VIRTUAL);
     post->set_state(item_t::CLEARED);
     post->pos = event.position;
+    post->checkin = event.checkin;
+    post->checkout = out_event.checkin;
     curr->add_post(post);
     event.account->add_post(post);
 

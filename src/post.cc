@@ -351,7 +351,14 @@ namespace {
     return post.date();
   }
   value_t get_datetime(post_t& post) {
-    return post.xdata().datetime;
+    return (! post.xdata().datetime.is_not_a_date_time() ?
+            post.xdata().datetime : datetime_t(post.date()));
+  }
+  value_t get_checkin(post_t& post) {
+    return post.checkin ? *post.checkin : NULL_VALUE;
+  }
+  value_t get_checkout(post_t& post) {
+    return post.checkout ? *post.checkout : NULL_VALUE;
   }
 
   template <value_t (*Func)(post_t&)>
@@ -444,6 +451,10 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
     else if (name == "commodity")
       return WRAP_FUNCTOR(&get_commodity);
+    else if (name == "checkin")
+      return WRAP_FUNCTOR(get_wrapper<&get_checkin>);
+    else if (name == "checkout")
+      return WRAP_FUNCTOR(get_wrapper<&get_checkout>);
     break;
 
   case 'd':
