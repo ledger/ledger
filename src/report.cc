@@ -756,6 +756,15 @@ value_t report_t::fn_format_date(call_scope_t& args)
     return string_value(format_date(args.get<date_t>(0), FMT_PRINTED));
 }
 
+value_t report_t::fn_format_datetime(call_scope_t& args)
+{
+  if (args.has<string>(1))
+    return string_value(format_datetime(args.get<datetime_t>(0), FMT_CUSTOM,
+                                        args.get<string>(1).c_str()));
+  else
+    return string_value(format_datetime(args.get<datetime_t>(0), FMT_PRINTED));
+}
+
 value_t report_t::fn_ansify_if(call_scope_t& args)
 {
   if (args.has<string>(1)) {
@@ -1331,6 +1340,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'f':
       if (is_eq(p, "format_date"))
         return MAKE_FUNCTOR(report_t::fn_format_date);
+      else if (is_eq(p, "format_datetime"))
+        return MAKE_FUNCTOR(report_t::fn_format_datetime);
       else if (is_eq(p, "format"))
         return MAKE_FUNCTOR(report_t::fn_format);
       else if (is_eq(p, "floor"))
