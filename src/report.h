@@ -538,7 +538,7 @@ public:
             "             bold if should_bold))"
             " %(ansify_if("
             "   ansify_if(justify(truncated(display_account, int(account_width), "
-            "                               abbrev_len), int(account_width)),"
+            "                               int(abbrev_len)), int(account_width)),"
             "             blue if color),"
             "             bold if should_bold))"
             " %(ansify_if("
@@ -886,7 +886,7 @@ public:
        "             bold if should_bold))"
        " %(ansify_if("
        "   ansify_if(justify(truncated(display_account, int(account_width), "
-       "                               abbrev_len), int(account_width)),"
+       "                               int(abbrev_len)), int(account_width)),"
        "             blue if color),"
        "             bold if should_bold))"
        " %(ansify_if("
@@ -1026,7 +1026,6 @@ public:
   OPTION(report_t, amount_width_);
   OPTION(report_t, total_width_);
 };
-
 
 template <class Type        = post_t,
           class handler_ptr = post_handler_ptr,
