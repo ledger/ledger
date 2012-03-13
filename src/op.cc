@@ -198,6 +198,9 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
   }
 
   if (! result) {
+    if (! left())
+      throw_(calc_error, _("Syntax error"));
+
     ptr_op_t lhs(left()->compile(*scope_ptr, depth + 1, param_scope));
     ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
                  (kind == O_LOOKUP ? right() :
