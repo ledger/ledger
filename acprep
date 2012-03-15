@@ -1348,7 +1348,7 @@ class PrepareBuild(CommandLineApp):
 
     def setup_flavor_opt(self):
         self.CPPFLAGS.append('-DNDEBUG=1')
-        for i in ['-O3', '-fomit-frame-pointer']:
+        for i in ['-O3']:
             self.CXXFLAGS.append(i)
             self.CFLAGS.append(i)
             self.LDFLAGS.append(i)
