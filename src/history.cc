@@ -132,6 +132,8 @@ void commodity_history_t::add_price(const commodity_t& source,
                                     const datetime_t&  when,
                                     const amount_t&    price)
 {
+  assert(source != price.commodity());
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*price.commodity().graph_index(), price_graph);
 
@@ -153,6 +155,8 @@ void commodity_history_t::remove_price(const commodity_t& source,
                                        const commodity_t& target,
                                        const datetime_t&  date)
 {
+  assert(source != target);
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
@@ -172,8 +176,11 @@ void commodity_history_t::map_prices(function<void(datetime_t,
                                                    const amount_t&)> fn,
                                      const commodity_t& source,
                                      const datetime_t&  moment,
-                                     const datetime_t&  oldest)
+                                     const datetime_t&  oldest,
+                                     bool bidirectionally)
 {
+  DEBUG("history.map", "Mapping prices for source commodity: " << source);
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
   FGraph fg(price_graph,
@@ -193,16 +200,23 @@ void commodity_history_t::map_prices(function<void(datetime_t,
     foreach (const price_map_t::value_type& pair, prices) {
       const datetime_t& when(pair.first);
 
+      DEBUG("history.map", "Price " << pair.second << " on " << when);
+
       if ((oldest.is_not_a_date_time() || when >= oldest) && when <= moment) {
         if (pair.second.commodity() == source) {
-          amount_t price(pair.second);
-          price.in_place_invert();
-          if (source == *get(namemap, sv))
-            price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
-          else
-            price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+          if (bidirectionally) {
+            amount_t price(pair.second);
+            price.in_place_invert();
+            if (source == *get(namemap, sv))
+              price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
+            else
+              price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+            DEBUG("history.map", "Inverted price is " << price);
+            fn(when, price);
+          }
+        } else {
+          fn(when, pair.second);
         }
-        fn(when, pair.second);
       }
     }
   }
@@ -275,6 +289,8 @@ commodity_history_t::find_price(const commodity_t& source,
                                 const datetime_t&  moment,
                                 const datetime_t&  oldest)
 {
+  assert(source != target);
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 

@@ -273,7 +273,8 @@ public:
 
   void map_prices(function<void(datetime_t, const amount_t&)> fn,
                   const datetime_t& moment  = datetime_t(),
-                  const datetime_t& _oldest = datetime_t());
+                  const datetime_t& _oldest = datetime_t(),
+                  bool bidirectionally = false);
 
   optional<price_point_t>
   find_price_from_expr(expr_t& expr, const commodity_t * commodity,

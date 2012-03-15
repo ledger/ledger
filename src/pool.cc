@@ -266,6 +266,9 @@ commodity_pool_t::exchange(const amount_t&             amount,
   amount_t per_unit_cost =
     (is_per_unit || amount.is_realzero()) ? cost.abs() : (cost / amount).abs();
 
+  if (! cost.has_commodity())
+    per_unit_cost.clear_commodity();
+
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 
   // Do not record commodity exchanges where amount's commodity has a

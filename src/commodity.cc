@@ -72,7 +72,8 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity)
 
 void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
                              const datetime_t& moment,
-                             const datetime_t& _oldest)
+                             const datetime_t& _oldest,
+                             bool bidirectionally)
 {
   datetime_t when;
   if (! moment.is_not_a_date_time())
@@ -82,7 +83,8 @@ void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
   else
     when = CURRENT_TIME();
 
-  pool().commodity_price_history.map_prices(fn, *this, when, _oldest);
+  pool().commodity_price_history.map_prices(fn, *this, when, _oldest,
+                                            bidirectionally);
 }
 
 optional<price_point_t>

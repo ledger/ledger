@@ -776,7 +776,7 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
              display_total.as_balance().amounts)
       amt_comm.first->map_prices(insert_prices_in_map(all_prices),
                                  datetime_t(current),
-                                 datetime_t(post.value_date()));
+                                 datetime_t(post.value_date()), true);
 
     // Choose the last price from each day as the price to use
     typedef std::map<const date_t, bool> date_map;
