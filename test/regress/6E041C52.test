@@ -1,0 +1,8 @@
+2012-03-16 KFC
+    Expenses:E of March: End of April  $100.00
+    Assets:Cash
+
+test reg
+12-Mar-16 KFC                   Ex:E of: End of April       $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+end test

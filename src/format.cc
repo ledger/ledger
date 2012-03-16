@@ -599,6 +599,7 @@ string format_t::truncate(const unistring&  ustr,
         index = 0;
 #endif
         std::size_t counter = lens.size();
+        std::list<string>::iterator x = parts.begin();
         for (std::list<std::size_t>::iterator i = lens.begin();
              i != lens.end();
              i++) {
@@ -628,12 +629,21 @@ string format_t::truncate(const unistring&  ustr,
           if (adjust > 0) {
             DEBUG("format.abbrev",
                   "Reducing segment " << ++index << " by " << adjust << " chars");
+            while (std::isspace((*x)[*i - adjust - 1]) && adjust < *i) {
+              DEBUG("format.abbrev",
+                    "Segment ends in whitespace, adjusting down");
+              ++adjust;
+            }
             (*i) -= adjust;
             DEBUG("format.abbrev",
                   "Segment " << index << " is now " << *i << " chars wide");
-            overflow -= adjust;
+            if (adjust > overflow)
+              overflow = 0;
+            else
+              overflow -= adjust;
             DEBUG("format.abbrev", "Overflow is now " << overflow << " chars");
           }
+          ++x;
         }
         DEBUG("format.abbrev",
               "Overflow ending this time at " << overflow << " chars");
