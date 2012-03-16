@@ -57,7 +57,8 @@
     (goto-char (point-min))
     (when (re-search-forward "^test \\(.+?\\)\\( ->.*\\)?$" nil t)
       (let ((command (expand-file-name ledger-test-binary))
-            (args (format "-f \"%s\" %s" buffer-file-name (match-string 1))))
+            (args (format "--args-only --columns=80 --no-color -f \"%s\" %s"
+                          buffer-file-name (match-string 1))))
         (setq args (replace-regexp-in-string "\\$sourcepath"
                                              ledger-source-directory args))
         (kill-new args)

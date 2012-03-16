@@ -146,7 +146,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
       case '\t':
       case '\n':
       case '\r':
-        if (! multiple_args && ! consume_whitespace)
+        if (! multiple_args && ! consume_whitespace && ! consume_next_arg)
           goto test_ident;
         else
           ident.push_back(*arg_i);

@@ -1,0 +1,32 @@
+= expr amount > 500 and account =~ /Employer:One/
+    (Virtual)                                      1
+
+2012-01-16 KFC
+    Employer:One                           $1,000.00
+    Assets:Cash
+
+= expr amount>500 and account =~ /Employer:Two/
+    (Virtual)                                     10
+
+2012-02-16 KFC
+    Employer:Two                           $1,000.00
+    Assets:Cash
+
+= Employer:Three and expr amount>500
+    (Virtual)                                    100
+
+2012-03-16 KFC
+    Employer:Three                         $1,000.00
+    Assets:Cash
+
+test reg
+12-Jan-16 KFC                   Employer:One              $1,000.00    $1,000.00
+                                Assets:Cash              $-1,000.00            0
+                                (Virtual)                 $1,000.00    $1,000.00
+12-Feb-16 KFC                   Employer:Two              $1,000.00    $2,000.00
+                                Assets:Cash              $-1,000.00    $1,000.00
+                                (Virtual)                $10,000.00   $11,000.00
+12-Mar-16 KFC                   Employer:Three            $1,000.00   $12,000.00
+                                Assets:Cash              $-1,000.00   $11,000.00
+                                (Virtual)               $100,000.00  $111,000.00
+end test
