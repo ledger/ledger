@@ -125,6 +125,10 @@ public:
     output_stream.close();
   }
 
+  void quick_close() {
+    output_stream.close();
+  }
+
   virtual string description() {
     return _("current report");
   }

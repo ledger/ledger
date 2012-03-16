@@ -56,6 +56,11 @@ public:
   global_scope_t(char ** envp);
   ~global_scope_t();
 
+  void quick_close() {
+    if (! report_stack.empty())
+      report_stack.front().quick_close();
+  }
+
   virtual string description() {
     return _("global scope");
   }
