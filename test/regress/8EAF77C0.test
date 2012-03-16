@@ -1,0 +1,21 @@
+2011/08/05 Rehab Donation
+    Asset:Bank:Boi:Current:Dk                10
+    Expense:Misc:Charity
+
+ 2011/08/07 Net Salary
+    Asset:Bank:Boi:Savings:Dk           -3016.24
+    Income:NetSalary:Dk
+
+2011/08/30 Net Salary
+    Asset:Bank:Boi:Savings:Dk           -3016.24
+    Income:NetSalary:Dk
+
+test reg -> 3
+__ERROR__
+While parsing file "$sourcepath/test/regress/8EAF77C0.test", line 5: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/regress/8EAF77C0.test", line 6: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/regress/8EAF77C0.test", line 7: 
+Error: Unexpected whitespace at beginning of line
+end test

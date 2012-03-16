@@ -337,9 +337,8 @@ void instance_t::read_next_directive()
     break;
 
   case ' ':
-  case '\t': {
-    break;
-  }
+  case '\t':
+    throw parse_error(_("Unexpected whitespace at beginning of line"));
 
   case ';':                     // comments
   case '#':

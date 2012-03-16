@@ -39,8 +39,11 @@
               (setq output
                     (concat (or output "")
                             (buffer-substring beg (match-beginning 0)))))))
-        (find-file-other-window (expand-file-name (concat prefix ".test")
-                                                  ledger-source-directory))
+        (find-file-other-window
+         (expand-file-name (concat prefix ".test")
+                           (expand-file-name "test/regress"
+                                             ledger-source-directory)))
+        (ledger-mode)
         (when input
           (insert input))
         (when output
@@ -52,9 +55,11 @@
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (when (re-search-forward "^test \\(.+\\)" nil t)
+    (when (re-search-forward "^test \\(.+?\\)\\( ->.*\\)?$" nil t)
       (let ((command (expand-file-name ledger-test-binary))
             (args (format "-f \"%s\" %s" buffer-file-name (match-string 1))))
+        (setq args (replace-regexp-in-string "\\$sourcepath"
+                                             ledger-source-directory args))
         (kill-new args)
         (message "Testing: ledger %s" args)
         (async-shell-command (format "\"%s\" %s" command args))))))

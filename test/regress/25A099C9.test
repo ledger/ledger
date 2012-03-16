@@ -1,17 +1,1211 @@
-test -f $sourcepath/src/amount.h reg -> 7
+test -f $sourcepath/src/amount.h reg -> 92
 __ERROR__
+While parsing file "$sourcepath/src/amount.h", line 2: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 3: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 4: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 5: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 6: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 7: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 8: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 9: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 10: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 11: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 12: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 13: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 14: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 15: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 16: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 17: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 18: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 19: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 20: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 21: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 22: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 23: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 24: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 25: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 26: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 27: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 28: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 29: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 30: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 33: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 34: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 37: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 38: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 39: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 40: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 41: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 42: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 43: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 44: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 45: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 46: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 47: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 48: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 49: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 50: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 51: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 52: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 66: 
 Error: No quantity specified for amount
+While parsing file "$sourcepath/src/amount.h", line 69: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 70: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 71: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 72: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 73: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 74: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 75: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 76: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 77: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 83: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 84: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 85: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 86: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 87: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 88: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 89: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 90: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 91: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 93: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 94: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 95: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 96: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 99: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 100: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 101: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 102: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 103: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 104: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 106: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 108: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 109: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 111: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 112: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 113: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 115: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 116: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 117: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 118: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 121: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 122: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 123: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 124: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 126: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 128: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 129: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 132: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 133: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 135: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 136: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 137: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 138: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 139: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 140: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 142: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 143: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 144: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 146: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 147: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 149: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 150: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 151: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 153: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 154: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 155: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 156: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 157: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 158: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 159: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 160: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 161: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 162: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 163: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 164: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 165: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 166: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 167: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 168: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 169: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 171: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 173: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 174: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 175: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 176: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 177: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 178: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 179: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 180: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 182: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 183: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 184: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 185: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 186: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 187: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 188: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 190: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 191: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 193: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 194: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 195: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 196: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 197: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 198: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 199: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 200: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 201: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 202: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 203: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 204: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 205: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 206: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 207: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 208: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 209: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 210: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 211: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 212: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 213: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 214: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 215: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 216: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 217: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 219: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 220: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 221: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 222: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 223: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 224: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 225: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 226: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 227: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 229: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 230: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 231: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 232: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 233: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 234: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 235: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 236: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 237: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 238: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 240: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 242: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 243: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 245: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 246: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 247: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 248: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 249: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 251: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 252: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 253: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 254: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 256: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 257: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 258: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 259: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 260: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 261: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 262: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 263: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 264: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 265: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 266: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 267: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 269: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 271: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 272: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 273: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 275: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 276: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 277: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 278: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 279: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 280: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 282: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 283: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 284: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 285: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 286: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 287: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 289: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 291: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 292: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 294: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 295: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 296: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 297: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 298: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 299: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 300: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 301: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 302: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 303: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 305: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 306: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 307: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 308: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 309: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 310: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 311: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 312: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 313: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 315: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 316: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 317: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 319: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 320: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 321: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 322: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 323: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 324: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 325: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 326: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 327: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 328: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 330: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 331: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 332: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 333: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 334: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 335: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 337: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 338: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 339: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 340: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 341: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 342: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 343: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 344: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 345: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 346: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 347: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 349: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 350: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 351: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 352: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 353: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 354: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 355: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 356: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 358: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 359: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 360: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 361: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 362: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 363: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 364: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 365: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 367: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 368: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 369: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 370: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 371: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 372: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 373: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 374: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 376: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 377: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 378: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 379: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 380: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 381: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 382: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 383: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 384: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 385: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 387: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 388: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 389: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 390: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 391: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 392: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 393: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 394: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 395: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 396: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 398: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 399: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 400: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 401: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 402: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 403: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 404: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 405: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 406: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 407: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 408: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 410: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 412: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 414: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 415: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 416: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 418: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 420: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 421: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 422: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 423: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 424: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 425: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 427: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 428: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 430: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 431: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 432: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 434: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 435: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 437: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 438: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 439: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 440: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 441: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 443: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 444: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 445: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 446: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 447: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 448: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 450: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 451: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 452: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 453: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 455: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 456: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 457: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 458: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 459: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 460: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 461: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 463: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 465: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 466: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 467: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 469: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 470: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 471: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 472: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 473: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 475: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 476: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 477: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 479: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 480: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 481: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 483: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 484: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 486: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 487: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 488: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 490: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 491: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 493: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 494: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 495: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 496: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 497: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 498: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 499: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 500: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 501: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 503: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 504: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 505: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 506: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 507: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 508: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 510: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 512: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 513: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 514: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 516: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 517: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 519: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 520: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 522: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 524: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 525: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 526: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 527: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 528: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 530: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 531: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 533: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 534: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 535: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 536: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 537: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 538: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 539: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 541: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 542: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 543: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 544: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 545: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 546: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 547: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 548: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 549: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 551: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 552: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 553: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 555: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 556: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 557: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 558: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 560: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 562: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 563: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 564: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 566: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 567: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 568: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 570: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 571: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 572: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 573: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 575: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 576: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 578: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 579: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 580: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 582: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 583: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 584: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 585: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 586: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 588: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 589: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 590: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 591: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 593: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 594: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 596: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 597: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 598: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 599: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 601: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 602: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 603: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 604: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 605: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 606: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 607: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 608: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 610: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 612: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 613: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 614: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 616: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 617: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 619: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 620: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 621: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 622: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 623: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 625: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 626: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 628: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 629: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 630: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 631: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 632: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 633: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 635: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 636: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 637: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 638: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 640: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 641: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 642: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 643: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 645: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 646: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 647: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 649: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 650: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 652: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 654: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 655: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 656: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 657: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 658: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 659: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 660: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 661: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 662: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 663: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 665: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 666: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 668: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 670: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 671: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 672: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 674: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 675: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 676: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 677: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 679: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 680: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 681: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 682: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 683: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 684: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 685: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 686: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 693: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 694: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 696: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 698: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 699: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 700: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 702: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 704: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 705: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 706: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 707: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 709: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 710: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 711: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 712: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 713: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 714: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 715: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 716: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 717: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 719: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 723: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 725: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 727: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 728: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 731: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 734: 
 Error: Invalid date/time: line amount_t amoun
+While parsing file "$sourcepath/src/amount.h", line 735: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 736: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 737: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 740: 
 Error: Invalid date/time: line string amount_
+While parsing file "$sourcepath/src/amount.h", line 741: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 742: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 743: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 746: 
 Error: Invalid date/time: line string amount_
+While parsing file "$sourcepath/src/amount.h", line 747: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 748: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 749: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 752: 
 Error: Invalid date/time: line string amount_
+While parsing file "$sourcepath/src/amount.h", line 753: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 754: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 755: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 758: 
 Error: Invalid date/time: line std::ostream& 
+While parsing file "$sourcepath/src/amount.h", line 759: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 760: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 761: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 762: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 763: 
+Error: Unexpected whitespace at beginning of line
 While parsing file "$sourcepath/src/amount.h", line 765: 
 Error: Invalid date/time: line std::istream& 
+While parsing file "$sourcepath/src/amount.h", line 766: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 767: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/src/amount.h", line 771: 
+Error: Unexpected whitespace at beginning of line
 end test
