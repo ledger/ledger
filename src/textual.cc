@@ -133,7 +133,7 @@ namespace {
     }
 #endif
 
-    void read_next_directive();
+    void read_next_directive(bool& error_flag);
 
 #if defined(TIMELOG_SUPPORT)
     void clock_in_directive(char * line, bool capitalized);
@@ -251,11 +251,15 @@ void instance_t::parse()
   context.linenum  = 0;
   context.curr_pos = in.tellg();
 
+  bool error_flag = false;
+
   while (in.good() && ! in.eof()) {
     try {
-      read_next_directive();
+      read_next_directive(error_flag);
     }
     catch (const std::exception& err) {
+      error_flag = true;
+
       string current_context = error_context();
 
       if (parent) {
@@ -324,12 +328,15 @@ std::streamsize instance_t::read_line(char *& line)
   return 0;
 }
 
-void instance_t::read_next_directive()
+void instance_t::read_next_directive(bool& error_flag)
 {
   char * line;
   std::streamsize len = read_line(line);
   if (len == 0 || line == NULL)
     return;
+
+  if (! std::isspace(line[0]))
+    error_flag = false;
 
   switch (line[0]) {
   case '\0':
@@ -338,7 +345,9 @@ void instance_t::read_next_directive()
 
   case ' ':
   case '\t':
-    throw parse_error(_("Unexpected whitespace at beginning of line"));
+    if (! error_flag)
+      throw parse_error(_("Unexpected whitespace at beginning of line"));
+    break;
 
   case ';':                     // comments
   case '#':

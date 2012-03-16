@@ -10,12 +10,8 @@
     Asset:Bank:Boi:Savings:Dk           -3016.24
     Income:NetSalary:Dk
 
-test reg -> 3
+test reg -> 1
 __ERROR__
 While parsing file "$sourcepath/test/regress/8EAF77C0.test", line 5: 
-Error: Unexpected whitespace at beginning of line
-While parsing file "$sourcepath/test/regress/8EAF77C0.test", line 6: 
-Error: Unexpected whitespace at beginning of line
-While parsing file "$sourcepath/test/regress/8EAF77C0.test", line 7: 
 Error: Unexpected whitespace at beginning of line
 end test
