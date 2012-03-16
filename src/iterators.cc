@@ -138,7 +138,7 @@ void posts_commodities_iterator::reset(journal_t& journal)
     commodity_t& comm(post->amount.commodity());
     if (comm.flags() & COMMODITY_NOMARKET)
       continue;
-    commodities.insert(&comm);
+    commodities.insert(&comm.referent());
   }
 
   foreach (commodity_t * comm, commodities)

@@ -212,9 +212,11 @@ void commodity_history_t::map_prices(function<void(datetime_t,
             else
               price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
             DEBUG("history.map", "Inverted price is " << price);
+            DEBUG("history.map", "fn(" << when << ", " << price << ")");
             fn(when, price);
           }
         } else {
+          DEBUG("history.map", "fn(" << when << ", " << pair.second << ")");
           fn(when, pair.second);
         }
       }
