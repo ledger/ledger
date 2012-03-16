@@ -111,6 +111,14 @@ value_t xact_base_t::magnitude() const
   return halfbal;
 }
 
+namespace {
+  inline bool account_ends_with_special_char(const string& name) {
+    string::size_type len(name.length());
+    return (std::isdigit(name[len - 1]) || name[len - 1] == ')' ||
+            name[len - 1] == '}' || name[len - 1] == ']');
+  }
+}
+
 bool xact_base_t::finalize()
 {
   // Scan through and compute the total balance for the xact.  This is used
@@ -136,8 +144,19 @@ bool xact_base_t::finalize()
                        p.rounded().reduced() : p.reduced());
     }
     else if (null_post) {
-      throw_(std::logic_error,
-             _("Only one posting with null amount allowed per transaction"));
+      bool post_account_bad =
+        account_ends_with_special_char(post->account->fullname());
+      bool null_post_account_bad =
+        account_ends_with_special_char(null_post->account->fullname());
+
+      if (post_account_bad || null_post_account_bad)
+        throw_(std::logic_error,
+               _("Posting with null amount's account may be mispelled:\n  \"%1\"")
+               << (post_account_bad ? post->account->fullname() :
+                   null_post->account->fullname()));
+      else
+        throw_(std::logic_error,
+               _("Only one posting with null amount allowed per transaction"));
     }
     else {
       null_post = post;
