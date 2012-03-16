@@ -1,0 +1,6 @@
+2011-11-08 * Test
+    Assets:Voucher:Amazon                 137.87 GBP (48H5)
+    Assets:Cash                          -137.87 GBP
+
+test pricedb
+end test

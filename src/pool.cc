@@ -277,8 +277,10 @@ commodity_pool_t::exchange(const amount_t&             amount,
   if (! per_unit_cost.is_realzero() &&
       (current_annotation == NULL ||
        ! (current_annotation->price &&
-          current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))))
+          current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))) &&
+      commodity.referent() != per_unit_cost.commodity().referent()) {
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
+  }
 
   cost_breakdown_t breakdown;
   breakdown.final_cost = ! is_per_unit ? cost : cost * amount.abs();
