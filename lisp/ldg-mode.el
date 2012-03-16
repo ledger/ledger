@@ -47,6 +47,7 @@
     (define-key map [(control ?c) (control ?e)] 'ledger-toggle-current-entry)
     (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)
     (define-key map [(control ?c) (control ?s)] 'ledger-sort)
+    (define-key map [(control ?c) (control ?t)] 'ledger-test-run)
     (define-key map [tab] 'pcomplete)
     (define-key map [(control ?i)] 'pcomplete)
     (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)

@@ -1,0 +1,62 @@
+(defcustom ledger-source-directory "~/src/ledger"
+  "Directory where the Ledger sources are located."
+  :type 'directory
+  :group 'ledger)
+
+(defcustom ledger-test-binary "~/Products/ledger/debug/ledger"
+  "Directory where the Ledger sources are located."
+  :type 'file
+  :group 'ledger)
+
+(defun ledger-test-org-narrow-to-entry ()
+  (outline-back-to-heading)
+  (narrow-to-region (point) (progn (outline-next-heading) (point)))
+  (goto-char (point-min)))
+
+(defun ledger-test-create ()
+  (interactive)
+  (let ((uuid (org-entry-get (point) "ID")))
+    (when (string-match "\\`\\([^-]+\\)-" uuid)
+      (let ((prefix (match-string 1 uuid))
+            input output)
+        (save-restriction
+          (ledger-test-org-narrow-to-entry)
+          (goto-char (point-min))
+          (while (re-search-forward "#\\+begin_src ledger" nil t)
+            (goto-char (match-end 0))
+            (forward-line 1)
+            (let ((beg (point)))
+              (re-search-forward "#\\+end_src")
+              (setq input
+                    (concat (or input "")
+                            (buffer-substring beg (match-beginning 0))))))
+          (goto-char (point-min))
+          (while (re-search-forward ":OUTPUT:" nil t)
+            (goto-char (match-end 0))
+            (forward-line 1)
+            (let ((beg (point)))
+              (re-search-forward ":END:")
+              (setq output
+                    (concat (or output "")
+                            (buffer-substring beg (match-beginning 0)))))))
+        (find-file-other-window (expand-file-name (concat prefix ".test")
+                                                  ledger-source-directory))
+        (when input
+          (insert input))
+        (when output
+          (insert "\ntest \n")
+          (insert output)
+          (insert "end test\n"))))))
+
+(defun ledger-test-run ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^test \\(.+\\)" nil t)
+      (let ((command (expand-file-name ledger-test-binary))
+            (args (format "-f \"%s\" %s" buffer-file-name (match-string 1))))
+        (kill-new args)
+        (message "Testing: ledger %s" args)
+        (async-shell-command (format "\"%s\" %s" command args))))))
+
+(provide 'ldg-test)
