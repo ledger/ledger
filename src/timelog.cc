@@ -41,9 +41,43 @@
 namespace ledger {
 
 namespace {
-  void clock_out_from_timelog(std::list<time_xact_t>& time_xacts,
-                              time_xact_t             out_event,
-                              parse_context_t&        context)
+  void create_timelog_xact(const time_xact_t& in_event,
+                           const time_xact_t& out_event,
+                           parse_context_t&   context)
+  {
+    unique_ptr<xact_t> curr(new xact_t);
+    curr->_date = in_event.checkin.date();
+    curr->code  = out_event.desc; // if it wasn't used above
+    curr->payee = in_event.desc;
+    curr->pos   = in_event.position;
+
+    if (! in_event.note.empty())
+      curr->append_note(in_event.note.c_str(), *context.scope);
+
+    char buf[32];
+    std::sprintf(buf, "%lds", long((out_event.checkin - in_event.checkin)
+                                   .total_seconds()));
+    amount_t amt;
+    amt.parse(buf);
+    VERIFY(amt.valid());
+
+    post_t * post = new post_t(in_event.account, amt, POST_VIRTUAL);
+    post->set_state(item_t::CLEARED);
+    post->pos = in_event.position;
+    post->checkin = in_event.checkin;
+    post->checkout = out_event.checkin;
+    curr->add_post(post);
+    in_event.account->add_post(post);
+
+    if (! context.journal->add_xact(curr.get()))
+      throw parse_error(_("Failed to record 'out' timelog transaction"));
+    else
+      curr.release();
+  }
+
+  std::size_t clock_out_from_timelog(std::list<time_xact_t>& time_xacts,
+                                     time_xact_t             out_event,
+                                     parse_context_t&        context)
   {
     time_xact_t event;
 
@@ -93,34 +127,35 @@ namespace {
     if (! out_event.note.empty() && event.note.empty())
       event.note = out_event.note;
 
-    unique_ptr<xact_t> curr(new xact_t);
-    curr->_date = event.checkin.date();
-    curr->code  = out_event.desc; // if it wasn't used above
-    curr->payee = event.desc;
-    curr->pos   = event.position;
+    if (! context.journal->day_break) {
+      create_timelog_xact(event, out_event, context);
+      return 1;
+    } else {
+      time_xact_t begin(event);
+      std::size_t xact_count = 0;
 
-    if (! event.note.empty())
-      curr->append_note(event.note.c_str(), *context.scope);
+      while (begin.checkin < out_event.checkin) {
+        DEBUG("timelog", "begin.checkin: " << begin.checkin);
+        datetime_t days_end(begin.checkin.date(), time_duration_t(23, 59, 59));
+        days_end += seconds(1);
+        DEBUG("timelog", "days_end: " << days_end);
 
-    char buf[32];
-    std::sprintf(buf, "%lds", long((out_event.checkin - event.checkin)
-                                   .total_seconds()));
-    amount_t amt;
-    amt.parse(buf);
-    VERIFY(amt.valid());
+        if (out_event.checkin <= days_end) {
+          create_timelog_xact(begin, out_event, context);
+          ++xact_count;
+          break;
+        } else {
+          time_xact_t end(out_event);
+          end.checkin = days_end;
+          DEBUG("timelog", "end.checkin: " << end.checkin);
+          create_timelog_xact(begin, end, context);
+          ++xact_count;
 
-    post_t * post = new post_t(event.account, amt, POST_VIRTUAL);
-    post->set_state(item_t::CLEARED);
-    post->pos = event.position;
-    post->checkin = event.checkin;
-    post->checkout = out_event.checkin;
-    curr->add_post(post);
-    event.account->add_post(post);
-
-    if (! context.journal->add_xact(curr.get()))
-      throw parse_error(_("Failed to record 'out' timelog transaction"));
-    else
-      curr.release();
+          begin.checkin = end.checkin;
+        }
+      }
+      return xact_count;
+    }
   }
 } // unnamed namespace
 
@@ -155,12 +190,12 @@ void time_log_t::clock_in(time_xact_t event)
   time_xacts.push_back(event);
 }
 
-void time_log_t::clock_out(time_xact_t event)
+std::size_t time_log_t::clock_out(time_xact_t event)
 {
   if (time_xacts.empty())
     throw std::logic_error(_("Timelog check-out event without a check-in"));
 
-  clock_out_from_timelog(time_xacts, event, context);
+  return clock_out_from_timelog(time_xacts, event, context);
 }
 
 } // namespace ledger

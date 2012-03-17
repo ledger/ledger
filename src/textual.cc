@@ -486,8 +486,7 @@ void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
                     n ? n : "",
                     end ? end : "");
 
-  timelog.clock_out(event);
-  context.count++;
+  context.count += timelog.clock_out(event);
 }
 
 #endif // TIMELOG_SUPPORT

@@ -130,6 +130,7 @@ public:
   bool                  was_loaded;
   bool                  force_checking;
   bool                  check_payees;
+  bool                  day_break;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
   accounts_map          account_aliases;

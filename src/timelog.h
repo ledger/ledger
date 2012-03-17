@@ -98,7 +98,7 @@ public:
   }
 
   void clock_in(time_xact_t event);
-  void clock_out(time_xact_t event);
+  std::size_t clock_out(time_xact_t event);
 
   void close();
 };

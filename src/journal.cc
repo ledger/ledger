@@ -94,6 +94,7 @@ void journal_t::initialize()
   was_loaded        = false;
   force_checking    = false;
   check_payees      = false;
+  day_break         = false;
   checking_style    = CHECK_PERMISSIVE;
 }
 

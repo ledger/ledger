@@ -105,6 +105,8 @@ std::size_t session_t::read_data(const string& master_account)
     journal->force_checking = true;
   if (HANDLED(check_payees))
     journal->check_payees = true;
+  if (HANDLED(day_break))
+    journal->day_break = true;
 
   if (HANDLED(permissive))
     journal->checking_style = journal_t::CHECK_PERMISSIVE;
@@ -320,6 +322,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'd':
     OPT(download); // -Q
     else OPT(decimal_comma);
+    else OPT(day_break);
     break;
   case 'e':
     OPT(explicit);
