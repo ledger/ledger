@@ -121,6 +121,7 @@ pkginclude_HEADERS =				\
 	src/xact.h				\
 	src/account.h				\
 	src/journal.h				\
+	src/context.h				\
 	src/temps.h				\
 	src/archive.h				\
 	src/timelog.h				\
