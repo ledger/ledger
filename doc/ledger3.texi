@@ -70,6 +70,7 @@ twinkling in their father's CRT.
 * Ledger Tutorial ::            
 * Principles of Accounting::    
 * Keeping a Journal::           
+* Transactions ::               
 * Building Reports::            
 * Reporting Commands::          
 * Command-line Syntax::         
@@ -1336,7 +1337,7 @@ associated with particular transactions.  Your own tastes will decide which
 is best for your situation.
 
 
-@node Keeping a Journal, Building Reports, Principles of Accounting, Top
+@node Keeping a Journal, Transactions , Principles of Accounting, Top
 @chapter Keeping a Journal
 
 The most important part of accounting is keeping a good journal.  If you
@@ -1374,11 +1375,6 @@ posting.
 * Structuring Your Accounts::   
 * Commenting on your journal::  
 * Currency and Commodities::    
-* Advanced Transactions::       
-* Keeping it Consistent::       
-* File Format::                 
-* Archiving Previous Years ::   
-* Using Emacs::                 
 @end menu
 
 @node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
@@ -1537,9 +1533,9 @@ There are several forms of comments within a transaction, for example:
 @noindent  The first comment is global and Ledger will not attach it to any specific
 transactions.  The comments within the transaction must all start with `;'s and are
 preserved as part of the transaction.  The `:'s indicate meta-data and tags 
-(@pxref{Transaction Notes and Tags}).
+(@pxref{Metadata}).
 
-@node Currency and Commodities, Advanced Transactions, Commenting on your journal, Keeping a Journal
+@node Currency and Commodities,  , Commenting on your journal, Keeping a Journal
 @section Currency and Commodities
 
 @cindex currency
@@ -1715,353 +1711,1036 @@ its amount is null.
 @subsection Complete control over commodity pricing
 
 
-@node Advanced Transactions, Keeping it Consistent, Currency and Commodities, Keeping a Journal
-@section Advanced Transactions
+
+@node Transactions , Building Reports, Keeping a Journal, Top
+@chapter  Transactions 
 @menu
-* Transaction Notes and Tags::  
-* Multiple Account Transactions::  
-* Virtual Transactions::        
-* Automatic Transactions::      
-* Checking Balances and Reconciliations::  
-* Effective Dates::             
-* Periodic Transactions::       
-* Recording Commodity Lot Prices::  
+* Basic format::                
+* Eliding amounts::             
+* Auxiliary dates::             
+* Codes::                       
+* Transaction state::           
+* Transaction notes::           
+* Metadata::                    
+* Virtual postings::            
+* Expression amounts::          
+* Balance verification::        
+* Posting cost::                
+* Explicit posting costs::      
+* Posting cost expressions::    
+* Total posting costs::         
+* Virtual posting costs::       
+* Commodity prices::            
+* Prices vs. costs::            
+* Lot dates::                   
+* Lot notes::                   
+* Lot value expressions::       
+* Automated transactions::      
+* Keeping it Consistent::       
+* File Format::                 
+* Archiving Previous Years ::   
+* Using Emacs::                 
 @end menu
 
-@node Transaction Notes and Tags, Multiple Account Transactions, Advanced Transactions, Advanced Transactions
-@subsection Transaction Notes and Tags
+@node Basic format, Eliding amounts, Transactions , Transactions
+@section Basic format
 
-Ledger 3.0 supports entry and transaction ``notes'', which may  
-contain new meta-data and tag markers.  Here's an example:
-@cindex meta-data
-@cindex tags
+
+The most basic form of transaction is:
 
 @smallexample
-   2004/05/27 (100) Credit card company
-       ; This is an entry note!
-       ; Sample: Value
-       Liabilities:MasterCard         $20.00
-       ; This is a transaction note!
-       ; Sample: Another Value
-       ; :MyTag:
-       Assets:Bank:Checking
-       ; :AnotherTag:
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash                 $-20.00
 @end smallexample
 
-An indented paragraph starting with `;' is parsed as a persistent note  
-for its preceding category.  These notes will get printed back to you  
-with the ``print'' command.  They are accessible to value expressions  
-using the ``note'' variable.
+This transaction has a date, a payee or description, a target account (the
+first posting), and a source account (the second posting).  Each posting
+specifies what action is taken related to that account.
 
-Further, any occurrence of ``:foo:'' in a note will cause a meta-data tag  
-for "foo" to be registered for that entry.  You can then search for  
-such transactions using:
-@findex %
-@cindex tags
-@smallexample
-   ledger reg %foo
-   ledger reg tag foo
-@end smallexample
-
-@cindex setting the value of a tag
-@cindex value tags
- 
-Also, if any word in the note ends (but does not start) with a colon,  
-the remainder of that line will be taken to be the meta-data value for  
-that tag.  That is:
+A transaction can have any number of postings:
 
 @smallexample
-   ; :foo:bar:baz:  <-- These are three tags
-   ; name: value    <-- this is a tag with a value
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash                 $-10.00
+       Liabilities:Credit          $-10.00
 @end smallexample
-@cindex searching for tags
-@cindex tags, searching for
-Tags with value can be searched for just like tags.  In addition, you  
-can further limit your tag search by looking for only those tags that  
-have specific values:
+
+@node Eliding amounts, Auxiliary dates, Basic format, Transactions
+@section  Eliding amounts
+
+The first thing you can do to make things easier is elide amounts.  That is,
+if exactly one posting has no amount specified, Ledger will infer the inverse
+of the other postings' amounts:
 
 @smallexample
-   ledger reg %name=value
-   ledger reg tag name=value
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash                 $-10.00
+       Liabilities:Credit                   ; same as specifying $-10
 @end smallexample
-@findex group-by "tag('foo')"
-@cindex group by tags
-The group-by and sort functions also support tags:
-@smallexample
-ledger --group-by "tag('foo')" bal 
-@end smallexample
-Will produce a balance summary of all transaction with tag `foo' group
-by transactions with the same value for `foo'.
+
+@noindent If the other postings use multiple commodities, Ledger will copy the empty
+posting N times and fill in the negated values of the various commodities:
 
 @smallexample
-ledger reg --sort "tag('foo')" %foo
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Expenses:Tips                 $2.00
+       Assets:Cash              EUR -10.00
+       Assets:Cash              GBP -10.00
+       Liabilities:Credit
 @end smallexample
-Produces a register view with the transaction have tag `foo' sorted by
-the tags value.
 
-Comments that occur before an entry, or which starts at column zero, are
-always ignored and are neither searched nor printed back.
-
-If a posting comment is a date (with brackets), it modifies the date for that posting:
-@smallexample
-2010/02/01 Sample
-  Assets:Bank  $400.00
-  Income:Check  $-400.00 ; [2010/01/01]
-@end smallexample
-You can use meta-data to override the payee field for individual postings within a transaction: (source)
-@cindex overriding payee using meta-data
-@cindex meta-data, overriding payee
-@smallexample 
-2010/06/17 Sample
-  Assets:Bank  $400.00
-  Income:Check1  $-100.00 ; Payee: Person One
-  Income:Check2  $-100.00 ; Payee: Person Two
-  Income:Check3  $-100.00 ; Payee: Person Three
-  Income:Check4  $-100.00 ; Payee: Person Four
-@end smallexample
-Meta-data are normally strings, but you can create meta-data of other types:
-
-@smallexample 
-2010/06/17 Sample
-  Assets:Bank  $400.00
-  Income:Check1  $-100.00
-  ; Date:: [2010/09/01]
-  ; Amount:: $100.00
-@end smallexample
-(Note that this Date tag is not the same as the posting date.)
-
-@cindex @@tag directive
-@cindex tags, applying to several transactions.
-You apply a tag or tags to a group of transactions by surrounding them with a @code{@@tag ... @@end tag} block.
-For example, if you wanted a
-conceptual ``page'' of transactions relating to business trip to
-Chicago, you could do this:
+@noindent This transaction is identical to writing:
 
 @smallexample
- @@tag Location: Chicago
- @@tag Purpose: Business
-
- ... transactions go here
-
- @@end tag 
- @@end tag
-@end smallexample
-It would be as if you'd applied "; Location: Chicago", etc., to every transaction.
-
-@node Multiple Account Transactions, Virtual Transactions, Transaction Notes and Tags, Advanced Transactions
-@subsection Multiple Account Transactions
-
-Often times a transaction needs to be split across several accounts.
-This is trivially simple in a Ledger journal:
-
-@cindex splitting transactions across accounts
-@cindex transactions, splitting across accounts
-@smallexample
-2011/09/15 * Deposit Acme Bytepumps Monthly Paycheck
-    Income:Taxable:Acme Bytepumps Inc.     $-2500.00
-    Assets:Brokerage:Checking                $175.00
-    Assets:Investments:401K Deferred         $250.00
-    Expenses:Tax:Medicare                     $36.25
-    Expenses:Tax:Federal Tax                 $200.00
-    Expenses:Tax:State Tax                    $20.00
-    Expenses:Insurance:Life                   $18.75
-    Assets:Credit Union:Joint Checking     
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Expenses:Tips                 $2.00
+       Assets:Cash              EUR -10.00
+       Assets:Cash              GBP -10.00
+       Liabilities:Credit          $-22.00
+       Liabilities:Credit        EUR 10.00
+       Liabilities:Credit        GBP 10.00
 @end smallexample
 
-This is an example of a paycheck entry.  The money comes @strong{out} of your
-income account, and is spent into several other accounts.  The last line
-doesn't require an amount, as ledger will automatically balance the
-transaction (it will be $1800 into the Joint Checking account)
+@node Auxiliary dates, Codes, Eliding amounts, Transactions
+@section Auxiliary dates
 
-
-@node Virtual Transactions, Automatic Transactions, Multiple Account Transactions, Advanced Transactions
-@subsection Virtual Transactions
-
-
-A virtual posting is when you, in your mind, see money as moving
-to a certain place, when in reality that money has not moved at all.
-There are several scenarios in which this type of tracking comes in
-handy, and each of them will be discussed in detail.
-
-To enter a virtual posting, surround the account name in
-parentheses.  This form of usage does not need to balance.  However,
-if you want to ensure the virtual posting balances with other
-virtual postings in the same transaction, use square brackets.  For
-example:
+You can associate a second date with a transaction by following the primary
+date with an equals sign:
 
 @smallexample
-10/2 Paycheck
-    Assets:Checking                        $1000.00
-    Income:Salary                         $-1000.00
-    (Debt:Alimony)                          $200.00
+   2012-03-10=2012-03-08 KFC
+       Expenses:Food                $20.00
+       Assets:Cash                 $-20.00
 @end smallexample
 
-In this example, after receiving a paycheck an alimony debt is
-increased---even though no money has moved around yet.
+What this auxiliary date means is entirely up to you.  The only use Ledger has
+for it is that if you specify --aux-date, then all reports and calculations
+(including pricing) will use the aux date as if it were the primary date.
+
+@node Codes, Transaction state, Auxiliary dates, Transactions
+@section Codes
+
+A transaction can have a textual "code".  This has no meaning and is only
+displayed by the print command.  Checking accounts often use codes like DEP,
+XFER, etc., as well as check numbers.  This is to give you a place to put
+those codes:
 
 @smallexample
-10/2  Paycheck
-    Assets:Checking                        $1000.00
-    Income:Salary                         $-1000.00
-    [Savings:Trip]                          $200.00
-    [Assets:Checking]                      $-200.00
+   2012-03-10 (#100) KFC
+       Expenses:Food                $20.00
+       Assets:Checking
 @end smallexample
 
-In this example, $200 has been deducted from checking toward savings
-for a trip.  It will appear as though the money has been moved from
-the account into @samp{Savings:Trip}, although no money has actually
-moved anywhere.
+@node Transaction state, Transaction notes, Codes, Transactions
+@section Transaction state
 
-When balances are displayed, virtual postings will be factored in.
-To view balances without any virtual balances factored in, using the
-@option{-R} flag, for ``reality''.
-
-
-@node Automatic Transactions, Checking Balances and Reconciliations, Virtual Transactions, Advanced Transactions
-@subsection Automatic Transactions
-
-As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
-It is similar to tithing for Jews and Christians, or to Zakát for
-Muslims.  The exact details of computing Huqúqu'lláh are somewhat
-complex, but if you have further interest, please consult the Web.
-
-Ledger makes this otherwise difficult law very easy.  Just set up an
-automated posting at the top of your ledger file:
+A transaction can have a ``state'': cleared, pending, or uncleared.  The default
+is uncleared.  To mark a transaction cleared, put a * before the payee, and
+after date or code:
 
 @smallexample
-; This automated transaction will compute Huqúqu'lláh based on this
-; journal's postings.  Any that match will affect the
-; Liabilities:Huququ'llah account by 19% of the value of that posting.
-
-= /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
-  (Liabilities:Huququ'llah)               0.19
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
 @end smallexample
 
-This automated posting works by looking at each posting in the
-ledger file.  If any match the given value expression, 19% of the
-posting's value is applied to the @samp{Liabilities:Huququ'llah}
-account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
-added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
-$190 is subtracted.  The ultimate balance of Huqúqu'lláh reflects how
-much is owed in order to fulfill one's obligation to Huqúqu'lláh.
-When ready to pay, just write a check to cover the amount shown in
-@samp{Liabilities:Huququ'llah}.  That transaction would look like:
+@noindent To mark it pending, use a !:
 
 @smallexample
-2003/01/01 (101) Baha'i Huqúqu'lláh Trust
-    Liabilities:Huququ'llah          $1,000.00
-    Assets:Checking
+   2012-03-10 ! KFC
+       Expenses:Food                $20.00
+       Assets:Cash
 @end smallexample
 
-That's it.  To see how much Huqúq is currently owed based on your
-ledger transactions, use:
+What these mean is entirely up to you.  The --cleared option will limits to
+reports to only cleared items, while --uncleared shows both uncleared and
+pending items, and --pending shows only pending items.
+
+I use cleared to mean that I've reconciled the transaction with my bank
+statement, and pending to mean that I'm in the middle of a reconciliation.
+
+
+When you clear a transaction, that's really just shorthand for clearing all of
+its postings.  That is:
 
 @smallexample
-ledger balance Liabilities:Huquq
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
 @end smallexample
 
-This works fine, but omits one aspect of the law: that Huqúq is only
-due once the liability exceeds the value of 19 mithqáls of gold (which
-is roughly 2.22 ounces).  So what we want is for the liability to
-appear in the balance report only when it exceeds the present day
-value of 2.22 ounces of gold.  This can be accomplished using the
-command:
+@noindent Is the same as writing:
 
 @smallexample
-ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
+   2012-03-10 KFC
+       * Expenses:Food                $20.00
+       * Assets:Cash
 @end smallexample
 
-With this command, the current price for gold is downloaded, and the
-Huqúqu'lláh is reported only if its value exceeds that of 2.22 ounces
-of gold.  If you wish the liability to be reflected in the parent
-subtotal either way, use this instead:
+@noindent You can mark individual postings as cleared or pending, in case one "side" of
+the transaction has cleared, but the other hasn't yet:
 
 @smallexample
-ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
+   2012-03-10 KFC
+       Liabilities:Credit            $100.00
+       * Assets:Checking
 @end smallexample
 
-In some cases, you may wish to refer to the account of whichever
-posting matched your automated transaction's value expression.  To do
-this, use the special account name @samp{$account}:
+@node Transaction notes, Metadata, Transaction state, Transactions
+@section Transaction notes
+
+After the payee, and after at least one tab or two spaces (or a space
+and a tab, which Ledger calls this a ``hard separator''), you may
+introduce a note about the transaction using the ; character:
 
 @smallexample
-= /^Some:Long:Account:Name/
-  [$account]  -0.10
-  [Savings]    0.10
+   2012-03-10 * KFC                ; yum, chicken...
+       Expenses:Food                $20.00
+       Assets:Cash
 @end smallexample
 
-This example causes 10% of the matching account's total to be deferred
-to the @samp{Savings} account---as a balanced virtual posting,
-which may be excluded from reports by using @option{--real}.
-
-Automated transactions can use the full range of value expressions in
-their predicate.  If you wanted to specify a transaction only occur to
-certain accounts that meet certain value criteria you could specify:
+@noindent Notes can also appear on the next line, so long as that line begins with
+whitespace:
 
 @smallexample
-= /Employees:.*:Payroll$/ and expr (amount >= $1000 and amount < $10000)
-  Expenses:Tax  0.27
+   2012-03-10 * KFC                ; yum, chicken...
+       ; and more notes...
+       Expenses:Food                $20.00
+       Assets:Cash
+
+   2012-03-10 * KFC
+       ; just these notes...
+       Expenses:Food                $20.00
+       Assets:Cash
 @end smallexample
-In this case, @samp{amount} is tied to the amount of the posting being
-tested.
 
-But, wait! There's more!
 
-@cindex Tax Bracket automation
-@cindex value expressions in automatic transactions
-
-In the short example above we calculated the taxes due for income within
-a certain bracket.  But in reality this calculation is more difficult.
-There are different rates for different marginal incomes and those taxes
-are not easily described by a simple multiplicative coefficient.
-Automated transactions can use value expressions in their postings to
-determine the amounts.  So to expand the example above for a three tax
-bracket system we could enter:
+A transaction note is shared by all its postings.  This becomes significant
+when querying for metadata (see below).  To specify that a note belongs only
+to one posting, place it after a hard separator after the amount, or on its
+own line preceded by whitespace:
 
 @smallexample
-= /Employees:.*:Payroll$/ and expr (amount < $10000.00)
-  (Expenses:Tax)  0.1
-= /Employees:.*:Payroll$/ and expr (amount > $10000.00 and amount < $100000.00 )
-  (Expenses:Tax)  ($1000.00 + .15 * (amount - $10000.00))
-= /Employees:.*:Payroll$/ and expr (amount > $100000.00)
-  (Expenses:Tax)  ($13500.00 + .20 * (amount-$100000.00))
+   2012-03-10 * KFC
+       Expenses:Food                $20.00  ; posting #1 note
+       Assets:Cash
+         ; posting #2 note, extra indentation is optional
 @end smallexample
 
-@node Checking Balances and Reconciliations, Effective Dates, Automatic Transactions, Advanced Transactions
-@subsection Forcing balances and Reconciling Accounts
+@node Metadata, Virtual postings, Transaction notes, Transactions
+@section Metadata
 
+One of Ledger's more powerful features is the ability to associate typed
+metadata with postings and transactions (by which I mean all of a
+transaction's postings).  This metadata can be queried, displayed, and used in
+calculations.
 
-Ledger has a feature for ensuring known past balances.  Here's
-an example entry:
-@cindex forcing a balance
-@cindex balance verification
-@smallexample
-   2008/11/26 (Interest) EXTND INS SWEEP ACCT(FDIC-INS)
-       * Assets:Brokerage                 $0.07 = $970.64
-       Income:Interest                   $-0.07
-@end smallexample
+The are two forms of metadata: tags and tag/value pairs.
 
-What this says is that as of 11/26/08 (bank perspective), the
-Assets:Brokerage account was known to equal $970.64.  It @strong{must}
-equal this amount at this point in the Ledger file, or there will be a
-balancing error.
+@menu
+* Metadata tags::               
+* Metadata values::             
+* Typed metadata::              
+@end menu
 
-If you reconcile bank statements you can enter the reconciliation and
-link to a file (if you have it)
-@cindex statement reconciliation
-@cindex reconcile statements
+@node Metadata tags, Metadata values, Metadata, Metadata
+@subsection Metadata tags
+
+To tag an item, put any word not containing whitespace between two colons:
 
 @smallexample
-2009/12/01 Foo
-    Assets:Checking    $10.00
-    Equity
-
-2009/12/10 Reconciled statement dated 2009/12/08
-    ; Link: [[file:statements/checking/2009-12.pdf][2009-12.pdf]]
-    [Assets:Checking]    = $10.00
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+         ; :TAG:
 @end smallexample
 
-@node Effective Dates, Periodic Transactions, Checking Balances and Reconciliations, Advanced Transactions
+You can gang up multiple tags by sharing colons:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+         ; :TAG1:TAG2:TAG3:
+@end smallexample
+
+@node Metadata values, Typed metadata, Metadata tags, Metadata
+@subsection Metadata values
+
+To associate a value with a tag, use the syntax "Key: Value", where the value
+can be any string of characters.  Whitespace is needed after the colon, and
+cannot appear in the Key:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+         ; MyTag: This is just a bogus value for MyTag
+@end smallexample
+
+@node Typed metadata,  , Metadata values, Metadata
+@subsection Typed metadata
+
+If a metadata tag ends in ::, it's value will be parsed as a value expression
+and stored internally as a value rather than as a string.  For example,
+although I can specify a date textually like so:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+         ; AuxDate: 2012/02/30
+@end smallexample
+
+@noindent This date is just a string, and won't be parsed as a date unless its value is
+used in a date-context (at which time the string is parsed into a date
+automatically every time it is needed as a date).  If on the other hand I
+write this:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+         ; AuxDate:: [2012/02/30]
+@end smallexample
+
+@noindent Then it is parsed as a date only once, and during parsing of the journal file,
+which would let me know right away that it is an invalid date.
+
+@node Virtual postings, Expression amounts, Metadata, Transactions
+@section  Virtual postings
+
+Ordinarily, the amounts of all postings in a transaction must balance to zero.
+This is non-negotiable.  It's what double-entry accounting is all about!  But
+there are some tricks up Ledger's sleeve...
+
+You can use virtual accounts to transfer amounts to an account on the sly,
+bypassing the balancing requirement.  The trick is that these postings are not
+considered ``real'', and can be removed from all reports using @samp{--real}.
+
+To specify a virtual account, surround the account name with parentheses:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+       (Budget:Food)               $-20.00
+@end smallexample
+
+If you want, you can state that virtual postings @emph{should} balance against
+one or more other virtual postings by using brackets (which look ``harder'')
+rather than parentheses:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+       [Budget:Food]               $-20.00
+       [Equity:Budgets]             $20.00
+@end smallexample
+
+@node Expression amounts, Balance verification, Virtual postings, Transactions
+@section Expression amounts
+
+An amount is usually a numerical figure with an (optional) commodity, but it
+can also be any value expression.  To indicate this, surround the amount
+expression with parentheses:
+
+@smallexample
+   2012-03-10 * KFC
+       Expenses:Food      ($10.00 + $20.00)  ; Ledger adds it up for you
+       Assets:Cash
+@end smallexample
+
+@node Balance verification, Posting cost, Expression amounts, Transactions
+@section Balance verification
+@menu
+* Balance assertions::          
+* Balance assignments::         
+* Resetting a balance::         
+* Balancing transactions::      
+@end menu
+
+If at the end of a posting's amount (and after the cost too, if there is one)
+there is an equals sign, then Ledger will verify that the total value for that
+account as of that posting matches the amount specified.
+
+There are two forms of this features: balance assertions, and balance
+assignments.
+
+
+@node Balance assertions, Balance assignments, Balance verification, Balance verification
+@subsection Balance assertions
+
+A balance assertion has this general form:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash                 $-20.00 = $500.00
+@end smallexample
+
+This simply asserts that after subtracting $20.00 from Assets:Cash, that the
+resulting total matches $500.00.  If not, it is an error.
+
+@node Balance assignments, Resetting a balance, Balance assertions, Balance verification
+@subsection Balance assignments
+
+A balance assignment has this form:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash                         = $500.00
+@end smallexample
+
+This sets the amount of the second posting to whatever it would need to be for
+the total in Assets:Cash to be $500.00 after the posting.  If the resulting
+amount is not $-20.00 in this case, it is an error.
+
+@node  Resetting a balance, Balancing transactions, Balance assignments, Balance verification
+@subsection  Resetting a balance
+
+Say your book-keeping has gotten a bit out of date, and your Ledger balance no
+longer matches your bank balance.  You can create an adjustment transaction
+using balance assignments:
+
+@smallexample
+   2012-03-10 Adjustment
+       Assets:Cash                         = $500.00
+       Equity:Adjustments
+@end smallexample
+
+Since the second posting is also null, it's value will become the inverse of
+whatever amount is generated for the first posting.
+
+This is the only time in ledger when more than one posting's amount may be
+empty -- and then only because it's not true empty, it is indirectly provided
+by the balance assignment's value.
+
+@node  Balancing transactions,  , Resetting a balance, Balance verification
+@subsection  Balancing transactions
+
+As a consequence of all the above, consider the following transaction:
+
+@smallexample
+   2012-03-10 My Broker
+       [Assets:Brokerage]            = 10 AAPL
+@end smallexample
+
+What this says is: set the amount of the posting to whatever value is needed
+so that Assets:Brokerage contains 10 AAPL.  Then, because this posting must
+balance, ensure that its value is zero.  This can only be true if
+Assets:Brokerage does indeed contain 10 AAPL at that point in the input file.
+
+A balanced virtual transaction is used simply to indicate to Ledger that this
+is not a "real" transaction.  It won't appear in any reports anyway (unless
+you use a register report with --empty).
+
+@node Posting cost, Explicit posting costs, Balance verification, Transactions
+@section Posting cost
+
+When you transfer a commodity from one account to another, sometimes it get
+transformed during the transaction.  This happens when you spend money on gas,
+for example, which transforms dollars into gallons of gasoline, or dollars
+into stocks in a company.
+
+In those cases, Ledger will remember the "cost" of that transaction for you,
+and can use it during reporting in various ways.  Here's an example of a stock
+purchase:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL
+       Assets:Brokerage:Cash       $-500.00
+@end smallexample
+
+This is different from transferring 10 AAPL shares from one account to
+another, in this case you are @emph{exchanging} one commodity for another.  The
+resulting posting cost is $50.00 per share.
+
+@node Explicit posting costs, Posting cost expressions, Posting cost, Transactions
+@section Explicit posting costs
+
+You can make any posting's cost explicit using the @ symbol after the amount
+or amount expression:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL @ $50.00
+       Assets:Brokerage:Cash       $-500.00
+@end smallexample
+
+When you do this, since Ledger can now figure out the balancing amount from
+the first posting's cost, you can elide the other amount:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL @ $50.00
+       Assets:Brokerage:Cash
+@end smallexample
+
+@menu
+* Primary and secondary commodities::  
+@end menu
+
+@node Primary and secondary commodities,  , Explicit posting costs, Explicit posting costs
+@subsection Primary and secondary commodities
+
+It is a general convention within Ledger that the "top" postings in a
+transaction contain the target accounts, while the final posting contains the
+source account.  Whenever a commodity is exchanged like this, the commodity
+moved to the target account is considered "secondary", while the commodity
+used for purchasing and tracked in the cost is "primary".
+
+Said another way, whenever Ledger sees a posting cost of the form "AMOUNT @
+AMOUNT", the commodity used in the second amount is marked "primary".
+
+The only meaning a primary commodity has is that -V flag will never convert a
+primary commodity into any other commodity.  -X still will, however.
+
+@node Posting cost expressions, Total posting costs, Explicit posting costs, Transactions
+@section Posting cost expressions
+
+Just as you can have amount expressions, you can have posting expressions:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL @ ($500.00 / 10)
+       Assets:Brokerage:Cash
+@end smallexample
+
+You can even have both:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             (5 AAPL * 2) @ ($500.00 / 10)
+       Assets:Brokerage:Cash
+@end smallexample
+
+@node Total posting costs, Virtual posting costs, Posting cost expressions, Transactions
+@section Total posting costs
+
+The cost figure following the @ character specifies the *per-unit* price for
+the commodity being transferred.  If you'd like to specify the total cost
+instead, use @@@@:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL @@@@ $500.00
+       Assets:Brokerage:Cash
+@end smallexample
+
+Ledger reads this as if you had written:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL @@@@ ($500.00 / 10)
+       Assets:Brokerage:Cash
+@end smallexample
+
+@node Virtual posting costs, Commodity prices, Total posting costs, Transactions
+@section Virtual posting costs
+
+Normally whenever a commodity exchange like this happens, the price of the
+exchange (such as $50 per share of AAPL, above) is recorded in Ledger's
+internal price history database.  To prevent this from happening in the case
+of an exceptional transaction, surround the @@ or @@@@ with parentheses:
+
+@smallexample
+   2012-03-10 My Brother
+       Assets:Brokerage            1000 AAPL (@@) $1
+       Income:Gifts Received
+@end smallexample
+
+@node Commodity prices, Prices vs. costs, Virtual posting costs, Transactions
+@section Commodity prices
+
+When a transaction occurs that exchange one commodity for another, Ledger
+records that commodity price not only within its internal price database, but
+also attached to the commodity itself.  Usually this fact remains invisible to
+the user, unless you turn on @samp{--lot-prices} to show these hidden price figures.
+
+For example, consider the stock sale given above:
+
+@smallexample
+   2012-03-10 My Broker
+       Assets:Brokerage             10 AAPL @@ $50.00
+       Assets:Brokerage:Cash
+@end smallexample
+
+The commodity transferred into Assets:Brokerage is not actually 10 AAPL, but
+rather 10 AAPL @{$5.00@}.  The figure in braces after the amount is called the
+"lot price".  It's Ledger's way of remembering that this commodity was
+transferred through an exchange, and that $5.00 was the price of that
+exchange.
+
+This becomes significant if you later sell that commodity again.  For example,
+you might write this:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash
+       Assets:Brokerage            -10 AAPL @@ $75.00
+@end smallexample
+
+And that would be perfectly fine, but how do you track the capital gains on
+the sale?  It could be done with a virtual posting:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash
+       Assets:Brokerage            -10 AAPL @@ $75.00
+       (Income:Capital Gains)      $-250.00
+@end smallexample
+
+But this gets messy since capital gains income is very real, and not quite
+appropriate for a virtual posting.
+
+Instead, if you reference that same hidden price annotation, Ledger will
+figure out that the price of the shares you're selling, and the cost you're
+selling them at, don't balance:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $750.00
+       Assets:Brokerage            -10 AAPL @{$50.00@} @@ $75.00
+@end smallexample
+
+This transaction will fail because the $250.00 price difference between the
+price you bought those shares at, and the cost you're selling them for, does
+not match.  The lot price also identifies which shares you purchased on that
+prior date.
+
+@menu
+* Total commodity prices::      
+@end menu
+
+@node Total commodity prices,  , Commodity prices, Commodity prices
+@subsection Total commodity prices
+
+As a shorthand, you can specify the total price instead of the per-share
+price in doubled braces.  This goes well with total costs, but is not required
+to be used with them:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $750.00
+       Assets:Brokerage            -10 AAPL @{@{$500.00@}@} @@@@ $750.00
+       Income:Capital Gains       $-250.00
+@end smallexample
+
+It should be noted that this is a convenience only for cases where you buy and
+sell whole lots.  The @{@{$500.00@}@} is @emph{not} an attribute of commodity, whereas
+@{$5.00@} is.  In fact, when you write @{@{$500.00@}@}, Ledger just divides that
+value by 10 and sees @{$50.00@}.  So if you use the print command to look at
+this transaction, you'll see the single form in the output.  The double price
+form is a shorthand only.
+
+Plus, it comes with dangers.  This works fine:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage            10 AAPL @ $50.00
+       Assets:Brokerage:Cash       $750.00
+
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+       Income:Capital Gains       $-125.00
+
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+       Income:Capital Gains       $-125.00
+@end smallexample
+
+@noindent But this does not do what you might expect:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage            10 AAPL @ $50.00
+       Assets:Brokerage:Cash       $750.00
+
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+       Income:Capital Gains       $-125.00
+
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+       Income:Capital Gains       $-125.00
+@end smallexample
+
+And in cases where the amounts do not divide into whole figure and must be
+rounded, the capital gains figure could be off by a cent.  Use with caution.
+
+@node Prices vs. costs, Lot dates, Commodity prices, Transactions
+@section Prices vs. costs
+
+Because lot pricing provides enough information to infer the cost, the
+following two transactions are equivalent:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage            10 AAPL @ $50.00
+       Assets:Brokerage:Cash       $750.00
+
+   2012-04-10 My Broker
+       Assets:Brokerage            10 AAPL @{$50.00@}
+       Assets:Brokerage:Cash       $750.00
+@end smallexample
+
+However, note that what you see in some reports may differ, for example in the
+print report.  Functionally, however, there is no difference, and neither the
+register nor the balance report are sensitive to this difference.
+
+@section Fixated prices
+
+If you buy a stock last year, and ask for its value today, Ledger will consult
+its price database to see what the most recent price for that stock is.  You
+can short-circuit this lookup by ``fixing'' the price at the time of a
+transaction.  This is done using @{=AMOUNT@}:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage            10 AAPL @{=$50.00@}
+       Assets:Brokerage:Cash       $750.00
+@end smallexample
+
+These 10 AAPL will now always be reported as being worth $50, no matter what
+else happens to the stock in the meantime.
+
+Fixated prices are a special case of using lot valuation expressions (see
+below) to fix the value of a commodity lot.
+
+@menu
+* Fixated costs::               
+@end menu
+
+@node Fixated costs,  , Prices vs. costs, Prices vs. costs
+@subsection Fixated costs
+
+Since price annotations are costs are largely interchangeable and a matter of
+preference, there is an equivalent syntax for specified fixated prices by way
+of the cost:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage            10 AAPL @@ =$50.00
+       Assets:Brokerage:Cash       $750.00
+@end smallexample
+
+This is the same as the previous transaction, with the same caveats found in
+the section ``Prices vs. costs''.
+
+@node Lot dates, Lot notes, Prices vs. costs, Transactions
+@section Lot dates
+
+In addition to lot prices, you can specify lot dates and reveal them with
+@samp{--lot-dates}.  Other than that, however, they have no special meaning to
+Ledger.  They are specified after the amount in square brackets (the same way
+that dates are parsed in value expressions):
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@ $375.00
+       Income:Capital Gains       $-125.00
+@end smallexample
+
+@node Lot notes, Lot value expressions, Lot dates, Transactions
+@section Lot notes
+
+You can also associate arbitrary notes for your own record keeping in
+parentheses, and reveal them with --lot-notes.  One caveat is that the note
+cannot begin with an @ character, as that would indicate a virtual cost:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@ $375.00
+       Income:Capital Gains       $-125.00
+@end smallexample
+
+You can any combination of lot prices, dates or notes, in any order.  They are
+all optional.
+
+To show all lot information in a report, use @samp{--lots}.
+
+@node Lot value expressions, Automated transactions, Lot notes, Transactions
+@section Lot value expressions
+
+Normally when you ask Ledger to display the values of commodities held, it
+uses a value expression called "market" to determine the most recent value
+from its price database -- even downloading prices from the Internet, if -Q
+was specified and a suitable "getquote" script is found on your system.
+
+However, you can override this valuation logic by providing a commodity
+valuation expression in doubled parentheses.  This expression must result in
+one of two values: either an amount to always be used as the per-share price
+for that commodity; or a function taking three argument which is called to
+determine that price.
+
+If you use the functional form, you can either specify a function name, or a
+lambda expression.  Here's a function that yields the price as $10 in whatever
+commodity is being requested:
+
+@smallexample
+   define ten_dollars(s, date, t) = market($10, date, t)
+@end smallexample
+
+I can now use that in a lot value expression as follows:
+
+@smallexample
+   2012-04-10 My Broker
+       Assets:Brokerage:Cash       $375.00
+       Assets:Brokerage            -5 AAPL @{$50.00@} ((ten_dollars)) @@@@ $375.00
+       Income:Capital Gains       $-125.00
+@end smallexample
+
+Alternatively, I could do the same thing without pre-defining a function by
+using a lambda expression taking three arguments:
+
+@smallexample
+   2012-04-10 My Broker
+       A:B:Cash       $375.00
+       A:B     -5 AAPL @{$50.00@} ((s, d, t -> market($10, date, t))) @@@@ $375.00
+       Income:Capital Gains       $-125.00
+@end smallexample
+
+The arguments passed to these functions have the following meaning:
+
+@itemize
+@item   source 
+        The source commodity string, or an amount object.  If it is a
+        string, the return value must be an amount representing the
+        price of the commodity identified by that string (example: "$").
+        If it is an amount, return the value of that amount as a new
+        amount (usually calculated as commodity price * source amount).
+
+@item   date 
+        The date to use for determining the value.  If null, it means no
+        date was specified, which can mean whatever you want it to mean.
+
+@item   target 
+        If not null, a string representing the desired target commodity
+        that the commodity price, or repriced amount, should be valued
+        in.  Note that this string can be a comma-separated list, and
+        that some or all of the commodities in that list may be suffixed
+        with an exclamation mark, to indicate what is being desired.
+@end itemize
+
+In most cases, it is simplest to either use explicit amounts in your valuation
+expressions, or just pass the arguments down to market after modifying them to
+suit your needs.
+
+@node Automated transactions, Keeping it Consistent, Lot value expressions, Transactions
+@section Automated transactions
+
+An automated transaction is a special kind of transaction which adds its
+postings to other transactions any time one of that other transactions'
+postings matches its predicate.  The predicate uses the same query syntax as
+the Ledger command line.
+
+Consider this posting:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+@end smallexample
+
+If I write this automated transaction before it in the file:
+
+@smallexample
+   = expr true
+       Foo                          $50.00
+       Bar                         $-50.00
+@end smallexample
+
+Then the first transaction will be modified during parsing as if I'd written
+this:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Foo                          $50.00
+       Bar                         $-50.00
+       Assets:Cash                 $-20.00
+       Foo                          $50.00
+       Bar                         $-50.00
+@end smallexample
+
+Despite this fancy logic, automated transactions themselves follow most of the
+same rules as regular transactions: their postings must balance (unless you
+use a virtual posting), you can have metadata, etc.
+
+One thing you cannot do, however, is elide amounts in an automated
+transaction.
+
+@menu
+* Amount multipliers::          
+* Accessing the matching posting's amount::  
+* Referring to the matching posting's account::  
+* Applying metadata to every matched posting::  
+* Applying metadata to the generated posting::  
+* State flags::                 
+* Effective Dates::             
+* Periodic Transactions::       
+@end menu
+
+@node Amount multipliers, Accessing the matching posting's amount, Automated transactions, Automated transactions
+@subsection Amount multipliers
+
+As a special case, if an automated transaction's posting's amount (phew) has
+no commodity, it is taken as a multiplier upon the matching posting's cost.
+For example:
+
+@smallexample
+   = expr true
+       Foo                           50.00
+       Bar                          -50.00
+
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+@end smallexample
+
+Then the latter transaction turns into this during parsing:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Foo                        $1000.00
+       Bar                       $-1000.00
+       Assets:Cash                 $-20.00
+       Foo                        $1000.00
+       Bar                       $-1000.00
+@end smallexample
+
+@node Accessing the matching posting's amount, Referring to the matching posting's account, Amount multipliers, Automated transactions
+@subsection Accessing the matching posting's amount
+
+If you use an amount expression for an automated transaction's posting, that
+expression has access to all the details of the matched posting.  For example,
+you can refer to that posting's amount using the "amount" value expression
+variable:
+
+@smallexample
+   = expr true
+       (Foo)                  (amount * 2)  ; same as just "2" in this case
+
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+@end smallexample
+
+This becomes:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       (Foo)                        $40.00
+       Assets:Cash                 $-20.00
+       (Foo)                       $-40.00
+@end smallexample
+
+@node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated transactions
+@subsection Referring to the matching posting's account
+
+Sometimes want to refer to the account that matched in some way within the
+automated transaction itself.  This is done by using the string $account,
+anywhere within the account part of the automated posting:
+
+@smallexample
+   = food
+       (Budget:$account)                10
+
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+@end smallexample
+
+Becomes:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       (Budget:Expenses:Food)      $200.00
+       Assets:Cash                 $-20.00
+@end smallexample
+
+@node Applying metadata to every matched posting, Applying metadata to the generated posting, Referring to the matching posting's account, Automated transactions
+@subsection Applying metadata to every matched posting
+
+If the automated transaction has a transaction note, that note is copied
+(along with any metadata) to every posting that matches the predicate:
+
+@smallexample
+   = food
+       ; Foo: Bar
+       (Budget:$account)                10
+
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+@end smallexample
+
+Becomes:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+         ; Foo: Bar
+       (Budget:Expenses:Food)      $200.00
+       Assets:Cash                 $-20.00
+@end smallexample
+
+@node Applying metadata to the generated posting, State flags, Applying metadata to every matched posting, Automated transactions
+@subsection Applying metadata to the generated posting
+
+If the automated transaction's posting has a note, that note is carried to the
+generated posting within the matched transaction:
+
+@smallexample
+   = food
+       (Budget:$account)                10
+         ; Foo: Bar
+
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       Assets:Cash
+@end smallexample
+
+Becomes:
+
+@smallexample
+   2012-03-10 KFC
+       Expenses:Food                $20.00
+       (Budget:Expenses:Food)      $200.00
+         ; Foo: Bar
+       Assets:Cash                 $-20.00
+@end smallexample
+
+This is slightly different from the rules for regular transaction notes, in
+that an automated transaction's note does not apply to every posting within
+the automated transaction itself, but rather to every posting it matches.
+
+@node State flags, Effective Dates, Applying metadata to the generated posting, Automated transactions
+@subsection State flags
+
+Although you cannot mark an automated transaction as a whole as cleared or
+pending, you can mark its postings with a * or ! before the account name, and
+that state flag gets carried to the generated posting.
+
+@node Effective Dates, Periodic Transactions, State flags, Automated transactions
 @subsection Effective Dates
 @cindex effective dates
 
@@ -2128,7 +2807,7 @@ automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
 
-@node Periodic Transactions, Recording Commodity Lot Prices, Effective Dates, Advanced Transactions
+@node Periodic Transactions,  , Effective Dates, Automated transactions
 @subsection Periodic Transactions
 
 A periodic transaction starts with a ~ followed by a period expression.
@@ -2137,53 +2816,9 @@ have no effect without the @samp{--budget} option specified.
 
 See @ref{Budgeting and Forecasting} for examples and details.
 
-@node Recording Commodity Lot Prices,  , Periodic Transactions, Advanced Transactions
-@subsection Recording Commodity Lot Prices
 
-If you are tracking investments it is often necessary to keep track of
-specific purchases of a commodity bought at difference prices.  These
-specific purchases are referred to as ``lots''.  Tracking lots using ledger
-requires some additional info in the journal as well as additional
-command-line options when generating reports.
 
-Say you want to record purchase of two separate lots of ACME, then sell
-some shares.  The correct way to do this is:
-
-@smallexample
-2010-09-01 * Buy 2 shares of ACME @@ $100
-   Assets:Broker                                  2 ACME @@ $100.00
-   Assets:Cash
-
-2010-09-10 * Buy 2 share of ACME @@ $110
-   Assets:Broker                                  2 ACME @@ $110.00
-   Assets:Cash
-
-2011-09-20 * Sell 2 shares of ACME @@ $150
-   Assets:Broker                       -1 ACME @{$100.00@} @@ $150.00
-   Assets:Broker                       -1 ACME @{$200.00@} @@ $150.00
-   Assets:Cash
-@end smallexample
-
-To report which lots of commodities you hold, use the
-@samp{--lot-prices} option.  For example, after buying the 2 shares at
-$100 and 1 at $200 it would show you:
-@smallexample
-$ ledger balance --lot-prices Assets:Broker until 2011-09-15
-    2 ACME @{$100.00@}
-    1 ACME @{$200.00@}  Assets:Broker
-@end smallexample
-@noindent without the @samp{--lot-prices} option you would only see the total number of shares you held:
-@smallexample
-$ ledger balance  Assets:Broker until 2011-09-15
-    3 ACME  Assets:Broker
-@end smallexample
-@noindent and after the sale on @samp{2011-09-20} it would show you:
-@smallexample
-$ ledger balance --lot-prices Assets:Broker
-    1 ACME @{$100.00@}  Assets:Broker
-@end smallexample
-
-@node Keeping it Consistent, File Format, Advanced Transactions, Keeping a Journal
+@node Keeping it Consistent, File Format, Automated transactions, Transactions
 @section Keeping it Consistent
 
 Sometimes Ledger's flexibility can lead to difficulties.  Using a
@@ -2215,7 +2850,7 @@ ledger accounts >> Accounts.dat
 @noindent You will have to edit this file to add the @samp{account} directive.
 
 
-@node File Format, Archiving Previous Years , Keeping it Consistent, Keeping a Journal
+@node File Format, Archiving Previous Years , Keeping it Consistent, Transactions
 @section File Format for Users
 @menu
 * File Format Intro::           
@@ -2266,7 +2901,7 @@ posting cost, by specifying @samp{@@ AMOUNT}, or a complete
 posting cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
-@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual Transactions})
+@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual postings})
 
 @item P
 Specifies a historical price for a commodity.  These are usually found
@@ -2283,7 +2918,7 @@ sign.
 After this initial line there should be a set of one or more
 postings, just as if it were normal transaction.  If the amounts of the
 postings have no commodity, they will be applied as modifiers to
-whichever real posting is matched by the value expression(See @pxref{Automatic Transactions}).
+whichever real posting is matched by the value expression(See @pxref{Automated transactions}).
 
 @item ~
 A period transaction.  A period expression must appear after the tilde.
@@ -2320,13 +2955,12 @@ could preface all personal accounts with @code{personal:} and all
 business account with @code{business:}.  You can easily split out large
 groups of transaction without manually editing them using the account
 directive.  For example:
-@smallexample
 
+@smallexample
 account Personal
 2011/11/15  Supermarket
     Expenses:Groceries
     Assets:Checking
-
 @end smallexample
 
 Would result in all postings going into
@@ -2564,7 +3198,7 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Archiving Previous Years , Using Emacs, File Format, Keeping a Journal
+@node Archiving Previous Years , Using Emacs, File Format, Transactions
 @section Archiving Previous Years
 
 
@@ -2623,7 +3257,7 @@ any electronic statements received during the year.  In the arena of
 organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
-@node Using Emacs,  , Archiving Previous Years , Keeping a Journal
+@node Using Emacs,  , Archiving Previous Years , Transactions
 @section Using Emacs to Maintain Your Journal
 @cindex Emacs
 
@@ -2824,7 +3458,7 @@ kill the report buffer
 
 
 
-@node Building Reports, Reporting Commands, Keeping a Journal, Top
+@node Building Reports, Reporting Commands, Transactions , Top
 @chapter Building Reports
 
 @menu
@@ -4902,7 +5536,7 @@ the right of the date).
 
 @option{--real} (@option{-R}) displays only real postings, not virtual.
 (A virtual posting is indicated by surrounding the account name with
-parentheses or brackets; see @ref{Virtual Transactions} for more
+parentheses or brackets; see @ref{Virtual postings} for more
 information).
 
 @option{--actual} (@option{-L}) displays only actual postings, and
