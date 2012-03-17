@@ -1113,7 +1113,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_(display_);
     else OPT(display_amount_);
     else OPT(display_total_);
-    else OPT_ALT(dow, days-of-week);
+    else OPT_ALT(dow, days_of_week);
     else OPT(date_width_);
     break;
   case 'e':
