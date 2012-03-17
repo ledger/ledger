@@ -2945,7 +2945,7 @@ Ledger.
 Command directives must occur at the beginning of a line.  Use of ! and
 @@ is deprecated.
 
-@item account
+@item apply account
 @c instance_t::master_account_directive
 Sets the root for all accounts following the directive.  Ledger supports
 a hierarchical tree of accounts.  It may be convenient to keep two
@@ -2957,7 +2957,7 @@ groups of transaction without manually editing them using the account
 directive.  For example:
 
 @smallexample
-account Personal
+apply account Personal
 2011/11/15  Supermarket
     Expenses:Groceries
     Assets:Checking
@@ -2965,7 +2965,7 @@ account Personal
 
 Would result in all postings going into
 @code{Personal:Expenses:Groceries} and @code{Personal:Assets:hecking}
-until and @code{end account}  directive was found.
+until and @code{end apply account}  directive was found.
 
 @item alias
 @c instance_t::alias_directive
@@ -3089,7 +3089,7 @@ payee  Supermarket Groceries  Supermarket 1
 Ledger will display the mapped payees in @code{print} and
 @code{register} reports.
 
-@item tag
+@item apply tag
 @c instance_t::tag_directive in textual.cc
 Allows you to designate a block of transactions and assign the same tag to all.  Tags can have values and may be nested.
 @smallexample
