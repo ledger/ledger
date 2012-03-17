@@ -2,7 +2,7 @@
 
 VALGRIND=''
 if [ -x /usr/bin/valgrind -o -x /opt/local/bin/valgrind ]; then
-  VALGRIND=valgrind
+  VALGRIND="valgrind -q"
 fi
 
 #export MallocGuardEdges=1

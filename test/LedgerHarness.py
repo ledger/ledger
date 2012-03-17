@@ -81,6 +81,13 @@ class LedgerHarness:
         command = re.sub('\$ledger', '%s%s %s' % \
                          (self.ledger, insert, '--args-only'), command)
 
+        valgrind = '/usr/bin/valgrind'
+        if not os.path.isfile(valgrind):
+            valgrind = '/opt/local/bin/valgrind'
+
+        if os.path.isfile(valgrind) and '--verify' in insert:
+            command = valgrind + ' -q ' + command
+
         return Popen(command, shell=True, close_fds=True, env=env,
                      stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
