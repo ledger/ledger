@@ -982,27 +982,23 @@ void instance_t::account_alias_directive(account_t * account, string alias)
   // (account), add a reference to the account in the `account_aliases'
   // map, which is used by the post parser to resolve alias references.
   trim(alias);
-#if defined(DEBUG_ON)
   std::pair<accounts_map::iterator, bool> result =
-#endif
     context.journal->account_aliases.insert
       (accounts_map::value_type(alias, account));
-#if defined(DEBUG_ON)
-  assert(result.second);
-#endif
+  if (! result.second)
+    (*result.first).second = account;
 }
 
 void instance_t::alias_directive(char * line)
 {
-  char * b = next_element(line);
-  if (char * e = std::strchr(b, '=')) {
+  if (char * e = std::strchr(line, '=')) {
     char * z = e - 1;
     while (std::isspace(*z))
       *z-- = '\0';
     *e++ = '\0';
     e = skip_ws(e);
 
-    account_alias_directive(top_account()->find_account(e), b);
+    account_alias_directive(top_account()->find_account(e), line);
   }
 }
 
