@@ -44,12 +44,15 @@
                            (expand-file-name "test/regress"
                                              ledger-source-directory)))
         (ledger-mode)
-        (when input
-          (insert input))
-        (when output
-          (insert "\ntest \n")
-          (insert output)
-          (insert "end test\n"))))))
+        (if input
+            (insert input)
+          (insert "2012-03-17 Payee\n")
+          (insert "    Expenses:Food                $20\n")
+          (insert "    Assets:Cash\n"))
+        (insert "\ntest reg\n")
+        (if output
+            (insert output))
+        (insert "end test\n")))))
 
 (defun ledger-test-run ()
   (interactive)
