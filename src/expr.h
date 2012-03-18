@@ -162,7 +162,6 @@ public:
     : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
     TRACE_CTOR(merged_expr_t, "string, string, string");
   }
-
   virtual ~merged_expr_t() {
     TRACE_DTOR(merged_expr_t);
   }
