@@ -552,6 +552,18 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{-T EXPR} @tab @code{--total} @tab Change the value expression used for ``totals'' column in register and balance reports
 @end multitable
 
+@node Error Checking and Calculation Options
+@subsection  Error Checking and Calculation Options
+
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{} @tab @code{--strict} @tab  accounts, tags or commodities not previously declared will cause warnings
+@item @code{} @tab @code{--pedantic} @tab accounts, tags or commodities not previously declared will cause errors
+@item @code{} @tab @code{--check-payees} @tab enable strict and pedantic checking for payees as well as accounts, commodities and tags.
+@item @code{} @tab @code{--immediate} @tab instructs ledger to evaluate calculations immediately rather than lazily
+@end multitable
+
+
 @node Output Customization Quick Reference, Grouping Options, Report Filtering Quick Reference, Command Line Quick Reference
 @subsection Output Customization
 @multitable @columnfractions .15 .4 .45
@@ -559,7 +571,6 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{-n} @tab @code{--collapse} @tab Collapse transactions with multiple postings
 @item @code{-s} @tab @code{--subtotal} @tab Report register as a single subtotal
 @item @code{-P} @tab @code{--by-payee} @tab Report subtotals by payee
-@item @code{-x} @tab @code{--comm-as-payee} @tab Change the payee of every posting to be the commodity used in that posting
 @item @code{-E} @tab @code{--empty} @tab Include empty accounts in report
 @item @code{-W} @tab @code{--weekly} @tab Report posting totals by week
 @item @code{-Y} @tab @code{--yearly} @tab Report posting totals by year
@@ -1375,6 +1386,7 @@ posting.
 * Structuring Your Accounts::   
 * Commenting on your journal::  
 * Currency and Commodities::    
+* Keeping it Consistent::       
 @end menu
 
 @node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
@@ -1535,7 +1547,7 @@ transactions.  The comments within the transaction must all start with `;'s and 
 preserved as part of the transaction.  The `:'s indicate meta-data and tags 
 (@pxref{Metadata}).
 
-@node Currency and Commodities,  , Commenting on your journal, Keeping a Journal
+@node Currency and Commodities, Keeping it Consistent, Commenting on your journal, Keeping a Journal
 @section Currency and Commodities
 
 @cindex currency
@@ -1710,6 +1722,37 @@ its amount is null.
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
 
+@node Keeping it Consistent,  , Currency and Commodities, Keeping a Journal
+@section Keeping it Consistent
+
+Sometimes Ledger's flexibility can lead to difficulties.  Using a
+freeform text editor to enter transactions makes it easy to keep the
+data, but also easy to enter accounts or payees inconsistently or with
+spelling errors.
+
+In order to combat inconsistency you can define allowable accounts and
+or payees.  For simplicity, create a separate text file and enter define
+accounts a payees like
+@smallexample
+account Expenses
+account Expenses:Utilities
+...
+@end smallexample
+Using the @samp{--strict} option will cause Ledger to complain if any accounts are not previously defined:
+@smallexample
+15:27:39 ~/ledger (next) > ledger bal --strict
+Warning: "FinanceData/Master.dat", line 6: Unknown account 'Liabilities:Tithe Owed'
+Warning: "FinanceData/Master.dat", line 8: Unknown account 'Liabilities:Tithe Owed'
+Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities:Domestic'
+@end smallexample
+
+If you have a large Ledger register already created use the @samp{accounts} command to get started:
+@smallexample
+ledger accounts >> Accounts.dat
+@end smallexample
+
+@noindent You will have to edit this file to add the @samp{account} directive.
+
 
 
 @node Transactions , Building Reports, Keeping a Journal, Top
@@ -1736,7 +1779,6 @@ its amount is null.
 * Lot notes::                   
 * Lot value expressions::       
 * Automated transactions::      
-* Keeping it Consistent::       
 * File Format::                 
 * Archiving Previous Years ::   
 * Using Emacs::                 
@@ -2541,7 +2583,7 @@ In most cases, it is simplest to either use explicit amounts in your valuation
 expressions, or just pass the arguments down to market after modifying them to
 suit your needs.
 
-@node Automated transactions, Keeping it Consistent, Lot value expressions, Transactions
+@node Automated transactions, File Format, Lot value expressions, Transactions
 @section Automated transactions
 
 An automated transaction is a special kind of transaction which adds its
@@ -2818,39 +2860,8 @@ See @ref{Budgeting and Forecasting} for examples and details.
 
 
 
-@node Keeping it Consistent, File Format, Automated transactions, Transactions
-@section Keeping it Consistent
 
-Sometimes Ledger's flexibility can lead to difficulties.  Using a
-freeform text editor to enter transactions makes it easy to keep the
-data, but also easy to enter accounts or payees inconsistently or with
-spelling errors.
-
-In order to combat inconsistency you can define allowable accounts and
-or payees.  For simplicity, create a separate text file and enter define
-accounts a payees like
-@smallexample
-account Expenses
-account Expenses:Utilities
-...
-@end smallexample
-Using the @samp{--strict} option will cause Ledger to complain if any accounts are not previously defined:
-@smallexample
-15:27:39 ~/ledger (next) > ledger bal --strict
-Warning: "FinanceData/Master.dat", line 6: Unknown account 'Liabilities:Tithe Owed'
-Warning: "FinanceData/Master.dat", line 8: Unknown account 'Liabilities:Tithe Owed'
-Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities:Domestic'
-@end smallexample
-
-If you have a large Ledger register already created use the @samp{accounts} command to get started:
-@smallexample
-ledger accounts >> Accounts.dat
-@end smallexample
-
-@noindent You will have to edit this file to add the @samp{account} directive.
-
-
-@node File Format, Archiving Previous Years , Keeping it Consistent, Transactions
+@node File Format, Archiving Previous Years , Automated transactions, Transactions
 @section File Format for Users
 @menu
 * File Format Intro::           
@@ -2944,6 +2955,49 @@ Ledger.
 @item beginning of line
 Command directives must occur at the beginning of a line.  Use of ! and
 @@ is deprecated.
+
+@item account
+
+The @samp{account} directive supports several optional sub-directives, if they
+immediately follow the account directive and if they begin with whitespace:
+
+@smallexample
+ account Expenses:Food
+     note This account is all about the chicken!
+     alias food
+     payee ^(KFC|Popeyes)$
+     check commodity == "$"
+     assert commodity == "$"
+     eval print("Hello!")
+     default
+@end smallexample
+
+The @samp{note} sub-directive associates a textual note with the account.  This can
+be accessed later using the @samp{note} valexpr function in any account context.
+
+The @samp{alias} sub-directive, which can occur multiple times, allows the alias to
+be used in place of the full account name anywhere that account names are
+allowed.
+
+The @samp{payee} sub-directive, which can occur multiple times, provides regexps
+that identify the account if that payee is encountered and an account within
+its transaction ends in the name "Unknown".  Example:
+
+@smallexample
+ 2012-02-27 KFC
+     Expenses:Unknown      $10.00  ; Read now as "Expenses:Food"
+     Assets:Cash
+@end smallexample
+
+The @samp{check} and @samp{assert} directives warn or error (respectively) if the given
+value expression evaluates to false within the context of any posting.
+
+The @samp{eval} directive evaluates the value expression in the context of the
+account at the time of definition.  At the moment this has little value.
+
+The @samp{default} directive specifies that this account should be used as the
+``balancing account'' for any future transactions that contain only a single
+posting.
 
 @item apply account
 @c instance_t::master_account_directive
@@ -3048,6 +3102,38 @@ check <VALUE EXPRESSION BOOLEAN RESULT>
 @item comment
 @c instance_t::comment_directive in textual.cc
 Start a block comment, closed by @code{end comment}.
+
+@item commodity
+Pre-declare commodity names.  This only has effect if @samp{--strict} or
+@samp{--pedantic} is used (see below).
+
+ commodity $
+ commodity CAD
+
+The @samp{commodity} directive supports several optional sub-directives, if they
+immediately follow the commodity directive and if they begin with whitespace:
+
+@smallexample
+ commodity $
+   note American Dollars
+   format $1,000.00
+   nomarket
+   default
+@end smallexample
+
+The @samp{note} sub-directive associates a textual note with the commodity.  At
+present this has no value other than documentation.
+
+The @samp{format} directive gives you a way to tell Ledger how to format this
+commodity.  In future using this directive will disable Ledger's observation
+of other ways that commodity is used, and will provide the ``canonical''
+representation.
+
+The @samp{nomarket} directive states that the commodity's price should never be
+auto-downloaded.
+
+The @samp{default} directive marks this as the ``default'' commodity.
+
 @item define
 @c instance_t::define_directive in textual.cc
 Allows you to define value expression for future use. For example:
@@ -3075,15 +3161,20 @@ Include the stated file as if it were part of the current file.
 
 @item payee
 @c instance_t::payee_mapping_directive in textual.cc
-Directs Ledger to replace any payee matching a regex with the given
-payee.  You may download transactions from your bank that you want to be
-shortened or altered.  For example, the the payee for the grocery store
-near me is only one character different than the payee if I buy gasoline
-at the grocery story.  I can enter payee mappings that make this very clear:
+The @samp{payee} directive supports one optional sub-directive, if it immediately
+follows the payee directive and if it begins with whitespace:
 
 @smallexample
-payee  Supermarket Gas  Supermarket 4
-payee  Supermarket Groceries  Supermarket 1
+ payee KFC
+     alias KENTUCKY FRIED CHICKEN
+@end smallexample
+
+The @samp{alias} directive provides a regexp which, if it matches a parsed payee,
+the declared payee name is substituted:
+
+@smallexample
+ 2012-02-27 KENTUCKY FRIED CHICKEN  ; will be read as being 'KFC'
+   ...
 @end smallexample
 
 Ledger will display the mapped payees in @code{print} and
@@ -3093,8 +3184,8 @@ Ledger will display the mapped payees in @code{print} and
 @c instance_t::tag_directive in textual.cc
 Allows you to designate a block of transactions and assign the same tag to all.  Tags can have values and may be nested.
 @smallexample
-tag hastag
-tag nestedtag: true
+apply tag hastag
+apply tag nestedtag: true
 2011/01/25 Tom's Used Cars
   Expenses:Auto                    $ 5,500.00
   ; :nobudget:
@@ -3104,12 +3195,12 @@ tag nestedtag: true
   Expenses:Books                       $20.00
   Liabilities:MasterCard
 
-end tag nestedtag
+end apply tag nestedtag
 
 2011/12/01 Sale
   Assets:Checking:Business            $ 30.00
   Income:Sales
-end tag hastag
+end apply tag hastag
 @end smallexample
 
 @noindent is the equivalent of
@@ -3134,8 +3225,32 @@ end tag hastag
   Income:Sales
 @end smallexample
 
-Note that anything following "@code{end tag}" is ignored.  placing the
+Note that anything following ``@code{end tag}'' is ignored.  placing the
 name of the tag that is being closed is a simple way to keep track.
+
+@item tag
+Pre-declares tag names.  This only has effect if @samp{--strict} or
+@item{--pedantic} is used (see below).
+
+@smallexample
+ tag Receipt
+ tag CSV
+@end smallexample
+
+The 'tag' directive supports two optional sub-directives, if they immediately
+follow the tag directive and if they begin with whitespace:
+
+@smallexample
+ tag Receipt
+   check value =~ /pattern/
+   assert value != "foobar"
+@end smallexample
+
+The @samp{check} and @samp{assert} directives warn or error (respectively) if the given
+value expression evaluates to false within the context of any use of the
+related tag.  In such a context, ``value'' is bound to the value of the tag
+(which may not be a string if typed-metadata is used!).  Such checks or
+assertions are not called if no value is given.
 
 @item test
 @c instance_t::comment_directive in textual.cc
@@ -3784,13 +3899,6 @@ passes a set of scripted commands to Gnuplot.  Feel free to modify the
 script to your liking, since you may prefer histograms to line plots,
 for example.
 
-@menu
-* Typical plots::               
-@end menu
-
-@node Typical plots,  , Visualizing with Gnuplot, Visualizing with Gnuplot
-@subsubsection Typical plots
-
 Here are some useful plots:
 
 @smallexample
@@ -3924,7 +4032,7 @@ downloads.  Unfortunately the file formats, aside form the commas, are
 all different.  The ledger convert command tried to help as much as it
 can.
 
-Your banks csv files will have field in different orders from other
+Your banks csv files will have fields in different orders from other
 banks, so there must be a way to tell Ledger what to expect.  Insert a
 line at the beginning of the csv file that describes the fields to Ledger.
 
@@ -5401,7 +5509,7 @@ Tell ledger to use a particular day of the week to start its ``weekly'' summary.
 FIX THIS ENTRY
 
 @option{--tail <INT>}
-FIX THIS ENTRY
+report only the last <INT> entries.  Only useful ona register report.
 
 @option{total-data}
 FIX THIS ENTRY
@@ -5647,9 +5755,6 @@ transaction.
 
 @option{--by-payee} (@option{-P}) reports subtotals by payee.
 
-@option{--comm-as-payee} (@option{-x}) changes the payee of every
-posting to be the commodity used in that posting.  This can be
-useful when combined with other options, such as @option{-s}.
 
 @option{--empty} (@option{-E}) includes even empty accounts in the
 @command{balance} report.
