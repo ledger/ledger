@@ -593,6 +593,7 @@ changed_value_posts::changed_value_posts
                report.HANDLER(display_total_).expr),
     display_total_expr(report.HANDLER(display_total_).expr),
     changed_values_only(report.HANDLED(revalued_only)),
+    historical_prices_only(report.HANDLED(historical)),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
     display_filter(_display_filter)
@@ -624,9 +625,11 @@ changed_value_posts::changed_value_posts
 void changed_value_posts::flush()
 {
   if (last_post && last_post->date() <= report.terminus.date()) {
-    if (! for_accounts_report)
-      output_intermediate_prices(*last_post, report.terminus.date());
-    output_revaluation(*last_post, report.terminus.date());
+    if (! historical_prices_only) {
+      if (! for_accounts_report)
+        output_intermediate_prices(*last_post, report.terminus.date());
+      output_revaluation(*last_post, report.terminus.date());
+    }
     last_post = NULL;
   }
   item_handler<post_t>::flush();
@@ -807,7 +810,7 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
 void changed_value_posts::operator()(post_t& post)
 {
   if (last_post) {
-    if (! for_accounts_report)
+    if (! for_accounts_report && ! historical_prices_only)
       output_intermediate_prices(*last_post, post.value_date());
     output_revaluation(*last_post, post.value_date());
   }

@@ -576,6 +576,7 @@ class changed_value_posts : public item_handler<post_t>
   expr_t&       total_expr;
   expr_t&       display_total_expr;
   bool          changed_values_only;
+  bool          historical_prices_only;
   bool          for_accounts_report;
   bool          show_unrealized;
   post_t *      last_post;
