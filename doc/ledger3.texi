@@ -1701,10 +1701,10 @@ both exist, you ask?  To support things like this:
          Assets:Checking
 @end smallexample
 
-This transaction says that you bought 11 gallons priced at $2.29 per  
+This transaction says that you bought 11 gallons priced at $2.299 per  
 gallon at a @strong{cost to you} of $2.30 per gallon.  Ledger auto-generates  
 a balance posting in this case to Equity:Capital Losses to reflect the  
-11 cent difference, which is then balanced by Assets:Checking because  
+1.1 cent difference, which is then balanced by Assets:Checking because  
 its amount is null. 
 
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
