@@ -272,6 +272,7 @@ void global_scope_t::report_options(report_t& report, std::ostream& out)
   HANDLER(trace_).report(out);
   HANDLER(verbose).report(out);
   HANDLER(verify).report(out);
+  HANDLER(verify_memory).report(out);
 
   out << std::endl << "[Session scope options]" << std::endl;
   report.session.report_options(out);
@@ -315,6 +316,7 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   case 'v':
     OPT_(verbose);
     else OPT(verify);
+    else OPT(verify_memory);
     else OPT(version);
     break;
   }
@@ -452,29 +454,36 @@ void handle_debug_options(int argc, char * argv[])
       if (std::strcmp(argv[i], "--args-only") == 0) {
         args_only = true;
       }
+      else if (std::strcmp(argv[i], "--verify-memory") == 0) {
+#if defined(VERIFY_ON)
+        verify_enabled = true;
+
+        _log_level    = LOG_DEBUG;
+        _log_category = "memory\\.counts";
+#endif
+      }
       else if (std::strcmp(argv[i], "--verify") == 0) {
 #if defined(VERIFY_ON)
-        verify_enabled = true; // global in utils.h
+        verify_enabled = true;
 #endif
       }
       else if (std::strcmp(argv[i], "--verbose") == 0 ||
                std::strcmp(argv[i], "-v") == 0) {
 #if defined(LOGGING_ON)
-        _log_level = LOG_INFO; // global in utils.h
+        _log_level = LOG_INFO;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if defined(DEBUG_ON)
-        _log_level    = LOG_DEBUG; // global in utils.h
-        _log_category = argv[i + 1]; // global in utils.h
+        _log_level    = LOG_DEBUG;  
+        _log_category = argv[i + 1];
         i++;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 #if defined(TRACING_ON)
-        _log_level   = LOG_TRACE; // global in utils.h
+        _log_level   = LOG_TRACE;
         try {
-          // global in utils.h
           _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
         }
         catch (const boost::bad_lexical_cast&) {

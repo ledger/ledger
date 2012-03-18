@@ -51,7 +51,12 @@ protected:
   std::string::size_type index;
 
 public:
-  straccbuf() : index(0) {}
+  straccbuf() : index(0) {
+    TRACE_CTOR(straccbuf, "");
+  }
+  ~straccbuf() throw() {
+    TRACE_DTOR(straccbuf);
+  }
 
 protected:
   virtual std::streamsize xsputn(const char * s, std::streamsize num);
@@ -66,7 +71,11 @@ protected:
 
 public:
   straccstream() : std::ostream(0) {
+    TRACE_CTOR(straccstream, "");
     rdbuf(&buf);
+  }
+  ~straccstream() throw() {
+    TRACE_DTOR(straccstream);
   }
 
   void clear() {

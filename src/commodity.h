@@ -132,10 +132,10 @@ protected:
          static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA) :
          static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
         symbol(_symbol), precision(0) {
-      TRACE_CTOR(base_t, "const string&");
+      TRACE_CTOR(commodity_t::base_t, "const string&");
     }
     virtual ~base_t() {
-      TRACE_DTOR(base_t);
+      TRACE_DTOR(commodity_t::base_t);
     }
 
 #if defined(HAVE_BOOST_SERIALIZATION)

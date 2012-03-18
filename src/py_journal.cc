@@ -151,8 +151,11 @@ namespace {
 
     collector_wrapper(journal_t& _journal, report_t& base)
       : journal(_journal), report(base),
-        posts_collector(new collect_posts) {}
+        posts_collector(new collect_posts) {
+      TRACE_CTOR(collector_wrapper, "journal_t&, report_t&");
+    }
     ~collector_wrapper() {
+      TRACE_DTOR(collector_wrapper);
       journal.clear_xdata();
     }
 

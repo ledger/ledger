@@ -58,6 +58,7 @@ int main(int argc, char * argv[], char * envp[])
   //   --verbose           ; turns on logging
   //   --debug CATEGORY    ; turns on debug logging
   //   --trace LEVEL       ; turns on trace logging
+  //   --memory            ; turns on memory usage tracing
   handle_debug_options(argc, argv);
 #if defined(VERIFY_ON)
   IF_VERIFY() initialize_memory_tracing();

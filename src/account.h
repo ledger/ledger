@@ -189,7 +189,16 @@ public:
           posts_cleared_count(0),
           posts_last_7_count(0),
           posts_last_30_count(0),
-          posts_this_month_count(0) {}
+          posts_this_month_count(0) {
+        TRACE_CTOR(account_t::xdata_t::details_t, "");
+      }
+      // A copy copies nothing
+      details_t(const details_t&) {
+        TRACE_CTOR(account_t::xdata_t::details_t, "copy");
+      }
+      ~details_t() throw() {
+        TRACE_DTOR(account_t::xdata_t::details_t);
+      }
 
       details_t& operator+=(const details_t& other);
 

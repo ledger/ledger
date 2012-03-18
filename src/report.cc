@@ -321,7 +321,12 @@ namespace {
     report_t&        report;
 
     posts_flusher(post_handler_ptr _handler, report_t& _report)
-      : handler(_handler), report(_report) {}
+      : handler(_handler), report(_report) {
+      TRACE_CTOR(posts_flusher, "post_handler_ptr, report_t&");
+    }
+    ~posts_flusher() throw() {
+      TRACE_DTOR(posts_flusher);
+    }
 
     void operator()(const value_t&) {
       report.session.journal->clear_xdata();

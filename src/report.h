@@ -119,9 +119,19 @@ public:
 
   explicit report_t(session_t& _session)
     : session(_session), terminus(CURRENT_TIME()),
-      budget_flags(BUDGET_NO_BUDGET) {}
+      budget_flags(BUDGET_NO_BUDGET) {
+    TRACE_CTOR(report_t, "session_t&");
+  }
+  report_t(const report_t& report)
+    : session(report.session),
+      output_stream(report.output_stream),
+      terminus(report.terminus),
+      budget_flags(report.budget_flags) {
+    TRACE_CTOR(report_t, "copy");
+  }
 
   virtual ~report_t() {
+    TRACE_DTOR(report_t);
     output_stream.close();
   }
 
@@ -1045,7 +1055,16 @@ class reporter
 public:
   reporter(shared_ptr<item_handler<Type> > _handler,
            report_t& _report, const string& _whence)
-    : handler(_handler), report(_report), whence(_whence) {}
+    : handler(_handler), report(_report), whence(_whence) {
+    TRACE_CTOR(reporter, "item_handler<Type>, report_t&, string");
+  }
+  reporter(const reporter& other)
+    : handler(other.handler), report(other.report), whence(other.whence) {
+    TRACE_CTOR(reporter, "copy");
+  }
+  ~reporter() throw() {
+    TRACE_DTOR(reporter);
+  }
 
   value_t operator()(call_scope_t& args)
   {

@@ -158,6 +158,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION(global_scope_t, trace_);
   OPTION(global_scope_t, verbose);
   OPTION(global_scope_t, verify);
+  OPTION(global_scope_t, verify_memory);
 
   OPTION_(global_scope_t, version, DO() { // -v
       parent->show_version_info(std::cout);

@@ -51,7 +51,11 @@ class temporaries_t
   optional<std::list<account_t> > acct_temps;
 
 public:
+  temporaries_t() {
+    TRACE_CTOR(temporaries_t, "");
+  }
   ~temporaries_t() {
+    TRACE_DTOR(temporaries_t);
     clear();
   }
 

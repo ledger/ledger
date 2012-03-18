@@ -142,6 +142,13 @@ private:
 class empty_scope_t : public scope_t
 {
 public:
+  empty_scope_t() {
+    TRACE_CTOR(empty_scope_t, "");
+  }
+  ~empty_scope_t() throw() {
+    TRACE_DTOR(empty_scope_t);
+  }
+
   virtual string description() {
     return _("<empty>");
   }
@@ -683,7 +690,12 @@ class value_scope_t : public child_scope_t
 
 public:
   value_scope_t(scope_t& _parent, const value_t& _value)
-    : child_scope_t(_parent), value(_value) {}
+    : child_scope_t(_parent), value(_value) {
+    TRACE_CTOR(value_scope_t, "scope_t&, value_t");
+  }
+  ~value_scope_t() throw() {
+    TRACE_DTOR(value_scope_t);
+  }
 
   virtual string description() {
     return parent->description();

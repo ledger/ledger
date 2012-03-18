@@ -88,7 +88,13 @@ namespace {
     create_price_xact(journal_t& _journal, account_t * _account,
                       temporaries_t& _temps, xacts_list& _xact_temps)
       : journal(_journal), account(_account), temps(_temps),
-        xact_temps(_xact_temps) {}
+        xact_temps(_xact_temps) {
+      TRACE_CTOR(create_price_xact,
+                 "journal_t&, account_t *, temporaries_t&, xacts_list&");
+    }
+    ~create_price_xact() throw() {
+      TRACE_DTOR(create_price_xact);
+    }
 
     void operator()(datetime_t& date, const amount_t& price) {
       xact_t * xact;

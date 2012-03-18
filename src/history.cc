@@ -423,7 +423,12 @@ commodity_history_t::find_price(const commodity_t& source,
 template <class Name>
 class label_writer {
 public:
-  label_writer(Name _name) : name(_name) {}
+  label_writer(Name _name) : name(_name) {
+    TRACE_CTOR(label_writer<Name>, "Name");
+  }
+  ~label_writer() throw() {
+    TRACE_DTOR(label_writer<Name>);
+  }
 
   template <class VertexOrEdge>
   void operator()(std::ostream& out, const VertexOrEdge& v) const {

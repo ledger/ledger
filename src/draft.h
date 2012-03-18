@@ -68,12 +68,22 @@ class draft_t : public expr_base_t<value_t>
       optional<string>   cost_operator;
       optional<amount_t> cost;
 
-      post_template_t() : from(false) {}
+      post_template_t() : from(false) {
+        TRACE_CTOR(post_template_t, "");
+      }
+      ~post_template_t() throw() {
+        TRACE_DTOR(post_template_t);
+      }
     };
 
     std::list<post_template_t> posts;
 
-    xact_template_t() {}
+    xact_template_t() {
+      TRACE_CTOR(xact_template_t, "");
+    }
+    ~xact_template_t() throw() {
+      TRACE_DTOR(xact_template_t);
+    }
 
     void dump(std::ostream& out) const;
   };
@@ -86,7 +96,7 @@ public:
     if (! args.empty())
       parse_args(args);
   }
-  virtual ~draft_t() {
+  virtual ~draft_t() throw() {
     TRACE_DTOR(draft_t);
   }
 
