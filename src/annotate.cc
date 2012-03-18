@@ -56,6 +56,7 @@ bool annotation_t::operator<(const annotation_t& rhs) const
       return true;
     if (price->commodity().symbol() > rhs.price->commodity().symbol())
       return false;
+
     if (*price < *rhs.price) return true;
     if (*price > *rhs.price) return false;
   }
@@ -68,9 +69,12 @@ bool annotation_t::operator<(const annotation_t& rhs) const
     if (*tag > *rhs.tag)     return false;
   }
   if (value_expr) {
+    DEBUG("annotate.less", "Comparing (" << value_expr->text()
+          << ") < (" << rhs.value_expr->text());
     if (value_expr->text() < rhs.value_expr->text()) return true;
-    if (value_expr->text() > rhs.value_expr->text()) return false;
+    //if (value_expr->text() > rhs.value_expr->text()) return false;
   }
+
   return false;
 }
 

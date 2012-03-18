@@ -72,7 +72,7 @@ struct annotation_t : public supports_flags<>,
     : supports_flags<>(), price(_price), date(_date), tag(_tag),
       value_expr(_value_expr) {
     TRACE_CTOR(annotation_t,
-               "const optional<amount_t>& + date_t + string + expr_t");
+               "optional<amount_t> + date_t + string + expr_t");
   }
   annotation_t(const annotation_t& other)
     : supports_flags<>(other.flags()),
@@ -91,9 +91,9 @@ struct annotation_t : public supports_flags<>,
 
   bool operator<(const annotation_t& rhs) const;
   bool operator==(const annotation_t& rhs) const {
-    return (price      == rhs.price &&
-            date       == rhs.date  &&
-            tag        == rhs.tag   &&
+    return (price == rhs.price &&
+            date  == rhs.date  &&
+            tag   == rhs.tag   &&
             (value_expr && rhs.value_expr ?
              value_expr->text() == rhs.value_expr->text() :
              value_expr == rhs.value_expr));
@@ -228,6 +228,7 @@ protected:
     : commodity_t(_ptr->parent_, _ptr->base), ptr(_ptr), details(_details) {
     TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
     annotated = true;
+    qualified_symbol = _ptr->qualified_symbol;
   }
 
 public:

@@ -102,7 +102,7 @@ commodity_t * commodity_pool_t::find_or_create(const string& symbol)
 
 commodity_t * commodity_pool_t::alias(const string& name, commodity_t& referent)
 {
-  commodities_map::const_iterator i = commodities.find(referent.symbol());
+  commodities_map::const_iterator i = commodities.find(referent.base_symbol());
   assert(i != commodities.end());
 
   std::pair<commodities_map::iterator, bool> result
@@ -130,20 +130,16 @@ commodity_pool_t::find(const string& symbol, const annotation_t& details)
   DEBUG("pool.commodities", "commodity_pool_t::find[ann] "
         << "symbol " << symbol << std::endl << details);
 
-  if (details) {
-    annotated_commodities_map::const_iterator i =
-      annotated_commodities.find
-      (annotated_commodities_map::key_type(symbol, details));
-    if (i != annotated_commodities.end()) {
-      DEBUG("pool.commodities", "commodity_pool_t::find[ann] found "
-            << "symbol " << (*i).second->symbol() << std::endl
-            << as_annotated_commodity(*(*i).second.get()).details);
-      return (*i).second.get();
-    } else {
-      return NULL;
-    }
+  annotated_commodities_map::const_iterator i =
+    annotated_commodities.find
+    (annotated_commodities_map::key_type(symbol, details));
+  if (i != annotated_commodities.end()) {
+    DEBUG("pool.commodities", "commodity_pool_t::find[ann] found "
+          << "symbol " << (*i).second->base_symbol() << std::endl
+          << as_annotated_commodity(*(*i).second.get()).details);
+    return (*i).second.get();
   } else {
-    return find(symbol);
+    return NULL;
   }
 }
 
@@ -170,10 +166,10 @@ commodity_t *
 commodity_pool_t::find_or_create(commodity_t& comm, const annotation_t& details)
 {
   DEBUG("pool.commodities", "commodity_pool_t::find_or_create[ann:comm] "
-        << "symbol " << comm.symbol() << std::endl << details);
+        << "symbol " << comm.base_symbol() << std::endl << details);
 
   if (details) {
-    if (commodity_t * ann_comm = find(comm.symbol(), details)) {
+    if (commodity_t * ann_comm = find(comm.base_symbol(), details)) {
       assert(ann_comm->annotated && as_annotated_commodity(*ann_comm).details);
       return ann_comm;
     } else {
@@ -189,7 +185,7 @@ commodity_pool_t::create(commodity_t&        comm,
                          const annotation_t& details)
 {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] "
-        << "symbol " << comm.symbol() << std::endl << details);
+        << "symbol " << comm.base_symbol() << std::endl << details);
 
   assert(comm);
   assert(! comm.has_annotation());
@@ -206,11 +202,8 @@ commodity_pool_t::create(commodity_t&        comm,
       comm.add_flags(COMMODITY_SAW_ANN_PRICE_FLOAT);
   }
 
-  commodity->qualified_symbol = comm.symbol();
-  assert(! commodity->qualified_symbol->empty());
-
   DEBUG("pool.commodities", "Creating annotated commodity "
-        << "symbol " << commodity->symbol()
+        << "symbol " << commodity->base_symbol()
         << std::endl << details);
 
 #if defined(DEBUG_ON)
@@ -218,7 +211,7 @@ commodity_pool_t::create(commodity_t&        comm,
 #endif
     annotated_commodities.insert(annotated_commodities_map::value_type
                                  (annotated_commodities_map::key_type
-                                  (comm.symbol(), details), commodity));
+                                  (comm.base_symbol(), details), commodity));
 #if defined(DEBUG_ON)
   assert(result.second);
 #endif
