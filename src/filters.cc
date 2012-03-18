@@ -835,7 +835,7 @@ void subtotal_posts::report_subtotal(const char *                     spec_fmt,
     foreach (post_t * post, component_posts) {
       date_t date       = post->date();
       date_t value_date = post->value_date();
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -843,7 +843,7 @@ void subtotal_posts::report_subtotal(const char *                     spec_fmt,
         range_start = date;
       if (! range_finish || value_date > *range_finish)
         range_finish = value_date;
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
 #pragma GCC diagnostic pop
 #endif
     }
