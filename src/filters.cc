@@ -1033,40 +1033,45 @@ void posts_as_equity::report_subtotal()
 
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
-    if (pair.second.value.is_balance()) {
-      foreach (const balance_t::amounts_map::value_type& amount_pair,
-               pair.second.value.as_balance().amounts)
-        handle_value(/* value=      */ amount_pair.second,
+    value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
+    if (! value.is_zero()) {
+      if (value.is_balance()) {
+        foreach (const balance_t::amounts_map::value_type& amount_pair,
+                 value.as_balance_lval().amounts)
+          handle_value(/* value=      */ amount_pair.second,
+                       /* account=    */ pair.second.account,
+                       /* xact=       */ &xact,
+                       /* temps=      */ temps,
+                       /* handler=    */ handler,
+                       /* date=       */ finish,
+                       /* act_date_p= */ false);
+      } else {
+        handle_value(/* value=      */ value.to_amount(),
                      /* account=    */ pair.second.account,
                      /* xact=       */ &xact,
                      /* temps=      */ temps,
                      /* handler=    */ handler,
                      /* date=       */ finish,
                      /* act_date_p= */ false);
-    } else {
-      handle_value(/* value=      */ pair.second.value,
-                   /* account=    */ pair.second.account,
-                   /* xact=       */ &xact,
-                   /* temps=      */ temps,
-                   /* handler=    */ handler,
-                   /* date=       */ finish,
-                   /* act_date_p= */ false);
+      }
     }
-    total += pair.second.value;
+    total += value;
   }
   values.clear();
 
-  if (total.is_balance()) {
-    foreach (const balance_t::amounts_map::value_type& pair,
-             total.as_balance().amounts) {
+  if (! total.is_zero()) {
+    if (total.is_balance()) {
+      foreach (const balance_t::amounts_map::value_type& pair,
+               total.as_balance().amounts) {
+        post_t& balance_post = temps.create_post(xact, balance_account);
+        balance_post.amount = - pair.second;
+        (*handler)(balance_post);
+      }
+    } else {
       post_t& balance_post = temps.create_post(xact, balance_account);
-      balance_post.amount = - pair.second;
+      balance_post.amount = - total.to_amount();
       (*handler)(balance_post);
     }
-  } else {
-    post_t& balance_post = temps.create_post(xact, balance_account);
-    balance_post.amount = - total.to_amount();
-    (*handler)(balance_post);
   }
 }
 

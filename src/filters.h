@@ -763,6 +763,7 @@ public:
 
 class posts_as_equity : public subtotal_posts
 {
+  report_t&   report;
   post_t *    last_post;
   account_t * equity_account;
   account_t * balance_account;
@@ -770,8 +771,9 @@ class posts_as_equity : public subtotal_posts
   posts_as_equity();
 
 public:
-  posts_as_equity(post_handler_ptr _handler, expr_t& amount_expr)
-    : subtotal_posts(_handler, amount_expr) {
+  posts_as_equity(post_handler_ptr _handler, report_t& _report,
+                  expr_t& amount_expr)
+    : subtotal_posts(_handler, amount_expr), report(_report) {
     TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
     create_accounts();
   }

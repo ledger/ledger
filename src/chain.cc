@@ -207,7 +207,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     // day_of_week_posts is like period_posts, except that it reports
     // all the posts that fall on each subsequent day of the week.
     if (report.HANDLED(equity))
-      handler.reset(new posts_as_equity(handler, expr));
+      handler.reset(new posts_as_equity(handler, report, expr));
     else if (report.HANDLED(subtotal))
       handler.reset(new subtotal_posts(handler, expr));
   }
