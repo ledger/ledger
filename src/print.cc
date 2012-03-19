@@ -226,7 +226,8 @@ namespace {
           std::ostringstream amt_str;
           value_t(post->amount).print(amt_str, static_cast<int>(amount_width),
                                       -1, AMOUNT_PRINT_RIGHT_JUSTIFY |
-                                      AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+                                      (report.HANDLED(generated) ? 0 :
+                                       AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS));
           amt = amt_str.str();
         }
 
