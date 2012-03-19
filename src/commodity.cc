@@ -481,6 +481,15 @@ bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
     if (aleftcomm.details.tag && arightcomm.details.tag)
       return *aleftcomm.details.tag < *arightcomm.details.tag;
 
+    if (! aleftcomm.details.value_expr && arightcomm.details.value_expr)
+      return true;
+    if (aleftcomm.details.value_expr && ! arightcomm.details.value_expr)
+      return false;
+
+    if (aleftcomm.details.value_expr && arightcomm.details.value_expr)
+      return (aleftcomm.details.value_expr->text() <
+              arightcomm.details.value_expr->text());
+
     assert(false);
     return true;
   }
