@@ -197,6 +197,8 @@ namespace {
 
   std::deque<shared_ptr<date_io_t> > readers;
 
+  bool convert_separators_to_slashes = true;
+
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
                                  date_traits_t * traits = NULL)
   {
@@ -205,9 +207,11 @@ namespace {
     char buf[128];
     std::strcpy(buf, date_str);
 
-    for (char * p = buf; *p; p++)
-      if (*p == '.' || *p == '-')
-        *p = '/';
+    if (convert_separators_to_slashes) {
+      for (char * p = buf; *p; p++)
+        if (*p == '.' || *p == '-')
+          *p = '/';
+    }
 
     date_t when = io.parse(buf);
 
@@ -1775,6 +1779,7 @@ void set_date_format(const char * format)
 void set_input_date_format(const char * format)
 {
   readers.push_front(shared_ptr<date_io_t>(new date_io_t(format, true)));
+  convert_separators_to_slashes = false;
 }
 
 void times_initialize()
