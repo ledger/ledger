@@ -543,7 +543,7 @@ string item_context(const item_t& item, const string& desc)
   if (! (len > 0))
     return empty_string;
 
-  assert(len < 8192);
+  assert(len < 1024 * 1024);
 
   std::ostringstream out;
 
