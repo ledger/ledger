@@ -1037,14 +1037,16 @@ void posts_as_equity::report_subtotal()
     if (! value.is_zero()) {
       if (value.is_balance()) {
         foreach (const balance_t::amounts_map::value_type& amount_pair,
-                 value.as_balance_lval().amounts)
-          handle_value(/* value=      */ amount_pair.second,
-                       /* account=    */ pair.second.account,
-                       /* xact=       */ &xact,
-                       /* temps=      */ temps,
-                       /* handler=    */ handler,
-                       /* date=       */ finish,
-                       /* act_date_p= */ false);
+                 value.as_balance_lval().amounts) {
+          if (! amount_pair.second.is_zero())
+            handle_value(/* value=      */ amount_pair.second,
+                         /* account=    */ pair.second.account,
+                         /* xact=       */ &xact,
+                         /* temps=      */ temps,
+                         /* handler=    */ handler,
+                         /* date=       */ finish,
+                         /* act_date_p= */ false);
+        }
       } else {
         handle_value(/* value=      */ value.to_amount(),
                      /* account=    */ pair.second.account,
@@ -1063,9 +1065,11 @@ void posts_as_equity::report_subtotal()
     if (total.is_balance()) {
       foreach (const balance_t::amounts_map::value_type& pair,
                total.as_balance().amounts) {
-        post_t& balance_post = temps.create_post(xact, balance_account);
-        balance_post.amount = - pair.second;
-        (*handler)(balance_post);
+        if (! pair.second.is_zero()) {
+          post_t& balance_post = temps.create_post(xact, balance_account);
+          balance_post.amount = - pair.second;
+          (*handler)(balance_post);
+        }
       }
     } else {
       post_t& balance_post = temps.create_post(xact, balance_account);
