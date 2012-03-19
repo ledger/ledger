@@ -742,7 +742,7 @@ value_t& value_t::operator/=(const value_t& val)
     break;
   }
 
-  add_error_context(_("While dividing %1 by %2:") << val << *this);
+  add_error_context(_("While dividing %1 by %2:") << *this << val);
   throw_(value_error, _("Cannot divide %1 by %2") << label() << val.label());
 
   return *this;
@@ -948,8 +948,7 @@ bool value_t::is_less_than(const value_t& val) const
     break;
   }
 
-  add_error_context(_("While comparing if %1 is less than %2:")
-                    << *this << val);
+  add_error_context(_("While comparing if %1 is less than %2:") << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -1064,8 +1063,7 @@ bool value_t::is_greater_than(const value_t& val) const
     break;
   }
 
-  add_error_context(_("While comparing if %1 is greater than %2:")
-                    << *this << val);
+  add_error_context(_("While comparing if %1 is greater than %2:") << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
