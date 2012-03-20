@@ -82,5 +82,4 @@ test reg -X EUR -H
                                 Expenses:Test            304.82 EUR -2606.99 EUR
                                 <Adjustment>              -0.01 EUR -2607.00 EUR
                                 Assets:Current          2612.80 EUR     5.80 EUR
-                                <Adjustment>               0.01 EUR     5.82 EUR
 end test

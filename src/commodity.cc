@@ -221,6 +221,8 @@ commodity_t& commodity_t::nail_down(const expr_t& expr)
 {
   annotation_t new_details;
   new_details.value_expr = expr;
+  new_details.add_flags(ANNOTATION_VALUE_EXPR_CALCULATED);
+
   commodity_t * new_comm =
     commodity_pool_t::current_pool->find_or_create(symbol(), new_details);
   return *new_comm;

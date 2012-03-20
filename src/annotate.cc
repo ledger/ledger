@@ -328,7 +328,8 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
   if ((keep_price && details.price) ||
       (keep_date  && details.date)  ||
       (keep_tag   && details.tag)   ||
-      details.value_expr)
+      (details.value_expr &&
+       ! details.has_flags(ANNOTATION_VALUE_EXPR_CALCULATED)))
   {
     new_comm = pool().find_or_create
       (referent(), annotation_t(keep_price ? details.price : none,

@@ -340,9 +340,10 @@ namespace {
                     const bool       act_date_p    = true,
                     const value_t&   total         = value_t(),
                     const bool       direct_amount = false,
-                    const bool       mark_visited  = false)
+                    const bool       mark_visited  = false,
+                    const bool       bidir_link    = true)
   {
-    post_t& post = temps.create_post(*xact, account);
+    post_t& post = temps.create_post(*xact, account, bidir_link);
     post.add_flags(ITEM_GENERATED);
 
     // If the account for this post is all virtual, then report the post as
@@ -566,7 +567,9 @@ bool display_filter_posts::output_rounding(post_t& post)
                      /* date=          */ date_t(),
                      /* act_date_p=    */ true,
                      /* total=         */ precise_display_total,
-                     /* direct_amount= */ true);
+                     /* direct_amount= */ true,
+                     /* mark_visited=  */ false,
+                     /* bidir_link=    */ false);
       }
     }
     if (show_rounding)
