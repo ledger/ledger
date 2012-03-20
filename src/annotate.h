@@ -226,9 +226,9 @@ protected:
   explicit annotated_commodity_t(commodity_t * _ptr,
                                  const annotation_t& _details)
     : commodity_t(_ptr->parent_, _ptr->base), ptr(_ptr), details(_details) {
-    TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
     annotated = true;
     qualified_symbol = _ptr->qualified_symbol;
+    TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
   }
 
 public:

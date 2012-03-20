@@ -125,9 +125,9 @@ public:
   }
   format_t(const string& _str, scope_t * context = NULL)
     : base_type(context) {
-    TRACE_CTOR(format_t, "const string&");
     if (! _str.empty())
       parse_format(_str);
+    TRACE_CTOR(format_t, "const string&");
   }
   virtual ~format_t() {
     TRACE_DTOR(format_t);

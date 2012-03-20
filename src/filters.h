@@ -75,8 +75,8 @@ public:
                 expr_t&          _group_by_expr)
     : post_chain(_post_chain), report(_report),
       group_by_expr(_group_by_expr) {
+    preflush_func = bind(&post_splitter::print_title, this, _1);
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
-        preflush_func = bind(&post_splitter::print_title, this, _1);
   }
   virtual ~post_splitter() {
     TRACE_DTOR(post_splitter);
@@ -154,8 +154,6 @@ class pass_down_posts : public item_handler<post_t>
 public:
   pass_down_posts(post_handler_ptr handler, Iterator& iter)
     : item_handler<post_t>(handler) {
-    TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
-
     while (post_t * post = *iter) {
       try {
         item_handler<post_t>::operator()(*post);
@@ -168,6 +166,8 @@ public:
     }
 
     item_handler<post_t>::flush();
+
+    TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
   }
 
   virtual ~pass_down_posts() {
@@ -448,8 +448,8 @@ public:
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
       only_collapse_if_zero(_only_collapse_if_zero), report(_report) {
-    TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
     create_accounts();
+    TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
@@ -499,8 +499,7 @@ public:
                        const bool _also_matching = false)
     : item_handler<post_t>(handler),
       also_matching(_also_matching) {
-    TRACE_CTOR(related_posts,
-               "post_handler_ptr, const bool");
+    TRACE_CTOR(related_posts, "post_handler_ptr, const bool");
   }
   virtual ~related_posts() throw() {
     TRACE_DTOR(related_posts);
@@ -722,9 +721,9 @@ public:
     : subtotal_posts(_handler, amount_expr), start_interval(_interval),
       interval(start_interval), exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
+    create_accounts();
     TRACE_CTOR(interval_posts,
                "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
-    create_accounts();
   }
   virtual ~interval_posts() throw() {
     TRACE_DTOR(interval_posts);
@@ -774,8 +773,8 @@ public:
   posts_as_equity(post_handler_ptr _handler, report_t& _report,
                   expr_t& amount_expr)
     : subtotal_posts(_handler, amount_expr), report(_report) {
-    TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
     create_accounts();
+    TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
   }
   virtual ~posts_as_equity() throw() {
     TRACE_DTOR(posts_as_equity);

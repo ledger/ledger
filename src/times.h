@@ -307,13 +307,14 @@ public:
   }
   date_specifier_t(const date_t& date,
                    const optional<date_traits_t>& traits = none) {
-    TRACE_CTOR(date_specifier_t, "date_t, date_traits_t");
     if (! traits || traits->has_year)
       year = date.year();
     if (! traits || traits->has_month)
       month = date.month();
     if (! traits || traits->has_day)
       day = date.day();
+
+    TRACE_CTOR(date_specifier_t, "date_t, date_traits_t");
   }
   date_specifier_t(const date_specifier_t& other)
     : year(other.year), month(other.month),
@@ -538,8 +539,8 @@ public:
     TRACE_CTOR(date_interval_t, "");
   }
   date_interval_t(const string& str) : aligned(false) {
-    TRACE_CTOR(date_interval_t, "const string&");
     parse(str);
+    TRACE_CTOR(date_interval_t, "const string&");
   }
   date_interval_t(const date_interval_t& other)
     : range(other.range),

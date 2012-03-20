@@ -209,9 +209,9 @@ public:
   explicit bind_scope_t(scope_t& _parent,
                         scope_t& _grandchild)
     : child_scope_t(_parent), grandchild(_grandchild) {
-    TRACE_CTOR(bind_scope_t, "scope_t&, scope_t&");
     DEBUG("scope.symbols",
           "Binding scope " << &_parent << " with " << &_grandchild);
+    TRACE_CTOR(bind_scope_t, "scope_t&, scope_t&");
   }
   virtual ~bind_scope_t() {
     TRACE_DTOR(bind_scope_t);

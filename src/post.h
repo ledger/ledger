@@ -96,8 +96,8 @@ public:
       assigned_amount(post.assigned_amount),
       xdata_(post.xdata_)
   {
-    TRACE_CTOR(post_t, "copy");
     copy_details(post);
+    TRACE_CTOR(post_t, "copy");
   }
   virtual ~post_t() {
     TRACE_DTOR(post_t);

@@ -60,8 +60,8 @@ struct position_t
     TRACE_CTOR(position_t, "");
   }
   position_t(const position_t& pos) {
-    TRACE_CTOR(position_t, "copy");
     *this = pos;
+    TRACE_CTOR(position_t, "copy");
   }
   ~position_t() throw() {
     TRACE_DTOR(position_t);
@@ -125,8 +125,8 @@ public:
   }
   item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t()
   {
-    TRACE_CTOR(item_t, "copy");
     copy_details(item);
+    TRACE_CTOR(item_t, "copy");
   }
   virtual ~item_t() {
     TRACE_DTOR(item_t);

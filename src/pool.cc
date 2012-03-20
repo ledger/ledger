@@ -47,9 +47,9 @@ commodity_pool_t::commodity_pool_t()
     quote_leeway(86400), get_quotes(false),
     get_commodity_quote(commodity_quote_from_script)
 {
-  TRACE_CTOR(commodity_pool_t, "");
   null_commodity = create("");
   null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  TRACE_CTOR(commodity_pool_t, "");
 }
 
 commodity_t * commodity_pool_t::create(const string& symbol)

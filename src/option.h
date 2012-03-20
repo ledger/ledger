@@ -69,8 +69,8 @@ public:
     : name(_name), name_len(std::strlen(name)), ch(_ch),
       handled(false), parent(NULL), value(),
       wants_arg(name[name_len - 1] == '_') {
-    TRACE_CTOR(option_t, "const char *, const char");
     DEBUG("option.names", "Option: " << name);
+    TRACE_CTOR(option_t, "const char *, const char");
   }
   option_t(const option_t& other)
     : name(other.name),

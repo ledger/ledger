@@ -85,9 +85,9 @@ public:
     }
     fileinfo_t(const path& _filename)
       : filename(_filename), from_stream(false) {
-      TRACE_CTOR(journal_t::fileinfo_t, "const path&");
       size    = file_size(*filename);
       modtime = posix_time::from_time_t(last_write_time(*filename));
+      TRACE_CTOR(journal_t::fileinfo_t, "const path&");
     }
     fileinfo_t(const fileinfo_t& info)
       : filename(info.filename), size(info.size),

@@ -278,16 +278,18 @@ namespace {
 
     buf << num;
 
+    string number(buf.str());
+
     int integer_digits = 0;
     // Count the number of integer digits
-    for (const char * p = buf.str().c_str(); *p; p++) {
+    for (const char * p = number.c_str(); *p; p++) {
       if (*p == '.')
         break;
       else if (*p != '-')
         integer_digits++;
     }
 
-    for (const char * p = buf.str().c_str(); *p; p++) {
+    for (const char * p = number.c_str(); *p; p++) {
       if (*p == '.') {
         obuf << *p;
         assert(integer_digits <= 3);
@@ -335,7 +337,7 @@ namespace {
   void report_count_map(std::ostream& out, object_count_map& the_map)
   {
     foreach (object_count_map::value_type& pair, the_map) {
-      out << "  " << std::right << std::setw(12);
+      out << "  " << std::right << std::setw(18);
       stream_commified_number(out, pair.second.first);
       out << "  " << std::right << std::setw(7);
       stream_memory_size(out, pair.second.second);
@@ -433,7 +435,7 @@ void report_memory(std::ostream& out, bool report_all)
     out << "Live memory:" << std::endl;
 
     foreach (const memory_map::value_type& pair, *live_memory) {
-      out << "  " << std::right << std::setw(12) << pair.first
+      out << "  " << std::right << std::setw(18) << pair.first
           << "  " << std::right << std::setw(7);
       stream_memory_size(out, pair.second.second);
       out << "  " << std::left  << pair.second.first
@@ -455,7 +457,7 @@ void report_memory(std::ostream& out, bool report_all)
     out << "Live objects:" << std::endl;
 
     foreach (const objects_map::value_type& pair, *live_objects) {
-      out << "  " << std::right << std::setw(12) << pair.first
+      out << "  " << std::right << std::setw(18) << pair.first
           << "  " << std::right << std::setw(7);
       stream_memory_size(out, pair.second.second);
       out << "  " << std::left  << pair.second.first

@@ -63,8 +63,6 @@ generate_posts_iterator::generate_posts_iterator
     neg_number_range(-10000, -1), neg_number_gen(rnd_gen, neg_number_range),
     pos_number_range(1, 10000), pos_number_gen(rnd_gen, pos_number_range)
 {
-  TRACE_CTOR(generate_posts_iterator, "bool");
-
   std::ostringstream next_date_buf;
   generate_date(next_date_buf);
   next_date = parse_date(next_date_buf.str());
@@ -73,6 +71,7 @@ generate_posts_iterator::generate_posts_iterator
   generate_date(next_aux_date_buf);
   next_aux_date = parse_date(next_aux_date_buf.str());
 
+  TRACE_CTOR(generate_posts_iterator, "bool");
 }
 
 void generate_posts_iterator::generate_string(std::ostream& out, int len,

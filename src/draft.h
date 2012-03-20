@@ -92,9 +92,9 @@ class draft_t : public expr_base_t<value_t>
 
 public:
   draft_t(const value_t& args) : base_type() {
-    TRACE_CTOR(draft_t, "value_t");
     if (! args.empty())
       parse_args(args);
+    TRACE_CTOR(draft_t, "value_t");
   }
   virtual ~draft_t() throw() {
     TRACE_DTOR(draft_t);

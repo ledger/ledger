@@ -91,8 +91,8 @@ public:
       cost_mask("cost"),
       total_mask("total"),
       note_mask("note") {
-    TRACE_CTOR(csv_reader, "parse_context_t&");
     read_index(*context.stream.get());
+    TRACE_CTOR(csv_reader, "parse_context_t&");
   }
   ~csv_reader() {
     TRACE_DTOR(csv_reader);

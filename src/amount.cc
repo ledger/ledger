@@ -63,16 +63,16 @@ struct amount_t::bigint_t : public supports_flags<>
 #define MP(bigint) ((bigint)->val)
 
   bigint_t() : prec(0), refc(1) {
-    TRACE_CTOR(bigint_t, "");
     mpq_init(val);
+    TRACE_CTOR(bigint_t, "");
   }
   bigint_t(const bigint_t& other)
     : supports_flags<>(static_cast<uint_least8_t>
                        (other.flags() & ~BIGINT_BULK_ALLOC)),
       prec(other.prec), refc(1) {
-    TRACE_CTOR(bigint_t, "copy");
     mpq_init(val);
     mpq_set(val, other.val);
+    TRACE_CTOR(bigint_t, "copy");
   }
   ~bigint_t() {
     TRACE_DTOR(bigint_t);
@@ -349,24 +349,24 @@ void amount_t::_release()
 
 amount_t::amount_t(const double val) : commodity_(NULL)
 {
-  TRACE_CTOR(amount_t, "const double");
   quantity = new bigint_t;
   mpq_set_d(MP(quantity), val);
   quantity->prec = extend_by_digits; // an approximation
+  TRACE_CTOR(amount_t, "const double");
 }
 
 amount_t::amount_t(const unsigned long val) : commodity_(NULL)
 {
-  TRACE_CTOR(amount_t, "const unsigned long");
   quantity = new bigint_t;
   mpq_set_ui(MP(quantity), val, 1);
+  TRACE_CTOR(amount_t, "const unsigned long");
 }
 
 amount_t::amount_t(const long val) : commodity_(NULL)
 {
-  TRACE_CTOR(amount_t, "const long");
   quantity = new bigint_t;
   mpq_set_si(MP(quantity), val, 1);
+  TRACE_CTOR(amount_t, "const long");
 }
 
 

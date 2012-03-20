@@ -155,17 +155,17 @@ public:
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
   explicit amount_t(const string& val) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "const string&");
     parse(val);
+    TRACE_CTOR(amount_t, "const string&");
   }
   /** Parse a pointer to a C string as an (optionally commoditized)
       amount.  If no commodity is present, the resulting commodity is \c
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
   explicit amount_t(const char * val) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "const char *");
     assert(val);
     parse(val);
+    TRACE_CTOR(amount_t, "const char *");
   }
 
   /*@}*/
@@ -195,21 +195,21 @@ public:
       same memory used by the original via reference counting.  The \c
       amount_t::bigint_t class in amount.cc maintains the reference. */
   amount_t(const amount_t& amt) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "copy");
     if (amt.quantity)
       _copy(amt);
     else
       commodity_ = NULL;
+    TRACE_CTOR(amount_t, "copy");
   }
   /** Copy an amount object, applying the given commodity annotation
       details afterward.  This is equivalent to doing a normal copy
       (@see amount_t(const amount_t&)) and then calling
       amount_t::annotate(). */
   amount_t(const amount_t& amt, const annotation_t& details) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "const amount_t&, const annotation_t&");
     assert(amt.quantity);
     _copy(amt);
     annotate(details);
+    TRACE_CTOR(amount_t, "const amount_t&, const annotation_t&");
   }
   /** Assign an amount object.  This is like copying if the amount was
       null beforehand, otherwise the previous value's reference is must

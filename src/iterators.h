@@ -100,8 +100,8 @@ public:
   }
   xact_posts_iterator(xact_t& xact)
     : posts_uninitialized(true) {
-    TRACE_CTOR(xact_posts_iterator, "xact_t&");
     reset(xact);
+    TRACE_CTOR(xact_posts_iterator, "xact_t&");
   }
   xact_posts_iterator(const xact_posts_iterator& i)
     : iterator_facade_base<xact_posts_iterator, post_t *,
@@ -145,13 +145,13 @@ public:
     TRACE_CTOR(xacts_iterator, "");
   }
   xacts_iterator(journal_t& journal) : xacts_uninitialized(false) {
-    TRACE_CTOR(xacts_iterator, "journal_t&");
     reset(journal);
+    TRACE_CTOR(xacts_iterator, "journal_t&");
   }
   xacts_iterator(xacts_list::iterator beg,
                  xacts_list::iterator end) : xacts_uninitialized(false) {
-    TRACE_CTOR(xacts_iterator, "xacts_list::iterator, xacts_list::iterator");
     reset(beg, end);
+    TRACE_CTOR(xacts_iterator, "xacts_list::iterator, xacts_list::iterator");
   }
   xacts_iterator(const xacts_iterator& i)
     : iterator_facade_base<xacts_iterator, xact_t *,
@@ -187,8 +187,8 @@ public:
     TRACE_CTOR(journal_posts_iterator, "");
   }
   journal_posts_iterator(journal_t& journal) {
-    TRACE_CTOR(journal_posts_iterator, "journal_t&");
     reset(journal);
+    TRACE_CTOR(journal_posts_iterator, "journal_t&");
   }
   journal_posts_iterator(const journal_posts_iterator& i)
     : iterator_facade_base<journal_posts_iterator, post_t *,
@@ -221,8 +221,8 @@ public:
     TRACE_CTOR(posts_commodities_iterator, "");
   }
   posts_commodities_iterator(journal_t& journal) {
-    TRACE_CTOR(posts_commodities_iterator, "journal_t&");
     reset(journal);
+    TRACE_CTOR(posts_commodities_iterator, "journal_t&");
   }
   posts_commodities_iterator(const posts_commodities_iterator& i)
     : iterator_facade_base<posts_commodities_iterator, post_t *,
@@ -252,9 +252,9 @@ public:
     TRACE_CTOR(basic_accounts_iterator, "");
   }
   basic_accounts_iterator(account_t& account) {
-    TRACE_CTOR(basic_accounts_iterator, "account_t&");
     push_back(account);
     increment();
+    TRACE_CTOR(basic_accounts_iterator, "account_t&");
   }
   basic_accounts_iterator(const basic_accounts_iterator& i)
     : iterator_facade_base<basic_accounts_iterator, account_t *,
@@ -292,9 +292,9 @@ public:
   sorted_accounts_iterator(account_t& account,
                            const expr_t& _sort_cmp, bool _flatten_all)
     : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
-    TRACE_CTOR(sorted_accounts_iterator, "account_t&, expr_t, bool");
     push_back(account);
     increment();
+    TRACE_CTOR(sorted_accounts_iterator, "account_t&, expr_t, bool");
   }
   sorted_accounts_iterator(const sorted_accounts_iterator& i)
     : iterator_facade_base<sorted_accounts_iterator, account_t *,

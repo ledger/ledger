@@ -37,8 +37,8 @@ namespace ledger {
 
 mask_t::mask_t(const string& pat) : expr()
 {
-  TRACE_CTOR(mask_t, "const string&");
   *this = pat;
+  TRACE_CTOR(mask_t, "const string&");
 }
 
 mask_t& mask_t::operator=(const string& pat)

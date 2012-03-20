@@ -55,16 +55,16 @@ expr_t::expr_t(ptr_op_t _ptr, scope_t * _context)
 expr_t::expr_t(const string& _str, const parse_flags_t& flags)
   : base_type()
 {
-  TRACE_CTOR(expr_t, "string, parse_flags_t");
   if (! _str.empty())
     parse(_str, flags);
+  TRACE_CTOR(expr_t, "string, parse_flags_t");
 }
 
 expr_t::expr_t(std::istream& in, const parse_flags_t& flags)
   : base_type()
 {
-  TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
   parse(in, flags);
+  TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
 }
 
 expr_t::~expr_t() {

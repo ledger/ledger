@@ -108,26 +108,26 @@ public:
     TRACE_CTOR(balance_t, "");
   }
   balance_t(const amount_t& amt) {
-    TRACE_CTOR(balance_t, "const amount_t&");
     if (amt.is_null())
       throw_(balance_error,
              _("Cannot initialize a balance from an uninitialized amount"));
     if (! amt.is_realzero())
       amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+    TRACE_CTOR(balance_t, "const amount_t&");
   }
   balance_t(const double val);
   balance_t(const unsigned long val);
   balance_t(const long val);
 
   explicit balance_t(const string& val) {
-    TRACE_CTOR(balance_t, "const string&");
     amount_t temp(val);
     amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    TRACE_CTOR(balance_t, "const string&");
   }
   explicit balance_t(const char * val) {
-    TRACE_CTOR(balance_t, "const char *");
     amount_t temp(val);
     amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    TRACE_CTOR(balance_t, "const char *");
   }
 
   /**

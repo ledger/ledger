@@ -62,14 +62,14 @@ void set_session_context(session_t * session)
 session_t::session_t()
   : flush_on_next_data_file(false), journal(new journal_t)
 {
-  TRACE_CTOR(session_t, "");
-
   if (const char * home_var = std::getenv("HOME"))
     HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
   else
     HANDLER(price_db_).on(none, path("./.pricedb").string());
 
   parsing_context.push();
+
+  TRACE_CTOR(session_t, "");
 }
 
 std::size_t session_t::read_data(const string& master_account)

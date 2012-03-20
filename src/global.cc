@@ -47,8 +47,6 @@ static bool args_only = false;
 
 global_scope_t::global_scope_t(char ** envp)
 {
-  TRACE_CTOR(global_scope_t, "");
-
   epoch = CURRENT_TIME();
 
 #if defined(HAVE_BOOST_PYTHON)
@@ -89,6 +87,8 @@ global_scope_t::global_scope_t(char ** envp)
   } else {
     session().HANDLER(price_db_).off();
   }
+
+  TRACE_CTOR(global_scope_t, "");
 }
 
 global_scope_t::~global_scope_t()

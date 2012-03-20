@@ -58,14 +58,14 @@ class ptristream : public std::istream
 
   public:
     ptrinbuf(char * _ptr, std::size_t _len) : ptr(_ptr), len(_len) {
-      TRACE_CTOR(ptrinbuf, "char *, std::size_t");
-
       if (*ptr && len == 0)
         len = std::strlen(ptr);
 
-      setg(ptr,         // beginning of putback area
-           ptr,         // read position
+      setg(ptr,                 // beginning of putback area
+           ptr,                 // read position
            ptr+len);            // end position
+
+      TRACE_CTOR(ptrinbuf, "char *, std::size_t");
     }
     ~ptrinbuf() throw() {
       TRACE_DTOR(ptrinbuf);

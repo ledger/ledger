@@ -512,8 +512,8 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
     display_total_expr(report.HANDLER(display_total_).expr),
     show_rounding(_show_rounding)
 {
-  TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
   create_accounts();
+  TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
 
 bool display_filter_posts::output_rounding(post_t& post)
@@ -598,9 +598,6 @@ changed_value_posts::changed_value_posts
     show_unrealized(_show_unrealized), last_post(NULL),
     display_filter(_display_filter)
 {
-  TRACE_CTOR(changed_value_posts,
-             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
-
   string gains_equity_account_name;
   if (report.HANDLED(unrealized_gains_))
     gains_equity_account_name = report.HANDLER(unrealized_gains_).str();
@@ -620,6 +617,9 @@ changed_value_posts::changed_value_posts
   losses_equity_account->add_flags(ACCOUNT_GENERATED);
 
   create_accounts();
+
+  TRACE_CTOR(changed_value_posts,
+             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
 }
 
 void changed_value_posts::flush()
@@ -1417,8 +1417,6 @@ inject_posts::inject_posts(post_handler_ptr handler,
                            account_t *      master)
   : item_handler<post_t>(handler)
 {
-  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
-
   scoped_array<char> buf(new char[tag_list.length() + 1]);
   std::strcpy(buf.get(), tag_list.c_str());
 
@@ -1435,6 +1433,8 @@ inject_posts::inject_posts(post_handler_ptr handler,
     tags_list.push_back
       (tags_list_pair(q, tag_mapping_pair(account, tag_injected_set())));
   }
+
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
 }
 
 void inject_posts::operator()(post_t& post)
