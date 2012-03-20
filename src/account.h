@@ -193,7 +193,17 @@ public:
         TRACE_CTOR(account_t::xdata_t::details_t, "");
       }
       // A copy copies nothing
-      details_t(const details_t&) {
+      details_t(const details_t&)
+        : calculated(false),
+          gathered(false),
+
+          posts_count(0),
+          posts_virtuals_count(0),
+          posts_cleared_count(0),
+          posts_last_7_count(0),
+          posts_last_30_count(0),
+          posts_this_month_count(0)
+      {
         TRACE_CTOR(account_t::xdata_t::details_t, "copy");
       }
       ~details_t() throw() {
