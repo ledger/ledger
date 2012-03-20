@@ -16,9 +16,11 @@ ledger_proof() {
     fi
 
     sudo rm -fr $DEST/ledger-proof
+    date > $LOGDIR/ledger-proof.log
+
     time nice -n 20 \
         ./acprep --debug --enable-doxygen --universal --clang -j16 proof 2>&1 | \
-        tee $LOGDIR/ledger-proof.log
+        tee -a $LOGDIR/ledger-proof.log
 
     sudo rm -fr $DEST/ledger-proof
     time nice -n 20 \
