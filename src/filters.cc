@@ -522,7 +522,8 @@ bool display_filter_posts::output_rounding(post_t& post)
   value_t      new_display_total;
 
   if (show_rounding) {
-    new_display_total = display_total_expr.calc(bound_scope);
+    new_display_total = (display_total_expr.calc(bound_scope)
+                         .strip_annotations(report.what_to_keep()));
 
     DEBUG("filters.changed_value.rounding",
           "rounding.new_display_total     = " << new_display_total);
@@ -539,7 +540,8 @@ bool display_filter_posts::output_rounding(post_t& post)
     return true;
   }
 
-  if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
+  if (value_t repriced_amount = (display_amount_expr.calc(bound_scope)
+                                 .strip_annotations(report.what_to_keep()))) {
     if (! last_display_total.is_null()) {
       DEBUG("filters.changed_value.rounding",
             "rounding.repriced_amount       = " << repriced_amount);

@@ -11,7 +11,6 @@ test reg -X EUR -H
 11-Jan-01 Opening balance       Assets:Investment       1658.90 EUR  1658.90 EUR
                                 Assets:Investments       124.00 EUR  1782.90 EUR
                                 Equity:Opening balance -1782.90 EUR            0
-11-Feb-10 Reimbursement: Taxi.. <Adjustment>              -0.01 EUR    -0.01 EUR
-                                Assets:A                   1.80 EUR     1.80 EUR
+11-Feb-10 Reimbursement: Taxi.. Assets:A                   1.80 EUR     1.80 EUR
                                 Assets:B                  -1.80 EUR            0
 end test
