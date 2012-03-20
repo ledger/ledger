@@ -688,6 +688,7 @@ void extend_post(post_t& post, journal_t& journal)
       if (! details) {
         annotation_t new_details;
         new_details.value_expr = value_expr;
+
         commodity_t * new_comm =
           commodity_pool_t::current_pool->find_or_create(comm, new_details);
         post.amount.set_commodity(*new_comm);

@@ -212,8 +212,7 @@ void annotation_t::print(std::ostream& out, bool keep_base,
       (! no_computed_annotations || ! has_flags(ANNOTATION_TAG_CALCULATED)))
     out << " (" << *tag << ')';
 
-  if (value_expr && (! no_computed_annotations ||
-                     ! has_flags(ANNOTATION_VALUE_EXPR_CALCULATED)))
+  if (value_expr && ! has_flags(ANNOTATION_VALUE_EXPR_CALCULATED))
     out << " ((" << *value_expr << "))";
 }
 
@@ -327,10 +326,7 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
 
   if ((keep_price && details.price) ||
       (keep_date  && details.date)  ||
-      (keep_tag   && details.tag)   ||
-      (details.value_expr &&
-       ! details.has_flags(ANNOTATION_VALUE_EXPR_CALCULATED)))
-  {
+      (keep_tag   && details.tag)) {
     new_comm = pool().find_or_create
       (referent(), annotation_t(keep_price ? details.price : none,
                                 keep_date  ? details.date  : none,
