@@ -1,0 +1,23 @@
+; Test for: automated transactions didn't show up in the balance report
+
+= Income:Clients:
+    (Liabilities:Taxes:VAT)  ((1,00 / 1,19) * 0,19)
+
+2009/07/27 * Invoice
+    Assets:Bank:Checking              €1.190,00
+    Income:Clients:ACME_Inc
+
+test --decimal-comma bal
+           €1.190,00  Assets:Bank:Checking
+          €-1.190,00  Income:Clients:ACME_Inc
+            €-190,00  Liabilities:Taxes:VAT
+--------------------
+            €-190,00
+end test
+
+test --decimal-comma reg
+09-Jul-27 Invoice               Assets:Bank:Checking      €1.190,00    €1.190,00
+                                Incom:Clients:ACME_Inc   €-1.190,00            0
+                                (Liabilitie:Taxes:VAT)     €-190,00     €-190,00
+end test
+

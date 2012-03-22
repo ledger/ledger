@@ -1,0 +1,13 @@
+!apply account A
+!include 89233B6D-a.dat
+!end
+
+!apply account B
+!include 89233B6D-b.dat
+!end
+
+test reg "^A:"
+94-Jan-02 Salary                A:Assset:Bank:Checking          200          200
+                                A:Income:Salary                -200            0
+end test
+

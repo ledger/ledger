@@ -1,0 +1,19 @@
+2012-01-01 * Opening Balances
+    Assets:Cash                           100.00 EUR
+    Equity:Opening balances              -100.00 EUR
+
+2012-01-02 * Buy AAA
+    Assets:Investments             1 AAA @ 10.00 EUR
+    Assets:Cash                           -10.00 EUR
+
+2012-01-03 * Sell AAA
+    Assets:Investments            -1 AAA @ 10.00 EUR
+    Assets:Cash                            10.00 EUR
+
+
+test equity
+2012/01/03 Opening Balances
+    Assets:Cash                           100.00 EUR
+    Equity:Opening balances
+end test
+
