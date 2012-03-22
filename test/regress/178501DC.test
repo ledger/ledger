@@ -1,0 +1,21 @@
+; Test for: The bal report does not honor -r (ledger bal simon
+; would show all accounts, rather than just simon and the related
+; account).
+
+2011/10/26 trader joe's
+       simon                         $-50
+       alice                         $-50
+       expenses:food:groceries
+
+test bal -r simon
+                $-50  alice
+                $100  expenses:food:groceries
+--------------------
+                 $50
+end test
+
+test reg -r simon
+11-Oct-26 trader joe's          alice                          $-50         $-50
+                                expense:food:groceries         $100          $50
+end test
+

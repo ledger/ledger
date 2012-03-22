@@ -1,0 +1,23 @@
+; Test for: --sort d not working with -p
+
+2009-01-01 Opening Balances
+    Assets:Checking    100.00 EUR
+    Equity:Opening Balances
+
+2009-03-01 Test
+    Expenses:Phone      10.00 EUR
+    Assets:Checking
+
+2009-02-01 Test
+    Expenses:Phone      10.00 EUR
+    Assets:Checking
+
+test --sort d -p "until 2010" reg
+09-Jan-01 Opening Balances      Assets:Checking          100.00 EUR   100.00 EUR
+                                Equit:Opening Balances  -100.00 EUR            0
+09-Feb-01 Test                  Expenses:Phone            10.00 EUR    10.00 EUR
+                                Assets:Checking          -10.00 EUR            0
+09-Mar-01 Test                  Expenses:Phone            10.00 EUR    10.00 EUR
+                                Assets:Checking          -10.00 EUR            0
+end test
+

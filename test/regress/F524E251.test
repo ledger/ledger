@@ -1,0 +1,37 @@
+; Test for: ledger -f doc/sample.dat -n reg' shows $0.00 on first post
+
+= /^Expenses:Books/
+  (Liabilities:Taxes)             -0.10
+
+~ Monthly
+  Assets:Bank:Checking          $500.00
+  Income:Salary
+
+2004/05/01 * Checking balance
+  Assets:Bank:Checking        $1,000.00
+  Equity:Opening Balances
+
+2004/05/01 * Investment balance
+  Assets:Brokerage              50 AAPL @ $30.00
+  Equity:Opening Balances
+
+2004/05/14 * Pay day
+  Assets:Bank:Checking          $500.00
+  Income:Salary
+
+2004/05/27 Book Store
+  Expenses:Books                 $20.00
+  Liabilities:MasterCard
+
+2004/05/27 (100) Credit card company
+  Liabilities:MasterCard         $20.00
+  Assets:Bank:Checking
+
+test -n reg
+04-May-01 Investment balance    <Total>                  $-1,500.00
+                                                            50 AAPL   $-1,500.00
+                                                                         50 AAPL
+04-May-27 Book Store            <Total>                      $-2.00   $-1,502.00
+                                                                         50 AAPL
+end test
+

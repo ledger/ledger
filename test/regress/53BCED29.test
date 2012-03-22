@@ -1,0 +1,29 @@
+D $1,000.00
+
+; payroll taxes
+= /^Payroll/
+  Liabilities:Taxes:CFICA  0.062
+  Liabilities:Taxes:CMED   0.0145
+  $account:EFICA   -0.062
+  $account:EMED    -0.0145
+
+; Hourly rates for each employee, as commodity prices.
+P 2010/01/01 EONE $15.00
+
+; Payroll transactions
+2010/05/18  Payroll from May 2nd to May 15th for Employee1
+  Assets:Checking    20 EONE
+  Payroll:Employee1
+
+test bal -V
+             $300.00  Assets:Checking
+             $-22.95  Liabilities:Taxes
+             $-18.60    CFICA
+              $-4.35    CMED
+            $-277.05  Payroll:Employee1
+              $18.60    EFICA
+               $4.35    EMED
+--------------------
+                   0
+end test
+
