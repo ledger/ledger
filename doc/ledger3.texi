@@ -902,7 +902,7 @@ file:
 And two in your company ledger file:
 
 @smallexample
-!account Company XYZ
+apply account Company XYZ
 
 2004/09/29  Circuit City
     Expenses:Computer:Software            $100.00
@@ -912,10 +912,10 @@ And two in your company ledger file:
     Accounts Payable:Your Name            $100.00
     Assets:Checking                      $-100.00
 
-!end
+end apply account
 @end smallexample
 
-(Note: The @samp{!account} above means that all accounts mentioned in
+(Note: The @samp{apply account} above means that all accounts mentioned in
 the file are children of that account.  In this case it means that all
 activity in the file relates to Company XYZ).
 
