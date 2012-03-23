@@ -1,0 +1,18 @@
+
+2012-03-23 * Test
+  A     10.00
+  B
+
+2012-03-23 * (100) Code
+  A     10.00 EUR
+  B
+
+test emacs
+(("$sourcepath/test/baseline/cmd-emacs.test" 2 (20331 48384 0) nil "Test"
+  (3 "A" "10" t)
+  (4 "B" "-10" t))
+ ("$sourcepath/test/baseline/cmd-emacs.test" 6 (20331 48384 0) "100" "Code"
+  (7 "A" "10.00 EUR" t)
+  (8 "B" "-10.00 EUR" t)))
+end test
+

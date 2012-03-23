@@ -1,0 +1,85 @@
+
+2012-01-01 * Opening balances
+    Assets:A                      10.00
+    Equity:Opening balances      -10.00
+
+2012-01-02 * A to B
+    Assets:A                     -10.00
+    Assets:B                      10.00
+
+2012-01-03 * B partly to C
+    Assets:B                      -5.00
+    Assets:C                       5.00
+
+2012-01-04 * Borrow
+    Assets:A                      10.00
+    Liabilities:A                -10.00
+
+2012-01-05 * Return A
+    Assets:A                     -10.00
+    Liabilities:A                 10.00
+
+test bal
+                  10  Assets
+                   5    B
+                   5    C
+                 -10  Equity:Opening balances
+--------------------
+                   0
+end test
+
+test bal -n
+                  10  Assets
+                 -10  Equity
+--------------------
+                   0
+end test
+
+test bal -n -E
+                  10  Assets
+                 -10  Equity
+                   0  Liabilities
+--------------------
+                   0
+end test
+
+test bal -E
+                  10  Assets
+                   0    A
+                   5    B
+                   5    C
+                 -10  Equity:Opening balances
+                   0  Liabilities:A
+--------------------
+                   0
+end test
+
+test bal --flat
+                   5  Assets:B
+                   5  Assets:C
+                 -10  Equity:Opening balances
+--------------------
+                   0
+end test
+
+test bal --flat -E
+                   0  Assets:A
+                   5  Assets:B
+                   5  Assets:C
+                 -10  Equity:Opening balances
+                   0  Liabilities:A
+--------------------
+                   0
+end test
+
+test bal -E --flat --no-total
+                   0  Assets:A
+                   5  Assets:B
+                   5  Assets:C
+                 -10  Equity:Opening balances
+                   0  Liabilities:A
+end test
+
+test bal -n --flat
+end test
+
