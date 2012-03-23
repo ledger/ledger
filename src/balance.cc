@@ -242,18 +242,27 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 
 void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const
 {
-  typedef std::vector<const amount_t *> amounts_array;
-  amounts_array sorted;
+  if (! amounts.empty()) {
+    if (amounts.size() == 1) {
+      const amount_t& amount((*amounts.begin()).second);
+      if (amount)
+        fn(amount);
+    }
+    else {
+      typedef std::vector<const amount_t *> amounts_array;
+      amounts_array sorted;
 
-  foreach (const amounts_map::value_type& pair, amounts)
-    if (pair.second)
-      sorted.push_back(&pair.second);
+      foreach (const amounts_map::value_type& pair, amounts)
+        if (pair.second)
+          sorted.push_back(&pair.second);
 
-  std::stable_sort(sorted.begin(), sorted.end(),
-                   commodity_t::compare_by_commodity());
+      std::stable_sort(sorted.begin(), sorted.end(),
+                       commodity_t::compare_by_commodity());
 
-  foreach (const amount_t * amount, sorted)
-    fn(*amount);
+      foreach (const amount_t * amount, sorted)
+        fn(*amount);
+    }
+  }
 }
 
 namespace {

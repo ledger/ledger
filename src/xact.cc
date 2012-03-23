@@ -117,6 +117,38 @@ namespace {
     return (std::isdigit(name[len - 1]) || name[len - 1] == ')' ||
             name[len - 1] == '}' || name[len - 1] == ']');
   }
+
+  struct add_balancing_post
+  {
+    bool         first;
+    xact_base_t& xact;
+    post_t *     null_post;
+
+    explicit add_balancing_post(xact_base_t& _xact, post_t * _null_post)
+      : first(true), xact(_xact), null_post(_null_post) {
+      TRACE_CTOR(add_balancing_post, "xact_base_t&, post_t *");
+    }
+    add_balancing_post(const add_balancing_post& other)
+      : first(other.first), xact(other.xact), null_post(other.null_post) {
+      TRACE_CTOR(add_balancing_post, "copy");
+    }
+    ~add_balancing_post() throw() {
+      TRACE_DTOR(add_balancing_post);
+    }
+
+    void operator()(const amount_t& amount) {
+      if (first) {
+        null_post->amount = amount.negated();
+        null_post->add_flags(POST_CALCULATED);
+        first = false;
+      } else {
+        unique_ptr<post_t> p(new post_t(null_post->account, amount.negated(),
+                                        ITEM_GENERATED | POST_CALCULATED));
+        p->set_state(null_post->state());
+        xact.add_post(p.release());
+      }
+    }
+  };
 }
 
 bool xact_base_t::finalize()
@@ -347,69 +379,17 @@ bool xact_base_t::finalize()
     // generated to balance them all.
 
     DEBUG("xact.finalize", "there was a null posting");
+    add_balancing_post post_adder(*this, null_post);
 
-    if (balance.is_balance()) {
-      const balance_t& bal(balance.as_balance());
-#if 1
-      typedef std::map<std::pair<string, annotation_t>,
-                       amount_t> sorted_amounts_map;
-      sorted_amounts_map samp;
-      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
-#if defined(DEBUG_ON)
-        std::pair<sorted_amounts_map::iterator, bool> result =
-#endif
-          samp.insert(sorted_amounts_map::value_type
-                      (sorted_amounts_map::key_type
-                       (pair.first->symbol(),
-                        pair.first->has_annotation() ?
-                        as_annotated_commodity(*pair.first).details :
-                        annotation_t()),
-                       pair.second));
-#if defined(DEBUG_ON)
-        assert(result.second);
-#endif
-      }
-
-      bool first = true;
-      foreach (sorted_amounts_map::value_type& pair, samp) {
-        if (first) {
-          null_post->amount = pair.second.negated();
-          null_post->add_flags(POST_CALCULATED);
-          first = false;
-        } else {
-          post_t * p = new post_t(null_post->account, pair.second.negated(),
-                                  ITEM_GENERATED | POST_CALCULATED);
-          p->set_state(null_post->state());
-          add_post(p);
-        }
-      }
-#else
-      bool first = true;
-      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
-        if (first) {
-          null_post->amount = pair.second.negated();
-          null_post->add_flags(POST_CALCULATED);
-          first = false;
-        } else {
-          post_t * p = new post_t(null_post->account, pair.second.negated(),
-                                  ITEM_GENERATED | POST_CALCULATED);
-          p->set_state(null_post->state());
-          add_post(p);
-        }
-      }
-#endif
-    }
-    else if (balance.is_amount()) {
-      null_post->amount = balance.as_amount().negated();
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (balance.is_long()) {
-      null_post->amount = amount_t(- balance.as_long());
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (! balance.is_null() && ! balance.is_realzero()) {
+    if (balance.is_balance())
+      balance.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (balance.is_amount())
+      post_adder(balance.as_amount_lval());
+    else if (balance.is_long())
+      post_adder(balance.to_amount());
+    else if (! balance.is_null() && ! balance.is_realzero())
       throw_(balance_error, _("Transaction does not balance"));
-    }
+
     balance = NULL_VALUE;
 
   }
