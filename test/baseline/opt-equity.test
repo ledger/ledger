@@ -12,16 +12,16 @@ test equity
 2011/03/05 Opening Balances
     Assets:Bank                            -3.80 GBP
     Assets:Broker                              4 AAA
-    Equity:Opening Balances                 3.80 GBP
     Equity:Opening Balances                   -4 AAA
+    Equity:Opening Balances                 3.80 GBP
 end test
 
 test equity assets
 2011/03/05 Opening Balances
     Assets:Bank                            -3.80 GBP
     Assets:Broker                              4 AAA
-    Equity:Opening Balances                 3.80 GBP
     Equity:Opening Balances                   -4 AAA
+    Equity:Opening Balances                 3.80 GBP
 end test
 
 test equity assets:bank
