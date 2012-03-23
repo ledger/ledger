@@ -1,0 +1,42 @@
+2011-03-01 * Z
+    A            10
+    B
+
+2011-03-02 * A
+    C            10
+    D
+
+2011-03-03 * 9
+    B            10
+    E
+
+2011-03-04 * B
+    B            10
+    E
+
+2011-03-05 * 1
+    B            10
+    E
+
+test payees
+1
+9
+A
+B
+Z
+end test
+
+test payees a
+Z
+end test
+
+test payees no:such:account
+end test
+
+test payees "^B$"
+1
+9
+B
+Z
+end test
+
