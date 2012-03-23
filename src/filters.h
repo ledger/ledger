@@ -640,15 +640,22 @@ protected:
   public:
     account_t * account;
     value_t     value;
+    bool        is_virtual;
+    bool        must_balance;
 
-    acct_value_t(account_t * a) : account(a) {
-      TRACE_CTOR(acct_value_t, "account_t *");
+    acct_value_t(account_t * a, bool _is_virtual = false,
+                 bool _must_balance = false)
+      : account(a), is_virtual(_is_virtual), must_balance(_must_balance) {
+      TRACE_CTOR(acct_value_t, "account_t *, bool, bool");
     }
-    acct_value_t(account_t * a, value_t& v) : account(a), value(v) {
-      TRACE_CTOR(acct_value_t, "account_t *, value_t&");
+    acct_value_t(account_t * a, value_t& v, bool _is_virtual = false,
+                 bool _must_balance = false)
+      : account(a), value(v), is_virtual(_is_virtual),
+        must_balance(_must_balance) {
+      TRACE_CTOR(acct_value_t, "account_t *, value_t&, bool, bool");
     }
     acct_value_t(const acct_value_t& av)
-      : account(av.account), value(av.value) {
+      : account(av.account), value(av.value), is_virtual(av.is_virtual) {
       TRACE_CTOR(acct_value_t, "copy");
     }
     ~acct_value_t() throw() {

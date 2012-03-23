@@ -1,0 +1,24 @@
+2005/01/03 * Pay Credit card
+    Liabilities:CredCard    $1,000.00  ; Electronic/ACH Debit
+    Assets:Current:Checking  ; Electronic/ACH Debit
+    (Virtualaccount)        $1,000.00
+
+2006/01/03 Gift shop
+    Expenses:Gifts                          $46.50   
+    * Liabilities:CredCard
+
+2006/01/03 Bike shop
+    Expenses:Misc               $199.00
+    * Liabilities:CredCard
+    (testvirtual)                          $184.72
+
+2006/01/04 Store
+    Expenses:Misc                           $49.95
+    * Liabilities:CredCard
+
+test equity -e 2006
+2005/01/03 Opening Balances
+    Assets:Current:Checking               $-1,000.00
+    Liabilities:CredCard                   $1,000.00
+    (Virtualaccount)                       $1,000.00
+end test

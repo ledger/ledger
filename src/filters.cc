@@ -900,11 +900,19 @@ void subtotal_posts::operator()(post_t& post)
 #if defined(DEBUG_ON)
     std::pair<values_map::iterator, bool> result =
 #endif
-      values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
+      values.insert(values_pair
+                    (acct->fullname(),
+                     acct_value_t(acct, temp, post.has_flags(POST_VIRTUAL),
+                                  post.has_flags(POST_MUST_BALANCE))));
 #if defined(DEBUG_ON)
     assert(result.second);
 #endif
   } else {
+    if (post.has_flags(POST_VIRTUAL) != (*i).second.is_virtual)
+      throw_(std::logic_error,
+             _("'equity' cannot accept virtual and "
+               "non-virtual postings to the same account"));
+
     post.add_to_value((*i).second.value, amount_expr);
   }
 
@@ -1062,10 +1070,17 @@ void posts_as_equity::report_subtotal()
                      /* act_date_p= */ false);
       }
     }
-    total += value;
+
+    if (! pair.second.is_virtual || pair.second.must_balance)
+      total += value;
   }
   values.clear();
 
+#if 1
+  // This last part isn't really needed, since an Equity:Opening
+  // Balances posting with a null amount will automatically balance with
+  // all the other postings generated.  But it does make the full
+  // balancing amount clearer to the user.
   if (! total.is_zero()) {
     if (total.is_balance()) {
       foreach (const balance_t::amounts_map::value_type& pair,
@@ -1082,6 +1097,7 @@ void posts_as_equity::report_subtotal()
       (*handler)(balance_post);
     }
   }
+#endif
 }
 
 void by_payee_posts::flush()
