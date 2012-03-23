@@ -40,6 +40,7 @@ class RegressFile(object):
 
     def transform_line(self, line):
         line = re.sub('\$sourcepath', harness.sourcepath, line)
+        line = re.sub('\$FILE', self.filename, line)
         return line
 
     def read_test(self):
@@ -130,9 +131,7 @@ class RegressFile(object):
         printed = False
         index   = 0
         if test['error'] is not None:
-            for line in unified_diff([re.sub('\$FILE', self.filename, line)
-                                      for line in test['error']],
-                                     harness.readlines(p.stderr)):
+            for line in unified_diff(test['error'], harness.readlines(p.stderr)):
                 index += 1
                 if index < 3:
                     continue
