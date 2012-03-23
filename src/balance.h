@@ -507,6 +507,14 @@ public:
   balance_t strip_annotations(const keep_details_t& what_to_keep) const;
 
   /**
+   * Iteration primitives.  `map_sorted_amounts' allows one to visit
+   * each amount in balance in the proper order for displaying to the
+   * user.  Mostly used by `print' and other routinse where the sort
+   * order of the amounts' commodities is significant.
+   */
+  void map_sorted_amounts(function<void(const amount_t&)> fn) const;
+
+  /**
    * Printing methods.  A balance may be output to a stream using the
    * `print' method.  There is also a global operator<< defined which
    * simply calls print for a balance on the given stream.  There is

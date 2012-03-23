@@ -41,9 +41,9 @@ test equity --lot-prices
     Assets:Bank                            -3.80 GBP
     Assets:Broker                       2 AAA {0.90 GBP}
     Assets:Broker                       2 AAA {1.00 GBP}
-    Equity:Opening Balances                 3.80 GBP
     Equity:Opening Balances             -2 AAA {0.90 GBP}
     Equity:Opening Balances             -2 AAA {1.00 GBP}
+    Equity:Opening Balances                 3.80 GBP
 end test
 
 test equity --lots
@@ -51,8 +51,8 @@ test equity --lots
     Assets:Bank                            -3.80 GBP
     Assets:Broker                       2 AAA {0.90 GBP} [2011/03/04]
     Assets:Broker                       2 AAA {1.00 GBP} [2011/03/05]
-    Equity:Opening Balances                 3.80 GBP
     Equity:Opening Balances             -2 AAA {0.90 GBP} [2011/03/04]
     Equity:Opening Balances             -2 AAA {1.00 GBP} [2011/03/05]
+    Equity:Opening Balances                 3.80 GBP
 end test
 

@@ -1030,6 +1030,40 @@ void interval_posts::flush()
   subtotal_posts::flush();
 }
 
+namespace {
+  struct create_post_from_amount
+  {
+    post_handler_ptr handler;
+    xact_t&          xact;
+    account_t&       balance_account;
+    temporaries_t&   temps;
+
+    explicit create_post_from_amount(post_handler_ptr _handler,
+                                     xact_t&          _xact,
+                                     account_t&       _balance_account,
+                                     temporaries_t&   _temps)
+      : handler(_handler), xact(_xact),
+        balance_account(_balance_account), temps(_temps) {
+      TRACE_CTOR(create_post_from_amount,
+                 "post_handler_ptr, xact_t&, account_t&, temporaries_t&");
+    }
+    create_post_from_amount(const create_post_from_amount& other)
+      : handler(other.handler), xact(other.xact),
+        balance_account(other.balance_account), temps(other.temps) {
+      TRACE_CTOR(create_post_from_amount, "copy");
+    }
+    ~create_post_from_amount() throw() {
+      TRACE_DTOR(create_post_from_amount);
+    }
+
+    void operator()(const amount_t& amount) {
+      post_t& balance_post = temps.create_post(xact, &balance_account);
+      balance_post.amount = - amount;
+      (*handler)(balance_post);
+    }      
+  };
+}
+
 void posts_as_equity::report_subtotal()
 {
   date_t finish;
@@ -1076,28 +1110,18 @@ void posts_as_equity::report_subtotal()
   }
   values.clear();
 
-#if 1
   // This last part isn't really needed, since an Equity:Opening
   // Balances posting with a null amount will automatically balance with
   // all the other postings generated.  But it does make the full
   // balancing amount clearer to the user.
   if (! total.is_zero()) {
-    if (total.is_balance()) {
-      foreach (const balance_t::amounts_map::value_type& pair,
-               total.as_balance().amounts) {
-        if (! pair.second.is_zero()) {
-          post_t& balance_post = temps.create_post(xact, balance_account);
-          balance_post.amount = - pair.second;
-          (*handler)(balance_post);
-        }
-      }
-    } else {
-      post_t& balance_post = temps.create_post(xact, balance_account);
-      balance_post.amount = - total.to_amount();
-      (*handler)(balance_post);
-    }
+    create_post_from_amount post_creator(handler, xact,
+                                         *balance_account, temps);
+    if (total.is_balance())
+      total.as_balance_lval().map_sorted_amounts(post_creator);
+    else
+      post_creator(total.to_amount());
   }
-#endif
 }
 
 void by_payee_posts::flush()
