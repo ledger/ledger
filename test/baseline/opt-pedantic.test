@@ -1,0 +1,17 @@
+2012-03-20 Test GBP
+    Expenses:Phone            20.00 GBP
+    Assets:Cash
+
+2012-03-21 * Test GBP
+    Expenses:Phone            20.00 GBP
+    Assets:Cash
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 2: 
+While parsing posting:
+  Expenses:Phone            20.00 GBP
+
+Error: Unknown account 'Expenses:Phone'
+end test
+

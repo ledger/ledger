@@ -1,0 +1,21 @@
+account A
+account B
+commodity GBP
+
+2012-03-25 GBP
+    A            10.00 GBP
+    B
+
+2012-03-26 EUR
+    A            20.00 EUR
+    B
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 10: 
+While parsing posting:
+  A            20.00 EUR
+               ^^^^^^^^^
+Error: Unknown commodity 'EUR'
+end test
+

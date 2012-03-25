@@ -1,0 +1,12 @@
+payee KFC
+    alias Kentucky Fried Chicken
+
+2012-03-25 * Kentucky Fried Chicken
+    A            10
+    B
+
+test reg
+12-Mar-25 KFC                   A                                10           10
+                                B                               -10            0
+end test
+
