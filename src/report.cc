@@ -1616,7 +1616,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "prices")) {
         return FORMATTED_COMMODITIES_REPORTER(prices_format_);
       }
-      else if (is_eq(p, "pricedb")) {
+      else if (is_eq(p, "pricedb") || is_eq(p, "pricesdb")) {
         return FORMATTED_COMMODITIES_REPORTER(pricedb_format_);
       }
       else if (is_eq(p, "pricemap")) {
