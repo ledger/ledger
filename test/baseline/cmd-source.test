@@ -1,0 +1,26 @@
+2012-02-28 * Test
+    E               30.00 EUR
+    F
+    G
+
+2012-03-24 Test
+    C               30.00 EUR
+    D
+    C
+
+2012/03/xx
+    E               30.00 EUR
+    F
+
+test source -> 3
+__ERROR__
+While parsing file "$FILE", line 4: 
+Error: Only one posting with null amount allowed per transaction
+While parsing file "$FILE", line 9: 
+Error: Only one posting with null amount allowed per transaction
+While parsing file "$FILE", line 11: 
+While parsing transaction:
+> 2012/03/xx
+Error: Invalid date: 2012/03/xx
+end test
+

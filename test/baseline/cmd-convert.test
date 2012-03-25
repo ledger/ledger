@@ -1,0 +1,35 @@
+
+test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert1.dat
+2011/12/12=2011/12/13 * (100) Test  ;test
+    Expenses:Unknown                             $10
+    Equity:Unknown                              $-10 = $20
+
+2011/12/12=2011/12/12 *   ;
+    Expenses:Unknown                             $10
+    Equity:Unknown
+end test
+
+test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert2.dat
+2011/01/01 * test
+    Expenses:Unknown                       20.00 EUR
+    Equity:Unknown
+end test
+
+test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert3.dat -> 1
+__ERROR__
+While parsing file "test/baseline/cmd-convert3.dat", line 1: 
+While parsing CSV line:
+  01/01/2011,,
+
+Error: No quantity specified for amount
+end test
+
+test -f /dev/null convert test/baseline/cmd-convert4.dat -> 1
+__ERROR__
+While parsing file "test/baseline/cmd-convert4.dat", line 1: 
+While parsing CSV line:
+  bogus,$10,
+
+Error: Invalid date: bogus
+end test
+
