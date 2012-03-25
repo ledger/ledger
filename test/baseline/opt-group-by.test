@@ -1,0 +1,114 @@
+2012-03-20 * Test GBP
+    A          -10.00 GBP
+    B
+
+2012-03-20 * Test EUR
+    A          -10.00 EUR
+    B
+
+2012-03-22 * Test GBP
+    A          -10.00 GBP
+    B
+
+2012-03-22 * Test EUR
+    A          -10.00 EUR
+    B
+
+2012-03-25 * Test GBP
+    A          -10.00 GBP
+    B
+
+2012-03-25 * Test EUR
+    A          -10.00 EUR
+    B
+
+test reg --group-by payee
+Test EUR
+12-Mar-20 Test EUR              A                        -10.00 EUR   -10.00 EUR
+                                B                         10.00 EUR            0
+12-Mar-22 Test EUR              A                        -10.00 EUR   -10.00 EUR
+                                B                         10.00 EUR            0
+12-Mar-25 Test EUR              A                        -10.00 EUR   -10.00 EUR
+                                B                         10.00 EUR            0
+
+Test GBP
+12-Mar-20 Test GBP              A                        -10.00 GBP   -10.00 GBP
+                                B                         10.00 GBP            0
+12-Mar-22 Test GBP              A                        -10.00 GBP   -10.00 GBP
+                                B                         10.00 GBP            0
+12-Mar-25 Test GBP              A                        -10.00 GBP   -10.00 GBP
+                                B                         10.00 GBP            0
+end test
+
+test reg --group-by commodity
+EUR
+12-Mar-20 Test EUR              A                        -10.00 EUR   -10.00 EUR
+                                B                         10.00 EUR            0
+12-Mar-22 Test EUR              A                        -10.00 EUR   -10.00 EUR
+                                B                         10.00 EUR            0
+12-Mar-25 Test EUR              A                        -10.00 EUR   -10.00 EUR
+                                B                         10.00 EUR            0
+
+GBP
+12-Mar-20 Test GBP              A                        -10.00 GBP   -10.00 GBP
+                                B                         10.00 GBP            0
+12-Mar-22 Test GBP              A                        -10.00 GBP   -10.00 GBP
+                                B                         10.00 GBP            0
+12-Mar-25 Test GBP              A                        -10.00 GBP   -10.00 GBP
+                                B                         10.00 GBP            0
+end test
+
+test bal --group-by commodity
+EUR
+          -30.00 EUR  A
+           30.00 EUR  B
+--------------------
+                   0
+
+GBP
+          -30.00 GBP  A
+           30.00 GBP  B
+--------------------
+                   0
+end test
+
+test bal --group-by payee
+Test EUR
+          -30.00 EUR  A
+           30.00 EUR  B
+--------------------
+                   0
+
+Test GBP
+          -30.00 GBP  A
+           30.00 GBP  B
+--------------------
+                   0
+end test
+
+test bal --group-by date
+2012/03/20
+          -10.00 EUR
+          -10.00 GBP  A
+           10.00 EUR
+           10.00 GBP  B
+--------------------
+                   0
+
+2012/03/22
+          -10.00 EUR
+          -10.00 GBP  A
+           10.00 EUR
+           10.00 GBP  B
+--------------------
+                   0
+
+2012/03/25
+          -10.00 EUR
+          -10.00 GBP  A
+           10.00 EUR
+           10.00 GBP  B
+--------------------
+                   0
+end test
+

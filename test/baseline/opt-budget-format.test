@@ -1,0 +1,21 @@
+~ Monthly
+    Expenses:Phone            10.00 GBP
+    Expenses:Rent            550.00 GBP
+    Assets
+
+2012-02-28 * Phone expense
+    Expenses:Phone            20.00 GBP
+    Assets:Cash              -20.00 GBP
+
+2012-02-29 * Rent expense
+    Expenses:Rent            530.00 GBP
+    Assets:Cash             -530.00 GBP
+
+test budget --now 2012-02-29 --budget-format "%(justify(scrub(display_total), 0))\n"
+(-550.00 GBP, 560.00 GBP)
+(550.00 GBP, -560.00 GBP)
+(20.00 GBP, -10.00 GBP)
+(530.00 GBP, -550.00 GBP)
+(0, 0)
+end test
+

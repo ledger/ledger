@@ -1,0 +1,48 @@
+2012-03-20 * Test GBP
+    A          -10.00 GBP
+    B
+
+2012-03-20 * Test EUR
+    A          -10.00 EUR
+    B
+
+2012-03-22 * Test GBP
+    A          -10.00 GBP
+    B
+
+2012-03-22 * Test EUR
+    A          -10.00 EUR
+    B
+
+test bal --group-by payee --group-title-format "-%(value)-\n"
+-Test EUR-
+          -20.00 EUR  A
+           20.00 EUR  B
+--------------------
+                   0
+
+-Test GBP-
+          -20.00 GBP  A
+           20.00 GBP  B
+--------------------
+                   0
+end test
+
+test bal --group-by date --group-title-format "|%(value)|\n"
+|2012/03/20|
+          -10.00 EUR
+          -10.00 GBP  A
+           10.00 EUR
+           10.00 GBP  B
+--------------------
+                   0
+
+|2012/03/22|
+          -10.00 EUR
+          -10.00 GBP  A
+           10.00 EUR
+           10.00 GBP  B
+--------------------
+                   0
+end test
+

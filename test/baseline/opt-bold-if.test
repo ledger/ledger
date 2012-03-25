@@ -1,0 +1,16 @@
+2012-01-01 * Opening balance
+    Assets:Cash              100.00 EUR
+    Equity:Opening Balance
+
+2012-01-02 * Test
+    ; :test:
+    Expenses:Food            100.00 EUR
+    Assets:Cash             -100.00 EUR
+
+test reg --bold-if 'has_tag("test")'
+12-Jan-01 Opening balance       Assets:Cash              100.00 EUR   100.00 EUR
+                                Equity:Opening Balance  -100.00 EUR            0
+[1m12-Jan-02[0m [1mTest                 [0m [1mExpenses:Food         [0m [1m  100.00 EUR[0m [1m  100.00 EUR[0m
+          [1m                     [0m [1mAssets:Cash           [0m [1m -100.00 EUR[0m [1m           0[0m
+end test
+
