@@ -18,8 +18,14 @@
     B            10
     E
 
+2011-03-06 * 2
+    ; Payee: 3
+    E            10
+    F
+
 test payees
 1
+3
 9
 A
 B
