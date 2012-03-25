@@ -101,7 +101,7 @@ sudo port install ledger
 
 h3. Ubuntu
 
-If you're going to be build on Ubuntu, @sudo apt-get install ...@ the
+If you're going to build on Ubuntu, @sudo apt-get install ...@ the
 following packages (current as of Ubuntu Hardy):
 
 <pre>
