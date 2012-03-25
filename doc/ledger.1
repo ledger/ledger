@@ -32,6 +32,11 @@ or command loop, allowing several commands to be executed against the same
 dataset without reparsing.
 .Pp
 The following is a complete list of reporting commands accepted by Ledger:
+.Bl -tag -width accounts
+.It Nm accounts Oo Ar report-query Oc
+Lists all accounts for postings matching the
+.Ar report-query .
+.El
 .Pp
 .Bl -tag -width balance
 .It Nm balance Oo Ar report-query Oc
@@ -76,6 +81,12 @@ A special balance report which adds two extra columns: the cleared balance for
 each account, and the date of the most recent cleared posting in that account.
 For this accounting to be meaningful, the cleared flag must be set on at least
 one posting.  See the manual for more information.
+.It Nm commodities Oo Ar report-query Oc
+Lists all commodities for postings matching the
+.Ar report-query .
+.It Nm convert
+Reads data from a CSV (comma-separated values) file and generates Ledger
+transactions.
 .It Nm csv Oo Ar report-query Oc
 Report of postings matching the
 .Ar report-query
@@ -112,6 +123,14 @@ in a special account called
 .Li Equity:Opening Balances .
 The purpose of this report is to close the books for a prior year, while using
 these equity transactions to carry forward those balances.
+.It Nm org
+Produces a journal file suitable for use in the Emacs org mode.
+.It Nm payees Oo Ar report-query Oc
+Lists all payees for postings matching the
+.Ar report-query .
+.It Nm pricemap
+Produces a file which can be used to generate a graph with graphviz showing
+the relationship of commodities in the Ledger file.
 .It Nm prices Oo Ar report-query Oc
 Reports prices for all commodities in postings matching the
 .Ar report-query .
@@ -231,6 +250,13 @@ This command requires that Python support be active.  If so, it starts up an
 HTTP server listening for requests on port 9000.  This provides an alternate
 interface to creating and viewing reports.  Note that this is very much a
 work-in-progress, and will not be fully functional until a later version.
+.It Nm select Oo Ar sql-query Oc
+List all postings matching the
+.Ar sql-query .
+This command allows to generate SQL-like queries.
+.It Nm source
+Parses a journal file and checks it for errors. Ledger will return success
+if no errors are found.
 .It Nm stats Oo Ar report-query Oc
 Provides summary information about all the postings matching
 .Ar report-query .
