@@ -1,0 +1,14 @@
+2012-01-01 * Buy AAA
+    A         1 AAA @ 1.00 EUR
+    B                -1.00 EUR
+
+2012-02-01 * Buy AAA
+    A         1 AAA @ 2.00 EUR
+    B                -2.00 EUR
+
+test reg A -V -A
+12-Jan-01 Buy AAA               A                          1.00 EUR     1.00 EUR
+12-Feb-01 Commodities revalued  <Revalued>                 1.00 EUR            0
+12-Feb-01 Buy AAA               A                          2.00 EUR     2.00 EUR
+end test
+
