@@ -73,8 +73,7 @@ public:
 
   post_t(account_t * _account = NULL,
          flags_t     _flags   = ITEM_NORMAL)
-    : item_t(_flags),
-      xact(NULL), account(_account)
+    : item_t(_flags), xact(NULL), account(_account)
   {
     TRACE_CTOR(post_t, "account_t *, flags_t");
   }
@@ -82,8 +81,7 @@ public:
          const amount_t&         _amount,
          flags_t                 _flags = ITEM_NORMAL,
          const optional<string>& _note = none)
-    : item_t(_flags, _note),
-      xact(NULL), account(_account), amount(_amount)
+    : item_t(_flags, _note), xact(NULL), account(_account), amount(_amount)
   {
     TRACE_CTOR(post_t, "account_t *, const amount_t&, flags_t, const optional<string>&");
   }
@@ -94,6 +92,8 @@ public:
       amount(post.amount),
       cost(post.cost),
       assigned_amount(post.assigned_amount),
+      checkin(post.checkin),
+      checkout(post.checkout),
       xdata_(post.xdata_)
   {
     copy_details(post);
