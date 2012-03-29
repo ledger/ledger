@@ -508,6 +508,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-python', action='store_true', dest='no_python',
                       default=False,
                       help='Do not enable Python support by default')
+        op.add_option('', '--cache', action='store_true',
+                      dest='enable_cache', default=False,
+                      help='Enable use of Boost.Serialization (--cache)')
+        op.add_option('', '--doxygen', action='store_true',
+                      dest='enable_doxygen', default=False,
+                      help='Enable use of Doxygen to build ref manual ("make docs")')
         op.add_option('', '--enable-cache', action='store_true',
                       dest='enable_cache', default=False,
                       help='Enable use of Boost.Serialization (--cache)')

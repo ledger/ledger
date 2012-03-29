@@ -246,10 +246,17 @@ void serialize(Archive& ar, boost::intrusive_ptr<T>& ptr, const unsigned int)
   }
 }
 
-template <class Archive, class T>
-void serialize(Archive&, boost::function<T>&, const unsigned int)
-{
+template <class Archive>
+void serialize(Archive&, boost::any&, const unsigned int) {
+  // jww (2012-03-29): Should we really ignore any fields entirely?
+  // These occur inside value_t::storage_t::data's variant.
 }
+
+template <class Archive>
+void serialize(Archive&, boost::blank&, const unsigned int) {}
+
+template <class Archive, class T>
+void serialize(Archive&, boost::function<T>&, const unsigned int) {}
 
 template <class Archive>
 void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)

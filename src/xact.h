@@ -168,6 +168,21 @@ public:
                         bool   _overwrite_existing)
       : tag_data(_tag_data), overwrite_existing(_overwrite_existing),
         apply_to_post(NULL) {}
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+    /** Serialization. */
+    deferred_tag_data_t() : apply_to_post(NULL) {}
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int /* version */) {
+      ar & tag_data;
+      ar & overwrite_existing;
+      ar & apply_to_post;
+    }
+#endif // HAVE_BOOST_SERIALIZATION
   };
 
   typedef std::list<deferred_tag_data_t> deferred_notes_list;

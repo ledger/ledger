@@ -483,7 +483,7 @@ public:
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 protected:
-  explicit call_scope_t() {
+  explicit call_scope_t() : depth(0) {
     TRACE_CTOR(call_scope_t, "");
   }
 
