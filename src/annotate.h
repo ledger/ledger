@@ -265,9 +265,14 @@ public:
 
   virtual void print(std::ostream& out, bool elide_quotes = false,
                      bool print_annotations = false) const {
-    commodity_t::print(out, elide_quotes);
-    if (print_annotations)
-      write_annotations(out);
+    if (print_annotations) {
+      std::ostringstream buf;
+      commodity_t::print(buf, elide_quotes);
+      write_annotations(buf);
+      out << buf.str();
+    } else {
+      commodity_t::print(out, elide_quotes);
+    }
   }
 
   virtual void write_annotations(std::ostream& out,
