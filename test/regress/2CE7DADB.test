@@ -1,0 +1,13 @@
+2012-01-01 * Buy AAA
+    A         1 AAA @ 1.00 EUR
+    B                -1.00 EUR
+
+2012-02-01 * Buy AAA
+    A         1 AAA @ 2.00 EUR
+    B                -2.00 EUR
+
+test --anon pricedb --format "%(date) %(amount)\n"
+2012/01/01 1.00 A
+2012/02/01 2.00 A
+end test
+
