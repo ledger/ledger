@@ -262,6 +262,14 @@ public:
                      const datetime_t&   oldest    = datetime_t()) const;
 
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
+
+  virtual void print(std::ostream& out, bool elide_quotes = false,
+                     bool print_annotations = false) const {
+    commodity_t::print(out, elide_quotes);
+    if (print_annotations)
+      write_annotations(out);
+  }
+
   virtual void write_annotations(std::ostream& out,
                                  bool no_computed_annotations = false) const;
 

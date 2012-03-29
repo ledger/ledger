@@ -384,7 +384,7 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
     throw_(amount_error, _("Failed to parse commodity"));
 }
 
-void commodity_t::print(std::ostream& out, bool elide_quotes) const
+void commodity_t::print(std::ostream& out, bool elide_quotes, bool) const
 {
   string sym = symbol();
   if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) &&

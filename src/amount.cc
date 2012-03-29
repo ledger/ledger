@@ -398,8 +398,8 @@ int amount_t::compare(const amount_t& amt) const
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
-           _("Cannot compare amounts with different commodities: %1 and %2")
-           << commodity().symbol() << amt.commodity().symbol());
+           _("Cannot compare amounts with different commodities: '%1' and '%2'")
+           << commodity() << amt.commodity());
 
   return mpq_cmp(MP(quantity), MP(amt.quantity));
 }
@@ -430,12 +430,11 @@ amount_t& amount_t::operator+=(const amount_t& amt)
       throw_(amount_error, _("Cannot add two uninitialized amounts"));
   }
 
-  if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
+  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _("Adding amounts with different commodities: %1 != %2")
-           << (has_commodity() ? commodity().symbol() : _("NONE"))
-           << (amt.has_commodity() ? amt.commodity().symbol() : _("NONE")));
+           _("Adding amounts with different commodities: '%1' != '%2'")
+           << commodity() << amt.commodity());
+  }
 
   _dup();
 
@@ -464,9 +463,8 @@ amount_t& amount_t::operator-=(const amount_t& amt)
   if (has_commodity() && amt.has_commodity() &&
       commodity() != amt.commodity())
     throw_(amount_error,
-           _("Subtracting amounts with different commodities: %1 != %2")
-           << (has_commodity() ? commodity().symbol() : _("NONE"))
-           << (amt.has_commodity() ? amt.commodity().symbol() : _("NONE")));
+           _("Subtracting amounts with different commodities: '%1' != '%2'")
+           << commodity() << amt.commodity());
 
   _dup();
 

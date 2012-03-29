@@ -303,7 +303,8 @@ public:
     return temp;
   }
 
-  void print(std::ostream& out, bool elide_quotes = false) const;
+  virtual void print(std::ostream& out, bool elide_quotes = false,
+                     bool print_annotations = false) const;
   bool valid() const;
 
   struct compare_by_commodity {
@@ -338,7 +339,7 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
-  comm.print(out);
+  comm.print(out, false, true);
   return out;
 }
 
