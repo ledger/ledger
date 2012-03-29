@@ -120,14 +120,20 @@ void export_item()
 #endif
 
     .add_property("note",
-                  make_getter(&item_t::note),
-                  make_setter(&item_t::note))
+                  make_getter(&item_t::note,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&item_t::note,
+                              return_value_policy<return_by_value>()))
     .add_property("pos",
-                  make_getter(&item_t::pos),
-                  make_setter(&item_t::pos))
+                  make_getter(&item_t::pos,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&item_t::pos,
+                              return_value_policy<return_by_value>()))
     .add_property("metadata",
-                  make_getter(&item_t::metadata),
-                  make_setter(&item_t::metadata))
+                  make_getter(&item_t::metadata,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&item_t::metadata,
+                              return_value_policy<return_by_value>()))
 
     .def("copy_details", &item_t::copy_details)
 

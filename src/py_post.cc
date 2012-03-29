@@ -149,11 +149,15 @@ void export_post()
                   make_getter(&post_t::amount),
                   make_setter(&post_t::amount))
     .add_property("cost",
-                  make_getter(&post_t::cost),
-                  make_setter(&post_t::cost))
+                  make_getter(&post_t::cost,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&post_t::cost,
+                              return_value_policy<return_by_value>()))
     .add_property("assigned_amount",
-                  make_getter(&post_t::assigned_amount),
-                  make_setter(&post_t::assigned_amount))
+                  make_getter(&post_t::assigned_amount,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&post_t::assigned_amount,
+                              return_value_policy<return_by_value>()))
 
     .def("has_tag", py_has_tag_1s)
     .def("has_tag", py_has_tag_1m)

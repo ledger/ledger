@@ -258,8 +258,10 @@ void export_commodity()
                   make_getter(&commodity_pool_t::keep_base),
                   make_setter(&commodity_pool_t::keep_base))
     .add_property("price_db",
-                  make_getter(&commodity_pool_t::price_db),
-                  make_setter(&commodity_pool_t::price_db))
+                  make_getter(&commodity_pool_t::price_db,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&commodity_pool_t::price_db,
+                              return_value_policy<return_by_value>()))
     .add_property("quote_leeway",
                   make_getter(&commodity_pool_t::quote_leeway),
                   make_setter(&commodity_pool_t::quote_leeway))
@@ -390,11 +392,15 @@ void export_commodity()
 
     .add_property("price", py_price, py_set_price)
     .add_property("date",
-                  make_getter(&annotation_t::date),
-                  make_setter(&annotation_t::date))
+                  make_getter(&annotation_t::date,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&annotation_t::date,
+                              return_value_policy<return_by_value>()))
     .add_property("tag",
-                  make_getter(&annotation_t::tag),
-                  make_setter(&annotation_t::tag))
+                  make_getter(&annotation_t::tag,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&annotation_t::tag,
+                              return_value_policy<return_by_value>()))
 
     .def("__nonzero__", &annotation_t::operator bool)
 
