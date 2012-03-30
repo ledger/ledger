@@ -66,6 +66,10 @@
                                              ledger-source-directory args))
         (kill-new args)
         (message "Testing: ledger %s" args)
-        (async-shell-command (format "\"%s\" %s" command args))))))
+        (let ((prev-directory default-directory))
+          (cd ledger-source-directory)
+          (unwind-protect
+              (async-shell-command (format "\"%s\" %s" command args))
+            (cd prev-directory)))))))
 
 (provide 'ldg-test)
