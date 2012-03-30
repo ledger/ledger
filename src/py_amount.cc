@@ -56,6 +56,11 @@ namespace {
                                        const datetime_t& moment) {
     return amount.value(moment, in_terms_of);
   }
+  boost::optional<amount_t> py_value_2d(const amount_t& amount,
+                                        const commodity_t * in_terms_of,
+                                        const date_t& moment) {
+    return amount.value(datetime_t(moment), in_terms_of);
+  }
 
   void py_parse_2(amount_t& amount, object in, unsigned char flags) {
     if (PyFile_Check(in.ptr())) {
@@ -238,6 +243,7 @@ internal precision."))
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
+    .def("value", py_value_2d, args("in_terms_of", "moment"))
 
     .def("price", &amount_t::price)
 
@@ -267,6 +273,7 @@ internal precision."))
                   make_function(&amount_t::set_commodity,
                                 with_custodian_and_ward<1, 2>()))
     .def("has_commodity", &amount_t::has_commodity)
+    .def("with_commodity", &amount_t::with_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
 
     .def("number", &amount_t::number)

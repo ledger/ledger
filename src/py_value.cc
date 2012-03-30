@@ -59,6 +59,11 @@ namespace {
                                       const datetime_t& moment) {
     return value.value(moment, in_terms_of);
   }
+  boost::optional<value_t> py_value_2d(const value_t& value,
+                                       const commodity_t * in_terms_of,
+                                       const date_t& moment) {
+    return value.value(datetime_t(moment), in_terms_of);
+  }
 
   PyObject * py_base_type(value_t& value)
   {
@@ -265,6 +270,7 @@ void export_value()
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
+    .def("value", py_value_2d, args("in_terms_of", "moment"))
 
     //.def("value", &value_t::value, value_overloads())
     .def("exchange_commodities", &value_t::exchange_commodities,
