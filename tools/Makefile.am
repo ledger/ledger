@@ -349,6 +349,7 @@ EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
 if HAVE_BOOST_PYTHON
 TEST_PYTHON_FLAGS = --python
+EXTRA_DIST += test/python
 else
 TEST_PYTHON_FLAGS = 
 endif
