@@ -31,6 +31,8 @@ harness = LedgerHarness(args)
 tests   = args[3]
 
 if not os.path.isdir(tests) and not os.path.isfile(tests):
+    sys.stderr.write("'%s' is not a directory or file (cwd %s)" %
+                     (tests, os.getcwd()))
     sys.exit(1)
 
 class RegressFile(object):
