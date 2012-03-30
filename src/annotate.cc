@@ -288,7 +288,7 @@ annotated_commodity_t::find_price(const commodity_t * commodity,
     return find_price_from_expr(const_cast<expr_t&>(*details.value_expr),
                                 commodity, when);
 
-  return commodity_t::find_price(target, moment, oldest);
+  return commodity_t::find_price(target, when, oldest);
 }
 
 commodity_t&

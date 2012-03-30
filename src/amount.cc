@@ -757,10 +757,10 @@ amount_t::value(const datetime_t&   moment,
         }
       }
 
-      if (! point) {
-        if (comm && commodity().referent() == comm->referent())
-          return *this;
+      if (comm && commodity().referent() == comm->referent())
+        return with_commodity(comm->referent());
 
+      if (! point) {
         point = commodity().find_price(comm, moment);
 
         // Whether a price was found or not, check whether we should attempt

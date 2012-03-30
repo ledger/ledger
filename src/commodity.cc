@@ -56,14 +56,14 @@ void commodity_t::add_price(const datetime_t& date, const amount_t& price,
   DEBUG("history.find", "Adding price: " << symbol()
         << " for " << price << " on " << date);
 
-  pool().commodity_price_history.add_price(*this, date, price);
+  pool().commodity_price_history.add_price(referent(), date, price);
 
   base->price_map.clear();    // a price was added, invalid the map
 }
 
 void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity)
 {
-  pool().commodity_price_history.remove_price(*this, commodity, date);
+  pool().commodity_price_history.remove_price(referent(), commodity, date);
 
   DEBUG("history.find", "Removing price: " << symbol() << " on " << date);
 
@@ -83,7 +83,7 @@ void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
   else
     when = CURRENT_TIME();
 
-  pool().commodity_price_history.map_prices(fn, *this, when, _oldest,
+  pool().commodity_price_history.map_prices(fn, referent(), when, _oldest,
                                             bidirectionally);
 }
 
@@ -159,9 +159,9 @@ commodity_t::find_price(const commodity_t * commodity,
 
   optional<price_point_t>
     point(target ?
-          pool().commodity_price_history.find_price(*this, *target,
+          pool().commodity_price_history.find_price(referent(), *target,
                                                     when, oldest) :
-          pool().commodity_price_history.find_price(*this, when, oldest));
+          pool().commodity_price_history.find_price(referent(), when, oldest));
 
   // Record this price point in the memoization map
   if (base->price_map.size() > base_t::max_price_map_size) {
@@ -206,7 +206,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
       DEBUG("commodity.download",
             "attempting to download a more current quote...");
       if (optional<price_point_t> quote =
-          pool().get_commodity_quote(*this, in_terms_of)) {
+          pool().get_commodity_quote(referent(), in_terms_of)) {
         if (! in_terms_of ||
             (quote->price.has_commodity() &&
              quote->price.commodity_ptr() == in_terms_of))
@@ -220,12 +220,11 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
 commodity_t& commodity_t::nail_down(const expr_t& expr)
 {
   annotation_t new_details;
+
   new_details.value_expr = expr;
   new_details.add_flags(ANNOTATION_VALUE_EXPR_CALCULATED);
 
-  commodity_t * new_comm =
-    commodity_pool_t::current_pool->find_or_create(symbol(), new_details);
-  return *new_comm;
+  return *pool().find_or_create(symbol(), new_details);
 }
 
 commodity_t::operator bool() const

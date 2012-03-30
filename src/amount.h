@@ -544,6 +544,15 @@ public:
       *this = 0L;
     commodity_ = &comm;
   }
+  amount_t with_commodity(const commodity_t& comm) const {
+    if (commodity_ == &comm) {
+      return *this;
+    } else {
+      amount_t tmp(*this);
+      tmp.set_commodity(const_cast<commodity_t&>(comm));
+      return tmp;
+    }
+  }
   void clear_commodity() {
     commodity_ = NULL;
   }

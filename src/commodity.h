@@ -188,6 +188,9 @@ public:
       return comm == *this;
     return base.get() == comm.base.get();
   }
+  bool operator==(const string& name) const {
+    return base_symbol() == name;
+  }
 
   static bool symbol_needs_quotes(const string& symbol);
 
