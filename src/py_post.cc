@@ -166,8 +166,8 @@ void export_post()
     .def("get_tag", py_get_tag_1m)
     .def("get_tag", py_get_tag_2m)
 
-    .def("date", &post_t::date)
-    .def("aux_date", &post_t::aux_date)
+    .add_property("date", &post_t::date)
+    .add_property("aux_date", &post_t::aux_date)
 
     .def("must_balance", &post_t::must_balance)
 
@@ -177,8 +177,7 @@ void export_post()
 
     .def("has_xdata", &post_t::has_xdata)
     .def("clear_xdata", &post_t::clear_xdata)
-    .def("xdata", py_xdata,
-         return_internal_reference<>())
+    .def("xdata", py_xdata, return_internal_reference<>())
 
     //.def("add_to_value", &post_t::add_to_value)
     .def("set_reported_account", &post_t::set_reported_account)
