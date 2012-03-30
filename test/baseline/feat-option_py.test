@@ -9,6 +9,6 @@ python
 --pysecond Hey
 
 test reg
-In --pyfirst (from $sourcepath/test/baseline/feat-option_py.test)
-In --pysecond=Hey (from $sourcepath/test/baseline/feat-option_py.test)
+In --pyfirst (from $FILE)
+In --pysecond=Hey (from $FILE)
 end test
