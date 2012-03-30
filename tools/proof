@@ -28,11 +28,10 @@ ledger_proof() {
         tee -a $LOGDIR/ledger-proof.log
 
     if egrep -q '(ERROR|CRITICAL)' $LOGDIR/ledger-proof.log; then
-        cat <<EOF | mutt -a $LOGDIR/ledger-proof.log \
-            -s '[ledger] Proof build FAILED' johnw@newartisans.com
+        mutt -a $LOGDIR/ledger-proof.log \
+             -s '[ledger] Proof build FAILED' johnw@newartisans.com <<EOF
 Ledger proof build FAILED, at commit $VERSION.
 EOF
-
         if [[ "$1" = "--alert" ]]; then
             notify "Ledger proof build FAILED"
         else
@@ -45,7 +44,7 @@ EOF
         cd $DEST/ledger-proof/debug; make docs
         cd $DEST/ledger-proof/gcov;  make report
 
-        cat <<EOF | mutt -s '[ledger] Proof build succeeded' johnw@newartisans.com
+        mutt -s '[ledger] Proof build succeeded' johnw@newartisans.com <<EOF
 Ledger proof build succeeded! at commit $VERSION.
 EOF
         echo "Ledger proof build succeeded"
