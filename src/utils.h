@@ -290,6 +290,12 @@ inline string to_string(std::size_t num) {
   return buf.str();
 }
 
+inline string lowered(const string& str) {
+  string tmp(str);
+  to_lower(tmp);
+  return tmp;
+}
+
 inline string operator+(const char * left, const string& right) {
   return string(left) + right;
 }
