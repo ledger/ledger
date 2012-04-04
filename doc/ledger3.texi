@@ -114,9 +114,11 @@ fat.  Think of it as the Bran Muffin of accounting tools.
 To use it, you need to start keeping a journal.  This is the basis of
 all accounting, and if you haven't started yet, now is the time to
 learn.  The little booklet that comes with your checkbook is a journal,
-so we'll describe double-entry accounting in terms of that.  If you use
-another GUI accounting program like GNUCash, the vast majority of its
-functionality is geared towards helping you keep a journal.
+so we'll describe double-entry accounting in terms of that.  
+
+@c If you use
+@c another GUI accounting program like GNUCash, the vast majority of its
+@c functionality is geared towards helping you keep a journal.
 
 A checkbook journal records debits (subtractions, or withdrawals) and
 credits (additions, or deposits) with reference to a single account:
