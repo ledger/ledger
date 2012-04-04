@@ -108,7 +108,8 @@ public:
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
   typedef std::pair<optional<value_t>, bool> tag_data_t;
-  typedef std::map<string, tag_data_t>       string_map;
+  typedef std::map<string, tag_data_t,
+                   function<bool(string, string)> > string_map;
 
   state_t              _state;
   optional<date_t>     _date;

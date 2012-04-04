@@ -103,6 +103,16 @@ optional<value_t> item_t::get_tag(const mask_t& tag_mask,
   return none;
 }
 
+namespace {
+  struct CaseInsensitiveKeyCompare
+    : public std::binary_function<string, string, bool>
+  {
+    bool operator()(const string& s1, const string& s2) const {
+      return boost::algorithm::ilexicographical_compare(s1, s2);
+    }
+  };
+}
+
 item_t::string_map::iterator
 item_t::set_tag(const string&            tag,
                 const optional<value_t>& value,
@@ -111,7 +121,7 @@ item_t::set_tag(const string&            tag,
   assert(! tag.empty());
 
   if (! metadata)
-    metadata = string_map();
+    metadata = string_map(CaseInsensitiveKeyCompare());
 
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
         << (value ? *value : string_value("<none>")) << "'");
