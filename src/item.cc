@@ -117,9 +117,8 @@ item_t::set_tag(const string&            tag,
         << (value ? *value : string_value("<none>")) << "'");
 
   optional<value_t> data = value;
-  if (data &&
-      (data->is_null() ||
-       (data->is_string() && data->as_string().empty())))
+  if (data && (data->is_null() ||
+               (data->is_string() && data->as_string().empty())))
     data = none;
 
   string_map::iterator i = metadata->find(tag);

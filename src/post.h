@@ -120,10 +120,10 @@ public:
                        bool                    inherit    = true) const;
 
   virtual optional<value_t> get_tag(const string& tag,
-                       bool                       inherit = true) const;
+                                    bool          inherit = true) const;
   virtual optional<value_t> get_tag(const mask_t&           tag_mask,
                                     const optional<mask_t>& value_mask = none,
-                       bool                                 inherit    = true) const;
+                                    bool                    inherit    = true) const;
 
   virtual date_t value_date() const;
   virtual date_t date() const;

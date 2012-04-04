@@ -118,8 +118,7 @@ public:
   optional<string_map> metadata;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-    : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED),
-      note(_note)
+    : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note)
   {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }

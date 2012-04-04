@@ -49,9 +49,9 @@ bool post_t::has_tag(const string& tag, bool inherit) const
   return false;
 }
 
-bool post_t::has_tag(const mask_t& tag_mask,
+bool post_t::has_tag(const mask_t&           tag_mask,
                      const optional<mask_t>& value_mask,
-                     bool inherit) const
+                     bool                    inherit) const
 {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
@@ -69,9 +69,9 @@ optional<value_t> post_t::get_tag(const string& tag, bool inherit) const
   return none;
 }
 
-optional<value_t> post_t::get_tag(const mask_t& tag_mask,
+optional<value_t> post_t::get_tag(const mask_t&           tag_mask,
                                   const optional<mask_t>& value_mask,
-                                  bool inherit) const
+                                  bool                    inherit) const
 {
   if (optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
@@ -93,17 +93,11 @@ date_t post_t::date() const
     return xdata_->date;
 
   if (item_t::use_aux_date) {
-    if (_date_aux)
-      return *_date_aux;
-    else if (xact && xact->_date_aux)
-      return *xact->_date_aux;
+    if (optional<date_t> aux = aux_date())
+      return *aux;
   }
 
-  if (! _date) {
-    assert(xact);
-    return xact->date();
-  }
-  return *_date;
+  return primary_date();
 }
 
 date_t post_t::primary_date() const
@@ -174,7 +168,8 @@ namespace {
     return string_value(post.payee());
   }
 
-  value_t get_note(post_t& post) {
+  value_t get_note(post_t& post)
+  {
     if (post.note || post.xact->note) {
       string note = post.note ? *post.note : empty_string;
       note += post.xact->note ? *post.xact->note : empty_string;
@@ -188,7 +183,8 @@ namespace {
     return post.xact->magnitude();
   }
 
-  value_t get_amount(post_t& post) {
+  value_t get_amount(post_t& post)
+  {
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
     else if (post.amount.is_null())
@@ -215,7 +211,8 @@ namespace {
     }
   }
 
-  value_t get_commodity_is_primary(post_t& post) {
+  value_t get_commodity_is_primary(post_t& post)
+  {
     if (post.has_xdata() &&
         post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value.to_amount()

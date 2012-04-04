@@ -1124,11 +1124,10 @@ void instance_t::tag_directive(char * line)
     if (keyword == "assert" || keyword == "check") {
       context.journal->tag_check_exprs.insert
         (tag_check_exprs_map::value_type
-         (string(p),
-          expr_t::check_expr_pair(expr_t(b),
-                                  keyword == "assert" ?
-                                  expr_t::EXPR_ASSERTION :
-                                  expr_t::EXPR_CHECK)));
+         (string(p), expr_t::check_expr_pair(expr_t(b),
+                                             keyword == "assert" ?
+                                             expr_t::EXPR_ASSERTION :
+                                             expr_t::EXPR_CHECK)));
     }
   }
 }
