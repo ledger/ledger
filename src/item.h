@@ -216,6 +216,8 @@ public:
     return _state;
   }
 
+  virtual void define(const symbol_t::kind_t, const string&,
+                      expr_t::ptr_op_t);
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
 
