@@ -475,7 +475,7 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 's':
-    if (name == "status")
+    if (name == "status" || name == "state")
       return WRAP_FUNCTOR(get_wrapper<&get_status>);
     else if (name == "seq")
       return WRAP_FUNCTOR(get_wrapper<&get_seq>);
