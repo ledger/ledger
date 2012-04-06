@@ -893,16 +893,28 @@ void subtotal_posts::operator()(post_t& post)
   account_t * acct = post.reported_account();
   assert(acct);
 
+#if 0
+  // jww (2012-04-06): The problem with doing this early is that
+  // fn_display_amount will recalculate this again.  For example, if you
+  // use --invert, it will invert both here and in the display amount,
+  // effectively negating it.
+  bind_scope_t bound_scope(*amount_expr.get_context(), post);
+  value_t amount(amount_expr.calc(bound_scope));
+#else
+  value_t amount(post.amount);
+#endif
+
+  post.xdata().compound_value = amount;
+  post.xdata().add_flags(POST_EXT_COMPOUND);
+
   values_map::iterator i = values.find(acct->fullname());
   if (i == values.end()) {
-    value_t temp;
-    post.add_to_value(temp, amount_expr);
 #if defined(DEBUG_ON)
     std::pair<values_map::iterator, bool> result =
 #endif
       values.insert(values_pair
                     (acct->fullname(),
-                     acct_value_t(acct, temp, post.has_flags(POST_VIRTUAL),
+                     acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
                                   post.has_flags(POST_MUST_BALANCE))));
 #if defined(DEBUG_ON)
     assert(result.second);
@@ -913,7 +925,7 @@ void subtotal_posts::operator()(post_t& post)
              _("'equity' cannot accept virtual and "
                "non-virtual postings to the same account"));
 
-    post.add_to_value((*i).second.value, amount_expr);
+    add_or_set_value((*i).second.value, amount);
   }
 
   // If the account for this post is all virtual, mark it as
@@ -953,8 +965,9 @@ void interval_posts::operator()(post_t& post)
   if (interval.duration) {
     all_posts.push_back(&post);
   }
-  else if (interval.find_period(post.date()))
+  else if (interval.find_period(post.date())) {
     item_handler<post_t>::operator()(post);
+  }
 }
 
 void interval_posts::flush()

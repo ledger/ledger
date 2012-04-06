@@ -725,7 +725,7 @@ public:
   OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {
-      OTHER(amount_).on(whence, "-amount");
+      OTHER(amount_).on(whence, "-amount_expr");
     });
 
   OPTION_
