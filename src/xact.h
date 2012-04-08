@@ -109,6 +109,10 @@ public:
   optional<string> code;
   string           payee;
 
+#ifdef DOCUMENT_MODEL
+  void * data;
+#endif
+
   xact_t() {
     TRACE_CTOR(xact_t, "");
   }

@@ -79,6 +79,7 @@ libledger_report_la_SOURCES  =			\
 	src/chain.cc				\
 	src/filters.cc				\
 	src/report.cc				\
+	src/views.cc				\
 	src/select.cc				\
 	src/session.cc
 
@@ -131,6 +132,7 @@ pkginclude_HEADERS =				\
 						\
 	src/session.h				\
 	src/select.h				\
+	src/views.h				\
 	src/report.h				\
 	src/filters.h				\
 	src/chain.h				\

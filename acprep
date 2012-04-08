@@ -1048,6 +1048,8 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
 
+        self.CXXFLAGS.append('-DDOCUMENT_MODEL=1')
+
         self.locate_darwin_libraries()
 
     def setup_for_system(self):
