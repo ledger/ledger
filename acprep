@@ -1673,8 +1673,17 @@ class PrepareBuild(CommandLineApp):
     def phase_rsync(self, *args):
         self.log.info('Executing phase: rsync')
 
-        source_copy_dir = join(self.ensure(self.products_directory()),
-                               'ledger-proof')
+        proof_dir = 'ledger-proof'
+
+        if self.options.python:
+            proof_dir += "-python"
+
+        if self.options.gcc47:
+            proof_dir += "-gcc47"
+        elif self.options.use_clang:
+            proof_dir += "-clang"
+
+        source_copy_dir = join(self.ensure(self.products_directory()), proof_dir)
 
         self.execute('rsync', '-a', '--delete',
                      '--exclude=.git/', '--exclude=b/',
