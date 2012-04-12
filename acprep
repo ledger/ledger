@@ -1521,6 +1521,8 @@ class PrepareBuild(CommandLineApp):
             make_args.append('-j%d' % self.options.jobs)
             make_args.append('JOBS=%d' % self.options.jobs)
 
+        make_args.append('FLAVOR=%s' % self.current_flavor)
+
         self.log.debug('Configure arguments => ' + str(config_args))
         self.log.debug('Makefile arguments  => ' + str(make_args))
 
