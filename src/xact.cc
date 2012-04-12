@@ -487,6 +487,9 @@ bool xact_base_t::verify()
 
 xact_t::xact_t(const xact_t& e)
   : xact_base_t(e), code(e.code), payee(e.payee)
+#ifdef DOCUMENT_MODEL
+    , data(NULL)
+#endif
 {
   TRACE_CTOR(xact_t, "copy");
 }

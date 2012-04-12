@@ -110,10 +110,14 @@ public:
   string           payee;
 
 #ifdef DOCUMENT_MODEL
-  void * data;
+  mutable void * data;
 #endif
 
-  xact_t() {
+  xact_t()
+#ifdef DOCUMENT_MODEL
+    : data(NULL)
+#endif
+  {
     TRACE_CTOR(xact_t, "");
   }
   xact_t(const xact_t& e);
