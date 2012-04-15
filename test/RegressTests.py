@@ -184,7 +184,8 @@ if __name__ == '__main__':
         tests = [os.path.join(tests, x)
                  for x in os.listdir(tests) 
                  if (x.endswith('.test') and 
-                     (not '_py.test' in x or harness.python))]
+                     (not '_py.test' in x or (harness.python and
+                                              not harness.verify)))]
         if pool:
             pool.map(do_test, tests, 1)
         else:

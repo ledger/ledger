@@ -81,6 +81,15 @@ class draft_t : public expr_base_t<value_t>
     xact_template_t() {
       TRACE_CTOR(xact_template_t, "");
     }
+    xact_template_t(const xact_template_t& other)
+      : date(other.date),
+        code(other.code),
+        note(other.note),
+        payee_mask(other.payee_mask),
+        posts(other.posts)
+    {
+      TRACE_CTOR(xact_template_t, "copy");
+    }
     ~xact_template_t() throw() {
       TRACE_DTOR(xact_template_t);
     }

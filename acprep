@@ -1643,7 +1643,10 @@ class PrepareBuild(CommandLineApp):
            isdir(self.build_directory()):
             self.log.info('=== Wiping build directory %s ===' %
                           self.build_directory())
-            shutil.rmtree(self.build_directory())
+            try:
+                shutil.rmtree(self.build_directory())
+            except:
+                self.execute('rm', '-fr', self.build_directory())
 
     def phase_distcheck(self, *args):
         self.log.info('Executing phase: distcheck')

@@ -56,7 +56,8 @@ xact_base_t::~xact_base_t()
       // temporary is.
       assert(! post->has_flags(ITEM_TEMP));
 
-      post->account->remove_post(post);
+      if (post->account)
+        post->account->remove_post(post);
       checked_delete(post);
     }
   }

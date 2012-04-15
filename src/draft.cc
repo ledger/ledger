@@ -507,7 +507,6 @@ value_t template_command(call_scope_t& args)
   out << std::endl << std::endl;
 
   draft_t draft(args.value());
-
   out << _("--- Transaction template ---") << std::endl;
   draft.dump(out);
 
@@ -517,15 +516,16 @@ value_t template_command(call_scope_t& args)
 value_t xact_command(call_scope_t& args)
 {
   report_t& report(find_scope<report_t>(args));
-  draft_t draft(args.value());
+  draft_t   draft(args.value());
 
-  xact_t * new_xact = draft.insert(*report.session.journal.get());
+  unique_ptr<xact_t> new_xact(draft.insert(*report.session.journal.get()));
+  if (new_xact.get()) {
+    // Only consider actual postings for the "xact" command
+    report.HANDLER(limit_).on("#xact", "actual");
 
-  // Only consider actual postings for the "xact" command
-  report.HANDLER(limit_).on("#xact", "actual");
+    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact.get());
+  }
 
-  if (new_xact)
-    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);
   return true;
 }
 
