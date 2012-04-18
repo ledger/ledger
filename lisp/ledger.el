@@ -80,7 +80,7 @@
   "Interface to the Ledger command-line accounting program."
   :group 'data)
 
-(defcustom ledger-binary-path "ledger"
+(defcustom ledger-binary-path "/usr/bin/ledger"
   "Path to the ledger executable."
   :type 'file
   :group 'ledger)
@@ -905,7 +905,7 @@ If name exists, returns the object naming the report, otherwise returns nil."
 (defun ledger-report-read-command (report-cmd)
   "Read the command line to create a report."
   (read-from-minibuffer "Report command line: "
-                        (if (null report-cmd) "ledger " report-cmd)
+                        (if (null report-cmd) "ledger -f %(ledger-file) " report-cmd)
                         nil nil 'ledger-report-cmd-prompt-history))
 
 (defun ledger-report-ledger-file-format-specifier ()
