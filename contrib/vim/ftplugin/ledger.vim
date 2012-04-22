@@ -11,7 +11,7 @@ let b:did_ftplugin = 1
 
 let b:undo_ftplugin = "setlocal ".
                     \ "foldmethod< foldtext< ".
-                    \ "include< comments< omnifunc< formatprg<"
+                    \ "include< comments< commentstring< omnifunc< formatprg<"
 
 " don't fill fold lines --> cleaner look
 setl fillchars="fold: "
@@ -19,6 +19,7 @@ setl foldtext=LedgerFoldText()
 setl foldmethod=syntax
 setl include=^!include
 setl comments=b:;
+setl commentstring=;%s
 setl omnifunc=LedgerComplete
 
 " set location of ledger binary for checking and auto-formatting
