@@ -532,9 +532,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--gcc47', action='store_true',
                       dest='gcc47', default=False,
                       help='Require the use of gcc 4.7')
+        op.add_option('', '--gcc48', action='store_true',
+                      dest='gcc48', default=False,
+                      help='Require the use of gcc 4.8')
         op.add_option('', '--cpp0x', action='store_true',
                       dest='cpp0x', default=False,
-                      help='Use C++0x extensions (requires Clang or gcc 4.6/7)')
+                      help='Use C++0x extensions (requires Clang or gcc 4.6/7/8)')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -1092,11 +1095,17 @@ class PrepareBuild(CommandLineApp):
                not self.options.gcc45 and \
                not self.options.gcc46 and \
                not self.options.gcc47 and \
+               not self.options.gcc48 and \
                exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
                 self.envvars['LD']  = '/usr/bin/g++-4.2'
                 self.darwin_gcc = True
+            elif exists('/usr/local/bin/g++-mp-4.8') and \
+                 self.options.gcc47:
+                self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.8'
+                self.envvars['CXX'] = '/usr/local/bin/g++-mp-4.8'
+                self.envvars['LD']  = '/usr/local/bin/g++-mp-4.8'
             elif exists('/usr/local/bin/g++-mp-4.7') and \
                  self.options.gcc47:
                 self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.7'
@@ -1345,7 +1354,8 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
 
-        if self.options.gcc45 or self.options.gcc46 or self.options.gcc47:
+        if self.options.gcc45 or self.options.gcc46 or \
+           self.options.gcc47 or self.options.gcc48:
             self.CXXFLAGS.append('-g2')
             self.CXXFLAGS.append('-ggdb')
             self.LDFLAGS.append('-g2')
@@ -1684,6 +1694,8 @@ class PrepareBuild(CommandLineApp):
 
         if self.options.gcc47:
             proof_dir += "-gcc47"
+        elif self.options.gcc48:
+            proof_dir += "-gcc48"
         elif self.options.use_clang:
             proof_dir += "-clang"
 
