@@ -5,7 +5,7 @@
 STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
-GCC_VERSION	= 4.6
+GCC_VERSION	= 4.7
 BOOST_VERSION	= 1_49_0
 
 CC		= gcc-mp-$(GCC_VERSION)
