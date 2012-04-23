@@ -1037,14 +1037,7 @@ class PrepareBuild(CommandLineApp):
                            (self.boost_inc_ident, self.boost_lib_ident))
 
         if self.current_flavor == 'debug':
-            if exists('/usr/local/stow/icu-%s/include' % self.boost_inc_ident):
-                self.sys_include_dirs.insert(
-                    0, '/usr/local/stow/icu-%s/include' % self.boost_inc_ident)
-                self.sys_library_dirs.insert(
-                    0, '/usr/local/stow/icu-%s/lib' % self.boost_inc_ident)
-
             self.configure_args.append('--disable-shared')
-
         elif self.current_flavor == 'gcov':
             self.configure_args.append('--disable-shared')
         else:
