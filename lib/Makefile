@@ -49,6 +49,7 @@ all: boost-build #icu-build boost-icu-build
 prepare-boost:
 	perl -i -pe 's/local command = \[ common\.get-invocation-command darwin : g\+\+ : .*/local command = [ common.get-invocation-command darwin : g++ : $(CXX) ] ;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
 	perl -i -pe 's/flags darwin\.compile OPTIONS : -no-cpp-precomp -gdwarf-2 (-fexceptions )?;/flags darwin\.compile OPTIONS : -gdwarf-2 \1;/;' $(BOOST_SOURCE)/tools/build/v2/tools/darwin.jam
+	perl -i -pe 's/command = \[ common\.get-invocation-command clang-darwin : clang\+\+ $$/command = [ common.get-invocation-command clang-darwin : clang++-mp-3.1/;' $(BOOST_SOURCE)/tools/build/v2/tools/clang-darwin.jam
 
 boost-build: prepare-boost
 	(cd $(BOOST_SOURCE) && \

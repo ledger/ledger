@@ -1016,8 +1016,14 @@ class PrepareBuild(CommandLineApp):
         self.envvars['PYTHON_HOME'] = '/opt/local'
 
         if self.options.use_clang:
-            self.boost_inc_ident = "clang"
-            self.boost_lib_ident = "clang-darwin28"
+            self.log.info('Setting up for using Clang')
+
+            self.boost_inc_ident = "clang31"
+            self.boost_lib_ident = "clang-darwin42"
+
+            #self.CXXFLAGS.append('-std=c++11')
+            #self.CXXFLAGS.append('-stdlib=libc++')
+            #self.LDFLAGS.append('-stdlib=libc++')
 
             global search_prefixes
             search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
