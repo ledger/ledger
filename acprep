@@ -1646,6 +1646,7 @@ class PrepareBuild(CommandLineApp):
             try:
                 shutil.rmtree(self.build_directory())
             except:
+                self.execute('chmod', '-R', 'u+w', self.build_directory())
                 self.execute('rm', '-fr', self.build_directory())
 
     def phase_distcheck(self, *args):
