@@ -186,11 +186,13 @@ lookup_probable_account(const string& ident,
           if (in_order_match && pos - index < 3)
             addend++;
 
+#if 0
 #if !defined(HAVE_BOOST_REGEX_UNICODE)
           if (pos == 0 || (pos > 0 && !std::isalnum(value_key[pos - 1])))
             addend++;
 #else
           // jww (2010-03-07): Not yet implemented
+#endif
 #endif
 
           last_match_pos = pos;
