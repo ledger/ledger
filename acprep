@@ -535,9 +535,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--gcc48', action='store_true',
                       dest='gcc48', default=False,
                       help='Require the use of gcc 4.8')
-        op.add_option('', '--cpp0x', action='store_true',
-                      dest='cpp0x', default=False,
-                      help='Use C++0x extensions (requires Clang or gcc 4.6/7/8)')
+        op.add_option('', '--cpp11', action='store_true',
+                      dest='use_cpp11', default=False,
+                      help='Use C++11 extensions (requires Clang or gcc 4.6/7/8)')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -1019,14 +1019,21 @@ class PrepareBuild(CommandLineApp):
             self.log.info('Setting up for using Clang')
 
             self.boost_inc_ident = "clang31"
-            self.boost_lib_ident = "clang-darwin42"
+            self.boost_lib_ident = "clang-darwin"
 
-            #self.CXXFLAGS.append('-std=c++11')
-            #self.CXXFLAGS.append('-stdlib=libc++')
-            #self.LDFLAGS.append('-stdlib=libc++')
+            if self.options.use_cpp11:
+                self.CXXFLAGS.append('-std=c++11')
+                self.CXXFLAGS.append('-stdlib=libc++')
+                self.CXXFLAGS.append('-nostdlibinc')
+                self.CXXFLAGS.append('-isystem /usr/local/include')
+                self.CXXFLAGS.append('-isystem /usr/local/include/c++/v1')
+                self.CXXFLAGS.append('-isystem /usr/include')
 
-            global search_prefixes
-            search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
+                self.LDFLAGS.append('-stdlib=libc++')
+                self.LDFLAGS.append('/usr/local/lib/libc++.dylib')
+            else:
+                global search_prefixes
+                search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
 
             self.log.debug('Using Clang ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
@@ -1077,14 +1084,14 @@ class PrepareBuild(CommandLineApp):
 
         elif system == 'Darwin':
             if self.options.use_clang:
-                if exists('/opt/local/bin/clang++-mp-3.1'):
-                    self.envvars['CC']  = '/opt/local/bin/clang-mp-3.1'
-                    self.envvars['CXX'] = '/opt/local/bin/clang++-mp-3.1'
-                    self.envvars['LD']  = '/opt/local/bin/clang++-mp-3.1'
-                elif exists('/usr/local/bin/clang++'):
+                if exists('/usr/local/bin/clang++'):
                     self.envvars['CC']  = '/usr/local/bin/clang'
                     self.envvars['CXX'] = '/usr/local/bin/clang++'
                     self.envvars['LD']  = '/usr/local/bin/clang++'
+                elif exists('/opt/local/bin/clang++-mp-3.1'):
+                    self.envvars['CC']  = '/opt/local/bin/clang-mp-3.1'
+                    self.envvars['CXX'] = '/opt/local/bin/clang++-mp-3.1'
+                    self.envvars['LD']  = '/opt/local/bin/clang++-mp-3.1'
                 else:
                     self.envvars['CC']  = 'clang'
                     self.envvars['CXX'] = 'clang++'
@@ -1142,9 +1149,6 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('--enable-python')
         if self.options.no_python:
             self.configure_args.remove('--enable-python')
-
-        if self.options.cpp0x:
-            self.CXXFLAGS.append('-std=c++0x')
 
         if exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
@@ -1323,7 +1327,8 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
-            if not self.options.use_clang and self.boost_info.configure(
+            if (not self.options.use_clang or self.options.use_cpp11) and \
+               self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-d-%s' % \
@@ -1337,7 +1342,8 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif not self.options.use_clang and self.boost_info.configure(
+            elif (not self.options.use_clang or self.options.use_cpp11) and \
+                 self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-%s' % \

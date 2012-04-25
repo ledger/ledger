@@ -7,11 +7,11 @@
 export PATH=$PATH:/opt/local/lib/openmpi/bin
 
 cat > ~/user-config.jam <<EOF
-using clang-darwin : : "/opt/local/bin/clang++-mp-3.1" : <cxxflags>-std=c++11 ;
+using clang-darwin : : "/usr/local/bin/clang++" : <cxxflags>-std=c++11 <include>/usr/local/include ;
 EOF
 
-make CXX=clang++-mp-3.1 LD=clang++-mp-3.1 CC=clang-mp-3.1 OPTJ=-j16     \
-     CXXFLAGS="-g -std=c++11 -stdlib=libc++"                            \
-     LDFLAGS="-g -stdlib=libc++"                                        \
-     BOOST_TOOLSET=clang DIR_SUFFIX=clang31                             \
-     BOOST_DEFINES="include=/opt/local/include -sICU_PATH=/opt/local -sICONV_PATH=/opt/local cxxflags=\"-g -std=c++11 -stdlib=libc++\" linkflags=\"-g -stdlib=libc++\""
+# jww (2012-04-24): This is still linking against /usr/lib/libc++.1.dylib
+# instead of /usr/local/lib/libc++.1.dylib
+make CXX=clang++ LD=clang++ CC=clang OPTJ=-j20     \
+     BOOST_TOOLSET=clang-darwin DIR_SUFFIX=clang31                             \
+    BOOST_DEFINES="-sICU_PATH=/usr/local cxxflags=\"-g -std=c++11 -nostdlibinc -I/usr/local/include -I/usr/local/include/c++/v1 -I/opt/local/include -I/usr/include -stdlib=libc++\" linkflags=\"-g -Z -L/usr/local/lib -L/opt/local/lib -L/usr/lib /usr/local/lib/libc++.dylib -stdlib=libc++\""
