@@ -52,8 +52,6 @@ class LedgerHarness:
         self.gmalloc    = '--gmalloc' in argv
         self.python     = '--python' in argv
 
-        os.chdir(self.sourcepath)
-
     def run(self, command, verify=None, gmalloc=None, columns=True):
         env = os.environ.copy()
 
@@ -89,7 +87,8 @@ class LedgerHarness:
             command = valgrind + ' -q ' + command
 
         return Popen(command, shell=True, close_fds=True, env=env,
-                     stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                     stdin=PIPE, stdout=PIPE, stderr=PIPE, 
+                     cwd=self.sourcepath)
 
     def read(self, fd):
         text = ""
