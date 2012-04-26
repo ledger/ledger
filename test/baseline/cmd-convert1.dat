@@ -1,0 +1,3 @@
+date,posted,code,payee,amount,total,note,
+12/12/2011,12/13/2011,100,Test,$10,$20,test,
+12/12/2011,12/12/2011,,,$10,,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -120,14 +120,20 @@ void export_item()
 #endif
 
     .add_property("note",
-                  make_getter(&item_t::note),
-                  make_setter(&item_t::note))
+                  make_getter(&item_t::note,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&item_t::note,
+                              return_value_policy<return_by_value>()))
     .add_property("pos",
-                  make_getter(&item_t::pos),
-                  make_setter(&item_t::pos))
+                  make_getter(&item_t::pos,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&item_t::pos,
+                              return_value_policy<return_by_value>()))
     .add_property("metadata",
-                  make_getter(&item_t::metadata),
-                  make_setter(&item_t::metadata))
+                  make_getter(&item_t::metadata,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&item_t::metadata,
+                              return_value_policy<return_by_value>()))
 
     .def("copy_details", &item_t::copy_details)
 
@@ -149,13 +155,13 @@ void export_item()
     .def("parse_tags", &item_t::parse_tags)
     .def("append_note", &item_t::append_note)
 
-    .add_static_property("use_effective_date",
-                         make_getter(&item_t::use_effective_date),
-                         make_setter(&item_t::use_effective_date))
+    .add_static_property("use_aux_date",
+                         make_getter(&item_t::use_aux_date),
+                         make_setter(&item_t::use_aux_date))
 
     .add_property("date", &item_t::date, make_setter(&item_t::_date))
-    .add_property("effective_date", &item_t::effective_date,
-                  make_setter(&item_t::_date_eff))
+    .add_property("aux_date", &item_t::aux_date,
+                  make_setter(&item_t::_date_aux))
 
     .add_property("state", &item_t::state, &item_t::set_state)
 

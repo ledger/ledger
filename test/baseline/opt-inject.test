@@ -1,0 +1,10 @@
+2012-03-20 * Test GBP
+    ; Expected:: -15.00 GBP
+    Expenses:Phone            20.00 GBP
+    Assets:Cash
+
+test --inject Expected reg Expenses:Phone
+12-Mar-20 Test GBP              Expected                 -15.00 GBP   -15.00 GBP
+12-Mar-20 Test GBP              Expenses:Phone            20.00 GBP     5.00 GBP
+end test
+

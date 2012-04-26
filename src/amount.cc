@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -63,16 +63,16 @@ struct amount_t::bigint_t : public supports_flags<>
 #define MP(bigint) ((bigint)->val)
 
   bigint_t() : prec(0), refc(1) {
-    TRACE_CTOR(bigint_t, "");
     mpq_init(val);
+    TRACE_CTOR(bigint_t, "");
   }
   bigint_t(const bigint_t& other)
     : supports_flags<>(static_cast<uint_least8_t>
                        (other.flags() & ~BIGINT_BULK_ALLOC)),
       prec(other.prec), refc(1) {
-    TRACE_CTOR(bigint_t, "copy");
     mpq_init(val);
     mpq_set(val, other.val);
+    TRACE_CTOR(bigint_t, "copy");
   }
   ~bigint_t() {
     TRACE_DTOR(bigint_t);
@@ -120,11 +120,13 @@ namespace {
   {
     char * buf = NULL;
     try {
+#if defined(DEBUG_ON)
       IF_DEBUG("amount.convert") {
         char * tbuf = mpq_get_str(NULL, 10, quant);
         DEBUG("amount.convert", "Rational to convert = " << tbuf);
         std::free(tbuf);
       }
+#endif
 
       // Convert the rational number to a floating-point, extending the
       // floating-point to a large enough size to get a precise answer.
@@ -347,24 +349,24 @@ void amount_t::_release()
 
 amount_t::amount_t(const double val) : commodity_(NULL)
 {
-  TRACE_CTOR(amount_t, "const double");
   quantity = new bigint_t;
   mpq_set_d(MP(quantity), val);
   quantity->prec = extend_by_digits; // an approximation
+  TRACE_CTOR(amount_t, "const double");
 }
 
 amount_t::amount_t(const unsigned long val) : commodity_(NULL)
 {
-  TRACE_CTOR(amount_t, "const unsigned long");
   quantity = new bigint_t;
   mpq_set_ui(MP(quantity), val, 1);
+  TRACE_CTOR(amount_t, "const unsigned long");
 }
 
 amount_t::amount_t(const long val) : commodity_(NULL)
 {
-  TRACE_CTOR(amount_t, "const long");
   quantity = new bigint_t;
   mpq_set_si(MP(quantity), val, 1);
+  TRACE_CTOR(amount_t, "const long");
 }
 
 
@@ -393,11 +395,11 @@ int amount_t::compare(const amount_t& amt) const
       throw_(amount_error, _("Cannot compare two uninitialized amounts"));
   }
 
-  if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
+  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _("Cannot compare amounts with different commodities: %1 and %2")
-           << commodity().symbol() << amt.commodity().symbol());
+           _("Cannot compare amounts with different commodities: '%1' and '%2'")
+           << commodity() << amt.commodity());
+  }
 
   return mpq_cmp(MP(quantity), MP(amt.quantity));
 }
@@ -428,12 +430,11 @@ amount_t& amount_t::operator+=(const amount_t& amt)
       throw_(amount_error, _("Cannot add two uninitialized amounts"));
   }
 
-  if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
+  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _("Adding amounts with different commodities: %1 != %2")
-           << (has_commodity() ? commodity().symbol() : _("NONE"))
-           << (amt.has_commodity() ? amt.commodity().symbol() : _("NONE")));
+           _("Adding amounts with different commodities: '%1' != '%2'")
+           << commodity() << amt.commodity());
+  }
 
   _dup();
 
@@ -459,12 +460,11 @@ amount_t& amount_t::operator-=(const amount_t& amt)
       throw_(amount_error, _("Cannot subtract two uninitialized amounts"));
   }
 
-  if (has_commodity() && amt.has_commodity() &&
-      commodity() != amt.commodity())
+  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _("Subtracting amounts with different commodities: %1 != %2")
-           << (has_commodity() ? commodity().symbol() : _("NONE"))
-           << (amt.has_commodity() ? amt.commodity().symbol() : _("NONE")));
+           _("Subtracting amounts with different commodities: '%1' != '%2'")
+           << commodity() << amt.commodity());
+  }
 
   _dup();
 
@@ -605,16 +605,13 @@ void amount_t::in_place_negate()
   }
 }
 
-amount_t amount_t::inverted() const
+void amount_t::in_place_invert()
 {
   if (! quantity)
     throw_(amount_error, _("Cannot invert an uninitialized amount"));
 
-  amount_t t(*this);
-  t._dup();
-  mpq_inv(MP(t.quantity), MP(t.quantity));
-
-  return t;
+  _dup();
+  mpq_inv(MP(quantity), MP(quantity));
 }
 
 void amount_t::in_place_round()
@@ -729,24 +726,24 @@ void amount_t::in_place_unreduce()
 }
 
 optional<amount_t>
-amount_t::value(const optional<datetime_t>&   moment,
-                const optional<commodity_t&>& in_terms_of) const
+amount_t::value(const datetime_t&   moment,
+                const commodity_t * in_terms_of) const
 {
   if (quantity) {
 #if defined(DEBUG_ON)
-    DEBUG("commodity.prices.find",
+    DEBUG("commodity.price.find",
           "amount_t::value of " << commodity().symbol());
-    if (moment)
-      DEBUG("commodity.prices.find",
-            "amount_t::value: moment =  " << *moment);
+    if (! moment.is_not_a_date_time())
+      DEBUG("commodity.price.find",
+            "amount_t::value: moment = " << moment);
     if (in_terms_of)
-      DEBUG("commodity.prices.find",
+      DEBUG("commodity.price.find",
             "amount_t::value: in_terms_of = " << in_terms_of->symbol());
 #endif
     if (has_commodity() &&
         (in_terms_of || ! commodity().has_flags(COMMODITY_PRIMARY))) {
       optional<price_point_t> point;
-      optional<commodity_t&>  comm(in_terms_of);
+      const commodity_t * comm(in_terms_of);
 
       if (has_annotation() && annotation().price) {
         if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
@@ -756,14 +753,14 @@ amount_t::value(const optional<datetime_t>&   moment,
                 "amount_t::value: fixated price =  " << point->price);
         }
         else if (! comm) {
-          comm = annotation().price->commodity();
+          comm = annotation().price->commodity_ptr();
         }
       }
 
-      if (! point) {
-        if (comm && commodity().referent() == comm->referent())
-          return *this;
+      if (comm && commodity().referent() == comm->referent())
+        return with_commodity(comm->referent());
 
+      if (! point) {
         point = commodity().find_price(comm, moment);
 
         // Whether a price was found or not, check whether we should attempt
@@ -788,7 +785,7 @@ amount_t::value(const optional<datetime_t>&   moment,
   return none;
 }
 
-amount_t amount_t::price() const
+optional<amount_t> amount_t::price() const
 {
   if (has_annotation() && annotation().price) {
     amount_t tmp(*annotation().price);
@@ -796,7 +793,7 @@ amount_t amount_t::price() const
     DEBUG("amount.price", "Returning price of " << *this << " = " << tmp);
     return tmp;
   }
-  return *this;
+  return none;
 }
 
 
@@ -868,10 +865,10 @@ bool amount_t::fits_in_long() const
   return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }
 
-commodity_t& amount_t::commodity() const
+commodity_t * amount_t::commodity_ptr() const
 {
-  return (has_commodity() ?
-          *commodity_ : *commodity_pool_t::current_pool->null_commodity);
+  return (commodity_ ?
+          commodity_ : commodity_pool_t::current_pool->null_commodity);
 }
 
 bool amount_t::has_commodity() const
@@ -1030,12 +1027,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   }
 
   // Allocate memory for the amount's quantity value.  We have to
-  // monitor the allocation in an auto_ptr because this function gets
+  // monitor the allocation in a unique_ptr because this function gets
   // called sometimes from amount_t's constructor; and if there is an
   // exeception thrown by any of the function calls after this point,
   // the destructor will never be called and the memory never freed.
 
-  std::auto_ptr<bigint_t> new_quantity;
+  unique_ptr<bigint_t> new_quantity;
 
   if (quantity) {
     if (quantity->refc > 1)
@@ -1061,10 +1058,6 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     if (! commodity_)
       commodity_ = commodity_pool_t::current_pool->create(symbol);
     assert(commodity_);
-
-    if (details)
-      commodity_ =
-        commodity_pool_t::current_pool->find_or_create(*commodity_, details);
   }
 
   // Quickly scan through and verify the correctness of the amount's use of
@@ -1199,6 +1192,14 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   if (! flags.has_flags(PARSE_NO_REDUCE))
     in_place_reduce();          // will not throw an exception
+
+  if (commodity_ && details) {
+    if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+      assert(details.price);
+      *details.price /= this->abs();
+    }
+    set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
+  }
 
   VERIFY(valid());
 

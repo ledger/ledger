@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -68,12 +68,31 @@ class draft_t : public expr_base_t<value_t>
       optional<string>   cost_operator;
       optional<amount_t> cost;
 
-      post_template_t() : from(false) {}
+      post_template_t() : from(false) {
+        TRACE_CTOR(post_template_t, "");
+      }
+      ~post_template_t() throw() {
+        TRACE_DTOR(post_template_t);
+      }
     };
 
     std::list<post_template_t> posts;
 
-    xact_template_t() {}
+    xact_template_t() {
+      TRACE_CTOR(xact_template_t, "");
+    }
+    xact_template_t(const xact_template_t& other)
+      : date(other.date),
+        code(other.code),
+        note(other.note),
+        payee_mask(other.payee_mask),
+        posts(other.posts)
+    {
+      TRACE_CTOR(xact_template_t, "copy");
+    }
+    ~xact_template_t() throw() {
+      TRACE_DTOR(xact_template_t);
+    }
 
     void dump(std::ostream& out) const;
   };
@@ -82,11 +101,11 @@ class draft_t : public expr_base_t<value_t>
 
 public:
   draft_t(const value_t& args) : base_type() {
-    TRACE_CTOR(draft_t, "value_t");
     if (! args.empty())
       parse_args(args);
+    TRACE_CTOR(draft_t, "value_t");
   }
-  virtual ~draft_t() {
+  virtual ~draft_t() throw() {
     TRACE_DTOR(draft_t);
   }
 

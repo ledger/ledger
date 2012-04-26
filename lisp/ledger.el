@@ -128,12 +128,12 @@ text that should replace the format specifier."
 
 (defvar bold 'bold)
 (defvar ledger-font-lock-keywords
-  '(("\\(       \\|  \\|^\\)\\(;.*\\)" 2 font-lock-comment-face)
+  '(("\\(	\\|  \\|^\\)\\(;.*\\)" 2 font-lock-comment-face)
     ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 bold)
     ;;("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([*].+?\\)\\(\\(       ;\\|  ;\\|$\\)\\)"
     ;; 2 font-lock-type-face)
     ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?\\([^*;]\\)+?\\(:\\|\\s-\\)[^]);
-        ]+?\\([])]\\)?\\)\\(    \\|  \\|$\\)"
+	]+?\\([])]\\)?\\)\\(	\\|  \\|$\\)"
      2 font-lock-keyword-face)
     ("^\\([~=].+\\)" 1 font-lock-function-name-face)
     ("^\\([A-Za-z]+ .+\\)" 1 font-lock-function-name-face))
@@ -545,7 +545,7 @@ dropped."
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (markerp (cdr where))
       (switch-to-buffer-other-window ledger-buf)
       (goto-char (cdr where)))))
 

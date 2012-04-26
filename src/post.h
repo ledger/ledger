@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,20 +58,22 @@ public:
 #define POST_COST_CALCULATED 0x0080 // posting's cost was calculated
 #define POST_COST_IN_FULL    0x0100 // cost specified using @@
 #define POST_COST_FIXATED    0x0200 // cost is fixed using = indicator
-#define POST_ANONYMIZED      0x0400 // a temporary, anonymous posting
+#define POST_COST_VIRTUAL    0x0400 // cost is virtualized: (@)
+#define POST_ANONYMIZED      0x0800 // a temporary, anonymous posting
 
-  xact_t *           xact;      // only set for posts of regular xacts
-  account_t *        account;
+  xact_t *    xact;             // only set for posts of regular xacts
+  account_t * account;
 
-  amount_t           amount;    // can be null until finalization
-  optional<expr_t>   amount_expr;
-  optional<amount_t> cost;
-  optional<amount_t> assigned_amount;
+  amount_t             amount;  // can be null until finalization
+  optional<expr_t>     amount_expr;
+  optional<amount_t>   cost;
+  optional<amount_t>   assigned_amount;
+  optional<datetime_t> checkin;
+  optional<datetime_t> checkout;
 
   post_t(account_t * _account = NULL,
          flags_t     _flags   = ITEM_NORMAL)
-    : item_t(_flags),
-      xact(NULL), account(_account)
+    : item_t(_flags), xact(NULL), account(_account)
   {
     TRACE_CTOR(post_t, "account_t *, flags_t");
   }
@@ -79,8 +81,7 @@ public:
          const amount_t&         _amount,
          flags_t                 _flags = ITEM_NORMAL,
          const optional<string>& _note = none)
-    : item_t(_flags, _note),
-      xact(NULL), account(_account), amount(_amount)
+    : item_t(_flags, _note), xact(NULL), account(_account), amount(_amount)
   {
     TRACE_CTOR(post_t, "account_t *, const amount_t&, flags_t, const optional<string>&");
   }
@@ -91,8 +92,11 @@ public:
       amount(post.amount),
       cost(post.cost),
       assigned_amount(post.assigned_amount),
+      checkin(post.checkin),
+      checkout(post.checkout),
       xdata_(post.xdata_)
   {
+    copy_details(post);
     TRACE_CTOR(post_t, "copy");
   }
   virtual ~post_t() {
@@ -116,15 +120,15 @@ public:
                        bool                    inherit    = true) const;
 
   virtual optional<value_t> get_tag(const string& tag,
-                       bool                       inherit = true) const;
+                                    bool          inherit = true) const;
   virtual optional<value_t> get_tag(const mask_t&           tag_mask,
                                     const optional<mask_t>& value_mask = none,
-                       bool                                 inherit    = true) const;
+                                    bool                    inherit    = true) const;
 
   virtual date_t value_date() const;
   virtual date_t date() const;
-  virtual date_t actual_date() const;
-  virtual optional<date_t> effective_date() const;
+  virtual date_t primary_date() const;
+  virtual optional<date_t> aux_date() const;
 
   string payee() const;
 
@@ -139,6 +143,12 @@ public:
 
   std::size_t xact_id() const;
   std::size_t account_id() const;
+
+  virtual void copy_details(const item_t& item) {
+    const post_t& post(dynamic_cast<const post_t&>(item));
+    xdata_ = post.xdata_;
+    item_t::copy_details(item);
+  }
 
   bool valid() const;
 
@@ -230,7 +240,7 @@ public:
   {
     bool operator()(const post_t * left, const post_t * right) const {
       gregorian::date_duration duration =
-        left->actual_date() - right->actual_date();
+        left->primary_date() - right->primary_date();
       if (duration.days() == 0) {
         return ((left->pos ? left->pos->sequence : 0) <
                 (right->pos ? right->pos->sequence : 0));
@@ -258,6 +268,9 @@ private:
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };
+
+class journal_t;
+void extend_post(post_t& post, journal_t& journal);
 
 void to_xml(std::ostream& out, const post_t& post);
 

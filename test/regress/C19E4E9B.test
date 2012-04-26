@@ -1,0 +1,18 @@
+2012-01-01=2012-01-02 * Buy AAA
+    A         1 AAA @ 1.00 EUR
+    B                -1.00 EUR
+
+2012-02-01 * Buy AAA
+    A         1 AAA @ 2.00 EUR
+    B                -2.00 EUR
+
+test reg --format "%S: %d %P %t %T\n"
+$FILE: 2012/01/01 Buy AAA 1 AAA 1 AAA
+$FILE: 2012/01/01 Buy AAA -1.00 EUR 1 AAA
+-1.00 EUR
+$FILE: 2012/02/01 Buy AAA 1 AAA 2 AAA
+-1.00 EUR
+$FILE: 2012/02/01 Buy AAA -2.00 EUR 2 AAA
+-3.00 EUR
+end test
+

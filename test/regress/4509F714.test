@@ -1,0 +1,25 @@
+P 2008/01/01 $ €1
+
+2008/01/11 LIAT
+   Expenses:Travel:Airfare  $40.00
+   Liabilities:MasterCard
+
+2008/02/05 CTX
+   Expenses:Travel:Auto  €240.38
+   Liabilities:MasterCard
+
+test bal --exchange=€
+             €280.38  Expenses:Travel
+              €40.00    Airfare
+             €240.38    Auto
+            €-280.38  Liabilities:MasterCard
+--------------------
+                   0
+end test
+
+test bal --exchange=€ --percent
+             100.00%  Expenses:Travel
+              14.27%    Airfare
+              85.73%    Auto
+             100.00%  Liabilities:MasterCard
+end test

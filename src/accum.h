@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,7 +51,12 @@ protected:
   std::string::size_type index;
 
 public:
-  straccbuf() : index(0) {}
+  straccbuf() : index(0) {
+    TRACE_CTOR(straccbuf, "");
+  }
+  ~straccbuf() throw() {
+    TRACE_DTOR(straccbuf);
+  }
 
 protected:
   virtual std::streamsize xsputn(const char * s, std::streamsize num);
@@ -66,7 +71,11 @@ protected:
 
 public:
   straccstream() : std::ostream(0) {
+    TRACE_CTOR(straccstream, "");
     rdbuf(&buf);
+  }
+  ~straccstream() throw() {
+    TRACE_DTOR(straccstream);
   }
 
   void clear() {
@@ -82,6 +91,20 @@ public:
 };
 
 #define ACCUM(obj) (static_cast<const straccstream&>(obj).str())
+
+extern straccstream       _accum;
+extern std::ostringstream _accum_buffer;
+
+inline string str_helper_func() {
+  string buf = _accum_buffer.str();
+  _accum_buffer.clear();
+  _accum_buffer.str("");
+  return buf;
+}
+
+#define STR(msg)                                \
+  ((_accum_buffer << ACCUM(_accum << msg)),     \
+   _accum.clear(), str_helper_func())
 
 } // namespace ledger
 

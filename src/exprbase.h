@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -113,7 +113,7 @@ public:
     return ! str.empty();
   }
 
-  virtual string text() {
+  virtual string text() const throw() {
     return str;
   }
   void set_text(const string& txt) {
@@ -163,7 +163,7 @@ public:
       }
 #endif // defined(DEBUG_ON)
 
-      DEBUG("expr.calc.when", "Compiling: " << str);
+      DEBUG("expr.compile", "Compiling: " << str);
       compile(scope);
 
 #if defined(DEBUG_ON)
@@ -174,7 +174,7 @@ public:
 #endif // defined(DEBUG_ON)
     }
 
-    DEBUG("expr.calc.when", "Calculating: " << str);
+    DEBUG("expr.calc", "Calculating: " << str);
     return real_calc(scope);
   }
 

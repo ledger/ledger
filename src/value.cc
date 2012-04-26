@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -724,7 +724,7 @@ value_t& value_t::operator/=(const value_t& val)
       return *this;
     case AMOUNT:
       if (as_balance().single_amount()) {
-        in_place_simplify();
+        in_place_cast(AMOUNT);
         as_amount_lval() /= val.as_amount();
         return *this;
       }
@@ -742,7 +742,7 @@ value_t& value_t::operator/=(const value_t& val)
     break;
   }
 
-  add_error_context(_("While dividing %1 by %2:") << val << *this);
+  add_error_context(_("While dividing %1 by %2:") << *this << val);
   throw_(value_error, _("Cannot divide %1 by %2") << label() << val.label());
 
   return *this;
@@ -869,7 +869,7 @@ bool value_t::is_less_than(const value_t& val) const
     case INTEGER:
       return as_long() < val.as_long();
     case AMOUNT:
-      return val.as_amount() >= as_long();
+      return val.as_amount() > as_long();
     default:
       break;
     }
@@ -948,8 +948,7 @@ bool value_t::is_less_than(const value_t& val) const
     break;
   }
 
-  add_error_context(_("While comparing if %1 is less than %2:")
-                    << *this << val);
+  add_error_context(_("While comparing if %1 is less than %2:") << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -990,7 +989,7 @@ bool value_t::is_greater_than(const value_t& val) const
     case INTEGER:
       return as_long() > val.as_long();
     case AMOUNT:
-      return val.as_amount() > as_long();
+      return val.as_amount() < as_long();
     default:
       break;
     }
@@ -1064,8 +1063,7 @@ bool value_t::is_greater_than(const value_t& val) const
     break;
   }
 
-  add_error_context(_("While comparing if %1 is greater than %2:")
-                    << *this << val);
+  add_error_context(_("While comparing if %1 is greater than %2:") << *this << val);
   throw_(value_error, _("Cannot compare %1 to %2") << label() << val.label());
 
   return *this;
@@ -1228,7 +1226,7 @@ void value_t::in_place_cast(type_t cast_type)
   case STRING:
     switch (cast_type) {
     case INTEGER: {
-      if (all(as_string(), is_digit())) {
+      if (all(as_string(), is_any_of("-0123456789"))) {
         set_long(lexical_cast<long>(as_string()));
         return;
       }
@@ -1251,13 +1249,23 @@ void value_t::in_place_cast(type_t cast_type)
     }
     break;
 
+  case MASK:
+    switch (cast_type) {
+    case STRING:
+      set_string(as_mask().str());
+      return;
+    default:
+      break;
+    }
+    break;
+
   default:
     break;
   }
 
   add_error_context(_("While converting %1:") << *this);
-  throw_(value_error, _("Cannot convert %1 to %2")
-         << label() << label(cast_type));
+  throw_(value_error,
+         _("Cannot convert %1 to %2") << label() << label(cast_type));
 }
 
 void value_t::in_place_negate()
@@ -1389,24 +1397,29 @@ bool value_t::is_zero() const
   return false;
 }
 
-value_t value_t::value(const optional<datetime_t>&   moment,
-                       const optional<commodity_t&>& in_terms_of) const
+value_t value_t::value(const datetime_t&   moment,
+                       const commodity_t * in_terms_of) const
 {
   switch (type()) {
   case INTEGER:
     return NULL_VALUE;
 
   case AMOUNT:
-    if (optional<amount_t> val =
-        as_amount().value(moment, in_terms_of))
+    if (optional<amount_t> val = as_amount().value(moment, in_terms_of))
       return *val;
     return NULL_VALUE;
 
   case BALANCE:
-    if (optional<balance_t> bal =
-        as_balance().value(moment, in_terms_of))
+    if (optional<balance_t> bal = as_balance().value(moment, in_terms_of))
       return *bal;
     return NULL_VALUE;
+
+  case SEQUENCE: {
+    value_t temp;
+    foreach (const value_t& value, as_sequence())
+      temp.push_back(value.value(moment, in_terms_of));
+    return temp;
+  }
 
   default:
     break;
@@ -1417,37 +1430,100 @@ value_t value_t::value(const optional<datetime_t>&   moment,
   return NULL_VALUE;
 }
 
-value_t value_t::price() const
+value_t value_t::exchange_commodities(const std::string& commodities,
+                                      const bool         add_prices,
+                                      const datetime_t&  moment)
 {
-  switch (type()) {
-  case AMOUNT:
-    return as_amount().price();
-  case BALANCE:
-    return as_balance().price();
-  default:
-    return *this;
+  if (type() == SEQUENCE) {
+    value_t temp;
+    foreach (value_t& value, as_sequence_lval())
+      temp.push_back(value.exchange_commodities(commodities, add_prices, moment));
+    return temp;
   }
-}
 
-value_t value_t::exchange_commodities(const std::string&          commodities,
-                                      const bool                  add_prices,
-                                      const optional<datetime_t>& moment)
-{
-  scoped_array<char> buf(new char[commodities.length() + 1]);
+  // If we are repricing to just a single commodity, with no price
+  // expression, skip the expensive logic below.
+  if (commodities.find(',') == string::npos &&
+      commodities.find('=') == string::npos)
+    return value(moment, commodity_pool_t::current_pool->find_or_create(commodities));
 
-  std::strcpy(buf.get(), commodities.c_str());
+  std::vector<commodity_t *> comms;
+  std::vector<bool>          force;
 
-  for (char * p = std::strtok(buf.get(), ",");
-       p;
-       p = std::strtok(NULL, ",")) {
-    if (commodity_t * commodity =
-        commodity_pool_t::current_pool->parse_price_expression(p, add_prices,
-                                                               moment)) {
-      value_t result = value(moment, *commodity);
-      if (! result.is_null())
-        return result;
+  typedef tokenizer<char_separator<char> > tokenizer;
+  tokenizer tokens(commodities, char_separator<char>(","));
+
+  foreach (const string& name, tokens) {
+    string::size_type name_len = name.length();
+
+    if (commodity_t * commodity = commodity_pool_t::current_pool
+        ->parse_price_expression(name[name_len - 1] == '!' ?
+                                 string(name, 0, name_len - 1) :
+                                 name, add_prices, moment)) {
+      DEBUG("commodity.exchange", "Pricing for commodity: " << commodity->symbol());
+      comms.push_back(&commodity->referent());
+      force.push_back(name[name_len - 1] == '!');
     }
   }
+
+  std::size_t index = 0;
+  foreach (commodity_t * comm, comms) {
+    switch (type()) {
+    case AMOUNT:
+      DEBUG("commodity.exchange", "We have an amount: " << as_amount_lval());
+      if (! force[index] &&
+          std::find(comms.begin(), comms.end(),
+                    &as_amount_lval().commodity().referent()) != comms.end())
+        break;
+
+      DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
+      if (optional<amount_t> val = as_amount_lval().value(moment, comm)) {
+        DEBUG("commodity.exchange", "Re-priced amount is: " << *val);
+        return *val;
+      }
+      DEBUG("commodity.exchange", "Was unable to find a price");
+      break;
+
+    case BALANCE: {
+      balance_t temp;
+      bool repriced = false;
+
+      DEBUG("commodity.exchange", "We have a balance: " << as_balance_lval());
+      foreach (const balance_t::amounts_map::value_type& pair,
+               as_balance_lval().amounts) {
+        DEBUG("commodity.exchange", "We have a balance amount of commodity: "
+              << pair.first->symbol() << " == "
+              << pair.second.commodity().symbol());
+        if (! force[index] &&
+            std::find(comms.begin(), comms.end(),
+                      &pair.first->referent()) != comms.end()) {
+          temp += pair.second;
+        } else {
+          DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
+          if (optional<amount_t> val = pair.second.value(moment, comm)) {
+            DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
+            temp += *val;
+            repriced = true;
+          } else {
+            DEBUG("commodity.exchange", "Was unable to find price");
+            temp += pair.second;
+          }
+        }
+      }
+
+      if (repriced) {
+        DEBUG("commodity.exchange", "Re-priced balance is: " << temp);
+        return temp;
+      }
+    }
+
+    default:
+      break;
+    }
+
+    ++index;
+  }
+
   return *this;
 }
 
@@ -1727,7 +1803,7 @@ void value_t::print(std::ostream&       _out,
 
   switch (type()) {
   case VOID:
-    out << "";
+    out << "(null)";
     break;
 
   case BOOLEAN:

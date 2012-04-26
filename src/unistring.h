@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -64,14 +64,14 @@ public:
   }
   unistring(const std::string& input)
   {
-    TRACE_CTOR(unistring, "std::string");
-
     const char * p   = input.c_str();
     std::size_t  len = input.length();
 
     assert(len < 1024);
     VERIFY(utf8::is_valid(p, p + len));
     utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
+
+    TRACE_CTOR(unistring, "std::string");
   }
   ~unistring() {
     TRACE_DTOR(unistring);

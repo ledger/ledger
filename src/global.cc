@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -47,8 +47,6 @@ static bool args_only = false;
 
 global_scope_t::global_scope_t(char ** envp)
 {
-  TRACE_CTOR(global_scope_t, "");
-
   epoch = CURRENT_TIME();
 
 #if defined(HAVE_BOOST_PYTHON)
@@ -68,8 +66,9 @@ global_scope_t::global_scope_t(char ** envp)
   // a GUI were calling into Ledger it would have one session object per
   // open document, with a separate report_t object for each report it
   // generated.
-  report_stack.push_front(new report_t(session()));
+  report_stack.push_front(new report_t(*session_ptr));
   scope_t::default_scope = &report();
+  scope_t::empty_scope   = &empty_scope;
 
   // Read the user's options, in the following order:
   //
@@ -88,6 +87,8 @@ global_scope_t::global_scope_t(char ** envp)
   } else {
     session().HANDLER(price_db_).off();
   }
+
+  TRACE_CTOR(global_scope_t, "");
 }
 
 global_scope_t::~global_scope_t()
@@ -112,9 +113,12 @@ void global_scope_t::read_init()
     if (exists(init_file)) {
       TRACE_START(init, 1, "Read initialization file");
 
-      ifstream init(init_file);
+      parse_context_stack_t parsing_context;
+      parsing_context.push(init_file);
+      parsing_context.get_current().journal = session().journal.get();
+      parsing_context.get_current().scope   = &report();
 
-      if (session().journal->read(init_file, NULL, &report()) > 0 ||
+      if (session().journal->read(parsing_context) > 0 ||
           session().journal->auto_xacts.size() > 0 ||
           session().journal->period_xacts.size() > 0) {
         throw_(parse_error, _("Transactions found in initialization file '%1'")
@@ -189,7 +193,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
     is_precommand = true;
 
   // If it is not a pre-command, then parse the user's ledger data at this
-  // time if not done alreday (i.e., if not at a REPL).  Then patch up the
+  // time if not done already (i.e., if not at a REPL).  Then patch up the
   // report options based on the command verb.
 
   if (! is_precommand) {
@@ -268,6 +272,7 @@ void global_scope_t::report_options(report_t& report, std::ostream& out)
   HANDLER(trace_).report(out);
   HANDLER(verbose).report(out);
   HANDLER(verify).report(out);
+  HANDLER(verify_memory).report(out);
 
   out << std::endl << "[Session scope options]" << std::endl;
   report.session.report_options(out);
@@ -311,6 +316,7 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   case 'v':
     OPT_(verbose);
     else OPT(verify);
+    else OPT(verify_memory);
     else OPT(version);
     break;
   }
@@ -448,29 +454,36 @@ void handle_debug_options(int argc, char * argv[])
       if (std::strcmp(argv[i], "--args-only") == 0) {
         args_only = true;
       }
+      else if (std::strcmp(argv[i], "--verify-memory") == 0) {
+#if defined(VERIFY_ON)
+        verify_enabled = true;
+
+        _log_level    = LOG_DEBUG;
+        _log_category = "memory\\.counts";
+#endif
+      }
       else if (std::strcmp(argv[i], "--verify") == 0) {
 #if defined(VERIFY_ON)
-        verify_enabled = true; // global in utils.h
+        verify_enabled = true;
 #endif
       }
       else if (std::strcmp(argv[i], "--verbose") == 0 ||
                std::strcmp(argv[i], "-v") == 0) {
 #if defined(LOGGING_ON)
-        _log_level = LOG_INFO; // global in utils.h
+        _log_level = LOG_INFO;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if defined(DEBUG_ON)
-        _log_level    = LOG_DEBUG; // global in utils.h
-        _log_category = argv[i + 1]; // global in utils.h
+        _log_level    = LOG_DEBUG;  
+        _log_category = argv[i + 1];
         i++;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
 #if defined(TRACING_ON)
-        _log_level   = LOG_TRACE; // global in utils.h
+        _log_level   = LOG_TRACE;
         try {
-          // global in utils.h
           _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
         }
         catch (const boost::bad_lexical_cast&) {

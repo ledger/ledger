@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "account.h"
 #include "xact.h"
 #include "post.h"
@@ -51,6 +52,7 @@ void export_commodity();
 void export_expr();
 void export_format();
 void export_item();
+void export_session();
 void export_journal();
 void export_post();
 void export_times();
@@ -72,6 +74,7 @@ void initialize_for_python()
   export_item();
   export_post();
   export_xact();
+  export_session();
   export_journal();
 }
 
@@ -81,16 +84,56 @@ struct python_run
 
   python_run(python_interpreter_t * intepreter,
              const string& str, int input_mode)
-    : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
-                                            intepreter->main_nspace.ptr(),
-                                            intepreter->main_nspace.ptr())))) {}
+    : result
+      (handle<>
+       (borrowed
+        (PyRun_String(str.c_str(), input_mode,
+                      intepreter->main_module->module_globals.ptr(),
+                      intepreter->main_module->module_globals.ptr())))) {}
   operator object() {
     return result;
   }
 };
 
+python_module_t::python_module_t(const string& name)
+  : scope_t(), module_name(name), module_globals()
+{
+  import_module(name);
+}
+
+python_module_t::python_module_t(const string& name, python::object obj)
+  : scope_t(), module_name(name), module_globals()
+{
+  module_object  = obj;
+  module_globals = extract<dict>(module_object.attr("__dict__"));
+}
+
+void python_module_t::import_module(const string& name, bool import_direct)
+{
+  object mod = python::import(name.c_str());
+  if (! mod)
+    throw_(std::runtime_error,
+           _("Module import failed (couldn't find %1)") << name);
+
+  dict globals = extract<dict>(mod.attr("__dict__"));
+  if (! globals)
+    throw_(std::runtime_error,
+           _("Module import failed (couldn't find %1)") << name);
+
+  if (! import_direct) {
+    module_object  = mod;
+    module_globals = globals;
+  } else {
+    // Import all top-level entries directly into the namespace
+    module_globals.update(mod.attr("__dict__"));
+  }
+}
+
 void python_interpreter_t::initialize()
 {
+  if (is_initialized)
+    return;
+
   TRACE_START(python_init, 1, "Initialized Python");
 
   try {
@@ -101,15 +144,7 @@ void python_interpreter_t::initialize()
 
     hack_system_paths();
 
-    object main_module = python::import("__main__");
-    if (! main_module)
-      throw_(std::runtime_error,
-             _("Python failed to initialize (couldn't find __main__)"));
-
-    main_nspace = extract<dict>(main_module.attr("__dict__"));
-    if (! main_nspace)
-      throw_(std::runtime_error,
-             _("Python failed to initialize (couldn't find __dict__)"));
+    main_module = import_module("__main__");
 
     python::detail::init_module("ledger", &initialize_for_python);
 
@@ -167,58 +202,57 @@ void python_interpreter_t::hack_system_paths()
 #endif
 }
 
-object python_interpreter_t::import_into_main(const string& str)
+object python_interpreter_t::import_option(const string& str)
 {
   if (! is_initialized)
     initialize();
 
-  try {
-    object mod = python::import(str.c_str());
-    if (! mod)
-      throw_(std::runtime_error,
-             _("Failed to import Python module %1") << str);
-
-    // Import all top-level entries directly into the main namespace
-    main_nspace.update(mod.attr("__dict__"));
-
-    return mod;
-  }
-  catch (const error_already_set&) {
-    PyErr_Print();
-  }
-  return object();
-}
-
-object python_interpreter_t::import_option(const string& str)
-{
-  path file(str);
-
   python::object sys_module = python::import("sys");
   python::object sys_dict   = sys_module.attr("__dict__");
 
+  path         file(str);
+  string       name(str);
   python::list paths(sys_dict["path"]);
 
+  if (contains(str, ".py")) {
 #if BOOST_VERSION >= 103700
-  paths.insert(0, file.parent_path().string());
-  sys_dict["path"] = paths;
+    path& cwd(parsing_context.get_current().current_directory);
+#if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
+    path parent(filesystem::absolute(file, cwd).parent_path());
+#else
+    path parent(filesystem::complete(file, cwd).parent_path());
+#endif
+    DEBUG("python.interp", "Adding " << parent << " to PYTHONPATH");
+    paths.insert(0, parent.string());
+    sys_dict["path"] = paths;
 
 #if BOOST_VERSION >= 104600
-  string name = file.filename().string();
-  if (contains(name, ".py"))
     name = file.stem().string();
 #else
-  string name = file.filename();
-  if (contains(name, ".py"))
     name = file.stem();
 #endif
 #else // BOOST_VERSION >= 103700
-  paths.insert(0, file.branch_path().string());
-  sys_dict["path"] = paths;
-
-  string name = file.leaf();
+    paths.insert(0, file.branch_path().string());
+    sys_dict["path"] = paths;
+    name = file.leaf();
 #endif // BOOST_VERSION >= 103700
+  }
 
-  return python::import(python::str(name.c_str()));
+  try {
+    if (contains(str, ".py"))
+      main_module->import_module(name, true);
+    else
+      import_module(str);
+  }
+  catch (const error_already_set&) {
+    PyErr_Print();
+    throw_(std::runtime_error, _("Python failed to import: %1") << str);
+  }
+  catch (...) {
+    throw;
+  }
+
+  return object();
 }
 
 object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode)
@@ -346,13 +380,13 @@ value_t python_interpreter_t::server_command(call_scope_t& args)
     functor_t func(main_function, "main");
     try {
       func(args);
+      return true;
     }
     catch (const error_already_set&) {
       PyErr_Print();
       throw_(std::runtime_error,
              _("Error while invoking ledger.server's main() function"));
     }
-    return true;
   } else {
       throw_(std::runtime_error,
              _("The ledger.server module is missing its main() function!"));
@@ -372,6 +406,40 @@ python_interpreter_t::lookup_option(const char * p)
   return NULL;
 }
 
+expr_t::ptr_op_t python_module_t::lookup(const symbol_t::kind_t kind,
+                                         const string& name)
+{
+  switch (kind) {
+  case symbol_t::FUNCTION:
+    DEBUG("python.interp", "Python lookup: " << name);
+    if (module_globals.has_key(name.c_str())) {
+      if (python::object obj = module_globals.get(name.c_str())) {
+        if (PyModule_Check(obj.ptr())) {
+          shared_ptr<python_module_t> mod;
+          python_module_map_t::iterator i =
+            python_session->modules_map.find(obj.ptr());
+          if (i == python_session->modules_map.end()) {
+            mod.reset(new python_module_t(name, obj));
+            python_session->modules_map.insert
+              (python_module_map_t::value_type(obj.ptr(), mod));
+          } else {
+            mod = (*i).second;
+          }
+          return expr_t::op_t::wrap_value(scope_value(mod.get()));
+        } else {
+          return WRAP_FUNCTOR(python_interpreter_t::functor_t(obj, name));
+        }
+      }
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  return NULL;
+}
+
 expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
                                               const string& name)
 {
@@ -381,21 +449,18 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 
   switch (kind) {
   case symbol_t::FUNCTION:
-    if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
-      return MAKE_OPT_FUNCTOR(python_interpreter_t, handler);
-
-    if (is_initialized && main_nspace.has_key(name.c_str())) {
-      DEBUG("python.interp", "Python lookup: " << name);
-
-      if (python::object obj = main_nspace.get(name.c_str()))
-        return WRAP_FUNCTOR(functor_t(obj, name));
-    }
+    if (is_initialized)
+      return main_module->lookup(kind, name);
     break;
 
-  case symbol_t::OPTION:
+  case symbol_t::OPTION: {
     if (option_t<python_interpreter_t> * handler = lookup_option(name.c_str()))
       return MAKE_OPT_HANDLER(python_interpreter_t, handler);
+
+    if (is_initialized)
+      return main_module->lookup(symbol_t::FUNCTION, string("option_") + name);
     break;
+  }
 
   case symbol_t::PRECOMMAND: {
     const char * p = name.c_str();
@@ -420,29 +485,59 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
 }
 
 namespace {
-  void append_value(list& lst, const value_t& value)
+  object convert_value_to_python(const value_t& val)
   {
-    if (value.is_scope()) {
-      const scope_t * scope = value.as_scope();
-      if (const post_t * post = dynamic_cast<const post_t *>(scope))
-        lst.append(ptr(post));
-      else if (const xact_t * xact = dynamic_cast<const xact_t *>(scope))
-        lst.append(ptr(xact));
-      else if (const account_t * account =
-               dynamic_cast<const account_t *>(scope))
-        lst.append(ptr(account));
-      else if (const period_xact_t * period_xact =
-               dynamic_cast<const period_xact_t *>(scope))
-        lst.append(ptr(period_xact));
-      else if (const auto_xact_t * auto_xact =
-               dynamic_cast<const auto_xact_t *>(scope))
-        lst.append(ptr(auto_xact));
-      else
-        throw_(std::logic_error,
-               _("Cannot downcast scoped object to specific type"));
-    } else {
-      lst.append(value);
+    switch (val.type()) {
+    case value_t::VOID:         // a null value (i.e., uninitialized)
+      return object();
+    case value_t::BOOLEAN:      // a boolean
+      return object(val.to_boolean());
+    case value_t::DATETIME:     // a date and time (Boost posix_time)
+      return object(val.to_datetime());
+    case value_t::DATE:         // a date (Boost gregorian::date)
+      return object(val.to_date());
+    case value_t::INTEGER:      // a signed integer value
+      return object(val.to_long());
+    case value_t::AMOUNT:       // a ledger::amount_t
+      return object(val.as_amount());
+    case value_t::BALANCE:      // a ledger::balance_t
+      return object(val.as_balance());
+    case value_t::STRING:       // a string object
+      return object(handle<>(borrowed(str_to_py_unicode(val.as_string()))));
+    case value_t::MASK:         // a regular expression mask
+      return object(val);
+    case value_t::SEQUENCE: {   // a vector of value_t objects
+      list arglist;
+      foreach (const value_t& elem, val.as_sequence())
+        arglist.append(elem);
+      return arglist;
     }
+    case value_t::SCOPE:        // a pointer to a scope
+      if (const scope_t * scope = val.as_scope()) {
+        if (const post_t * post = dynamic_cast<const post_t *>(scope))
+          return object(ptr(post));
+        else if (const xact_t * xact = dynamic_cast<const xact_t *>(scope))
+          return object(ptr(xact));
+        else if (const account_t * account =
+                 dynamic_cast<const account_t *>(scope))
+          return object(ptr(account));
+        else if (const period_xact_t * period_xact =
+                 dynamic_cast<const period_xact_t *>(scope))
+          return object(ptr(period_xact));
+        else if (const auto_xact_t * auto_xact =
+                 dynamic_cast<const auto_xact_t *>(scope))
+          return object(ptr(auto_xact));
+        else
+          throw_(std::logic_error,
+                 _("Cannot downcast scoped object to specific type"));
+      }
+      return object();
+    case value_t::ANY:          // a pointer to an arbitrary object
+      return object(val);
+    }
+#if !defined(__clang__)
+    return object();
+#endif
   }
 }
 
@@ -453,6 +548,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
 
     if (! PyCallable_Check(func.ptr())) {
       extract<value_t> val(func);
+      DEBUG("python.interp", "Value of Python '" << name << "': " << val);
       std::signal(SIGINT, sigint_handler);
       if (val.check())
         return val();
@@ -464,9 +560,9 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       // rather than a sequence of arguments?
       if (args.value().is_sequence())
         foreach (const value_t& value, args.value().as_sequence())
-          append_value(arglist, value);
+          arglist.append(convert_value_to_python(value));
       else
-        append_value(arglist, args.value());
+        arglist.append(convert_value_to_python(args.value()));
 
       if (PyObject * val =
           PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {
@@ -474,11 +570,12 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
         value_t result;
         if (xval.check()) {
           result = xval();
+          DEBUG("python.interp",
+                "Return from Python '" << name << "': " << result);
           Py_DECREF(val);
         } else {
           Py_DECREF(val);
-          throw_(calc_error,
-                 _("Could not evaluate Python variable '%1'") << name);
+          return NULL_VALUE;
         }
         std::signal(SIGINT, sigint_handler);
         return result;

@@ -1,0 +1,99 @@
+;; A valuation function receives three arguments:
+;;
+;;   'source'    A string identifying the commodity whose price
+;;               is being asked for (example: "EUR")
+;;
+;;   'date'      The reference date the price should be relative.
+;;
+;;   'target'    A string identifying the "target" commodity, or
+;;               the commodity the returned price should be in.
+;;               This argument is null if -V was used instead of -X.
+;;
+;; The valuation function should return an amount.  If you've written your
+;; function in Python, you can return something like Amount("$100").  If the
+;; function returns an explicit value, that value is always used, regardless
+;; of the commodity, the date, or the desired target commodity.
+
+define myfunc_seven(s, d, t) = 7 EUR
+
+;; In order to specific a fixed price, but still valuate that price into the
+;; target commodity, use something like this:
+
+define myfunc_five(s, d, t) = market(5 EUR, d, t)
+
+;; The 'value' directive sets the valuation used for all commodities used in
+;; the rest of the daat stream.  This is the fallback, if nothing more
+;; specific is found.
+
+value myfunc_seven
+
+;; You can set a specific valuation function on a per-commodity basis.
+;; Instead of defining a function, you can also pass a lambda.
+
+commodity $
+    value s, d, t -> 6 EUR
+
+;; Each account can also provide a default valuation function for any
+;; commodities transferred to that account.
+
+account Expenses:Food5
+    value myfunc_five
+
+;; The metadata field "Value", if found, overrides the valuation function on a
+;; transaction-wide or per-posting basis.
+
+= @XACT and Food
+    ; Value:: 8 EUR
+    (Equity)                     $1
+
+= @POST and Dining
+    (Expenses:Food9)             $1
+        ; Value:: 9 EUR
+
+;; Lastly, you can specify the valuation function/value for any specific
+;; amount using the (( )) commodity annotation.
+
+2012-03-02 KFC
+    Expenses:Food2               $1 ((2 EUR))
+    Assets:Cash2
+
+2012-03-03 KFC
+    Expenses:Food3               $1
+        ; Value:: 3 EUR
+    Assets:Cash3
+
+2012-03-04 KFC
+    ; Value:: 4 EUR
+    Expenses:Food4               $1
+    Assets:Cash4
+
+2012-03-05 KFC
+    Expenses:Food5               $1
+    Assets:Cash5
+
+2012-03-06 KFC
+    Expenses:Food6               $1
+    Assets:Cash6
+
+2012-03-07 KFC
+    Expenses:Food7                1 CAD
+    Assets:Cas7
+
+2012-03-08 XACT
+    Expenses:Food8               $1
+    Assets:Cash8
+
+2012-03-09 POST
+    Expenses:Dining9             $1
+    Assets:Cash9
+
+test reg -V food
+12-Mar-02 KFC                   Expenses:Food2                2 EUR        2 EUR
+12-Mar-03 KFC                   Expenses:Food3                3 EUR        5 EUR
+12-Mar-04 KFC                   Expenses:Food4                4 EUR        9 EUR
+12-Mar-05 KFC                   Expenses:Food5                5 EUR       14 EUR
+12-Mar-06 KFC                   Expenses:Food6                6 EUR       20 EUR
+12-Mar-07 KFC                   Expenses:Food7                7 EUR       27 EUR
+12-Mar-08 XACT                  Expenses:Food8                8 EUR       35 EUR
+12-Mar-09 POST                  (Expenses:Food9)              9 EUR       44 EUR
+end test

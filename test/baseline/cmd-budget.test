@@ -1,0 +1,65 @@
+~ Monthly
+    Expenses:Phone            10.00 GBP
+    Expenses:Rent            550.00 GBP
+    Assets
+
+2012-01-10 * Phone expense on holidays
+    Expenses:Phone            12.00 EUR @@ 10.00 GBP
+    Assets:Cash              -10.00 GBP
+
+2012-01-31 * Rent expense
+    Expenses:Rent            550.00 GBP
+    Assets:Cash             -550.00 GBP
+
+2012-02-28 * Phone expense
+    Expenses:Phone            20.00 GBP
+    Assets:Cash              -20.00 GBP
+
+2012-02-29 * Rent expense
+    Expenses:Rent            530.00 GBP
+    Assets:Cash             -530.00 GBP
+
+2012-03-10 * Phone expense
+    Expenses:Phone            15.00 GBP
+    Assets:Cash              -15.00 GBP
+
+2012-03-31 * Rent expense
+    Expenses:Rent            570.00 GBP
+    Assets:Cash             -570.00 GBP
+
+test budget -X GBP -p "in january 2012"
+ -560.00 GBP  -560.00 GBP            0  100%  Assets
+  560.00 GBP   560.00 GBP            0  100%  Expenses
+   10.00 GBP    10.00 GBP            0  100%    Phone
+  550.00 GBP   550.00 GBP            0  100%    Rent
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+test budget -X GBP -p "in feb 2012"
+ -550.00 GBP  -560.00 GBP    10.00 GBP   98%  Assets
+  550.00 GBP   560.00 GBP   -10.00 GBP   98%  Expenses
+   20.00 GBP    10.00 GBP    10.00 GBP  200%    Phone
+  530.00 GBP   550.00 GBP   -20.00 GBP   96%    Rent
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+test budget -X GBP -p "in march  2012"
+ -585.00 GBP  -560.00 GBP   -25.00 GBP  104%  Assets
+  585.00 GBP   560.00 GBP    25.00 GBP  104%  Expenses
+   15.00 GBP    10.00 GBP     5.00 GBP  150%    Phone
+  570.00 GBP   550.00 GBP    20.00 GBP  104%    Rent
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+test budget -X GBP --now "2012-03-31"
+-1695.00 GBP -1680.00 GBP   -15.00 GBP  101%  Assets
+ 1695.00 GBP  1680.00 GBP    15.00 GBP  101%  Expenses
+   45.00 GBP    30.00 GBP    15.00 GBP  150%    Phone
+ 1650.00 GBP  1650.00 GBP            0  100%    Rent
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+

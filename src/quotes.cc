@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -40,7 +40,7 @@ namespace ledger {
 
 optional<price_point_t>
 commodity_quote_from_script(commodity_t& commodity,
-                            const optional<commodity_t&>& exchange_commodity)
+                            const commodity_t * exchange_commodity)
 {
   DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
 #if defined(DEBUG_ON)

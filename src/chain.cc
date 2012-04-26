@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -88,10 +88,9 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
                            predicate_t(report.HANDLER(forecast_while_).str(),
                                        report.what_to_keep()),
                            report,
-                           report.HANDLED(forecast_years_) ?
-                             static_cast<std::size_t>
-                               (report.HANDLER(forecast_years_).value.to_long()) :
-                             5UL);
+                           (report.HANDLED(forecast_years_) ?
+                            lexical_cast<std::size_t>
+                            (report.HANDLER(forecast_years_).value) : 5UL));
     forecast_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(forecast_handler);
 
@@ -115,9 +114,12 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   predicate_t            only_predicate;
   display_filter_posts * display_filter = NULL;
 
-  assert(report.HANDLED(amount_));
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
+
+  report.HANDLER(total_).expr.set_context(&report);
+  report.HANDLER(display_amount_).expr.set_context(&report);
+  report.HANDLER(display_total_).expr.set_context(&report);
 
   if (! for_accounts_report) {
     // Make sure only forecast postings which match are allowed through
@@ -134,9 +136,9 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
       handler.reset
         (new truncate_xacts(handler,
                             report.HANDLED(head_) ?
-                            report.HANDLER(head_).value.to_int() : 0,
+                            lexical_cast<int>(report.HANDLER(head_).value) : 0,
                             report.HANDLED(tail_) ?
-                            report.HANDLER(tail_).value.to_int() : 0));
+                            lexical_cast<int>(report.HANDLER(tail_).value) : 0));
 
     // display_filter_posts adds virtual posts to the list to account
     // for changes in value of commodities, which otherwise would affect
@@ -205,7 +207,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     // day_of_week_posts is like period_posts, except that it reports
     // all the posts that fall on each subsequent day of the week.
     if (report.HANDLED(equity))
-      handler.reset(new posts_as_equity(handler, expr));
+      handler.reset(new posts_as_equity(handler, report, expr));
     else if (report.HANDLED(subtotal))
       handler.reset(new subtotal_posts(handler, expr));
   }
@@ -217,13 +219,11 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
 
   // interval_posts groups posts together based on a time period, such as
   // weekly or monthly.
-  if (report.HANDLED(period_)) {
+  if (report.HANDLED(period_))
     handler.reset(new interval_posts(handler, expr,
                                      report.HANDLER(period_).str(),
                                      report.HANDLED(exact),
                                      report.HANDLED(empty)));
-    handler.reset(new sort_posts(handler, "date"));
-  }
 
   if (report.HANDLED(date_))
     handler.reset(new transfer_details(handler, transfer_details::SET_DATE,

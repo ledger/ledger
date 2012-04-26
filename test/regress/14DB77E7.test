@@ -1,0 +1,18 @@
+D 1000.00 GBP
+
+;P 2011-01-01 EUR 0.8604 GBP
+P 2011-02-01 EUR 0.8576 GBP
+
+2011-01-31 * AdSense earnings
+    Assets:Receivable:AdSense              11.00 EUR
+    Income:AdSense
+
+2011-02-28 * AdSense earnings
+    Assets:Receivable:AdSense              10.00 EUR
+    Income:AdSense
+
+test reg income:adse -X GBP -H
+11-Jan-31 AdSense earnings      Income:AdSense           -11.00 EUR   -11.00 EUR
+11-Feb-28 Commodities revalued  <Revalued>                -9.43 GBP    -9.43 GBP
+11-Feb-28 AdSense earnings      Income:AdSense            -8.58 GBP   -18.01 GBP
+end test

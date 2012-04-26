@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -70,8 +70,7 @@ struct symbol_t
     TRACE_CTOR(symbol_t, "symbol_t::kind_t, string");
   }
   symbol_t(const symbol_t& sym)
-    : kind(sym.kind), name(sym.name),
-      definition(sym.definition) {
+    : kind(sym.kind), name(sym.name), definition(sym.definition) {
     TRACE_CTOR(symbol_t, "copy");
   }
   ~symbol_t() throw() {
@@ -80,6 +79,9 @@ struct symbol_t
 
   bool operator<(const symbol_t& sym) const {
     return kind < sym.kind || name < sym.name;
+  }
+  bool operator==(const symbol_t& sym) const {
+    return kind == sym.kind || name == sym.name;
   }
 
 #if defined(HAVE_BOOST_SERIALIZATION)
@@ -97,10 +99,13 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+class empty_scope_t;
+
 class scope_t
 {
 public:
-  static scope_t * default_scope;
+  static scope_t *       default_scope;
+  static empty_scope_t * empty_scope;
 
   explicit scope_t() {
     TRACE_CTOR(scope_t, "");
@@ -134,6 +139,24 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
+class empty_scope_t : public scope_t
+{
+public:
+  empty_scope_t() {
+    TRACE_CTOR(empty_scope_t, "");
+  }
+  ~empty_scope_t() throw() {
+    TRACE_DTOR(empty_scope_t);
+  }
+
+  virtual string description() {
+    return _("<empty>");
+  }
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) {
+    return NULL;
+  }
+};
+
 class child_scope_t : public noncopyable, public scope_t
 {
 public:
@@ -142,8 +165,7 @@ public:
   explicit child_scope_t() : parent(NULL) {
     TRACE_CTOR(child_scope_t, "");
   }
-  explicit child_scope_t(scope_t& _parent)
-    : parent(&_parent) {
+  explicit child_scope_t(scope_t& _parent) : parent(&_parent) {
     TRACE_CTOR(child_scope_t, "scope_t&");
   }
   virtual ~child_scope_t() {
@@ -187,6 +209,8 @@ public:
   explicit bind_scope_t(scope_t& _parent,
                         scope_t& _grandchild)
     : child_scope_t(_parent), grandchild(_grandchild) {
+    DEBUG("scope.symbols",
+          "Binding scope " << &_parent << " with " << &_grandchild);
     TRACE_CTOR(bind_scope_t, "scope_t&, scope_t&");
   }
   virtual ~bind_scope_t() {
@@ -225,15 +249,19 @@ private:
 };
 
 template <typename T>
-T * search_scope(scope_t * ptr)
+T * search_scope(scope_t * ptr, bool prefer_direct_parents = false)
 {
+  DEBUG("scope.search", "Searching scope " << ptr->description());
+
   if (T * sought = dynamic_cast<T *>(ptr))
     return sought;
 
   if (bind_scope_t * scope = dynamic_cast<bind_scope_t *>(ptr)) {
-    if (T * sought = search_scope<T>(&scope->grandchild))
+    if (T * sought = search_scope<T>(prefer_direct_parents ?
+                                     scope->parent : &scope->grandchild))
       return sought;
-    return search_scope<T>(scope->parent);
+    return search_scope<T>(prefer_direct_parents ?
+                           &scope->grandchild : scope->parent);
   }
   else if (child_scope_t * child_scope = dynamic_cast<child_scope_t *>(ptr)) {
     return search_scope<T>(child_scope->parent);
@@ -242,9 +270,21 @@ T * search_scope(scope_t * ptr)
 }
 
 template <typename T>
-inline T& find_scope(child_scope_t& scope, bool skip_this = true)
+inline T& find_scope(child_scope_t& scope, bool skip_this = true,
+                     bool prefer_direct_parents = false)
 {
-  if (T * sought = search_scope<T>(skip_this ? scope.parent : &scope))
+  if (T * sought = search_scope<T>(skip_this ? scope.parent : &scope,
+                                   prefer_direct_parents))
+    return *sought;
+
+  throw_(std::runtime_error, _("Could not find scope"));
+  return reinterpret_cast<T&>(scope); // never executed
+}
+
+template <typename T>
+inline T& find_scope(scope_t& scope, bool prefer_direct_parents = false)
+{
+  if (T * sought = search_scope<T>(&scope, prefer_direct_parents))
     return *sought;
 
   throw_(std::runtime_error, _("Could not find scope"));
@@ -258,7 +298,7 @@ class symbol_scope_t : public child_scope_t
   optional<symbol_map> symbols;
 
 public:
-  explicit symbol_scope_t() {
+  explicit symbol_scope_t() : child_scope_t() {
     TRACE_CTOR(symbol_scope_t, "");
   }
   explicit symbol_scope_t(scope_t& _parent) : child_scope_t(_parent) {
@@ -347,13 +387,8 @@ protected:
 
 class call_scope_t : public context_scope_t
 {
-#if defined(DEBUG_ON)
 public:
-#endif
   value_t        args;
-#if defined(DEBUG_ON)
-private:
-#endif
   mutable void * ptr;
 
   value_t& resolve(const std::size_t index,
@@ -370,15 +405,10 @@ public:
     : context_scope_t(_parent, _parent.type_context(),
                       _parent.type_required()),
       ptr(NULL), locus(_locus), depth(_depth) {
-    TRACE_CTOR(call_scope_t,
-               "scope_t&, value_t::type_t, bool, expr_t::ptr_op_t *, int");
+    TRACE_CTOR(call_scope_t, "scope_t&, expr_t::ptr_op_t *, const int");
   }
   virtual ~call_scope_t() {
     TRACE_DTOR(call_scope_t);
-  }
-
-  virtual string description() {
-    return context_scope_t::description();
   }
 
   void set_args(const value_t& _args) {
@@ -453,7 +483,7 @@ public:
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 protected:
-  explicit call_scope_t() {
+  explicit call_scope_t() : depth(0) {
     TRACE_CTOR(call_scope_t, "");
   }
 
@@ -635,6 +665,21 @@ call_scope_t::get<expr_t::ptr_op_t>(std::size_t index, bool) {
   return args[index].as_any<expr_t::ptr_op_t>();
 }
 
+inline string join_args(call_scope_t& args) {
+  std::ostringstream buf;
+  bool first = true;
+
+  for (std::size_t i = 0; i < args.size(); i++) {
+    if (first)
+      first = false;
+    else
+      buf << ' ';
+    buf << args[i];
+  }
+
+  return buf.str();
+}
+
 class value_scope_t : public child_scope_t
 {
   value_t value;
@@ -645,7 +690,12 @@ class value_scope_t : public child_scope_t
 
 public:
   value_scope_t(scope_t& _parent, const value_t& _value)
-    : child_scope_t(_parent), value(_value) {}
+    : child_scope_t(_parent), value(_value) {
+    TRACE_CTOR(value_scope_t, "scope_t&, value_t");
+  }
+  ~value_scope_t() throw() {
+    TRACE_DTOR(value_scope_t);
+  }
 
   virtual string description() {
     return parent->description();
@@ -660,7 +710,7 @@ public:
     if (name == "value")
       return MAKE_FUNCTOR(value_scope_t::get_value);
 
-    return NULL;
+    return child_scope_t::lookup(kind, name);
   }
 };
 

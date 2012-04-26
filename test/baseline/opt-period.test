@@ -257,7 +257,7 @@ test reg -p "weekly january 2008"
 08-Jan-01 - 08-Jan-05           Assets:Cash                 $-20.00      $-20.00
                                 Expenses:Books               $10.00      $-10.00
                                 Liabilities:Cards            $10.00            0
-08-Jan-29 - 08-Jan-31           Assets:Cash                 $-20.00      $-20.00
+08-Jan-27 - 08-Jan-31           Assets:Cash                 $-20.00      $-20.00
                                 Expenses:Books               $10.00      $-10.00
                                 Liabilities:Cards            $10.00            0
 end test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -65,18 +65,18 @@ protected:
   value_to_posts_map         posts_map;
   post_handler_ptr           post_chain;
   report_t&                  report;
-  expr_t                     group_by_expr;
+  expr_t&                    group_by_expr;
   custom_flusher_t           preflush_func;
   optional<custom_flusher_t> postflush_func;
 
 public:
   post_splitter(post_handler_ptr _post_chain,
                 report_t&        _report,
-                expr_t           _group_by_expr)
+                expr_t&          _group_by_expr)
     : post_chain(_post_chain), report(_report),
       group_by_expr(_group_by_expr) {
+    preflush_func = bind(&post_splitter::print_title, this, _1);
     TRACE_CTOR(post_splitter, "scope_t&, post_handler_ptr, expr_t");
-        preflush_func = bind(&post_splitter::print_title, this, _1);
   }
   virtual ~post_splitter() {
     TRACE_DTOR(post_splitter);
@@ -154,9 +154,7 @@ class pass_down_posts : public item_handler<post_t>
 public:
   pass_down_posts(post_handler_ptr handler, Iterator& iter)
     : item_handler<post_t>(handler) {
-    TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
-
-    while (post_t * post = *iter++) {
+    while (post_t * post = *iter) {
       try {
         item_handler<post_t>::operator()(*post);
       }
@@ -164,9 +162,12 @@ public:
         add_error_context(item_context(*post, _("While handling posting")));
         throw;
       }
+      iter.increment();
     }
 
     item_handler<post_t>::flush();
+
+    TRACE_CTOR(pass_down_posts, "post_handler_ptr, posts_iterator");
   }
 
   virtual ~pass_down_posts() {
@@ -372,6 +373,7 @@ public:
   }
   virtual ~anonymize_posts() {
     TRACE_DTOR(anonymize_posts);
+    handler.reset();
   }
 
   void render_commodity(amount_t& amt);
@@ -446,11 +448,12 @@ public:
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
       only_collapse_if_zero(_only_collapse_if_zero), report(_report) {
-    TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
     create_accounts();
+    TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
+    handler.reset();
   }
 
   void create_accounts() {
@@ -496,8 +499,7 @@ public:
                        const bool _also_matching = false)
     : item_handler<post_t>(handler),
       also_matching(_also_matching) {
-    TRACE_CTOR(related_posts,
-               "post_handler_ptr, const bool");
+    TRACE_CTOR(related_posts, "post_handler_ptr, const bool");
   }
   virtual ~related_posts() throw() {
     TRACE_DTOR(related_posts);
@@ -521,8 +523,8 @@ class display_filter_posts : public item_handler<post_t>
   // later in the chain.
 
   report_t&     report;
-  expr_t        display_amount_expr;
-  expr_t        display_total_expr;
+  expr_t&       display_amount_expr;
+  expr_t&       display_total_expr;
   bool          show_rounding;
   value_t       last_display_total;
   temporaries_t temps;
@@ -539,6 +541,7 @@ public:
 
   virtual ~display_filter_posts() {
     TRACE_DTOR(display_filter_posts);
+    handler.reset();
   }
 
   void create_accounts() {
@@ -569,9 +572,10 @@ class changed_value_posts : public item_handler<post_t>
   // later in the chain.
 
   report_t&     report;
-  expr_t        total_expr;
-  expr_t        display_total_expr;
+  expr_t&       total_expr;
+  expr_t&       display_total_expr;
   bool          changed_values_only;
+  bool          historical_prices_only;
   bool          for_accounts_report;
   bool          show_unrealized;
   post_t *      last_post;
@@ -595,6 +599,7 @@ public:
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
+    handler.reset();
   }
 
   void create_accounts() {
@@ -635,15 +640,22 @@ protected:
   public:
     account_t * account;
     value_t     value;
+    bool        is_virtual;
+    bool        must_balance;
 
-    acct_value_t(account_t * a) : account(a) {
-      TRACE_CTOR(acct_value_t, "account_t *");
+    acct_value_t(account_t * a, bool _is_virtual = false,
+                 bool _must_balance = false)
+      : account(a), is_virtual(_is_virtual), must_balance(_must_balance) {
+      TRACE_CTOR(acct_value_t, "account_t *, bool, bool");
     }
-    acct_value_t(account_t * a, value_t& v) : account(a), value(v) {
-      TRACE_CTOR(acct_value_t, "account_t *, value_t&");
+    acct_value_t(account_t * a, value_t& v, bool _is_virtual = false,
+                 bool _must_balance = false)
+      : account(a), value(v), is_virtual(_is_virtual),
+        must_balance(_must_balance) {
+      TRACE_CTOR(acct_value_t, "account_t *, value_t&, bool, bool");
     }
     acct_value_t(const acct_value_t& av)
-      : account(av.account), value(av.value) {
+      : account(av.account), value(av.value), is_virtual(av.is_virtual) {
       TRACE_CTOR(acct_value_t, "copy");
     }
     ~acct_value_t() throw() {
@@ -655,11 +667,11 @@ protected:
   typedef std::pair<string, acct_value_t> values_pair;
 
 protected:
-  expr_t&             amount_expr;
-  values_map          values;
-  optional<string>    date_format;
-  temporaries_t       temps;
-  std::list<post_t *> component_posts;
+  expr_t&              amount_expr;
+  values_map           values;
+  optional<string>     date_format;
+  temporaries_t        temps;
+  std::deque<post_t *> component_posts;
 
 public:
   subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr,
@@ -671,6 +683,7 @@ public:
   }
   virtual ~subtotal_posts() {
     TRACE_DTOR(subtotal_posts);
+    handler.reset();
   }
 
   void report_subtotal(const char * spec_fmt = NULL,
@@ -697,11 +710,11 @@ class interval_posts : public subtotal_posts
 {
   date_interval_t start_interval;
   date_interval_t interval;
-  date_interval_t last_interval;
-  post_t *        last_post;
   account_t *     empty_account;
   bool            exact_periods;
   bool            generate_empty_posts;
+
+  std::deque<post_t *> all_posts;
 
   interval_posts();
 
@@ -713,12 +726,11 @@ public:
                  bool                   _exact_periods        = false,
                  bool                   _generate_empty_posts = false)
     : subtotal_posts(_handler, amount_expr), start_interval(_interval),
-      interval(start_interval), last_post(NULL),
-      exact_periods(_exact_periods),
+      interval(start_interval), exact_periods(_exact_periods),
       generate_empty_posts(_generate_empty_posts) {
+    create_accounts();
     TRACE_CTOR(interval_posts,
                "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
-    create_accounts();
   }
   virtual ~interval_posts() throw() {
     TRACE_DTOR(interval_posts);
@@ -728,21 +740,27 @@ public:
     empty_account = &temps.create_account(_("<None>"));
   }
 
-  void report_subtotal(const date_interval_t& interval);
+  void report_subtotal(const date_interval_t& ival);
 
-  virtual void flush() {
-    if (last_post && interval.duration) {
-      if (interval.is_valid())
-        report_subtotal(interval);
-      subtotal_posts::flush();
-    }
+#if defined(DEBUG_ON)
+  void debug_interval(const date_interval_t& ival) {
+    if (ival.start)
+      DEBUG("filters.interval", "start  = " << *ival.start);
+    else
+      DEBUG("filters.interval", "no start");
+
+    if (ival.finish)
+      DEBUG("filters.interval", "finish = " << *ival.finish);
+    else
+      DEBUG("filters.interval", "no finish");
   }
+#endif
+
   virtual void operator()(post_t& post);
+  virtual void flush();
 
   virtual void clear() {
-    interval = start_interval;
-    last_interval = date_interval_t();
-    last_post = NULL;
+    interval  = start_interval;
 
     subtotal_posts::clear();
     create_accounts();
@@ -751,6 +769,7 @@ public:
 
 class posts_as_equity : public subtotal_posts
 {
+  report_t&   report;
   post_t *    last_post;
   account_t * equity_account;
   account_t * balance_account;
@@ -758,10 +777,11 @@ class posts_as_equity : public subtotal_posts
   posts_as_equity();
 
 public:
-  posts_as_equity(post_handler_ptr _handler, expr_t& amount_expr)
-    : subtotal_posts(_handler, amount_expr) {
-    TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
+  posts_as_equity(post_handler_ptr _handler, report_t& _report,
+                  expr_t& amount_expr)
+    : subtotal_posts(_handler, amount_expr), report(_report) {
     create_accounts();
+    TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
   }
   virtual ~posts_as_equity() throw() {
     TRACE_DTOR(posts_as_equity);
@@ -844,6 +864,7 @@ public:
   }
   virtual ~transfer_details() {
     TRACE_DTOR(transfer_details);
+    handler.reset();
   }
 
   virtual void operator()(post_t& post);
@@ -903,6 +924,7 @@ public:
 
   virtual ~generate_posts() {
     TRACE_DTOR(generate_posts);
+    handler.reset();
   }
 
   void add_period_xacts(period_xacts_list& period_xacts);
@@ -990,6 +1012,7 @@ class inject_posts : public item_handler<post_t>
 
   virtual ~inject_posts() throw() {
     TRACE_DTOR(inject_posts);
+    handler.reset();
   }
 
   virtual void operator()(post_t& post);

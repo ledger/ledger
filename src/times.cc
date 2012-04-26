@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -173,6 +173,7 @@ namespace {
 #else // USE_BOOST_FACETS
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
+    data.tm_year = CURRENT_DATE().year() - 1900;
     data.tm_mday = 1;           // some formats have no day
     if (strptime(str, fmt_str, &data))
       return gregorian::date_from_tm(data);
@@ -196,6 +197,8 @@ namespace {
 
   std::deque<shared_ptr<date_io_t> > readers;
 
+  bool convert_separators_to_slashes = true;
+
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
                                  date_traits_t * traits = NULL)
   {
@@ -204,9 +207,11 @@ namespace {
     char buf[128];
     std::strcpy(buf, date_str);
 
-    for (char * p = buf; *p; p++)
-      if (*p == '.' || *p == '-')
-        *p = '/';
+    if (convert_separators_to_slashes) {
+      for (char * p = buf; *p; p++)
+        if (*p == '.' || *p == '-')
+          *p = '/';
+    }
 
     date_t when = io.parse(buf);
 
@@ -1305,7 +1310,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
         date_interval_t next_interval(*this);
         ++next_interval;
 
-        if (next_interval.start && *next_interval.start < *date) {
+        if (next_interval.start && *next_interval.start <= *date) {
           *this = next_interval;
         } else {
           end_of_duration = none;
@@ -1355,7 +1360,8 @@ void date_interval_t::stabilize(const optional<date_t>& date)
   }
 }
 
-bool date_interval_t::find_period(const date_t& date)
+bool date_interval_t::find_period(const date_t& date,
+                                  const bool    allow_shift)
 {
   stabilize(date);
 
@@ -1397,6 +1403,12 @@ bool date_interval_t::find_period(const date_t& date)
   DEBUG("times.interval", "date        = " << date);
   DEBUG("times.interval", "scan        = " << scan);
   DEBUG("times.interval", "end_of_scan = " << end_of_scan);
+#if defined(DEBUG_ON)
+  if (finish)
+    DEBUG("times.interval", "finish      = " << *finish);
+  else
+    DEBUG("times.interval", "finish is not set");
+#endif
 
   while (date >= scan && (! finish || scan < *finish)) {
     if (date < end_of_scan) {
@@ -1411,10 +1423,18 @@ bool date_interval_t::find_period(const date_t& date)
 
       return true;
     }
+    else if (! allow_shift) {
+      break;
+    }
 
     scan        = duration->add(scan);
     end_of_scan = duration->add(scan);
+
+    DEBUG("times.interval", "scan        = " << scan);
+    DEBUG("times.interval", "end_of_scan = " << end_of_scan);
   }
+
+  DEBUG("times.interval", "false: failed scan");
 
   return false;
 }
@@ -1759,6 +1779,7 @@ void set_date_format(const char * format)
 void set_input_date_format(const char * format)
 {
   readers.push_front(shared_ptr<date_io_t>(new date_io_t(format, true)));
+  convert_separators_to_slashes = false;
 }
 
 void times_initialize()

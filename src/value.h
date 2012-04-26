@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -179,8 +179,8 @@ public:
      */
     explicit storage_t(const storage_t& rhs)
       : type(rhs.type), refc(0) {
-      TRACE_CTOR(value_t::storage_t, "copy");
       *this = rhs;
+      TRACE_CTOR(value_t::storage_t, "copy");
     }
     storage_t& operator=(const storage_t& rhs);
 
@@ -290,73 +290,75 @@ public:
   }
 
   value_t(const bool val) {
-    TRACE_CTOR(value_t, "const bool");
     set_boolean(val);
+    TRACE_CTOR(value_t, "const bool");
   }
 
   value_t(const datetime_t& val) {
-    TRACE_CTOR(value_t, "const datetime_t&");
     set_datetime(val);
+    TRACE_CTOR(value_t, "const datetime_t&");
   }
   value_t(const date_t& val) {
-    TRACE_CTOR(value_t, "const date_t&");
     set_date(val);
+    TRACE_CTOR(value_t, "const date_t&");
   }
 
   value_t(const long val) {
-    TRACE_CTOR(value_t, "const long");
     set_long(val);
+    TRACE_CTOR(value_t, "const long");
   }
   value_t(const unsigned long val) {
-    TRACE_CTOR(value_t, "const unsigned long");
     set_amount(val);
+    TRACE_CTOR(value_t, "const unsigned long");
   }
   value_t(const double val) {
-    TRACE_CTOR(value_t, "const double");
     set_amount(val);
+    TRACE_CTOR(value_t, "const double");
   }
   value_t(const amount_t& val) {
-    TRACE_CTOR(value_t, "const amount_t&");
     set_amount(val);
+    TRACE_CTOR(value_t, "const amount_t&");
   }
   value_t(const balance_t& val) {
-    TRACE_CTOR(value_t, "const balance_t&");
     set_balance(val);
+    TRACE_CTOR(value_t, "const balance_t&");
   }
   value_t(const mask_t& val) {
-    TRACE_CTOR(value_t, "const mask_t&");
     set_mask(val);
+    TRACE_CTOR(value_t, "const mask_t&");
   }
 
   explicit value_t(const string& val, bool literal = false) {
-    TRACE_CTOR(value_t, "const string&, bool");
     if (literal)
       set_string(val);
     else
       set_amount(amount_t(val));
+
+    TRACE_CTOR(value_t, "const string&, bool");
   }
   explicit value_t(const char * val, bool literal = false) {
-    TRACE_CTOR(value_t, "const char *");
     if (literal)
       set_string(val);
     else
       set_amount(amount_t(val));
+
+    TRACE_CTOR(value_t, "const char *");
   }
 
   value_t(const sequence_t& val) {
-    TRACE_CTOR(value_t, "const sequence_t&");
     set_sequence(val);
+    TRACE_CTOR(value_t, "const sequence_t&");
   }
 
   explicit value_t(scope_t * item) {
-    TRACE_CTOR(value_t, "scope_t *");
     set_scope(item);
+    TRACE_CTOR(value_t, "scope_t *");
   }
 #if 0
   template <typename T>
   explicit value_t(T& item) {
-    TRACE_CTOR(value_t, "T&");
     set_any(item);
+    TRACE_CTOR(value_t, "T&");
   }
 #endif
 
@@ -375,8 +377,8 @@ public:
    * object.  A true copy is only ever made prior to modification.
    */
   value_t(const value_t& val) {
-    TRACE_CTOR(value_t, "copy");
     *this = val;
+    TRACE_CTOR(value_t, "copy");
   }
   value_t& operator=(const value_t& val) {
     if (! (this == &val || storage == val.storage))
@@ -477,14 +479,12 @@ public:
   void    in_place_unreduce();  // exists for efficiency's sake
 
   // Return the "market value" of a given value at a specific time.
-  value_t value(const optional<datetime_t>&   moment       = none,
-                const optional<commodity_t&>& in_terms_of  = none) const;
+  value_t value(const datetime_t&   moment      = datetime_t(),
+                const commodity_t * in_terms_of = NULL) const;
 
-  value_t price() const;
-
-  value_t exchange_commodities(const std::string&          commodities,
-                               const bool                  add_prices = false,
-                               const optional<datetime_t>& moment     = none);
+  value_t exchange_commodities(const std::string& commodities,
+                               const bool         add_prices = false,
+                               const datetime_t&  moment     = datetime_t());
 
   /**
    * Truth tests.

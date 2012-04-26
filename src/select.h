@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,12 +29,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+/**
+ * @addtogroup select
+ */
 
-#include "predicate.h"
-#include "query.h"
-#include "op.h"
+/**
+ * @file   select.h
+ * @author John Wiegley
+ *
+ * @ingroup select
+ */
+#ifndef _SELECT_H
+#define _SELECT_H
+
+#include "utils.h"
+#include "value.h"
 
 namespace ledger {
 
+class call_scope_t;
+value_t select_command(call_scope_t& args);
+
 } // namespace ledger
+
+#endif // _SELECT_H

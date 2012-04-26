@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -63,16 +63,15 @@ generate_posts_iterator::generate_posts_iterator
     neg_number_range(-10000, -1), neg_number_gen(rnd_gen, neg_number_range),
     pos_number_range(1, 10000), pos_number_gen(rnd_gen, pos_number_range)
 {
-  TRACE_CTOR(generate_posts_iterator, "bool");
-
   std::ostringstream next_date_buf;
   generate_date(next_date_buf);
   next_date = parse_date(next_date_buf.str());
 
-  std::ostringstream next_eff_date_buf;
-  generate_date(next_eff_date_buf);
-  next_eff_date = parse_date(next_eff_date_buf.str());
+  std::ostringstream next_aux_date_buf;
+  generate_date(next_aux_date_buf);
+  next_aux_date = parse_date(next_aux_date_buf.str());
 
+  TRACE_CTOR(generate_posts_iterator, "bool");
 }
 
 void generate_posts_iterator::generate_string(std::ostream& out, int len,
@@ -326,8 +325,8 @@ void generate_posts_iterator::generate_xact(std::ostream& out)
   next_date += gregorian::days(six_gen());
   if (truth_gen()) {
     out << '=';
-    out << format_date(next_eff_date, FMT_WRITTEN);
-    next_eff_date += gregorian::days(six_gen());
+    out << format_date(next_aux_date, FMT_WRITTEN);
+    next_aux_date += gregorian::days(six_gen());
   }
   out << ' ';
 
@@ -360,9 +359,15 @@ void generate_posts_iterator::increment()
 
     DEBUG("generate.post", "The post we intend to parse:\n" << buf.str());
 
-    std::istringstream in(buf.str());
     try {
-      if (session.journal->parse(in, session) != 0) {
+      shared_ptr<std::istringstream> in(new std::istringstream(buf.str()));
+
+      parse_context_stack_t parsing_context;
+      parsing_context.push(in);
+      parsing_context.get_current().journal = session.journal.get();
+      parsing_context.get_current().scope   = &session;
+
+      if (session.journal->read(parsing_context) != 0) {
         VERIFY(session.journal->xacts.back()->valid());
         posts.reset(*session.journal->xacts.back());
         post = *posts++;

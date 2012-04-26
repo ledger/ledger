@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,6 +37,7 @@
 #include "report.h"
 #include "compare.h"
 #include "pool.h"
+#include "history.h"
 
 namespace ledger {
 
@@ -262,6 +263,8 @@ void anonymize_posts::operator()(post_t& post)
 
     xact.payee = to_hex(message_digest);
     xact.note  = none;
+  } else {
+    xact.journal = post.xact->journal;
   }
 
   std::list<string> account_names;
@@ -337,9 +340,10 @@ namespace {
                     const bool       act_date_p    = true,
                     const value_t&   total         = value_t(),
                     const bool       direct_amount = false,
-                    const bool       mark_visited  = false)
+                    const bool       mark_visited  = false,
+                    const bool       bidir_link    = true)
   {
-    post_t& post = temps.create_post(*xact, account);
+    post_t& post = temps.create_post(*xact, account, bidir_link);
     post.add_flags(ITEM_GENERATED);
 
     // If the account for this post is all virtual, then report the post as
@@ -509,8 +513,8 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler,
     display_total_expr(report.HANDLER(display_total_).expr),
     show_rounding(_show_rounding)
 {
-  TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
   create_accounts();
+  TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
 
 bool display_filter_posts::output_rounding(post_t& post)
@@ -519,7 +523,8 @@ bool display_filter_posts::output_rounding(post_t& post)
   value_t      new_display_total;
 
   if (show_rounding) {
-    new_display_total = display_total_expr.calc(bound_scope);
+    new_display_total = (display_total_expr.calc(bound_scope)
+                         .strip_annotations(report.what_to_keep()));
 
     DEBUG("filters.changed_value.rounding",
           "rounding.new_display_total     = " << new_display_total);
@@ -536,7 +541,8 @@ bool display_filter_posts::output_rounding(post_t& post)
     return true;
   }
 
-  if (value_t repriced_amount = display_amount_expr.calc(bound_scope)) {
+  if (value_t repriced_amount = (display_amount_expr.calc(bound_scope)
+                                 .strip_annotations(report.what_to_keep()))) {
     if (! last_display_total.is_null()) {
       DEBUG("filters.changed_value.rounding",
             "rounding.repriced_amount       = " << repriced_amount);
@@ -561,7 +567,9 @@ bool display_filter_posts::output_rounding(post_t& post)
                      /* date=          */ date_t(),
                      /* act_date_p=    */ true,
                      /* total=         */ precise_display_total,
-                     /* direct_amount= */ true);
+                     /* direct_amount= */ true,
+                     /* mark_visited=  */ false,
+                     /* bidir_link=    */ false);
       }
     }
     if (show_rounding)
@@ -590,13 +598,11 @@ changed_value_posts::changed_value_posts
                report.HANDLER(display_total_).expr),
     display_total_expr(report.HANDLER(display_total_).expr),
     changed_values_only(report.HANDLED(revalued_only)),
+    historical_prices_only(report.HANDLED(historical)),
     for_accounts_report(_for_accounts_report),
     show_unrealized(_show_unrealized), last_post(NULL),
     display_filter(_display_filter)
 {
-  TRACE_CTOR(changed_value_posts,
-             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
-
   string gains_equity_account_name;
   if (report.HANDLED(unrealized_gains_))
     gains_equity_account_name = report.HANDLER(unrealized_gains_).str();
@@ -616,14 +622,19 @@ changed_value_posts::changed_value_posts
   losses_equity_account->add_flags(ACCOUNT_GENERATED);
 
   create_accounts();
+
+  TRACE_CTOR(changed_value_posts,
+             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
 }
 
 void changed_value_posts::flush()
 {
   if (last_post && last_post->date() <= report.terminus.date()) {
-    if (! for_accounts_report)
-      output_intermediate_prices(*last_post, report.terminus.date());
-    output_revaluation(*last_post, report.terminus.date());
+    if (! historical_prices_only) {
+      if (! for_accounts_report)
+        output_intermediate_prices(*last_post, report.terminus.date());
+      output_revaluation(*last_post, report.terminus.date());
+    }
     last_post = NULL;
   }
   item_handler<post_t>::flush();
@@ -686,6 +697,19 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date)
       }
     }
   }
+}
+
+namespace {
+  struct insert_prices_in_map {
+    price_map_t& all_prices;
+
+    insert_prices_in_map(price_map_t& _all_prices)
+      : all_prices(_all_prices) {}
+
+    void operator()(datetime_t& date, const amount_t& price) {
+      all_prices.insert(price_map_t::value_type(date, price));
+    }
+  };
 }
 
 void changed_value_posts::output_intermediate_prices(post_t&       post,
@@ -754,36 +778,19 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
     // fall through...
 
   case value_t::BALANCE: {
-    commodity_t::history_map all_prices;
+    price_map_t all_prices;
 
     foreach (const balance_t::amounts_map::value_type& amt_comm,
-             display_total.as_balance().amounts) {
-      if (optional<commodity_t::varied_history_t&> hist =
-          amt_comm.first->varied_history()) {
-        foreach
-          (const commodity_t::history_by_commodity_map::value_type& comm_hist,
-           hist->histories) {
-          foreach (const commodity_t::history_map::value_type& price,
-                   comm_hist.second.prices) {
-            if (price.first.date() > post.value_date() &&
-                price.first.date() < current) {
-              DEBUG("filters.revalued", post.value_date() << " < "
-                    << price.first.date() << " < " << current);
-              DEBUG("filters.revalued", "inserting "
-                    << price.second << " at " << price.first.date());
-              all_prices.insert(price);
-            }
-          }
-        }
-      }
-    }
+             display_total.as_balance().amounts)
+      amt_comm.first->map_prices(insert_prices_in_map(all_prices),
+                                 datetime_t(current),
+                                 datetime_t(post.value_date()), true);
 
     // Choose the last price from each day as the price to use
     typedef std::map<const date_t, bool> date_map;
     date_map pricing_dates;
 
-    BOOST_REVERSE_FOREACH
-      (const commodity_t::history_map::value_type& price, all_prices) {
+    BOOST_REVERSE_FOREACH(const price_map_t::value_type& price, all_prices) {
       // This insert will fail if a later price has already been inserted
       // for that date.
       DEBUG("filters.revalued",
@@ -808,7 +815,7 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
 void changed_value_posts::operator()(post_t& post)
 {
   if (last_post) {
-    if (! for_accounts_report)
+    if (! for_accounts_report && ! historical_prices_only)
       output_intermediate_prices(*last_post, post.value_date());
     output_revaluation(*last_post, post.value_date());
   }
@@ -836,10 +843,17 @@ void subtotal_posts::report_subtotal(const char *                     spec_fmt,
     foreach (post_t * post, component_posts) {
       date_t date       = post->date();
       date_t value_date = post->value_date();
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
       if (! range_start || date < *range_start)
         range_start = date;
       if (! range_finish || value_date > *range_finish)
         range_finish = value_date;
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+#pragma GCC diagnostic pop
+#endif
     }
   }
   component_posts.clear();
@@ -879,15 +893,39 @@ void subtotal_posts::operator()(post_t& post)
   account_t * acct = post.reported_account();
   assert(acct);
 
+#if 0
+  // jww (2012-04-06): The problem with doing this early is that
+  // fn_display_amount will recalculate this again.  For example, if you
+  // use --invert, it will invert both here and in the display amount,
+  // effectively negating it.
+  bind_scope_t bound_scope(*amount_expr.get_context(), post);
+  value_t amount(amount_expr.calc(bound_scope));
+#else
+  value_t amount(post.amount);
+#endif
+
+  post.xdata().compound_value = amount;
+  post.xdata().add_flags(POST_EXT_COMPOUND);
+
   values_map::iterator i = values.find(acct->fullname());
   if (i == values.end()) {
-    value_t temp;
-    post.add_to_value(temp, amount_expr);
-    std::pair<values_map::iterator, bool> result
-      = values.insert(values_pair(acct->fullname(), acct_value_t(acct, temp)));
+#if defined(DEBUG_ON)
+    std::pair<values_map::iterator, bool> result =
+#endif
+      values.insert(values_pair
+                    (acct->fullname(),
+                     acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
+                                  post.has_flags(POST_MUST_BALANCE))));
+#if defined(DEBUG_ON)
     assert(result.second);
+#endif
   } else {
-    post.add_to_value((*i).second.value, amount_expr);
+    if (post.has_flags(POST_VIRTUAL) != (*i).second.is_virtual)
+      throw_(std::logic_error,
+             _("'equity' cannot accept virtual and "
+               "non-virtual postings to the same account"));
+
+    add_or_set_value((*i).second.value, amount);
   }
 
   // If the account for this post is all virtual, mark it as
@@ -904,55 +942,139 @@ void subtotal_posts::operator()(post_t& post)
 
 void interval_posts::report_subtotal(const date_interval_t& ival)
 {
-  if (last_post && ival) {
-    if (exact_periods)
-      subtotal_posts::report_subtotal();
-    else
-      subtotal_posts::report_subtotal(NULL, ival);
-  }
+  if (exact_periods)
+    subtotal_posts::report_subtotal();
+  else
+    subtotal_posts::report_subtotal(NULL, ival);
+}
 
-  last_post = NULL;
+namespace {
+  struct sort_posts_by_date {
+    bool operator()(post_t * left, post_t * right) const {
+      return left->date() < right->date();
+    }
+  };
 }
 
 void interval_posts::operator()(post_t& post)
 {
-  if (! interval.find_period(post.date()))
-    return;
+  // If there is a duration (such as weekly), we must generate the
+  // report in two passes.  Otherwise, we only have to check whether the
+  // post falls within the reporting period.
 
   if (interval.duration) {
-    if (last_interval && interval != last_interval) {
-      report_subtotal(last_interval);
-
-      if (generate_empty_posts) {
-        for (++last_interval; interval != last_interval; ++last_interval) {
-          // Generate a null posting, so the intervening periods can be
-          // seen when -E is used, or if the calculated amount ends up being
-          // non-zero
-          xact_t& null_xact = temps.create_xact();
-          null_xact._date = last_interval.inclusive_end();
-
-          post_t& null_post = temps.create_post(null_xact, empty_account);
-          null_post.add_flags(POST_CALCULATED);
-          null_post.amount = 0L;
-
-          last_post = &null_post;
-          subtotal_posts::operator()(null_post);
-
-          report_subtotal(last_interval);
-        }
-        assert(interval == last_interval);
-      } else {
-        last_interval = interval;
-      }
-    } else {
-      last_interval = interval;
-    }
-    subtotal_posts::operator()(post);
-  } else {
+    all_posts.push_back(&post);
+  }
+  else if (interval.find_period(post.date())) {
     item_handler<post_t>::operator()(post);
   }
+}
 
-  last_post = &post;
+void interval_posts::flush()
+{
+  if (! interval.duration) {
+    item_handler<post_t>::flush();
+    return;
+  }
+
+  // Sort all the postings we saw by date ascending
+  std::stable_sort(all_posts.begin(), all_posts.end(),
+                   sort_posts_by_date());
+
+  // Determine the beginning interval by using the earliest post
+  if (! interval.find_period(all_posts.front()->date()))
+    throw_(std::logic_error, _("Failed to find period for interval report"));
+
+  // Walk the interval forward reporting all posts within each one
+  // before moving on, until we reach the end of all_posts
+  bool saw_posts = false;
+  for (std::deque<post_t *>::iterator i = all_posts.begin();
+       i != all_posts.end(); ) {
+    post_t * post(*i);
+
+    DEBUG("filters.interval",
+          "Considering post " << post->date() << " = " << post->amount);
+#if defined(DEBUG_ON)
+    DEBUG("filters.interval", "interval is:");
+    debug_interval(interval);
+#endif
+    assert(! interval.finish || post->date() < *interval.finish);
+
+    if (interval.within_period(post->date())) {
+      DEBUG("filters.interval", "Calling subtotal_posts::operator()");
+      subtotal_posts::operator()(*post);
+      ++i;
+      saw_posts = true;
+    } else {
+      if (saw_posts) {
+        DEBUG("filters.interval",
+              "Calling subtotal_posts::report_subtotal()");
+        report_subtotal(interval);
+        saw_posts = false;
+      }
+      else if (generate_empty_posts) {
+        // Generate a null posting, so the intervening periods can be
+        // seen when -E is used, or if the calculated amount ends up
+        // being non-zero
+        xact_t& null_xact = temps.create_xact();
+        null_xact._date = interval.inclusive_end();
+
+        post_t& null_post = temps.create_post(null_xact, empty_account);
+        null_post.add_flags(POST_CALCULATED);
+        null_post.amount = 0L;
+
+        subtotal_posts::operator()(null_post);
+        report_subtotal(interval);
+      }
+
+      DEBUG("filters.interval", "Advancing interval");
+      ++interval;
+    }
+  }
+
+  // If the last postings weren't reported, do so now.
+  if (saw_posts) {
+    DEBUG("filters.interval",
+          "Calling subtotal_posts::report_subtotal() at end");
+    report_subtotal(interval);
+  }
+    
+  // Tell our parent class to flush
+  subtotal_posts::flush();
+}
+
+namespace {
+  struct create_post_from_amount
+  {
+    post_handler_ptr handler;
+    xact_t&          xact;
+    account_t&       balance_account;
+    temporaries_t&   temps;
+
+    explicit create_post_from_amount(post_handler_ptr _handler,
+                                     xact_t&          _xact,
+                                     account_t&       _balance_account,
+                                     temporaries_t&   _temps)
+      : handler(_handler), xact(_xact),
+        balance_account(_balance_account), temps(_temps) {
+      TRACE_CTOR(create_post_from_amount,
+                 "post_handler_ptr, xact_t&, account_t&, temporaries_t&");
+    }
+    create_post_from_amount(const create_post_from_amount& other)
+      : handler(other.handler), xact(other.xact),
+        balance_account(other.balance_account), temps(other.temps) {
+      TRACE_CTOR(create_post_from_amount, "copy");
+    }
+    ~create_post_from_amount() throw() {
+      TRACE_DTOR(create_post_from_amount);
+    }
+
+    void operator()(const amount_t& amount) {
+      post_t& balance_post = temps.create_post(xact, &balance_account);
+      balance_post.amount = - amount;
+      (*handler)(balance_post);
+    }      
+  };
 }
 
 void posts_as_equity::report_subtotal()
@@ -971,40 +1093,47 @@ void posts_as_equity::report_subtotal()
 
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
-    if (pair.second.value.is_balance()) {
-      foreach (const balance_t::amounts_map::value_type& amount_pair,
-               pair.second.value.as_balance().amounts)
-        handle_value(/* value=      */ amount_pair.second,
+    value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
+    if (! value.is_zero()) {
+      if (value.is_balance()) {
+        foreach (const balance_t::amounts_map::value_type& amount_pair,
+                 value.as_balance_lval().amounts) {
+          if (! amount_pair.second.is_zero())
+            handle_value(/* value=      */ amount_pair.second,
+                         /* account=    */ pair.second.account,
+                         /* xact=       */ &xact,
+                         /* temps=      */ temps,
+                         /* handler=    */ handler,
+                         /* date=       */ finish,
+                         /* act_date_p= */ false);
+        }
+      } else {
+        handle_value(/* value=      */ value.to_amount(),
                      /* account=    */ pair.second.account,
                      /* xact=       */ &xact,
                      /* temps=      */ temps,
                      /* handler=    */ handler,
                      /* date=       */ finish,
                      /* act_date_p= */ false);
-    } else {
-      handle_value(/* value=      */ pair.second.value,
-                   /* account=    */ pair.second.account,
-                   /* xact=       */ &xact,
-                   /* temps=      */ temps,
-                   /* handler=    */ handler,
-                   /* date=       */ finish,
-                   /* act_date_p= */ false);
+      }
     }
-    total += pair.second.value;
+
+    if (! pair.second.is_virtual || pair.second.must_balance)
+      total += value;
   }
   values.clear();
 
-  if (total.is_balance()) {
-    foreach (const balance_t::amounts_map::value_type& pair,
-             total.as_balance().amounts) {
-      post_t& balance_post = temps.create_post(xact, balance_account);
-      balance_post.amount = - pair.second;
-      (*handler)(balance_post);
-    }
-  } else {
-    post_t& balance_post = temps.create_post(xact, balance_account);
-    balance_post.amount = - total.to_amount();
-    (*handler)(balance_post);
+  // This last part isn't really needed, since an Equity:Opening
+  // Balances posting with a null amount will automatically balance with
+  // all the other postings generated.  But it does make the full
+  // balancing amount clearer to the user.
+  if (! total.is_zero()) {
+    create_post_from_amount post_creator(handler, xact,
+                                         *balance_account, temps);
+    if (total.is_balance())
+      total.as_balance_lval().map_sorted_amounts(post_creator);
+    else
+      post_creator(total.to_amount());
   }
 }
 
@@ -1346,8 +1475,6 @@ inject_posts::inject_posts(post_handler_ptr handler,
                            account_t *      master)
   : item_handler<post_t>(handler)
 {
-  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
-
   scoped_array<char> buf(new char[tag_list.length() + 1]);
   std::strcpy(buf.get(), tag_list.c_str());
 
@@ -1364,6 +1491,8 @@ inject_posts::inject_posts(post_handler_ptr handler,
     tags_list.push_back
       (tags_list_pair(q, tag_mapping_pair(account, tag_injected_set())));
   }
+
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
 }
 
 void inject_posts::operator()(post_t& post)

@@ -1,0 +1,17 @@
+D 1000.00 EUR
+
+2011-02-27 * Australia
+    A    -100.00 AUD @ 0.746 EUR
+    B
+
+2012-03-12 * Withdrawal
+    Assets:Cash                           USD 200.00 
+    Expenses:Banking:Fees                   USD 2.50
+    Assets:Chequing                      CAD -203.42
+    Epenses:Banking:Fees                    CAD 2.00
+    Assets:Chqeuing                        CAD -2.00
+
+test pricedb
+P 2011/02/27 00:00:00 AUD 0.746 EUR
+P 2012/03/12 00:00:00 USD CAD 1.00454320987654321
+end test

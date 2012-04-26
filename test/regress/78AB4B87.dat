@@ -1,0 +1,14 @@
+D 1000.00 EUR
+P 2011-01-01 GBP 1.2 EUR
+
+2011-01-01 * Opening balance
+    Assets:Bank                    10.00 GBP
+    Equity:Opening balance
+
+2012-01-02 * Test
+    Assets:Bank                      5.00 GBP
+    Income:Whatever
+
+2012-01-03 * Test
+    Assets:Bank
+    Income:Whatever              -5.00 EUR @ 0.8733 GBP

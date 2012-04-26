@@ -1,0 +1,39 @@
+2012-01-01 * Opening balance
+    A           10.00 GBP
+    B
+
+2012-01-02 * Test
+    A           10.00 GBP @@ 12.00 EUR
+    B
+
+2012-01-03 * Test
+    B           12.00 EUR @@ 15.80 USD
+    C
+
+2012-01-04 * Test
+    C           15.80 USD @ 0.63 GBP
+    D
+
+test prices
+2012/01/02 GBP          1.20 EUR
+2012/01/03 EUR      1.3166666667 USD
+2012/01/04 USD          0.63 GBP
+end test
+
+test prices EUR
+2012/01/03 EUR      1.3166666667 USD
+end test
+
+test prices USD
+2012/01/04 USD          0.63 GBP
+end test
+
+test prices GBP
+2012/01/02 GBP          1.20 EUR
+end test
+
+test prices U
+2012/01/03 EUR      1.3166666667 USD
+2012/01/04 USD          0.63 GBP
+end test
+

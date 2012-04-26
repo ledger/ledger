@@ -1,0 +1,31 @@
+
+2012-02-28 * Test
+    E               30.00 EUR
+    F
+
+2012-02-29 * Test
+    E               30.00 EUR
+    F
+
+2012-03-24 Test
+    A               30.00 EUR
+    B
+
+test stats --now "2012-03-31"
+Time period: 12-Feb-28 to 12-Mar-24 (25 days)
+
+  Files these postings came from:
+    $sourcepath/test/baseline/cmd-stats.test
+
+  Unique payees:               1
+  Unique accounts:             4
+
+  Number of postings:          6 (0.24 per day)
+  Uncleared postings:          2
+
+  Days since last post:        7
+  Posts in last 7 days:        2
+  Posts in last 30 days:       2
+  Posts seen this month:       2
+end test
+

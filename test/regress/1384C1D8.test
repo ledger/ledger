@@ -1,0 +1,27 @@
+@alias OLD1 = NEW1
+
+2012-01-01 Something
+  OLD1  $10.00
+  Other
+
+!alias OLD2 = NEW2
+
+2012-01-01 Something
+  OLD2  $10.00
+  Other
+
+account NEW3
+  alias OLD3
+
+2012-01-01 Something
+  OLD3  $10.00
+  Other
+
+test bal
+              $10.00  NEW1
+              $10.00  NEW2
+              $10.00  NEW3
+             $-30.00  Other
+--------------------
+                   0
+end test

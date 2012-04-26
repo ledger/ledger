@@ -190,7 +190,7 @@
     Expenses:Books         $120.00
     Assets:Cash
 
-test reg --deviation books
+test reg -A --deviation books
 08-Jan-01 January               Expenses:Books               $10.00            0
 08-Jan-31 End of January        Expenses:Books               $10.00            0
 08-Feb-01 February              Expenses:Books               $20.00        $6.67

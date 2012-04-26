@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -50,8 +50,8 @@ void debug_assert(const string& reason,
                   std::size_t   line)
 {
   std::ostringstream buf;
-  buf << "Assertion failed in \"" << file << "\", line " << line
-      << ": " << func << ": " << reason;
+  buf << "Assertion failed in " << file_context(file, line)
+      << func << ": " << reason;
   throw assertion_failed(buf.str());
 }
 
@@ -270,13 +270,81 @@ void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
 
 namespace ledger {
 
-inline void report_count_map(std::ostream& out, object_count_map& the_map)
-{
-  foreach (object_count_map::value_type& pair, the_map)
-    out << "  " << std::right << std::setw(12) << pair.second.first
-        << "  " << std::right << std::setw(7) << pair.second.second
-        << "  " << std::left  << pair.first
-        << std::endl;
+namespace {
+  void stream_commified_number(std::ostream& out, std::size_t num)
+  {
+    std::ostringstream buf;
+    std::ostringstream obuf;
+
+    buf << num;
+
+    string number(buf.str());
+
+    int integer_digits = 0;
+    // Count the number of integer digits
+    for (const char * p = number.c_str(); *p; p++) {
+      if (*p == '.')
+        break;
+      else if (*p != '-')
+        integer_digits++;
+    }
+
+    for (const char * p = number.c_str(); *p; p++) {
+      if (*p == '.') {
+        obuf << *p;
+        assert(integer_digits <= 3);
+      }
+      else if (*p == '-') {
+        obuf << *p;
+      }
+      else {
+        obuf << *p;
+
+        if (integer_digits > 3 && --integer_digits % 3 == 0)
+          obuf << ',';
+      }
+    }
+
+    out << obuf.str();
+  }
+
+  void stream_memory_size(std::ostream& out, std::size_t size)
+  {
+    std::ostringstream obuf;
+
+    if (size > 10 * 1024 * 1024)
+      obuf << "\033[1m";
+    if (size > 100 * 1024 * 1024)
+      obuf << "\033[31m";
+
+    obuf << std::setw(7);
+
+    if (size < 1024)
+      obuf << size << 'b';
+    else if (size < (1024 * 1024))
+      obuf << int(double(size) / 1024.0) << 'K';
+    else if (size < (1024 * 1024 * 1024))
+      obuf << int(double(size) / (1024.0 * 1024.0)) << 'M';
+    else
+      obuf << int(double(size) / (1024.0 * 1024.0 * 1024.0)) << 'G';
+
+    if (size > 10 * 1024 * 1024)
+      obuf << "\033[0m";
+
+    out << obuf.str();
+  }
+
+  void report_count_map(std::ostream& out, object_count_map& the_map)
+  {
+    foreach (object_count_map::value_type& pair, the_map) {
+      out << "  " << std::right << std::setw(18);
+      stream_commified_number(out, pair.second.first);
+      out << "  " << std::right << std::setw(7);
+      stream_memory_size(out, pair.second.second);
+      out << "  " << std::left  << pair.first
+          << std::endl;
+    }
+  }
 }
 
 std::size_t current_objects_size()
@@ -354,7 +422,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
 void report_memory(std::ostream& out, bool report_all)
 {
-  if (! live_memory || ! memory_tracing_active) return;
+  if (! live_memory) return;
 
   if (live_memory_count->size() > 0) {
     out << "NOTE: There may be memory held by Boost "
@@ -366,11 +434,13 @@ void report_memory(std::ostream& out, bool report_all)
   if (live_memory->size() > 0) {
     out << "Live memory:" << std::endl;
 
-    foreach (const memory_map::value_type& pair, *live_memory)
-      out << "  " << std::right << std::setw(12) << pair.first
-          << "  " << std::right << std::setw(7) << pair.second.second
-          << "  " << std::left  << pair.second.first
+    foreach (const memory_map::value_type& pair, *live_memory) {
+      out << "  " << std::right << std::setw(18) << pair.first
+          << "  " << std::right << std::setw(7);
+      stream_memory_size(out, pair.second.second);
+      out << "  " << std::left  << pair.second.first
           << std::endl;
+    }
   }
 
   if (report_all && total_memory_count->size() > 0) {
@@ -386,11 +456,13 @@ void report_memory(std::ostream& out, bool report_all)
   if (live_objects->size() > 0) {
     out << "Live objects:" << std::endl;
 
-    foreach (const objects_map::value_type& pair, *live_objects)
-      out << "  " << std::right << std::setw(12) << pair.first
-          << "  " << std::right << std::setw(7) << pair.second.second
-          << "  " << std::left  << pair.second.first
+    foreach (const objects_map::value_type& pair, *live_objects) {
+      out << "  " << std::right << std::setw(18) << pair.first
+          << "  " << std::right << std::setw(7);
+      stream_memory_size(out, pair.second.second);
+      out << "  " << std::left  << pair.second.first
           << std::endl;
+    }
   }
 
   if (report_all) {
@@ -529,18 +601,6 @@ std::ostringstream _log_buffer;
 uint8_t            _trace_level;
 #endif
 
-static inline void stream_memory_size(std::ostream& out, std::size_t size)
-{
-  if (size < 1024)
-    out << size << 'b';
-  else if (size < (1024 * 1024))
-    out << (double(size) / 1024.0) << 'K';
-  else if (size < (1024 * 1024 * 1024))
-    out << (double(size) / (1024.0 * 1024.0)) << 'M';
-  else
-    out << (double(size) / (1024.0 * 1024.0 * 1024.0)) << 'G';
-}
-
 static bool  logger_has_run = false;
 static ptime logger_start;
 
@@ -553,9 +613,6 @@ void logger_func(log_level_t level)
 #if defined(VERIFY_ON)
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
-#else
-    IF_VERIFY()
-      *_log_stream << "   TIME" << std::endl;
 #endif
   }
 
@@ -603,12 +660,16 @@ void logger_func(log_level_t level)
 
 namespace ledger {
 
-optional<std::string> _log_category;
+optional<std::string>     _log_category;
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+optional<boost::u32regex> _log_category_re;
+#else
+optional<boost::regex>    _log_category_re;
+#endif
 
 struct __maybe_enable_debugging {
   __maybe_enable_debugging() {
-    const char * p = std::getenv("LEDGER_DEBUG");
-    if (p != NULL) {
+    if (const char * p = std::getenv("LEDGER_DEBUG")) {
       _log_level    = LOG_DEBUG;
       _log_category = p;
     }

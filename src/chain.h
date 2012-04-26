@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -50,8 +50,9 @@ class post_t;
 class account_t;
 
 template <typename T>
-struct item_handler : public noncopyable
+class item_handler : public noncopyable
 {
+protected:
   shared_ptr<item_handler> handler;
 
 public:

@@ -1,0 +1,21 @@
+test eval 'foo(w, u)=(z=w+u;z*2); (a=1 + 1; foo(10, 15))'
+50
+end test
+
+test eval 'foo(x, y, z)=print(x, y, z); bar(x)=x; foo(1, 2, 3); bar(3)'
+123
+3
+end test
+
+test eval 'total_expr=$100;amount_expr=$15;x=total_expr;x=x/5;x=amount_expr-x*5;x'
+$-85
+end test
+
+test eval 'foo = x, y, z -> print(x, y, z); foo(1, 2, 3)'
+123
+1
+end test
+
+test eval 'foo(x,y)=y(1, 2, 3);foo(amount_expr, (s,d,t -> t))'
+3
+end test

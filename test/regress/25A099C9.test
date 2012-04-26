@@ -1,17 +1,43 @@
-test -f $sourcepath/src/amount.h reg -> 7
+test -f src/amount.h reg -> 20
 __ERROR__
-While parsing file "$sourcepath/src/amount.h", line 66: 
+While parsing file "src/amount.h", line 2: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 33: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 37: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 66: 
 Error: No quantity specified for amount
-While parsing file "$sourcepath/src/amount.h", line 726: 
+While parsing file "src/amount.h", line 69: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 83: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 93: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 99: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 121: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 132: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 702: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 732: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 740: 
+Error: Unexpected whitespace at beginning of line
+While parsing file "src/amount.h", line 743: 
 Error: Invalid date/time: line amount_t amoun
-While parsing file "$sourcepath/src/amount.h", line 732: 
+While parsing file "src/amount.h", line 749: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 738: 
+While parsing file "src/amount.h", line 755: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 744: 
+While parsing file "src/amount.h", line 761: 
 Error: Invalid date/time: line string amount_
-While parsing file "$sourcepath/src/amount.h", line 750: 
+While parsing file "src/amount.h", line 767: 
 Error: Invalid date/time: line std::ostream& 
-While parsing file "$sourcepath/src/amount.h", line 757: 
+While parsing file "src/amount.h", line 774: 
 Error: Invalid date/time: line std::istream& 
+While parsing file "src/amount.h", line 780: 
+Error: Unexpected whitespace at beginning of line
 end test

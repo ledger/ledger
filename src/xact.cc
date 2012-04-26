@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 #include "post.h"
 #include "account.h"
 #include "journal.h"
+#include "context.h"
 #include "pool.h"
 
 namespace ledger {
@@ -54,6 +55,9 @@ xact_base_t::~xact_base_t()
       // If the posting is a temporary, it will be destructed when the
       // temporary is.
       assert(! post->has_flags(ITEM_TEMP));
+
+      if (post->account)
+        post->account->remove_post(post);
       checked_delete(post);
     }
   }
@@ -108,6 +112,46 @@ value_t xact_base_t::magnitude() const
   return halfbal;
 }
 
+namespace {
+  inline bool account_ends_with_special_char(const string& name) {
+    string::size_type len(name.length());
+    return (std::isdigit(name[len - 1]) || name[len - 1] == ')' ||
+            name[len - 1] == '}' || name[len - 1] == ']');
+  }
+
+  struct add_balancing_post
+  {
+    bool         first;
+    xact_base_t& xact;
+    post_t *     null_post;
+
+    explicit add_balancing_post(xact_base_t& _xact, post_t * _null_post)
+      : first(true), xact(_xact), null_post(_null_post) {
+      TRACE_CTOR(add_balancing_post, "xact_base_t&, post_t *");
+    }
+    add_balancing_post(const add_balancing_post& other)
+      : first(other.first), xact(other.xact), null_post(other.null_post) {
+      TRACE_CTOR(add_balancing_post, "copy");
+    }
+    ~add_balancing_post() throw() {
+      TRACE_DTOR(add_balancing_post);
+    }
+
+    void operator()(const amount_t& amount) {
+      if (first) {
+        null_post->amount = amount.negated();
+        null_post->add_flags(POST_CALCULATED);
+        first = false;
+      } else {
+        unique_ptr<post_t> p(new post_t(null_post->account, amount.negated(),
+                                        ITEM_GENERATED | POST_CALCULATED));
+        p->set_state(null_post->state());
+        xact.add_post(p.release());
+      }
+    }
+  };
+}
+
 bool xact_base_t::finalize()
 {
   // Scan through and compute the total balance for the xact.  This is used
@@ -133,8 +177,19 @@ bool xact_base_t::finalize()
                        p.rounded().reduced() : p.reduced());
     }
     else if (null_post) {
-      throw_(std::logic_error,
-             _("Only one posting with null amount allowed per transaction"));
+      bool post_account_bad =
+        account_ends_with_special_char(post->account->fullname());
+      bool null_post_account_bad =
+        account_ends_with_special_char(null_post->account->fullname());
+
+      if (post_account_bad || null_post_account_bad)
+        throw_(std::logic_error,
+               _("Posting with null amount's account may be mispelled:\n  \"%1\"")
+               << (post_account_bad ? post->account->fullname() :
+                   null_post->account->fullname()));
+      else
+        throw_(std::logic_error,
+               _("Only one posting with null amount allowed per transaction"));
     }
     else {
       null_post = post;
@@ -266,11 +321,13 @@ bool xact_base_t::finalize()
 
       cost_breakdown_t breakdown =
         commodity_pool_t::current_pool->exchange
-        (post->amount, *post->cost, false,
+        (post->amount, *post->cost, false, ! post->has_flags(POST_COST_VIRTUAL),
          datetime_t(date(), time_duration(0, 0, 0, 0)));
 
       if (post->amount.has_annotation() && post->amount.annotation().price) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
+          DEBUG("xact.finalize", "breakdown.basis_cost = " << breakdown.basis_cost);
+          DEBUG("xact.finalize", "breakdown.final_cost = " << breakdown.final_cost);
           if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             gain_loss.in_place_round();
@@ -323,43 +380,17 @@ bool xact_base_t::finalize()
     // generated to balance them all.
 
     DEBUG("xact.finalize", "there was a null posting");
+    add_balancing_post post_adder(*this, null_post);
 
-    if (balance.is_balance()) {
-      const balance_t& bal(balance.as_balance());
-      typedef std::map<string, amount_t> sorted_amounts_map;
-      sorted_amounts_map samp;
-      foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
-        std::pair<sorted_amounts_map::iterator, bool> result =
-          samp.insert(sorted_amounts_map::value_type(pair.first->mapping_key(),
-                                                     pair.second));
-        assert(result.second);
-      }
-
-      bool first = true;
-      foreach (sorted_amounts_map::value_type& pair, samp) {
-        if (first) {
-          null_post->amount = pair.second.negated();
-          null_post->add_flags(POST_CALCULATED);
-          first = false;
-        } else {
-          post_t * p = new post_t(null_post->account, pair.second.negated(),
-                                  ITEM_GENERATED | POST_CALCULATED);
-          p->set_state(null_post->state());
-          add_post(p);
-        }
-      }
-    }
-    else if (balance.is_amount()) {
-      null_post->amount = balance.as_amount().negated();
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (balance.is_long()) {
-      null_post->amount = amount_t(- balance.as_long());
-      null_post->add_flags(POST_CALCULATED);
-    }
-    else if (! balance.is_null() && ! balance.is_realzero()) {
+    if (balance.is_balance())
+      balance.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (balance.is_amount())
+      post_adder(balance.as_amount_lval());
+    else if (balance.is_long())
+      post_adder(balance.to_amount());
+    else if (! balance.is_null() && ! balance.is_realzero())
       throw_(balance_error, _("Transaction does not balance"));
-    }
+
     balance = NULL_VALUE;
 
   }
@@ -457,6 +488,9 @@ bool xact_base_t::verify()
 
 xact_t::xact_t(const xact_t& e)
   : xact_base_t(e), code(e.code), payee(e.payee)
+#ifdef DOCUMENT_MODEL
+    , data(NULL)
+#endif
 {
   TRACE_CTOR(xact_t, "copy");
 }
@@ -467,29 +501,9 @@ void xact_t::add_post(post_t * post)
   xact_base_t::add_post(post);
 }
 
-string xact_t::idstring() const
-{
-  std::ostringstream buf;
-  buf << format_date(*_date, FMT_WRITTEN);
-  buf << payee;
-  magnitude().number().print(buf);
-  return buf.str();
-}
-
-string xact_t::id() const
-{
-  return sha1sum(idstring());
-}
-
 namespace {
   value_t get_magnitude(xact_t& xact) {
     return xact.magnitude();
-  }
-  value_t get_idstring(xact_t& xact) {
-    return string_value(xact.idstring());
-  }
-  value_t get_id(xact_t& xact) {
-    return string_value(xact.id());
   }
 
   value_t get_code(xact_t& xact) {
@@ -554,13 +568,6 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     break;
 
-  case 'i':
-    if (name == "id")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    else if (name == "idstring")
-      return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
-    break;
-
   case 'm':
     if (name == "magnitude")
       return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
@@ -592,7 +599,6 @@ bool xact_t::valid() const
 }
 
 namespace {
-
   bool post_pred(expr_t::ptr_op_t op, post_t& post)
   {
     switch (op->kind) {
@@ -608,6 +614,9 @@ namespace {
           .match(post.reported_account()->fullname());
       else
         break;
+
+    case expr_t::op_t::O_EQ:
+      return post_pred(op->left(), post) == post_pred(op->right(), post);
 
     case expr_t::op_t::O_NOT:
       return ! post_pred(op->left(), post);
@@ -631,10 +640,9 @@ namespace {
     throw_(calc_error, _("Unhandled operator"));
     return false;
   }
+}
 
-} // unnamed namespace
-
-void auto_xact_t::extend_xact(xact_base_t& xact)
+void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -645,6 +653,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
   foreach (post_t * initial_post, initial_posts) {
     if (initial_post->has_flags(ITEM_GENERATED))
       continue;
+
+    bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
     bool matches_predicate = false;
     if (try_quick_match) {
@@ -673,14 +683,13 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
         DEBUG("xact.extend.fail",
               "The quick matcher failed, going back to regular eval");
         try_quick_match   = false;
-        matches_predicate = predicate(*initial_post);
+        matches_predicate = predicate(bound_scope);
       }
     } else {
-      matches_predicate = predicate(*initial_post);
+      matches_predicate = predicate(bound_scope);
     }
-    if (matches_predicate) {
-      bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
+    if (matches_predicate) {
       if (deferred_notes) {
         foreach (deferred_tag_data_t& data, *deferred_notes) {
           if (data.apply_to_post == NULL)
@@ -688,18 +697,19 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
                                      data.overwrite_existing);
         }
       }
+
       if (check_exprs) {
-        foreach (check_expr_pair& pair, *check_exprs) {
-          if (pair.second == auto_xact_t::EXPR_GENERAL) {
+        foreach (expr_t::check_expr_pair& pair, *check_exprs) {
+          if (pair.second == expr_t::EXPR_GENERAL) {
             pair.first.calc(bound_scope);
           }
           else if (! pair.first.calc(bound_scope).to_boolean()) {
-            if (pair.second == auto_xact_t::EXPR_ASSERTION) {
+            if (pair.second == expr_t::EXPR_ASSERTION)
               throw_(parse_error,
                      _("Transaction assertion failed: %1") << pair.first);
-            } else {
-              warning_(_("Transaction check failed: %1") << pair.first);
-            }
+            else
+              context.warning(STR(_("Transaction check failed: %1")
+                                  << pair.first));
           }
         }
       }
@@ -770,20 +780,25 @@ void auto_xact_t::extend_xact(xact_base_t& xact)
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
         new_post->add_flags(ITEM_GENERATED);
+        new_post->account =
+          journal->register_account(account->fullname(), new_post,
+                                    journal->master);
+
+        if (deferred_notes) {
+          foreach (deferred_tag_data_t& data, *deferred_notes) {
+            if (! data.apply_to_post || data.apply_to_post == post)
+              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
+                                   data.overwrite_existing);
+          }
+        }
+
+        extend_post(*new_post, *journal);
 
         xact.add_post(new_post);
         new_post->account->add_post(new_post);
 
         if (new_post->must_balance())
           needs_further_verification = true;
-
-        if (deferred_notes) {
-          foreach (deferred_tag_data_t& data, *deferred_notes) {
-            if (data.apply_to_post == post)
-              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
-                                   data.overwrite_existing);
-          }
-        }
       }
     }
   }
@@ -817,9 +832,9 @@ void to_xml(std::ostream& out, const xact_t& xact)
     push_xml y(out, "date");
     to_xml(out, *xact._date, false);
   }
-  if (xact._date_eff) {
-    push_xml y(out, "effective-date");
-    to_xml(out, *xact._date_eff, false);
+  if (xact._date_aux) {
+    push_xml y(out, "aux-date");
+    to_xml(out, *xact._date_aux, false);
   }
 
   if (xact.code) {

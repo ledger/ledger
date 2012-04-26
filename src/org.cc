@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -45,8 +45,6 @@ posts_to_org_table::posts_to_org_table(report_t&               _report,
                                        const optional<string>& _prepend_format)
   : report(_report), last_xact(NULL), last_post(NULL)
 {
-  TRACE_CTOR(posts_to_org_table, "report&, optional<string>");
-
   first_line_format.parse_format
     ("|%(format_date(date))"
      "|%(code)"
@@ -79,6 +77,8 @@ posts_to_org_table::posts_to_org_table(report_t&               _report,
 
   if (_prepend_format)
     prepend_format.parse_format(*_prepend_format);
+
+  TRACE_CTOR(posts_to_org_table, "report&, optional<string>");
 }
 
 void posts_to_org_table::flush()

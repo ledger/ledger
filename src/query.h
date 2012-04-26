@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -153,8 +153,6 @@ public:
         case TERM:        return string("TERM(") + *value + ")";
         case END_REACHED: return "END_REACHED";
         }
-        assert(false);
-        return empty_string;
       }
 
       string symbol() const {
@@ -188,6 +186,9 @@ public:
           assert(false);
           return "<UNKNOWN>";
         }
+#if !defined(__clang__)
+        return "<ERROR>";
+#endif
       }
 
       void unexpected();
@@ -203,10 +204,11 @@ public:
         consume_whitespace(false), consume_next_arg(false),
         multiple_args(_multiple_args)
     {
-      TRACE_CTOR(query_t::lexer_t, "");
       assert(begin != end);
       arg_i   = (*begin).as_string().begin();
       arg_end = (*begin).as_string().end();
+
+      TRACE_CTOR(query_t::lexer_t, "");
     }
     lexer_t(const lexer_t& lexer)
       : begin(lexer.begin), end(lexer.end),
@@ -301,18 +303,19 @@ public:
   query_t(const string&         arg,
           const keep_details_t& what_to_keep  = keep_details_t(),
           bool                  multiple_args = true) {
-    TRACE_CTOR(query_t, "string, keep_details_t, bool");
     if (! arg.empty()) {
       value_t temp(string_value(arg));
       parse_args(temp.to_sequence(), what_to_keep, multiple_args);
     }
+    TRACE_CTOR(query_t, "string, keep_details_t, bool");
   }
   query_t(const value_t&        args,
           const keep_details_t& what_to_keep  = keep_details_t(),
           bool                  multiple_args = true) {
-    TRACE_CTOR(query_t, "value_t, keep_details_t, bool");
     if (! args.empty())
       parse_args(args, what_to_keep, multiple_args);
+
+    TRACE_CTOR(query_t, "value_t, keep_details_t, bool");
   }
   virtual ~query_t() {
     TRACE_DTOR(query_t);

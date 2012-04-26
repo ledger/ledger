@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -51,13 +51,18 @@ namespace {
     return value.value(CURRENT_TIME());
   }
   boost::optional<value_t> py_value_1(const value_t& value,
-                                      commodity_t& in_terms_of) {
+                                      const commodity_t * in_terms_of) {
     return value.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<value_t> py_value_2(const value_t& value,
-                                      commodity_t& in_terms_of,
-                                      datetime_t& moment) {
+                                      const commodity_t * in_terms_of,
+                                      const datetime_t& moment) {
     return value.value(moment, in_terms_of);
+  }
+  boost::optional<value_t> py_value_2d(const value_t& value,
+                                       const commodity_t * in_terms_of,
+                                       const date_t& moment) {
+    return value.value(datetime_t(moment), in_terms_of);
   }
 
   PyObject * py_base_type(value_t& value)
@@ -147,7 +152,7 @@ void export_value()
     .def(init<balance_t>())
     .def(init<mask_t>())
     .def(init<std::string>())
-    // jww (2009-11-02): Need to support conversion eof value_t::sequence_t
+    // jww (2009-11-02): Need to support conversion of value_t::sequence_t
     //.def(init<value_t::sequence_t>())
     .def(init<value_t>())
 
@@ -265,9 +270,9 @@ void export_value()
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
+    .def("value", py_value_2d, args("in_terms_of", "moment"))
 
-    .def("value", &value_t::value, value_overloads())
-    .def("price", &value_t::price)
+    //.def("value", &value_t::value, value_overloads())
     .def("exchange_commodities", &value_t::exchange_commodities,
          exchange_commodities_overloads())
 

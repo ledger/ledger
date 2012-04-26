@@ -1,0 +1,36 @@
+P 2012-03-25 EUR 0.83 GBP
+P 2012-03-25 EUR 1.32 $
+P 2012-03-25 USD 0.75 EUR
+P 2012-03-25 AAA $10.00
+
+2012-03-23 * Test 1
+    C               20.00 EUR @@ 16.71 GBP
+    D
+
+2012-03-24 * Test 2
+    E               30.00 GBP
+    F
+
+2012-03-25 * Test 3
+    G          1 AAA @ $10.00
+    H
+
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="GBP"];
+6[label="EUR"];
+7[label="$"];
+8[label="USD"];
+9[label="AAA"];
+6--5 ;
+6--7 ;
+8--6 ;
+9--7 ;
+}
+end test
+

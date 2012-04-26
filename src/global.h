@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -50,10 +50,16 @@ class global_scope_t : public noncopyable, public scope_t
 {
   shared_ptr<session_t> session_ptr;
   ptr_list<report_t>    report_stack;
+  empty_scope_t         empty_scope;
 
 public:
   global_scope_t(char ** envp);
   ~global_scope_t();
+
+  void quick_close() {
+    if (! report_stack.empty())
+      report_stack.front().quick_close();
+  }
 
   virtual string description() {
     return _("global scope");
@@ -82,6 +88,7 @@ public:
   void pop_report() {
     assert(! report_stack.empty());
     report_stack.pop_front();
+
     // There should always be the "default report" waiting on the stack.
     assert(! report_stack.empty());
     scope_t::default_scope = &report();
@@ -113,7 +120,7 @@ public:
     out <<
       "Ledger " << ledger::version << _(", the command-line accounting tool");
     out <<
-      _("\n\nCopyright (c) 2003-2010, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2012, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
@@ -139,7 +146,6 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   OPTION__
   (global_scope_t, init_file_, // -i
-
    CTOR(global_scope_t, init_file_) {
      if (const char * home_var = std::getenv("HOME"))
        on(none, (path(home_var) / ".ledgerrc").string());
@@ -152,10 +158,11 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION(global_scope_t, trace_);
   OPTION(global_scope_t, verbose);
   OPTION(global_scope_t, verify);
+  OPTION(global_scope_t, verify_memory);
 
   OPTION_(global_scope_t, version, DO() { // -v
       parent->show_version_info(std::cout);
-      throw int(0);             // exit immediately
+      throw error_count(0);     // exit immediately
     });
 };
 

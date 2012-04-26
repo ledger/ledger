@@ -1,0 +1,23 @@
+commodity $
+    alias USD
+
+2012-03-12 * $
+    A    $10.00
+    B
+
+2012-03-12 * USD
+    A     15.00 USD
+    B
+
+test bal
+             25.00 $  A
+            -25.00 $  B
+--------------------
+                   0
+end test
+
+test reg a
+12-Mar-12 $                     A                           10.00 $      10.00 $
+12-Mar-12 USD                   A                           15.00 $      25.00 $
+end test
+

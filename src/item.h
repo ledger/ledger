@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -60,8 +60,8 @@ struct position_t
     TRACE_CTOR(position_t, "");
   }
   position_t(const position_t& pos) {
-    TRACE_CTOR(position_t, "copy");
     *this = pos;
+    TRACE_CTOR(position_t, "copy");
   }
   ~position_t() throw() {
     TRACE_DTOR(position_t);
@@ -100,18 +100,20 @@ private:
 class item_t : public supports_flags<uint_least16_t>, public scope_t
 {
 public:
-#define ITEM_NORMAL     0x00    // no flags at all, a basic posting
-#define ITEM_GENERATED  0x01    // posting was not found in a journal
-#define ITEM_TEMP       0x02    // posting is a managed temporary
+#define ITEM_NORMAL            0x00 // no flags at all, a basic posting
+#define ITEM_GENERATED         0x01 // posting was not found in a journal
+#define ITEM_TEMP              0x02 // posting is a managed temporary
+#define ITEM_NOTE_ON_NEXT_LINE 0x04 // did we see a note on the next line?
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
   typedef std::pair<optional<value_t>, bool> tag_data_t;
-  typedef std::map<string, tag_data_t>       string_map;
+  typedef std::map<string, tag_data_t,
+                   function<bool(string, string)> > string_map;
 
   state_t              _state;
   optional<date_t>     _date;
-  optional<date_t>     _date_eff;
+  optional<date_t>     _date_aux;
   optional<string>     note;
   optional<position_t> pos;
   optional<string_map> metadata;
@@ -123,20 +125,20 @@ public:
   }
   item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t()
   {
-    TRACE_CTOR(item_t, "copy");
     copy_details(item);
+    TRACE_CTOR(item_t, "copy");
   }
   virtual ~item_t() {
     TRACE_DTOR(item_t);
   }
 
-  void copy_details(const item_t& item)
+  virtual void copy_details(const item_t& item)
   {
     set_flags(item.flags());
     set_state(item.state());
 
     _date     = item._date;
-    _date_eff = item._date_eff;
+    _date_aux = item._date_aux;
     note      = item.note;
     pos       = item.pos;
     metadata  = item.metadata;
@@ -147,6 +149,19 @@ public:
   }
   virtual bool operator!=(const item_t& xact) {
     return ! (*this == xact);
+  }
+
+  string id() const {
+    if (optional<value_t> ref = get_tag(_("UUID"))) {
+      return ref->to_string();
+    } else {
+      std::ostringstream buf;
+      buf << seq();
+      return buf.str();
+    }
+  }
+  std::size_t seq() const {
+    return pos ? pos->sequence : 0L;
   }
 
   virtual bool has_tag(const string& tag,
@@ -173,7 +188,7 @@ public:
                            scope_t&     scope,
                            bool         overwrite_existing = true);
 
-  static bool use_effective_date;
+  static bool use_aux_date;
 
   virtual bool has_date() const {
     return _date;
@@ -181,17 +196,17 @@ public:
 
   virtual date_t date() const {
     assert(_date);
-    if (use_effective_date)
-      if (optional<date_t> effective = effective_date())
-        return *effective;
+    if (use_aux_date)
+      if (optional<date_t> aux = aux_date())
+        return *aux;
     return *_date;
   }
-  virtual date_t actual_date() const {
+  virtual date_t primary_date() const {
     assert(_date);
     return *_date;
   }
-  virtual optional<date_t> effective_date() const {
-    return _date_eff;
+  virtual optional<date_t> aux_date() const {
+    return _date_aux;
   }
 
   void set_state(state_t new_state) {
@@ -201,6 +216,8 @@ public:
     return _state;
   }
 
+  virtual void define(const symbol_t::kind_t, const string&,
+                      expr_t::ptr_op_t);
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
 
@@ -218,7 +235,7 @@ private:
     ar & boost::serialization::base_object<scope_t>(*this);
     ar & _state;
     ar & _date;
-    ar & _date_eff;
+    ar & _date_aux;
     ar & note;
     ar & pos;
     ar & metadata;

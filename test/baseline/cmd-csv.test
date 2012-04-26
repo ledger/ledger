@@ -1,0 +1,53 @@
+
+2012-01-01 * Opening balances
+    Assets:A                      10.00
+    Equity:Opening balances      -10.00
+
+2012-01-02 * Cleared posting
+    Assets:A                     -10.00
+    Assets:B                      10.00
+
+2012-01-03 Uncleared posting
+    Assets:B                      -5.00
+    Assets:C                       5.00
+
+2012-01-04=2012-01-05 * aux date
+    Assets:A                      10.00
+    Liabilities:A                -10.00
+
+2012-01-05 * (100) Code
+    Assets:A                     -10.00
+    Liabilities:A                 10.00
+
+2012-01-06 * (100) Specify commodity
+    Assets:A                    $-10.00
+    Liabilities:A                $10.00
+
+2012-01-07 * (100) Specify commodity
+    Assets:A                     -10.00 EUR
+    Liabilities:A                 10.00 EUR
+
+2012-01-08 * (100) With note
+    ;This is an xact note
+    Assets:A                     -10.00 EUR
+    Liabilities:A                 10.00 EUR
+
+test csv
+"2012/01/01","","Opening balances","Assets:A","","10","*",""
+"2012/01/01","","Opening balances","Equity:Opening balances","","-10","*",""
+"2012/01/02","","Cleared posting","Assets:A","","-10","*",""
+"2012/01/02","","Cleared posting","Assets:B","","10","*",""
+"2012/01/03","","Uncleared posting","Assets:B","","-5","",""
+"2012/01/03","","Uncleared posting","Assets:C","","5","",""
+"2012/01/04","","aux date","Assets:A","","10","*",""
+"2012/01/04","","aux date","Liabilities:A","","-10","*",""
+"2012/01/05","100","Code","Assets:A","","-10","*",""
+"2012/01/05","100","Code","Liabilities:A","","10","*",""
+"2012/01/06","100","Specify commodity","Assets:A","$","-10","*",""
+"2012/01/06","100","Specify commodity","Liabilities:A","$","10","*",""
+"2012/01/07","100","Specify commodity","Assets:A","EUR","-10","*",""
+"2012/01/07","100","Specify commodity","Liabilities:A","EUR","10","*",""
+"2012/01/08","100","With note","Assets:A","EUR","-10","*","This is an xact note"
+"2012/01/08","100","With note","Liabilities:A","EUR","10","*","This is an xact note"
+end test
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -76,6 +76,12 @@ namespace {
     return **elem;
   }
 
+  string py_xact_to_string(xact_t&)
+  {
+    // jww (2012-03-01): TODO
+    return empty_string;
+  }
+
 } // unnamed namespace
 
 using namespace boost::python;
@@ -107,6 +113,11 @@ void export_xact()
     ;
 
   class_< xact_t, bases<xact_base_t> > ("Transaction")
+    .def("id", &xact_t::id)
+    .def("seq", &xact_t::seq)
+
+    .def("__str__", py_xact_to_string)
+
     .add_property("code",
                   make_getter(&xact_t::code),
                   make_setter(&xact_t::code))
@@ -117,8 +128,6 @@ void export_xact()
     .def("add_post", &xact_t::add_post, with_custodian_and_ward<1, 2>())
 
     .def("magnitude", &xact_t::magnitude)
-    .def("idstring", &xact_t::idstring)
-    .def("id", &xact_t::id)
 
     .def("lookup", &xact_t::lookup)
 

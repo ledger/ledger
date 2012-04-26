@@ -8,7 +8,6 @@ DISTCLEANFILES	= .timestamp
 lib_LTLIBRARIES =				\
 	libledger_report.la			\
 	libledger_data.la			\
-	libledger_expr.la			\
 	libledger_math.la			\
 	libledger_util.la
 
@@ -28,8 +27,17 @@ libledger_util_la_CPPFLAGS = $(lib_cppflags)
 libledger_util_la_LDFLAGS  = -release $(LIBVERSION)
 
 libledger_math_la_SOURCES  =			\
+	src/format.cc				\
+	src/query.cc				\
+	src/scope.cc				\
+	src/expr.cc				\
+	src/op.cc				\
+	src/parser.cc				\
+	src/token.cc				\
+	src/value.cc                            \
 	src/balance.cc				\
 	src/quotes.cc				\
+	src/history.cc				\
 	src/pool.cc				\
 	src/annotate.cc				\
 	src/commodity.cc			\
@@ -38,22 +46,8 @@ libledger_math_la_SOURCES  =			\
 libledger_math_la_CPPFLAGS = $(lib_cppflags)
 libledger_math_la_LDFLAGS  = -release $(LIBVERSION)
 
-libledger_expr_la_SOURCES  =			\
-	src/option.cc				\
-	src/format.cc				\
-	src/query.cc				\
-	src/predicate.cc			\
-	src/scope.cc				\
-	src/expr.cc				\
-	src/op.cc				\
-	src/parser.cc				\
-	src/token.cc				\
-	src/value.cc
-
-libledger_expr_la_CPPFLAGS  = $(lib_cppflags)
-libledger_expr_la_LDFLAGS   = -release $(LIBVERSION)
-
 libledger_data_la_SOURCES   =			\
+	src/option.cc				\
 	src/lookup.cc				\
 	src/compare.cc				\
 	src/iterators.cc			\
@@ -85,6 +79,8 @@ libledger_report_la_SOURCES  =			\
 	src/chain.cc				\
 	src/filters.cc				\
 	src/report.cc				\
+	src/views.cc				\
+	src/select.cc				\
 	src/session.cc
 
 libledger_report_la_CPPFLAGS = $(lib_cppflags)
@@ -104,6 +100,7 @@ pkginclude_HEADERS =				\
 	src/amount.h				\
 	src/commodity.h				\
 	src/annotate.h				\
+	src/history.h				\
 	src/pool.h				\
 	src/quotes.h				\
 	src/balance.h				\
@@ -119,13 +116,13 @@ pkginclude_HEADERS =				\
 	src/query.h				\
 	src/format.h				\
 	src/option.h				\
-	src/series.h				\
 						\
 	src/item.h				\
 	src/post.h				\
 	src/xact.h				\
 	src/account.h				\
 	src/journal.h				\
+	src/context.h				\
 	src/temps.h				\
 	src/archive.h				\
 	src/timelog.h				\
@@ -134,6 +131,8 @@ pkginclude_HEADERS =				\
 	src/lookup.h				\
 						\
 	src/session.h				\
+	src/select.h				\
+	src/views.h				\
 	src/report.h				\
 	src/filters.h				\
 	src/chain.h				\
@@ -202,7 +201,6 @@ DISTCLEANFILES += ledger.elc timeclock.elc
 
 all_sources	= $(libledger_util_la_SOURCES)		\
 		  $(libledger_math_la_SOURCES)		\
-		  $(libledger_expr_la_SOURCES)		\
 		  $(libledger_data_la_SOURCES)		\
 		  $(libledger_report_la_SOURCES)	\
 		  $(libledger_python_la_SOURCES)	\
@@ -226,6 +224,7 @@ libledger_python_la_SOURCES =			\
 	src/py_expr.cc				\
 	src/py_format.cc			\
 	src/py_item.cc				\
+	src/py_session.cc			\
 	src/py_journal.cc			\
 	src/py_post.cc				\
 	src/py_times.cc				\
@@ -256,8 +255,7 @@ TESTS = RegressTests BaselineTests ManualTests ConfirmTests \
 if HAVE_BOOST_TEST
 TESTS +=	    \
 	UtilTests   \
-	MathTests   \
-	ExprTests
+	MathTests
 #	DataTests   \
 #	ReportTests
 endif
@@ -282,6 +280,7 @@ UtilTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 UtilTests_LDADD	   = libledger_util.la $(TESTLIBS)
 
 MathTests_SOURCES =		 \
+	test/unit/t_expr.cc      \
 	test/unit/t_commodity.cc \
 	test/unit/t_amount.cc	 \
 	test/unit/t_balance.cc
@@ -289,16 +288,10 @@ MathTests_SOURCES =		 \
 MathTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
 MathTests_LDADD	   = libledger_math.la $(UtilTests_LDADD)
 
-ExprTests_SOURCES =		 \
-	test/unit/t_expr.cc
-
-ExprTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-ExprTests_LDADD	   = libledger_expr.la $(MathTests_LDADD)
-
 DataTests_SOURCES =
 
 DataTests_CPPFLAGS = -I$(srcdir)/test $(lib_cppflags)
-DataTests_LDADD	   = libledger_data.la $(ExprTests_LDADD)
+DataTests_LDADD	   = libledger_data.la $(MathTests_LDADD)
 
 ReportTests_SOURCES =
 
@@ -308,7 +301,6 @@ ReportTests_LDADD    = libledger_report.la $(DataTests_LDADD)
 all_tests_sources =				\
 	$(UtilTests_SOURCES)			\
 	$(MathTests_SOURCES)			\
-	$(ExprTests_SOURCES)			\
 	$(DataTests_SOURCES)			\
 	$(ReportTests_SOURCES)
 
@@ -321,7 +313,7 @@ all_py_tests_sources = \
 test/python/%.py: test/unit/%.cc test/convert.py
 	$(PYTHON) $(srcdir)/test/convert.py $< $@
 
-test/python/UnitTests.py: $(all_py_tests_sources)
+test/python/ConvertedTests.py: $(all_py_tests_sources)
 	@echo "from unittest import TextTestRunner, TestSuite" > $@
 	@for file in $$(ls $(srcdir)/test/unit/*.cc); do \
 	    base=$$(basename $$file); \
@@ -346,7 +338,7 @@ ESC_distdir=`echo "$(distdir)" | sed 's/\//\\\\\//g'`
 
 # jww (2007-05-10): This rule will not be triggered on systems that
 # define an EXEEXT.
-PyUnitTests: test/PyUnitTests.py test/python/UnitTests.py
+PyUnitTests: test/PyUnitTests.py test/python/ConvertedTests.py
 	@cat $(srcdir)/test/PyUnitTests.py \
 	    | sed "s/%python%/$(ESC_python)/" \
 	    | sed "s/%srcdir%/$(ESC_srcdir)/g" \
@@ -357,8 +349,15 @@ RegressTests_SOURCES = test/RegressTests.py
 
 EXTRA_DIST += test/regress test/convert.py test/LedgerHarness.py
 
+if HAVE_BOOST_PYTHON
+TEST_PYTHON_FLAGS = --python
+EXTRA_DIST += test/python
+else
+TEST_PYTHON_FLAGS = 
+endif
+
 RegressTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/regress $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 BaselineTests_SOURCES = test/RegressTests.py
@@ -366,7 +365,7 @@ BaselineTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/baseline
 
 BaselineTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/baseline $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 ManualTests_SOURCES = test/RegressTests.py
@@ -374,7 +373,7 @@ ManualTests_SOURCES = test/RegressTests.py
 EXTRA_DIST += test/manual
 
 ManualTests: $(srcdir)/test/RegressTests.py
-	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/RegressTests.py -j$(JOBS) $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/manual $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 ConfirmTests_SOURCES = test/ConfirmTests.py
@@ -389,7 +388,7 @@ test/input/mondo.dat: test/input/standard.dat
 	done
 
 ConfirmTests: $(srcdir)/test/ConfirmTests.py
-	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/input \"\$$@\"" > $@
+	echo "$(PYTHON) $(srcdir)/test/ConfirmTests.py $(top_builddir)/ledger$(EXEEXT) $(srcdir) $(srcdir)/test/input $(TEST_PYTHON_FLAGS) \"\$$@\"" > $@
 	chmod 755 $@
 
 GenerateTests_SOURCES = test/GenerateTests.py
@@ -412,8 +411,6 @@ unittests: check
 	    2>&1 | grep -v '^GuardMalloc:'
 	@sh $(FULLCHECK) $(top_builddir)/MathTests$(EXEEXT)   --verify \
 	    2>&1 | grep -v '^GuardMalloc:'
-	@sh $(FULLCHECK) $(top_builddir)/ExprTests$(EXEEXT)   --verify \
-	    2>&1 | grep -v '^GuardMalloc:'
 #	@sh $(FULLCHECK) $(top_builddir)/DataTests$(EXEEXT)   --verify \
 #	    2>&1 | grep -v '^GuardMalloc:'
 #	@sh $(FULLCHECK) $(top_builddir)/ReportTests$(EXEEXT) --verify \
@@ -429,10 +426,10 @@ fullcheck: unittests
 	@$(top_builddir)/ManualTests   --verify
 	@$(top_builddir)/ConfirmTests  --verify
 	@$(top_builddir)/GenerateTests 20 --verify
-	@$(top_builddir)/RegressTests  --gmalloc
-	@$(top_builddir)/BaselineTests --gmalloc
-	@$(top_builddir)/ManualTests   --gmalloc
-	@$(top_builddir)/ConfirmTests  --gmalloc
+#	@$(top_builddir)/RegressTests  --gmalloc
+#	@$(top_builddir)/BaselineTests --gmalloc
+#	@$(top_builddir)/ManualTests   --gmalloc
+#	@$(top_builddir)/ConfirmTests  --gmalloc
 	@$(top_builddir)/GenerateTests 10000
 #	@$(top_builddir)/GenerateTests --gmalloc
 

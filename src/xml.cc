@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -52,6 +52,7 @@ namespace {
       out << "\">\n";
 
       out << "<name>" << acct->name << "</name>\n";
+      out << "<fullname>" << acct->fullname() << "</fullname>\n";
       value_t total = acct->amount();
       if (! total.is_null()) {
         out << "<amount>\n";

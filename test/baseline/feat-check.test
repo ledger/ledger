@@ -13,6 +13,6 @@ test bal
 --------------------
                    0
 __ERROR__
-Warning: Transaction check failed: (account =~ /Foo/)
-Warning: Check failed: account("Assets:Checking").all(account =~ /Expense/)
+Warning: "$sourcepath/test/baseline/feat-check.test", line 6: Transaction check failed: (account =~ /Foo/)
+Warning: "$sourcepath/test/baseline/feat-check.test", line 8: Check failed: account("Assets:Checking").all(account =~ /Expense/)
 end test

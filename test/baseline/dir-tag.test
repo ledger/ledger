@@ -1,0 +1,21 @@
+tag Happy
+    check value == 'Valley'
+
+2012-02-27 * KFC
+    ; Happy: Valley
+    Expenses:Unknown                          $20.00
+    ; Happy: Summer
+    Assets:Cash
+
+2012-02-28 * KFC
+    food                                      $20.00
+    Assets:Cash
+
+test reg
+12-Feb-27 KFC                   Expenses:Unknown             $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+12-Feb-28 KFC                   food                         $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+__ERROR__
+Warning: "$sourcepath/test/baseline/dir-tag.test", line 8: Metadata check failed for (Happy: Summer): (value == "Valley")
+end test

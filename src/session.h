@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,6 +44,7 @@
 
 #include "account.h"
 #include "journal.h"
+#include "context.h"
 #include "option.h"
 #include "commodity.h"
 
@@ -57,11 +58,15 @@ class session_t : public symbol_scope_t
 
 public:
   bool flush_on_next_data_file;
-  std::auto_ptr<journal_t> journal;
+
+  unique_ptr<journal_t> journal;
+  parse_context_stack_t parsing_context;
+  optional<expr_t>      value_expr;
 
   explicit session_t();
   virtual ~session_t() {
     TRACE_DTOR(session_t);
+    parsing_context.pop();
   }
 
   virtual string description() {
@@ -72,14 +77,18 @@ public:
     flush_on_next_data_file = truth;
   }
 
+  journal_t * read_journal(const path& pathname);
+  journal_t * read_journal_from_string(const string& data);
   std::size_t read_data(const string& master_account = "");
 
-  void read_journal_files();
+  journal_t * read_journal_files();
   void close_journal_files();
 
   value_t fn_account(call_scope_t& scope);
   value_t fn_min(call_scope_t& scope);
   value_t fn_max(call_scope_t& scope);
+  value_t fn_int(call_scope_t& scope);
+  value_t fn_str(call_scope_t& scope);
   value_t fn_lot_price(call_scope_t& scope);
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_tag(call_scope_t& scope);
@@ -87,14 +96,20 @@ public:
   void report_options(std::ostream& out)
   {
     HANDLER(cache_).report(out);
+    HANDLER(check_payees).report(out);
+    HANDLER(day_break).report(out);
     HANDLER(download).report(out);
     HANDLER(decimal_comma).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
+    HANDLER(explicit).report(out);
     HANDLER(master_account_).report(out);
+    HANDLER(pedantic).report(out);
+    HANDLER(permissive).report(out);
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(strict).report(out);
+    HANDLER(value_expr_).report(out);
   }
 
   option_t<session_t> * lookup_option(const char * p);
@@ -107,6 +122,8 @@ public:
    */
 
   OPTION(session_t, cache_);
+  OPTION(session_t, check_payees);
+  OPTION(session_t, day_break);
   OPTION(session_t, download); // -Q
 
   OPTION_(session_t, decimal_comma, DO() {
@@ -115,33 +132,33 @@ public:
 
   OPTION__
   (session_t, price_exp_, // -Z
-   CTOR(session_t, price_exp_) { value = 24L * 3600L; }
-   DO_(args) {
-     value = args.get<long>(1) * 60L;
-   });
+   CTOR(session_t, price_exp_) { value = "24"; });
 
   OPTION__
   (session_t, file_, // -f
    std::list<path> data_files;
    CTOR(session_t, file_) {}
-   DO_(args) {
-     assert(args.size() == 2);
+   DO_(str) {
      if (parent->flush_on_next_data_file) {
        data_files.clear();
        parent->flush_on_next_data_file = false;
      }
-     data_files.push_back(args.get<string>(1));
+     data_files.push_back(str);
    });
 
-  OPTION_(session_t, input_date_format_, DO_(args) {
-      // This changes static variables inside times.h, which affects the basic
-      // date parser.
-      set_input_date_format(args.get<string>(1).c_str());
+  OPTION_(session_t, input_date_format_, DO_(str) {
+      // This changes static variables inside times.h, which affects the
+      // basic date parser.
+      set_input_date_format(str.c_str());
     });
 
+  OPTION(session_t, explicit);
   OPTION(session_t, master_account_);
+  OPTION(session_t, pedantic);
+  OPTION(session_t, permissive);
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
+  OPTION(session_t, value_expr_);
 };
 
 /**

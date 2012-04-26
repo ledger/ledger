@@ -92,18 +92,18 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
   BOOST_CHECK_EQUAL(string("$2124.122"), amt->to_fullstring());
 #endif
 
-  amt = x1.value(CURRENT_TIME(), euro);
+  amt = x1.value(CURRENT_TIME(), &euro);
   BOOST_CHECK(amt);
-  BOOST_CHECK_EQUAL(string("EUR 1366.87"), amt->rounded().to_string());
+  BOOST_CHECK_EQUAL(string("EUR 1787.50"), amt->rounded().to_string());
 
   // Add a newer Euro pricing
   aapl.add_price(jan17_07, amount_t("EUR 23.00"));
 
-  amt = x1.value(CURRENT_TIME(), euro);
+  amt = x1.value(CURRENT_TIME(), &euro);
   BOOST_CHECK(amt);
   BOOST_CHECK_EQUAL(string("EUR 2302.30"), amt->to_string());
 
-  amt = x1.value(CURRENT_TIME(), cad);
+  amt = x1.value(CURRENT_TIME(), &cad);
   BOOST_CHECK(amt);
   BOOST_CHECK_EQUAL(string("CAD 3223.22"), amt->to_string());
 #endif // NOT_FOR_PYTHON

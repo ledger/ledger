@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -54,20 +54,6 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
 
     node = new op_t(op_t::IDENT);
     node->set_ident(ident);
-
-    // An identifier followed by ( represents a function call
-    tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-    if (tok.kind == token_t::LPAREN) {
-      op_t::kind_t kind = op_t::O_CALL;
-      ptr_op_t call_node(new op_t(kind));
-      call_node->set_left(node);
-      node = call_node;
-
-      push_token(tok);          // let the parser see it again
-      node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
-    } else {
-      push_token(tok);
-    }
     break;
   }
 
@@ -85,11 +71,37 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
   return node;
 }
 
+
+expr_t::ptr_op_t
+expr_t::parser_t::parse_call_expr(std::istream& in,
+                                 const parse_flags_t& tflags) const
+{
+  ptr_op_t node(parse_value_term(in, tflags));
+
+  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+    while (true) {
+      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+      if (tok.kind == token_t::LPAREN) {
+        ptr_op_t prev(node);
+        node = new op_t(op_t::O_CALL);
+        node->set_left(prev);
+        push_token(tok);        // let the parser see the '(' again
+        node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
+      } else {
+        push_token(tok);
+        break;
+      }
+    }
+  }
+
+  return node;
+}
+
 expr_t::ptr_op_t
 expr_t::parser_t::parse_dot_expr(std::istream& in,
                                  const parse_flags_t& tflags) const
 {
-  ptr_op_t node(parse_value_term(in, tflags));
+  ptr_op_t node(parse_call_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
@@ -98,7 +110,7 @@ expr_t::parser_t::parse_dot_expr(std::istream& in,
         ptr_op_t prev(node);
         node = new op_t(op_t::O_LOOKUP);
         node->set_left(prev);
-        node->set_right(parse_value_term(in, tflags));
+        node->set_right(parse_call_expr(in, tflags));
         if (! node->right())
           throw_(parse_error,
                  _("%1 operator not followed by argument") << tok.symbol);
@@ -434,7 +446,6 @@ expr_t::parser_t::parse_comma_expr(std::istream& in,
           ptr_op_t prev(node);
           node = new op_t(op_t::O_CONS);
           node->set_left(prev);
-
           next = node;
         }
 
@@ -471,7 +482,9 @@ expr_t::parser_t::parse_lambda_expr(std::istream& in,
       ptr_op_t prev(node);
       node = new op_t(op_t::O_LAMBDA);
       node->set_left(prev);
-      node->set_right(parse_querycolon_expr(in, tflags));
+      ptr_op_t scope(new op_t(op_t::SCOPE));
+      scope->set_left(parse_querycolon_expr(in, tflags));
+      node->set_right(scope);
     } else {
       push_token(tok);
     }
@@ -493,7 +506,9 @@ expr_t::parser_t::parse_assign_expr(std::istream& in,
       ptr_op_t prev(node);
       node = new op_t(op_t::O_DEFINE);
       node->set_left(prev);
-      node->set_right(parse_lambda_expr(in, tflags));
+      ptr_op_t scope(new op_t(op_t::SCOPE));
+      scope->set_left(parse_lambda_expr(in, tflags));
+      node->set_right(scope);
     } else {
       push_token(tok);
     }
@@ -509,24 +524,20 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
   ptr_op_t node(parse_assign_expr(in, tflags));
 
   if (node && ! tflags.has_flags(PARSE_SINGLE)) {
-    ptr_op_t next;
+    ptr_op_t chain;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-
       if (tok.kind == token_t::SEMI) {
-        if (! next) {
-          ptr_op_t prev(node);
-          node = new op_t(op_t::O_SEQ);
-          node->set_left(prev);
-
-          next = node;
+        ptr_op_t seq(new op_t(op_t::O_SEQ));
+        if (! chain) {
+          seq->set_left(node);
+          node = seq;
+        } else {
+          seq->set_left(chain->right());
+          chain->set_right(seq);
         }
-
-        ptr_op_t chain(new op_t(op_t::O_SEQ));
-        chain->set_left(parse_assign_expr(in, tflags));
-
-        next->set_right(chain);
-        next = chain;
+        seq->set_right(parse_assign_expr(in, tflags));
+        chain = seq;
       } else {
         push_token(tok);
         break;

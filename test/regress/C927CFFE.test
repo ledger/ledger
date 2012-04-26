@@ -1,0 +1,43 @@
+
+2010/02/09 * Test 1
+    A         $10
+    B
+
+2010/02/10 * Test 2
+    B         $10
+    C
+
+2010/02/11 * Test 3
+    C         $10
+    D
+
+test reg
+test -l "date>=[2010/02/10]" reg
+10-Feb-10 Test 2                B                               $10          $10
+                                C                              $-10            0
+10-Feb-11 Test 3                C                               $10          $10
+                                D                              $-10            0
+end test
+
+test -l "date<=[2010/02/10]" reg
+10-Feb-09 Test 1                A                               $10          $10
+                                B                              $-10            0
+10-Feb-10 Test 2                B                               $10          $10
+                                C                              $-10            0
+end test
+
+test -l "date==[2010/02/10]" reg
+10-Feb-10 Test 2                B                               $10          $10
+                                C                              $-10            0
+end test
+
+test -l "date>[2010/02/10]" reg
+10-Feb-11 Test 3                C                               $10          $10
+                                D                              $-10            0
+end test
+
+test -l "date<[2010/02/10]" reg
+10-Feb-09 Test 1                A                               $10          $10
+                                B                              $-10            0
+end test
+

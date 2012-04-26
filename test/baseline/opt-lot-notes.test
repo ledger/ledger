@@ -1,0 +1,31 @@
+2012-01-01 * Opening balance
+    Assets:Cash              100.00 GBP
+    Equity:Opening Balance
+
+2012-01-02 * Voucher 1
+    Assets:Voucher            10.00 GBP (aaaa)
+    Assets:Cash              -10.00 GBP
+
+2012-01-03 * Voucher 1
+    Assets:Voucher            10.00 GBP (bbbb)
+    Assets:Cash              -10.00 GBP
+
+2012-01-04 * Voucher 1
+    Assets:Voucher            10.00 GBP (cccc)
+    Assets:Cash              -10.00 GBP
+
+test bal assets:voucher --lot-notes
+    10.00 GBP (aaaa)
+    10.00 GBP (bbbb)
+    10.00 GBP (cccc)  Assets:Voucher
+end test
+
+test reg assets:voucher --lot-notes
+12-Jan-02 Voucher 1             Assets:Voucher         10.00 GBP (aaaa) 10.00 GBP (aaaa)
+12-Jan-03 Voucher 1             Assets:Voucher         10.00 GBP (bbbb) 10.00 GBP (aaaa)
+                                                                10.00 GBP (bbbb)
+12-Jan-04 Voucher 1             Assets:Voucher         10.00 GBP (cccc) 10.00 GBP (aaaa)
+                                                                10.00 GBP (bbbb)
+                                                                10.00 GBP (cccc)
+end test
+

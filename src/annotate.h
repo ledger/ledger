@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -46,29 +46,39 @@
 #ifndef _ANNOTATE_H
 #define _ANNOTATE_H
 
+#include "expr.h"
+
 namespace ledger {
 
 struct annotation_t : public supports_flags<>,
                       public equality_comparable<annotation_t>
 {
-#define ANNOTATION_PRICE_CALCULATED 0x01
-#define ANNOTATION_PRICE_FIXATED    0x02
-#define ANNOTATION_DATE_CALCULATED  0x04
-#define ANNOTATION_TAG_CALCULATED   0x08
+#define ANNOTATION_PRICE_CALCULATED      0x01
+#define ANNOTATION_PRICE_FIXATED         0x02
+#define ANNOTATION_PRICE_NOT_PER_UNIT    0x04
+#define ANNOTATION_DATE_CALCULATED       0x08
+#define ANNOTATION_TAG_CALCULATED        0x10
+#define ANNOTATION_VALUE_EXPR_CALCULATED 0x20
 
   optional<amount_t> price;
   optional<date_t>   date;
   optional<string>   tag;
+  optional<expr_t>   value_expr;
 
-  explicit annotation_t(const optional<amount_t>& _price = none,
-                        const optional<date_t>&   _date  = none,
-                        const optional<string>&   _tag   = none)
-    : supports_flags<>(), price(_price), date(_date), tag(_tag) {
-    TRACE_CTOR(annotation_t, "const optional<amount_t>& + date_t + string");
+  explicit annotation_t(const optional<amount_t>& _price      = none,
+                        const optional<date_t>&   _date       = none,
+                        const optional<string>&   _tag        = none,
+                        const optional<expr_t>&   _value_expr = none)
+    : supports_flags<>(), price(_price), date(_date), tag(_tag),
+      value_expr(_value_expr) {
+    TRACE_CTOR(annotation_t,
+               "optional<amount_t> + date_t + string + expr_t");
   }
   annotation_t(const annotation_t& other)
     : supports_flags<>(other.flags()),
-      price(other.price), date(other.date), tag(other.tag) {
+      price(other.price), date(other.date), tag(other.tag),
+      value_expr(other.value_expr)
+  {
     TRACE_CTOR(annotation_t, "copy");
   }
   ~annotation_t() {
@@ -76,17 +86,20 @@ struct annotation_t : public supports_flags<>,
   }
 
   operator bool() const {
-    return price || date || tag;
+    return price || date || tag || value_expr;
   }
 
+  bool operator<(const annotation_t& rhs) const;
   bool operator==(const annotation_t& rhs) const {
     return (price == rhs.price &&
-            date  == rhs.date &&
-            tag   == rhs.tag);
+            date  == rhs.date  &&
+            tag   == rhs.tag   &&
+            (value_expr && rhs.value_expr ?
+             value_expr->text() == rhs.value_expr->text() :
+             value_expr == rhs.value_expr));
   }
 
   void parse(std::istream& in);
-
   void print(std::ostream& out, bool keep_base = false,
              bool no_computed_annotations = false) const;
 
@@ -131,6 +144,12 @@ inline void to_xml(std::ostream& out, const annotation_t& details)
   {
     push_xml y(out, "tag");
     out << y.guard(*details.tag);
+  }
+
+  if (details.value_expr)
+  {
+    push_xml y(out, "value-expr");
+    out << y.guard(details.value_expr->text());
   }
 }
 
@@ -207,8 +226,9 @@ protected:
   explicit annotated_commodity_t(commodity_t * _ptr,
                                  const annotation_t& _details)
     : commodity_t(_ptr->parent_, _ptr->base), ptr(_ptr), details(_details) {
-    TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
     annotated = true;
+    qualified_symbol = _ptr->qualified_symbol;
+    TRACE_CTOR(annotated_commodity_t, "commodity_t *, annotation_t");
   }
 
 public:
@@ -230,7 +250,31 @@ public:
     return *ptr;
   }
 
+  virtual optional<expr_t> value_expr() const {
+    if (details.value_expr)
+      return details.value_expr;
+    return commodity_t::value_expr();
+  }
+
+  optional<price_point_t>
+  virtual find_price(const commodity_t * commodity = NULL,
+                     const datetime_t&   moment    = datetime_t(),
+                     const datetime_t&   oldest    = datetime_t()) const;
+
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
+
+  virtual void print(std::ostream& out, bool elide_quotes = false,
+                     bool print_annotations = false) const {
+    if (print_annotations) {
+      std::ostringstream buf;
+      commodity_t::print(buf, elide_quotes);
+      write_annotations(buf);
+      out << buf.str();
+    } else {
+      commodity_t::print(out, elide_quotes);
+    }
+  }
+
   virtual void write_annotations(std::ostream& out,
                                  bool no_computed_annotations = false) const;
 

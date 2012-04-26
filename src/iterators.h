@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,7 +58,15 @@ class iterator_facade_base
   typedef Value node_base;
 
 public:
-  iterator_facade_base() : m_node(NULL) {}
+  iterator_facade_base() : m_node(NULL) {
+    TRACE_CTOR(iterator_facade_base, "");
+  }
+  iterator_facade_base(const iterator_facade_base& i) : m_node(i.m_node) {
+    TRACE_CTOR(iterator_facade_base, "copy");
+  }
+  ~iterator_facade_base() throw() {
+    TRACE_DTOR(iterator_facade_base);
+  }
 
   explicit iterator_facade_base(node_base p) : m_node(p) {}
 
@@ -87,12 +95,24 @@ class xact_posts_iterator
   bool posts_uninitialized;
 
 public:
-  xact_posts_iterator() : posts_uninitialized(true) {}
+  xact_posts_iterator() : posts_uninitialized(true) {
+    TRACE_CTOR(xact_posts_iterator, "");
+  }
   xact_posts_iterator(xact_t& xact)
     : posts_uninitialized(true) {
     reset(xact);
+    TRACE_CTOR(xact_posts_iterator, "xact_t&");
   }
-  ~xact_posts_iterator() throw() {}
+  xact_posts_iterator(const xact_posts_iterator& i)
+    : iterator_facade_base<xact_posts_iterator, post_t *,
+                           boost::forward_traversal_tag>(i),
+      posts_i(i.posts_i), posts_end(i.posts_end),
+      posts_uninitialized(i.posts_uninitialized) {
+    TRACE_CTOR(xact_posts_iterator, "copy");
+  }
+  ~xact_posts_iterator() throw() {
+    TRACE_DTOR(xact_posts_iterator);
+  }
 
   void reset(xact_t& xact) {
     posts_i   = xact.posts.begin();
@@ -121,15 +141,28 @@ public:
 
   bool xacts_uninitialized;
 
-  xacts_iterator() : xacts_uninitialized(true) {}
+  xacts_iterator() : xacts_uninitialized(true) {
+    TRACE_CTOR(xacts_iterator, "");
+  }
   xacts_iterator(journal_t& journal) : xacts_uninitialized(false) {
     reset(journal);
+    TRACE_CTOR(xacts_iterator, "journal_t&");
   }
   xacts_iterator(xacts_list::iterator beg,
                  xacts_list::iterator end) : xacts_uninitialized(false) {
     reset(beg, end);
+    TRACE_CTOR(xacts_iterator, "xacts_list::iterator, xacts_list::iterator");
   }
-  ~xacts_iterator() throw() {}
+  xacts_iterator(const xacts_iterator& i)
+    : iterator_facade_base<xacts_iterator, xact_t *,
+                           boost::forward_traversal_tag>(i),
+      xacts_i(i.xacts_i), xacts_end(i.xacts_end),
+      xacts_uninitialized(i.xacts_uninitialized) {
+    TRACE_CTOR(xacts_iterator, "copy");
+  }
+  ~xacts_iterator() throw() {
+    TRACE_DTOR(xacts_iterator);
+  }
 
   void reset(journal_t& journal);
 
@@ -150,11 +183,22 @@ class journal_posts_iterator
   xact_posts_iterator posts;
 
 public:
-  journal_posts_iterator() {}
+  journal_posts_iterator() {
+    TRACE_CTOR(journal_posts_iterator, "");
+  }
   journal_posts_iterator(journal_t& journal) {
     reset(journal);
+    TRACE_CTOR(journal_posts_iterator, "journal_t&");
   }
-  ~journal_posts_iterator() throw() {}
+  journal_posts_iterator(const journal_posts_iterator& i)
+    : iterator_facade_base<journal_posts_iterator, post_t *,
+                           boost::forward_traversal_tag>(i),
+      xacts(i.xacts), posts(i.posts) {
+    TRACE_CTOR(journal_posts_iterator, "copy");
+  }
+  ~journal_posts_iterator() throw() {
+    TRACE_DTOR(journal_posts_iterator);
+  }
 
   void reset(journal_t& journal);
 
@@ -169,15 +213,27 @@ protected:
   journal_posts_iterator  journal_posts;
   xacts_iterator          xacts;
   xact_posts_iterator     posts;
-  temporaries_t           temps;
   xacts_list              xact_temps;
+  temporaries_t           temps;
 
 public:
-  posts_commodities_iterator() {}
+  posts_commodities_iterator() {
+    TRACE_CTOR(posts_commodities_iterator, "");
+  }
   posts_commodities_iterator(journal_t& journal) {
     reset(journal);
+    TRACE_CTOR(posts_commodities_iterator, "journal_t&");
   }
-  ~posts_commodities_iterator() throw() {}
+  posts_commodities_iterator(const posts_commodities_iterator& i)
+    : iterator_facade_base<posts_commodities_iterator, post_t *,
+                           boost::forward_traversal_tag>(i),
+      journal_posts(i.journal_posts), xacts(i.xacts), posts(i.posts),
+      xact_temps(i.xact_temps), temps(i.temps) {
+    TRACE_CTOR(posts_commodities_iterator, "copy");
+  }
+  ~posts_commodities_iterator() throw() {
+    TRACE_DTOR(posts_commodities_iterator);
+  }
 
   void reset(journal_t& journal);
 
@@ -192,12 +248,23 @@ class basic_accounts_iterator
   std::list<accounts_map::const_iterator> accounts_end;
 
 public:
-  basic_accounts_iterator() {}
+  basic_accounts_iterator() {
+    TRACE_CTOR(basic_accounts_iterator, "");
+  }
   basic_accounts_iterator(account_t& account) {
     push_back(account);
     increment();
+    TRACE_CTOR(basic_accounts_iterator, "account_t&");
   }
-  ~basic_accounts_iterator() throw() {}
+  basic_accounts_iterator(const basic_accounts_iterator& i)
+    : iterator_facade_base<basic_accounts_iterator, account_t *,
+                           boost::forward_traversal_tag>(i),
+      accounts_i(i.accounts_i), accounts_end(i.accounts_end) {
+    TRACE_CTOR(basic_accounts_iterator, "copy");
+  }
+  ~basic_accounts_iterator() throw() {
+    TRACE_DTOR(basic_accounts_iterator);
+  }
 
   void increment();
 
@@ -227,8 +294,20 @@ public:
     : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
     push_back(account);
     increment();
+    TRACE_CTOR(sorted_accounts_iterator, "account_t&, expr_t, bool");
   }
-  ~sorted_accounts_iterator() throw() {}
+  sorted_accounts_iterator(const sorted_accounts_iterator& i)
+    : iterator_facade_base<sorted_accounts_iterator, account_t *,
+                           boost::forward_traversal_tag>(i),
+      sort_cmp(i.sort_cmp), flatten_all(i.flatten_all),
+      accounts_list(i.accounts_list),
+      sorted_accounts_i(i.sorted_accounts_i),
+      sorted_accounts_end(i.sorted_accounts_end) {
+    TRACE_CTOR(sorted_accounts_iterator, "copy");
+  }
+  ~sorted_accounts_iterator() throw() {
+    TRACE_DTOR(sorted_accounts_iterator);
+  }
 
   void increment();
 

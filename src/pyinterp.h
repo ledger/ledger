@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,20 +38,52 @@
 
 namespace ledger {
 
+class python_module_t : public scope_t, public noncopyable
+{
+public:
+  string         module_name;
+  python::object module_object;
+  python::dict   module_globals;
+
+  explicit python_module_t(const string& name);
+  explicit python_module_t(const string& name, python::object obj);
+
+  void import_module(const string& name, bool import_direct = false);
+
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+                                  const string& name);
+
+  void define_global(const string& name, python::object obj) {
+    module_globals[name] = obj;
+  }
+
+  virtual string description() {
+    return module_name;
+  }
+};
+
+typedef std::map<PyObject *, shared_ptr<python_module_t> > python_module_map_t;
+
 class python_interpreter_t : public session_t
 {
 public:
-  python::dict main_nspace;
   bool is_initialized;
 
-  python_interpreter_t()
-    : session_t(), main_nspace(), is_initialized(false) {
+  shared_ptr<python_module_t> main_module;
+  python_module_map_t         modules_map;
+
+  shared_ptr<python_module_t> import_module(const string& name) {
+    shared_ptr<python_module_t> mod(new python_module_t(name));
+    if (name != "__main__")
+      main_module->define_global(name, mod->module_object);
+    return mod;
+  }    
+
+  python_interpreter_t() : session_t(), is_initialized(false) {
     TRACE_CTOR(python_interpreter_t, "");
   }
-
   virtual ~python_interpreter_t() {
     TRACE_DTOR(python_interpreter_t);
-
     if (is_initialized)
       Py_Finalize();
   }
@@ -59,7 +91,6 @@ public:
   void initialize();
   void hack_system_paths();
 
-  python::object import_into_main(const string& name);
   python::object import_option(const string& name);
 
   enum py_eval_mode_t {
@@ -68,14 +99,10 @@ public:
     PY_EVAL_MULTI
   };
 
-  python::object eval(std::istream& in,
-                      py_eval_mode_t mode = PY_EVAL_EXPR);
-  python::object eval(const string& str,
-                      py_eval_mode_t mode = PY_EVAL_EXPR);
-  python::object eval(const char * c_str,
-                      py_eval_mode_t mode = PY_EVAL_EXPR) {
-    string str(c_str);
-    return eval(str, mode);
+  python::object eval(std::istream& in, py_eval_mode_t mode = PY_EVAL_EXPR);
+  python::object eval(const string& str, py_eval_mode_t mode = PY_EVAL_EXPR);
+  python::object eval(const char * c_str, py_eval_mode_t mode = PY_EVAL_EXPR) {
+    return eval(string(c_str), mode);
   }
 
   value_t python_command(call_scope_t& scope);
@@ -109,8 +136,8 @@ public:
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
 
-  OPTION_(python_interpreter_t, import_, DO_(args) {
-      parent->import_option(args.get<string>(1));
+  OPTION_(python_interpreter_t, import_, DO_(str) {
+      parent->import_option(str);
     });
 };
 

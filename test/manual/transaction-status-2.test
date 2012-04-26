@@ -11,5 +11,5 @@
     Assets
 
 test reg --columns=60 food --cleared
-09-Oct-31 Panera Bread    Expenses:Food      $4.50     $4.50
+09-Oct-31 Panera Bread   Expenses:Food       $4.50     $4.50
 end test

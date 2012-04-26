@@ -1,0 +1,43 @@
+2012-03-23 * Test 1
+    A                  $10.00
+    B
+
+2012-03-24 * Test 2
+    ; Payee: Test 3
+    C               20.00 EUR
+    D
+
+2012-03-25 * Test 4
+    E               30.00 GBP
+    F
+
+test --now 2012/03/25 xact "Test 1"
+2012/03/25 Test 1
+    A                                         $10.00
+    B
+end test
+
+test --now 2012/03/25 xact "Test 2"
+2012/03/25 Test 2
+    C                                      20.00 EUR
+    D
+end test
+
+; I think this output is wrong, see bug #737
+test --now 2012/03/25 xact "Test 3"
+2012/03/25 Test 4
+    E                                      30.00 GBP
+    F
+end test
+
+test --now 2012/03/25 xact "Test 4"
+2012/03/25 Test 4
+    E                                      30.00 GBP
+    F
+end test
+
+test xact no:such:account -> 1
+__ERROR__
+Error: No accounts, and no past transaction matching 'no:such:account'
+end test
+

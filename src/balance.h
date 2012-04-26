@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -108,26 +108,26 @@ public:
     TRACE_CTOR(balance_t, "");
   }
   balance_t(const amount_t& amt) {
-    TRACE_CTOR(balance_t, "const amount_t&");
     if (amt.is_null())
       throw_(balance_error,
              _("Cannot initialize a balance from an uninitialized amount"));
     if (! amt.is_realzero())
       amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+    TRACE_CTOR(balance_t, "const amount_t&");
   }
   balance_t(const double val);
   balance_t(const unsigned long val);
   balance_t(const long val);
 
   explicit balance_t(const string& val) {
-    TRACE_CTOR(balance_t, "const string&");
     amount_t temp(val);
     amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    TRACE_CTOR(balance_t, "const string&");
   }
   explicit balance_t(const char * val) {
-    TRACE_CTOR(balance_t, "const char *");
     amount_t temp(val);
     amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    TRACE_CTOR(balance_t, "const char *");
   }
 
   /**
@@ -384,10 +384,8 @@ public:
   }
 
   optional<balance_t>
-  value(const optional<datetime_t>&   moment      = none,
-        const optional<commodity_t&>& in_terms_of = none) const;
-
-  balance_t price() const;
+  value(const datetime_t&   moment      = datetime_t(),
+        const commodity_t * in_terms_of = NULL) const;
 
   /**
    * Truth tests.  An balance may be truth test in two ways:
@@ -507,6 +505,14 @@ public:
    * amount_t::strip_annotations for more details.
    */
   balance_t strip_annotations(const keep_details_t& what_to_keep) const;
+
+  /**
+   * Iteration primitives.  `map_sorted_amounts' allows one to visit
+   * each amount in balance in the proper order for displaying to the
+   * user.  Mostly used by `print' and other routinse where the sort
+   * order of the amounts' commodities is significant.
+   */
+  void map_sorted_amounts(function<void(const amount_t&)> fn) const;
 
   /**
    * Printing methods.  A balance may be output to a stream using the

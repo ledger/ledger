@@ -34,6 +34,7 @@ class LedgerHarness:
     failed     = 0
     verify     = False
     gmalloc    = False
+    python     = False
 
     def __init__(self, argv):
         if not os.path.isfile(argv[1]):
@@ -43,12 +44,13 @@ class LedgerHarness:
             print "Cannot find source path at '%s'" % argv[2]
             sys.exit(1)
 
-        self.ledger     = argv[1]
-        self.sourcepath = argv[2]
+        self.ledger     = os.path.abspath(argv[1])
+        self.sourcepath = os.path.abspath(argv[2])
         self.succeeded  = 0
         self.failed     = 0
         self.verify     = '--verify' in argv
         self.gmalloc    = '--gmalloc' in argv
+        self.python     = '--python' in argv
 
     def run(self, command, verify=None, gmalloc=None, columns=True):
         env = os.environ.copy()
@@ -77,8 +79,16 @@ class LedgerHarness:
         command = re.sub('\$ledger', '%s%s %s' % \
                          (self.ledger, insert, '--args-only'), command)
 
+        valgrind = '/usr/bin/valgrind'
+        if not os.path.isfile(valgrind):
+            valgrind = '/opt/local/bin/valgrind'
+
+        if os.path.isfile(valgrind) and '--verify' in insert:
+            command = valgrind + ' -q ' + command
+
         return Popen(command, shell=True, close_fds=True, env=env,
-                     stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                     stdin=PIPE, stdout=PIPE, stderr=PIPE, 
+                     cwd=self.sourcepath)
 
     def read(self, fd):
         text = ""
@@ -108,8 +118,10 @@ class LedgerHarness:
         sys.stdout.write(".")
         self.succeeded += 1
 
-    def failure(self):
+    def failure(self, name=None):
         sys.stdout.write("E")
+        if name:
+            sys.stdout.write("[%s]" % name)
         self.failed += 1
 
     def exit(self):

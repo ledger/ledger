@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,7 +35,7 @@
 
 namespace ledger {
 
-bool item_t::use_effective_date = false;
+bool item_t::use_aux_date = false;
 
 bool item_t::has_tag(const string& tag, bool) const
 {
@@ -72,7 +72,7 @@ bool item_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-  optional<value_t> item_t::get_tag(const string& tag, bool) const
+optional<value_t> item_t::get_tag(const string& tag, bool) const
 {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
@@ -103,6 +103,16 @@ optional<value_t> item_t::get_tag(const mask_t& tag_mask,
   return none;
 }
 
+namespace {
+  struct CaseInsensitiveKeyCompare
+    : public std::binary_function<string, string, bool>
+  {
+    bool operator()(const string& s1, const string& s2) const {
+      return boost::algorithm::ilexicographical_compare(s1, s2);
+    }
+  };
+}
+
 item_t::string_map::iterator
 item_t::set_tag(const string&            tag,
                 const optional<value_t>& value,
@@ -111,15 +121,14 @@ item_t::set_tag(const string&            tag,
   assert(! tag.empty());
 
   if (! metadata)
-    metadata = string_map();
+    metadata = string_map(CaseInsensitiveKeyCompare());
 
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
         << (value ? *value : string_value("<none>")) << "'");
 
   optional<value_t> data = value;
-  if (data &&
-      (data->is_null() ||
-       (data->is_string() && data->as_string().empty())))
+  if (data && (data->is_null() ||
+               (data->is_string() && data->as_string().empty())))
     data = none;
 
   string_map::iterator i = metadata->find(tag);
@@ -150,7 +159,7 @@ void item_t::parse_tags(const char * p,
 
           if (char * pp = std::strchr(buf, '=')) {
             *pp++ = '\0';
-            _date_eff = parse_date(pp);
+            _date_aux = parse_date(pp);
           }
           if (buf[0])
             _date = parse_date(buf);
@@ -172,19 +181,7 @@ void item_t::parse_tags(const char * p,
        q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
     if (len < 2) continue;
-    if (! tag.empty()) {
-      string_map::iterator i;
-      string field(p + (q - buf.get()));
-      if (by_value) {
-        bind_scope_t bound_scope(scope, *this);
-        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
-      } else {
-        i = set_tag(tag, string_value(field), overwrite_existing);
-      }
-      (*i).second.second = true;
-      break;
-    }
-    else if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
+    if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
       for (char * r = std::strtok(q + 1, ":");
            r;
            r = std::strtok(NULL, ":")) {
@@ -199,6 +196,18 @@ void item_t::parse_tags(const char * p,
         index    = 2;
       }
       tag = string(q, len - index);
+
+      string_map::iterator i;
+      string field(p + len + index);
+      trim(field);
+      if (by_value) {
+        bind_scope_t bound_scope(scope, *this);
+        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
+      } else {
+        i = set_tag(tag, string_value(field), overwrite_existing);
+      }
+      (*i).second.second = true;
+      break;
     }
     first = false;
   }
@@ -239,12 +248,12 @@ namespace {
   value_t get_date(item_t& item) {
     return item.date();
   }
-  value_t get_actual_date(item_t& item) {
-    return item.actual_date();
+  value_t get_primary_date(item_t& item) {
+    return item.primary_date();
   }
-  value_t get_effective_date(item_t& item) {
-    if (optional<date_t> effective = item.effective_date())
-      return *effective;
+  value_t get_aux_date(item_t& item) {
+    if (optional<date_t> aux_date = item.aux_date())
+      return *aux_date;
     return NULL_VALUE;
   }
   value_t get_note(item_t& item) {
@@ -338,7 +347,10 @@ namespace {
   }
 
   value_t get_seq(item_t& item) {
-    return item.pos ? long(item.pos->sequence) : 0L;
+    return long(item.seq());
+  }
+  value_t get_id(item_t& item) {
+    return string_value(item.id());
   }
 
   value_t get_addr(item_t& item) {
@@ -386,6 +398,13 @@ value_t get_comment(item_t& item)
   }
 }
 
+void item_t::define(const symbol_t::kind_t, const string& name,
+                    expr_t::ptr_op_t def)
+{
+  bind_scope_t bound_scope(*scope_t::default_scope, *this);
+  set_tag(name, def->calc(bound_scope));
+}
+
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
                                 const string& name)
 {
@@ -397,9 +416,11 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
     if (name == "actual")
       return WRAP_FUNCTOR(get_wrapper<&get_actual>);
     else if (name == "actual_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_actual_date>);
+      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
     else if (name == "addr")
       return WRAP_FUNCTOR(get_wrapper<&get_addr>);
+    else if (name == "aux_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
     break;
 
   case 'b':
@@ -429,7 +450,7 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
     else if (name == "end_pos")
       return WRAP_FUNCTOR(get_wrapper<&get_end_pos>);
     else if (name == "effective_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_effective_date>);
+      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
     break;
 
   case 'f':
@@ -447,6 +468,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'i':
     if (name == "is_account")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    else if (name == "id")
+      return WRAP_FUNCTOR(get_wrapper<&get_id>);
     break;
 
   case 'm':
@@ -464,10 +487,12 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     else if (name == "parent")
       return WRAP_FUNCTOR(get_wrapper<&ignore>);
+    else if (name == "primary_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
     break;
 
   case 's':
-    if (name == "status")
+    if (name == "status" || name == "state")
       return WRAP_FUNCTOR(get_wrapper<&get_status>);
     else if (name == "seq")
       return WRAP_FUNCTOR(get_wrapper<&get_seq>);
@@ -481,6 +506,8 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'u':
     if (name == "uncleared")
       return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
+    else if (name == "uuid")
+      return WRAP_FUNCTOR(get_wrapper<&get_id>);
     break;
 
   case 'v':
@@ -532,7 +559,7 @@ string item_context(const item_t& item, const string& desc)
   if (! (len > 0))
     return empty_string;
 
-  assert(len < 8192);
+  assert(len < 1024 * 1024);
 
   std::ostringstream out;
 

@@ -1,0 +1,20 @@
+~ monthly
+  assets:checking  $1,000.00
+  income:work:salary  $-1,000.00
+
+~ monthly
+  ; note
+  assets:checking  $1,000.00
+  income:work:salary  $-1,000.00
+
+~ monthly
+  assets:checking  $1,000.00
+  income:work:salary
+
+~ monthly
+  ; note
+  assets:checking  $1,000.00
+  income:work:salary
+
+test reg
+end test

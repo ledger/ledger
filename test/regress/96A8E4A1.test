@@ -1,0 +1,10 @@
+2011-01-31 * Test
+    Expenses:Travel        1 "Spr MegaBonus"
+    Assets:Voucher
+
+test -X EUR -H bal
+  -1 "Spr MegaBonus"  Assets:Voucher
+   1 "Spr MegaBonus"  Expenses:Travel
+--------------------
+                   0
+end test

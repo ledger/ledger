@@ -1,0 +1,16 @@
+2012-03-10 Employer
+    Assets:Cash                 $100
+    Income:Employer
+
+2012-03-10 KFC
+    Expenses:Food                $20
+    Assets:Cash
+
+2012-03-10 KFC - Rebate
+    Assets:Cash
+    Expenses:Food                $-5
+
+2012-03-10 KFC - Food & Rebate
+    Expenses:Food                $20
+    Expenses:Food                $-5
+    Assets:Cash

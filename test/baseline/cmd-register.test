@@ -1,0 +1,40 @@
+2012-01-10 * Phone expense on holidays
+    Expenses:Phone            12.00 EUR @@ 10.00 GBP
+    Assets:Cash              -10.00 GBP
+
+2012-01-31 * Rent expense
+    Expenses:Rent            550.00 GBP
+    Assets:Cash             -550.00 GBP
+
+2012-02-01 * Buy AAA
+    Assets:Investment             1 AAA @ 10.00 GBP
+    Assets:Cash              -10.00 GBP
+
+test reg
+12-Jan-10 Phone expense on ho.. Expenses:Phone            12.00 EUR    12.00 EUR
+                                Assets:Cash              -10.00 GBP    12.00 EUR
+                                                                      -10.00 GBP
+12-Jan-31 Rent expense          Expenses:Rent            550.00 GBP    12.00 EUR
+                                                                      540.00 GBP
+                                Assets:Cash             -550.00 GBP    12.00 EUR
+                                                                      -10.00 GBP
+12-Feb-01 Buy AAA               Assets:Investment             1 AAA        1 AAA
+                                                                       12.00 EUR
+                                                                      -10.00 GBP
+                                Assets:Cash              -10.00 GBP        1 AAA
+                                                                       12.00 EUR
+                                                                      -20.00 GBP
+end test
+
+test r :inve
+12-Feb-01 Buy AAA               Assets:Investment             1 AAA        1 AAA
+end test
+
+test reg :inve
+12-Feb-01 Buy AAA               Assets:Investment             1 AAA        1 AAA
+end test
+
+test register :inve
+12-Feb-01 Buy AAA               Assets:Investment             1 AAA        1 AAA
+end test
+

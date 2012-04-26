@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -415,16 +415,13 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     try {
       amount_t temp;
       if (! temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
-        // If the amount had no commodity, it must be an unambiguous
-        // variable reference
-
         in.clear();
         in.seekg(pos, std::ios::beg);
         if (in.fail())
           throw_(parse_error, _("Failed to reset input stream"));
 
         c = static_cast<char>(in.peek());
-        if (! std::isalpha(c))
+        if (! std::isalpha(c) && c != '_')
           expected('\0', c);
 
         parse_ident(in);

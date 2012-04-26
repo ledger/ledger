@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -49,6 +49,7 @@ namespace ledger {
 
 class post_t;
 class journal_t;
+class parse_context_t;
 
 typedef std::list<post_t *> posts_list;
 
@@ -108,7 +109,15 @@ public:
   optional<string> code;
   string           payee;
 
-  xact_t() {
+#ifdef DOCUMENT_MODEL
+  mutable void * data;
+#endif
+
+  xact_t()
+#ifdef DOCUMENT_MODEL
+    : data(NULL)
+#endif
+  {
     TRACE_CTOR(xact_t, "");
   }
   xact_t(const xact_t& e);
@@ -128,9 +137,6 @@ public:
   }
 
   virtual void add_post(post_t * post);
-
-  string idstring() const;
-  string id() const;
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
@@ -155,21 +161,11 @@ private:
 class auto_xact_t : public xact_base_t
 {
 public:
-  predicate_t predicate;
-  bool        try_quick_match;
-
+  predicate_t            predicate;
+  bool                   try_quick_match;
   std::map<string, bool> memoized_results;
 
-  enum xact_expr_kind_t {
-    EXPR_GENERAL,
-    EXPR_ASSERTION,
-    EXPR_CHECK
-  };
-
-  typedef std::pair<expr_t, xact_expr_kind_t> check_expr_pair;
-  typedef std::list<check_expr_pair>          check_expr_list;
-
-  optional<check_expr_list> check_exprs;
+  optional<expr_t::check_expr_list> check_exprs;
 
   struct deferred_tag_data_t {
     string   tag_data;
@@ -180,22 +176,39 @@ public:
                         bool   _overwrite_existing)
       : tag_data(_tag_data), overwrite_existing(_overwrite_existing),
         apply_to_post(NULL) {}
+
+#if defined(HAVE_BOOST_SERIALIZATION)
+private:
+    /** Serialization. */
+    deferred_tag_data_t() : apply_to_post(NULL) {}
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int /* version */) {
+      ar & tag_data;
+      ar & overwrite_existing;
+      ar & apply_to_post;
+    }
+#endif // HAVE_BOOST_SERIALIZATION
   };
 
   typedef std::list<deferred_tag_data_t> deferred_notes_list;
 
   optional<deferred_notes_list> deferred_notes;
+  post_t * active_post;
 
-  auto_xact_t() : try_quick_match(true) {
+  auto_xact_t() : try_quick_match(true), active_post(NULL) {
     TRACE_CTOR(auto_xact_t, "");
   }
   auto_xact_t(const auto_xact_t& other)
     : xact_base_t(), predicate(other.predicate),
-      try_quick_match(other.try_quick_match) {
+      try_quick_match(other.try_quick_match),
+      active_post(other.active_post) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
   auto_xact_t(const predicate_t& _predicate)
-    : predicate(_predicate), try_quick_match(true)
+    : predicate(_predicate), try_quick_match(true), active_post(NULL)
   {
     TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
@@ -214,15 +227,15 @@ public:
     }
   }
 
-  virtual void parse_tags(const char * p,
-                          scope_t&,
-                          bool         overwrite_existing = true) {
+  virtual void parse_tags(const char * p, scope_t&,
+                          bool overwrite_existing = true) {
     if (! deferred_notes)
       deferred_notes = deferred_notes_list();
     deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
+    deferred_notes->back().apply_to_post = active_post;
   }
 
-  virtual void extend_xact(xact_base_t& xact);
+  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:

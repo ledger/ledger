@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -67,10 +67,8 @@ void draft_t::xact_template_t::dump(std::ostream& out) const
         << std::endl;
   } else {
     foreach (const post_template_t& post, posts) {
-      straccstream accum;
       out << std::endl
-          << ACCUM(accum << _("[Posting \"%1\"]")
-                   << (post.from ? _("from") : _("to")))
+          << STR(_("[Posting \"%1\"]") << (post.from ? _("from") : _("to")))
           << std::endl;
 
       if (post.account_mask)
@@ -111,7 +109,14 @@ void draft_t::parse_args(const value_t& args)
     }
     else if (check_for_date &&
              bool(weekday = string_to_day_of_week(what[0]))) {
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
       short  dow  = static_cast<short>(*weekday);
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+#pragma GCC diagnostic pop
+#endif
       date_t date = CURRENT_DATE() - date_duration(1);
       while (date.day_of_week() != dow)
         date -= date_duration(1);
@@ -235,7 +240,7 @@ xact_t * draft_t::insert(journal_t& journal)
     throw std::runtime_error(_("'xact' command requires at least a payee"));
 
   xact_t *              matching = NULL;
-  std::auto_ptr<xact_t> added(new xact_t);
+  unique_ptr<xact_t> added(new xact_t);
 
   if (xact_t * xact =
       lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),
@@ -318,7 +323,7 @@ xact_t * draft_t::insert(journal_t& journal)
     }
 
     foreach (xact_template_t::post_template_t& post, tmpl->posts) {
-      std::auto_ptr<post_t> new_post;
+      unique_ptr<post_t> new_post;
 
       commodity_t * found_commodity = NULL;
 
@@ -502,7 +507,6 @@ value_t template_command(call_scope_t& args)
   out << std::endl << std::endl;
 
   draft_t draft(args.value());
-
   out << _("--- Transaction template ---") << std::endl;
   draft.dump(out);
 
@@ -512,15 +516,16 @@ value_t template_command(call_scope_t& args)
 value_t xact_command(call_scope_t& args)
 {
   report_t& report(find_scope<report_t>(args));
-  draft_t draft(args.value());
+  draft_t   draft(args.value());
 
-  xact_t * new_xact = draft.insert(*report.session.journal.get());
+  unique_ptr<xact_t> new_xact(draft.insert(*report.session.journal.get()));
+  if (new_xact.get()) {
+    // Only consider actual postings for the "xact" command
+    report.HANDLER(limit_).on("#xact", "actual");
 
-  // Only consider actual postings for the "xact" command
-  report.HANDLER(limit_).on(string("#xact"), "actual");
+    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact.get());
+  }
 
-  if (new_xact)
-    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact);
   return true;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -81,6 +81,8 @@ class expr_t::parser_t : public noncopyable
 
   ptr_op_t parse_value_term(std::istream& in,
                             const parse_flags_t& flags) const;
+  ptr_op_t parse_call_expr(std::istream& in,
+                           const parse_flags_t& flags) const;
   ptr_op_t parse_dot_expr(std::istream& in,
                           const parse_flags_t& flags) const;
   ptr_op_t parse_unary_expr(std::istream& in,

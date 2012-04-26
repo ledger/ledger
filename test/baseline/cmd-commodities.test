@@ -1,0 +1,30 @@
+2011-01-01 * Opening balance
+    Assets:Bank                    10.00 GBP
+    Equity:Opening balance
+
+2011-03-04 * Buy AAA
+    Assets:Broker           2 AAA @ 0.90 GBP
+    Assets:Bank                    -1.80 GBP
+
+2011-03-05 * Buy AA2
+    Assets:Broker           2 "AA2" @ 1.00 GBP
+    Assets:Bank
+
+2011-03-06 * Get Miles&More airmiles
+    Assets:Rewards           1000 "M&M"
+    Income:Rewards
+
+test commodities
+GBP
+AAA
+"AA2"
+"M&M"
+end test
+
+test commodities Assets:Rewards
+"M&M"
+end test
+
+test commodities no:such:account
+end test
+

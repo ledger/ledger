@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -116,7 +116,7 @@ void export_post()
                   make_setter(&post_t::xdata_t::datetime))
     .add_property("account",
                   make_getter(&post_t::xdata_t::account,
-                              return_value_policy<reference_existing_object>()),
+                              return_internal_reference<>()),
                   make_setter(&post_t::xdata_t::account,
                               with_custodian_and_ward<1, 2>()))
     .add_property("sort_values",
@@ -132,6 +132,9 @@ void export_post()
   class_< post_t, bases<item_t> > ("Posting")
     //.def(init<account_t *>())
 
+    .def("id", &post_t::id)
+    .def("seq", &post_t::seq)
+
     .add_property("xact",
                   make_getter(&post_t::xact,
                               return_internal_reference<>()),
@@ -146,11 +149,15 @@ void export_post()
                   make_getter(&post_t::amount),
                   make_setter(&post_t::amount))
     .add_property("cost",
-                  make_getter(&post_t::cost),
-                  make_setter(&post_t::cost))
+                  make_getter(&post_t::cost,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&post_t::cost,
+                              return_value_policy<return_by_value>()))
     .add_property("assigned_amount",
-                  make_getter(&post_t::assigned_amount),
-                  make_setter(&post_t::assigned_amount))
+                  make_getter(&post_t::assigned_amount,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&post_t::assigned_amount,
+                              return_value_policy<return_by_value>()))
 
     .def("has_tag", py_has_tag_1s)
     .def("has_tag", py_has_tag_1m)
@@ -159,8 +166,8 @@ void export_post()
     .def("get_tag", py_get_tag_1m)
     .def("get_tag", py_get_tag_2m)
 
-    .def("date", &post_t::date)
-    .def("effective_date", &post_t::effective_date)
+    .add_property("date", &post_t::date)
+    .add_property("aux_date", &post_t::aux_date)
 
     .def("must_balance", &post_t::must_balance)
 
@@ -170,8 +177,7 @@ void export_post()
 
     .def("has_xdata", &post_t::has_xdata)
     .def("clear_xdata", &post_t::clear_xdata)
-    .def("xdata", py_xdata,
-         return_internal_reference<>())
+    .def("xdata", py_xdata, return_internal_reference<>())
 
     //.def("add_to_value", &post_t::add_to_value)
     .def("set_reported_account", &post_t::set_reported_account)

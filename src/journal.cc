@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -32,33 +32,37 @@
 #include <system.hh>
 
 #include "journal.h"
+#include "context.h"
 #include "amount.h"
 #include "commodity.h"
 #include "pool.h"
 #include "xact.h"
+#include "post.h"
 #include "account.h"
 
 namespace ledger {
 
 journal_t::journal_t()
 {
-  TRACE_CTOR(journal_t, "");
   initialize();
+  TRACE_CTOR(journal_t, "");
 }
 
+#if 0
 journal_t::journal_t(const path& pathname)
 {
-  TRACE_CTOR(journal_t, "path");
   initialize();
   read(pathname);
+  TRACE_CTOR(journal_t, "path");
 }
 
 journal_t::journal_t(const string& str)
 {
-  TRACE_CTOR(journal_t, "string");
   initialize();
   read(str);
+  TRACE_CTOR(journal_t, "string");
 }
+#endif
 
 journal_t::~journal_t()
 {
@@ -80,9 +84,18 @@ journal_t::~journal_t()
 
 void journal_t::initialize()
 {
-  master     = new account_t;
-  bucket     = NULL;
-  was_loaded = false;
+  master            = new account_t;
+  bucket            = NULL;
+  fixed_accounts    = false;
+  fixed_payees      = false;
+  fixed_commodities = false;
+  fixed_metadata    = false;
+  current_context   = NULL;
+  was_loaded        = false;
+  force_checking    = false;
+  check_payees      = false;
+  day_break         = false;
+  checking_style    = CHECK_PERMISSIVE;
 }
 
 void journal_t::add_account(account_t * acct)
@@ -105,6 +118,201 @@ account_t * journal_t::find_account_re(const string& regexp)
   return master->find_account_re(regexp);
 }
 
+account_t * journal_t::register_account(const string& name, post_t * post,
+                                        account_t * master_account)
+{
+  account_t * result = NULL;
+
+  // If there any account aliases, substitute before creating an account
+  // object.
+  if (account_aliases.size() > 0) {
+    accounts_map::const_iterator i = account_aliases.find(name);
+    if (i != account_aliases.end())
+      result = (*i).second;
+  }
+
+  // Create the account object and associate it with the journal; this
+  // is registering the account.
+  if (! result)
+    result = master_account->find_account(name);
+
+  // If the account name being registered is "Unknown", check whether
+  // the payee indicates an account that should be used.
+  if (result->name == _("Unknown")) {
+    foreach (account_mapping_t& value, payees_for_unknown_accounts) {
+      if (value.first.match(post->xact->payee)) {
+        result = value.second;
+        break;
+      }
+    }
+  }
+
+  // Now that we have an account, make certain that the account is
+  // "known", if the user has requested validation of that fact.
+  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+    if (! result->has_flags(ACCOUNT_KNOWN)) {
+      if (! post) {
+        if (force_checking)
+          fixed_accounts = true;
+        result->add_flags(ACCOUNT_KNOWN);
+      }
+      else if (! fixed_accounts && post->_state != item_t::UNCLEARED) {
+        result->add_flags(ACCOUNT_KNOWN);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        current_context->warning(STR(_("Unknown account '%1'")
+                                     << result->fullname()));
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown account '%1'") << result->fullname());
+      }
+    }
+  }
+
+  return result;
+}
+
+string journal_t::register_payee(const string& name, xact_t * xact)
+{
+  string payee;
+
+  if (check_payees &&
+      (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR)) {
+    std::set<string>::iterator i = known_payees.find(name);
+
+    if (i == known_payees.end()) {
+      if (! xact) {
+        if (force_checking)
+          fixed_payees = true;
+        known_payees.insert(name);
+      }
+      else if (! fixed_payees && xact->_state != item_t::UNCLEARED) {
+        known_payees.insert(name);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        current_context->warning(STR(_("Unknown payee '%1'") << name));
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown payee '%1'") << name);
+      }
+    }
+  }
+
+  foreach (payee_mapping_t& value, payee_mappings) {
+    if (value.first.match(name)) {
+      payee = value.second;
+      break;
+    }
+  }
+
+  return payee.empty() ? name : payee;
+}
+
+void journal_t::register_commodity(commodity_t& comm,
+                                   variant<int, xact_t *, post_t *> context)
+{
+  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+    if (! comm.has_flags(COMMODITY_KNOWN)) {
+      if (context.which() == 0) {
+        if (force_checking)
+          fixed_commodities = true;
+        comm.add_flags(COMMODITY_KNOWN);
+      }
+      else if (! fixed_commodities &&
+               ((context.which() == 1 &&
+                 boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
+                (context.which() == 2 &&
+                 boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
+        comm.add_flags(COMMODITY_KNOWN);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        current_context->warning(STR(_("Unknown commodity '%1'") << comm));
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown commodity '%1'") << comm);
+      }
+    }
+  }
+}
+
+void journal_t::register_metadata(const string& key, const value_t& value,
+                                  variant<int, xact_t *, post_t *> context)
+{
+  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+    std::set<string>::iterator i = known_tags.find(key);
+
+    if (i == known_tags.end()) {
+      if (context.which() == 0) {
+        if (force_checking)
+          fixed_metadata = true;
+        known_tags.insert(key);
+      }
+      else if (! fixed_metadata &&
+               ((context.which() == 1 &&
+                 boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
+                (context.which() == 2 &&
+                 boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
+        known_tags.insert(key);
+      }
+      else if (checking_style == CHECK_WARNING) {
+        current_context->warning(STR(_("Unknown metadata tag '%1'") << key));
+      }
+      else if (checking_style == CHECK_ERROR) {
+        throw_(parse_error, _("Unknown metadata tag '%1'") << key);
+      }
+    }
+  }
+
+  if (! value.is_null()) {
+    std::pair<tag_check_exprs_map::iterator,
+              tag_check_exprs_map::iterator> range =
+      tag_check_exprs.equal_range(key);
+
+    for (tag_check_exprs_map::iterator i = range.first;
+         i != range.second;
+         ++i) {
+      bind_scope_t bound_scope
+        (*current_context->scope,
+         context.which() == 1 ?
+         static_cast<scope_t&>(*boost::get<xact_t *>(context)) :
+         static_cast<scope_t&>(*boost::get<post_t *>(context)));
+      value_scope_t val_scope(bound_scope, value);
+
+      if (! (*i).second.first.calc(val_scope).to_boolean()) {
+        if ((*i).second.second == expr_t::EXPR_ASSERTION)
+          throw_(parse_error,
+                 _("Metadata assertion failed for (%1: %2): %3")
+                 << key << value << (*i).second.first);
+        else
+          current_context->warning
+            (STR(_("Metadata check failed for (%1: %2): %3")
+                 << key << value << (*i).second.first));
+      }
+    }
+  }
+}
+
+namespace {
+  void check_all_metadata(journal_t& journal,
+                          variant<int, xact_t *, post_t *> context)
+  {
+    xact_t * xact = context.which() == 1 ? boost::get<xact_t *>(context) : NULL;
+    post_t * post = context.which() == 2 ? boost::get<post_t *>(context) : NULL;
+
+    if ((xact || post) && xact ? xact->metadata : post->metadata) {
+      foreach (const item_t::string_map::value_type& pair,
+               xact ? *xact->metadata : *post->metadata) {
+        const string& key(pair.first);
+
+        if (optional<value_t> value = pair.second.first)
+          journal.register_metadata(key, *value, context);
+        else
+          journal.register_metadata(key, NULL_VALUE, context);
+      }
+    }
+  }
+}
+
 bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
@@ -115,6 +323,29 @@ bool journal_t::add_xact(xact_t * xact)
   }
 
   extend_xact(xact);
+  check_all_metadata(*this, xact);
+
+  foreach (post_t * post, xact->posts) {
+    extend_post(*post, *this);
+    check_all_metadata(*this, post);
+  }
+
+  // If a transaction with this UUID has already been seen, simply do
+  // not add this one to the journal.  However, all automated checks
+  // will have been performed by extend_xact, so asserts can still be
+  // applied to it.
+  if (optional<value_t> ref = xact->get_tag(_("UUID"))) {
+    std::pair<checksum_map_t::iterator, bool> result
+      = checksum_map.insert(checksum_map_t::value_type(ref->to_string(), xact));
+    if (! result.second) {
+      // jww (2012-02-27): Confirm that the xact in
+      // (*result.first).second is exact match in its significant
+      // details to xact.
+      xact->journal = NULL;
+      return false;
+    }
+  }
+
   xacts.push_back(xact);
 
   return true;
@@ -123,7 +354,7 @@ bool journal_t::add_xact(xact_t * xact)
 void journal_t::extend_xact(xact_base_t * xact)
 {
   foreach (auto_xact_t * auto_xact, auto_xacts)
-    auto_xact->extend_xact(*xact);
+    auto_xact->extend_xact(*xact, *current_context);
 }
 
 bool journal_t::remove_xact(xact_t * xact)
@@ -144,28 +375,36 @@ bool journal_t::remove_xact(xact_t * xact)
   return true;
 }
 
-std::size_t journal_t::read(std::istream& in,
-                            const path&   pathname,
-                            account_t *   master_alt,
-                            scope_t *     scope)
+std::size_t journal_t::read(parse_context_stack_t& context)
 {
   std::size_t count = 0;
   try {
-    if (! scope)
-      scope = scope_t::default_scope;
+    parse_context_t& current(context.get_current());
+    current_context = &current;
 
-    if (! scope)
+    current.count = 0;
+    if (! current.scope)
+      current.scope = scope_t::default_scope;
+
+    if (! current.scope)
       throw_(std::runtime_error,
              _("No default scope in which to read journal file '%1'")
-             << pathname);
+             << current.pathname);
 
-    value_t strict = expr_t("strict").calc(*scope);
+    if (! current.master)
+      current.master = master;
 
-    count = parse(in, *scope, master_alt ? master_alt : master,
-                  &pathname, strict.to_boolean());
+    count = read_textual(context);
+    if (count > 0) {
+      if (! current.pathname.empty())
+        sources.push_back(fileinfo_t(current.pathname));
+      else
+        sources.push_back(fileinfo_t());
+    }
   }
   catch (...) {
     clear_xdata();
+    current_context = NULL;
     throw;
   }
 
@@ -174,23 +413,6 @@ std::size_t journal_t::read(std::istream& in,
   // posting amounts.
   clear_xdata();
 
-  return count;
-}
-
-std::size_t journal_t::read(const path& pathname,
-                            account_t * master_account,
-                            scope_t *   scope)
-{
-  path filename = resolve_path(pathname);
-
-  if (! exists(filename))
-    throw_(std::runtime_error,
-           _("Cannot read journal file '%1'") << filename);
-
-  ifstream stream(filename);
-  std::size_t count = read(stream, filename, master_account, scope);
-  if (count > 0)
-    sources.push_back(fileinfo_t(filename));
   return count;
 }
 

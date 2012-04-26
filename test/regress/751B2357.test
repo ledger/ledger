@@ -1,0 +1,17 @@
+01.10.2011 4b4e2a89
+    ef9d9585:efa1fb7b:22845e93:0e3763f0       2,00 A
+    2c166ff7:d34e3aa1:8a5075b3:56f3c726
+
+01.10.2011 15983995
+    eb78b6c0:a2857de3:d6d8ea07:6688fc4e       2,58 A
+    ba3ffe56:c3ba36a5:aa63399f:e9e1d043
+
+test print --date-format=%d.%m.%Y --input-date-format=%d.%m.%Y
+01.10.2011 4b4e2a89
+    ef9d9585:efa1fb7b:22845e93:0e3763f0       2,00 A
+    2c166ff7:d34e3aa1:8a5075b3:56f3c726
+
+01.10.2011 15983995
+    eb78b6c0:a2857de3:d6d8ea07:6688fc4e       2,58 A
+    ba3ffe56:c3ba36a5:aa63399f:e9e1d043
+end test

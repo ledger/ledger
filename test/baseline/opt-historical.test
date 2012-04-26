@@ -1,0 +1,250 @@
+D EUR 2.000,00
+
+P 2011-12-15 $ EUR 2
+P 2011-12-15 AAPL $5.00
+
+2012-01-01 Broker
+    Assets:Stocks                10 AAPL {$1} @ $10
+    Equity
+
+P 2012-01-15 AAPL $15.00
+
+2012-02-02 Broker
+    Assets:Stocks                10 AAPL {$2} @ $20
+    Equity
+
+P 2012-02-15 AAPL $25.00
+
+2012-03-03 Broker
+    Assets:Stocks                10 AAPL {$3} @ $30
+    Equity
+
+P 2012-03-15 AAPL $35.00
+
+2012-04-04 Broker
+    Assets:Stocks                10 AAPL {$4} @ $40
+    Equity
+
+P 2012-04-15 AAPL $45.00
+
+2012-05-05 Broker
+    Assets:Stocks                10 AAPL {$5} @ $50
+    Equity
+
+P 2012-5-15 AAPL $55.00
+
+test reg stocks
+12-Jan-01 Broker                Assets:Stocks               10 AAPL      10 AAPL
+12-Feb-02 Broker                Assets:Stocks               10 AAPL      20 AAPL
+12-Mar-03 Broker                Assets:Stocks               10 AAPL      30 AAPL
+12-Apr-04 Broker                Assets:Stocks               10 AAPL      40 AAPL
+12-May-05 Broker                Assets:Stocks               10 AAPL      50 AAPL
+end test
+
+test reg stocks -O
+12-Jan-01 Broker                Assets:Stocks               10 AAPL      10 AAPL
+12-Feb-02 Broker                Assets:Stocks               10 AAPL      20 AAPL
+12-Mar-03 Broker                Assets:Stocks               10 AAPL      30 AAPL
+12-Apr-04 Broker                Assets:Stocks               10 AAPL      40 AAPL
+12-May-05 Broker                Assets:Stocks               10 AAPL      50 AAPL
+end test
+
+test reg stocks -B
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -I
+12-Jan-01 Broker                Assets:Stocks                   $10          $10
+12-Feb-02 Broker                Assets:Stocks                   $20          $30
+12-Mar-03 Broker                Assets:Stocks                   $30          $60
+12-Apr-04 Broker                Assets:Stocks                   $40         $100
+12-May-05 Broker                Assets:Stocks                   $50         $150
+end test
+
+test reg stocks -V
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Jan-15 Commodities revalued  <Revalued>                      $50         $150
+12-Feb-02 Commodities revalued  <Revalued>                      $50         $200
+12-Feb-02 Broker                Assets:Stocks                  $200         $400
+12-Feb-15 Commodities revalued  <Revalued>                     $100         $500
+12-Mar-03 Commodities revalued  <Revalued>                     $100         $600
+12-Mar-03 Broker                Assets:Stocks                  $300         $900
+12-Mar-15 Commodities revalued  <Revalued>                     $150        $1050
+12-Apr-04 Commodities revalued  <Revalued>                     $150        $1200
+12-Apr-04 Broker                Assets:Stocks                  $400        $1600
+12-Apr-15 Commodities revalued  <Revalued>                     $200        $1800
+12-May-05 Commodities revalued  <Revalued>                     $200        $2000
+12-May-05 Broker                Assets:Stocks                  $500        $2500
+end test
+
+test reg stocks -O -V
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Jan-15 Commodities revalued  <Revalued>                      $50         $150
+12-Feb-02 Commodities revalued  <Revalued>                      $50         $200
+12-Feb-02 Broker                Assets:Stocks                  $200         $400
+12-Feb-15 Commodities revalued  <Revalued>                     $100         $500
+12-Mar-03 Commodities revalued  <Revalued>                     $100         $600
+12-Mar-03 Broker                Assets:Stocks                  $300         $900
+12-Mar-15 Commodities revalued  <Revalued>                     $150        $1050
+12-Apr-04 Commodities revalued  <Revalued>                     $150        $1200
+12-Apr-04 Broker                Assets:Stocks                  $400        $1600
+12-Apr-15 Commodities revalued  <Revalued>                     $200        $1800
+12-May-05 Commodities revalued  <Revalued>                     $200        $2000
+12-May-05 Broker                Assets:Stocks                  $500        $2500
+end test
+
+test reg stocks -B -V
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -I -V
+12-Jan-01 Broker                Assets:Stocks                   $10          $10
+12-Feb-02 Broker                Assets:Stocks                   $20          $30
+12-Mar-03 Broker                Assets:Stocks                   $30          $60
+12-Apr-04 Broker                Assets:Stocks                   $40         $100
+12-May-05 Broker                Assets:Stocks                   $50         $150
+end test
+
+test reg stocks -X EUR
+12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
+12-Feb-02 Commodities revalued  <Revalued>               EUR 200,00   EUR 400,00
+12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 800,00
+12-Mar-03 Commodities revalued  <Revalued>               EUR 400,00 EUR 1.200,00
+12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.800,00
+12-Apr-04 Commodities revalued  <Revalued>               EUR 600,00 EUR 2.400,00
+12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 3.200,00
+12-May-05 Commodities revalued  <Revalued>               EUR 800,00 EUR 4.000,00
+12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
+end test
+
+test reg stocks -O -X EUR
+12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
+12-Feb-02 Commodities revalued  <Revalued>               EUR 200,00   EUR 400,00
+12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 800,00
+12-Mar-03 Commodities revalued  <Revalued>               EUR 400,00 EUR 1.200,00
+12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.800,00
+12-Apr-04 Commodities revalued  <Revalued>               EUR 600,00 EUR 2.400,00
+12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 3.200,00
+12-May-05 Commodities revalued  <Revalued>               EUR 800,00 EUR 4.000,00
+12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
+end test
+
+test reg stocks -B -X EUR
+12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
+12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 600,00
+12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.200,00
+12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 2.000,00
+12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 3.000,00
+end test
+
+test reg stocks -I -X EUR
+12-Jan-01 Broker                Assets:Stocks             EUR 20,00    EUR 20,00
+12-Feb-02 Broker                Assets:Stocks             EUR 40,00    EUR 60,00
+12-Mar-03 Broker                Assets:Stocks             EUR 60,00   EUR 120,00
+12-Apr-04 Broker                Assets:Stocks             EUR 80,00   EUR 200,00
+12-May-05 Broker                Assets:Stocks            EUR 100,00   EUR 300,00
+end test
+
+test reg stocks -H
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -O -H
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -B -H
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -I -H
+12-Jan-01 Broker                Assets:Stocks                   $10          $10
+12-Feb-02 Broker                Assets:Stocks                   $20          $30
+12-Mar-03 Broker                Assets:Stocks                   $30          $60
+12-Apr-04 Broker                Assets:Stocks                   $40         $100
+12-May-05 Broker                Assets:Stocks                   $50         $150
+end test
+
+test reg stocks -H -V
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -O -H -V
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -B -H -V
+12-Jan-01 Broker                Assets:Stocks                  $100         $100
+12-Feb-02 Broker                Assets:Stocks                  $200         $300
+12-Mar-03 Broker                Assets:Stocks                  $300         $600
+12-Apr-04 Broker                Assets:Stocks                  $400        $1000
+12-May-05 Broker                Assets:Stocks                  $500        $1500
+end test
+
+test reg stocks -I -H -V
+12-Jan-01 Broker                Assets:Stocks                   $10          $10
+12-Feb-02 Broker                Assets:Stocks                   $20          $30
+12-Mar-03 Broker                Assets:Stocks                   $30          $60
+12-Apr-04 Broker                Assets:Stocks                   $40         $100
+12-May-05 Broker                Assets:Stocks                   $50         $150
+end test
+
+test reg stocks -H -X EUR
+12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
+12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 600,00
+12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.200,00
+12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 2.000,00
+12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 3.000,00
+end test
+
+test reg stocks -O -H -X EUR
+12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
+12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 600,00
+12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.200,00
+12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 2.000,00
+12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 3.000,00
+end test
+
+test reg stocks -B -H -X EUR
+12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
+12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 600,00
+12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.200,00
+12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 2.000,00
+12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 3.000,00
+end test
+
+test reg stocks -I -H -X EUR
+12-Jan-01 Broker                Assets:Stocks             EUR 20,00    EUR 20,00
+12-Feb-02 Broker                Assets:Stocks             EUR 40,00    EUR 60,00
+12-Mar-03 Broker                Assets:Stocks             EUR 60,00   EUR 120,00
+12-Apr-04 Broker                Assets:Stocks             EUR 80,00   EUR 200,00
+12-May-05 Broker                Assets:Stocks            EUR 100,00   EUR 300,00
+end test

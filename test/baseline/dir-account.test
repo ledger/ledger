@@ -1,0 +1,45 @@
+--explicit
+--pedantic
+
+commodity $
+    format $1,000.00
+
+account Assets:Cash
+    check abs(amount) <= 20
+    check commodity == '$'
+    default
+
+account Expenses:Food
+    alias food
+    payee KFC
+
+2012-02-27 KFC
+    Expenses:Unknown                          $20.00
+    Assets:Cash
+
+2012-02-28 KFC
+    food                                      $20.00
+    Assets:Cash
+
+2012-02-29 KFC
+    food                                      $25.00
+    Assets:Cash
+
+2012-02-29 KFC
+    food                                      $25.00
+    Assets:Cash
+
+test reg
+12-Feb-27 KFC                   Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+12-Feb-28 KFC                   Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+12-Feb-29 KFC                   Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+12-Feb-29 KFC                   Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+__ERROR__
+Warning: "$FILE", line 26: Transaction check failed: (abs(amount) <= {20})
+Warning: "$FILE", line 30: Transaction check failed: (abs(amount) <= {20})
+end test
+

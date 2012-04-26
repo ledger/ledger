@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -47,8 +47,6 @@ format_posts::format_posts(report_t&               _report,
   : report(_report), prepend_width(_prepend_width),
     last_xact(NULL), last_post(NULL), first_report_title(true)
 {
-  TRACE_CTOR(format_posts, "report&, const string&, bool");
-
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
@@ -70,6 +68,8 @@ format_posts::format_posts(report_t&               _report,
 
   if (_prepend_format)
     prepend_format.parse_format(*_prepend_format);
+
+  TRACE_CTOR(format_posts, "report&, const string&, bool");
 }
 
 void format_posts::flush()
@@ -131,8 +131,6 @@ format_accounts::format_accounts(report_t&               _report,
   : report(_report), prepend_width(_prepend_width), disp_pred(),
     first_report_title(true)
 {
-  TRACE_CTOR(format_accounts, "report&, const string&");
-
   const char * f = format.c_str();
 
   if (const char * p = std::strstr(f, "%/")) {
@@ -154,6 +152,8 @@ format_accounts::format_accounts(report_t&               _report,
 
   if (_prepend_format)
     prepend_format.parse_format(*_prepend_format);
+
+  TRACE_CTOR(format_accounts, "report&, const string&");
 }
 
 std::size_t format_accounts::post_account(account_t& account, const bool flat)

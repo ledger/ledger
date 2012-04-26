@@ -1,0 +1,92 @@
+2008/01/11 LIAT
+    Expenses:Travel:Airfare                    40,00 €
+    Liabilities:MasterCard                      
+
+2008/01/14 cheaptickets.com
+    Expenses:Travel:Airfare                   182,19 €
+    Liabilities:MasterCard                      
+
+2008/02/05 CTX
+    Expenses:Travel:Auto                      240,38 €
+    Liabilities:MasterCard                      
+
+2008/02/05 UNITED
+    Expenses:Travel:Airfare                   238,80 €
+    Liabilities:MasterCard                      
+
+2008/02/05 UNITED
+    Expenses:Travel:Airfare                   238,80 €
+    Liabilities:MasterCard                      
+
+2008/02/22 BUDGET RENT-A-CAR
+    Expenses:Travel:Auto                       40,59 €
+    Liabilities:MasterCard                      
+
+2008/03/16 IBERIA
+    Expenses:Travel:Airfare                  1231,60 €
+    Liabilities:MasterCard                      
+
+2008/03/16 IBERIA
+    Expenses:Travel:Airfare                  1231,60 €
+    Liabilities:MasterCard                      
+
+2008/04/03 AMERICAN
+    Expenses:Travel:Airfare                   155,86 €
+    Liabilities:MasterCard                      
+
+2008/04/03 AMERICAN
+    Expenses:Travel:Airfare                   155,86 €
+    Liabilities:MasterCard                      
+
+2008/04/30 UNITED
+    Expenses:Travel:Airfare                   437,21 €
+    Liabilities:MasterCard                      
+
+2008/04/30 UNITED
+    Expenses:Travel:Airfare                   437,21 €
+    Liabilities:MasterCard                      
+
+2008/08/08 BCIS I-131 FILING FEE-
+    Expenses:Travel:Passport                  170,00 €
+    Liabilities:MasterCard                      
+
+2008/09/06 AMERICAN
+    Expenses:Travel:Airfare                   912,60 €
+    Liabilities:MasterCard                      
+
+2008/09/06 AMERICAN
+    Expenses:Travel:Airfare                   912,60 €
+    Liabilities:MasterCard                      
+
+2008/09/22 AGNT FEE
+    Expenses:Travel:Airfare                    70,00 €
+    Liabilities:MasterCard                      
+
+2008/09/22 DELTA
+    Expenses:Travel:Airfare                   806,20 €
+    Liabilities:MasterCard                      
+
+2008/09/22 DELTA
+    Expenses:Travel:Airfare                   806,20 €
+    Liabilities:MasterCard                      
+
+2008/09/22 LIAT 1974 LIMITED
+    Expenses:Travel:Airfare                   418,34 €
+    Liabilities:MasterCard                      
+
+2008/12/26 U.S. Department of State
+    Expenses:Travel:Passport                  127,00 €
+    Assets:Checking                             
+
+2008/12/26 U.S. Department of State
+    Expenses:Travel:Passport                  127,00 €
+    Assets:Checking                             
+
+test --decimal-comma --percent balance
+             100.00%  Assets:Checking
+             100.00%  Expenses:Travel
+              92.15%    Airfare
+               3.13%    Auto
+               4.72%    Passport
+             100.00%  Liabilities:MasterCard
+end test

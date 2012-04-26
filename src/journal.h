@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -45,6 +45,7 @@
 #include "utils.h"
 #include "times.h"
 #include "mask.h"
+#include "expr.h"
 
 namespace ledger {
 
@@ -52,17 +53,22 @@ class xact_base_t;
 class xact_t;
 class auto_xact_t;
 class period_xact_t;
+class post_t;
 class account_t;
-class scope_t;
+class parse_context_t;
+class parse_context_stack_t;
 
-typedef std::list<xact_t *>        xacts_list;
-typedef std::list<auto_xact_t *>   auto_xacts_list;
-typedef std::list<period_xact_t *> period_xacts_list;
-
-typedef std::pair<mask_t, string>      payee_mapping_t;
-typedef std::list<payee_mapping_t>     payee_mappings_t;
-typedef std::pair<mask_t, account_t *> account_mapping_t;
-typedef std::list<account_mapping_t>   account_mappings_t;
+typedef std::list<xact_t *>                    xacts_list;
+typedef std::list<auto_xact_t *>               auto_xacts_list;
+typedef std::list<period_xact_t *>             period_xacts_list;
+typedef std::pair<mask_t, string>              payee_mapping_t;
+typedef std::list<payee_mapping_t>             payee_mappings_t;
+typedef std::pair<mask_t, account_t *>         account_mapping_t;
+typedef std::list<account_mapping_t>           account_mappings_t;
+typedef std::map<const string, account_t *>    accounts_map;
+typedef std::map<string, xact_t *>             checksum_map_t;
+typedef std::multimap<string,
+                      expr_t::check_expr_pair> tag_check_exprs_map;
 
 class journal_t : public noncopyable
 {
@@ -79,9 +85,9 @@ public:
     }
     fileinfo_t(const path& _filename)
       : filename(_filename), from_stream(false) {
-      TRACE_CTOR(journal_t::fileinfo_t, "const path&");
       size    = file_size(*filename);
       modtime = posix_time::from_time_t(last_write_time(*filename));
+      TRACE_CTOR(journal_t::fileinfo_t, "const path&");
     }
     fileinfo_t(const fileinfo_t& info)
       : filename(info.filename), size(info.size),
@@ -115,13 +121,36 @@ public:
   auto_xacts_list       auto_xacts;
   period_xacts_list     period_xacts;
   std::list<fileinfo_t> sources;
+  std::set<string>      known_payees;
+  std::set<string>      known_tags;
+  bool                  fixed_accounts;
+  bool                  fixed_payees;
+  bool                  fixed_commodities;
+  bool                  fixed_metadata;
+  bool                  was_loaded;
+  bool                  force_checking;
+  bool                  check_payees;
+  bool                  day_break;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
-  bool                  was_loaded;
+  accounts_map          account_aliases;
+  account_mappings_t    payees_for_unknown_accounts;
+  checksum_map_t        checksum_map;
+  tag_check_exprs_map   tag_check_exprs;
+  optional<expr_t>      value_expr;
+  parse_context_t *     current_context;
+
+  enum checking_style_t {
+    CHECK_PERMISSIVE,
+    CHECK_WARNING,
+    CHECK_ERROR
+  } checking_style;
 
   journal_t();
+#if 0
   journal_t(const path& pathname);
   journal_t(const string& str);
+#endif
   ~journal_t();
 
   void initialize();
@@ -133,12 +162,18 @@ public:
     return sources.end();
   }
 
-  // These four methods are delegated to the current session, since all
-  // accounts processed are gathered together at the session level.
   void        add_account(account_t * acct);
   bool        remove_account(account_t * acct);
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
+
+  account_t * register_account(const string& name, post_t * post,
+                               account_t * master = NULL);
+  string      register_payee(const string& name, xact_t * xact);
+  void        register_commodity(commodity_t& comm,
+                                 variant<int, xact_t *, post_t *> context);
+  void        register_metadata(const string& key, const value_t& value,
+                                variant<int, xact_t *, post_t *> context);
 
   bool add_xact(xact_t * xact);
   void extend_xact(xact_base_t * xact);
@@ -163,24 +198,15 @@ public:
     return period_xacts.end();
   }
 
-  std::size_t read(std::istream& in,
-                   const path&   pathname,
-                   account_t *   master = NULL,
-                   scope_t *     scope  = NULL);
-  std::size_t read(const path&   pathname,
-                   account_t *   master = NULL,
-                   scope_t *     scope  = NULL);
-
-  std::size_t parse(std::istream& in,
-                    scope_t&      session_scope,
-                    account_t *   master        = NULL,
-                    const path *  original_file = NULL,
-                    bool          strict        = false);
+  std::size_t read(parse_context_stack_t& context);
 
   bool has_xdata();
   void clear_xdata();
 
   bool valid() const;
+
+private:
+  std::size_t read_textual(parse_context_stack_t& context);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -198,6 +224,7 @@ private:
     ar & sources;
     ar & payee_mappings;
     ar & account_mappings;
+    ar & checksum_map;
   }
 #endif // HAVE_BOOST_SERIALIZATION
 };

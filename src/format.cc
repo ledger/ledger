@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -70,6 +70,27 @@ void format_t::element_t::dump(std::ostream& out) const
 }
 
 namespace {
+  struct format_mapping_t {
+    char letter;
+    const char * expr;
+  } single_letter_mappings[] = {
+    { 'd', "date" },
+    { 'S', "filename" },
+    { 'B', "beg_pos" },
+    { 'b', "beg_line" },
+    { 'E', "end_pos" },
+    { 'e', "end_line" },
+    { 'X', "cleared" },
+    { 'Y', "xact.cleared" },
+    { 'C', "code" },
+    { 'P', "payee" },
+    { 'a', "account.name" },
+    { 'A', "account" },
+    { 't', "justify(scrub(display_amount), $min, $max, $left, color)" },
+    { 'T', "justify(scrub(display_total), $min, $max, $left, color)" },
+    { 'N', "note" },
+  };
+
   expr_t parse_single_expression(const char *& p, bool single_expr = true)
   {
     string temp(p);
@@ -92,12 +113,19 @@ namespace {
     }
     return expr;
   }
+
+  inline expr_t::ptr_op_t ident_node(const string& ident)
+  {
+    expr_t::ptr_op_t node(new expr_t::op_t(expr_t::op_t::IDENT));
+    node->set_ident(ident);
+    return node;
+  }
 }
 
 format_t::element_t * format_t::parse_elements(const string& fmt,
                                                const optional<format_t&>& tmpl)
 {
-  std::auto_ptr<element_t> result;
+  unique_ptr<element_t> result;
 
   element_t * current = NULL;
 
@@ -172,122 +200,170 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
         current->min_width = current->max_width;
     }
 
-    switch (*p) {
-    case '%':
-      current->type = element_t::STRING;
-      current->data = string("%");
-      break;
+    if (std::isalpha(*p)) {
+      bool found = false;
+      for (std::size_t i = 0; i < (sizeof(single_letter_mappings) /
+                                   sizeof(format_mapping_t)); i++) {
+        if (*p == single_letter_mappings[i].letter) {
+          std::ostringstream expr;
+          for (const char * ptr = single_letter_mappings[i].expr; *ptr; ){
+            if (*ptr == '$') {
+              const char * beg = ++ptr;
+              while (*ptr && std::isalpha(*ptr))
+                ++ptr;
+              string::size_type klen = static_cast<string::size_type>(ptr - beg);
+              string keyword(beg, 0, klen);
+              if (keyword == "min")
+                expr << (current->min_width > 0 ?
+                         static_cast<int>(current->min_width) : -1);
+              else if (keyword == "max")
+                expr << (current->max_width > 0 ?
+                         static_cast<int>(current->max_width) : -1);
+              else if (keyword == "left")
+                expr << (current->has_flags(ELEMENT_ALIGN_LEFT) ? "false" : "true");
+#if defined(DEBUG_ON)
+              else
+                assert("Unrecognized format substitution keyword" == NULL);
+#endif
+            } else {
+              expr << *ptr++;
+            }
+          }
+          current->type = element_t::EXPR;
+          current->data = expr_t(expr.str());
+          found = true;
+          break;
+        }
+      }
+      if (! found)
+        throw_(format_error, _("Unrecognized formatting character: %1") << *p);
+    } else {
+      switch (*p) {
+      case '%':
+        current->type = element_t::STRING;
+        current->data = string("%");
+        break;
 
-    case '$': {
-      if (! tmpl)
-        throw_(format_error, _("Prior field reference, but no template"));
+      case '$': {
+        if (! tmpl)
+          throw_(format_error, _("Prior field reference, but no template"));
 
-      p++;
-      if (*p == '0' || (! std::isdigit(*p) &&
-                        *p != 'A' && *p != 'B' && *p != 'C' &&
-                        *p != 'D' && *p != 'E' && *p != 'F'))
-        throw_(format_error, _("%$ field reference must be a digit from 1-9"));
+        p++;
+        if (*p == '0' || (! std::isdigit(*p) &&
+                          *p != 'A' && *p != 'B' && *p != 'C' &&
+                          *p != 'D' && *p != 'E' && *p != 'F'))
+          throw_(format_error, _("%$ field reference must be a digit from 1-9"));
 
-      int         index     = std::isdigit(*p) ? *p - '0' : (*p - 'A' + 10);
-      element_t * tmpl_elem = tmpl->elements.get();
+        int         index     = std::isdigit(*p) ? *p - '0' : (*p - 'A' + 10);
+        element_t * tmpl_elem = tmpl->elements.get();
 
-      for (int i = 1; i < index && tmpl_elem; i++) {
-        tmpl_elem = tmpl_elem->next.get();
-        while (tmpl_elem && tmpl_elem->type != element_t::EXPR)
+        for (int i = 1; i < index && tmpl_elem; i++) {
           tmpl_elem = tmpl_elem->next.get();
+          while (tmpl_elem && tmpl_elem->type != element_t::EXPR)
+            tmpl_elem = tmpl_elem->next.get();
+        }
+
+        if (! tmpl_elem)
+          throw_(format_error, _("%$ reference to a non-existent prior field"));
+
+        *current = *tmpl_elem;
+        break;
       }
 
-      if (! tmpl_elem)
-        throw_(format_error, _("%$ reference to a non-existent prior field"));
+      case '(':
+      case '{': {
+        bool format_amount = *p == '{';
 
-      *current = *tmpl_elem;
-      break;
-    }
+        current->type = element_t::EXPR;
+        current->data = parse_single_expression(p);
 
-    case '(':
-    case '{': {
-      bool format_amount = *p == '{';
-      if (format_amount) p++;
-
-      current->type = element_t::EXPR;
-      current->data = parse_single_expression(p, ! format_amount);
-
-      // Wrap the subexpression in calls to justify and scrub
-      if (format_amount) {
-        if (! *p || *(p + 1) != '}')
-          throw_(format_error, _("Expected closing brace"));
-        else
-          p++;
+        // Wrap the subexpression in calls to justify and scrub
+        if (! format_amount)
+          break;
 
         expr_t::ptr_op_t op = boost::get<expr_t>(current->data).get_op();
 
-        expr_t::ptr_op_t amount_op;
-        expr_t::ptr_op_t colorize_op;
-        if (op->kind == expr_t::op_t::O_CONS) {
-          amount_op   = op->left();
-          colorize_op = op->right();
-        } else {
-          amount_op = op;
+        expr_t::ptr_op_t call2_node(new expr_t::op_t(expr_t::op_t::O_CALL));
+        {
+          call2_node->set_left(ident_node("justify"));
+
+          {
+            expr_t::ptr_op_t args3_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+            {
+              {
+                expr_t::ptr_op_t call1_node(new expr_t::op_t(expr_t::op_t::O_CALL));
+                {
+                  call1_node->set_left(ident_node("scrub"));
+                  call1_node->set_right(op->kind == expr_t::op_t::O_CONS ? op->left() : op);
+                }
+
+                args3_node->set_left(call1_node);
+              }
+
+              expr_t::ptr_op_t args2_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+              {
+                {
+                  expr_t::ptr_op_t arg1_node(new expr_t::op_t(expr_t::op_t::VALUE));
+                  arg1_node->set_value(current->min_width > 0 ?
+                                       long(current->min_width) : -1);
+
+                  args2_node->set_left(arg1_node);
+                }
+
+                {
+                  expr_t::ptr_op_t args1_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+                  {
+                    {
+                      expr_t::ptr_op_t arg2_node(new expr_t::op_t(expr_t::op_t::VALUE));
+                      arg2_node->set_value(current->max_width > 0 ?
+                                           long(current->max_width) : -1);
+
+                      args1_node->set_left(arg2_node);
+                    }
+
+                    {
+                      expr_t::ptr_op_t arg3_node(new expr_t::op_t(expr_t::op_t::VALUE));
+                      arg3_node->set_value(! current->has_flags(ELEMENT_ALIGN_LEFT));
+
+                      args1_node->set_right(arg3_node);
+                    }
+                  }
+
+                  args2_node->set_right(args1_node);
+                }
+
+                args3_node->set_right(args2_node);
+              }
+            }
+
+            call2_node->set_right(args3_node);
+          }
         }
-
-        expr_t::ptr_op_t scrub_node(new expr_t::op_t(expr_t::op_t::IDENT));
-        scrub_node->set_ident("scrub");
-
-        expr_t::ptr_op_t call1_node(new expr_t::op_t(expr_t::op_t::O_CALL));
-        call1_node->set_left(scrub_node);
-        call1_node->set_right(amount_op);
-
-        expr_t::ptr_op_t arg1_node(new expr_t::op_t(expr_t::op_t::VALUE));
-        expr_t::ptr_op_t arg2_node(new expr_t::op_t(expr_t::op_t::VALUE));
-        expr_t::ptr_op_t arg3_node(new expr_t::op_t(expr_t::op_t::VALUE));
-
-        arg1_node->set_value(current->min_width > 0 ?
-                             long(current->min_width) : -1);
-        arg2_node->set_value(current->max_width > 0 ?
-                             long(current->max_width) : -1);
-        arg3_node->set_value(! current->has_flags(ELEMENT_ALIGN_LEFT));
 
         current->min_width = 0;
         current->max_width = 0;
 
-        expr_t::ptr_op_t args1_node(new expr_t::op_t(expr_t::op_t::O_CONS));
-        args1_node->set_left(arg2_node);
-        args1_node->set_right(arg3_node);
-
-        expr_t::ptr_op_t args2_node(new expr_t::op_t(expr_t::op_t::O_CONS));
-        args2_node->set_left(arg1_node);
-        args2_node->set_right(args1_node);
-
-        expr_t::ptr_op_t args3_node(new expr_t::op_t(expr_t::op_t::O_CONS));
-        args3_node->set_left(call1_node);
-        args3_node->set_right(args2_node);
-
-        expr_t::ptr_op_t seq1_node(new expr_t::op_t(expr_t::op_t::O_SEQ));
-        seq1_node->set_left(args3_node);
-
-        expr_t::ptr_op_t justify_node(new expr_t::op_t(expr_t::op_t::IDENT));
-        justify_node->set_ident("justify");
-
-        expr_t::ptr_op_t call2_node(new expr_t::op_t(expr_t::op_t::O_CALL));
-        call2_node->set_left(justify_node);
-        call2_node->set_right(seq1_node);
-
         string prev_expr = boost::get<expr_t>(current->data).text();
 
+        expr_t::ptr_op_t colorize_op;
+        if (op->kind == expr_t::op_t::O_CONS)
+          colorize_op = op->has_right() ? op->right() : NULL;
+
         if (colorize_op) {
-          expr_t::ptr_op_t ansify_if_node(new expr_t::op_t(expr_t::op_t::IDENT));
-          ansify_if_node->set_ident("ansify_if");
-
-          expr_t::ptr_op_t args4_node(new expr_t::op_t(expr_t::op_t::O_CONS));
-          args4_node->set_left(call2_node);
-          args4_node->set_right(colorize_op);
-
-          expr_t::ptr_op_t seq2_node(new expr_t::op_t(expr_t::op_t::O_SEQ));
-          seq2_node->set_left(args4_node);
-
           expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
-          call3_node->set_left(ansify_if_node);
-          call3_node->set_right(seq2_node);
+          {
+            call3_node->set_left(ident_node("ansify_if"));
+
+            {
+              expr_t::ptr_op_t args4_node(new expr_t::op_t(expr_t::op_t::O_CONS));
+              {
+                args4_node->set_left(call2_node); // from above
+                args4_node->set_right(colorize_op);
+              }
+
+              call3_node->set_right(args4_node);
+            }
+          }
 
           current->data = expr_t(call3_node);
         } else {
@@ -295,12 +371,12 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
         }
 
         boost::get<expr_t>(current->data).set_text(prev_expr);
+        break;
       }
-      break;
-    }
 
-    default:
-      throw_(format_error, _("Unrecognized formatting character: %1") << *p);
+      default:
+        throw_(format_error, _("Unrecognized formatting character: %1") << *p);
+      }
     }
   }
 
@@ -342,7 +418,6 @@ string format_t::real_calc(scope_t& scope)
     case element_t::EXPR: {
       expr_t& expr(boost::get<expr_t>(elem->data));
       try {
-
         expr.compile(scope);
 
         value_t value;
@@ -524,6 +599,7 @@ string format_t::truncate(const unistring&  ustr,
         index = 0;
 #endif
         std::size_t counter = lens.size();
+        std::list<string>::iterator x = parts.begin();
         for (std::list<std::size_t>::iterator i = lens.begin();
              i != lens.end();
              i++) {
@@ -553,12 +629,21 @@ string format_t::truncate(const unistring&  ustr,
           if (adjust > 0) {
             DEBUG("format.abbrev",
                   "Reducing segment " << ++index << " by " << adjust << " chars");
+            while (std::isspace((*x)[*i - adjust - 1]) && adjust < *i) {
+              DEBUG("format.abbrev",
+                    "Segment ends in whitespace, adjusting down");
+              ++adjust;
+            }
             (*i) -= adjust;
             DEBUG("format.abbrev",
                   "Segment " << index << " is now " << *i << " chars wide");
-            overflow -= adjust;
+            if (adjust > overflow)
+              overflow = 0;
+            else
+              overflow -= adjust;
             DEBUG("format.abbrev", "Overflow is now " << overflow << " chars");
           }
+          ++x;
         }
         DEBUG("format.abbrev",
               "Overflow ending this time at " << overflow << " chars");

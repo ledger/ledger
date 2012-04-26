@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -155,17 +155,17 @@ public:
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
   explicit amount_t(const string& val) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "const string&");
     parse(val);
+    TRACE_CTOR(amount_t, "const string&");
   }
   /** Parse a pointer to a C string as an (optionally commoditized)
       amount.  If no commodity is present, the resulting commodity is \c
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
   explicit amount_t(const char * val) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "const char *");
     assert(val);
     parse(val);
+    TRACE_CTOR(amount_t, "const char *");
   }
 
   /*@}*/
@@ -195,21 +195,21 @@ public:
       same memory used by the original via reference counting.  The \c
       amount_t::bigint_t class in amount.cc maintains the reference. */
   amount_t(const amount_t& amt) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "copy");
     if (amt.quantity)
       _copy(amt);
     else
       commodity_ = NULL;
+    TRACE_CTOR(amount_t, "copy");
   }
   /** Copy an amount object, applying the given commodity annotation
       details afterward.  This is equivalent to doing a normal copy
       (@see amount_t(const amount_t&)) and then calling
       amount_t::annotate(). */
   amount_t(const amount_t& amt, const annotation_t& details) : quantity(NULL) {
-    TRACE_CTOR(amount_t, "const amount_t&, const annotation_t&");
     assert(amt.quantity);
     _copy(amt);
     annotate(details);
+    TRACE_CTOR(amount_t, "const amount_t&, const annotation_t&");
   }
   /** Assign an amount object.  This is like copying if the amount was
       null beforehand, otherwise the previous value's reference is must
@@ -327,7 +327,12 @@ public:
     return *this;
   }
 
-  amount_t inverted() const;
+  amount_t inverted() const {
+    amount_t temp(*this);
+    temp.in_place_invert();
+    return temp;
+  }
+  void in_place_invert();
 
   /** Yields an amount whose display precision when output is truncated
       to the display precision of its commodity.  This is normally the
@@ -399,10 +404,10 @@ public:
       $100.00.
   */
   optional<amount_t>
-  value(const optional<datetime_t>& moment        = none,
-        const optional<commodity_t&>& in_terms_of = none) const;
+  value(const datetime_t& moment        = datetime_t(),
+        const commodity_t * in_terms_of = NULL) const;
 
-  amount_t price() const;
+  optional<amount_t> price() const;
 
   /*@}*/
 
@@ -528,13 +533,25 @@ public:
       number() returns a commodity-less version of an amount.  This is
       useful for accessing just the numeric portion of an amount.
   */
-  commodity_t& commodity() const;
+  commodity_t * commodity_ptr() const;
+  commodity_t& commodity() const {
+    return *commodity_ptr();
+  }
 
   bool has_commodity() const;
   void set_commodity(commodity_t& comm) {
     if (! quantity)
       *this = 0L;
     commodity_ = &comm;
+  }
+  amount_t with_commodity(const commodity_t& comm) const {
+    if (commodity_ == &comm) {
+      return *this;
+    } else {
+      amount_t tmp(*this);
+      tmp.set_commodity(const_cast<commodity_t&>(comm));
+      return tmp;
+    }
   }
   void clear_commodity() {
     commodity_ = NULL;

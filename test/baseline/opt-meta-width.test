@@ -9,6 +9,6 @@
     ; :AnotherTag:
 
 test reg --meta Sample --meta-width=15
-Another Value  04-May-27 Credit card com.. Liab:MasterCard     $20.00     $20.00
-Value                                      As:Ban:Checking    $-20.00          0
+Another Value  04-May-27 Credit card co.. Liabi:MasterCard     $20.00     $20.00
+Value                                     As:Bank:Checking    $-20.00          0
 end test

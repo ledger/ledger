@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,12 +35,14 @@
 
 namespace ledger {
 
-scope_t * scope_t::default_scope = NULL;
+scope_t *       scope_t::default_scope = NULL;
+empty_scope_t * scope_t::empty_scope   = NULL;
 
 void symbol_scope_t::define(const symbol_t::kind_t kind,
                             const string& name, expr_t::ptr_op_t def)
 {
-  DEBUG("scope.symbols", "Defining '" << name << "' = " << def);
+  DEBUG("scope.symbols",
+        "Defining '" << name << "' = " << def << " in " << this);
 
   if (! symbols)
     symbols = symbol_map();
@@ -52,8 +54,8 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
     assert(i != symbols->end());
     symbols->erase(i);
 
-    result = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def),
-                                                    def));
+    result = symbols->insert(symbol_map::value_type
+                             (symbol_t(kind, name, def), def));
     if (! result.second)
       throw_(compile_error,
              _("Redefinition of '%1' in the same scope") << name);
@@ -64,9 +66,12 @@ expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind,
                                         const string& name)
 {
   if (symbols) {
+    DEBUG("scope.symbols", "Looking for '" << name << "' in " << this);
     symbol_map::const_iterator i = symbols->find(symbol_t(kind, name));
-    if (i != symbols->end())
+    if (i != symbols->end()) {
+      DEBUG("scope.symbols", "Found '" << name << "' in " << this);
       return (*i).second;
+    }
   }
   return child_scope_t::lookup(kind, name);
 }
@@ -84,8 +89,7 @@ value_t& call_scope_t::resolve(const std::size_t index,
     value = as_expr(value)->calc(scope, locus, depth);
     if (required && ! value.is_type(context))
       throw_(calc_error, _("Expected %1 for argument %2, but received %3")
-             << value.label(context) << index
-             << value.label());
+             << value.label(context) << index << value.label());
   }
   return value;
 }

@@ -1,0 +1,85 @@
+2012-01-01 * Opening balance
+    Assets:Current                         17.43 EUR
+    Assets:Investments                200 "LU02" @ 24.77 EUR
+    Assets:Investments                 58 "LU02" @ 24.79900855 EUR
+    Equity:Opening balance
+
+2012-01-01 * Opening balance
+    Assets:Pension                        785.44 GBP
+    Assets:Pension               97.0017 "H2" @ 5.342999720204 GBP
+    Assets:Pension                4.3441 "H1" @ 5.289999915108 GBP
+    Equity:Opening balance
+
+2012-01-01 * Opening balance: misc
+    Assets:Piggy bank                       3.51 GBP
+    Equity:Opening balance
+
+2012-01-01 * Opening balance
+    Assets:Rewards                   9836 AAdvantage
+    Equity:Opening balance
+
+2012-01-03 * Receivable
+    Assets:Current
+    Assets:Receivable                    -161.06 EUR
+    Assets:Receivable                      -9.99 GBP @@ 11.65 EUR
+
+2012-01-27 * Test
+    Income:Test                         -2759.50 GBP
+    Income:Test                          -110.76 GBP
+    Assets:Foo                            345.57 GBP
+    Expenses:Test                          16.47 GBP
+    Expenses:Test                           6.33 GBP
+    Expenses:Test                         261.39 GBP
+    Assets:Current
+
+test reg -X EUR -H
+12-Jan-01 Opening balance       Assets:Current            17.43 EUR    17.43 EUR
+                                Assets:Investments      4959.80 EUR  4977.23 EUR
+                                Assets:Investments      1438.34 EUR  6415.57 EUR
+                                Equity:Opening balance -6409.77 EUR     5.80 EUR
+12-Jan-01 Opening balance       Assets:Pension           785.44 GBP     5.80 EUR
+                                                                      785.44 GBP
+                                Assets:Pension           97.0017 H2     5.80 EUR
+                                                                      785.44 GBP
+                                                                      97.0017 H2
+                                Assets:Pension            4.3441 H1     5.80 EUR
+                                                                      785.44 GBP
+                                                                       4.3441 H1
+                                                                      97.0017 H2
+                                Equity:Opening balance -1326.70 GBP     5.80 EUR
+                                                                     -541.26 GBP
+                                                                       4.3441 H1
+                                                                      97.0017 H2
+12-Jan-01 Opening balance: misc Assets:Piggy bank          3.51 GBP     5.80 EUR
+                                                                     -537.75 GBP
+                                                                       4.3441 H1
+                                                                      97.0017 H2
+                                Equity:Opening balance    -3.51 GBP     5.80 EUR
+                                                                     -541.26 GBP
+                                                                       4.3441 H1
+                                                                      97.0017 H2
+12-Jan-01 Opening balance       Assets:Rewards         9836 AAdvantage 9836 AAdvantage
+                                                                        5.80 EUR
+                                                                     -541.26 GBP
+                                                                       4.3441 H1
+                                                                      97.0017 H2
+                                Equity:Opening balance -9836 AAdvantage     5.80 EUR
+                                                                     -541.26 GBP
+                                                                       4.3441 H1
+                                                                      97.0017 H2
+12-Jan-03 Commodities revalued  <Revalued>                        0     5.80 EUR
+12-Jan-03 Receivable            Assets:Current           172.71 EUR   178.51 EUR
+                                Assets:Receivable       -161.06 EUR    17.45 EUR
+                                Assets:Receivable        -11.65 EUR     5.80 EUR
+12-Jan-27 Test                  <Adjustment>               0.01 EUR     5.81 EUR
+                                Income:Test            -3218.04 EUR -3212.23 EUR
+                                <Adjustment>              -0.01 EUR -3212.24 EUR
+                                Income:Test             -129.16 EUR -3341.40 EUR
+                                Assets:Foo               402.99 EUR -2938.41 EUR
+                                Expenses:Test             19.21 EUR -2919.20 EUR
+                                Expenses:Test              7.38 EUR -2911.82 EUR
+                                <Adjustment>               0.01 EUR -2911.81 EUR
+                                Expenses:Test            304.82 EUR -2606.99 EUR
+                                <Adjustment>              -0.01 EUR -2607.00 EUR
+                                Assets:Current          2612.80 EUR     5.80 EUR
+end test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,21 +58,25 @@ private:
   mutable short refc;
   ptr_op_t      left_;
 
-  variant<ptr_op_t,             // used by all binary operators
+  variant<boost::blank,
+          ptr_op_t,             // used by all binary operators
           value_t,              // used by constant VALUE
           string,               // used by constant IDENT
-          expr_t::func_t        // used by terminal FUNCTION
+          expr_t::func_t,       // used by terminal FUNCTION
+          shared_ptr<scope_t>   // used by terminal SCOPE
           > data;
 
 public:
   enum kind_t {
     // Constants
+    PLUG,
     VALUE,
     IDENT,
 
     CONSTANTS,
 
     FUNCTION,
+    SCOPE,
 
     TERMINALS,
 
@@ -173,7 +177,7 @@ public:
     return kind == FUNCTION;
   }
   expr_t::func_t& as_function_lval() {
-    assert(kind == FUNCTION);
+    assert(is_function());
     return boost::get<expr_t::func_t>(data);
   }
   const expr_t::func_t& as_function() const {
@@ -183,21 +187,41 @@ public:
     data = val;
   }
 
+  bool is_scope() const {
+    return kind == SCOPE;
+  }
+  bool is_scope_unset() const {
+    return data.which() == 0;
+  }
+  shared_ptr<scope_t> as_scope_lval() {
+    assert(is_scope());
+    return boost::get<shared_ptr<scope_t> >(data);
+  }
+  const shared_ptr<scope_t> as_scope() const {
+    return const_cast<op_t *>(this)->as_scope_lval();
+  }
+  void set_scope(shared_ptr<scope_t> val) {
+    data = val;
+  }
+
+  // These three functions must use 'kind == IDENT' rather than
+  // 'is_ident()', because they are called before the `data' member gets
+  // set, which is_ident() tests.
   ptr_op_t& left() {
-    assert(kind > TERMINALS || kind == IDENT);
+    assert(kind > TERMINALS || kind == IDENT || is_scope());
     return left_;
   }
   const ptr_op_t& left() const {
-    assert(kind > TERMINALS || kind == IDENT);
+    assert(kind > TERMINALS || kind == IDENT || is_scope());
     return left_;
   }
   void set_left(const ptr_op_t& expr) {
-    assert(kind > TERMINALS || kind == IDENT);
+    assert(kind > TERMINALS || kind == IDENT || is_scope());
     left_ = expr;
   }
 
   ptr_op_t& as_op_lval() {
-    assert(kind > TERMINALS || kind == IDENT);
+    assert(kind > TERMINALS || is_ident());
     return boost::get<ptr_op_t>(data);
   }
   const ptr_op_t& as_op() const {
@@ -219,7 +243,7 @@ public:
   bool has_right() const {
     if (kind < TERMINALS)
       return false;
-    return as_op();
+    return data.which() != 0 && as_op();
   }
 
 private:
@@ -237,12 +261,8 @@ private:
       checked_delete(this);
   }
 
-  friend inline void intrusive_ptr_add_ref(const op_t * op) {
-    op->acquire();
-  }
-  friend inline void intrusive_ptr_release(const op_t * op) {
-    op->release();
-  }
+  friend void intrusive_ptr_add_ref(const op_t * op);
+  friend void intrusive_ptr_release(const op_t * op);
 
   ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
     ptr_op_t node(new_node(kind, _left, _right));
@@ -255,9 +275,13 @@ public:
   static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
                            ptr_op_t _right = NULL);
 
-  ptr_op_t compile(scope_t& scope, const int depth = 0);
+  ptr_op_t compile(scope_t& scope, const int depth = 0,
+                   scope_t * param_scope = NULL);
   value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
                 const int depth = 0);
+
+  value_t call(const value_t& args, scope_t& scope,
+               ptr_op_t * locus = NULL, const int depth = 0);
 
   struct context_t
   {
@@ -284,6 +308,12 @@ public:
 
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(expr_t::func_t fobj);
+  static ptr_op_t wrap_scope(shared_ptr<scope_t> sobj);
+
+private:
+  value_t calc_call(scope_t& scope, ptr_op_t * locus, const int depth);
+  value_t calc_cons(scope_t& scope, ptr_op_t * locus, const int depth);
+  value_t calc_seq(scope_t& scope, ptr_op_t * locus, const int depth);
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 private:
@@ -295,13 +325,13 @@ private:
   void serialize(Archive& ar, const unsigned int /* version */) {
     ar & refc;
     ar & kind;
-    if (Archive::is_loading::value || ! left_ || left_->kind != FUNCTION) {
+    if (Archive::is_loading::value || ! left_ || ! left_->is_function()) {
       ar & left_;
     } else {
       ptr_op_t temp_op;
       ar & temp_op;
     }
-    if (Archive::is_loading::value || kind == VALUE || kind == IDENT ||
+    if (Archive::is_loading::value || is_value() || is_ident() ||
         (kind > UNARY_OPERATORS &&
          (! has_right() || ! right()->is_function()))) {
       ar & data;
@@ -340,6 +370,8 @@ expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
 
 string op_context(const expr_t::ptr_op_t op,
                   const expr_t::ptr_op_t locus = NULL);
+
+value_t split_cons_expr(expr_t::ptr_op_t op);
 
 } // namespace ledger
 

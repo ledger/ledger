@@ -36,7 +36,7 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
+search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
 
 class BoostInfo(object):
     log          = None
@@ -52,21 +52,6 @@ class BoostInfo(object):
 
     def configure(self, suffix = None, file_suffix = None, home_path = None,
                   include_path = None, library_path = None):
-        path = library_path or self.library_path
-        if not isabs(path):
-            path = join(home_path or self.home_path, path)
-        if not exists(path) or not isdir(path) or \
-           not self.check_for_boost_regex_lib(path, suffix or self.suffix,
-                                              file_suffix or self.file_suffix):
-            return False
-
-        path = include_path or self.include_path
-        if not isabs(path):
-            path = join(home_path or self.home_path, path)
-        if not exists(path) or not isdir(path) or \
-           not self.check_for_boost_regex_hpp(path):
-            return False
-
         self.log.debug('Configuring Boost details')
         if suffix:
             self.log.debug('Setting Boost suffix to => ' + suffix)
@@ -83,6 +68,21 @@ class BoostInfo(object):
         if library_path:
             self.log.debug('Setting Boost lib directory to => ' + library_path)
             self.library_path = library_path
+
+        path = library_path or self.library_path
+        if not isabs(path):
+            path = join(home_path or self.home_path, path)
+        if not exists(path) or not isdir(path) or \
+           not self.check_for_boost_regex_lib(path, suffix or self.suffix,
+                                              file_suffix or self.file_suffix):
+            return False
+
+        path = include_path or self.include_path
+        if not isabs(path):
+            path = join(home_path or self.home_path, path)
+        if not exists(path) or not isdir(path) or \
+           not self.check_for_boost_regex_hpp(path):
+            return False
 
         self.configured = True
 
@@ -254,8 +254,8 @@ class CommandLineApp(object):
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
     darwin_gcc    = False
-    boost_version = "1_48_0"
-    boost_major   = "1_48"
+    boost_version = "1_49_0"
+    boost_major   = "1_49"
 
     options = {
         'debug':    False,
@@ -508,6 +508,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--no-python', action='store_true', dest='no_python',
                       default=False,
                       help='Do not enable Python support by default')
+        op.add_option('', '--cache', action='store_true',
+                      dest='enable_cache', default=False,
+                      help='Enable use of Boost.Serialization (--cache)')
+        op.add_option('', '--doxygen', action='store_true',
+                      dest='enable_doxygen', default=False,
+                      help='Enable use of Doxygen to build ref manual ("make docs")')
         op.add_option('', '--enable-cache', action='store_true',
                       dest='enable_cache', default=False,
                       help='Enable use of Boost.Serialization (--cache)')
@@ -526,9 +532,12 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--gcc47', action='store_true',
                       dest='gcc47', default=False,
                       help='Require the use of gcc 4.7')
-        op.add_option('', '--cpp0x', action='store_true',
-                      dest='cpp0x', default=False,
-                      help='Use C++0x extensions (requires Clang or gcc 4.6/7)')
+        op.add_option('', '--gcc48', action='store_true',
+                      dest='gcc48', default=False,
+                      help='Require the use of gcc 4.8')
+        op.add_option('', '--cpp11', action='store_true',
+                      dest='use_cpp11', default=False,
+                      help='Use C++11 extensions (requires Clang or gcc 4.6/7/8)')
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -555,11 +564,6 @@ class PrepareBuild(CommandLineApp):
                       help='Enable full warning flags')
 
     def main(self, *args):
-        if self.options.python:
-            self.configure_args.append('--enable-python')
-        if self.options.no_python:
-            self.configure_args.remove('--enable-python')
-
         if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
             self.current_flavor = args[0]
             args = args[1:]
@@ -1012,10 +1016,24 @@ class PrepareBuild(CommandLineApp):
         self.envvars['PYTHON_HOME'] = '/opt/local'
 
         if self.options.use_clang:
-            self.boost_inc_ident = "clang"
-            self.boost_lib_ident = "clang-darwin28"
+            self.log.info('Setting up for using Clang')
 
-            self.log.debug("Setting Python home to /opt/local")
+            self.boost_inc_ident = "clang31"
+            self.boost_lib_ident = "clang-darwin"
+
+            if self.options.use_cpp11:
+                self.CXXFLAGS.append('-std=c++11')
+                self.CXXFLAGS.append('-stdlib=libc++')
+                self.CXXFLAGS.append('-nostdlibinc')
+                self.CXXFLAGS.append('-isystem /usr/local/include')
+                self.CXXFLAGS.append('-isystem /usr/local/include/c++/v1')
+                self.CXXFLAGS.append('-isystem /usr/include')
+
+                self.LDFLAGS.append('-stdlib=libc++')
+                self.LDFLAGS.append('/usr/local/lib/libc++.dylib')
+            else:
+                global search_prefixes
+                search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
 
             self.log.debug('Using Clang ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
@@ -1032,19 +1050,14 @@ class PrepareBuild(CommandLineApp):
                            (self.boost_inc_ident, self.boost_lib_ident))
 
         if self.current_flavor == 'debug':
-            if exists('/usr/local/stow/icu-%s/include' % self.boost_inc_ident):
-                self.sys_include_dirs.insert(
-                    0, '/usr/local/stow/icu-%s/include' % self.boost_inc_ident)
-                self.sys_library_dirs.insert(
-                    0, '/usr/local/stow/icu-%s/lib' % self.boost_inc_ident)
-
             self.configure_args.append('--disable-shared')
-
         elif self.current_flavor == 'gcov':
             self.configure_args.append('--disable-shared')
         else:
             self.CXXFLAGS.append('-march=nocona')
             self.CXXFLAGS.append('-msse3')
+
+        self.CXXFLAGS.append('-DDOCUMENT_MODEL=1')
 
         self.locate_darwin_libraries()
 
@@ -1071,14 +1084,14 @@ class PrepareBuild(CommandLineApp):
 
         elif system == 'Darwin':
             if self.options.use_clang:
-                if exists('/opt/local/bin/clang++-mp-3.1'):
-                    self.envvars['CC']  = '/opt/local/bin/clang-mp-3.1'
-                    self.envvars['CXX'] = '/opt/local/bin/clang++-mp-3.1'
-                    self.envvars['LD']  = '/opt/local/bin/clang++-mp-3.1'
-                elif exists('/usr/local/bin/clang++'):
+                if exists('/usr/local/bin/clang++'):
                     self.envvars['CC']  = '/usr/local/bin/clang'
                     self.envvars['CXX'] = '/usr/local/bin/clang++'
                     self.envvars['LD']  = '/usr/local/bin/clang++'
+                elif exists('/opt/local/bin/clang++-mp-3.1'):
+                    self.envvars['CC']  = '/opt/local/bin/clang-mp-3.1'
+                    self.envvars['CXX'] = '/opt/local/bin/clang++-mp-3.1'
+                    self.envvars['LD']  = '/opt/local/bin/clang++-mp-3.1'
                 else:
                     self.envvars['CC']  = 'clang'
                     self.envvars['CXX'] = 'clang++'
@@ -1088,11 +1101,17 @@ class PrepareBuild(CommandLineApp):
                not self.options.gcc45 and \
                not self.options.gcc46 and \
                not self.options.gcc47 and \
+               not self.options.gcc48 and \
                exists('/usr/bin/g++-4.2'):
                 self.envvars['CC']  = '/usr/bin/gcc-4.2'
                 self.envvars['CXX'] = '/usr/bin/g++-4.2'
                 self.envvars['LD']  = '/usr/bin/g++-4.2'
                 self.darwin_gcc = True
+            elif exists('/usr/local/bin/g++-mp-4.8') and \
+                 self.options.gcc47:
+                self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.8'
+                self.envvars['CXX'] = '/usr/local/bin/g++-mp-4.8'
+                self.envvars['LD']  = '/usr/local/bin/g++-mp-4.8'
             elif exists('/usr/local/bin/g++-mp-4.7') and \
                  self.options.gcc47:
                 self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.7'
@@ -1126,9 +1145,10 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('--enable-doxygen')
         if self.options.enable_cache:
             self.configure_args.append('--enable-cache')
-
-        if self.options.cpp0x:
-            self.CXXFLAGS.append('-std=c++0x')
+        if self.options.python:
+            self.configure_args.append('--enable-python')
+        if self.options.no_python:
+            self.configure_args.remove('--enable-python')
 
         if exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
@@ -1211,6 +1231,7 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-Wno-missing-prototypes')
             self.CXXFLAGS.append('-Wno-missing-noreturn')
             self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
+            self.CXXFLAGS.append('-Wno-unused-parameter')
             self.CXXFLAGS.append('-fno-limit-debug-info')
         #self.CXXFLAGS.append('-Wold-style-cast')
 
@@ -1306,15 +1327,8 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
-            if self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s-%s' % \
-                    (self.boost_version, self.boost_inc_ident),
-                suffix       = '-%s-sd-%s' % \
-                    (self.boost_lib_ident, self.boost_major),
-                file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_major):
-                pass
-            elif self.boost_info.configure(
+            if (not self.options.use_clang or self.options.use_cpp11) and \
+               self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-d-%s' % \
@@ -1328,15 +1342,8 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s-%s' % \
-                    (self.boost_version, self.boost_inc_ident),
-                suffix       = '-%s-s-%s' % \
-                    (self.boost_lib_ident, self.boost_major),
-                file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_major):
-                pass
-            elif self.boost_info.configure(
+            elif (not self.options.use_clang or self.options.use_cpp11) and \
+                 self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
                 suffix       = '-%s-%s' % \
@@ -1352,7 +1359,8 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor_debug(self):
         self.configure_args.append('--enable-debug')
 
-        if self.options.gcc45 or self.options.gcc46 or self.options.gcc47:
+        if self.options.gcc45 or self.options.gcc46 or \
+           self.options.gcc47 or self.options.gcc48:
             self.CXXFLAGS.append('-g2')
             self.CXXFLAGS.append('-ggdb')
             self.LDFLAGS.append('-g2')
@@ -1363,7 +1371,7 @@ class PrepareBuild(CommandLineApp):
 
     def setup_flavor_opt(self):
         self.CPPFLAGS.append('-DNDEBUG=1')
-        for i in ['-O3', '-fomit-frame-pointer']:
+        for i in ['-O3']:
             self.CXXFLAGS.append(i)
             self.CFLAGS.append(i)
             self.LDFLAGS.append(i)
@@ -1528,6 +1536,8 @@ class PrepareBuild(CommandLineApp):
             make_args.append('-j%d' % self.options.jobs)
             make_args.append('JOBS=%d' % self.options.jobs)
 
+        make_args.append('FLAVOR=%s' % self.current_flavor)
+
         self.log.debug('Configure arguments => ' + str(config_args))
         self.log.debug('Makefile arguments  => ' + str(make_args))
 
@@ -1648,7 +1658,11 @@ class PrepareBuild(CommandLineApp):
            isdir(self.build_directory()):
             self.log.info('=== Wiping build directory %s ===' %
                           self.build_directory())
-            shutil.rmtree(self.build_directory())
+            try:
+                shutil.rmtree(self.build_directory())
+            except:
+                self.execute('chmod', '-R', 'u+w', self.build_directory())
+                self.execute('rm', '-fr', self.build_directory())
 
     def phase_distcheck(self, *args):
         self.log.info('Executing phase: distcheck')
@@ -1678,8 +1692,19 @@ class PrepareBuild(CommandLineApp):
     def phase_rsync(self, *args):
         self.log.info('Executing phase: rsync')
 
-        source_copy_dir = join(self.ensure(self.products_directory()),
-                               'ledger-proof')
+        proof_dir = 'ledger-proof'
+
+        if self.options.python:
+            proof_dir += "-python"
+
+        if self.options.gcc47:
+            proof_dir += "-gcc47"
+        elif self.options.gcc48:
+            proof_dir += "-gcc48"
+        elif self.options.use_clang:
+            proof_dir += "-clang"
+
+        source_copy_dir = join(self.ensure(self.products_directory()), proof_dir)
 
         self.execute('rsync', '-a', '--delete',
                      '--exclude=.git/', '--exclude=b/',
@@ -1720,34 +1745,18 @@ class PrepareBuild(CommandLineApp):
 
         self.configure_flavor('opt', reset)
 
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
-
         self.log.info('=== Building opt ===')
         self.phase_make(*args)
 
         self.configure_flavor('gcov', reset)
 
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
-
         self.log.info('=== Building gcov ===')
         self.phase_make(*args)
-
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
 
         self.log.info('=== Building default ===')
         self.phase_make(*args)
 
         self.configure_flavor('debug', reset)
-
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
 
         self.log.info('=== Building debug ===')
         self.phase_make(*args)

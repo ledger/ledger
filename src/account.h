@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -67,15 +67,23 @@ public:
   unsigned short   depth;
   accounts_map     accounts;
   posts_list       posts;
+  optional<expr_t> value_expr;
 
   mutable string   _fullname;
+#ifdef DOCUMENT_MODEL
+  mutable void * data;
+#endif
 
   account_t(account_t *             _parent = NULL,
             const string&           _name   = "",
             const optional<string>& _note   = none)
     : supports_flags<>(), scope_t(), parent(_parent),
       name(_name), note(_note),
-      depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
+      depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0))
+#ifdef DOCUMENT_MODEL
+      , data(NULL)
+#endif
+  {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
   account_t(const account_t& other)
@@ -84,10 +92,14 @@ public:
       name(other.name),
       note(other.note),
       depth(other.depth),
-      accounts(other.accounts) {
+      accounts(other.accounts)
+#ifdef DOCUMENT_MODEL
+      , data(NULL)
+#endif
+  {
     TRACE_CTOR(account_t, "copy");
   }
-  ~account_t();
+  virtual ~account_t();
 
   virtual string description() {
     return string(_("account ")) + fullname();
@@ -169,6 +181,9 @@ public:
       date_t             latest_post;
       date_t             latest_cleared_post;
 
+      datetime_t         earliest_checkin;
+      datetime_t         latest_checkout;
+
       std::set<path>     filenames;
       std::set<string>   accounts_referenced;
       std::set<string>   payees_referenced;
@@ -185,7 +200,26 @@ public:
           posts_cleared_count(0),
           posts_last_7_count(0),
           posts_last_30_count(0),
-          posts_this_month_count(0) {}
+          posts_this_month_count(0) {
+        TRACE_CTOR(account_t::xdata_t::details_t, "");
+      }
+      // A copy copies nothing
+      details_t(const details_t&)
+        : calculated(false),
+          gathered(false),
+
+          posts_count(0),
+          posts_virtuals_count(0),
+          posts_cleared_count(0),
+          posts_last_7_count(0),
+          posts_last_30_count(0),
+          posts_this_month_count(0)
+      {
+        TRACE_CTOR(account_t::xdata_t::details_t, "copy");
+      }
+      ~details_t() throw() {
+        TRACE_DTOR(account_t::xdata_t::details_t);
+      }
 
       details_t& operator+=(const details_t& other);
 

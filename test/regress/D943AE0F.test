@@ -6,7 +6,7 @@ D 1000.00 EUR
 
 P 2008/04/20 00:00:00 CAD 1.20 EUR
 
-test reg -V
+test reg -V --now=2008/04/20
 08-Apr-15 Paid expenses back .. Exp:Cie-Reimbursements  2200.00 EUR  2200.00 EUR
                                 Assets:Checking        -2200.00 EUR            0
 08-Apr-20 Commodities revalued  <Revalued>               200.00 EUR   200.00 EUR

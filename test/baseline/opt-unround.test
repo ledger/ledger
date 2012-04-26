@@ -82,7 +82,7 @@
     Expenses:Travel:Passport                 $127.00
     Assets:Checking                             
 
-test bal --unround --percent
+test bal --percent --unround
              100.00%  Assets:Checking
              100.00%  Expenses:Travel
         92.14958953%    Airfare

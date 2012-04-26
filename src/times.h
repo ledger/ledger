@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -218,6 +218,9 @@ struct date_duration_t
     case YEARS:
       return date + gregorian::years(length);
     }
+#if !defined(__clang__)
+    return date_t();
+#endif
   }
 
   date_t subtract(const date_t& date) const {
@@ -233,6 +236,9 @@ struct date_duration_t
     case YEARS:
       return date - gregorian::years(length);
     }
+#if !defined(__clang__)
+    return date_t();
+#endif
   }
 
   string to_string() const {
@@ -301,13 +307,14 @@ public:
   }
   date_specifier_t(const date_t& date,
                    const optional<date_traits_t>& traits = none) {
-    TRACE_CTOR(date_specifier_t, "date_t, date_traits_t");
     if (! traits || traits->has_year)
       year = date.year();
     if (! traits || traits->has_month)
       month = date.month();
     if (! traits || traits->has_day)
       day = date.day();
+
+    TRACE_CTOR(date_specifier_t, "date_t, date_traits_t");
   }
   date_specifier_t(const date_specifier_t& other)
     : year(other.year), month(other.month),
@@ -532,8 +539,8 @@ public:
     TRACE_CTOR(date_interval_t, "");
   }
   date_interval_t(const string& str) : aligned(false) {
-    TRACE_CTOR(date_interval_t, "const string&");
     parse(str);
+    TRACE_CTOR(date_interval_t, "const string&");
   }
   date_interval_t(const date_interval_t& other)
     : range(other.range),
@@ -552,6 +559,10 @@ public:
   bool operator==(const date_interval_t& other) const {
     return (start == other.start &&
             (! start || *start == *other.start));
+  }
+  bool operator<(const date_interval_t& other) const {
+    return (start == other.start &&
+            (! start || *start < *other.start));
   }
 
   operator bool() const {
@@ -574,10 +585,14 @@ public:
     return start;
   }
 
-  /** Find the current or next period containing date.  Returns true if the
-      date_interval_t object has been altered to reflect the interval
-      containing date, or false if no such period can be found. */
-  bool find_period(const date_t& date = CURRENT_DATE());
+  /** Find the current or next period containing date.  Returns false if
+      no such period can be found.  If allow_shift is true, the default,
+      then the interval may be shifted in time to find the period. */
+  bool find_period(const date_t& date        = CURRENT_DATE(),
+                   const bool    allow_shift = true);
+  bool within_period(const date_t& date = CURRENT_DATE()) {
+    return find_period(date, false);
+  }
 
   optional<date_t> inclusive_end() const {
     if (end_of_duration)

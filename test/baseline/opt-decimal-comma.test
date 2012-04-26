@@ -1,0 +1,22 @@
+2012-01-01 * Opening balance
+    Assets:Cash              100,00 EUR
+    Equity:Opening Balance
+
+2012-01-02 * Test
+    Expenses:Food             10,00 EUR
+    Assets:Cash              -10,00 EUR
+
+2012-01-03 * Test
+    Expenses:Food                €10,00
+    Assets:Cash                 €-10,00
+
+test --decimal-comma bal
+           90,00 EUR
+             €-10,00  Assets:Cash
+         -100,00 EUR  Equity:Opening Balance
+           10,00 EUR
+              €10,00  Expenses:Food
+--------------------
+                   0
+end test
+

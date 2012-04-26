@@ -1,0 +1,43 @@
+2012-02-28 Phone expense
+    Expenses:Phone            20.00 GBP
+    Assets:Cash              -20.00 GBP
+
+2012-02-29 * Rent expense
+    Expenses:Rent            530.00 GBP
+    Assets:Cash             -530.00 GBP
+
+2012-03-03 Phone expense
+    Expenses:Phone            12.00 EUR
+    Assets:Cash              -12.00 EUR
+
+2012-03-04 * Bed and breakfast
+    ; Payee: Rent expense
+    ; :bnb:
+    Expenses:Rent             30.00 EUR
+    Assets:Cash              -30.00 EUR
+
+test accounts --count
+2 Expenses:Phone
+4 Assets:Cash
+2 Expenses:Rent
+end test
+
+test commodities --count
+4 GBP
+4 EUR
+end test
+
+test payees --count
+4 Phone expense
+4 Rent expense
+end test
+
+test commodities :rent --count
+1 GBP
+1 EUR
+end test
+
+test payees tag bnb --count
+2 Rent expense
+end test
+

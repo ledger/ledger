@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,23 +41,23 @@ namespace ledger {
 
 balance_t::balance_t(const double val)
 {
-  TRACE_CTOR(balance_t, "const double");
   amounts.insert
     (amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  TRACE_CTOR(balance_t, "const double");
 }
 
 balance_t::balance_t(const unsigned long val)
 {
-  TRACE_CTOR(balance_t, "const unsigned long");
   amounts.insert
     (amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  TRACE_CTOR(balance_t, "const unsigned long");
 }
 
 balance_t::balance_t(const long val)
 {
-  TRACE_CTOR(balance_t, "const long");
   amounts.insert
     (amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  TRACE_CTOR(balance_t, "const long");
 }
 
 balance_t& balance_t::operator+=(const balance_t& bal)
@@ -185,8 +185,8 @@ balance_t& balance_t::operator/=(const amount_t& amt)
 }
 
 optional<balance_t>
-balance_t::value(const optional<datetime_t>&   moment,
-                 const optional<commodity_t&>& in_terms_of) const
+balance_t::value(const datetime_t&   moment,
+                 const commodity_t * in_terms_of) const
 {
   balance_t temp;
   bool      resolved = false;
@@ -200,16 +200,6 @@ balance_t::value(const optional<datetime_t>&   moment,
     }
   }
   return resolved ? temp : optional<balance_t>();
-}
-
-balance_t balance_t::price() const
-{
-  balance_t temp;
-
-  foreach (const amounts_map::value_type& pair, amounts)
-    temp += pair.second.price();
-
-  return temp;
 }
 
 optional<amount_t>
@@ -250,51 +240,100 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
   return temp;
 }
 
+void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const
+{
+  if (! amounts.empty()) {
+    if (amounts.size() == 1) {
+      const amount_t& amount((*amounts.begin()).second);
+      if (amount)
+        fn(amount);
+    }
+    else {
+      typedef std::vector<const amount_t *> amounts_array;
+      amounts_array sorted;
+
+      foreach (const amounts_map::value_type& pair, amounts)
+        if (pair.second)
+          sorted.push_back(&pair.second);
+
+      std::stable_sort(sorted.begin(), sorted.end(),
+                       commodity_t::compare_by_commodity());
+
+      foreach (const amount_t * amount, sorted)
+        fn(*amount);
+    }
+  }
+}
+
+namespace {
+  struct print_amount_from_balance
+  {
+    std::ostream& out;
+    bool&         first;
+    int           fwidth;
+    int           lwidth;
+    uint_least8_t flags;
+
+    explicit print_amount_from_balance(std::ostream& _out,
+                                       bool& _first,
+                                       int _fwidth, int _lwidth,
+                                       uint_least8_t _flags)
+      : out(_out), first(_first), fwidth(_fwidth), lwidth(_lwidth),
+        flags(_flags) {
+      TRACE_CTOR(print_amount_from_balance,
+                 "ostream&, int, int, uint_least8_t");
+    }
+    print_amount_from_balance(const print_amount_from_balance& other)
+      : out(other.out), first(other.first), fwidth(other.fwidth),
+        lwidth(other.lwidth), flags(other.flags) {
+      TRACE_CTOR(print_amount_from_balance, "copy");
+    }
+    ~print_amount_from_balance() throw() {
+      TRACE_DTOR(print_amount_from_balance);
+    }
+
+    void operator()(const amount_t& amount) {
+      int width;
+      if (! first) {
+        out << std::endl;
+        width = lwidth;
+      } else {
+        first = false;
+        width = fwidth;
+      }
+
+      std::ostringstream buf;
+      amount.print(buf, flags);
+
+      justify(out, buf.str(), width,
+              flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
+              flags & AMOUNT_PRINT_COLORIZE && amount.sign() < 0);
+    }
+
+    void close() {
+      out.width(fwidth);
+      if (flags & AMOUNT_PRINT_RIGHT_JUSTIFY)
+        out << std::right;
+      else
+        out << std::left;
+      out << 0;
+    }
+  };
+}
+
 void balance_t::print(std::ostream&       out,
                       const int           first_width,
                       const int           latter_width,
                       const uint_least8_t flags) const
 {
-  bool first  = true;
-  int  lwidth = latter_width;
+  bool first = true;
+  print_amount_from_balance
+    amount_printer(out, first, first_width,
+                   latter_width == 1 ? first_width : latter_width, flags);
+  map_sorted_amounts(amount_printer);
 
-  if (lwidth == -1)
-    lwidth = first_width;
-
-  typedef std::vector<const amount_t *> amounts_array;
-  amounts_array sorted;
-
-  foreach (const amounts_map::value_type& pair, amounts)
-    if (pair.second)
-      sorted.push_back(&pair.second);
-
-  std::stable_sort(sorted.begin(), sorted.end(),
-                   commodity_t::compare_by_commodity());
-
-  foreach (const amount_t * amount, sorted) {
-    int width;
-    if (! first) {
-      out << std::endl;
-      width = lwidth;
-    } else {
-      first = false;
-      width = first_width;
-    }
-
-    std::ostringstream buf;
-    amount->print(buf, flags);
-    justify(out, buf.str(), width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
-            flags & AMOUNT_PRINT_COLORIZE && amount->sign() < 0);
-  }
-
-  if (first) {
-    out.width(first_width);
-    if (flags & AMOUNT_PRINT_RIGHT_JUSTIFY)
-      out << std::right;
-    else
-      out << std::left;
-    out << 0;
-  }
+  if (first)
+    amount_printer.close();
 }
 
 void to_xml(std::ostream& out, const balance_t& bal)

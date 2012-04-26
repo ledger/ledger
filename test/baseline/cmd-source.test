@@ -1,0 +1,64 @@
+~ xxx
+
+2012-02-28 * Test
+    E               30.00 EUR
+    F
+    G
+
+2012-03-24 Test
+    C               30.00 EUR
+    D
+    C
+
+2012/03/xx
+    E               30.00 EUR
+    F
+
+2012-03-25 * Test
+    G               AAA
+    H
+
+2012-03-26 * Test
+    I             1,00.00 EUR
+    J             -100.00 EUR
+
+2012-03-27 * Test
+    K              100.00 EUR
+    L             -200.00 EUR
+
+test source -> 7
+__ERROR__
+While parsing file "$FILE", line 1: 
+While parsing periodic transaction:
+> ~ xxx
+Error: Unexpected date period token 'xxx'
+While parsing file "$FILE", line 6: 
+Error: Only one posting with null amount allowed per transaction
+While parsing file "$FILE", line 11: 
+Error: Only one posting with null amount allowed per transaction
+While parsing file "$FILE", line 13: 
+While parsing transaction:
+> 2012/03/xx
+Error: Invalid date: 2012/03/xx
+While parsing file "$FILE", line 18: 
+While parsing posting:
+  G               AAA
+                  ^^^
+Error: No quantity specified for amount
+While parsing file "$FILE", line 22: 
+While parsing posting:
+  I             1,00.00 EUR
+                ^^^^^^^^^^^
+Error: Incorrect use of thousand-mark comma
+While parsing file "$FILE", line 27: 
+While balancing transaction from "$FILE", lines 25-27:
+> 2012-03-27 * Test
+>     K              100.00 EUR
+>     L             -200.00 EUR
+Unbalanced remainder is:
+         -100.00 EUR
+Amount to balance against:
+          100.00 EUR
+Error: Transaction does not balance
+end test
+

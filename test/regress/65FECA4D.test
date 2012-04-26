@@ -1,0 +1,12 @@
+--now=2012-02-28
+
+Y 2012
+
+2/29 E-trade Bank
+    Expenses:Food        $20
+    Assets:Cash
+
+test reg
+12-Feb-29 E-trade Bank          Expenses:Food                   $20          $20
+                                Assets:Cash                    $-20            0
+end test

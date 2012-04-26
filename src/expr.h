@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,53 +58,33 @@ public:
   typedef intrusive_ptr<op_t>       ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
+  enum check_expr_kind_t {
+    EXPR_GENERAL,
+    EXPR_ASSERTION,
+    EXPR_CHECK
+  };
+
+  typedef std::pair<expr_t, check_expr_kind_t> check_expr_pair;
+  typedef std::list<check_expr_pair>           check_expr_list;
+
 protected:
   ptr_op_t ptr;
 
 public:
-  expr_t() : base_type() {
-    TRACE_CTOR(expr_t, "");
-  }
-  expr_t(const expr_t& other)
-    : base_type(other), ptr(other.ptr) {
-    TRACE_CTOR(expr_t, "copy");
-  }
-  expr_t(ptr_op_t _ptr, scope_t * _context = NULL)
-    : base_type(_context), ptr(_ptr) {
-    TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *");
-  }
+  expr_t();
+  expr_t(const expr_t& other);
+  expr_t(ptr_op_t _ptr, scope_t * _context = NULL);
 
-  expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT)
-    : base_type() {
-    TRACE_CTOR(expr_t, "string, parse_flags_t");
-    if (! _str.empty())
-      parse(_str, flags);
-  }
-  expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT)
-    : base_type() {
-    TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
-    parse(in, flags);
-  }
+  expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT);
+  expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
 
-  virtual ~expr_t() {
-    TRACE_DTOR(expr_t);
-  }
+  virtual ~expr_t();
 
-  expr_t& operator=(const expr_t& _expr) {
-    if (this != &_expr) {
-      base_type::operator=(_expr);
-      ptr = _expr.ptr;
-    }
-    return *this;
-  }
+  expr_t& operator=(const expr_t& _expr);
 
-  virtual operator bool() const throw() {
-    return ptr.get() != NULL;
-  }
+  virtual operator bool() const throw();
 
-  ptr_op_t get_op() throw() {
-    return ptr;
-  }
+  ptr_op_t get_op() throw();
 
   void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
@@ -147,21 +127,73 @@ private:
 inline bool is_expr(const value_t& val) {
   return val.is_any() && val.as_any().type() == typeid(expr_t::ptr_op_t);
 }
-inline expr_t::ptr_op_t as_expr(const value_t& val) {
-  VERIFY(val.is_any());
-  return val.as_any<expr_t::ptr_op_t>();
-}
-inline void set_expr(value_t& val, expr_t::ptr_op_t op) {
-  val.set_any(op);
-}
-inline value_t expr_value(expr_t::ptr_op_t op) {
-  value_t temp;
-  temp.set_any(op);
-  return temp;
-}
+
+expr_t::ptr_op_t as_expr(const value_t& val);
+void             set_expr(value_t& val, expr_t::ptr_op_t op);
+value_t          expr_value(expr_t::ptr_op_t op);
+
+// A merged expression allows one to set an expression term, "foo", and
+// a base expression, "bar", and then merge in later expressions that
+// utilize foo.  For example:
+//
+//    foo: bar
+//  merge: foo * 10
+//  merge: foo + 20
+//
+// When this expression is finally compiled, the base and merged
+// elements are written into this:
+//
+//   __tmp=(foo=bar; foo=foo*10; foo=foo+20);__tmp
+//
+// This allows users to select flags like -O, -B or -I at any time, and
+// also combine flags such as -V and -A.
+
+class merged_expr_t : public expr_t
+{
+public:
+  string term;
+  string base_expr;
+  string merge_operator;
+
+  std::list<string> exprs;
+
+  merged_expr_t(const string& _term, const string& expr,
+                const string& merge_op = ";")
+    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
+    TRACE_CTOR(merged_expr_t, "string, string, string");
+  }
+  virtual ~merged_expr_t() {
+    TRACE_DTOR(merged_expr_t);
+  }
+
+  void set_term(const string& _term) {
+    term = _term;
+  }
+  void set_base_expr(const string& expr) {
+    base_expr = expr;
+  }
+  void set_merge_operator(const string& merge_op) {
+    merge_operator = merge_op;
+  }
+
+  bool check_for_single_identifier(const string& expr);
+
+  void prepend(const string& expr) {
+    if (! check_for_single_identifier(expr))
+      exprs.push_front(expr);
+  }
+  void append(const string& expr) {
+    if (! check_for_single_identifier(expr))
+      exprs.push_back(expr);
+  }
+  void remove(const string& expr) {
+    exprs.remove(expr);
+  }
+
+  virtual void compile(scope_t& scope);
+};
 
 class call_scope_t;
-
 value_t source_command(call_scope_t& scope);
 
 } // namespace ledger

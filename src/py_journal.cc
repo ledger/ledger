@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -135,51 +135,57 @@ namespace {
     return journal.find_account(name, auto_create);
   }
 
+#if 0
   std::size_t py_read(journal_t& journal, const string& pathname)
   {
-    return journal.read(pathname);
+    return journal.read(context_stack);
   }
+#endif
 
   struct collector_wrapper
   {
-    journal_t&       journal;
-    report_t         report;
-    collect_posts *  posts_collector;
-    post_handler_ptr chain;
+    journal_t& journal;
+    report_t   report;
+
+    post_handler_ptr posts_collector;
 
     collector_wrapper(journal_t& _journal, report_t& base)
       : journal(_journal), report(base),
-        posts_collector(new collect_posts) {}
+        posts_collector(new collect_posts) {
+      TRACE_CTOR(collector_wrapper, "journal_t&, report_t&");
+    }
     ~collector_wrapper() {
+      TRACE_DTOR(collector_wrapper);
       journal.clear_xdata();
     }
 
     std::size_t length() const {
-      return posts_collector->length();
+      return dynamic_cast<collect_posts *>(posts_collector.get())->length();
     }
 
     std::vector<post_t *>::iterator begin() {
-      return posts_collector->begin();
+      return dynamic_cast<collect_posts *>(posts_collector.get())->begin();
     }
     std::vector<post_t *>::iterator end() {
-      return posts_collector->end();
+      return dynamic_cast<collect_posts *>(posts_collector.get())->end();
     }
   };
 
-  shared_ptr<collector_wrapper>
-  py_collect(journal_t& journal, const string& query)
+  shared_ptr<collector_wrapper> py_query(journal_t& journal,
+                                         const string& query)
   {
     if (journal.has_xdata()) {
       PyErr_SetString(PyExc_RuntimeError,
-                      _("Cannot have multiple journal collections open at once"));
+                      _("Cannot have more than one active journal query"));
       throw_error_already_set();
     }
 
     report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-    shared_ptr<collector_wrapper> coll(new collector_wrapper(journal,
-                                                             current_report));
-    unique_ptr<journal_t> save_journal(current_report.session.journal.release());
-    current_report.session.journal.reset(&journal);
+    shared_ptr<collector_wrapper>
+      coll(new collector_wrapper(journal, current_report));
+
+    unique_ptr<journal_t> save_journal(coll->report.session.journal.release());
+    coll->report.session.journal.reset(&coll->journal);
 
     try {
       strings_list remaining =
@@ -189,37 +195,36 @@ namespace {
       value_t args;
       foreach (const string& arg, remaining)
         args.push_back(string_value(arg));
-      coll->report.parse_query_args(args, "@Journal.collect");
+      coll->report.parse_query_args(args, "@Journal.query");
 
-      journal_posts_iterator walker(coll->journal);
-      coll->chain =
-        chain_post_handlers(post_handler_ptr(coll->posts_collector),
-                            coll->report);
-      pass_down_posts<journal_posts_iterator>(coll->chain, walker);
+      coll->report.posts_report(coll->posts_collector);
     }
     catch (...) {
-      current_report.session.journal.release();
-      current_report.session.journal.reset(save_journal.release());
+      coll->report.session.journal.release();
+      coll->report.session.journal.reset(save_journal.release());
       throw;
     }
-    current_report.session.journal.release();
-    current_report.session.journal.reset(save_journal.release());
+    coll->report.session.journal.release();
+    coll->report.session.journal.reset(save_journal.release());
 
     return coll;
   }
 
   post_t * posts_getitem(collector_wrapper& collector, long i)
   {
-    post_t * post =
-      collector.posts_collector->posts[static_cast<std::string::size_type>(i)];
-    std::cerr << typeid(post).name() << std::endl;
-    std::cerr << typeid(*post).name() << std::endl;
-    std::cerr << typeid(post->account).name() << std::endl;
-    std::cerr << typeid(*post->account).name() << std::endl;
-    return post;
+    return dynamic_cast<collect_posts *>(collector.posts_collector.get())
+      ->posts[static_cast<std::size_t>(i)];
   }
 
 } // unnamed namespace
+
+#define EXC_TRANSLATOR(type)                            \
+  void exc_translate_ ## type(const type& err) {        \
+    PyErr_SetString(PyExc_RuntimeError, err.what()); \
+  }
+
+EXC_TRANSLATOR(parse_error)
+EXC_TRANSLATOR(error_count)
 
 void export_journal()
 {
@@ -227,22 +232,11 @@ void export_journal()
           boost::noncopyable >("PostHandler")
     ;
 
-  class_< collect_posts, bases<item_handler<post_t> >,
-          shared_ptr<collect_posts>, boost::noncopyable >("PostCollector")
-    .def("__len__", &collect_posts::length)
-    .def("__iter__", python::range<return_internal_reference<1,
-                                   with_custodian_and_ward_postcall<1, 0> > >
-         (&collect_posts::begin, &collect_posts::end))
-    ;
-
   class_< collector_wrapper, shared_ptr<collector_wrapper>,
           boost::noncopyable >("PostCollectorWrapper", no_init)
     .def("__len__", &collector_wrapper::length)
-    .def("__getitem__", posts_getitem, return_internal_reference<1,
-                             with_custodian_and_ward_postcall<0, 1> >())
-    .def("__iter__",
-         python::range<return_value_policy<reference_existing_object,
-                       with_custodian_and_ward_postcall<0, 1> > >
+    .def("__getitem__", posts_getitem, return_internal_reference<>())
+    .def("__iter__", python::range<return_internal_reference<> >
          (&collector_wrapper::begin, &collector_wrapper::end))
     ;
 
@@ -264,9 +258,10 @@ void export_journal()
     ;
 
   class_< journal_t, boost::noncopyable > ("Journal")
+#if 0
     .def(init<path>())
     .def(init<string>())
-
+#endif
     .add_property("master",
                   make_getter(&journal_t::master,
                               return_internal_reference<1,
@@ -283,13 +278,13 @@ void export_journal()
 
     .def("find_account", py_find_account_1,
          return_internal_reference<1,
-             with_custodian_and_ward_postcall<0, 1> >())
+             with_custodian_and_ward_postcall<1, 0> >())
     .def("find_account", py_find_account_2,
          return_internal_reference<1,
-             with_custodian_and_ward_postcall<0, 1> >())
+             with_custodian_and_ward_postcall<1, 0> >())
     .def("find_account_re", &journal_t::find_account_re,
          return_internal_reference<1,
-             with_custodian_and_ward_postcall<0, 1> >())
+             with_custodian_and_ward_postcall<1, 0> >())
 
     .def("add_xact", &journal_t::add_xact)
     .def("remove_xact", &journal_t::remove_xact)
@@ -298,7 +293,7 @@ void export_journal()
 #if 0
     .def("__getitem__", xacts_getitem,
          return_internal_reference<1,
-             with_custodian_and_ward_postcall<0, 1> >())
+             with_custodian_and_ward_postcall<1, 0> >())
 #endif
 
     .def("__iter__", python::range<return_internal_reference<> >
@@ -311,16 +306,22 @@ void export_journal()
          (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
     .def("sources", python::range<return_internal_reference<> >
          (&journal_t::sources_begin, &journal_t::sources_end))
-
+#if 0
     .def("read", py_read)
-
+#endif
     .def("has_xdata", &journal_t::has_xdata)
     .def("clear_xdata", &journal_t::clear_xdata)
 
-    .def("collect", py_collect, with_custodian_and_ward_postcall<0, 1>())
+    .def("query", py_query)
 
     .def("valid", &journal_t::valid)
     ;
+
+#define EXC_TRANSLATE(type) \
+  register_exception_translator<type>(&exc_translate_ ## type);
+
+  EXC_TRANSLATE(parse_error);
+  EXC_TRANSLATE(error_count);
 }
 
 } // namespace ledger

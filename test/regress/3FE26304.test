@@ -1,0 +1,74 @@
+N $
+P 2010/09/28 20:43:24 E $3.700
+P 2010/09/28 20:43:25 A $5.230
+P 2010/09/28 20:43:26 D $34.020
+P 2010/09/28 20:43:27 C $12.370
+P 2010/09/28 20:43:28 F $39.700
+P 2010/09/28 20:43:29 B $39.430
+P 2010/09/29 13:50:15 E $3.720
+P 2010/09/29 13:50:15 A $5.240
+P 2010/09/29 13:50:17 D $33.920
+P 2010/09/29 13:50:18 C $12.310   P 2010/09/29 13:50:18 F $39.670
+P 2010/09/29 13:50:19 B $39.830
+
+2010/04/04 * Opening Balance
+ Assets:Sub1                       100 A @ $0.01
+ Equity:Opening Balances
+
+2010/04/04 * Opening Balance
+ Assets:Sub1                       100 B @ $32.27
+ Equity:Opening Balances
+
+2010/04/04 * Opening Balance
+ Assets:Sub1                       100 C @ $11.30
+ Equity:Opening Balances
+
+2010/04/04 * Opening Balance
+ Assets:Sub1                       100 D @ $20.30
+ Equity:Opening Balances
+
+2010/04/04 * Opening Balance
+ Assets:Sub1:Leftovers     $6.79
+ Equity:Opening Balances
+
+2010/04/04 * Opening Balance
+ Assets:Sub1                       11 D
+ Equity:Opening Balances
+
+2010/04/04 * Opening Balance
+ Assets:Sub1                       100 E @ $2.97
+ Equity:Opening Balances
+
+2010/05/18=2010/05/21 * FOO
+ Assets:Sub1           200 F @ $27.190
+ Expenses:Qux         $29.95
+ Assets:Sub2
+
+2010/07/02 * BAR
+ Income:D                      -$169.65
+ Assets:Sub2        $32.50
+ Assets:Sub1                       6 D @ $22.64
+ Assets:Sub1:Leftovers
+
+test bal -X \$ sub1
+           $18026.74  Assets:Sub1
+               $8.10    Leftovers
+--------------------
+           $18026.74
+end test
+
+test reg -X \$ sub1 --now=2012/03/14
+10-Apr-04 Opening Balance       Assets:Sub1                   $1.00        $1.00
+10-Apr-04 Opening Balance       Assets:Sub1                $3227.00     $3228.00
+10-Apr-04 Opening Balance       Assets:Sub1                $1130.00     $4358.00
+10-Apr-04 Opening Balance       Assets:Sub1                $2030.00     $6388.00
+10-Apr-04 Opening Balance       Assets:Sub1:Leftovers         $6.79     $6394.79
+10-Apr-04 Opening Balance       Assets:Sub1                 $223.30     $6618.09
+10-Apr-04 Opening Balance       Assets:Sub1                 $297.00     $6915.09
+10-May-18 FOO                   Assets:Sub1                $5438.00    $12353.09
+10-Jul-02 Commodities revalued  <Revalued>                  $259.74    $12612.83
+10-Jul-02 BAR                   Assets:Sub1                 $135.84    $12748.67
+                                Assets:Sub1:Leftovers         $1.31    $12749.98
+10-Sep-29 Commodities revalued  <Revalued>                 $5251.46    $18001.44
+12-Mar-14 Commodities revalued  <Revalued>                   $25.30    $18026.74
+end test

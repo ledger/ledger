@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -96,14 +96,15 @@ namespace {
     pool.exchange(commodity, per_unit_cost, moment);
   }
 
-  cost_breakdown_t py_exchange_5(commodity_pool_t&                  pool,
+  cost_breakdown_t py_exchange_7(commodity_pool_t&                  pool,
                                  const amount_t&                    amount,
                                  const amount_t&                    cost,
                                  const bool                         is_per_unit,
+                                 const bool                         add_prices,
                                  const boost::optional<datetime_t>& moment,
                                  const boost::optional<string>&     tag)
   {
-    return pool.exchange(amount, cost, is_per_unit, moment, tag);
+    return pool.exchange(amount, cost, is_per_unit, add_prices, moment, tag);
   }
 
   commodity_t * py_pool_getitem(commodity_pool_t& pool, const string& symbol)
@@ -113,9 +114,9 @@ namespace {
     if (i == pool.commodities.end()) {
       PyErr_SetString(PyExc_ValueError,
                       (string("Could not find commodity ") + symbol).c_str());
-      throw boost::python::error_already_set();
+      throw_error_already_set();
     }
-    return (*i).second;
+    return (*i).second.get();
   }
 
   python::list py_pool_keys(commodity_pool_t& pool) {
@@ -168,13 +169,15 @@ namespace {
   py_pool_commodities_values_begin(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.begin(),
-       bind(&commodity_pool_t::commodities_map::value_type::second, _1));
+       bind(&shared_ptr<commodity_t>::get,
+            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
   commodities_map_seconds_iterator
   py_pool_commodities_values_end(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.end(),
-       bind(&commodity_pool_t::commodities_map::value_type::second, _1));
+       bind(&shared_ptr<commodity_t>::get,
+            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
 
   void py_add_price_2(commodity_t& commodity,
@@ -255,8 +258,10 @@ void export_commodity()
                   make_getter(&commodity_pool_t::keep_base),
                   make_setter(&commodity_pool_t::keep_base))
     .add_property("price_db",
-                  make_getter(&commodity_pool_t::price_db),
-                  make_setter(&commodity_pool_t::price_db))
+                  make_getter(&commodity_pool_t::price_db,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&commodity_pool_t::price_db,
+                              return_value_policy<return_by_value>()))
     .add_property("quote_leeway",
                   make_getter(&commodity_pool_t::quote_leeway),
                   make_setter(&commodity_pool_t::quote_leeway))
@@ -267,44 +272,38 @@ void export_commodity()
                   make_getter(&commodity_pool_t::get_commodity_quote),
                   make_setter(&commodity_pool_t::get_commodity_quote))
 
-    .def("make_qualified_name", &commodity_pool_t::make_qualified_name)
+    .def("create", py_create_1, return_internal_reference<>())
+    .def("create", py_create_2, return_internal_reference<>())
 
-    .def("create", py_create_1,
-         return_value_policy<reference_existing_object>())
-    .def("create", py_create_2,
-         return_value_policy<reference_existing_object>())
+    .def("find_or_create", py_find_or_create_1, return_internal_reference<>())
+    .def("find_or_create", py_find_or_create_2, return_internal_reference<>())
 
-    .def("find_or_create", py_find_or_create_1,
-         return_value_policy<reference_existing_object>())
-    .def("find_or_create", py_find_or_create_2,
-         return_value_policy<reference_existing_object>())
-
-    .def("find", py_find_1, return_value_policy<reference_existing_object>())
-    .def("find", py_find_2, return_value_policy<reference_existing_object>())
+    .def("find", py_find_1, return_internal_reference<>())
+    .def("find", py_find_2, return_internal_reference<>())
 
     .def("exchange", py_exchange_2, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_3, with_custodian_and_ward<1, 2>())
-    .def("exchange", py_exchange_5)
+    .def("exchange", py_exchange_7)
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
 
     .def("__getitem__", py_pool_getitem,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
     .def("keys", py_pool_keys)
     .def("has_key", py_pool_contains)
     .def("__contains__", py_pool_contains)
     .def("__iter__",
-         python::range<return_value_policy<reference_existing_object> >
+         python::range<return_internal_reference<> >
          (py_pool_commodities_begin, py_pool_commodities_end))
     .def("iteritems",
-         python::range<return_value_policy<reference_existing_object> >
+         python::range<return_internal_reference<> >
          (py_pool_commodities_begin, py_pool_commodities_end))
     .def("iterkeys", python::range<>(py_pool_commodities_keys_begin,
                                      py_pool_commodities_keys_end))
     .def("itervalues",
-         python::range<return_value_policy<reference_existing_object> >
+         python::range<return_internal_reference<> >
          (py_pool_commodities_values_begin, py_pool_commodities_values_end))
     ;
 
@@ -349,21 +348,20 @@ void export_commodity()
 
     .add_property("referent",
                   make_function(py_commodity_referent,
-                                return_value_policy<reference_existing_object>()))
+                                return_internal_reference<>()))
 
     .def("has_annotation", &commodity_t::has_annotation)
     .def("strip_annotations", py_strip_annotations_0,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
     .def("strip_annotations", py_strip_annotations_1,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
     .def("write_annotations", &commodity_t::write_annotations)
 
     .def("pool", &commodity_t::pool,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
 
     .add_property("base_symbol", &commodity_t::base_symbol)
     .add_property("symbol", &commodity_t::symbol)
-    .add_property("mapping_key", &commodity_t::mapping_key)
 
     .add_property("name", &commodity_t::name, &commodity_t::set_name)
     .add_property("note", &commodity_t::note, &commodity_t::set_note)
@@ -394,11 +392,15 @@ void export_commodity()
 
     .add_property("price", py_price, py_set_price)
     .add_property("date",
-                  make_getter(&annotation_t::date),
-                  make_setter(&annotation_t::date))
+                  make_getter(&annotation_t::date,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&annotation_t::date,
+                              return_value_policy<return_by_value>()))
     .add_property("tag",
-                  make_getter(&annotation_t::tag),
-                  make_setter(&annotation_t::tag))
+                  make_getter(&annotation_t::tag,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&annotation_t::tag,
+                              return_value_policy<return_by_value>()))
 
     .def("__nonzero__", &annotation_t::operator bool)
 
@@ -441,12 +443,12 @@ void export_commodity()
 
     .add_property("referent",
                   make_function(py_annotated_commodity_referent,
-                                return_value_policy<reference_existing_object>()))
+                                return_internal_reference<>()))
 
     .def("strip_annotations", py_strip_ann_annotations_0,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
     .def("strip_annotations", py_strip_ann_annotations_1,
-         return_value_policy<reference_existing_object>())
+         return_internal_reference<>())
     .def("write_annotations", &annotated_commodity_t::write_annotations)
     ;
 }

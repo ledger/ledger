@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -48,13 +48,18 @@ namespace {
     return amount.value(CURRENT_TIME());
   }
   boost::optional<amount_t> py_value_1(const amount_t& amount,
-                                       commodity_t& in_terms_of) {
+                                       const commodity_t * in_terms_of) {
     return amount.value(CURRENT_TIME(), in_terms_of);
   }
   boost::optional<amount_t> py_value_2(const amount_t& amount,
-                                       commodity_t& in_terms_of,
-                                       datetime_t& moment) {
+                                       const commodity_t * in_terms_of,
+                                       const datetime_t& moment) {
     return amount.value(moment, in_terms_of);
+  }
+  boost::optional<amount_t> py_value_2d(const amount_t& amount,
+                                        const commodity_t * in_terms_of,
+                                        const date_t& moment) {
+    return amount.value(datetime_t(moment), in_terms_of);
   }
 
   void py_parse_2(amount_t& amount, object in, unsigned char flags) {
@@ -238,6 +243,7 @@ internal precision."))
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
+    .def("value", py_value_2d, args("in_terms_of", "moment"))
 
     .def("price", &amount_t::price)
 
@@ -263,10 +269,11 @@ internal precision."))
 
     .add_property("commodity",
                   make_function(&amount_t::commodity,
-                                return_value_policy<reference_existing_object>()),
+                                return_internal_reference<>()),
                   make_function(&amount_t::set_commodity,
                                 with_custodian_and_ward<1, 2>()))
     .def("has_commodity", &amount_t::has_commodity)
+    .def("with_commodity", &amount_t::with_commodity)
     .def("clear_commodity", &amount_t::clear_commodity)
 
     .def("number", &amount_t::number)

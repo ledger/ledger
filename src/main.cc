@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,6 +58,7 @@ int main(int argc, char * argv[], char * envp[])
   //   --verbose           ; turns on logging
   //   --debug CATEGORY    ; turns on debug logging
   //   --trace LEVEL       ; turns on trace logging
+  //   --memory            ; turns on memory usage tracing
   handle_debug_options(argc, argv);
 #if defined(VERIFY_ON)
   IF_VERIFY() initialize_memory_tracing();
@@ -80,13 +81,12 @@ int main(int argc, char * argv[], char * envp[])
   ::textdomain("ledger");
 #endif
 
-  std::auto_ptr<global_scope_t> global_scope;
+  global_scope_t * global_scope = NULL;
 
   try {
     // Create the session object, which maintains nearly all state relating to
     // this invocation of Ledger; and register all known journal parsers.
-    global_scope.reset(new global_scope_t(envp));
-
+    global_scope = new global_scope_t(envp);
     global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
@@ -95,8 +95,7 @@ int main(int argc, char * argv[], char * envp[])
       args.push_back(argv[i]);
 
     // Look for options and a command verb in the command-line arguments
-    bind_scope_t bound_scope(*global_scope.get(), global_scope->report());
-
+    bind_scope_t bound_scope(*global_scope, global_scope->report());
     args = global_scope->read_command_arguments(bound_scope, args);
 
     if (global_scope->HANDLED(script_)) {
@@ -112,8 +111,8 @@ int main(int argc, char * argv[], char * envp[])
 
         char * p = skip_ws(line);
         if (*p && *p != '#')
-          status = global_scope->execute_command_wrapper(split_arguments(p),
-                                                         true);
+          status =
+            global_scope->execute_command_wrapper(split_arguments(p), true);
       }
     }
     else if (! args.empty()) {
@@ -187,30 +186,35 @@ int main(int argc, char * argv[], char * envp[])
     }
   }
   catch (const std::exception& err) {
-    if (global_scope.get())
+    if (global_scope)
       global_scope->report_error(err);
     else
       std::cerr << "Exception during initialization: " << err.what()
                 << std::endl;
   }
-  catch (int _status) {
-    status = _status;           // used for a "quick" exit, and is used only
-                                // if help text (such as --help) was displayed
+  catch (const error_count& errors) {
+    // used for a "quick" exit, and is used only if help text (such as
+    // --help) was displayed
+    status = static_cast<int>(errors.count);
   }
 
   // If memory verification is being performed (which can be very slow), clean
   // up everything by closing the session and deleting the session object, and
   // then shutting down the memory tracing subsystem.  Otherwise, let it all
   // leak because we're about to exit anyway.
+#if defined(VERIFY_ON)
   IF_VERIFY() {
-    global_scope.reset();
+    checked_delete(global_scope);
 
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
 #if defined(VERIFY_ON)
     shutdown_memory_tracing();
 #endif
-  } else {
-    INFO("Ledger ended");
+  } else
+#endif
+  {
+    global_scope->quick_close();
+    INFO("Ledger ended");       // let global_scope leak!
   }
 
   // Return the final status to the operating system, either 1 for error or 0

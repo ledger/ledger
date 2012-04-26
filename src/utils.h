@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -171,7 +171,7 @@ void report_memory(std::ostream& out, bool report_all = false);
 #else // ! VERIFY_ON
 
 #define VERIFY(x)
-#define DO_VERIFY() true
+#define DO_VERIFY() false
 #define TRACE_CTOR(cls, args)
 #define TRACE_DTOR(cls)
 
@@ -278,6 +278,28 @@ extern string empty_string;
 
 strings_list split_arguments(const char * line);
 
+inline string to_string(long num) {
+  std::ostringstream buf;
+  buf << num;
+  return buf.str();
+}
+
+inline string to_string(std::size_t num) {
+  std::ostringstream buf;
+  buf << num;
+  return buf.str();
+}
+
+inline string lowered(const string& str) {
+  string tmp(str);
+  to_lower(tmp);
+  return tmp;
+}
+
+inline string operator+(const char * left, const string& right) {
+  return string(left) + right;
+}
+
 } // namespace ledger
 
 /*@}*/
@@ -338,10 +360,32 @@ extern uint8_t _trace_level;
 
 #if defined(DEBUG_ON)
 
-extern optional<std::string> _log_category;
+extern optional<std::string>       _log_category;
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+  extern optional<boost::u32regex> _log_category_re;
+#else
+  extern optional<boost::regex>    _log_category_re;
+#endif
 
 inline bool category_matches(const char * cat) {
-  return _log_category && starts_with(cat, *_log_category);
+  if (_log_category) {
+    if (! _log_category_re) {
+      _log_category_re =
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+        boost::make_u32regex(_log_category->c_str(),
+                             boost::regex::perl | boost::regex::icase);
+#else
+        boost::regex(_log_category->c_str(),
+                     boost::regex::perl | boost::regex::icase);
+#endif
+    }
+#if defined(HAVE_BOOST_REGEX_UNICODE)
+    return boost::u32regex_search(cat, *_log_category_re);
+#else
+    return boost::regex_search(cat, *_log_category_re);
+#endif
+  }
+  return false;
 }
 
 #define SHOW_DEBUG(cat) \

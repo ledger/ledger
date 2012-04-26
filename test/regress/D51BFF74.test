@@ -1,0 +1,24 @@
+2012-03-16 KFC
+    Expenses:Food                               $-20
+    Assets:Cash
+
+2012-03-16 KFC
+    Expenses:Food                              $- 20
+    Assets:Cash
+
+2012-03-16 KFC
+    Expenses:Food                               -$20
+    Assets:Cash
+
+2012-03-16 KFC
+    Expenses:Food                              - $20
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 6: 
+While parsing posting:
+  Expenses:Food                              $- 20
+                                             ^^^^^
+Error: No quantity specified for amount
+end test

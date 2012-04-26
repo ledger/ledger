@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,22 +43,6 @@
 namespace ledger {
 
 namespace {
-  string join_args(call_scope_t& args)
-  {
-    std::ostringstream buf;
-    bool first = true;
-
-    for (std::size_t i = 0; i < args.size(); i++) {
-      if (first)
-        first = false;
-      else
-        buf << ' ';
-      buf << args[i];
-    }
-
-    return buf.str();
-  }
-
   post_t * get_sample_xact(report_t& report)
   {
     {
@@ -83,8 +67,14 @@ namespace {
       out << _("--- Context is first posting of the following transaction ---")
           << std::endl << str << std::endl;
       {
-        std::istringstream in(str);
-        report.session.journal->parse(in, report.session);
+        shared_ptr<std::istringstream> in(new std::istringstream(str));
+
+        parse_context_stack_t parsing_context;
+        parsing_context.push(in);
+        parsing_context.get_current().journal = report.session.journal.get();
+        parsing_context.get_current().scope   = &report.session;
+
+        report.session.journal->read(parsing_context);
         report.session.journal->clear_xdata();
       }
     }

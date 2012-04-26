@@ -4,7 +4,7 @@
   ""
   :group 'ledger)
 
-(defcustom ledger-post-auto-adjust-amounts t
+(defcustom ledger-post-auto-adjust-amounts nil
   "If non-nil, ."
   :type 'boolean
   :group 'ledger-post)

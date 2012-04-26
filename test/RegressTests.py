@@ -31,6 +31,8 @@ harness = LedgerHarness(args)
 tests   = args[3]
 
 if not os.path.isdir(tests) and not os.path.isfile(tests):
+    sys.stderr.write("'%s' is not a directory or file (cwd %s)" %
+                     (tests, os.getcwd()))
     sys.exit(1)
 
 class RegressFile(object):
@@ -40,6 +42,7 @@ class RegressFile(object):
 
     def transform_line(self, line):
         line = re.sub('\$sourcepath', harness.sourcepath, line)
+        line = re.sub('\$FILE', os.path.abspath(self.filename), line)
         return line
 
     def read_test(self):
@@ -90,7 +93,7 @@ class RegressFile(object):
     def notify_user(self, msg, test):
         print msg
         print "--"
-        print test['command'],
+        print self.transform_line(test['command']),
         print "--"
 
     def run_test(self, test):
@@ -98,7 +101,8 @@ class RegressFile(object):
         if test['command'].find("-f - ") != -1:
             use_stdin = True
         else:
-            test['command'] = (('$ledger -f "%s" ' % self.filename) +
+            test['command'] = (('$ledger -f "%s" ' % 
+                                os.path.abspath(self.filename)) +
                                test['command'])
 
         p = harness.run(test['command'],
@@ -130,9 +134,7 @@ class RegressFile(object):
         printed = False
         index   = 0
         if test['error'] is not None:
-            for line in unified_diff([re.sub('\$FILE', self.filename, line)
-                                      for line in test['error']],
-                                     harness.readlines(p.stderr)):
+            for line in unified_diff(test['error'], harness.readlines(p.stderr)):
                 index += 1
                 if index < 3:
                     continue
@@ -148,14 +150,16 @@ class RegressFile(object):
             if success:
                 harness.success()
             else:
-                harness.failure()
+                harness.failure(os.path.basename(self.filename))
+                print "STDERR:"
+                print p.stderr.read()
         else:
             if success: print
             if test['exitcode']:
                 self.notify_user("FAILURE in exit code (%d != %d) from %s:"
                                  % (test['exitcode'], p.returncode, self.filename),
                                  test)
-            harness.failure()
+            harness.failure(os.path.basename(self.filename))
 
     def run_tests(self):
         test = self.read_test()
@@ -179,7 +183,10 @@ if __name__ == '__main__':
 
     if os.path.isdir(tests):
         tests = [os.path.join(tests, x)
-                 for x in os.listdir(tests) if x.endswith('.test')]
+                 for x in os.listdir(tests) 
+                 if (x.endswith('.test') and 
+                     (not '_py.test' in x or (harness.python and
+                                              not harness.verify)))]
         if pool:
             pool.map(do_test, tests, 1)
         else:

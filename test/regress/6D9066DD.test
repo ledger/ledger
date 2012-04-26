@@ -1,0 +1,17 @@
+2009/09/23 * (EFT) Elec Ext Deposit  AMAZON.COM FZXXOLTQ - Retail dis  payments.amazon.com     
+    Assets:Checking                      $39.05
+    Assets:Receivable:Amazon     
+
+2007/10/15 * FOO  ; :USA:
+     Assets:NRL:Checking                    $1,726.18     
+     Assets:Receivable:CEG  ; [2007/10/05]     
+
+test print
+2009/09/23 * (EFT) Elec Ext Deposit  AMAZON.COM FZXXOLTQ - Retail dis  payments.amazon.com
+    Assets:Checking                           $39.05
+    Assets:Receivable:Amazon
+
+2007/10/15 * FOO  ; :USA:
+    Assets:NRL:Checking                    $1,726.18
+    Assets:Receivable:CEG  ; [2007/10/05]
+end test

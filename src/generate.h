@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -57,7 +57,7 @@ class generate_posts_iterator
   std::size_t  quantity;
   bool         allow_invalid;
   date_t       next_date;
-  date_t       next_eff_date;
+  date_t       next_aux_date;
 
   mt19937 rnd_gen;
 

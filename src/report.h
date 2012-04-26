@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -119,9 +119,23 @@ public:
 
   explicit report_t(session_t& _session)
     : session(_session), terminus(CURRENT_TIME()),
-      budget_flags(BUDGET_NO_BUDGET) {}
+      budget_flags(BUDGET_NO_BUDGET) {
+    TRACE_CTOR(report_t, "session_t&");
+  }
+  report_t(const report_t& report)
+    : session(report.session),
+      output_stream(report.output_stream),
+      terminus(report.terminus),
+      budget_flags(report.budget_flags) {
+    TRACE_CTOR(report_t, "copy");
+  }
 
   virtual ~report_t() {
+    TRACE_DTOR(report_t);
+    output_stream.close();
+  }
+
+  void quick_close() {
     output_stream.close();
   }
 
@@ -167,10 +181,11 @@ public:
   value_t fn_quoted(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
+  value_t fn_format_datetime(call_scope_t& scope);
   value_t fn_ansify_if(call_scope_t& scope);
   value_t fn_percent(call_scope_t& scope);
-  value_t fn_price(call_scope_t& scope);
   value_t fn_commodity(call_scope_t& scope);
+  value_t fn_nail_down(call_scope_t& scope);
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_price(call_scope_t& scope);
   value_t fn_lot_tag(call_scope_t& scope);
@@ -215,7 +230,7 @@ public:
     bool lots = HANDLED(lots) || HANDLED(lots_actual);
     return keep_details_t(lots || HANDLED(lot_prices),
                           lots || HANDLED(lot_dates),
-                          lots || HANDLED(lot_tags),
+                          lots || HANDLED(lot_notes),
                           HANDLED(lots_actual));
   }
 
@@ -224,11 +239,12 @@ public:
     HANDLER(abbrev_len_).report(out);
     HANDLER(account_).report(out);
     HANDLER(actual).report(out);
-    HANDLER(actual_dates).report(out);
     HANDLER(add_budget).report(out);
     HANDLER(amount_).report(out);
     HANDLER(amount_data).report(out);
     HANDLER(anon).report(out);
+    HANDLER(auto_match).report(out);
+    HANDLER(aux_date).report(out);
     HANDLER(average).report(out);
     HANDLER(balance_format_).report(out);
     HANDLER(base).report(out);
@@ -249,13 +265,13 @@ public:
     HANDLER(date_).report(out);
     HANDLER(date_format_).report(out);
     HANDLER(datetime_format_).report(out);
+    HANDLER(dc).report(out);
     HANDLER(depth_).report(out);
     HANDLER(deviation).report(out);
     HANDLER(display_).report(out);
     HANDLER(display_amount_).report(out);
     HANDLER(display_total_).report(out);
     HANDLER(dow).report(out);
-    HANDLER(effective).report(out);
     HANDLER(empty).report(out);
     HANDLER(end_).report(out);
     HANDLER(equity).report(out);
@@ -272,12 +288,13 @@ public:
     HANDLER(group_by_).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
+    HANDLER(immediate).report(out);
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
     HANDLER(lot_dates).report(out);
     HANDLER(lot_prices).report(out);
-    HANDLER(lot_tags).report(out);
+    HANDLER(lot_notes).report(out);
     HANDLER(lots).report(out);
     HANDLER(lots_actual).report(out);
     HANDLER(market).report(out);
@@ -302,6 +319,7 @@ public:
     HANDLER(price).report(out);
     HANDLER(prices_format_).report(out);
     HANDLER(pricedb_format_).report(out);
+    HANDLER(primary_date).report(out);
     HANDLER(quantity).report(out);
     HANDLER(quarterly).report(out);
     HANDLER(raw).report(out);
@@ -312,6 +330,7 @@ public:
     HANDLER(revalued).report(out);
     HANDLER(revalued_only).report(out);
     HANDLER(revalued_total_).report(out);
+    HANDLER(rich_data).report(out);
     HANDLER(seed_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
@@ -319,6 +338,7 @@ public:
     HANDLER(start_of_week_).report(out);
     HANDLER(subtotal).report(out);
     HANDLER(tail_).report(out);
+    HANDLER(time_report).report(out);
     HANDLER(total_).report(out);
     HANDLER(total_data).report(out);
     HANDLER(truncate_).report(out);
@@ -351,15 +371,17 @@ public:
    * Option handlers
    */
 
-  OPTION__(report_t, abbrev_len_,
-           CTOR(report_t, abbrev_len_) { on_with(none, 2L); });
+  OPTION__
+  (report_t, abbrev_len_,
+   CTOR(report_t, abbrev_len_) {
+    on(none, "2");
+  });
+
   OPTION(report_t, account_);
 
   OPTION_(report_t, actual, DO() { // -L
-      parent->HANDLER(limit_).on(string("--actual"), "actual");
+      OTHER(limit_).on(whence, "actual");
     });
-
-  OPTION(report_t, actual_dates);
 
   OPTION_(report_t, add_budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED | BUDGET_UNBUDGETED;
@@ -367,236 +389,281 @@ public:
 
   OPTION__
   (report_t, amount_, // -t
-   expr_t expr;
-   CTOR(report_t, amount_) {
-     set_expr(none, "amount");
-   }
-   void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
+   DECL1(report_t, amount_, merged_expr_t, expr, ("amount_expr", "amount")) {}
+   DO_(str) {
+     expr.append(str);
    });
 
   OPTION(report_t, amount_data); // -j
   OPTION(report_t, anon);
+  OPTION(report_t, auto_match);
 
   OPTION_(report_t, average, DO() { // -A
-      parent->HANDLER(display_total_)
-        .set_expr(string("--average"), "count>0?(total_expr/count):0");
+      OTHER(display_total_)
+        .on(whence, "count>0?(display_total/count):0");
     });
 
-  OPTION__(report_t, balance_format_, CTOR(report_t, balance_format_) {
-      on(none,
-         "%(ansify_if("
-         "  justify(scrub(display_total), 20, 20 + prepend_width, true, color),"
-         "            bold if should_bold))"
-         "  %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if("
-         "   ansify_if(partial_account(options.flat), blue if color),"
-         "             bold if should_bold))\n%/"
-         "%$1\n%/"
-         "%(prepend_width ? \" \" * prepend_width : \"\")"
-         "--------------------\n");
-    });
+  OPTION__
+  (report_t, balance_format_,
+   CTOR(report_t, balance_format_) {
+    on(none,
+       "%(ansify_if("
+       "  justify(scrub(display_total), 20,"
+       "          20 + int(prepend_width), true, color),"
+       "            bold if should_bold))"
+       "  %(!options.flat ? depth_spacer : \"\")"
+       "%-(ansify_if("
+       "   ansify_if(partial_account(options.flat), blue if color),"
+       "             bold if should_bold))\n%/"
+       "%$1\n%/"
+       "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+       "--------------------\n");
+  });
 
   OPTION(report_t, base);
 
   OPTION_(report_t, basis, DO() { // -B
-      parent->HANDLER(revalued).on_only(string("--basis"));
-      parent->HANDLER(amount_).set_expr(string("--basis"), "rounded(cost)");
+      OTHER(revalued).on(whence);
+      OTHER(amount_).expr.set_base_expr("rounded(cost)");
     });
 
-  OPTION_(report_t, begin_, DO_(args) { // -b
-      date_interval_t  interval(args.get<string>(1));
-      optional<date_t> begin = interval.begin();
-      if (! begin)
+  OPTION_(report_t, begin_, DO_(str) { // -b
+      date_interval_t interval(str);
+      if (optional<date_t> begin = interval.begin()) {
+        string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
+        OTHER(limit_).on(whence, predicate);
+      } else {
         throw_(std::invalid_argument,
-               _("Could not determine beginning of period '%1'")
-               << args.get<string>(1));
-
-      string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
-      parent->HANDLER(limit_).on(string("--begin"), predicate);
+               _("Could not determine beginning of period '%1'") << str);
+      }
     });
 
-  OPTION__
+  OPTION_
   (report_t, bold_if_,
    expr_t expr;
-   CTOR(report_t, bold_if_) {}
-   void set_expr(const optional<string>& whence, const string& str) {
+   DO_(str) {
      expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
   OPTION_(report_t, budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED;
     });
 
-  OPTION__(report_t, budget_format_, CTOR(report_t, budget_format_) {
-      on(none,
-         "%(justify(scrub(get_at(total_expr, 0)), 12, -1, true, color))"
-         " %(justify(-scrub(get_at(total_expr, 1)), 12, "
-         "           12 + 1 + 12, true, color))"
-         " %(justify(scrub(get_at(total_expr, 1) + "
-         "                 get_at(total_expr, 0)), 12, "
-         "           12 + 1 + 12 + 1 + 12, true, color))"
-         " %(ansify_if("
-         "   justify((get_at(total_expr, 1) ? "
-         "            (100% * scrub(get_at(total_expr, 0))) / "
-         "             -scrub(get_at(total_expr, 1)) : 0), "
-         "           5, -1, true, false),"
-         "   magenta if (color and get_at(total_expr, 1) and "
-         "               (abs(quantity(scrub(get_at(total_expr, 0))) / "
-         "                    quantity(scrub(get_at(total_expr, 1)))) >= 1))))"
-         "  %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if(partial_account(options.flat), blue if color))\n"
-         "%/%$1 %$2 %$3 %$4\n%/"
-         "%(prepend_width ? \" \" * prepend_width : \"\")"
-         "------------ ------------ ------------ -----\n");
-    });
+  OPTION__
+  (report_t, budget_format_,
+   CTOR(report_t, budget_format_) {
+    on(none,
+       "%(justify(scrub(get_at(display_total, 0)), 12, -1, true, color))"
+       " %(justify(-scrub(get_at(display_total, 1)), 12, "
+       "           12 + 1 + 12, true, color))"
+       " %(justify(scrub(get_at(display_total, 1) + "
+       "                 get_at(display_total, 0)), 12, "
+       "           12 + 1 + 12 + 1 + 12, true, color))"
+       " %(ansify_if("
+       "   justify((get_at(display_total, 1) ? "
+       "            (100% * scrub(get_at(display_total, 0))) / "
+       "             -scrub(get_at(display_total, 1)) : 0), "
+       "           5, -1, true, false),"
+       "   magenta if (color and get_at(display_total, 1) and "
+       "               (abs(quantity(scrub(get_at(display_total, 0))) / "
+       "                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
+       "  %(!options.flat ? depth_spacer : \"\")"
+       "%-(ansify_if(partial_account(options.flat), blue if color))\n"
+       "%/%$1 %$2 %$3 %$4\n%/"
+       "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+       "------------ ------------ ------------ -----\n");
+  });
 
   OPTION(report_t, by_payee); // -P
 
   OPTION_(report_t, cleared, DO() { // -C
-      parent->HANDLER(limit_).on(string("--cleared"), "cleared");
+      OTHER(limit_).on(whence, "cleared");
     });
 
-  OPTION__(report_t, cleared_format_, CTOR(report_t, cleared_format_) {
-      on(none,
-         "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
-         " true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
-         " 36 + prepend_width, true, color))"
-         "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
-         "    %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-         "%$1  %$2    %$3\n%/"
-         "%(prepend_width ? \" \" * prepend_width : \"\")"
-         "----------------  ----------------    ---------\n");
-    });
+  OPTION__
+  (report_t, cleared_format_,
+   CTOR(report_t, cleared_format_) {
+    on(none,
+       "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
+       " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
+       " 36 + int(prepend_width), true, color))"
+       "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+       "    %(!options.flat ? depth_spacer : \"\")"
+       "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+       "%$1  %$2    %$3\n%/"
+       "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+       "----------------  ----------------    ---------\n");
+  });
 
   OPTION(report_t, color);
 
   OPTION_(report_t, collapse, DO() { // -n
       // Make sure that balance reports are collapsed too, but only apply it
       // to account xacts
-      parent->HANDLER(display_).on(string("--collapse"), "post|depth<=1");
+      OTHER(display_).on(whence, "post|depth<=1");
     });
 
   OPTION_(report_t, collapse_if_zero, DO() {
-      parent->HANDLER(collapse).on_only(string("--collapse-if-zero"));
+      OTHER(collapse).on(whence);
     });
 
   OPTION(report_t, columns_);
   OPTION(report_t, count);
 
-  OPTION__(report_t, csv_format_, CTOR(report_t, csv_format_) {
-      on(none,
-         "%(quoted(date)),"
-         "%(quoted(code)),"
-         "%(quoted(payee)),"
-         "%(quoted(display_account)),"
-         "%(quoted(commodity)),"
-         "%(quoted(quantity(scrub(display_amount)))),"
-         "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-         "%(quoted(join(note | xact.note)))\n");
-    });
+  OPTION__
+  (report_t, csv_format_,
+   CTOR(report_t, csv_format_) {
+    on(none,
+       "%(quoted(date)),"
+       "%(quoted(code)),"
+       "%(quoted(payee)),"
+       "%(quoted(display_account)),"
+       "%(quoted(commodity)),"
+       "%(quoted(quantity(scrub(display_amount)))),"
+       "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+       "%(quoted(join(note | xact.note)))\n");
+  });
 
   OPTION_(report_t, current, DO() { // -c
-      parent->HANDLER(limit_).on(string("--current"), "date<=today");
+      OTHER(limit_).on(whence, "date<=today");
     });
 
   OPTION_(report_t, daily, DO() { // -D
-      parent->HANDLER(period_).on(string("--daily"), "daily");
+      OTHER(period_).on(whence, "daily");
     });
 
   OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
-  OPTION_(report_t, depth_, DO_(args) {
-      parent->HANDLER(display_)
-        .on(string("--depth"), string("depth<=") + args.get<string>(1));
+  OPTION_(report_t, dc, DO() {
+      OTHER(amount_).expr.set_base_expr
+        ("(amount > 0 ? amount : 0, amount < 0 ? amount : 0)");
+
+      OTHER(register_format_)
+        .on(none,
+            "%(ansify_if("
+            "  ansify_if(justify(format_date(date), int(date_width)),"
+            "            green if color and date > today),"
+            "            bold if should_bold))"
+            " %(ansify_if("
+            "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+            "             bold if color and !cleared and actual),"
+            "             bold if should_bold))"
+            " %(ansify_if("
+            "   ansify_if(justify(truncated(display_account, int(account_width), "
+            "                               int(abbrev_len)), int(account_width)),"
+            "             blue if color),"
+            "             bold if should_bold))"
+            " %(ansify_if("
+            "   justify(scrub(abs(get_at(display_amount, 0))), int(amount_width), "
+            "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+            "             + int(account_width) + int(amount_width) + int(prepend_width),"
+            "           true, color),"
+            "           bold if should_bold))"
+            " %(ansify_if("
+            "   justify(scrub(abs(get_at(display_amount, 1))), int(amount_width), "
+            "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+            "             + int(account_width) + int(amount_width) + int(amount_width) + int(prepend_width),"
+            "           true, color),"
+            "           bold if should_bold))"
+            " %(ansify_if("
+            "   justify(scrub(get_at(display_total, 0) + get_at(display_total, 1)), int(total_width), "
+            "           5 + int(meta_width) + int(date_width) + int(payee_width)"
+            "             + int(account_width) + int(amount_width) + int(amount_width) + int(total_width)"
+            "             + int(prepend_width), true, color),"
+            "           bold if should_bold))\n%/"
+            "%(justify(\" \", int(date_width)))"
+            " %(ansify_if("
+            "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+            "                     int(payee_width)), int(payee_width)),"
+            "             bold if should_bold))"
+            " %$3 %$4 %$5 %$6\n");
+
+      OTHER(balance_format_)
+        .on(none,
+            "%(ansify_if("
+            "  justify(scrub(abs(get_at(display_total, 0))), 14,"
+            "          14 + int(prepend_width), true, color),"
+            "            bold if should_bold)) "
+            "%(ansify_if("
+            "  justify(scrub(abs(get_at(display_total, 1))), 14,"
+            "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
+            "            bold if should_bold)) "
+            "%(ansify_if("
+            "  justify(scrub(get_at(display_total, 0) + get_at(display_total, 1)), 14,"
+            "          14 + 2 + int(prepend_width) + int(total_width) + int(total_width), true, color),"
+            "            bold if should_bold))"
+            "  %(!options.flat ? depth_spacer : \"\")"
+            "%-(ansify_if("
+            "   ansify_if(partial_account(options.flat), blue if color),"
+            "             bold if should_bold))\n%/"
+            "%$1 %$2 %$3\n%/"
+            "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+            "--------------------------------------------\n");
+  });
+
+  OPTION_(report_t, depth_, DO_(str) {
+      OTHER(display_).on(whence, string("depth<=") + str);
     });
 
   OPTION_(report_t, deviation, DO() {
-      parent->HANDLER(display_total_)
-        .set_expr(string("--deviation"), "amount_expr-total_expr/count");
+      OTHER(display_total_)
+        .on(whence, "display_amount-display_total");
     });
 
-  OPTION__
-  (report_t, display_, // -d
-   CTOR(report_t, display_) {}
-   virtual void on_with(const optional<string>& whence, const value_t& text) {
-     if (! handled)
-       option_t<report_t>::on_with(whence, text);
-     else
-       option_t<report_t>::on_with(whence,
-                                   string_value(string("(") + str() + ")&(" +
-                                                text.as_string() + ")"));
+  OPTION_
+  (report_t, display_,
+   DO_(str) { // -d
+     if (handled)
+       value = string("(") + value + ")&(" + str + ")";
    });
 
   OPTION__
   (report_t, display_amount_,
-   expr_t expr;
-   CTOR(report_t, display_amount_) {
-     set_expr(none, "amount_expr");
-   }
-   void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
+   DECL1(report_t, display_amount_, merged_expr_t, expr,
+         ("display_amount", "amount_expr")) {}
+   DO_(str) {
+     expr.append(str);
    });
 
   OPTION__
   (report_t, display_total_,
-   expr_t expr;
-   CTOR(report_t, display_total_) {
-     set_expr(none, "total_expr");
-   }
-   void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
+   DECL1(report_t, display_total_, merged_expr_t, expr,
+         ("display_total", "total_expr")) {}
+   DO_(str) {
+     expr.append(str);
    });
 
   OPTION(report_t, dow);
-  OPTION(report_t, effective);
+  OPTION(report_t, aux_date);
   OPTION(report_t, empty); // -E
 
-  OPTION_(report_t, end_, DO_(args) { // -e
-      date_interval_t  interval(args.get<string>(1));
+  OPTION_(report_t, end_, DO_(str) { // -e
       // Use begin() here so that if the user says --end=2008, we end on
       // 2008/01/01 instead of 2009/01/01 (which is what end() would
       // return).
-      optional<date_t> end = interval.begin();
-      if (! end)
+      date_interval_t interval(str);
+      if (optional<date_t> end = interval.begin()) {
+        string predicate = "date<[" + to_iso_extended_string(*end) + "]";
+        OTHER(limit_).on(whence, predicate);
+
+        parent->terminus = datetime_t(*end);
+      } else {
         throw_(std::invalid_argument,
                _("Could not determine end of period '%1'")
-               << args.get<string>(1));
-
-      string predicate = "date<[" + to_iso_extended_string(*end) + "]";
-      parent->HANDLER(limit_).on(string("--end"), predicate);
-
-      parent->terminus = datetime_t(*end);
+               << str);
+      }
     });
 
   OPTION(report_t, equity);
   OPTION(report_t, exact);
 
-  OPTION_(report_t, exchange_, DO_(args) { // -X
-      on_with(args.get<string>(0), args[1]);
-      call_scope_t no_args(*parent);
-      no_args.push_back(args[0]);
-      parent->HANDLER(market).parent = parent;
-      parent->HANDLER(market).handler(no_args);
+  OPTION_(report_t, exchange_, DO_() { // -X
+      // Using -X implies -V.  The main difference is that now
+      // HANDLER(exchange_) contains the name of a commodity, which
+      // is accessed via the "exchange" value expression function.
+      OTHER(market).on(whence);
     });
 
   OPTION(report_t, flat);
@@ -607,115 +674,112 @@ public:
   OPTION(report_t, format_); // -F
 
   OPTION_(report_t, gain, DO() { // -G
-      parent->HANDLER(revalued).on_only(string("--gain"));
-      parent->HANDLER(amount_).set_expr(string("--gain"), "(amount, cost)");
+      OTHER(revalued).on(whence);
+      OTHER(amount_).expr.set_base_expr("(amount, cost)");
+
       // Since we are displaying the amounts of revalued postings, they
       // will end up being composite totals, and hence a pair of pairs.
-      parent->HANDLER(display_amount_)
-        .set_expr(string("--gain"),
-                  "use_direct_amount ? amount :"
-                  " (is_seq(get_at(amount_expr, 0)) ?"
-                  "  get_at(get_at(amount_expr, 0), 0) :"
-                  "  market(get_at(amount_expr, 0), value_date, exchange)"
-                  "  - get_at(amount_expr, 1))");
-      parent->HANDLER(revalued_total_)
-        .set_expr(string("--gain"),
-                  "(market(get_at(total_expr, 0), value_date, exchange), "
-                  "get_at(total_expr, 1))");
-      parent->HANDLER(display_total_)
-        .set_expr(string("--gain"),
-                  "use_direct_amount ? total_expr :"
-                  " market(get_at(total_expr, 0), value_date, exchange)"
-                  " - get_at(total_expr, 1)");
+      OTHER(display_amount_)
+        .on(whence,
+            "use_direct_amount ? amount :"
+            " (is_seq(get_at(amount_expr, 0)) ?"
+            "  get_at(get_at(amount_expr, 0), 0) :"
+            "  market(get_at(amount_expr, 0), value_date, exchange)"
+            "  - get_at(amount_expr, 1))");
+      OTHER(revalued_total_)
+        .on(whence,
+            "(market(get_at(total_expr, 0), value_date, exchange), "
+            "get_at(total_expr, 1))");
+      OTHER(display_total_)
+        .on(whence,
+            "use_direct_amount ? total_expr :"
+            " market(get_at(total_expr, 0), value_date, exchange)"
+            " - get_at(total_expr, 1)");
     });
 
   OPTION(report_t, generated);
 
-  OPTION__
+  OPTION_
   (report_t, group_by_,
    expr_t expr;
-   CTOR(report_t, group_by_) {}
-   void set_expr(const optional<string>& whence, const string& str) {
+   DO_(str) {
      expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
    });
 
-  OPTION__(report_t, group_title_format_, CTOR(report_t, group_title_format_) {
-      on(none, "%(value)\n");
-    });
+  OPTION__
+  (report_t, group_title_format_,
+   CTOR(report_t, group_title_format_) {
+    on(none, "%(value)\n");
+  });
 
   OPTION(report_t, head_);
+
+  OPTION_(report_t, historical, DO() { // -H
+      OTHER(market).on(whence);
+      OTHER(amount_)
+        .on(whence, "nail_down(amount_expr, "
+            "market(amount_expr, value_date, exchange))");
+    });
+
+  OPTION(report_t, immediate);
   OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {
-      parent->HANDLER(amount_).set_expr(string("--invert"), "-amount");
+      OTHER(amount_).on(whence, "-amount_expr");
     });
 
-  OPTION__
-  (report_t, limit_, // -l
-   CTOR(report_t, limit_) {}
-   virtual void on_with(const optional<string>& whence, const value_t& text) {
-     if (! handled)
-       option_t<report_t>::on_with(whence, text);
-     else
-       option_t<report_t>::on_with(whence,
-                                   string_value(string("(") + str() + ")&(" +
-                                                text.as_string() + ")"));
+  OPTION_
+  (report_t, limit_,
+   DO_(str) { // -l
+     if (handled)
+       value = string("(") + value + ")&(" + str + ")";
    });
 
   OPTION(report_t, lot_dates);
   OPTION(report_t, lot_prices);
-  OPTION(report_t, lot_tags);
+  OPTION(report_t, lot_notes);
   OPTION(report_t, lots);
   OPTION(report_t, lots_actual);
 
   OPTION_(report_t, market, DO() { // -V
-      parent->HANDLER(revalued).on_only(string("--market"));
-      parent->HANDLER(display_amount_)
-        .set_expr(string("--market"),
-                  "market(amount_expr, value_date, exchange)");
-      parent->HANDLER(display_total_)
-        .set_expr(string("--market"),
-                  "market(total_expr, value_date, exchange)");
+      OTHER(revalued).on(whence);
+
+      OTHER(display_amount_)
+        .on(whence, "market(display_amount, value_date, exchange)");
+      OTHER(display_total_)
+        .on(whence, "market(display_total, value_date, exchange)");
     });
 
   OPTION(report_t, meta_);
 
   OPTION_(report_t, monthly, DO() { // -M
-      parent->HANDLER(period_).on(string("--monthly"), "monthly");
+      OTHER(period_).on(whence, "monthly");
     });
 
   OPTION_(report_t, no_color, DO() {
-      parent->HANDLER(color).off();
+      OTHER(color).off();
     });
 
   OPTION(report_t, no_rounding);
   OPTION(report_t, no_titles);
   OPTION(report_t, no_total);
 
-  OPTION_(report_t, now_, DO_(args) {
-      date_interval_t interval(args.get<string>(1));
-      optional<date_t> begin = interval.begin();
-      if (! begin)
+  OPTION_(report_t, now_, DO_(str) {
+      date_interval_t interval(str);
+      if (optional<date_t> begin = interval.begin()) {
+        ledger::epoch = parent->terminus = datetime_t(*begin);
+      } else {
         throw_(std::invalid_argument,
                _("Could not determine beginning of period '%1'")
-               << args.get<string>(1));
-      ledger::epoch = parent->terminus = datetime_t(*begin);
+               << str);
+      }
     });
 
-  OPTION__
+  OPTION_
   (report_t, only_,
-   CTOR(report_t, only_) {}
-   virtual void on_with(const optional<string>& whence, const value_t& text) {
-     if (! handled)
-       option_t<report_t>::on_with(whence, text);
-     else
-       option_t<report_t>::on_with(whence,
-                                   string_value(string("(") + str() + ")&(" +
-                                                text.as_string() + ")"));
+   DO_(str) {
+     if (handled)
+       value = string("(") + value + ")&(" + str + ")";
    });
 
   OPTION(report_t, output_); // -o
@@ -736,201 +800,197 @@ public:
          setenv("LESS", "-FRSX", 0); // don't overwrite
        }
      }
-   }
-   virtual void on_with(const optional<string>& whence, const value_t& text) {
-     string cmd(text.to_string());
-     if (cmd == "" || cmd == "false" || cmd == "off" ||
-         cmd == "none" || cmd == "no" || cmd == "disable")
-       option_t<report_t>::off();
-     else
-       option_t<report_t>::on_with(whence, text);
    });
 #else // HAVE_ISATTY
-  OPTION__
-  (report_t, pager_,
-   CTOR(report_t, pager_) {
-   }
-   virtual void on_with(const optional<string>& whence, const value_t& text) {
-     string cmd(text.to_string());
-     if (cmd == "" || cmd == "false" || cmd == "off" ||
-         cmd == "none" || cmd == "no" || cmd == "disable")
-       option_t<report_t>::off();
-     else
-       option_t<report_t>::on_with(whence, text);
-   });
+  OPTION(report_t, pager_);
 #endif // HAVE_ISATTY
+
+  OPTION_(report_t, no_pager, DO() {
+      OTHER(pager_).off();
+    });
 
   OPTION(report_t, payee_);
 
   OPTION_(report_t, pending, DO() { // -C
-      parent->HANDLER(limit_).on(string("--pending"), "pending");
+      OTHER(limit_).on(whence, "pending");
     });
 
   OPTION_(report_t, percent, DO() { // -%
-      parent->HANDLER(total_)
-        .set_expr(string("--percent"),
-                  "((is_account&parent&parent.total)?"
-                  "  percent(scrub(total), scrub(parent.total)):0)");
+      OTHER(total_)
+        .on(whence,
+            "((is_account&parent&parent.total)?"
+            "  percent(scrub(total), scrub(parent.total)):0)");
     });
 
-  OPTION__
-  (report_t, period_, // -p
-   CTOR(report_t, period_) {}
-   virtual void on_with(const optional<string>& whence, const value_t& text) {
-     if (! handled)
-       option_t<report_t>::on_with(whence, text);
-     else
-       option_t<report_t>::on_with(whence,
-                                   string_value(text.as_string() + " " + str()));
+  OPTION_
+  (report_t, period_,
+   DO_(str) { // -p
+     if (handled)
+       value += string(" ") + str;
    });
 
   OPTION(report_t, pivot_);
 
-  OPTION__(report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
-      on(none,
-         "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
-    });
+  OPTION__
+  (report_t, plot_amount_format_,
+   CTOR(report_t, plot_amount_format_) {
+    on(none,
+       "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
+  });
 
-  OPTION__(report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-      on(none,
-         "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
-    });
+  OPTION__
+  (report_t, plot_total_format_,
+   CTOR(report_t, plot_total_format_) {
+    on(none,
+       "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
+  });
 
   OPTION(report_t, prepend_format_);
-  OPTION_(report_t, prepend_width_, DO_(args) {
-      value = args.get<long>(1);
-    });
+  OPTION(report_t, prepend_width_);
 
   OPTION_(report_t, price, DO() { // -I
-      parent->HANDLER(display_amount_)
-        .set_expr(string("--price"), "price(amount_expr)");
-      parent->HANDLER(display_total_)
-        .set_expr(string("--price"), "price(total_expr)");
+      OTHER(amount_).expr.set_base_expr("price");
     });
 
-  OPTION__(report_t, prices_format_, CTOR(report_t, prices_format_) {
-      on(none,
-         "%(date) %-8(display_account) %(justify(scrub(display_amount), 12, "
-         "    2 + 9 + 8 + 12, true, color))\n");
-    });
+  OPTION__
+  (report_t, prices_format_,
+   CTOR(report_t, prices_format_) {
+    on(none,
+       "%(date) %-8(display_account) %(justify(scrub(display_amount), 12, "
+       "    2 + 9 + 8 + 12, true, color))\n");
+  });
 
-  OPTION__(report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
-      on(none,
-         "P %(datetime) %(display_account) %(scrub(display_amount))\n");
-    });
+  OPTION__
+  (report_t, pricedb_format_,
+   CTOR(report_t, pricedb_format_) {
+    on(none,
+       "P %(datetime) %(display_account) %(scrub(display_amount))\n");
+  });
+
+  OPTION(report_t, primary_date);
 
   OPTION_(report_t, quantity, DO() { // -O
-      parent->HANDLER(revalued).off();
-      parent->HANDLER(amount_).set_expr(string("--quantity"), "amount");
-      parent->HANDLER(total_).set_expr(string("--quantity"), "total");
+      OTHER(revalued).off();
+
+      OTHER(amount_).expr.set_base_expr("amount");
+      OTHER(total_).expr.set_base_expr("total");
     });
 
   OPTION_(report_t, quarterly, DO() {
-      parent->HANDLER(period_).on(string("--quarterly"), "quarterly");
+      OTHER(period_).on(whence, "quarterly");
     });
 
   OPTION(report_t, raw);
 
   OPTION_(report_t, real, DO() { // -R
-      parent->HANDLER(limit_).on(string("--real"), "real");
+      OTHER(limit_).on(whence, "real");
     });
 
-  OPTION__(report_t, register_format_, CTOR(report_t, register_format_) {
-      on(none,
-         "%(ansify_if("
-         "  ansify_if(justify(format_date(date), date_width),"
-         "            green if color and date > today),"
-         "            bold if should_bold))"
-         " %(ansify_if("
-         "   ansify_if(justify(truncated(payee, payee_width), payee_width), "
-         "             bold if color and !cleared and actual),"
-         "             bold if should_bold))"
-         " %(ansify_if("
-         "   ansify_if(justify(truncated(display_account, account_width, "
-         "                               abbrev_len), account_width),"
-         "             blue if color),"
-         "             bold if should_bold))"
-         " %(ansify_if("
-         "   justify(scrub(display_amount), amount_width, "
-         "           3 + meta_width + date_width + payee_width"
-         "             + account_width + amount_width + prepend_width,"
-         "           true, color),"
-         "           bold if should_bold))"
-         " %(ansify_if("
-         "   justify(scrub(display_total), total_width, "
-         "           4 + meta_width + date_width + payee_width"
-         "             + account_width + amount_width + total_width"
-         "             + prepend_width, true, color),"
-         "           bold if should_bold))\n%/"
-         "%(justify(\" \", date_width))"
-         " %(ansify_if("
-         "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
-         "                     payee_width), payee_width),"
-         "             bold if should_bold))"
-         " %$3 %$4 %$5\n");
-    });
+  OPTION__
+  (report_t, register_format_,
+   CTOR(report_t, register_format_) {
+    on(none,
+       "%(ansify_if("
+       "  ansify_if(justify(format_date(date), int(date_width)),"
+       "            green if color and date > today),"
+       "            bold if should_bold))"
+       " %(ansify_if("
+       "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+       "             bold if color and !cleared and actual),"
+       "             bold if should_bold))"
+       " %(ansify_if("
+       "   ansify_if(justify(truncated(display_account, int(account_width), "
+       "                               int(abbrev_len)), int(account_width)),"
+       "             blue if color),"
+       "             bold if should_bold))"
+       " %(ansify_if("
+       "   justify(scrub(display_amount), int(amount_width), "
+       "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+       "             + int(account_width) + int(amount_width) + int(prepend_width),"
+       "           true, color),"
+       "           bold if should_bold))"
+       " %(ansify_if("
+       "   justify(scrub(display_total), int(total_width), "
+       "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+       "             + int(account_width) + int(amount_width) + int(total_width)"
+       "             + int(prepend_width), true, color),"
+       "           bold if should_bold))\n%/"
+       "%(justify(\" \", int(date_width)))"
+       " %(ansify_if("
+       "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+       "                     int(payee_width)), int(payee_width)),"
+       "             bold if should_bold))"
+       " %$3 %$4 %$5\n");
+  });
 
   OPTION(report_t, related); // -r
 
   OPTION_(report_t, related_all, DO() {
-      parent->HANDLER(related).on_only(string("--related-all"));
+      OTHER(related).on(whence);
     });
 
   OPTION(report_t, revalued);
   OPTION(report_t, revalued_only);
 
-  OPTION__
+  OPTION_
   (report_t, revalued_total_,
    expr_t expr;
-   CTOR(report_t, revalued_total_) {}
-   void set_expr(const optional<string>& whence, const string& str) {
+   DO_(str) {
      expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
    });
+
+  OPTION(report_t, rich_data);
 
   OPTION(report_t, seed_);
 
-  OPTION_(report_t, sort_, DO_(args) { // -S
-      on_with(args.get<string>(0), args[1]);
-      parent->HANDLER(sort_xacts_).off();
-      parent->HANDLER(sort_all_).off();
+  OPTION_(report_t, sort_, DO_(str) { // -S
+      OTHER(sort_xacts_).off();
+      OTHER(sort_all_).off();
     });
 
-  OPTION_(report_t, sort_all_, DO_(args) {
-      parent->HANDLER(sort_).on_with(string("--sort-all"), args[1]);
-      parent->HANDLER(sort_xacts_).off();
+  OPTION_(report_t, sort_all_, DO_(str) {
+      OTHER(sort_).on(whence, str);
+      OTHER(sort_xacts_).off();
     });
 
-  OPTION_(report_t, sort_xacts_, DO_(args) {
-      parent->HANDLER(sort_).on_with(string("--sort-xacts"), args[1]);
-      parent->HANDLER(sort_all_).off();
+  OPTION_(report_t, sort_xacts_, DO_(str) {
+      OTHER(sort_).on(whence, str);
+      OTHER(sort_all_).off();
     });
 
   OPTION(report_t, start_of_week_);
   OPTION(report_t, subtotal); // -s
   OPTION(report_t, tail_);
 
+  OPTION_(report_t, time_report, DO() {
+      OTHER(balance_format_)
+        .on(none,
+            "%(justify(earliest_checkin ? "
+            "          format_datetime(earliest_checkin) : \"\", 19, -1, true))  "
+            "%(justify(latest_checkout ? "
+            "          format_datetime(latest_checkout) : \"\", 19, -1, true))  "
+            "%(ansify_if("
+            "  justify(scrub(display_total), 8,"
+            "          8 + 4 + 19 * 2, true, color), bold if should_bold))"
+            "  %(!options.flat ? depth_spacer : \"\")"
+            "%-(ansify_if("
+            "   ansify_if(partial_account(options.flat), blue if color),"
+            "             bold if should_bold))\n%/"
+            "%$1  %$2  %$3\n%/"
+            "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+            "--------------------------------------------------\n");
+    });
+
   OPTION__
   (report_t, total_, // -T
-   expr_t expr;
-   CTOR(report_t, total_) {
-     set_expr(none, "total");
-   }
-   void set_expr(const optional<string>& whence, const string& str) {
-     expr = str;
-     on(whence, str);
-   }
-   DO_(args) {
-     set_expr(args.get<string>(0), args.get<string>(1));
+   DECL1(report_t, total_, merged_expr_t, expr, ("total_expr", "total")) {}
+   DO_(str) {
+     expr.append(str);
    });
 
   OPTION(report_t, total_data); // -J
 
-  OPTION_(report_t, truncate_, DO_(args) {
-      string style(args.get<string>(1));
+  OPTION_(report_t, truncate_, DO_(style) {
       if (style == "leading")
         format_t::default_style = format_t::TRUNCATE_LEADING;
       else if (style == "middle")
@@ -948,7 +1008,7 @@ public:
     });
 
   OPTION_(report_t, uncleared, DO() { // -U
-      parent->HANDLER(limit_).on(string("--uncleared"), "uncleared|pending");
+      OTHER(limit_).on(whence, "uncleared|pending");
     });
 
   OPTION(report_t, unrealized);
@@ -957,50 +1017,29 @@ public:
   OPTION(report_t, unrealized_losses_);
 
   OPTION_(report_t, unround, DO() {
-      parent->HANDLER(display_amount_)
-        .set_expr(string("--unround"), "unrounded(amount_expr)");
-      parent->HANDLER(display_total_)
-        .set_expr(string("--unround"), "unrounded(total_expr)");
+      OTHER(amount_).on(whence, "unrounded(amount_expr)");
+      OTHER(total_).on(whence, "unrounded(total_expr)");
     });
 
   OPTION_(report_t, weekly, DO() { // -W
-      parent->HANDLER(period_).on(string("--weekly"), "weekly");
+      OTHER(period_).on(whence, "weekly");
     });
 
   OPTION_(report_t, wide, DO() { // -w
-      parent->HANDLER(columns_).on_with(string("--wide"), 132L);
+      OTHER(columns_).on(whence, "132");
     });
 
   OPTION_(report_t, yearly, DO() { // -Y
-      parent->HANDLER(period_).on(string("--yearly"), "yearly");
+      OTHER(period_).on(whence, "yearly");
     });
 
-  OPTION__(report_t, meta_width_,
-           bool specified;
-           CTOR(report_t, meta_width_) { specified = false; }
-           DO_(args) { value = args.get<long>(1); specified = true; });
-  OPTION__(report_t, date_width_,
-           bool specified;
-           CTOR(report_t, date_width_) { specified = false; }
-           DO_(args) { value = args.get<long>(1); specified = true; });
-  OPTION__(report_t, payee_width_,
-           bool specified;
-           CTOR(report_t, payee_width_) { specified = false; }
-           DO_(args) { value = args.get<long>(1); specified = true; });
-  OPTION__(report_t, account_width_,
-           bool specified;
-           CTOR(report_t, account_width_) { specified = false; }
-           DO_(args) { value = args.get<long>(1); specified = true; });
-  OPTION__(report_t, amount_width_,
-           bool specified;
-           CTOR(report_t, amount_width_) { specified = false; }
-           DO_(args) { value = args.get<long>(1); specified = true; });
-  OPTION__(report_t, total_width_,
-           bool specified;
-           CTOR(report_t, total_width_) { specified = false; }
-           DO_(args) { value = args.get<long>(1); specified = true; });
+  OPTION(report_t, meta_width_);
+  OPTION(report_t, date_width_);
+  OPTION(report_t, payee_width_);
+  OPTION(report_t, account_width_);
+  OPTION(report_t, amount_width_);
+  OPTION(report_t, total_width_);
 };
-
 
 template <class Type        = post_t,
           class handler_ptr = post_handler_ptr,
@@ -1014,9 +1053,18 @@ class reporter
   string    whence;
 
 public:
-  reporter(item_handler<Type> * _handler,
+  reporter(shared_ptr<item_handler<Type> > _handler,
            report_t& _report, const string& _whence)
-    : handler(_handler), report(_report), whence(_whence) {}
+    : handler(_handler), report(_report), whence(_whence) {
+    TRACE_CTOR(reporter, "item_handler<Type>, report_t&, string");
+  }
+  reporter(const reporter& other)
+    : handler(other.handler), report(other.report), whence(other.whence) {
+    TRACE_CTOR(reporter, "copy");
+  }
+  ~reporter() throw() {
+    TRACE_DTOR(reporter);
+  }
 
   value_t operator()(call_scope_t& args)
   {

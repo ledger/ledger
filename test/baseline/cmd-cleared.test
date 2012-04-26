@@ -1,0 +1,36 @@
+2012-02-23 * Test 1
+    A     10.00
+    B
+
+2012-02-24 Test 1
+    C     15.00
+    D
+
+; leave E/F uncleared
+2012-02-25 Test 1
+    E     20.00
+    F
+
+; have a cleared posting last for C
+2012-02-26 * Test 1
+    C     30.00
+    G
+
+; have an uncleared posting last for A
+2012-02-27 Test 1
+    A     40.00
+    H
+
+test cleared
+              50                  10    12-Feb-23    A
+             -10                 -10    12-Feb-23    B
+              45                  30    12-Feb-26    C
+             -15                   0                 D
+              20                   0                 E
+             -20                   0                 F
+             -30                 -30    12-Feb-26    G
+             -40                   0                 H
+----------------  ----------------    ---------
+               0                   0             
+end test
+

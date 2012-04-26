@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -81,7 +81,8 @@ post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
   return temp;
 }
 
-post_t& temporaries_t::create_post(xact_t& xact, account_t * account)
+post_t& temporaries_t::create_post(xact_t& xact, account_t * account,
+                                   bool bidir_link)
 {
   if (! post_temps)
     post_temps = std::list<post_t>();
@@ -93,7 +94,10 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t * account)
   temp.account = account;
 
   temp.account->add_post(&temp);
-  xact.add_post(&temp);
+  if (bidir_link)
+    xact.add_post(&temp);
+  else
+    temp.xact = &xact;
 
   return temp;
 }

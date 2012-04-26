@@ -1,0 +1,57 @@
+; -*- ledger -*-
+D 1000,00 PLN
+N $
+N h
+N PLN
+N zł
+C 1,00 PLN = 1,00
+
+2010-05-19 * ŁUKASZ STELMACH
+    Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+    Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * ŁUKASZ STELMACH
+    Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+    Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto<30                 -975,98 PLN @ 0,204922 GBP
+   Assets:Checking:Konto24 GBP               200,00 GBP ; fikimiki
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto<30                 -975,98 PLN @ 0,204922 GBP
+   Assets:Checking:Konto24 GBP               200,00 GBP ; fikimiki
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+   Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+   Assets:Checking:Konto<30                 -975,98 PLN
+
+test reg
+10-May-19 ŁUKASZ STELMACH       As:Checkin:Konto24 GBP   200,00 GBP   200,00 GBP
+                                Asse:Checking:Konto<30      -975.98      -975.98
+                                                                      200,00 GBP
+10-May-19 ŁUKASZ STELMACH       As:Checkin:Konto24 GBP   200,00 GBP      -975.98
+                                                                      400,00 GBP
+                                Asse:Checking:Konto<30      -975.98     -1951.96
+                                                                      400,00 GBP
+10-May-19 ŁUKASZ STELMACH       Asse:Checking:Konto<30      -975.98     -2927.94
+                                                                      400,00 GBP
+                                As:Checkin:Konto24 GBP   200,00 GBP     -2927.94
+                                                                      600,00 GBP
+10-May-19 ŁUKASZ STELMACH       Asse:Checking:Konto<30      -975.98     -3903.92
+                                                                      600,00 GBP
+                                As:Checkin:Konto24 GBP   200,00 GBP     -3903.92
+                                                                      800,00 GBP
+10-May-19 ŁUKASZ STELMACH       As:Checkin:Konto24 GBP   200,00 GBP     -3903.92
+                                                                     1000,00 GBP
+                                Asse:Checking:Konto<30      -975.98      -4879.9
+                                                                     1000,00 GBP
+10-May-19 ŁUKASZ STELMACH       As:Checkin:Konto24 GBP   200,00 GBP      -4879.9
+                                                                     1200,00 GBP
+                                Asse:Checking:Konto<30      -975.98     -5855.88
+                                                                     1200,00 GBP
+end test

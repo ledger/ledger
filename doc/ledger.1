@@ -1,4 +1,4 @@
-.Dd June 22, 2010
+.Dd March 23, 2012
 .Dt ledger 1
 .Sh NAME
 .Nm ledger
@@ -32,6 +32,11 @@ or command loop, allowing several commands to be executed against the same
 dataset without reparsing.
 .Pp
 The following is a complete list of reporting commands accepted by Ledger:
+.Bl -tag -width accounts
+.It Nm accounts Oo Ar report-query Oc
+Lists all accounts for postings matching the
+.Ar report-query .
+.El
 .Pp
 .Bl -tag -width balance
 .It Nm balance Oo Ar report-query Oc
@@ -76,6 +81,12 @@ A special balance report which adds two extra columns: the cleared balance for
 each account, and the date of the most recent cleared posting in that account.
 For this accounting to be meaningful, the cleared flag must be set on at least
 one posting.  See the manual for more information.
+.It Nm commodities Oo Ar report-query Oc
+Lists all commodities for postings matching the
+.Ar report-query .
+.It Nm convert
+Reads data from a CSV (comma-separated values) file and generates Ledger
+transactions.
 .It Nm csv Oo Ar report-query Oc
 Report of postings matching the
 .Ar report-query
@@ -112,11 +123,19 @@ in a special account called
 .Li Equity:Opening Balances .
 The purpose of this report is to close the books for a prior year, while using
 these equity transactions to carry forward those balances.
+.It Nm org
+Produces a journal file suitable for use in the Emacs org mode.
+.It Nm payees Oo Ar report-query Oc
+Lists all payees for postings matching the
+.Ar report-query .
+.It Nm pricemap
+Produces a file which can be used to generate a graph with graphviz showing
+the relationship of commodities in the Ledger file.
 .It Nm prices Oo Ar report-query Oc
 Reports prices for all commodities in postings matching the
 .Ar report-query .
 The prices are reported with the granularity of a single day.
-.It Nm pricesdb Oo Ar report-query Oc
+.It Nm pricedb Oo Ar report-query Oc
 Reports prices for all commodities in postings matching the
 .Ar report-query .
 Prices are reported down to the second, using the same format as the
@@ -163,6 +182,7 @@ Show any gains (or losses) in commodity values over time.
 Only show the top
 .Ar number
 postings.
+.It Fl \-historical Pq Fl H
 .It Fl \-invert
 Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
@@ -230,6 +250,13 @@ This command requires that Python support be active.  If so, it starts up an
 HTTP server listening for requests on port 9000.  This provides an alternate
 interface to creating and viewing reports.  Note that this is very much a
 work-in-progress, and will not be fully functional until a later version.
+.It Nm select Oo Ar sql-query Oc
+List all postings matching the
+.Ar sql-query .
+This command allows to generate SQL-like queries.
+.It Nm source
+Parses a journal file and checks it for errors. Ledger will return success
+if no errors are found.
 .It Nm stats Oo Ar report-query Oc
 Provides summary information about all the postings matching
 .Ar report-query .
@@ -263,13 +290,14 @@ transactions they are contained in.  See the manual for more information.
 .It Fl \-account Ar STR
 .It Fl \-account-width Ar INT
 .It Fl \-actual Pq Fl L
-.It Fl \-actual-dates
 .It Fl \-add-budget
 .It Fl \-amount Ar EXPR Pq Fl t
 .It Fl \-amount-data Pq Fl j
 .It Fl \-amount-width Ar INT
 .It Fl \-anon
 .It Fl \-args-only
+.It Fl \-auto-match
+.It Fl \-aux-date
 .It Fl \-average Pq Fl A
 .It Fl \-balance-format Ar FMT
 .It Fl \-base
@@ -280,6 +308,7 @@ transactions they are contained in.  See the manual for more information.
 .It Fl \-budget-format Ar FMT
 .It Fl \-by-payee Pq Fl P
 .It Fl \-cache Ar FILE
+.It Fl \-check-payees
 .It Fl \-cleared Pq Fl C
 .It Fl \-cleared-format Ar FMT
 .It Fl \-collapse Pq Fl n
@@ -297,6 +326,8 @@ See
 .It Fl \-date-format Ar DATEFMT Pq Fl y
 .It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
+.It Fl \-day-break
+.It Fl \-dc
 .It Fl \-debug Ar STR
 .It Fl \-decimal-comma
 .It Fl \-depth Ar INT
@@ -306,12 +337,12 @@ See
 .It Fl \-display-total Ar EXPR
 .It Fl \-dow
 .It Fl \-download
-.It Fl \-effective
 .It Fl \-empty Pq Fl E
 .It Fl \-end Pq Fl e
 .It Fl \-equity
 .It Fl \-exact
 .It Fl \-exchange Ar COMM Oo , COMM, ... Oc Pq Fl X
+.It Fl \-explicit
 .It Fl \-file Ar FILE
 .It Fl \-first Ar INT
 See
@@ -335,6 +366,7 @@ See
 .It Fl \-help-calc
 .It Fl \-help-comm
 .It Fl \-help-disp
+.It Fl \-immediate
 .It Fl \-import Ar STR
 .It Fl \-init-file Ar FILE
 .It Fl \-inject Ar STR
@@ -346,8 +378,8 @@ See
 .It Fl \-leeway Ar INT Pq Fl Z
 .It Fl \-limit Ar EXPR Pq Fl l
 .It Fl \-lot-dates
+.It Fl \-lot-notes
 .It Fl \-lot-prices
-.It Fl \-lot-tags
 .It Fl \-lots
 .It Fl \-lots-actual
 .It Fl \-market Pq Fl V
@@ -356,6 +388,7 @@ See
 .It Fl \-meta-width Ar INT
 .It Fl \-monthly Pq Fl M
 .It Fl \-no-color
+.It Fl \-no-pager
 .It Fl \-no-rounding
 .It Fl \-no-titles
 .It Fl \-no-total
@@ -366,10 +399,12 @@ See
 .It Fl \-pager Ar STR
 .It Fl \-payee
 .It Fl \-payee-width Ar INT
+.It Fl \-pedantic
 .It Fl \-pending
 .It Fl \-percent Pq Fl \%
 .It Fl \-period Ar PERIOD Pq Fl p
 .It Fl \-period-sort
+.It Fl \-permissive
 .It Fl \-pivot Ar STR
 .It Fl \-plot-amount-format Ar FMT
 .It Fl \-plot-total-format Ar FMT
@@ -382,6 +417,7 @@ See
 .Fl \-leeway .
 .It Fl \-prices-format Ar FMT
 .It Fl \-pricedb-format Ar FMT
+.It Fl \-primary-date
 .It Fl \-quantity Pq Fl O
 .It Fl \-quarterly
 .It Fl \-raw
@@ -396,6 +432,7 @@ appeared in the original journal file.
 .It Fl \-revalued
 .It Fl \-revalued-only
 .It Fl \-revalued-total Ar EXPR
+.It Fl \-rich-data
 .It Fl \-seed Ar INT
 .It Fl \-script
 .It Fl \-sort Ar EXPR Pq Fl S
@@ -405,6 +442,7 @@ appeared in the original journal file.
 .It Fl \-strict
 .It Fl \-subtotal Pq Fl s
 .It Fl \-tail Ar INT
+.It Fl \-time-report
 .It Fl \-total Ar EXPR
 .It Fl \-total-data Pq Fl J
 .It Fl \-total-width Ar INT
@@ -416,8 +454,10 @@ appeared in the original journal file.
 .It Fl \-unrealized-gains
 .It Fl \-unrealized-losses
 .It Fl \-unround
+.It Fl \-value-expr Ar EXPR
 .It Fl \-verbose
 .It Fl \-verify
+.It Fl \-verify-memory
 .It Fl \-version
 .It Fl \-weekly Pq Fl W
 .It Fl \-wide Pq Fl w

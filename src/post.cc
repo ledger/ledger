@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "format.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -48,9 +49,9 @@ bool post_t::has_tag(const string& tag, bool inherit) const
   return false;
 }
 
-bool post_t::has_tag(const mask_t& tag_mask,
+bool post_t::has_tag(const mask_t&           tag_mask,
                      const optional<mask_t>& value_mask,
-                     bool inherit) const
+                     bool                    inherit) const
 {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
@@ -68,9 +69,9 @@ optional<value_t> post_t::get_tag(const string& tag, bool inherit) const
   return none;
 }
 
-optional<value_t> post_t::get_tag(const mask_t& tag_mask,
+optional<value_t> post_t::get_tag(const mask_t&           tag_mask,
                                   const optional<mask_t>& value_mask,
-                                  bool inherit) const
+                                  bool                    inherit) const
 {
   if (optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
@@ -91,21 +92,15 @@ date_t post_t::date() const
   if (xdata_ && is_valid(xdata_->date))
     return xdata_->date;
 
-  if (item_t::use_effective_date) {
-    if (_date_eff)
-      return *_date_eff;
-    else if (xact && xact->_date_eff)
-      return *xact->_date_eff;
+  if (item_t::use_aux_date) {
+    if (optional<date_t> aux = aux_date())
+      return *aux;
   }
 
-  if (! _date) {
-    assert(xact);
-    return xact->date();
-  }
-  return *_date;
+  return primary_date();
 }
 
-date_t post_t::actual_date() const
+date_t post_t::primary_date() const
 {
   if (xdata_ && is_valid(xdata_->date))
     return xdata_->date;
@@ -117,11 +112,11 @@ date_t post_t::actual_date() const
   return *_date;
 }
 
-optional<date_t> post_t::effective_date() const
+optional<date_t> post_t::aux_date() const
 {
-  optional<date_t> date = item_t::effective_date();
+  optional<date_t> date = item_t::aux_date();
   if (! date && xact)
-    return xact->effective_date();
+    return xact->aux_date();
   return date;
 }
 
@@ -173,7 +168,8 @@ namespace {
     return string_value(post.payee());
   }
 
-  value_t get_note(post_t& post) {
+  value_t get_note(post_t& post)
+  {
     if (post.note || post.xact->note) {
       string note = post.note ? *post.note : empty_string;
       note += post.xact->note ? *post.xact->note : empty_string;
@@ -186,14 +182,9 @@ namespace {
   value_t get_magnitude(post_t& post) {
     return post.xact->magnitude();
   }
-  value_t get_idstring(post_t& post) {
-    return string_value(post.xact->idstring());
-  }
-  value_t get_id(post_t& post) {
-    return string_value(post.xact->id());
-  }
 
-  value_t get_amount(post_t& post) {
+  value_t get_amount(post_t& post)
+  {
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value;
     else if (post.amount.is_null())
@@ -220,7 +211,8 @@ namespace {
     }
   }
 
-  value_t get_commodity_is_primary(post_t& post) {
+  value_t get_commodity_is_primary(post_t& post)
+  {
     if (post.has_xdata() &&
         post.xdata().has_flags(POST_EXT_COMPOUND))
       return post.xdata().compound_value.to_amount()
@@ -243,6 +235,15 @@ namespace {
       return 0L;
     else
       return post.amount;
+  }
+
+  value_t get_price(post_t& post) {
+    if (post.amount.is_null())
+      return 0L;
+    if (post.amount.has_annotation() && post.amount.annotation().price)
+      return *post.amount.price();
+    else
+      return get_cost(post);
   }
 
   value_t get_total(post_t& post) {
@@ -347,7 +348,14 @@ namespace {
     return post.date();
   }
   value_t get_datetime(post_t& post) {
-    return post.xdata().datetime;
+    return (! post.xdata().datetime.is_not_a_date_time() ?
+            post.xdata().datetime : datetime_t(post.date()));
+  }
+  value_t get_checkin(post_t& post) {
+    return post.checkin ? *post.checkin : NULL_VALUE;
+  }
+  value_t get_checkout(post_t& post) {
+    return post.checkout ? *post.checkout : NULL_VALUE;
   }
 
   template <value_t (*Func)(post_t&)>
@@ -440,6 +448,10 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
     else if (name == "commodity")
       return WRAP_FUNCTOR(&get_commodity);
+    else if (name == "checkin")
+      return WRAP_FUNCTOR(get_wrapper<&get_checkin>);
+    else if (name == "checkout")
+      return WRAP_FUNCTOR(get_wrapper<&get_checkout>);
     break;
 
   case 'd':
@@ -459,10 +471,6 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'i':
     if (name == "index")
       return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (name == "id")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    else if (name == "idstring")
-      return WRAP_FUNCTOR(get_wrapper<&get_idstring>);
     break;
 
   case 'm':
@@ -484,6 +492,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     else if (name == "primary")
       return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
+    else if (name == "price")
+      return WRAP_FUNCTOR(get_wrapper<&get_price>);
     else if (name == "parent")
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
     break;
@@ -616,7 +626,8 @@ bool post_t::valid() const
 void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
 {
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
-    add_or_set_value(value, xdata_->compound_value);
+    if (! xdata_->compound_value.is_null())
+      add_or_set_value(value, xdata_->compound_value);
   }
   else if (expr) {
     bind_scope_t bound_scope(*expr->get_context(),
@@ -647,6 +658,44 @@ void post_t::set_reported_account(account_t * acct)
   acct->xdata().reported_posts.push_back(this);
 }
 
+void extend_post(post_t& post, journal_t& journal)
+{
+  commodity_t& comm(post.amount.commodity());
+
+  annotation_t * details =
+    (comm.has_annotation() ?
+     &as_annotated_commodity(comm).details : NULL);
+
+  if (! details || ! details->value_expr) {
+    optional<expr_t> value_expr;
+
+    if (optional<value_t> data = post.get_tag(_("Value")))
+      value_expr = expr_t(data->to_string());
+
+    if (! value_expr)
+      value_expr = post.account->value_expr;
+
+    if (! value_expr)
+      value_expr = post.amount.commodity().value_expr();
+
+    if (! value_expr)
+      value_expr = journal.value_expr;
+
+    if (value_expr) {
+      if (! details) {
+        annotation_t new_details;
+        new_details.value_expr = value_expr;
+
+        commodity_t * new_comm =
+          commodity_pool_t::current_pool->find_or_create(comm, new_details);
+        post.amount.set_commodity(*new_comm);
+      } else {
+        details->value_expr = value_expr;
+      }
+    }
+  }
+}
+
 void to_xml(std::ostream& out, const post_t& post)
 {
   push_xml x(out, "posting", true);
@@ -667,9 +716,9 @@ void to_xml(std::ostream& out, const post_t& post)
     push_xml y(out, "date");
     to_xml(out, *post._date, false);
   }
-  if (post._date_eff) {
-    push_xml y(out, "effective-date");
-    to_xml(out, *post._date_eff, false);
+  if (post._date_aux) {
+    push_xml y(out, "aux-date");
+    to_xml(out, *post._date_aux, false);
   }
 
   if (post.account) {

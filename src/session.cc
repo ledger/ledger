@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -62,12 +62,14 @@ void set_session_context(session_t * session)
 session_t::session_t()
   : flush_on_next_data_file(false), journal(new journal_t)
 {
-  TRACE_CTOR(session_t, "");
-
   if (const char * home_var = std::getenv("HOME"))
     HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
   else
     HANDLER(price_db_).on(none, path("./.pricedb").string());
+
+  parsing_context.push();
+
+  TRACE_CTOR(session_t, "");
 }
 
 std::size_t session_t::read_data(const string& master_account)
@@ -89,13 +91,31 @@ std::size_t session_t::read_data(const string& master_account)
 
   std::size_t xact_count = 0;
 
-  account_t * acct = journal->master;
-  if (! master_account.empty())
+  account_t * acct;
+  if (master_account.empty())
+    acct = journal->master;
+  else
     acct = journal->find_account(master_account);
 
   optional<path> price_db_path;
   if (HANDLED(price_db_))
     price_db_path = resolve_path(HANDLER(price_db_).str());
+
+  if (HANDLED(explicit))
+    journal->force_checking = true;
+  if (HANDLED(check_payees))
+    journal->check_payees = true;
+  if (HANDLED(day_break))
+    journal->day_break = true;
+
+  if (HANDLED(permissive))
+    journal->checking_style = journal_t::CHECK_PERMISSIVE;
+  else if (HANDLED(pedantic))
+    journal->checking_style = journal_t::CHECK_ERROR;
+  else if (HANDLED(strict))
+    journal->checking_style = journal_t::CHECK_WARNING;
+  else if (HANDLED(value_expr_))
+    journal->value_expr     = HANDLER(value_expr_).str();
 
 #if defined(HAVE_BOOST_SERIALIZATION)
   optional<archive_t> cache;
@@ -108,8 +128,17 @@ std::size_t session_t::read_data(const string& master_account)
 #endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
-        if (journal->read(*price_db_path) > 0)
-          throw_(parse_error, _("Transactions not allowed in price history file"));
+        parsing_context.push(*price_db_path);
+        parsing_context.get_current().journal = journal.get();
+        try {
+          if (journal->read(parsing_context) > 0)
+            throw_(parse_error, _("Transactions not allowed in price history file"));
+        }
+        catch (...) {
+          parsing_context.pop();
+          throw;
+        }
+        parsing_context.pop();
       }
     }
 
@@ -128,12 +157,22 @@ std::size_t session_t::read_data(const string& master_account)
         }
         buffer.flush();
 
-        std::istringstream buf_in(buffer.str());
-        xact_count += journal->read(buf_in, "/dev/stdin", acct);
-        journal->sources.push_back(journal_t::fileinfo_t());
+        shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+        parsing_context.push(stream);
       } else {
-        xact_count += journal->read(pathname, acct);
+        parsing_context.push(pathname);
       }
+
+      parsing_context.get_current().journal = journal.get();
+      parsing_context.get_current().master  = acct;
+      try {
+        xact_count += journal->read(parsing_context);
+      }
+      catch (...) {
+        parsing_context.pop();
+        throw;
+      }
+      parsing_context.pop();
     }
 
     DEBUG("ledger.read", "xact_count [" << xact_count
@@ -154,7 +193,7 @@ std::size_t session_t::read_data(const string& master_account)
   return journal->xacts.size();
 }
 
-void session_t::read_journal_files()
+journal_t * session_t::read_journal_files()
 {
   INFO_START(journal, "Read journal file");
 
@@ -172,6 +211,37 @@ void session_t::read_journal_files()
 #if defined(DEBUG_ON)
   INFO("Found " << count << " transactions");
 #endif
+
+  return journal.get();
+}
+
+journal_t * session_t::read_journal(const path& pathname)
+{
+  HANDLER(file_).data_files.clear();
+  HANDLER(file_).data_files.push_back(pathname);
+
+  return read_journal_files();
+}
+
+journal_t * session_t::read_journal_from_string(const string& data)
+{
+  HANDLER(file_).data_files.clear();
+
+  shared_ptr<std::istream> stream(new std::istringstream(data));
+  parsing_context.push(stream);
+
+  parsing_context.get_current().journal = journal.get();
+  parsing_context.get_current().master  = journal->master;
+  try {
+    journal->read(parsing_context);
+  }
+  catch (...) {
+    parsing_context.pop();
+    throw;
+  }
+  parsing_context.pop();
+
+  return journal.get();
 }
 
 void session_t::close_journal_files()
@@ -200,6 +270,15 @@ value_t session_t::fn_min(call_scope_t& args)
 value_t session_t::fn_max(call_scope_t& args)
 {
   return args[1] > args[0] ? args[1] : args[0];
+}
+
+value_t session_t::fn_int(call_scope_t& args)
+{
+  return args[0].to_long();
+}
+value_t session_t::fn_str(call_scope_t& args)
+{
+  return string_value(args[0].to_string());
 }
 
 value_t session_t::fn_lot_price(call_scope_t& args)
@@ -238,10 +317,15 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     break;
   case 'c':
     OPT(cache_);
+    else OPT(check_payees);
     break;
   case 'd':
     OPT(download); // -Q
     else OPT(decimal_comma);
+    else OPT(day_break);
+    break;
+  case 'e':
+    OPT(explicit);
     break;
   case 'f':
     OPT_(file_); // -f
@@ -258,9 +342,14 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'p':
     OPT(price_db_);
     else OPT(price_exp_);
+    else OPT(pedantic);
+    else OPT(permissive);
     break;
   case 's':
     OPT(strict);
+    break;
+  case 'v':
+    OPT(value_expr_);
     break;
   }
   return NULL;
@@ -288,11 +377,21 @@ expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(session_t::fn_lot_tag);
       break;
 
+    case 'i':
+      if (is_eq(p, "int"))
+        return MAKE_FUNCTOR(session_t::fn_int);
+      break;
+
     case 'm':
       if (is_eq(p, "min"))
         return MAKE_FUNCTOR(session_t::fn_min);
       else if (is_eq(p, "max"))
         return MAKE_FUNCTOR(session_t::fn_max);
+      break;
+
+    case 's':
+      if (is_eq(p, "str"))
+        return MAKE_FUNCTOR(session_t::fn_str);
       break;
 
     default:

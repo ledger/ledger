@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,14 +41,47 @@
 namespace ledger {
 
 namespace {
+  bool post_has_simple_amount(const post_t& post)
+  {
+    // Is the amount the result of a computation, i.e., it wasn't
+    // explicit specified by the user?
+    if (post.has_flags(POST_CALCULATED))
+      return false;
+
+    // Is the amount still empty?  This shouldn't be true by this point,
+    // but we check anyway for safety.
+    if (post.amount.is_null())
+      return false;
+
+    // Is the amount a complex expression.  If so, the first 'if' should
+    // have triggered.
+    if (post.amount_expr)
+      return false;
+
+    // Is there a balance assignment?  If so, don't elide the amount as
+    // that can change the semantics.
+    if (post.assigned_amount)
+      return false;
+
+    // Does it have an explicitly specified cost (i.e., one that wasn't
+    // calculated for the user)?  If so, don't elide the amount!
+    if (post.cost && ! post.has_flags(POST_COST_CALCULATED))
+      return false;
+
+    return true;
+  }
+
   void print_note(std::ostream&     out,
                   const string&     note,
+                  const bool        note_on_next_line,
                   const std::size_t columns,
                   const std::size_t prior_width)
   {
-    // The 4 is for four leading spaces at the beginning of the posting, and
-    // the 3 is for two spaces and a semi-colon before the note.
-    if (columns > 0 && note.length() > columns - (prior_width + 3))
+    // The 3 is for two spaces and a semi-colon before the note.
+    if (note_on_next_line ||
+        (columns > 0 &&
+         (columns <= prior_width + 3 ||
+          note.length() > columns - (prior_width + 3))))
       out << "\n    ;";
     else
       out << "  ;";
@@ -79,11 +112,11 @@ namespace {
 
     std::ostringstream buf;
 
-    buf << format_date(item_t::use_effective_date ?
-                       xact.date() : xact.actual_date(),
+    buf << format_date(item_t::use_aux_date ?
+                       xact.date() : xact.primary_date(),
                        format_type, format);
-    if (! item_t::use_effective_date && xact.effective_date())
-      buf << '=' << format_date(*xact.effective_date(),
+    if (! item_t::use_aux_date && xact.aux_date())
+      buf << '=' << format_date(*xact.aux_date(),
                                 format_type, format);
     buf << ' ';
 
@@ -100,10 +133,11 @@ namespace {
 
     std::size_t columns =
       (report.HANDLED(columns_) ?
-       static_cast<std::size_t>(report.HANDLER(columns_).value.to_long()) : 80);
+       lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
 
     if (xact.note)
-      print_note(out, *xact.note, columns, unistring(leader).length());
+      print_note(out, *xact.note, xact.has_flags(ITEM_NOTE_ON_NEXT_LINE),
+                 columns, unistring(leader).length());
     out << '\n';
 
     if (xact.metadata) {
@@ -119,7 +153,12 @@ namespace {
       }
     }
 
+    std::size_t count = xact.posts.size();
+    std::size_t index = 0;
+
     foreach (post_t * post, xact.posts) {
+      index++;
+
       if (! report.HANDLED(generated) &&
           (post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
            ! post->has_flags(POST_ANONYMIZED)))
@@ -152,8 +191,8 @@ namespace {
       unistring name(pbuf.str());
 
       std::size_t account_width =
-        (report.HANDLER(account_width_).specified ?
-         static_cast<std::size_t>(report.HANDLER(account_width_).value.to_long()) : 36);
+        (report.HANDLED(account_width_) ?
+         lexical_cast<std::size_t>(report.HANDLER(account_width_).str()) : 36);
 
       if (account_width < name.length())
         account_width = name.length();
@@ -163,25 +202,32 @@ namespace {
         std::string::size_type slip =
           (static_cast<std::string::size_type>(account_width) -
            static_cast<std::string::size_type>(name.length()));
-        if (slip > 0) {
-          out.width(static_cast<std::streamsize>(slip));
-          out << ' ';
-        }
-
-        std::ostringstream amtbuf;
 
         string amt;
         if (post->amount_expr) {
           amt = post->amount_expr->text();
-        } else {
-          int amount_width =
-            (report.HANDLER(amount_width_).specified ?
-             report.HANDLER(amount_width_).value.to_int() : 12);
+        }
+        else if (count == 2 && index == 2 &&
+                 post_has_simple_amount(*post) &&
+                 post_has_simple_amount(*(*xact.posts.begin())) &&
+                 ((*xact.posts.begin())->amount.commodity() ==
+                  post->amount.commodity())) {
+          // If there are two postings and they both simple amount, and
+          // they are both of the same commodity, don't bother printing
+          // the second amount as it's always just an inverse of the
+          // first.
+        }
+        else {
+          std::size_t amount_width =
+            (report.HANDLED(amount_width_) ?
+             lexical_cast<std::size_t>(report.HANDLER(amount_width_).str()) :
+             12);
 
           std::ostringstream amt_str;
-          value_t(post->amount).print(amt_str, amount_width, -1,
-                                      AMOUNT_PRINT_RIGHT_JUSTIFY |
-                                      AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+          value_t(post->amount).print(amt_str, static_cast<int>(amount_width),
+                                      -1, AMOUNT_PRINT_RIGHT_JUSTIFY |
+                                      (report.HANDLED(generated) ? 0 :
+                                       AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS));
           amt = amt_str.str();
         }
 
@@ -191,6 +237,7 @@ namespace {
           (static_cast<std::string::size_type>(amt.length()) -
            static_cast<std::string::size_type>(trimmed_amt.length()));
 
+        std::ostringstream amtbuf;
         if (slip + amt_slip < 2)
           amtbuf << string(2 - (slip + amt_slip), ' ');
         amtbuf << amt;
@@ -208,15 +255,22 @@ namespace {
           amtbuf << " = " << *post->assigned_amount;
 
         string trailer = amtbuf.str();
-        out << trailer;
+        if (! trailer.empty()) {
+          if (slip > 0) {
+            out.width(static_cast<std::streamsize>(slip));
+            out << ' ';
+          }
+          out << trailer;
 
-        account_width += unistring(trailer).length();
+          account_width += unistring(trailer).length();
+        }
       } else {
         out << pbuf.str();
       }
 
       if (post->note)
-        print_note(out, *post->note, columns, 4 + account_width);
+        print_note(out, *post->note, post->has_flags(ITEM_NOTE_ON_NEXT_LINE),
+                   columns, 4 + account_width);
       out << '\n';
     }
   }

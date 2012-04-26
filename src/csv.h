@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,6 +43,7 @@
 #define _CSV_H
 
 #include "value.h"
+#include "context.h"
 
 namespace ledger {
 
@@ -52,13 +53,11 @@ class account_t;
 
 class csv_reader
 {
-  static const std::size_t MAX_LINE = 1024;
-
-  std::istream& in;
+  parse_context_t context;
 
   enum headers_t {
     FIELD_DATE = 0,
-    FIELD_DATE_EFF,
+    FIELD_DATE_AUX,
     FIELD_CODE,
     FIELD_PAYEE,
     FIELD_AMOUNT,
@@ -70,7 +69,7 @@ class csv_reader
   };
 
   mask_t date_mask;
-  mask_t date_eff_mask;
+  mask_t date_aux_mask;
   mask_t code_mask;
   mask_t payee_mask;
   mask_t amount_mask;
@@ -80,29 +79,40 @@ class csv_reader
 
   std::vector<int>    index;
   std::vector<string> names;
-  std::vector<string> fields;
-
-  typedef std::map<string, string> string_map;
 
 public:
-  csv_reader(std::istream& _in)
-    : in(_in),
+  csv_reader(parse_context_t& _context)
+    : context(_context),
       date_mask("date"),
-      date_eff_mask("posted( ?date)?"),
+      date_aux_mask("posted( ?date)?"),
       code_mask("code"),
       payee_mask("(payee|desc(ription)?|title)"),
       amount_mask("amount"),
       cost_mask("cost"),
       total_mask("total"),
       note_mask("note") {
-    read_index(in);
+    read_index(*context.stream.get());
+    TRACE_CTOR(csv_reader, "parse_context_t&");
+  }
+  ~csv_reader() {
+    TRACE_DTOR(csv_reader);
   }
 
+  void   read_index(std::istream& in);
   string read_field(std::istream& in);
   char * next_line(std::istream& in);
-  void read_index(std::istream& in);
 
-  xact_t * read_xact(journal_t& journal, account_t * bucket);
+  xact_t * read_xact(bool rich_data);
+
+  const char * get_last_line() const {
+    return context.linebuf;
+  }
+  path get_pathname() const {
+    return context.pathname;
+  }
+  std::size_t get_linenum() const {
+    return context.linenum;
+  }
 };
 
 } // namespace ledger

@@ -1,0 +1,552 @@
+2011/04/01 serveraxis.com
+    Expenses:Computer:Internet                $15.00
+    Expenses:Computer:Internet                 $1.10
+    Liabilities:MasterCard
+
+2011/04/05 Pennsylvania toll booth
+    Expenses:Auto:Fees                        $13.00
+    Expenses:Cash
+
+2011/04/05 iTunes
+    Expenses:Music                             $1.29
+    Expenses:Taxes:Sales                       $0.09
+    Liabilities:MasterCard                    $-1.38
+
+2011/04/19 iTunes
+    Expenses:Computer:Software                 $4.99
+    Expenses:Taxes:Sales                       $0.35
+    Liabilities:MasterCard                    $-5.34
+
+2011/04/24 iTunes
+    Expenses:Movies                            $1.99
+    Expenses:Movies                            $2.99
+    Expenses:Taxes:Sales                       $0.35
+    Liabilities:MasterCard                    $-5.33
+
+2011/04/29 iTunes
+    Expenses:Computer:Movies                   $0.99
+    Expenses:Taxes:Sales                       $0.07
+    Liabilities:MasterCard                    $-1.06
+
+2011/05/01 serveraxis.com
+    Expenses:Computer:Internet                $15.00
+    Expenses:Computer:Internet                 $1.10
+    Liabilities:MasterCard
+
+2011/05/18 iTunes
+    Expenses:Computer:Software                 $6.99
+    Expenses:Taxes:Sales                       $0.49
+    Liabilities:MasterCard                    $-7.48
+
+2011/05/20 DynDNS.com
+    Expenses:Computer:Internet                $15.00
+    Liabilities:MasterCard
+
+2011/05/20 DynDNS.com
+    Expenses:Computer:Internet                $15.00
+    Liabilities:MasterCard
+
+2011/05/27 iTunes
+    Expenses:Movies                            $1.99
+    Expenses:Movies                            $1.99
+    Expenses:Movies                            $1.99
+    Expenses:Taxes:Sales                       $0.42
+    Liabilities:MasterCard                    $-6.39
+
+2011/05/26 Valero
+    Expenses:Auto:Gas                         $26.79
+    Liabilities:MasterCard
+
+2011/05/26 Starbucks
+    Expenses:Food                              $2.20
+    Expenses:Taxes:Sales                       $0.15
+    Liabilities:MasterCard                    $-2.35
+
+2011/05/26 La Mex
+    Expenses:Food                             $17.70
+    Expenses:Taxes:Sales                       $1.11
+    Expenses:Tips                              $3.00
+    Liabilities:MasterCard                   $-21.81
+
+2011/05/27 Leaves N Beans
+    Expenses:Food:Dining                      $20.98
+    Expenses:Taxes:Sales                       $1.63
+    Expenses:Tips                              $2.00
+    Liabilities:MasterCard                   $-24.61
+
+2011/05/27 Wal*Mart
+    Expenses:Home:Supplies                     $7.97
+    Expenses:Food:Grocery                      $3.25
+    Expenses:Food:Grocery                      $3.18
+    Expenses:Food:Grocery                      $3.18
+    Expenses:Food:Grocery                      $2.98
+    Expenses:Food:Grocery                      $1.98
+    Expenses:Food:Grocery                      $3.98
+    Expenses:Food:Grocery                      $3.58
+    Expenses:Food:Grocery                      $3.58
+    Expenses:Food:Grocery                      $1.58
+    Expenses:Food:Grocery                      $1.88
+    Expenses:Food:Grocery                      $2.50
+    Expenses:Food:Grocery                      $1.26
+    Expenses:Food:Grocery                      $2.62
+    Expenses:Food:Grocery                      $3.48
+    Expenses:Home:Supplies                     $1.37
+    Expenses:Home:Supplies                     $2.92
+    Expenses:Beauty                            $3.38
+    Expenses:Beauty                            $0.97
+    Expenses:Beauty                            $4.64
+    Expenses:Beauty                            $1.97
+    Expenses:Beauty                            $1.97
+    Expenses:Beauty                            $5.98
+    Expenses:Home:Supplies                     $9.98
+    Expenses:Bedding                           $4.00
+    Expenses:Bedding                           $4.00
+    Expenses:Home:Supplies                     $2.88
+    Expenses:Home:Supplies                     $2.88
+    Expenses:Home:Supplies                     $2.88
+    Expenses:Home:Supplies                     $2.88
+    Expenses:Clothing                          $2.96
+    Expenses:Supplies                          $0.84
+    Expenses:Food:Grocery                      $1.38
+    Expenses:Food:Grocery                      $1.38
+    Expenses:Food:Grocery                      $2.32
+    Expenses:Food:Grocery                      $2.00
+    Expenses:Food:Grocery                      $2.98
+    Expenses:Food:Grocery                      $3.00
+    Expenses:Food:Grocery                      $2.14
+    Expenses:Food:Grocery                      $2.14
+    Expenses:Food:Grocery                      $2.50
+    Expenses:Food:Grocery                      $2.50
+    Expenses:Food:Grocery                      $3.48
+    Expenses:Home:Supplies                     $1.17
+    Expenses:Supplies                          $3.00
+    Expenses:Bedding                          $34.88
+    Expenses:Home                              $6.00
+    Expenses:Home                              $6.00
+    Expenses:Home:Supplies                     $3.97
+    Expenses:Food:Grocery                      $0.78
+    Expenses:Food:Grocery                      $0.78
+    Expenses:Food:Grocery                      $0.78
+    Expenses:Food:Grocery                      $0.78
+    Expenses:Home                              $4.00
+    Expenses:Home                              $4.00
+    Expenses:Home                             $10.87
+    Expenses:Home                              $4.00
+    Expenses:Bedding                          $65.96
+    Expenses:Taxes:Sales                      $16.89
+    Expenses:Taxes:Sales                       $0.65
+    Liabilities:MasterCard                  $-293.83
+
+2011/05/27 Asia Grill
+    Expenses:Food:Dining                      $28.63
+    Expenses:Tips                              $4.00
+    Liabilities:MasterCard                   $-32.63
+
+2011/05/28 Shell
+    Expenses:Auto:Gas                         $43.41
+    Liabilities:MasterCard
+
+2011/05/28 Sears
+    Expenses:Home                          $1,728.96
+    Expenses:Taxes:Sales                     $136.87
+    Liabilities:MasterCard                $-1,865.83
+
+2011/05/28 Sears
+    Expenses:Home                             $99.61
+    Expenses:Taxes:Sales                       $8.22
+    Liabilities:MasterCard                  $-107.83
+
+2011/05/28 Buffalo Wild Wings
+    Expenses:Food:Dining                      $22.98
+    Expenses:Tips                              $2.35
+    Expenses:Taxes:Sales                       $3.50
+    Liabilities:MasterCard                   $-28.83
+
+2011/05/28 Cold Stone Creamery
+    Expenses:Food:Dining                       $5.73
+    Expenses:Tips                              $0.50
+    Liabilities:MasterCard                    $-6.23
+
+2011/05/29 Hy Vee
+    Expenses:Supplies                          $2.00
+    Expenses:Supplies                          $7.99
+    Expenses:Supplies                          $7.99
+    Expenses:Food:Grocery                    $157.64
+    Expenses:Taxes:Sales                       $5.74
+    Liabilities:MasterCard                  $-181.36
+
+2011/05/30 Allied movers, Fidel & Manny
+    Expenses:Tips                             $97.00
+    Expenses:Cash
+
+2011/05/30 Starbucks
+    Expenses:Food:Dining                       $6.90
+    Expenses:Taxes:Sales                       $0.71
+    Liabilities:MasterCard                    $-7.61
+
+2011/05/31 Wal*Mart
+    Expenses:Home                            $108.13
+    Expenses:Taxes:Sales                       $8.65
+    Liabilities:MasterCard                  $-116.78
+
+test reg -p "apr 2011" Expenses
+11-Apr-01 serveraxis.com        Expe:Computer:Internet       $15.00       $15.00
+                                Expe:Computer:Internet        $1.10       $16.10
+11-Apr-05 Pennsylvania toll b.. Expenses:Auto:Fees           $13.00       $29.10
+                                Expenses:Cash               $-13.00       $16.10
+11-Apr-05 iTunes                Expenses:Music                $1.29       $17.39
+                                Expenses:Taxes:Sales          $0.09       $17.48
+11-Apr-19 iTunes                Expe:Computer:Software        $4.99       $22.47
+                                Expenses:Taxes:Sales          $0.35       $22.82
+11-Apr-24 iTunes                Expenses:Movies               $1.99       $24.81
+                                Expenses:Movies               $2.99       $27.80
+                                Expenses:Taxes:Sales          $0.35       $28.15
+11-Apr-29 iTunes                Expens:Computer:Movies        $0.99       $29.14
+                                Expenses:Taxes:Sales          $0.07       $29.21
+end test
+
+test reg -p "apr 2011" Expenses --monthly
+11-Apr-01 - 11-Apr-30           Expenses:Auto:Fees           $13.00       $13.00
+                                Expenses:Cash               $-13.00            0
+                                Expe:Computer:Internet       $16.10       $16.10
+                                Expens:Computer:Movies        $0.99       $17.09
+                                Expe:Computer:Software        $4.99       $22.08
+                                Expenses:Movies               $4.98       $27.06
+                                Expenses:Music                $1.29       $28.35
+                                Expenses:Taxes:Sales          $0.86       $29.21
+end test
+
+test reg -p "apr 2011" Expenses --monthly --exact
+11-Apr-01 - 11-Apr-29           Expenses:Auto:Fees           $13.00       $13.00
+                                Expenses:Cash               $-13.00            0
+                                Expe:Computer:Internet       $16.10       $16.10
+                                Expens:Computer:Movies        $0.99       $17.09
+                                Expe:Computer:Software        $4.99       $22.08
+                                Expenses:Movies               $4.98       $27.06
+                                Expenses:Music                $1.29       $28.35
+                                Expenses:Taxes:Sales          $0.86       $29.21
+end test
+
+test reg -p "apr 2011" Expenses --weekly
+11-Apr-01 - 11-Apr-02           Expe:Computer:Internet       $16.10       $16.10
+11-Apr-03 - 11-Apr-09           Expenses:Auto:Fees           $13.00       $29.10
+                                Expenses:Cash               $-13.00       $16.10
+                                Expenses:Music                $1.29       $17.39
+                                Expenses:Taxes:Sales          $0.09       $17.48
+11-Apr-17 - 11-Apr-23           Expe:Computer:Software        $4.99       $22.47
+                                Expenses:Taxes:Sales          $0.35       $22.82
+11-Apr-24 - 11-Apr-30           Expens:Computer:Movies        $0.99       $23.81
+                                Expenses:Movies               $4.98       $28.79
+                                Expenses:Taxes:Sales          $0.42       $29.21
+end test
+
+test reg -p "apr 2011" Expenses --weekly --exact
+11-Apr-01 - 11-Apr-01           Expe:Computer:Internet       $16.10       $16.10
+11-Apr-05 - 11-Apr-05           Expenses:Auto:Fees           $13.00       $29.10
+                                Expenses:Cash               $-13.00       $16.10
+                                Expenses:Music                $1.29       $17.39
+                                Expenses:Taxes:Sales          $0.09       $17.48
+11-Apr-19 - 11-Apr-19           Expe:Computer:Software        $4.99       $22.47
+                                Expenses:Taxes:Sales          $0.35       $22.82
+11-Apr-24 - 11-Apr-29           Expens:Computer:Movies        $0.99       $23.81
+                                Expenses:Movies               $4.98       $28.79
+                                Expenses:Taxes:Sales          $0.42       $29.21
+end test
+
+test reg -p "apr 2011" Expenses --weekly --empty
+11-Apr-01 - 11-Apr-02           Expe:Computer:Internet       $16.10       $16.10
+11-Apr-03 - 11-Apr-09           Expenses:Auto:Fees           $13.00       $29.10
+                                Expenses:Cash               $-13.00       $16.10
+                                Expenses:Music                $1.29       $17.39
+                                Expenses:Taxes:Sales          $0.09       $17.48
+11-Apr-10 - 11-Apr-16           <None>                            0       $17.48
+11-Apr-17 - 11-Apr-23           Expe:Computer:Software        $4.99       $22.47
+                                Expenses:Taxes:Sales          $0.35       $22.82
+11-Apr-24 - 11-Apr-30           Expens:Computer:Movies        $0.99       $23.81
+                                Expenses:Movies               $4.98       $28.79
+                                Expenses:Taxes:Sales          $0.42       $29.21
+end test
+
+test reg -p "apr 2011" Expenses --weekly --empty --exact
+11-Apr-01 - 11-Apr-01           Expe:Computer:Internet       $16.10       $16.10
+11-Apr-05 - 11-Apr-05           Expenses:Auto:Fees           $13.00       $29.10
+                                Expenses:Cash               $-13.00       $16.10
+                                Expenses:Music                $1.29       $17.39
+                                Expenses:Taxes:Sales          $0.09       $17.48
+11-Apr-16 - 11-Apr-16           <None>                            0       $17.48
+11-Apr-19 - 11-Apr-19           Expe:Computer:Software        $4.99       $22.47
+                                Expenses:Taxes:Sales          $0.35       $22.82
+11-Apr-24 - 11-Apr-29           Expens:Computer:Movies        $0.99       $23.81
+                                Expenses:Movies               $4.98       $28.79
+                                Expenses:Taxes:Sales          $0.42       $29.21
+end test
+
+test reg -p "may 2011"
+11-May-01 serveraxis.com        Expe:Computer:Internet       $15.00       $15.00
+                                Expe:Computer:Internet        $1.10       $16.10
+                                Liabilities:MasterCard      $-16.10            0
+11-May-18 iTunes                Expe:Computer:Software        $6.99        $6.99
+                                Expenses:Taxes:Sales          $0.49        $7.48
+                                Liabilities:MasterCard       $-7.48            0
+11-May-20 DynDNS.com            Expe:Computer:Internet       $15.00       $15.00
+                                Liabilities:MasterCard      $-15.00            0
+11-May-20 DynDNS.com            Expe:Computer:Internet       $15.00       $15.00
+                                Liabilities:MasterCard      $-15.00            0
+11-May-27 iTunes                Expenses:Movies               $1.99        $1.99
+                                Expenses:Movies               $1.99        $3.98
+                                Expenses:Movies               $1.99        $5.97
+                                Expenses:Taxes:Sales          $0.42        $6.39
+                                Liabilities:MasterCard       $-6.39            0
+11-May-26 Valero                Expenses:Auto:Gas            $26.79       $26.79
+                                Liabilities:MasterCard      $-26.79            0
+11-May-26 Starbucks             Expenses:Food                 $2.20        $2.20
+                                Expenses:Taxes:Sales          $0.15        $2.35
+                                Liabilities:MasterCard       $-2.35            0
+11-May-26 La Mex                Expenses:Food                $17.70       $17.70
+                                Expenses:Taxes:Sales          $1.11       $18.81
+                                Expenses:Tips                 $3.00       $21.81
+                                Liabilities:MasterCard      $-21.81            0
+11-May-27 Leaves N Beans        Expenses:Food:Dining         $20.98       $20.98
+                                Expenses:Taxes:Sales          $1.63       $22.61
+                                Expenses:Tips                 $2.00       $24.61
+                                Liabilities:MasterCard      $-24.61            0
+11-May-27 Wal*Mart              Expenses:Home:Supplies        $7.97        $7.97
+                                Expenses:Food:Grocery         $3.25       $11.22
+                                Expenses:Food:Grocery         $3.18       $14.40
+                                Expenses:Food:Grocery         $3.18       $17.58
+                                Expenses:Food:Grocery         $2.98       $20.56
+                                Expenses:Food:Grocery         $1.98       $22.54
+                                Expenses:Food:Grocery         $3.98       $26.52
+                                Expenses:Food:Grocery         $3.58       $30.10
+                                Expenses:Food:Grocery         $3.58       $33.68
+                                Expenses:Food:Grocery         $1.58       $35.26
+                                Expenses:Food:Grocery         $1.88       $37.14
+                                Expenses:Food:Grocery         $2.50       $39.64
+                                Expenses:Food:Grocery         $1.26       $40.90
+                                Expenses:Food:Grocery         $2.62       $43.52
+                                Expenses:Food:Grocery         $3.48       $47.00
+                                Expenses:Home:Supplies        $1.37       $48.37
+                                Expenses:Home:Supplies        $2.92       $51.29
+                                Expenses:Beauty               $3.38       $54.67
+                                Expenses:Beauty               $0.97       $55.64
+                                Expenses:Beauty               $4.64       $60.28
+                                Expenses:Beauty               $1.97       $62.25
+                                Expenses:Beauty               $1.97       $64.22
+                                Expenses:Beauty               $5.98       $70.20
+                                Expenses:Home:Supplies        $9.98       $80.18
+                                Expenses:Bedding              $4.00       $84.18
+                                Expenses:Bedding              $4.00       $88.18
+                                Expenses:Home:Supplies        $2.88       $91.06
+                                Expenses:Home:Supplies        $2.88       $93.94
+                                Expenses:Home:Supplies        $2.88       $96.82
+                                Expenses:Home:Supplies        $2.88       $99.70
+                                Expenses:Clothing             $2.96      $102.66
+                                Expenses:Supplies             $0.84      $103.50
+                                Expenses:Food:Grocery         $1.38      $104.88
+                                Expenses:Food:Grocery         $1.38      $106.26
+                                Expenses:Food:Grocery         $2.32      $108.58
+                                Expenses:Food:Grocery         $2.00      $110.58
+                                Expenses:Food:Grocery         $2.98      $113.56
+                                Expenses:Food:Grocery         $3.00      $116.56
+                                Expenses:Food:Grocery         $2.14      $118.70
+                                Expenses:Food:Grocery         $2.14      $120.84
+                                Expenses:Food:Grocery         $2.50      $123.34
+                                Expenses:Food:Grocery         $2.50      $125.84
+                                Expenses:Food:Grocery         $3.48      $129.32
+                                Expenses:Home:Supplies        $1.17      $130.49
+                                Expenses:Supplies             $3.00      $133.49
+                                Expenses:Bedding             $34.88      $168.37
+                                Expenses:Home                 $6.00      $174.37
+                                Expenses:Home                 $6.00      $180.37
+                                Expenses:Home:Supplies        $3.97      $184.34
+                                Expenses:Food:Grocery         $0.78      $185.12
+                                Expenses:Food:Grocery         $0.78      $185.90
+                                Expenses:Food:Grocery         $0.78      $186.68
+                                Expenses:Food:Grocery         $0.78      $187.46
+                                Expenses:Home                 $4.00      $191.46
+                                Expenses:Home                 $4.00      $195.46
+                                Expenses:Home                $10.87      $206.33
+                                Expenses:Home                 $4.00      $210.33
+                                Expenses:Bedding             $65.96      $276.29
+                                Expenses:Taxes:Sales         $16.89      $293.18
+                                Expenses:Taxes:Sales          $0.65      $293.83
+                                Liabilities:MasterCard     $-293.83            0
+11-May-27 Asia Grill            Expenses:Food:Dining         $28.63       $28.63
+                                Expenses:Tips                 $4.00       $32.63
+                                Liabilities:MasterCard      $-32.63            0
+11-May-28 Shell                 Expenses:Auto:Gas            $43.41       $43.41
+                                Liabilities:MasterCard      $-43.41            0
+11-May-28 Sears                 Expenses:Home             $1,728.96    $1,728.96
+                                Expenses:Taxes:Sales        $136.87    $1,865.83
+                                Liabilities:MasterCard   $-1,865.83            0
+11-May-28 Sears                 Expenses:Home                $99.61       $99.61
+                                Expenses:Taxes:Sales          $8.22      $107.83
+                                Liabilities:MasterCard     $-107.83            0
+11-May-28 Buffalo Wild Wings    Expenses:Food:Dining         $22.98       $22.98
+                                Expenses:Tips                 $2.35       $25.33
+                                Expenses:Taxes:Sales          $3.50       $28.83
+                                Liabilities:MasterCard      $-28.83            0
+11-May-28 Cold Stone Creamery   Expenses:Food:Dining          $5.73        $5.73
+                                Expenses:Tips                 $0.50        $6.23
+                                Liabilities:MasterCard       $-6.23            0
+11-May-29 Hy Vee                Expenses:Supplies             $2.00        $2.00
+                                Expenses:Supplies             $7.99        $9.99
+                                Expenses:Supplies             $7.99       $17.98
+                                Expenses:Food:Grocery       $157.64      $175.62
+                                Expenses:Taxes:Sales          $5.74      $181.36
+                                Liabilities:MasterCard     $-181.36            0
+11-May-30 Allied movers, Fide.. Expenses:Tips                $97.00       $97.00
+                                Expenses:Cash               $-97.00            0
+11-May-30 Starbucks             Expenses:Food:Dining          $6.90        $6.90
+                                Expenses:Taxes:Sales          $0.71        $7.61
+                                Liabilities:MasterCard       $-7.61            0
+11-May-31 Wal*Mart              Expenses:Home               $108.13      $108.13
+                                Expenses:Taxes:Sales          $8.65      $116.78
+                                Liabilities:MasterCard     $-116.78            0
+end test
+
+test reg -p "may 2011" --monthly
+11-May-01 - 11-May-31           Expenses:Auto:Gas            $70.20       $70.20
+                                Expenses:Beauty              $18.91       $89.11
+                                Expenses:Bedding            $108.84      $197.95
+                                Expenses:Cash               $-97.00      $100.95
+                                Expenses:Clothing             $2.96      $103.91
+                                Expe:Computer:Internet       $46.10      $150.01
+                                Expe:Computer:Software        $6.99      $157.00
+                                Expenses:Food                $19.90      $176.90
+                                Expenses:Food:Dining         $85.22      $262.12
+                                Expenses:Food:Grocery       $225.61      $487.73
+                                Expenses:Home             $1,971.57    $2,459.30
+                                Expenses:Home:Supplies       $38.90    $2,498.20
+                                Expenses:Movies               $5.97    $2,504.17
+                                Expenses:Supplies            $21.82    $2,525.99
+                                Expenses:Taxes:Sales        $185.03    $2,711.02
+                                Expenses:Tips               $108.85    $2,819.87
+                                Liabilities:MasterCard   $-2,819.87            0
+end test
+
+test reg -p "may 2011" --weekly
+11-May-01 - 11-May-07           Expe:Computer:Internet       $16.10       $16.10
+                                Liabilities:MasterCard      $-16.10            0
+11-May-15 - 11-May-21           Expe:Computer:Internet       $30.00       $30.00
+                                Expe:Computer:Software        $6.99       $36.99
+                                Expenses:Taxes:Sales          $0.49       $37.48
+                                Liabilities:MasterCard      $-37.48            0
+11-May-22 - 11-May-28           Expenses:Auto:Gas            $70.20       $70.20
+                                Expenses:Beauty              $18.91       $89.11
+                                Expenses:Bedding            $108.84      $197.95
+                                Expenses:Clothing             $2.96      $200.91
+                                Expenses:Food                $19.90      $220.81
+                                Expenses:Food:Dining         $78.32      $299.13
+                                Expenses:Food:Grocery        $67.97      $367.10
+                                Expenses:Home             $1,863.44    $2,230.54
+                                Expenses:Home:Supplies       $38.90    $2,269.44
+                                Expenses:Movies               $5.97    $2,275.41
+                                Expenses:Supplies             $3.84    $2,279.25
+                                Expenses:Taxes:Sales        $169.44    $2,448.69
+                                Expenses:Tips                $11.85    $2,460.54
+                                Liabilities:MasterCard   $-2,460.54            0
+11-May-29 - 11-May-31           Expenses:Cash               $-97.00      $-97.00
+                                Expenses:Food:Dining          $6.90      $-90.10
+                                Expenses:Food:Grocery       $157.64       $67.54
+                                Expenses:Home               $108.13      $175.67
+                                Expenses:Supplies            $17.98      $193.65
+                                Expenses:Taxes:Sales         $15.10      $208.75
+                                Expenses:Tips                $97.00      $305.75
+                                Liabilities:MasterCard     $-305.75            0
+end test
+
+test reg -p "may 2011" --weekly --exact
+11-May-01 - 11-May-01           Expe:Computer:Internet       $16.10       $16.10
+                                Liabilities:MasterCard      $-16.10            0
+11-May-18 - 11-May-20           Expe:Computer:Internet       $30.00       $30.00
+                                Expe:Computer:Software        $6.99       $36.99
+                                Expenses:Taxes:Sales          $0.49       $37.48
+                                Liabilities:MasterCard      $-37.48            0
+11-May-26 - 11-May-28           Expenses:Auto:Gas            $70.20       $70.20
+                                Expenses:Beauty              $18.91       $89.11
+                                Expenses:Bedding            $108.84      $197.95
+                                Expenses:Clothing             $2.96      $200.91
+                                Expenses:Food                $19.90      $220.81
+                                Expenses:Food:Dining         $78.32      $299.13
+                                Expenses:Food:Grocery        $67.97      $367.10
+                                Expenses:Home             $1,863.44    $2,230.54
+                                Expenses:Home:Supplies       $38.90    $2,269.44
+                                Expenses:Movies               $5.97    $2,275.41
+                                Expenses:Supplies             $3.84    $2,279.25
+                                Expenses:Taxes:Sales        $169.44    $2,448.69
+                                Expenses:Tips                $11.85    $2,460.54
+                                Liabilities:MasterCard   $-2,460.54            0
+11-May-29 - 11-May-31           Expenses:Cash               $-97.00      $-97.00
+                                Expenses:Food:Dining          $6.90      $-90.10
+                                Expenses:Food:Grocery       $157.64       $67.54
+                                Expenses:Home               $108.13      $175.67
+                                Expenses:Supplies            $17.98      $193.65
+                                Expenses:Taxes:Sales         $15.10      $208.75
+                                Expenses:Tips                $97.00      $305.75
+                                Liabilities:MasterCard     $-305.75            0
+end test
+
+test reg -p "may 2011" --weekly --empty
+11-May-01 - 11-May-07           Expe:Computer:Internet       $16.10       $16.10
+                                Liabilities:MasterCard      $-16.10            0
+11-May-08 - 11-May-14           <None>                            0            0
+11-May-15 - 11-May-21           Expe:Computer:Internet       $30.00       $30.00
+                                Expe:Computer:Software        $6.99       $36.99
+                                Expenses:Taxes:Sales          $0.49       $37.48
+                                Liabilities:MasterCard      $-37.48            0
+11-May-22 - 11-May-28           Expenses:Auto:Gas            $70.20       $70.20
+                                Expenses:Beauty              $18.91       $89.11
+                                Expenses:Bedding            $108.84      $197.95
+                                Expenses:Clothing             $2.96      $200.91
+                                Expenses:Food                $19.90      $220.81
+                                Expenses:Food:Dining         $78.32      $299.13
+                                Expenses:Food:Grocery        $67.97      $367.10
+                                Expenses:Home             $1,863.44    $2,230.54
+                                Expenses:Home:Supplies       $38.90    $2,269.44
+                                Expenses:Movies               $5.97    $2,275.41
+                                Expenses:Supplies             $3.84    $2,279.25
+                                Expenses:Taxes:Sales        $169.44    $2,448.69
+                                Expenses:Tips                $11.85    $2,460.54
+                                Liabilities:MasterCard   $-2,460.54            0
+11-May-29 - 11-May-31           Expenses:Cash               $-97.00      $-97.00
+                                Expenses:Food:Dining          $6.90      $-90.10
+                                Expenses:Food:Grocery       $157.64       $67.54
+                                Expenses:Home               $108.13      $175.67
+                                Expenses:Supplies            $17.98      $193.65
+                                Expenses:Taxes:Sales         $15.10      $208.75
+                                Expenses:Tips                $97.00      $305.75
+                                Liabilities:MasterCard     $-305.75            0
+end test
+
+test reg -p "may 2011" --weekly --empty --exact
+11-May-01 - 11-May-01           Expe:Computer:Internet       $16.10       $16.10
+                                Liabilities:MasterCard      $-16.10            0
+11-May-14 - 11-May-14           <None>                            0            0
+11-May-18 - 11-May-20           Expe:Computer:Internet       $30.00       $30.00
+                                Expe:Computer:Software        $6.99       $36.99
+                                Expenses:Taxes:Sales          $0.49       $37.48
+                                Liabilities:MasterCard      $-37.48            0
+11-May-26 - 11-May-28           Expenses:Auto:Gas            $70.20       $70.20
+                                Expenses:Beauty              $18.91       $89.11
+                                Expenses:Bedding            $108.84      $197.95
+                                Expenses:Clothing             $2.96      $200.91
+                                Expenses:Food                $19.90      $220.81
+                                Expenses:Food:Dining         $78.32      $299.13
+                                Expenses:Food:Grocery        $67.97      $367.10
+                                Expenses:Home             $1,863.44    $2,230.54
+                                Expenses:Home:Supplies       $38.90    $2,269.44
+                                Expenses:Movies               $5.97    $2,275.41
+                                Expenses:Supplies             $3.84    $2,279.25
+                                Expenses:Taxes:Sales        $169.44    $2,448.69
+                                Expenses:Tips                $11.85    $2,460.54
+                                Liabilities:MasterCard   $-2,460.54            0
+11-May-29 - 11-May-31           Expenses:Cash               $-97.00      $-97.00
+                                Expenses:Food:Dining          $6.90      $-90.10
+                                Expenses:Food:Grocery       $157.64       $67.54
+                                Expenses:Home               $108.13      $175.67
+                                Expenses:Supplies            $17.98      $193.65
+                                Expenses:Taxes:Sales         $15.10      $208.75
+                                Expenses:Tips                $97.00      $305.75
+                                Liabilities:MasterCard     $-305.75            0
+end test

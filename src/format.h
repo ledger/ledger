@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -51,11 +51,11 @@ class unistring;
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
-class format_t : public expr_base_t<string>
+class format_t : public expr_base_t<string>, public noncopyable
 {
   typedef expr_base_t<string> base_type;
 
-  struct element_t : public supports_flags<>
+  struct element_t : public supports_flags<>, public noncopyable
   {
 #define ELEMENT_ALIGN_LEFT 0x01
 
@@ -73,9 +73,6 @@ class format_t : public expr_base_t<string>
     }
     ~element_t() throw() {
       TRACE_DTOR(element_t);
-    }
-    element_t(const element_t& elem) : supports_flags<>() {
-      *this = elem;
     }
 
     element_t& operator=(const element_t& elem) {
@@ -128,9 +125,9 @@ public:
   }
   format_t(const string& _str, scope_t * context = NULL)
     : base_type(context) {
-    TRACE_CTOR(format_t, "const string&");
     if (! _str.empty())
       parse_format(_str);
+    TRACE_CTOR(format_t, "const string&");
   }
   virtual ~format_t() {
     TRACE_DTOR(format_t);
