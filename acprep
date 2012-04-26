@@ -1745,34 +1745,18 @@ class PrepareBuild(CommandLineApp):
 
         self.configure_flavor('opt', reset)
 
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
-
         self.log.info('=== Building opt ===')
         self.phase_make(*args)
 
         self.configure_flavor('gcov', reset)
 
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
-
         self.log.info('=== Building gcov ===')
         self.phase_make(*args)
-
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
 
         self.log.info('=== Building default ===')
         self.phase_make(*args)
 
         self.configure_flavor('debug', reset)
-
-        system_hh_gch = join(self.source_dir, 'src', 'system.hh.gch')
-        if exists(system_hh_gch):
-            os.remove(system_hh_gch)
 
         self.log.info('=== Building debug ===')
         self.phase_make(*args)
