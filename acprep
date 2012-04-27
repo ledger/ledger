@@ -1031,23 +1031,22 @@ class PrepareBuild(CommandLineApp):
 
                 self.LDFLAGS.append('-stdlib=libc++')
                 self.LDFLAGS.append('/usr/local/lib/libc++.dylib')
-            else:
-                global search_prefixes
-                search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
 
             self.log.debug('Using Clang ident: %s/%s' %
                            (self.boost_inc_ident, self.boost_lib_ident))
         else:
-            match = re.search('gcc-mp-([0-9]+)\.([0-9]+)', self.envvars['CC'])
-            if match:
-                self.boost_inc_ident = "gcc" + match.group(1) + match.group(2)
-                self.boost_lib_ident = "x" + self.boost_inc_ident
-            else:
-                self.boost_inc_ident = "gcc42"
-                self.boost_lib_ident = "xgcc42"
-
-            self.log.debug('Using Boost ident: %s/%s' %
-                           (self.boost_inc_ident, self.boost_lib_ident))
+            global search_prefixes
+            search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
+        #    match = re.search('gcc-mp-([0-9]+)\.([0-9]+)', self.envvars['CC'])
+        #    if match:
+        #        self.boost_inc_ident = "gcc" + match.group(1) + match.group(2)
+        #        self.boost_lib_ident = "x" + self.boost_inc_ident
+        #    else:
+        #        self.boost_inc_ident = "gcc42"
+        #        self.boost_lib_ident = "xgcc42"
+        #
+        #    self.log.debug('Using Boost ident: %s/%s' %
+        #                   (self.boost_inc_ident, self.boost_lib_ident))
 
         if self.current_flavor == 'debug':
             self.configure_args.append('--disable-shared')
@@ -1327,7 +1326,7 @@ class PrepareBuild(CommandLineApp):
 
     def locate_darwin_libraries(self):
         if self.current_flavor == 'debug':
-            if (not self.options.use_clang or self.options.use_cpp11) and \
+            if (self.options.use_clang or self.options.use_cpp11) and \
                self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
@@ -1342,7 +1341,7 @@ class PrepareBuild(CommandLineApp):
         else:
             if self.boost_info.configure():
                 pass
-            elif (not self.options.use_clang or self.options.use_cpp11) and \
+            elif (self.options.use_clang or self.options.use_cpp11) and \
                  self.boost_info.configure(
                 home_path    = '/usr/local/stow/boost_%s-%s' % \
                     (self.boost_version, self.boost_inc_ident),
@@ -1706,8 +1705,9 @@ class PrepareBuild(CommandLineApp):
 
         source_copy_dir = join(self.ensure(self.products_directory()), proof_dir)
 
-        self.execute('rsync', '-a', '--delete',
-                     '--exclude=.git/', '--exclude=b/',
+        self.execute('rsync', '-a', '--delete', '--exclude=/dist/',
+                     '--exclude=.git/', '--exclude=b/', '--exclude=/lib/',
+                     '--exclude=/archive/', '--exclude=/build/',
                      '%s/' % self.source_dir, '%s/' % source_copy_dir)
 
         self.source_dir = source_copy_dir
@@ -1724,9 +1724,10 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Testing opt ===')
         self.phase_make('fullcheck')
 
-        self.configure_flavor('gcov', reset=False)
-        self.log.info('=== Testing gcov ===')
-        self.phase_make('check')
+        if not self.options.use_clang:
+            self.configure_flavor('gcov', reset=False)
+            self.log.info('=== Testing gcov ===')
+            self.phase_make('check')
 
         self.configure_flavor('debug', reset=False)
         self.log.info('=== Testing debug ===')
@@ -1748,10 +1749,11 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Building opt ===')
         self.phase_make(*args)
 
-        self.configure_flavor('gcov', reset)
+        if not self.options.use_clang:
+            self.configure_flavor('gcov', reset)
 
-        self.log.info('=== Building gcov ===')
-        self.phase_make(*args)
+            self.log.info('=== Building gcov ===')
+            self.phase_make(*args)
 
         self.log.info('=== Building default ===')
         self.phase_make(*args)

@@ -48,8 +48,8 @@ EOF
     else
         echo $VERSION > $DEST/last-proofed
 
-        cd $DEST/ledger-proof/debug; make docs
-        cd $DEST/ledger-proof/gcov;  make report
+        cd $DEST/ledger-proof-python-gcc47/debug; make docs
+        cd $DEST/ledger-proof-python-gcc47/gcov;  make report
 
         mutt -s '[ledger] Proof build succeeded' johnw@newartisans.com <<EOF
 Ledger proof build succeeded! at commit $VERSION.
