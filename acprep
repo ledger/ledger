@@ -1706,7 +1706,8 @@ class PrepareBuild(CommandLineApp):
         source_copy_dir = join(self.ensure(self.products_directory()), proof_dir)
 
         self.execute('rsync', '-a', '--delete', '--exclude=/dist/',
-                     '--exclude=.git/', '--exclude=b/', '--exclude=/lib/',
+                     '--exclude=.git/', '--exclude=b/',
+                     '--exclude=/lib/boost-release/',
                      '--exclude=/archive/', '--exclude=/build/',
                      '%s/' % self.source_dir, '%s/' % source_copy_dir)
 
