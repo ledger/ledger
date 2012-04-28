@@ -1022,14 +1022,11 @@ class PrepareBuild(CommandLineApp):
             self.boost_lib_ident = "clang-darwin"
 
             if self.options.use_cpp11:
-                self.CXXFLAGS.append('-std=c++11')
-                self.CXXFLAGS.append('-stdlib=libc++')
                 self.CXXFLAGS.append('-nostdlibinc')
                 self.CXXFLAGS.append('-isystem /usr/local/include')
                 self.CXXFLAGS.append('-isystem /usr/local/include/c++/v1')
                 self.CXXFLAGS.append('-isystem /usr/include')
 
-                self.LDFLAGS.append('-stdlib=libc++')
                 self.LDFLAGS.append('/usr/local/lib/libc++.dylib')
 
             self.log.debug('Using Clang ident: %s/%s' %
@@ -1231,6 +1228,7 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-Wno-missing-noreturn')
             self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
             self.CXXFLAGS.append('-Wno-unused-parameter')
+            self.CXXFLAGS.append('-Wno-c++98-compat')
             self.CXXFLAGS.append('-fno-limit-debug-info')
         #self.CXXFLAGS.append('-Wold-style-cast')
 

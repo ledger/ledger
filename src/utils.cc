@@ -489,7 +489,7 @@ void report_memory(std::ostream& out, bool report_all)
 
 namespace ledger {
 
-#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
 
 string::string() : std::string() {
   TRACE_CTOR(string, "");
@@ -527,7 +527,7 @@ string::~string() throw() {
   TRACE_DTOR(string);
 }
 
-#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#endif // !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
 
 string empty_string("");
 
