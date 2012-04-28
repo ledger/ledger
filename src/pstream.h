@@ -93,9 +93,6 @@ class ptristream : public std::istream
       case std::ios::end:
         setg(ptr, egptr()+off, ptr+len);
         break;
-
-      default:
-        return pos_type(off_type(-1));
       }
       return pos_type(gptr() - ptr);
     }
