@@ -58,17 +58,17 @@ class account_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-typedef std::list<xact_t *>                    xacts_list;
-typedef std::list<auto_xact_t *>               auto_xacts_list;
-typedef std::list<period_xact_t *>             period_xacts_list;
-typedef std::pair<mask_t, string>              payee_mapping_t;
-typedef std::list<payee_mapping_t>             payee_mappings_t;
-typedef std::pair<mask_t, account_t *>         account_mapping_t;
-typedef std::list<account_mapping_t>           account_mappings_t;
-typedef std::map<const string, account_t *>    accounts_map;
-typedef std::map<string, xact_t *>             checksum_map_t;
-typedef std::multimap<string,
-                      expr_t::check_expr_pair> tag_check_exprs_map;
+typedef std::list<xact_t *>            xacts_list;
+typedef std::list<auto_xact_t *>       auto_xacts_list;
+typedef std::list<period_xact_t *>     period_xacts_list;
+typedef std::pair<mask_t, string>      payee_mapping_t;
+typedef std::list<payee_mapping_t>     payee_mappings_t;
+typedef std::pair<mask_t, account_t *> account_mapping_t;
+typedef std::list<account_mapping_t>   account_mappings_t;
+typedef std::map<string, account_t *>  accounts_map;
+typedef std::map<string, xact_t *>     checksum_map_t;
+
+typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;
 
 class journal_t : public noncopyable
 {

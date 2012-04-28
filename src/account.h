@@ -51,7 +51,7 @@ class xact_t;
 class post_t;
 
 typedef std::list<post_t *> posts_list;
-typedef std::map<const string, account_t *> accounts_map;
+typedef std::map<string, account_t *> accounts_map;
 
 class account_t : public supports_flags<>, public scope_t
 {
