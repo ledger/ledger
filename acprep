@@ -46,6 +46,7 @@ class BoostInfo(object):
     include_path = "include"
     library_path = "lib"
     configured   = False
+    no_includes  = False
 
     def __init__(self, log):
         self.log = log
@@ -970,8 +971,12 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def setup_system_directories(self):
-        boost_include = self.boost_info.include_directory()
-        boost_library = self.boost_info.library_directory()
+        if not self.boost_info.no_includes:
+            boost_include = self.boost_info.include_directory()
+            boost_library = self.boost_info.library_directory()
+        else:
+            boost_include = None
+            boost_library = None
 
         if re.match('/(usr|opt)/local', self.boost_info.home_path):
             self.log.debug("Setting Python home to /opt/local based on Boost's location")
@@ -985,7 +990,7 @@ class PrepareBuild(CommandLineApp):
                       self.envvars['PYTHON_VERSION'].strip()),
                      '/opt/local/include',
                      '/sw/include']:
-            if exists(path) and isdir(path) and \
+            if path and exists(path) and isdir(path) and \
                path != '/usr/include':
                 self.log.info('Noticing include directory => ' + path)
                 self.sys_include_dirs.append(path)
@@ -1006,7 +1011,7 @@ class PrepareBuild(CommandLineApp):
                      '/opt/local/lib',
                      boost_library,
                      '/sw/lib']:
-            if exists(path) and isdir(path) and \
+            if path and exists(path) and isdir(path) and \
                path not in self.sys_library_dirs:
                 self.log.info('Noticing library directory => ' + path)
                 self.sys_library_dirs.append(path)
@@ -1014,36 +1019,17 @@ class PrepareBuild(CommandLineApp):
     def setup_for_johnw(self):
         self.envvars['PYTHON']      = '/opt/local/bin/python'
         self.envvars['PYTHON_HOME'] = '/opt/local'
+        self.envvars['CXX']         = '/Users/johnw/bin/cxx'
+        self.envvars['LD']          = '/Users/johnw/bin/cxx'
 
-        if self.options.use_clang:
-            self.log.info('Setting up for using Clang')
+        self.boost_info.configured  = True     # cxx does all this work for me
+        self.boost_info.no_includes = True
 
-            self.boost_inc_ident = "clang31"
-            self.boost_lib_ident = "clang-darwin"
+        if self.options.use_cpp11:
+            self.CXXFLAGS.append('-std=c++11')
 
-            if self.options.use_cpp11:
-                self.CXXFLAGS.append('-nostdlibinc')
-                self.CXXFLAGS.append('-isystem /usr/local/include')
-                self.CXXFLAGS.append('-isystem /usr/local/include/c++/v1')
-                self.CXXFLAGS.append('-isystem /usr/include')
-
-                self.LDFLAGS.append('/usr/local/lib/libc++.dylib')
-
-            self.log.debug('Using Clang ident: %s/%s' %
-                           (self.boost_inc_ident, self.boost_lib_ident))
-        else:
-            global search_prefixes
-            search_prefixes = [ '/opt/local', '/usr/local', '/sw', '/usr' ]
-        #    match = re.search('gcc-mp-([0-9]+)\.([0-9]+)', self.envvars['CC'])
-        #    if match:
-        #        self.boost_inc_ident = "gcc" + match.group(1) + match.group(2)
-        #        self.boost_lib_ident = "x" + self.boost_inc_ident
-        #    else:
-        #        self.boost_inc_ident = "gcc42"
-        #        self.boost_lib_ident = "xgcc42"
-        #
-        #    self.log.debug('Using Boost ident: %s/%s' %
-        #                   (self.boost_inc_ident, self.boost_lib_ident))
+        if not self.options.use_clang:
+            self.CXXFLAGS.append('--gcc47')
 
         if self.current_flavor == 'debug':
             self.configure_args.append('--disable-shared')
@@ -1054,8 +1040,6 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-msse3')
 
         self.CXXFLAGS.append('-DDOCUMENT_MODEL=1')
-
-        self.locate_darwin_libraries()
 
     def setup_for_system(self):
         system = self.get_stdout('uname', '-s')
@@ -1080,59 +1064,9 @@ class PrepareBuild(CommandLineApp):
 
         elif system == 'Darwin':
             if self.options.use_clang:
-                if exists('/usr/local/bin/clang++'):
-                    self.envvars['CC']  = '/usr/local/bin/clang'
-                    self.envvars['CXX'] = '/usr/local/bin/clang++'
-                    self.envvars['LD']  = '/usr/local/bin/clang++'
-                elif exists('/opt/local/bin/clang++-mp-3.1'):
-                    self.envvars['CC']  = '/opt/local/bin/clang-mp-3.1'
-                    self.envvars['CXX'] = '/opt/local/bin/clang++-mp-3.1'
-                    self.envvars['LD']  = '/opt/local/bin/clang++-mp-3.1'
-                else:
-                    self.envvars['CC']  = 'clang'
-                    self.envvars['CXX'] = 'clang++'
-                    self.envvars['LD']  = 'llvm-ld'
-            elif (self.current_flavor == 'opt' or \
-                  self.current_flavor == 'default') and \
-               not self.options.gcc45 and \
-               not self.options.gcc46 and \
-               not self.options.gcc47 and \
-               not self.options.gcc48 and \
-               exists('/usr/bin/g++-4.2'):
-                self.envvars['CC']  = '/usr/bin/gcc-4.2'
-                self.envvars['CXX'] = '/usr/bin/g++-4.2'
-                self.envvars['LD']  = '/usr/bin/g++-4.2'
-                self.darwin_gcc = True
-            elif exists('/usr/local/bin/g++-mp-4.8') and \
-                 self.options.gcc47:
-                self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.8'
-                self.envvars['CXX'] = '/usr/local/bin/g++-mp-4.8'
-                self.envvars['LD']  = '/usr/local/bin/g++-mp-4.8'
-            elif exists('/usr/local/bin/g++-mp-4.7') and \
-                 self.options.gcc47:
-                self.envvars['CC']  = '/usr/local/bin/gcc-mp-4.7'
-                self.envvars['CXX'] = '/usr/local/bin/g++-mp-4.7'
-                self.envvars['LD']  = '/usr/local/bin/g++-mp-4.7'
-            elif exists('/opt/local/bin/g++-mp-4.7') and \
-                 self.options.gcc47:
-                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.7'
-                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.7'
-                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.7'
-            elif exists('/opt/local/bin/g++-mp-4.6') and \
-                 self.options.gcc46:
-                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.6'
-                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.6'
-                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.6'
-            elif exists('/opt/local/bin/g++-mp-4.5') and \
-                self.options.gcc45:
-                self.envvars['CC']  = '/opt/local/bin/gcc-mp-4.5'
-                self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.5'
-                self.envvars['LD']  = '/opt/local/bin/g++-mp-4.5'
-            elif exists('/usr/bin/g++-4.2'):
-                self.envvars['CC']  = '/usr/bin/gcc-4.2'
-                self.envvars['CXX'] = '/usr/bin/g++-4.2'
-                self.envvars['LD']  = '/usr/bin/g++-4.2'
-                self.darwin_gcc = True
+                self.envvars['CC']  = 'clang'
+                self.envvars['CXX'] = 'clang++'
+                self.envvars['LD']  = 'llvm-ld'
             else:
                 # g++ 4.0.1 cannot use PCH headers on OS X 10.5
                 self.option_no_pch()
@@ -1321,33 +1255,6 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
     # The various build flavors                                             #
     #########################################################################
-
-    def locate_darwin_libraries(self):
-        if self.current_flavor == 'debug':
-            if (self.options.use_clang or self.options.use_cpp11) and \
-               self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s-%s' % \
-                    (self.boost_version, self.boost_inc_ident),
-                suffix       = '-%s-d-%s' % \
-                    (self.boost_lib_ident, self.boost_major),
-                file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_major):
-                pass
-            elif self.boost_info.configure(suffix = '-d', file_suffix  = '.dylib'):
-                pass
-
-        else:
-            if self.boost_info.configure():
-                pass
-            elif (self.options.use_clang or self.options.use_cpp11) and \
-                 self.boost_info.configure(
-                home_path    = '/usr/local/stow/boost_%s-%s' % \
-                    (self.boost_version, self.boost_inc_ident),
-                suffix       = '-%s-%s' % \
-                    (self.boost_lib_ident, self.boost_major),
-                file_suffix  = '.dylib',
-                include_path = 'include/boost-%s' % self.boost_major):
-                pass
 
     def setup_flavor_default(self):
         if self.darwin_gcc:
