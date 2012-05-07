@@ -62,7 +62,7 @@ namespace {
     VERIFY(amt.valid());
 
     post_t * post = new post_t(in_event.account, amt, POST_VIRTUAL);
-    post->set_state(item_t::CLEARED);
+    post->set_state(out_event.completed ? item_t::CLEARED : item_t::UNCLEARED);
     post->pos = in_event.position;
     post->checkin = in_event.checkin;
     post->checkout = out_event.checkin;
