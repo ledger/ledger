@@ -1028,8 +1028,8 @@ class PrepareBuild(CommandLineApp):
             self.envvars['CXX'] = '/Users/johnw/bin/cxx'
             self.envvars['LD']  = '/Users/johnw/bin/cxx'
 
-        if not self.options.use_clang:
-            self.CXXFLAGS.append('--gcc47')
+        #if not self.options.use_clang:
+        #    self.CXXFLAGS.append('--gcc47')
 
         if self.current_flavor == 'debug':
             self.configure_args.append('--disable-shared')
