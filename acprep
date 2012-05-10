@@ -539,6 +539,9 @@ class PrepareBuild(CommandLineApp):
         op.add_option('', '--cpp11', action='store_true',
                       dest='use_cpp11', default=False,
                       help='Use C++11 extensions (requires Clang or gcc 4.6/7/8)')
+        op.add_option('', '--plain', action='store_true',
+                      dest='use_plain', default=False,
+                      help="Don't customize for my private environment")
         op.add_option('', '--output', metavar='DIR', action="callback",
                       callback=self.option_output,
                       help='Build in the specified directory')
@@ -1080,7 +1083,8 @@ class PrepareBuild(CommandLineApp):
         if self.options.no_python:
             self.configure_args.remove('--enable-python')
 
-        if exists('/Users/johnw/Projects/ledger/plan/TODO'):
+        if not self.options.use_plain and \
+           exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
         self.setup_system_directories()
 
