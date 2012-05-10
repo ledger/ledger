@@ -1019,14 +1019,14 @@ class PrepareBuild(CommandLineApp):
     def setup_for_johnw(self):
         self.envvars['PYTHON']      = '/opt/local/bin/python'
         self.envvars['PYTHON_HOME'] = '/opt/local'
-        self.envvars['CXX']         = '/Users/johnw/bin/cxx'
-        self.envvars['LD']          = '/Users/johnw/bin/cxx'
 
         self.boost_info.configured  = True     # cxx does all this work for me
         self.boost_info.no_includes = True
 
         if self.options.use_cpp11:
             self.CXXFLAGS.append('-std=c++11')
+            self.envvars['CXX'] = '/Users/johnw/bin/cxx'
+            self.envvars['LD']  = '/Users/johnw/bin/cxx'
 
         if not self.options.use_clang:
             self.CXXFLAGS.append('--gcc47')
