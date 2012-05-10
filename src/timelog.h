@@ -56,6 +56,7 @@ class time_xact_t
 {
 public:
   datetime_t  checkin;
+  bool        completed;
   account_t * account;
   string      desc;
   string      note;
@@ -66,16 +67,18 @@ public:
   }
   time_xact_t(const optional<position_t>& _position,
               const datetime_t&           _checkin,
-              account_t *                 _account = NULL,
-              const string&               _desc    = "",
-              const string&               _note    = "")
-    : checkin(_checkin), account(_account), desc(_desc), note(_note),
+              const bool                  _completed = false,
+              account_t *                 _account   = NULL,
+              const string&               _desc      = "",
+              const string&               _note      = "")
+    : checkin(_checkin), completed(_completed), account(_account),
+      desc(_desc), note(_note),
       position(_position ? *_position : position_t()) {
     TRACE_CTOR(time_xact_t,
-               "position_t, datetime_t, account_t *, string, string");
+               "position_t, datetime_t, bool, account_t *, string, string");
   }
   time_xact_t(const time_xact_t& xact)
-    : checkin(xact.checkin), account(xact.account),
+    : checkin(xact.checkin), completed(xact.completed), account(xact.account),
       desc(xact.desc), note(xact.note), position(xact.position) {
     TRACE_CTOR(time_xact_t, "copy");
   }

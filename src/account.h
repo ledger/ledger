@@ -183,6 +183,7 @@ public:
 
       datetime_t         earliest_checkin;
       datetime_t         latest_checkout;
+      bool               latest_checkout_cleared;
 
       std::set<path>     filenames;
       std::set<string>   accounts_referenced;

@@ -309,6 +309,10 @@ namespace {
     return (! account.self_details().latest_checkout.is_not_a_date_time() ?
             value_t(account.self_details().latest_checkout) : NULL_VALUE);
   }
+  value_t get_latest_checkout_cleared(account_t& account)
+  {
+    return account.self_details().latest_checkout_cleared;
+  }
 
   template <value_t (*Func)(account_t&)>
   value_t get_wrapper(call_scope_t& args) {
@@ -405,6 +409,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_latest>);
     else if (fn_name == "latest_checkout")
       return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout>);
+    else if (fn_name == "latest_checkout_cleared")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout_cleared>);
     break;
 
   case 'n':
@@ -662,8 +668,10 @@ void account_t::xdata_t::details_t::update(post_t& post,
     earliest_checkin = *post.checkin;
 
   if (post.checkout && (latest_checkout.is_not_a_date_time() ||
-                        *post.checkout > latest_checkout))
+                        *post.checkout > latest_checkout)) {
     latest_checkout = *post.checkout;
+    latest_checkout_cleared = post.state() == item_t::CLEARED;
+  }
 
   if (post.state() == item_t::CLEARED) {
     posts_cleared_count++;
