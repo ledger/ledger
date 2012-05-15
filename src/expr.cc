@@ -306,8 +306,8 @@ value_t source_command(call_scope_t& args)
         expr_t(p).calc(file_locals);
       }
       catch (const std::exception&) {
-        add_error_context(_("While parsing value expression on line %1:")
-                          << linenum);
+        add_error_context(_f("While parsing value expression on line %1%:")
+                          % linenum);
         add_error_context(source_context(pathname, pos, in->tellg(), "> "));
       }
     }

@@ -270,16 +270,16 @@ namespace {
         return item.has_tag(args.get<mask_t>(0));
       else
         throw_(std::runtime_error,
-               _("Expected string or mask for argument 1, but received %1")
-               << args[0].label());
+               _f("Expected string or mask for argument 1, but received %1%")
+               % args[0].label());
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
         return item.has_tag(args.get<mask_t>(0), args.get<mask_t>(1));
       else
         throw_(std::runtime_error,
-               _("Expected masks for arguments 1 and 2, but received %1 and %2")
-               << args[0].label() << args[1].label());
+               _f("Expected masks for arguments 1 and 2, but received %1% and %2%")
+               % args[0].label() % args[1].label());
     }
     else if (args.size() == 0) {
       throw_(std::runtime_error, _("Too few arguments to function"));
@@ -302,16 +302,16 @@ namespace {
         val = item.get_tag(args.get<mask_t>(0));
       else
         throw_(std::runtime_error,
-               _("Expected string or mask for argument 1, but received %1")
-               << args[0].label());
+               _f("Expected string or mask for argument 1, but received %1%")
+               % args[0].label());
     }
     else if (args.size() == 2) {
       if (args[0].is_mask() && args[1].is_mask())
         val = item.get_tag(args.get<mask_t>(0), args.get<mask_t>(1));
       else
         throw_(std::runtime_error,
-               _("Expected masks for arguments 1 and 2, but received %1 and %2")
-               << args[0].label() << args[1].label());
+               _f("Expected masks for arguments 1 and 2, but received %1% and %2%")
+               % args[0].label() % args[1].label());
     }
     else if (args.size() == 0) {
       throw_(std::runtime_error, _("Too few arguments to function"));

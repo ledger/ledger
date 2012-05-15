@@ -42,11 +42,8 @@
 #ifndef _ERROR_H
 #define _ERROR_H
 
-#include "accum.h"
-
 namespace ledger {
 
-extern straccstream       _desc_accum;
 extern std::ostringstream _desc_buffer;
 
 template <typename T>
@@ -57,8 +54,7 @@ inline void throw_func(const string& message) {
 }
 
 #define throw_(cls, msg)                        \
-  ((_desc_buffer << ACCUM(_desc_accum << msg)), \
-   _desc_accum.clear(),                         \
+  ((_desc_buffer << (msg)),                     \
    throw_func<cls>(_desc_buffer.str()))
 
 inline void warning_func(const string& message) {
@@ -68,19 +64,15 @@ inline void warning_func(const string& message) {
 }
 
 #define warning_(msg)                           \
-  ((_desc_buffer << ACCUM(_desc_accum << msg)), \
-   _desc_accum.clear(),                         \
+  ((_desc_buffer << (msg)),                     \
    warning_func(_desc_buffer.str()))
 
-extern straccstream       _ctxt_accum;
 extern std::ostringstream _ctxt_buffer;
 
-#define add_error_context(msg)                                  \
-  ((long(_ctxt_buffer.tellp()) == 0) ?                          \
-   ((_ctxt_buffer << ACCUM(_ctxt_accum << msg)),                \
-    _ctxt_accum.clear()) :                                      \
-   ((_ctxt_buffer << std::endl << ACCUM(_ctxt_accum << msg)),   \
-    _ctxt_accum.clear()))
+#define add_error_context(msg)                  \
+  ((long(_ctxt_buffer.tellp()) == 0) ?          \
+   (_ctxt_buffer << (msg)) :                    \
+   (_ctxt_buffer << std::endl << (msg)))
 
 string error_context();
 

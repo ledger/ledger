@@ -479,26 +479,26 @@ void expr_t::token_t::unexpected(const char wanted)
     case TOK_EOF:
       throw_(parse_error, _("Unexpected end of expression"));
     case IDENT:
-      throw_(parse_error, _("Unexpected symbol '%1'") << value);
+      throw_(parse_error, _f("Unexpected symbol '%1%'") % value);
     case VALUE:
-      throw_(parse_error, _("Unexpected value '%1'") << value);
+      throw_(parse_error, _f("Unexpected value '%1%'") % value);
     default:
-      throw_(parse_error, _("Unexpected expression token '%1'") << symbol);
+      throw_(parse_error, _f("Unexpected expression token '%1%'") % symbol);
     }
   } else {
     switch (prev_kind) {
     case TOK_EOF:
       throw_(parse_error,
-             _("Unexpected end of expression (wanted '%1')") << wanted);
+             _f("Unexpected end of expression (wanted '%1%')") % wanted);
     case IDENT:
       throw_(parse_error,
-             _("Unexpected symbol '%1' (wanted '%2')") << value << wanted);
+             _f("Unexpected symbol '%1%' (wanted '%2%')") % value % wanted);
     case VALUE:
       throw_(parse_error,
-             _("Unexpected value '%1' (wanted '%2')") << value << wanted);
+             _f("Unexpected value '%1%' (wanted '%2%')") % value % wanted);
     default:
-      throw_(parse_error, _("Unexpected expression token '%1' (wanted '%2')")
-             << symbol << wanted);
+      throw_(parse_error, _f("Unexpected expression token '%1%' (wanted '%2%')")
+             % symbol % wanted);
     }
   }
 }
@@ -509,13 +509,13 @@ void expr_t::token_t::expected(const char wanted, char c)
     if (wanted == '\0' || wanted == -1)
       throw_(parse_error, _("Unexpected end"));
     else
-      throw_(parse_error, _("Missing '%1'") << wanted);
+      throw_(parse_error, _f("Missing '%1%'") % wanted);
   } else {
     if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _("Invalid char '%1'") << c);
+      throw_(parse_error, _f("Invalid char '%1%'") % c);
     else
       throw_(parse_error,
-             _("Invalid char '%1' (wanted '%2')") << c << wanted);
+             _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
   }
 }
 
@@ -523,10 +523,10 @@ void expr_t::token_t::expected(const kind_t wanted)
 {
   try {
     if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _("Invalid token '%1'") << *this);
+      throw_(parse_error, _f("Invalid token '%1%'") % *this);
     else
       throw_(parse_error,
-             _("Invalid token '%1' (wanted '%2')") << *this << wanted);
+             _f("Invalid token '%1%' (wanted '%2%')") % *this % wanted);
   }
   catch (...) {
     kind = ERROR;

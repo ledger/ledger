@@ -393,7 +393,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
   objects_map::iterator i = live_objects->find(ptr);
   if (i == live_objects->end()) {
-    warning_(_("Attempting to delete %1 a non-living %2") << ptr << cls_name);
+    warning_(_f("Attempting to delete %1% a non-living %2%") % ptr % cls_name);
     memory_tracing_active = true;
     return;
   }
@@ -408,7 +408,7 @@ void trace_dtor_func(void * ptr, const char * cls_name, std::size_t cls_size)
 
   object_count_map::iterator k = live_object_count->find(cls_name);
   if (k == live_object_count->end()) {
-    warning_(_("Failed to find %1 in live object counts") << cls_name);
+    warning_(_f("Failed to find %1% in live object counts") % cls_name);
     memory_tracing_active = true;
     return;
   }
@@ -572,7 +572,7 @@ strings_list split_arguments(const char * line)
 
   if (in_quoted_string)
     throw_(std::logic_error,
-           _("Unterminated string, expected '%1'") << in_quoted_string);
+           _f("Unterminated string, expected '%1%'") % in_quoted_string);
 
   if (q != buf) {
     *q = '\0';

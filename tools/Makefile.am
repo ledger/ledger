@@ -20,7 +20,6 @@ libledger_util_la_SOURCES =			\
 	src/times.cc				\
 	src/error.cc				\
 	src/utils.cc				\
-	src/accum.cc				\
 	lib/sha1.cpp
 
 libledger_util_la_CPPFLAGS = $(lib_cppflags)
@@ -95,7 +94,6 @@ pkginclude_HEADERS =				\
 	src/stream.h				\
 	src/pstream.h				\
 	src/unistring.h				\
-	src/accum.h				\
 						\
 	src/amount.h				\
 	src/commodity.h				\

@@ -129,7 +129,7 @@ public:
   virtual string description() {
     if (pos) {
       std::ostringstream buf;
-      buf << _("transaction at line %1") << pos->beg_line;
+      buf << _f("transaction at line %1") << pos->beg_line;
       return buf.str();
     } else {
       return string(_("generated transaction"));
@@ -220,7 +220,7 @@ private:
   virtual string description() {
     if (pos) {
       std::ostringstream buf;
-      buf << _("automated transaction at line %1") << pos->beg_line;
+      buf << _f("automated transaction at line %1") << pos->beg_line;
       return buf.str();
     } else {
       return string(_("generated automated transaction"));
@@ -278,7 +278,7 @@ class period_xact_t : public xact_base_t
   virtual string description() {
     if (pos) {
       std::ostringstream buf;
-      buf << _("periodic transaction at line %1") << pos->beg_line;
+      buf << _f("periodic transaction at line %1") << pos->beg_line;
       return buf.str();
     } else {
       return string(_("generated periodic transaction"));

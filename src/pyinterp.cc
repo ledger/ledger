@@ -113,12 +113,12 @@ void python_module_t::import_module(const string& name, bool import_direct)
   object mod = python::import(name.c_str());
   if (! mod)
     throw_(std::runtime_error,
-           _("Module import failed (couldn't find %1)") << name);
+           _f("Module import failed (couldn't find %1%)") % name);
 
   dict globals = extract<dict>(mod.attr("__dict__"));
   if (! globals)
     throw_(std::runtime_error,
-           _("Module import failed (couldn't find %1)") << name);
+           _f("Module import failed (couldn't find %1%)") % name);
 
   if (! import_direct) {
     module_object  = mod;
@@ -246,7 +246,7 @@ object python_interpreter_t::import_option(const string& str)
   }
   catch (const error_already_set&) {
     PyErr_Print();
-    throw_(std::runtime_error, _("Python failed to import: %1") << str);
+    throw_(std::runtime_error, _f("Python failed to import: %1%") % str);
   }
   catch (...) {
     throw;
@@ -582,7 +582,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
       }
       else if (PyErr_Occurred()) {
         PyErr_Print();
-        throw_(calc_error, _("Failed call to Python function '%1'") << name);
+        throw_(calc_error, _f("Failed call to Python function '%1%'") % name);
       } else {
         assert(false);
       }
@@ -595,7 +595,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
   catch (const error_already_set&) {
     std::signal(SIGINT, sigint_handler);
     PyErr_Print();
-    throw_(calc_error, _("Failed call to Python function '%1'") << name);
+    throw_(calc_error, _f("Failed call to Python function '%1%'") % name);
   }
   catch (...) {
     std::signal(SIGINT, sigint_handler);

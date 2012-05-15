@@ -230,7 +230,7 @@ namespace {
         if (! *p || *p != *q) break;
       }
       if (*p != '\0' || *q != '\0')
-        throw_(date_error, _("Invalid date: %1") << date_str);
+        throw_(date_error, _f("Invalid date: %1%") % date_str);
 
       if (traits)
         *traits = io.traits;
@@ -260,7 +260,7 @@ namespace {
         return when;
     }
 
-    throw_(date_error, _("Invalid date: %1") << date_str);
+    throw_(date_error, _f("Invalid date: %1%") % date_str);
     return date_t();
   }
 }
@@ -329,7 +329,7 @@ datetime_t parse_datetime(const char * str)
   if (when.is_not_a_date_time()) {
     when = timelog_datetime_io->parse(buf);
     if (when.is_not_a_date_time()) {
-      throw_(date_error, _("Invalid date/time: %1") << str);
+      throw_(date_error, _f("Invalid date/time: %1%") % str);
     }
   }
   return when;
@@ -1682,7 +1682,7 @@ void date_parser_t::lexer_t::token_t::unexpected()
   default: {
     string desc = to_string();
     kind = UNKNOWN;
-    throw_(date_error, _("Unexpected date period token '%1'") << desc);
+    throw_(date_error, _f("Unexpected date period token '%1%'") % desc);
   }
   }
 }
@@ -1693,12 +1693,12 @@ void date_parser_t::lexer_t::token_t::expected(char wanted, char c)
     if (wanted == '\0' || wanted == -1)
       throw_(date_error, _("Unexpected end"));
     else
-      throw_(date_error, _("Missing '%1'") << wanted);
+      throw_(date_error, _f("Missing '%1%'") % wanted);
   } else {
     if (wanted == '\0' || wanted == -1)
-      throw_(date_error, _("Invalid char '%1'") << c);
+      throw_(date_error, _f("Invalid char '%1%'") % c);
     else
-      throw_(date_error, _("Invalid char '%1' (wanted '%2')") << c << wanted);
+      throw_(date_error, _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
   }
 }
 

@@ -146,7 +146,7 @@ int main(int argc, char * argv[], char * envp[])
             std::free(expansion);
           std::free(p);
           throw_(std::logic_error,
-                 _("Failed to expand history reference '%1'") << p);
+                 _f("Failed to expand history reference '%1%'") % p);
         }
         else if (expansion) {
           add_history(expansion);

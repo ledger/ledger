@@ -121,8 +121,8 @@ void global_scope_t::read_init()
       if (session().journal->read(parsing_context) > 0 ||
           session().journal->auto_xacts.size() > 0 ||
           session().journal->period_xacts.size() > 0) {
-        throw_(parse_error, _("Transactions found in initialization file '%1'")
-               << init_file);
+        throw_(parse_error, _f("Transactions found in initialization file '%1%'")
+               % init_file);
       }
 
       TRACE_FINISH(init, 1);
@@ -203,7 +203,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl)
     report().normalize_options(verb);
 
     if (! bool(command = look_for_command(bound_scope, verb)))
-      throw_(std::logic_error, _("Unrecognized command '%1'") << verb);
+      throw_(std::logic_error, _f("Unrecognized command '%1%'") % verb);
   }
 
   // Create the output stream (it might be a file, the console or a PAGER

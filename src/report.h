@@ -434,7 +434,7 @@ public:
         OTHER(limit_).on(whence, predicate);
       } else {
         throw_(std::invalid_argument,
-               _("Could not determine beginning of period '%1'") << str);
+               _f("Could not determine beginning of period '%1%'") % str);
       }
     });
 
@@ -651,8 +651,8 @@ public:
         parent->terminus = datetime_t(*end);
       } else {
         throw_(std::invalid_argument,
-               _("Could not determine end of period '%1'")
-               << str);
+               _f("Could not determine end of period '%1%'")
+               % str);
       }
     });
 
@@ -770,8 +770,8 @@ public:
         ledger::epoch = parent->terminus = datetime_t(*begin);
       } else {
         throw_(std::invalid_argument,
-               _("Could not determine beginning of period '%1'")
-               << str);
+               _f("Could not determine beginning of period '%1%'")
+               % str);
       }
     });
 
@@ -1002,7 +1002,7 @@ public:
         format_t::default_style = format_t::TRUNCATE_TRAILING;
       else
         throw_(std::invalid_argument,
-               _("Unrecognized truncation style: '%1'") << style);
+               _f("Unrecognized truncation style: '%1%'") % style);
       format_t::default_style_changed = true;
     });
 

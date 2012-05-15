@@ -68,7 +68,7 @@ void draft_t::xact_template_t::dump(std::ostream& out) const
   } else {
     foreach (const post_template_t& post, posts) {
       out << std::endl
-          << STR(_("[Posting \"%1\"]") << (post.from ? _("from") : _("to")))
+          << _f("[Posting \"%1\"]") % (post.from ? _("from") : _("to"))
           << std::endl;
 
       if (post.account_mask)
@@ -307,8 +307,8 @@ xact_t * draft_t::insert(journal_t& journal)
       }
     } else {
       throw_(std::runtime_error,
-             _("No accounts, and no past transaction matching '%1'")
-             << tmpl->payee_mask);
+             _f("No accounts, and no past transaction matching '%1%'")
+             % tmpl->payee_mask);
     }
   } else {
     DEBUG("draft.xact", "Template had postings");

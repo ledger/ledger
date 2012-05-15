@@ -103,6 +103,9 @@ public:
   void warning(const string& what) const {
     warning_func(location() + what);
   }
+  void warning(const boost::format& what) const {
+    warning_func(location() + string(what.str()));
+  }
 };
 
 inline parse_context_t open_for_reading(const path& pathname,
@@ -112,7 +115,7 @@ inline parse_context_t open_for_reading(const path& pathname,
 
   if (! exists(filename))
     throw_(std::runtime_error,
-           _("Cannot read journal file %1") << filename);
+           _f("Cannot read journal file %1%") % filename);
 
 #if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
   path parent(filesystem::absolute(pathname, cwd).parent_path());

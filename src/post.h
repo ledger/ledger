@@ -106,7 +106,7 @@ public:
   virtual string description() {
     if (pos) {
       std::ostringstream buf;
-      buf << _("posting at line %1") << pos->beg_line;
+      buf << _f("posting at line %1") << pos->beg_line;
       return buf.str();
     } else {
       return string(_("generated posting"));

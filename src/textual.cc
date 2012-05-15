@@ -271,10 +271,10 @@ void instance_t::parse()
           instances.push_front(instance);
 
         foreach (instance_t * instance, instances)
-          add_error_context(_("In file included from %1")
-                            << instance->context.location());
+          add_error_context(_f("In file included from %1%")
+                            % instance->context.location());
       }
-      add_error_context(_("While parsing file %1") << context.location());
+      add_error_context(_f("While parsing file %1%") % context.location());
 
       if (caught_signal != NONE_CAUGHT)
         throw;
@@ -544,7 +544,7 @@ void instance_t::option_directive(char * line)
   path abs_path(filesystem::absolute(context.pathname,
                                      context.current_directory));
   if (! process_option(abs_path.string(), line + 2, *context.scope, p, line))
-    throw_(option_error, _("Illegal option --%1") << line + 2);
+    throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
 
 void instance_t::automated_xact_directive(char * line)
@@ -813,7 +813,7 @@ void instance_t::include_directive(char * line)
 
   if (! files_found)
     throw_(std::runtime_error,
-           _("File to include was not found: %1") << filename);
+           _f("File to include was not found: %1%") % filename);
 
 }
 
@@ -886,15 +886,15 @@ void instance_t::end_apply_directive(char * kind)
              _("'end' or 'end apply' found, but no enclosing 'apply' directive"));
     } else {
       throw_(std::runtime_error,
-             _("'end apply %1' found, but no enclosing 'apply' directive")
-             << name);
+             _f("'end apply %1%' found, but no enclosing 'apply' directive")
+             % name);
     }
   }
 
   if (! name.empty() && name != apply_stack.front().label)
     throw_(std::runtime_error,
-           _("'end apply %1' directive does not match 'apply %2' directive")
-           << name << apply_stack.front().label);
+           _f("'end apply %1%' directive does not match 'apply %2%' directive")
+           % name % apply_stack.front().label);
 
   if (apply_stack.front().value.type() == typeid(optional<datetime_t>))
     epoch = boost::get<optional<datetime_t> >(apply_stack.front().value);
@@ -1142,14 +1142,14 @@ void instance_t::assert_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(*context.scope).to_boolean())
-    throw_(parse_error, _("Assertion failed: %1") << line);
+    throw_(parse_error, _f("Assertion failed: %1%") % line);
 }
 
 void instance_t::check_directive(char * line)
 {
   expr_t expr(line);
   if (! expr.calc(*context.scope).to_boolean())
-    context.warning(STR(_("Check failed: %1") << line));
+    context.warning(_f("Check failed: %1%") % line);
 }
 
 void instance_t::value_directive(char * line)
@@ -1624,7 +1624,7 @@ post_t * instance_t::parse_post(char *          line,
         if (! post->amount.is_null()) {
           diff -= post->amount;
           if (! diff.is_zero())
-            throw_(parse_error, _("Balance assertion off by %1") << diff);
+            throw_(parse_error, _f("Balance assertion off by %1%") % diff);
         } else {
           post->amount = diff;
           DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -1654,8 +1654,8 @@ post_t * instance_t::parse_post(char *          line,
 
   if (next && *next)
     throw_(parse_error,
-           _("Unexpected char '%1' (Note: inline math requires parentheses)")
-           << *next);
+           _f("Unexpected char '%1%' (Note: inline math requires parentheses)")
+           % *next);
 
   post->pos->end_pos  = context.curr_pos;
   post->pos->end_line = context.linenum;
@@ -1838,9 +1838,9 @@ xact_t * instance_t::parse_xact(char *          line,
       }
       else if (! expr.calc(bound_scope).to_boolean()) {
         if (c == 'a') {
-          throw_(parse_error, _("Transaction assertion failed: %1") << p);
+          throw_(parse_error, _f("Transaction assertion failed: %1%") % p);
         } else {
-          context.warning(STR(_("Transaction check failed: %1") << p));
+          context.warning(_f("Transaction check failed: %1%") % p);
         }
       }
     }

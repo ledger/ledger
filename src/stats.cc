@@ -55,15 +55,12 @@ value_t report_statistics(call_scope_t& args)
   assert(is_valid(statistics.earliest_post));
   assert(is_valid(statistics.latest_post));
 
-  {
-    straccstream accum;
-    out << ACCUM(accum << _("Time period: %1 to %2 (%3 days)")
-                 << format_date(statistics.earliest_post)
-                 << format_date(statistics.latest_post)
-                 << (statistics.latest_post -
-                     statistics.earliest_post).days())
-        << std::endl << std::endl;
-  }
+  out << format(_f("Time period: %1% to %2% (%3% days)")
+                % format_date(statistics.earliest_post)
+                % format_date(statistics.latest_post)
+                % (statistics.latest_post -
+                   statistics.earliest_post).days())
+      << std::endl << std::endl;
 
   out << _("  Files these postings came from:") << std::endl;
 

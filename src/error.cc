@@ -35,9 +35,7 @@
 
 namespace ledger {
 
-straccstream       _ctxt_accum;
 std::ostringstream _ctxt_buffer;
-straccstream       _desc_accum;
 std::ostringstream _desc_buffer;
 
 string error_context()

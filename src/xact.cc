@@ -184,8 +184,8 @@ bool xact_base_t::finalize()
 
       if (post_account_bad || null_post_account_bad)
         throw_(std::logic_error,
-               _("Posting with null amount's account may be mispelled:\n  \"%1\"")
-               << (post_account_bad ? post->account->fullname() :
+               _f("Posting with null amount's account may be mispelled:\n  \"%1%\"")
+               % (post_account_bad ? post->account->fullname() :
                    null_post->account->fullname()));
       else
         throw_(std::logic_error,
@@ -706,10 +706,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
           else if (! pair.first.calc(bound_scope).to_boolean()) {
             if (pair.second == expr_t::EXPR_ASSERTION)
               throw_(parse_error,
-                     _("Transaction assertion failed: %1") << pair.first);
+                     _f("Transaction assertion failed: %1%") % pair.first);
             else
-              context.warning(STR(_("Transaction check failed: %1")
-                                  << pair.first));
+              context.warning(_f("Transaction check failed: %1%") % pair.first);
           }
         }
       }

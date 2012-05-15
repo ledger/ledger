@@ -58,7 +58,7 @@ void symbol_scope_t::define(const symbol_t::kind_t kind,
                              (symbol_t(kind, name, def), def));
     if (! result.second)
       throw_(compile_error,
-             _("Redefinition of '%1' in the same scope") << name);
+             _f("Redefinition of '%1%' in the same scope") % name);
   }
 }
 
@@ -88,8 +88,8 @@ value_t& call_scope_t::resolve(const std::size_t index,
     context_scope_t scope(*this, context, required);
     value = as_expr(value)->calc(scope, locus, depth);
     if (required && ! value.is_type(context))
-      throw_(calc_error, _("Expected %1 for argument %2, but received %3")
-             << value.label(context) << index << value.label());
+      throw_(calc_error, _f("Expected %1% for argument %2%, but received %3%")
+             % value.label(context) % index % value.label());
   }
   return value;
 }

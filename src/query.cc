@@ -79,7 +79,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
       pat.push_back(*arg_i);
     }
     if (! found_closing)
-      throw_(parse_error, _("Expected '%1' at end of pattern") << closing);
+      throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
     if (pat.empty())
       throw_(parse_error, _("Match pattern is empty"));
 
@@ -229,9 +229,9 @@ void query_t::lexer_t::token_t::unexpected()
   case END_REACHED:
     throw_(parse_error, _("Unexpected end of expression"));
   case TERM:
-    throw_(parse_error, _("Unexpected string '%1'") << *value);
+    throw_(parse_error, _f("Unexpected string '%1%'") % *value);
   default:
-    throw_(parse_error, _("Unexpected token '%1'") << symbol());
+    throw_(parse_error, _f("Unexpected token '%1%'") % symbol());
   }
 }
 
@@ -243,12 +243,12 @@ void query_t::lexer_t::token_t::expected(char wanted, char c)
     if (wanted == '\0' || wanted == -1)
       throw_(parse_error, _("Unexpected end"));
     else
-      throw_(parse_error, _("Missing '%1'") << wanted);
+      throw_(parse_error, _f("Missing '%1%'") % wanted);
   } else {
     if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _("Invalid char '%1'") << c);
+      throw_(parse_error, _f("Invalid char '%1%'") % c);
     else
-      throw_(parse_error, _("Invalid char '%1' (wanted '%2')") << c << wanted);
+      throw_(parse_error, _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
   }
 }
 
@@ -278,7 +278,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     node = parse_query_term(tok.kind);
     if (! node)
       throw_(parse_error,
-             _("%1 operator not followed by argument") << tok.symbol());
+             _f("%1% operator not followed by argument") % tok.symbol());
     break;
 
   case lexer_t::token_t::TERM:
@@ -374,7 +374,7 @@ query_t::parser_t::parse_unary_expr(lexer_t::token_t::kind_t tok_context)
     expr_t::ptr_op_t term(parse_query_term(tok_context));
     if (! term)
       throw_(parse_error,
-             _("%1 operator not followed by argument") << tok.symbol());
+             _f("%1% operator not followed by argument") % tok.symbol());
 
     node = new expr_t::op_t(expr_t::op_t::O_NOT);
     node->set_left(term);
@@ -403,7 +403,7 @@ query_t::parser_t::parse_and_expr(lexer_t::token_t::kind_t tok_context)
         node->set_right(parse_unary_expr(tok_context));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol());
+                 _f("%1% operator not followed by argument") % tok.symbol());
       } else {
         lexer.push_token(tok);
         break;
@@ -427,7 +427,7 @@ query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_context)
         node->set_right(parse_and_expr(tok_context));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol());
+                 _f("%1% operator not followed by argument") % tok.symbol());
       } else {
         lexer.push_token(tok);
         break;

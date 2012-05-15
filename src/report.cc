@@ -591,15 +591,15 @@ value_t report_t::fn_get_at(call_scope_t& args)
   }
   else if (! args[0].is_sequence()) {
     throw_(std::runtime_error,
-           _("Attempting to get argument at index %1 from %2")
-           << index << args[0].label());
+           _f("Attempting to get argument at index %1% from %2%")
+           % index % args[0].label());
   }
 
   value_t::sequence_t& seq(args[0].as_sequence_lval());
   if (index >= seq.size())
     throw_(std::runtime_error,
-           _("Attempting to get index %1 from %2 with %3 elements")
-           << index << args[0].label() << seq.size());
+           _f("Attempting to get index %1% from %2% with %3% elements")
+           % index % args[0].label() % seq.size());
 
   return seq[index];
 }
@@ -852,8 +852,8 @@ value_t report_t::fn_nail_down(call_scope_t& args)
   }
 
   default:
-    throw_(std::runtime_error, _("Attempting to nail down %1")
-           << args[0].label());
+    throw_(std::runtime_error, _f("Attempting to nail down %1%")
+           % args[0].label());
   }
   return arg0;
 }

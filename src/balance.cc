@@ -216,8 +216,8 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
         return temp.commodity_amount(commodity);
 
       throw_(amount_error,
-             _("Requested amount of a balance with multiple commodities: %1")
-             << temp);
+             _f("Requested amount of a balance with multiple commodities: %1%")
+             % temp);
     }
   }
   else if (amounts.size() > 0) {

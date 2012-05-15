@@ -113,7 +113,7 @@ expr_t::parser_t::parse_dot_expr(std::istream& in,
         node->set_right(parse_call_expr(in, tflags));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
+                 _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -137,7 +137,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
     ptr_op_t term(parse_dot_expr(in, tflags));
     if (! term)
       throw_(parse_error,
-             _("%1 operator not followed by argument") << tok.symbol);
+             _f("%1% operator not followed by argument") % tok.symbol);
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
@@ -154,7 +154,7 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
     ptr_op_t term(parse_dot_expr(in, tflags));
     if (! term)
       throw_(parse_error,
-             _("%1 operator not followed by argument") << tok.symbol);
+             _f("%1% operator not followed by argument") % tok.symbol);
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
@@ -195,7 +195,7 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
         node->set_right(parse_unary_expr(in, tflags));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
+                 _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -225,7 +225,7 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
         node->set_right(parse_mul_expr(in, tflags));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
+                 _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -292,7 +292,7 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
 
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
+                 _f("%1% operator not followed by argument") % tok.symbol);
 
         if (negate) {
           prev = node;
@@ -324,7 +324,7 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
         node->set_right(parse_logic_expr(in, tflags));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
+                 _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -351,7 +351,7 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
         node->set_right(parse_and_expr(in, tflags));
         if (! node->right())
           throw_(parse_error,
-                 _("%1 operator not followed by argument") << tok.symbol);
+                 _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -377,7 +377,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       node->set_right(parse_or_expr(in, tflags));
       if (! node->right())
         throw_(parse_error,
-               _("%1 operator not followed by argument") << tok.symbol);
+               _f("%1% operator not followed by argument") % tok.symbol);
 
       next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT), token_t::COLON);
       prev = node->right();
@@ -386,7 +386,7 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       subnode->set_right(parse_or_expr(in, tflags));
       if (! subnode->right())
         throw_(parse_error,
-               _("%1 operator not followed by argument") << tok.symbol);
+               _f("%1% operator not followed by argument") % tok.symbol);
 
       node->set_right(subnode);
     }

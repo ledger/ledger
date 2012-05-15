@@ -236,7 +236,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
         }
       }
       if (! found)
-        throw_(format_error, _("Unrecognized formatting character: %1") << *p);
+        throw_(format_error, _f("Unrecognized formatting character: %1%") % *p);
     } else {
       switch (*p) {
       case '%':
@@ -375,7 +375,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
       }
 
       default:
-        throw_(format_error, _("Unrecognized formatting character: %1") << *p);
+        throw_(format_error, _f("Unrecognized formatting character: %1%") % *p);
       }
     }
   }

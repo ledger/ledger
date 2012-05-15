@@ -374,14 +374,14 @@ void generate_posts_iterator::increment()
       }
     }
     catch (std::exception&) {
-      add_error_context(_("While parsing generated transaction (seed %1):")
-                        << seed);
+      add_error_context(_f("While parsing generated transaction (seed %1%):")
+                        % seed);
       add_error_context(buf.str());
       throw;
     }
     catch (int) {
-      add_error_context(_("While parsing generated transaction (seed %1):")
-                        << seed);
+      add_error_context(_f("While parsing generated transaction (seed %1%):")
+                        % seed);
       add_error_context(buf.str());
       throw;
     }

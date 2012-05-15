@@ -292,13 +292,13 @@ namespace {
         }
         else {
           throw_(std::runtime_error,
-                 _("Expected string or mask for argument 1, but received %1")
-                 << args[0].label());
+                 _f("Expected string or mask for argument 1, but received %1%")
+                 % args[0].label());
         }
 
         if (! acct)
           throw_(std::runtime_error,
-                 _("Could not find an account matching ") << args[0]);
+                 _f("Could not find an account matching '%1%'") % args[0]);
 
         return value_t(static_cast<scope_t *>(acct));
       }

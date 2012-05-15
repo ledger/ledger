@@ -117,12 +117,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
-#if defined(HAVE_GETTEXT)
-#include "gettext.h"
-#define _(str) gettext(str)
-#else
-#define _(str) str
-#endif
 
 #include <gmp.h>
 #include <mpfr.h>
@@ -152,6 +146,8 @@ typedef std::ostream::pos_type ostream_pos_type;
 #if !(defined(__GXX_EXPERIMENTAL_CXX0X__) && __GXX_EXPERIMENTAL_CXX0X__)
 #include <boost/foreach.hpp>
 #endif
+
+#include <boost/format.hpp>
 #include <boost/function.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
@@ -192,6 +188,15 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <boost/variant.hpp>
 #include <boost/version.hpp>
+
+#if defined(HAVE_GETTEXT)
+#include "gettext.h"
+#define _(str) gettext(str)
+#define _f(str) boost::format(gettext(str))
+#else
+#define _(str) str
+#define _f(str) boost::format(str)
+#endif
 
 #if defined(HAVE_BOOST_SERIALIZATION)
 

@@ -79,9 +79,9 @@ namespace {
         scope.type_context() != value_t::VOID &&
         result.type() != scope.type_context()) {
       throw_(calc_error,
-             _("Expected return of %1, but received %2")
-             << result.label(scope.type_context())
-             << result.label());
+             _f("Expected return of %1%, but received %2%")
+             % result.label(scope.type_context())
+             % result.label());
     }
   }
 }
@@ -181,7 +181,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
         std::ostringstream buf;
         varname->dump(buf, 0);
         throw_(calc_error,
-               _("Invalid function or lambda parameter: %1") << buf.str());
+               _f("Invalid function or lambda parameter: %1%") % buf.str());
       } else {
         DEBUG("expr.compile",
               "Defining function parameter " << varname->as_ident());
@@ -242,7 +242,7 @@ namespace {
       def = scope.lookup(symbol_t::FUNCTION, op->as_ident());
     }
     if (! def)
-      throw_(calc_error, _("Unknown identifier '%1'") << op->as_ident());
+      throw_(calc_error, _f("Unknown identifier '%1%'") % op->as_ident());
     return def;
   }
 }
@@ -412,7 +412,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     break;
 
   default:
-    throw_(calc_error, _("Unexpected expr node '%1'") << op_context(this));
+    throw_(calc_error, _f("Unexpected expr node '%1%'") % op_context(this));
   }
 
 #if defined(DEBUG_ON)
@@ -462,7 +462,7 @@ namespace {
         return find_definition(as_expr(def), scope, locus, depth,
                                recursion_depth + 1);
       else
-        throw_(value_error, _("Cannot call %1 as a function") << def.label());
+        throw_(value_error, _f("Cannot call %1% as a function") % def.label());
     }
 
     // Resolve ordinary expressions.
@@ -504,8 +504,8 @@ namespace {
 
     if (args_index < args_count)
       throw_(calc_error,
-             _("Too few arguments in function call (saw %1, wanted %2)")
-             << args_count << args_index);
+             _f("Too few arguments in function call (saw %1%, wanted %2%)")
+             % args_count % args_index);
 
     if (func->right()->is_scope()) {
       bind_scope_t outer_scope(scope, *func->right()->as_scope());
@@ -555,8 +555,8 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t * locus,
     }
   }
   catch (const std::exception&) {
-    add_error_context(_("While calling function '%1 %2':" << name
-                        << call_args.args));
+    add_error_context(_f("While calling function '%1% %2%':") % name
+                      % call_args.args);
     throw;
   }
 }

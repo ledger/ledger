@@ -160,11 +160,10 @@ account_t * journal_t::register_account(const string& name, post_t * post,
         result->add_flags(ACCOUNT_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
-        current_context->warning(STR(_("Unknown account '%1'")
-                                     << result->fullname()));
+        current_context->warning(_f("Unknown account '%1%'") % result->fullname());
       }
       else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _("Unknown account '%1'") << result->fullname());
+        throw_(parse_error, _f("Unknown account '%1%'") % result->fullname());
       }
     }
   }
@@ -190,10 +189,10 @@ string journal_t::register_payee(const string& name, xact_t * xact)
         known_payees.insert(name);
       }
       else if (checking_style == CHECK_WARNING) {
-        current_context->warning(STR(_("Unknown payee '%1'") << name));
+        current_context->warning(_f("Unknown payee '%1%'") % name);
       }
       else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _("Unknown payee '%1'") << name);
+        throw_(parse_error, _f("Unknown payee '%1%'") % name);
       }
     }
   }
@@ -226,10 +225,10 @@ void journal_t::register_commodity(commodity_t& comm,
         comm.add_flags(COMMODITY_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
-        current_context->warning(STR(_("Unknown commodity '%1'") << comm));
+        current_context->warning(_f("Unknown commodity '%1%'") % comm);
       }
       else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _("Unknown commodity '%1'") << comm);
+        throw_(parse_error, _f("Unknown commodity '%1%'") % comm);
       }
     }
   }
@@ -255,10 +254,10 @@ void journal_t::register_metadata(const string& key, const value_t& value,
         known_tags.insert(key);
       }
       else if (checking_style == CHECK_WARNING) {
-        current_context->warning(STR(_("Unknown metadata tag '%1'") << key));
+        current_context->warning(_f("Unknown metadata tag '%1%'") % key);
       }
       else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _("Unknown metadata tag '%1'") << key);
+        throw_(parse_error, _f("Unknown metadata tag '%1%'") % key);
       }
     }
   }
@@ -281,12 +280,12 @@ void journal_t::register_metadata(const string& key, const value_t& value,
       if (! (*i).second.first.calc(val_scope).to_boolean()) {
         if ((*i).second.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error,
-                 _("Metadata assertion failed for (%1: %2): %3")
-                 << key << value << (*i).second.first);
+                 _f("Metadata assertion failed for (%1%: %2%): %3%")
+                 % key % value % (*i).second.first);
         else
           current_context->warning
-            (STR(_("Metadata check failed for (%1: %2): %3")
-                 << key << value << (*i).second.first));
+            (_f("Metadata check failed for (%1%: %2%): %3%")
+             % key % value % (*i).second.first);
       }
     }
   }
@@ -388,8 +387,8 @@ std::size_t journal_t::read(parse_context_stack_t& context)
 
     if (! current.scope)
       throw_(std::runtime_error,
-             _("No default scope in which to read journal file '%1'")
-             << current.pathname);
+             _f("No default scope in which to read journal file '%1%'")
+             % current.pathname);
 
     if (! current.master)
       current.master = master;
