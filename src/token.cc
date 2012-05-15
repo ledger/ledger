@@ -148,7 +148,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
   char c = peek_next_nonws(in);
 
-  if (in.eof()) {
+  if (in.eof() || c == -1) {
     kind = TOK_EOF;
     return;
   }
@@ -426,6 +426,8 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
             expected('\0', c);
 
           parse_ident(in);
+        } else {
+          throw_(parse_error, _("Unexpected EOF"));
         }
 
         if (! value.is_string() || value.as_string().empty()) {

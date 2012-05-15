@@ -87,7 +87,7 @@ char * csv_reader::next_line(std::istream& in)
   while (in.good() && ! in.eof() && in.peek() == '#')
     in.getline(context.linebuf, parse_context_t::MAX_LINE);
 
-  if (! in.good() || in.eof())
+  if (! in.good() || in.eof() || in.peek() == -1)
     return NULL;
 
   in.getline(context.linebuf, parse_context_t::MAX_LINE);
