@@ -527,6 +527,34 @@ AC_CACHE_CHECK(
 
 AM_CONDITIONAL(HAVE_BOOST_TEST, test x$boost_test_avail_cv_ = xtrue)
 
+# check for C++11 and libc++
+#AC_CACHE_CHECK(
+#  [if C++11 and libc++ are available],
+#  [cpp11_avail_cv_],
+#  [cpp11_save_cxxflags=$CXXFLAGS
+#   cpp11_save_ldflags=$LDFLAGS
+#   CXXFLAGS="-std=c++11 -stdlib=libc++ $CXXFLAGS"
+#   LDFLAGS="-stdlib=libc++ $LDFLAGS"
+#   AC_LANG_PUSH(C++)
+#   AC_LINK_IFELSE(
+#     [AC_LANG_PROGRAM(
+#       [[#include <boost/regex.hpp>
+#         #include <iostream>]],
+#       [[boost::regex foo_regexp("Hello, world!");
+#         for (auto i : "Hello, world")
+#           std::cout << i << std::endl;]])],
+#     [cpp11_avail_cv_=true],
+#     [cpp11_avail_cv_=false])
+#   AC_LANG_POP
+#   CXXFLAGS="$cpp11_save_cxxflags"
+#   LDFLAGS="$cpp11_save_ldflags"])
+#
+#if [test x$cpp11_avail_cv_ = xtrue]; then
+#  AC_DEFINE([HAVE_CPP11], [1], [Whether C++11 and libc++ are available])
+#  CXXFLAGS="-std=c++11 -stdlib=libc++ $CXXFLAGS"
+#  LDFLAGS="-stdlib=libc++ $LDFLAGS"
+#fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_STAT

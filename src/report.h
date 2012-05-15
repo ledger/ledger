@@ -965,10 +965,13 @@ public:
   OPTION_(report_t, time_report, DO() {
       OTHER(balance_format_)
         .on(none,
-            "%(justify(earliest_checkin ? "
-            "          format_datetime(earliest_checkin) : \"\", 19, -1, true))  "
-            "%(justify(latest_checkout ? "
-            "          format_datetime(latest_checkout) : \"\", 19, -1, true))  "
+            "%(ansify_if(justify(earliest_checkin ? "
+            "     format_datetime(earliest_checkin) : \"\", 19, -1, true),"
+            "     bold if latest_checkout_cleared))  "
+            "%(ansify_if(justify(latest_checkout ? "
+            "     format_datetime(latest_checkout) : \"\", 19, -1, true), "
+            "     bold if latest_checkout_cleared)) "
+            "%(latest_checkout_cleared ? \"*\" : \" \")  "
             "%(ansify_if("
             "  justify(scrub(display_total), 8,"
             "          8 + 4 + 19 * 2, true, color), bold if should_bold))"

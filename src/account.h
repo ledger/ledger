@@ -51,7 +51,7 @@ class xact_t;
 class post_t;
 
 typedef std::list<post_t *> posts_list;
-typedef std::map<const string, account_t *> accounts_map;
+typedef std::map<string, account_t *> accounts_map;
 
 class account_t : public supports_flags<>, public scope_t
 {
@@ -183,6 +183,7 @@ public:
 
       datetime_t         earliest_checkin;
       datetime_t         latest_checkout;
+      bool               latest_checkout_cleared;
 
       std::set<path>     filenames;
       std::set<string>   accounts_referenced;

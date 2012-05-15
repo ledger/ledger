@@ -48,7 +48,7 @@ namespace {
   template <typename T, typename InputFacetType, typename OutputFacetType>
   class temporal_io_t : public noncopyable
   {
-    const char *       fmt_str;
+    string             fmt_str;
 #if defined(USE_BOOST_FACETS)
     std::istringstream input_stream;
     std::ostringstream output_stream;
@@ -104,7 +104,7 @@ namespace {
 #else // USE_BOOST_FACETS
       std::tm data(to_tm(when));
       char buf[128];
-      std::strftime(buf, 127, fmt_str, &data);
+      std::strftime(buf, 127, fmt_str.c_str(), &data);
       return buf;
 #endif // USE_BOOST_FACETS
     }
@@ -138,7 +138,7 @@ namespace {
 #else // USE_BOOST_FACETS
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
-    if (strptime(str, fmt_str, &data))
+    if (strptime(str, fmt_str.c_str(), &data))
       return posix_time::ptime_from_tm(data);
     else
       return datetime_t();
@@ -175,7 +175,7 @@ namespace {
     std::memset(&data, 0, sizeof(std::tm));
     data.tm_year = CURRENT_DATE().year() - 1900;
     data.tm_mday = 1;           // some formats have no day
-    if (strptime(str, fmt_str, &data))
+    if (strptime(str, fmt_str.c_str(), &data))
       return gregorian::date_from_tm(data);
     else
       return date_t();

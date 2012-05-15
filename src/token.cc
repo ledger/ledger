@@ -148,7 +148,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
   char c = peek_next_nonws(in);
 
-  if (in.eof()) {
+  if (in.eof() || c == -1) {
     kind = TOK_EOF;
     return;
   }
@@ -417,16 +417,20 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       if (! temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
         in.clear();
         in.seekg(pos, std::ios::beg);
-        if (in.fail())
+        if (in.fail() || ! in.good())
           throw_(parse_error, _("Failed to reset input stream"));
 
         c = static_cast<char>(in.peek());
-        if (! std::isalpha(c) && c != '_')
-          expected('\0', c);
+        if (c != -1) {
+          if (! std::isalpha(c) && c != '_')
+            expected('\0', c);
 
-        parse_ident(in);
+          parse_ident(in);
+        } else {
+          throw_(parse_error, _("Unexpected EOF"));
+        }
 
-        if (value.as_string().length() == 0) {
+        if (! value.is_string() || value.as_string().empty()) {
           kind = ERROR;
           symbol[0] = c;
           symbol[1] = '\0';

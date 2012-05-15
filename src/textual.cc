@@ -431,7 +431,7 @@ void instance_t::read_next_directive(bool& error_flag)
 
 #if defined(TIMELOG_SUPPORT)
 
-void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
+void instance_t::clock_in_directive(char * line, bool capitalized)
 {
   string datetime(line, 2, 19);
 
@@ -452,7 +452,7 @@ void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
   position.end_line = context.linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime),
+  time_xact_t event(position, parse_datetime(datetime), capitalized,
                     p ? top_account()->find_account(p) : NULL,
                     n ? n : "",
                     end ? end : "");
@@ -460,7 +460,7 @@ void instance_t::clock_in_directive(char * line, bool /*capitalized*/)
   timelog.clock_in(event);
 }
 
-void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
+void instance_t::clock_out_directive(char * line, bool capitalized)
 {
   string datetime(line, 2, 19);
 
@@ -481,7 +481,7 @@ void instance_t::clock_out_directive(char * line, bool /*capitalized*/)
   position.end_line = context.linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime),
+  time_xact_t event(position, parse_datetime(datetime), capitalized,
                     p ? top_account()->find_account(p) : NULL,
                     n ? n : "",
                     end ? end : "");

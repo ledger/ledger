@@ -72,7 +72,7 @@
 namespace ledger {
   using namespace boost;
 
-#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
   class string;
 #else
   typedef std::string string;
@@ -93,7 +93,7 @@ namespace ledger {
 }
 
 #if BOOST_FILESYSTEM_VERSION == 3
-#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
 namespace boost { namespace filesystem3 { namespace path_traits {
 template<> struct is_pathable<ledger::string> { static const bool value = true; };
 }}}
@@ -193,7 +193,7 @@ void report_memory(std::ostream& out, bool report_all = false);
 
 namespace ledger {
 
-#if defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
 
 class string : public std::string
 {
@@ -272,7 +272,7 @@ inline bool operator!=(const char* __lhs, const string& __rhs)
 inline bool operator!=(const string& __lhs, const char* __rhs)
 { return __lhs.compare(__rhs) != 0; }
 
-#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#endif // !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
 
 extern string empty_string;
 
