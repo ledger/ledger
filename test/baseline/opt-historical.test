@@ -65,7 +65,7 @@ test reg stocks -I
 12-May-05 Broker                Assets:Stocks                   $50         $150
 end test
 
-test reg stocks -V
+test reg stocks -V --now=2012/05/10
 12-Jan-01 Broker                Assets:Stocks                  $100         $100
 12-Jan-15 Commodities revalued  <Revalued>                      $50         $150
 12-Feb-02 Commodities revalued  <Revalued>                      $50         $200
@@ -81,7 +81,7 @@ test reg stocks -V
 12-May-05 Broker                Assets:Stocks                  $500        $2500
 end test
 
-test reg stocks -O -V
+test reg stocks -O -V --now=2012/05/10
 12-Jan-01 Broker                Assets:Stocks                  $100         $100
 12-Jan-15 Commodities revalued  <Revalued>                      $50         $150
 12-Feb-02 Commodities revalued  <Revalued>                      $50         $200
@@ -113,7 +113,7 @@ test reg stocks -I -V
 12-May-05 Broker                Assets:Stocks                   $50         $150
 end test
 
-test reg stocks -X EUR
+test reg stocks -X EUR --now=2012/05/10
 12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
 12-Feb-02 Commodities revalued  <Revalued>               EUR 200,00   EUR 400,00
 12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 800,00
@@ -125,7 +125,7 @@ test reg stocks -X EUR
 12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
 end test
 
-test reg stocks -O -X EUR
+test reg stocks -O -X EUR --now=2012/05/10
 12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
 12-Feb-02 Commodities revalued  <Revalued>               EUR 200,00   EUR 400,00
 12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 800,00
