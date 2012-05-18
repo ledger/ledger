@@ -74,7 +74,14 @@ void format_ptree::flush()
         put_post(pt, *post);
   }
 
-  property_tree::write_xml(out, pt);
+  switch (format) {
+  case FORMAT_XML:
+    property_tree::write_xml(out, pt);
+    break;
+  case FORMAT_JSON:
+    property_tree::write_json(out, pt);
+    break;
+  }
 }
 
 void format_ptree::operator()(post_t& post)

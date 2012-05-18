@@ -74,8 +74,14 @@ protected:
   std::deque<xact_t *> transactions;
 
 public:
-  format_ptree(report_t& _report) : report(_report) {
-    TRACE_CTOR(format_ptree, "report&");
+  enum format_t {
+    FORMAT_XML,
+    FORMAT_JSON
+  } format;
+
+  format_ptree(report_t& _report, format_t _format = FORMAT_XML)
+    : report(_report), format(_format) {
+    TRACE_CTOR(format_ptree, "report&, format_t");
   }
   virtual ~format_ptree() {
     TRACE_DTOR(format_ptree);

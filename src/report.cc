@@ -1602,11 +1602,16 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       }
       break;
 
+    case 'j':
+      if (is_eq(p, "json"))
+        return POSTS_REPORTER(new format_ptree(*this,
+                                               format_ptree::FORMAT_JSON));
+      break;
+
     case 'o':
-      if (is_eq(p, "org")) {
+      if (is_eq(p, "org"))
         return POSTS_REPORTER(new posts_to_org_table
                             (*this, maybe_format(HANDLER(prepend_format_))));
-      }
       break;
 
     case 'p':
@@ -1649,7 +1654,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "xml"))
-        return POSTS_REPORTER(new format_ptree(*this));
+        return POSTS_REPORTER(new format_ptree(*this,
+                                               format_ptree::FORMAT_XML));
       break;
     }
     break;
