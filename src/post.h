@@ -271,8 +271,7 @@ private:
 
 class journal_t;
 void extend_post(post_t& post, journal_t& journal);
-
-void to_xml(std::ostream& out, const post_t& post);
+void put_post(property_tree::ptree& pt, const post_t& post);
 
 } // namespace ledger
 

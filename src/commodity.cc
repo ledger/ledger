@@ -496,29 +496,22 @@ bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
   }
 }
 
-void to_xml(std::ostream& out, const commodity_t& comm,
-            bool commodity_details)
+void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
+                   bool commodity_details)
 {
-  push_xml x(out, "commodity", true);
+  property_tree::ptree& st(pt.put("commodity", ""));
 
-  out << " flags=\"";
-  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED)))  out << 'P';
-  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))     out << 'S';
-  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))     out << 'T';
-  if (comm.has_flags(COMMODITY_STYLE_DECIMAL_COMMA)) out << 'D';
-  out << '"';
+  std::string flags;
+  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED)))  flags += 'P';
+  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))     flags += 'S';
+  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))     flags += 'T';
+  if (comm.has_flags(COMMODITY_STYLE_DECIMAL_COMMA)) flags += 'D';
+  st.put("<xmlattr>.flags", flags);
 
-  x.close_attrs();
+  st.put("symbol", comm.symbol());
 
-  {
-    push_xml y(out, "symbol");
-    out << y.guard(comm.symbol());
-  }
-
-  if (commodity_details) {
-    if (comm.has_annotation())
-      to_xml(out, as_annotated_commodity(comm).details);
-  }
+  if (commodity_details && comm.has_annotation())
+    put_annotation(st, as_annotated_commodity(comm).details);
 }
 
 } // namespace ledger

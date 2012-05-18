@@ -1283,17 +1283,15 @@ bool amount_t::valid() const
   return true;
 }
 
-void to_xml(std::ostream& out, const amount_t& amt, bool commodity_details)
+void put_amount(property_tree::ptree& pt, const amount_t& amt,
+                bool wrap, bool commodity_details)
 {
-  push_xml x(out, "amount");
+  property_tree::ptree& st(wrap ? pt.put("amount", "") : pt);
 
   if (amt.has_commodity())
-    to_xml(out, amt.commodity(), commodity_details);
+    put_commodity(st, amt.commodity(), commodity_details);
 
-  {
-    push_xml y(out, "quantity");
-    out << y.guard(amt.quantity_string());
-  }
+  st.put("quantity", amt.quantity_string());
 }
 
 #if defined(HAVE_BOOST_SERIALIZATION)

@@ -813,63 +813,37 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
   }
 }
 
-void to_xml(std::ostream& out, const xact_t& xact)
+void put_xact(property_tree::ptree& pt, const xact_t& xact)
 {
-  push_xml x(out, "transaction", true, true);
+  property_tree::ptree& st(pt.put("transaction", ""));
 
   if (xact.state() == item_t::CLEARED)
-    out << " state=\"cleared\"";
+    st.put("<xmlattr>.state", "cleared");
   else if (xact.state() == item_t::PENDING)
-    out << " state=\"pending\"";
+    st.put("<xmlattr>.state", "pending");
 
   if (xact.has_flags(ITEM_GENERATED))
-    out << " generated=\"true\"";
-
-  x.close_attrs();
+    st.put("<xmlattr>.generated", "true");
 
   if (xact._date) {
-    push_xml y(out, "date");
-    to_xml(out, *xact._date, false);
+    property_tree::ptree& t(st.put("date", ""));
+    put_date(t, *xact._date, false);
   }
   if (xact._date_aux) {
-    push_xml y(out, "aux-date");
-    to_xml(out, *xact._date_aux, false);
+    property_tree::ptree& t(st.put("aux-date", ""));
+    put_date(t, *xact._date_aux, false);
   }
 
-  if (xact.code) {
-    push_xml y(out, "code");
-    out << y.guard(*xact.code);
-  }
+  if (xact.code)
+    st.put("code", *xact.code);
 
-  {
-    push_xml y(out, "payee");
-    out << y.guard(xact.payee);
-  }
+  st.put("payee", xact.payee);
 
-  if (xact.note) {
-    push_xml y(out, "note");
-    out << y.guard(*xact.note);
-  }
+  if (xact.note)
+    st.put("note", *xact.note);
 
-  if (xact.metadata) {
-    push_xml y(out, "metadata");
-    foreach (const item_t::string_map::value_type& pair, *xact.metadata) {
-      if (pair.second.first) {
-        push_xml z(out, "variable");
-        {
-          push_xml w(out, "key");
-          out << y.guard(pair.first);
-        }
-        {
-          push_xml w(out, "value");
-          to_xml(out, *pair.second.first);
-        }
-      } else {
-        push_xml z(out, "tag");
-        out << y.guard(pair.first);
-      }
-    }
-  }
+  if (xact.metadata)
+    put_metadata(st,  *xact.metadata);
 }
 
 } // namespace ledger

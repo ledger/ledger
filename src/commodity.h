@@ -346,8 +346,8 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
   return out;
 }
 
-void to_xml(std::ostream& out, const commodity_t& comm,
-            bool commodity_details = false);
+void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
+                   bool commodity_details = false);
 
 } // namespace ledger
 

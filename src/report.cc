@@ -46,7 +46,7 @@
 #include "generate.h"
 #include "draft.h"
 #include "convert.h"
-#include "xml.h"
+#include "ptree.h"
 #include "emacs.h"
 #include "org.h"
 
@@ -1649,7 +1649,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "xml"))
-        return POSTS_REPORTER(new format_xml(*this));
+        return POSTS_REPORTER(new format_ptree(*this));
       break;
     }
     break;

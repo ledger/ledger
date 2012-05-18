@@ -591,7 +591,7 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
   return out;
 }
 
-void to_xml(std::ostream& out, const balance_t& amt);
+void put_balance(property_tree::ptree& pt, const balance_t& bal);
 
 } // namespace ledger
 

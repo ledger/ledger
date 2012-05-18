@@ -2014,49 +2014,41 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
   return false;
 }
 
-void to_xml(std::ostream& out, const value_t& value)
+void put_value(property_tree::ptree& pt, const value_t& value)
 {
   switch (value.type()) {
   case value_t::VOID:
-    out << "<void />";
+    pt.put("void", "");
     break;
-  case value_t::BOOLEAN: {
-    push_xml y(out, "boolean");
-    out << (value.as_boolean() ? "true" : "false");
+  case value_t::BOOLEAN:
+    pt.put("bool", value.as_boolean() ? "true" : "false");
     break;
-  }
-  case value_t::INTEGER: {
-    push_xml y(out, "integer");
-    out << value.as_long();
+  case value_t::INTEGER:
+    pt.put("int", value.to_string());
     break;
-  }
-
   case value_t::AMOUNT:
-    to_xml(out, value.as_amount());
+    put_amount(pt, value.as_amount());
     break;
   case value_t::BALANCE:
-    to_xml(out, value.as_balance());
+    put_balance(pt, value.as_balance());
     break;
-
   case value_t::DATETIME:
-    to_xml(out, value.as_datetime());
+    put_datetime(pt, value.as_datetime());
     break;
   case value_t::DATE:
-    to_xml(out, value.as_date());
+    put_date(pt, value.as_date());
     break;
-  case value_t::STRING: {
-    push_xml y(out, "string");
-    out << y.guard(value.as_string());
+  case value_t::STRING:
+    pt.put("string", value.as_string());
     break;
-  }
   case value_t::MASK:
-    to_xml(out, value.as_mask());
+    put_mask(pt, value.as_mask());
     break;
 
   case value_t::SEQUENCE: {
-    push_xml y(out, "sequence");
+    property_tree::ptree& st(pt.put("sequence", ""));
     foreach (const value_t& member, value.as_sequence())
-      to_xml(out, member);
+      put_value(st, member);
     break;
   }
 

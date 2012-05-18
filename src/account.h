@@ -305,6 +305,9 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);
 
+void put_account(property_tree::ptree& pt, const account_t& acct,
+                 function<bool(const account_t&)> pred);
+
 } // namespace ledger
 
 #endif // _ACCOUNT_H

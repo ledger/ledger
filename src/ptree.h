@@ -34,7 +34,7 @@
  */
 
 /**
- * @file   xml.h
+ * @file   ptree.h
  * @author John Wiegley
  *
  * @ingroup report
@@ -43,8 +43,8 @@
  *
  * Long.
  */
-#ifndef _XML_H
-#define _XML_H
+#ifndef _PTREE_H
+#define _PTREE_H
 
 #include "chain.h"
 
@@ -61,7 +61,7 @@ class report_t;
  *
  * Long.
  */
-class format_xml : public item_handler<post_t>
+class format_ptree : public item_handler<post_t>
 {
 protected:
   report_t& report;
@@ -74,11 +74,11 @@ protected:
   std::deque<xact_t *> transactions;
 
 public:
-  format_xml(report_t& _report) : report(_report) {
-    TRACE_CTOR(format_xml, "report&");
+  format_ptree(report_t& _report) : report(_report) {
+    TRACE_CTOR(format_ptree, "report&");
   }
-  virtual ~format_xml() {
-    TRACE_DTOR(format_xml);
+  virtual ~format_ptree() {
+    TRACE_DTOR(format_ptree);
   }
 
   virtual void flush();
@@ -95,4 +95,4 @@ public:
 
 } // namespace ledger
 
-#endif // _XML_H
+#endif // _PTREE_H

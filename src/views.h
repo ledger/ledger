@@ -182,7 +182,7 @@ public:
   r_account_ptr create_account(account_t * account = NULL);
   r_account_ptr create_account(const std::string& name);
 
-  friend void to_xml(std::ostream& out, r_journal_ptr journal);
+  friend void put_journal(property_tree::ptree& pt, r_journal_ptr journal);
 };
 
 class r_item_t : public r_base_t
@@ -267,7 +267,7 @@ public:
                                   const string& name);
 
   friend class r_journal_t;
-  friend void to_xml(std::ostream& out, r_item_ptr item);
+  friend void put_item(property_tree::ptree& pt, r_item_ptr journal);
 };
 
 class r_xact_t : public r_item_t
@@ -315,7 +315,7 @@ public:
   string payee() const;
 
   friend class r_journal_t;
-  friend void to_xml(std::ostream& out, r_xact_ptr xact);
+  friend void put_xact(property_tree::ptree& pt, r_xact_ptr journal);
 };
 
 class r_post_t : public r_item_t
@@ -371,7 +371,7 @@ public:
   optional<datetime_t> checkout() const;
 
   friend class r_journal_t;
-  friend void to_xml(std::ostream& out, r_post_ptr post);
+  friend void put_post(property_tree::ptree& pt, r_post_ptr journal);
 };
 
 typedef std::map<string, r_account_ptr> r_accounts_map;
@@ -434,7 +434,7 @@ public:
   }
 
   friend class r_journal_t;
-  friend void to_xml(std::ostream& out, r_account_ptr account);
+  friend void put_account(property_tree::ptree& pt, r_account_ptr journal);
 };
 
 template <typename PostsIterator>

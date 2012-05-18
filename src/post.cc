@@ -696,98 +696,73 @@ void extend_post(post_t& post, journal_t& journal)
   }
 }
 
-void to_xml(std::ostream& out, const post_t& post)
+void put_post(property_tree::ptree& pt, const post_t& post)
 {
-  push_xml x(out, "posting", true);
+  property_tree::ptree& st(pt.put("posting", ""));
 
   if (post.state() == item_t::CLEARED)
-    out << " state=\"cleared\"";
+    st.put("<xmlattr>.state", "cleared");
   else if (post.state() == item_t::PENDING)
-    out << " state=\"pending\"";
+    st.put("<xmlattr>.state", "pending");
 
   if (post.has_flags(POST_VIRTUAL))
-    out << " virtual=\"true\"";
+    st.put("<xmlattr>.virtual", "true");
   if (post.has_flags(ITEM_GENERATED))
-    out << " generated=\"true\"";
-
-  x.close_attrs();
+    st.put("<xmlattr>.generated", "true");
 
   if (post._date) {
-    push_xml y(out, "date");
-    to_xml(out, *post._date, false);
+    property_tree::ptree& t(st.put("date", ""));
+    put_date(t, *post._date, false);
   }
   if (post._date_aux) {
-    push_xml y(out, "aux-date");
-    to_xml(out, *post._date_aux, false);
+    property_tree::ptree& t(st.put("aux-date", ""));
+    put_date(t, *post._date_aux, false);
   }
 
   if (post.account) {
-    push_xml y(out, "account", true);
+    property_tree::ptree& t(st.put("account", ""));
 
-    out << " ref=\"";
-    out.width(sizeof(unsigned long) * 2);
-    out.fill('0');
-    out << std::hex << reinterpret_cast<unsigned long>(post.account);
-    out << '"';
-    y.close_attrs();
+    std::ostringstream buf;
+    buf.width(sizeof(unsigned long) * 2);
+    buf.fill('0');
+    buf << std::hex << reinterpret_cast<unsigned long>(post.account);
 
-    {
-      push_xml z(out, "name");
-      out << z.guard(post.account->fullname());
-    }
+    t.put("<xmlattr>.ref", buf.str());
+    t.put("name", post.account->fullname());
   }
 
   {
-    push_xml y(out, "post-amount");
+    property_tree::ptree& t(st.put("post-amount", ""));
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
-      to_xml(out, post.xdata().compound_value);
+      put_value(t, post.xdata().compound_value);
     else
-      to_xml(out, post.amount);
+      put_amount(t, post.amount);
   }
 
   if (post.cost) {
-    push_xml y(out, "cost");
-    to_xml(out, *post.cost);
+    property_tree::ptree& t(st.put("cost", ""));
+    put_amount(t, *post.cost, false);
   }
 
   if (post.assigned_amount) {
     if (post.has_flags(POST_CALCULATED)) {
-      push_xml y(out, "balance-assertion");
-      to_xml(out, *post.assigned_amount);
+      property_tree::ptree& t(st.put("balance-assertion", ""));
+      put_amount(t, *post.assigned_amount, false);
     } else {
-      push_xml y(out, "balance-assignment");
-      to_xml(out, *post.assigned_amount);
+      property_tree::ptree& t(st.put("balance-assignment", ""));
+      put_amount(t, *post.assigned_amount, false);
     }
   }
 
-  if (post.note) {
-    push_xml y(out, "note");
-    out << y.guard(*post.note);
-  }
+  if (post.note)
+    st.put("note", *post.note);
 
-  if (post.metadata) {
-    push_xml y(out, "metadata");
-    foreach (const item_t::string_map::value_type& pair, *post.metadata) {
-      if (pair.second.first) {
-        push_xml z(out, "variable");
-        {
-          push_xml w(out, "key");
-          out << y.guard(pair.first);
-        }
-        {
-          push_xml w(out, "value");
-          to_xml(out, *pair.second.first);
-        }
-      } else {
-        push_xml z(out, "tag");
-        out << y.guard(pair.first);
-      }
-    }
-  }
+  if (post.metadata)
+    put_metadata(st,  *post.metadata);
 
   if (post.xdata_ && ! post.xdata_->total.is_null()) {
-    push_xml y(out, "total");
-    to_xml(out, post.xdata_->total);
+    property_tree::ptree& t(st.put("total", ""));
+    put_value(t, post.xdata_->total);
   }
 }
 

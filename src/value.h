@@ -1016,7 +1016,7 @@ struct sort_value_t
 bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
                              const std::list<sort_value_t>& right_values);
 
-void to_xml(std::ostream& out, const value_t& value);
+void put_value(property_tree::ptree& pt, const value_t& value);
 
 } // namespace ledger
 

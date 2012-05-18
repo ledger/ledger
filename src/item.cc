@@ -581,4 +581,18 @@ string item_context(const item_t& item, const string& desc)
   return out.str();
 }
 
+void put_metadata(property_tree::ptree& pt, const item_t::string_map& metadata)
+{
+  property_tree::ptree& st(pt.put("metadata", ""));
+  foreach (const item_t::string_map::value_type& pair, metadata) {
+    if (pair.second.first) {
+      property_tree::ptree& vt(st.put("pair", ""));
+      vt.put("key", pair.first);
+      put_value(vt, *pair.second.first);
+    } else {
+      st.put("tag", pair.first);
+    }
+  }
+}
+
 } // namespace ledger

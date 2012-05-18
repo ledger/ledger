@@ -247,6 +247,7 @@ value_t get_comment(item_t& item);
 void    print_item(std::ostream& out, const item_t& item,
                    const string& prefix = "");
 string  item_context(const item_t& item, const string& desc);
+void    put_metadata(property_tree::ptree& pt, const item_t::string_map& metadata);
 
 } // namespace ledger
 

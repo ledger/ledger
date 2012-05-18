@@ -727,51 +727,6 @@ inline string sha1sum(const string& str)
   return to_hex(message_digest, 5);
 }
 
-class push_xml
-{
-  std::ostream& out;
-  string        tag;
-  bool          leave_open;
-
-public:
-  push_xml(std::ostream& _out, const string& _tag, bool has_attrs = false,
-           bool _leave_open = false)
-    : out(_out), tag(_tag), leave_open(_leave_open) {
-    out << '<' << tag;
-    if (! has_attrs)
-      out << '>';
-  }
-  ~push_xml() {
-    if (! leave_open)
-      out << "</" << tag << '>';
-  }
-
-  void close_attrs() {
-    out << '>';
-  }
-
-  static string guard(const string& str) {
-    std::ostringstream buf;
-    foreach (const char& ch, str) {
-      switch (ch) {
-      case '<':
-        buf << "&lt;";
-        break;
-      case '>':
-        buf << "&gt;";
-        break;
-      case '&':
-        buf << "&amp;";
-        break;
-      default:
-        buf << ch;
-        break;
-      }
-    }
-    return buf.str();
-  }
-};
-
 extern const string version;
 
 } // namespace ledger

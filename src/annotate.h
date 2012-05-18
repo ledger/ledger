@@ -124,34 +124,7 @@ private:
 #endif // HAVE_BOOST_SERIALIZATION
 };
 
-inline void to_xml(std::ostream& out, const annotation_t& details)
-{
-  push_xml x(out, "annotation");
-
-  if (details.price)
-  {
-    push_xml y(out, "price");
-    to_xml(out, *details.price);
-  }
-
-  if (details.date)
-  {
-    push_xml y(out, "date");
-    to_xml(out, *details.date, false);
-  }
-
-  if (details.tag)
-  {
-    push_xml y(out, "tag");
-    out << y.guard(*details.tag);
-  }
-
-  if (details.value_expr)
-  {
-    push_xml y(out, "value-expr");
-    out << y.guard(details.value_expr->text());
-  }
-}
+void put_annotation(property_tree::ptree& pt, const annotation_t& details);
 
 struct keep_details_t
 {

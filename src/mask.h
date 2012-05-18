@@ -150,10 +150,8 @@ inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
   return out;
 }
 
-inline void to_xml(std::ostream& out, const mask_t& mask)
-{
-  push_xml x(out, "mask");
-  out << x.guard(mask.str());
+inline void put_mask(property_tree::ptree& pt, const mask_t& mask) {
+  pt.put("mask", mask.str());
 }
 
 } // namespace ledger

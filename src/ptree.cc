@@ -31,7 +31,7 @@
 
 #include <system.hh>
 
-#include "xml.h"
+#include "ptree.h"
 #include "xact.h"
 #include "post.h"
 #include "account.h"
@@ -41,84 +41,52 @@
 namespace ledger {
 
 namespace {
-  void xml_account(std::ostream& out, const account_t * acct) {
-    if ((acct->has_xdata() &&
-         acct->xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
-        acct->children_with_flags(ACCOUNT_EXT_VISITED)) {
-      out << "<account id=\"";
-      out.width(sizeof(unsigned long) * 2);
-      out.fill('0');
-      out << std::hex << reinterpret_cast<unsigned long>(acct);
-      out << "\">\n";
-
-      out << "<name>" << acct->name << "</name>\n";
-      out << "<fullname>" << acct->fullname() << "</fullname>\n";
-      value_t total = acct->amount();
-      if (! total.is_null()) {
-        out << "<amount>\n";
-        to_xml(out, total);
-        out << "</amount>\n";
-      }
-      total = acct->total();
-      if (! total.is_null()) {
-        out << "<total>\n";
-        to_xml(out, total);
-        out << "</total>\n";
-      }
-      out << "</account>\n";
-    }
-
-    foreach (const accounts_map::value_type& pair, acct->accounts)
-      xml_account(out, pair.second);
-  }
-
-  void xml_transaction(std::ostream& out, const xact_t * xact) {
-    to_xml(out, *xact);
-
-    foreach (const post_t * post, xact->posts)
-      if (post->has_xdata() &&
-          post->xdata().has_flags(POST_EXT_VISITED))
-        to_xml(out, *post);
-
-    out << "</transaction>\n";
+  bool account_visited_p(const account_t& acct) {
+    return ((acct.has_xdata() &&
+            acct.xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
+            acct.children_with_flags(ACCOUNT_EXT_VISITED));
   }
 }
 
-void format_xml::flush()
+void format_ptree::flush()
 {
   std::ostream& out(report.output_stream);
 
-  out << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-  out << "<ledger version=\"" << VERSION << "\">\n";
+  property_tree::ptree pt;
 
-  out << "<commodities>\n";
-  foreach (const commodities_pair& pair, commodities) {
-    to_xml(out, *pair.second, true);
-    out << '\n';
+  pt.put("ledger.<xmlattr>.version", VERSION);
+
+  property_tree::ptree& ct(pt.put("ledger.commodities", ""));
+  foreach (const commodities_pair& pair, commodities)
+    put_commodity(ct, *pair.second, true);
+
+  property_tree::ptree& at(pt.put("ledger.accounts", ""));
+  put_account(at, *report.session.journal->master, account_visited_p);
+
+  property_tree::ptree& tt(pt.put("ledger.transactions", ""));
+  foreach (const xact_t * xact, transactions) {
+    put_xact(tt, *xact);
+
+    property_tree::ptree& pt(tt.put("postings", ""));
+    foreach (const post_t * post, xact->posts)
+      if (post->has_xdata() &&
+          post->xdata().has_flags(POST_EXT_VISITED))
+        put_post(pt, *post);
   }
-  out << "</commodities>\n";
 
-  out << "<accounts>\n";
-  xml_account(out, report.session.journal->master);
-  out << "</accounts>\n";
-
-  out << "<transactions>\n";
-  foreach (const xact_t * xact, transactions)
-    xml_transaction(out, xact);
-  out << "</transactions>\n";
-
-  out << "</ledger>\n";
-  out.flush();
+  property_tree::write_xml(out, pt);
 }
 
-void format_xml::operator()(post_t& post)
+void format_ptree::operator()(post_t& post)
 {
   assert(post.xdata().has_flags(POST_EXT_VISITED));
 
   commodities.insert(commodities_pair(post.amount.commodity().symbol(),
                                       &post.amount.commodity()));
 
-  if (transactions_set.find(post.xact) == transactions_set.end())
+  std::pair<std::set<xact_t *>::iterator, bool> result =
+    transactions_set.insert(post.xact);
+  if (result.second)            // we haven't seen this transaction before
     transactions.push_back(post.xact);
 }
 

@@ -776,8 +776,8 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   return in;
 }
 
-void to_xml(std::ostream& out, const amount_t& amt,
-            bool commodity_details = false);
+void put_amount(property_tree::ptree& pt, const amount_t& amt,
+                bool wrap = true, bool commodity_details = false);
 
 } // namespace ledger
 

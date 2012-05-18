@@ -216,6 +216,27 @@ void annotation_t::print(std::ostream& out, bool keep_base,
     out << " ((" << *value_expr << "))";
 }
 
+void put_annotation(property_tree::ptree& pt, const annotation_t& details)
+{
+  property_tree::ptree& st(pt.put("annotation", ""));
+
+  if (details.price) {
+    property_tree::ptree& t(st.put("price", ""));
+    put_amount(t, *details.price, false);
+  }
+
+  if (details.date) {
+    property_tree::ptree& t(st.put("date", ""));
+    put_date(t, *details.date, false);
+  }
+
+  if (details.tag)
+    st.put("tag", *details.tag);
+
+  if (details.value_expr)
+    st.put("value_expr", details.value_expr->text());
+}
+
 bool keep_details_t::keep_all(const commodity_t& comm) const
 {
   return (! comm.has_annotation() ||

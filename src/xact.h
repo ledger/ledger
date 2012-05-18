@@ -304,7 +304,7 @@ typedef std::list<xact_t *>        xacts_list;
 typedef std::list<auto_xact_t *>   auto_xacts_list;
 typedef std::list<period_xact_t *> period_xacts_list;
 
-void to_xml(std::ostream& out, const xact_t& xact);
+void put_xact(property_tree::ptree& pt, const xact_t& xact);
 
 } // namespace ledger
 
