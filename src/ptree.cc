@@ -67,11 +67,11 @@ void format_ptree::flush()
   foreach (const xact_t * xact, transactions) {
     put_xact(tt, *xact);
 
-    property_tree::ptree& pt(tt.put("postings", ""));
+    property_tree::ptree& post_t(tt.put("postings", ""));
     foreach (const post_t * post, xact->posts)
       if (post->has_xdata() &&
           post->xdata().has_flags(POST_EXT_VISITED))
-        put_post(pt, *post);
+        put_post(post_t, *post);
   }
 
   switch (format) {
