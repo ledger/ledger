@@ -133,7 +133,7 @@ namespace ledger {
 
 extern bool verify_enabled;
 
-#define VERIFY(x)   (ledger::verify_enabled ? assert(x) : ((void)0))
+#define VERIFY(x)   if (ledger::verify_enabled) { assert(x); }
 #define DO_VERIFY() ledger::verify_enabled
 
 void initialize_memory_tracing();
