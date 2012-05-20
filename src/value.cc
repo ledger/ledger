@@ -256,7 +256,7 @@ value_t::sequence_t value_t::to_sequence() const
 
 void value_t::in_place_simplify()
 {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   LOGGER("value.simplify");
 #endif
 
@@ -273,7 +273,7 @@ void value_t::in_place_simplify()
     DEBUG_("as an amount it looks like: " << *this);
   }
 
-#ifdef REDUCE_TO_INTEGER        // this is off by default
+#if REDUCE_TO_INTEGER        // this is off by default
   if (is_amount() && ! as_amount().has_commodity() &&
       as_amount().fits_in_long()) {
     DEBUG_("Reducing amount to integer");

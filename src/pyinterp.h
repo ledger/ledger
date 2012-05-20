@@ -34,7 +34,7 @@
 
 #include "session.h"
 
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
 
 namespace ledger {
 

@@ -186,7 +186,7 @@ void annotation_t::parse(std::istream& in)
     }
   } while (true);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("amounts.commodities") && *this) {
     DEBUG("amounts.commodities",
           "Parsed commodity annotations: " << std::endl << *this);
@@ -300,7 +300,7 @@ annotated_commodity_t::find_price(const commodity_t * commodity,
     }
   }
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (target)
     DEBUG("commodity.price.find", "target commodity: " << target->symbol());
 #endif

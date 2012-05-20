@@ -40,7 +40,7 @@
 #include "query.h"
 #include "pstream.h"
 #include "pool.h"
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
 #endif
 
@@ -126,7 +126,7 @@ namespace {
       return (in.good() && ! in.eof() &&
               (in.peek() == ' ' || in.peek() == '\t'));
     }
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
     bool peek_blank_line() {
       return (in.good() && ! in.eof() &&
               (in.peek() == '\n' || in.peek() == '\r'));
@@ -220,15 +220,6 @@ namespace {
     expr_t expr(in, flags.plus_flags(PARSE_PARTIAL));
 
     DEBUG("textual.parse", "Parsed an amount expression");
-
-#if defined(DEBUG_ENABLED)
-    DEBUG_IF("textual.parse") {
-      if (_debug_stream) {
-        ledger::dump_value_expr(*_debug_stream, expr);
-        *_debug_stream << std::endl;
-      }
-    }
-#endif
 
     if (expr) {
       if (amount_expr)
@@ -835,7 +826,7 @@ void instance_t::apply_account_directive(char * line)
 {
   if (account_t * acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
   else
     assert("Failed to create account" == NULL);
 #endif
@@ -1168,7 +1159,7 @@ void instance_t::comment_directive(char * line)
   }
 }
 
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
 
 void instance_t::import_directive(char * line)
 {

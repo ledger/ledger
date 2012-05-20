@@ -91,7 +91,7 @@ optional<price_point_t>
 commodity_t::find_price_from_expr(expr_t& expr, const commodity_t * commodity,
                                   const datetime_t& moment) const
 {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("commodity.price.find")) {
     ledger::_log_buffer << "valuation expr: ";
     expr.dump(ledger::_log_buffer);

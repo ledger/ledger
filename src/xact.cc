@@ -65,7 +65,7 @@ xact_base_t::~xact_base_t()
 
 void xact_base_t::add_post(post_t * post)
 {
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
   // You can add temporary postings to transactions, but not real postings to
   // temporary transactions.
   if (! post->has_flags(ITEM_TEMP))
@@ -197,7 +197,7 @@ bool xact_base_t::finalize()
   }
   VERIFY(balance.valid());
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   DEBUG("xact.finalize", "initial balance = " << balance);
   DEBUG("xact.finalize", "balance is " << balance.label());
   if (balance.is_balance())
@@ -488,7 +488,7 @@ bool xact_base_t::verify()
 
 xact_t::xact_t(const xact_t& e)
   : xact_base_t(e), code(e.code), payee(e.payee)
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
     , data(NULL)
 #endif
 {
@@ -739,7 +739,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
         else
           amt = post_amount;
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
         IF_DEBUG("xact.extend") {
           DEBUG("xact.extend",
                 "Initial post on line " << initial_post->pos->beg_line << ": "
@@ -760,7 +760,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
           if (amt.keep_precision())
             DEBUG("xact.extend", "  amt precision is kept");
         }
-#endif // defined(DEBUG_ON)
+#endif // DEBUG_ON
 
         account_t * account  = post->account;
         string fullname = account->fullname();

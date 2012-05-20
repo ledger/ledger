@@ -659,7 +659,7 @@ public:
   OPTION(report_t, equity);
   OPTION(report_t, exact);
 
-  OPTION_(report_t, exchange_, DO_() { // -X
+  OPTION_(report_t, exchange_, DO_(str) { // -X
       // Using -X implies -V.  The main difference is that now
       // HANDLER(exchange_) contains the name of a commodity, which
       // is accessed via the "exchange" value expression function.
@@ -784,7 +784,7 @@ public:
 
   OPTION(report_t, output_); // -o
 
-#ifdef HAVE_ISATTY
+#if HAVE_ISATTY
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {

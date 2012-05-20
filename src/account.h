@@ -70,7 +70,7 @@ public:
   optional<expr_t> value_expr;
 
   mutable string   _fullname;
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
   mutable void * data;
 #endif
 
@@ -80,7 +80,7 @@ public:
     : supports_flags<>(), scope_t(), parent(_parent),
       name(_name), note(_note),
       depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0))
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
       , data(NULL)
 #endif
   {
@@ -93,7 +93,7 @@ public:
       note(other.note),
       depth(other.depth),
       accounts(other.accounts)
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
       , data(NULL)
 #endif
   {
@@ -282,7 +282,7 @@ public:
   bool children_with_xdata() const;
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

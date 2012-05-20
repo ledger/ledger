@@ -32,7 +32,7 @@
 #include <system.hh>
 
 #include "global.h"
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
 #else
 #include "session.h"
@@ -49,7 +49,7 @@ global_scope_t::global_scope_t(char ** envp)
 {
   epoch = CURRENT_TIME();
 
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
   if (! python_session.get()) {
     python_session.reset(new ledger::python_interpreter_t);
     session_ptr = python_session;
@@ -101,7 +101,7 @@ global_scope_t::~global_scope_t()
   // Otherwise, let it all leak because we're about to exit anyway.
   IF_VERIFY() set_session_context(NULL);
 
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
   python_session.reset();
 #endif
 }
@@ -399,13 +399,13 @@ global_scope_t::read_command_arguments(scope_t& scope, strings_list args)
 
 void global_scope_t::normalize_session_options()
 {
-#if defined(LOGGING_ON)
+#if LOGGING_ON
   INFO("Initialization file is " << HANDLER(init_file_).str());
   INFO("Price database is " << session().HANDLER(price_db_).str());
 
   foreach (const path& pathname, session().HANDLER(file_).data_files)
     INFO("Journal file is " << pathname.string());
-#endif // defined(LOGGING_ON)
+#endif // LOGGING_ON
 }
 
 expr_t::func_t global_scope_t::look_for_precommand(scope_t&      scope,
@@ -455,7 +455,7 @@ void handle_debug_options(int argc, char * argv[])
         args_only = true;
       }
       else if (std::strcmp(argv[i], "--verify-memory") == 0) {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
         verify_enabled = true;
 
         _log_level    = LOG_DEBUG;
@@ -463,25 +463,25 @@ void handle_debug_options(int argc, char * argv[])
 #endif
       }
       else if (std::strcmp(argv[i], "--verify") == 0) {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
         verify_enabled = true;
 #endif
       }
       else if (std::strcmp(argv[i], "--verbose") == 0 ||
                std::strcmp(argv[i], "-v") == 0) {
-#if defined(LOGGING_ON)
+#if LOGGING_ON
         _log_level = LOG_INFO;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
         _log_level    = LOG_DEBUG;  
         _log_category = argv[i + 1];
         i++;
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--trace") == 0) {
-#if defined(TRACING_ON)
+#if TRACING_ON
         _log_level   = LOG_TRACE;
         try {
           _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);

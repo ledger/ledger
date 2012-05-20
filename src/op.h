@@ -315,7 +315,7 @@ private:
   value_t calc_cons(scope_t& scope, ptr_op_t * locus, const int depth);
   value_t calc_seq(scope_t& scope, ptr_op_t * locus, const int depth);
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

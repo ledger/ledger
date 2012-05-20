@@ -93,7 +93,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
   unique_ptr<scope_t> bound_scope;
   expr_t::ptr_op_t    result;
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("expr.compile")) {
     for (int i = 0; i < depth; i++)
       ledger::_log_buffer << '.';
@@ -114,12 +114,12 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Found definition:");
         def->dump(*_log_stream, 0);
       }
-#endif // defined(DEBUG_ON)
+#endif // DEBUG_ON
       result = copy(def);
     }
     else if (left()) {
@@ -219,7 +219,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
     }
   }
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("expr.compile")) {
     for (int i = 0; i < depth; i++)
       ledger::_log_buffer << '.';
@@ -253,7 +253,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
 
   value_t result;
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("expr.calc")) {
     for (int i = 0; i < depth; i++)
       ledger::_log_buffer << '.';
@@ -415,7 +415,7 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
     throw_(calc_error, _f("Unexpected expr node '%1%'") % op_context(this));
   }
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("expr.calc")) {
     for (int i = 0; i < depth; i++)
       ledger::_log_buffer << '.';

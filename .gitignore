@@ -86,3 +86,14 @@ doc/ledger.1.html
 doc/ledger.html
 doc/ledger3.html
 src/TAGS
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+CMakeFiles/
+_CPack_Packages/
+cmake_install.cmake
+install_manifest.txt
+system.hh
+system.hh.[gp]ch*
+Ledger*.dmg
+Ledger*.sh

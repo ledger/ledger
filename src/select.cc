@@ -178,12 +178,8 @@ value_t select_command(call_scope_t& args)
          lexical_cast<std::size_t>(report.HANDLER(meta_width_).str()) :
          10);
 
-      bool saw_date    = false;
       bool saw_payee   = false;
       bool saw_account = false;
-      bool saw_amount  = false;
-      bool saw_total   = false;
-      bool saw_meta    = false;
 
       std::size_t cols_needed = 0;
       foreach (const value_t& column, columns.to_sequence()) {
@@ -191,7 +187,6 @@ value_t select_command(call_scope_t& args)
         if (get_principal_identifiers(as_expr(column), ident)) {
           if (ident == "date" || ident == "aux_date") {
             cols_needed += date_width + 1;
-            saw_date = true;
           }
           else if (ident == "payee") {
             cols_needed += payee_width + 1;
@@ -203,15 +198,12 @@ value_t select_command(call_scope_t& args)
           }
           else if (ident == "amount") {
             cols_needed += amount_width + 1;
-            saw_amount = true;
           }
           else if (ident == "total") {
             cols_needed += total_width + 1;
-            saw_total = true;
           }
           else {
             cols_needed += meta_width + 1;
-            saw_meta = true;
           }
         }
       }

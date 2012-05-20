@@ -122,7 +122,7 @@ namespace {
 
       datetime_t when;
       input_stream >> when;
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (when.is_not_a_date_time())
         DEBUG("times.parse", "Failed to parse date/time '" << str
               << "' using pattern '" << fmt_str << "'");
@@ -157,7 +157,7 @@ namespace {
 
       date_t when;
       input_stream >> when;
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (when.is_not_a_date())
         DEBUG("times.parse", "Failed to parse date '" << str
               << "' using pattern '" << fmt_str << "'");
@@ -346,7 +346,7 @@ date_t date_specifier_t::begin() const
   month_type the_month = month ? *month : date_t::month_type(1);
   day_type   the_day   = day   ? *day   : date_t::day_type(1);
 
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
   if (day)
     assert(! wday);
   else if (wday)
@@ -1259,7 +1259,7 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip)
 
 void date_interval_t::stabilize(const optional<date_t>& date)
 {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (date)
     DEBUG("times.interval", "stabilize: with date = " << *date);
 #endif
@@ -1280,7 +1280,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
       optional<date_t> initial_start  = start  ? start  : begin();
       optional<date_t> initial_finish = finish ? finish : end();
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (initial_start)
         DEBUG("times.interval",
               "stabilize: initial_start  = " << *initial_start);
@@ -1333,7 +1333,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
         DEBUG("times.interval", "stabilize: finish reset to initial finish");
       }
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (start)
         DEBUG("times.interval", "stabilize: final start  = " << *start);
       if (finish)
@@ -1403,7 +1403,7 @@ bool date_interval_t::find_period(const date_t& date,
   DEBUG("times.interval", "date        = " << date);
   DEBUG("times.interval", "scan        = " << scan);
   DEBUG("times.interval", "end_of_scan = " << end_of_scan);
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (finish)
     DEBUG("times.interval", "finish      = " << *finish);
   else

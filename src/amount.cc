@@ -93,7 +93,7 @@ struct amount_t::bigint_t : public supports_flags<>
     return true;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   friend class boost::serialization::access;
 
@@ -120,7 +120,7 @@ namespace {
   {
     char * buf = NULL;
     try {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       IF_DEBUG("amount.convert") {
         char * tbuf = mpq_get_str(NULL, 10, quant);
         DEBUG("amount.convert", "Rational to convert = " << tbuf);
@@ -247,7 +247,7 @@ void amount_t::initialize()
     // in terms of seconds, but reported as minutes or hours.
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
     else
       assert(false);
 #endif
@@ -255,7 +255,7 @@ void amount_t::initialize()
     // Add a "percentile" commodity
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("%"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
     else
       assert(false);
 #endif
@@ -730,7 +730,7 @@ amount_t::value(const datetime_t&   moment,
                 const commodity_t * in_terms_of) const
 {
   if (quantity) {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     DEBUG("commodity.price.find",
           "amount_t::value of " << commodity().symbol());
     if (! moment.is_not_a_date_time())
@@ -1294,7 +1294,7 @@ void put_amount(property_tree::ptree& pt, const amount_t& amt,
   st.put("quantity", amt.quantity_string());
 }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 
 template<class Archive>
 void amount_t::serialize(Archive& ar, const unsigned int /* version */)
@@ -1308,7 +1308,7 @@ void amount_t::serialize(Archive& ar, const unsigned int /* version */)
 
 } // namespace ledger
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 namespace boost {
 namespace serialization {
 

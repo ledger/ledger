@@ -95,7 +95,7 @@ public:
       if (wants_arg) {
         out << " = ";
         out.width(42);
-        out << value;
+        out << std::left << value;
       } else {
         out.width(45);
         out << ' ';

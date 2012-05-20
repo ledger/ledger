@@ -67,7 +67,7 @@ lookup_probable_account(const string& ident,
 {
   scorecard_t scores;
 
-#if !defined(HAVE_BOOST_REGEX_UNICODE)
+#if !HAVE_BOOST_REGEX_UNICODE
     string lident = ident;
     to_lower(lident);
     unistring lowered_ident(lident);
@@ -78,7 +78,7 @@ lookup_probable_account(const string& ident,
 
   DEBUG("lookup.account",
         "Looking up identifier '" << lowered_ident.extract() << "'");
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (ref_account != NULL)
     DEBUG("lookup.account",
           "  with reference account: " << ref_account->fullname());
@@ -100,7 +100,7 @@ lookup_probable_account(const string& ident,
       break;
     }
 
-#if !defined(HAVE_BOOST_REGEX_UNICODE)
+#if !HAVE_BOOST_REGEX_UNICODE
     string payee = xact->payee;
     to_lower(payee);
     unistring value_key(payee);
@@ -187,7 +187,7 @@ lookup_probable_account(const string& ident,
             addend++;
 
 #if 0
-#if !defined(HAVE_BOOST_REGEX_UNICODE)
+#if !HAVE_BOOST_REGEX_UNICODE
           if (pos == 0 || (pos > 0 && !std::isalnum(value_key[pos - 1])))
             addend++;
 #else
@@ -268,7 +268,7 @@ lookup_probable_account(const string& ident,
   }
 
   if (account_usage.size() > 0) {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     if (SHOW_DEBUG("lookup.account")) {
       foreach (const account_use_pair& value, account_usage) {
         DEBUG("lookup.account",

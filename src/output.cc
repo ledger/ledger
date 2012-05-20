@@ -208,7 +208,7 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
     to_display += i.second;
   }
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   DEBUG("account.display", "Considering account: " << account.fullname());
   if (account.has_xflags(ACCOUNT_EXT_VISITED))
     DEBUG("account.display", "  it was visited itself");

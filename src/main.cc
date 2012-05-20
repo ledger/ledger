@@ -37,7 +37,7 @@
 
 using namespace ledger;
 
-#ifdef HAVE_BOOST_PYTHON
+#if HAVE_BOOST_PYTHON
 namespace ledger {
   extern char * argv0;
 }
@@ -47,7 +47,7 @@ int main(int argc, char * argv[], char * envp[])
 {
   int status = 1;
 
-#ifdef HAVE_BOOST_PYTHON
+#if HAVE_BOOST_PYTHON
   argv0 = argv[0];
 #endif
 
@@ -60,7 +60,7 @@ int main(int argc, char * argv[], char * envp[])
   //   --trace LEVEL       ; turns on trace logging
   //   --memory            ; turns on memory usage tracing
   handle_debug_options(argc, argv);
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   IF_VERIFY() initialize_memory_tracing();
 #endif
 
@@ -77,7 +77,7 @@ int main(int argc, char * argv[], char * envp[])
   std::signal(SIGPIPE, sigpipe_handler);
 #endif
 
-#if defined(HAVE_GETTEXT)
+#if HAVE_GETTEXT
   ::textdomain("ledger");
 #endif
 
@@ -127,7 +127,7 @@ int main(int argc, char * argv[], char * envp[])
 
       bool exit_loop = false;
 
-#ifdef HAVE_LIBEDIT
+#ifdef HAVE_EDIT
 
       rl_readline_name = const_cast<char *>("Ledger");
 #if 0
@@ -152,7 +152,7 @@ int main(int argc, char * argv[], char * envp[])
           add_history(expansion);
         }
 
-#else // HAVE_LIBEDIT
+#else // HAVE_EDIT
 
       while (! std::cin.eof()) {
         std::cout << global_scope->prompt_string();
@@ -161,7 +161,7 @@ int main(int argc, char * argv[], char * envp[])
 
         char * p = skip_ws(line);
 
-#endif // HAVE_LIBEDIT
+#endif // HAVE_EDIT
 
         check_for_signal();
 
@@ -172,7 +172,7 @@ int main(int argc, char * argv[], char * envp[])
             global_scope->execute_command_wrapper(split_arguments(p), true);
         }
 
-#ifdef HAVE_LIBEDIT
+#if HAVE_EDIT
         if (expansion)
           std::free(expansion);
         std::free(p);
@@ -202,12 +202,12 @@ int main(int argc, char * argv[], char * envp[])
   // up everything by closing the session and deleting the session object, and
   // then shutting down the memory tracing subsystem.  Otherwise, let it all
   // leak because we're about to exit anyway.
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   IF_VERIFY() {
     checked_delete(global_scope);
 
     INFO("Ledger ended (Boost/libstdc++ may still hold memory)");
-#if defined(VERIFY_ON)
+#if VERIFY_ON
     shutdown_memory_tracing();
 #endif
   } else

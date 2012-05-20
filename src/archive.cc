@@ -31,7 +31,7 @@
 
 #include <system.hh>
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 
 #include "archive.h"
 #include "amount.h"
@@ -116,7 +116,7 @@ bool archive_t::read_header()
         "Version number:    " << std::hex << ARCHIVE_VERSION << std::dec);
   DEBUG("archive.journal", "Number of sources: " << sources.size());
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   foreach (const journal_t::fileinfo_t& i, sources)
     DEBUG("archive.journal", "Loaded source: " << *i.filename);
 #endif
@@ -250,7 +250,7 @@ void archive_t::save(journal_t& journal)
   write_header_bits(stream);
   sources = journal.sources;
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   foreach (const journal_t::fileinfo_t& i, sources)
     DEBUG("archive.journal", "Saving source: " << *i.filename);
 #endif

@@ -69,11 +69,11 @@ commodity_t * commodity_pool_t::create(const string& symbol)
 
   DEBUG("pool.commodities", "Creating commodity '" << symbol << "'");
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   std::pair<commodities_map::iterator, bool> result =
 #endif
     commodities.insert(commodities_map::value_type(symbol, commodity));
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   assert(result.second);
 #endif
 
@@ -206,13 +206,13 @@ commodity_pool_t::create(commodity_t&        comm,
         << "symbol " << commodity->base_symbol()
         << std::endl << details);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   std::pair<annotated_commodities_map::iterator, bool> result =
 #endif
     annotated_commodities.insert(annotated_commodities_map::value_type
                                  (annotated_commodities_map::key_type
                                   (comm.base_symbol(), details), commodity));
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   assert(result.second);
 #endif
 
@@ -243,7 +243,7 @@ commodity_pool_t::exchange(const amount_t&             amount,
 {
   DEBUG("commodity.prices.add", "exchange: " << amount << " for " << cost);
   DEBUG("commodity.prices.add", "exchange: is-per-unit   = " << is_per_unit);
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (moment)
     DEBUG("commodity.prices.add", "exchange: moment        = " << *moment);
   if (tag)

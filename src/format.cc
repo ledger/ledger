@@ -221,7 +221,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
                          static_cast<int>(current->max_width) : -1);
               else if (keyword == "left")
                 expr << (current->has_flags(ELEMENT_ALIGN_LEFT) ? "false" : "true");
-#if defined(DEBUG_ON)
+#if DEBUG_ON
               else
                 assert("Unrecognized format substitution keyword" == NULL);
 #endif
@@ -538,7 +538,7 @@ string format_t::truncate(const unistring&  ustr,
       // distributed, with the latter parts being longer than the
       // former, but with none shorter than account_abbrev_length.
       std::list<std::size_t> lens;
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       int index = 0;
 #endif
       for (std::list<string>::iterator i = parts.begin();
@@ -595,7 +595,7 @@ string format_t::truncate(const unistring&  ustr,
         std::size_t overflow_at_start = overflow;
         DEBUG("format.abbrev",
               "Overflow starting at " << overflow << " chars");
-#if defined(DEBUG_ON)
+#if DEBUG_ON
         index = 0;
 #endif
         std::size_t counter = lens.size();

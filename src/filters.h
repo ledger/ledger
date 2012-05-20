@@ -742,7 +742,7 @@ public:
 
   void report_subtotal(const date_interval_t& ival);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   void debug_interval(const date_interval_t& ival) {
     if (ival.start)
       DEBUG("filters.interval", "start  = " << *ival.start);

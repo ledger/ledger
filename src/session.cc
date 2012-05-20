@@ -117,7 +117,7 @@ std::size_t session_t::read_data(const string& master_account)
   else if (HANDLED(value_expr_))
     journal->value_expr     = HANDLER(value_expr_).str();
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
   optional<archive_t> cache;
   if (HANDLED(cache_) && master_account.empty())
     cache = archive_t(HANDLED(cache_).str());
@@ -179,7 +179,7 @@ std::size_t session_t::read_data(const string& master_account)
           << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
     assert(xact_count == journal->xacts.size());
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
     if (cache && cache->should_save(*journal.get()))
       cache->save(*journal.get());
   }
@@ -201,14 +201,14 @@ journal_t * session_t::read_journal_files()
   if (HANDLED(master_account_))
     master_account = HANDLER(master_account_).str();
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   std::size_t count =
 #endif
     read_data(master_account);
 
   INFO_FINISH(journal);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   INFO("Found " << count << " transactions");
 #endif
 

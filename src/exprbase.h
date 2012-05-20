@@ -156,22 +156,22 @@ public:
   result_type calc(scope_t& scope)
   {
     if (! compiled) {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Before compilation:");
         dump(*_log_stream);
       }
-#endif // defined(DEBUG_ON)
+#endif // DEBUG_ON
 
       DEBUG("expr.compile", "Compiling: " << str);
       compile(scope);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "After compilation:");
         dump(*_log_stream);
       }
-#endif // defined(DEBUG_ON)
+#endif // DEBUG_ON
     }
 
     DEBUG("expr.calc", "Calculating: " << str);
@@ -232,7 +232,7 @@ public:
     return calc();
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

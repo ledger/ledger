@@ -166,7 +166,7 @@ void python_interpreter_t::hack_system_paths()
 
   python::list paths(sys_dict["path"]);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   bool path_initialized = false;
 #endif
   int n = python::extract<int>(paths.attr("__len__")());
@@ -189,13 +189,13 @@ void python_interpreter_t::hack_system_paths()
         throw_(std::runtime_error,
                _("Python failed to initialize (couldn't find ledger)"));
       }
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       path_initialized = true;
 #endif
       break;
     }
   }
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (! path_initialized)
     DEBUG("python.init",
           "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");

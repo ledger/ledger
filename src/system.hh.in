@@ -41,7 +41,48 @@
  * None of these header files (with the exception of acconf.h, when
  * configure is re-run) are expected to change.
  */
-#include "config.h"
+
+#ifndef _SYSTEM_HH
+#define _SYSTEM_HH
+
+//#warning("Loading system.hh.  This should occur only once!")
+
+/*------------------------------------------------------------------------*/
+/* Application configuration                                              */
+/*------------------------------------------------------------------------*/
+
+#define Ledger_VERSION_MAJOR     @Ledger_VERSION_MAJOR@
+#define Ledger_VERSION_MINOR     @Ledger_VERSION_MINOR@
+#define Ledger_VERSION_PATCH     @Ledger_VERSION_PATCH@
+#define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
+
+#define HAVE_CXX11               @HAVE_CXX11@
+
+#define HAVE_LANGINFO_H          @HAVE_LANGINFO_H@
+#define HAVE_EDIT                @HAVE_EDIT@
+#define HAVE_GETTEXT             @HAVE_GETTEXT@
+
+#define HAVE_ACCESS              @HAVE_ACCESS@
+#define HAVE_REALPATH            @HAVE_REALPATH@
+#define HAVE_GETPWUID            @HAVE_GETPWUID@
+#define HAVE_GETPWNAM            @HAVE_GETPWNAM@
+#define HAVE_ISATTY              @HAVE_ISATTY@
+
+#define HAVE_UNIX_PIPES          @HAVE_UNIX_PIPES@
+
+#define HAVE_BOOST_PYTHON        @HAVE_BOOST_PYTHON@
+#define HAVE_BOOST_REGEX_UNICODE @HAVE_BOOST_REGEX_UNICODE@
+#define HAVE_BOOST_SERIALIZATION 0
+
+#define DEBUG_MODE               @DEBUG_MODE@
+#define NDEBUG                   @NDEBUG@
+
+#define DOCUMENT_MODEL           0
+#define REDUCE_TO_INTEGER        0
+
+/*------------------------------------------------------------------------*/
+/* System includes                                                        */
+/*------------------------------------------------------------------------*/
 
 #if defined(__GNUG__) && __GNUG__ < 3
 #define _XOPEN_SOURCE
@@ -109,11 +150,11 @@ typedef std::ostream::pos_type ostream_pos_type;
 #else
 #include <unistd.h>
 #endif
-#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
+#if HAVE_GETPWUID || HAVE_GETPWNAM
 #include <pwd.h>
 #endif
 
-#if defined(HAVE_UNIX_PIPES)
+#if HAVE_UNIX_PIPES
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
@@ -123,7 +164,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include "sha1.h"
 #include "utf8.h"
 
-#if defined(HAVE_LIBEDIT)
+#if HAVE_EDIT
 #include <editline/readline.h>
 #endif
 
@@ -147,7 +188,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/foreach.hpp>
 #endif
 
-#include <boost/format.hpp>
 #include <boost/function.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
@@ -155,6 +195,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/graphviz.hpp>
 
+#include <boost/format.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <boost/iostreams/stream.hpp>
@@ -179,7 +220,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 
-#if defined(HAVE_BOOST_REGEX_UNICODE)
+#if HAVE_BOOST_REGEX_UNICODE
 #include <boost/regex/icu.hpp>
 #else
 #include <boost/regex.hpp>
@@ -193,8 +234,8 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/variant.hpp>
 #include <boost/version.hpp>
 
-#if defined(HAVE_GETTEXT)
-#include "gettext.h"
+#if HAVE_GETTEXT
+#include <libintl.h>
 #define _(str) gettext(str)
 #define _f(str) boost::format(gettext(str))
 #else
@@ -202,7 +243,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #define _f(str) boost::format(str)
 #endif
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -282,7 +323,7 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 
 #endif // HAVE_BOOST_SERIALIZATION
 
-#if defined(HAVE_BOOST_PYTHON)
+#if HAVE_BOOST_PYTHON
 
 #include <boost/python.hpp>
 
@@ -296,3 +337,5 @@ void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
 #include <boost/iterator/indirect_iterator.hpp>
 
 #endif // HAVE_BOOST_PYTHON
+
+#endif // _SYSTEM_HH

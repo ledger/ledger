@@ -132,7 +132,7 @@ public:
                          const bool                  add_prices = true,
                          const optional<datetime_t>& moment     = none);
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

@@ -57,7 +57,7 @@ void report_t::normalize_options(const string& verb)
   // Patch up some of the reporting options based on what kind of
   // command it was.
 
-#ifdef HAVE_ISATTY
+#if HAVE_ISATTY
   if (! HANDLED(force_color)) {
     if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
       HANDLER(color).on("?normalize");
@@ -480,7 +480,7 @@ void report_t::commodities_report(post_handler_ptr handler)
     pass_down_posts<posts_commodities_iterator>(handler, *walker);
   }
   catch (...) {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
       // Otherwise, just leak like a sieve.

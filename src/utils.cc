@@ -38,7 +38,7 @@
  * Assertions
  */
 
-#if defined(ASSERTS_ON)
+#if ASSERTS_ON
 
 namespace ledger {
 
@@ -64,7 +64,7 @@ void debug_assert(const string& reason,
  * Verification (basically, very slow asserts)
  */
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
 
 namespace ledger {
 
@@ -489,7 +489,7 @@ void report_memory(std::ostream& out, bool report_all)
 
 namespace ledger {
 
-#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
+#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
 
 string::string() : std::string() {
   TRACE_CTOR(string, "");
@@ -527,7 +527,7 @@ string::~string() throw() {
   TRACE_DTOR(string);
 }
 
-#endif // !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
+#endif // !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
 
 string empty_string("");
 
@@ -589,7 +589,7 @@ strings_list split_arguments(const char * line)
  * Logging
  */
 
-#if defined(LOGGING_ON)
+#if LOGGING_ON
 
 namespace ledger {
 
@@ -597,7 +597,7 @@ log_level_t        _log_level  = LOG_WARN;
 std::ostream *     _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
 
-#if defined(TRACING_ON)
+#if TRACING_ON
 uint8_t            _trace_level;
 #endif
 
@@ -610,7 +610,7 @@ void logger_func(log_level_t level)
     logger_has_run = true;
     logger_start   = TRUE_CURRENT_TIME();
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
 #endif
@@ -620,7 +620,7 @@ void logger_func(log_level_t level)
                << (TRUE_CURRENT_TIME() -
                    logger_start).total_milliseconds() << "ms";
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   IF_VERIFY() {
     *_log_stream << std::right << std::setw(6) << std::setprecision(3);
     stream_memory_size(*_log_stream, current_objects_size());
@@ -656,12 +656,12 @@ void logger_func(log_level_t level)
 
 } // namespace ledger
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
 
 namespace ledger {
 
 optional<std::string>     _log_category;
-#if defined(HAVE_BOOST_REGEX_UNICODE)
+#if HAVE_BOOST_REGEX_UNICODE
 optional<boost::u32regex> _log_category_re;
 #else
 optional<boost::regex>    _log_category_re;
@@ -686,7 +686,7 @@ struct __maybe_enable_debugging {
  * Timers (allows log xacts to specify cumulative time spent)
  */
 
-#if defined(LOGGING_ON) && defined(TIMERS_ON)
+#if LOGGING_ON && defined(TIMERS_ON)
 
 namespace ledger {
 
@@ -710,7 +710,7 @@ static timer_map timers;
 
 void start_timer(const char * name, log_level_t lvl)
 {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   bool tracing_active = memory_tracing_active;
   memory_tracing_active = false;
 #endif
@@ -726,14 +726,14 @@ void start_timer(const char * name, log_level_t lvl)
   _log_buffer.clear();
   _log_buffer.str("");
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   memory_tracing_active = tracing_active;
 #endif
 }
 
 void stop_timer(const char * name)
 {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   bool tracing_active = memory_tracing_active;
   memory_tracing_active = false;
 #endif
@@ -744,21 +744,21 @@ void stop_timer(const char * name)
   (*i).second.spent += TRUE_CURRENT_TIME() - (*i).second.begin;
   (*i).second.active = false;
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   memory_tracing_active = tracing_active;
 #endif
 }
 
 void finish_timer(const char * name)
 {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   bool tracing_active = memory_tracing_active;
   memory_tracing_active = false;
 #endif
 
   timer_map::iterator i = timers.find(name);
   if (i == timers.end()) {
-#if defined(VERIFY_ON)
+#if VERIFY_ON
     memory_tracing_active = tracing_active;
 #endif
     return;
@@ -787,7 +787,7 @@ void finish_timer(const char * name)
 
   timers.erase(i);
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
   memory_tracing_active = tracing_active;
 #endif
 }
@@ -820,8 +820,6 @@ void sigpipe_handler(int)
 
 namespace ledger {
 
-const string version = PACKAGE_VERSION;
-
 path expand_path(const path& pathname)
 {
   if (pathname.empty())
@@ -833,7 +831,7 @@ path expand_path(const path& pathname)
 
   if (path_string.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
-#ifdef HAVE_GETPWUID
+#if HAVE_GETPWUID
     if (! pfx) {
       // Punt. We're trying to expand ~/, but HOME isn't set
       struct passwd * pw = getpwuid(getuid());
@@ -842,7 +840,7 @@ path expand_path(const path& pathname)
     }
 #endif
   }
-#ifdef HAVE_GETPWNAM
+#if HAVE_GETPWNAM
   else {
     string user(path_string, 1, pos == string::npos ?
                 string::npos : pos - 1);

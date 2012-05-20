@@ -99,7 +99,7 @@ public:
       TRACE_DTOR(journal_t::fileinfo_t);
     }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
   private:
     /** Serialization. */
 
@@ -208,7 +208,7 @@ public:
 private:
   std::size_t read_textual(parse_context_stack_t& context);
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

@@ -51,15 +51,23 @@
 
 #define TIMERS_ON   1
 
-#if defined(DEBUG_MODE)
+#if DEBUG_MODE
+#define NO_ASSERTS  0
 #define VERIFY_ON   1
 #define TRACING_ON  1
 #define DEBUG_ON    1
-#elif defined(NDEBUG)
+#elif NDEBUG
 #define NO_ASSERTS  1
 //#define NO_LOGGING  1
+#define VERIFY_ON   0
+#define TRACING_ON  0
+#define DEBUG_ON    0
 #else
+#define NO_ASSERTS  0
 #define TRACING_ON  1           // use --trace X to enable
+#define VERIFY_ON   0
+#define TRACING_ON  0
+#define DEBUG_ON    0
 #endif
 
 /*@}*/
@@ -72,7 +80,7 @@
 namespace ledger {
   using namespace boost;
 
-#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
+#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
   class string;
 #else
   typedef std::string string;
@@ -93,11 +101,11 @@ namespace ledger {
 }
 
 #if BOOST_FILESYSTEM_VERSION == 3
-#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
+#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
 namespace boost { namespace filesystem3 { namespace path_traits {
 template<> struct is_pathable<ledger::string> { static const bool value = true; };
 }}}
-#endif // defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON)
+#endif // VERIFY_ON || HAVE_BOOST_PYTHON
 #endif // BOOST_FILESYSTEM_VERSION == 3
 
 /*@}*/
@@ -111,10 +119,10 @@ template<> struct is_pathable<ledger::string> { static const bool value = true; 
 #undef assert
 #endif
 
-#if ! defined(NO_ASSERTS)
+#if ! NO_ASSERTS
 #define ASSERTS_ON 1
 #endif
-#if defined(ASSERTS_ON)
+#if ASSERTS_ON
 
 namespace ledger {
   void debug_assert(const string& reason, const string& func,
@@ -138,7 +146,7 @@ namespace ledger {
  */
 /*@{*/
 
-#if defined(VERIFY_ON)
+#if VERIFY_ON
 
 namespace ledger {
 
@@ -193,7 +201,7 @@ void report_memory(std::ostream& out, bool report_all = false);
 
 namespace ledger {
 
-#if !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
+#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
 
 class string : public std::string
 {
@@ -215,7 +223,7 @@ public:
   string(const char * str, size_type x, size_type y);
   ~string() throw();
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -272,7 +280,7 @@ inline bool operator!=(const char* __lhs, const string& __rhs)
 inline bool operator!=(const string& __lhs, const char* __rhs)
 { return __lhs.compare(__rhs) != 0; }
 
-#endif // !defined(HAVE_CPP11) && (defined(VERIFY_ON) || defined(HAVE_BOOST_PYTHON))
+#endif // !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
 
 extern string empty_string;
 
@@ -312,7 +320,7 @@ inline string operator+(const char * left, const string& right) {
 #if ! defined(NO_LOGGING)
 #define LOGGING_ON 1
 #endif
-#if defined(LOGGING_ON)
+#if LOGGING_ON
 
 namespace ledger {
 
@@ -340,7 +348,7 @@ void logger_func(log_level_t level);
 #define LOGGER(cat) \
     static const char * const _this_category = cat
 
-#if defined(TRACING_ON)
+#if TRACING_ON
 
 extern uint8_t _trace_level;
 
@@ -358,10 +366,10 @@ extern uint8_t _trace_level;
 
 #endif // TRACING_ON
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
 
 extern optional<std::string>       _log_category;
-#if defined(HAVE_BOOST_REGEX_UNICODE)
+#if HAVE_BOOST_REGEX_UNICODE
   extern optional<boost::u32regex> _log_category_re;
 #else
   extern optional<boost::regex>    _log_category_re;
@@ -371,7 +379,7 @@ inline bool category_matches(const char * cat) {
   if (_log_category) {
     if (! _log_category_re) {
       _log_category_re =
-#if defined(HAVE_BOOST_REGEX_UNICODE)
+#if HAVE_BOOST_REGEX_UNICODE
         boost::make_u32regex(_log_category->c_str(),
                              boost::regex::perl | boost::regex::icase);
 #else
@@ -379,7 +387,7 @@ inline bool category_matches(const char * cat) {
                      boost::regex::perl | boost::regex::icase);
 #endif
     }
-#if defined(HAVE_BOOST_REGEX_UNICODE)
+#if HAVE_BOOST_REGEX_UNICODE
     return boost::u32regex_search(cat, *_log_category_re);
 #else
     return boost::regex_search(cat, *_log_category_re);
@@ -467,7 +475,7 @@ inline bool category_matches(const char * cat) {
  */
 /*@{*/
 
-#if defined(LOGGING_ON) && defined(TIMERS_ON)
+#if LOGGING_ON && TIMERS_ON
 
 namespace ledger {
 
@@ -475,7 +483,7 @@ void start_timer(const char * name, log_level_t lvl);
 void stop_timer(const char * name);
 void finish_timer(const char * name);
 
-#if defined(TRACING_ON)
+#if TRACING_ON
 #define TRACE_START(name, lvl, msg) \
   (SHOW_TRACE(lvl) ? \
    ((ledger::_log_buffer << msg), \
@@ -490,7 +498,7 @@ void finish_timer(const char * name);
 #define TRACE_FINISH(name, lvl)
 #endif
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
 #define DEBUG_START(name, cat, msg) \
   (SHOW_DEBUG(cat) ? \
    ((ledger::_log_buffer << msg), \
@@ -575,11 +583,10 @@ inline void check_for_signal() {
  */
 /*@{*/
 
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) && __GXX_EXPERIMENTAL_CXX0X__
-#define foreach(x, y) for (x : y)
-#define unique_ptr std::unique_ptr
-#else
 #define foreach BOOST_FOREACH
+#if HAVE_CXX11
+using std::unique_ptr;
+#else
 #define unique_ptr std::auto_ptr
 #endif
 
@@ -592,7 +599,7 @@ inline T& downcast(U& object) {
 
 path resolve_path(const path& pathname);
 
-#ifdef HAVE_REALPATH
+#if HAVE_REALPATH
 extern "C" char * realpath(const char *, char resolved_path[]);
 #endif
 

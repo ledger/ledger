@@ -54,7 +54,10 @@ void format_ptree::flush()
 
   property_tree::ptree pt;
 
-  pt.put("ledger.<xmlattr>.version", VERSION);
+  pt.put("ledger.<xmlattr>.version",
+         lexical_cast<string>((Ledger_VERSION_MAJOR << 16) |
+                              (Ledger_VERSION_MINOR << 8) |
+                              Ledger_VERSION_PATCH));
 
   property_tree::ptree& ct(pt.put("ledger.commodities", ""));
   foreach (const commodities_pair& pair, commodities)
@@ -67,11 +70,11 @@ void format_ptree::flush()
   foreach (const xact_t * xact, transactions) {
     put_xact(tt, *xact);
 
-    property_tree::ptree& post_t(tt.put("postings", ""));
+    property_tree::ptree& post_tree(tt.put("postings", ""));
     foreach (const post_t * post, xact->posts)
       if (post->has_xdata() &&
           post->xdata().has_flags(POST_EXT_VISITED))
-        put_post(post_t, *post);
+        put_post(post_tree, *post);
   }
 
   switch (format) {

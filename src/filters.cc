@@ -909,14 +909,14 @@ void subtotal_posts::operator()(post_t& post)
 
   values_map::iterator i = values.find(acct->fullname());
   if (i == values.end()) {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     std::pair<values_map::iterator, bool> result =
 #endif
       values.insert(values_pair
                     (acct->fullname(),
                      acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
                                   post.has_flags(POST_MUST_BALANCE))));
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     assert(result.second);
 #endif
   } else {
@@ -994,7 +994,7 @@ void interval_posts::flush()
 
     DEBUG("filters.interval",
           "Considering post " << post->date() << " = " << post->amount);
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     DEBUG("filters.interval", "interval is:");
     debug_interval(interval);
 #endif
@@ -1269,7 +1269,7 @@ void budget_posts::report_budget_items(const date_t& date)
         begin = pair.first.start;
       }
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
       DEBUG("budget.generate", "begin = " << *begin);
       DEBUG("budget.generate", "date  = " << date);
       if (pair.first.finish)
@@ -1409,7 +1409,7 @@ void forecast_posts::flush()
         least = i;
     }
 
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
     if ((*least).first.finish)
       assert(*(*least).first.start < *(*least).first.finish);
 #endif

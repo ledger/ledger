@@ -45,7 +45,7 @@ bool item_t::has_tag(const string& tag, bool) const
     return false;
   }
   string_map::const_iterator i = metadata->find(tag);
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("item.meta")) {
     if (i == metadata->end())
       DEBUG("item.meta", "Item does not have this tag");

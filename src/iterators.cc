@@ -203,7 +203,7 @@ void sorted_accounts_iterator::push_back(account_t& account)
                      accounts_list.back().end(),
                      compare_items<account_t>(sort_cmp));
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     if (SHOW_DEBUG("accounts.sorted")) {
       foreach (account_t * acct, accounts_list.back())
         DEBUG("accounts.sorted",
@@ -236,7 +236,7 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
   std::stable_sort(deque.begin(), deque.end(),
                    compare_items<account_t>(sort_cmp));
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (SHOW_DEBUG("accounts.sorted")) {
     foreach (account_t * acct, deque)
       DEBUG("accounts.sorted", "Account: " << acct->fullname());

@@ -84,7 +84,7 @@ struct symbol_t
     return kind == sym.kind || name == sym.name;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -128,7 +128,7 @@ public:
     return false;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -185,7 +185,7 @@ public:
     return NULL;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -234,7 +234,7 @@ public:
     return child_scope_t::lookup(kind, name);
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -311,7 +311,7 @@ public:
   virtual string description() {
     if (parent)
       return parent->description();
-#if !defined(NO_ASSERTS)
+#if !NO_ASSERTS
     else
       assert(false);
 #endif
@@ -324,7 +324,7 @@ public:
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -366,7 +366,7 @@ public:
     return required;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 protected:
   explicit context_scope_t() {
     TRACE_CTOR(context_scope_t, "");
@@ -481,7 +481,7 @@ public:
     return args.size() == 0;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 protected:
   explicit call_scope_t() : depth(0) {
     TRACE_CTOR(call_scope_t, "");

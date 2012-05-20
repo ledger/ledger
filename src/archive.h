@@ -74,7 +74,7 @@ public:
   void save(journal_t& journal);
   bool load(journal_t& journal);
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

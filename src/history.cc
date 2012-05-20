@@ -67,7 +67,7 @@ public:
   template <typename Edge>
   bool operator()(const Edge& e) const
   {
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     DEBUG("history.find", "  reftime      = " << reftime);
     if (! oldest.is_not_a_date_time()) {
       DEBUG("history.find", "  oldest       = " << oldest);
@@ -239,7 +239,7 @@ commodity_history_t::find_price(const commodity_t& source,
   FNameMap namemap(get(vertex_name, fg));
 
   DEBUG("history.find", "sv commodity = " << get(namemap, sv)->symbol());
-#if defined(DEBUG_ON)
+#if DEBUG_ON
   if (source.has_flags(COMMODITY_PRIMARY))
     DEBUG("history.find", "sv commodity is primary");
 #endif

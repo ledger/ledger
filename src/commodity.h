@@ -69,7 +69,7 @@ struct price_point_t
     return when == other.when && price == other.price;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -138,7 +138,7 @@ protected:
       TRACE_DTOR(commodity_t::base_t);
     }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
   private:
     base_t() {
       TRACE_CTOR(base_t, "");
@@ -314,7 +314,7 @@ public:
     bool operator()(const amount_t * left, const amount_t * right) const;
   };
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   supports_flags<uint_least16_t> temp_flags;
 

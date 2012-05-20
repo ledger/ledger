@@ -118,7 +118,11 @@ public:
 
   void show_version_info(std::ostream& out) {
     out <<
-      "Ledger " << ledger::version << _(", the command-line accounting tool");
+      "Ledger " << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
+                << Ledger_VERSION_PATCH;
+    if (Ledger_VERSION_DATE != 0)
+      out << '-' << Ledger_VERSION_DATE;
+    out << _(", the command-line accounting tool");
     out <<
       _("\n\nCopyright (c) 2003-2012, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\

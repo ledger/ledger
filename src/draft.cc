@@ -276,7 +276,7 @@ xact_t * draft_t::insert(journal_t& journal)
     //added->code  = matching->code;
     //added->note  = matching->note;
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     DEBUG("draft.xact", "Setting payee from match: " << added->payee);
     //if (added->code)
     //  DEBUG("draft.xact", "Setting code  from match: " << *added->code);
@@ -381,14 +381,14 @@ xact_t * draft_t::insert(journal_t& journal)
           account_t * acct = NULL;
           if (! acct) {
             acct = journal.find_account_re(post.account_mask->str());
-#if defined(DEBUG_ON)
+#if DEBUG_ON
             if (acct)
               DEBUG("draft.xact", "Found account as a regular expression");
 #endif
           }
           if (! acct) {
             acct = journal.find_account(post.account_mask->str());
-#if defined(DEBUG_ON)
+#if DEBUG_ON
             if (acct)
               DEBUG("draft.xact", "Found (or created) account by name");
 #endif

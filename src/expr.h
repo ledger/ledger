@@ -107,7 +107,7 @@ public:
   virtual void    print(std::ostream& out) const;
   virtual void    dump(std::ostream& out) const;
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

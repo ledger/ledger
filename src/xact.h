@@ -88,7 +88,7 @@ public:
     return true;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -109,12 +109,12 @@ public:
   optional<string> code;
   string           payee;
 
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
   mutable void * data;
 #endif
 
   xact_t()
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
     : data(NULL)
 #endif
   {
@@ -143,7 +143,7 @@ public:
 
   virtual bool valid() const;
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -177,7 +177,7 @@ public:
       : tag_data(_tag_data), overwrite_existing(_overwrite_existing),
         apply_to_post(NULL) {}
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
     /** Serialization. */
     deferred_tag_data_t() : apply_to_post(NULL) {}
@@ -237,7 +237,7 @@ private:
 
   virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -285,7 +285,7 @@ class period_xact_t : public xact_base_t
     }
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 

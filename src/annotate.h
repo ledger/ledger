@@ -108,7 +108,7 @@ struct annotation_t : public supports_flags<>,
     return true;
   }
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -163,7 +163,7 @@ struct keep_details_t
   }
   bool keep_any(const commodity_t& comm) const;
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   /** Serialization. */
 
@@ -251,7 +251,7 @@ public:
   virtual void write_annotations(std::ostream& out,
                                  bool no_computed_annotations = false) const;
 
-#if defined(HAVE_BOOST_SERIALIZATION)
+#if HAVE_BOOST_SERIALIZATION
 private:
   explicit annotated_commodity_t() : ptr(NULL) {
     TRACE_CTOR(annotated_commodity_t, "");

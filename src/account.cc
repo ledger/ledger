@@ -89,11 +89,11 @@ account_t * account_t::find_account(const string& acct_name,
     if (has_flags(ACCOUNT_GENERATED))
       account->add_flags(ACCOUNT_GENERATED);
 
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     std::pair<accounts_map::iterator, bool> result =
 #endif
       accounts.insert(accounts_map::value_type(first, account));
-#if defined(DEBUG_ON)
+#if DEBUG_ON
     assert(result.second);
 #endif
   } else {

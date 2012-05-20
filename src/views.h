@@ -44,7 +44,7 @@
 
 #include "utils.h"
 
-#ifdef DOCUMENT_MODEL
+#if DOCUMENT_MODEL
 
 #include "scope.h"
 #include "item.h"
