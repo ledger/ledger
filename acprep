@@ -632,24 +632,33 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def setup_for_johnw(self):
-        self.envvars['CXX'] = '/usr/local/stow/clang-3.1/bin/clang++'
+        if not self.options.compiler or self.options.compiler == "clang-3.1":
+            self.envvars['CXX'] = '/usr/local/stow/clang-3.1/bin/clang++'
 
-        self.CXXFLAGS.append('-Qunused-arguments')
-        self.CXXFLAGS.append('-nostdlibinc')
-        self.CXXFLAGS.append('-isystem')
-        self.CXXFLAGS.append('/usr/local/include/c++/v1')
-        self.CXXFLAGS.append('-isystem')
-        self.CXXFLAGS.append('/usr/include')
-        self.CXXFLAGS.append('-stdlib=libc++')
-        self.CXXFLAGS.append('-Wl,/usr/local/lib/libc++.dylib')
-        self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
+            self.CXXFLAGS.append('-Qunused-arguments')
+            self.CXXFLAGS.append('-nostdlibinc')
+            self.CXXFLAGS.append('-isystem')
+            self.CXXFLAGS.append('/usr/local/include/c++/v1')
+            self.CXXFLAGS.append('-isystem')
+            self.CXXFLAGS.append('/usr/include')
+            self.CXXFLAGS.append('-stdlib=libc++')
+            self.CXXFLAGS.append('-Wl,/usr/local/lib/libc++.dylib')
+            self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
 
-        self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include;/opt/local/include')
-        self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib;/opt/local/lib')
-        self.configure_args.append('-DBOOST_ROOT=/usr/local')
-        self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_49')
-        self.configure_args.append('-DBoost_COMPILER=-clang-darwin')
-        self.configure_args.append(self.source_dir)
+            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include;/opt/local/include')
+            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib;/opt/local/lib')
+            self.configure_args.append('-DBOOST_ROOT=/usr/local')
+            self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_49')
+            self.configure_args.append('-DBoost_COMPILER=-clang-darwin')
+            self.configure_args.append(self.source_dir)
+
+        elif self.options.compiler == "g=++-4.7":
+            self.envvars['CXX'] = '/opt/local/bin/g++-mp-4.7'
+
+            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/opt/local/include')
+            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/opt/local/lib')
+            self.configure_args.append('-DBOOST_ROOT=/opt/local')
+            self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
         system = self.get_stdout('uname', '-s')
@@ -762,9 +771,15 @@ class PrepareBuild(CommandLineApp):
                (var.endswith('FLAGS') or exists(self.envvars[var])):
                 conf_args.append('%s=%s' % (var, self.envvars[var]))
 
+        if self.options.boost_root:
+            conf_args.append('-DBOOST_ROOT=%s' %
+                             self.options.boost_root)
         if self.options.boost_suffix:
             conf_args.append('-DBoost_COMPILER=%s' %
                              self.options.boost_suffix)
+        if self.options.boost_include:
+            conf_args.append('-DBOOST_INCLUDEDIR=%s' %
+                             self.options.boost_include)
 
         if self.prefix_directory():
             conf_args.append('-DCMAKE_PREFIX_PATH=%s' % self.prefix_directory())
