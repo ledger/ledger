@@ -75,7 +75,7 @@
 #define HAVE_BOOST_SERIALIZATION 0
 
 #define DEBUG_MODE               @DEBUG_MODE@
-#define NDEBUG                   @NDEBUG@
+#define NO_ASSERTS               @NO_ASSERTS@
 
 #define DOCUMENT_MODEL           0
 #define REDUCE_TO_INTEGER        0

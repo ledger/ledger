@@ -52,18 +52,15 @@
 #define TIMERS_ON   1
 
 #if DEBUG_MODE
-#define NO_ASSERTS  0
 #define VERIFY_ON   1
 #define TRACING_ON  1
 #define DEBUG_ON    1
-#elif NDEBUG
-#define NO_ASSERTS  1
+#elif NO_ASSERTS
 //#define NO_LOGGING  1
 #define VERIFY_ON   0
 #define TRACING_ON  0
 #define DEBUG_ON    0
 #else
-#define NO_ASSERTS  0
 #define TRACING_ON  1           // use --trace X to enable
 #define VERIFY_ON   0
 #define TRACING_ON  0
