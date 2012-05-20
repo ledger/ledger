@@ -34,9 +34,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-#if 0
 #include <boost/graph/graphviz.hpp>
-#endif
 
 #include "history.h"
 
@@ -583,7 +581,6 @@ private:
 void commodity_history_impl_t::print_map(std::ostream& out,
                                          const datetime_t& moment)
 {
-#if 0
   if (moment.is_not_a_date_time()) {
     write_graphviz(out, price_graph,
                    label_writer<NameMap>(get(vertex_name, price_graph)));
@@ -593,7 +590,6 @@ void commodity_history_impl_t::print_map(std::ostream& out,
               (get(edge_weight, price_graph), pricemap, ratiomap, moment));
     write_graphviz(out, fg, label_writer<FNameMap>(get(vertex_name, fg)));
   }
-#endif
 }
 
 } // namespace ledger

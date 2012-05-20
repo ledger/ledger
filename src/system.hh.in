@@ -212,6 +212,9 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 
+// jww (2012-05-20): This must be included before Boost.Regex
+#include <boost/xpressive/xpressive_static.hpp>
+
 #if HAVE_BOOST_REGEX_UNICODE
 #include <boost/regex/icu.hpp>
 #else
