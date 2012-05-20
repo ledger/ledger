@@ -58,11 +58,11 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(Gettext)           # Used for running tests
 
-if(GETTEXT_FOUND)
-  set(HAVE_GETTEXT 1)
-else()
+#if(GETTEXT_FOUND)
+#  set(HAVE_GETTEXT 1)
+#else()
   set(HAVE_GETTEXT 0)
-endif()
+#endif()
 
 ########################################################################
 
