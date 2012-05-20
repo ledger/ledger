@@ -15,7 +15,7 @@ option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(NO_ASSERTS "Build without any internal consistency checks" OFF)
-option(BUILD_DEBUG "Build support for runtime debugging" ON)
+option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
