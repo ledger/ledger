@@ -58,7 +58,6 @@
 
 #define HAVE_CXX11               @HAVE_CXX11@
 
-#define HAVE_LANGINFO_H          @HAVE_LANGINFO_H@
 #define HAVE_EDIT                @HAVE_EDIT@
 #define HAVE_GETTEXT             @HAVE_GETTEXT@
 
