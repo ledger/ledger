@@ -854,7 +854,8 @@ class PrepareBuild(CommandLineApp):
     def phase_update(self, *args):
         self.log.info('Executing phase: update')
         self.phase_pull()
-        self.phase_check(*args)
+        #self.phase_check(*args)
+        self.phase_make(*args)
 
     #########################################################################
     # Build directory cleaning phases                                       #

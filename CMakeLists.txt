@@ -45,6 +45,8 @@ if(USE_PYTHON)
     set(HAVE_BOOST_PYTHON 0)
     message("Could not find a Python library to use with Boost.Python")
   endif()
+else()
+  set(HAVE_BOOST_PYTHON 0)
 endif()
 
 set(Boost_USE_MULTITHREADED OFF)
