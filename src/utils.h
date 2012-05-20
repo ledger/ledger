@@ -103,10 +103,7 @@ namespace ledger {
 #undef assert
 #endif
 
-#if ! NO_ASSERTS
-#define ASSERTS_ON 1
-#endif
-#if ASSERTS_ON
+#if !NO_ASSERTS
 
 namespace ledger {
   void debug_assert(const string& reason, const string& func,
@@ -117,11 +114,11 @@ namespace ledger {
   ((x) ? ((void)0) : debug_assert(#x, BOOST_CURRENT_FUNCTION,   \
                                   __FILE__, __LINE__))
 
-#else // ! ASSERTS_ON
+#else // !NO_ASSERTS
 
 #define assert(x)
 
-#endif // ASSERTS_ON
+#endif // !NO_ASSERTS
 
 /*@}*/
 

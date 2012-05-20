@@ -900,7 +900,7 @@ void amount_t::annotate(const annotation_t& details)
   if (commodity_t * ann_comm =
       this_base->pool().find_or_create(*this_base, details))
     set_commodity(*ann_comm);
-#ifdef ASSERTS_ON
+#if !NO_ASSERTS
   else
     assert(false);
 #endif

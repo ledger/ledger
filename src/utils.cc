@@ -38,7 +38,7 @@
  * Assertions
  */
 
-#if ASSERTS_ON
+#if !NO_ASSERTS
 
 namespace ledger {
 
