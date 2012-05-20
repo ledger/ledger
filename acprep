@@ -937,10 +937,9 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Testing opt ===')
         self.phase_make('fullcheck')
 
-        if not self.options.use_clang:
-            self.configure_flavor('gcov', reset=False)
-            self.log.info('=== Testing gcov ===')
-            self.phase_make('check')
+        self.configure_flavor('gcov', reset=False)
+        self.log.info('=== Testing gcov ===')
+        self.phase_make('check')
 
         self.configure_flavor('debug', reset=False)
         self.log.info('=== Testing debug ===')
@@ -959,11 +958,10 @@ class PrepareBuild(CommandLineApp):
         self.log.info('=== Building opt ===')
         self.phase_make(*args)
 
-        if not self.options.use_clang:
-            self.configure_flavor('gcov', reset)
+        self.configure_flavor('gcov', reset)
 
-            self.log.info('=== Building gcov ===')
-            self.phase_make(*args)
+        self.log.info('=== Building gcov ===')
+        self.phase_make(*args)
 
         self.log.info('=== Building default ===')
         self.phase_make(*args)
