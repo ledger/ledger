@@ -14,7 +14,7 @@ enable_testing()
 option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
-option(NO_ASSERTS "Build without any internal consistency checks" OFF)
+option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
@@ -27,6 +27,12 @@ if(BUILD_DEBUG)
 else()
   set(CMAKE_BUILD_TYPE Release)
   set(DEBUG_MODE 0)
+endif()
+
+if(DISABLE_ASSERTS)
+  set(NO_ASSERTS 1)
+else()
+  set(NO_ASSERTS 0)
 endif()
 
 if(CLANG_GCOV)
