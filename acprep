@@ -739,9 +739,15 @@ class PrepareBuild(CommandLineApp):
         # else branch inside assert statements.
         self.configure_args.append('-DBUILD_DEBUG=1')
         self.configure_args.append('-DNO_ASSERTS=1')
+        self.configure_args.append('-DCLANG_GCOV=1')
 
         self.CXXFLAGS.append('-fprofile-arcs')
         self.CXXFLAGS.append('-ftest-coverage')
+        self.LDFLAGS.append('-fprofile-arcs')
+        self.LDFLAGS.append('-ftest-coverage')
+
+        if not self.options.compiler or self.options.compiler == "clang-3.1":
+            self.LDFLAGS.append('-lprofile_rt')
 
     def setup_flavor_gprof(self):
         self.configure_args.append('-DBUILD_DEBUG=1')
@@ -847,6 +853,9 @@ class PrepareBuild(CommandLineApp):
             make_args.append('-j%d' % self.options.jobs)
             make_args.append('ARGS=-j%d' % self.options.jobs)
 
+        if self.options.verbose:
+            make_args.append('VERBOSE=1')
+
         self.log.debug('Configure arguments => ' + str(config_args))
         self.log.debug('Makefile arguments  => ' + str(make_args))
 
@@ -935,20 +944,26 @@ class PrepareBuild(CommandLineApp):
 
         self.configure_flavor('opt', reset=False)
         self.log.info('=== Testing opt ===')
-        self.phase_make('fullcheck')
+        # jww (2012-05-20): Can't use fullcheck yet
+        #self.phase_make('fullcheck')
+        self.phase_make('test')
 
         self.configure_flavor('gcov', reset=False)
         self.log.info('=== Testing gcov ===')
-        self.phase_make('check')
+        #self.phase_make('check')
+        self.phase_make('test')
 
         self.configure_flavor('debug', reset=False)
         self.log.info('=== Testing debug ===')
-        self.phase_make('fullcheck')
+        #self.phase_make('fullcheck')
+        self.phase_make('test')
 
         self.configure_flavor('default', reset=False)
         self.log.info('=== Testing default ===')
-        self.phase_make('fullcheck')
-        self.phase_make('docs')
+        #self.phase_make('fullcheck')
+        self.phase_make('test')
+        # jww (2012-05-20): docs are not working yet
+        #self.phase_make('docs')
 
     def phase_makeall(self, reset=False, *args):
         self.log.info('Executing phase: makeall')

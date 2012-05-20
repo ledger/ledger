@@ -29,6 +29,11 @@ else()
   set(DEBUG_MODE 0)
 endif()
 
+if(CLANG_GCOV)
+  set(PROFILE_LIBS profile_rt)
+  set(CMAKE_REQUIRED_LIBRARIES ${PROFILE_LIBS})
+endif()
+
 ########################################################################
 
 find_package(PythonInterp)      # Used for running tests
@@ -111,7 +116,7 @@ endif()
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc)
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -239,6 +244,7 @@ macro(add_ledger_library_dependencies _target)
   if(HAVE_BOOST_REGEX_UNICODE)
     target_link_libraries(${_target} icuuc)
   endif()
+  target_link_libraries(${_target} ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)
 
 ########################################################################
@@ -255,6 +261,12 @@ include_directories("${PROJECT_BINARY_DIR}")
 configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
+
+if(CMAKE_CXX_COMPILER MATCHES "clang")
+  set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
+elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
+  set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
+endif()
 
 add_subdirectory(src)
 if(BUILD_DOCS)

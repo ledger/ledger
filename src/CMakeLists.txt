@@ -134,7 +134,6 @@ set(LEDGER_INCLUDES
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if(CMAKE_CXX_COMPILER MATCHES "clang")
-    set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
     add_definitions(
       -Weverything
       -Wno-padded
