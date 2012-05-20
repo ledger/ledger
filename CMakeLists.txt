@@ -62,33 +62,20 @@ find_package(Boost 1.47.0
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-find_package(Gettext)           # Used for running tests
-
-#if(GETTEXT_FOUND)
-#  set(HAVE_GETTEXT 1)
-#else()
-  set(HAVE_GETTEXT 0)
-#endif()
-
 ########################################################################
 
 include(CheckIncludeFiles)
-
-check_include_files(langinfo.h HAVE_LANGINFO_H)
-
 include(CheckLibraryExists)
-
-check_library_exists(edit readline "" HAVE_EDIT)
-
 include(CheckFunctionExists)
+include(CheckCSourceCompiles)
+include(CheckCXXSourceRuns)
+include(CMakePushCheckState)
 
 check_function_exists(access HAVE_ACCESS)
 check_function_exists(realpath HAVE_REALPATH)
 check_function_exists(getpwuid HAVE_GETPWUID)
 check_function_exists(getpwnam HAVE_GETPWNAM)
 check_function_exists(isatty HAVE_ISATTY)
-
-include(CheckCSourceCompiles)
 
 check_c_source_compiles("
 #include <sys/types.h>
@@ -126,9 +113,6 @@ if(UNIX_PIPES_COMPILES)
 else()
   set(HAVE_UNIX_PIPES 0)
 endif()
-
-include(CheckCXXSourceRuns)
-include(CMakePushCheckState)
 
 cmake_push_check_state()
 
@@ -189,21 +173,52 @@ cmake_pop_check_state()
 
 include_directories(${CMAKE_INCLUDE_PATH})
 
-find_path(GMP_PATH gmp.h)
-find_library(GMP_LIB gmp)
-include_directories(SYSTEM "${GMP_PATH}")
+macro(find_opt_library_and_header _header_var _header _lib_var _lib _have_var)
+  if(${_header_var})
+    find_path(${_header_var} ${_header})
+    if(NOT ${_header_var})
+      set(${_have_var} 0)
+    else()
+      find_library(${_lib_var} ${_lib})
+      if(NOT ${_lib_var})
+        set(${_have_var} 0)
+      else()
+        include_directories(SYSTEM "${${_header_var}}")
+      endif()
+    endif()
+  endif()
+endmacro(find_opt_library_and_header _header_var _header _lib_var _lib _have_var)
 
-find_path(MPFR_PATH mpfr.h)
-find_library(MPFR_LIB mpfr)
-include_directories(SYSTEM "${MPFR_PATH}")
+macro(find_req_library_and_header _header_var _header _lib_var _lib)
+  find_path(${_header_var} ${_header})
+  if(NOT ${_header_var})
+    message(SEND_ERROR "Could not find ${_header} on your system")
+  else()
+    include_directories(SYSTEM "${${_header_var}}")
+    find_library(${_lib_var} ${_lib})
+    if(NOT ${_lib_var})
+      message(SEND_ERROR "Could not find library ${_lib} on your system")
+    endif()
+  endif()
+endmacro(find_req_library_and_header _header_var _header _lib_var _lib)
 
-find_path(EDIT_PATH histedit.h)
-find_library(EDIT_LIB edit)
-include_directories(SYSTEM "${EDIT_PATH}")
+find_req_library_and_header(GMP_PATH gmp.h GMP_LIB gmp)
+find_req_library_and_header(MPFR_PATH mpfr.h MPFR_LIB mpfr)
 
-find_path(INTL_PATH libintl.h)
-find_library(INTL_LIB intl)
-include_directories(SYSTEM "${INTL_PATH}")
+check_library_exists(edit readline "" HAVE_EDIT)
+find_opt_library_and_header(EDIT_PATH histedit.h EDIT_LIB edit HAVE_EDIT)
+
+find_package(Gettext)           # Used for running tests
+
+#if(GETTEXT_FOUND)
+#  set(HAVE_GETTEXT 1)
+#else()
+  set(HAVE_GETTEXT 0)
+#endif()
+
+#find_path(INTL_PATH libintl.h)
+#find_library(INTL_LIB intl)
+#include_directories(SYSTEM "${INTL_PATH}")
 
 ########################################################################
 
