@@ -489,46 +489,6 @@ void report_memory(std::ostream& out, bool report_all)
 
 namespace ledger {
 
-#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
-
-string::string() : std::string() {
-  TRACE_CTOR(string, "");
-}
-string::string(const string& str) : std::string(str) {
-  TRACE_CTOR(string, "copy");
-}
-string::string(const std::string& str) : std::string(str) {
-  TRACE_CTOR(string, "const std::string&");
-}
-string::string(size_type len, char x) : std::string(len, x) {
-  TRACE_CTOR(string, "size_type, char");
-}
-string::string(const char * str) : std::string(str) {
-  TRACE_CTOR(string, "const char *");
-}
-string::string(const char * str, const char * end) : std::string(str, end) {
-  TRACE_CTOR(string, "const char *, const char *");
-}
-string::string(const string& str, size_type x) : std::string(str, x) {
-  TRACE_CTOR(string, "const string&, size_type");
-}
-string::string(const string& str, size_type x, size_type y)
-  : std::string(str, x, y) {
-  TRACE_CTOR(string, "const string&, size_type, size_type");
-}
-string::string(const char * str, size_type x) : std::string(str, x) {
-  TRACE_CTOR(string, "const char *, size_type");
-}
-string::string(const char * str, size_type x, size_type y)
-  : std::string(str, x, y) {
-  TRACE_CTOR(string, "const char *, size_type, size_type");
-}
-string::~string() throw() {
-  TRACE_DTOR(string);
-}
-
-#endif // !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
-
 string empty_string("");
 
 strings_list split_arguments(const char * line)

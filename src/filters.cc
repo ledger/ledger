@@ -37,7 +37,6 @@
 #include "report.h"
 #include "compare.h"
 #include "pool.h"
-#include "history.h"
 
 namespace ledger {
 

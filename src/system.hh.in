@@ -184,18 +184,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#if !(defined(__GXX_EXPERIMENTAL_CXX0X__) && __GXX_EXPERIMENTAL_CXX0X__)
 #include <boost/foreach.hpp>
-#endif
-
+#include <boost/format.hpp>
 #include <boost/function.hpp>
 
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/filtered_graph.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/graph/graphviz.hpp>
-
-#include <boost/format.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <boost/iostreams/stream.hpp>
@@ -237,11 +229,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #if HAVE_GETTEXT
 #include <libintl.h>
 #define _(str) gettext(str)
-#define _f(str) boost::format(gettext(str))
 #else
 #define _(str) str
-#define _f(str) boost::format(str)
 #endif
+#define _f(str) boost::format(_(str))
 
 #if HAVE_BOOST_SERIALIZATION
 

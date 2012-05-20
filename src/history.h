@@ -49,57 +49,17 @@
 #include "amount.h"
 #include "commodity.h"
 
-namespace boost {
-  enum edge_price_point_t { edge_price_point };
-  enum edge_price_ratio_t { edge_price_ratio };
-  BOOST_INSTALL_PROPERTY(edge, price_point);
-  BOOST_INSTALL_PROPERTY(edge, price_ratio);
-}
-
 namespace ledger {
 
 typedef std::map<datetime_t, amount_t> price_map_t;
 
+class commodity_history_impl_t;
 class commodity_history_t : public noncopyable
 {
+  unique_ptr<commodity_history_impl_t> p_impl;
+
 public:
-  typedef adjacency_list
-    <vecS,                      // Store all edges in a vector
-     vecS,                      // Store all vertices in a vector
-     undirectedS,               // Relations are both ways
-
-    // All vertices are commodities
-    property<vertex_name_t, const commodity_t *,
-             property<vertex_index_t, std::size_t> >,
-
-    // All edges are weights computed as the absolute difference between
-    // the reference time of a search and a known price point.  A
-    // filtered_graph is used to select the recent price point to the
-    // reference time before performing the search.
-    property<edge_weight_t, long,
-             property<edge_price_ratio_t, price_map_t,
-                      property<edge_price_point_t, price_point_t> > >,
-
-    // Graph itself has a std::string name
-    property<graph_name_t, std::string>
-    > Graph;
-
-  Graph price_graph;
-
-  typedef graph_traits<Graph>::vertex_descriptor vertex_descriptor;
-  typedef graph_traits<Graph>::edge_descriptor   edge_descriptor;
-
-  typedef property_map<Graph, vertex_name_t>::type      NameMap;
-  typedef property_map<Graph, edge_weight_t>::type      EdgeWeightMap;
-  typedef property_map<Graph, edge_price_point_t>::type PricePointMap;
-  typedef property_map<Graph, edge_price_ratio_t>::type PriceRatioMap;
-
-  PricePointMap pricemap;
-  PriceRatioMap ratiomap;
-
-  commodity_history_t()
-    : pricemap(get(edge_price_point, price_graph)),
-      ratiomap(get(edge_price_ratio, price_graph)) {}
+  commodity_history_t();
 
   void add_commodity(commodity_t& comm);
 

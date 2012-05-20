@@ -80,12 +80,7 @@
 namespace ledger {
   using namespace boost;
 
-#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
-  class string;
-#else
   typedef std::string string;
-#endif
-
   typedef std::list<string> strings_list;
 
   typedef posix_time::ptime         ptime;
@@ -99,14 +94,6 @@ namespace ledger {
   typedef boost::filesystem::ofstream         ofstream;
   typedef boost::filesystem::filesystem_error filesystem_error;
 }
-
-#if BOOST_FILESYSTEM_VERSION == 3
-#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
-namespace boost { namespace filesystem3 { namespace path_traits {
-template<> struct is_pathable<ledger::string> { static const bool value = true; };
-}}}
-#endif // VERIFY_ON || HAVE_BOOST_PYTHON
-#endif // BOOST_FILESYSTEM_VERSION == 3
 
 /*@}*/
 
@@ -200,87 +187,6 @@ void report_memory(std::ostream& out, bool report_all = false);
 /*@{*/
 
 namespace ledger {
-
-#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
-
-class string : public std::string
-{
-public:
-  string();
-  string(const string& str);
-  string(const std::string& str);
-  string(size_type len, char x);
-  template<class _InputIterator>
-  string(_InputIterator __beg, _InputIterator __end)
-    : std::string(__beg, __end) {
-    TRACE_CTOR(string, "InputIterator, InputIterator");
-  }
-  string(const char * str);
-  string(const char * str, const char * end);
-  string(const string& str, size_type x);
-  string(const string& str, size_type x, size_type y);
-  string(const char * str, size_type x);
-  string(const char * str, size_type x, size_type y);
-  ~string() throw();
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<std::string>(*this);
-  }
-#endif // HAVE_BOOST_SERIALIZATION
-};
-
-inline string operator+(const string& __lhs, const string& __rhs)
-{
-  string __str(__lhs);
-  __str.append(__rhs);
-  return __str;
-}
-
-string operator+(const char* __lhs, const string& __rhs);
-string operator+(char __lhs, const string& __rhs);
-
-inline string operator+(const string& __lhs, const char* __rhs)
-{
-  string __str(__lhs);
-  __str.append(__rhs);
-  return __str;
-}
-
-inline string operator+(const string& __lhs, char __rhs)
-{
-  typedef string                __string_type;
-  typedef string::size_type     __size_type;
-  __string_type __str(__lhs);
-  __str.append(__size_type(1), __rhs);
-  return __str;
-}
-
-inline bool operator==(const string& __lhs, const string& __rhs)
-{ return __lhs.compare(__rhs) == 0; }
-
-inline bool operator==(const char* __lhs, const string& __rhs)
-{ return __rhs.compare(__lhs) == 0; }
-
-inline bool operator==(const string& __lhs, const char* __rhs)
-{ return __lhs.compare(__rhs) == 0; }
-
-inline bool operator!=(const string& __lhs, const string& __rhs)
-{ return __rhs.compare(__lhs) != 0; }
-
-inline bool operator!=(const char* __lhs, const string& __rhs)
-{ return __rhs.compare(__lhs) != 0; }
-
-inline bool operator!=(const string& __lhs, const char* __rhs)
-{ return __lhs.compare(__rhs) != 0; }
-
-#endif // !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
 
 extern string empty_string;
 

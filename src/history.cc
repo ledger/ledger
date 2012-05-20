@@ -31,6 +31,13 @@
 
 #include <system.hh>
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/filtered_graph.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#if 0
+#include <boost/graph/graphviz.hpp>
+#endif
+
 #include "history.h"
 
 template <typename T>
@@ -40,7 +47,141 @@ struct f_max : public std::binary_function<T, T, bool> {
   }
 };
 
+namespace boost {
+  enum edge_price_point_t { edge_price_point };
+  enum edge_price_ratio_t { edge_price_ratio };
+  BOOST_INSTALL_PROPERTY(edge, price_point);
+  BOOST_INSTALL_PROPERTY(edge, price_ratio);
+}
+
 namespace ledger {
+
+class commodity_history_impl_t : public noncopyable
+{
+public:
+  typedef adjacency_list
+    <vecS,                      // Store all edges in a vector
+     vecS,                      // Store all vertices in a vector
+     undirectedS,               // Relations are both ways
+
+    // All vertices are commodities
+    property<vertex_name_t, const commodity_t *,
+             property<vertex_index_t, std::size_t> >,
+
+    // All edges are weights computed as the absolute difference between
+    // the reference time of a search and a known price point.  A
+    // filtered_graph is used to select the recent price point to the
+    // reference time before performing the search.
+    property<edge_weight_t, long,
+             property<edge_price_ratio_t, price_map_t,
+                      property<edge_price_point_t, price_point_t> > >,
+
+    // Graph itself has a std::string name
+    property<graph_name_t, std::string>
+    > Graph;
+
+  Graph price_graph;
+
+  typedef graph_traits<Graph>::vertex_descriptor vertex_descriptor;
+  typedef graph_traits<Graph>::edge_descriptor   edge_descriptor;
+
+  typedef property_map<Graph, vertex_name_t>::type      NameMap;
+  typedef property_map<Graph, edge_weight_t>::type      EdgeWeightMap;
+  typedef property_map<Graph, edge_price_point_t>::type PricePointMap;
+  typedef property_map<Graph, edge_price_ratio_t>::type PriceRatioMap;
+
+  PricePointMap pricemap;
+  PriceRatioMap ratiomap;
+
+  commodity_history_impl_t()
+    : pricemap(get(edge_price_point, price_graph)),
+      ratiomap(get(edge_price_ratio, price_graph)) {}
+
+  void add_commodity(commodity_t& comm);
+
+  void add_price(const commodity_t& source,
+                 const datetime_t&  when,
+                 const amount_t&    price);
+  void remove_price(const commodity_t& source,
+                    const commodity_t& target,
+                    const datetime_t&  date);
+
+  void map_prices(function<void(datetime_t, const amount_t&)> fn,
+                  const commodity_t& source,
+                  const datetime_t&  moment,
+                  const datetime_t&  _oldest = datetime_t(),
+                  bool bidirectionally = false);
+
+  optional<price_point_t>
+  find_price(const commodity_t& source,
+             const datetime_t&  moment,
+             const datetime_t&  oldest = datetime_t());
+
+  optional<price_point_t>
+  find_price(const commodity_t& source,
+             const commodity_t& target,
+             const datetime_t&  moment,
+             const datetime_t&  oldest = datetime_t());
+
+  void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
+};
+
+commodity_history_t::commodity_history_t()
+{
+  p_impl.reset(new commodity_history_impl_t);
+}
+
+void commodity_history_t::add_commodity(commodity_t& comm)
+{
+  p_impl->add_commodity(comm);
+}
+
+void commodity_history_t::add_price(const commodity_t& source,
+                                    const datetime_t&  when,
+                                    const amount_t&    price)
+{
+  p_impl->add_price(source, when, price);
+}
+
+void commodity_history_t::remove_price(const commodity_t& source,
+                                       const commodity_t& target,
+                                       const datetime_t&  date)
+{
+  p_impl->remove_price(source, target, date);
+}
+
+void commodity_history_t::map_prices(
+  function<void(datetime_t, const amount_t&)> fn,
+  const commodity_t& source,
+  const datetime_t&  moment,
+  const datetime_t&  _oldest,
+  bool               bidirectionally)
+{
+  p_impl->map_prices(fn, source, moment, _oldest, bidirectionally);
+}
+
+optional<price_point_t>
+commodity_history_t::find_price(const commodity_t& source,
+                                const datetime_t&  moment,
+                                const datetime_t&  oldest)
+{
+  return p_impl->find_price(source, moment, oldest);
+}
+
+optional<price_point_t>
+commodity_history_t::find_price(const commodity_t& source,
+                                const commodity_t& target,
+                                const datetime_t&  moment,
+                                const datetime_t&  oldest)
+{
+  return p_impl->find_price(source, target, moment, oldest);
+}
+
+void commodity_history_t::print_map(std::ostream& out,
+                                    const datetime_t& moment)
+{
+  p_impl->print_map(out, moment);
+}
 
 template <typename EdgeWeightMap,
           typename PricePointMap,
@@ -107,20 +248,20 @@ public:
 };
 
 typedef filtered_graph
-  <commodity_history_t::Graph,
-   recent_edge_weight<commodity_history_t::EdgeWeightMap,
-                      commodity_history_t::PricePointMap,
-                      commodity_history_t::PriceRatioMap> > FGraph;
+  <commodity_history_impl_t::Graph,
+   recent_edge_weight<commodity_history_impl_t::EdgeWeightMap,
+                      commodity_history_impl_t::PricePointMap,
+                      commodity_history_impl_t::PriceRatioMap> > FGraph;
 
 typedef property_map<FGraph, vertex_name_t>::type FNameMap;
 typedef property_map<FGraph, vertex_index_t>::type FIndexMap;
 typedef iterator_property_map
-  <commodity_history_t::vertex_descriptor*, FIndexMap,
-   commodity_history_t::vertex_descriptor,
-   commodity_history_t::vertex_descriptor&> FPredecessorMap;
+  <commodity_history_impl_t::vertex_descriptor*, FIndexMap,
+   commodity_history_impl_t::vertex_descriptor,
+   commodity_history_impl_t::vertex_descriptor&> FPredecessorMap;
 typedef iterator_property_map<long*, FIndexMap, long, long&> FDistanceMap;
 
-void commodity_history_t::add_commodity(commodity_t& comm)
+void commodity_history_impl_t::add_commodity(commodity_t& comm)
 {
   if (! comm.graph_index()) {
     comm.set_graph_index(num_vertices(price_graph));
@@ -128,9 +269,9 @@ void commodity_history_t::add_commodity(commodity_t& comm)
   }
 }
 
-void commodity_history_t::add_price(const commodity_t& source,
-                                    const datetime_t&  when,
-                                    const amount_t&    price)
+void commodity_history_impl_t::add_price(const commodity_t& source,
+                                         const datetime_t&  when,
+                                         const amount_t&    price)
 {
   assert(source != price.commodity());
 
@@ -151,9 +292,9 @@ void commodity_history_t::add_price(const commodity_t& source,
   }
 }
 
-void commodity_history_t::remove_price(const commodity_t& source,
-                                       const commodity_t& target,
-                                       const datetime_t&  date)
+void commodity_history_impl_t::remove_price(const commodity_t& source,
+                                            const commodity_t& target,
+                                            const datetime_t&  date)
 {
   assert(source != target);
 
@@ -172,12 +313,12 @@ void commodity_history_t::remove_price(const commodity_t& source,
   }
 }
 
-void commodity_history_t::map_prices(function<void(datetime_t,
-                                                   const amount_t&)> fn,
-                                     const commodity_t& source,
-                                     const datetime_t&  moment,
-                                     const datetime_t&  oldest,
-                                     bool bidirectionally)
+void commodity_history_impl_t::map_prices(
+  function<void(datetime_t, const amount_t&)> fn,
+  const commodity_t& source,
+  const datetime_t&  moment,
+  const datetime_t&  oldest,
+  bool bidirectionally)
 {
   DEBUG("history.map", "Mapping prices for source commodity: " << source);
 
@@ -225,9 +366,9 @@ void commodity_history_t::map_prices(function<void(datetime_t,
 }
 
 optional<price_point_t>
-commodity_history_t::find_price(const commodity_t& source,
-                                const datetime_t&  moment,
-                                const datetime_t&  oldest)
+commodity_history_impl_t::find_price(const commodity_t& source,
+                                     const datetime_t&  moment,
+                                     const datetime_t&  oldest)
 {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
@@ -286,10 +427,10 @@ commodity_history_t::find_price(const commodity_t& source,
 }
 
 optional<price_point_t>
-commodity_history_t::find_price(const commodity_t& source,
-                                const commodity_t& target,
-                                const datetime_t&  moment,
-                                const datetime_t&  oldest)
+commodity_history_impl_t::find_price(const commodity_t& source,
+                                     const commodity_t& target,
+                                     const datetime_t&  moment,
+                                     const datetime_t&  oldest)
 {
   assert(source != target);
 
@@ -439,8 +580,10 @@ private:
   Name name;
 };
 
-void commodity_history_t::print_map(std::ostream& out, const datetime_t& moment)
+void commodity_history_impl_t::print_map(std::ostream& out,
+                                         const datetime_t& moment)
 {
+#if 0
   if (moment.is_not_a_date_time()) {
     write_graphviz(out, price_graph,
                    label_writer<NameMap>(get(vertex_name, price_graph)));
@@ -450,6 +593,7 @@ void commodity_history_t::print_map(std::ostream& out, const datetime_t& moment)
               (get(edge_weight, price_graph), pricemap, ratiomap, moment));
     write_graphviz(out, fg, label_writer<FNameMap>(get(vertex_name, fg)));
   }
+#endif
 }
 
 } // namespace ledger

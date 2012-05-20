@@ -180,10 +180,6 @@ namespace boost { namespace python {
         BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T,expr, pytype)  \
         BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T,expr)
 
-#if !HAVE_CXX11 && (VERIFY_ON || HAVE_BOOST_PYTHON)
-BOOST_PYTHON_TO_PYTHON_BY_VALUE(ledger::string, ::PyUnicode_FromEncodedObject(::PyString_FromString(x.c_str()), "UTF-8", NULL), &PyUnicode_Type)
-#endif
-
 } } // namespace boost::python
 
 //boost::python::register_ptr_to_python< boost::shared_ptr<Base> >();
