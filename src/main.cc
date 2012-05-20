@@ -127,7 +127,7 @@ int main(int argc, char * argv[], char * envp[])
 
       bool exit_loop = false;
 
-#ifdef HAVE_EDIT
+#if HAVE_EDIT
 
       rl_readline_name = const_cast<char *>("Ledger");
 #if 0
