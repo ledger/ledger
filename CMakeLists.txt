@@ -58,8 +58,6 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
-set(Boost_USE_MULTITHREADED OFF)
-
 find_package(Boost 1.47.0
   REQUIRED date_time filesystem system iostreams regex 
            unit_test_framework test_exec_monitor
