@@ -38,6 +38,28 @@ LEVELS = {'DEBUG':    logging.DEBUG,
 
 search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
 
+def which(program):
+    def is_exe(fpath):
+        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+    def ext_candidates(fpath):
+        yield fpath
+        for ext in os.environ.get("PATHEXT", "").split(os.pathsep):
+            yield fpath + ext
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            for candidate in ext_candidates(exe_file):
+                if is_exe(candidate):
+                    return candidate
+
+    return None
+
 class BoostInfo(object):
     def dependencies(system):
         if system == 'darwin':
@@ -647,6 +669,7 @@ class PrepareBuild(CommandLineApp):
 
             self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include;/opt/local/include')
             self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib;/opt/local/lib')
+            self.configure_args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON')
             self.configure_args.append('-DBOOST_ROOT=/usr/local')
             self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_49')
             self.configure_args.append('-DBoost_COMPILER=-clang-darwin')
@@ -771,6 +794,10 @@ class PrepareBuild(CommandLineApp):
             conf_args = ['cmake']
         else:
             conf_args = ['cmake', self.source_dir]
+
+        if not which('cmake'):
+            self.log.error("Cannot find CMake, please check your PATH")
+            sys.exit(1)
 
         for var in ('CXX', 'CXXFLAGS', 'LDFLAGS'):
             if self.envvars.has_key(var) and self.envvars[var] and \
