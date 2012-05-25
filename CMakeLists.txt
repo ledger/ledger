@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.6)
 
 project(Ledger)
 
@@ -214,7 +214,7 @@ find_req_library_and_header(MPFR_PATH mpfr.h MPFR_LIB mpfr)
 check_library_exists(edit readline "" HAVE_EDIT)
 find_opt_library_and_header(EDIT_PATH histedit.h EDIT_LIB edit HAVE_EDIT)
 
-find_package(Gettext)           # Used for running tests
+#find_package(Gettext)           # Used for running tests
 
 #if(GETTEXT_FOUND)
 #  set(HAVE_GETTEXT 1)
