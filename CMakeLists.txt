@@ -61,7 +61,7 @@ endif()
 find_package(Boost 1.47.0
   REQUIRED date_time filesystem system iostreams regex 
            unit_test_framework test_exec_monitor
-  OPTIONAL_COMPONENTS ${BOOST_PYTHON})
+  ${BOOST_PYTHON})
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
