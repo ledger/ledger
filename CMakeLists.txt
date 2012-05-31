@@ -58,9 +58,8 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
-find_package(Boost 1.47.0
-  REQUIRED date_time filesystem system iostreams regex 
-           unit_test_framework test_exec_monitor
+find_package(Boost 1.46.0
+  REQUIRED date_time filesystem system iostreams regex unit_test_framework
   ${BOOST_PYTHON})
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
