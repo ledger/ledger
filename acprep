@@ -390,8 +390,8 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def prefix_directory(self):
-        if self.prefix_dir:
-            return self.prefix_dir
+        if self.options.prefix_dir:
+            return self.options.prefix_dir
         else:
             return None
 
@@ -399,7 +399,7 @@ class PrepareBuild(CommandLineApp):
         return join(os.environ['HOME'], "Products")
 
     def products_directory(self):
-        if not self.products_dir:
+        if not self.options.products_dir:
             products = self.default_products_directory()
 
             if not exists(products) or not isdir(products):
@@ -407,15 +407,15 @@ class PrepareBuild(CommandLineApp):
 
             products = join(products, basename(self.source_dir))
 
-            self.products_dir = products
+            self.options.products_dir = products
 
-        return self.products_dir
+        return self.options.products_dir
 
     def build_directory(self):
-        if not self.build_dir:
-            self.build_dir = join(self.products_directory(),
-                                  self.current_flavor)
-        return self.build_dir
+        if not self.options.build_dir:
+            self.options.build_dir = join(self.products_directory(),
+                                          self.current_flavor)
+        return self.optionsbuild_dir
 
     def ensure(self, dirname):
         if not exists(dirname):
