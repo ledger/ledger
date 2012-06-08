@@ -415,7 +415,7 @@ class PrepareBuild(CommandLineApp):
         if not self.options.build_dir:
             self.options.build_dir = join(self.products_directory(),
                                           self.current_flavor)
-        return self.optionsbuild_dir
+        return self.options.build_dir
 
     def ensure(self, dirname):
         if not exists(dirname):
