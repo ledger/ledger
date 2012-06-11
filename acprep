@@ -399,7 +399,7 @@ class PrepareBuild(CommandLineApp):
         return join(os.environ['HOME'], "Products")
 
     def products_directory(self):
-        if not self.options.products_dir:
+        if not self.products_dir:
             products = self.default_products_directory()
 
             if not exists(products) or not isdir(products):
@@ -407,9 +407,9 @@ class PrepareBuild(CommandLineApp):
 
             products = join(products, basename(self.source_dir))
 
-            self.options.products_dir = products
+            self.products_dir = products
 
-        return self.options.products_dir
+        return self.products_dir
 
     def build_directory(self):
         if not self.options.build_dir:
