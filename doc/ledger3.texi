@@ -1335,7 +1335,7 @@ Or to see a particular funds expenses, the @samp{School} fund in this
 case:
 
 @smallexample
-ledger --code-as-payee -P reg ^Expenses -- School
+ledger --code-as-payee -P reg ^Expenses @School
 @end smallexample
 
 Both approaches yield different kinds of flexibility, depending on how
