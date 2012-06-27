@@ -355,14 +355,16 @@ bool xact_base_t::finalize()
           }
         }
       } else {
-        if (post->amount.has_annotation()) {
-          if (breakdown.amount.has_annotation())
-            breakdown.amount.annotation().tag = post->amount.annotation().tag;
-          else
-            breakdown.amount.annotate
-              (annotation_t(none, none, post->amount.annotation().tag));
-        }
-        post->amount = breakdown.amount;
+        post->amount =
+          breakdown.amount.has_annotation() ?
+          amount_t(breakdown.amount,
+                   annotation_t(breakdown.amount.annotation().price,
+                                breakdown.amount.annotation().date,
+                                post->amount.has_annotation() ?
+                                post->amount.annotation().tag :
+                                breakdown.amount.annotation().tag,
+                                breakdown.amount.annotation().value_expr)) :
+          breakdown.amount;
         DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
 
