@@ -1,3 +1,6 @@
+(eval-when-compile
+  (require 'cl))
+
 (defcustom ledger-reports
   '(("bal" "ledger -f %(ledger-file) bal")
     ("reg" "ledger -f %(ledger-file) reg")
@@ -66,6 +69,7 @@ text that should replace the format specifier."
       'ledger-report-kill)
     (define-key map [(control ?c) (control ?l) (control ?e)]
       'ledger-report-edit)
+    (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
     (use-local-map map)))
 
 (defun ledger-report-read-name ()
@@ -234,7 +238,23 @@ the default."
           (format "Command: %s\n" cmd)
           (make-string (- (window-width) 1) ?=)
           "\n")
-  (shell-command cmd t nil))
+  (shell-command
+   (concat cmd " --prepend-format='%(filename):%(beg_line):'") t nil)
+  (goto-char (point-min))
+  (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
+    (let ((file (match-string 1))
+          (line (string-to-number (match-string 2))))
+      (delete-region (match-beginning 0) (match-end 0))
+      (set-text-properties (line-beginning-position) (line-end-position)
+                           (list 'ledger-source (cons file line))))))
+
+(defun ledger-report-visit-source ()
+  (interactive)
+  (destructuring-bind (file . line)
+      (get-text-property (point) 'ledger-source)
+    (find-file-other-window file)
+    (goto-char (point-min))
+    (forward-line (1- line))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."
@@ -446,3 +466,5 @@ specified line, returns nil."
       (if (eq (ledger-context-line-type context-info) 'entry)
           (ledger-context-field-value context-info 'payee)
         nil))))
+
+(provide 'ldg-report)
