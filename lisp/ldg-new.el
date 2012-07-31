@@ -36,6 +36,7 @@
 (require 'ldg-mode)
 (require 'ldg-complete)
 (require 'ldg-state)
+(require 'ldg-report)
 
 ;(autoload #'ledger-mode "ldg-mode" nil t)
 ;(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
