@@ -6,7 +6,7 @@ STOW_ROOT	= /usr/local/stow
 PRODUCTS	= $(HOME)/Products
 
 GCC_VERSION	= 4.7
-BOOST_VERSION	= 1_49_0
+BOOST_VERSION	= 1_50_0
 
 CC		= gcc-mp-$(GCC_VERSION)
 ifeq ($(CC),clang)
@@ -27,7 +27,7 @@ BOOST_SOURCE	= boost-release
 ifeq ($(GCC_VERSION),4.7)
 BOOST_DEFINES   = define=_GLIBCXX__PTHREADS=1
 else
-BOOST_DEFINES   = 
+BOOST_DEFINES   =
 endif
 ifeq ($(CC),clang)
 BOOST_TOOLSET	= clang

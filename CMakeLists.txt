@@ -58,6 +58,7 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
+# Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost 1.46.0
   REQUIRED date_time filesystem system iostreams regex unit_test_framework
   ${BOOST_PYTHON})

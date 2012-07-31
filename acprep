@@ -99,7 +99,7 @@ class CommandLineApp(object):
 
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
-    boost_major   = "1_49"
+    boost_major   = "1_50"
 
     options = {
         'debug':    False,
@@ -674,14 +674,17 @@ class PrepareBuild(CommandLineApp):
             self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
 
             if self.current_flavor == 'opt':
-                self.configure_args.append('-DCMAKE_CXX_FLAGS:STRING=-O4')
-                self.configure_args.append('-DCMAKE_CXX_LINK_FLAGS:STRING=-O4')
+                self.configure_args.append('-DCMAKE_CXX_FLAGS_RELEASE:STRING=-O4')
+                self.configure_args.append('-DCMAKE_CXX_LINK_FLAGS_RELEASE:STRING=-O4')
+            #else:
+            #    self.CXXFLAGS.append('-g -O1 -faddress-sanitizer')
+            #    self.LDFLAGS.append('-g -O1 -faddress-sanitizer')
 
             self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include;/opt/local/include')
             self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib;/opt/local/lib')
 
             self.configure_args.append('-DBOOST_ROOT=/usr/local')
-            self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_49')
+            self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_50')
             self.configure_args.append('-DBoost_COMPILER=-clang-darwin')
 
             self.configure_args.append(self.source_dir)
