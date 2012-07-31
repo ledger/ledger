@@ -153,6 +153,8 @@ std::size_t current_memory_size()
   return memory_size;
 }
 
+#if !defined(__has_feature) || !__has_feature(address_sanitizer)
+
 static void trace_new_func(void * ptr, const char * which, std::size_t size)
 {
   if (! live_memory || ! memory_tracing_active) return;
@@ -221,7 +223,11 @@ static void trace_delete_func(void * ptr, const char * which)
   memory_tracing_active = true;
 }
 
+#endif // !defined(__has_feature) || !__has_feature(address_sanitizer)
+
 } // namespace ledger
+
+#if !defined(__has_feature) || !__has_feature(address_sanitizer)
 
 void * operator new(std::size_t size) throw (std::bad_alloc) {
   void * ptr = std::malloc(size);
@@ -267,6 +273,8 @@ void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
     ledger::trace_delete_func(ptr, "new[]");
   std::free(ptr);
 }
+
+#endif // !defined(__has_feature) || !__has_feature(address_sanitizer)
 
 namespace ledger {
 
