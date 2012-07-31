@@ -238,23 +238,27 @@ the default."
           (format "Command: %s\n" cmd)
           (make-string (- (window-width) 1) ?=)
           "\n")
-  (shell-command
-   (concat cmd " --prepend-format='%(filename):%(beg_line):'") t nil)
-  (goto-char (point-min))
-  (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
-    (let ((file (match-string 1))
-          (line (string-to-number (match-string 2))))
-      (delete-region (match-beginning 0) (match-end 0))
-      (set-text-properties (line-beginning-position) (line-end-position)
-                           (list 'ledger-source (cons file line))))))
+  (let ((register-report (string-match " reg\\(ister\\)? " cmd)))
+    (shell-command
+     (if register-report
+         (concat cmd " --prepend-format='%(filename):%(beg_line):'")
+       cmd) t nil)
+    (when register-report
+      (goto-char (point-min))
+      (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
+        (let ((file (match-string 1))
+              (line (string-to-number (match-string 2))))
+          (delete-region (match-beginning 0) (match-end 0))
+          (set-text-properties (line-beginning-position) (line-end-position)
+                               (list 'ledger-source (cons file line))))))))
 
 (defun ledger-report-visit-source ()
   (interactive)
-  (destructuring-bind (file . line)
-      (get-text-property (point) 'ledger-source)
-    (find-file-other-window file)
-    (goto-char (point-min))
-    (forward-line (1- line))))
+  (let ((prop (get-text-property (point) 'ledger-source)))
+    (destructuring-bind (file . line) prop
+      (find-file-other-window file)
+      (goto-char (point-min))
+      (forward-line (1- line)))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."
