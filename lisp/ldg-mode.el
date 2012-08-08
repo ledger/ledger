@@ -51,7 +51,9 @@
     (define-key map [tab] 'pcomplete)
     (define-key map [(control ?i)] 'pcomplete)
     (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
-    (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)))
+    (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry))
+
+  (ledger-report-patch-reports (current-buffer)))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
