@@ -122,7 +122,7 @@ command:
     sudo apt-get install build-essential cmake autopoint texinfo python-dev
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev
          libboost-date-time1.49-dev libboost-filesystem1.49-dev
-         libboost-graph49-dev libboost-iostreams1.49-dev
+         libboost-graph1.49-dev libboost-iostreams1.49-dev
          libboost-python1.49-dev libboost-regex1.49-dev libboost-test1.49-dev
 
 ## Building
