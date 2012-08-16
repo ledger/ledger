@@ -123,7 +123,7 @@ public:
     TRACE_CTOR(report_t, "session_t&");
   }
   report_t(const report_t& report)
-    : session(report.session),
+    : scope_t(report), session(report.session),
       output_stream(report.output_stream),
       terminus(report.terminus),
       budget_flags(report.budget_flags) {

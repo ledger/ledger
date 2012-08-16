@@ -129,6 +129,10 @@ commodity_history_t::commodity_history_t()
   p_impl.reset(new commodity_history_impl_t);
 }
 
+commodity_history_t::~commodity_history_t()
+{
+}
+
 void commodity_history_t::add_commodity(commodity_t& comm)
 {
   p_impl->add_commodity(comm);
