@@ -88,6 +88,7 @@ public:
              const datetime_t&  oldest = datetime_t());
 
   void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
+  ~commodity_history_t();
 };
 
 } // namespace ledger
