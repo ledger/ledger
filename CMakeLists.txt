@@ -45,6 +45,7 @@ endif()
 find_package(PythonInterp)      # Used for running tests
 
 if(USE_PYTHON)
+  set(Python_ADDITIONAL_VERSIONS 2.7 2.6)
   find_package(PythonLibs)
   if(PYTHONLIBS_FOUND)
     set(BOOST_PYTHON python)
