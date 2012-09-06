@@ -114,3 +114,43 @@ it's usually fairly obvious where things have gone astray.
 
    A: This can happen for the same reason as above.  It can also happen if you
       have ICU support enabled.  This is a bug I'm still trying to track down.
+
+   ----------------------------------------------------------------------
+
+ - Q: My distribution has a versions of Boost and/or CMake that are too
+      old for Ledger.  How do I build my own Boost and/or CMake binaries
+      that will work properly with Ledger?  Thereafter, how do I configure
+      Ledger properly to use those newly built verisons of Boost and/or
+      CMake?
+
+   A: Here's commands that one user used to make this work, for Boost
+      1.51.0 on Debian GNU/Linux 6.0.x (aka Debian squeeze).  It's likely
+      to work ok for other versions of Boost as well.  YMMV on other
+      distributions and/or other Debian distribution versions, though.
+
+      # Preparing and building Boost 1.51.0
+
+      $ cd /somewhere/you/want/to/build/boost
+      $ wget -N http://iweb.dl.sourceforge.net/project/boost/boost/1.51.0/boost_1_51_0.tar.bz2
+      $ tar xvf boost_1_51_0.tar.bz2
+      $ cd boost_1_51_0
+      $ ./bootstrap.sh
+      $ ./b2 --build-type=complete --layout=tagged --prefix=/where/you/want/boost/installed
+      $ ./b2 --build-type=complete --layout=tagged --prefix=/where/you/want/boost/installed install
+
+      # Preparing and building CMake 2.8.8
+
+      $ cd /somewhere/you/want/to/build/cmake
+      $ wget -N http://www.cmake.org/files/v2.8/cmake-2.8.8.tar.gz
+      $ tar xvf cmake-2.8.8.tar.gz
+      $ cd cmake-2.8.8
+      $ ./configure --prefix=/where/you/want/cmake/installed/
+      $ make
+      $ make install
+
+      # Building Ledger using the CMake and/or Boost as installed above
+
+      $ cd /path/to/ledger/sources
+      $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed ./acprep --prefix=/where/you/want/ledger/installed --debug --python config
+      $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed ./acprep --prefix=/where/you/want/ledger/installed --debug --python make
+      $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed ./acprep --prefix=/where/you/want/ledger/installed --debug --python install
