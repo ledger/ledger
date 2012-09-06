@@ -847,7 +847,7 @@ class PrepareBuild(CommandLineApp):
                              self.options.boost_include)
 
         if self.prefix_directory():
-            conf_args.append('-DCMAKE_PREFIX_PATH=%s' % self.prefix_directory())
+            conf_args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix_directory())
 
         return (environ, conf_args + self.configure_args)
 
