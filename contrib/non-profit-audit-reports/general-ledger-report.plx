@@ -27,7 +27,7 @@ use warnings;
 use Math::BigFloat;
 use Date::Manip;
 
-my $LEDGER_CMD = "/usr/bin/ledger";
+my $LEDGER_CMD = "/usr/local/bin/ledger";
 
 my $ACCT_WIDTH = 75;
 
