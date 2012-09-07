@@ -39,7 +39,7 @@ sub ParseNumber($) {
 Math::BigFloat->precision(-2);
 my $ZERO =  Math::BigFloat->new("0.00");
 
-if (@ARGV < 2) {
+if (@ARGV < 3) {
   print STDERR "usage: $0 <BEGIN_DATE> <END_DATE> <OTHER_LEDGER_OPTS>\n";
   exit 1;
 }
