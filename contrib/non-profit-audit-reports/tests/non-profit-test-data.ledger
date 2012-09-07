@@ -19,3 +19,8 @@
       ;Invoice: Financial/Invoices/Invoice20110510.pdf
    Assets:Checking   $50.00
 
+2011/04/20 (2) Baz Hosting Services, LLC
+   Expenses:Blah:Hosting   $250.00
+      ;Receipt: Projects/Blah/Expenses/hosting/AprilHostingReceipt.pdf
+      ;Invoice: Projects/Blah/Expenses/hosting/april-invoice.pdf
+   Assets:Checking       $-250.00
