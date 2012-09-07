@@ -1,0 +1,13 @@
+README
+
+This document provides backround on the enclosed example
+
+Sample PDF files
+----------------
+The sample PDF files were created as follows:
+
+paps --font="Courier 12" --paper letter --top-margin=18 tests/Projects/Foo/Expenses/hosting/AprilHostingReceipt.txt | ps2pdf - tests/Projects/Foo/Expenses/hosting/AprilHostingReceipt.pdf
+
+paps --font="Courier 12" --paper letter --top-margin=18 tests/Financial/Invoices/Invoice20110510.txt | ps2pdf - tests/Financial/Invoices/Invoice20110510.pdf
+
+
