@@ -4,7 +4,8 @@
 #    Script to generate a General Ledger report that accountants like
 #    using Ledger.
 #
-# Copyright (C) 2011, Bradley M. Kuhn
+# Copyright (C) 2011, 2012 Bradley M. Kuhn
+# Copyright (C) 2012       Tom Marble
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
