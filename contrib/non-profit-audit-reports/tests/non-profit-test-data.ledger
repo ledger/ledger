@@ -1,7 +1,7 @@
 
-2010/01/01 A Donation to Project Foo
+2010/01/01 Kindly T. Donor
    Income:Foo:Donation   $-100.00
-      ;Invoice: Projects/Foo/Invoices/Invoice20110315.pdf
+      ;Invoice: Projects/Foo/Invoices/Invoice20100101.pdf
    Assets:Checking       $100.00
 
 
@@ -18,5 +18,4 @@
    Income:Donation   $-50.00
       ;Invoice: Financial/Invoices/Invoice20110510.pdf
    Assets:Checking   $50.00
-
 
