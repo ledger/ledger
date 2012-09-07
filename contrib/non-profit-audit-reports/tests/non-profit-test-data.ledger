@@ -1,7 +1,7 @@
 
 2010/01/01 A Donation to Project Foo
    Income:Foo:Donation   $-100.00
-      ;INVOICE: Projects/Foo/Invoices/Invoice20110315.pdf
+      ;Invoice: Projects/Foo/Invoices/Invoice20110315.pdf
    Assets:Checking       $100.00
 
 
@@ -11,12 +11,12 @@
 
 2011/04/20 (1) Baz Hosting Services, LLC
    Expenses:Foo:Hosting   $250.00
-      ;RECEIPT: Projects/Foo/Expenses/hosting/AprilHostingReceipt.pdf
+      ;Receipt: Projects/Foo/Expenses/hosting/AprilHostingReceipt.pdf
    Assets:Checking       $-250.00
 
 2011/05/10 Donation to General Fund
    Income:Donation   $-50.00
-      ;INVOICE: Financial/Invoices/Invoice20110510.pdf
+      ;Invoice: Financial/Invoices/Invoice20110510.pdf
    Assets:Checking   $50.00
 
 
