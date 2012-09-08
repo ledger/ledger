@@ -3,6 +3,7 @@
 # Convert example csv file to ods
 #
 # Copyright (c) 2012 Tom Marble
+# Copyright (c) 2012 Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -55,7 +56,7 @@ def csv2ods(csvname, odsname, verbose = False):
                 if len(val) > 0 and val[0] == '$':
                     doc.set_cell_value(col + 1, row, 'currency', val[1:])
                 else:
-                    if ( (col == 3) and (val != 'Receipt') and len(val) > 0) or ( (col == 4) and (val != 'Invoice') and len(val) > 0):
+                    if ( (col == 5) and (val != 'Receipt') and len(val) > 0) or ( (col == 6) and (val != 'Invoice') and len(val) > 0):
                         linkrel = '../' + val # ../ means remove the name of the *.ods
                         linkname = os.path.basename(val) # name is just the last component
                         doc.set_cell_value(col + 1, row, 'link', (linkrel, linkname))

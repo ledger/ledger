@@ -107,8 +107,8 @@ foreach my $acct (@sortedAccounts) {
   close(GL_TEXT_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 
   print GL_CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
-  print GL_CSV_OUT '"DATE","CHECK NUM","NAME","Receipt","Invoice","TRANSACTION AMT","RUNNING TOTAL"', "\n";
-  @acctLedgerOpts = ('-F', '"%(date)","%C","%P","%(tag(\'Receipt\'))","%(tag(\'Invoice\'))","%t","%T"\n', '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
+  print GL_CSV_OUT '"DATE","CHECK NUM","NAME","TRANSACTION AMT","RUNNING TOTAL","Receipt","Invoice"', "\n";
+  @acctLedgerOpts = ('-F', '"%(date)","%C","%P","%t","%T","%(tag(\'Receipt\'))","%(tag(\'Invoice\'))"\n', '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
   open(GL_CSV_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
     or die "Unable to run $LEDGER_CMD @acctLedgerOpts: $!";
 
