@@ -48,6 +48,7 @@ doc/.dirstamp
 doc/html/
 doc/latex/
 doc/ledger.info
+doc/ledger3.info
 doc/refman.pdf
 doc/report/
 elisp-comp
