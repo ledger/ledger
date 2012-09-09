@@ -1,0 +1,100 @@
+README
+
+This document provides backround on the enclosed example
+
+Demo
+----
+To run the demo do
+./demo.sh
+
+Which should generate the following files in tests/
+  chart-of-accounts.txt
+  general-ledger.txt
+  general-ledger.csv
+  general-ledger.ods
+
+And a final, "portable" zip file with the spreadsheet in
+  general-ledger.zip
+
+It *should* be possible to copy general-ledger.zip to another system,
+unzip it, open general-ledger.ods in Libre Office and have the relative
+links resolve correctly.
+
+NOTE: Export to PDF should also work.
+
+
+Known Dependencies
+------------------
+ledger (3.0)
+python (2.x)
+zip
+libdate-manip-perl
+libmath-gmp-perl
+
+
+Temporary Hacks
+---------------
+Due to an urgent project deadline the ooolib2 directory
+represents some fixes to:
+  http://ooolib.sourceforge.net/
+
+The proper version of this library can be installed on Debian systems with
+# apt-get install python-ooolib
+
+Compare the deltas to the current version with 
+# diff -u /usr/share/pyshared/ooolib/__init__.py ooolib2/__init__.py
+
+Note also that the csv2ods.py treats columns 4 and 5 (numbering from 1) of the csv 
+magically. If column 4 contains a non-empty string which is not 'Receipt'
+then it is interpreted as a relative path of an artifact to link to.
+Similary for column 5 and 'Invoice'.
+
+
+Sample PDF files
+----------------
+The sample PDF files were created as follows:
+
+paps --font="Courier 12" --paper letter --top-margin=18 tests/Projects/Foo/Expenses/hosting/AprilHostingReceipt.txt | ps2pdf - tests/Projects/Foo/Expenses/hosting/AprilHostingReceipt.pdf
+
+paps --font="Courier 12" --paper letter --top-margin=18 tests/Financial/Invoices/Invoice20110510.txt | ps2pdf - tests/Financial/Invoices/Invoice20110510.pdf
+
+
+Resources
+---------
+ooolib
+  http://ooolib.sourceforge.net/
+  
+LIBPF
+  probably does not replace ooolib
+  http://wp.libpf.com/?p=82
+
+Libre Office Calc Guide (contains function reference)
+  https://www.libreoffice.org/get-help/documentation/
+
+Libre Office API
+  http://api.libreoffice.org/examples/examples.html
+  http://api.libreoffice.org/examples/DevelopersGuide/examples.html
+
+OpenOffice Developers Guide
+  http://wiki.openoffice.org/wiki/Documentation/DevGuide/OpenOffice.org_Developers_Guide
+
+Spreadsheet Documents
+  http://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Spreadsheet_Documents
+
+How to correctly create ODF documents using zip
+(Do NOT do this, use ooolib instead)
+   http://www.jejik.com/articles/2010/03/how_to_correctly_create_odf_documents_using_zip/
+
+Line Breaks
+  fo:break-before="page"
+  http://books.evc-cit.info/oobook/ch03.html#page-content-section
+
+ODF Validator
+  http://opendocumentfellowship.com/validator
+
+Editing Hyperlinks
+  http://help.libreoffice.org/Common/Editing_Hyperlinks
+
+Perl OODoc
+NOTE: a replacement for POD, not ooolib
+  http://search.cpan.org/dist/OpenOffice-OODoc/

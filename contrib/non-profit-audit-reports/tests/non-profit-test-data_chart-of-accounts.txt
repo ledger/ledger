@@ -1,0 +1,4 @@
+Assets:Checking
+Expenses:Foo:Hosting
+Income:Donation
+Income:Foo:Donation
