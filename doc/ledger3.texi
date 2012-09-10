@@ -6809,7 +6809,7 @@ generated the posting.
 @subsubsection Summary
 @multitable @columnfractions .3 .2 .5
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
-@item @code{filename} @tab S @tab @tab name of ledger data file from whence posting came
+@item @code{filename} @tab S @tab name of ledger data file from whence posting came
 @item @code{beg_pos} @tab B @tab character position in @code{filename} where entry for posting begins
 @item @code{end_pos} @tab E @tab character position in @code{filename} where entry for posting ends
 @item @code{beg_line} @tab b @tab line number in @code{filename} where entry for posting begins
