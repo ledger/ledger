@@ -6691,6 +6691,7 @@ As an example of how flexible the --format strings can be, the default balance f
 * Quantities and Calculations::  
 * Dates::                       
 * Text Formatting::             
+* Data File Parsing Information::  
 * Misc::                        
 @end menu
 
@@ -6762,7 +6763,7 @@ The character based formatting ledger can do is limited to the ANSI terminal cha
 @item @code{value_date } @tab @code{} @tab 
 @end multitable
 
-@node Text Formatting, Misc, Dates, New formatting codes
+@node Text Formatting, Data File Parsing Information, Dates, New formatting codes
 @subsection Text Formatting
 @subsubsection Summary
 @multitable @columnfractions .6 .4
@@ -6797,7 +6798,26 @@ Return str surrounded by double quotes, @code{"<str>"}.
 Values can have numerous annotations, such as effective dates and lot
 prices.  @code{strip} removes these annotations.
 @end table
-@node Misc,  , Text Formatting, New formatting codes
+
+@node Data File Parsing Information, Misc, Text Formatting, New formatting codes
+@subsection Data File Parsing Information
+
+The format strings in the table below provide locational metadata
+regarding the coordinates of entries in the source data file(s) that
+generated the posting.
+
+@subsubsection Summary
+@multitable @columnfractions .3 .2 .5
+@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
+@item @code{filename} @tab S @tab name of ledger data file from whence posting came
+@item @code{beg_pos} @tab B @tab character position in @code{filename} where entry for posting begins
+@item @code{end_pos} @tab E @tab character position in @code{filename} where entry for posting ends
+@item @code{beg_line} @tab b @tab line number in @code{filename} where entry for posting begins
+@item @code{end_line} @tab e @tab line number in @code{filename} where posting's entry for posting ends
+@end multitable
+
+
+@node Misc,  , Data File Parsing Information, New formatting codes
 @subsection Miscellaneous
 @multitable @columnfractions .3 .2 .5
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
