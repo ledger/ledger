@@ -2047,6 +2047,41 @@ Closes block commands like @code{tag} or @code{comment}.
 @item fixed
 @c instance_t::fixed_directive in textual.cc
 
+A fixed block is used to set fixated prices (@pxref{Fixated prices}) for a series of
+transactions.  It's purely a typing saver, for use when entering many
+transactions with fixated prices.
+
+Thus, the following:
+@smallexample
+fixed CAD $0.90
+   2012-04-10 Lunch in Canada
+       Assets:Wallet            -15.50 CAD
+       Expenses:Food            15.50 CAD
+
+   2012-04-11 Second day Dinner in Canada
+       Assets:Wallet            -25.75 CAD
+       Expenses:Food            25.75 CAD
+endfixed
+@end smallexample
+is equivalent to this:
+@smallexample
+   2012-04-10 Lunch in Canada
+       Assets:Wallet            -15.50 CAD @{=$0.90@}
+       Expenses:Food            15.50 CAD  @{=$0.90@}
+
+   2012-04-11 Second day Dinner in Canada
+       Assets:Wallet            -25.75 CAD  @{=$0.90@}
+       Expenses:Food            25.75 CAD   @{=$0.90@}
+@end smallexample
+
+Note that ending a @samp{fixed} is done differently than other
+directives, as @samp{fixed} is closed with an @samp{endfixed} (i.e.,
+there is @strong{no space} between @samp{end} and @samp{fixed}).
+
+For the moment, users may wish to study
+@uref{http://bugs.ledger-cli.org/show_bug.cgi?id=789, Bug Report 789}
+before using the @samp{fixed} directive in production.
+
 @item include
 @c instance_t::include_directive in textual.cc
 Include the stated file as if it were part of the current file.
@@ -2486,6 +2521,7 @@ kill the report buffer
 * Virtual posting costs::       
 * Commodity prices::            
 * Prices vs. costs::            
+* Fixated prices::              
 * Lot dates::                   
 * Lot notes::                   
 * Lot value expressions::       
@@ -3131,7 +3167,7 @@ Plus, it comes with dangers.  This works fine:
 And in cases where the amounts do not divide into whole figure and must be
 rounded, the capital gains figure could be off by a cent.  Use with caution.
 
-@node Prices vs. costs, Lot dates, Commodity prices, Transactions
+@node Prices vs. costs, Fixated prices, Commodity prices, Transactions
 @section Prices vs. costs
 
 Because lot pricing provides enough information to infer the cost, the
@@ -3151,6 +3187,7 @@ However, note that what you see in some reports may differ, for example in the
 print report.  Functionally, however, there is no difference, and neither the
 register nor the balance report are sensitive to this difference.
 
+@node  Fixated prices, Lot dates, Prices vs. costs, Transactions
 @section Fixated prices
 
 If you buy a stock last year, and ask for its value today, Ledger will consult
@@ -3174,7 +3211,7 @@ below) to fix the value of a commodity lot.
 * Fixated costs::               
 @end menu
 
-@node Fixated costs,  , Prices vs. costs, Prices vs. costs
+@node Fixated costs,  , Fixated prices, Fixated prices
 @subsection Fixated costs
 
 Since price annotations are costs are largely interchangeable and a matter of
@@ -3190,7 +3227,7 @@ of the cost:
 This is the same as the previous transaction, with the same caveats found in
 the section ``Prices vs. costs''.
 
-@node Lot dates, Lot notes, Prices vs. costs, Transactions
+@node Lot dates, Lot notes, Fixated prices, Transactions
 @section Lot dates
 
 In addition to lot prices, you can specify lot dates and reveal them with
