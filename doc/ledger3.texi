@@ -2078,6 +2078,10 @@ Note that ending a @samp{fixed} is done differently than other
 directives, as @samp{fixed} is closed with an @samp{endfixed} (i.e.,
 there is @strong{no space} between @samp{end} and @samp{fixed}).
 
+For the moment, users may wish to study
+@uref{http://bugs.ledger-cli.org/show_bug.cgi?id=789, Bug Report 789}
+before using the @samp{fixed} directive in production.
+
 @item include
 @c instance_t::include_directive in textual.cc
 Include the stated file as if it were part of the current file.
