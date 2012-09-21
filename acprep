@@ -657,11 +657,12 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def setup_for_johnw(self):
+        self.configure_args.append('-GNinja')
         self.configure_args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON')
         self.configure_args.append('-DBoost_USE_MULTITHREADED:BOOL=OFF')
 
         if not self.options.compiler:
-            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/stow/clang-3.1/bin/clang++')
+            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/bin/clang++')
 
             self.CXXFLAGS.append('-Qunused-arguments')
             self.CXXFLAGS.append('-nostdlibinc')
@@ -910,7 +911,6 @@ class PrepareBuild(CommandLineApp):
 
         if self.options.jobs > 1 and self.current_flavor != 'gcov':
             make_args.append('-j%d' % self.options.jobs)
-            make_args.append('ARGS=-j%d' % self.options.jobs)
 
         if self.options.verbose:
             make_args.append('VERBOSE=1')
@@ -932,12 +932,11 @@ class PrepareBuild(CommandLineApp):
 
     def phase_check(self, *args):
         self.log.info('Executing phase: update')
-        self.phase_make(*(['check'] + list(args)))
+        self.execute(*(['ctest'] + make_args))
 
     def phase_update(self, *args):
         self.log.info('Executing phase: update')
         self.phase_pull()
-        #self.phase_check(*args)
         self.phase_make(*args)
 
     #########################################################################
