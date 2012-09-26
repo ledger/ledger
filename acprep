@@ -659,20 +659,9 @@ class PrepareBuild(CommandLineApp):
     def setup_for_johnw(self):
         self.configure_args.append('-GNinja')
         self.configure_args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON')
-        self.configure_args.append('-DBoost_USE_MULTITHREADED:BOOL=OFF')
 
         if not self.options.compiler:
             self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/bin/clang++')
-
-            self.CXXFLAGS.append('-Qunused-arguments')
-            self.CXXFLAGS.append('-nostdlibinc')
-            self.CXXFLAGS.append('-isystem')
-            self.CXXFLAGS.append('/usr/local/include/c++/v1')
-            self.CXXFLAGS.append('-isystem')
-            self.CXXFLAGS.append('/usr/include')
-            self.CXXFLAGS.append('-stdlib=libc++')
-            self.CXXFLAGS.append('-Wl,/usr/local/lib/libc++.dylib')
-            self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
 
             if self.current_flavor == 'opt':
                 self.configure_args.append('-DCMAKE_CXX_FLAGS_RELEASE:STRING=-O4')
@@ -681,31 +670,13 @@ class PrepareBuild(CommandLineApp):
             #    self.CXXFLAGS.append('-g -O1 -faddress-sanitizer')
             #    self.LDFLAGS.append('-g -O1 -faddress-sanitizer')
 
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include;/opt/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib;/opt/local/lib')
-
-            self.configure_args.append('-DBOOST_ROOT=/usr/local')
-            self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_50')
-            self.configure_args.append('-DBoost_COMPILER=-clang-darwin')
-
-            self.configure_args.append(self.source_dir)
-
-        elif self.options.compiler == "icc":
-            self.configure_args.append('-DCMAKE_AR:PATH=/opt/intel/bin/xiar')
-            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/opt/intel/bin/icc')
-            if self.current_flavor == 'opt':
-                self.configure_args.append('-DCMAKE_CXX_FLAGS:STRING=-fast')
-                self.configure_args.append('-DCMAKE_CXX_LINK_FLAGS:STRING=-fast')
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/opt/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/opt/local/lib')
-            self.configure_args.append('-DBOOST_ROOT=/opt/local')
             self.configure_args.append(self.source_dir)
 
         else:
             self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=' + self.options.compiler)
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/opt/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/opt/local/lib')
-            self.configure_args.append('-DBOOST_ROOT=/opt/local')
+            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include')
+            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib')
+            self.configure_args.append('-DBOOST_ROOT=/usr/local')
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
@@ -926,13 +897,24 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.execute(*(['make'] + make_args))
+            self.execute(*(['ninja'] + make_args))
         finally:
             os.chdir(self.source_dir)
 
     def phase_check(self, *args):
         self.log.info('Executing phase: update')
-        self.execute(*(['ctest'] + make_args))
+        build_dir = self.ensure(self.build_directory())
+        try:
+            self.log.debug('Changing directory to ' + build_dir)
+            os.chdir(build_dir)
+
+            make_args = list(args)
+            if self.options.jobs > 1:
+                make_args.append('-j%d' % self.options.jobs)
+
+            self.execute(*(['ctest'] + list(make_args)))
+        finally:
+            os.chdir(self.source_dir)
 
     def phase_update(self, *args):
         self.log.info('Executing phase: update')
