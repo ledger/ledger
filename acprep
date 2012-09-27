@@ -300,6 +300,9 @@ class PrepareBuild(CommandLineApp):
                       action="store", dest="compiler",
                       help='Use the Clang C++ compiler')
 
+        op.add_option('-N', '--ninja', action='store_true', dest='use_ninja',
+                      default=False,
+                      help='Use ninja to build, rather than make')
         op.add_option('', '--no-git', action='store_true', dest='no_git',
                       default=False,
                       help='Do not call out to Git; useful for offline builds')
@@ -657,7 +660,6 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def setup_for_johnw(self):
-        self.configure_args.append('-GNinja')
         self.configure_args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON')
 
         if not self.options.compiler:
@@ -689,6 +691,9 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('-DUSE_PYTHON=1')
         if self.options.no_python:
             self.configure_args.remove('-DUSE_PYTHON=1')
+
+        if self.options.use_ninja:
+            self.configure_args.append('-GNinja')
 
         if exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
@@ -897,7 +902,8 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.execute(*(['make'] + make_args))
+            self.execute(*(['ninja' if self.options.use_ninja else 'make'] + 
+                           make_args))
         finally:
             os.chdir(self.source_dir)
 
