@@ -897,7 +897,7 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.execute(*(['ninja'] + make_args))
+            self.execute(*(['make'] + make_args))
         finally:
             os.chdir(self.source_dir)
 
