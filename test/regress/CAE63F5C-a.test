@@ -1,0 +1,17 @@
+2011/03/01 test1
+    a                       4.00 €
+    b
+
+2011/03/02 test2
+    a                       4.00 €
+    b
+
+2011/03/03 test2
+    a                       4.00 €
+    b
+
+test reg a
+11-Mar-01 test1                 a                            4.00 €       4.00 €
+11-Mar-02 test2                 a                            4.00 €       8.00 €
+11-Mar-03 test2                 a                            4.00 €      12.00 €
+end test
