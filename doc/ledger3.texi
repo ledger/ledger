@@ -3751,7 +3751,7 @@ The following query makes it easy to see monthly expenses, with each
 month's expenses sorted by the amount:
 
 @example
-ledger -M --period-sort t reg ^expenses
+ledger -M --period-sort "(amount)" reg ^expenses
 @end example
 
 Now, you might wonder where the money came from to pay for these
@@ -3759,7 +3759,7 @@ things.  To see that report, add @option{-r}, which shows the
 ``related account'' postings:
 
 @example
-ledger -M --period-sort t -r reg ^expenses
+ledger -M --period-sort "(amount)" -r reg ^expenses
 @end example
 
 But maybe this prints too much information.  You might just want to
