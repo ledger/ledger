@@ -2984,7 +2984,7 @@ source account.  Whenever a commodity is exchanged like this, the commodity
 moved to the target account is considered "secondary", while the commodity
 used for purchasing and tracked in the cost is "primary".
 
-Said another way, whenever Ledger sees a posting cost of the form "AMOUNT @
+Said another way, whenever Ledger sees a posting cost of the form "AMOUNT @@
 AMOUNT", the commodity used in the second amount is marked "primary".
 
 The only meaning a primary commodity has is that -V flag will never convert a
@@ -2997,7 +2997,7 @@ Just as you can have amount expressions, you can have posting expressions:
 
 @smallexample
    2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @ ($500.00 / 10)
+       Assets:Brokerage             10 AAPL @@ ($500.00 / 10)
        Assets:Brokerage:Cash
 @end smallexample
 
@@ -3005,7 +3005,7 @@ You can even have both:
 
 @smallexample
    2012-03-10 My Broker
-       Assets:Brokerage             (5 AAPL * 2) @ ($500.00 / 10)
+       Assets:Brokerage             (5 AAPL * 2) @@ ($500.00 / 10)
        Assets:Brokerage:Cash
 @end smallexample
 
@@ -3018,7 +3018,7 @@ instead, use @@@@:
 
 @smallexample
    2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@@@ $500.00
+       Assets:Brokerage             10 AAPL @@ $500.00
        Assets:Brokerage:Cash
 @end smallexample
 
