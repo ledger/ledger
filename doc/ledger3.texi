@@ -280,7 +280,6 @@ http://groups.google.com/group/ledger-cli
 @menu
 * Start a Journal::             
 * Run Some Reports::            
-* Command Line Quick Reference::  
 @end menu
 
 @node Start a Journal, Run Some Reports, Ledger Tutorial , Ledger Tutorial
@@ -295,7 +294,7 @@ directory.
 
 If you would rather start with your own journal right away please see @ref{Keeping a Journal}.
 
-@node Run Some Reports, Command Line Quick Reference, Start a Journal, Ledger Tutorial
+@node Run Some Reports,  , Start a Journal, Ledger Tutorial
 @section Run a Few Reports
 
 @menu
@@ -482,147 +481,6 @@ Using ledger under the windows command shell has one significant
 limitation.  CMD.exe is limited to standard ASCII characters and as such
 cannot display any currency symbols other than dollar signs ($).
 
-@page
-@node Command Line Quick Reference,  , Run Some Reports, Ledger Tutorial
-@section Command Line Quick Reference
-
-@menu
-* Reporting Commands Quick Reference::  
-* Basic Options Quick Reference::  
-* Report Filtering Quick Reference::  
-* Error Checking and Calculation Options::  
-* Output Customization Quick Reference::  
-* Grouping Options::            
-* Commodity Reporting Quick Reference::  
-@end menu
-
-@node Reporting Commands Quick Reference, Basic Options Quick Reference, Command Line Quick Reference, Command Line Quick Reference
-@subsection Reporting Commands
-@multitable @columnfractions .2 .8
-@item @strong{Report} @tab @strong{Description}
-@item @code{balance} @tab Show account balances
-@item @code{register} @tab Show all transactions with running total
-@item @code{csv} @tab Show transactions in csv format, for exporting to other programs
-@item @code{print} @tab  Print transaction in a ledger readable format
-@item @code{xml} @tab Produce XML output of the register command
-@item @code{emacs} @tab Produce Emacs lisp output
-@item @code{equity} @tab Print account balances as transactions
-@item @code{prices} @tab Print price history for matching commodities
-@item @code{pricedb} @tab Print price history for matching commodities in ledger readable format
-@item @code{xact} @tab  Used to generate transactions based on previous postings
-@end multitable
-
-@node Basic Options Quick Reference, Report Filtering Quick Reference, Reporting Commands Quick Reference, Command Line Quick Reference
-@subsection Basic Options
-@multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{-h} @tab @code{--help} @tab prints summary of all options
-@item @code{-v} @tab @code{--version} @tab prints version of ledger executable
-@item @code{-f FILE} @tab @code{--file FILE} @tab read @file{FILE} as a ledger file
-@item @code{-o FILE} @tab @code{--output FILE} @tab redirects output to @file{FILE}
-@item @code{-i FILE} @tab @code{--init-file FILE} @tab specify options file
-@item @code{-a NAME} @tab @code{--account NAME} @tab specify default account name for QIF file postings
-@end multitable
- 
-@node Report Filtering Quick Reference, Error Checking and Calculation Options, Basic Options Quick Reference, Command Line Quick Reference
-@subsection Report Filtering
-@multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{-c} @tab @code{--current} @tab Display transaction on or before the current date
-@item @code{-b DATE} @tab @code{--begin DATE} @tab Begin reports on or after @code{DATE}
-@item @code{-e DATE} @tab @code{--end DATE} @tab Limits end date of transactions for report
-@item @code{-p STR} @tab @code{--period} @tab Set report period to STR
-@item @code{ } @tab @code{--period-sort} @tab Sort postings within each period
-@item @code{-C} @tab @code{--cleared} @tab Display only cleared postings
-@item @code{} @tab @code{--dc} @tab Display register or balance in debit/credit format
-@item @code{-U} @tab @code{--uncleared} @tab Display only uncleared postings
-@item @code{-R} @tab @code{--real} @tab Display only real postings
-@item @code{-L} @tab @code{--actual} @tab Displays only actual postings, not automated
-@item @code{-r} @tab @code{--related} @tab Display related postings
-@item @code{} @tab @code{--budget} @tab Display how close your postings meet your budget
-@item @code{} @tab @code{--add-budget} @tab Shows un-budgeted postings
-@item @code{} @tab @code{--unbudgeted} @tab Shows only un-budgeted postings
-@item @code{} @tab @code{--forecast} @tab Project balances into the future
-@item @code{-l EXPR} @tab @code{--limit EXPR} @tab Limits postings in calculations
-@item @code{-t EXPR} @tab @code{--amount} @tab Change value expression reported in register report
-@item @code{-T EXPR} @tab @code{--total} @tab Change the value expression used for ``totals'' column in register and balance reports
-@end multitable
-
-@node Error Checking and Calculation Options, Output Customization Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
-@subsection  Error Checking and Calculation Options
-
-@multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{} @tab @code{--strict} @tab  accounts, tags or commodities not previously declared will cause warnings
-@item @code{} @tab @code{--pedantic} @tab accounts, tags or commodities not previously declared will cause errors
-@item @code{} @tab @code{--check-payees} @tab enable strict and pedantic checking for payees as well as accounts, commodities and tags.
-@item @code{} @tab @code{--immediate} @tab instructs ledger to evaluate calculations immediately rather than lazily
-@end multitable
-
-
-@node Output Customization Quick Reference, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
-@subsection Output Customization
-@multitable @columnfractions .15 .4 .45
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{-n} @tab @code{--collapse} @tab Collapse transactions with multiple postings
-@item @code{-s} @tab @code{--subtotal} @tab Report register as a single subtotal
-@item @code{-P} @tab @code{--by-payee} @tab Report subtotals by payee
-@item @code{-E} @tab @code{--empty} @tab Include empty accounts in report
-@item @code{-W} @tab @code{--weekly} @tab Report posting totals by week
-@item @code{-Y} @tab @code{--yearly} @tab Report posting totals by year
-@item @code{} @tab @code{--dow} @tab report Posting totals by day of week
-@item @code{-S EXPR} @tab @code{--sort EXPR} @tab Sorts a report using @code{EXPR}
-@item @code{-w} @tab @code{--wide} @tab Assume 132 columns instead of 80
-@item @code{} @tab @code{--head N} @tab Report the first N postings
-@item @code{} @tab @code{--tail N} @tab Report the last N postings
-@item @code{} @tab @code{--pager prog} @tab Direct output @code{prog} pager program
-@item @code{-A} @tab @code{--average} @tab Reports average posting value
-@item @code{-D} @tab @code{--deviation} @tab Reports each posting deviation from the average
-@item @code{-%} @tab @code{--percent} @tab Show subtotals in the balance report as percentages
-@c @item @code{} @tab @code{--totals} @tab Include running total in the @code{xml} report
-@item @code{} @tab @code{--pivot TAG} @tab produce a pivot table of the tag type specified
-@item @code{-j} @tab @code{--amount-data} @tab Show only date and value column
-@item @code{-J} @tab @code{--total-data} @tab Show only dates and totals
-@item @code{-d EXPR} @tab @code{--display EXPR} @tab Limit only the display of certain postings
-@item @code{-y STR} @tab @code{--date-format STR} @tab Change the basic date format used in reports
-@item @code{-F STR} @tab @code{--format STR} @tab Set reporting format
-@item @code{} @tab @code{--balance-format STR} @tab
-@item @code{} @tab @code{--register-format STR} @tab
-@item @code{-j register} @tab @code{--plot-amount-format STR} @tab format the output of a amount plots
-@item @code{-J register} @tab @code{--plot-total-format STR} @tab format the output of a total plot
-@item @code{} @tab @code{--prices-format STR} @tab
-@item @code{-w register} @tab @code{--wide-register-format STR} @tab
-@item @code{} @tab @code{--anon} @tab  Print the ledger register with anonymized accounts and payees, useful for filing bug reports
-@end multitable
-
-@node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
-@subsection Grouping Options
-@multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{-P} @tab @code{--by-payee} @tab Group postings by common payee names
-@item @code{-D} @tab @code{--daily} @tab  Group postings by day
-@item @code{-W} @tab @code{--weekly} @tab Group postings by week
-@item @code{-M} @tab @code{--monthly} @tab Group postings by month
-@item @code{} @tab @code{--quarterly} @tab  Group postings by quarter
-@item @code{-Y} @tab @code{--yearly} @tab  Group postings by year
-@item @code{} @tab @code{--dow} @tab  Group by day of weeks
-@item @code{-s} @tab @code{--subtotal} @tab Group posting together, similar to balance report
-@end multitable
-
-@node Commodity Reporting Quick Reference,  , Grouping Options, Command Line Quick Reference
-@subsection Commodity Reporting
-
-@multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
-@item @code{} @tab @code{--price-db FILE} @tab Use @file{FILE} for retrieving stored commodity prices
-@item @code{-L MINS} @tab @code{--price-exp MINS} @tab Set expected freshness of prices in minutes
-@item @code{-Q} @tab @code{--download} @tab Download quotes using @code{getquote}
-@item @code{} @tab @code{--getquote} @tab Sets path to a user defined script to download commodity prices.
-@item @code{-O} @tab @code{--quantity} @tab  Report commodity totals without conversion
-@item @code{-B} @tab @code{--basis} @tab Report cost basis
-@item @code{-V} @tab @code{--market} @tab Report last known market value
-@item @code{-G} @tab @code{--gain} @tab  Report net gain loss for commodities that have a price history
-@end multitable
 
 @node Principles of Accounting, Keeping a Journal, Ledger Tutorial , Top
 @chapter Principles of Accounting with Ledger
@@ -1382,6 +1240,7 @@ posting.
 * Currency and Commodities::    
 * Keeping it Consistent::       
 * Journal Format::              
+* Converting from other formats::  
 * Archiving Previous Years ::   
 * Using Emacs::                 
 @end menu
@@ -1719,6 +1578,145 @@ its amount is null.
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
 
+Ledger allows you to have very detailed control over how your
+commodities are valued. You can fine tune the results given using the
+@code{--market} or @code{--exchange} options. There are now several
+points of interception, you can specify the valuation method:
+@enumerate
+  @item on a commodity itself
+  @item on a posting, via metadata (affect is largely the same as #1)
+  @item on an xact, which then applies to all postings in that xact
+  @item on any posting via an automated transaction
+  @item on a per-account basis
+  @item on a per-commodity basis
+  @item by changing the journal default of @code{market}
+@end enumerate
+
+Fixated pricing (such as @code{@{=$20@})} still plays a role in this scheme.  As far as
+valuation goes, it's shorthand for writing @code{((s,d,t -> market($20,d,t)))}.
+
+
+A valuation function receives three arguments:
+
+@table @code
+@item  source
+    A string identifying the commodity whose price is being asked for
+              (example: "EUR")
+@item date
+      The reference date the price should be relative.
+@item target    
+A string identifying the ``target'' commodity, or the commodity the
+              returned price should be in.  This argument is null if @code{--market}
+              was used instead of @code{--exchange}.
+@end table
+
+The valuation function should return an amount.  If you've written your
+function in Python, you can return something like @code{Amount("$100")}.  If the
+function returns an explicit value, that value is always used, regardless
+of the commodity, the date, or the desired target commodity. For example,
+
+@smallexample
+define myfunc_seven(s, d, t) = 7 EUR
+@end smallexample
+
+In order to specify a fixed price, but still valuate that price into the
+target commodity, use something like this:
+@smallexample
+define myfunc_five(s, d, t) = market(5 EUR, d, t)
+@end smallexample
+
+The @code{value} directive sets the valuation used for all commodities
+used in the rest of the data stream.  This is the fallback, if nothing
+more specific is found.
+@smallexample
+value myfunc_seven
+@end smallexample
+
+You can set a specific valuation function on a per-commodity basis.
+Instead of defining a function, you can also pass a lambda.
+@smallexample
+commodity $
+    value s, d, t -> 6 EUR
+@end smallexample
+
+Each account can also provide a default valuation function for any
+commodities transferred to that account.
+
+@smallexample
+account Expenses:Food5
+    value myfunc_five
+@end smallexample
+
+The metadata field @code{Value}, if found, overrides the valuation function
+on a transaction-wide or per-posting basis.
+
+@smallexample
+= @@XACT and Food
+    ; Value:: 8 EUR
+    (Equity)                     $1
+
+= @@POST and Dining
+    (Expenses:Food9)             $1
+        ; Value:: 9 EUR
+@end smallexample
+
+Lastly, you can specify the valuation function/value for any specific
+amount using the @code{(( ))} commodity annotation.
+
+@smallexample
+2012-03-02 KFC
+    Expenses:Food2               $1 ((2 EUR))
+    Assets:Cash2
+
+2012-03-03 KFC
+    Expenses:Food3               $1
+        ; Value:: 3 EUR
+    Assets:Cash3
+
+2012-03-04 KFC
+    ; Value:: 4 EUR
+    Expenses:Food4               $1
+    Assets:Cash4
+
+2012-03-05 KFC
+    Expenses:Food5               $1
+    Assets:Cash5
+
+2012-03-06 KFC
+    Expenses:Food6               $1
+    Assets:Cash6
+
+2012-03-07 KFC
+    Expenses:Food7                1 CAD
+    Assets:Cas7
+
+2012-03-08 XACT
+    Expenses:Food8               $1
+    Assets:Cash8
+
+2012-03-09 POST
+    Expenses:Dining9             $1
+    Assets:Cash9
+@end smallexample
+
+
+@smallexample
+ledger reg -V food
+12-Mar-02 KFC                   Expenses:Food2                2 EUR        2 EUR
+12-Mar-03 KFC                   <Adjustment>                 -1 EUR        1 EUR
+                                Expenses:Food3                3 EUR        4 EUR
+12-Mar-04 KFC                   <Adjustment>                 -2 EUR        2 EUR
+                                Expenses:Food4                4 EUR        6 EUR
+12-Mar-05 KFC                   <Adjustment>                 -3 EUR        3 EUR
+                                Expenses:Food5                5 EUR        8 EUR
+12-Mar-06 KFC                   <Adjustment>                 -4 EUR        4 EUR
+                                Expenses:Food6                6 EUR       10 EUR
+12-Mar-07 KFC                   Expenses:Food7                7 EUR       17 EUR
+12-Mar-08 XACT                  Expenses:Food8                8 EUR       25 EUR
+12-Mar-09 POST                  (Expenses:Food9)              9 EUR       34 EUR
+@end smallexample
+
+
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
 @section Keeping it Consistent
 
@@ -1750,7 +1748,7 @@ ledger accounts >> Accounts.dat
 
 @noindent You will have to edit this file to add the @samp{account} directive.
 
-@node Journal Format, Archiving Previous Years , Keeping it Consistent, Keeping a Journal
+@node Journal Format, Converting from other formats, Keeping it Consistent, Keeping a Journal
 @section Journal Format
 
 The ledger file format is quite simple, but also very flexible.  It
@@ -2238,7 +2236,21 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Archiving Previous Years , Using Emacs, Journal Format, Keeping a Journal
+@node Converting from other formats, Archiving Previous Years , Journal Format, Keeping a Journal
+@section Converting from other formats
+There are numerous tools to help convert various formats to a Ledger
+file.  Most banks will generate a commas separated value file that can
+easily be parsed into Ledger format using one of those tools.  Some of the more popular tools are:
+@itemize
+@item @code{icsv2ledger}
+@item @code{csvToLedger}
+@item @code{CSV2Ledger}
+@end itemize
+@noindent Directly pulling information from banks is outside the scope of Ledger's
+function.
+
+
+@node Archiving Previous Years , Using Emacs, Converting from other formats, Keeping a Journal
 @section Archiving Previous Years
 
 
@@ -4882,11 +4894,12 @@ FIX THIS ENTRY
 
 @menu
 * Basic Usage::                 
+* Command Line Quick Reference::  
 * Detailed Options Description::  
 * Period Expressions::          
 @end menu
 
-@node Basic Usage, Detailed Options Description, Command-line Syntax, Command-line Syntax
+@node Basic Usage, Command Line Quick Reference, Command-line Syntax, Command-line Syntax
 @section Basic Usage
 
 This chapter describes Ledger's features and options. You may wish to
@@ -4927,8 +4940,148 @@ There are many, many command options available with the
 However, none of them are required to use the basic reporting
 commands.
 
+@node Command Line Quick Reference, Detailed Options Description, Basic Usage, Command-line Syntax
+@section Command Line Quick Reference
 
-@node Detailed Options Description, Period Expressions, Basic Usage, Command-line Syntax
+@menu
+* Reporting Commands Quick Reference::  
+* Basic Options Quick Reference::  
+* Report Filtering Quick Reference::  
+* Error Checking and Calculation Options::  
+* Output Customization Quick Reference::  
+* Grouping Options::            
+* Commodity Reporting Quick Reference::  
+@end menu
+
+@node Reporting Commands Quick Reference, Basic Options Quick Reference, Command Line Quick Reference, Command Line Quick Reference
+@subsection Reporting Commands
+@multitable @columnfractions .2 .8
+@item @strong{Report} @tab @strong{Description}
+@item @code{balance} @tab Show account balances
+@item @code{register} @tab Show all transactions with running total
+@item @code{csv} @tab Show transactions in csv format, for exporting to other programs
+@item @code{print} @tab  Print transaction in a ledger readable format
+@item @code{xml} @tab Produce XML output of the register command
+@item @code{emacs} @tab Produce Emacs lisp output
+@item @code{equity} @tab Print account balances as transactions
+@item @code{prices} @tab Print price history for matching commodities
+@item @code{pricedb} @tab Print price history for matching commodities in ledger readable format
+@item @code{xact} @tab  Used to generate transactions based on previous postings
+@end multitable
+
+@node Basic Options Quick Reference, Report Filtering Quick Reference, Reporting Commands Quick Reference, Command Line Quick Reference
+@subsection Basic Options
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{-h} @tab @code{--help} @tab prints summary of all options
+@item @code{-v} @tab @code{--version} @tab prints version of ledger executable
+@item @code{-f FILE} @tab @code{--file FILE} @tab read @file{FILE} as a ledger file
+@item @code{-o FILE} @tab @code{--output FILE} @tab redirects output to @file{FILE}
+@item @code{-i FILE} @tab @code{--init-file FILE} @tab specify options file
+@item @code{-a NAME} @tab @code{--account NAME} @tab specify default account name for QIF file postings
+@end multitable
+ 
+@node Report Filtering Quick Reference, Error Checking and Calculation Options, Basic Options Quick Reference, Command Line Quick Reference
+@subsection Report Filtering
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{-c} @tab @code{--current} @tab Display transaction on or before the current date
+@item @code{-b DATE} @tab @code{--begin DATE} @tab Begin reports on or after @code{DATE}
+@item @code{-e DATE} @tab @code{--end DATE} @tab Limits end date of transactions for report
+@item @code{-p STR} @tab @code{--period} @tab Set report period to STR
+@item @code{ } @tab @code{--period-sort} @tab Sort postings within each period
+@item @code{-C} @tab @code{--cleared} @tab Display only cleared postings
+@item @code{} @tab @code{--dc} @tab Display register or balance in debit/credit format
+@item @code{-U} @tab @code{--uncleared} @tab Display only uncleared postings
+@item @code{-R} @tab @code{--real} @tab Display only real postings
+@item @code{-L} @tab @code{--actual} @tab Displays only actual postings, not automated
+@item @code{-r} @tab @code{--related} @tab Display related postings
+@item @code{} @tab @code{--budget} @tab Display how close your postings meet your budget
+@item @code{} @tab @code{--add-budget} @tab Shows un-budgeted postings
+@item @code{} @tab @code{--unbudgeted} @tab Shows only un-budgeted postings
+@item @code{} @tab @code{--forecast} @tab Project balances into the future
+@item @code{-l EXPR} @tab @code{--limit EXPR} @tab Limits postings in calculations
+@item @code{-t EXPR} @tab @code{--amount} @tab Change value expression reported in register report
+@item @code{-T EXPR} @tab @code{--total} @tab Change the value expression used for ``totals'' column in register and balance reports
+@end multitable
+
+@node Error Checking and Calculation Options, Output Customization Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
+@subsection  Error Checking and Calculation Options
+
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{} @tab @code{--strict} @tab  accounts, tags or commodities not previously declared will cause warnings
+@item @code{} @tab @code{--pedantic} @tab accounts, tags or commodities not previously declared will cause errors
+@item @code{} @tab @code{--check-payees} @tab enable strict and pedantic checking for payees as well as accounts, commodities and tags.
+@item @code{} @tab @code{--immediate} @tab instructs ledger to evaluate calculations immediately rather than lazily
+@end multitable
+
+
+@node Output Customization Quick Reference, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
+@subsection Output Customization
+@multitable @columnfractions .15 .4 .45
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{-n} @tab @code{--collapse} @tab Collapse transactions with multiple postings
+@item @code{-s} @tab @code{--subtotal} @tab Report register as a single subtotal
+@item @code{-P} @tab @code{--by-payee} @tab Report subtotals by payee
+@item @code{-E} @tab @code{--empty} @tab Include empty accounts in report
+@item @code{-W} @tab @code{--weekly} @tab Report posting totals by week
+@item @code{-Y} @tab @code{--yearly} @tab Report posting totals by year
+@item @code{} @tab @code{--dow} @tab report Posting totals by day of week
+@item @code{-S EXPR} @tab @code{--sort EXPR} @tab Sorts a report using @code{EXPR}
+@item @code{-w} @tab @code{--wide} @tab Assume 132 columns instead of 80
+@item @code{} @tab @code{--head N} @tab Report the first N postings
+@item @code{} @tab @code{--tail N} @tab Report the last N postings
+@item @code{} @tab @code{--pager prog} @tab Direct output @code{prog} pager program
+@item @code{-A} @tab @code{--average} @tab Reports average posting value
+@item @code{-D} @tab @code{--deviation} @tab Reports each posting deviation from the average
+@item @code{-%} @tab @code{--percent} @tab Show subtotals in the balance report as percentages
+@c @item @code{} @tab @code{--totals} @tab Include running total in the @code{xml} report
+@item @code{} @tab @code{--pivot TAG} @tab produce a pivot table of the tag type specified
+@item @code{-j} @tab @code{--amount-data} @tab Show only date and value column
+@item @code{-J} @tab @code{--total-data} @tab Show only dates and totals
+@item @code{-d EXPR} @tab @code{--display EXPR} @tab Limit only the display of certain postings
+@item @code{-y STR} @tab @code{--date-format STR} @tab Change the basic date format used in reports
+@item @code{-F STR} @tab @code{--format STR} @tab Set reporting format
+@item @code{} @tab @code{--balance-format STR} @tab
+@item @code{} @tab @code{--register-format STR} @tab
+@item @code{-j register} @tab @code{--plot-amount-format STR} @tab format the output of a amount plots
+@item @code{-J register} @tab @code{--plot-total-format STR} @tab format the output of a total plot
+@item @code{} @tab @code{--prices-format STR} @tab
+@item @code{-w register} @tab @code{--wide-register-format STR} @tab
+@item @code{} @tab @code{--anon} @tab  Print the ledger register with anonymized accounts and payees, useful for filing bug reports
+@end multitable
+
+@node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
+@subsection Grouping Options
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{-P} @tab @code{--by-payee} @tab Group postings by common payee names
+@item @code{-D} @tab @code{--daily} @tab  Group postings by day
+@item @code{-W} @tab @code{--weekly} @tab Group postings by week
+@item @code{-M} @tab @code{--monthly} @tab Group postings by month
+@item @code{} @tab @code{--quarterly} @tab  Group postings by quarter
+@item @code{-Y} @tab @code{--yearly} @tab  Group postings by year
+@item @code{} @tab @code{--dow} @tab  Group by day of weeks
+@item @code{-s} @tab @code{--subtotal} @tab Group posting together, similar to balance report
+@end multitable
+
+@node Commodity Reporting Quick Reference,  , Grouping Options, Command Line Quick Reference
+@subsection Commodity Reporting
+
+@multitable @columnfractions .1 .25 .65
+@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@item @code{} @tab @code{--price-db FILE} @tab Use @file{FILE} for retrieving stored commodity prices
+@item @code{-L MINS} @tab @code{--price-exp MINS} @tab Set expected freshness of prices in minutes
+@item @code{-Q} @tab @code{--download} @tab Download quotes using @code{getquote}
+@item @code{} @tab @code{--getquote} @tab Sets path to a user defined script to download commodity prices.
+@item @code{-O} @tab @code{--quantity} @tab  Report commodity totals without conversion
+@item @code{-B} @tab @code{--basis} @tab Report cost basis
+@item @code{-V} @tab @code{--market} @tab Report last known market value
+@item @code{-G} @tab @code{--gain} @tab  Report net gain loss for commodities that have a price history
+@end multitable
+
+@node Detailed Options Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
 @section Detailed Option Description
 
 @menu
@@ -4962,7 +5115,7 @@ database.
 Displays the info page for ledger.
 
 @item --init-file <PATH>
-Specifies the location of the init file @file{.ledgerrc}
+Specifies the location of the init file. The default is @file{~/.ledgerrc}
 
 @item --options
  Display the options in effect for this Ledger invocation, along with
@@ -5095,15 +5248,16 @@ difference between these scopes.  Ledger 3.0 contains provisions for
 GUIs, which would make use of the different scopes by keeping an
 instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
-@code{--abbrev-len <INT>} Sets the minimum
+
+@table @code
+@item --abbrev-len <INT>
+Sets the minimum
 length an account can be abbreviated to if it doesn't fit inside the
 @code{account-width}.  If @code{abbrev-len} is zero, then the account
 name will be truncated on the right. If @code{abbrev-len} is greater
 than @code{account-width} then the account will be truncated on the
 left, with no shortening of the account names in order to fit into the
 desired width.
-
-@table @code
 @item --account <STR>
 Prepend @code{<STR>} to all accounts
 reported. That is, the option @code{--account Personal} would tack
@@ -5515,16 +5669,14 @@ Suppress the output of group titles
 Suppress printing the final total line in a balance report.
 
 @item --now
-
-FIX THIS ENTRY
+Define the current date in case to you to do calculate in the past or future using @code{--current}
 
 @item --only
 
 FIX THIS ENTRY
 
-@item --output
-
-FIX THIS ENTRY
+@item --output <PATH>
+Redriect the output of ledger to the file defined in @file{PATH}.
 
 @item --pager
 
@@ -5667,13 +5819,11 @@ report only the last <INT> entries.  Only useful ona register report.
 
 FIX THIS ENTRY
 
-@item --total
-
-FIX THIS ENTRY
+@item --total <VEXPR>
+Define a vlaue expression used to calulate the total in reports.
 
 @item --total-width
-
-FIX THIS ENTRY
+Set the width of the total field in the register report.
 
 @item --truncate
 
@@ -5685,7 +5835,7 @@ FIX THIS ENTRY
 
 @item --uncleared
 
-FIX THIS ENTRY
+Use only uncleared transactions in calculations and reports.
 
 @item --unrealized-gains
 
@@ -5700,8 +5850,7 @@ FIX THIS ENTRY
 FIX THIS ENTRY
 
 @item --unround
-
-FIX THIS ENTRY
+Perform all calculations without rounding and display results to full precision.
 
 @item --weekly
 
@@ -7938,11 +8087,16 @@ need to create sums of multiple commodities, use a Balance.  For example:
 @node Major Changes from version 2.6, Example Data File, Extending with Python, Top
 @chapter Major Changes from version 2.6
 
+@itemize
+@item OFX support has been removed from Ledger 3.0
+@item single character value expressions are deprecated and should be changed to the new value expressions available in 3.0
+@end itemize
+
 @node Example Data File, Miscellaneous Notes, Major Changes from version 2.6, Top
 @appendix Example Journal File: drewr.dat
  The following journal file is included with the source distribution of
  ledger.  It is called @file{drewr.dat} and exhibits many ledger
- features, include automatic and virtual transactions, 
+ features, include automatic and virtual transactions,
 @smallexample
 ; -*- ledger -*-
 
@@ -8044,6 +8198,7 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 = /Tithe/
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
+
 
 @node Concept Index, Command Index, Miscellaneous Notes, Top
 @unnumbered Concept Index
