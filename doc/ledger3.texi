@@ -236,7 +236,7 @@ $ ledger -f ledger.dat register Bell
 
 An important difference between Ledger and other finance packages is
 that journal will never alter your input file.  You can create and edit
-that file in any way you prefer, but journal is only for analyzing the
+that file in any way you prefer, but Ledger is only for analyzing the
 data, not for altering it.
 
 
@@ -504,7 +504,6 @@ cannot display any currency symbols other than dollar signs ($).
 @item @code{register} @tab Show all transactions with running total
 @item @code{csv} @tab Show transactions in csv format, for exporting to other programs
 @item @code{print} @tab  Print transaction in a ledger readable format
-@item @code{output} @tab  Similar to print without included transactions
 @item @code{xml} @tab Produce XML output of the register command
 @item @code{emacs} @tab Produce Emacs lisp output
 @item @code{equity} @tab Print account balances as transactions
