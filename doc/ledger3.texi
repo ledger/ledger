@@ -235,7 +235,7 @@ $ ledger -f ledger.dat register Bell
 @end smallexample
 
 An important difference between Ledger and other finance packages is
-that journal will never alter your input file.  You can create and edit
+that Ledger will never alter your input file.  You can create and edit
 that file in any way you prefer, but Ledger is only for analyzing the
 data, not for altering it.
 
