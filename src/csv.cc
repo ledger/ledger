@@ -166,7 +166,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
   string total;
   string field;
 
-  while (instr.good() && ! instr.eof()) {
+  while (instr.good() && ! instr.eof() && n < index.size()) {
     field = read_field(instr);
 
     switch (index[n]) {
