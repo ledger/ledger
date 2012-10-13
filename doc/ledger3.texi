@@ -4038,14 +4038,14 @@ file whose formatting has gotten out of hand.
 @section Reports in other Formats
 @menu
 * Comma Separated Variable files::  
-* Emacs::                       
+* The emacs command::           
 * Emacs org mode::              
 * The pricemap Command::        
 * The xml Command::             
 * prices and pricedb::          
 @end menu
 
-@node Comma Separated Variable files, Emacs, Reports in other Formats, Reports in other Formats
+@node Comma Separated Variable files, The emacs command, Reports in other Formats, Reports in other Formats
 @subsection Comma Separated Variable files
 @menu
 * The csv command::             
@@ -4153,8 +4153,8 @@ passed through 'ledger print' a second time if you want to match on the
 new payee field. During the 'ledger convert' run only the original payee
 name as specified in the csv data seems to be used.
 
-@node Emacs, Emacs org mode, Comma Separated Variable files, Reports in other Formats
-@subsection Emacs
+@node The emacs command, Emacs org mode, Comma Separated Variable files, Reports in other Formats
+@subsection The @code{emacs} command
 
 The @command{emacs} command outputs results in a form that can be read
 directly by Emacs Lisp.  The format of the @code{sexp} is:
@@ -4165,7 +4165,7 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
  ...)                   ; list of transactions
 @end smallexample
 
-@node Emacs org mode, The pricemap Command, Emacs, Reports in other Formats
+@node Emacs org mode, The pricemap Command, The emacs command, Reports in other Formats
 @subsection Emacs @code{org} Mode
 The @code{org} command produces a journal file suitable for use in the
 Emacs org mode.  More details on using org mode can be found at
