@@ -1,0 +1,9 @@
+test -f /dev/null --input-date-format '%m/%d/%Y' convert test/regress/0DDDEBC0.dat
+2011/12/12=2011/12/13 * 
+    Expenses:Unknown                             $10
+    Equity:Unknown
+
+2011/12/12 * 
+    Expenses:Unknown                             $20
+    Equity:Unknown
+end test
