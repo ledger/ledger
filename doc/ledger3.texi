@@ -4098,7 +4098,7 @@ line of the file.  The fields ledger can recognize are called
 
 Delete the account description lines at the top, and replace the first line in the data above with:
 @smallexample
-date,payee,note,amount,,,code,
+,date,payee,note,amount,,,code,
 @end smallexample
 
 Then execute ledger like this:
@@ -4110,6 +4110,49 @@ Where the @code{--input-date-format} option tells ledger how to
 interpret the dates.
 
 Importing csv files is a lot of work, and but is very amenable to scripting.
+
+If there are columns in the bank data you would like to keep in your
+ledger data, besides the primary fileds described above, you can name
+them in the field descriptor list and Ledger will include them in the
+transaction as meta data if it doesn't recognize the field name. For
+example, if you want to capture the bank transaction number and it
+occurs in the first column of the data use:
+
+
+@smallexample
+transid,date,payee,note,amount,,,code,
+@end smallexample
+
+Ledger will include @code{; transid: 767718} in the first transaction is
+fromthe file above.
+
+The @code{convert} command accepts three options, the most important
+ones are @code{--invert} which inverts the amount field, and
+@code{--account NAME} which you can use to specify the account to
+balance against and @code{--rich-data}. When using the rich-data switch
+additional metadata is stored as tags. There is, for example, a UUID field. If
+an entry with the same UUID tag is already included in the normal ledger
+file (specified via -f or $LEDGER_FILE) this entry will not be printed
+again.
+
+You can also use @code{convert} with @code{payee} and @code{account}
+directives. First, you can use the @code{payee} and @code{alias}
+directive to rewrite the @code{payee} field based on some rules. Then you can
+use the account and its @code{payee} directive to specify the account. I use it
+like this, for example:
+
+@smallexample
+payee Aldi
+    alias ^ALDI SUED SAGT DANKE
+account Aufwand:Einkauf:Lebensmittel
+    payee ^(Aldi|Alnatura|Kaufland|REWE)$
+@end smallexample
+
+Note that it may be necessary for the output of 'ledger convert' to be
+passed through 'ledger print' a second time if you want to match on the
+new payee field. During the 'ledger convert' run only the original payee
+name as specified in the csv data seems to be used.
+
 @node Emacs, Emacs org mode, Comma Separated Variable files, Reports in other Formats
 @subsection Emacs
 
