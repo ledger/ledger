@@ -245,7 +245,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
 
   // Translate the account name, if we have enough information to do so
 
-  foreach (account_mapping_t& value, context.journal->account_mappings) {
+  foreach (account_mapping_t& value, context.journal->payees_for_unknown_accounts) {
     if (value.first.match(xact->payee)) {
       post->account = value.second;
       break;
