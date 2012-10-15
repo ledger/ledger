@@ -231,28 +231,6 @@ the default."
         (ledger-reports-custom-save))
     report-cmd))
 
-(defvar ledger-report-patch-alist nil)
-
-(defun ledger-report-patch-reports (buf)
-  (when ledger-report-patch-alist
-    (let ((entry (assoc (expand-file-name (buffer-file-name buf))
-                        ledger-report-patch-alist)))
-      (when entry
-        (dolist (b (cdr entry))
-          (if (buffer-live-p b)
-              (with-current-buffer b
-                (save-excursion
-                  (goto-char (point-min))
-                  (while (not (eobp))
-                    (let ((record (get-text-property (point) 'ledger-source)))
-                      (if (and record (not (markerp (cdr record))))
-                          (setcdr record (with-current-buffer buf
-                                           (save-excursion
-                                             (goto-char (point-min))
-                                             (forward-line (cdr record))
-                                             (point-marker))))))
-                    (forward-line 1))))))))))
-
 (defun ledger-do-report (cmd)
   "Run a report command line."
   (goto-char (point-min))
@@ -271,23 +249,17 @@ the default."
       (goto-char data-pos)
       (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
         (let ((file (match-string 1))
-              (line (string-to-number (match-string 2))))
+               (line (string-to-number (match-string 2))))
           (delete-region (match-beginning 0) (match-end 0))
           (set-text-properties (line-beginning-position) (line-end-position)
-                               (list 'ledger-source (cons file line)))
-          (end-of-line)
-          (let* ((fullpath (expand-file-name file))
-                 (entry (assoc fullpath ledger-report-patch-alist)))
-            (if entry
-                (nconc (cdr entry) (list (current-buffer)))
-              (push (cons (expand-file-name file)
-                          (list (current-buffer)))
-                    ledger-report-patch-alist))
-            (add-to-list 'files-in-report fullpath))))
-      (dolist (path files-in-report)
-          (let ((buf (get-file-buffer path)))
-            (if (and buf (buffer-live-p buf))
-                (ledger-report-patch-reports buf)))))
+                               (list 'ledger-source (cons file (save-window-excursion
+                                                                 (save-excursion
+                                                                   (find-file file)
+                                                                   (widen)
+                                                                   (goto-char (point-min))
+                                                                   (forward-line (1- line))
+                                                                   (point-marker))))))
+          (end-of-line))))
     (goto-char data-pos)))
 
 
