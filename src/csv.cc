@@ -166,7 +166,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
   string total;
   string field;
 
-  while (instr.good() && ! instr.eof()) {
+  while (instr.good() && ! instr.eof() && n < index.size()) {
     field = read_field(instr);
 
     switch (index[n]) {
@@ -175,7 +175,8 @@ xact_t * csv_reader::read_xact(bool rich_data)
       break;
 
     case FIELD_DATE_AUX:
-      xact->_date_aux = parse_date(field);
+      if (! field.empty())
+        xact->_date_aux = parse_date(field);
       break;
 
     case FIELD_CODE:
@@ -224,7 +225,8 @@ xact_t * csv_reader::read_xact(bool rich_data)
       break;
 
     case FIELD_NOTE:
-      xact->note = field;
+      if (! field.empty())
+        xact->note = field;
       break;
 
     case FIELD_UNKNOWN:
