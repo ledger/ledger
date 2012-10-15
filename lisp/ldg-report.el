@@ -275,6 +275,7 @@ the default."
           (delete-region (match-beginning 0) (match-end 0))
           (set-text-properties (line-beginning-position) (line-end-position)
                                (list 'ledger-source (cons file line)))
+          (end-of-line)
           (let* ((fullpath (expand-file-name file))
                  (entry (assoc fullpath ledger-report-patch-alist)))
             (if entry
@@ -282,15 +283,13 @@ the default."
               (push (cons (expand-file-name file)
                           (list (current-buffer)))
                     ledger-report-patch-alist))
-            (add-to-list 'files-in-report fullpath)))
+            (add-to-list 'files-in-report fullpath))))
+      (dolist (path files-in-report)
+          (let ((buf (get-file-buffer path)))
+            (if (and buf (buffer-live-p buf))
+                (ledger-report-patch-reports buf)))))
+    (goto-char data-pos)))
 
-        ;; Disable john's "monkey patching" because it didn't work
-        ;; (dolist (path files-in-report)
-        ;;   (let ((buf (get-file-buffer path)))
-        ;;     (if (and buf (buffer-live-p buf))
-        ;;         (ledger-report-patch-reports buf))))))))
-        )
-      (goto-char data-pos) )))
 
 (defun ledger-report-visit-source ()
   (interactive)
