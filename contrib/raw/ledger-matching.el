@@ -145,11 +145,12 @@
     (backward-paragraph)
     (beginning-of-line)
 
-    ;; Update the ER and Project while I'm there
-    (save-excursion
-      (search-forward "; ER:")
-      (kill-line nil)
-      (insert " " *ledger-expense-shortcut-ER*))
+    ;; ;; Update the ER and Project while I'm there
+    ;; (save-excursion
+    ;;   (search-forward "; ER:")
+    ;;   (kill-line nil)
+    ;;   (insert " " *ledger-expense-shortcut-ER*))
+    ;; Just do the project for now.
     (save-excursion
       (search-forward "; PROJECT:")
       (kill-line nil)
@@ -192,7 +193,9 @@
                          ledger-matching-image-name))
 
     ;; Update the receipt screen
-    (ledger-matching-update-current-image) ))
+    (ledger-matching-update-current-image)
+
+    (message "Filed %s to project %s" ledger-matching-image-name ledger-matching-project)))
 
 
 
@@ -207,6 +210,133 @@
     ;; Update the receipt screen at the same offset
     (ledger-matching-update-current-image))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Items below are speed entry macros, and should eventually migrate to their own file.
+
+(defvar *ledger-expense-shortcut-ER*
+  "Current expense report number, just last four digits (ie: 1234 results in AISER1234).")
+
+(defvar *ledger-expense-shortcut-split-ER*
+  "Split (ie: internal) expense report number, just last four digits (ie: 1234 results in AISER1234).")
+
+(defvar *ledger-expense-shortcut-Proj* ""
+  "Current export report project code (ie: AGIL1292)")
+
+(defun ledger-expense-shortcut-ER-format-specifier () *ledger-expense-shortcut-ER*)
+
+(defun ledger-expense-shortcut-Project-format-specifier () *ledger-expense-shortcut-Proj*)
+
+(defun ledger-expense-shortcut-setup (ER Split Proj)
+  "Sets the variables expanded into the transaction."
+  (interactive "MER Number (ER or IN and 4 digit number only): \nMSplit ER Number (ER or IN and 4 digit number only): \nMProject: ")
+  (setq *ledger-expense-shortcut-ER*
+        (concatenate 'string "AIS" ER))
+  (setq *ledger-expense-shortcut-split-ER*
+        (concatenate 'string "AIS" Split))
+  (setq *ledger-expense-shortcut-Proj* Proj)
+  (setq ledger-matching-project Proj)
+  (message "Set Proj to %s and ER to %s, split to %s"
+           *ledger-expense-shortcut-Proj*
+           *ledger-expense-shortcut-ER*
+           *ledger-expense-shortcut-split-ER*))
+
+(defun ledger-expense-shortcut ()
+  "Updates the ER and Project metadata with the current values of the shortcut variables."
+ (interactive)
+ (when (eq major-mode 'ledger-mode)
+   (if (or (eql *ledger-expense-shortcut-ER* "")
+           (eql *ledger-expense-shortcut-Proj* ""))
+         (message "Run ledger-expense-shortcut-setup first.")
+     (save-excursion
+       (search-forward "; ER:")
+       (kill-line nil)
+       (insert " " *ledger-expense-shortcut-ER*))
+     (save-excursion
+       (search-forward "; PROJECT:")
+       (kill-line nil)
+       (insert " " *ledger-expense-shortcut-Proj*)))))
+
+(defun ledger-expense-split ()
+  "Splits the current transaction between internal and projects."
+  (interactive)
+  (when (eq major-mode 'ledger-mode) ; I made this local now, should only trigger in ldg-mode
+    (save-excursion
+      (end-of-line)
+      (re-search-backward "^[0-9]\\{4\\}/")
+      (re-search-forward "^ +Dest:Projects")
+      (move-beginning-of-line nil)
+      (let ((begin (point))
+            (end (re-search-forward "^$")))
+        (goto-char end)
+        (insert (buffer-substring begin end))
+        (goto-char end)
+        (re-search-forward "^    Dest:Projects")
+        (replace-match "    Dest:Internal")
+        (re-search-forward "; ER: +[A-Za-z0-9]+")
+        (replace-match (concat "; ER: " *ledger-expense-shortcut-split-ER*)  t)
+        (when (re-search-forward "; CATEGORY: Meals" (save-excursion (re-search-forward "^$")) t)
+          (replace-match "; CATEGORY: Travel" t))))
+    (re-search-backward "^[0-9]\\{4\\}/")
+    (re-search-forward "^ +Dest:Projects")
+    (insert-string "                                     $") ))
+
+(defun ledger-expense-internal ()
+  "Makes the expense an internal one."
+  (interactive)
+  (when (eq major-mode 'ledger-mode) ; I made this local now, should only trigger in ldg-mode
+    (save-excursion
+      (end-of-line)
+      (re-search-backward "^[0-9]\\{4\\}/")
+      (let ((begin (point))
+            (end (save-excursion (re-search-forward "^$"))))
+        (when (re-search-forward "^    Dest:Projects" end t)
+          (replace-match "    Dest:Internal") )
+        (when (re-search-forward "; CATEGORY: Meals" (save-excursion (re-search-forward "^$")) t)
+          (replace-match "; CATEGORY: Travel" t))))))
+
+(defun ledger-expense-personal ()
+  "Makes the expense an personal one, eliminating metadata and receipts."
+ (interactive)
+ (when (eq major-mode 'ledger-mode) ; I made this local now, should only trigger in ldg-mode
+   (save-excursion
+     (end-of-line)
+     (re-search-backward "^[0-9]\\{4\\}/")
+     (let ((begin (point))
+           (end (save-excursion (re-search-forward "^$"))))
+       (when (re-search-forward "^    Dest:Projects" end t)
+         (replace-match "    Other:Personal"))
+       (goto-char begin)
+       (save-excursion
+         (when (re-search-forward "^ +; ER:" end t)
+         (beginning-of-line)
+         (kill-line 1)))
+       (save-excursion
+         (when (re-search-forward "^ +; PROJECT:" end t)
+         (beginning-of-line)
+         (kill-line 1)))
+       (save-excursion
+         (when (re-search-forward "^ +; CATEGORY:" end t)
+         (beginning-of-line)
+         (kill-line 1)))
+       (save-excursion
+         (when (re-search-forward "^ +; RECEIPT:" end t)
+         (beginning-of-line)
+         (kill-line 1)))
+       (ledger-toggle-current-entry)))))
+
+(defun ledger-expense-show-receipt ()
+  "Uses the Receipt buffer to show the receipt of the txn we're on."
+  (when (eq major-mode 'ledger-mode) ; I made this local now, should only trigger in ldg-mode
+    (save-excursion
+      (end-of-line)
+      (re-search-backward "^[0-9]\\{4\\}/")
+      (let ((begin (point))
+            (end (save-excursion (re-search-forward "^$"))))
+        (save-excursion
+          (when (re-search-forward "^\\( +; RECEIPT: +\\)\\([^,]+?.jpg\\).*$" end t)
+            (ledger-matching-display-image
+             (concat "/home/adamsrl/AdamsInfoServ/BusinessDocuments/Ledger/AdamsRussell/"
+                     (match-string 2))) ))))))
 
 
 (provide 'ledger-matching)
