@@ -261,7 +261,7 @@ enter these commands:
 Ledger has a complete online help system based on GNU Info.  This manual
 can be searched directly from the command line using the following
 options:
-@option{ledger --help} bring up this entire manual in your tty.
+@code{ledger --help} bring up this entire manual in your tty.
 
 If you need help on how to use Ledger, or run into problems, you can
 join the Ledger mailing list at the following Web address:
@@ -270,8 +270,8 @@ join the Ledger mailing list at the following Web address:
 http://groups.google.com/group/ledger-cli
 @end smallexample
 
-@noindent You can also find help at the @samp{#ledger} channel on the IRC server
-@samp{irc.freenode.net}.
+@noindent You can also find help at the @code{#ledger} channel on the IRC server
+@code{irc.freenode.net}.
 
 @cindex tutorial
 @node Ledger Tutorial , Principles of Accounting, Introduction to Ledger, Top
@@ -419,14 +419,14 @@ $ ledger -f drewr3.dat register Groceries
 11-Jan-19 Grocery Store         Expense:Food:Groceries      $ 44.00     $ 334.00
 @end smallexample
 
-@noindent Which matches the balance reported for the @samp{Groceries} account:
+@noindent Which matches the balance reported for the @code{Groceries} account:
 
 @smallexample
 $ ledger -f drewr3.dat balance Groceries 
             $ 334.00  Expenses:Food:Groceries
 @end smallexample
 
-@noindent  If you would like to find transaction to only a certain payee use @samp{payee} or @@:
+@noindent  If you would like to find transaction to only a certain payee use @code{payee} or @@:
 @smallexample
 $ ledger -f drewr3.dat register payee "Organic"
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
@@ -445,7 +445,7 @@ $ ledger -f drewr3.dat register payee "Organic"
 A very useful report is to show what your obligations are versus what
 expenditures have actually been recorded.  It can take several days for
 a check to clear, but you should treat it as money spent.  The
-@samp{cleared} report shows just that (note that the cleared report will
+@code{cleared} report shows just that (note that the cleared report will
 not format correctly for accounts that contain multiple commodities):
 
 @smallexample
@@ -626,7 +626,7 @@ ledger -M register expenses:auto
 @end example
 
 This assumes, of course, that you use account names like
-@samp{Expenses:Auto:Gas} and @samp{Expenses:Auto:Repair}.
+@code{Expenses:Auto:Gas} and @code{Expenses:Auto:Repair}.
 
 @menu
 * Tracking reimbursable expenses::  
@@ -728,8 +728,8 @@ It's easier shown than said:
 And now the reimbursements account is paid off, accounts payable is
 paid off, and $100.00 has been effectively transferred from the
 company's checking account to your personal checking account.  The
-money simply ``waited''---in both @samp{Assets:Reimbursements:Company
-XYZ}, and @samp{Company XYZ:Accounts Payable:Your Name}---until such
+money simply ``waited''---in both @code{Assets:Reimbursements:Company
+XYZ}, and @code{Company XYZ:Accounts Payable:Your Name}---until such
 time as it could be paid off.
 
 The value of tracking expenses from both sides like that is that you
@@ -773,7 +773,7 @@ apply account Company XYZ
 end apply account
 @end smallexample
 
-(Note: The @samp{apply account} above means that all accounts mentioned in
+(Note: The @code{apply account} above means that all accounts mentioned in
 the file are children of that account.  In this case it means that all
 activity in the file relates to Company XYZ).
 
@@ -839,8 +839,8 @@ P 2004/06/21 02:18:02 AAPL $32.91
 P 2004/06/21 02:18:02 AU $400.00
 @end smallexample
 
-Specify the price history to use with the @option{--price-db} option,
-with the @option{-V} option to report in terms of current market
+Specify the price history to use with the @code{--price-db} option,
+with the @code{-V} option to report in terms of current market
 value:
 
 @example
@@ -910,7 +910,7 @@ or days, it should be possible to convert between the various forms.
 Doing this requires the use of commodity equivalencies.
 
 For example, you might have the following two postings, one which
-transfers an hour of time into a @samp{Billable} account, and another
+transfers an hour of time into a @code{Billable} account, and another
 which decreases the same account by ten minutes.  The resulting report
 will indicate that fifty minutes remain:
 
@@ -944,13 +944,13 @@ C 1.00 Gb = 1024 Mb
 C 1.00 Tb = 1024 Gb
 @end smallexample
 
-Each of these definitions correlates a commodity (such as @samp{Kb})
+Each of these definitions correlates a commodity (such as @code{Kb})
 and a default precision, with a certain quantity of another commodity.
 In the above example, kilobytes are reported with two decimal places
 of precision and each kilobyte is equal to 1024 bytes.
 
 Equivalency chains can be as long as desired.  Whenever a commodity
-would report as a decimal amount (less than @samp{1.00}), the next
+would report as a decimal amount (less than @code{1.00}), the next
 smallest commodity is used.  If a commodity could be reported in terms
 of a higher commodity without resulting to a partial fraction, then
 the larger commodity is used.
@@ -975,8 +975,8 @@ EverQuest account:
 Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
 amounts are negative, because you are taking @emph{from} Black's
 Tavern in order to add to your Inventory account.  Note that you don't
-have to use @samp{Places:Black's Tavern} as the source account.  You
-could use @samp{EverQuest:System} to represent the fact that you
+have to use @code{Places:Black's Tavern} as the source account.  You
+could use @code{EverQuest:System} to represent the fact that you
 acquired them online.  The only purpose for choosing one kind of
 source account over another is for generate more informative reports
 later on.  The more you know, the better analysis you can perform.
@@ -1029,7 +1029,7 @@ assets is greater than the absolute value of your starting equity, it
 means you are making money.
 
 Clear as mud?  Keep thinking about it.  Until you figure it out, put
-@samp{-Equity} at the end of your balance command, to remove the
+@code{-Equity} at the end of your balance command, to remove the
 confusing figure from the total.
 
 @node Dealing with Petty Cash, Working with multiple funds and accounts, Understanding Equity, Principles of Accounting
@@ -1042,7 +1042,7 @@ a few large ones, as with checks.
 
 One solution is: don't bother.  Move your spending to a debit card,
 but in general ignore cash.  Once you withdraw it from the ATM, mark
-it as already spent to an @samp{Expenses:Cash} category:
+it as already spent to an @code{Expenses:Cash} category:
 
 @smallexample
 2004/03/15 ATM
@@ -1051,7 +1051,7 @@ it as already spent to an @samp{Expenses:Cash} category:
 @end smallexample
 
 If at some point you make a large cash expense that you want to track,
-just ``move'' the amount of the expense from @samp{Expenses:Cash} into
+just ``move'' the amount of the expense from @code{Expenses:Cash} into
 the target account:
 
 @smallexample
@@ -1091,8 +1091,8 @@ reserves resources for later:
 The problem with this kind of setup is that when you spend money, it
 comes from two or more places at once: the account and the fund.  And
 yet, the correlation of amounts between funds and accounts is rarely
-one-to-one.  What if the school fund has @samp{$500.00}, but
-@samp{$400.00} of that comes from Checking, and @samp{$100.00} from
+one-to-one.  What if the school fund has @code{$500.00}, but
+@code{$400.00} of that comes from Checking, and @code{$100.00} from
 Savings?
 
 Traditional finance packages require that the money reside in only one
@@ -1130,14 +1130,14 @@ account:
 
 When reports are generated, by default they'll appear in terms of the
 funds.  In this case, you will likely want to mask out your
-@samp{Assets} account, because otherwise the balance won't make much
+@code{Assets} account, because otherwise the balance won't make much
 sense:
 
 @example
 ledger bal -^Assets
 @end example
 
-If the @option{--real} option is used, the report will be in terms of
+If the @code{--real} option is used, the report will be in terms of
 the real accounts:
 
 @example
@@ -1159,7 +1159,7 @@ The second way of tracking funds is to use transaction codes.  In this
 respect the codes become like virtual accounts that embrace the entire
 set of postings.  Basically, we are associating a transaction with a
 fund by setting its code.  Here are two transactions that deposit money
-into, and spend money from, the @samp{Funds:School} fund:
+into, and spend money from, the @code{Funds:School} fund:
 
 @smallexample
 2004/03/25 (Funds:School) Donations
@@ -1176,10 +1176,10 @@ balance or registers reports will reflect this.  That the transactions
 relate to a particular fund is kept only in the code.
 
 How does this become a fund report?  By using the
-@option{--code-as-payee} option, you can generate a register report
+@code{--code-as-payee} option, you can generate a register report
 where the payee for each posting shows the code.  Alone, this is
 not terribly interesting; but when combined with the
-@option{--by-payee} option, you will now see account subtotals for any
+@code{--by-payee} option, you will now see account subtotals for any
 postings related to a specific fund.  So, to see the current
 monetary balances of all funds, the command would be:
 
@@ -1187,7 +1187,7 @@ monetary balances of all funds, the command would be:
 ledger --code-as-payee -P reg ^Assets
 @end smallexample
 
-Or to see a particular funds expenses, the @samp{School} fund in this
+Or to see a particular funds expenses, the @code{School} fund in this
 case:
 
 @smallexample
@@ -1270,7 +1270,7 @@ balanced amount, if it is the same as the first line:
 @end smallexample
 
 For this transaction, Ledger will figure out that $-23.00 must come from
-@samp{Assets:Checking} in order to balance the transaction.
+@code{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
 hierarchy established by separating with colons (see @pxref{Structuring
@@ -1733,7 +1733,7 @@ account Expenses
 account Expenses:Utilities
 ...
 @end smallexample
-Using the @samp{--strict} option will cause Ledger to complain if any accounts are not previously defined:
+Using the @code{--strict} option will cause Ledger to complain if any accounts are not previously defined:
 @smallexample
 15:27:39 ~/ledger (next) > ledger bal --strict
 Warning: "FinanceData/Master.dat", line 6: Unknown account 'Liabilities:Tithe Owed'
@@ -1741,12 +1741,12 @@ Warning: "FinanceData/Master.dat", line 8: Unknown account 'Liabilities:Tithe Ow
 Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities:Domestic'
 @end smallexample
 
-If you have a large Ledger register already created use the @samp{accounts} command to get started:
+If you have a large Ledger register already created use the @code{accounts} command to get started:
 @smallexample
 ledger accounts >> Accounts.dat
 @end smallexample
 
-@noindent You will have to edit this file to add the @samp{account} directive.
+@noindent You will have to edit this file to add the @code{account} directive.
 
 @node Journal Format, Converting from other formats, Keeping it Consistent, Keeping a Journal
 @section Journal Format
@@ -1775,11 +1775,11 @@ transaction's account postings.  The format of the first line is:
 DATE[=EDATE] [*|!] [(CODE)] DESC
 @end smallexample
 
-If @samp{*} appears after the date (with optional effective date), it
+If @code{*} appears after the date (with optional effective date), it
 indicates the transaction is ``cleared'', which can mean whatever the user
-wants it to mean.  If @samp{!} appears after the date, it indicates d
+wants it to mean.  If @code{!} appears after the date, it indicates d
 the transaction is ``pending''; i.e., tentatively cleared from the user's
-point of view, but not yet actually cleared.  If a @samp{CODE} appears
+point of view, but not yet actually cleared.  If a @code{CODE} appears
 in parentheses, it may be used to indicate a check number, or the type
 of the posting.  Following these is the payee, or a description of
 the posting.
@@ -1790,18 +1790,18 @@ The format of each following posting is:
   ACCOUNT  AMOUNT  [; NOTE]
 @end smallexample
 
-The @samp{ACCOUNT} may be surrounded by parentheses if it is a virtual
+The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
 posting, or square brackets if it is a virtual posting that
-must balance.  The @samp{AMOUNT} can be followed by a per-unit
-posting cost, by specifying @samp{@@ AMOUNT}, or a complete
-posting cost with @samp{@@@@ AMOUNT}.  Lastly, the @samp{NOTE} may
+must balance.  The @code{AMOUNT} can be followed by a per-unit
+posting cost, by specifying @code{@@ AMOUNT}, or a complete
+posting cost with @code{@@@@ AMOUNT}.  Lastly, the @code{NOTE} may
 specify an actual and/or effective date for the posting by using
-the syntax @samp{[ACTUAL_DATE]} or @samp{[=EFFECTIVE_DATE]} or
-@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual postings})
+the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
+@code{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual postings})
 
 @item P
 Specifies a historical price for a commodity.  These are usually found
-in a pricing history file (see the @option{-Q} option).  The syntax
+in a pricing history file (see the @code{-Q} option).  The syntax
 is:
 @smallexample
 P DATE SYMBOL PRICE
@@ -1844,8 +1844,8 @@ Command directives must occur at the beginning of a line.  Use of ! and
 @item account
 
 Pre-declare valid account names.  This only has effect if
-@samp{--strict} or @samp{--pedantic} is used (see below).  The
-@samp{account} directive supports several optional sub-directives, if
+@code{--strict} or @code{--pedantic} is used (see below).  The
+@code{account} directive supports several optional sub-directives, if
 they immediately follow the account directive and if they begin with
 whitespace:
 
@@ -1860,14 +1860,14 @@ whitespace:
      default
 @end smallexample
 
-The @samp{note} sub-directive associates a textual note with the account.  This can
-be accessed later using the @samp{note} valexpr function in any account context.
+The @code{note} sub-directive associates a textual note with the account.  This can
+be accessed later using the @code{note} valexpr function in any account context.
 
-The @samp{alias} sub-directive, which can occur multiple times, allows the alias to
+The @code{alias} sub-directive, which can occur multiple times, allows the alias to
 be used in place of the full account name anywhere that account names are
 allowed.
 
-The @samp{payee} sub-directive, which can occur multiple times, provides regexps
+The @code{payee} sub-directive, which can occur multiple times, provides regexps
 that identify the account if that payee is encountered and an account within
 its transaction ends in the name "Unknown".  Example:
 
@@ -1877,13 +1877,13 @@ its transaction ends in the name "Unknown".  Example:
      Assets:Cash
 @end smallexample
 
-The @samp{check} and @samp{assert} directives warn or error (respectively) if the given
+The @code{check} and @code{assert} directives warn or error (respectively) if the given
 value expression evaluates to false within the context of any posting.
 
-The @samp{eval} directive evaluates the value expression in the context of the
+The @code{eval} directive evaluates the value expression in the context of the
 account at the time of definition.  At the moment this has little value.
 
-The @samp{default} directive specifies that this account should be used as the
+The @code{default} directive specifies that this account should be used as the
 ``balancing account'' for any future transactions that contain only a single
 posting.
 
@@ -1992,13 +1992,13 @@ check <VALUE EXPRESSION BOOLEAN RESULT>
 Start a block comment, closed by @code{end comment}.
 
 @item commodity
-Pre-declare commodity names.  This only has effect if @samp{--strict} or
-@samp{--pedantic} is used (see below).
+Pre-declare commodity names.  This only has effect if @code{--strict} or
+@code{--pedantic} is used (see below).
 
  commodity $
  commodity CAD
 
-The @samp{commodity} directive supports several optional sub-directives, if they
+The @code{commodity} directive supports several optional sub-directives, if they
 immediately follow the commodity directive and if they begin with whitespace:
 
 @smallexample
@@ -2009,18 +2009,18 @@ immediately follow the commodity directive and if they begin with whitespace:
    default
 @end smallexample
 
-The @samp{note} sub-directive associates a textual note with the commodity.  At
+The @code{note} sub-directive associates a textual note with the commodity.  At
 present this has no value other than documentation.
 
-The @samp{format} directive gives you a way to tell Ledger how to format this
+The @code{format} directive gives you a way to tell Ledger how to format this
 commodity.  In future using this directive will disable Ledger's observation
 of other ways that commodity is used, and will provide the ``canonical''
 representation.
 
-The @samp{nomarket} directive states that the commodity's price should never be
+The @code{nomarket} directive states that the commodity's price should never be
 auto-downloaded.
 
-The @samp{default} directive marks this as the ``default'' commodity.
+The @code{default} directive marks this as the ``default'' commodity.
 
 @item define
 @c instance_t::define_directive in textual.cc
@@ -2070,13 +2070,13 @@ is equivalent to this:
        Expenses:Food            25.75 CAD   @{=$0.90@}
 @end smallexample
 
-Note that ending a @samp{fixed} is done differently than other
-directives, as @samp{fixed} is closed with an @samp{endfixed} (i.e.,
-there is @strong{no space} between @samp{end} and @samp{fixed}).
+Note that ending a @code{fixed} is done differently than other
+directives, as @code{fixed} is closed with an @code{endfixed} (i.e.,
+there is @strong{no space} between @code{end} and @code{fixed}).
 
 For the moment, users may wish to study
 @uref{http://bugs.ledger-cli.org/show_bug.cgi?id=789, Bug Report 789}
-before using the @samp{fixed} directive in production.
+before using the @code{fixed} directive in production.
 
 @item include
 @c instance_t::include_directive in textual.cc
@@ -2084,7 +2084,7 @@ Include the stated file as if it were part of the current file.
 
 @item payee
 @c instance_t::payee_mapping_directive in textual.cc
-The @samp{payee} directive supports one optional sub-directive, if it immediately
+The @code{payee} directive supports one optional sub-directive, if it immediately
 follows the payee directive and if it begins with whitespace:
 
 @smallexample
@@ -2092,7 +2092,7 @@ follows the payee directive and if it begins with whitespace:
      alias KENTUCKY FRIED CHICKEN
 @end smallexample
 
-The @samp{alias} directive provides a regexp which, if it matches a parsed payee,
+The @code{alias} directive provides a regexp which, if it matches a parsed payee,
 the declared payee name is substituted:
 
 @smallexample
@@ -2152,8 +2152,8 @@ Note that anything following ``@code{end tag}'' is ignored.  placing the
 name of the tag that is being closed is a simple way to keep track.
 
 @item tag
-Pre-declares tag names.  This only has effect if @samp{--strict} or
-@samp{--pedantic} is used (see below).
+Pre-declares tag names.  This only has effect if @code{--strict} or
+@code{--pedantic} is used (see below).
 
 @smallexample
  tag Receipt
@@ -2169,7 +2169,7 @@ follow the tag directive and if they begin with whitespace:
    assert value != "foobar"
 @end smallexample
 
-The @samp{check} and @samp{assert} directives warn or error (respectively) if the given
+The @code{check} and @code{assert} directives warn or error (respectively) if the given
 value expression evaluates to false within the context of any use of the
 related tag.  In such a context, ``value'' is bound to the value of the tag
 (which may not be a string if typed-metadata is used!).  Such checks or
@@ -2183,7 +2183,7 @@ This is a synonym for @code{comment} and must be closed by and @code{end} tag.
 @c instance_t::year_directive in textual.cc
 Denotes the year used for all subsequent transactions that give a date
 without a year.  The year should appear immediately after the Y, for
-example: @samp{year 2004}.  This is useful at the beginning of a file, to
+example: @code{year 2004}.  This is useful at the beginning of a file, to
 specify the year for that file.  If all transactions specify a year,
 however, this command has no effect.
 
@@ -2408,8 +2408,8 @@ save typing and improve accuracy. Ledger doesn't leave you hanging,
 Type a portion of the payee and hit <TAB>, and @code{ledger-mode} will
 suggest a completion.  When filling in the account type the first few
 letters followed by a <TAB> and the account will be filled in.  For
-example typing @samp{Ex<TAB>Au<TAB>F<TAB>} would yield
-@samp{Expenses:Auto:Fuel} if you had previously used that account in
+example typing @code{Ex<TAB>Au<TAB>F<TAB>} would yield
+@code{Expenses:Auto:Fuel} if you had previously used that account in
 this journal. If there are more than one account with similar starting,
 hitting <TAB> multiple times will iterate through them. This is a good
 habit to get in to prevent misspellings of accounts. Remember Ledger
@@ -2434,7 +2434,7 @@ payee.  For example, if your journal  contains an entry
      Expenses:Tips  $2.55
      Liabilities:MasterCard  $-15.00
 @end smallexample 
-@noindent and you type @samp{C-c C-a}, the mini-buffer will appear showing the
+@noindent and you type @code{C-c C-a}, the mini-buffer will appear showing the
 current year and month.  If you complete the mini-buffer entry by typing
 @smallexample
 Entry: 2011/11/28 viva food 34 tip 7 <enter>
@@ -2470,7 +2470,7 @@ your bank (or whatever else you want the concept to mean)
 @end smallexample
 
 If, for some reason you need to clear a specific posting in the
-transaction you can type @samp{C-c C-c} and the posting at point will be
+transaction you can type @code{C-c C-c} and the posting at point will be
 toggled.
 
 @node Reconciling accounts, Generating Reports, Working with entries, Using Emacs
@@ -2817,7 +2817,7 @@ there are some tricks up Ledger's sleeve...
 
 You can use virtual accounts to transfer amounts to an account on the sly,
 bypassing the balancing requirement.  The trick is that these postings are not
-considered ``real'', and can be removed from all reports using @samp{--real}.
+considered ``real'', and can be removed from all reports using @code{--real}.
 
 To specify a virtual account, surround the account name with parentheses:
 
@@ -3060,7 +3060,7 @@ of an exceptional transaction, surround the @@ or @@@@ with parentheses:
 When a transaction occurs that exchange one commodity for another, Ledger
 records that commodity price not only within its internal price database, but
 also attached to the commodity itself.  Usually this fact remains invisible to
-the user, unless you turn on @samp{--lot-prices} to show these hidden price figures.
+the user, unless you turn on @code{--lot-prices} to show these hidden price figures.
 
 For example, consider the stock sale given above:
 
@@ -3234,7 +3234,7 @@ This is the same as the previous transaction, with the same caveats found in
 @section Lot dates
 
 In addition to lot prices, you can specify lot dates and reveal them with
-@samp{--lot-dates}.  Other than that, however, they have no special meaning to
+@code{--lot-dates}.  Other than that, however, they have no special meaning to
 Ledger.  They are specified after the amount in square brackets (the same way
 that dates are parsed in value expressions):
 
@@ -3262,7 +3262,7 @@ cannot begin with an @ character, as that would indicate a virtual cost:
 You can any combination of lot prices, dates or notes, in any order.  They are
 all optional.
 
-To show all lot information in a report, use @samp{--lots}.
+To show all lot information in a report, use @code{--lots}.
 
 @node Lot value expressions, Automated transactions, Lot notes, Transactions
 @section Lot value expressions
@@ -3602,7 +3602,7 @@ really knows that it debited $225 this month.
 
 A periodic transaction starts with a ~ followed by a period expression.
 Periodic transactions are used for budgeting and forecasting only, they
-have no effect without the @samp{--budget} option specified.
+have no effect without the @code{--budget} option specified.
 
 See @ref{Budgeting and Forecasting} for examples and details.
 
@@ -3680,7 +3680,7 @@ command.
           $ 5,480.00
 20:39:21 ~/ledger/test/input > 
 @end smallexample
-@noindent note the implicit logical and between @samp{Auto} and @samp{Mastercard}.
+@noindent note the implicit logical and between @code{Auto} and @code{Mastercard}.
 
 If you want the entire contents of a branch of your account tree, use the
 highest common name in the branch:
@@ -3703,7 +3703,7 @@ You can use general regular expressions in nearly anyplace Ledger needs a string
 
 The first example looks for any account starting with ``Bo'', of which
 there are none.  The second looks for any account with ``Bo'', which is
-@samp{Expenses:Books}.
+@code{Expenses:Books}.
 
 @cindex limit by payees
 If you want to know exactly how much you have spent in a particular
@@ -3758,7 +3758,7 @@ ledger -M --period-sort "(amount)" reg ^expenses
 @end example
 
 Now, you might wonder where the money came from to pay for these
-things.  To see that report, add @option{-r}, which shows the
+things.  To see that report, add @code{-r}, which shows the
 ``related account'' postings:
 
 @example
@@ -3768,8 +3768,8 @@ ledger -M --period-sort "(amount)" -r reg ^expenses
 But maybe this prints too much information.  You might just want to
 see how much you're spending with your MasterCard.  That kind of query
 requires the use of a display predicate, since the postings
-calculated must match @samp{^expenses}, while the postings
-displayed must match @samp{mastercard}.  The command would be:
+calculated must match @code{^expenses}, while the postings
+displayed must match @code{mastercard}.  The command would be:
 
 @example
 ledger -M -r --display "account =~ /mastercard/" reg ^expenses
@@ -3777,8 +3777,8 @@ ledger -M -r --display "account =~ /mastercard/" reg ^expenses
 
 This query says: Report monthly subtotals; report the ``related
 account'' postings; display only related postings whose
-account matches @samp{mastercard}, and base the calculation on
-postings matching @samp{^expenses}.
+account matches @code{mastercard}, and base the calculation on
+postings matching @code{^expenses}.
 
 This works just as well for report the overall total, too:
 
@@ -3786,7 +3786,7 @@ This works just as well for report the overall total, too:
 ledger -s -r --display "account =~ /mastercard/"/ reg ^expenses
 @end example
 
-The @option{-s} option subtotals all postings, just as @option{-M}
+The @code{-s} option subtotals all postings, just as @code{-M}
 subtotaled by the month.  The running total in both cases is off,
 however, since a display expression is being used.
 
@@ -3922,8 +3922,8 @@ register reports.  The script to do this is included in the ledger
 distribution, and is named @file{contrib/report}.  Install @file{report}
 anywhere along your @env{PATH}, and then use @command{report} instead of
 @command{ledger} when doing a register report.  The only thing to keep
-in mind is that you must specify @option{-j (--amount-data)} or
-@option{-J (--total-data)} to indicate whether Gnuplot should plot the
+in mind is that you must specify @code{-j (--amount-data)} or
+@code{-J (--total-data)} to indicate whether Gnuplot should plot the
 amount, or the running total.  For example, this command plots total
 monthly expenses made on your MasterCard.
 
@@ -3954,8 +3954,8 @@ report -J -l "Ua>=@{\$0.01@}" reg ^assets ^liab
 report -J -l "Ua>=@{\$0.01@}" -d "d>=[last feb]" reg ^assets ^liab
 @end smallexample
 
-The last report uses both a calculation predicate (@option{-l}) and a
-display predicate (@option{-d}).  The calculation predicates limits
+The last report uses both a calculation predicate (@code{-l}) and a
+display predicate (@code{-d}).  The calculation predicates limits
 the report to postings whose amount is greater than $1 (which can
 only happen if the posting amount is in dollars).  The display
 predicate limits the transactions @emph{displayed} to just those since last
@@ -4018,7 +4018,7 @@ always be the same as the current balance of that account.
 If you have Gnuplot installed, you may plot the amount or running
 total of any register by using the script @file{report}, which is
 included in the Ledger distribution.  The only requirement is that you
-add either @option{-j} or @option{-J} to your register command, in
+add either @code{-j} or @code{-J} to your register command, in
 order to plot either the amount or total column, respectively.
 
 @node The print Command,  , The register Command, Primary Financial Reports
@@ -4132,7 +4132,7 @@ ones are @code{--invert} which inverts the amount field, and
 balance against and @code{--rich-data}. When using the rich-data switch
 additional metadata is stored as tags. There is, for example, a UUID field. If
 an entry with the same UUID tag is already included in the normal ledger
-file (specified via -f or $LEDGER_FILE) this entry will not be printed
+file (specified via @code{-f} or @code{$LEDGER_FILE}) this entry will not be printed
 again.
 
 You can also use @code{convert} with @code{payee} and @code{account}
@@ -4148,9 +4148,9 @@ account Aufwand:Einkauf:Lebensmittel
     payee ^(Aldi|Alnatura|Kaufland|REWE)$
 @end smallexample
 
-Note that it may be necessary for the output of 'ledger convert' to be
-passed through 'ledger print' a second time if you want to match on the
-new payee field. During the 'ledger convert' run only the original payee
+Note that it may be necessary for the output of @code{ledger convert} to be
+passed through @code{ledger print} a second time if you want to match on the
+new payee field. During the @code{ledger convert} run only the original payee
 name as specified in the csv data seems to be used.
 
 @node The emacs command, Emacs org mode, Comma Separated Variable files, Reports in other Formats
@@ -4171,18 +4171,18 @@ The @code{org} command produces a journal file suitable for use in the
 Emacs org mode.  More details on using org mode can be found at
 @url{http://www.orgmode.org}.
 
-Org mode has a sub-system known as babel which allows for literate
+Org mode has a sub-system known as Babel which allows for literate
 programming.  This allows you to mix text and code within the same
 document and automatically execute code which may generate results which
 will then appear in the text.
 
-One of the languages supported by org+babel is ledger so that you can
+One of the languages supported by @code{org+babel} is Ledger, so that you can
 have ledger commands embedded in a text file and have the output of
 ledger commands also appear in the text file.  The output can be
 updated whenever any new ledger entries are added.
 
 For instance, the following org mode text document snippet illustrates a
-very naive but still useful of the org+babel system:
+very naive but still useful of the @code{org+babel} system:
 
 @smallexample
 * A simple test of ledger in an org file
@@ -4316,7 +4316,7 @@ Evaluating the code block again would generate a different report.
 Having to change the actual directive on the code block and re-evaluate
 makes it difficult to have more than one view of your transactions and
 financial state. Eventually, babel will support passing arguments to
-#+call evaluations of code blocks but this support is missing
+@code{#+call} evaluations of code blocks but this support is missing
 currently. Instead, we can use the concepts of literary programming, as
 implemented by the noweb features of babel, to help us.
 
@@ -4377,7 +4377,7 @@ have been done individually.
 
 Given the ledger entries defined above in the income and expenses code
 blocks, we can now refer to these using the noweb expansion directives,
-<<name>>. We can now define different code blocks to generate specific
+@code{<<name>>}. We can now define different code blocks to generate specific
 reports for those transactions. Below are two examples, one to generate
 a balance report and one to generate a register report of all
 transactions.
@@ -4402,7 +4402,7 @@ results generated by incorporating the transactions referred to by the
 @end smallexample
 
 If you want a more detailed breakdown of where your money is and where
-it has been spent, you can specify the -s flag (i.e. @code{:cmdline -s bal}) to
+it has been spent, you can specify the @code{-s} flag (i.e. @code{:cmdline -s bal}) to
 tell Ledger to include sub-accounts in the report.
 
 @smallexample
@@ -4505,8 +4505,8 @@ The general format used for Ledger data is:
 </ledger>
 @end smallexample
 
-The data stream is enclosed in a @samp{ledger} tag, which contains a
-series of one or more transactions.  Each @samp{xact} describes the
+The data stream is enclosed in a @code{ledger} tag, which contains a
+series of one or more transactions.  Each @code{xact} describes the
 transaction and contains a series of one or more postings:
 
 @smallexample
@@ -4523,19 +4523,19 @@ transaction and contains a series of one or more postings:
 </xact>
 @end smallexample
 
-The date format for @samp{en:date} is always @samp{YYYY/MM/DD}.  The
-@samp{en:cleared} tag is optional, and indicates whether the posting has
-been cleared or not.  There is also an @samp{en:pending} tag, for
-marking pending postings.  The @samp{en:code} and @samp{en:payee} tags
+The date format for @code{en:date} is always @code{YYYY/MM/DD}.  The
+@code{en:cleared} tag is optional, and indicates whether the posting has
+been cleared or not.  There is also an @code{en:pending} tag, for
+marking pending postings.  The @code{en:code} and @code{en:payee} tags
 both contain whatever text the user wishes.
 
 After the initial transaction data, there must follow a set of postings
-marked with @samp{en:postings}.  Typically these postings will all
+marked with @code{en:postings}.  Typically these postings will all
 balance each other, but if not they will be automatically balanced into
-an account named @samp{<Unknown>}.
+an account named @code{<Unknown>}.
 
-Within the @samp{en:postings} tag is a series of one or more
-@samp{posting}'s, which have the following form:
+Within the @code{en:postings} tag is a series of one or more
+@code{posting}'s, which have the following form:
 
 @smallexample
 <posting>
@@ -4552,13 +4552,13 @@ Within the @samp{en:postings} tag is a series of one or more
 @end smallexample
 
 This is a basic posting.  It may also be begin with
-@samp{tr:virtual} and/or @samp{tr:generated} tags, to indicate virtual
-and auto-generated postings.  Then follows the @samp{tr:account}
+@code{tr:virtual} and/or @code{tr:generated} tags, to indicate virtual
+and auto-generated postings.  Then follows the @code{tr:account}
 tag, which contains the full name of the account the posting is
 related to.  Colons separate parent from child in an account name.
 
 Lastly follows the amount of the posting, indicated by
-@samp{tr:amount}.  Within this tag is a @samp{value} tag, of which
+@code{tr:amount}.  Within this tag is a @code{value} tag, of which
 there are four different kinds, each with its own format:
 
 @enumerate
@@ -4568,15 +4568,15 @@ there are four different kinds, each with its own format:
 @item balance
 @end enumerate
 
-The format of a Boolean value is @samp{true} or @samp{false}
-surrounded by a @samp{boolean} tag, for example:
+The format of a Boolean value is @code{true} or @code{false}
+surrounded by a @code{boolean} tag, for example:
 
 @smallexample
 <boolean>true</boolean>
 @end smallexample
 
 The format of an integer value is the numerical value surrounded by an
-@samp{integer} tag, for example:
+@code{integer} tag, for example:
 
 @smallexample
 <integer>12036</integer>
@@ -4641,8 +4641,8 @@ the same data.
 @subsection @code{prices} and @code{pricedb}
 
 The @command{prices} command displays the price history for matching
-commodities.  The @option{-A} flag is useful with this report, to
-display the running average price, or @option{-D} to show each price's
+commodities.  The @code{-A} flag is useful with this report, to
+display the running average price, or @code{-D} to show each price's
 deviation from that average.
 
 There is also a @command{pricedb} command which outputs the same
@@ -4690,7 +4690,7 @@ Say you currently have this posting in your ledger file:
     Liabilities:MasterCard             $-15.00
 @end smallexample
 
-Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva
+Now it's @code{2004/4/9}, and you've just eating at @code{Viva
 Italiano} again.  The exact amounts are different, but the overall
 form is the same.  With the @command{xact} command you can type:
 
@@ -4708,10 +4708,10 @@ This produces the following output:
 @end smallexample
 
 It works by finding a past posting matching the regular expression
-@samp{viva}, and assuming that any accounts or amounts specified will
+@code{viva}, and assuming that any accounts or amounts specified will
 be similar to that earlier posting.  If Ledger does not succeed in
 generating a new transaction, an error is printed and the exit code is set
-to @samp{1}.
+to @code{1}.
 
 Here are a few more examples of the @command{xact} command, assuming
 the above journal transaction:
@@ -4933,7 +4933,7 @@ model transaction:
 true
 @end smallexample
 @item template
-Shows the insertion template that a "draft" or "xact" sub-command generates.
+Shows the insertion template that a @code{draft} or @code{xact} sub-command generates.
 This is a debugging command.
 @end table
 
@@ -4972,7 +4972,7 @@ meaning, described below.
 
 The regular expressions arguments always match the account name that a
 posting refers to.  To match on the payee of the transaction instead,
-precede the regular expression with @samp{payee} or @@.  For example, the
+precede the regular expression with @code{payee} or @@.  For example, the
 following balance command reports account totals for rent, food and
 movies, but only those whose payee matches Freddie:
 
@@ -5197,10 +5197,10 @@ their values and the source of those values, for example:
 --------------------
                    0
 @end smallexample
-@noindent For the `source' column, a value starting with a `@code{-}' or
-`@code{--}' indicated the source was a command line argument.  It the
-entry starts with a `@code{$}', the source was an environment
-variable. If the source is `@code{?normalize}' the value was set
+@noindent For the source column, a value starting with a @code{-} or
+@code{--} indicated the source was a command line argument.  It the
+entry starts with a @code{$}, the source was an environment
+variable. If the source is @code{?normalize} the value was set
 internally by ledger, in a function called @code{normalize_options}.
 
 @item --script <PATH>
@@ -5277,7 +5277,7 @@ Specify the location of the price entry data file.
 @item --price-exp INTEGER_MINUTES
 Set the expected freshness of price quotes, in minutes. That is, if the
 last known quote for any commodity is older than this value, and if
-@samp{--download} is being used, then the Internet will be consulted again
+@code{--download} is being used, then the Internet will be consulted again
 for a newer price. Otherwise, the old price is still considered to be
 fresh enough.
 
@@ -5479,7 +5479,7 @@ ASK JOHN
 
 @item --dc
  Display register or balance in debit/credit format
-If you use @samp{--dc} with either the register (reg) or balance (bal) commands, you
+If you use @code{--dc} with either the register (reg) or balance (bal) commands, you
 will now get extra columns.  The register goes from this:
 @smallexample
    12-Mar-10 Employer           Assets:Cash                $100        $100
@@ -5508,7 +5508,7 @@ will now get extra columns.  The register goes from this:
 @noindent Where the first column is debits, the second is credits, and the third is the
 running total.  Only the running total may contain negative values.
 
-For the balance report without @samp{--dc}:
+For the balance report without @code{--dc}:
 
 @smallexample
                     $70  Assets:Cash
@@ -5518,7 +5518,7 @@ For the balance report without @samp{--dc}:
                       0
 @end smallexample
 
-@noindent And with @samp{--dc} it becomes this:
+@noindent And with @code{--dc} it becomes this:
 
 @smallexample
              $105            $35            $70  Assets:Cash
@@ -5619,8 +5619,8 @@ them.
 
 @item --group-by <EXPR>
  group transaction together in the register
-report.  EXPR can be anything, although most common would be
-@code{"payee"} or @code{"commodity"}.  The @code{tags()} function is
+report.  @code{EXPR} can be anything, although most common would be
+@code{payee} or @code{commodity}.  The @code{tags()} function is
 also useful here.
 
 @item --group-title-format
@@ -5643,7 +5643,7 @@ ledger reg Expenses --group-by "payee" --group-title-format "-------------------
 
 @item --head <INT>
 
-Print the first INT entries. Opposite of @code{--tail}.
+Print the first @code{INT} entries. Opposite of @code{--tail}.
 
 @item --inject
 Use @code{Expected} amounts in calculations.  In the case that you know
@@ -5656,14 +5656,14 @@ wrong value you can use metadata to put in the expected amount:
 @end smallexample
 
 Then using the command @code{ledger reg --inject=Expected Income} would
-treat the transaction as iff the ``Expected Value'' was actual.
+treat the transaction as if the ``Expected Value'' was actual.
 @item --invert
 
 Change the sign of all reported values.
 
 @item --limit <EXPR>
- Only transactions that satisfy the expression
-will be considered in the calculation.
+ Only transactions that satisfy the expression will be considered in the
+calculation.
 
 @item --lot-dates
 Report the date on which each commodity in a balance report was purchased.
@@ -5717,12 +5717,13 @@ Suppress the output of group titles
 Suppress printing the final total line in a balance report.
 
 @item --now
-Define the current date in case to you to do calculate in the past or future using @code{--current}
+Define the current date in case to you to do calculate in the past or
+future using @code{--current}
 
 @item --only
 
-This is a postings predicate that applies after certain
-transforms have been executed, such as periodic gathering.
+This is a postings predicate that applies after certain transforms have
+been executed, such as periodic gathering.
 
 @item --output <PATH>
 Redriect the output of ledger to the file defined in @file{PATH}.
@@ -5752,7 +5753,7 @@ Only works for account that have a single commoditiy.
 @item --period <PERIOD EXPRESSION>
 
 Define a period expression the sets the time period during which
-transactions are to be accounted.  For a register report only th
+transactions are to be accounted.  For a register report only the
 transactions that satisfy the period expression with be displayed.  For
 a balance report only those transactions will be accounted in the final
 balances.
@@ -5812,8 +5813,8 @@ interpreting.  Can be useful for minor cleanups, like just aligning
 amounts.
 
 @item --real
- Account using only real transactions ignoring virtual
-and automatic transactions.
+Account using only real transactions ignoring virtual and automatic
+transactions.
 
 
 @item --related-all
@@ -5865,7 +5866,7 @@ FIX THIS ENTRY
 
 @item --tail <INT>
 
-report only the last <INT> entries.  Only useful ona register report.
+report only the last @code{INT} entries.  Only useful ona register report.
 
 @item --total-data
 
@@ -5882,7 +5883,7 @@ Indicates how truncation should happen when the contents of columns
 exceed their width. Valid arguments are @code{leading}, @code{middle},
 and @code{trailing}. The default is smarter than any of these three, as
 it considers sub-names within the account name (that style is called
-``abbreviate''.
+``abbreviate'').
 
 @item --unbudgeted
 
@@ -5954,7 +5955,7 @@ goes to standard output.
 
 @item --init-file FILE 
 @item -i FILE
-causes FILE to be read by ledger before any other ledger file.  This
+causes @code{FILE} to be read by ledger before any other ledger file.  This
 file may not contain any postings, but it may contain option settings.
 To specify options in the init file, use the same syntax as the
 command-line, but put each option on it's own line.  Here's an example
@@ -5989,11 +5990,11 @@ displays only transactions occurring on or before the current date.
 
 @item --begin DATE
 @item -b DATE 
-constrains the report to transactions on or after
-@var{DATE}.  Only transactions after that date will be calculated, which
-means that the running total in the balance report will always start at
-zero with the first matching transaction.  (Note: This is different from
-using @option{--display} to constrain what is displayed).
+constrains the report to transactions on or after @var{DATE}.  Only
+transactions after that date will be calculated, which means that the
+running total in the balance report will always start at zero with the
+first matching transaction.  (Note: This is different from using
+@code{--display} to constrain what is displayed).
 
 @item --end DATE
 @item -e DATE
@@ -6002,12 +6003,12 @@ not considered.  The ending date is inclusive.
 
 @item --period STR
 @item -p STR 
-sets the reporting period to @var{STR}.  This will subtotal
-all matching transactions within each period separately, making it easy
-to see weekly, monthly, quarterly, etc., posting totals.  A period
-string can even specify the beginning and end of the report range, using
-simple terms like ``last June'' or ``next month''.  For more using
-period expressions, see @ref{Period Expressions}.
+sets the reporting period to @var{STR}.  This will subtotal all matching
+transactions within each period separately, making it easy to see
+weekly, monthly, quarterly, etc., posting totals.  A period string can
+even specify the beginning and end of the report range, using simple
+terms like ``last June'' or ``next month''.  For more using period
+expressions, see @ref{Period Expressions}.
 
 @item --period-sort EXPR
 sorts the postings within each reporting period using the value
@@ -6100,8 +6101,8 @@ sets the value expression used for the ``totals'' column in the
 @c  ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
 @c @end smallexample
 
-@c Where @samp{COMMAND} is any command verb (@pxref{Reporting Commands}), @samp{OPTIONS} can occur
-@c anywhere, and @samp{SEARCH-TERM} is one or more of the following:
+@c Where @code{COMMAND} is any command verb (@pxref{Reporting Commands}), @code{OPTIONS} can occur
+@c anywhere, and @code{SEARCH-TERM} is one or more of the following:
 
 @c @smallexample
 @c  word              search for any account containing 'word'
@@ -6149,7 +6150,7 @@ postings to be collapsed into a single, subtotaled transaction.
 
 @item --subtotal
 @item -s
- causes all transactions in a @command{register} report to be collapsed
+causes all transactions in a @command{register} report to be collapsed
 into a single, subtotaled transaction.
 
 @item --by-payee
@@ -6165,7 +6166,7 @@ includes even empty accounts in the @command{balance} report.
 @item -W
 reports posting totals by the week.  The week begins on whichever day of
 the week begins the month containing that posting.  To set a specific
-begin date, use a period string, such as @samp{weekly from DATE}.
+begin date, use a period string, such as @code{weekly from DATE}.
 @item --monthly
 @item -M
 reports posting totals by month;
@@ -6182,7 +6183,7 @@ to see if weekend spending is more than on weekdays.
 @item --sort EXPR
 @item -S EXPR
 sorts a report by comparing the values determined using the value
-expression @var{EXPR}.  For example, using @option{-S -UT} in the
+expression @var{EXPR}.  For example, using @code{-S -UT} in the
 balance report will sort account balances from greatest to least, using
 the absolute value of the total.  For more on how to use value
 expressions, see @ref{Value Expressions}.
@@ -6197,16 +6198,16 @@ causes the default @command{register} report to assume 132 columns
 instead of 80.
 
 @item --head
-causes only the first N transactions to be printed.  This is different
+causes only the first @code{N} transactions to be printed.  This is different
 from using the command-line utility @command{head}, which would limit to
-the first N postings.  @option{--tail} outputs only the last N
+the first N postings.  @code{--tail} outputs only the last @code{N}
 transactions.  Both options may be used simultaneously.  If a negative
 amount is given, it will invert the meaning of the flag (instead of the
 first five transactions being printed, for example, it would print all
 but the first five).
 
 @item --pager
-tells Ledger to pass its output to the given pager program---very useful
+tells Ledger to pass its output to the given pager program; very useful
 when the output is especially long.  This behavior can be made the
 default by setting the @env{LEDGER_PAGER} environment variable.
 
@@ -6224,7 +6225,7 @@ meaningful in the @command{register} and @command{prices} reports.
 shows account subtotals in the @command{balance} report as percentages
 of the parent account.
 
-@c @option{--totals} include running total information in the
+@c @code{--totals} include running total information in the
 @c @command{xml} report.
 
 @item --amount-data
@@ -6261,15 +6262,15 @@ ledger -p "last month" reg checking
 @end smallexample
 
 Which is more useful depends on what you're looking to know: the total
-amount for the reporting range (@option{-p}), or simply a display
-restricted to the reporting range (using @option{-d}).
+amount for the reporting range (@code{-p}), or simply a display
+restricted to the reporting range (using @code{-d}).
 
 @item --date-format STR
 @item -y STR
 changes the basic date format used by reports.  The default uses a date
-like 2004/08/01, which represents the default date format of
-@samp{%Y/%m/%d}.  To change the way dates are printed in general, the
-easiest way is to put @option{--date-format FORMAT} in the Ledger
+like @code{2004/08/01}, which represents the default date format of
+@code{%Y/%m/%d}.  To change the way dates are printed in general, the
+easiest way is to put @code{--date-format FORMAT} in the Ledger
 initialization file @file{~/.ledgerrc} (or the file referred to by
 @env{LEDGER_INIT}).
 
@@ -6398,8 +6399,8 @@ N $
 N h
 @end smallexample
 
-@noindent Note: Ledger NEVER write output to files.  You are responsible for
-updated the price-db file.  The best way is to have your price download
+@noindent Note: Ledger NEVER writes output to files.  You are responsible for
+updating the price-db file.  The best way is to have your price download
 script maintain this file.
 
 The format of the file can be changed by telling ledger to use the
@@ -6408,8 +6409,8 @@ The format of the file can be changed by telling ledger to use the
 @item --price-exp MINS
 @item -L MINS
 sets the expected freshness of price quotes, in minutes.  That is, if
-the last known quote for any commodity is older than this value---and if
-@code{--download} is being used---then the Internet will be consulted
+the last known quote for any commodity is older than this value, and if
+@code{--download} is being used, then the Internet will be consulted
 again for a newer price.  Otherwise, the old price is still considered
 to be fresh enough.
 
@@ -6425,7 +6426,7 @@ database, usually specified using the environment variable
 @end table
 There are several different ways that ledger can report the totals it
 displays.  The most flexible way to adjust them is by using value
-expressions, and the @option{-t} and @option{-T} options.  However,
+expressions, and the @code{-t} and @code{-T} options.  However,
 there are also several ``default'' reports, which will satisfy most
 users basic reporting needs:
 
@@ -6453,10 +6454,10 @@ commodity can mean different things to different people, depending on
 the accounts involved, the commodities, the nature of the transactions,
 etc.
 
-When you specify @samp{-V}, or @samp{-X COMM}, you are requesting that
+When you specify @code{-V}, or @code{-X COMM}, you are requesting that
 some or all of the commodities be valuated as of today (or whatever
-@samp{--now} is set to).  But what does such a valuation mean?  This
-meaning is governed by the presence of a @samp{VALUE} meta-data property,
+@code{--now} is set to).  But what does such a valuation mean?  This
+meaning is governed by the presence of a @code{VALUE} meta-data property,
 whose content is an expression used to compute that value.
 
 If no VALUE property is specified, each posting is assumed to have a
@@ -6467,9 +6468,9 @@ follows:
   = expr true
     ; VALUE:: market(amount, date, exchange)
 @end smallexample
-This definition emulates the present day behavior of @samp{-V} and @samp{-X} (in the
-case of @samp{-X}, the requested commodity is passed via the string 'exchange'
-above).
+This definition emulates the present day behavior of @code{-V} and
+@code{-X} (in the case of @code{-X}, the requested commodity is passed
+via the string 'exchange' above).
 
 @cindex Euro conversion
 One thing many people have wanted to do is to fixate the valuation of
@@ -6481,8 +6482,8 @@ old European currencies in terms of the Euro after a certain date:
     ; VALUE:: date < [Jun 2008] ? market(amount, date, exchange) : 1.44 EUR
 @end smallexample
 
-This says: If @samp{--now} is some old date, use market prices as they
-were at that time; but if @samp{--now} is past June 2008, use a fixed
+This says: If @code{--now} is some old date, use market prices as they
+were at that time; but if @code{--now} is past June 2008, use a fixed
 price for converting Deutsch Mark to Euro.
 
 Or how about never re-valuating commodities used in Expenses, since they
@@ -6495,7 +6496,7 @@ cannot have a different future value:
 
 This says the future valuation is the same as the valuation at the time
 of posting.  post.date equals the posting's date, while just 'date' is
-the value of @samp{--now} (defaults to today).
+the value of @code{--now} (defaults to today).
 
 Or how about valuating miles based on a reimbursement rate during a
 specific time period:
@@ -6507,7 +6508,7 @@ specific time period:
 @end smallexample
 
 In this case, miles driven in 2007 will always be valuated at $1.05
-each.  If you use @samp{-X EUR} to expressly request all amounts in
+each.  If you use @code{-X EUR} to expressly request all amounts in
 Euro, Ledger shall convert $1.05 to Euro by whatever means are
 appropriate for dollars.
 
@@ -6547,16 +6548,16 @@ another currency.  For example:
 Ledger presently has no way of handling such things as FIFO and LIFO.
 
 If you specify an unadorned commodity name, like AAPL, it will balance
-against itself.  If @samp{--lots} are not being displayed, then it will
+against itself.  If @code{--lots} are not being displayed, then it will
 appear to balance against any lot of AAPL.
 
 @cindex adorned commodity
 If you specify an adorned commodity, like AAPL @{$10.00@}, it will also
-balance against itself, and against any AAPL if @samp{--lots} is not
-specified.  But if you do specify @samp{--lot-prices}, for example, then
+balance against itself, and against any AAPL if @code{--lots} is not
+specified.  But if you do specify @code{--lot-prices}, for example, then
 it will balance against that specific price for AAPL.
 
-Normally when you use @samp{-X <commodity>} to request that amounts be reported in a
+Normally when you use @code{-X <commodity>} to request that amounts be reported in a
 specific commodity, Ledger uses these values:
 @itemize
 
@@ -6569,16 +6570,17 @@ specific commodity, Ledger uses these values:
    For the balance report, use the value of that commodity as of today.
 @end itemize
 
-You can now specify -H to ask that all valuations for any amount be done
+You can now specify @code{-H} to ask that all valuations for any amount be done
 relative to the date that amount was encountered.
 
-You can also now use -X (and -H) in conjunction with -B and -I, to see
-valuation reports of just your basis costs or lot prices.
+You can also now use @code{-X} (and @code{-H}) in conjunction with
+@code{-B} and @code{-I}, to see valuation reports of just your basis
+costs or lot prices.
 @node Environment Variables,  , Commodity Reporting, Detailed Options Description
 @subsection Environment variables
 
 Every option to ledger may be set using an environment variable.  If
-an option has a long name such @option{--this-option}, setting the
+an option has a long name such @code{--this-option}, setting the
 environment variable @env{LEDGER_THIS_OPTION} will have the same
 affect as specifying that option on the command-line.  Options on the
 command-line always take precedence over environment variable
@@ -6655,7 +6657,7 @@ last week
 
 The beginning and ending can be given at the same time, if it spans a
 single period.  In that case, just use @var{SPEC} by itself.  In that
-case, the period @samp{oct}, for example, will cover all the days in
+case, the period @code{oct}, for example, will cover all the days in
 October.  The possible forms are:
 
 @smallexample
@@ -6729,7 +6731,7 @@ ledger -p "this year" --monthly --average --subtotal balance ^expenses
 The reported totals are the current year's average for each account.
 
 Once these period transactions are defined, creating a budget report is as
-easy as adding @option{--budget} to the command-line.  For example, a
+easy as adding @code{--budget} to the command-line.  For example, a
 typical monthly expense report would be:
 
 @example
@@ -6744,8 +6746,8 @@ ledger --budget --monthly register ^expenses
 
 A budget report includes only those accounts that appear in the
 budget.  To see all expenses balanced against the budget, use
-@option{--add-budget}.  You can even see only the un-budgeted expenses
-using @option{--unbudgeted}:
+@code{--add-budget}.  You can even see only the un-budgeted expenses
+using @code{--unbudgeted}:
 
 @example
 ledger --unbudgeted --monthly register ^expenses
@@ -6780,15 +6782,15 @@ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @node Value Expressions, Format Strings, Budgeting and Forecasting, Top
 @chapter Value Expressions
 
-Ledger uses value expressions to make
-calculations for many different purposes:
+Ledger uses value expressions to make calculations for many different
+purposes:
 
 @enumerate
 @item
 The values displayed in reports
 @item
 For predicates (where truth is anything non-zero), to determine which
-postings are calculated (@option{-l}) or displayed (@option{-d}).
+postings are calculated (@code{-l}) or displayed (@code{-d}).
 @item
 For sorting criteria, to yield the sort key.
 @item
@@ -6822,8 +6824,8 @@ ledger -d "d>[this month]" register checking
 @end smallexample
 
 This advantage to this command's complexity is that it prints the
-running total in terms of all transactions in the register.  The following,
-simpler command is similar, but totals only the displayed
+running total in terms of all transactions in the register.  The
+following, simpler command is similar, but totals only the displayed
 postings:
 
 @smallexample
@@ -6844,20 +6846,20 @@ Below are the one letter variables available in any value expression.
 For the register and print commands, these variables relate to
 individual postings, and sometimes the account affected by a
 posting.  For the balance command, these variables relate to
-accounts---often with a subtle difference in meaning.  The use of each
+accounts, often with a subtle difference in meaning.  The use of each
 variable for both is specified.
 
 @table @code
 @item t
-This maps to whatever the user specified with @option{-t}.  In a
-register report, @option{-t} changes the value column; in a balance
-report, it has no meaning by default.  If @option{-t} was not
+This maps to whatever the user specified with @code{-t}.  In a
+register report, @code{-t} changes the value column; in a balance
+report, it has no meaning by default.  If @code{-t} was not
 specified, the current report style's value expression is used.
 
 @item T
-This maps to whatever the user specified with @option{-T}.  In a
-register report, @option{-T} changes the totals column; in a balance
-report, this is the value given for each account.  If @option{-T} was
+This maps to whatever the user specified with @code{-T}.  In a
+register report, @code{-T} changes the totals column; in a balance
+report, this is the value given for each account.  If @code{-T} was
 not specified, the current report style's value expression is used.
 
 @item m
@@ -6884,7 +6886,7 @@ The market value of a posting, or an account without its children.
 
 @item g
 The net gain (market value minus cost basis), for a posting or an
-account without its children.  It is the same as @samp{v-b}.
+account without its children.  It is the same as @code{v-b}.
 
 @item l
 The depth (``level'') of an account.  If an account has one parent,
@@ -6926,7 +6928,7 @@ all its children.
 @item G
 The total net gain (market value minus cost basis), for a series of
 postings, or an account and its children.  It is the same as
-@samp{V-B}.
+@code{V-B}.
 @end table
 
 @node Functions, Operators, Variables, Value Expressions
@@ -6945,12 +6947,12 @@ The absolute (unsigned) value of the argument.
 Strips the commodity from the argument.
 
 @item A
-The arithmetic mean of the argument; @samp{Ax} is the same as
-@samp{x/n}.
+The arithmetic mean of the argument; @code{Ax} is the same as
+@code{x/n}.
 
 @item P
-The present market value of the argument.  The syntax @samp{P(x,d)} is
-supported, which yields the market value at time @samp{d}.  If no date
+The present market value of the argument.  The syntax @code{P(x,d)} is
+supported, which yields the market value at time @code{d}.  If no date
 is given, then the current moment is used.
 @end table
 
@@ -6960,10 +6962,10 @@ is given, then the current moment is used.
 The binary and ternary operators, in order of precedence, are:
 
 @enumerate
-@item @samp{* /}
-@item @samp{+ -}
-@item @samp{! < > =}
-@item @samp{& | ?:}
+@item @code{* /}
+@item @code{+ -}
+@item @code{! < > =}
+@item @code{& | ?:}
 @end enumerate
 
 @menu
@@ -7045,322 +7047,14 @@ precedence order of operators.
 
 @item [DATE]
 Useful specifying a date in plain terms.  For example, you could say
-@samp{[2004/06/01]}.
+@code{[2004/06/01]}.
 @end table
 
-
-@node Format Strings, Ledger for Developers, Value Expressions, Top
-@chapter Format Strings
-
 @menu
-* Basics::                      
-* Format Expressions::          
-* --balance-format::            
-* New formatting codes::        
-* Date and Time Format Codes::  
-@end menu
-
-@node Basics, Format Expressions, Format Strings, Format Strings
-@section Format String Basics
-Format strings may be used to change the output format of reports.
-They are specified by passing a formatting string to the
-@option{--format} (@option{-F}) option.  Within that string,
-constructs are allowed which make it possible to display the various
-parts of an account or posting in custom ways.
-
-Within a format string, a substitution is specified using a percent
-character (@samp{%}).  The basic format of all substitutions is:
-
-@smallexample
-%[-][MIN WIDTH][.MAX WIDTH](VALEXPR)
-@end smallexample
-
-If the optional minus sign (@samp{-}) follows the percent character,
-whatever is substituted will be left justified.  The default is right
-justified.  If a minimum width is given next, the substituted text
-will be at least that wide, perhaps wider.  If a period and a maximum
-width is given, the substituted text will never be wider than this,
-and will be truncated to fit.  Here are some examples:
-
-@smallexample
-%-P     a transaction's payee, left justified
-%20P    The same, right justified, at least 20 chars wide
-%.20P   The same, no more than 20 chars wide
-%-.20P  Left justified, maximum twenty chars wide
-@end smallexample
-
-The expression following the format constraints can be a single
-letter, or an expression enclosed in parentheses or brackets. 
-
-@node Format Expressions, --balance-format, Basics, Format Strings
-@section Format Expressions
-
- The
-allowable expressions are:
-
-@table @code
-@item %
-Inserts a percent sign.
-
-@item t
-Inserts the results of the value expression specified by @option{-t}.
-If @option{-t} was not specified, the current report style's value
-expression is used.
-
-@item T
-Inserts the results of the value expression specified by @option{-T}.
-If @option{-T} was not specified, the current report style's value
-expression is used.
-
-@item |
-Inserts a single space.  This is useful if a width is specified, for
-inserting a certain number of spaces.
-
-@item _
-Inserts a space for each level of an account's depth.  That is, if an
-account has two parents, this construct will insert two spaces.  If a
-minimum width is specified, that much space is inserted for each level
-of depth.  Thus @samp{%5_}, for an account with four parents, will
-insert twenty spaces.
-
-@item (EXPR)
-Inserts the amount resulting from the value expression given in
-parentheses.  To insert five times the total value of an account, for
-example, one could say @samp{%12(5*O)}.  Note: It's important to put
-the five first in that expression, so that the commodity doesn't get
-stripped from the total.
-
-@item [DATEFMT]
-Inserts the result of formatting a posting's date with a date
-format string, exactly like those supported by @code{strftime}.  For
-example: @samp{%[%Y/%m/%d %H:%M:%S]}.
-
-@item S
-Insert the pathname of the file from which the transaction's data was read.
-
-@item B
-Inserts the beginning character position of that transaction within the file.
-
-@item b
-Inserts the beginning line of that transaction within the file.
-
-@item E
-Inserts the ending character position of that transaction within the file.
-
-@item e
-Inserts the ending line of that transaction within the file.
-
-@item D
-By default, this is the same as @samp{%[%Y/%m%/d]}.  The date format
-used can be changed at any time with the @option{-y} flag, however.
-Using @samp{%D} gives the user more control over the way dates are
-output.
-
-@item d
-This is the same as the @samp{%D} option, unless the transaction has an
-effective date, in which case it prints
-@samp{[ACTUAL_DATE=EFFECTIVE_DATE]}.
-
-@item X
-If a posting has been cleared, this inserts @samp{*} followed by a
-space; otherwise nothing is inserted.
-
-@item Y
-This is the same as @samp{%X}, except that it only displays a state
-character if all of the member postings have the same state.
-
-@item C
-Inserts the checking number for a transaction, in parentheses, followed by
-a space; if none was specified, nothing is inserted.
-
-@item P
-Inserts the payee related to a posting.
-
-@item a
-Inserts the optimal short name for an account.  This is normally used
-in balance reports.  It prints a parent account's name if that name
-has not been printed yet, otherwise it just prints the account's name.
-
-@item A
-Inserts the full name of an account.
-
-@item W
-This is the same as @samp{%A}, except that it first displays the
-posting's state @emph{if the transaction's posting states are not
-all the same}, followed by the full account name.  This is offered as
-a printing optimization, so that combined with @samp{%Y}, only the
-minimum amount of state detail is printed.
-
-@item o
-Inserts the ``optimized'' form of a posting's amount.  This is
-used by the print report.  In some cases, this inserts nothing; in
-others, it inserts the posting amount and its cost.  It's use is
-not recommended unless you are modifying the print report.
-
-@item n
-Inserts the note associated with a posting, preceded by two spaces
-and a semi-colon, if it exists.  Thus, no none becomes an empty
-string, while the note @samp{foo} is substituted as @samp{ ; foo}.
-
-@item N
-Inserts the note associated with a posting, if one exists.
-
-@item /
-The @samp{%/} construct is special.  It separates a format string
-between what is printed for the first posting of a transaction, and
-what is printed for all subsequent postings.  If not used, the
-same format string is used for all postings.
-@end table
-
-@node --balance-format, New formatting codes, Format Expressions, Format Strings
-@section --balance-format
-
-As an example of how flexible the --format strings can be, the default balance format looks like this:
-
-@smallexample
-         "%(justify(scrub(display_total), 20, -1, true, color))"
-         "  %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-         "%$1\n%/"
-         "--------------------\n"
-@end smallexample
-
-@node New formatting codes, Date and Time Format Codes, --balance-format, Format Strings
-@section New Formatting Codes
-
-@menu
-* Field Widths::                
-* Colors::                      
-* Quantities and Calculations::  
-* Dates::                       
-* Text Formatting::             
-* Data File Parsing Information::  
 * Misc::                        
 @end menu
 
-@node Field Widths, Colors, New formatting codes, New formatting codes
-@subsection Field Widths
-@multitable @columnfractions .3 .2 .5
-@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
-@item @code{date_width}
-@item @code{payee_width}
-@item @code{account_width}
-@item @code{amount_width}
-@item @code{total_width}
-@end multitable
-
-@node Colors, Quantities and Calculations, Field Widths, New formatting codes
-@subsection Colors
-
-The character based formatting ledger can do is limited to the ANSI terminal character colors and font highlight in a normal TTY session.  
-@multitable @columnfractions .3 .3 .3
-@item @code{red} @tab @code{magenta} @tab @code{bold}
-@item @code{green } @tab @code{cyan} @tab @code{underline}
-@item @code{yellow } @tab @code{white} @tab @code{blink}
-@item @code{blue } 
-@end multitable
-
-
-
-@node Quantities and Calculations, Dates, Colors, New formatting codes
-@subsection Quantities and Calculations
-
-
-
-@multitable @columnfractions .3 .2 .5
-@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
-@item @code{amount_expr } @tab @code{} @tab 
-@item @code{abs} @tab @code{U} @tab 
-@item @code{commodity } @tab @code{} @tab 
-@item @code{display_amount } @tab @code{t} @tab
-@item @code{display_total } @tab @code{T} @tab 
-@item @code{floor } @tab @code{} @tab 
-@item @code{get_at } @tab @code{} @tab 
-@item @code{is_seq } @tab @code{} @tab 
-@item @code{market } @tab @code{P} @tab 
-@item @code{percent } @tab @code{} @tab 
-@item @code{price } @tab @code{} @tab 
-@item @code{quantity } @tab @code{} @tab 
-@item @code{rounded } @tab @code{} @tab 
-@item @code{truncated } @tab @code{} @tab 
-@item @code{total_expr } @tab @code{} @tab 
-@item @code{top_amount } @tab @code{} @tab 
-@item @code{to_boolean } @tab @code{} @tab 
-@item @code{to_int } @tab @code{} @tab 
-@item @code{to_amount } @tab @code{} @tab 
-@item @code{to_balance } @tab @code{} @tab 
-@item @code{unrounded } @tab @code{} @tab 
-@end multitable
-      
-@node Dates, Text Formatting, Quantities and Calculations, New formatting codes
-@subsection Dates
-
-@multitable @columnfractions .3 .2 .5
-@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
-@item @code{date } @tab @code{} @tab 
-@item @code{format_date } @tab @code{} @tab 
-@item @code{now } @tab @code{} @tab   --> d m
-@item @code{today } @tab @code{} @tab 
-@item @code{to_datetime } @tab @code{} @tab 
-@item @code{to_date } @tab @code{} @tab 
-@item @code{value_date } @tab @code{} @tab 
-@end multitable
-
-@node Text Formatting, Data File Parsing Information, Dates, New formatting codes
-@subsection Text Formatting
-@subsubsection Summary
-@multitable @columnfractions .6 .4
-@item @strong{Function}  @tab @strong{Description}
-@item @code{ansify_if(str,color) } @tab Colorize the string
-@item @code{justify(str, fwidth, lwidth, right, colorize) }  @tab Right or left justify the string.
-@item @code{join(str) } @tab Remove line feeds from the input string.  Mainly used internally for org-mode output 
-@item @code{quoted(str) } @tab Returns @code{"<str>"}. 
-@item @code{strip } @tab @code{Removes additional annotations from values.}
-@item @code{scrub } @tab @code{S} 
-@item @code{should_bold } @tab @code{} 
-@end multitable
-@subsubsection Detailed Descriptions
-@table @code
-@item ansify_if(value, color)
-Surrounds the string representing value with ANSI codes to give it
-@code{color} on an TTY display.  Has no effect if directed to a file.
-@item justify(value, first_width, latter_width, right_justify, colorize)  
-Right or left justify the string representing @code{value}.  The width
-of the field in the first line is given by @code{first_width}.  For
-subsequent lines the width is given by @code{latterwidth}.  If
-@code{latter_width=-1}, then @code{first_width} is use for all lines.
-If @code{right_justify=true} then the field is right justify within the
-width of the field. If it is @code{false}, then the field is left
-justified and padded to the full width of the field.  If @code{colorize}
-is true then ledger will honor color settings.
-@item join(str)
-Replaces line feeds in str with @code{\n}.
-@item quoted(str)
-Return str surrounded by double quotes, @code{"<str>"}.
-@item strip(value)
-Values can have numerous annotations, such as effective dates and lot
-prices.  @code{strip} removes these annotations.
-@end table
-
-@node Data File Parsing Information, Misc, Text Formatting, New formatting codes
-@subsection Data File Parsing Information
-
-The format strings in the table below provide locational metadata
-regarding the coordinates of entries in the source data file(s) that
-generated the posting.
-
-@subsubsection Summary
-@multitable @columnfractions .3 .2 .5
-@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
-@item @code{filename} @tab S @tab name of ledger data file from whence posting came
-@item @code{beg_pos} @tab B @tab character position in @code{filename} where entry for posting begins
-@item @code{end_pos} @tab E @tab character position in @code{filename} where entry for posting ends
-@item @code{beg_line} @tab b @tab line number in @code{filename} where entry for posting begins
-@item @code{end_line} @tab e @tab line number in @code{filename} where posting's entry for posting ends
-@end multitable
-
-
-@node Misc,  , Data File Parsing Information, New formatting codes
+@node Misc,  , Complex Expressions, Complex Expressions
 @subsection Miscellaneous
 @multitable @columnfractions .3 .2 .5
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
@@ -7409,84 +7103,433 @@ generated the posting.
 @item @code{value_date } @tab @code{} @tab 
 @end multitable
 
-@node Date and Time Format Codes,  , New formatting codes, Format Strings
-@section Date and Time Format Codes
+@node Format Strings, Ledger for Developers, Value Expressions, Top
+@chapter Format Strings
+
+@menu
+* Basics::                      
+* Format String Structure::     
+* Format Expressions::          
+* --balance-format::            
+* Formatting codes::            
+@end menu
+
+@node Basics, Format String Structure, Format Strings, Format Strings
+@section Format String Basics
+Format strings may be used to change the output format of reports.  They
+are specified by passing a formatting string to the @code{--format}
+(@code{-F}) option.  Within that string, constructs are allowed which
+make it possible to display the various parts of an account or posting
+in custom ways.
+
+There are several additional flags that allow you to define formats for
+specific reports.  These are useful to define in your configuration file
+and will allow you to run ledger reports from the command line without
+having to enter a new format for each command.
+
+@itemize
+@item @code{--balance-report}
+@item @code{--cleared-report}
+@item @code{--register-report}
+@item @code{--csv-report}
+@item @code{--plot-amount-report}
+@item @code{--plot-total-report}
+@item @code{--pricedb-report}
+@item @code{--prices-report}
+@item @code{--wide-register-report}
+@end itemize
+
+@node Format String Structure, Format Expressions, Basics, Format Strings
+@section Format String Structure
+Within a format string, a substitution is specified using a percent
+character (@code{%}).  The basic format of all substitutions is:
+
+@smallexample
+%[-][MIN WIDTH][.MAX WIDTH](VALEXPR)
+@end smallexample
+
+If the optional minus sign (@code{-}) follows the percent character,
+whatever is substituted will be left justified.  The default is right
+justified.  If a minimum width is given next, the substituted text will
+be at least that wide, perhaps wider.  If a period and a maximum width
+is given, the substituted text will never be wider than this, and will
+be truncated to fit.  Here are some examples:
+
+@table @code
+@item %-20P   
+a transaction's payee, left justified and padded to 20 characters wide.
+@item %20P    
+The same, right justified, at least 20 chars wide
+@item %.20P   
+The same, no more than 20 chars wide
+@end table
+
+The expression following the format constraints can be a single letter,
+or an expression enclosed in parentheses or brackets.
+
+@node Format Expressions, --balance-format, Format String Structure, Format Strings
+@section Format Expressions
+
+ The allowable expressions are:
+
+@table @code
+@item %
+Inserts a percent sign.
+
+@item t
+Inserts the results of the value expression specified by @code{-t}.
+If @code{-t} was not specified, the current report style's value
+expression is used.
+
+@item T
+Inserts the results of the value expression specified by @code{-T}.
+If @code{-T} was not specified, the current report style's value
+expression is used.
+
+@item (EXPR)
+Inserts the amount resulting from the value expression given in
+parentheses.  To insert five times the total value of an account, for
+example, one could say @code{%12(5*O)}.  Note: It's important to put the
+five first in that expression, so that the commodity doesn't get
+stripped from the total.
+
+@item [DATEFMT]
+Inserts the result of formatting a posting's date with a date
+format string, exactly like those supported by @code{strftime}.  For
+example: @code{%[%Y/%m/%d %H:%M:%S]}.
+
+@item S
+Insert the pathname of the file from which the transaction's data was
+read.  Only sensible in a register report.
+
+@item B
+Inserts the beginning character position of that transaction within the
+file.
+
+@item b
+Inserts the beginning line of that transaction within the file.
+
+@item E
+Inserts the ending character position of that transaction within the
+file.
+
+@item e
+Inserts the ending line of that transaction within the file.
+
+@c @item D
+@c By default, this is the same as @code{%[%Y/%m%/d]}.  The date format
+@c used can be changed at any time with the @code{-y} flag, however.  Using
+@c @code{%D} gives the user more control over the way dates are output.
+
+@item d
+Returns the data accoridng to the default format.  If the transaction
+has an effective date, it prints @code{[ACTUAL_DATE=EFFECTIVE_DATE]}.
+
+@item X
+If a posting has been cleared, this returns a 1, otherwise returns 0.
+
+@item Y
+This is the same as @code{%X}, except that it only displays a state
+character if all of the member postings have the same state.
+
+@item C
+Inserts the transaction type.  This is the value specified between
+parenthesis on the first line of the transaction.
+
+@item P
+Inserts the payee related to a posting.
+
+@c @item a
+@c Inserts the optimal short name for an account.  This is normally used in
+@c balance reports.  It prints a parent account's name if that name has not
+@c been printed yet, otherwise it just prints the account's name.
+
+@item A
+Inserts the full name of an account.
+
+@c @item W
+@c This is the same as @code{%A}, except that it first displays the
+@c posting's state @emph{if the transaction's posting states are not all
+@c the same}, followed by the full account name.  This is offered as a
+@c printing optimization, so that combined with @code{%Y}, only the minimum
+@c amount of state detail is printed.
+
+@c @item o
+@c Inserts the ``optimized'' form of a posting's amount.  This is used by
+@c the print report.  In some cases, this inserts nothing; in others, it
+@c inserts the posting amount and its cost.  It's use is not recommended
+@c unless you are modifying the print report.
+
+
+@item N
+Inserts the note associated with a posting, if one exists.
+
+@item /
+The @code{%/} construct is special.  It separates a format string
+between what is printed for the first posting of a transaction, and
+what is printed for all subsequent postings.  If not used, the
+same format string is used for all postings.
+@end table
+
+@node --balance-format, Formatting codes, Format Expressions, Format Strings
+@section --balance-format
+
+As an example of how flexible the @code{--format} strings can be, the default
+balance format looks like this (the various functions are descirbed later):
+
+@smallexample
+         "%(justify(scrub(display_total), 20, -1, true, color))"
+         "  %(!options.flat ? depth_spacer : \"\")"
+         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+         "%$1\n%/"
+         "--------------------\n"
+@end smallexample
+
+@node Formatting codes,  , --balance-format, Format Strings
+@section Formatting Functions and Codes
+
+@menu
+* Field Widths::                
+* Colors::                      
+* Quantities and Calculations::  
+* Dates::                       
+* Date and Time Format Codes::  
+* Text Formatting::             
+* Data File Parsing Information::  
+@end menu
+
+@node Field Widths, Colors, Formatting codes, Formatting codes
+@subsection Field Widths
+The following codes return the width allocated for the specific fields.
+The defaults can be changed using the corresponding command line
+options:
+@itemize
+@item @code{date_width}
+@item @code{payee_width}
+@item @code{account_width}
+@item @code{amount_width}
+@item @code{total_width}
+@end itemize
+
+@node Colors, Quantities and Calculations, Field Widths, Formatting codes
+@subsection Colors
+
+The character based formatting ledger can do is limited to the ANSI
+terminal character colors and font highlights in a normal TTY session.
+@multitable @columnfractions .3 .3 .3
+@item @code{red} @tab @code{magenta} @tab @code{bold}
+@item @code{green } @tab @code{cyan} @tab @code{underline}
+@item @code{yellow } @tab @code{white} @tab @code{blink}
+@item @code{blue } 
+@end multitable
+
+
+
+@node Quantities and Calculations, Dates, Colors, Formatting codes
+@subsection Quantities and Calculations
+
+
+
+@table @code
+@item amount_expr
+@item abs
+@item commodity
+@item display_amount
+@item display_total
+@item floor
+@item get_at
+@item is_seq
+@item market
+@item percent
+@item price
+@item quantity
+@item rounded
+@item truncated
+@item total_expr
+@item top_amount
+@item to_boolean
+@item to_int
+@item to_amount
+@item to_balance
+@item unrounded
+@end table
+      
+@node Dates, Date and Time Format Codes, Quantities and Calculations, Formatting codes
+@subsection Date Functions
+The following functions allow you to manipulate and format dates.
+@table @code
+@item date
+Returns the date of the current transaction
+@item format_date(date, "FORMAT STRING")
+formats the date using the given format string.
+@item now
+Returns the current date and time.  If the @code{--now} option is
+defined it will return that value.
+@item today
+Returns the current date. If the @code{--now} option is
+defined it will return that value.
+@item to_datetime
+convert a string to a date-time value
+@item to_date
+convert a string to date value
+@item value_date
+@end table
+
+@menu
+* Date and Time Format Codes::  
+@end menu
+
+@node Date and Time Format Codes, Text Formatting, Dates, Formatting codes
+@subsection Date and Time Format Codes
 Date and time format are specified as strings of single letter codes
 preceded by percent signs.  Any separator, or no separator can be
 specified.
-@subsection Dates
+@subsubsection Days
 Dates are formed from a combination of day, month and year codes, in
 whatever order you prefer:
 
-@option{%Y} is keyword for four digit year
+@table @code
+@item %Y 
+Four digit year
 
-@option{%y} is keyword for two digit year
+@item %y
+Two digit year
 
-@option{%m} is keyword for two digit month
+@item %m
+Two digit month
 
-@option{%d} is keyword for two digit date
+@item %d
+Two digit date
+@end table
 
-@noindent So @code{"%Y%m%d"}  yields @code{20111214} which provides a date that is simple to sort.
+@noindent So @code{"%Y%m%d"}  yields @code{20111214} which provides a date that is simple to sort on.
 
-@subsection Weekdays
+@subsubsection Weekdays
 
 You can have additional weekday information in your date with @code{%A}
 as
 
-@option{%m-%d-%Y %A}   yields  @code{02-10-2010 Wednesday}
+@table @code
+@item %m-%d-%Y %A
+yields  @code{02-10-2010 Wednesday}
 
-@option{%A %m-%d-%Y}    yields  @code{Wednesday 02-10-2010}
-
+@item %A %m-%d-%Y
+yields  @code{Wednesday 02-10-2010}
+@end table
 @noindent These are options you can select for weekday
 
-@option{%a} weekday, abbreviated Wed
-
-@option{%A} weekday, full Wednesday
-
-@option{%d} day of the month (dd), zero padded 10
-
-@option{%e} day of the month (dd) 10
-
-@option{%j} day of year, zero padded 000-366
-
-@option{%u} day of week starting with Monday (1), i.e. @code{mtwtfss} 3
-
-@option{%w} day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
-
-@subsection Month
+@table @code
+@item %a
+weekday, abbreviated Wed
+@item %A
+weekday, full Wednesday
+@item %d
+day of the month (dd), zero padded 10
+@item %e
+day of the month (dd) 10
+@item %j
+day of year, zero padded 000-366
+@item %u
+day of week starting with Monday (1), i.e. @code{mtwtfss} 3
+@item %w
+day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
+@end table
+@subsubsection Month
 
 You can have additional month information in your date with @code{%B} as
 
+@table @code
+@item %m-%d-%Y %B
+yields  @code{ 02-10-2010 Februrary}
 
-@option{%m-%d-%Y %B}   yields  @code{ 02-10-2010 Februrary}
-
-@option{%B %m-%d-%Y}   yields  @code{February 02-10-2010}
-
+@item %B %m-%d-%Y
+yields  @code{February 02-10-2010}
+@end table
 @noindent These are options you can select for month
+@table @code
+@item %m
+@code{mm} month as two digits
 
-@option{%m} @code{mm} month as two digits
+@item %b
+Locale’s abbreviated month, for example @code{02} might be abbreviated as @code{Feb}
 
-@option{%b} @code{Mon}, locale’s abbreviated Feb
+@item %B
+Locale’s full month, variable length February
+@end table
 
-@option{%B} locale’s full month, variable length February
-
-
-@subsection Miscellaneous Date Codes
+@subsubsection Miscellaneous Date Codes
 Additional date format parameters which can be used :
 
-@option{%U} week number Sunday as first day of week 01–53
+@table @code
+@item %U
+week number Sunday as first day of week 01–53
+@item %W
+week number Monday as first day of week 01–53
+@item %V
+week of the year 01–53
+@item %C
+@code{cc} century 00–99
+@item %D
+yields  @code{mm/dd/yy 02/10/10}
+@item %x
+locale’s date representation @code{02/10/2010} for the U.S.
+@item %F
+yields  @code{%Y-%m-%d 2010-02-10}
+@end table
+@menu
+* Text Formatting::             
+* Data File Parsing Information::  
+* Misc::                        
+@end menu
 
-@option{%W} week number Monday as first day of week 01–53
+@node Text Formatting, Data File Parsing Information, Date and Time Format Codes, Formatting codes
+@subsection Text Formatting
+The following format functions allow you limited formatting of text:
+@table @code
+@item ansify_if(value, color)
+Surrounds the string representing value with ANSI codes to give it
+@code{color} on an TTY display.  Has no effect if directed to a file.
+@item justify(value, first_width, latter_width, right_justify, colorize)  
+Right or left justify the string representing @code{value}.  The width
+of the field in the first line is given by @code{first_width}.  For
+subsequent lines the width is given by @code{latterwidth}.  If
+@code{latter_width=-1}, then @code{first_width} is use for all lines.
+If @code{right_justify=true} then the field is right justify within the
+width of the field. If it is @code{false}, then the field is left
+justified and padded to the full width of the field.  If @code{colorize}
+is true then ledger will honor color settings.
+@item join(STR)
+Replaces line feeds in @code{STR} with @code{\n}.
+@item quoted(STR)
+Return @code{STR} surrounded by double quotes, @code{"STR"}.
+@item strip(value)
+Values can have numerous annotations, such as effective dates and lot
+prices.  @code{strip} removes these annotations.
+@end table
 
-@option{%V} week of the year 01–53
+@node Data File Parsing Information,  , Text Formatting, Formatting codes
+@subsection Data File Parsing Information
 
-@option{%C} @code{cc} century 00–99
+The following format strings provide locational metadata
+regarding the coordinates of entries in the source data file(s) that
+generated the posting.
 
-@option{%D} yields  @code{mm/dd/yy 02/10/10}
+@table @code
+@item filename 
+name of ledger data file from whence posting came, abbreviated @code{S}
+@item beg_pos 
+character position in @code{filename} where entry for posting begins, abbreviated @code{B}
+@item end_pos  
+character position in @code{filename} where entry for posting ends, abbreviated @code{E}
+@item beg_line  
+line number in @code{filename} where entry for posting begins, abbreviated @code{b}
+@item end_line 
+line number in @code{filename} where posting's entry for posting ends, abbreviated @code{e}
+@end table
 
-@option{%x} locale’s date representation @code{02/10/2010} for the U.S.
 
-@option{%F} yields  @code{%Y-%m-%d 2010-02-10}
+
+
 
 
 @node Ledger for Developers, Extending with Python, Format Strings, Top
@@ -7547,7 +7590,7 @@ Those tiers are:
   strings, etc.  If you try to apply an operation between two values that
   makes no sense (like dividing an amount by a balance), an error occurs at
   runtime, rather than at compile-time (as would happen if you actually tried
-  to divide an amount_t by a balance_t).
+  to divide an @code{amount_t} by a @code{balance_t}).
 
   This is the core data type for the value expression language.
 
@@ -7566,9 +7609,9 @@ Those tiers are:
 @item Query expressions
 
   Expressions can be onerous to type at the command-line, so there's a
-  shorthand for reporting called "query expressions".  These add no
+  shorthand for reporting called ``query expressions''.  These add no
   functionality of there own, but are purely translated from the input string
-  (cash) down to the corresponding value expression (account =~ /cash/).
+  (cash) down to the corresponding value expression @code{(account =~ /cash/)}.
   This is a convenience layer.
 
 @item Format strings
@@ -7576,7 +7619,7 @@ Those tiers are:
   Format strings let you interpolate value expressions into string, with the
   requirement that any interpolated value have a string representation.
   Really all this does is calculate the value expression in the current
-  report context, call the resulting value's "to_string()" method, and stuffs
+  report context, call the resulting value's @code{to_string()} method, and stuffs
   the result into the output string.  It also provides printf-like behavior,
   such as min/max width, right/left justification, etc.
 
@@ -7609,19 +7652,19 @@ Those tiers are:
 @item The Journal object
 
   Finally, all transactions with their postings, and all accounts, are owned
-  by a journal_t object.  This is the go-to object for querying ad reporting
+  by a @code{journal_t} object.  This is the go-to object for querying ad reporting
   on your data.
 
 @item Textual journal parser
 
   There is a textual parser, wholly contained in textual.cc, which knows how
-  to parse text into journal objects, which then get "finalized" and added to
+  to parse text into journal objects, which then get ``finalized'' and added to
   the journal.  Finalization is the step that enforces the double-entry
   guarantee.
 
 @item Iterators
 
-  Every journal object is "iterable", and these iterators are defined in
+  Every journal object is ``iterable'', and these iterators are defined in
   iterators.h and iterators.cc.  This iteration logic is kept out of the
   basic journal objects themselves for the sake of modularity.
 
@@ -7629,12 +7672,12 @@ Those tiers are:
 
   Another abstraction isolated to its own layer, this class encapsulating the
   comparison of journal objects, based on whatever value expression the user
-  passed to --sort.
+  passed to @code{--sort}.
 
 @item Temporaries
 
   Many reports bring pseudo-journal objects into existence, like postings
-  which report totals in a "<Total>" account.  These objects are created and
+  which report totals in a @code{<Total>} account.  These objects are created and
   managed by a temporaries_t object, which gets used in many places by the
   reporting filters.
 
@@ -7666,7 +7709,7 @@ Those tiers are:
   iterator depends on the type of report.
 
   This iterator is then walked, and every object yielded from the iterator is
-  passed to an "item handler", whose type is directly related to the type of
+  passed to an ``item handler'', whose type is directly related to the type of
   the iterator.
 
   There are many, many item handlers, which can be chained together.  Each
@@ -7675,22 +7718,22 @@ Those tiers are:
   filters which compute the running totals; that queue and sort all the input
   items before playing them back out in a new order; that filter out items
   which fail to match a predicate, etc.  Almost every reporting feature in
-  Ledger is related to one or more filters.  Looking at filters.h, I see over
+  Ledger is related to one or more filters.  Looking at @code{filters.h}, I see over
   25 of them defined currently.
 
 @item The filter chain
 
   How filters get wired up, and in what order, is a complex process based on
   all the various options specified by the user.  This is the job of the
-  chain logic, found entirely in chain.cc.  It took a really long time to get
+  chain logic, found entirely in @code{chain.cc}.  It took a really long time to get
   this logic exactly write, which is why I haven't exposed this layer to the
   Python bridge yet.
 
 @item Output modules
 
   Although filters are great and all, in the end you want to see stuff.  This
-  is the job of special "leaf" filters call output modules.  They are
-  implemented just like a regular filter, but they don't have a "next" filter
+  is the job of special ``leaf'' filters call output modules.  They are
+  implemented just like a regular filter, but they don't have a ``next'' filter
   to pass the time on down to.  Instead, they are the end of the line and
   must do something with the item that results in the user seeing something
   on their screen or in a file.
@@ -7714,7 +7757,7 @@ Those tiers are:
 
   This creates the global scope object, performs error reporting, and handles
   command-line options which must precede even the creation of the global
-  scope, such as --debug.
+  scope, such as @code{--debug}.
 @end itemize
 
 And that's Ledger in a nutshell.  All the rest are details, such as which
@@ -7755,7 +7798,7 @@ double-entry accounting: the sum of every transaction must balance to
 zero, or it is in error.  Whenever Ledger encounters a @dfn{null
 posting} in a transaction, it uses it to balance the remainder.
 
-It is also typical---though not enforced---to think of the first
+It is also typical, though not enforced, to think of the first
 posting as the destination, and the final as the source.  Thus, the
 amount of the first posting is typically positive.  Consider:
 
@@ -7779,7 +7822,7 @@ amount of the first posting is typically positive.  Consider:
 @node Comments and meta-data, Specifying Amounts, Journal File Format, Journal File Format
 @subsection Comments and meta-data
 
-Comments are generally started using a ';'.  However, in order to
+Comments are generally started using a @code{;}.  However, in order to
 increase compatibility with other text manipulation programs and methods
 three additional comment characters are valid if used at the beginning
 of a line: @code{#}, @code{|}, and @code{*}.
@@ -7822,13 +7865,13 @@ now, a word must be said about how Ledger stores numbers.
 Every number parsed by Ledger is stored internally as an
 infinite-precision rational value.  Floating-point math is never used,
 as it cannot be trusted to maintain precision of values.  So, in the
-case of @samp{1000.00} above, the internal value is @samp{100000/100}.
+case of @code{1000.00} above, the internal value is @code{100000/100}.
 
 While rational numbers are great at not losing precision, the question
-arises: How should they be displayed?  A number like @samp{100000/100}
+arises: How should they be displayed?  A number like @code{100000/100}
 is no problem, since it represents a clean decimal fraction.  But what
-about when the number @samp{1/1} is divided by three?  How should one
-print @samp{1/3}, an infinitely repeating decimal?
+about when the number @code{1/1} is divided by three?  How should one
+print @code{1/3}, an infinitely repeating decimal?
 
 Ledger gets around this problem by rendering rationals into decimal at
 the last possible moment, and only for display.  As such, some
@@ -7839,11 +7882,11 @@ rarely, but even then it does not reflect adjustment of the
 @emph{internal amount}, only the displayed amount.
 
 What has still not been answered is how Ledger rounds values.  Should
-@samp{1/3} be printed as @samp{0.33} or @samp{0.33333}?  For
+@code{1/3} be printed as @code{0.33} or @code{0.33333}?  For
 commoditized amounts, the number of decimal places is decided by
 observing how each commodity is used; but in the case of integer
 amounts, an arbitrary factor must be chosen.  Initially, this factor
-is six.  Thus, @samp{1/3} is printed back as @samp{0.333333}.
+is six.  Thus, @code{1/3} is printed back as @code{0.333333}.
 Further, this rounding factor becomes associated with each particular
 value, and is carried through mathematical operations.  For example,
 if that particular number were multiplied by itself, the decimal
@@ -7866,10 +7909,10 @@ characters are allowed in a commodity name, except for the following:
 @itemize @bullet
 @item Any kind of white-space
 @item Numerical digits
-@item Punctuation: @samp{.,;:?!}
-@item Mathematical and logical operators: @samp{-+*/^&|=}
-@item Bracketing characters: @samp{<>[]()}@{@}
-@item The at symbol: @samp{@@}
+@item Punctuation: @code{.,;:?!}
+@item Mathematical and logical operators: @code{-+*/^&|=}
+@item Bracketing characters: @code{<>[]()}@{@}
+@item The at symbol: @code{@@}
 @end itemize
 
 And yet, any of these may appear in a commodity name if it is
@@ -7885,9 +7928,9 @@ part is the commodity.
 
 Another feature of commoditized amounts is that they are reported back
 in the same form as parsed.  If you specify dollar amounts using
-@samp{$100}, they will print the same; likewise with @samp{100 $} or
-@samp{$100.000}.  You may even use decimal commas, such as
-@samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.
+@code{$100}, they will print the same; likewise with @code{100 $} or
+@code{$100.000}.  You may even use decimal commas, such as
+@code{$100,00}, or thousand-marks, as in @code{$10,000.00}.
 
 These display characteristics become associated with the commodity, with
 the result being that all amounts of the same commodity are reported
@@ -7951,7 +7994,7 @@ postings are involved:
     Assets:Checking
 @end smallexample
 
-Here the implied cost is @samp{$57.00}, which is entered into the null
+Here the implied cost is @code{$57.00}, which is entered into the null
 posting automatically so that the transaction balances.
 
 @node Primary commodities,  , Posting costs, Journal File Format
@@ -7979,7 +8022,7 @@ on the placement of the commodity in the transaction:
 @end smallexample
 
 The only case where knowledge of primary versus secondary comes into
-play is in reports that use the @option{-V} or @option{-B} options.
+play is in reports that use the @code{-V} or @code{-B} options.
 With these, only primary commodities are shown.
 
 If a transaction uses only one commodity, this commodity is also
@@ -8010,7 +8053,7 @@ interface functions.  The Session is where objects live like the Commodity's
 that Amount's refer to.
 
 The make a Session useful, you must read a Journal into it, using the function
-`@samp{read_journal}`.  This reads Ledger data from the given file, populates a
+`@code{read_journal}`.  This reads Ledger data from the given file, populates a
 Journal object within the current Session, and returns a reference to that
 Journal object.
 
