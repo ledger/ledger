@@ -116,12 +116,14 @@ class LedgerHarness:
 
     def success(self):
         sys.stdout.write(".")
+        sys.stdout.flush()
         self.succeeded += 1
 
     def failure(self, name=None):
         sys.stdout.write("E")
         if name:
             sys.stdout.write("[%s]" % name)
+        sys.stdout.flush()
         self.failed += 1
 
     def exit(self):
