@@ -1225,7 +1225,7 @@ For example, you do not need to tell Ledger about the accounts you
 use.  Any time Ledger sees a posting involving an account it knows
 nothing about, it will create it@footnote{This also means if you
 misspell an account it will end up getting counted separately from what
-you intended.  The provided Emacs major mode provides for automatically
+you intended.  The provided EMACS major mode provides for automatically
 filling in account names.}.  If you use a commodity that is new to
 Ledger, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
@@ -1242,7 +1242,7 @@ posting.
 * Journal Format::              
 * Converting from other formats::  
 * Archiving Previous Years ::   
-* Using Emacs::                 
+* Using EMACS::                 
 @end menu
 
 @node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
@@ -2250,7 +2250,7 @@ easily be parsed into Ledger format using one of those tools.  Some of the more 
 function.
 
 
-@node Archiving Previous Years , Using Emacs, Converting from other formats, Keeping a Journal
+@node Archiving Previous Years , Using EMACS, Converting from other formats, Keeping a Journal
 @section Archiving Previous Years
 
 
@@ -2299,7 +2299,7 @@ they were before the data was split.
 
 How often should you split your ledger?  You never need to, if you
 don't want to.  Even eighty years of data will not slow down ledger
-much---and that's just using present day hardware!  Or, you can keep
+much, and that's just using present day hardware!  Or, you can keep
 the previous and current year in one file, and each year before that
 in its own file.  It's really up to you, and how you want to organize
 your finances.  For those who also keep an accurate paper trail, it
@@ -2309,45 +2309,52 @@ any electronic statements received during the year.  In the arena of
 organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
-@node Using Emacs,  , Archiving Previous Years , Keeping a Journal
-@section Using Emacs to Maintain Your Journal
-@cindex Emacs
+@node Using EMACS,  , Archiving Previous Years , Keeping a Journal
+@section Using EMACS to Maintain Your Journal
+@cindex EMACS
 
 @menu
-* running ledger-mode::         
+* Running ledger-mode::         
 * Working with entries::        
 * Reconciling accounts::        
 * Generating Reports::          
 @end menu
 
-@node running ledger-mode, Working with entries, Using Emacs, Using Emacs
-@subsection Running ledger-mode
+@node Running ledger-mode, Working with entries, Using EMACS, Using EMACS
+@subsection Running ledger-mode in EMACS
 
 Journal files are simple free text files easily modified by any text
-editor.  A special mode for Emacs is included with the source
+editor.  A special mode for EMACS is included with the source
 distribution.
 
-@cindex Emacs .emacs file
-To use the Emacs mode, copy the several lisp files from the source lisp
-directory your your @file{site-lisp} directory and add the following line
-to your @file{.emacs} (or equivalent, @file{~/Aquamacs/Preferences.el}
-for Aquamacs on Mac OS X)
+@cindex EMACS .emacs file
+
+Add the following line to your @file{.emacs} (or equivalent,
+@file{~/Aquamacs/Preferences.el} for Aquamacs on Mac OS X)
 @smallexample
-(load "ledger")
+(load "ldg-new")
 @end smallexample
+
+Copy the several lisp files from the source lisp directory your your
+@file{site-lisp} directory, or add the ledger lisp source directory to
+your EMACS load path by adding:
+@smallexample
+(add-to-list 'load-path "~/ledger/lisp")
+@end smallexample
+@noindent to your @file{.emacs} file.
 
 To trigger ledger mode when you visit a journal file, the first line of
 each of your journal files should be:
 @smallexample
 ; -*-ledger-*-
 @end smallexample
-To enter ledger-mode on a new file, type M-x ledger-mode.
+To enter ledger-mode on a new file, type @command{M-x ledger-mode}.
  
-Once you have loaded a Journal file into Emacs, you have several
+Once you have loaded a Journal file into EMACS, you have several
 commands available to make entering, clearing and reconciling
 transactions and producing reports:
 
-@cindex Emacs commands
+@cindex EMACS commands
 @table @code
 @item C-i  or <TAB>
 auto complete entry
@@ -2387,7 +2394,7 @@ kill the ledger report buffer
 * Generating Reports::          
 @end menu
 
-@node Working with entries, Reconciling accounts, running ledger-mode, Using Emacs
+@node Working with entries, Reconciling accounts, Running ledger-mode, Using EMACS
 @subsection Working with entries
 @menu
 * Manual Entry Support::        
@@ -2405,13 +2412,13 @@ kill the ledger report buffer
 In most financial programs, some sort of auto-completion is available to
 save typing and improve accuracy. Ledger doesn't leave you hanging,
 @code{ledger-mode} provides tab completion on all portions of an entry.
-Type a portion of the payee and hit <TAB>, and @code{ledger-mode} will
+Type a portion of the payee and hit @code{<TAB>}, and @code{ledger-mode} will
 suggest a completion.  When filling in the account type the first few
-letters followed by a <TAB> and the account will be filled in.  For
+letters followed by a @code{<TAB>} and the account will be filled in.  For
 example typing @code{Ex<TAB>Au<TAB>F<TAB>} would yield
 @code{Expenses:Auto:Fuel} if you had previously used that account in
 this journal. If there are more than one account with similar starting,
-hitting <TAB> multiple times will iterate through them. This is a good
+hitting @code{<TAB>} multiple times will iterate through them. This is a good
 habit to get in to prevent misspellings of accounts. Remember Ledger
 does not validate the names of payees or account so a misspelled account
 will be interpreted as a new account by ledger.
@@ -2419,10 +2426,10 @@ will be interpreted as a new account by ledger.
 
 @node Automagically Adding new entries, Clearing Transactions, Manual Entry Support, Working with entries
 @subsubsection Automagically Adding new entries
-@cindex new transactions in Emacs
-@cindex Emacs, adding new transactions
+@cindex new transactions in EMACS
+@cindex EMACS, adding new transactions
 @code{C-c C-a} will run the @code{ledger entry} command (@pxref{entry
-and xact}) from within Emacs.  When typed, the mini-buffer will appear
+and xact}) from within EMACS.  When typed, the mini-buffer will appear
 with the current year and month, waiting for you to enter the day and
 the payee.  Ledger will generate a new entry based on the most recent
 entry for that payee, using the amount and accounts from that
@@ -2439,7 +2446,7 @@ current year and month.  If you complete the mini-buffer entry by typing
 @smallexample
 Entry: 2011/11/28 viva food 34 tip 7 <enter>
 @end smallexample
-@noindent Emacs will add the following entry to your journal:
+@noindent EMACS will add the following entry to your journal:
 @smallexample
 2011/11/30 Viva Italiano 
     Expenses:Food                             $34.00
@@ -2450,8 +2457,8 @@ Entry: 2011/11/28 viva food 34 tip 7 <enter>
 ordered by date, not necessarily at the bottom of the file.
 @node Clearing Transactions,  , Automagically Adding new entries, Working with entries
 @subsubsection Clearing Transactions and Postings
-@cindex clearing transactions in Emacs
-@cindex Emacs, clear transaction
+@cindex clearing transactions in EMACS
+@cindex EMACS, clear transaction
 @code{C-c C-e} will place an asterisk after the date in the current
 transaction.  The tells ledger the transaction has been cleared through
 your bank (or whatever else you want the concept to mean)
@@ -2473,13 +2480,13 @@ If, for some reason you need to clear a specific posting in the
 transaction you can type @code{C-c C-c} and the posting at point will be
 toggled.
 
-@node Reconciling accounts, Generating Reports, Working with entries, Using Emacs
+@node Reconciling accounts, Generating Reports, Working with entries, Using EMACS
 @subsection Reconciling accounts
 
 In the reconcile buffer, use SPACE to toggle the cleared status of a
 transaction, C-x C-s to save changes (to the ledger file as well).
 
-@node Generating Reports,  , Reconciling accounts, Using Emacs
+@node Generating Reports,  , Reconciling accounts, Using EMACS
 @subsection Generating Reports
 
 The ledger reports command asks the user to select a report to run then
@@ -4039,7 +4046,7 @@ file whose formatting has gotten out of hand.
 @menu
 * Comma Separated Variable files::  
 * The emacs command::           
-* Emacs org mode::              
+* EMACS org mode::              
 * The pricemap Command::        
 * The xml Command::             
 * prices and pricedb::          
@@ -4153,11 +4160,11 @@ passed through @code{ledger print} a second time if you want to match on the
 new payee field. During the @code{ledger convert} run only the original payee
 name as specified in the csv data seems to be used.
 
-@node The emacs command, Emacs org mode, Comma Separated Variable files, Reports in other Formats
+@node The emacs command, EMACS org mode, Comma Separated Variable files, Reports in other Formats
 @subsection The @code{emacs} command
 
 The @command{emacs} command outputs results in a form that can be read
-directly by Emacs Lisp.  The format of the @code{sexp} is:
+directly by EMACS Lisp.  The format of the @code{sexp} is:
 
 @smallexample
 ((BEG-POS CLEARED DATE CODE PAYEE
@@ -4165,10 +4172,10 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
  ...)                   ; list of transactions
 @end smallexample
 
-@node Emacs org mode, The pricemap Command, The emacs command, Reports in other Formats
-@subsection Emacs @code{org} Mode
+@node EMACS org mode, The pricemap Command, The emacs command, Reports in other Formats
+@subsection EMACS @code{org} Mode
 The @code{org} command produces a journal file suitable for use in the
-Emacs org mode.  More details on using org mode can be found at
+EMACS org mode.  More details on using org mode can be found at
 @url{http://www.orgmode.org}.
 
 Org mode has a sub-system known as Babel which allows for literate
@@ -4475,7 +4482,7 @@ file and manipulated using Babel. However, only simple Ledger features
 have been illustrated; please refer to the Ledger documentation for
 examples of more complex operations with a ledger.
 
-@node The pricemap Command, The xml Command, Emacs org mode, Reports in other Formats
+@node The pricemap Command, The xml Command, EMACS org mode, Reports in other Formats
 @subsection The @code{pricemap} Command
 
 If you have the @code{graphviz} graph visualization package installed, ledger
@@ -5011,7 +5018,7 @@ commands.
 @item @code{csv} @tab Show transactions in csv format, for exporting to other programs
 @item @code{print} @tab  Print transaction in a ledger readable format
 @item @code{xml} @tab Produce XML output of the register command
-@item @code{emacs} @tab Produce Emacs lisp output
+@item @code{emacs} @tab Produce EMACS lisp output
 @item @code{equity} @tab Print account balances as transactions
 @item @code{prices} @tab Print price history for matching commodities
 @item @code{pricedb} @tab Print price history for matching commodities in ledger readable format
