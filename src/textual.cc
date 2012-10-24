@@ -148,7 +148,7 @@ namespace {
     void account_value_directive(account_t * account, string expr_str);
     void account_default_directive(account_t * account);
 
-    void default_account_directive(char * line);
+    void default_account_directive(char * args);
     void alias_directive(char * line);
 
     void payee_directive(char * line);
@@ -397,7 +397,7 @@ void instance_t::read_next_directive(bool& error_flag)
 #endif // TIMELOG_SUPPORT
 
       case 'A':                 // a default account for unbalanced posts
-        default_account_directive(line);
+        default_account_directive(line + 1);
         break;
       case 'C':                 // a set of conversions
         price_conversion_directive(line);
@@ -490,9 +490,9 @@ void instance_t::default_commodity_directive(char * line)
   amt.commodity().add_flags(COMMODITY_KNOWN);
 }
 
-void instance_t::default_account_directive(char * line)
+void instance_t::default_account_directive(char * args)
 {
-  context.journal->bucket = top_account()->find_account(skip_ws(line + 1));
+  context.journal->bucket = top_account()->find_account(skip_ws(name));
   context.journal->bucket->add_flags(ACCOUNT_KNOWN);
 }
 
