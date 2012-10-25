@@ -59,6 +59,7 @@ int main(int argc, char * argv[], char * envp[])
   //   --debug CATEGORY    ; turns on debug logging
   //   --trace LEVEL       ; turns on trace logging
   //   --memory            ; turns on memory usage tracing
+  //   --init-file         ; directs ledger to use a different init file
   handle_debug_options(argc, argv);
 #if VERIFY_ON
   IF_VERIFY() initialize_memory_tracing();

@@ -44,6 +44,7 @@
 namespace ledger {
 
 static bool args_only = false;
+std::string       _init_file;
 
 global_scope_t::global_scope_t(char ** envp)
 {
@@ -126,6 +127,8 @@ void global_scope_t::read_init()
       }
 
       TRACE_FINISH(init, 1);
+    } else {
+      throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   }
 }
@@ -472,6 +475,10 @@ void handle_debug_options(int argc, char * argv[])
 #if LOGGING_ON
         _log_level = LOG_INFO;
 #endif
+      }
+      else if (i + 1 < argc && std::strcmp(argv[i], "--init-file") == 0) {
+	_init_file = argv[i + 1];
+	i++;
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if DEBUG_ON
