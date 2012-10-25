@@ -46,6 +46,8 @@ namespace ledger {
 class session_t;
 class report_t;
 
+extern std::string       _init_file;
+
 class global_scope_t : public noncopyable, public scope_t
 {
   shared_ptr<session_t> session_ptr;
@@ -151,10 +153,14 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION__
   (global_scope_t, init_file_, // -i
    CTOR(global_scope_t, init_file_) {
-     if (const char * home_var = std::getenv("HOME"))
-       on(none, (path(home_var) / ".ledgerrc").string());
-     else
-       on(none, path("./.ledgerrc").string());
+    if(!_init_file.empty())
+      // _init_file is filled during handle_debug_options
+      on(none, _init_file);
+    else
+      if (const char * home_var = std::getenv("HOME"))
+	on(none, (path(home_var) / ".ledgerrc").string());
+      else
+	on(none, path("./.ledgerrc").string());
    });
 
   OPTION(global_scope_t, options);

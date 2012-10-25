@@ -330,6 +330,21 @@ namespace {
       return NULL_VALUE;
   }
 
+  value_t get_filebase(item_t& item) {
+    if (item.pos)
+      return string_value(item.pos->pathname.filename().string());
+    else
+      return NULL_VALUE;
+  }
+
+  value_t get_filepath(item_t& item) {
+    if (item.pos)
+      return string_value(item.pos->pathname.parent_path().string());
+    else
+      return NULL_VALUE;
+  }
+
+
   value_t get_beg_pos(item_t& item) {
     return item.pos ? long(item.pos->beg_pos) : 0L;
   }
@@ -456,7 +471,12 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'f':
     if (name == "filename")
       return WRAP_FUNCTOR(get_wrapper<&get_pathname>);
-    break;
+    else if (name == "filebase")
+      return WRAP_FUNCTOR(get_wrapper<&get_filebase>);
+    else if (name == "filepath")
+      return WRAP_FUNCTOR(get_wrapper<&get_filepath>);
+     break;
+     break;
 
   case 'h':
     if (name == "has_tag")
