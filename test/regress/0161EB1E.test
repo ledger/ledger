@@ -1,0 +1,15 @@
+bucket Assets:Checking
+2011/04/25 Tom's Used Cars
+  Auto                    $ 5,500.00
+  ; :nobudget:
+
+A Assets:Checking
+2011/04/27 Book Store
+  Books                       $20.00
+
+test reg
+11-Apr-25 Tom's Used Cars       Auto                     $ 5,500.00   $ 5,500.00
+                                Assets:Checking         $ -5,500.00            0
+11-Apr-27 Book Store            Books                       $ 20.00      $ 20.00
+                                Assets:Checking            $ -20.00            0
+end test
