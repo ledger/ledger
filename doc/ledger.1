@@ -92,29 +92,23 @@ Report of postings matching the
 .Ar report-query
 in CSV format (comma-separated values).  Useful for exporting data to a
 spreadsheet for further analysis or charting.
-.It Nm draft Oo Ar draft-template Oc
+.It Nm entry Oo Ar entry-template Oc
 Generate and display a new, properly formatted Ledger transaction by comparing
 the
-.Ar draft-template
+.Ar entry-template
 to the transactions in your data file(s).  For more information on draft
 templates and using this command to quickly create new transactions, see the
 section
-.Sx DRAFTS .
+.Sx ENTRIES .
 .Pp
-The synonyms
-.Nm entry
-and
+The synonym
 .Nm xact
-are also accepted.
+is also accepted.
 .It Nm emacs Oo Ar query Oc
 Outputs posting and transaction data in a format readily consumed by the Emacs
 editor, in a series of Lisp forms.  This is used by the
 .Li ledger.el
 Emacs mode to process reporting data from Ledger.
-.Pp
-The synonym
-.Nm lisp
-is also accepted.
 .It Nm equity Oo Ar report-query Oc
 Prints a series of transactions that balance current totals for
 accounts matching the
@@ -586,9 +580,9 @@ for example:
 .It Nm xact
 .El
 .Pp
-.Sh DRAFTS
+.Sh ENTRIES
 .Pp
-.Sh FORMATS
+.Sh FORMATS 
 .Pp
 .Sh DEBUG COMMANDS
 In addition to the regular reporting commands, Ledger also accepts several
