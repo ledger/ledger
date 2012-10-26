@@ -681,6 +681,11 @@ value_t report_t::fn_floor(call_scope_t& args)
   return args[0].floored();
 }
 
+value_t report_t::fn_ceiling(call_scope_t& args)
+{
+  return args[0].ceilinged();
+}
+
 value_t report_t::fn_round(call_scope_t& args)
 {
   return args[0].rounded();
@@ -1335,6 +1340,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(fn_cyan);
       else if (is_eq(p, "commodity"))
         return MAKE_FUNCTOR(report_t::fn_commodity);
+      else if (is_eq(p, "ceiling"))
+        return MAKE_FUNCTOR(report_t::fn_ceiling);
       break;
 
     case 'd':

@@ -364,6 +364,15 @@ public:
   }
   void in_place_floor();
 
+  /** Yields an amount which has lost all of its extra precision, beyond what
+      the display precision of the commodity would have printed. */
+  amount_t ceilinged() const {
+    amount_t temp(*this);
+    temp.in_place_ceiling();
+    return temp;
+  }
+  void in_place_ceiling();
+
   /** Yields an amount whose display precision is never truncated, even
       though its commodity normally displays only rounded values. */
   amount_t unrounded() const {
