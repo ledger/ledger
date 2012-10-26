@@ -670,10 +670,27 @@ void amount_t::in_place_floor()
 
   _dup();
 
-  std::ostringstream out;
-  stream_out_mpq(out, MP(quantity), precision_t(0), -1, GMP_RNDZ);
+  mpz_t quot;
+  mpz_init(quot);
+  mpz_fdiv_q(quot,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpq_clear(MP(quantity));
+  mpq_init(MP(quantity));
+  mpq_set_num(MP(quantity), quot);
+}
 
-  mpq_set_str(MP(quantity), out.str().c_str(), 10);
+void amount_t::in_place_ceiling()
+{
+  if (! quantity)
+    throw_(amount_error, _("Cannot ceiling an uninitialized amount"));
+
+  _dup();
+ 
+  mpz_t quot;
+  mpz_init(quot);
+  mpz_cdiv_q(quot,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpq_clear(MP(quantity));
+  mpq_init(MP(quantity));
+  mpq_set_num(MP(quantity), quot);
 }
 
 void amount_t::in_place_unround()

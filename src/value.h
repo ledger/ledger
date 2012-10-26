@@ -457,6 +457,13 @@ public:
   }
   void in_place_floor();
 
+  value_t ceilinged() const {
+    value_t temp(*this);
+    temp.in_place_ceiling();
+    return temp;
+  }
+  void in_place_ceiling();
+
   value_t unrounded() const {
     value_t temp(*this);
     temp.in_place_unround();
