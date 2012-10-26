@@ -1596,6 +1596,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "draft")) {
         return WRAP_FUNCTOR(xact_command);
       }
+      break;
     case 'e':
       if (is_eq(p, "equity")) {
         HANDLER(generated).on("#equity");
