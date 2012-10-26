@@ -1658,6 +1658,29 @@ void value_t::in_place_floor()
   throw_(value_error, _f("Cannot floor %1%") % label());
 }
 
+void value_t::in_place_ceiling()
+{
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_ceiling();
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_ceiling();
+    return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_ceiling();
+    return;
+  default:
+    break;
+  }
+
+  add_error_context(_f("While ceiling %1%:") % *this);
+  throw_(value_error, _f("Cannot ceiling %1%") % label());
+}
+
 void value_t::in_place_unround()
 {
   switch (type()) {

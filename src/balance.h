@@ -345,6 +345,17 @@ public:
       pair.second.in_place_floor();
   }
 
+  balance_t ceilinged() const {
+    balance_t temp(*this);
+    temp.in_place_ceiling();
+    return temp;
+  }
+  void in_place_ceiling() {
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_ceiling();
+  }
+
+
   balance_t unrounded() const {
     balance_t temp(*this);
     temp.in_place_unround();
