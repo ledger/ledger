@@ -8199,6 +8199,8 @@ need to create sums of multiple commodities, use a Balance.  For example:
 @itemize
 @item OFX support has been removed from Ledger 3.0
 @item single character value expressions are deprecated and should be changed to the new value expressions available in 3.0
+@item @code{draft} command is no longer supported, use @code{entry} or @code{exact}
+@item @code{lisp} command is no longer supported, use @code{emacs}.
 @end itemize
 
 @node Example Data File, Miscellaneous Notes, Major Changes from version 2.6, Top
