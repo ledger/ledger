@@ -7800,7 +7800,7 @@ useful to follow standard accounting practice (@pxref{Principles of
 Accounting}).
 
 Since an amount is missing from the second posting, it is assumed to
-be the inverse of the first.  This guarantee the cardinal rule of
+be the inverse of the first.  This guarantees the cardinal rule of
 double-entry accounting: the sum of every transaction must balance to
 zero, or it is in error.  Whenever Ledger encounters a @dfn{null
 posting} in a transaction, it uses it to balance the remainder.
