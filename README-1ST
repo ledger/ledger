@@ -5,9 +5,12 @@ To build this code after doing a Git clone, run:
 
     $ ./acprep update
 
-If you try to configure and build on your own, you are almost certainly going
-to run into problems.  In future, you can run this command again and again,
-and it will keep you updated to the very latest version.
+If anything goes wrong, see "COMMON CONFIGURE/BUILD PROBLEMS" below.
+
+If you try to configure and build without running acprep first, you are
+almost certainly going to run into problems.  In future, you can run
+'acprep update' again and again, and it will keep you updated to the
+very latest version.
 
 I further recommend building both debug and optimized versions of Ledger, in a
 subdirectory of your source tree named 'build' (which acprep will manage for
@@ -21,8 +24,8 @@ Now install the optimized version, but know that you have 'build/debug/ledger'
 available for testing and more useful bug reports.
 
 ===============================================================================
-
-                   IF YOU HAVE CONFIGURE OR BUILD PROBLEMS
+COMMON CONFIGURE/BUILD PROBLEMS:
+===============================================================================
 
 To build and install Ledger requires several dependencies on various
 platforms.  You can install these dependencies very simply for most of them
@@ -41,13 +44,37 @@ With the contents of config.log, and the output from acprep --debug update,
 it's usually fairly obvious where things have gone astray.
 
 ===============================================================================
+F.A.Q.:
+===============================================================================
 
-                                    F.A.Q.
 
  - Q: The build fails saying it can't find utf8.h
 
    A: You didn't run ./acprep update.
 
+   ----------------------------------------------------------------------
+
+ - Q: './acprep update' gives errors
+
+   A: You're probably missing some dependency libraries.  Did you run
+      './acprep dependencies'?  If you tried that too and it didn't
+      work, then you may need to install dependencies by hand.  On a
+      Debian GNU/Linux system (or Debian-based system such as Ubuntu),
+      something this should work (as root):
+
+      # aptitude update
+      # for name in                                                   \
+            cmake libboost-dev libboost-date-time-dev libboost-doc    \
+            libboost-dbg libboost-filesystem-dev libboost-graph-dev   \
+            libboost-iostreams-dev libboost-program-options-dev       \
+            libboost-python-dev libboost-regex-dev                    \
+            libboost-serialization-dev libboost-signals-dev           \
+            libboost-test-dev libboost-thread-dev libboost-wave-dev   \
+            libmpfr-dev libmpfr-dbg libmpfr-doc;                      \
+        do                                                            \
+            aptitude install ${name};                                 \
+        done
+    
    ----------------------------------------------------------------------
 
  - Q: Configure fails saying it can't find boost_regex
@@ -68,7 +95,9 @@ it's usually fairly obvious where things have gone astray.
  - Q: Configure fails saying it can't find MPFR
 
    A: You need MPFR version 2.4.0 or higher.  This version does not come with
-      most Debian distributions, so you will need to build it.
+      most Debian distributions, so you will need to build it.  The
+      relevant packages are 'libmpfr-dev' and 'libmpfr-dbg'.  See also
+      the question above about "'./acprep update' gives errors".
 
    ----------------------------------------------------------------------
 
