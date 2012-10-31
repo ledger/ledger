@@ -490,9 +490,9 @@ void instance_t::default_commodity_directive(char * line)
   amt.commodity().add_flags(COMMODITY_KNOWN);
 }
 
-void instance_t::default_account_directive(char * args)
+void instance_t::default_account_directive(char * line)
 {
-  context.journal->bucket = top_account()->find_account(skip_ws(name));
+  context.journal->bucket = top_account()->find_account(skip_ws(line));
   context.journal->bucket->add_flags(ACCOUNT_KNOWN);
 }
 
