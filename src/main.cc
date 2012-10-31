@@ -214,7 +214,8 @@ int main(int argc, char * argv[], char * envp[])
   } else
 #endif
   {
-    global_scope->quick_close();
+    if (global_scope)
+      global_scope->quick_close();
     INFO("Ledger ended");       // let global_scope leak!
   }
 
