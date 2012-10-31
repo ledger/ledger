@@ -1592,7 +1592,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return POSTS_REPORTER(new report_commodities(*this));
       }
       break;
-
+    case 'd':
+      if (is_eq(p, "draft")) {
+        return WRAP_FUNCTOR(xact_command);
+      }
+      break;
     case 'e':
       if (is_eq(p, "equity")) {
         HANDLER(generated).on("#equity");
@@ -1614,7 +1618,10 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return POSTS_REPORTER(new format_ptree(*this,
                                                format_ptree::FORMAT_JSON));
       break;
-
+    case 'l':
+      if (is_eq(p, "lisp"))
+        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+      break;
     case 'o':
       if (is_eq(p, "org"))
         return POSTS_REPORTER(new posts_to_org_table
