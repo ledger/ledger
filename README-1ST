@@ -54,13 +54,13 @@ F.A.Q.:
 
    ----------------------------------------------------------------------
 
- - Q: './acprep update' gives errors
+ - Q: './acprep update' gives errors or './acprep dependencies' fails
 
-   A: You're probably missing some dependency libraries.  Did you run
-      './acprep dependencies'?  If you tried that too and it didn't
-      work, then you may need to install dependencies by hand.  On a
-      Debian GNU/Linux system (or Debian-based system such as Ubuntu),
-      something this should work (as root):
+   A: You're probably missing some dependency libraries.  If you tried
+      './acprep dependencies' already and that didn't solve the problem,
+      then you may need to install dependencies by hand.  On a Debian
+      GNU/Linux system (or Debian-based system such as Ubuntu), something
+      like this should work (as root):
 
       # aptitude update
       # for name in                                                   \
@@ -97,7 +97,8 @@ F.A.Q.:
    A: You need MPFR version 2.4.0 or higher.  This version does not come with
       most Debian distributions, so you will need to build it.  The
       relevant packages are 'libmpfr-dev' and 'libmpfr-dbg'.  See also
-      the question above about "'./acprep update' gives errors".
+      the question above about what to do if './acprep update' gives
+      errors or './acprep dependencies' fails.
 
    ----------------------------------------------------------------------
 
