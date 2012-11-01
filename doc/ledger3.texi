@@ -4045,14 +4045,14 @@ file whose formatting has gotten out of hand.
 @section Reports in other Formats
 @menu
 * Comma Separated Variable files::  
-* The emacs command::           
+* The lisp command::            
 * EMACS org mode::              
 * The pricemap Command::        
 * The xml Command::             
 * prices and pricedb::          
 @end menu
 
-@node Comma Separated Variable files, The emacs command, Reports in other Formats, Reports in other Formats
+@node Comma Separated Variable files, The lisp command, Reports in other Formats, Reports in other Formats
 @subsection Comma Separated Variable files
 @menu
 * The csv command::             
@@ -4160,10 +4160,10 @@ passed through @code{ledger print} a second time if you want to match on the
 new payee field. During the @code{ledger convert} run only the original payee
 name as specified in the csv data seems to be used.
 
-@node The emacs command, EMACS org mode, Comma Separated Variable files, Reports in other Formats
-@subsection The @code{emacs} command
+@node The lisp command, EMACS org mode, Comma Separated Variable files, Reports in other Formats
+@subsection The @code{lisp} command
 
-The @command{emacs} command outputs results in a form that can be read
+The @command{lisp} command outputs results in a form that can be read
 directly by EMACS Lisp.  The format of the @code{sexp} is:
 
 @smallexample
@@ -4172,7 +4172,9 @@ directly by EMACS Lisp.  The format of the @code{sexp} is:
  ...)                   ; list of transactions
 @end smallexample
 
-@node EMACS org mode, The pricemap Command, The emacs command, Reports in other Formats
+@noindent @code{emacs{ can also be used as asynonym for @code{lisp}
+
+@node EMACS org mode, The pricemap Command, The lisp command, Reports in other Formats
 @subsection EMACS @code{org} Mode
 The @code{org} command produces a journal file suitable for use in the
 EMACS org mode.  More details on using org mode can be found at
@@ -4682,11 +4684,11 @@ Report all commodities present in the journals under consideration.
 
 
 @node entry and xact, payees, commodities, Reports about your Journals
-@subsection @command{entry} and @command{xact}
+@subsection @command{draft}, @command{entry} and @command{xact}
 
-The @code{entry} and @command{xact} commands simplify the creation of
-new transactions.  It works on the principle that 80% of all postings
-are variants of earlier postings.  Here's how it works:
+The @code{draft}, @code{entry} and @command{xact} commands simplify the
+creation of new transactions.  It works on the principle that 80% of all
+postings are variants of earlier postings.  Here's how it works:
 
 Say you currently have this posting in your ledger file:
 
@@ -8199,8 +8201,6 @@ need to create sums of multiple commodities, use a Balance.  For example:
 @itemize
 @item OFX support has been removed from Ledger 3.0
 @item single character value expressions are deprecated and should be changed to the new value expressions available in 3.0
-@item @code{draft} command is no longer supported, use @code{entry} or @code{exact}
-@item @code{lisp} command is no longer supported, use @code{emacs}.
 @end itemize
 
 @node Example Data File, Miscellaneous Notes, Major Changes from version 2.6, Top
