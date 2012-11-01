@@ -120,6 +120,10 @@ public:
     return out.str();
   }
 
+  optional<string> get_source() const {
+    return source;
+  }
+
   operator bool() const {
     return handled;
   }

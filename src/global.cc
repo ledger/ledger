@@ -112,6 +112,7 @@ void global_scope_t::read_init()
   if (HANDLED(init_file_)) {
     path init_file(HANDLER(init_file_).str());
     if (exists(init_file)) {
+      
       TRACE_START(init, 1, "Read initialization file");
 
       parse_context_stack_t parsing_context;
@@ -128,7 +129,8 @@ void global_scope_t::read_init()
 
       TRACE_FINISH(init, 1);
     } else {
-      throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
+      if (HANDLER(init_file_).get_source().get().compare("default")!=0)
+      	throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   }
 }
