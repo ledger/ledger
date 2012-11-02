@@ -29,7 +29,7 @@ but know that you have 'build/ledger/debug' available for testing and
 for more useful bug reports.
 
 ===============================================================================
-COMMON CONFIGURE/BUILD PROBLEMS:
+                       COMMON CONFIGURE/BUILD PROBLEMS
 ===============================================================================
 
 To build and install Ledger requires several dependencies on various
@@ -49,7 +49,7 @@ With the contents of config.log, and the output from acprep --debug update,
 it's usually fairly obvious where things have gone astray.
 
 ===============================================================================
-F.A.Q.:
+                                    F.A.Q.
 ===============================================================================
 
 
@@ -152,16 +152,15 @@ F.A.Q.:
 
    ----------------------------------------------------------------------
 
- - Q: My distribution has a versions of Boost and/or CMake that are too
-      old for Ledger.  How do I build my own Boost and/or CMake binaries
-      that will work properly with Ledger?  Thereafter, how do I configure
-      Ledger properly to use those newly built verisons of Boost and/or
-      CMake?
+ - Q: My distribution has versions of Boost and/or CMake that are too old for
+      Ledger.  How do I build my own Boost and/or CMake binaries that will
+      work properly with Ledger?  Thereafter, how do I configure Ledger
+      properly to use those newly built verisons of Boost and/or CMake?
 
-   A: Here's commands that one user used to make this work, for Boost
-      1.51.0 on Debian GNU/Linux 6.0.x (aka Debian squeeze).  It's likely
-      to work ok for other versions of Boost as well.  YMMV on other
-      distributions and/or other Debian distribution versions, though.
+   A: Here's commands that one user used to make this work, for Boost 1.51.0
+      on Debian GNU/Linux 6.0.x (aka Debian squeeze).  It's likely to work ok
+      for other versions of Boost as well.  YMMV on other distributions and/or
+      other Debian distribution versions, though.
 
       # Preparing and building Boost 1.51.0
 
