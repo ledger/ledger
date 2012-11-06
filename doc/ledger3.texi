@@ -2177,7 +2177,7 @@ assertions are not called if no value is given.
 
 @item test
 @c instance_t::comment_directive in textual.cc
-This is a synonym for @code{comment} and must be closed by and @code{end} tag.
+This is a synonym for @code{comment} and must be closed by an @code{end} tag.
 
 @item year
 @c instance_t::year_directive in textual.cc
@@ -4172,7 +4172,7 @@ directly by EMACS Lisp.  The format of the @code{sexp} is:
  ...)                   ; list of transactions
 @end smallexample
 
-@noindent @code{emacs{ can also be used as asynonym for @code{lisp}
+@noindent @code{emacs} can also be used as asynonym for @code{lisp}
 
 @node EMACS org mode, The pricemap Command, The lisp command, Reports in other Formats
 @subsection EMACS @code{org} Mode
