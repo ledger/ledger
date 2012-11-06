@@ -203,9 +203,15 @@ namespace {
           (static_cast<std::string::size_type>(account_width) -
            static_cast<std::string::size_type>(name.length()));
 
+        std::size_t amount_width =
+          (report.HANDLED(amount_width_) ?
+           lexical_cast<std::size_t>(report.HANDLER(amount_width_).str()) :
+           12);
         string amt;
         if (post->amount_expr) {
-          amt = post->amount_expr->text();
+          std::ostringstream amt_str;
+          justify(amt_str, post->amount_expr->text(), amount_width, true);
+          amt = amt_str.str();
         }
         else if (count == 2 && index == 2 &&
                  post_has_simple_amount(*post) &&
@@ -218,11 +224,6 @@ namespace {
           // first.
         }
         else {
-          std::size_t amount_width =
-            (report.HANDLED(amount_width_) ?
-             lexical_cast<std::size_t>(report.HANDLER(amount_width_).str()) :
-             12);
-
           std::ostringstream amt_str;
           value_t(post->amount).print(amt_str, static_cast<int>(amount_width),
                                       -1, AMOUNT_PRINT_RIGHT_JUSTIFY |
