@@ -530,9 +530,11 @@ bool display_filter_posts::output_rounding(post_t& post)
   }
 
   // Allow the posting to be displayed if:
-  //  1. It's display_amount would display as non-zero
-  //  2. The --empty option was specified
-  //  3. The account of the posting is <Revalued>
+  //  1. Its display_amount would display as non-zero, or
+  //  2. The --empty option was specified, or
+  //  3. a) The account of the posting is <Revalued>, and
+  //     b) the revalued option is specified, and
+  //     c) the --no-rounding option is not specified.
 
   if (post.account == revalued_account) {
     if (show_rounding)
