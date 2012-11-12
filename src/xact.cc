@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "context.h"
+#include "format.h"
 #include "pool.h"
 
 namespace ledger {
@@ -774,6 +775,14 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
           while (account->parent)
             account = account->parent;
           account = account->find_account(fullname);
+        }
+        else if (contains(fullname, "%")) {
+          format_t account_name(fullname);
+          std::ostringstream buf;
+          buf << account_name(bound_scope);
+          while (account->parent)
+            account = account->parent;
+          account = account->find_account(buf.str());
         }
 
         // Copy over details so that the resulting post is a mirror of
