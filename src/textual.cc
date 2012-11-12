@@ -575,7 +575,7 @@ void instance_t::automated_xact_directive(char * line)
           item = ae.get();
 
         // This is a trailing note, and possibly a metadata info tag
-        item->append_note(p + 1, *context.scope, true);
+        ae->append_note(p + 1, *context.scope, true);
         item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = context.curr_pos;
         item->pos->end_line++;
