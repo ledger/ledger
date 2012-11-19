@@ -4119,7 +4119,7 @@ interpret the dates.
 Importing csv files is a lot of work, and but is very amenable to scripting.
 
 If there are columns in the bank data you would like to keep in your
-ledger data, besides the primary fileds described above, you can name
+ledger data, besides the primary fields described above, you can name
 them in the field descriptor list and Ledger will include them in the
 transaction as meta data if it doesn't recognize the field name. For
 example, if you want to capture the bank transaction number and it
@@ -4131,7 +4131,7 @@ transid,date,payee,note,amount,,,code,
 @end smallexample
 
 Ledger will include @code{; transid: 767718} in the first transaction is
-fromthe file above.
+from the file above.
 
 The @code{convert} command accepts three options, the most important
 ones are @code{--invert} which inverts the amount field, and
@@ -4172,7 +4172,7 @@ directly by EMACS Lisp.  The format of the @code{sexp} is:
  ...)                   ; list of transactions
 @end smallexample
 
-@noindent @code{emacs} can also be used as asynonym for @code{lisp}
+@noindent @code{emacs} can also be used as a synonym for @code{lisp}
 
 @node EMACS org mode, The pricemap Command, The lisp command, Reports in other Formats
 @subsection EMACS @code{org} Mode
@@ -5595,12 +5595,12 @@ ASK JOHN
 commodity.  The latest available price is used.
 
 @item --flat
- force the full names of accounts to be used inthe
+ force the full names of accounts to be used in the
 balance report. The balance report will not use an indented tree.
 
 @item --force-color
  output tty color codes even if the tty doesn't
-support them.  Ueful for TTY that don't advertise their capabilities
+support them.  Useful for TTY that don't advertise their capabilities
 correctly.
 
 @item --force-pager
@@ -5707,7 +5707,7 @@ Specify the width of the Meta column used for the @code{--meta} options.
 
 @item --monthly
 
-synonymn for @code{--period "monthly"}
+synonym for @code{--period "monthly"}
 
 @item --no-color
 
@@ -5735,7 +5735,7 @@ This is a postings predicate that applies after certain transforms have
 been executed, such as periodic gathering.
 
 @item --output <PATH>
-Redriect the output of ledger to the file defined in @file{PATH}.
+Redirect the output of ledger to the file defined in @file{PATH}.
 
 @item --pager
 
@@ -5756,8 +5756,8 @@ Set the number of columns dedicated to the payee in the register report.
 Use only postings that are marked pending
 
 @item --percent
-Calculate the percentage value of each account in a blance reports.
-Only works for account that have a single commoditiy.
+Calculate the percentage value of each account in a balance reports.
+Only works for account that have a single commodity.
 
 @item --period <PERIOD EXPRESSION>
 
@@ -5875,14 +5875,14 @@ FIX THIS ENTRY
 
 @item --tail <INT>
 
-report only the last @code{INT} entries.  Only useful ona register report.
+report only the last @code{INT} entries.  Only useful on a register report.
 
 @item --total-data
 
 FIX THIS ENTRY
 
 @item --total <VEXPR>
-Define a vlaue expression used to calulate the total in reports.
+Define a value expression used to calculate the total in reports.
 
 @item --total-width
 Set the width of the total field in the register report.
@@ -5919,14 +5919,14 @@ Perform all calculations without rounding and display results to full precision.
 
 @item --weekly
 
-synonymn for @code{--period "weekly"}
+synonym for @code{--period "weekly"}
 
 @item --wide
 lets the register report use 132 columns.  Identical to @code{--columns
 "132"}
 
 @item --yearly
-synonymn for @code{--period "yearly"}
+synonym for @code{--period "yearly"}
 
 @end table
 
@@ -6375,13 +6375,13 @@ Sets the format for total plots, using the @code{-J} option.  The default is:
 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n"
 @end smallexample
 @item --pricedb-format STR
-Sets the format expected for the histroical price file. The default is
+Sets the format expected for the historical price file. The default is
 @smallexample
 "P %(datetime) %(display_account) %(scrub(display_amount))\n"
 @end smallexample
 
 @item --prices-format STR
-Sets the format for the @command{prices} report. The deault is:
+Sets the format for the @command{prices} report. The default is:
 @smallexample
 "%(date) %-8(display_account) %(justify(scrub(display_amount), 12, 
            2 + 9 + 8 + 12, true, color))\n"
@@ -7231,7 +7231,7 @@ Inserts the ending line of that transaction within the file.
 @c @code{%D} gives the user more control over the way dates are output.
 
 @item d
-Returns the data accoridng to the default format.  If the transaction
+Returns the data according to the default format.  If the transaction
 has an effective date, it prints @code{[ACTUAL_DATE=EFFECTIVE_DATE]}.
 
 @item X
@@ -7284,7 +7284,7 @@ same format string is used for all postings.
 @section --balance-format
 
 As an example of how flexible the @code{--format} strings can be, the default
-balance format looks like this (the various functions are descirbed later):
+balance format looks like this (the various functions are described later):
 
 @smallexample
          "%(justify(scrub(display_total), 20, -1, true, color))"
