@@ -40,26 +40,26 @@ if (@ARGV < 2) {
   print STDERR "usage: $0 <START_DATE> <END_DATE> <LEDGER_OPTIONS>\n";
   exit 1;
 }
-
 my($startDate, $endDate, @mainLedgerOptions) = @ARGV;
 
 # First, get fund list from ending balance
 my(@ledgerOptions) = (@mainLedgerOptions,
                       '-V', '-X', '$', '-F', "%-.70A %22.108t\n", '-s',
                       '-e', $endDate, 'reg', '/^Funds:Restricted:/');
-
-
 my %funds;
 
 open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
   or die "Unable to run $LEDGER_CMD for funds: $!";
 
 while (my $fundLine = <LEDGER_FUNDS>) {
-  die "Unable to parse output line from funds command: \"$fundLine\""
-    unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\d\.\,]+)/;
+  die "Unable to parse output line from first funds command: \"$fundLine\""
+    unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\-\d\.\,]+)/;
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
-  $account =~ s/^\s*Funds:Restricted://;    $account =~ s/\s+$//;
+  $account =~ s/\s+$//;
+  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+  die "Weird account found, $account with amount of $amount in first funds command\n"
+    unless $account =~ s/^\s*Funds:Restricted://;
   $funds{$account}{ending} = $amount;
 }
 close LEDGER_FUNDS;
@@ -73,11 +73,14 @@ open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
   or die "Unable to run $LEDGER_CMD for funds: $!";
 
 while (my $fundLine = <LEDGER_FUNDS>) {
-  die "Unable to parse output line from funds command: $fundLine"
-    unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\d\.\,]+)/;
+  die "Unable to parse output line from second funds command: $fundLine"
+    unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
-  $account =~ s/^\s*Funds:Restricted://;    $account =~ s/\s+$//;
+  $account =~ s/\s+$//;
+  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+  die "Weird account found, $account with amount of $amount in first second command\n"
+    unless $account =~ s/^\s*Funds:Restricted://;
   $funds{$account}{starting} = $amount;
 }
 close LEDGER_FUNDS;
