@@ -25,7 +25,7 @@ use warnings;
 
 use Math::BigFloat;
 
-my $LEDGER_CMD = "/usr/bin/ledger";
+my $LEDGER_CMD = "/usr/local/bin/ledger";
 
 my $ACCT_WIDTH = 70;
 
@@ -45,8 +45,8 @@ my($startDate, $endDate, @mainLedgerOptions) = @ARGV;
 
 # First, get fund list from ending balance
 my(@ledgerOptions) = (@mainLedgerOptions,
-                      '--wide-register-format', "%-.70A %22.108t\n",  '-w', '-s',
-                      '-e', $endDate, 'reg', '^Funds:Restricted:');
+                      '-V', '-X', '$', '-F', "%-.70A %22.108t\n", '-s',
+                      '-e', $endDate, 'reg', '/^Funds:Restricted:/');
 
 
 my %funds;
@@ -55,7 +55,7 @@ open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
   or die "Unable to run $LEDGER_CMD for funds: $!";
 
 while (my $fundLine = <LEDGER_FUNDS>) {
-  die "Unable to parse output line from funds command: $fundLine"
+  die "Unable to parse output line from funds command: \"$fundLine\""
     unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\d\.\,]+)/;
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
@@ -66,7 +66,7 @@ close LEDGER_FUNDS;
 
 # First, get fund list from ending balance
 @ledgerOptions = (@mainLedgerOptions,
-                  '--wide-register-format', "%-.70A %22.108t\n",  '-w', '-s',
+                  '-V', '-X', '$', '-F', "%-.70A %22.108t\n",  '-w', '-s',
                   '-e', $startDate, 'reg', '^Funds:Restricted:');
 
 open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
@@ -88,7 +88,7 @@ foreach my $fund (keys %funds) {
 }
 
 @ledgerOptions = (@mainLedgerOptions,
-                  '--wide-register-format', "%-.70A %22.108t\n",  '-w', '-s',
+                  '-V', '-X', '$', '-F', "%-.70A %22.108t\n",  '-w', '-s',
                   '-b', $startDate, '-e', $endDate, 'reg');
 
 foreach my $type ('Income', 'Expenses') {
