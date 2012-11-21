@@ -44,6 +44,7 @@ if (@ARGV < 3) {
   print STDERR "usage: $0 <BEGIN_DATE> <END_DATE> <OTHER_LEDGER_OPTS>\n";
   exit 1;
 }
+open(MANIFEST, ">", "MANIFEST") or die "Unable to open MANIFEST for writing: $!";
 
 my($beginDate, $endDate, @otherLedgerOpts) = @ARGV;
 
@@ -52,8 +53,6 @@ my(@chartOfAccountsOpts) = ('-F', "%150A\n",  '-w', '-s',
 
 open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
   or die "Unable to run $LEDGER_CMD @chartOfAccountsOpts: $!";
-
-open(CHART_OUTPUT, ">", "chart-of-accounts.txt") or die "unable to write chart-of-accounts.txt: $!";
 
 my @accounts;
 while (my $line = <CHART_DATA>) {
@@ -65,6 +64,7 @@ while (my $line = <CHART_DATA>) {
 close(CHART_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 
 open(CHART_OUTPUT, ">", "chart-of-accounts.txt") or die "unable to write chart-of-accounts.txt: $!";
+print MANIFEST "chart-of-accounts.txt\n";
 
 my @sortedAccounts;
 foreach my $acct (
@@ -91,7 +91,9 @@ $formattedEndDate = $formattedEndDate->calc($oneDayLess);
 $formattedEndDate = $formattedEndDate->printf("%Y/%m/%d");
 
 open(GL_TEXT_OUT, ">", "general-ledger.txt") or die "unable to write general-ledger.txt: $!";
+print MANIFEST "general-ledger.txt\n";
 open(GL_CSV_OUT, ">", "general-ledger.csv") or die "unable to write general-ledger.csv: $!";
+print MANIFEST "general-ledger.csv\n";
 
 foreach my $acct (@sortedAccounts) {
   print GL_TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
@@ -122,6 +124,14 @@ foreach my $acct (@sortedAccounts) {
 
   foreach my $line (<GL_CSV_DATA>) {
     print GL_CSV_OUT $line;
+    next if $line =~ /ACCOUNT:.*PERIOD/;  # Skip column header lines
+    $line =~ s/^"[^"]*","[^"]*","[^"]*","[^"]*","[^"]*",//;
+    while ($line =~ s/^"([^"]*)"(,|$)//) {
+      my $file = $1;
+      next if $file =~ /^\s*$/;
+      warn "$file does not exist and/or is not readable" unless -r $file;
+      print MANIFEST "$file\n";
+    }
   }
   close(GL_CSV_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 }

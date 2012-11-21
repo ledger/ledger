@@ -32,11 +32,13 @@ else
   exit 1
 fi
 
+echo general-ledger.ods >> MANIFEST
+
 # create a portable zip file with the spreadsheet
 # and the linked artifacts
 
 echo creating portable zipfile...
-zip -r ../general-ledger.zip general-ledger.ods Financial Projects -x '*.txt' 
+cat MANIFEST | zip -@ ../general-ledger.zip
 
 echo " "
 echo "created general-ledger.zip"
