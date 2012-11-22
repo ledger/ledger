@@ -64,7 +64,7 @@ while (my $fundLine = <LEDGER_FUNDS>) {
 }
 close LEDGER_FUNDS;
 
-# First, get fund list from ending balance
+# First, get fund list from starting balance
 @ledgerOptions = (@mainLedgerOptions,
                   '-V', '-X', '$', '-F', "%-.70A %22.108t\n",  '-w', '-s',
                   '-e', $startDate, 'reg', '^Funds:Restricted:');
@@ -94,7 +94,10 @@ foreach my $fund (keys %funds) {
                   '-V', '-X', '$', '-F', "%-.70A %22.108t\n",  '-w', '-s',
                   '-b', $startDate, '-e', $endDate, 'reg');
 
-foreach my $type ('Income', 'Expenses') {
+my @possibleTypes = ('Unearned Income', 'Retained Earnings', 'Retained Costs',
+                     'Accrued:Accounts Payable', 'Accrued:Accounts Receivable');
+
+foreach my $type ('Income', 'Expenses', @possibleTypes) {
   foreach my $fund (keys %funds) {
     open(LEDGER_INCOME, "-|", $LEDGER_CMD, @ledgerOptions, "^${type}:$fund")
       or die "Unable to run $LEDGER_CMD for funds: $!";
@@ -113,15 +116,20 @@ foreach my $type ('Income', 'Expenses') {
 my($totStart, $totEnd) = ($ZERO, $ZERO);
 
 foreach my $fund (sort keys %funds) {
-  print "Fund: $fund\n";
-  print "      Balance as of $startDate: ", sprintf("\$%15.2f\n\n", $funds{$fund}{starting});
-  print "      Income during period:     ", sprintf("\$%15.2f\n", $funds{$fund}{Income});
-  print "      Expenses during period:   ", sprintf("\$%15.2f\n\n", $funds{$fund}{Expenses});
-  print "      Balance as of $endDate: ", sprintf("\$%15.2f\n", $funds{$fund}{ending});
-  print "\n\n";
+  my $sanityTotal = $funds{$fund}{starting};
+  print "Fund: $fund\n", sprintf("%-35s\$%26.2f\n\n", "Balance as of $startDate:",
+      $funds{$fund}{starting});
+  foreach my $type ('Income', 'Expenses', @possibleTypes) {
+    my $formattedType = $type;   $formattedType =~ s/^Accrued://;
+    next if $type ne 'Income' and $type ne 'Expenses' and $funds{$fund}{$type} == $ZERO;
+    print sprintf("%19s during period: \$%26.2f\n", $formattedType, $funds{$fund}{$type});
+  }
+  print sprintf("\n%-35s\$%26.2f\n", "Balance as of $endDate:",
+      $funds{$fund}{ending}), "\n\n";
   # Santity check:
   if ($funds{$fund}{ending} !=
-      ( ($funds{$fund}{starting} - $funds{$fund}{Income}) - $funds{$fund}{Expenses})) {
+      ($funds{$fund}{starting}
+         - $funds{$fund}{Income} - $funds{$fund}{'Unearned Income'} - $funds{$fund}{Expenses})) {
     print "$fund FAILED SANITY CHECK\n\n\n";
     die "$fund FAILED SANITY CHECK";
   }
