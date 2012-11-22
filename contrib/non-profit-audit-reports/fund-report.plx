@@ -3,7 +3,7 @@
 #
 #    Script to generate a Trial Balance report for a ledger.
 #
-# Copyright (C) 2011, Bradley M. Kuhn
+# Copyright (C) 2011, 2012, Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
