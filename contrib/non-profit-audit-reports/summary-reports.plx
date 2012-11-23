@@ -113,43 +113,43 @@ foreach my $item (keys %reportFields) {
   print STDERR  "$item: $reportFields{$item}{total}\n" if $VERBOSE;
 }
 
-open(ASSETS, ">", "assets-and-liabilities.txt")
-  or die "unable to open assets-and-liabilities.txt for writing: $!";
+open(BALANCE_SHEET, ">", "balance-sheet.txt")
+  or die "unable to open balance-sheet.txt for writing: $!";
 
-print ASSETS "ASSETS\n\n";
+print BALANCE_SHEET "ASSETS\n\n";
 
 my $formatStr      = "   %-42s \$%13s\n";
 my $formatStrTotal = "%-45s \$%13s\n";
 my $tot = $ZERO;
 foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
   next if $reportFields{$item}{total} == $ZERO;
-  print ASSETS sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
+  print BALANCE_SHEET sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
   $tot += $reportFields{$item}{total};
 }
-print ASSETS "\n", sprintf($formatStrTotal, "TOTAL ASSETS", Commify($tot)), "\n\nLIABILITIES\n\n";
+print BALANCE_SHEET "\n", sprintf($formatStrTotal, "TOTAL ASSETS", Commify($tot)), "\n\nLIABILITIES\n\n";
 
 my $totLiabilities = $ZERO;
 foreach my $item ('Accounts Payable', 'Accrued Expenses',
                   'Liabilities, Credit Cards', 'Liabilities, Other',
                   'Unearned Income, Conference Registration', 'Unearned Income, Other') {
   next if $reportFields{$item}{total} == $ZERO;
-  print ASSETS sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
+  print BALANCE_SHEET sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
   $totLiabilities += $reportFields{$item}{total};
 }
-print ASSETS "\n", sprintf($formatStr, "TOTAL LIABILTIES", Commify($totLiabilities)),
+print BALANCE_SHEET "\n", sprintf($formatStr, "TOTAL LIABILTIES", Commify($totLiabilities)),
   "\n\nNET ASSETS\n\n";
 
 my $totNetAssets = $ZERO;
 foreach my $item ('Unrestricted Net Assets', 'Temporarily Restricted Net Assets') {
   next if $reportFields{$item}{total} == $ZERO;
-  print ASSETS sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
+  print BALANCE_SHEET sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
   $totNetAssets += $reportFields{$item}{total};
 }
-print ASSETS "\n", sprintf($formatStr, "TOTAL NET ASSETS", Commify($totNetAssets)), "\n\n",
+print BALANCE_SHEET "\n", sprintf($formatStr, "TOTAL NET ASSETS", Commify($totNetAssets)), "\n\n",
              sprintf($formatStrTotal, "TOTAL LIABILITIES AND NET ASSETS", 
                      Commify($totNetAssets + $totLiabilities));
 
-close ASSETS;
+close BALANCE_SHEET;
 print STDERR "\n";
 die "unable to write to Assets-and-liabilities.txt: $!" unless ($? == 0);
 
