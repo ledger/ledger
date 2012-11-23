@@ -74,7 +74,7 @@ my %reportFields =
 );
 foreach my $item (keys %reportFields) {
   my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions,
-                      '-V', '-S', 'T', '-s', '-d', 'T', @{$reportFields{$item}{args}});
+                      '-V', '-X', '$', '-S', 'T', '-s', '-d', 'T', @{$reportFields{$item}{args}});
   open(FILE, "-|", @fullCommand)
     or die "unable to run command ledger command: @fullCommand: $!";
 
