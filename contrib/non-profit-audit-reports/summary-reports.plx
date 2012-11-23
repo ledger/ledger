@@ -59,6 +59,7 @@ my(@ledgerOptions) = (@mainLedgerOptions,
 my %reportFields =
   ('Cash' => { args => [ '-e', $endDate, 'bal', '/^Assets/' ] },
    'Accounts Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Accounts Receivable/' ]},
+   'Loans Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Loans Receivable/' ]},
    'Accounts Payable' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Accounts Payable/' ]},
    'Accrued Expenses' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Expenses/' ]},
    'Unearned Income, Conference Registration' => {args => [ '-e', $endDate, 'bal',
