@@ -53,11 +53,6 @@ if (@ARGV < 2) {
 }
 my($startDate, $endDate, @mainLedgerOptions) = @ARGV;
 
-# First, get fund list from ending balance
-my(@ledgerOptions) = (@mainLedgerOptions,
-                      '-V', '-X', '$', '-F', "%-.70A %22.108t\n", '-S', 'T', '-s',
-                      'd', 'T', '-e', $endDate, 'bal', '/^Assets/');
-
 my %reportFields =
   ('Cash' => { args => [ '-e', $endDate, 'bal', '/^Assets/' ] },
    'Accounts Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Accounts Receivable/' ]},
