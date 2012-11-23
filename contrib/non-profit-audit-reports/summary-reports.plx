@@ -53,6 +53,14 @@ if (@ARGV < 2) {
 }
 my($startDate, $endDate, @mainLedgerOptions) = @ARGV;
 
+my $err;
+my $formattedEndDate = UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
+                                "%B %e, %Y");
+die "Date calculation error on $endDate" if ($err);
+
+my $formattedStartDate = UnixDate(ParseDate($endDate), "%B %e, %Y"),
+die "Date calculation error on $startDate" if ($err);
+
 my %reportFields =
   ('Cash' => { args => [ '-e', $endDate, 'bal', '/^Assets/' ] },
    'Accounts Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Accounts Receivable/' ]},
@@ -109,16 +117,12 @@ foreach my $item (keys %reportFields) {
   print STDERR  "$item: $reportFields{$item}{total}\n" if $VERBOSE;
 }
 
-my $err;
 open(BALANCE_SHEET, ">", "balance-sheet.txt")
   or die "unable to open balance-sheet.txt for writing: $!";
 
 print BALANCE_SHEET "                          BALANCE SHEET\n",
-                    "                          Ending ",
-                    UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
-                             "%B %e, %Y\n"),
+                    "                          Ending ", $formattedEndDate, "\n",
                   "\n\nASSETS\n\n";
-die "Date calculation error" if ($err);
 
 my $formatStr      = "   %-42s \$%13s\n";
 my $formatStrTotal = "%-45s \$%13s\n";
