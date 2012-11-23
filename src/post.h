@@ -83,7 +83,7 @@ public:
          const optional<string>& _note = none)
     : item_t(_flags, _note), xact(NULL), account(_account), amount(_amount)
   {
-    TRACE_CTOR(post_t, "account_t *, const amount_t&, flags_t, const optional<string>&");
+    TRACE_CTOR(post_t, "account_t *, amount_t, flags_t, optional<string>");
   }
   post_t(const post_t& post)
     : item_t(post),
