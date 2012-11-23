@@ -24,6 +24,7 @@ use strict;
 use warnings;
 
 use Math::BigFloat;
+use Date::Manip;
 
 my $VERBOSE = 0;
 my $DEBUG = 0;
@@ -113,10 +114,16 @@ foreach my $item (keys %reportFields) {
   print STDERR  "$item: $reportFields{$item}{total}\n" if $VERBOSE;
 }
 
+my $err;
 open(BALANCE_SHEET, ">", "balance-sheet.txt")
   or die "unable to open balance-sheet.txt for writing: $!";
 
-print BALANCE_SHEET "ASSETS\n\n";
+print BALANCE_SHEET "                          BALANCE SHEET\n",
+                    "                          Ending ",
+                    UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
+                             "%B %e, %Y\n"),
+                  "\n\nASSETS\n\n";
+die "Date calculation error" if ($err);
 
 my $formatStr      = "   %-42s \$%13s\n";
 my $formatStrTotal = "%-45s \$%13s\n";
