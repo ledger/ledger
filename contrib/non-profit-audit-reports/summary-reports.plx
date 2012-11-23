@@ -63,6 +63,8 @@ my %reportFields =
    'Accounts Payable' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Accounts Payable/' ]},
    'Accrued Expenses' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Expenses/' ]},
    'Liabilities, Credit Cards' => {args => [ '-e', $endDate, 'bal', '/^Liabilities:Credit Card/' ]},
+   'Liabilities, Other' => {args => [ '-e', $endDate, 'bal', '/^Liabilities/',
+                                    'and', 'not', '/^Liabilities:Credit Card/']},
    'Unearned Income, Conference Registration' => {args => [ '-e', $endDate, 'bal',
                                                    '/^Unearned Income.*Conf.*Reg/' ]},
    'Unearned Income, Other' => {args => [ '-e', $endDate, 'bal', '/^Unearned Income/', 'and', 'not',
@@ -126,7 +128,8 @@ foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
 print ASSETS "\n", sprintf($formatStrTotal, "TOTAL ASSETS", Commify($tot)), "\n\nLIABILITIES\n\n";
 
 my $totLiabilities = $ZERO;
-foreach my $item ('Accounts Payable', 'Liabilities, Credit Cards', 'Accrued Expenses',
+foreach my $item ('Accounts Payable', 'Accrued Expenses',
+                  'Liabilities, Credit Cards', 'Liabilities, Other',
                   'Unearned Income, Conference Registration', 'Unearned Income, Other') {
   next if $reportFields{$item}{total} == $ZERO;
   print ASSETS sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
@@ -157,6 +160,7 @@ die "Cash+accounts receivable total does not equal net assets and liabilities to
        $reportFields{'Unearned Income, Conference Registration'}{total} +
        $reportFields{'Unearned Income, Other'}{total} +
        $reportFields{'Liabilities, Credit Cards'}{total} +
+       $reportFields{'Liabilities, Other'}{total} +
        $reportFields{'Total Net Assets'}{total}));
 
 die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
