@@ -109,28 +109,15 @@ foreach my $item (keys %reportFields) {
   print STDERR  "$item: $reportFields{$item}{total}\n" if $VERBOSE;
 }
 
-die "Cash+accounts receivable total does not equal net assets and liabilities total"
-  if ( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}) !=
-      ($reportFields{'Accounts Payable'}{total} +
-       $reportFields{'Accrued Expenses'}{total} +
-       $reportFields{'Unearned Income, Conference Registration'}{total} +
-       $reportFields{'Unearned Income, Other'}{total} +
-       $reportFields{'Total Net Assets'}{total}));
-
-die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
-  if ($reportFields{'Total Net Assets'}{total} !=
-      $reportFields{'Unrestricted Net Assets'}{total} +
-      $reportFields{'Temporarily Restricted Net Assets'}{total});
-
 open(ASSETS, ">", "assets-and-liabilities.txt")
   or die "unable to open assets-and-liabilities.txt for writing: $!";
 
 print ASSETS "ASSETS\n\n";
 
-my $formatStr      = "   %-42s \$%18s\n";
-my $formatStrTotal = "%-45s \$%12s\n";
+my $formatStr      = "   %-42s \$%13s\n";
+my $formatStrTotal = "%-45s \$%13s\n";
 my $tot = $ZERO;
-foreach my $item ('Cash', 'Accounts Receivable') {
+foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
   next if $reportFields{$item}{total} == $ZERO;
   print ASSETS sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
   $tot += $reportFields{$item}{total};
@@ -160,6 +147,20 @@ print ASSETS "\n", sprintf($formatStr, "TOTAL NET ASSETS", Commify($totNetAssets
 close ASSETS;
 print STDERR "\n";
 die "unable to write to Assets-and-liabilities.txt: $!" unless ($? == 0);
+
+die "Cash+accounts receivable total does not equal net assets and liabilities total"
+  if ( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
+       + $reportFields{'Loans Receivable'}{total}) !=
+      ($reportFields{'Accounts Payable'}{total} +
+       $reportFields{'Accrued Expenses'}{total} +
+       $reportFields{'Unearned Income, Conference Registration'}{total} +
+       $reportFields{'Unearned Income, Other'}{total} +
+       $reportFields{'Total Net Assets'}{total}));
+
+die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
+  if ($reportFields{'Total Net Assets'}{total} !=
+      $reportFields{'Unrestricted Net Assets'}{total} +
+      $reportFields{'Temporarily Restricted Net Assets'}{total});
 
 ###############################################################################
 #
