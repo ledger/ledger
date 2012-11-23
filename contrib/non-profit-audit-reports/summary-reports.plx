@@ -44,6 +44,7 @@ sub ParseNumber($) {
 }
 Math::BigFloat->precision(-2);
 my $ZERO =  Math::BigFloat->new("0.00");
+my $ONE_PENNY =  Math::BigFloat->new("0.01");
 
 if (@ARGV < 2) {
   print STDERR "usage: $0 <START_DATE> <END_DATE> <LEDGER_OPTIONS>\n";
@@ -153,20 +154,20 @@ print STDERR "\n";
 die "unable to write to Assets-and-liabilities.txt: $!" unless ($? == 0);
 
 die "Cash+accounts receivable total does not equal net assets and liabilities total"
-  if ( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
-       + $reportFields{'Loans Receivable'}{total}) !=
-      ($reportFields{'Accounts Payable'}{total} +
+  if (abs( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
+       + $reportFields{'Loans Receivable'}{total})) -
+      abs($reportFields{'Accounts Payable'}{total} +
        $reportFields{'Accrued Expenses'}{total} +
        $reportFields{'Unearned Income, Conference Registration'}{total} +
        $reportFields{'Unearned Income, Other'}{total} +
        $reportFields{'Liabilities, Credit Cards'}{total} +
        $reportFields{'Liabilities, Other'}{total} +
-       $reportFields{'Total Net Assets'}{total}));
+       $reportFields{'Total Net Assets'}{total}) > $ONE_PENNY);
 
 die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
-  if ($reportFields{'Total Net Assets'}{total} !=
-      $reportFields{'Unrestricted Net Assets'}{total} +
-      $reportFields{'Temporarily Restricted Net Assets'}{total});
+  if (abs($reportFields{'Total Net Assets'}{total}) -
+      abs($reportFields{'Unrestricted Net Assets'}{total} +
+      $reportFields{'Temporarily Restricted Net Assets'}{total}) > $ONE_PENNY);
 
 ###############################################################################
 #
