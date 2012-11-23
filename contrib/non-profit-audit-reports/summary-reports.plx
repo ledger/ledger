@@ -175,9 +175,26 @@ die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
       abs($reportFields{'Unrestricted Net Assets'}{total} +
       $reportFields{'Temporarily Restricted Net Assets'}{total}) > $ONE_PENNY);
 
+
+my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                    '-b', $startDate, '-e', $endDate,
+                    '-F', '%-.80A   %22.108t\n', '-s',
+                    'reg', '^Income');
+
+open(FILE, "-|", @fullCommand)
+  or die "unable to run command ledger command: @fullCommand: $!";
+
+open(INCOME, ">", "income.txt")
+  or die "unable to open balance-sheet.txt for writing: $!";
+
+print INCOME "                           INCOME\n",
+             "           Between $formattedStartDate and $formattedEndDate\n\n";
+
+foreach my $line (<FILE>) { print INCOME $line; }
+close INCOME;
+die "unable to write to income.txt: $!" unless ($? == 0);
 ###############################################################################
 #
 # Local variables:
 # compile-command: "perl -c summary-reports.plx"
 # End:
-
