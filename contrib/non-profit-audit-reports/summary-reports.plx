@@ -57,8 +57,7 @@ my $err;
 my $formattedEndDate = UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
                                 "%B %e, %Y");
 die "Date calculation error on $endDate" if ($err);
-
-my $formattedStartDate = UnixDate(ParseDate($endDate), "%B %e, %Y"),
+my $formattedStartDate = UnixDate(ParseDate($startDate), "%B %e, %Y");
 die "Date calculation error on $startDate" if ($err);
 
 my %reportFields =
@@ -157,7 +156,7 @@ print BALANCE_SHEET "\n", sprintf($formatStr, "TOTAL NET ASSETS", Commify($totNe
 
 close BALANCE_SHEET;
 print STDERR "\n";
-die "unable to write to Assets-and-liabilities.txt: $!" unless ($? == 0);
+die "unable to write to balance-sheet.txt: $!" unless ($? == 0);
 
 die "Cash+accounts receivable total does not equal net assets and liabilities total"
   if (abs( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
@@ -176,23 +175,77 @@ die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
       $reportFields{'Temporarily Restricted Net Assets'}{total}) > $ONE_PENNY);
 
 
-my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
-                    '-b', $startDate, '-e', $endDate,
-                    '-F', '%-.80A   %22.108t\n', '-s',
-                    'reg', '^Income');
+my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
+                    'DONATIONS' => { args => [ '/^Income.*Donation/' ] },
+                    'BOOK ROYALTIES & AFFILIATE PROGRAMS' =>
+                    { args => [ '/^Income.*(Royalt|Affilate)/' ] },
+                    'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Conf.*Reg/' ] },
+                    'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Booth|RBI)/'] },
+                    'LICENSE ENFORCEMENT' => { args => [ '/^Income.*Enforce/' ]},
+                    'TRADEMARKS' => {args => [ '/^Income.*Trademark/' ]},
+                    'ADVERSITING' => {args => [ '/^Income.*Advertising/' ]});
 
-open(FILE, "-|", @fullCommand)
-  or die "unable to run command ledger command: @fullCommand: $!";
+my @otherArgs;
+foreach my $type (keys %incomeGroups) {
+  @otherArgs = ("/^Income/") if @otherArgs == 0;
+  push(@otherArgs, 'and', 'not', @{$incomeGroups{$type}{args}});
+}
+$incomeGroups{"OTHER"}{args} = \@otherArgs;
+$incomeGroups{"TOTAL"}{args} = ['/^Income/'];
 
-open(INCOME, ">", "income.txt")
-  or die "unable to open balance-sheet.txt for writing: $!";
+open(INCOME, ">", "income.txt") or die "unable to open income.txt for writing: $!";
 
+foreach my $type (keys %incomeGroups) {
+  my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                      '-b', $startDate, '-e', $endDate,
+                      '-F', '%-.80A   %22.108t\n', '-s',
+                      'reg', @{$incomeGroups{$type}{args}});
+
+  open(FILE, "-|", @fullCommand)
+    or die "unable to run command ledger command: @fullCommand: $!";
+
+  print STDERR ($VERBOSE ? "Running: @fullCommand\n" : ".");
+
+  $incomeGroups{$type}{total} = $ZERO;
+  $incomeGroups{$type}{output} = "";
+
+  foreach my $line (<FILE>) {
+    die "Unable to parse output line from second funds command: $line"
+      unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
+    my($account, $amount) = ($1, $2);
+    $amount = ParseNumber($amount);
+    $account =~ s/\s+$//;
+    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+    die "Weird account found, $account with amount of $amount in income command\n"
+      unless $account =~ s/^\s*Income://;
+
+    $incomeGroups{$type}{total} += $amount;
+    $incomeGroups{$type}{output} .= "    $line";
+  }
+}
 print INCOME "                           INCOME\n",
              "           Between $formattedStartDate and $formattedEndDate\n\n";
 
-foreach my $line (<FILE>) { print INCOME $line; }
-close INCOME;
-die "unable to write to income.txt: $!" unless ($? == 0);
+
+my $overallTotal = $ZERO;
+
+$formatStrTotal = "%-90s    \$%14s\n";
+foreach my $type ('DONATIONS', 'LICENSE ENFORCEMENT',
+                  'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
+                  'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
+                  'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
+  print INCOME "\n$type\n",
+               $incomeGroups{$type}{output}, "\n",
+               sprintf($formatStrTotal, "TOTAL $type:", Commify($incomeGroups{$type}{total}));
+  $overallTotal += $incomeGroups{$type}{total};
+}
+print INCOME "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overallTotal));
+
+close INCOME;    die "unable to write to income.txt: $!" unless ($? == 0);
+
+die "calculated total of $overallTotal does equal $incomeGroups{TOTAL}{total}"
+  if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $ONE_PENNY);
+
 ###############################################################################
 #
 # Local variables:
