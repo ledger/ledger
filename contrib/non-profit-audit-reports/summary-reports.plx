@@ -234,6 +234,7 @@ foreach my $type ('DONATIONS', 'LICENSE ENFORCEMENT',
                   'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
                   'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
                   'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
+  next if ($incomeGroups{$type}{output} =~ /^\s*$/ and $incomeGroups{$type}{total} == $ZERO);
   print INCOME "\n$type\n",
                $incomeGroups{$type}{output}, "\n",
                sprintf($formatStrTotal, "TOTAL $type:", Commify($incomeGroups{$type}{total}));
@@ -245,6 +246,106 @@ close INCOME;    die "unable to write to income.txt: $!" unless ($? == 0);
 
 die "calculated total of $overallTotal does equal $incomeGroups{TOTAL}{total}"
   if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $ONE_PENNY);
+
+print STDERR "\n";
+
+my %expenseGroups = ('BANKING FEES' => { regex => '^Expenses.*(Banking Fees|Currency Conversion)'  },
+                    'COMPUTING, HOSTING AND EQUIPMENT' => { regex =>  '^Expenses.*(Hosting|Computer Equipment)'  },
+                    'CONFERENCES' => { regex =>  '^Expenses.*(Conferences|Sprint)'  },
+                    'DEVELOPER MENTORING' => {regex =>  '^Expenses.*Mentor'  },
+                    'LICENSE ENFORCEMENT' => { regex =>  '^Expenses.*Enforce' },
+                    'ACCOUNTING' => { regex =>  '^Expenses.*(Accounting|Annual Audit)' },
+                    'PAYROLL' => { regex =>  '^Expenses.*Payroll' },
+                    'OFFICE' => { regex =>  '^Expenses.*(Office|Phones)' },
+                    'RENT' => { regex =>  '^Expenses.*Rent' },
+                    'SOFTWARE DEVELOPMENT' => { regex =>  '^Expenses.*Development' },
+                    'OTHER PROGRAM ACTIVITY' => {regex =>  '^Expenses.*Gould' },
+                    'ADVOCACY AND PROMOTION' => {regex =>  '^Expenses.*(Slipstream|Advocacy Merchandise|Promotional)' },
+                    'ADVERSITING' => {regex =>  '^Expenses.*Advertising' });
+
+foreach my $type (keys %expenseGroups, 'TRAVEL') {
+  $expenseGroups{$type}{total} = $ZERO;
+  $expenseGroups{$type}{output} = "";
+}
+
+open(EXPENSE, ">", "expense.txt") or die "unable to open expense.txt for writing: $!";
+
+my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                    '-b', $startDate, '-e', $endDate,
+                    '-F', '%-.80A   %22.108t\n', '-s',
+                    'reg', '/^Expenses/');
+
+open(FILE, "-|", @fullCommand)
+  or die "unable to run command ledger command: @fullCommand: $!";
+
+print STDERR ($VERBOSE ? "Running: @fullCommand\n" : ".");
+
+my $firstTotal = $ZERO;
+foreach my $line (<FILE>) {
+  die "Unable to parse output line from second funds command: $line"
+    unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
+  my($account, $amount) = ($1, $2);
+  $amount = ParseNumber($amount);
+  $account =~ s/\s+$//;
+  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+  die "Weird account found, $account, with amount of $amount in expenses command\n"
+    unless $account =~ /^\s*Expenses:/;
+
+  if ($account =~ /Travel/) {
+    $expenseGroups{'TRAVEL'}{total} += $amount;
+    $expenseGroups{'TRAVEL'}{output} .= "    $line";
+  } else {
+    my $taken = 0;
+    foreach my $type (keys %expenseGroups) {
+      last if $taken;
+      next if $type eq 'TRAVEL' or $type eq 'OTHER';
+      next unless $line =~ /$expenseGroups{$type}{regex}/;
+      $taken = 1;
+      $expenseGroups{$type}{total} += $amount;
+      $expenseGroups{$type}{output} .= "    $line";
+    }
+    if (not $taken) {
+      $expenseGroups{'OTHER'}{total} += $amount;
+      $expenseGroups{'OTHER'}{output} .= "    $line";
+    }
+  }
+  $firstTotal += $amount;
+}
+print EXPENSE "                           EXPENSES\n",
+             "           Between $formattedStartDate and $formattedEndDate\n\n";
+$overallTotal = $ZERO;
+$formatStrTotal = "%-90s    \$%14s\n";
+
+my %verifyAllGroups;
+foreach my $key (keys %expenseGroups) {
+  $verifyAllGroups{$key} = 1;
+}
+foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CONFERENCES',
+                  'DEVELOPER MENTORING', 'TRAVEL', 'BANKING FEES', 'ADVOCACY AND PROMOTION',
+                  'COMPUTING, HOSTING AND EQUIPMENT', 'ACCOUNTING',
+                  'OFFICE', 'RENT', 'ADVERSITING', 'OTHER PROGRAM ACTIVITY', 'OTHER') {
+  delete $verifyAllGroups{$type};
+
+  die "$type is not defined!" if not defined $expenseGroups{$type};
+  next if ($expenseGroups{$type}{output} =~ /^\s*$/ and $expenseGroups{$type}{total} == $ZERO);
+
+  print EXPENSE "\n$type\n",
+               $expenseGroups{$type}{output}, "\n",
+               sprintf($formatStrTotal, "TOTAL $type:", Commify($expenseGroups{$type}{total}));
+  $overallTotal += $expenseGroups{$type}{total};
+}
+
+print EXPENSE "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overallTotal));
+
+close EXPENSE;    die "unable to write to expense.txt: $!" unless ($? == 0);
+
+die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
+  unless (keys %verifyAllGroups == 0);
+
+die "calculated total of $overallTotal does equal $firstTotal"
+  if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
+
+print STDERR "\n";
 
 ###############################################################################
 #
