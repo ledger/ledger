@@ -48,7 +48,7 @@ open(MANIFEST, ">", "MANIFEST") or die "Unable to open MANIFEST for writing: $!"
 
 my($beginDate, $endDate, @otherLedgerOpts) = @ARGV;
 
-my(@chartOfAccountsOpts) = ('-F', "%150A\n",  '-w', '-s',
+my(@chartOfAccountsOpts) = ('-V', '-F', "%150A\n",  '-w', '-s',
                             '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg');
 
 open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
@@ -97,7 +97,7 @@ print MANIFEST "general-ledger.csv\n";
 
 foreach my $acct (@sortedAccounts) {
   print GL_TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
-  my @acctLedgerOpts = ('-F',
+  my @acctLedgerOpts = ('-V', '-F',
                         "%(date)  %-.10C   %-.80P  %-.80N  %18t  %18T\n", '-w', '--sort', 'd',
                         '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
   open(GL_TEXT_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
@@ -118,7 +118,7 @@ foreach my $acct (@sortedAccounts) {
   $formatString .= "\n";
   print GL_CSV_OUT "\n";
 
-  @acctLedgerOpts = ('-F', $formatString, '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
+  @acctLedgerOpts = ('-V', '-F', $formatString, '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
   open(GL_CSV_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
     or die "Unable to run $LEDGER_CMD @acctLedgerOpts: $!";
 
