@@ -96,6 +96,7 @@ print MANIFEST "general-ledger.txt\n";
 open(GL_CSV_OUT, ">", "general-ledger.csv") or die "unable to write general-ledger.csv: $!";
 print MANIFEST "general-ledger.csv\n";
 
+my %manifest;
 foreach my $acct (@sortedAccounts) {
   print GL_TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
   my @acctLedgerOpts = ('-V', '-F',
@@ -131,7 +132,8 @@ foreach my $acct (@sortedAccounts) {
       my $file = $1;
       next if $file =~ /^\s*$/;
       warn "$file does not exist and/or is not readable" unless -r $file;
-      print MANIFEST "$file\n";
+      print MANIFEST "$file\n" if not defined $manifest{$file};
+      $manifest{$file} = $line;
     }
   }
   close(GL_CSV_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
