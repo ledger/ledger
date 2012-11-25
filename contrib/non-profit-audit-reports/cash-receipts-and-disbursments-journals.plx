@@ -4,7 +4,7 @@
 #    Script to generate a General Ledger report that accountants like
 #    using Ledger.
 #
-# Copyright (C) 2011, Bradley M. Kuhn
+# Copyright (C) 2011, 2012 Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -28,7 +28,7 @@ use Math::BigFloat;
 use Date::Manip;
 use File::Temp qw/tempfile/;
 
-my $LEDGER_CMD = "/usr/bin/ledger";
+my $LEDGER_CMD = "/usr/local/bin/ledger";
 
 my $ACCT_WIDTH = 75;
 
@@ -54,7 +54,7 @@ if (@ARGV < 2) {
 
 my($beginDate, $endDate, @otherLedgerOpts) = @ARGV;
 
-my(@chartOfAccountsOpts) = ('--wide-register-format', "%150A\n",  '-w', '-s',
+my(@chartOfAccountsOpts) = ('-V', '-F', "%150A\n",  '-w', '-s',
                             '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg');
 
 open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
@@ -90,7 +90,7 @@ foreach my $acct (@accounts) {
 
     print TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
     print CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
-    print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"', "\n";
+    print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"';
 
     my @entryLedgerOpts = ('-l', $typeData->{query},
                            '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'print', $acct);
@@ -106,12 +106,18 @@ foreach my $acct (@accounts) {
 
     goto SKIP_REGISTER_COMMANDS if (-z $tempFile);
 
-    my @txtRegLedgerOpts = ('-f', $tempFile, '--wide-register-format',
-                            "%D  %-.70P  %-.10C  %-.80A  %18t\n%/%68|%15|%-.80A  %18t\n", '-w', '--sort', 'd',
+    my @txtRegLedgerOpts = ('-f', $tempFile, '-V', '-F',
+                            "%(date)  %-.70P  %-.10C  %-.80A  %18t\n", '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
-    my @csvRegLedgerOpts = ('-f', $tempFile, '--wide-register-format',
-                            '\n"%D","%C","%P","%A","%t"\n%/"","","","%A","%t"\n', '-w', '--sort', 'd',
+    my $formatString = '\n"%(date)","%C","%P","%A","%t"\n%/"","","","%A","%t"';
+    foreach my $tagField (qw/Receipt Invoice Statement Contract PurchaseOrder Approval Check IncomeDistributionAnalysis CurrencyRate/) {
+      print CSV_OUT ',"', $tagField, '"';
+      $formatString .= ',"%(tag(\'' . $tagField . '\'))"';
+    }
+    $formatString .= "\n";
+    print CSV_OUT "\n";
+    my @csvRegLedgerOpts = ('-f', $tempFile, '-V', '-F', $formatString, '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
 
