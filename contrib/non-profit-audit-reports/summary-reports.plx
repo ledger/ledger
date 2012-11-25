@@ -291,20 +291,21 @@ foreach my $line (<FILE>) {
   die "Weird account found, $account, with amount of $amount in expenses command\n"
     unless $account =~ /^\s*Expenses:/;
 
-  if ($account =~ /Travel/) {
-    $expenseGroups{'TRAVEL'}{total} += $amount;
-    $expenseGroups{'TRAVEL'}{output} .= "    $line";
-  } else {
-    my $taken = 0;
-    foreach my $type (keys %expenseGroups) {
-      last if $taken;
-      next if $type eq 'TRAVEL' or $type eq 'OTHER';
-      next unless $line =~ /$expenseGroups{$type}{regex}/;
-      $taken = 1;
-      $expenseGroups{$type}{total} += $amount;
-      $expenseGroups{$type}{output} .= "    $line";
-    }
-    if (not $taken) {
+  my $taken = 0;
+  # Note: Prioritize to put things under conference expenses if they were for a conference. 
+  foreach my $type ('CONFERENCES', keys %expenseGroups) {
+    last if $taken;
+    next if $type eq 'TRAVEL' or $type eq 'OTHER';
+    next unless $line =~ /$expenseGroups{$type}{regex}/;
+    $taken = 1;
+    $expenseGroups{$type}{total} += $amount;
+    $expenseGroups{$type}{output} .= "    $line";
+  }
+  if (not $taken) {
+    if ($account =~ /Travel/) {
+      $expenseGroups{'TRAVEL'}{total} += $amount;
+      $expenseGroups{'TRAVEL'}{output} .= "    $line";
+    } else {
       $expenseGroups{'OTHER'}{total} += $amount;
       $expenseGroups{'OTHER'}{output} .= "    $line";
     }
