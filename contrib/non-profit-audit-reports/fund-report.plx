@@ -24,6 +24,7 @@ use strict;
 use warnings;
 
 use Math::BigFloat;
+use Date::Manip;
 
 my $LEDGER_CMD = "/usr/local/bin/ledger";
 
@@ -41,6 +42,13 @@ if (@ARGV < 2) {
   exit 1;
 }
 my($startDate, $endDate, @mainLedgerOptions) = @ARGV;
+
+my $err;
+my $formattedEndDate = UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
+                                "%B %e, %Y");
+die "Date calculation error on $endDate" if ($err);
+my $formattedStartDate = UnixDate(ParseDate($startDate), "%B %e, %Y");
+die "Date calculation error on $startDate" if ($err);
 
 # First, get fund list from ending balance
 my(@ledgerOptions) = (@mainLedgerOptions,
@@ -117,14 +125,14 @@ my($totStart, $totEnd) = ($ZERO, $ZERO);
 
 foreach my $fund (sort keys %funds) {
   my $sanityTotal = $funds{$fund}{starting};
-  print "Fund: $fund\n", sprintf("%-35s\$%26.2f\n\n", "Balance as of $startDate:",
+  print "Fund: $fund\n", sprintf("%-35s\$%26.2f\n\n", "Balance as of $formattedStartDate:",
       $funds{$fund}{starting});
   foreach my $type ('Income', 'Expenses', @possibleTypes) {
     my $formattedType = $type;   $formattedType =~ s/^Accrued://;
     next if $type ne 'Income' and $type ne 'Expenses' and $funds{$fund}{$type} == $ZERO;
     print sprintf("%19s during period: \$%26.2f\n", $formattedType, $funds{$fund}{$type});
   }
-  print sprintf("\n%-35s\$%26.2f\n", "Balance as of $endDate:",
+  print sprintf("\n%-35s\$%26.2f\n", "Balance as of $formattedEndDate:",
       $funds{$fund}{ending}), "\n\n";
   # Santity check:
   if ($funds{$fund}{ending} !=
@@ -136,8 +144,8 @@ foreach my $fund (sort keys %funds) {
   $totStart += $funds{$fund}{starting};
   $totEnd += $funds{$fund}{ending};
 }
-print "\n\n\nTotal Restricted Funds as of $startDate: ", sprintf("\$%15.2f\n", $totStart);
-print "\nTotal Restricted Funds as of $endDate: ", sprintf("\$%15.2f\n", $totEnd);
+print "\n\n\nTotal Restricted Funds as of $formattedStartDate: ", sprintf("\$%15.2f\n", $totStart);
+print "\nTotal Restricted Funds as of $formattedStartDate: ", sprintf("\$%15.2f\n", $totEnd);
 ###############################################################################
 #
 # Local variables:
