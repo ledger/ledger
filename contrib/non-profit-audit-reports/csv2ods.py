@@ -31,7 +31,7 @@ def err(msg):
     print 'error: %s' % msg
     sys.exit(1)
 
-def csv2ods(csvname, odsname, verbose = False):
+def csv2ods(csvname, odsname, encoding='', verbose = False):
     if verbose:
         print 'converting from %s to %s' % (csvname, odsname)
     doc = ooolib2.Calc()
@@ -56,6 +56,8 @@ def csv2ods(csvname, odsname, verbose = False):
         if len(fields) > 0:
             for col in range(len(fields)):
                 val = fields[col]
+                if encoding != '':
+                    val = unicode(val, 'utf8')
                 if len(val) > 0 and val[0] == '$':
                     doc.set_cell_value(col + 1, row, 'currency', val[1:])
                 else:
@@ -92,6 +94,8 @@ def main():
                       help='csv file to process')
     parser.add_option('-o', '--ods', action='store', 
                       help='ods output filename')
+    parser.add_option('-e', '--encoding', action='store', 
+                      help='unicode character encoding type')
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("not expecting extra args")  
@@ -104,7 +108,8 @@ def main():
         print '%s: verbose mode on' % program
         print 'csv:', options.csv
         print 'ods:', options.ods
-    csv2ods(options.csv, options.ods, options.verbose)
+        print 'ods:', options.encoding
+    csv2ods(options.csv, options.ods, options.verbose, options.encoding)
 
 if __name__ == '__main__':
   main()
