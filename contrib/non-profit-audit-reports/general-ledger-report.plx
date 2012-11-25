@@ -57,6 +57,7 @@ open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
 my @accounts;
 while (my $line = <CHART_DATA>) {
   chomp $line;
+  next if $line =~ /^\s*\<\s*Adjustment\s*\>\s*$/;
   $line =~ s/^\s*//;   $line =~ s/\s*$//;
   push(@accounts, $line);
 
