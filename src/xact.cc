@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "context.h"
+#include "format.h"
 #include "pool.h"
 
 namespace ledger {
@@ -644,6 +645,18 @@ namespace {
   }
 }
 
+static string apply_format(const string& str, scope_t& scope)
+{
+  if (contains(str, "%(")) {
+    format_t str_format(str);
+    std::ostringstream buf;
+    buf << str_format(scope);
+    return buf.str();
+  } else {
+    return str;
+  }
+}
+
 void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
@@ -695,8 +708,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
       if (deferred_notes) {
         foreach (deferred_tag_data_t& data, *deferred_notes) {
           if (data.apply_to_post == NULL)
-            initial_post->parse_tags(data.tag_data.c_str(), bound_scope,
-                                     data.overwrite_existing);
+            initial_post->append_note(
+              apply_format(data.tag_data, bound_scope).c_str(),
+              bound_scope, data.overwrite_existing);
         }
       }
 
@@ -775,6 +789,14 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
             account = account->parent;
           account = account->find_account(fullname);
         }
+        else if (contains(fullname, "%(")) {
+          format_t account_name(fullname);
+          std::ostringstream buf;
+          buf << account_name(bound_scope);
+          while (account->parent)
+            account = account->parent;
+          account = account->find_account(buf.str());
+        }
 
         // Copy over details so that the resulting post is a mirror of
         // the automated xact's one.
@@ -795,9 +817,11 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 
         if (deferred_notes) {
           foreach (deferred_tag_data_t& data, *deferred_notes) {
-            if (! data.apply_to_post || data.apply_to_post == post)
-              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
-                                   data.overwrite_existing);
+            if (! data.apply_to_post || data.apply_to_post == post) {
+              new_post->append_note(
+                apply_format(data.tag_data, bound_scope).c_str(),
+                bound_scope, data.overwrite_existing);
+            }
           }
         }
 
