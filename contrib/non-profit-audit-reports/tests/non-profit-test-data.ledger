@@ -5,8 +5,9 @@
    Assets:Checking       $100.00
 
 
-2011/03/15 A Later Donation to Project Foo
+2011/03/15 Another J. Donor
    Income:Foo:Donation   $-400.00
+      ;Approval: Projects/Foo/earmark-record.txt
    Assets:Checking       $400.00
 
 2011/04/20 (1) Baz Hosting Services, LLC
@@ -24,3 +25,4 @@
       ;Receipt: Projects/Blah/Expenses/hosting/AprilHostingReceipt.pdf
       ;Invoice: Projects/Blah/Expenses/hosting/april-invoice.pdf
    Assets:Checking       $-250.00
+      ;Statement: Financial/BankStuff/bank-statement.pdf
