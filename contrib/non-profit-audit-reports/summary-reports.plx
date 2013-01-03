@@ -387,7 +387,7 @@ open(TRIAL, ">", "trial-balance.csv") or die "unable to open accrued.txt for wri
                     'reg');
 
 print TRIAL "\"TRIAL BALANCE REPORT\",",
-             "\"ENDING:\",\"$formattedEndDate\"\n\n\"ACCOUNT NAME\", \"AMOUNT\"\n\n";
+             "\"ENDING:\",\"$formattedEndDate\"\n\n\"ACCOUNT NAME\",\"AMOUNT\"\n\n";
 
 open(FILE, "-|", @fullCommand)
   or die "unable to run command ledger command: @fullCommand: $!";
@@ -413,7 +413,7 @@ close FILE;
 die "unable to run trial balance ledger command: $!" unless ($? == 0);
 
 foreach my $account (sort preferredAccountSorting keys %trialBalances) {
-  print TRIAL "\"$account\",\"$trialBalances{$account}\"\n";
+  print TRIAL "\"$account\",\"\$$trialBalances{$account}\"\n";
 }
 
 close TRIAL;
