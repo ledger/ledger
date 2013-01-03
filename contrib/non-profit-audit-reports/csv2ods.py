@@ -2,8 +2,8 @@
 # csv2ods.py
 # Convert example csv file to ods
 #
-# Copyright (c) 2012 Tom Marble
-# Copyright (c) 2012 Bradley M. Kuhn
+# Copyright (c) 2012       Tom Marble
+# Copyright (c) 2012, 2013 Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ def err(msg):
     print 'error: %s' % msg
     sys.exit(1)
 
-def csv2ods(csvname, odsname, encoding='', verbose = False):
+def csv2ods(csvname, odsname, encoding='', verbose = False, skip_page_break = False):
     if verbose:
         print 'converting from %s to %s' % (csvname, odsname)
     doc = ooolib2.Calc()
@@ -77,7 +77,8 @@ def csv2ods(csvname, odsname, encoding='', verbose = False):
             # enter an empty string for blank lines
             doc.set_cell_value(1, row, 'string', '')
             # put a pagebreak here
-            doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
+            if not skip_page_break:
+                doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
         row += 1
     # save the file
     doc.save(odsname)
@@ -96,6 +97,9 @@ def main():
                       help='ods output filename')
     parser.add_option('-e', '--encoding', action='store', 
                       help='unicode character encoding type')
+    parser.add_option('-s', '--skip-page-break', action='store_true', 
+                      dest='skip_page_break',
+                      help='do not add any page breaks')
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("not expecting extra args")  
@@ -109,7 +113,7 @@ def main():
         print 'csv:', options.csv
         print 'ods:', options.ods
         print 'ods:', options.encoding
-    csv2ods(options.csv, options.ods, options.verbose, options.encoding)
+    csv2ods(options.csv, options.ods, options.verbose, options.encoding, options.skip_page_break)
 
 if __name__ == '__main__':
   main()
