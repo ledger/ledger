@@ -223,7 +223,7 @@ foreach my $type (keys %incomeGroups) {
 $incomeGroups{"OTHER"}{args} = \@otherArgs;
 $incomeGroups{"TOTAL"}{args} = ['/^Income/'];
 
-open(INCOME, ">", "income.txt") or die "unable to open income.txt for writing: $!";
+open(INCOME, ">", "income.csv") or die "unable to open income.csv for writing: $!";
 
 foreach my $type (keys %incomeGroups) {
   my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
@@ -247,32 +247,32 @@ foreach my $type (keys %incomeGroups) {
     $account =~ s/\s+$//;
     next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
     die "Weird account found, $account with amount of $amount in income command\n"
-      unless $account =~ s/^\s*Income://;
+      unless $account =~ /^\s*Income:/;
 
     $incomeGroups{$type}{total} += $amount;
-    $incomeGroups{$type}{output} .= "    $line";
+    $incomeGroups{$type}{output} .= "\"$account\",\"\$$amount\"\n";
   }
 }
-print INCOME "                           INCOME\n",
-             "           Between $formattedStartDate and $formattedEndDate\n\n";
+print INCOME "\"INCOME\",",
+             "\"STARTING:\",\"$formattedStartDate\",\"ENDING:\",\"$formattedEndDate\"\n\n";
 
 
 my $overallTotal = $ZERO;
 
-$formatStrTotal = "%-90s    \$%14s\n";
+$formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
 foreach my $type ('DONATIONS', 'LICENSE ENFORCEMENT',
                   'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
                   'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
                   'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
   next if ($incomeGroups{$type}{output} =~ /^\s*$/ and $incomeGroups{$type}{total} == $ZERO);
-  print INCOME "\n$type\n",
+  print INCOME "\n\"$type\"\n",
                $incomeGroups{$type}{output}, "\n",
                sprintf($formatStrTotal, "TOTAL $type:", Commify($incomeGroups{$type}{total}));
   $overallTotal += $incomeGroups{$type}{total};
 }
 print INCOME "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overallTotal));
 
-close INCOME;    die "unable to write to income.txt: $!" unless ($? == 0);
+close INCOME;    die "unable to write to income.csv: $!" unless ($? == 0);
 
 die "calculated total of $overallTotal does equal $incomeGroups{TOTAL}{total}"
   if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $ONE_PENNY);
@@ -298,7 +298,7 @@ foreach my $type (keys %expenseGroups, 'TRAVEL') {
   $expenseGroups{$type}{output} = "";
 }
 
-open(EXPENSE, ">", "expense.txt") or die "unable to open expense.txt for writing: $!";
+open(EXPENSE, ">", "expense.csv") or die "unable to open expense.csv for writing: $!";
 
 my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
                     '-b', $startDate, '-e', $endDate,
@@ -321,6 +321,7 @@ foreach my $line (<FILE>) {
   die "Weird account found, $account, with amount of $amount in expenses command\n"
     unless $account =~ /^\s*Expenses:/;
 
+  my $outputLine = "\"$account\",\"\$$amount\"\n";
   my $taken = 0;
   # Note: Prioritize to put things under conference expenses if they were for a conference. 
   foreach my $type ('CONFERENCES', keys %expenseGroups) {
@@ -329,23 +330,23 @@ foreach my $line (<FILE>) {
     next unless $line =~ /$expenseGroups{$type}{regex}/;
     $taken = 1;
     $expenseGroups{$type}{total} += $amount;
-    $expenseGroups{$type}{output} .= "    $line";
+    $expenseGroups{$type}{output} .= $outputLine;
   }
   if (not $taken) {
     if ($account =~ /Travel/) {
       $expenseGroups{'TRAVEL'}{total} += $amount;
-      $expenseGroups{'TRAVEL'}{output} .= "    $line";
+      $expenseGroups{'TRAVEL'}{output} .= $outputLine;
     } else {
       $expenseGroups{'OTHER'}{total} += $amount;
-      $expenseGroups{'OTHER'}{output} .= "    $line";
+      $expenseGroups{'OTHER'}{output} .= $outputLine;
     }
   }
   $firstTotal += $amount;
 }
-print EXPENSE "                           EXPENSES\n",
-             "           Between $formattedStartDate and $formattedEndDate\n\n";
+print EXPENSE "\"EXPENSES\",",
+             "\"STARTING:\",\"$formattedStartDate\",\"ENDING:\",\"$formattedEndDate\"\n\n";
 $overallTotal = $ZERO;
-$formatStrTotal = "%-90s    \$%14s\n";
+$formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
 
 my %verifyAllGroups;
 foreach my $key (keys %expenseGroups) {
@@ -360,7 +361,7 @@ foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CON
   die "$type is not defined!" if not defined $expenseGroups{$type};
   next if ($expenseGroups{$type}{output} =~ /^\s*$/ and $expenseGroups{$type}{total} == $ZERO);
 
-  print EXPENSE "\n$type\n",
+  print EXPENSE "\n\"$type\"\n",
                $expenseGroups{$type}{output}, "\n",
                sprintf($formatStrTotal, "TOTAL $type:", Commify($expenseGroups{$type}{total}));
   $overallTotal += $expenseGroups{$type}{total};
@@ -368,7 +369,7 @@ foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CON
 
 print EXPENSE "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overallTotal));
 
-close EXPENSE;    die "unable to write to expense.txt: $!" unless ($? == 0);
+close EXPENSE;    die "unable to write to expense.csv: $!" unless ($? == 0);
 
 die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
   unless (keys %verifyAllGroups == 0);
