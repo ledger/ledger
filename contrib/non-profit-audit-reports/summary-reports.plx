@@ -39,6 +39,36 @@ sub Commify ($) {
     return scalar reverse $text;
 }
 
+sub preferredAccountSorting ($$) {
+  if ($_[0] =~ /^Assets/) {
+    return -1;
+  } elsif ($_[1] =~ /^Assets/) {
+    return 1;
+  } elsif ($_[0] =~ /^Liabilities/ and $_[1] !~ /^Assets/) {
+    return -1;
+  } elsif ($_[1] =~ /^Liabilities/ and $_[0] !~ /^Assets/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Accrued)/ and $_[1] !~ /^(Assets|Liabilities)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Accrued)/ and $_[0] !~ /^(Assets|Liabilities)/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Unearned Income)/ and $_[1] !~ /^(Assets|Liabilities|Accrued)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Unearned Income)/ and $_[0] !~ /^(Assets|Liabilities|Accrued)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Income/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Income/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Expense/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Expense)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Expense/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Expense)/) {
+    return 1;
+  } else {
+    return $_[0] cmp $_[1];
+  }
+}
+
 sub ParseNumber($) {
   $_[0] =~ s/,//g;
   return Math::BigFloat->new($_[0]);

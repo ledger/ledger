@@ -4,8 +4,8 @@
 #    Script to generate a General Ledger report that accountants like
 #    using Ledger.
 #
-# Copyright (C) 2011, 2012 Bradley M. Kuhn
-# Copyright (C) 2012       Tom Marble
+# Copyright (C) 2011, 2012, 2013 Bradley M. Kuhn
+# Copyright (C) 2012             Tom Marble
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -67,18 +67,38 @@ close(CHART_DATA); die "error reading ledger output for chart of accounts: $!" u
 open(CHART_OUTPUT, ">", "chart-of-accounts.txt") or die "unable to write chart-of-accounts.txt: $!";
 print MANIFEST "chart-of-accounts.txt\n";
 
+sub preferredAccountSorting ($$) {
+  if ($_[0] =~ /^Assets/) {
+    return -1;
+  } elsif ($_[1] =~ /^Assets/) {
+    return 1;
+  } elsif ($_[0] =~ /^Liabilities/ and $_[1] !~ /^Assets/) {
+    return -1;
+  } elsif ($_[1] =~ /^Liabilities/ and $_[0] !~ /^Assets/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Accrued)/ and $_[1] !~ /^(Assets|Liabilities)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Accrued)/ and $_[0] !~ /^(Assets|Liabilities)/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Unearned Income)/ and $_[1] !~ /^(Assets|Liabilities|Accrued)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Unearned Income)/ and $_[0] !~ /^(Assets|Liabilities|Accrued)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Income/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Income/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Expense/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Expense)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Expense/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Expense)/) {
+    return 1;
+  } else {
+    return $_[0] cmp $_[1];
+  }
+}
+
 my @sortedAccounts;
-foreach my $acct (
-                  # Proper sorting for a chart of accounts
-                  sort {
-                    if ($a =~ /^Assets/ and $b !~ /^Assets/) {
-                      return -1;
-                    } elsif ($a =~ /^Liabilities/ and $b !~ /^Liabilitie/) {
-                      return -1;
-                    } else {
-                      return $a cmp $b;
-                    }
-                    } @accounts) {
+foreach my $acct ( sort preferredAccountSorting @accounts) {
   print CHART_OUTPUT "$acct\n";
   push(@sortedAccounts, $acct);
 }
