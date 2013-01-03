@@ -3,7 +3,7 @@
 #
 #    Script to generate end-of-year summary reports.
 #
-# Copyright (C) 2011, 2012, Bradley M. Kuhn
+# Copyright (C) 2011, 2012, 2013, Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -347,6 +347,35 @@ die "calculated total of $overallTotal does equal $firstTotal"
   if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
 
 print STDERR "\n";
+
+open(TRIAL, ">", "trial-balance.txt") or die "unable to open accrued.txt for writing: $!";
+
+@fullCommand = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                    '-e', $endDate,
+                    '-F', '%-.80A   %22.108t\n', '-s',
+                    'reg');
+
+print TRIAL "                           TRIAL BALANCE \n",
+             "                     Ending $formattedEndDate\n\n";
+
+open(FILE, "-|", @fullCommand)
+  or die "unable to run command ledger command: @fullCommand: $!";
+
+print STDERR ($VERBOSE ? "Running: @fullCommand\n" : ".");
+
+my $accruedTotal = $ZERO;
+
+foreach my $line (<FILE>) {
+  die "Unable to parse output line from second funds command: $line"
+    unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
+  my($account, $amount) = ($1, $2);
+  $amount = ParseNumber($amount);
+  $account =~ s/\s+$//;
+  next if $account =~ /\<Adjustment\>|^Equity:/ and (abs($amount) <= 0.02);
+  print TRIAL $line;
+
+  $accruedTotal += $amount;
+}
 
 ###############################################################################
 #
