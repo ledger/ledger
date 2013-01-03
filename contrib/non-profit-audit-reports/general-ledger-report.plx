@@ -44,9 +44,23 @@ if (@ARGV < 3) {
   print STDERR "usage: $0 <BEGIN_DATE> <END_DATE> <OTHER_LEDGER_OPTS>\n";
   exit 1;
 }
+
+
 open(MANIFEST, ">", "MANIFEST") or die "Unable to open MANIFEST for writing: $!";
 
 my($beginDate, $endDate, @otherLedgerOpts) = @ARGV;
+
+my $formattedEndDate = new Date::Manip::Date;
+die "badly formatted end date, $endDate" if $formattedEndDate->parse($endDate);
+my $oneDayLess = new Date::Manip::Delta;
+die "bad one day less" if $oneDayLess->parse("- 1 day");
+$formattedEndDate = $formattedEndDate->calc($oneDayLess);
+$formattedEndDate = $formattedEndDate->printf("%Y/%m/%d");
+
+my $formattedBeginDate = new Date::Manip::Date;
+die "badly formatted end date, $endDate" if $formattedBeginDate->parse($endDate);
+$formattedBeginDate = $formattedBeginDate->printf("%Y/%m/%d");
+
 
 my(@chartOfAccountsOpts) = ('-V', '-F', "%150A\n",  '-w', '-s',
                             '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg');
@@ -64,8 +78,12 @@ while (my $line = <CHART_DATA>) {
 }
 close(CHART_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 
-open(CHART_OUTPUT, ">", "chart-of-accounts.txt") or die "unable to write chart-of-accounts.txt: $!";
-print MANIFEST "chart-of-accounts.txt\n";
+open(CHART_OUTPUT, ">", "chart-of-accounts.csv") or die "unable to write chart-of-accounts.csv: $!";
+print MANIFEST "chart-of-accounts.csv\n";
+
+print CHART_OUTPUT "\"CHART OF ACCOUNTS\",";
+print CHART_OUTPUT "\"BEGINNING:\",\"$formattedBeginDate\",";
+print CHART_OUTPUT "\"ENDING:\",\"$formattedEndDate\"\n";
 
 sub preferredAccountSorting ($$) {
   if ($_[0] =~ /^Assets/) {
@@ -99,17 +117,11 @@ sub preferredAccountSorting ($$) {
 
 my @sortedAccounts;
 foreach my $acct ( sort preferredAccountSorting @accounts) {
-  print CHART_OUTPUT "$acct\n";
+  print CHART_OUTPUT "\"$acct\"\n";
   push(@sortedAccounts, $acct);
 }
 close(CHART_OUTPUT); die "error writing to chart-of-accounts.txt: $!" unless $? == 0;
 
-my $formattedEndDate = new Date::Manip::Date;
-die "badly formatted end date, $endDate" if $formattedEndDate->parse($endDate);
-my $oneDayLess = new Date::Manip::Delta;
-die "bad one day less" if $oneDayLess->parse("- 1 day");
-$formattedEndDate = $formattedEndDate->calc($oneDayLess);
-$formattedEndDate = $formattedEndDate->printf("%Y/%m/%d");
 
 open(GL_TEXT_OUT, ">", "general-ledger.txt") or die "unable to write general-ledger.txt: $!";
 print MANIFEST "general-ledger.txt\n";
