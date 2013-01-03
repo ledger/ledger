@@ -146,15 +146,15 @@ foreach my $item (keys %reportFields) {
   print STDERR  "$item: $reportFields{$item}{total}\n" if $VERBOSE;
 }
 
-open(BALANCE_SHEET, ">", "balance-sheet.txt")
-  or die "unable to open balance-sheet.txt for writing: $!";
+open(BALANCE_SHEET, ">", "balance-sheet.csv")
+  or die "unable to open balance-sheet.csv for writing: $!";
 
-print BALANCE_SHEET "                          BALANCE SHEET\n",
-                    "                          Ending ", $formattedEndDate, "\n",
-                  "\n\nASSETS\n\n";
+print BALANCE_SHEET "\"BALANCE SHEET\"\n",
+                    "\"Ending\",\"", $formattedEndDate, "\"\n",
+                  "\n\n\"ASSETS\"\n\n";
 
-my $formatStr      = "   %-42s \$%13s\n";
-my $formatStrTotal = "%-45s \$%13s\n";
+my $formatStr      = "\"\",\"%-42s\",\"\$%13s\"\n";
+my $formatStrTotal = "\"\",\"%-45s\",\"\$%13s\"\n";
 my $tot = $ZERO;
 foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
   next if $reportFields{$item}{total} == $ZERO;
@@ -186,7 +186,7 @@ print BALANCE_SHEET "\n", sprintf($formatStr, "TOTAL NET ASSETS", Commify($totNe
 
 close BALANCE_SHEET;
 print STDERR "\n";
-die "unable to write to balance-sheet.txt: $!" unless ($? == 0);
+die "unable to write to balance-sheet.csv: $!" unless ($? == 0);
 
 die "Cash+accounts receivable total does not equal net assets and liabilities total"
   if (abs( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
