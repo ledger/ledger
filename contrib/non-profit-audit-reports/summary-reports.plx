@@ -378,15 +378,15 @@ die "calculated total of $overallTotal does equal $firstTotal"
 
 print STDERR "\n";
 
-open(TRIAL, ">", "trial-balance.txt") or die "unable to open accrued.txt for writing: $!";
+open(TRIAL, ">", "trial-balance.csv") or die "unable to open accrued.txt for writing: $!";
 
 @fullCommand = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
                     '-e', $endDate,
                     '-F', '%-.80A   %22.108t\n', '-s',
                     'reg');
 
-print TRIAL "                           TRIAL BALANCE \n",
-             "                     Ending $formattedEndDate\n\n";
+print TRIAL "\"TRIAL BALANCE REPORT\",",
+             "\"ENDING:\",\"$formattedEndDate\"\n\n\"ACCOUNT NAME\", \"AMOUNT\"\n\n";
 
 open(FILE, "-|", @fullCommand)
   or die "unable to run command ledger command: @fullCommand: $!";
@@ -395,17 +395,28 @@ print STDERR ($VERBOSE ? "Running: @fullCommand\n" : ".");
 
 my $accruedTotal = $ZERO;
 
+my %trialBalances;
+
 foreach my $line (<FILE>) {
   die "Unable to parse output line from second funds command: $line"
     unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
   $account =~ s/\s+$//;
-  next if $account =~ /\<Adjustment\>|^Equity:/ and (abs($amount) <= 0.02);
-  print TRIAL $line;
-
+  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+  next if $account =~ /^Equity:/;   # Stupid auto-account made by ledger.
+  $trialBalances{$account} = $amount;
   $accruedTotal += $amount;
 }
+close FILE;
+die "unable to run trial balance ledger command: $!" unless ($? == 0);
+
+foreach my $account (sort preferredAccountSorting keys %trialBalances) {
+  print TRIAL "\"$account\",\"$trialBalances{$account}\"\n";
+}
+
+close TRIAL;
+die "unable to write trial-balance.csv: $!" unless ($? == 0);
 
 ###############################################################################
 #
