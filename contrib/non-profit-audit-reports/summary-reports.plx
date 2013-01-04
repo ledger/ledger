@@ -385,41 +385,72 @@ print STDERR "\n";
 
 open(TRIAL, ">", "trial-balance.csv") or die "unable to open accrued.txt for writing: $!";
 
-@fullCommand = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
-                    '-e', $endDate,
-                    '-F', '%-.80A   %22.108t\n', '-s',
-                    'reg');
+print TRIAL "\"TRIAL BALANCE REPORT\",\"ENDING: $formattedEndDate\"\n\n",
+             "\"ACCOUNT\",\"BALANCE AT $formattedStartDate\",\"CHANGE DURING FY\",\"BALANCE AT $formattedEndDate\"\n\n";
 
-print TRIAL "\"TRIAL BALANCE REPORT\",",
-             "\"ENDING:\",\"$formattedEndDate\"\n\n\"ACCOUNT NAME\",\"AMOUNT\"\n\n";
+my %commands = (
+                'totalEndFY' => [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                                              '-e', $endDate, '-F', '%-.80A   %22.108t\n', '-s',
+                                              'reg' ],
+                'amountInYear' =>  [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                                     '-b', $startDate, '-e', $endDate, '-F', '%-.80A   %22.108t\n',
+                                     '-s', 'reg' ],
+                'totalBeginFY' =>  [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                                     '-e', $startDate, '-F', '%-.80A   %22.108t\n',
+                                     '-s', 'reg' ]);
 
-open(FILE, "-|", @fullCommand)
-  or die "unable to run command ledger command: @fullCommand: $!";
+my %trialBalanceData;
+my %fullAccountList;
 
-print STDERR ($VERBOSE ? "Running: @fullCommand\n" : ".");
+foreach my $id (keys %commands) {
+  my(@command) = @{$commands{$id}};
 
-my $accruedTotal = $ZERO;
+  open(FILE, "-|", @command)
+  or die "unable to run command ledger command: @command: $!";
 
-my %trialBalances;
+  print STDERR ($VERBOSE ? "Running: @command\n" : ".");
 
-foreach my $line (<FILE>) {
-  die "Unable to parse output line from second funds command: $line"
-    unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
-  my($account, $amount) = ($1, $2);
-  $amount = ParseNumber($amount);
-  $account =~ s/\s+$//;
-  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
-  next if $account =~ /^Equity:/;   # Stupid auto-account made by ledger.
-  $trialBalances{$account} = $amount;
-  $accruedTotal += $amount;
+  foreach my $line (<FILE>) {
+    die "Unable to parse output line from trial balance $id command: $line"
+      unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
+    my($account, $amount) = ($1, $2);
+    $amount = ParseNumber($amount);
+    $account =~ s/\s+$//;
+    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+    next if $account =~ /^Equity:/;   # Stupid auto-account made by ledger.
+    $trialBalanceData{$id}{$account} = $amount;
+    $fullAccountList{$account} = $id;
+  }
+  close FILE;
+  die "unable to run trial balance ledger command, @command: $!" unless ($? == 0);
 }
-close FILE;
-die "unable to run trial balance ledger command: $!" unless ($? == 0);
 
-foreach my $account (sort preferredAccountSorting keys %trialBalances) {
-  print TRIAL "\"$account\",\"\$$trialBalances{$account}\"\n";
+my $curOn = 'Assets';
+
+foreach my $account (sort preferredAccountSorting keys %fullAccountList) {
+  # Blank lines right
+  if ($account !~ /^$curOn/) {
+    print TRIAL "\n";
+    $curOn = $account;
+    $curOn =~ s/^([^:]+):.*$/$1/;
+    print "CurOn now: $curOn\n";
+  }
+  if ($account =~ /^Assets|Liabilities|Accrued|Unearned Income/) {
+    foreach my $id (qw/totalBeginFY totalEndFY amountInYear/) {
+      $trialBalanceData{$id}{$account} = $ZERO
+      unless defined $trialBalanceData{$id}{$account};
+    }
+    print TRIAL "\"$account\",\"\$$trialBalanceData{totalBeginFY}{$account}\",",
+     "\"\$$trialBalanceData{amountInYear}{$account}\",\"\$$trialBalanceData{totalEndFY}{$account}\"\n"
+       unless $trialBalanceData{totalBeginFY}{$account} == $ZERO and
+         $trialBalanceData{amountInYear}{$account} == $ZERO and
+           $trialBalanceData{totalEndFY}{$account} == $ZERO;
+  } else {
+    print TRIAL "\"$account\",\"\",\"\$$trialBalanceData{amountInYear}{$account}\",\"\"\n"
+      if defined $trialBalanceData{amountInYear}{$account} and
+        $trialBalanceData{amountInYear}{$account} != $ZERO;
+  }
 }
-
 close TRIAL;
 die "unable to write trial-balance.csv: $!" unless ($? == 0);
 
