@@ -103,4 +103,5 @@ contrib/non-profit-audit-reports/tests/chart-of-accounts.txt
 contrib/non-profit-audit-reports/tests/general-ledger.csv
 contrib/non-profit-audit-reports/tests/general-ledger.ods
 contrib/non-profit-audit-reports/tests/general-ledger.txt
+contrib/non-profit-audit-reports/tests/MANIFEST
 contrib/non-profit-audit-reports/general-ledger.zip
