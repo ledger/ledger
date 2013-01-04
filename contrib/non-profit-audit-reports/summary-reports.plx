@@ -40,29 +40,33 @@ sub Commify ($) {
 }
 
 sub preferredAccountSorting ($$) {
-  if ($_[0] =~ /^Assets/) {
+  if ($_[0] =~ /^Assets/ and $_[1] !~ /^Assets/) {
     return -1;
-  } elsif ($_[1] =~ /^Assets/) {
+  } elsif ($_[1] =~ /^Assets/ and $_[0] !~ /^Assets/) {
     return 1;
-  } elsif ($_[0] =~ /^Liabilities/ and $_[1] !~ /^Assets/) {
+  } elsif ($_[0] =~ /^Liabilities/ and $_[1] !~ /^(Assets|Liabilities)/) {
     return -1;
-  } elsif ($_[1] =~ /^Liabilities/ and $_[0] !~ /^Assets/) {
+  } elsif ($_[1] =~ /^Liabilities/ and $_[0] !~ /^(Assets|Liabilities)/) {
     return 1;
-  } elsif ($_[0] =~ /^(Accrued)/ and $_[1] !~ /^(Assets|Liabilities)/) {
+  } elsif ($_[0] =~ /^(Accrued:[^:]+Receivable)/ and $_[1] !~ /^(Assets|Liabilities|Accrued:[^:]+Receivable)/) {
     return -1;
-  } elsif ($_[1] =~ /^(Accrued)/ and $_[0] !~ /^(Assets|Liabilities)/) {
+  } elsif ($_[1] =~ /^(Accrued:[^:]+Receivable)/ and $_[0] !~ /^(Assets|Liabilities|Accrued:[^:]+Receivable)/) {
     return 1;
-  } elsif ($_[0] =~ /^(Unearned Income)/ and $_[1] !~ /^(Assets|Liabilities|Accrued)/) {
+  } elsif ($_[0] =~ /^(Accrued)/ and $_[1] !~ /^(Assets|Liabilities|Accrued)/) {
     return -1;
-  } elsif ($_[1] =~ /^(Unearned Income)/ and $_[0] !~ /^(Assets|Liabilities|Accrued)/) {
+  } elsif ($_[1] =~ /^(Accrued)/ and $_[0] !~ /^(Assets|Liabilities|Accrued)/) {
     return 1;
-  } elsif ($_[0] =~ /^Income/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+  } elsif ($_[0] =~ /^(Unearned Income)/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
     return -1;
-  } elsif ($_[1] =~ /^Income/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+  } elsif ($_[1] =~ /^(Unearned Income)/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
     return 1;
-  } elsif ($_[0] =~ /^Expense/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Expense)/) {
+  } elsif ($_[0] =~ /^Income/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Income)/) {
     return -1;
-  } elsif ($_[1] =~ /^Expense/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Expense)/) {
+  } elsif ($_[1] =~ /^Income/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Income)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Expense/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Income|Unearned Income|Expense)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Expense/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Income|Unearned Income|Expense)/) {
     return 1;
   } else {
     return $_[0] cmp $_[1];
