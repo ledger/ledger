@@ -113,7 +113,7 @@ def main():
         print 'csv:', options.csv
         print 'ods:', options.ods
         print 'ods:', options.encoding
-    csv2ods(options.csv, options.ods, options.verbose, options.encoding, options.skip_page_break)
+    csv2ods(options.csv, options.ods, options.encoding, options.verbose, options.skip_page_break)
 
 if __name__ == '__main__':
   main()
