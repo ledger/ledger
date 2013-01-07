@@ -55,14 +55,14 @@ my $formattedStartDate = UnixDate(ParseDate($startDate), "%Y/%m/%d");
 die "Date calculation error on $startDate" if ($err);
 
 my(@ledgerOptions) = (@mainLedgerOptions,
-                      '-V', '-X', '$', '-F', 
+                      '-V', '-X', '$',  '-e', $endDate, '-F',
                       '\"%(tag("Invoice"))\",\"%A\",\"%(date)\",\"%(payee)\",\"%22.108t\"\n',
                       '--limit', 'tag("Invoice") !~ /^\s*$/', 'reg');
 
 my @possibleTypes = ('Accrued:Loans Receivable', 'Accrued:Accounts Payable',
                      'Accrued:Accounts Receivable', 'Accrued:Expenses');
 
-
+my %data;
 foreach my $type (@possibleTypes) {
   open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions, "/^$type/")
     or die "Unable to run $LEDGER_CMD @ledgerOptions: $!";
@@ -73,8 +73,34 @@ foreach my $type (@possibleTypes) {
 
       unless $line =~ /^\s*"([^"]+)","([^"]+)","([^"]+)","([^"]+)","\s*\$\s*([\-\d\.\,]+)"\s*$/;
     my($invoice, $account, $date, $payee, $amount) = ($1, $2, $3, $4, $5);
-      $amount = ParseNumber($amount);
+    $amount = ParseNumber($amount);
+
+    push(@{$data{$type}{$invoice}{entries}}, { account => $account, date => $date, payee => $payee, amount => $amount});
+    $data{$type}{$invoice}{total} = $ZERO unless defined $data{$type}{$invoice}{total};
+    $data{$type}{$invoice}{total} += $amount;
   }
+  close LEDGER_FUNDS;
+  die "Failure on ledger command for $type: $!" unless ($? == 0);
+
+}
+foreach my $type (keys %data) {
+  foreach my $invoice (keys %{$data{$type}}) {
+    delete $data{$type}{$invoice} if abs($data{$type}{$invoice}{total}) <= $TWO_CENTS;
+  }
+}
+foreach my $type (keys %data) {
+  delete $data{$type} if scalar(keys %{$data{$type}}) == 0;
+}
+foreach my $type (keys %data) {
+  print "\"SCHEDULE OF $type\"\n\"ENDING:\",\"$formattedEndDate\"\n\n",
+    '"DATE","PAYEE","ACCOUNT","AMOUNT","INVOICE"', "\n";
+  foreach my $invoice (keys %{$data{$type}}) {
+    my $vals;
+    foreach my $vals (@{$data{$type}{$invoice}{entries}}) {
+      print "\"$vals->{date}\",\"$vals->{payee}\",\"$vals->{account}\",\"\$$vals->{amount}\",\"link:$invoice\"\n";
+    }
+  }
+  print "pagebreak\n";
 }
 ###############################################################################
 #
