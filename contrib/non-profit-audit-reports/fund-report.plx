@@ -1,9 +1,19 @@
 #!/usr/bin/perl
 # fund-report.plx                                    -*- Perl -*-
 #
-#    Script to generate a Trial Balance report for a ledger.
+#    Script to generate a Restricted Fund Report.  Usefulness of this
+#    script may be confined to those who track separate funds in their
+#    accounts by having accounts that match this format:
+#     /^(Income|Expenses|Unearned Income|(Accrued:[^:]+:):PROJECTNAME/
+
+#  Conservancy does this because we carefully track fund balances for our
+#  fiscal sponsored projects.  Those who aren't fiscal sponsors won't find
+#  this report all that useful, I suspect.  Note that the name
+#  "Conservancy" is special-cased in a few places, mainly because our
+#  "General" fund is called "Conservancy".
+
 #
-# Copyright (C) 2011, 2012, Bradley M. Kuhn
+# Copyright (C) 2011, 2012, 2013 Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -36,6 +46,7 @@ sub ParseNumber($) {
 }
 Math::BigFloat->precision(-2);
 my $ZERO =  Math::BigFloat->new("0.00");
+my $TWO_CENTS =  Math::BigFloat->new("0.02");
 
 if (@ARGV < 2) {
   print STDERR "usage: $0 <START_DATE> <END_DATE> <LEDGER_OPTIONS>\n";
@@ -45,71 +56,65 @@ my($startDate, $endDate, @mainLedgerOptions) = @ARGV;
 
 my $err;
 my $formattedEndDate = UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
-                                "%B %e, %Y");
+                                "%Y/%m/%d");
 die "Date calculation error on $endDate" if ($err);
-my $formattedStartDate = UnixDate(ParseDate($startDate), "%B %e, %Y");
+my $formattedStartDate = UnixDate(ParseDate($startDate), "%Y/%m/%d");
 die "Date calculation error on $startDate" if ($err);
 
-# First, get fund list from ending balance
-my(@ledgerOptions) = (@mainLedgerOptions,
-                      '-V', '-X', '$', '-F', "%-.70A %22.108t\n", '-s',
-                      '-e', $endDate, 'reg', '/^Funds:Restricted:/');
+# First, get balances for starting and ending for each fund
+
 my %funds;
 
-open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
-  or die "Unable to run $LEDGER_CMD for funds: $!";
+foreach my $type ('starting', 'ending') {
+  my(@ledgerOptions) = (@mainLedgerOptions,
+                      '-V', '-X', '$', '-F', "%-.70A %22.108t\n", '-s');
 
-while (my $fundLine = <LEDGER_FUNDS>) {
-  die "Unable to parse output line from first funds command: \"$fundLine\""
-    unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\-\d\.\,]+)/;
-  my($account, $amount) = ($1, $2);
-  $amount = ParseNumber($amount);
-  $account =~ s/\s+$//;
-  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
-  die "Weird account found, $account with amount of $amount in first funds command\n"
-    unless $account =~ s/^\s*Funds:Restricted://;
-  $funds{$account}{ending} = $amount;
+  if ($type eq 'starting') {
+    push(@ledgerOptions, '-e', $startDate);
+  } else {
+    push(@ledgerOptions,'-e', $endDate);
+  }
+  push(@ledgerOptions, 'reg', '/^(Income|Expenses):([^:]+):/');
+
+  open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
+    or die "Unable to run $LEDGER_CMD @ledgerOptions: $!";
+
+  while (my $fundLine = <LEDGER_FUNDS>) {
+    die "Unable to parse output line from first funds command: \"$fundLine\""
+      unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*\s*([\-\d\.\,]+)/;
+    my($account, $amount) = ($1, $2);
+    $amount = ParseNumber($amount);
+    $account =~ s/\s+$//;
+    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= $TWO_CENTS);
+    die "Weird account found, $account with amount of $amount in command: @ledgerOptions\n"
+      unless $account =~ s/^\s*(?:Income|Expenses):([^:]+)://;
+    $account = $1;
+    $account = 'General' if $account eq 'Conservancy';   # FIXME: this is a special case for Consrevancy
+    $funds{$account}{$type} += $amount;
+  }
+  close LEDGER_FUNDS;
+  die "Failure on ledger command @ledgerOptions: $!" unless ($? == 0);
 }
-close LEDGER_FUNDS;
-
-# First, get fund list from starting balance
-@ledgerOptions = (@mainLedgerOptions,
-                  '-V', '-X', '$', '-F', "%-.70A %22.108t\n",  '-w', '-s',
-                  '-e', $startDate, 'reg', '^Funds:Restricted:');
-
-open(LEDGER_FUNDS, "-|", $LEDGER_CMD, @ledgerOptions)
-  or die "Unable to run $LEDGER_CMD for funds: $!";
-
-while (my $fundLine = <LEDGER_FUNDS>) {
-  die "Unable to parse output line from second funds command: $fundLine"
-    unless $fundLine =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
-  my($account, $amount) = ($1, $2);
-  $amount = ParseNumber($amount);
-  $account =~ s/\s+$//;
-  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
-  die "Weird account found, $account with amount of $amount in first second command\n"
-    unless $account =~ s/^\s*Funds:Restricted://;
-  $funds{$account}{starting} = $amount;
-}
-close LEDGER_FUNDS;
-
-
 foreach my $fund (keys %funds) {
-  $funds{$fund}{starting} = $ZERO if not defined $funds{$fund}{starting};
+  foreach my $type (keys %{$funds{$fund}}) {
+    $funds{$fund}{$type} = $ZERO - $funds{$fund}{$type};
+  }
 }
-
-@ledgerOptions = (@mainLedgerOptions,
+my(@ledgerOptions) = (@mainLedgerOptions,
                   '-V', '-X', '$', '-F', "%-.70A %22.108t\n",  '-w', '-s',
                   '-b', $startDate, '-e', $endDate, 'reg');
 
-my @possibleTypes = ('Unearned Income', 'Retained Earnings', 'Retained Costs',
-                     'Accrued:Accounts Payable', 'Accrued:Accounts Receivable');
+my @possibleTypes = ('Income', 'Expenses', 'Unearned Income', 'Retained Earnings', 'Retained Costs',
+                     'Accrued:Loans Receivable', 'Accrued:Accounts Payable',
+                     'Accrued:Accounts Receivable', 'Accrued:Expenses');
 
-foreach my $type ('Income', 'Expenses', @possibleTypes) {
+foreach my $type (@possibleTypes) {
   foreach my $fund (keys %funds) {
-    open(LEDGER_INCOME, "-|", $LEDGER_CMD, @ledgerOptions, "^${type}:$fund")
+    my $query;
+    $query = ($fund eq 'General') ? "/^${type}:Conservancy/": "/^${type}:$fund/";
+    open(LEDGER_INCOME, "-|", $LEDGER_CMD, @ledgerOptions, $query)
       or die "Unable to run $LEDGER_CMD for funds: $!";
-      $funds{$fund}{$type} = $ZERO;
+    $funds{$fund}{$type} = $ZERO;
     while (my $line = <LEDGER_INCOME>) {
       die "Unable to parse output line from $type line command: $line"
         unless $line =~ /^\s*([^\$]+)\s+\$\s*\s*([\-\d\.\,]+)/;
@@ -118,34 +123,110 @@ foreach my $type ('Income', 'Expenses', @possibleTypes) {
       $funds{$fund}{$type} += $amount;
     }
     close LEDGER_INCOME;
+    die "Failure on ledger command for ${type}:$fund: $!" unless ($? == 0);
   }
 }
 
-my($totStart, $totEnd) = ($ZERO, $ZERO);
+my %tot;
+($tot{Start}, $tot{End}) = ($ZERO, $ZERO);
 
-foreach my $fund (sort keys %funds) {
+my %beforeEndings = ('Income' => 1, 'Expenses' => 1);
+my %afterEndings;
+
+# For other @possibleTypes, build up @fieldsList to just thoes that are present. 
+
+foreach my $fund (keys %funds) {
+  foreach my $type (@possibleTypes) {
+    if ($funds{$fund}{$type} != $ZERO) {
+      if ($type =~ /^(Unearned Income|Accrued)/) {
+        $afterEndings{$type} = 1;
+      } else {
+        $beforeEndings{$type} = 1;
+      }
+    }
+  }
+}
+my(@beforeEndingFields, @afterEndingFields);
+
+foreach my $ii (@possibleTypes) {
+  push(@beforeEndingFields, $ii) if defined $beforeEndings{$ii};
+  push(@afterEndingFields, $ii)  if defined $afterEndings{$ii};
+}
+# Make sure fieldLists present items are zero for those that should be zero.
+foreach my $fund (keys %funds) {
+  foreach my $type ('starting', @beforeEndingFields, 'ending', @afterEndingFields) {
+    $funds{$fund}{$type} = $ZERO unless defined $funds{$fund}{$type};
+  }
+}
+
+print '"RESTRICTED AND GENERAL FUND REPORT",', "\"BEGINNING:\",\"$formattedStartDate\",\"ENDING:\",\"$formattedEndDate\"\n\n";
+print '"FUND","STARTING BALANCE",';
+my @finalPrints;
+foreach my $type (@beforeEndingFields) {
+  $tot{$type} = $ZERO;
+  my $formattedType = $type;
+  print "\"$formattedType\",";
+}
+print '"ENDING BALANCE",""';
+foreach my $type (@afterEndingFields) {
+  $tot{$type} = $ZERO;
+  my $formattedType = $type;
+  $formattedType = "Prepaid Expenses" if $formattedType eq 'Accrued:Expenses'; 
+  $formattedType =~ s/^Accrued://;
+  print ",\"$formattedType\"";
+}
+print "\n\n";
+
+sub printTotal ($$) {
+  my($label, $tot) = @_;
+  print "\"$label\",\"\$$tot->{Start}\",";
+  foreach my $type (@beforeEndingFields) {
+    print "\"\$$tot->{$type}\",";
+  }
+  print "\"\$$tot->{End}\",\"\"";
+  foreach my $type (@afterEndingFields) {
+    print ",\"\$$tot->{$type}\"";
+  }
+  print "\n";
+}
+
+foreach my $fund (sort {
+                        if ($a eq "General") { return 1 }
+                        elsif ($b eq "General") { return -1 }
+                        else { return $a cmp $b } }
+                  keys %funds) {
   my $sanityTotal = $funds{$fund}{starting};
-  print "Fund: $fund\n", sprintf("%-35s\$%26.2f\n\n", "Balance as of $formattedStartDate:",
-      $funds{$fund}{starting});
-  foreach my $type ('Income', 'Expenses', @possibleTypes) {
-    my $formattedType = $type;   $formattedType =~ s/^Accrued://;
-    next if $type ne 'Income' and $type ne 'Expenses' and $funds{$fund}{$type} == $ZERO;
-    print sprintf("%19s during period: \$%26.2f\n", $formattedType, $funds{$fund}{$type});
+
+  if ($fund eq 'General') {
+    print "\n";
+    printTotal("Restricted Subtotal", \%tot);
+    print "\n";
   }
-  print sprintf("\n%-35s\$%26.2f\n", "Balance as of $formattedEndDate:",
-      $funds{$fund}{ending}), "\n\n";
+  $tot{Start} += $funds{$fund}{starting};
+  $tot{End} += $funds{$fund}{ending};
+
+  print "\"$fund\",\"\$$funds{$fund}{starting}\",";
+  foreach my $type (@beforeEndingFields) {
+    print "\"\$$funds{$fund}{$type}\",";
+    $tot{$type} += $funds{$fund}{$type};
+  }
+  print "\"\$$funds{$fund}{ending}\",\"\"";
+  foreach my $type (@afterEndingFields) {
+    print ",\"\$$funds{$fund}{$type}\"";
+    $tot{$type} += $funds{$fund}{$type};
+  }
+  print "\n";
   # Santity check:
-  if ($funds{$fund}{ending} !=
+  if (abs($funds{$fund}{ending} -
       ($funds{$fund}{starting}
-         - $funds{$fund}{Income} - $funds{$fund}{'Unearned Income'} - $funds{$fund}{Expenses})) {
-    print "$fund FAILED SANITY CHECK\n\n\n";
-    die "$fund FAILED SANITY CHECK";
+         - $funds{$fund}{Income} - $funds{$fund}{Expenses}))
+      > $TWO_CENTS) {
+    print "$fund FAILED SANITY CHECK: Ending: $funds{$fund}{ending} \n\n\n";
+    warn "$fund FAILED SANITY CHECK";
   }
-  $totStart += $funds{$fund}{starting};
-  $totEnd += $funds{$fund}{ending};
 }
-print "\n\n\nTotal Restricted Funds as of $formattedStartDate: ", sprintf("\$%15.2f\n", $totStart);
-print "\nTotal Restricted Funds as of $formattedStartDate: ", sprintf("\$%15.2f\n", $totEnd);
+print "\n";
+printTotal("OVERALL TOTAL", \%tot);
 ###############################################################################
 #
 # Local variables:
