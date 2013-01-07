@@ -430,10 +430,13 @@ my $curOn = 'Assets';
 foreach my $account (sort preferredAccountSorting keys %fullAccountList) {
   # Blank lines right
   if ($account !~ /^$curOn/) {
-    print TRIAL "\n";
+    print TRIAL "pagebreak\n";
     $curOn = $account;
-    $curOn =~ s/^([^:]+):.*$/$1/;
-    print "CurOn now: $curOn\n";
+    if ($curOn =~ /(Accrued:[^:]+):.*$/) {
+      $curOn = $1;
+    } else {
+      $curOn =~ s/^([^:]+):.*$/$1/;
+    }
   }
   if ($account =~ /^Assets|Liabilities|Accrued|Unearned Income/) {
     foreach my $id (qw/totalBeginFY totalEndFY amountInYear/) {
