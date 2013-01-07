@@ -181,7 +181,7 @@ foreach my $acct (@sortedAccounts) {
   my $formatString = '"%(date)","%C","%P","%t",""';
   foreach my $tagField (qw/Receipt Invoice Statement Contract PurchaseOrder Approval Check IncomeDistributionAnalysis CurrencyRate/) {
     print GL_CSV_OUT ',"', $tagField, '"';
-    $formatString .= ',"%(tag(\'' . $tagField . '\'))"';
+    $formatString .= ',"link:%(tag(\'' . $tagField . '\'))"';
   }
   $formatString .= "\n";
   print GL_CSV_OUT "\n";
@@ -195,12 +195,14 @@ foreach my $acct (@sortedAccounts) {
     or die "Unable to run $LEDGER_CMD @acctLedgerOpts: $!";
 
   foreach my $line (<GL_CSV_DATA>) {
+    $line =~ s/"link:"/""/g;
     print GL_CSV_OUT $line;
     next if $line =~ /ACCOUNT:.*PERIOD/;  # Skip column header lines
     $line =~ s/^"[^"]*","[^"]*","[^"]*","[^"]*","[^"]*",//;
     while ($line =~ s/^"([^"]*)"(,|$)//) {
       my $file = $1;
       next if $file =~ /^\s*$/;
+      $file =~ s/^link:(.*)$/$1/;
       warn "$file does not exist and/or is not readable" unless -r $file;
       print MANIFEST "$file\n" if not defined $manifest{$file};
       $manifest{$file} = $line;
@@ -210,7 +212,7 @@ foreach my $acct (@sortedAccounts) {
     $balanceData{totalEnd}{$acct} = $ZERO unless defined $balanceData{totalEnd}{$acct};
     print GL_CSV_OUT "\"$formattedEndDate\"", ',"","BALANCE","","$', "$balanceData{totalEnd}{$acct}\"\n";
   }
-
+  print GL_CSV_OUT "pagebreak\n";
   close(GL_CSV_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 }
 close(GL_TEXT_OUT); die "error writing to general-ledger.txt: $!" unless $? == 0;

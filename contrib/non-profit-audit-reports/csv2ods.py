@@ -24,14 +24,13 @@ import sys, os, os.path, optparse
 import csv
 import ooolib2
 
-file_fields = [ 'Receipt', 'Invoice', 'Statement', 'Contract', 'PurchaseOrder',
-                'Approval', 'Check', 'IncomeDistributionAnalysis', 'CurrencyRate' ]
-
 def err(msg):
     print 'error: %s' % msg
     sys.exit(1)
 
-def csv2ods(csvname, odsname, encoding='', verbose = False, skip_page_break = False):
+def csv2ods(csvname, odsname, encoding='', verbose = False):
+    filesSavedinManifest = {}
+
     if verbose:
         print 'converting from %s to %s' % (csvname, odsname)
     doc = ooolib2.Calc()
@@ -45,7 +44,7 @@ def csv2ods(csvname, odsname, encoding='', verbose = False, skip_page_break = Fa
     style_currency = doc.styles.get_next_style('cell')
     style_data = tuple([style])
     doc.styles.style_config[style_data] = style_currency
-    
+
     row = 1
     csvdir = os.path.dirname(csvname)
     if len(csvdir) == 0:
@@ -61,26 +60,39 @@ def csv2ods(csvname, odsname, encoding='', verbose = False, skip_page_break = Fa
                 if len(val) > 0 and val[0] == '$':
                     doc.set_cell_value(col + 1, row, 'currency', val[1:])
                 else:
-                    if ((col >= 5) and (not val in file_fields) and len(val) > 0):
+                    if (len(val) > 0 and val[0:5] == "link:"):
+                        val = val[5:]
                         linkrel = '../' + val # ../ means remove the name of the *.ods
                         linkname = os.path.basename(val) # name is just the last component
                         doc.set_cell_value(col + 1, row, 'link', (linkrel, linkname))
                         linkpath = csvdir + '/' + val
+
+                        if not val in filesSavedinManifest:
+                            filesSavedinManifest[val] = col
+
+                        if not os.path.exists(linkpath):
+                            print "WARNING: link %s DOES NOT EXIST at %s" % (val, linkpath)
                         if verbose:
                             if os.path.exists(linkpath):
                                 print 'relative link %s EXISTS at %s' % (val, linkpath)
-                            else:
-                                print 'relative link %s DOES NOT EXIST at %s' % (val, linkpath)
                     else:
-                        doc.set_cell_value(col + 1, row, 'string', val)
+                        if val == "pagebreak":
+                            doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
+                        else:
+                            doc.set_cell_value(col + 1, row, 'string', val)
         else:
             # enter an empty string for blank lines
             doc.set_cell_value(1, row, 'string', '')
-            # put a pagebreak here
-            if not skip_page_break:
-                doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
         row += 1
-    # save the file
+    # save manifest file 
+    if filesSavedinManifest.keys() != []:
+        manifestFH = open("MANIFEST", "a")
+        manifestFH.write("# Files from %s\n" % odsname)
+        for file in filesSavedinManifest.keys():
+            manifestFH.write("%s\n" % file)
+            
+        manifestFH.close()
+    # Save spreadsheet file.
     doc.save(odsname)
 
 def main():
@@ -97,9 +109,6 @@ def main():
                       help='ods output filename')
     parser.add_option('-e', '--encoding', action='store', 
                       help='unicode character encoding type')
-    parser.add_option('-s', '--skip-page-break', action='store_true', 
-                      dest='skip_page_break',
-                      help='do not add any page breaks')
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("not expecting extra args")  
@@ -113,7 +122,7 @@ def main():
         print 'csv:', options.csv
         print 'ods:', options.ods
         print 'ods:', options.encoding
-    csv2ods(options.csv, options.ods, options.encoding, options.verbose, options.skip_page_break)
+    csv2ods(options.csv, options.ods, options.encoding, options.verbose)
 
 if __name__ == '__main__':
   main()
