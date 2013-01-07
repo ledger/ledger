@@ -23,16 +23,23 @@
 import sys, os, os.path, optparse
 import csv
 import ooolib2
+import shutil
+import string
 
 def err(msg):
     print 'error: %s' % msg
     sys.exit(1)
 
-def csv2ods(csvname, odsname, encoding='', verbose = False):
+def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, verbose = False):
     filesSavedinManifest = {}
 
     if verbose:
         print 'converting from %s to %s' % (csvname, odsname)
+
+    if singleFileDirectory:
+        if not os.path.isdir(os.path.join(os.getcwd(),singleFileDirectory)):
+            os.mkdir(singleFileDirectory)
+
     doc = ooolib2.Calc()
     #  add a pagebreak style
     style = 'pagebreak'
@@ -55,20 +62,51 @@ def csv2ods(csvname, odsname, encoding='', verbose = False):
         if len(fields) > 0:
             for col in range(len(fields)):
                 val = fields[col]
-                if encoding != '':
+                if encoding != '' and val[0:5] != "link:":  # Only utf8 encode if it's not a filename
                     val = unicode(val, 'utf8')
                 if len(val) > 0 and val[0] == '$':
                     doc.set_cell_value(col + 1, row, 'currency', val[1:])
                 else:
                     if (len(val) > 0 and val[0:5] == "link:"):
                         val = val[5:]
-                        linkrel = '../' + val # ../ means remove the name of the *.ods
                         linkname = os.path.basename(val) # name is just the last component
+                        if not singleFileDirectory:
+                            newFile = val
+                        else:
+                            relativeFileWithPath = os.path.basename(val)
+                            fileName, fileExtension = os.path.splitext(relativeFileWithPath)
+                            newFile = fileName[:15]   # 15 is an arbitrary choice.
+                            newFile = newFile + fileExtension
+                            # We'll now test to see if we made this file
+                            # before, and if it matched the same file we
+                            # now want.  If it doesn't, try to make a
+                            # short file name for it.
+                            if filesSavedinManifest.has_key(newFile) and filesSavedinManifest[newFile] != val:
+                                testFile = None
+                                for cc in list(string.letters) + list(string.digits):
+                                    testFile = cc + newFile
+                                    if not filesSavedinManifest.has_key(testFile):
+                                        break
+                                    testFile = None
+                                if not testFile:
+                                    raise Exception("too many similar file names for linkage; giving up")
+                                else:
+                                    newFile = testFile
+                            if not os.path.exists(csvdir + '/' + val):
+                                raise Exception("File" + csvdir + '/' + val + " does not exist in single file directory mode; giving up")
+                            src = os.path.join(csvdir, val)
+                            dest = os.path.join(csvdir, singleFileDirectory, newFile)
+                            shutil.copyfile(src, dest)
+                            shutil.copystat(src, dest)
+                            shutil.copymode(src, dest)
+                            newFile = os.path.join(singleFileDirectory, newFile)
+
+                        linkrel = '../' + newFile # ../ means remove the name of the *.ods
                         doc.set_cell_value(col + 1, row, 'link', (linkrel, linkname))
                         linkpath = csvdir + '/' + val
 
                         if not val in filesSavedinManifest:
-                            filesSavedinManifest[val] = col
+                            filesSavedinManifest[newFile] = val
 
                         if not os.path.exists(linkpath):
                             print "WARNING: link %s DOES NOT EXIST at %s" % (val, linkpath)
@@ -109,7 +147,10 @@ def main():
                       help='ods output filename')
     parser.add_option('-e', '--encoding', action='store', 
                       help='unicode character encoding type')
+    parser.add_option('-d', '--single-file-directory', action='store',
+                      help='directory name to move all files into')
     (options, args) = parser.parse_args()
+
     if len(args) != 0:
         parser.error("not expecting extra args")  
     if not os.path.exists(options.csv):
@@ -122,7 +163,7 @@ def main():
         print 'csv:', options.csv
         print 'ods:', options.ods
         print 'ods:', options.encoding
-    csv2ods(options.csv, options.ods, options.encoding, options.verbose)
+    csv2ods(options.csv, options.ods, options.encoding, options.single_file_directory, options.verbose)
 
 if __name__ == '__main__':
   main()
