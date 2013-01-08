@@ -8,8 +8,9 @@ use Date::Manip;
 
 Math::BigFloat->precision(-2);
 my $ZERO =  Math::BigFloat->new("0.00");
+my $ONE_HUNDRED =  Math::BigFloat->new("100.00");
 
-my $VERBOSE = 0;
+my $VERBOSE = 1;
 my $DEBUG = 0;
 
 my $LEDGER_BIN = "/usr/local/bin/ledger";
@@ -19,17 +20,26 @@ sub SubSetSumSolver ($$$) {
   my($numberList, $totalSought, $extractNumber) = @_;
 
   my($P, $N) = (0, 0);
-  foreach my $ii (@{$numberList}) {
-    if ($ii < $ZERO) {
-      $N += $ii;
-    } else {
-      $P += $ii;
-    }
-  }
   my $size = scalar(@{$numberList});
   my %Q;
   my(@L) =
      map { { val => &$extractNumber($_), obj => $_ } } @{$numberList};
+
+
+  if ($VERBOSE) {
+    }
+  }
+    print STDERR "  L in this iteration:\n     [" if $VERBOSE;
+
+  foreach my $ee (@L) {
+    if ($ee->{val} < 0) {
+      $N += $ee->{val}
+    } else {
+      $P += $ee->{val};
+    }
+    print STDERR $ee->{val}, ", " if $VERBOSE;
+  }
+  print STDERR "]\n    P = $P, N = $N\n" if ($VERBOSE);
 
   for (my $ii = 0 ; $ii <= $size ; $ii++ ) {
     $Q{$ii}{0}{value} = 1;
@@ -85,6 +95,14 @@ if (@ARGV < 4) {
   exit 1;
 }
 ######################################################################
+sub ConvertTwoDigitPrecisionToInteger ($) {
+  return sprintf("%d", $_[0] * $ONE_HUNDRED);
+}
+######################################################################
+sub ConvertTwoDigitPrecisionToIntegerInEntry ($) {
+  return ConvertTwoDigitPrecisionToInteger($_[0]->{amount});
+}
+######################################################################
 my($account, $endDate, $balanceSought, @mainLedgerOptions) = @ARGV;
 
 $balanceSought = ParseNumber($balanceSought);
@@ -111,8 +129,17 @@ foreach my $line (<FILE>) {
     unless $amount =~ s/\s*\$\s*([\-\d\.\,]+)\s*$/$1/;
   $amount = ParseNumber($amount);
 
-  print "$date, $checkNum, $payee, $amount\n";
   push(@entries, { date => $date, checkNum => $checkNum, amount => $amount });
+}
+close FILE;
+die "unable to properly run ledger command: @fullCommand: $!" unless ($? == 0);
+
+my(@solution) = SubSetSumSolver(\@entries, ConvertTwoDigitPrecisionToInteger($balanceSought),
+                                \&ConvertTwoDigitPrecisionToIntegerInEntry);
+
+if ($VERBOSE) {
+  use Data::Dumper;
+  print Data::Dumper->Dump(\@solution);
 }
 
 ###############################################################################
