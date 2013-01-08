@@ -16,7 +16,7 @@ my $DEBUG = 0;
 my $LEDGER_BIN = "/usr/local/bin/ledger";
 
 ######################################################################
-sub SubSetSumSolver ($$$) {
+sub DynamicProgrammingSubSetSumSolver ($$$) {
   my($numberList, $totalSought, $extractNumber) = @_;
 
   my($P, $N) = (0, 0);
@@ -148,7 +148,7 @@ while ($startDate ge $earliestStartDate) {
   if (@entries == 1) {
     @solution = ( (abs($entries[0]->{amount}) == abs($balanceSought)), \@entries);
   } else {
-    @solution = SubSetSumSolver(\@entries, ConvertTwoDigitPrecisionToInteger($balanceSought),
+    @solution = DynamicProgrammingSubSetSumSolver(\@entries, ConvertTwoDigitPrecisionToInteger($balanceSought),
                                 \&ConvertTwoDigitPrecisionToIntegerInEntry);
   }
   if ($VERBOSE) {
