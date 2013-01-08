@@ -25,11 +25,8 @@ sub SubSetSumSolver ($$$) {
   my(@L) =
      map { { val => &$extractNumber($_), obj => $_ } } @{$numberList};
 
-
-  if ($VERBOSE) {
-    }
-  }
-    print STDERR "  L in this iteration:\n     [" if $VERBOSE;
+  print STDERR "  TotalSought:", $totalSought if $VERBOSE;
+  print STDERR "  L in this iteration:\n     [" if $VERBOSE;
 
   foreach my $ee (@L) {
     if ($ee->{val} < 0) {
@@ -108,40 +105,66 @@ my($account, $endDate, $balanceSought, @mainLedgerOptions) = @ARGV;
 $balanceSought = ParseNumber($balanceSought);
 
 my $err;
-my $startDate = UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 month"), \$err), "%Y/%m/%d");
+my $earliestStartDate = DateCalc(ParseDate($endDate), ParseDateDelta("- 1 month"), \$err);
+
 die "Date calculation error on $endDate" if ($err);
 
-my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
-                    '-b', $startDate, '-e', $endDate,
-                    '-F', '"%(date)","%C","%P","%t"\n',
-                    'reg', "/$account/");
+my $startDate = ParseDate($endDate);
+
+my @solution;
+while ($startDate ge $earliestStartDate) {
+  print "START LOOP ITR: $startDate $earliestStartDate\n";
+  $startDate = DateCalc(ParseDate($startDate), ParseDateDelta("- 1 day"), \$err);
+  die "Date calculation error on $endDate" if ($err);
+
+  my $formattedStartDate = UnixDate($startDate, "%Y/%m/%d");
+
+  print STDERR "Testing $formattedStartDate through $endDate: \n" if $VERBOSE;
+
+  my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                      '-b', $formattedStartDate, '-e', $endDate,
+                      '-F', '"%(date)","%C","%P","%t"\n',
+                      'reg', "/$account/");
 
   open(FILE, "-|", @fullCommand)
     or die "unable to run command ledger command: @fullCommand: $!";
 
-my @entries;
+  my @entries;
 
-foreach my $line (<FILE>) {
-  die "Unable to parse output line from: $line"
-    unless $line =~ /^\s*"([^"]*)","([^"]*)","([^"]*)","([^"]*)"\s*$/;
-  my($date, $checkNum, $payee, $amount) = ($1, $2, $3, $4);
-  die "$amount is not a valid amount"
-    unless $amount =~ s/\s*\$\s*([\-\d\.\,]+)\s*$/$1/;
-  $amount = ParseNumber($amount);
+  foreach my $line (<FILE>) {
+    die "Unable to parse output line from: $line"
+      unless $line =~ /^\s*"([^"]*)","([^"]*)","([^"]*)","([^"]*)"\s*$/;
+    my($date, $checkNum, $payee, $amount) = ($1, $2, $3, $4);
+    die "$amount is not a valid amount"
+      unless $amount =~ s/\s*\$\s*([\-\d\.\,]+)\s*$/$1/;
+    $amount = ParseNumber($amount);
 
-  push(@entries, { date => $date, checkNum => $checkNum, amount => $amount });
-}
-close FILE;
-die "unable to properly run ledger command: @fullCommand: $!" unless ($? == 0);
+    push(@entries, { date => $date, checkNum => $checkNum, amount => $amount });
+  }
+  close FILE;
+  die "unable to properly run ledger command: @fullCommand: $!" unless ($? == 0);
 
-my(@solution) = SubSetSumSolver(\@entries, ConvertTwoDigitPrecisionToInteger($balanceSought),
+  @solution = ();
+  if (@entries == 1) {
+    @solution = ( (abs($entries[0]->{amount}) == abs($balanceSought)), \@entries);
+  } else {
+    @solution = SubSetSumSolver(\@entries, ConvertTwoDigitPrecisionToInteger($balanceSought),
                                 \&ConvertTwoDigitPrecisionToIntegerInEntry);
-
-if ($VERBOSE) {
-  use Data::Dumper;
-  print Data::Dumper->Dump(\@solution);
+  }
+  if ($VERBOSE) {
+    use Data::Dumper;
+    print STDERR "Solution for $formattedStartDate, $balanceSought: \n", Data::Dumper->Dump(\@solution);
+  }
+  print STDERR "Solution Found: Dying" if ($solution[0]) and $VERBOSE;
+#  last if ($solution[0]);
 }
-
+print "DONE LOOP: $startDate $earliestStartDate\n";
+if ($solution[0]) {
+  print "FINAL SOLUTION: ";
+  foreach my $ee (@{$solution[1]}) {
+    print "$ee->date, $ee->payee, $ee->amount\n";
+  }
+}
 ###############################################################################
 #
 # Local variables:
