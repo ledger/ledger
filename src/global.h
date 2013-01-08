@@ -155,12 +155,12 @@ See LICENSE file included with the distribution for details and disclaimer.");
    CTOR(global_scope_t, init_file_) {
     if(!_init_file.empty())
       // _init_file is filled during handle_debug_options
-      on(none, _init_file);
+      on("command-line", _init_file);
     else
       if (const char * home_var = std::getenv("HOME"))
-	on(none, (path(home_var) / ".ledgerrc").string());
+	on("default", (path(home_var) / ".ledgerrc").string());
       else
-	on(none, path("./.ledgerrc").string());
+	on("default", path("./.ledgerrc").string());
    });
 
   OPTION(global_scope_t, options);
