@@ -25,13 +25,45 @@ import csv
 import ooolib2
 import shutil
 import string
+from Crypto.Hash import SHA256
 
 def err(msg):
     print 'error: %s' % msg
     sys.exit(1)
 
-def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, verbose = False):
+def ReadChecksums(inputFile):
+    checksums = {}
+    with open(inputFile, "r") as inputFH:
+        entries = inputFH.readlines()
+    for ee in entries:
+        fileName, checksum = ee.split(":")
+        fileName = fileName.replace(' ', "")
+        checksum = checksum.replace(' ', "")
+        checksum = checksum.replace("\n", "")
+        checksums[checksum] = fileName
+    return checksums
+
+def ChecksumFile(filename):
+    sha256 = SHA256.new()
+    chunk_size = 8192
+    with open(filename, 'rb') as myFile:
+        while True:
+            chunk = myFile.read(chunk_size)
+            if len(chunk) == 0:
+                break
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+def main():
+    program = os.path.basename(sys.argv[0])
+
+    print get_file_checksum(sys.argv[1])
+
+def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecksums={}, verbose = False):
     filesSavedinManifest = {}
+
+    if knownChecksums:
+        checksumCache = {}
 
     if verbose:
         print 'converting from %s to %s' % (csvname, odsname)
@@ -70,10 +102,25 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, verbose = F
                     if (len(val) > 0 and val[0:5] == "link:"):
                         val = val[5:]
                         linkname = os.path.basename(val) # name is just the last component
+                        newFile = None
+
                         if not singleFileDirectory:
                             newFile = val
-                        else:
+
+                        if knownChecksums:
+                            if not checksumCache.has_key(val):
+                                checksum = ChecksumFile(val)
+                                checksumCache[val] = checksum
+                            else:
+                                checksum = checksumCache[val]
+
+                            if knownChecksums.has_key(checksum):
+                                newFile = knownChecksums[checksum]
+                                print "FOUND new file in known: " + newFile
+
+                        if not newFile:
                             relativeFileWithPath = os.path.basename(val)
+
                             fileName, fileExtension = os.path.splitext(relativeFileWithPath)
                             newFile = fileName[:15]   # 15 is an arbitrary choice.
                             newFile = newFile + fileExtension
@@ -88,18 +135,23 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, verbose = F
                                     if not filesSavedinManifest.has_key(testFile):
                                         break
                                     testFile = None
-                                if not testFile:
-                                    raise Exception("too many similar file names for linkage; giving up")
-                                else:
-                                    newFile = testFile
-                            if not os.path.exists(csvdir + '/' + val):
-                                raise Exception("File" + csvdir + '/' + val + " does not exist in single file directory mode; giving up")
+                                    if not testFile:
+                                        raise Exception("too many similar file names for linkage; giving up")
+                                    else:
+                                        newFile = testFile
+                                        if not os.path.exists(csvdir + '/' + val):
+                                            raise Exception("File" + csvdir + '/' + val + " does not exist in single file directory mode; giving up")
                             src = os.path.join(csvdir, val)
                             dest = os.path.join(csvdir, singleFileDirectory, newFile)
                             shutil.copyfile(src, dest)
                             shutil.copystat(src, dest)
                             shutil.copymode(src, dest)
+
                             newFile = os.path.join(singleFileDirectory, newFile)
+
+                        if knownChecksums:
+                            checksumCache[checksum]   = newFile
+                            knownChecksums[checksum]  = newFile
 
                         linkrel = '../' + newFile # ../ means remove the name of the *.ods
                         doc.set_cell_value(col + 1, row, 'link', (linkrel, linkname))
@@ -149,6 +201,8 @@ def main():
                       help='unicode character encoding type')
     parser.add_option('-d', '--single-file-directory', action='store',
                       help='directory name to move all files into')
+    parser.add_option('-s', '--known-checksum-list', action='store',
+                      help='directory name to move all files into')
     (options, args) = parser.parse_args()
 
     if len(args) != 0:
@@ -163,7 +217,14 @@ def main():
         print 'csv:', options.csv
         print 'ods:', options.ods
         print 'ods:', options.encoding
-    csv2ods(options.csv, options.ods, options.encoding, options.single_file_directory, options.verbose)
+    if options.known_checksum_list and not options.single_file_directory:
+        err(program + ": --known-checksum-list option is completely useless without --single-file-directory")
+    knownChecksums = {}
+    if options.known_checksum_list:
+        if not os.access(options.known_checksum_list, os.R_OK):
+            err(program + ": unable to read file: " + options.known_checksum_list)
+        knownChecksums = ReadChecksums(options.known_checksum_list)
+    csv2ods(options.csv, options.ods, options.encoding, options.single_file_directory, knownChecksums, options.verbose)
 
 if __name__ == '__main__':
   main()
