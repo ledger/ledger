@@ -5,6 +5,7 @@ use warnings;
 
 use Math::BigFloat;
 use Date::Manip;
+use Data::PowerSet;
 
 Math::BigFloat->precision(-2);
 my $ZERO =  Math::BigFloat->new("0.00");
@@ -15,6 +16,30 @@ my $DEBUG = 0;
 
 my $LEDGER_BIN = "/usr/local/bin/ledger";
 
+######################################################################
+sub BruteForceSubSetSumSolver ($$$) {
+  my($numberList, $totalSought, $extractNumber) = @_;
+
+  my($P, $N) = (0, 0);
+  my $size = scalar(@{$numberList});
+  my %Q;
+  my(@L) =
+     map { { val => &$extractNumber($_), obj => $_ } } @{$numberList};
+
+  my $powerset = Data::PowerSet->new(@L);
+
+  while (my $set = $powerset->next) {
+    my $total = $ZERO;
+    foreach my $ee (@{$set}) {
+      $total += $ee->{val};
+    }
+    if ($totalSought == $total) {
+      my(@list) = map { $_->{obj} } @{$set};
+      return (1, \@list);
+    }
+  }
+  return (0, []);
+}
 ######################################################################
 sub DynamicProgrammingSubSetSumSolver ($$$) {
   my($numberList, $totalSought, $extractNumber) = @_;
@@ -88,7 +113,7 @@ sub ParseNumber($) {
   return Math::BigFloat->new($_[0]);
 }
 if (@ARGV < 4) {
-  print STDERR "usage: $0 <ACCOUNT_REGEX> <END_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
+  print STDERR "usage: $0 [-d] <ACCOUNT_REGEX> <END_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
   exit 1;
 }
 ######################################################################
@@ -100,7 +125,17 @@ sub ConvertTwoDigitPrecisionToIntegerInEntry ($) {
   return ConvertTwoDigitPrecisionToInteger($_[0]->{amount});
 }
 ######################################################################
+my $firstArg = shift @ARGV;
+
+my $solver = \&BruteForceSubSetSumSolver;
+
+if ($firstArg eq '-d') {
+  $solver = \&DynamicProgrammingSubSetSumSolver;
+} else {
+  unshift(@ARGV, $firstArg);
+}
 my($account, $endDate, $balanceSought, @mainLedgerOptions) = @ARGV;
+
 
 $balanceSought = ParseNumber($balanceSought);
 
@@ -139,7 +174,8 @@ while ($startDate ge $earliestStartDate) {
       unless $amount =~ s/\s*\$\s*([\-\d\.\,]+)\s*$/$1/;
     $amount = ParseNumber($amount);
 
-    push(@entries, { date => $date, checkNum => $checkNum, amount => $amount });
+    push(@entries, { date => $date, checkNum => $checkNum, 
+                     payee => $payee, amount => $amount });
   }
   close FILE;
   die "unable to properly run ledger command: @fullCommand: $!" unless ($? == 0);
@@ -148,21 +184,21 @@ while ($startDate ge $earliestStartDate) {
   if (@entries == 1) {
     @solution = ( (abs($entries[0]->{amount}) == abs($balanceSought)), \@entries);
   } else {
-    @solution = DynamicProgrammingSubSetSumSolver(\@entries, ConvertTwoDigitPrecisionToInteger($balanceSought),
-                                \&ConvertTwoDigitPrecisionToIntegerInEntry);
+    @solution = $solver->(\@entries,
+                          ConvertTwoDigitPrecisionToInteger($balanceSought),
+                          \&ConvertTwoDigitPrecisionToIntegerInEntry);
   }
   if ($VERBOSE) {
     use Data::Dumper;
     print STDERR "Solution for $formattedStartDate, $balanceSought: \n", Data::Dumper->Dump(\@solution);
   }
-  print STDERR "Solution Found: Dying" if ($solution[0]) and $VERBOSE;
-#  last if ($solution[0]);
+  last if ($solution[0]);
 }
-print "DONE LOOP: $startDate $earliestStartDate\n";
 if ($solution[0]) {
   print "FINAL SOLUTION: ";
   foreach my $ee (@{$solution[1]}) {
-    print "$ee->date, $ee->payee, $ee->amount\n";
+    print Data::Dumper->Dump($solution[1]);
+    print "$ee->{date}, $ee->{payee}, $ee->{amount}\n";
   }
 }
 ###############################################################################
