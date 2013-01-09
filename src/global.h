@@ -67,6 +67,7 @@ public:
     return _("global scope");
   }
 
+  void           parse_init(path init_file);
   void           read_init();
   void           read_environment_settings(char * envp[]);
   strings_list   read_command_arguments(scope_t& scope, strings_list args);
@@ -156,11 +157,6 @@ See LICENSE file included with the distribution for details and disclaimer.");
     if(!_init_file.empty())
       // _init_file is filled during handle_debug_options
       on(none, _init_file);
-    else
-      if (const char * home_var = std::getenv("HOME"))
-	on(none, (path(home_var) / ".ledgerrc").string());
-      else
-	on(none, path("./.ledgerrc").string());
    });
 
   OPTION(global_scope_t, options);

@@ -107,11 +107,8 @@ global_scope_t::~global_scope_t()
 #endif
 }
 
-void global_scope_t::read_init()
+void global_scope_t::parse_init(path init_file)
 {
-  if (HANDLED(init_file_)) {
-    path init_file(HANDLER(init_file_).str());
-    if (exists(init_file)) {
       TRACE_START(init, 1, "Read initialization file");
 
       parse_context_stack_t parsing_context;
@@ -127,9 +124,32 @@ void global_scope_t::read_init()
       }
 
       TRACE_FINISH(init, 1);
+}
+
+void global_scope_t::read_init()
+{
+  // if specified on the command line init_file_ is filled in 
+  // global_scope_t::handle_debug_options.  If it was specified on the command line
+  // fail is the file doesn't exist. If no init file was specified
+  // on the command-line then try the default values, but don't fail if there
+  // isn't one.
+  path init_file;
+  if (HANDLED(init_file_)) {
+    init_file=HANDLER(init_file_).str();
+    if (exists(init_file)) {
+      parse_init(init_file);
     } else {
       throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
+  } else {
+    if (const char * home_var = std::getenv("HOME")){
+      init_file = (path(home_var) / ".ledgerrc");
+    } else {
+      init_file = ("./.ledgerrc");
+    }
+  }
+  if(exists(init_file)){
+    parse_init(init_file);
   }
 }
 
