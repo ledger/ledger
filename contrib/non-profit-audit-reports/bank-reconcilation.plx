@@ -112,10 +112,6 @@ sub ParseNumber($) {
   $_[0] =~ s/,//g;
   return Math::BigFloat->new($_[0]);
 }
-if (@ARGV < 4) {
-  print STDERR "usage: $0 [-d] <ACCOUNT_REGEX> <END_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
-  exit 1;
-}
 ######################################################################
 sub ConvertTwoDigitPrecisionToInteger ($) {
   return sprintf("%d", $_[0] * $ONE_HUNDRED);
@@ -129,17 +125,43 @@ my $firstArg = shift @ARGV;
 
 my $solver = \&BruteForceSubSetSumSolver;
 
+if (@ARGV < 5) {
+  print STDERR "usage: $0 [-d] <TITLE> <ACCOUNT_REGEX> <END_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
+  exit 1;
+}
 if ($firstArg eq '-d') {
   $solver = \&DynamicProgrammingSubSetSumSolver;
 } else {
   unshift(@ARGV, $firstArg);
 }
-my($account, $endDate, $balanceSought, @mainLedgerOptions) = @ARGV;
+my($title, $account, $endDate, $bankBalance, @mainLedgerOptions) = @ARGV;
 
+$bankBalance = ParseNumber($bankBalance);
 
-$balanceSought = ParseNumber($balanceSought);
+my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                    '-e', $endDate, '-F', '%t\n', 'bal', "/$account/");
+
+open(FILE, "-|", @fullCommand) or die "unable to run command ledger command: @fullCommand: $!";
+
+my $total;
+foreach my $line (<FILE>) {
+  chomp $line;
+  die "Unable to parse output line from: \"$line\""
+    unless $line =~ /^\s*\$\s*([\-\d\.\,]+)\s*$/  and not defined $total;
+  $total = $1;
+  $total = ParseNumber($total);
+}
+close FILE;
+if (not defined $total or $? != 0) {
+  die "unable to run ledger @fullCommand: $!";
+}
+my $differenceSought = $total - $bankBalance;
 
 my $err;
+my $formattedEndDate = UnixDate(DateCalc(ParseDate($endDate), ParseDateDelta("- 1 day"), \$err),
+                                "%Y-%m-%d");
+die "Date calculation error on $endDate" if ($err);
+
 my $earliestStartDate = DateCalc(ParseDate($endDate), ParseDateDelta("- 1 month"), \$err);
 
 die "Date calculation error on $endDate" if ($err);
@@ -148,11 +170,11 @@ my $startDate = ParseDate($endDate);
 
 my @solution;
 while ($startDate ge $earliestStartDate) {
-  print "START LOOP ITR: $startDate $earliestStartDate\n";
+  print STDERR "START LOOP ITR: $startDate $earliestStartDate\n" if ($VERBOSE);
   $startDate = DateCalc(ParseDate($startDate), ParseDateDelta("- 1 day"), \$err);
   die "Date calculation error on $endDate" if ($err);
 
-  my $formattedStartDate = UnixDate($startDate, "%Y/%m/%d");
+  my $formattedStartDate = UnixDate($startDate, "%Y-%m-%d");
 
   print STDERR "Testing $formattedStartDate through $endDate: \n" if $VERBOSE;
 
@@ -180,26 +202,24 @@ while ($startDate ge $earliestStartDate) {
   close FILE;
   die "unable to properly run ledger command: @fullCommand: $!" unless ($? == 0);
 
-  @solution = ();
-  if (@entries == 1) {
-    @solution = ( (abs($entries[0]->{amount}) == abs($balanceSought)), \@entries);
-  } else {
-    @solution = $solver->(\@entries,
-                          ConvertTwoDigitPrecisionToInteger($balanceSought),
-                          \&ConvertTwoDigitPrecisionToIntegerInEntry);
-  }
+  @solution = $solver->(\@entries,
+                        ConvertTwoDigitPrecisionToInteger($differenceSought),
+                        \&ConvertTwoDigitPrecisionToIntegerInEntry);
   if ($VERBOSE) {
     use Data::Dumper;
-    print STDERR "Solution for $formattedStartDate, $balanceSought: \n", Data::Dumper->Dump(\@solution);
+    print STDERR "Solution for $formattedStartDate to $formattedEndDate, $differenceSought: \n",
+                 Data::Dumper->Dump(\@solution);
   }
   last if ($solution[0]);
 }
 if ($solution[0]) {
-  print "FINAL SOLUTION: ";
+  print "\"title:$formattedEndDate: $title\"\n\"BANK RECONCILATION: $account\",\"ENDING\",\"$formattedEndDate\"\n";
+  print "\n\n\"DATE\",\"CHECK NUM\",\"PAYEE\",\"AMOUNT\"\n\n";
+  print "\"$formattedEndDate\",\"\",\"BANK ACCOUNT BALANCE\",\"$bankBalance\"\n\n";
   foreach my $ee (@{$solution[1]}) {
-    print Data::Dumper->Dump($solution[1]);
-    print "$ee->{date}, $ee->{payee}, $ee->{amount}\n";
+    print "\"$ee->{date}\",\"$ee->{checkNum}\",\"$ee->{payee}\",\"$ee->{amount}\"\n";
   }
+    print "\n\"$formattedEndDate\",\"\",\"OUR ACCOUNT BALANCE\",\"$total\"\n\n";
 }
 ###############################################################################
 #
