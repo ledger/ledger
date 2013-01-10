@@ -125,8 +125,8 @@ my $firstArg = shift @ARGV;
 
 my $solver = \&BruteForceSubSetSumSolver;
 
-if (@ARGV < 5) {
-  print STDERR "usage: $0 [-d] <TITLE> <ACCOUNT_REGEX> <END_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
+if (@ARGV < 6) {
+  print STDERR "usage: $0 [-d] <TITLE> <ACCOUNT_REGEX> <END_DATE> <START_SEARCH_FROM_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
   exit 1;
 }
 if ($firstArg eq '-d') {
@@ -134,7 +134,7 @@ if ($firstArg eq '-d') {
 } else {
   unshift(@ARGV, $firstArg);
 }
-my($title, $account, $endDate, $bankBalance, @mainLedgerOptions) = @ARGV;
+my($title, $account, $endDate, $startSearchFromDate, $bankBalance, @mainLedgerOptions) = @ARGV;
 
 $bankBalance = ParseNumber($bankBalance);
 
@@ -166,7 +166,7 @@ my $earliestStartDate = DateCalc(ParseDate($endDate), ParseDateDelta("- 1 month"
 
 die "Date calculation error on $endDate" if ($err);
 
-my $startDate = ParseDate($endDate);
+my $startDate = ParseDate($startSearchFromDate);
 
 my @solution;
 while ($startDate ge $earliestStartDate) {
@@ -179,7 +179,7 @@ while ($startDate ge $earliestStartDate) {
   print STDERR "Testing $formattedStartDate through $endDate: \n" if $VERBOSE;
 
   my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
-                      '-b', $formattedStartDate, '-e', $endDate,
+                      '-b', $formattedStartDate, '-e', $startSearchFromDate,
                       '-F', '"%(date)","%C","%P","%t"\n',
                       'reg', "/$account/");
 
