@@ -169,7 +169,10 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecks
                         if val == "pagebreak":
                             doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
                         else:
-                            doc.set_cell_value(col + 1, row, 'string', val)
+                            if val[0:6] == "title:":
+                                doc.sheets[doc.sheet_index].set_name(val[6:])
+                            else:
+                                doc.set_cell_value(col + 1, row, 'string', val)
         else:
             # enter an empty string for blank lines
             doc.set_cell_value(1, row, 'string', '')
