@@ -318,6 +318,38 @@ void report_payees::operator()(post_t& post)
     (*i).second++;
 }
 
+void report_tags::flush()
+{
+  std::ostream& out(report.output_stream);
+
+  foreach (tags_pair& entry, tags) {
+    if (report.HANDLED(count))
+      out << entry.second << ' ';
+    out << entry.first << '\n';
+  }
+}
+
+void report_tags::operator()(post_t& post)
+{
+  if(post.metadata){
+    for(item_t::string_map::const_iterator post_tags = post.metadata->begin();
+	post_tags!=post.metadata->end();
+	++post_tags){
+      string tag=post_tags->first;
+      if(report.HANDLED(values) && (post_tags->second).first){
+	value_t data=(post_tags->second).first.get();
+	tag+=": "+data.to_string();
+      }
+      std::map<string, std::size_t>::iterator i = tags.find(tag);
+      if (i == tags.end())
+	tags.insert(tags_pair(tag, 1));
+      else
+	(*i).second++;
+    }
+  }
+}
+
+
 void report_commodities::flush()
 {
   std::ostream& out(report.output_stream);

@@ -358,6 +358,7 @@ public:
     HANDLER(account_width_).report(out);
     HANDLER(amount_width_).report(out);
     HANDLER(total_width_).report(out);
+    HANDLER(values).report(out);
   }
 
   option_t<report_t> * lookup_option(const char * p);
@@ -1043,6 +1044,7 @@ public:
   OPTION(report_t, account_width_);
   OPTION(report_t, amount_width_);
   OPTION(report_t, total_width_);
+  OPTION(report_t, values);
 };
 
 template <class Type        = post_t,
