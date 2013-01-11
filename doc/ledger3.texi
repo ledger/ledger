@@ -1312,9 +1312,9 @@ your opening balance entry could look like this:
       Assets:Joint Checking                   $800.14
       Assets:Other Checking                    $63.44
       Assets:Savings                         $2805.54
-      Assets:Investments:401K:Deferred         100.0000 VIFSX @ $80.5227
-      Assets:Investments:401K:Matching          50.0000 VIFSX @ $83.7015
-      Assets:Investments:IRA                   250.0000 VTHRX @ $20.5324
+      Assets:Investments:401K:Deferred         100.0000 VIFSX @@ $80.5227
+      Assets:Investments:401K:Matching          50.0000 VIFSX @@ $83.7015
+      Assets:Investments:IRA                   250.0000 VTHRX @@ $20.5324
       Liabilities:Mortgage                $-175634.88
       Liabilities:Car Loan                  $-3494.26
       Liabilities:Visa                      -$1762.44
@@ -2970,12 +2970,12 @@ resulting posting cost is $50.00 per share.
 @node Explicit posting costs, Posting cost expressions, Posting cost, Transactions
 @section Explicit posting costs
 
-You can make any posting's cost explicit using the @ symbol after the amount
+You can make any posting's cost explicit using the @@ symbol after the amount
 or amount expression:
 
 @smallexample
    2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @ $50.00
+       Assets:Brokerage             10 AAPL @@ $50.00
        Assets:Brokerage:Cash       $-500.00
 @end smallexample
 
@@ -2984,7 +2984,7 @@ the first posting's cost, you can elide the other amount:
 
 @smallexample
    2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @ $50.00
+       Assets:Brokerage             10 AAPL @@ $50.00
        Assets:Brokerage:Cash
 @end smallexample
 
@@ -3029,7 +3029,7 @@ You can even have both:
 @node Total posting costs, Virtual posting costs, Posting cost expressions, Transactions
 @section Total posting costs
 
-The cost figure following the @ character specifies the @emph{per-unit} price for
+The cost figure following the @@ character specifies the @emph{per-unit} price for
 the commodity being transferred.  If you'd like to specify the total cost
 instead, use @@@@:
 
@@ -3149,7 +3149,7 @@ Plus, it comes with dangers.  This works fine:
 
 @smallexample
    2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @ $50.00
+       Assets:Brokerage            10 AAPL @@ $50.00
        Assets:Brokerage:Cash       $750.00
 
    2012-04-10 My Broker
@@ -3167,7 +3167,7 @@ Plus, it comes with dangers.  This works fine:
 
 @smallexample
    2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @ $50.00
+       Assets:Brokerage            10 AAPL @@ $50.00
        Assets:Brokerage:Cash       $750.00
 
    2012-04-10 My Broker
@@ -3192,7 +3192,7 @@ following two transactions are equivalent:
 
 @smallexample
    2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @ $50.00
+       Assets:Brokerage            10 AAPL @@ $50.00
        Assets:Brokerage:Cash       $750.00
 
    2012-04-10 My Broker
@@ -3257,7 +3257,7 @@ that dates are parsed in value expressions):
 
 You can also associate arbitrary notes for your own record keeping in
 parentheses, and reveal them with --lot-notes.  One caveat is that the note
-cannot begin with an @ character, as that would indicate a virtual cost:
+cannot begin with an @@ character, as that would indicate a virtual cost:
 
 @smallexample
    2012-04-10 My Broker
@@ -4914,7 +4914,7 @@ model transaction:
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
     ; This note applies to all postings. :SecondTag:
-    Expenses:Books                 20 BOOK @ $10
+    Expenses:Books                 20 BOOK @@ $10
     ; Metadata: Some Value
     ; Typed:: $100 + $200
     ; :ExampleTag:
