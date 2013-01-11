@@ -44,20 +44,20 @@ if (@ARGV < 3) {
   print STDERR "usage: $0 <BEGIN_DATE> <END_DATE> <OTHER_LEDGER_OPTS>\n";
   exit 1;
 }
+open(MANIFEST, ">", "MANIFEST") or die "Unable to open MANIFEST for writing: $!";
 
 my($beginDate, $endDate, @otherLedgerOpts) = @ARGV;
 
-my(@chartOfAccountsOpts) = ('-F', "%150A\n",  '-w', '-s',
+my(@chartOfAccountsOpts) = ('-V', '-F', "%150A\n",  '-w', '-s',
                             '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg');
 
 open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
   or die "Unable to run $LEDGER_CMD @chartOfAccountsOpts: $!";
 
-open(CHART_OUTPUT, ">", "chart-of-accounts.txt") or die "unable to write chart-of-accounts.txt: $!";
-
 my @accounts;
 while (my $line = <CHART_DATA>) {
   chomp $line;
+  next if $line =~ /^\s*\<\s*Adjustment\s*\>\s*$/;
   $line =~ s/^\s*//;   $line =~ s/\s*$//;
   push(@accounts, $line);
 
@@ -65,6 +65,7 @@ while (my $line = <CHART_DATA>) {
 close(CHART_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 
 open(CHART_OUTPUT, ">", "chart-of-accounts.txt") or die "unable to write chart-of-accounts.txt: $!";
+print MANIFEST "chart-of-accounts.txt\n";
 
 my @sortedAccounts;
 foreach my $acct (
@@ -91,11 +92,14 @@ $formattedEndDate = $formattedEndDate->calc($oneDayLess);
 $formattedEndDate = $formattedEndDate->printf("%Y/%m/%d");
 
 open(GL_TEXT_OUT, ">", "general-ledger.txt") or die "unable to write general-ledger.txt: $!";
+print MANIFEST "general-ledger.txt\n";
 open(GL_CSV_OUT, ">", "general-ledger.csv") or die "unable to write general-ledger.csv: $!";
+print MANIFEST "general-ledger.csv\n";
 
+my %manifest;
 foreach my $acct (@sortedAccounts) {
   print GL_TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
-  my @acctLedgerOpts = ('-F',
+  my @acctLedgerOpts = ('-V', '-F',
                         "%(date)  %-.10C   %-.80P  %-.80N  %18t  %18T\n", '-w', '--sort', 'd',
                         '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
   open(GL_TEXT_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
@@ -107,13 +111,30 @@ foreach my $acct (@sortedAccounts) {
   close(GL_TEXT_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 
   print GL_CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
-  print GL_CSV_OUT '"DATE","CHECK NUM","NAME","TRANSACTION AMT","RUNNING TOTAL","Receipt","Invoice"', "\n";
-  @acctLedgerOpts = ('-F', '"%(date)","%C","%P","%t","%T","%(tag(\'Receipt\'))","%(tag(\'Invoice\'))"\n', '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
+  print GL_CSV_OUT '"DATE","CHECK NUM","NAME","TRANSACTION AMT","RUNNING TOTAL"';
+  my $formatString = '"%(date)","%C","%P","%t","%T"';
+  foreach my $tagField (qw/Receipt Invoice Statement Contract PurchaseOrder Approval Check IncomeDistributionAnalysis CurrencyRate/) {
+    print GL_CSV_OUT ',"', $tagField, '"';
+    $formatString .= ',"%(tag(\'' . $tagField . '\'))"';
+  }
+  $formatString .= "\n";
+  print GL_CSV_OUT "\n";
+
+  @acctLedgerOpts = ('-V', '-F', $formatString, '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
   open(GL_CSV_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
     or die "Unable to run $LEDGER_CMD @acctLedgerOpts: $!";
 
   foreach my $line (<GL_CSV_DATA>) {
     print GL_CSV_OUT $line;
+    next if $line =~ /ACCOUNT:.*PERIOD/;  # Skip column header lines
+    $line =~ s/^"[^"]*","[^"]*","[^"]*","[^"]*","[^"]*",//;
+    while ($line =~ s/^"([^"]*)"(,|$)//) {
+      my $file = $1;
+      next if $file =~ /^\s*$/;
+      warn "$file does not exist and/or is not readable" unless -r $file;
+      print MANIFEST "$file\n" if not defined $manifest{$file};
+      $manifest{$file} = $line;
+    }
   }
   close(GL_CSV_DATA); die "error reading ledger output for chart of accounts: $!" unless $? == 0;
 }

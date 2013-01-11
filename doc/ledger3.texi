@@ -2182,7 +2182,7 @@ This is a synonym for @code{comment} and must be closed by an @code{end} tag.
 @item year
 @c instance_t::year_directive in textual.cc
 Denotes the year used for all subsequent transactions that give a date
-without a year.  The year should appear immediately after the Y, for
+without a year.  The year should appear immediately after the directive, for
 example: @code{year 2004}.  This is useful at the beginning of a file, to
 specify the year for that file.  If all transactions specify a year,
 however, this command has no effect.
