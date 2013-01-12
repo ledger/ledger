@@ -1247,6 +1247,9 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(unrealized_losses_);
     else OPT(unround);
     break;
+  case 'v':
+    OPT(values);
+    break;
   case 'w':
     OPT(weekly);
     else OPT_(wide);
@@ -1663,7 +1666,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "select"))
         return WRAP_FUNCTOR(select_command);
       break;
-
+    case 't':
+      if (is_eq(p, "tags")) {
+        return POSTS_REPORTER(new report_tags(*this));
+      }
+      break;
     case 'x':
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
