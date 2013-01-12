@@ -189,6 +189,33 @@ public:
   }
 };
 
+class report_tags : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<string, std::size_t> tags;
+
+  typedef std::map<string, std::size_t>::value_type tags_pair;
+
+public:
+  report_tags(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_tags, "report&");
+  }
+  virtual ~report_tags() {
+    TRACE_DTOR(report_tags);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    tags.clear();
+    item_handler<post_t>::clear();
+  }
+};
+
+
 class report_commodities : public item_handler<post_t>
 {
 protected:
