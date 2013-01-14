@@ -684,7 +684,7 @@ void amount_t::in_place_ceiling()
     throw_(amount_error, _("Cannot ceiling an uninitialized amount"));
 
   _dup();
- 
+
   mpz_t quot;
   mpz_init(quot);
   mpz_cdiv_q(quot,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));

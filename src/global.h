@@ -153,14 +153,14 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION__
   (global_scope_t, init_file_, // -i
    CTOR(global_scope_t, init_file_) {
-    if(!_init_file.empty())
+    if (!_init_file.empty())
       // _init_file is filled during handle_debug_options
       on(none, _init_file);
     else
       if (const char * home_var = std::getenv("HOME"))
-	on(none, (path(home_var) / ".ledgerrc").string());
+        on(none, (path(home_var) / ".ledgerrc").string());
       else
-	on(none, path("./.ledgerrc").string());
+        on(none, path("./.ledgerrc").string());
    });
 
   OPTION(global_scope_t, options);
