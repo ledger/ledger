@@ -1,3 +1,21 @@
+if (USE_DOXYGEN)
+  find_package(Doxygen)
+  if(NOT DOXYGEN_FOUND)
+    message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
+  endif()
+
+  configure_file(Doxyfile.in Doxyfile @ONLY)
+  add_custom_target(doxygen ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+    SOURCES Doxyfile)
+endif(USE_DOXYGEN)
+
+########################################################################
+
+if(NOT BUILD_DOCS)
+  return()
+endif()
+
 set(info_files ledger.texi ledger3.texi)
 
 find_program(MAKEINFO makeinfo)
