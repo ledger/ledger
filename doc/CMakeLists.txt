@@ -14,8 +14,8 @@ foreach(file ${info_files})
     endif()
 
     add_custom_command(OUTPUT ${file_base}.html
-      COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${file}
-      DEPENDS ${file}
+      COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.html)
   endif(BUILD_WEB_DOCS)
@@ -23,11 +23,9 @@ foreach(file ${info_files})
   if(NOT TEXI2PDF)
     mesage(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
   else()
-    get_filename_component(file_base ${file} NAME_WE)
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf -b -q ${file}
-      COMMAND rm -f ${file_base}.aux ${file_base}.cp ${file_base}.fn ${file_base}.ky ${file_base}.log ${file_base}.pg ${file_base}.toc ${file_base}.tp ${file_base}.vr
-      DEPENDS ${file}
+      COMMAND texi2pdf -b -q --tidy -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
   endif()
@@ -45,8 +43,8 @@ if(BUILD_WEB_DOCS)
   endif()
 
   add_custom_command(OUTPUT ledger.1.html
-    COMMAND ${BASH} -c "man2html ledger.1 | tail -n+3 > ledger.1.html"
-    DEPENDS ledger.1
+    COMMAND ${BASH} -c "man2html $<1:CMAKE_CURRENT_SOURCE_DIR>/ledger.1 | tail -n+3 > ledger.1.html"
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
     VERBATIM)
   list(APPEND ledger_doc_files ledger.1.html)
 endif(BUILD_WEB_DOCS)
@@ -60,14 +58,14 @@ add_custom_target(doc ALL DEPENDS ${ledger_doc_files})
 include(GNUInstallDirs)
 
 if(CMAKE_INSTALL_MANDIR)
-  install(FILES ledger.1
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endif(CMAKE_INSTALL_MANDIR)
 
 if(CMAKE_INSTALL_DOCDIR)
   foreach(file ${info_files})
     get_filename_component(file_base ${file} NAME_WE)
-    install(FILES ${file_base}.pdf
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file_base}.pdf
       DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc OPTIONAL)
   endforeach()
 endif(CMAKE_INSTALL_DOCDIR)
