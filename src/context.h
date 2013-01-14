@@ -121,7 +121,7 @@ inline parse_context_t open_for_reading(const path& pathname,
     throw_(std::runtime_error,
            _f("Cannot read journal file %1%") % filename);
 
-  path parent(pathname.parent_path());
+  path parent(filename.parent_path());
   shared_ptr<std::istream> stream(new ifstream(filename));
   parse_context_t context(stream, parent);
   context.pathname = filename;
