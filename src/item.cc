@@ -476,7 +476,6 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
     else if (name == "filepath")
       return WRAP_FUNCTOR(get_wrapper<&get_filepath>);
      break;
-     break;
 
   case 'h':
     if (name == "has_tag")
