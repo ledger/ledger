@@ -983,7 +983,8 @@ void interval_posts::flush()
                    sort_posts_by_date());
 
   // Determine the beginning interval by using the earliest post
-  if (! interval.find_period(all_posts.front()->date()))
+  if (all_posts.front() &&
+      ! interval.find_period(all_posts.front()->date()))
     throw_(std::logic_error, _("Failed to find period for interval report"));
 
   // Walk the interval forward reporting all posts within each one
