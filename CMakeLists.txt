@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.5)
 
-project(Ledger)
+PROJECT(ledger)
 
 set(Ledger_VERSION_MAJOR 3)
 set(Ledger_VERSION_MINOR 0)
@@ -18,7 +18,8 @@ option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
-option(BUILD_DOCS "Build and install documentation" OFF)
+option(BUILD_DOCS "Build and install documentation" ON)
+option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
 option(BUILD_EMACSLISP "Build and install ledger-mode for Emacs" OFF)
 
 if(BUILD_DEBUG)
@@ -275,9 +276,7 @@ elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
 endif()
 
 add_subdirectory(src)
-if(BUILD_DOCS)
-  add_subdirectory(doc)
-endif()
+add_subdirectory(doc)
 if(BUILD_EMACSLISP)
   add_subdirectory(lisp)
 endif()
