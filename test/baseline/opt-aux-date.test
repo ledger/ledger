@@ -10,7 +10,7 @@
     Expenses:Books          $20.00
     Assets:Cash
 
-test reg --effective
+test reg --aux-date
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
 08-Feb-01 End of January        Expenses:Books               $10.00       $10.00
