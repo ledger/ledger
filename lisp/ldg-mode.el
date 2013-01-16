@@ -76,6 +76,47 @@ Return the difference in the format of a time value."
         (if (ledger-time-less-p moment date)
             (throw 'found t)))))))
 
+(defun ledger-iterate-entries (callback)
+  (goto-char (point-min))
+  (let* ((now (current-time))
+         (current-year (nth 5 (decode-time now))))
+    (while (not (eobp))
+      (when (looking-at
+             (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
+                     "\\([0-9]\\{4\\}+\\)?[./]?"
+                     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
+                     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
+        (let ((found (match-string 2)))
+          (if found
+              (setq current-year (string-to-number found))
+            (let ((start (match-beginning 0))
+                  (year (match-string 3))
+                  (month (string-to-number (match-string 4)))
+                  (day (string-to-number (match-string 5)))
+                  (mark (match-string 6))
+                  (desc (match-string 7)))
+              (if (and year (> (length year) 0))
+                  (setq year (string-to-number year)))
+              (funcall callback start
+                       (encode-time 0 0 0 day month
+                                    (or year current-year))
+                       mark desc)))))
+      (forward-line))))
+
+(defun ledger-set-year (newyear)
+  "Set ledger's idea of the current year to the prefix argument."
+  (interactive "p")
+  (if (= newyear 1)
+      (setq ledger-year (read-string "Year: " (ledger-current-year)))
+    (setq ledger-year (number-to-string newyear))))
+
+(defun ledger-set-month (newmonth)
+  "Set ledger's idea of the current month to the prefix argument."
+  (interactive "p")
+  (if (= newmonth 1)
+      (setq ledger-month (read-string "Month: " (ledger-current-month)))
+    (setq ledger-month (format "%02d" newmonth))))
+
 (defun ledger-add-entry (entry-text &optional insert-at-point)
   (interactive "sEntry: ")
   (let* ((args (with-temp-buffer
@@ -95,7 +136,7 @@ Return the difference in the format of a time value."
       (insert
        (with-temp-buffer
          (setq exit-code
-               (apply #'ledger-run-ledger ledger-buf "entry"
+               (apply #'ledger-exec-ledger ledger-buf ledger-buf "entry"
                       (mapcar 'eval args)))
          (goto-char (point-min))
          (if (looking-at "Error: ")
