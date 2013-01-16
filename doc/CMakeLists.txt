@@ -42,7 +42,7 @@ foreach(file ${info_files})
     mesage(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
   else()
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf -b -q --tidy -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND texi2pdf -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
