@@ -582,8 +582,8 @@ string item_context(const item_t& item, const string& desc)
 
   std::ostringstream out;
 
-  if (item.pos->pathname == path("/dev/stdin")) {
-    out << desc << _(" from standard input:");
+  if (item.pos->pathname.empty()) {
+    out << desc << _(" from streamed input:");
     return out.str();
   }
 
