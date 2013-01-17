@@ -22,7 +22,7 @@ macro(add_ledger_harness_tests _class)
     foreach(TestFile ${${_class}_TESTS})
       get_filename_component(TestFile_Name ${TestFile} NAME_WE)
       string(FIND ${TestFile_Name} "_py" TestFile_IsPythonTest)
-      if((NOT TestFile_IsPythonTest) OR HAVE_BOOST_PYTHON)
+      if((TestFile_IsPythonTest EQUAL -1) OR HAVE_BOOST_PYTHON)
         add_test(${_class}Test_${TestFile_Name}
           ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/RegressTests.py 
           ${LEDGER_LOCATION} ${PROJECT_SOURCE_DIR} 
