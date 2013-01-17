@@ -100,7 +100,7 @@ class RegressFile(object):
         use_stdin = False
         if test['command'].find("-f ") != -1:
             test['command'] = '$ledger ' + test['command']
-            if test['command'].find("-f - ") != -1:
+            if re.search("-f (-|/dev/stdin)(\s|$)", test['command']):
                 use_stdin = True
         else:
             test['command'] = (('$ledger -f "%s" ' % 
