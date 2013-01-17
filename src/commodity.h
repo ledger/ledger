@@ -349,13 +349,6 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
 void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
                    bool commodity_details = false);
 
-//simple struct to allow std::map to compare commodities names
-struct commodity_compare {
-  bool operator() (const commodity_t* lhs, const commodity_t* rhs){
-    return (lhs->symbol().compare(rhs->symbol()) < 0);
-  }
-};
-
 } // namespace ledger
 
 #endif // _COMMODITY_H

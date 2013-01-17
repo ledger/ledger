@@ -308,13 +308,6 @@ std::ostream& operator<<(std::ostream& out, const account_t& account);
 void put_account(property_tree::ptree& pt, const account_t& acct,
                  function<bool(const account_t&)> pred);
 
-//simple struct added to allow std::map to compare accounts in the accounts report
-struct account_compare {
-  bool operator() (const account_t& lhs, const account_t& rhs){
-    return (lhs.fullname().compare(rhs.fullname()) < 0);
-  }
-};
-
 } // namespace ledger
 
 #endif // _ACCOUNT_H
