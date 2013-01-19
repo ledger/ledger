@@ -1,9 +1,6 @@
-# The following will be generated or updated…
-# …for every build (target 'doc.auto'):
+# The following will be generated or updated when the 'doc' target is built:
 # • user guide and man pages: if BUILD_DOCS is set
 # • HTML versions of the above: if BUILD_DOCS and BUILD_WEB_DOCS are set
-#
-# …only when the 'doc' target is built explicitly:
 # • Doxygen / reference documentation: if USE_DOXYGEN is set
 
 ########################################################################
@@ -88,8 +85,7 @@ endif(BUILD_WEB_DOCS)
 
 ########################################################################
 
-add_custom_target(doc.auto ALL DEPENDS ${ledger_doc_files})
-add_custom_target(doc DEPENDS doc.auto doc.doxygen)
+add_custom_target(doc DEPENDS ${ledger_doc_files} doc.doxygen)
 
 ########################################################################
 
