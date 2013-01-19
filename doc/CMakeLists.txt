@@ -5,14 +5,22 @@ if (USE_DOXYGEN)
   endif()
 
   configure_file(Doxyfile.in Doxyfile @ONLY)
-  add_custom_target(doxygen ALL
+  add_custom_command(OUTPUT html/index.html
     COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-    SOURCES Doxyfile)
+    DEPENDS Doxyfile
+    COMMENT "Building doxygen documentation")
+  add_custom_target(doxygen
+    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+    DEPENDS Doxyfile
+    COMMENT "Building doxygen documentation")
+  message("NOTE: Doxygen documentation will be built once. Use target doxygen to update.")
+  list(APPEND ledger_doc_files html/index.html)
 endif(USE_DOXYGEN)
 
 ########################################################################
 
 if(NOT BUILD_DOCS)
+  add_custom_target(doc ALL DEPENDS ${ledger_doc_files})
   return()
 endif()
 
