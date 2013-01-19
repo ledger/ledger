@@ -679,6 +679,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
+# please update dependencies in CMakeList.txt if you change this
 INPUT                  = @PROJECT_SOURCE_DIR@/src
 
 # This tag can be used to specify the character encoding of the source files
@@ -697,6 +698,7 @@ INPUT_ENCODING         = UTF-8
 # *.hxx *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm *.dox *.py
 # *.f90 *.f *.for *.vhd *.vhdl
 
+# please update dependencies in CMakeList.txt if you change this
 FILE_PATTERNS          = *.h
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories

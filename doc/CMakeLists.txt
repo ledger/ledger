@@ -1,3 +1,13 @@
+# The following will be generated or updated…
+# …for every build (target 'doc.auto'):
+# • user guide and man pages: if BUILD_DOCS is set
+# • HTML versions of the above: if BUILD_DOCS and BUILD_WEB_DOCS are set
+#
+# …only when the 'doc' target is built explicitly:
+# • Doxygen / reference documentation: if USE_DOXYGEN is set
+
+########################################################################
+
 if (USE_DOXYGEN)
   find_package(Doxygen)
   if(NOT DOXYGEN_FOUND)
@@ -5,22 +15,23 @@ if (USE_DOXYGEN)
   endif()
 
   configure_file(Doxyfile.in Doxyfile @ONLY)
+
+  # see INPUT/FILE_PATTERNS in Doxyfile.in
+  file(GLOB doxygen_input_files ${CMAKE_SOURCE_DIR}/src/*.h)
+
   add_custom_command(OUTPUT html/index.html
     COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-    DEPENDS Doxyfile
+    DEPENDS Doxyfile ${doxygen_input_files}
     COMMENT "Building doxygen documentation")
-  add_custom_target(doxygen
-    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-    DEPENDS Doxyfile
-    COMMENT "Building doxygen documentation")
-  message("NOTE: Doxygen documentation will be built once. Use target doxygen to update.")
-  list(APPEND ledger_doc_files html/index.html)
-endif(USE_DOXYGEN)
+  add_custom_target(doc.doxygen DEPENDS html/index.html)
+else()
+  add_custom_target(doc.doxygen)
+endif()
 
 ########################################################################
 
 if(NOT BUILD_DOCS)
-  add_custom_target(doc ALL DEPENDS ${ledger_doc_files})
+  add_custom_target(doc DEPENDS doc.doxygen)
   return()
 endif()
 
@@ -77,7 +88,8 @@ endif(BUILD_WEB_DOCS)
 
 ########################################################################
 
-add_custom_target(doc ALL DEPENDS ${ledger_doc_files})
+add_custom_target(doc.auto ALL DEPENDS ${ledger_doc_files})
+add_custom_target(doc DEPENDS doc.auto doc.doxygen)
 
 ########################################################################
 
