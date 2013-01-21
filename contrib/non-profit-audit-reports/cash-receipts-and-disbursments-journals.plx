@@ -85,10 +85,8 @@ foreach my $acct (@accounts) {
                          { name => 'receipts', query => 'a>0' }) {
     my $fileNameBase = $acctFilename . '-' . $typeData->{name};
 
-    open(TEXT_OUT, ">", "$fileNameBase.txt") or die "unable to open $fileNameBase.txt: $!";
     open(CSV_OUT, ">", "$fileNameBase.csv") or die "unable to open $fileNameBase.csv: $!";
 
-    print TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
     print CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
     print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"';
 
@@ -106,10 +104,6 @@ foreach my $acct (@accounts) {
 
     goto SKIP_REGISTER_COMMANDS if (-z $tempFile);
 
-    my @txtRegLedgerOpts = ('-f', $tempFile, '-V', '-F',
-                            "%(date)  %-.70P  %-.10C  %-.80A  %18t\n", '-w', '--sort', 'd',
-                            '-b', $beginDate, '-e', $endDate, 'reg');
-
     my $formatString = '\n"%(date)","%C","%P","%A","%t"\n%/"","","","%A","%t"';
     foreach my $tagField (qw/Receipt Invoice Statement Contract PurchaseOrder Approval Check IncomeDistributionAnalysis CurrencyRate/) {
       print CSV_OUT ',"', $tagField, '"';
@@ -121,12 +115,6 @@ foreach my $acct (@accounts) {
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
 
-    open(TXT_DATA, "-|", $LEDGER_CMD, @txtRegLedgerOpts)
-      or die "unable to run ledger command for $fileNameBase.txt: $!";
-
-    while (my $line = <TXT_DATA>) { print TEXT_OUT $line; }
-    close(TEXT_OUT); die "Error read write text out to $fileNameBase.txt: $!" unless $? == 0;
-
     open(CSV_DATA, "-|", $LEDGER_CMD, @csvRegLedgerOpts)
       or die "unable to run ledger command for $fileNameBase.csv: $!";
 
@@ -134,7 +122,6 @@ foreach my $acct (@accounts) {
     close(CSV_DATA); die "Error read from csv ledger command $!" unless $? == 0;
 
   SKIP_REGISTER_COMMANDS:
-    close(TXT_DATA); die "Error read from txt ledger command $!" unless $? == 0;
     close(CSV_OUT); die "Error read write csv out to $fileNameBase.csv: $!" unless $? == 0;
     unlink($tempFile);
   }
